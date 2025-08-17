@@ -163,11 +163,11 @@ struct mux_lang {
         char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
-        char THEME_DOWNLOADER[MAX_BUFFER_SIZE];
+        char THEME_DOWN[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
-        char THEME_RESOLUTION[MAX_BUFFER_SIZE];
+        char THEME_RES[MAX_BUFFER_SIZE];
         char SCREEN[MAX_BUFFER_SIZE];
-        char THEME_ALTERNATE[MAX_BUFFER_SIZE];
+        char THEME_ALT[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
         char ANIMATION[MAX_BUFFER_SIZE];
         char FADE[MAX_BUFFER_SIZE];
@@ -217,10 +217,10 @@ struct mux_lang {
             char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
-            char THEME_DOWNLOADER[MAX_BUFFER_SIZE];
+            char THEME_DOWN[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
-            char THEME_RESOLUTION[MAX_BUFFER_SIZE];
-            char THEME_ALTERNATE[MAX_BUFFER_SIZE];
+            char THEME_RES[MAX_BUFFER_SIZE];
+            char THEME_ALT[MAX_BUFFER_SIZE];
             char ANIMATION[MAX_BUFFER_SIZE];
             char BOX_ART[MAX_BUFFER_SIZE];
             char BOX_ALIGN[MAX_BUFFER_SIZE];
@@ -615,7 +615,7 @@ struct mux_lang {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
-        char THEME_DOWNLOADER_LABEL[MAX_BUFFER_SIZE];
+        char THEME_DOWN[MAX_BUFFER_SIZE];
         char INVALID_VER[MAX_BUFFER_SIZE];
         char INVALID_RES[MAX_BUFFER_SIZE];
         struct {
@@ -895,26 +895,28 @@ struct mux_lang {
         char THEME_REMOVED[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
-        char DOWNLOADING_THEME[MAX_BUFFER_SIZE];
-        char DOWNLOADING_THEME_DATA[MAX_BUFFER_SIZE];
-        char DOWNLOADING_THEME_PREVIEWS[MAX_BUFFER_SIZE];
+        struct {
+            char THEME[MAX_BUFFER_SIZE];
+            char DATA[MAX_BUFFER_SIZE];
+            char PREVIEW[MAX_BUFFER_SIZE];
+        } DOWN;
         char REMOVE[MAX_BUFFER_SIZE];
-        char ERROR_RETRIEVING_THEME_DATA[MAX_BUFFER_SIZE];
-    } MUXTHEMEDOWNLOADER;
+        char ERROR_GET_DATA[MAX_BUFFER_SIZE];
+    } MUXTHEMEDOWN;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char THEME_COMPATIBILITY[MAX_BUFFER_SIZE];
         char GRID[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
         char LANGUAGE[MAX_BUFFER_SIZE];
         char LOOKUP[MAX_BUFFER_SIZE];
+        char COMPATIBILITY[MAX_BUFFER_SIZE];
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
             char ALL[MAX_BUFFER_SIZE];
-        } THEME_COMPATIBILITY_OPTIONS;
+        } COMPAT;
         struct {
-            char THEME_COMPATIBILITY[MAX_BUFFER_SIZE];
+            char COMPATIBILITY[MAX_BUFFER_SIZE];
             char GRID[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];
             char LANGUAGE[MAX_BUFFER_SIZE];

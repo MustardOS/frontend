@@ -92,8 +92,8 @@ static void image_refresh(void) {
 static void create_picker_items(void) {
     if (device.DEVICE.HAS_NETWORK && !strcasecmp(picker_type, "/theme") && strcasecmp(base_dir, sys_dir) == 0 &&
         !kiosk.CUSTOM.THEME_DOWN) {
-        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWNLOADER_LABEL,
-                 lang.MUXPICKER.THEME_DOWNLOADER_LABEL, "", MENU);
+        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWN,
+                 lang.MUXPICKER.THEME_DOWN, "", MENU);
     }
 
     DIR *td;

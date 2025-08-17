@@ -35,22 +35,24 @@ struct mux_config {
     } NETWORK;
 
     struct {
-        int16_t ALL_THEMES;
-        int16_t RESOLUTION_640x480;
-        int16_t RESOLUTION_720x480;
-        int16_t RESOLUTION_720x720;
-        int16_t RESOLUTION_1024x768;
-        int16_t RESOLUTION_1280x720;
-        int16_t GRID;
-        int16_t HDMI;
-        int16_t LANGUAGE;
-        char LOOKUP[MAX_BUFFER_SIZE];
-    } THEME_FILTER;
+        struct {
+            int16_t ALL_THEMES;
+            int16_t RESOLUTION_640x480;
+            int16_t RESOLUTION_720x480;
+            int16_t RESOLUTION_720x720;
+            int16_t RESOLUTION_1024x768;
+            int16_t RESOLUTION_1280x720;
+            int16_t GRID;
+            int16_t HDMI;
+            int16_t LANGUAGE;
+            char LOOKUP[MAX_BUFFER_SIZE];
+        } FILTER;
 
-    struct {
-        char THEME_DATA_URL[MAX_BUFFER_SIZE];
-        char THEME_PREVIEW_URL[MAX_BUFFER_SIZE];
-    } THEME_DOWNLOADER;
+        struct {
+            char DATA[MAX_BUFFER_SIZE];
+            char PREVIEW[MAX_BUFFER_SIZE];
+        } DOWNLOAD;
+    } THEME;
 
     struct {
         struct {

@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxplore.h"
 #include "../common/collection_theme.h"
-#include "../common/downloader.h"
+#include "../common/download.h"
 
 static char theme_data_local_path[MAX_BUFFER_SIZE];
 static theme_item *theme_items = NULL;
@@ -75,15 +75,15 @@ static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabl
                             bool resolution640x480, bool resolution720x480, bool resolution720x720,
                             bool resolution1024x768, bool resolution1280x720) {
     return (
-            (config.THEME_FILTER.RESOLUTION_640x480 && !resolution640x480) ||
-            (config.THEME_FILTER.RESOLUTION_720x480 && !resolution720x480) ||
-            (config.THEME_FILTER.RESOLUTION_720x720 && !resolution720x720) ||
-            (config.THEME_FILTER.RESOLUTION_1024x768 && !resolution1024x768) ||
-            (config.THEME_FILTER.RESOLUTION_1280x720 && !resolution1280x720) ||
-            (config.THEME_FILTER.GRID && !grid_enabled) ||
-            (config.THEME_FILTER.HDMI && !hdmi_enabled) ||
-            (config.THEME_FILTER.LANGUAGE && !language_enabled) ||
-            (config.THEME_FILTER.LOOKUP[0] != '\0' && strcasestr(name, config.THEME_FILTER.LOOKUP) == NULL)
+            (config.THEME.FILTER.RESOLUTION_640x480 && !resolution640x480) ||
+            (config.THEME.FILTER.RESOLUTION_720x480 && !resolution720x480) ||
+            (config.THEME.FILTER.RESOLUTION_720x720 && !resolution720x720) ||
+            (config.THEME.FILTER.RESOLUTION_1024x768 && !resolution1024x768) ||
+            (config.THEME.FILTER.RESOLUTION_1280x720 && !resolution1280x720) ||
+            (config.THEME.FILTER.GRID && !grid_enabled) ||
+            (config.THEME.FILTER.HDMI && !hdmi_enabled) ||
+            (config.THEME.FILTER.LANGUAGE && !language_enabled) ||
+            (config.THEME.FILTER.LOOKUP[0] != '\0' && strcasestr(name, config.THEME.FILTER.LOOKUP) == NULL)
     );
 }
 
@@ -131,7 +131,7 @@ static void create_content_items() {
     for (size_t i = 0; i < theme_item_count; i++) {
         if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
 
-        gen_label(mux_module, is_downloaded(i) ? "theme_downloaded" : "theme", theme_items[i].name);
+        gen_label(mux_module, is_downloaded(i) ? "theme_down" : "theme", theme_items[i].name);
     }
 }
 
@@ -140,7 +140,7 @@ static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, in
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
-        get_glyph_path(mux_module, is_downloaded(index) ? "theme_downloaded" : "theme", glyph_image_embed,
+        get_glyph_path(mux_module, is_downloaded(index) ? "theme_down" : "theme", glyph_image_embed,
                        MAX_BUFFER_SIZE);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
@@ -208,8 +208,8 @@ static void list_nav_move(int steps, int direction) {
 
     set_label_long_mode(&theme, lv_group_get_focused(ui_group));
 
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWNLOADER.REMOVE
-                                                                    : lang.MUXTHEMEDOWNLOADER.DOWNLOAD);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
+                                                                    : lang.MUXTHEMEDOWN.DOWNLOAD);
 
     image_refresh("box");
     nav_moved = 1;
@@ -227,8 +227,8 @@ static void list_nav_next(int steps) {
 
 static void theme_download_finished(int result) {
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWNLOADER.REMOVE
-                                                                    : lang.MUXTHEMEDOWNLOADER.DOWNLOAD);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
+                                                                    : lang.MUXTHEMEDOWN.DOWNLOAD);
 }
 
 static void refresh_theme_previews_finished(int result) {
@@ -239,7 +239,7 @@ static void refresh_theme_previews_finished(int result) {
         mux_input_stop();
     } else {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWNLOADER.ERROR_RETRIEVING_THEME_DATA, 0);
+        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, 0);
     }
 }
 
@@ -247,19 +247,19 @@ static void refresh_theme_data_finished(int result) {
     if (result == 0) {
         if (file_exist(preview_zip_path)) remove(preview_zip_path);
         set_download_callbacks(refresh_theme_previews_finished);
-        initiate_download(config.THEME_DOWNLOADER.THEME_PREVIEW_URL, preview_zip_path, true,
-                          lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_PREVIEWS);
+        initiate_download(config.THEME.DOWNLOAD.PREVIEW, preview_zip_path, true,
+                          lang.MUXTHEMEDOWN.DOWN.PREVIEW);
     } else {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWNLOADER.ERROR_RETRIEVING_THEME_DATA, 0);
+        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, 0);
     }
 }
 
 static void update_theme_data() {
     if (file_exist(theme_data_local_path)) remove(theme_data_local_path);
     set_download_callbacks(refresh_theme_data_finished);
-    initiate_download(config.THEME_DOWNLOADER.THEME_DATA_URL, theme_data_local_path, true,
-                      lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_DATA);
+    initiate_download(config.THEME.DOWNLOAD.DATA, theme_data_local_path, true,
+                      lang.MUXTHEMEDOWN.DOWN.DATA);
 }
 
 static void handle_a() {
@@ -273,11 +273,11 @@ static void handle_a() {
     if (file_exist(theme_path)) {
         remove(theme_path);
         theme_download_finished(0);
-        toast_message(lang.MUXTHEMEDOWNLOADER.THEME_REMOVED, 1000);
+        toast_message(lang.MUXTHEMEDOWN.THEME_REMOVED, 1000);
     } else {
         set_download_callbacks(theme_download_finished);
         initiate_download(theme_items[current_item_index].url, theme_path, true,
-                          lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME);
+                          lang.MUXTHEMEDOWN.DOWN.THEME);
     }
 }
 
@@ -320,8 +320,8 @@ static void handle_x() {
 static void handle_y() {
     if (download_in_progress || msgbox_active) return;
     play_sound(SND_CONFIRM);
-    
-    theme_downloader_index = current_item_index;
+
+    theme_down_index = current_item_index;
 
     load_mux("themefilter");
 
@@ -350,15 +350,15 @@ static void init_elements() {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                               1},
-            {ui_lblNavA,      lang.MUXTHEMEDOWNLOADER.DOWNLOAD, 1},
-            {ui_lblNavBGlyph, "",                               0},
-            {ui_lblNavB,      lang.GENERIC.BACK,                0},
-            {ui_lblNavXGlyph, "",                               0},
-            {ui_lblNavX,      lang.MUXTHEMEDOWNLOADER.REFRESH,  0},
-            {ui_lblNavYGlyph, "",                               0},
-            {ui_lblNavY,      lang.GENERIC.FILTER,              0},
-            {NULL, NULL,                                        0}
+            {ui_lblNavAGlyph, "",                         1},
+            {ui_lblNavA,      lang.MUXTHEMEDOWN.DOWNLOAD, 1},
+            {ui_lblNavBGlyph, "",                         0},
+            {ui_lblNavB,      lang.GENERIC.BACK,          0},
+            {ui_lblNavXGlyph, "",                         0},
+            {ui_lblNavX,      lang.MUXTHEMEDOWN.REFRESH,  0},
+            {ui_lblNavYGlyph, "",                         0},
+            {ui_lblNavY,      lang.GENERIC.FILTER,        0},
+            {NULL, NULL,                                  0}
     });
 
     overlay_display();
@@ -383,17 +383,17 @@ static void handle_idle() {
     lv_task_handler();
 }
 
-int muxthemedownloader_main() {
+int muxthemedown_main() {
     exit_status = 0;
     starter_image = 0;
     snprintf(theme_data_local_path, sizeof(theme_data_local_path), "%s/%s",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" THEME_DATA);
 
-    init_module("muxthemedownloader");
+    init_module("muxthemedown");
 
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXTHEMEDOWNLOADER.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXTHEMEDOWN.TITLE);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -425,8 +425,8 @@ int muxthemedownloader_main() {
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
-    if (ui_count > 0) list_nav_move(theme_downloader_index, 1);
-    theme_downloader_index = 0;
+    if (ui_count > 0) list_nav_move(theme_down_index, 1);
+    theme_down_index = 0;
 
     init_timer(ui_refresh_task, NULL);
 

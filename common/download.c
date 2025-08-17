@@ -1,4 +1,4 @@
-#include "downloader.h"
+#include "download.h"
 
 bool cancel_download = false;
 bool download_in_progress = false;
@@ -41,7 +41,7 @@ static void update_progress() {
 
     if (cancel_download || last_update == 100) {
         download_in_progress = false;
-        printf("deleting timer\n");
+        printf("Deleting timer\n");
     }
 
     if (!download_in_progress) {
@@ -58,7 +58,7 @@ static void update_progress() {
 static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
                              curl_off_t ultotal, curl_off_t ulnow) {
     if (cancel_download) {
-        printf("cancelling download\n");
+        printf("Cancelling download\n");
         return 1;
     }
 
@@ -134,7 +134,7 @@ int download_file(const char *url, const char *output_path) {
         return -3;
     }
 
-    printf("Download_file Finished\n");
+    printf("Download Finished\n");
     download_finished(0);
     return 0;
 }

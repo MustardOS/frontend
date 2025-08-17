@@ -58,7 +58,7 @@ extern int first_open;
 extern int ui_count;
 extern int holding_cell;
 
-extern int theme_downloader_index;
+extern int theme_down_index;
 
 extern lv_obj_t *overlay_image;
 extern lv_obj_t *kiosk_image;
@@ -176,7 +176,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys);
 
 int muxtask_main(char *ex_dir);
 
-int muxthemedownloader_main();
+int muxthemedown_main();
 
 int muxthemefilter_main();
 

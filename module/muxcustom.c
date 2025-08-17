@@ -49,8 +49,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblCatalogue_custom,       lang.MUXCUSTOM.HELP.CATALOGUE},
             {ui_lblConfig_custom,          lang.MUXCUSTOM.HELP.CONFIG},
             {ui_lblTheme_custom,           lang.MUXCUSTOM.HELP.THEME},
-            {ui_lblThemeResolution_custom, lang.MUXCUSTOM.HELP.THEME_RESOLUTION},
-            {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALTERNATE},
+            {ui_lblThemeResolution_custom, lang.MUXCUSTOM.HELP.THEME_RES},
+            {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALT},
             {ui_lblAnimation_custom,       lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblMusic_custom,           lang.MUXCUSTOM.HELP.MUSIC},
             {ui_lblShuffle_custom,         lang.MUXCUSTOM.HELP.SHUFFLE},
@@ -161,10 +161,10 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RESOLUTION, "resolution", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RES, "resolution", NULL, 0);
 
     if (populate_theme_alternates() > 0) {
-        INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALTERNATE, "alternate", NULL, 0);
+        INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALT, "alternate", NULL, 0);
     } else {
         lv_obj_add_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
     }
@@ -188,7 +188,8 @@ static void init_navigation_group(void) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
                  STORAGE_THEME, theme_resolutions[i].resolution);
         if (directory_exist(theme_device_folder)) {
-            lv_dropdown_add_option(ui_droThemeResolution_custom, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
+            lv_dropdown_add_option(ui_droThemeResolution_custom,
+                                   theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
         }
     }
 
@@ -205,9 +206,10 @@ static void init_navigation_group(void) {
         apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
     }
 
-    // Removal of animated background element
+    // Temporary removal of elements
     lv_obj_add_flag(ui_pnlAnimation_custom, MU_OBJ_FLAG_HIDE_FLOAT);
-    ui_count -= 1;
+    lv_obj_add_flag(ui_pnlBootlogo_custom, MU_OBJ_FLAG_HIDE_FLOAT);
+    ui_count -= 2;
 
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
