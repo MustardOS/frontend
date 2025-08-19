@@ -45,6 +45,10 @@
     lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);                                     \
 } while (0)
 
+#define APPCON_ELEMENTS          \
+    APPCON(Governor, "governor") \
+    APPCON(Control,  "control")
+
 #define BACKUP_ELEMENTS                        \
     BACKUP(Bios,             "bios")           \
     BACKUP(Catalogue,        "catalogue")      \

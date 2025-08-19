@@ -87,9 +87,9 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
 
 char *specify_asset(char *val, const char *def_val, const char *label);
 
-char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit);
+char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit, int is_app);
 
-char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit);
+char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit, int is_app);
 
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
@@ -104,9 +104,11 @@ void gen_label(char *module, char *item_glyph, char *item_text);
 
 int muxapp_main();
 
+int muxappcon_main(int auto_assign, char *name, char *dir, char *sys, int app);
+
 int muxarchive_main();
 
-int muxassign_main(int auto_assign, char *name, char *dir, char *sys);
+int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app);
 
 int muxbackup_main();
 
@@ -116,7 +118,7 @@ int muxconfig_main();
 
 int muxconnect_main();
 
-int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys);
+int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app);
 
 int muxcustom_main();
 
@@ -124,7 +126,7 @@ int muxdanger_main();
 
 int muxdevice_main();
 
-int muxgov_main(int auto_assign, char *name, char *dir, char *sys);
+int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app);
 
 int muxhdmi_main();
 
@@ -146,7 +148,7 @@ int muxnetscan_main();
 
 int muxnetwork_main();
 
-int muxoption_main(int nothing, char *name, char *dir, char *sys);
+int muxoption_main(int nothing, char *name, char *dir, char *sys, int app);
 
 int muxpass_main(char *p_type);
 
@@ -172,7 +174,7 @@ int muxsysinfo_main();
 
 int muxtext_main();
 
-int muxtag_main(int nothing, char *name, char *dir, char *sys);
+int muxtag_main(int nothing, char *name, char *dir, char *sys, int app);
 
 int muxtask_main(char *ex_dir);
 

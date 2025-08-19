@@ -225,6 +225,19 @@ static void handle_a(void) {
             refresh_screen(ui_screen);
         }
 
+        char app_dir[MAX_BUFFER_SIZE];
+        snprintf(app_dir, sizeof(app_dir), "%s/%s/%s",
+                 device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
+
+        char *assigned_gov = specify_asset(load_content_governor(app_dir, NULL, 0, 1, 1),
+                                           device.CPU.DEFAULT, "Governor");
+
+        char *assigned_con = specify_asset(load_content_control_scheme(app_dir, NULL, 0, 1, 1),
+                                           "system", "Control Scheme");
+
+        write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
+
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
@@ -254,6 +267,37 @@ static void handle_menu(void) {
 
     play_sound(SND_INFO_OPEN);
     show_help();
+}
+
+static void handle_select(void) {
+    if (msgbox_active || !ui_count) return;
+
+    struct {
+        const char *app_name;
+    } elements[] = {
+            {lang.MUXAPP.ARCHIVE},
+            {lang.MUXAPP.TASK}
+    };
+
+    for (size_t i = 0; i < A_SIZE(elements); i++) {
+        if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
+            return;
+        }
+    }
+
+    char app_dir[MAX_BUFFER_SIZE];
+    snprintf(app_dir, sizeof(app_dir), "%s/%s/%s",
+             device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
+
+    load_assign(MUOS_APL_LOAD, items[current_item_index].name, app_dir, "none", 0, 1);
+
+    play_sound(SND_CONFIRM);
+    write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
+
+    load_mux("appcon");
+
+    close_input();
+    mux_input_stop();
 }
 
 static void adjust_panels(void) {
@@ -337,6 +381,7 @@ int muxapp_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_SELECT] = handle_select,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

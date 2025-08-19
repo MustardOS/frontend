@@ -115,7 +115,7 @@ void overlay_display(void) {
 }
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
-    if (!val || !strcasecmp(val, "(null)")) {
+    if (!val || !strlen(val) || !strcasecmp(val, "(null)")) {
         LOG_INFO(mux_module, "Using Default %s: %s", label, def_val)
         return strdup(def_val);
     }
@@ -124,12 +124,24 @@ char *specify_asset(char *val, const char *def_val, const char *label) {
     return val;
 }
 
-static char *load_content_asset(char *sys_dir, char *pointer, int force,
-                                int run_quit, const char *ext, const char *label) {
+static char *load_content_asset(char *sys_dir, char *pointer, int force, int run_quit,
+                                const char *ext, const char *label, int is_app) {
     char path[MAX_BUFFER_SIZE];
     const char *last_subdir = NULL;
 
     if (pointer == NULL) {
+        if (is_app) {
+            snprintf(path, sizeof(path), "%s/mux_option.%s", sys_dir, ext);
+
+            LOG_SUCCESS(mux_module, "Loading Application %s: %s", label, path)
+
+            char *txt = read_all_char_from(path);
+            if (txt) return txt;
+
+            LOG_ERROR(mux_module, "Failed to read application %s", label)
+            return NULL;
+        }
+
         last_subdir = get_last_subdir(sys_dir, '/', 4);
 
         if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
@@ -180,12 +192,12 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force,
     return NULL;
 }
 
-char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit) {
-    return load_content_asset(sys_dir, pointer, force, run_quit, "gov", "Governor");
+char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit, int is_app) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "gov", "Governor", is_app);
 }
 
-char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit) {
-    return load_content_asset(sys_dir, pointer, force, run_quit, "con", "Control Scheme");
+char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit, int is_app) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "con", "Control Scheme", is_app);
 }
 
 void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,

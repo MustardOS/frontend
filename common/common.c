@@ -842,14 +842,14 @@ void decrease_option_value(lv_obj_t *element) {
     }
 }
 
-void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
-    FILE *file = fopen(MUOS_ASS_LOAD, "w");
+void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {
+    FILE *file = fopen(loader, "w");
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
-    fprintf(file, "%s\n%s\n%s\n%d", rom, dir, sys, forced);
+    fprintf(file, "%s\n%s\n%s\n%d\n%d", rom, dir, sys, forced, app);
     fclose(file);
 }
 
@@ -2347,6 +2347,15 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line) {
     } else {
         snprintf(path, sizeof(path), "%s/%s/%s.%s", INFO_COR_PATH, subdir, strip_ext(name), ext);
     }
+
+    if (file_exist(path)) return read_line_char_from(path, line);
+
+    return "";
+}
+
+char *get_application_line(char *dir, char *ext, size_t line) {
+    static char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/mux_option.%s", dir, ext);
 
     if (file_exist(path)) return read_line_char_from(path, line);
 

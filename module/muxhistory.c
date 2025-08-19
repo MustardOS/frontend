@@ -313,18 +313,17 @@ static int load_content(const char *content_name) {
              read_line_char_from(pointer_file, CACHE_CORE_PATH));
 
     if (file_exist(cache_file)) {
+        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
+
         char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
 
-        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0),
+        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
+
+        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0, 0),
                                            device.CPU.DEFAULT, "Governor");
 
-        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0),
+        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0, 0),
                                            "system", "Control Scheme");
-
-        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
-        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
-        LOG_INFO(mux_module, "Assigned Control Scheme: %s", assigned_con)
-        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
 
         char add_to_history[MAX_BUFFER_SIZE];
         snprintf(add_to_history, sizeof(add_to_history), INFO_HIS_PATH "/%s", content_name);

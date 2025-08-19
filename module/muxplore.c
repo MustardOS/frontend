@@ -82,7 +82,7 @@ static char *load_content_core(int force, int run_quit) {
         LOG_ERROR(mux_module, "Failed to build global core")
     }
 
-    load_assign(items[current_item_index].name, sys_dir, "none", force);
+    load_assign(MUOS_ASS_LOAD, items[current_item_index].name, sys_dir, "none", force, 0);
     if (run_quit) mux_input_stop();
 
     LOG_INFO(mux_module, "No core detected")
@@ -555,6 +555,8 @@ static int load_content(int add_collection) {
         snprintf(cache_file, sizeof(cache_file), INFO_COR_PATH "/%s/%s.cfg",
                  system_sub, content_name);
 
+        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
+
         snprintf(pointer, sizeof(pointer), "%s\n%s\n%s",
                  cache_file, system_sub, content_name);
 
@@ -562,16 +564,13 @@ static int load_content(int add_collection) {
             snprintf(content, sizeof(content), "%s.cfg", content_name);
             add_to_collection(content, pointer);
         } else {
-            char *assigned_gov = specify_asset(load_content_governor(sys_dir, NULL, 0, 1),
+            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
+
+            char *assigned_gov = specify_asset(load_content_governor(sys_dir, NULL, 0, 1, 0),
                                                device.CPU.DEFAULT, "Governor");
 
-            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, NULL, 0, 1),
+            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, NULL, 0, 1, 0),
                                                "system", "Control Scheme");
-
-            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
-            LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
-            LOG_INFO(mux_module, "Assigned Control Scheme: %s", assigned_con)
-            LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
 
             snprintf(content, sizeof(content), INFO_HIS_PATH "/%s-%08X.cfg",
                      content_name, fnv1a_hash(cache_file));
@@ -863,7 +862,7 @@ static void handle_select(void) {
     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
     load_content_core(1, 0);
-    load_content_governor(sys_dir, NULL, 1, 0);
+    load_content_governor(sys_dir, NULL, 1, 0, 0);
 
     load_mux("option");
 

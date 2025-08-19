@@ -265,9 +265,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtag_main(int nothing, char *name, char *dir, char *sys) {
-    (void) nothing;
-
+int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_dir, sizeof(rom_name), "%s", dir);
     snprintf(rom_system, sizeof(rom_name), "%s", sys);

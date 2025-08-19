@@ -233,7 +233,7 @@ void increase_option_value(lv_obj_t *element);
 
 void decrease_option_value(lv_obj_t *element);
 
-void load_assign(const char *rom, const char *dir, const char *sys, int forced);
+void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app);
 
 void load_mux(const char *value);
 
@@ -343,6 +343,8 @@ void kiosk_denied();
 void run_exec(const char *args[], size_t size, int background);
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line);
+
+char *get_application_line(char *dir, char *ext, size_t line);
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);

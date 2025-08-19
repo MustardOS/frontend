@@ -1,11 +1,10 @@
 #include "muxshare.h"
-#include "ui/ui_muxoption.h"
+#include "ui/ui_muxappcon.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 3
 
-static char rom_name[MAX_BUFFER_SIZE];
-static char rom_dir[MAX_BUFFER_SIZE];
-static char rom_system[MAX_BUFFER_SIZE];
+static char app_name[MAX_BUFFER_SIZE];
+static char app_dir[MAX_BUFFER_SIZE];
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -18,11 +17,8 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSearch_option,   lang.MUXOPTION.HELP.SEARCH},
-            {ui_lblCore_option,     lang.MUXOPTION.HELP.CORE},
-            {ui_lblGovernor_option, lang.MUXOPTION.HELP.GOV},
-            {ui_lblControl_option,  lang.MUXOPTION.HELP.CONTROL},
-            {ui_lblTag_option,      lang.MUXOPTION.HELP.TAG},
+            {ui_lblGovernor_appcon, lang.MUXOPTION.HELP.GOV},
+            {ui_lblControl_appcon,  lang.MUXOPTION.HELP.CONTROL},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -64,130 +60,35 @@ static void add_static_item(int index, const char *item_label, const char *item_
     lv_obj_move_to_index(ui_pnlInfoItem, index);
 }
 
-static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *get_dir,
-                               const char *opt_type, bool cap_label) {
+static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *opt_type) {
     const char *value = get_file;
 
-    if (!*value) value = get_dir;
-
-    if (!*value) {
-        value = !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE :
-                !strcmp(opt_type, "tag") ? lang.MUXOPTION.NOT_ASSIGNED :
-                "System";
-    }
+    if (!*value) value = !strcmp(opt_type, "gov") ? device.CPU.DEFAULT : "System";
 
     char cap_value[MAX_BUFFER_SIZE];
     snprintf(cap_value, sizeof(cap_value), "%s", value);
 
-    apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
+    apply_theme_list_value(&theme, ui_lblItemValue, str_capital_all(cap_value));
 }
 
 static void add_info_items(void) {
-    const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
-    const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
-    add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
+    const char *app_gov = get_application_line(app_dir, "gov", 1);
+    add_info_item_type(ui_lblGovernorValue_appcon, app_gov, "gov");
 
-    const char *gov_file = get_content_line(rom_dir, rom_name, "gov", 1);
-    const char *gov_dir = get_content_line(rom_dir, NULL, "gov", 1);
-    add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
-
-    const char *control_file = get_content_line(rom_dir, rom_name, "con", 1);
-    const char *control_dir = get_content_line(rom_dir, NULL, "con", 1);
-    add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "con", true);
-
-    const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
-    const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
-    add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
-}
-
-static struct json get_playtime_json(void) {
-    char fullpath[PATH_MAX];
-    snprintf(fullpath, sizeof(fullpath), "%s/%s", rom_dir, rom_name);
-
-    char playtime_data[MAX_BUFFER_SIZE];
-    snprintf(playtime_data, sizeof(playtime_data), INFO_ACT_PATH "/" PLAYTIME_DATA);
-
-    if (!file_exist(playtime_data)) {
-        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data)
-        return (struct json) {0};
-    } else {
-        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data)
-    }
-
-    char *json_str = read_all_char_from(playtime_data);
-    if (!json_valid(json_str)) {
-        free(json_str);
-        return (struct json) {0};
-    }
-
-    struct json fn_json = json_parse(json_str);
-
-    struct json playtime_json = json_object_get(fn_json, fullpath);
-    if (!json_exists(playtime_json)) return (struct json) {0};
-
-    free(json_str);
-
-    return playtime_json;
-}
-
-static char *get_time_played(void) {
-    struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
-
-    static char time_buffer[MAX_BUFFER_SIZE] = "0m";
-    int total_time = json_int(json_object_get(playtime_json, "total_time"));
-
-    int days = total_time / 86400;
-    int hours = (total_time % 86400) / 3600;
-    int minutes = (total_time % 3600) / 60;
-
-    if (days > 0)
-        snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm",
-                 days, hours, minutes);
-    else if (hours > 0)
-        snprintf(time_buffer, sizeof(time_buffer), "%dh %dm",
-                 hours, minutes);
-    else if (minutes > 0)
-        snprintf(time_buffer, sizeof(time_buffer), "%dm",
-                 minutes);
-    else
-        snprintf(time_buffer, sizeof(time_buffer), "%s",
-                 lang.GENERIC.UNKNOWN);
-
-    return time_buffer;
-}
-
-static char *get_launch_count(void) {
-    struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
-
-    static char launch_count[MAX_BUFFER_SIZE];
-    snprintf(launch_count, sizeof(launch_count), "%d",
-             json_int(json_object_get(playtime_json, "launches")));
-
-    return launch_count;
+    const char *app_con = get_application_line(app_dir, "con", 1);
+    add_info_item_type(ui_lblControlValue_appcon, app_con, "con");
 }
 
 static void init_navigation_group(void) {
     int line_index = 0;
 
-    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
-    add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
-    add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
-    add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
+    add_static_item(line_index++, lang.MUXOPTION.NAME, app_name, "rom", false);
     add_static_item(line_index, "", "", "", true);
 
-    INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
+    INIT_VALUE_ITEM(-1, appcon, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
+    INIT_VALUE_ITEM(-1, appcon, Control, lang.MUXOPTION.CONTROL, "control", "");
 
-    const char *dot = strrchr(rom_name, '.');
-    if ((dot && dot != rom_name)) {
-        INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
-        INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
-        INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
-        INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
-
-        add_info_items();
-    }
+    add_info_items();
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -240,11 +141,8 @@ static void handle_confirm(void) {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"search",   "search",   &kiosk.CONTENT.SEARCH},
-            {"core",     "assign",   &kiosk.CONTENT.CORE},
             {"governor", "governor", &kiosk.CONTENT.GOVERNOR},
             {"control",  "control",  &kiosk.CONTENT.CONTROL},
-            {"tag",      "tag",      &kiosk.CONTENT.TAG}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -317,9 +215,9 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-#define OPTION(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
-    OPTION_ELEMENTS
-#undef OPTION
+#define APPCON(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_appcon, UDATA);
+    APPCON_ELEMENTS
+#undef APPCON
 
     overlay_display();
 }
@@ -336,26 +234,17 @@ static void ui_refresh_task() {
     }
 }
 
-int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
+int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
     group_index = 0;
 
-    snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
-    snprintf(rom_system, sizeof(rom_system), "%s", sys);
+    snprintf(app_name, sizeof(app_name), "%s", name);
+    snprintf(app_dir, sizeof(app_dir), "%s", dir);
 
-    init_module("muxoption");
-
-    if (file_exist(OPTION_SKIP)) {
-        remove(OPTION_SKIP);
-        LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
-        close_input();
-        return 0;
-    }
-
+    init_module("muxappcon");
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
-    init_muxoption(ui_pnlContent);
+    init_muxappcon(ui_pnlContent);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);

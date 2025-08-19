@@ -201,7 +201,7 @@ static void handle_b(void) {
         fprintf(file, "%s", "");
         fclose(file);
     } else {
-        load_assign(rom_name, rom_dir, "none", 0);
+        load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, "none", 0, 0);
     }
 
     remove(MUOS_SAA_LOAD);
@@ -281,7 +281,7 @@ static void handle_a(void) {
 
     if (!strcasecmp(rom_system, "none")) {
         play_sound(SND_CONFIRM);
-        load_assign(rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0);
+        load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
     } else {
         handle_core_assignment("Single Core Assignment Triggered", SINGLE);
     }
@@ -372,7 +372,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxassign_main(int auto_assign, char *name, char *dir, char *sys) {
+int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_dir, sizeof(rom_name), "%s", dir);
     snprintf(rom_system, sizeof(rom_name), "%s", sys);
