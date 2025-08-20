@@ -823,6 +823,22 @@ int ui_common_check(void) {
     return 1;
 }
 
+static int blank_check(void) {
+    if (file_exist(MUX_BLANK)) {
+        is_blank = 1;
+
+        lv_obj_set_style_bg_opa(ui_blank, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_foreground(ui_blank);
+    } else {
+        is_blank = 0;
+
+        lv_obj_set_style_bg_opa(ui_blank, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_background(ui_blank);
+    }
+
+    return is_blank;
+}
+
 static void adjust_brightness(int direction) {
     if (!ui_common_check() || !progress_onscreen) return;
 
@@ -906,6 +922,8 @@ void ui_common_handle_idle(void) {
         char buffer[MAX_BUFFER_SIZE];
         CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
 
+        blank_check();
+
         lv_task_handler();
         return;
     }
@@ -932,19 +950,6 @@ void ui_common_handle_idle(void) {
         lv_obj_invalidate(ui_screen);
 
         lv_refr_now(NULL);
-    }
-
-    if (file_exist(MUX_BLANK) && !is_blank) {
-        is_blank = 1;
-        lv_obj_set_style_bg_opa(ui_blank, 255, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_move_foreground(ui_blank);
-    } else {
-        if (lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > 0) {
-            if (file_exist(MUX_BLANK)) remove(MUX_BLANK);
-            is_blank = 0;
-            lv_obj_set_style_bg_opa(ui_blank, 0, MU_OBJ_MAIN_DEFAULT);
-            lv_obj_move_background(ui_blank);
-        }
     }
 
     lv_task_handler();
