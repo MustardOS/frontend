@@ -312,16 +312,14 @@ static void init_navigation_group(void) {
     }
 
     if (!is_network_connected()) {
-        lv_obj_add_flag(ui_pnlIp_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlSsid_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlGateway_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlDns_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlSignal_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlChannel_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlAcTraffic_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_pnlTpTraffic_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
-
-        ui_count -= 7;
+        HIDE_VALUE_ITEM(netinfo, Ip);
+        HIDE_VALUE_ITEM(netinfo, Ssid);
+        HIDE_VALUE_ITEM(netinfo, Gateway);
+        HIDE_VALUE_ITEM(netinfo, Dns);
+        HIDE_VALUE_ITEM(netinfo, Signal);
+        HIDE_VALUE_ITEM(netinfo, Channel);
+        HIDE_VALUE_ITEM(netinfo, AcTraffic);
+        HIDE_VALUE_ITEM(netinfo, TpTraffic);
     }
 }
 

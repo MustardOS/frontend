@@ -106,14 +106,12 @@ static void init_navigation_group(void) {
     }
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetwork_connect, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlServices_connect, LV_OBJ_FLAG_HIDDEN);
-        ui_count -= 2;
+        HIDE_OPTION_ITEM(connect, Network);
+        HIDE_OPTION_ITEM(connect, Services);
     }
 
     if (!device.DEVICE.HAS_BLUETOOTH || true) { // TODO: remove true when bluetooth is implemented
-        lv_obj_add_flag(ui_pnlBluetooth_connect, LV_OBJ_FLAG_HIDDEN);
-        ui_count -= 1;
+        HIDE_OPTION_ITEM(connect, Bluetooth);
     }
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);

@@ -44,10 +44,7 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
-        lv_obj_add_flag(ui_pnlStorage_config, LV_OBJ_FLAG_HIDDEN);
-        ui_count -= 1;
-    }
+    if (!is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) HIDE_STATIC_ITEM(config, Storage);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }

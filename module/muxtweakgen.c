@@ -167,15 +167,8 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.DEVICE.HAS_HDMI) {
-        lv_obj_add_flag(ui_pnlHdmi_tweakgen, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 1;
-    }
-
-    if (!device.DEVICE.RGB) {
-        lv_obj_add_flag(ui_pnlRgb_tweakgen, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 1;
-    }
+    if (!device.DEVICE.HAS_HDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
+    if (!device.DEVICE.RGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }

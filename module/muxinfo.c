@@ -40,10 +40,7 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetInfo_info, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 1;
-    }
+    if (!device.DEVICE.HAS_NETWORK) HIDE_STATIC_ITEM(info, NetInfo);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }

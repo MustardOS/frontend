@@ -220,23 +220,14 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 1;
-    }
+    if (!device.DEVICE.HAS_NETWORK) HIDE_OPTION_ITEM(tweakadv, RetroWait);
+    if (!device.DEVICE.HAS_LID) HIDE_OPTION_ITEM(tweakadv, LidSwitch);
 
-    if (!device.DEVICE.HAS_LID) {
-        lv_obj_add_flag(ui_pnlLidSwitch_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 1;
-    }
+    // Removal of random theme because it is causing a number of issues
+    HIDE_OPTION_ITEM(tweakadv, Theme);
 
-    {
-        // Removal of random theme because it is causing a number of issues
-        lv_obj_add_flag(ui_pnlTheme_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
-        // Removal of verbose messages due to changes to muterm not playing ball
-        lv_obj_add_flag(ui_pnlVerbose_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 2;
-    }
+    // Removal of verbose messages due to changes to muterm not playing ball
+    HIDE_OPTION_ITEM(tweakadv, Verbose);
 }
 
 static void list_nav_move(int steps, int direction) {
