@@ -166,7 +166,7 @@ void load_lang(struct mux_lang *lang) {
     // muxcharge
     SPECIFIC_FIELD(lang->MUXCHARGE.BOOT, "Booting System - Please Wait…");
     SPECIFIC_FIELD(lang->MUXCHARGE.CAPACITY, "Capacity");
-    SPECIFIC_FIELD(lang->MUXCHARGE.POWER, "Press POWER button to continue booting…");
+    SPECIFIC_FIELD(lang->MUXCHARGE.START, "Press START button to continue booting…");
     SPECIFIC_FIELD(lang->MUXCHARGE.VOLTAGE, "Voltage");
 
     // muxcollect

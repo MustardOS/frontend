@@ -101,7 +101,7 @@ struct mux_lang {
     struct {
         char BOOT[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
-        char POWER[MAX_BUFFER_SIZE];
+        char START[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
     } MUXCHARGE;
 

@@ -41,8 +41,8 @@ static void set_brightness(int brightness) {
     load_config(&config);
 }
 
-static void handle_power_short(void) {
-    LOG_SUCCESS(mux_module, "Power Button Pressed")
+static void handle_start(void) {
+    LOG_SUCCESS(mux_module, "Start Button Pressed")
 
     if (is_blank) {
         int bright_value = read_line_int_from(CHARGER_BRIGHT, 1);
@@ -127,7 +127,7 @@ int main(void) {
     set_brightness(config.SETTINGS.GENERAL.BRIGHTNESS);
 
     lv_obj_set_user_data(ui_scrCharge_charge, mux_module);
-    lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.POWER);
+    lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.START);
 
     load_wallpaper(ui_scrCharge_charge, NULL, ui_pnlWall_charge, ui_imgWall_charge, GENERAL);
     load_font_text(ui_scrCharge_charge);
@@ -148,7 +148,7 @@ int main(void) {
     refresh_screen(ui_scrCharge_charge);
 
     mux_input_options input_opts = {
-            .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power_short},
+            .press_handler = {[MUX_INPUT_START] = handle_start},
             .idle_handler = handle_idle
     };
     init_input(&input_opts, false);
