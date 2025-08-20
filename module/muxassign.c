@@ -4,11 +4,15 @@ static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
+static lv_obj_t *ui_lblCoreDownloader;
+
 static void show_help(void) {
     show_info_box(lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP, 0);
 }
 
 static void create_system_items(void) {
+    add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
+    
     DIR *ad;
     struct dirent *af;
 
@@ -41,7 +45,7 @@ static void create_system_items(void) {
         lv_obj_set_user_data(ui_lblSystemItem, items[i].name);
 
         lv_obj_t *ui_lblSystemItemGlyph = lv_img_create(ui_pnlSystem);
-        apply_theme_list_glyph(&theme, ui_lblSystemItemGlyph, mux_module, "system");
+        apply_theme_list_glyph(&theme, ui_lblSystemItemGlyph, mux_module, items[i].content_type == MENU ? "download" : "system");
 
         lv_group_add_obj(ui_group, ui_lblSystemItem);
         lv_group_add_obj(ui_group_glyph, ui_lblSystemItemGlyph);
@@ -49,6 +53,8 @@ static void create_system_items(void) {
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblSystemItem, ui_lblSystemItemGlyph, items[i].name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblSystemItem);
+
+        if (items[i].content_type == MENU) ui_lblCoreDownloader = ui_lblSystemItem;
     }
 
     if (ui_count > 0) {
@@ -279,11 +285,16 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
 static void handle_a(void) {
     if (msgbox_active) return;
 
-    if (!strcasecmp(rom_system, "none")) {
-        play_sound(SND_CONFIRM);
-        load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
+    if (lv_group_get_focused(ui_group) == ui_lblCoreDownloader) {
+        load_assign(MUOS_ASS_LOAD "_temp", rom_name, rom_dir, "none", 0, 0);
+        load_mux("coredown");
     } else {
-        handle_core_assignment("Single Core Assignment Triggered", SINGLE);
+        if (!strcasecmp(rom_system, "none")) {
+            play_sound(SND_CONFIRM);
+            load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
+        } else {
+            handle_core_assignment("Single Core Assignment Triggered", SINGLE);
+        }
     }
 
     close_input();

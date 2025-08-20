@@ -206,6 +206,11 @@ static void module_assign(void) {
     module_run("option", muxassign_main);
 }
 
+static void module_download(void) {
+    load_mux("assign");
+    muxdownload_main("core");
+}
+
 static void module_governor(void) {
     module_run("option", muxgov_main);
 }
@@ -319,6 +324,7 @@ static const ModuleEntry modules[] = {
         {"reboot",     NULL, NULL, NULL, module_reboot},
         {"shutdown",   NULL, NULL, NULL, module_shutdown},
         {"assign",     NULL, NULL, NULL, module_assign},
+        {"coredown",   NULL, NULL, NULL, module_download},
         {"governor",   NULL, NULL, NULL, module_governor},
         {"control",    NULL, NULL, NULL, module_control},
         {"tag",        NULL, NULL, NULL, module_tag},

@@ -14,6 +14,7 @@ typedef struct {
     char *sort_name;
     content_type content_type;
     char *extra_data;
+    char *help;
     char *glyph_icon;
     char *use_module;
 } content_item;

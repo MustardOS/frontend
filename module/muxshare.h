@@ -126,6 +126,8 @@ int muxdanger_main();
 
 int muxdevice_main();
 
+int muxdownload_main(char *type);
+
 int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app);
 
 int muxhdmi_main();

@@ -81,6 +81,7 @@
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
 
 #define MUOS_APPS_PATH "MUOS/application"
+#define MUOS_ARCH_PATH "ARCHIVE"
 #define MUOS_TASK_PATH "MUOS/task"
 #define MUOS_INFO_PATH "MUOS/info"
 
@@ -142,6 +143,7 @@
 #define APP_LAUNCHER    "mux_launch.sh"
 
 #define THEME_DATA   "theme_data.json"
+#define EXTRA_DATA   "extra_data.json"
 
 #define FONT_PANEL_FOLDER  "panel"
 #define FONT_HEADER_FOLDER "header"
