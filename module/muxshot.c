@@ -119,12 +119,12 @@ static void handle_confirm(void) {
 
     if (is_fullscreen) {
         is_fullscreen = 0;
-        lv_obj_set_style_img_opa(ui_imgScreenshot, 25, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_opa(ui_imgScreenshot, 25, MU_OBJ_MAIN_DEFAULT);
         lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
     } else {
         is_fullscreen = 1;
-        lv_obj_set_style_img_opa(ui_imgScreenshot, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_opa(ui_imgScreenshot, 255, MU_OBJ_MAIN_DEFAULT);
         lv_obj_add_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
     }
@@ -196,7 +196,7 @@ static void init_elements(void) {
     ui_imgScreenshot = lv_img_create(ui_screen);
     lv_img_set_pivot(ui_imgScreenshot, 0, 0);
     lv_img_set_src(ui_imgScreenshot, &ui_image_Nothing);
-    lv_obj_set_style_img_opa(ui_imgScreenshot, 25, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui_imgScreenshot, 25, MU_OBJ_MAIN_DEFAULT);
 
     overlay_display();
 }

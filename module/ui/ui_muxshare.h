@@ -1,20 +1,20 @@
 #pragma once
 
-#define CREATE_OPTION_ITEM(MODULE, NAME) do {                                                        \
-        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                      \
-        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                          \
-        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                              \
-        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                            \
-        ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);                       \
-        lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                                          \
-        lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+#define CREATE_OPTION_ITEM(MODULE, NAME) do {                                       \
+        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                     \
+        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);         \
+        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                             \
+        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);           \
+        ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);      \
+        lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                         \
+        lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, 0, MU_OBJ_INDI_DEFAULT); \
     } while (0)
 
-#define CREATE_STATIC_ITEM(MODULE, NAME) do {                                                        \
-        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                      \
-        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                          \
-        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                              \
-        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                            \
+#define CREATE_STATIC_ITEM(MODULE, NAME) do {                               \
+        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);             \
+        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
+        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                     \
+        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);   \
     } while (0)
 
 #define CREATE_VALUE_ITEM(MODULE, NAME) do {                                     \
@@ -26,23 +26,23 @@
         lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                     \
     } while (0)
 
-#define CREATE_BAR_ITEM(MODULE, NAME) do {                                                                                           \
-    ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                                                          \
-    ui_pnl##NAME##Bar_##MODULE = lv_obj_create(ui_pnlContent);                                                                       \
-    ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                                              \
-    ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                                                                \
-    ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                                         \
-    ui_bar##NAME##_##MODULE = lv_bar_create(ui_pnl##NAME##Bar_##MODULE);                                                             \
-    lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                                                                  \
-    lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                                                                             \
-    lv_obj_set_height(ui_pnl##NAME##Bar_##MODULE, 10);                                                                               \
-    lv_obj_set_width(ui_pnl##NAME##Bar_##MODULE, lv_pct(100));                                                                       \
-    lv_obj_set_width(ui_bar##NAME##_##MODULE, lv_pct(100));                                                                          \
-    lv_bar_set_range(ui_bar##NAME##_##MODULE, 0, device.MUX.WIDTH);                                                                  \
-    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);      \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, LV_PART_MAIN | LV_STATE_DEFAULT);                                           \
-    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_INDICATOR | LV_STATE_DEFAULT); \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);                                     \
+#define CREATE_BAR_ITEM(MODULE, NAME) do {                                                                          \
+    ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                                         \
+    ui_pnl##NAME##Bar_##MODULE = lv_obj_create(ui_pnlContent);                                                      \
+    ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                             \
+    ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                                               \
+    ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                        \
+    ui_bar##NAME##_##MODULE = lv_bar_create(ui_pnl##NAME##Bar_##MODULE);                                            \
+    lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                                                 \
+    lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                                                            \
+    lv_obj_set_height(ui_pnl##NAME##Bar_##MODULE, 10);                                                              \
+    lv_obj_set_width(ui_pnl##NAME##Bar_##MODULE, lv_pct(100));                                                      \
+    lv_obj_set_width(ui_bar##NAME##_##MODULE, lv_pct(100));                                                         \
+    lv_bar_set_range(ui_bar##NAME##_##MODULE, 0, device.MUX.WIDTH);                                                 \
+    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), MU_OBJ_MAIN_DEFAULT); \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, MU_OBJ_MAIN_DEFAULT);                                      \
+    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), MU_OBJ_INDI_DEFAULT); \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, MU_OBJ_INDI_DEFAULT);                                     \
 } while (0)
 
 #define APPCON_ELEMENTS          \

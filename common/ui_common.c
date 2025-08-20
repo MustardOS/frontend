@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "img/nothing.h"
 #include "common.h"
+#include "options.h"
 #include "language.h"
 #include "config.h"
 #include "input.h"
@@ -245,15 +246,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_blank, device->MUX.WIDTH);
     lv_obj_set_height(ui_blank, device->MUX.HEIGHT);
     lv_obj_set_align(ui_blank, LV_ALIGN_CENTER);
-    lv_obj_set_style_bg_color(ui_blank, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_blank, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_blank, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_screen = lv_obj_create(ui_screen_container);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
-                                       ? theme->SYSTEM.BACKGROUND_ALPHA : 0,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
+                                       ? theme->SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_width(ui_screen, device->MUX.WIDTH);
     lv_obj_set_height(ui_screen, device->MUX.HEIGHT);
@@ -267,13 +267,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                                   LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlWall, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlWall, LV_DIR_VER);
-    lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlWall, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
@@ -299,24 +299,24 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_COLUMN);
     if (theme->MISC.CONTENT.ALIGNMENT == 1) {
         lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-        lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT * 2, MU_OBJ_MAIN_DEFAULT);
     } else if (theme->MISC.CONTENT.ALIGNMENT == 2) {
         lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
-        lv_obj_set_style_pad_right(ui_pnlContent, -theme->MISC.CONTENT.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_pnlContent, -theme->MISC.CONTENT.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
     } else {
         lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-        lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
     }
     lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlContent, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlContent, LV_DIR_VER);
-    lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlContent, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
@@ -333,15 +333,15 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                                  LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlBox, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlBox, LV_DIR_VER);
-    lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlBox, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
@@ -353,15 +353,15 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
     lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_clip_corner(ui_imgBox, true, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(ui_imgBox, theme->IMAGE_LIST.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_opa(ui_imgBox, theme->IMAGE_LIST.ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor(ui_imgBox, lv_color_hex(theme->IMAGE_LIST.RECOLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_imgBox, theme->IMAGE_LIST.RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_imgBox, theme->IMAGE_LIST.PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_imgBox, theme->IMAGE_LIST.PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_imgBox, theme->IMAGE_LIST.PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_imgBox, theme->IMAGE_LIST.PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui_imgBox, true, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(ui_imgBox, theme->IMAGE_LIST.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_opa(ui_imgBox, theme->IMAGE_LIST.ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_imgBox, lv_color_hex(theme->IMAGE_LIST.RECOLOUR), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_imgBox, theme->IMAGE_LIST.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_imgBox, theme->IMAGE_LIST.PAD_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_imgBox, theme->IMAGE_LIST.PAD_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_imgBox, theme->IMAGE_LIST.PAD_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_imgBox, theme->IMAGE_LIST.PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHeader = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlHeader, device->MUX.WIDTH);
@@ -370,14 +370,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_flow(ui_pnlHeader, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlHeader, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHeader, lv_color_hex(theme->HEADER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHeader, theme->HEADER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHeader, lv_color_hex(theme->HEADER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHeader, theme->HEADER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblDatetime = lv_label_create(ui_pnlHeader);
     lv_obj_set_width(ui_lblDatetime, device->MUX.WIDTH);
@@ -385,14 +385,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_long_mode(ui_lblDatetime, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblDatetime, "");
     lv_obj_clear_flag(ui_lblDatetime, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_align(ui_lblDatetime, theme->DATETIME.ALIGN, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblDatetime, lv_color_hex(theme->DATETIME.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblDatetime, theme->DATETIME.ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblDatetime, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblDatetime, theme->DATETIME.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblDatetime, theme->DATETIME.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblDatetime, theme->FONT.HEADER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblDatetime, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblDatetime, theme->DATETIME.ALIGN, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblDatetime, lv_color_hex(theme->DATETIME.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblDatetime, theme->DATETIME.ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblDatetime, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblDatetime, theme->DATETIME.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblDatetime, theme->DATETIME.PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblDatetime, theme->FONT.HEADER_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblDatetime, theme->FONT.HEADER_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblTitle = lv_label_create(ui_pnlHeader);
     lv_obj_set_width(ui_lblTitle, device->MUX.WIDTH);
@@ -400,13 +400,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblTitle, LV_ALIGN_TOP_MID);
     lv_label_set_long_mode(ui_lblTitle, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblTitle, title);
-    lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(theme->HEADER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblTitle, theme->HEADER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblTitle, theme->HEADER.TEXT_ALIGN, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblTitle, theme->HEADER.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblTitle, theme->HEADER.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblTitle, theme->FONT.HEADER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblTitle, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(theme->HEADER.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblTitle, theme->HEADER.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblTitle, theme->HEADER.TEXT_ALIGN, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblTitle, theme->HEADER.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblTitle, theme->HEADER.PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblTitle, theme->FONT.HEADER_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblTitle, theme->FONT.HEADER_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
 
     ui_conGlyphs = lv_obj_create(ui_pnlHeader);
     lv_obj_set_width(ui_conGlyphs, device->MUX.WIDTH);
@@ -415,10 +415,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_flow(ui_conGlyphs, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_conGlyphs, theme->STATUS.ALIGN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_conGlyphs, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_pad_left(ui_conGlyphs, theme->STATUS.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_conGlyphs, theme->STATUS.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_conGlyphs, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_conGlyphs, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_conGlyphs, theme->STATUS.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_conGlyphs, theme->STATUS.PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_conGlyphs, theme->FONT.HEADER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_conGlyphs, theme->FONT.HEADER_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
 
     ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
     //update_bluetooth_status(ui_staBluetooth, theme);
@@ -438,23 +438,23 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_flow(ui_pnlFooter, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlFooter, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlFooter, lv_color_hex(theme->FOOTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlFooter, theme->FOOTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlFooter, lv_color_hex(theme->FOOTER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlFooter, theme->FOOTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_flex_align_t e_align;
     switch (theme->NAV.ALIGNMENT) {
         case 1:
             e_align = LV_FLEX_ALIGN_CENTER;
             break;
         case 2:
-            lv_obj_set_style_pad_right(ui_pnlFooter, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_pnlFooter, 12, MU_OBJ_MAIN_DEFAULT);
             e_align = LV_FLEX_ALIGN_END;
             break;
         case 3:
@@ -467,11 +467,11 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
             e_align = LV_FLEX_ALIGN_SPACE_EVENLY;
             break;
         default:
-            lv_obj_set_style_pad_left(ui_pnlFooter, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(ui_pnlFooter, 12, MU_OBJ_MAIN_DEFAULT);
             e_align = LV_FLEX_ALIGN_START;
             break;
     }
-    lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblNavLRGlyph = create_footer_glyph(ui_pnlFooter, theme, "lr", theme->NAV.LR);
     ui_lblNavLR = create_footer_text(ui_pnlFooter, theme, theme->NAV.LR.TEXT, theme->NAV.LR.TEXT_ALPHA);
@@ -508,26 +508,25 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
     lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblScreenMessage, theme->LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblScreenMessage, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblScreenMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblScreenMessage, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_lblScreenMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_lblScreenMessage, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_lblScreenMessage, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblScreenMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblScreenMessage, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblScreenMessage, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblScreenMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblScreenMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblScreenMessage, theme->FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblScreenMessage, theme->FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(0xF8E008), LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblScreenMessage, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblScreenMessage, theme->LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblScreenMessage, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblScreenMessage, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblScreenMessage, 200, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblScreenMessage, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblScreenMessage, 5, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblScreenMessage, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblScreenMessage, theme->FONT.LIST_PAD_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblScreenMessage, theme->FONT.LIST_PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_text_opa(ui_lblScreenMessage, 255, MU_OBJ_MAIN_FOCUS);
 
     ui_pnlMessage = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlMessage, device->MUX.WIDTH - 25);
@@ -539,13 +538,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_align(ui_pnlMessage, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlMessage, theme->MESSAGE.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlMessage, lv_color_hex(theme->MESSAGE.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlMessage, theme->MESSAGE.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlMessage, lv_color_hex(theme->MESSAGE.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlMessage, theme->MESSAGE.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlMessage, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlMessage, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlMessage, theme->MESSAGE.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlMessage, lv_color_hex(theme->MESSAGE.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlMessage, theme->MESSAGE.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlMessage, lv_color_hex(theme->MESSAGE.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlMessage, theme->MESSAGE.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlMessage, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlMessage, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblMessage = lv_label_create(ui_pnlMessage);
     lv_obj_set_width(ui_lblMessage, device->MUX.WIDTH - 50);
@@ -553,12 +552,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblMessage, "");
     lv_label_set_recolor(ui_lblMessage, "true");
-    lv_obj_set_style_text_color(ui_lblMessage, lv_color_hex(theme->MESSAGE.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblMessage, theme->MESSAGE.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblMessage, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblMessage, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblMessage, theme->FONT.MESSAGE_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblMessage, theme->FONT.MESSAGE_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblMessage, lv_color_hex(theme->MESSAGE.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblMessage, theme->MESSAGE.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblMessage, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblMessage, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblMessage, theme->FONT.MESSAGE_PAD_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblMessage, theme->FONT.MESSAGE_PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelp = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlHelp, device->MUX.WIDTH);
@@ -566,25 +565,25 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlHelp, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlHelp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHelp, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelp, 155, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlHelp, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlHelp, 155, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHelp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHelp, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHelp, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelp, 155, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlHelp, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlHelp, 155, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlHelp, 1, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpMessage = lv_obj_create(ui_pnlHelp);
     lv_obj_set_width(ui_pnlHelpMessage, device->MUX.WIDTH * .9);
     lv_obj_set_height(ui_pnlHelpMessage, device->MUX.HEIGHT * .9);
     lv_obj_set_align(ui_pnlHelpMessage, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlHelpMessage, theme->HELP.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHelpMessage, lv_color_hex(theme->HELP.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpMessage, theme->HELP.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlHelpMessage, lv_color_hex(theme->HELP.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlHelpMessage, theme->HELP.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHelpMessage, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlHelpMessage, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHelpMessage, theme->HELP.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHelpMessage, lv_color_hex(theme->HELP.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpMessage, theme->HELP.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlHelpMessage, lv_color_hex(theme->HELP.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlHelpMessage, theme->HELP.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlHelpMessage, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlHelpMessage, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpHeader = lv_label_create(ui_pnlHelpMessage);
     lv_obj_set_width(ui_lblHelpHeader, device->MUX.WIDTH * .9 - 60);
@@ -592,8 +591,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_align(ui_lblHelpHeader, LV_ALIGN_TOP_LEFT, 15, 15);
     lv_label_set_long_mode(ui_lblHelpHeader, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblHelpHeader, "");
-    lv_obj_set_style_text_color(ui_lblHelpHeader, lv_color_hex(theme->HELP.TITLE), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpHeader, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHelpHeader, lv_color_hex(theme->HELP.TITLE), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHelpHeader, 255, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpContent = lv_obj_create(ui_pnlHelp);
     lv_obj_set_align(ui_pnlHelpContent, LV_ALIGN_CENTER);
@@ -609,10 +608,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblHelpContent, LV_ALIGN_TOP_LEFT);
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_WRAP);
     lv_label_set_text(ui_lblHelpContent, "");
-    lv_obj_set_style_text_color(ui_lblHelpContent, lv_color_hex(theme->HELP.CONTENT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpContent, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblHelpContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblHelpContent, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHelpContent, lv_color_hex(theme->HELP.CONTENT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHelpContent, 255, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui_lblHelpContent, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblHelpContent, 5, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpExtra = lv_obj_create(ui_pnlHelpMessage);
     lv_obj_set_width(ui_pnlHelpExtra, device->MUX.WIDTH * .9 - 60);
@@ -624,10 +623,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                                        LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE |
                                        LV_OBJ_FLAG_SCROLL_ELASTIC |
                                        LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
-    lv_obj_set_style_radius(ui_pnlHelpExtra, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHelpExtra, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpExtra, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlHelpExtra, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHelpExtra, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHelpExtra, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpExtra, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlHelpExtra, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
                                                    theme->NAV.A);
@@ -641,13 +640,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlHelpPreview, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlHelpPreview, theme->HELP.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHelpPreview, lv_color_hex(theme->HELP.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpPreview, theme->HELP.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlHelpPreview, lv_color_hex(theme->HELP.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlHelpPreview, theme->HELP.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHelpPreview, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlHelpPreview, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHelpPreview, theme->HELP.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHelpPreview, lv_color_hex(theme->HELP.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpPreview, theme->HELP.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlHelpPreview, lv_color_hex(theme->HELP.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlHelpPreview, theme->HELP.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlHelpPreview, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlHelpPreview, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpPreviewHeader = lv_label_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_lblHelpPreviewHeader, device->MUX.WIDTH * .9 - 60);
@@ -655,19 +654,18 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_align(ui_lblHelpPreviewHeader, LV_ALIGN_TOP_LEFT, 15, 15);
     lv_label_set_long_mode(ui_lblHelpPreviewHeader, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblHelpPreviewHeader, "");
-    lv_obj_set_style_text_color(ui_lblHelpPreviewHeader, lv_color_hex(theme->HELP.TITLE),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpPreviewHeader, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHelpPreviewHeader, lv_color_hex(theme->HELP.TITLE), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHelpPreviewHeader, 255, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpPreviewImage = lv_obj_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_pnlHelpPreviewImage, device->MUX.WIDTH * .9 - 60);
     lv_obj_set_height(ui_pnlHelpPreviewImage, device->MUX.HEIGHT * .9 - 120);
     lv_obj_set_align(ui_pnlHelpPreviewImage, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHelpPreviewImage, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHelpPreviewImage, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_imgHelpPreviewImage = lv_img_create(ui_pnlHelpPreviewImage);
     lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
@@ -676,15 +674,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_imgHelpPreviewImage, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_imgHelpPreviewImage, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_imgHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_clip_corner(ui_imgHelpPreviewImage, true, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_imgHelpPreviewImage, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_imgHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_clip_corner(ui_imgHelpPreviewImage, true, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor(ui_imgHelpPreviewImage, lv_color_hex(theme->IMAGE_PREVIEW.RECOLOUR),
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RECOLOUR_ALPHA,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+                                 MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpPreviewInfo = lv_obj_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_pnlHelpPreviewInfo, device->MUX.WIDTH * .9 - 60);
@@ -693,10 +690,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_flow(ui_pnlHelpPreviewInfo, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlHelpPreviewInfo, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpPreviewInfo, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlHelpPreviewInfo, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlHelpPreviewInfo, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlHelpPreviewInfo, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme,
                                                      (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
@@ -717,23 +714,18 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                           LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BACKGROUND_ALPHA,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BORDER),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlProgressBrightness, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlProgressBrightness, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlProgressBrightness, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlProgressBrightness, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_icoProgressBrightness = lv_img_create(ui_pnlProgressBrightness);
     lv_obj_set_align(ui_icoProgressBrightness, LV_ALIGN_CENTER);
-    lv_obj_set_style_img_recolor(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON),
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_icoProgressBrightness, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_icoProgressBrightness, theme->BAR.ICON_ALPHA, MU_OBJ_MAIN_DEFAULT);
     update_glyph(ui_icoProgressBrightness, "bar", "bright_0");
 
     current_brightness = config.SETTINGS.GENERAL.BRIGHTNESS;
@@ -744,16 +736,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_barProgressBrightness, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressBrightness, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressBrightness, LV_ALIGN_CENTER);
-    lv_obj_set_style_radius(ui_barProgressBrightness, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_barProgressBrightness, theme->BAR.PROGRESS_RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(ui_barProgressBrightness, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+                              MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(ui_barProgressBrightness, 0, MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
-                              LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
-                            LV_PART_INDICATOR | LV_STATE_DEFAULT);
+                              MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, MU_OBJ_INDI_DEFAULT);
 
     ui_pnlProgressVolume = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlProgressVolume, theme->BAR.PANEL_WIDTH);
@@ -765,21 +755,18 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_align(ui_pnlProgressVolume, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnlProgressVolume, theme->BAR.PANEL_BORDER_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlProgressVolume, theme->BAR.PANEL_BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BORDER),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlProgressVolume, theme->BAR.PANEL_BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlProgressVolume, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlProgressVolume, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlProgressVolume, theme->BAR.PANEL_BORDER_RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlProgressVolume, theme->BAR.PANEL_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlProgressVolume, theme->BAR.PANEL_BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlProgressVolume, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_pnlProgressVolume, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_icoProgressVolume = lv_img_create(ui_pnlProgressVolume);
     lv_obj_set_align(ui_icoProgressVolume, LV_ALIGN_CENTER);
-    lv_obj_set_style_img_recolor(ui_icoProgressVolume, lv_color_hex(theme->BAR.ICON),
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_icoProgressVolume, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_icoProgressVolume, lv_color_hex(theme->BAR.ICON), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_icoProgressVolume, theme->BAR.ICON_ALPHA, MU_OBJ_MAIN_DEFAULT);
     update_glyph(ui_icoProgressVolume, "bar", "volume_0");
 
     current_volume = config.SETTINGS.GENERAL.VOLUME;
@@ -790,16 +777,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_barProgressVolume, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressVolume, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
-    lv_obj_set_style_radius(ui_barProgressVolume, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_barProgressVolume, theme->BAR.PROGRESS_RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(ui_barProgressVolume, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+                              MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(ui_barProgressVolume, 0, MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
-                              LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
-                            LV_PART_INDICATOR | LV_STATE_DEFAULT);
+                              MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, MU_OBJ_INDI_DEFAULT);
 
     ui_pnlDownload = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlDownload, device->MUX.WIDTH);
@@ -807,31 +792,26 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_flow(ui_pnlDownload, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui_pnlDownload, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_row(ui_pnlDownload, 10, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(ui_pnlDownload, lv_color_hex(0x000000),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlDownload, 230, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_opa(ui_pnlDownload, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlDownload, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlDownload, 230, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_opa(ui_pnlDownload, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_barDownload = lv_bar_create(ui_pnlDownload);
     lv_obj_set_size(ui_barDownload, 400, 40);
-    lv_obj_set_style_radius(ui_barDownload, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barDownload, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barDownload, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(ui_barDownload, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barDownload, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
-                              LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barDownload, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
-                            LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_barDownload, theme->BAR.PROGRESS_RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barDownload, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barDownload, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(ui_barDownload, 0, MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barDownload, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND), MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barDownload, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, MU_OBJ_INDI_DEFAULT);
     lv_bar_set_value(ui_barDownload, 0, LV_ANIM_OFF);
 
     ui_lblDownload = lv_label_create(ui_pnlDownload);
     lv_label_set_text(ui_lblDownload, "");
     lv_obj_set_width(ui_lblDownload, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblDownload, LV_SIZE_CONTENT);
-    lv_obj_set_style_text_color(ui_lblDownload, lv_color_hex(theme->MESSAGE.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblDownload, theme->MESSAGE.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblDownload, lv_color_hex(theme->MESSAGE.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblDownload, theme->MESSAGE.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     lv_disp_load_scr(ui_screen_container);
 }
@@ -954,26 +934,15 @@ void ui_common_handle_idle(void) {
         lv_refr_now(NULL);
     }
 
-    if (file_exist("/tmp/mux_blank")) {
-        if (!is_blank) {
-            char buffer[MAX_BUFFER_SIZE];
-            CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
-
-            if (config.SETTINGS.GENERAL.BRIGHTNESS <= 0) {
-                is_blank = 1;
-
-                lv_obj_set_style_bg_opa(ui_blank, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_move_foreground(ui_blank);
-            }
-        } else {
-            is_blank = 0;
-            remove("/tmp/mux_blank");
-        }
+    if (file_exist(MUX_BLANK) && !is_blank) {
+        is_blank = 1;
+        lv_obj_set_style_bg_opa(ui_blank, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_foreground(ui_blank);
     } else {
-        is_blank = 0;
-
-        if (lv_obj_get_style_bg_opa(ui_blank, LV_PART_MAIN | LV_STATE_DEFAULT) > 0) {
-            lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        if (lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > 0) {
+            if (file_exist(MUX_BLANK)) remove(MUX_BLANK);
+            is_blank = 0;
+            lv_obj_set_style_bg_opa(ui_blank, 0, MU_OBJ_MAIN_DEFAULT);
             lv_obj_move_background(ui_blank);
         }
     }
@@ -987,10 +956,10 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
-    lv_obj_set_style_pad_left(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_glyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_glyph, 6, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_glyph, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.HEADER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
     return ui_glyph;
 }
 
@@ -1020,17 +989,17 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
     if (file_exist(footer_image_path) && nav_footer_glyph.GLYPH_ALPHA > 0) lv_img_set_src(ui_glyph, footer_image_embed);
-    lv_obj_set_style_img_opa(ui_glyph, nav_footer_glyph.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui_glyph, nav_footer_glyph.GLYPH_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_glyph, 6, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
-    lv_obj_set_style_pad_left(ui_glyph, theme->NAV.SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_glyph, theme->NAV.SPACING, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_set_style_img_recolor(ui_glyph, lv_color_hex(nav_footer_glyph.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_glyph, nav_footer_glyph.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_glyph, lv_color_hex(nav_footer_glyph.GLYPH), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_glyph, nav_footer_glyph.GLYPH_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     if (nav_footer_glyph.GLYPH_ALPHA == 0) lv_obj_set_width(ui_glyph, 0);
     lv_obj_add_flag(ui_glyph, LV_OBJ_FLAG_HIDDEN);
@@ -1044,12 +1013,12 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     lv_obj_set_align(ui_lblNavText, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavText, "");
     lv_label_set_recolor(ui_lblNavText, "true");
-    lv_obj_set_style_text_color(ui_lblNavText, lv_color_hex(text_color), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavText, text_alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavText, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavText, theme->NAV.SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavText, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavText, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblNavText, lv_color_hex(text_color), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblNavText, text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblNavText, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblNavText, theme->NAV.SPACING, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblNavText, theme->FONT.FOOTER_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavText, theme->FONT.FOOTER_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
     if (text_alpha == 0) lv_obj_set_width(ui_lblNavText, 0);
     lv_obj_add_flag(ui_lblNavText, LV_OBJ_FLAG_HIDDEN);
     return ui_lblNavText;
@@ -1095,20 +1064,14 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
     char image_embed[MAX_BUFFER_SIZE];
 
     if (str_startswith(battery_glyph_name, "capacity_charging_")) {
-        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE),
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.ACTIVE_ALPHA,
-                                         LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.ACTIVE_ALPHA, MU_OBJ_MAIN_DEFAULT);
     } else if (battery_capacity <= 15) {
-        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.LOW),
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.LOW_ALPHA,
-                                         LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.LOW), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.LOW_ALPHA, MU_OBJ_MAIN_DEFAULT);
     } else {
-        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA,
-                                         LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA, MU_OBJ_MAIN_DEFAULT);
     }
 
     if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", battery_glyph_name, image_path,
@@ -1152,8 +1115,8 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
         status_style.status = "normal";
     }
 
-    lv_obj_set_style_img_recolor(ui_staNetwork, status_style.color, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_staNetwork, status_style.alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_staNetwork, status_style.color, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_staNetwork, status_style.alpha, MU_OBJ_MAIN_DEFAULT);
 
     char network_status_filename[20];
     snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", status_style.status);
@@ -1171,7 +1134,7 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
 
 static void hide_message(lv_timer_t *msg_timer) {
     lv_obj_t *target_obj = (lv_obj_t *) msg_timer->user_data;
-    lv_obj_set_style_opa(target_obj, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_opa(target_obj, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
     if (target_obj == ui_pnlMessage && toast_timer == msg_timer) {
         toast_timer = NULL;
@@ -1183,7 +1146,7 @@ static void hide_message(lv_timer_t *msg_timer) {
 static void show_message(lv_obj_t *panel, lv_obj_t *label, const char *msg, uint32_t delay, lv_timer_t **msg_timer) {
     lv_label_set_text(label, msg);
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_set_style_opa(panel, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_opa(panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
     if (*msg_timer != NULL) {
         lv_timer_del(*msg_timer);
@@ -1270,7 +1233,7 @@ static void fade_black(lv_obj_t *ui_screen, int start_opa, int end_opa, int step
 
     lv_obj_set_size(black, device.MUX.WIDTH, device.MUX.HEIGHT);
     lv_obj_set_style_bg_color(black, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(black, start_opa, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(black, start_opa, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_center(black);
     lv_obj_move_foreground(black);
@@ -1278,7 +1241,7 @@ static void fade_black(lv_obj_t *ui_screen, int start_opa, int end_opa, int step
     if (start_opa < end_opa) unload_image_animation();
 
     for (int i = start_opa; (step > 0) ? (i <= end_opa) : (i >= end_opa); i += step) {
-        lv_obj_set_style_bg_opa(black, i, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(black, i, MU_OBJ_MAIN_DEFAULT);
         lv_task_handler();
         usleep(128);
     }
@@ -1309,8 +1272,8 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     }
     row_dsc[row_count] = LV_GRID_TEMPLATE_LAST;
 
-    lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
                     theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
     //add padding to the bottom to make sure grid panel scrolls correctly
@@ -1319,8 +1282,8 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
     lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
-    lv_obj_set_style_bg_color(ui_pnlGrid, lv_color_hex(theme->GRID.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlGrid, theme->GRID.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlGrid, lv_color_hex(theme->GRID.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlGrid, theme->GRID.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_scroll_dir(ui_pnlGrid, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(ui_pnlGrid, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_snap_y(ui_pnlGrid, LV_SCROLL_SNAP_NONE);
@@ -1330,40 +1293,40 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
                  theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X, theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
     lv_label_set_long_mode(ui_lblGridCurrentItem, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT
                                                                                       : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
     lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT
                                                                                         : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
     lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
+                            MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+                                  MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
+                              MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
+                            MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+                                  MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_text_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA,
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
+                              MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT,
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
+                              MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
+                               MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP,
-                             LV_PART_MAIN | LV_STATE_DEFAULT);
+                             MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                MU_OBJ_MAIN_DEFAULT);
 }
 
 void grid_item_focus_event_cb(lv_event_t *e) {
@@ -1378,9 +1341,9 @@ void grid_item_focus_event_cb(lv_event_t *e) {
     if (!cell_image_focused) return;
 
     if (lv_event_get_code(e) == LV_EVENT_FOCUSED) {
-        lv_obj_set_style_img_opa(cell_image_focused, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_opa(cell_image_focused, 255, MU_OBJ_MAIN_DEFAULT);
     } else if (lv_event_get_code(e) == LV_EVENT_DEFOCUSED) {
-        lv_obj_set_style_img_opa(cell_image_focused, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
     }
 }
 
@@ -1388,8 +1351,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
                       int16_t col, int16_t row, char *item_image_path, char *item_image_focused_path, char *item_text) {
     lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
-    lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
 
     static lv_style_t style;
     lv_style_init(&style);
@@ -1399,61 +1362,44 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_style_set_shadow_ofs_y(&style, theme->GRID.CELL.SHADOW_Y_OFFSET);
     lv_obj_add_style(cell_pnl, &style, 0);
 
-    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR),
-                                   LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BORDER),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                   MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(cell_label, theme->GRID.CELL.TEXT_LINE_SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_line_space(cell_label, theme->GRID.CELL.TEXT_LINE_SPACING, MU_OBJ_MAIN_DEFAULT);
 
 
-    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA,
-                             LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR),
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+                                 MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER), MU_OBJ_MAIN_FOCUS);
 
     lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR),
-                                   LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START,
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP,
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION,
-                                 LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_FOCUS.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+                                   MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_FOCUS.BORDER_ALPHA, MU_OBJ_MAIN_FOCUS);
 
-    lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_FOCUS.TEXT), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_FOCUS.TEXT_ALPHA, MU_OBJ_MAIN_FOCUS);
 
 
-    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_ALPHA,
-                             LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR),
-                                 LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA,
-                                     LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_ALPHA, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA, MU_OBJ_MAIN_FOCUS);
 
     lv_obj_set_grid_cell(cell_pnl, theme->GRID.CELL.COLUMN_ALIGN, col, 1, theme->GRID.CELL.ROW_ALIGN, row, 1);
 
@@ -1478,7 +1424,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         } else {
             lv_obj_align(cell_image_focused, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
         }
-        lv_obj_set_style_img_opa(cell_image_focused, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
         lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
         lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
     }
@@ -1487,7 +1433,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
     lv_label_set_text(cell_label, item_text);
     lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);
 }

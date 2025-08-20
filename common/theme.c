@@ -518,12 +518,11 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->NAV.LR.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_LR_GLYPH", theme->NAV.LR.GLYPH);
     theme->NAV.LR.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_LR_GLYPH_ALPHA",
-                                              theme->NAV.LR.GLYPH_ALPHA);
+                                            theme->NAV.LR.GLYPH_ALPHA);
     theme->NAV.LR.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_LR_GLYPH_RECOLOUR_ALPHA",
-                                                       theme->NAV.LR.GLYPH_RECOLOUR_ALPHA);
+                                                     theme->NAV.LR.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.LR.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_LR_TEXT", theme->NAV.LR.TEXT);
-    theme->NAV.LR.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_LR_TEXT_ALPHA",
-                                             theme->NAV.LR.TEXT_ALPHA);
+    theme->NAV.LR.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_LR_TEXT_ALPHA", theme->NAV.LR.TEXT_ALPHA);
 
     theme->NAV.A.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_A_GLYPH", theme->NAV.A.GLYPH);
     theme->NAV.A.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_ALPHA", theme->NAV.A.GLYPH_ALPHA);
@@ -1149,9 +1148,10 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
                                 theme->MISC.CONTENT.WIDTH - (theme->LIST_DEFAULT.BORDER_WIDTH * 2));
         // When using size to content right padding needs to be zero to prevent text from wrapping.
         // The overall width of the control will include the right padding
-        lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblItem, 0, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_width(ui_lblItem, item_width);
-        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2) -
+        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT -
+                                      (item_width / 2) -
                                       theme->LIST_DEFAULT.BORDER_WIDTH);
     }
 }
@@ -1248,16 +1248,16 @@ void init_glyph_style(struct theme_config *theme) {
 
 void apply_theme_list_panel(lv_obj_t *ui_pnlList) {
     lv_obj_set_scrollbar_mode(ui_pnlList, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_add_style(ui_pnlList, &style_list_panel_default, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_pnlList, &style_list_panel_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_pnlList, &style_list_panel_default, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_style(ui_pnlList, &style_list_panel_focused, MU_OBJ_MAIN_FOCUS);
 }
 
 void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text) {
     lv_label_set_text(ui_lblItem, item_text);
     lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
 
-    lv_obj_add_style(ui_lblItem, &style_list_item_default, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_lblItem, &style_list_item_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_lblItem, &style_list_item_default, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_style(ui_lblItem, &style_list_item_focused, MU_OBJ_MAIN_FOCUS);
 
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) {
         lv_obj_set_height(ui_lblItem, LV_SIZE_CONTENT);
@@ -1275,8 +1275,8 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 
-    lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_default, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_default, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_focused, MU_OBJ_MAIN_FOCUS);
 }
 
 void apply_theme_list_value(struct theme_config *theme, lv_obj_t *ui_lblItemValue, const char *item_text) {
@@ -1288,27 +1288,22 @@ void apply_theme_list_value(struct theme_config *theme, lv_obj_t *ui_lblItemValu
     lv_obj_set_height(ui_lblItemValue, font_height);
     lv_obj_set_align(ui_lblItemValue, LV_ALIGN_RIGHT_MID);
 
-    lv_obj_set_style_text_color(ui_lblItemValue, lv_color_hex(theme->LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblItemValue, theme->LIST_DEFAULT.TEXT_ALPHA,
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblItemValue, lv_color_hex(theme->LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblItemValue, theme->LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_set_style_text_color(ui_lblItemValue, lv_color_hex(theme->LIST_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblItemValue, theme->LIST_FOCUS.TEXT_ALPHA,
-                              LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_color(ui_lblItemValue, lv_color_hex(theme->LIST_FOCUS.TEXT), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_text_opa(ui_lblItemValue, theme->LIST_FOCUS.TEXT_ALPHA, MU_OBJ_MAIN_FOCUS);
 
-    lv_obj_set_style_pad_left(ui_lblItemValue, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblItemValue, theme->FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblItemValue, theme->FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblItemValue, theme->FONT.LIST_PAD_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblItemValue, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblItemValue, theme->FONT.LIST_PAD_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblItemValue, theme->FONT.LIST_PAD_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblItemValue, theme->FONT.LIST_PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_set_style_text_line_space(ui_lblItemValue, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblItemValue, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblItemValue, 16, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblItemValue, LV_TEXT_ALIGN_RIGHT, MU_OBJ_MAIN_DEFAULT);
     lv_label_set_long_mode(ui_lblItemValue, LV_LABEL_LONG_WRAP);
 
-    lv_obj_set_style_radius(ui_lblItemValue, theme->LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_lblItemValue, theme->LIST_DEFAULT.RADIUS, MU_OBJ_MAIN_DEFAULT);
 }
 
 void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t *ui_lblItemDropDown, char *options) {
@@ -1323,29 +1318,24 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t *ui_lblItem
     lv_obj_add_flag(ui_lblItemDropDown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_scrollbar_mode(ui_lblItemDropDown, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblItemDropDown, LV_DIR_RIGHT);
-    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_color(ui_lblItemDropDown, lv_color_hex(0x403A03), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblItemDropDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblItemDropDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblItemDropDown, theme->FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblItemDropDown, theme->FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblItemDropDown, theme->FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_SCROLLED);
-    lv_obj_set_style_text_opa(ui_lblItemDropDown, 255, LV_PART_MAIN | LV_STATE_SCROLLED);
-    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblItemDropDown, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0x02080D),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008),
-                              LV_PART_SELECTED | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_FOCUS.TEXT), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_FOCUS.TEXT_ALPHA, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_bg_color(ui_lblItemDropDown, lv_color_hex(0x403A03), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblItemDropDown, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblItemDropDown, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblItemDropDown, theme->FONT.LIST_PAD_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblItemDropDown, theme->FONT.LIST_PAD_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblItemDropDown, theme->FONT.LIST_PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0xF7E318), MU_OBJ_MAIN_SCROLL);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, 255, MU_OBJ_MAIN_SCROLL);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0x808080), MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, 0, MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0x02080D), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008), MU_OBJ_SELECT_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, MU_OBJ_SELECT_DEFAULT);
 }
 
 void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,
@@ -1359,8 +1349,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.TEXT},
     };
     for (size_t i = 0; i < A_SIZE(roll_text_elements); ++i) {
-        lv_obj_set_style_text_color(roll_text_elements[i].e, lv_color_hex(roll_text_elements[i].c),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(roll_text_elements[i].e,
+                                    lv_color_hex(roll_text_elements[i].c),
+                                    MU_OBJ_MAIN_DEFAULT);
     }
 
     struct pt_big roll_selected_text_elements[] = {
@@ -1372,8 +1363,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.SELECT_TEXT},
     };
     for (size_t i = 0; i < A_SIZE(roll_selected_text_elements); ++i) {
-        lv_obj_set_style_text_color(roll_selected_text_elements[i].e, lv_color_hex(roll_selected_text_elements[i].c),
-                                    LV_PART_SELECTED | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(roll_selected_text_elements[i].e,
+                                    lv_color_hex(roll_selected_text_elements[i].c),
+                                    MU_OBJ_SELECT_DEFAULT);
     }
 
     struct pt_big roll_text_alpha_elements[] = {
@@ -1385,8 +1377,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.TEXT_ALPHA},
     };
     for (size_t i = 0; i < A_SIZE(roll_text_alpha_elements); ++i) {
-        lv_obj_set_style_text_opa(roll_text_alpha_elements[i].e, roll_text_alpha_elements[i].c,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_opa(roll_text_alpha_elements[i].e,
+                                  roll_text_alpha_elements[i].c,
+                                  MU_OBJ_MAIN_DEFAULT);
     }
 
     struct pt_big roll_selected_text_alpha_elements[] = {
@@ -1398,8 +1391,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.SELECT_TEXT_ALPHA},
     };
     for (size_t i = 0; i < A_SIZE(roll_selected_text_alpha_elements); ++i) {
-        lv_obj_set_style_text_opa(roll_selected_text_alpha_elements[i].e, roll_selected_text_alpha_elements[i].c,
-                                  LV_PART_SELECTED | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_opa(roll_selected_text_alpha_elements[i].e,
+                                  roll_selected_text_alpha_elements[i].c,
+                                  MU_OBJ_SELECT_DEFAULT);
     }
 
     struct pt_big roll_background_elements[] = {
@@ -1411,8 +1405,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.BACKGROUND},
     };
     for (size_t i = 0; i < A_SIZE(roll_background_elements); ++i) {
-        lv_obj_set_style_bg_color(roll_background_elements[i].e, lv_color_hex(roll_background_elements[i].c),
-                                  LV_PART_SELECTED | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(roll_background_elements[i].e,
+                                  lv_color_hex(roll_background_elements[i].c),
+                                  MU_OBJ_SELECT_DEFAULT);
     }
 
     struct pt_small roll_background_alpha_elements[] = {
@@ -1424,8 +1419,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < A_SIZE(roll_background_alpha_elements); ++i) {
-        lv_obj_set_style_bg_opa(roll_background_alpha_elements[i].e, roll_background_alpha_elements[i].c,
-                                LV_PART_SELECTED | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(roll_background_alpha_elements[i].e,
+                                roll_background_alpha_elements[i].c,
+                                MU_OBJ_SELECT_DEFAULT);
     }
 
     struct pt_big roll_selected_background_elements[] = {
@@ -1465,8 +1461,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.RADIUS},
     };
     for (size_t i = 0; i < A_SIZE(roll_radius_elements); ++i) {
-        lv_obj_set_style_radius(roll_radius_elements[i].e, roll_radius_elements[i].c,
-                                LV_PART_SELECTED | LV_STATE_DEFAULT);
+        lv_obj_set_style_radius(roll_radius_elements[i].e,
+                                roll_radius_elements[i].c,
+                                MU_OBJ_SELECT_DEFAULT);
     }
     struct pt_small roll_selected_radius_elements[] = {
             {ui_rolComboOne,   theme.ROLL.SELECT_RADIUS},
@@ -1477,7 +1474,8 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.SELECT_RADIUS},
     };
     for (size_t i = 0; i < A_SIZE(roll_selected_radius_elements); ++i) {
-        lv_obj_set_style_radius(roll_selected_radius_elements[i].e, roll_selected_radius_elements[i].c,
+        lv_obj_set_style_radius(roll_selected_radius_elements[i].e,
+                                roll_selected_radius_elements[i].c,
                                 LV_PART_SELECTED | LV_STATE_FOCUSED);
     }
 
@@ -1490,8 +1488,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.BORDER_RADIUS},
     };
     for (size_t i = 0; i < A_SIZE(roll_border_radius_elements); ++i) {
-        lv_obj_set_style_radius(roll_border_radius_elements[i].e, roll_border_radius_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_radius(roll_border_radius_elements[i].e,
+                                roll_border_radius_elements[i].c,
+                                MU_OBJ_MAIN_FOCUS);
     }
 
     struct pt_big roll_border_colour_elements[] = {
@@ -1503,8 +1502,9 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.BORDER_COLOUR},
     };
     for (size_t i = 0; i < A_SIZE(roll_border_colour_elements); ++i) {
-        lv_obj_set_style_outline_color(roll_border_colour_elements[i].e, lv_color_hex(roll_border_colour_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_outline_color(roll_border_colour_elements[i].e,
+                                       lv_color_hex(roll_border_colour_elements[i].c),
+                                       MU_OBJ_MAIN_FOCUS);
     }
 
     struct pt_small roll_border_alpha_elements[] = {
@@ -1516,7 +1516,8 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboSix,   theme.ROLL.BORDER_ALPHA},
     };
     for (size_t i = 0; i < A_SIZE(roll_border_alpha_elements); ++i) {
-        lv_obj_set_style_outline_opa(roll_border_alpha_elements[i].e, roll_border_alpha_elements[i].c,
-                                     LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_outline_opa(roll_border_alpha_elements[i].e,
+                                     roll_border_alpha_elements[i].c,
+                                     MU_OBJ_MAIN_FOCUS);
     }
 }

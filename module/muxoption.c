@@ -44,14 +44,10 @@ static void add_static_item(int index, const char *item_label, const char *item_
 
     if (add_bottom_border) {
         lv_obj_set_height(ui_pnlInfoItem, 1);
-        lv_obj_set_style_border_width(ui_pnlInfoItem, 1,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_pnlInfoItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_pnlInfoItem, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(ui_pnlInfoItem, 1, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_color(ui_pnlInfoItem, lv_color_hex(theme.LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_opa(ui_pnlInfoItem, theme.LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
     } else if (theme.MUX.ITEM.COUNT < UI_COUNT) {
         ui_objects_panel[group_index] = ui_pnlInfoItem;
         ui_objects[group_index] = ui_lblInfoItem;

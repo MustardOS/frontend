@@ -40,10 +40,8 @@ static void update_storage_info() {
             lv_label_set_text(storage_info[i].value, space_info);
 
             if (percentage >= 90) {
-                lv_obj_set_style_bg_color(storage_info[i].bar, lv_color_hex(0xEE3F3F),
-                                          LV_PART_INDICATOR | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_opa(storage_info[i].bar, 255,
-                                        LV_PART_INDICATOR | LV_STATE_DEFAULT);
+                lv_obj_set_style_bg_color(storage_info[i].bar, lv_color_hex(0xEE3F3F), MU_OBJ_INDI_DEFAULT);
+                lv_obj_set_style_bg_opa(storage_info[i].bar, 255, MU_OBJ_INDI_DEFAULT);
             }
         } else {
             lv_obj_add_flag(storage_info[i].value_panel, LV_OBJ_FLAG_HIDDEN);

@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     overlay_image = lv_img_create(ui_scrMessage);
     load_overlay_image(ui_scrMessage, overlay_image);
 
-    lv_obj_set_style_bg_opa(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
     refresh_screen(ui_scrMessage);
 
     char *ext = grab_ext((char *) default_message);

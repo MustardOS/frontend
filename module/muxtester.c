@@ -86,9 +86,9 @@ static void init_elements(void) {
     lv_obj_set_align(ui_imgButton, LV_ALIGN_CENTER);
     lv_img_set_src(ui_imgButton, &ui_image_Nothing);
     lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR),
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+                                 MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     MU_OBJ_MAIN_DEFAULT);
 
     lv_label_set_text(ui_lblMessage, lang.MUXTESTER.QUIT);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);

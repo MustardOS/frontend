@@ -86,8 +86,8 @@ void setup_nav(struct nav_bar *nav_items) {
 }
 
 void header_and_footer_setup(void) {
-    lv_obj_set_style_bg_opa(ui_pnlHeader, theme.HEADER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlFooter, theme.FOOTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHeader, theme.HEADER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlFooter, theme.FOOTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");

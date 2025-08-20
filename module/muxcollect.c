@@ -573,7 +573,7 @@ static void process_load(int from_start) {
                         lv_obj_move_foreground(overlay_image);
 
                         for (unsigned int i = 0; i <= 255; i += 15) {
-                            lv_obj_set_style_img_opa(ui_imgSplash, i, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_obj_set_style_img_opa(ui_imgSplash, i, MU_OBJ_MAIN_DEFAULT);
                             lv_task_handler();
                             usleep(128);
                         }
@@ -886,7 +886,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
 
     ui_imgSplash = lv_img_create(ui_screen);
-    lv_obj_set_style_img_opa(ui_imgSplash, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui_imgSplash, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());

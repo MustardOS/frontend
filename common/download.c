@@ -30,7 +30,7 @@ void set_download_callbacks(void (*callback)(int)) {
 
 static void update_progress() {
     if (showProgressUpdates) {
-        lv_obj_set_style_opa(ui_pnlDownload, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
         lv_bar_set_value(ui_barDownload, last_update, LV_ANIM_OFF);
 
         char buf[32];
@@ -45,7 +45,7 @@ static void update_progress() {
     }
 
     if (!download_in_progress) {
-        lv_obj_set_style_opa(ui_pnlDownload, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_pnlDownload, 0, MU_OBJ_MAIN_DEFAULT);
 
         if (timer_update_progress) {
             lv_timer_del(timer_update_progress);
@@ -89,7 +89,7 @@ int download_file(const char *url, const char *output_path) {
     if (showProgressUpdates) {
         lv_label_set_text(ui_lblDownload, "");
         lv_bar_set_value(ui_barDownload, last_update, LV_ANIM_OFF);
-        lv_obj_set_style_opa(ui_pnlDownload, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
     }
 
     timer_update_progress = lv_timer_create(update_progress, TIMER_REFRESH, NULL);

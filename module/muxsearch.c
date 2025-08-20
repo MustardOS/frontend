@@ -129,7 +129,7 @@ static void gen_result(char *item_glyph, char *item_text, char *item_data, char 
 
     lv_obj_t *ui_lblResultItemValue = lv_label_create(ui_pnlResult);
     lv_label_set_text(ui_lblResultItemValue, item_value);
-    lv_obj_set_style_text_opa(ui_lblResultItemValue, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblResultItemValue, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_width(ui_lblResultItemValue, 0);
 
     lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
@@ -174,10 +174,10 @@ static void gen_result(char *item_glyph, char *item_text, char *item_data, char 
     }
 
     if (strcasecmp(item_data, "folder") == 0) {
-        lv_obj_set_style_border_width(ui_pnlResult, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_pnlResult, lv_color_hex(theme.LIST_DEFAULT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_pnlResult, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_pnlResult, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(ui_pnlResult, 1, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_color(ui_pnlResult, lv_color_hex(theme.LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_opa(ui_pnlResult, theme.LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_side(ui_pnlResult, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
     }
 }
 

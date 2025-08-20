@@ -1253,7 +1253,7 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
 
     if (file_exist(static_image_path)) {
         lv_img_set_src(overlay_image, static_image_embed);
-        lv_obj_set_style_img_opa(overlay_image, config.VISUAL.OVERLAY_TRANSPARENCY, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_opa(overlay_image, config.VISUAL.OVERLAY_TRANSPARENCY, MU_OBJ_MAIN_DEFAULT);
         lv_obj_move_foreground(overlay_image);
     }
 }
@@ -1414,7 +1414,7 @@ void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
     snprintf(theme_font_text_fs, sizeof(theme_font_text_fs), "M:%s", filepath);
     lv_font_t *font = lv_font_load(theme_font_text_fs);
     font->fallback = get_language_font();
-    lv_obj_set_style_text_font(element, font, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(element, font, MU_OBJ_MAIN_DEFAULT);
 }
 
 void load_font_text(lv_obj_t *screen) {
@@ -1456,7 +1456,7 @@ void load_font_text(lv_obj_t *screen) {
     }
 
     LOG_INFO(mux_module, "Loading Default Language Font")
-    lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(screen, language_font, MU_OBJ_MAIN_DEFAULT);
 }
 
 void load_font_section(const char *section, lv_obj_t *element) {
@@ -1623,10 +1623,10 @@ void display_testing_message(lv_obj_t *screen) {
 
     lv_obj_set_align(ui_conTest, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_conTest, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_conTest, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_conTest, spec, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_conTest, lv_color_hex(0x808080), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_conTest, spec, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
@@ -1729,10 +1729,10 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
         }
 
         lv_obj_set_align(ui_imgobj, image_settings.align);
-        lv_obj_set_style_pad_left(ui_imgobj, image_settings.pad_left, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_imgobj, image_settings.pad_right, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_imgobj, image_settings.pad_top, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_imgobj, image_settings.pad_bottom, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_imgobj, image_settings.pad_left, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_right(ui_imgobj, image_settings.pad_right, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_top(ui_imgobj, image_settings.pad_top, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_imgobj, image_settings.pad_bottom, MU_OBJ_MAIN_DEFAULT);
         lv_img_set_src(ui_imgobj, image_path);
         lv_obj_move_foreground(ui_imgobj);
     } else {
