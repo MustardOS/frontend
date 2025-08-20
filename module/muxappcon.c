@@ -98,6 +98,8 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
     }
 
+    if (strcasecmp(app_name, "RetroArch") != 0) HIDE_VALUE_ITEM(appcon, Control);
+
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 

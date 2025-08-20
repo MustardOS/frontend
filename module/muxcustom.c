@@ -183,13 +183,14 @@ static void init_navigation_group(void) {
 
     lv_dropdown_clear_options(ui_droThemeResolution_custom);
     lv_dropdown_add_option(ui_droThemeResolution_custom, lang.MUXCUSTOM.SCREEN, LV_DROPDOWN_POS_LAST);
+
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
                  STORAGE_THEME, theme_resolutions[i].resolution);
+
         if (directory_exist(theme_device_folder)) {
-            lv_dropdown_add_option(ui_droThemeResolution_custom,
-                                   theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
+            lv_dropdown_add_option(ui_droThemeResolution_custom, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
         }
     }
 
