@@ -143,6 +143,7 @@
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"
 
+#define MUX_BLANK       "/tmp/mux_blank"
 #define PLAYTIME_DATA   "playtime_data.json"
 #define FRIENDLY_RESULT "/tmp/f_result.json"
 #define MANUAL_RA_LOAD  "/tmp/ra_no_load"

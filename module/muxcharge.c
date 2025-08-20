@@ -15,6 +15,22 @@ static void check_for_cable(void) {
     if (file_exist(device.BATTERY.CHARGER) && !read_line_int_from(device.BATTERY.CHARGER, 1)) exit_status = 1;
 }
 
+static int blank_check(void) {
+    if (file_exist(MUX_BLANK)) {
+        is_blank = 1;
+
+        lv_obj_set_style_bg_opa(ui_blank_charge, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_foreground(ui_blank_charge);
+    } else {
+        is_blank = 0;
+
+        lv_obj_set_style_bg_opa(ui_blank_charge, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_background(ui_blank_charge);
+    }
+
+    return is_blank;
+}
+
 static void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
@@ -34,8 +50,11 @@ static void handle_power_short(void) {
         LOG_INFO(mux_module, "Setting Brightness To: %d", bright_value)
         set_brightness(bright_value);
 
-        is_blank = 0;
-        blank_timeout = 5;
+        if (file_exist(MUX_BLANK)) remove(MUX_BLANK);
+        blank_check();
+
+        blank_timeout = 4;
+
         return;
     }
 
@@ -49,16 +68,6 @@ static void handle_power_short(void) {
 }
 
 static void handle_idle(void) {
-    if (file_exist("/tmp/mux_blank")) {
-        lv_obj_set_style_bg_opa(ui_blank_charge, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_move_foreground(ui_blank_charge);
-    } else {
-        if (lv_obj_get_style_bg_opa(ui_blank_charge, LV_PART_MAIN | LV_STATE_DEFAULT) > 0) {
-            lv_obj_set_style_bg_opa(ui_blank_charge, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_move_background(ui_blank_charge);
-        }
-    }
-
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
         if (file_exist(CHARGER_BRIGHT)) remove(CHARGER_BRIGHT);
@@ -70,12 +79,13 @@ static void handle_idle(void) {
         return;
     }
 
-    refresh_screen(ui_scrCharge_charge);
+    if (!is_blank) refresh_screen(ui_scrCharge_charge);
 }
 
 static void battery_task_charge() {
     check_for_cable();
-    if (is_blank) return;
+
+    if (blank_check()) return;
 
     if (blank_timeout < 0) {
         LOG_INFO(mux_module, "Setting Brightness To: %d", 0)
