@@ -1,6 +1,8 @@
 #include "muxshare.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
+int first_boot = 1;
+
 static int last_index = 0;
 static int forced_flag = 0;
 static int is_app = 0;
@@ -439,6 +441,11 @@ int main(void) {
             LOG_DEBUG("muxfrontend", "Resolution or Theme Refreshed... exiting!")
             safe_quit(0);
             break;
+        }
+
+        if (first_boot) {
+            first_boot = 0;
+            lv_task_handler();
         }
 
         // Process application option loader
