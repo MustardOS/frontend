@@ -617,6 +617,7 @@ static void handle_a(void) {
 }
 
 static void handle_a_hold(void) {
+    if (msgbox_active) return;
     process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
 }
 
@@ -804,6 +805,8 @@ static void init_elements(void) {
     adjust_box_art();
     adjust_panels();
     header_and_footer_setup();
+    lv_label_set_text(ui_lblPreviewHeader, lang.GENERIC.SWITCH_IMAGE);
+    lv_obj_clear_flag(ui_lblPreviewHeaderGlyph, LV_OBJ_FLAG_HIDDEN);
 
     setup_nav((struct nav_bar[]) {
             {ui_lblNavAGlyph,    "",                  0},

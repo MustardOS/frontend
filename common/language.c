@@ -50,6 +50,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
     GENERIC_FIELD(lang->GENERIC.DIRECTORY, "Directory");
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
+    GENERIC_FIELD(lang->GENERIC.DOWNLOAD, "Download");
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
@@ -109,6 +110,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXASSIGN.FILE, "Assigned to file");
     SPECIFIC_FIELD(lang->MUXASSIGN.NONE, "No Cores Found…");
     SPECIFIC_FIELD(lang->MUXASSIGN.HELP, "This is where you can assign a core or external emulator to content");
+    SPECIFIC_FIELD(lang->MUXASSIGN.CORE_DOWN, "Core Downloader");
 
     // muxbackup
     SPECIFIC_FIELD(lang->MUXBACKUP.TITLE, "DEVICE BACKUP");
@@ -322,6 +324,15 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDEVICE.HELP.LID, "Toggles hall switch (lid) support on device\n\nDo not enable this on non-lid devices!");
     SPECIFIC_FIELD(lang->MUXDEVICE.HELP.NETWORK, "Toggles Network integration on device");
     SPECIFIC_FIELD(lang->MUXDEVICE.HELP.PORTMASTER, "Toggles internal Portmaster support on device");
+
+    // muxdownload
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.TITLE.CORE, "CORE DOWNLOADER");
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.TITLE.APP, "APP DOWNLOADER");
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.DOWN.ARCHIVE, "Downloading Archive");
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.DOWN.DATA, "Downloading Data");
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.REFRESH, "Refresh");
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.ARCHIVE_REMOVED, "Archive Removed");
+    SPECIFIC_FIELD(lang->MUXDOWNLOAD.ERROR_GET_DATA, "Error Retrieving Data");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");

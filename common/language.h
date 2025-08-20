@@ -34,6 +34,7 @@ struct mux_lang {
         char COLLECT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
+        char DOWNLOAD[MAX_BUFFER_SIZE];
         char ENABLED[MAX_BUFFER_SIZE];
         char EXTRACT[MAX_BUFFER_SIZE];
         char FILTER[MAX_BUFFER_SIZE];
@@ -96,6 +97,7 @@ struct mux_lang {
         char HELP[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
+        char CORE_DOWN[MAX_BUFFER_SIZE];
     } MUXASSIGN;
 
     struct {
@@ -290,6 +292,20 @@ struct mux_lang {
             char PORTMASTER[MAX_BUFFER_SIZE];
         } HELP;
     } MUXDEVICE;
+
+    struct {
+        char ERROR_GET_DATA[MAX_BUFFER_SIZE];
+        char ARCHIVE_REMOVED[MAX_BUFFER_SIZE];
+        char REFRESH[MAX_BUFFER_SIZE];
+        struct {
+            char ARCHIVE[MAX_BUFFER_SIZE];
+            char DATA[MAX_BUFFER_SIZE];
+        } DOWN;
+        struct {
+            char APP[MAX_BUFFER_SIZE];
+            char CORE[MAX_BUFFER_SIZE];
+        } TITLE;
+    } MUXDOWNLOAD;
 
     struct {
         char HELP[MAX_BUFFER_SIZE];

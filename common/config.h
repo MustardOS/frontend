@@ -36,6 +36,12 @@ struct mux_config {
 
     struct {
         struct {
+            char DATA[MAX_BUFFER_SIZE];
+        } DOWNLOAD;
+    } EXTRA;
+
+    struct {
+        struct {
             int16_t ALL_THEMES;
             int16_t RESOLUTION_640x480;
             int16_t RESOLUTION_720x480;

@@ -90,7 +90,7 @@ void header_and_footer_setup(void) {
     lv_obj_set_style_bg_opa(ui_pnlFooter, theme.FOOTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
+    lv_obj_add_flag(ui_lblPreviewHeaderGlyph, LV_OBJ_FLAG_HIDDEN);
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);
