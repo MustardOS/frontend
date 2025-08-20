@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxplore.h"
+#include "../common/skip_list.h"
 
 static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
@@ -304,38 +305,54 @@ static void gen_item(char **file_names, int file_count) {
         fn_json = json_parse(read_all_char_from(custom_lookup));
     }
 
+    SkipList skiplist;
+    init_skiplist(&skiplist);
     for (int i = 0; i < file_count; i++) {
-        int has_custom_name = 0;
-        char fn_name[MAX_BUFFER_SIZE];
-        char *stripped_name = strip_ext(file_names[i]);
-
-        if (fn_valid) {
-            struct json custom_lookup_json = json_object_get(fn_json, str_tolower(stripped_name));
-            if (json_exists(custom_lookup_json)) {
-                json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
-                has_custom_name = 1;
-            }
+        if (ends_with(file_names[i], ".cue")) {
+            process_cue_file(sys_dir, file_names[i], &skiplist);
+        } else if (ends_with(file_names[i], ".gdi")) {
+            process_gdi_file(sys_dir, file_names[i], &skiplist);
+        } else if (ends_with(file_names[i], ".m3u")) {
+            process_m3u_file(sys_dir, file_names[i], &skiplist);
         }
-
-        int lookup_line = CONTENT_LOOKUP;
-        char name_lookup[MAX_BUFFER_SIZE];
-        snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
-
-        if (!file_exist(name_lookup)) {
-            snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
-            lookup_line = GLOBAL_LOOKUP;
-        }
-
-        if (!has_custom_name) {
-            const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
-            snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
-        }
-
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
-        adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-
-        free(file_names[i]);
     }
+
+    for (int i = 0; i < file_count; i++) {
+        if (!in_skiplist(&skiplist, file_names[i])) {
+            int has_custom_name = 0;
+            char fn_name[MAX_BUFFER_SIZE];
+            char *stripped_name = strip_ext(file_names[i]);
+
+            if (fn_valid) {
+                struct json custom_lookup_json = json_object_get(fn_json, str_tolower(stripped_name));
+                if (json_exists(custom_lookup_json)) {
+                    json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
+                    has_custom_name = 1;
+                }
+            }
+
+            int lookup_line = CONTENT_LOOKUP;
+            char name_lookup[MAX_BUFFER_SIZE];
+            snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
+
+            if (!file_exist(name_lookup)) {
+                snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
+                lookup_line = GLOBAL_LOOKUP;
+            }
+
+            if (!has_custom_name) {
+                const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
+                snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
+            }
+
+            content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
+            adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
+            free(file_names[i]);
+        }
+    }
+
+    free_skiplist(&skiplist);
 
     sort_items(items, item_count);
 
