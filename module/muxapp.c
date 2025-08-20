@@ -223,20 +223,20 @@ static void handle_a(void) {
         if (!skip_toast) {
             toast_message(lang.MUXAPP.LOAD_APP, 0);
             refresh_screen(ui_screen);
+
+            char app_dir[MAX_BUFFER_SIZE];
+            snprintf(app_dir, sizeof(app_dir), "%s/%s/%s",
+                     device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
+
+            char *assigned_gov = specify_asset(load_content_governor(app_dir, NULL, 0, 1, 1),
+                                               device.CPU.DEFAULT, "Governor");
+
+            char *assigned_con = specify_asset(load_content_control_scheme(app_dir, NULL, 0, 1, 1),
+                                               "system", "Control Scheme");
+
+            write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+            write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
         }
-
-        char app_dir[MAX_BUFFER_SIZE];
-        snprintf(app_dir, sizeof(app_dir), "%s/%s/%s",
-                 device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
-
-        char *assigned_gov = specify_asset(load_content_governor(app_dir, NULL, 0, 1, 1),
-                                           device.CPU.DEFAULT, "Governor");
-
-        char *assigned_con = specify_asset(load_content_control_scheme(app_dir, NULL, 0, 1, 1),
-                                           "system", "Control Scheme");
-
-        write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
-        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
 
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
