@@ -952,6 +952,10 @@ void ui_common_handle_idle(void) {
         lv_refr_now(NULL);
     }
 
+    if (!file_exist(MUX_BLANK) && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > 0) {
+        blank_check();
+    }
+
     lv_task_handler();
 }
 
@@ -1011,7 +1015,8 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     return ui_glyph;
 }
 
-lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha, int16_t add_hide_flag) {
+lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color,
+                             int16_t text_alpha, int16_t add_hide_flag) {
     lv_obj_t *ui_lblNavText = lv_label_create(parent);
     lv_obj_set_width(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblNavText, LV_SIZE_CONTENT);
