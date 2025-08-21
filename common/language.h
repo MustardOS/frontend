@@ -87,6 +87,17 @@ struct mux_lang {
     } MUXAPP;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char NAME[MAX_BUFFER_SIZE];
+        char GOVERNOR[MAX_BUFFER_SIZE];
+        char CONTROL[MAX_BUFFER_SIZE];
+        struct {
+            char GOVERNOR[MAX_BUFFER_SIZE];
+            char CONTROL[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXAPPCON;
+
+    struct {
         char HELP[MAX_BUFFER_SIZE];
         char INSTALLED[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
@@ -616,7 +627,7 @@ struct mux_lang {
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
             char CORE[MAX_BUFFER_SIZE];
-            char GOV[MAX_BUFFER_SIZE];
+            char GOVERNOR[MAX_BUFFER_SIZE];
             char CONTROL[MAX_BUFFER_SIZE];
             char TAG[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
@@ -869,7 +880,7 @@ struct mux_lang {
         struct {
             char INFO[MAX_BUFFER_SIZE];
             char SPEED[MAX_BUFFER_SIZE];
-            char GOV[MAX_BUFFER_SIZE];
+            char GOVERNOR[MAX_BUFFER_SIZE];
         } CPU;
         struct {
             char VERSION[MAX_BUFFER_SIZE];
@@ -884,7 +895,7 @@ struct mux_lang {
             struct {
                 char INFO[MAX_BUFFER_SIZE];
                 char SPEED[MAX_BUFFER_SIZE];
-                char GOV[MAX_BUFFER_SIZE];
+                char GOVERNOR[MAX_BUFFER_SIZE];
             } CPU;
         } HELP;
     } MUXSYSINFO;

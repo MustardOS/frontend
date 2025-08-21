@@ -14,7 +14,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblUptime_sysinfo,   lang.MUXSYSINFO.HELP.UPTIME},
             {ui_lblCpu_sysinfo,      lang.MUXSYSINFO.HELP.CPU.INFO},
             {ui_lblSpeed_sysinfo,    lang.MUXSYSINFO.HELP.CPU.SPEED},
-            {ui_lblGovernor_sysinfo, lang.MUXSYSINFO.HELP.CPU.GOV},
+            {ui_lblGovernor_sysinfo, lang.MUXSYSINFO.HELP.CPU.GOVERNOR},
             {ui_lblMemory_sysinfo,   lang.MUXSYSINFO.HELP.MEMORY},
             {ui_lblTemp_sysinfo,     lang.MUXSYSINFO.HELP.TEMP},
             {ui_lblCapacity_sysinfo, lang.MUXSYSINFO.HELP.CAPACITY},
@@ -203,7 +203,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_uptime());
     INIT_VALUE_ITEM(-1, sysinfo, Cpu, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
     INIT_VALUE_ITEM(-1, sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
-    INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOV, "governor", get_scaling_governor());
+    INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOVERNOR, "governor", get_scaling_governor());
     INIT_VALUE_ITEM(-1, sysinfo, Memory, lang.MUXSYSINFO.MEMORY.INFO, "memory", get_memory_usage());
     INIT_VALUE_ITEM(-1, sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
     INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());

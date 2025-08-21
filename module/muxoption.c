@@ -20,7 +20,7 @@ static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblSearch_option,   lang.MUXOPTION.HELP.SEARCH},
             {ui_lblCore_option,     lang.MUXOPTION.HELP.CORE},
-            {ui_lblGovernor_option, lang.MUXOPTION.HELP.GOV},
+            {ui_lblGovernor_option, lang.MUXOPTION.HELP.GOVERNOR},
             {ui_lblControl_option,  lang.MUXOPTION.HELP.CONTROL},
             {ui_lblTag_option,      lang.MUXOPTION.HELP.TAG},
     };

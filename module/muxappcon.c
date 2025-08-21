@@ -17,8 +17,8 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblGovernor_appcon, lang.MUXOPTION.HELP.GOV},
-            {ui_lblControl_appcon,  lang.MUXOPTION.HELP.CONTROL},
+            {ui_lblGovernor_appcon, lang.MUXAPPCON.HELP.GOVERNOR},
+            {ui_lblControl_appcon,  lang.MUXAPPCON.HELP.CONTROL},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -78,11 +78,11 @@ static void add_info_items(void) {
 static void init_navigation_group(void) {
     int line_index = 0;
 
-    add_static_item(line_index++, lang.MUXOPTION.NAME, app_name, "rom", false);
+    add_static_item(line_index++, lang.MUXAPPCON.NAME, app_name, "rom", false);
     add_static_item(line_index, "", "", "", true);
 
-    INIT_VALUE_ITEM(-1, appcon, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
-    INIT_VALUE_ITEM(-1, appcon, Control, lang.MUXOPTION.CONTROL, "control", "");
+    INIT_VALUE_ITEM(-1, appcon, Governor, lang.MUXAPPCON.GOVERNOR, "governor", "");
+    INIT_VALUE_ITEM(-1, appcon, Control, lang.MUXAPPCON.CONTROL, "control", "");
 
     add_info_items();
 
@@ -241,7 +241,7 @@ int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
     init_module("muxappcon");
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXAPPCON.TITLE);
     init_muxappcon(ui_pnlContent);
     init_elements();
 

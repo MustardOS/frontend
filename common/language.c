@@ -100,6 +100,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXAPP.ARCHIVE, "Archive Manager");
     SPECIFIC_FIELD(lang->MUXAPP.TASK, "Task Toolkit");
 
+    // muxappcon
+    SPECIFIC_FIELD(lang->MUXAPPCON.TITLE, "APPLICATION OPTION");
+    SPECIFIC_FIELD(lang->MUXAPPCON.NAME, "Name");
+    SPECIFIC_FIELD(lang->MUXAPPCON.GOVERNOR, "Governor");
+    SPECIFIC_FIELD(lang->MUXAPPCON.CONTROL, "Control Scheme");
+    SPECIFIC_FIELD(lang->MUXAPPCON.HELP.GOVERNOR, "Set the CPU governor for the selected application");
+    SPECIFIC_FIELD(lang->MUXAPPCON.HELP.CONTROL, "Set the control scheme for the selected application");
+
     // muxarchive
     SPECIFIC_FIELD(lang->MUXARCHIVE.TITLE, "ARCHIVE MANAGER");
     SPECIFIC_FIELD(lang->MUXARCHIVE.INSTALLED, "INSTALLED");
@@ -593,7 +601,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CORE, "Set the system core or external emulator for the selected content or directory");
-    SPECIFIC_FIELD(lang->MUXOPTION.HELP.GOV, "Set the CPU governor for the selected content or directory");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.GOVERNOR, "Set the CPU governor for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
@@ -752,7 +760,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.VOLTAGE, "Battery Voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.INFO, "CPU Information");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.SPEED, "CPU Speed");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.GOV, "CPU Governor");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.GOVERNOR, "CPU Governor");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VERSION, "The current version of muOS running on the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.DEVICE, "The current device type detected and configured");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.KERNEL, "The current Linux kernel");
@@ -763,7 +771,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VOLTAGE, "The current detected battery voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.INFO, "The detected CPU type of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.SPEED, "The current CPU frequency of the device");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.GOV, "The current running governor of the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.GOVERNOR, "The current running governor of the device");
 
     // muxtag
     SPECIFIC_FIELD(lang->MUXTAG.TITLE, "TAG");
