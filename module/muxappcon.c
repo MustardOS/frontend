@@ -78,7 +78,7 @@ static void add_info_items(void) {
 static void init_navigation_group(void) {
     int line_index = 0;
 
-    add_static_item(line_index++, lang.MUXAPPCON.NAME, app_name, "rom", false);
+    add_static_item(line_index++, lang.MUXAPPCON.NAME, app_name, "app", false);
     add_static_item(line_index, "", "", "", true);
 
     INIT_VALUE_ITEM(-1, appcon, Governor, lang.MUXAPPCON.GOVERNOR, "governor", "");
