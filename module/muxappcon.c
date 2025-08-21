@@ -119,7 +119,8 @@ static void list_nav_move(int steps, int direction) {
         nav_move(ui_group_value, direction);
     }
 
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT - 1, theme.MUX.ITEM.PANEL,
+                           ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
