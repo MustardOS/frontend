@@ -198,17 +198,17 @@ static void handle_a(void) {
 
     if (ui_count > 0) {
         struct {
-            const char *app_name;
+            const char *mux_name;
             int16_t *kiosk_flag;
         } elements[] = {
-                {lang.MUXAPP.ARCHIVE, &kiosk.APPLICATION.ARCHIVE},
-                {lang.MUXAPP.TASK,    &kiosk.APPLICATION.TASK}
+                {"Archive Manager", &kiosk.APPLICATION.ARCHIVE},
+                {"Task Toolkit",    &kiosk.APPLICATION.TASK}
         };
 
         int skip_toast = 0;
 
         for (size_t i = 0; i < A_SIZE(elements); i++) {
-            if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
+            if (strcasecmp(items[current_item_index].name, elements[i].mux_name) == 0) {
                 if (*(elements[i].kiosk_flag)) {
                     kiosk_denied();
                     return;
@@ -273,14 +273,14 @@ static void handle_select(void) {
     if (msgbox_active || !ui_count) return;
 
     struct {
-        const char *app_name;
+        const char *mux_name;
     } elements[] = {
-            {lang.MUXAPP.ARCHIVE},
-            {lang.MUXAPP.TASK}
+            {"Archive Manager"},
+            {"Task Toolkit"}
     };
 
     for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
+        if (strcasecmp(items[current_item_index].name, elements[i].mux_name) == 0) {
             return;
         }
     }
