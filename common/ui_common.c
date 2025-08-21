@@ -54,6 +54,10 @@ lv_obj_t *ui_lblHelpHeader;
 lv_obj_t *ui_pnlHelpContent;
 lv_obj_t *ui_lblHelpContent;
 lv_obj_t *ui_pnlHelpExtra;
+lv_obj_t *ui_lblHelpNavUDGlyph;
+lv_obj_t *ui_lblHelpNavUD;
+lv_obj_t *ui_lblHelpNavBGlyph;
+lv_obj_t *ui_lblHelpNavB;
 lv_obj_t *ui_lblPreviewHeaderGlyph;
 lv_obj_t *ui_lblPreviewHeader;
 lv_obj_t *ui_pnlHelpPreview;
@@ -63,6 +67,8 @@ lv_obj_t *ui_imgHelpPreviewImage;
 lv_obj_t *ui_pnlHelpPreviewInfo;
 lv_obj_t *ui_lblHelpPreviewInfoGlyph;
 lv_obj_t *ui_lblHelpPreviewInfoMessage;
+lv_obj_t *ui_lblHelpPreviewNavBGlyph;
+lv_obj_t *ui_lblHelpPreviewNavB;
 lv_obj_t *ui_pnlProgressBrightness;
 lv_obj_t *ui_icoProgressBrightness;
 lv_obj_t *ui_barProgressBrightness;
@@ -628,11 +634,21 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlHelpExtra, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpExtra, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
+    ui_lblHelpNavUDGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, "ud", theme->NAV.UD, 0);
+    ui_lblHelpNavUD = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.UD.TEXT, theme->NAV.UD.TEXT_ALPHA, 0);
+    lv_label_set_text(ui_lblHelpNavUD, lang->GENERIC.SCROLL);
+
     ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
                                                    theme->NAV.A, 0);
 
     ui_lblPreviewHeader = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblPreviewHeader, lang->GENERIC.SWITCH_IMAGE);
+
+    ui_lblHelpNavBGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
+                                                   theme->NAV.B, 0);
+
+    ui_lblHelpNavB = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
+    lv_label_set_text(ui_lblHelpNavB, lang->GENERIC.CLOSE);
 
     ui_pnlHelpPreview = lv_obj_create(ui_pnlHelp);
     lv_obj_set_width(ui_pnlHelpPreview, device->MUX.WIDTH * .9);
@@ -702,6 +718,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT,
                                                       theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpPreviewInfoMessage, lang->GENERIC.SWITCH_INFO);
+
+    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
+                                                   theme->NAV.B, 0);
+
+    ui_lblHelpPreviewNavB = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
+    lv_label_set_text(ui_lblHelpPreviewNavB, lang->GENERIC.CLOSE);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlProgressBrightness, theme->BAR.PANEL_WIDTH);

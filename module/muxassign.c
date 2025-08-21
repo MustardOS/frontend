@@ -11,7 +11,9 @@ static void show_help(void) {
 }
 
 static void create_system_items(void) {
-    add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
+    if (device.DEVICE.HAS_NETWORK) {
+        add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
+    }
     
     DIR *ad;
     struct dirent *af;

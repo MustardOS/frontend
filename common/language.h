@@ -31,6 +31,7 @@ struct mux_lang {
         char BACK[MAX_BUFFER_SIZE];
         char TOP[MAX_BUFFER_SIZE];
         char CLEAR[MAX_BUFFER_SIZE];
+        char CLOSE[MAX_BUFFER_SIZE];
         char COLLECT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
@@ -59,6 +60,7 @@ struct mux_lang {
         char RESCAN[MAX_BUFFER_SIZE];
         char RESTORE[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
+        char SCROLL[MAX_BUFFER_SIZE];
         char SELECT[MAX_BUFFER_SIZE];
         char SWITCH_IMAGE[MAX_BUFFER_SIZE];
         char SWITCH_INFO[MAX_BUFFER_SIZE];

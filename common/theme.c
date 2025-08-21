@@ -116,6 +116,12 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->NAV.LR.TEXT = 0xFFFFFF;
     theme->NAV.LR.TEXT_ALPHA = 255;
 
+    theme->NAV.UD.GLYPH = 0xF7E318;
+    theme->NAV.UD.GLYPH_ALPHA = 255;
+    theme->NAV.UD.GLYPH_RECOLOUR_ALPHA = 255;
+    theme->NAV.UD.TEXT = 0xFFFFFF;
+    theme->NAV.UD.TEXT_ALPHA = 255;
+
     theme->NAV.A.GLYPH = 0xF7E318;
     theme->NAV.A.GLYPH_ALPHA = 255;
     theme->NAV.A.GLYPH_RECOLOUR_ALPHA = 255;
@@ -523,6 +529,14 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
                                                      theme->NAV.LR.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.LR.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_LR_TEXT", theme->NAV.LR.TEXT);
     theme->NAV.LR.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_LR_TEXT_ALPHA", theme->NAV.LR.TEXT_ALPHA);
+
+    theme->NAV.UD.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_UD_GLYPH", theme->NAV.UD.GLYPH);
+    theme->NAV.UD.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_UD_GLYPH_ALPHA",
+                                            theme->NAV.UD.GLYPH_ALPHA);
+    theme->NAV.UD.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_UD_GLYPH_RECOLOUR_ALPHA",
+                                                     theme->NAV.UD.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.UD.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_UD_TEXT", theme->NAV.UD.TEXT);
+    theme->NAV.UD.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_UD_TEXT_ALPHA", theme->NAV.UD.TEXT_ALPHA);
 
     theme->NAV.A.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_A_GLYPH", theme->NAV.A.GLYPH);
     theme->NAV.A.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_ALPHA", theme->NAV.A.GLYPH_ALPHA);
