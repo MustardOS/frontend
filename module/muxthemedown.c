@@ -11,6 +11,20 @@ static char *preview_zip_path = "/tmp/theme_catalogue.muxzip";
 static int exit_status = 0;
 static int starter_image = 0;
 
+static void show_help(void) {
+    char text_path[MAX_BUFFER_SIZE];
+    snprintf(text_path, sizeof(text_path), "%s/theme/text/%s.txt", INFO_CAT_PATH, theme_items[current_item_index].name);
+
+    char credits[MAX_BUFFER_SIZE];
+    if (file_exist(text_path)) {
+        strcpy(credits, read_all_char_from(text_path));
+    } else {
+        strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
+    }
+
+    show_info_box(TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits), 0);
+}
+
 static bool is_downloaded(int index) {
     char theme_path[MAX_BUFFER_SIZE];
     snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm", RUN_STORAGE_PATH, theme_items[index].name);
@@ -329,6 +343,13 @@ static void handle_y() {
     mux_input_stop();
 }
 
+static void handle_help(void) {
+    if (download_in_progress || msgbox_active || !ui_count) return;
+
+    play_sound(SND_INFO_OPEN);
+    show_help();
+}
+
 static void adjust_panels() {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
@@ -439,6 +460,7 @@ int muxthemedown_main() {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
