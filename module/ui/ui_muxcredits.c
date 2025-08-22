@@ -123,7 +123,7 @@ const char *contributors[] = {
         "acmeplus", "aeverdyn", "antikk", "arkun", "bgelmini", "bitter_bizarro",
         "cart_su", "chronoss09", "duncanyoyo1", "habbening", "imcokeman", "incognitoman",
         "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "voodatari",
-        "xonglebongle", "zarquon",
+        "wakeboxer", "xonglebongle", "zarquon",
         NULL
 };
 
