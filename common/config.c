@@ -55,6 +55,7 @@ void load_config(struct mux_config *config) {
     }
 
     CFG_STR_FIELD(config->EXTRA.DOWNLOAD.DATA, CONF_CONFIG_PATH "extra/download/data", "")
+    CFG_STR_FIELD(config->EXTRA.LANGUAGE.DATA, CONF_CONFIG_PATH "extra/language/data", "")
     
     CFG_STR_FIELD(config->THEME.DOWNLOAD.DATA, CONF_CONFIG_PATH "theme/download/data", "")
     CFG_STR_FIELD(config->THEME.DOWNLOAD.PREVIEW, CONF_CONFIG_PATH "theme/download/preview", "")

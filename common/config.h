@@ -38,6 +38,9 @@ struct mux_config {
         struct {
             char DATA[MAX_BUFFER_SIZE];
         } DOWNLOAD;
+        struct {
+            char DATA[MAX_BUFFER_SIZE];
+        } LANGUAGE;
     } EXTRA;
 
     struct {

@@ -1,4 +1,7 @@
 #include "muxshare.h"
+#include "../common/download.h"
+
+static char language_data_local_path[MAX_BUFFER_SIZE];
 
 static void show_help(void) {
     show_info_box(lang.MUXLANGUAGE.TITLE, lang.MUXLANGUAGE.HELP, 0);
@@ -53,10 +56,12 @@ static void list_nav_move(int steps, int direction) {
 }
 
 static void list_nav_prev(int steps) {
+    if (download_in_progress) return;
     list_nav_move(steps, -1);
 }
 
 static void list_nav_next(int steps) {
+    if (download_in_progress) return;
     list_nav_move(steps, +1);
 }
 
@@ -87,8 +92,27 @@ static void create_language_items(void) {
     }
 }
 
+static void refresh_language_data_finished(int result) {
+    if (result == 0) {
+        extract_archive(language_data_local_path, "language");
+    } else {
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXLANGUAGE.ERROR_GET_DATA, 0);
+    }
+}
+
+static void update_language_data() {
+    snprintf(language_data_local_path, sizeof(language_data_local_path), "%s/%s/lang.muxzip",
+            device.STORAGE.ROM.MOUNT, MUOS_ARCH_PATH);
+
+    if (file_exist(language_data_local_path)) remove(language_data_local_path);
+    set_download_callbacks(refresh_language_data_finished);
+    initiate_download(config.EXTRA.LANGUAGE.DATA, language_data_local_path, true,
+                      lang.MUXLANGUAGE.DOWNLOADING);
+}
+
 static void handle_confirm(void) {
-    if (msgbox_active) return;
+    if (download_in_progress || msgbox_active) return;
 
     play_sound(SND_CONFIRM);
 
@@ -105,7 +129,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
-    if (msgbox_active) {
+    if (download_in_progress || msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
@@ -119,8 +143,14 @@ static void handle_back(void) {
     mux_input_stop();
 }
 
+static void handle_refresh(void) {
+    if (download_in_progress || msgbox_active || !device.DEVICE.HAS_NETWORK) return;
+    play_sound(SND_CONFIRM);
+    update_language_data();
+}
+
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (download_in_progress || msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -142,12 +172,20 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  1},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 1},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
+            {ui_lblNavAGlyph, "",                       1},
+            {ui_lblNavA,      lang.GENERIC.SELECT,      1},
+            {ui_lblNavBGlyph, "",                       0},
+            {ui_lblNavB,      lang.GENERIC.BACK,        0},
+            {NULL, NULL,                                0}
     });
+
+    if (device.DEVICE.HAS_NETWORK) {
+        setup_nav((struct nav_bar[]) {
+                {ui_lblNavXGlyph, "",                       0},
+                {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},
+                {NULL, NULL,                                0}
+        });
+    }
 
     overlay_display();
 }
@@ -194,6 +232,7 @@ int muxlanguage_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_confirm,
                     [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_X] = handle_refresh,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
