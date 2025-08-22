@@ -302,7 +302,8 @@
     SYSINFO(Memory,   "memory")   \
     SYSINFO(Temp,     "temp")     \
     SYSINFO(Capacity, "capacity") \
-    SYSINFO(Voltage,  "voltage")
+    SYSINFO(Voltage,  "voltage")  \
+    SYSINFO(Refresh,  "refresh")
 
 #define TWEAKADV_ELEMENTS                \
     TWEAKADV(Accelerate,  "accelerate")  \

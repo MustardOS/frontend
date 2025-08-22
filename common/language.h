@@ -76,6 +76,7 @@ struct mux_lang {
         char CHANGE[MAX_BUFFER_SIZE];
         char ALLOWED[MAX_BUFFER_SIZE];
         char RESTRICTED[MAX_BUFFER_SIZE];
+        char REFRESH[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -880,6 +881,7 @@ struct mux_lang {
         char TEMP[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
+        char REFRESH[MAX_BUFFER_SIZE];
         struct {
             char INFO[MAX_BUFFER_SIZE];
             char SPEED[MAX_BUFFER_SIZE];
@@ -895,6 +897,7 @@ struct mux_lang {
             char SERVICE[MAX_BUFFER_SIZE];
             char CAPACITY[MAX_BUFFER_SIZE];
             char VOLTAGE[MAX_BUFFER_SIZE];
+            char REFRESH[MAX_BUFFER_SIZE];
             struct {
                 char INFO[MAX_BUFFER_SIZE];
                 char SPEED[MAX_BUFFER_SIZE];

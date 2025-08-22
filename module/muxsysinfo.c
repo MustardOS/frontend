@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxsysinfo.h"
 
-#define UI_COUNT  11
+#define UI_COUNT  12
 
 static char hostname[32];
 static int tap_count = 0;
@@ -19,6 +19,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTemp_sysinfo,     lang.MUXSYSINFO.HELP.TEMP},
             {ui_lblCapacity_sysinfo, lang.MUXSYSINFO.HELP.CAPACITY},
             {ui_lblVoltage_sysinfo,  lang.MUXSYSINFO.HELP.VOLTAGE},
+            {ui_lblRefresh_sysinfo,  lang.MUXSYSINFO.HELP.REFRESH},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -189,6 +190,7 @@ static void update_system_info() {
     lv_label_set_text(ui_lblTempValue_sysinfo, get_temperature());
     lv_label_set_text(ui_lblCapacityValue_sysinfo, get_battery_cap());
     lv_label_set_text(ui_lblVoltageValue_sysinfo, read_battery_voltage());
+    lv_label_set_text(ui_lblRefreshValue_sysinfo, "");
 }
 
 static void init_navigation_group(void) {
@@ -208,6 +210,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
     INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
     INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", read_battery_voltage());
+    INIT_VALUE_ITEM(-1, sysinfo, Refresh, lang.MUXSYSINFO.REFRESH, "refresh", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -362,6 +365,21 @@ static void handle_a(void) {
 
     if (lv_group_get_focused(ui_group) == ui_lblKernel_sysinfo) {
         toast_message(hostname, 1000);
+    }
+
+    if (lv_group_get_focused(ui_group) == ui_lblRefresh_sysinfo) {
+        toast_message(lang.GENERIC.REFRESH, 0);
+
+        refresh_config = 1;
+        refresh_device = 1;
+        refresh_kiosk = 1;
+        refresh_resolution = 1;
+
+        if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
+        load_mux("launcher");
+
+        close_input();
+        mux_input_stop();
     }
 
     refresh_screen(ui_screen);
