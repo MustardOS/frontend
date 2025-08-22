@@ -1,5 +1,4 @@
 #include "muxshare.h"
-#include "ui/ui_muxplore.h"
 #include "../common/skip_list.h"
 
 static lv_obj_t *ui_imgSplash;
@@ -982,7 +981,7 @@ int muxplore_main(int index, char *dir) {
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_muxplore(ui_screen, &theme);
+    init_ui_item_counter(&theme);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
