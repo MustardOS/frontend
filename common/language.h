@@ -485,6 +485,9 @@ struct mux_lang {
         char NONE[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
+        char REFRESH[MAX_BUFFER_SIZE];
+        char DOWNLOADING[MAX_BUFFER_SIZE];
+        char ERROR_GET_DATA[MAX_BUFFER_SIZE];
     } MUXLANGUAGE;
 
     struct {

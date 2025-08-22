@@ -478,6 +478,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLANGUAGE.NONE, "No Languages Found…");
     SPECIFIC_FIELD(lang->MUXLANGUAGE.SAVE, "Saving Language");
     SPECIFIC_FIELD(lang->MUXLANGUAGE.HELP, "Select your preferred language");
+    SPECIFIC_FIELD(lang->MUXLANGUAGE.REFRESH, "Refresh");
+    SPECIFIC_FIELD(lang->MUXLANGUAGE.DOWNLOADING, "Downloading Language Updates");
+    SPECIFIC_FIELD(lang->MUXLANGUAGE.ERROR_GET_DATA, "Error Retrieving Language Data");
 
     // muxlaunch
     SPECIFIC_FIELD(lang->MUXLAUNCH.TITLE, "MAIN MENU");
