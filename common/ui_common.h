@@ -24,6 +24,8 @@ void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 
+void init_ui_item_counter(struct theme_config *theme);
+
 void ui_common_handle_bright_up();
 
 void ui_common_handle_bright_down();
@@ -143,6 +145,7 @@ extern lv_obj_t *ui_barProgressVolume;
 extern lv_obj_t *ui_pnlDownload;
 extern lv_obj_t *ui_barDownload;
 extern lv_obj_t *ui_lblDownload;
+extern lv_obj_t *ui_lblCounter_explore;
 
 
 LV_IMG_DECLARE(ui_img_nothing_png)

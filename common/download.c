@@ -39,15 +39,11 @@ static void update_progress() {
         lv_obj_move_foreground(ui_pnlDownload);
     }
 
-    if (cancel_download || last_update == 100) {
-        download_in_progress = false;
-        printf("Deleting timer\n");
-    }
-
     if (!download_in_progress) {
         lv_obj_set_style_opa(ui_pnlDownload, 0, MU_OBJ_MAIN_DEFAULT);
 
         if (timer_update_progress) {
+            printf("Deleting download timer\n");
             lv_timer_del(timer_update_progress);
             timer_update_progress = NULL;
         }
@@ -77,6 +73,7 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 }
 
 static void download_finished(int result) {
+    printf("Download finished with result: %d\n", result);
     download_in_progress = false;
     if (download_finish_cb) download_finish_cb(result);
 }
@@ -85,14 +82,6 @@ int download_file(const char *url, const char *output_path) {
     last_update = 0;
     cancel_download = false;
     download_in_progress = true;
-
-    if (showProgressUpdates) {
-        lv_label_set_text(ui_lblDownload, "");
-        lv_bar_set_value(ui_barDownload, last_update, LV_ANIM_OFF);
-        lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
-    }
-
-    timer_update_progress = lv_timer_create(update_progress, TIMER_REFRESH, NULL);
 
     CURL *curl;
     FILE *fp;
@@ -124,7 +113,14 @@ int download_file(const char *url, const char *output_path) {
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
     res = curl_easy_perform(curl);
-    fclose(fp);
+
+    // flush and close file before checking
+    fflush(fp);
+    fclose(fp);    
+
+    long response_code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
@@ -134,7 +130,25 @@ int download_file(const char *url, const char *output_path) {
         return -3;
     }
 
-    printf("Download Finished\n");
+    // Verify HTTP status
+    if (response_code != 200) {
+        fprintf(stderr, "Unexpected HTTP status: %ld\n", response_code);
+        remove(output_path);
+        download_finished(-4);
+        return -4;
+    }
+
+    // Verify file is not empty
+    double cl;
+    curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD, &cl);
+    if (cl <= 0.0) {
+        fprintf(stderr, "No data downloaded\n");
+        remove(output_path);
+        download_finished(-5);
+        return -5;
+    }
+
+    printf("Download Finished (%.0f bytes)\n", cl);
     download_finished(0);
     return 0;
 }
@@ -149,6 +163,12 @@ static void *download_thread(void *arg) {
 }
 
 void initiate_download(const char *url, const char *output_path, bool showProgress, char *message) {
+    if (showProgressUpdates) {
+        lv_label_set_text(ui_lblDownload, "");
+        lv_bar_set_value(ui_barDownload, last_update, LV_ANIM_OFF);
+        lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
+    }
+    
     snprintf(download_message, sizeof(download_message), "%s", message);
 
     showProgressUpdates = showProgress;
@@ -159,4 +179,7 @@ void initiate_download(const char *url, const char *output_path, bool showProgre
 
     pthread_t tid;
     pthread_create(&tid, NULL, download_thread, args);
+    pthread_detach(tid);
+
+    timer_update_progress = lv_timer_create(update_progress, TIMER_REFRESH, NULL);
 }
