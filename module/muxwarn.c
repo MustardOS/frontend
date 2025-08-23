@@ -56,7 +56,7 @@ int main(void) {
     lv_obj_t *ui_barProgress = lv_bar_create(ui_scrWarn);
     lv_bar_set_range(ui_barProgress, 0, 100);
     lv_obj_set_y(ui_barProgress, 0);
-    lv_obj_set_size(ui_barProgress, device.MUX.WIDTH, 24);
+    lv_obj_set_size(ui_barProgress, device.MUX.WIDTH, device.MUX.HEIGHT <= 480 ? 12 : 24);
     lv_obj_set_style_pad_all(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
