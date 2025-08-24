@@ -162,7 +162,7 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || !ui_count) return;
 
     LOG_INFO(mux_module, "Single Tag Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -191,7 +191,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || !ui_count) return;
 
     LOG_INFO(mux_module, "Directory Tag Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -204,7 +204,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || !ui_count) return;
 
     LOG_INFO(mux_module, "Parent Tag Assignment Triggered")
     play_sound(SND_CONFIRM);
