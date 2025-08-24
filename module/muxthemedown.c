@@ -31,7 +31,7 @@ static bool is_downloaded(int index) {
 }
 
 static void image_refresh(char *image_type) {
-    if (!strcasecmp(image_type, "box") && config.VISUAL.BOX_ART == 8) return;
+    lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
     char image[MAX_BUFFER_SIZE];
     char *core_artwork = "theme";
@@ -68,11 +68,11 @@ static void image_refresh(char *image_type) {
             if (file_exist(image)) {
                 starter_image = 1;
                 struct ImageSettings image_settings = {
-                        image, config.VISUAL.BOX_ART_ALIGN,
+                        image, 6,
                         validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
                         validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
-                        theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, theme.IMAGE_LIST.PAD_TOP,
-                        theme.IMAGE_LIST.PAD_BOTTOM
+                        theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
+                        theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
                 };
                 update_image(ui_imgBox, image_settings);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
