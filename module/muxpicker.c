@@ -71,8 +71,12 @@ static void image_refresh(void) {
              get_last_subdir(picker_type, '/', 1), name);
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
-        if (!extract_preview(mux_dimension, preview_path) && !strcmp("640x480/", mux_dimension))
-            extract_preview("640x480/", fallback_path);
+        char catalogue_path[PATH_MAX];
+        snprintf(catalogue_path, sizeof(catalogue_path), "%s/%s/box/%s", INFO_CAT_PATH,
+                 get_last_subdir(picker_type, '/', 1), mux_dimension);
+        create_directories(catalogue_path);
+
+        extract_preview(mux_dimension, preview_path);
     }
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
