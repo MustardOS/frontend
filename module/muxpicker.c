@@ -10,7 +10,7 @@ static char *picker_extension;
 #define TEMP_CREDITS "credits.txt"
 
 static void show_help(void) {
-    if (items[current_item_index].content_type == FOLDER) return;
+    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) return;
 
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
@@ -64,16 +64,16 @@ static void image_refresh(void) {
     char *name = lv_label_get_text(lv_group_get_focused(ui_group));
     char preview_path[PATH_MAX];
     snprintf(preview_path, sizeof(preview_path), "%s/%s/box/%s%s.png", INFO_CAT_PATH,
-             get_last_subdir(picker_type, '/', 1), mux_dimension, name);
+             str_capital(get_last_subdir(picker_type, '/', 1)), mux_dimension, name);
 
     char fallback_path[PATH_MAX];
     snprintf(fallback_path, sizeof(fallback_path), "%s/%s/box/640x480/%s.png", INFO_CAT_PATH,
-             get_last_subdir(picker_type, '/', 1), name);
+             str_capital(get_last_subdir(picker_type, '/', 1)), name);
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
         char catalogue_path[PATH_MAX];
         snprintf(catalogue_path, sizeof(catalogue_path), "%s/%s/box/%s", INFO_CAT_PATH,
-                 get_last_subdir(picker_type, '/', 1), mux_dimension);
+                 str_capital(get_last_subdir(picker_type, '/', 1)), mux_dimension);
         create_directories(catalogue_path);
 
         extract_preview(mux_dimension, preview_path);
