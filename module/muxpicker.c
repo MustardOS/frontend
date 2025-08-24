@@ -79,7 +79,7 @@ static void image_refresh(void) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
     } else {
         struct ImageSettings image_settings = {
-                file_exist(preview_path) ? preview_path : fallback_path, config.VISUAL.BOX_ART_ALIGN,
+                file_exist(preview_path) ? preview_path : fallback_path, 6,
                 validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
                 validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
                 theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
@@ -263,7 +263,7 @@ static void handle_confirm(void) {
 static void handle_confirm_force(void) {
     if (msgbox_active || ui_count <= 0 ||
         strcasecmp(picker_type, "/theme") != 0 ||
-        items[current_item_index].content_type == FOLDER || 
+        items[current_item_index].content_type == FOLDER ||
         items[current_item_index].content_type == MENU) {
         return;
     }
@@ -424,8 +424,6 @@ int muxpicker_main(char *type, char *ex_dir) {
     init_module("muxpicker");
 
     init_theme(1, 1);
-
-    config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
     const char *picker_title = NULL;
     if (!strcasecmp(picker_type, "/theme")) {
