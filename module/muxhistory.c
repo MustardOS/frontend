@@ -356,7 +356,7 @@ static int load_content(const char *content_name) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (ui_count <= 0) return;
+    if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
@@ -389,7 +389,7 @@ static void list_nav_next(int steps) {
 }
 
 static void process_load(int from_start) {
-    if (!ui_count || holding_cell) return;
+    if (!ui_count || hold_call) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -446,20 +446,12 @@ static void handle_a(void) {
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
     process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
 }
 
-static void handle_l2_hold(void) {
-    holding_cell = 1;
-}
-
-static void handle_l2_release(void) {
-    holding_cell = 0;
-}
-
 static void handle_b(void) {
-    if (holding_cell) return;
+    if (hold_call) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -476,21 +468,21 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY || holding_cell) return;
+    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY || hold_call) return;
 
     play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON || holding_cell) return;
+    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON || hold_call) return;
 
     play_sound(SND_CONFIRM);
     add_to_collection();
 }
 
 static void handle_menu(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -499,7 +491,7 @@ static void handle_menu(void) {
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count < 2 || holding_cell || !config.VISUAL.SHUFFLE) return;
+    if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE) return;
 
     int dir, target;
     shuffle_index(current_item_index, &dir, &target);
@@ -670,7 +662,7 @@ int muxhistory_main(int his_index) {
             },
             .release_handler = {
                     [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_L2] = handle_l2_release,
+                    [MUX_INPUT_L2] = hold_call_release,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,
@@ -679,7 +671,7 @@ int muxhistory_main(int his_index) {
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_L2] = handle_l2_hold,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             }

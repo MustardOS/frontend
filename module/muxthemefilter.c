@@ -6,7 +6,7 @@
 static char lookup_original_value[MAX_BUFFER_SIZE];
 
 #define THEMEFILTER(NAME, UDATA) static int NAME##_original;
-    THEMEFILTER_ELEMENTS
+THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 
 static void show_help(lv_obj_t *element_focused) {
@@ -21,20 +21,20 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define THEMEFILTER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_themefilter);
     THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 }
 
-static void restore_theme_filter_options() {
+static void restore_theme_filter_options(void) {
     lv_dropdown_set_selected(ui_droAllThemes_themefilter, config.THEME.FILTER.ALL_THEMES);
     lv_dropdown_set_selected(ui_droGrid_themefilter, config.THEME.FILTER.GRID);
     lv_dropdown_set_selected(ui_droHdmi_themefilter, config.THEME.FILTER.HDMI);
     lv_dropdown_set_selected(ui_droLanguage_themefilter, config.THEME.FILTER.LANGUAGE);
 }
 
-static void save_theme_filter_options() {
+static void save_theme_filter_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(themefilter, AllThemes, "theme/filter/allthemes", INT, 0);
@@ -56,7 +56,7 @@ static void save_theme_filter_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -89,7 +89,7 @@ static void init_navigation_group() {
     }
 }
 
-static void check_focus() {
+static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblLookup_themefilter) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -201,24 +201,26 @@ static void handle_confirm(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     key_show ? handle_keyboard_press() : handle_confirm();
 }
 
 static void handle_x(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     if (key_show) key_backspace(ui_txtEntry_themefilter);
 }
 
 static void handle_y(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     if (key_show) key_swap();
 }
 
-static void handle_back(void) {
+static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -243,7 +245,7 @@ static void handle_back(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
@@ -289,7 +291,7 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -300,7 +302,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -335,7 +337,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxthemefilter_main() {
+int muxthemefilter_main(void) {
     init_module("muxthemefilter");
 
     init_theme(1, 0);
@@ -361,7 +363,7 @@ int muxthemefilter_main() {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
@@ -372,12 +374,16 @@ int muxthemefilter_main() {
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_r1,
             }
     };

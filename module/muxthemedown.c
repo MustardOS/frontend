@@ -100,7 +100,7 @@ static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabl
     );
 }
 
-static void create_content_items() {
+static void create_content_items(void) {
     if (!file_exist(theme_data_local_path)) {
         LOG_WARN(mux_module, "Theme Data Not Found At: %s", theme_data_local_path)
         return;
@@ -170,7 +170,7 @@ static void update_list_items(int start_index) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (ui_count <= 0) return;
+    if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
@@ -268,14 +268,14 @@ static void refresh_theme_data_finished(int result) {
     }
 }
 
-static void update_theme_data() {
+static void update_theme_data(void) {
     if (file_exist(theme_data_local_path)) remove(theme_data_local_path);
     set_download_callbacks(refresh_theme_data_finished);
     initiate_download(config.THEME.DOWNLOAD.DATA, theme_data_local_path, true,
                       lang.MUXTHEMEDOWN.DOWN.DATA);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (download_in_progress || msgbox_active || !ui_count) return;
 
     play_sound(SND_CONFIRM);
@@ -294,7 +294,9 @@ static void handle_a() {
     }
 }
 
-static void handle_b() {
+static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -324,13 +326,13 @@ static void handle_b() {
     }
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (download_in_progress || msgbox_active || !ui_count) return;
     play_sound(SND_CONFIRM);
     update_theme_data();
 }
 
-static void handle_y() {
+static void handle_y(void) {
     if (download_in_progress || msgbox_active) return;
     play_sound(SND_CONFIRM);
 
@@ -349,7 +351,7 @@ static void handle_help(void) {
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -361,7 +363,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -396,7 +398,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxthemedown_main() {
+int muxthemedown_main(void) {
     exit_status = 0;
     starter_image = 0;
     snprintf(theme_data_local_path, sizeof(theme_data_local_path), "%s/%s",
@@ -463,12 +465,16 @@ int muxthemedown_main() {
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
     };

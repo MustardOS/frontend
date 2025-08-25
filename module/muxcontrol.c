@@ -196,7 +196,7 @@ static void create_control_items(const char *target) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (ui_count <= 0) return;
+    if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
@@ -227,7 +227,7 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     LOG_INFO(mux_module, "Single Control Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -242,6 +242,8 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -260,7 +262,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || is_app) return;
+    if (msgbox_active || is_app || hold_call) return;
 
     LOG_INFO(mux_module, "Directory Control Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -273,7 +275,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || is_app || at_base(rom_dir, "ROMS")) return;
+    if (msgbox_active || is_app || at_base(rom_dir, "ROMS") || hold_call) return;
 
     LOG_INFO(mux_module, "Parent Control Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -286,7 +288,7 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -514,10 +516,14 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };

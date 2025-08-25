@@ -438,7 +438,7 @@ static void update_footer_glyph(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (ui_count <= 0) return;
+    if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
@@ -537,7 +537,7 @@ static void process_load(int from_start) {
         return;
     }
 
-    if (holding_cell || (!add_mode && !ui_count)) return;
+    if (hold_call || (!add_mode && !ui_count)) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -632,16 +632,8 @@ static void handle_a(void) {
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
     process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
-}
-
-static void handle_l2_hold(void) {
-    holding_cell = 1;
-}
-
-static void handle_l2_release(void) {
-    holding_cell = 0;
 }
 
 static void handle_b(void) {
@@ -650,7 +642,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (holding_cell) return;
+    if (hold_call) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -693,7 +685,7 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode || holding_cell) return;
+    if (msgbox_active || !ui_count || add_mode || hold_call) return;
 
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
@@ -727,7 +719,7 @@ static void handle_y(void) {
         return;
     }
 
-    if (msgbox_active || holding_cell) return;
+    if (msgbox_active || hold_call) return;
 
     if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, access_mode)) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
@@ -743,7 +735,7 @@ static void handle_y(void) {
 }
 
 static void handle_menu(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -752,7 +744,7 @@ static void handle_menu(void) {
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count < 2 || holding_cell || !config.VISUAL.SHUFFLE) return;
+    if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE) return;
 
     int dir, target;
     shuffle_index(current_item_index, &dir, &target);
@@ -1032,7 +1024,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
             },
             .release_handler = {
                     [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_L2] = handle_l2_release,
+                    [MUX_INPUT_L2] = hold_call_release,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,
@@ -1041,7 +1033,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_L2] = handle_l2_hold,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_r1,
                     [MUX_INPUT_R2] = handle_random_select,
             }

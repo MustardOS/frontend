@@ -26,7 +26,7 @@ static void init_navigation_group(void) {
     }
 }
 
-static void handle_confirm(void) {
+static void handle_a(void) {
     play_sound(SND_CONFIRM);
 
     char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
@@ -49,7 +49,7 @@ static void handle_confirm(void) {
     }
 }
 
-static void handle_back(void) {
+static void handle_b(void) {
     play_sound(SND_BACK);
 
     exit_status_muxpass = 2;
@@ -160,18 +160,22 @@ int muxpass_main(char *p_type) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_confirm,
-                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
+            },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_L2] = hold_call_set,
             }
     };
     init_input(&input_opts, true);

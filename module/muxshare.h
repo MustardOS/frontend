@@ -56,7 +56,7 @@ extern int nav_moved;
 extern int current_item_index;
 extern int first_open;
 extern int ui_count;
-extern int holding_cell;
+extern int hold_call;
 
 extern int theme_down_index;
 
@@ -71,6 +71,10 @@ extern lv_group_t *ui_group_value;
 extern char box_image_previous_path[MAX_BUFFER_SIZE];
 extern char preview_image_previous_path[MAX_BUFFER_SIZE];
 extern char splash_image_previous_path[MAX_BUFFER_SIZE];
+
+void hold_call_set(void);
+
+void hold_call_release(void);
 
 void shuffle_index(int current, int *dir, int *target);
 

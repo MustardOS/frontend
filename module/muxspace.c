@@ -15,7 +15,7 @@ static void show_help(lv_obj_t *element_focused) {
     show_info_box(TS(lv_label_get_text(element_focused)), lang.MUXSPACE.HELP, 0);
 }
 
-static void update_storage_info() {
+static void update_storage_info(void) {
     struct mount storage_info[] = {
             {ui_pnlPrimary_space,   ui_pnlPrimaryBar_space,   ui_lblPrimaryValue_space,   ui_barPrimary_space,   device.STORAGE.ROM.MOUNT},
             {ui_pnlSecondary_space, ui_pnlSecondaryBar_space, ui_lblSecondaryValue_space, ui_barSecondary_space, device.STORAGE.SDCARD.MOUNT},
@@ -103,6 +103,8 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -119,7 +121,7 @@ static void handle_b(void) {
 }
 
 static void handle_menu(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
@@ -196,10 +198,14 @@ int muxspace_main(void) {
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };

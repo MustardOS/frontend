@@ -46,10 +46,14 @@ static void handle_down_page(void) {
 }
 
 static void handle_x(void) {
+    if (hold_call) return;
+
     lv_obj_scroll_to_y(ui_txtDocument_text, 0, LV_ANIM_ON);
 }
 
 static void handle_b(void) {
+    if (hold_call) return;
+
     play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "text");
 
@@ -129,10 +133,14 @@ int muxtext_main(void) {
                     [MUX_INPUT_L1] = handle_up_page,
                     [MUX_INPUT_R1] = handle_down_page,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_L1] = handle_up_page,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_down_page,
             },
 

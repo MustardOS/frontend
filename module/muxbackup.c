@@ -20,31 +20,31 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-        {ui_lblBiosValue_backup,        lang.MUXBACKUP.HELP.BIOS},
-        {ui_lblCatalogue_backup,        lang.MUXBACKUP.HELP.CATALOGUE},
-        {ui_lblName_backup,             lang.MUXBACKUP.HELP.FRIENDLY},
-        {ui_lblRetroArch_backup,        lang.MUXBACKUP.HELP.RA_SYSTEM},
-        {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
-        {ui_lblCore_backup,             lang.MUXBACKUP.HELP.ASSIGNED},
-        {ui_lblScheme_backup,           lang.MUXBACKUP.HELP.CONTROL_SCHEME},
-        {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
-        {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
-        {ui_lblMusic_backup,            lang.MUXBACKUP.HELP.MUSIC},
-        {ui_lblSave_backup,             lang.MUXBACKUP.HELP.SAVE},
-        {ui_lblScreenshot_backup,       lang.MUXBACKUP.HELP.SCREENSHOT},
-        {ui_lblTheme_backup,            lang.MUXBACKUP.HELP.PACKAGE.THEME},
-        {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
-        {ui_lblConfigPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
-        {ui_lblBootlogoPackage_backup,  lang.MUXBACKUP.HELP.PACKAGE.BOOTLOGO},
-        {ui_lblLanguage_backup,         lang.MUXBACKUP.HELP.LANGUAGE},
-        {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
-        {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
-        {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
-        {ui_lblActivityTracker_backup,  lang.MUXBACKUP.HELP.ACTIVITY_TRACKER},
-        {ui_lblExternal_backup,         lang.MUXBACKUP.HELP.EXTERNAL},
-        {ui_lblMuosConfig_backup,       lang.MUXBACKUP.HELP.MUOS_CONFIG},
-        {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
-        {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
+            {ui_lblBiosValue_backup,        lang.MUXBACKUP.HELP.BIOS},
+            {ui_lblCatalogue_backup,        lang.MUXBACKUP.HELP.CATALOGUE},
+            {ui_lblName_backup,             lang.MUXBACKUP.HELP.FRIENDLY},
+            {ui_lblRetroArch_backup,        lang.MUXBACKUP.HELP.RA_SYSTEM},
+            {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
+            {ui_lblCore_backup,             lang.MUXBACKUP.HELP.ASSIGNED},
+            {ui_lblScheme_backup,           lang.MUXBACKUP.HELP.CONTROL_SCHEME},
+            {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
+            {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
+            {ui_lblMusic_backup,            lang.MUXBACKUP.HELP.MUSIC},
+            {ui_lblSave_backup,             lang.MUXBACKUP.HELP.SAVE},
+            {ui_lblScreenshot_backup,       lang.MUXBACKUP.HELP.SCREENSHOT},
+            {ui_lblTheme_backup,            lang.MUXBACKUP.HELP.PACKAGE.THEME},
+            {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
+            {ui_lblConfigPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
+            {ui_lblBootlogoPackage_backup,  lang.MUXBACKUP.HELP.PACKAGE.BOOTLOGO},
+            {ui_lblLanguage_backup,         lang.MUXBACKUP.HELP.LANGUAGE},
+            {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
+            {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
+            {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
+            {ui_lblActivityTracker_backup,  lang.MUXBACKUP.HELP.ACTIVITY_TRACKER},
+            {ui_lblExternal_backup,         lang.MUXBACKUP.HELP.EXTERNAL},
+            {ui_lblMuosConfig_backup,       lang.MUXBACKUP.HELP.MUOS_CONFIG},
+            {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
+            {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -171,31 +171,31 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, backup, Bios,             lang.MUXBACKUP.BIOS,              "bios",            "");
-    INIT_VALUE_ITEM(-1, backup, Catalogue,        lang.MUXBACKUP.CATALOGUE,         "catalogue",       "");
-    INIT_VALUE_ITEM(-1, backup, Name,             lang.MUXBACKUP.FRIENDLY,          "name",            "");
-    INIT_VALUE_ITEM(-1, backup, RetroArch,        lang.MUXBACKUP.RA_SYSTEM,         "retroarch",       "");
-    INIT_VALUE_ITEM(-1, backup, Config,           lang.MUXBACKUP.RA_CONFIG,         "config",          "");
-    INIT_VALUE_ITEM(-1, backup, Core,             lang.MUXBACKUP.ASSIGNED,          "core",            "");
-    INIT_VALUE_ITEM(-1, backup, Scheme,           lang.MUXBACKUP.CONTROL_SCHEME,    "scheme",          "");
-    INIT_VALUE_ITEM(-1, backup, Collection,       lang.MUXBACKUP.COLLECTION,        "collection",      "");
-    INIT_VALUE_ITEM(-1, backup, History,          lang.MUXBACKUP.HISTORY,           "history",         "");
-    INIT_VALUE_ITEM(-1, backup, Music,            lang.MUXBACKUP.MUSIC,             "music",           "");
-    INIT_VALUE_ITEM(-1, backup, Save,             lang.MUXBACKUP.SAVE,              "save",            "");
-    INIT_VALUE_ITEM(-1, backup, Screenshot,       lang.MUXBACKUP.SCREENSHOT,        "screenshot",      "");
-    INIT_VALUE_ITEM(-1, backup, Theme,            lang.MUXBACKUP.PACKAGE.THEME,     "theme",           "");
-    INIT_VALUE_ITEM(-1, backup, CataloguePackage, lang.MUXBACKUP.PACKAGE.CATALOGUE, "pack-catalogue",  "");
-    INIT_VALUE_ITEM(-1, backup, ConfigPackage,    lang.MUXBACKUP.PACKAGE.RA_CONFIG, "pack-config",     "");
-    INIT_VALUE_ITEM(-1, backup, BootlogoPackage,  lang.MUXBACKUP.PACKAGE.BOOTLOGO,  "pack-bootlogo",   "");
-    INIT_VALUE_ITEM(-1, backup, Language,         lang.MUXBACKUP.LANGUAGE,          "language",        "");
-    INIT_VALUE_ITEM(-1, backup, Network,          lang.MUXBACKUP.NET_PROFILE,       "network",         "");
-    INIT_VALUE_ITEM(-1, backup, Syncthing,        lang.MUXBACKUP.SYNCTHING,         "syncthing",       "");
-    INIT_VALUE_ITEM(-1, backup, UserInit,         lang.MUXBACKUP.USER_INIT,         "userinit",        "");
-    INIT_VALUE_ITEM(-1, backup, ActivityTracker,  lang.MUXBACKUP.ACTIVITY_TRACKER,  "activity",        "");
-    INIT_VALUE_ITEM(-1, backup, External,         lang.MUXBACKUP.EXTERNAL,          "external",        "");
-    INIT_VALUE_ITEM(-1, backup, MuosConfig,       lang.MUXBACKUP.MUOS_CONFIG,       "muosconfig",      "");
-    INIT_VALUE_ITEM(-1, backup, BackupTarget,     lang.MUXBACKUP.BACKUP_TARGET,     "backuptarget",    "");
-    INIT_VALUE_ITEM(-1, backup, StartBackup,      lang.MUXBACKUP.START_BACKUP,      "startbackup",     "");
+    INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
+    INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
+    INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.FRIENDLY, "name", "");
+    INIT_VALUE_ITEM(-1, backup, RetroArch, lang.MUXBACKUP.RA_SYSTEM, "retroarch", "");
+    INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.RA_CONFIG, "config", "");
+    INIT_VALUE_ITEM(-1, backup, Core, lang.MUXBACKUP.ASSIGNED, "core", "");
+    INIT_VALUE_ITEM(-1, backup, Scheme, lang.MUXBACKUP.CONTROL_SCHEME, "scheme", "");
+    INIT_VALUE_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", "");
+    INIT_VALUE_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", "");
+    INIT_VALUE_ITEM(-1, backup, Music, lang.MUXBACKUP.MUSIC, "music", "");
+    INIT_VALUE_ITEM(-1, backup, Save, lang.MUXBACKUP.SAVE, "save", "");
+    INIT_VALUE_ITEM(-1, backup, Screenshot, lang.MUXBACKUP.SCREENSHOT, "screenshot", "");
+    INIT_VALUE_ITEM(-1, backup, Theme, lang.MUXBACKUP.PACKAGE.THEME, "theme", "");
+    INIT_VALUE_ITEM(-1, backup, CataloguePackage, lang.MUXBACKUP.PACKAGE.CATALOGUE, "pack-catalogue", "");
+    INIT_VALUE_ITEM(-1, backup, ConfigPackage, lang.MUXBACKUP.PACKAGE.RA_CONFIG, "pack-config", "");
+    INIT_VALUE_ITEM(-1, backup, BootlogoPackage, lang.MUXBACKUP.PACKAGE.BOOTLOGO, "pack-bootlogo", "");
+    INIT_VALUE_ITEM(-1, backup, Language, lang.MUXBACKUP.LANGUAGE, "language", "");
+    INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NET_PROFILE, "network", "");
+    INIT_VALUE_ITEM(-1, backup, Syncthing, lang.MUXBACKUP.SYNCTHING, "syncthing", "");
+    INIT_VALUE_ITEM(-1, backup, UserInit, lang.MUXBACKUP.USER_INIT, "userinit", "");
+    INIT_VALUE_ITEM(-1, backup, ActivityTracker, lang.MUXBACKUP.ACTIVITY_TRACKER, "activity", "");
+    INIT_VALUE_ITEM(-1, backup, External, lang.MUXBACKUP.EXTERNAL, "external", "");
+    INIT_VALUE_ITEM(-1, backup, MuosConfig, lang.MUXBACKUP.MUOS_CONFIG, "muosconfig", "");
+    INIT_VALUE_ITEM(-1, backup, BackupTarget, lang.MUXBACKUP.BACKUP_TARGET, "backuptarget", "");
+    INIT_VALUE_ITEM(-1, backup, StartBackup, lang.MUXBACKUP.START_BACKUP, "startbackup", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -249,7 +249,9 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_back(void) {
+static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_CONFIRM);
         msgbox_active = 0;
@@ -266,7 +268,7 @@ static void handle_back(void) {
     mux_input_stop();
 }
 
-// Fuck you I'm a ukelele
+// Fuck you I'm a ukulele
 static int get_focused_element_index(struct _lv_obj_t *element_focused) {
     if (ui_lblStartBackupValue_backup == element_focused) {
         return START_BACKUP_INDEX;
@@ -280,8 +282,8 @@ static int get_focused_element_index(struct _lv_obj_t *element_focused) {
     return -1; // Not found
 }
 
-static void handle_confirm(void) {
-    if (msgbox_active) return;
+static void handle_a(void) {
+    if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
 
@@ -349,8 +351,8 @@ static void handle_confirm(void) {
     mux_input_stop();
 }
 
-static void handle_toggle(void) {
-    if (msgbox_active) return;
+static void handle_x(void) {
+    if (msgbox_active || hold_call) return;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
     const char *label_text = lv_label_get_text(element_focused);
@@ -371,14 +373,14 @@ static void handle_toggle(void) {
     } else if (focused_index == START_BACKUP_INDEX) {
         // If focused on Start Backup, just return
         return;
-    } else if (focused_index == EXTERNAL_INDEX 
-            || focused_index == MUOS_CONFIG_INDEX) {
+    } else if (focused_index == EXTERNAL_INDEX
+               || focused_index == MUOS_CONFIG_INDEX) {
         play_sound(SND_CONFIRM);
 
         if (strcasecmp(label_text, "NONE") == 0) {
             lv_label_set_text(element_focused, "CUSTOM");
         }
-        
+
         nav_moved = 1;
     } else {
         play_sound(SND_CONFIRM);
@@ -386,8 +388,8 @@ static void handle_toggle(void) {
         // Toggle between SD1 and SD2 (or from NONE to SD1)
         if (strcasecmp(label_text, "SD2") == 0) {
             lv_label_set_text(element_focused, "SD1");
-        } else if (strcasecmp(label_text, "SD1") == 0 
-                && is_partition_mounted(device.STORAGE.SDCARD.MOUNT))  {
+        } else if (strcasecmp(label_text, "SD1") == 0
+                   && is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
             lv_label_set_text(element_focused, "SD2");
         } else if (strcasecmp(label_text, "NONE") == 0) {
             lv_label_set_text(element_focused, "SD1");
@@ -397,15 +399,15 @@ static void handle_toggle(void) {
     }
 }
 
-static void handle_clear(void) {
-    if (msgbox_active) return;
+static void handle_y(void) {
+    if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
 
     int focused_index = get_focused_element_index(element_focused);
-    if (focused_index == BACKUP_TARGET_INDEX 
+    if (focused_index == BACKUP_TARGET_INDEX
         || focused_index == START_BACKUP_INDEX) {
         // If focused on Toggle Target or Start Backup, just return
         return;
@@ -413,9 +415,9 @@ static void handle_clear(void) {
 
     // If SD1 or SD2, set to NONE
     const char *label_text = lv_label_get_text(element_focused);
-    if (strcasecmp(label_text, "SD1") == 0 
-    || strcasecmp(label_text, "SD2") == 0
-    || strcasecmp(label_text, "CUSTOM") == 0) {
+    if (strcasecmp(label_text, "SD1") == 0
+        || strcasecmp(label_text, "SD2") == 0
+        || strcasecmp(label_text, "CUSTOM") == 0) {
         lv_label_set_text(element_focused, "NONE");
     }
 
@@ -423,7 +425,7 @@ static void handle_clear(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     if (progress_onscreen == -1) {
         play_sound(SND_CONFIRM);
@@ -535,24 +537,28 @@ int muxbackup_main(void) {
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .press_handler = {
-            [MUX_INPUT_B]           = handle_back,
-            [MUX_INPUT_X]           = handle_toggle,
-            [MUX_INPUT_Y]           = handle_clear,
-            [MUX_INPUT_A]           = handle_confirm,
-            [MUX_INPUT_MENU_SHORT]  = handle_help,
-            [MUX_INPUT_DPAD_UP]     = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN]   = handle_list_nav_down,
-            [MUX_INPUT_L1]          = handle_list_nav_page_up,
-            [MUX_INPUT_R1]          = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            [MUX_INPUT_DPAD_UP]     = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN]   = handle_list_nav_down_hold,
-            [MUX_INPUT_L1]          = handle_list_nav_page_up,
-            [MUX_INPUT_R1]          = handle_list_nav_page_down,
-        }
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .press_handler = {
+                    [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+            },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
+            .hold_handler = {
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+            }
     };
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);

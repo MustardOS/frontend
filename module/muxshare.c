@@ -18,7 +18,7 @@ int nav_moved = 0;
 int current_item_index = 0;
 int first_open = 1;
 int ui_count = 0;
-int holding_cell = 0;
+int hold_call = 0;
 
 int theme_down_index = 0;
 
@@ -36,6 +36,14 @@ lv_group_t *ui_group_value;
 char box_image_previous_path[MAX_BUFFER_SIZE];
 char preview_image_previous_path[MAX_BUFFER_SIZE];
 char splash_image_previous_path[MAX_BUFFER_SIZE];
+
+void hold_call_set(void) {
+    hold_call = 1;
+}
+
+void hold_call_release(void) {
+    hold_call = 0;
+}
 
 void shuffle_index(int current, int *dir, int *target) {
     do {

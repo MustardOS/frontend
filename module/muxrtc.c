@@ -221,7 +221,6 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-// Trickle down validation functions to ensure the RTC state is always valid
 static void validate_notation(void) {
     if (rtc.notation < 0)
         rtc.notation = 1;
@@ -275,7 +274,6 @@ static void validate_year(void) {
     validate_month();
 }
 
-// Adjust functions to modify the RTC state and validate it
 static void adjust_year(int direction) {
     rtc.year += direction;
     validate_year();
@@ -306,7 +304,6 @@ static void adjust_notation(int direction) {
     validate_notation();
 }
 
-// If we change the RTC state, we need to update all of the UI labels accordingly
 static void check_rtc_state(rtc_state_t *rtc, rtc_state_t *old_rtc) {
     if (rtc->year != old_rtc->year) lv_label_set_text_fmt(ui_lblYearValue_rtc, "%04d", rtc->year);
     if (rtc->month != old_rtc->month) lv_label_set_text_fmt(ui_lblMonthValue_rtc, "%02d", rtc->month);
@@ -316,10 +313,8 @@ static void check_rtc_state(rtc_state_t *rtc, rtc_state_t *old_rtc) {
     if (rtc->notation != old_rtc->notation) lv_label_set_text(ui_lblNotationValue_rtc, notation[rtc->notation]);
 }
 
-// Adjust the focused option based on the direction of navigation
 static void adjust_option(int direction) {
-    if (msgbox_active)
-        return;
+    if (msgbox_active || hold_call) return;
 
     rtc_state_t old_rtc = rtc;
     play_sound(SND_OPTION);
@@ -355,7 +350,7 @@ static void save_and_exit(char *message) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblTimezone_rtc) {
         if (kiosk.DATETIME.TIMEZONE) return;
@@ -370,6 +365,8 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -398,7 +395,7 @@ static void handle_right(void) {
 }
 
 static void handle_menu(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -487,12 +484,16 @@ int muxrtc_main(void) {
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };

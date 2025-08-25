@@ -195,7 +195,9 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_back(void) {
+static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -212,8 +214,8 @@ static void handle_back(void) {
     mux_input_stop();
 }
 
-static void handle_confirm(void) {
-    if (msgbox_active) return;
+static void handle_a(void) {
+    if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
 
@@ -245,7 +247,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
@@ -321,18 +323,22 @@ int muxstorage_main(void) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_B] = handle_back,
-                    [MUX_INPUT_X] = handle_confirm,
+                    [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_a,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };

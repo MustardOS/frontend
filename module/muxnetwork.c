@@ -462,12 +462,14 @@ static void handle_profiles(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     key_show ? handle_keyboard_press() : handle_confirm();
 }
 
 static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -486,19 +488,19 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     key_show ? key_backspace(ui_txtEntry_network) : handle_scan();
 }
 
 static void handle_y(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     key_show ? key_swap() : handle_profiles();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
@@ -648,12 +650,16 @@ int muxnetwork_main(void) {
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_r1,
             }
     };

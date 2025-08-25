@@ -134,7 +134,7 @@ static int save_profile(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (ui_count <= 0) return;
+    if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
@@ -271,10 +271,8 @@ static void create_profile_items(void) {
     }
 }
 
-static void handle_confirm(void) {
-    if (msgbox_active || is_network_connected() || ui_count <= 0) {
-        return;
-    }
+static void handle_a(void) {
+    if (msgbox_active || is_network_connected() || !ui_count || hold_call) return;
 
     play_sound(SND_CONFIRM);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
@@ -285,7 +283,9 @@ static void handle_confirm(void) {
     mux_input_stop();
 }
 
-static void handle_back(void) {
+static void handle_b(void) {
+    if (hold_call) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -301,7 +301,7 @@ static void handle_back(void) {
 }
 
 static void handle_save(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || hold_call) return;
 
     if (save_profile()) {
         play_sound(SND_CONFIRM);
@@ -313,9 +313,7 @@ static void handle_save(void) {
 }
 
 static void handle_remove(void) {
-    if (msgbox_active || ui_count <= 0) {
-        return;
-    }
+    if (msgbox_active || !ui_count || hold_call) return;
 
     if (remove_profile(lv_label_get_text(lv_group_get_focused(ui_group)))) {
         play_sound(SND_CONFIRM);
@@ -327,7 +325,7 @@ static void handle_remove(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -399,8 +397,8 @@ int muxnetprofile_main(void) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_confirm,
-                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_save,
                     [MUX_INPUT_Y] = handle_remove,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
@@ -409,10 +407,14 @@ int muxnetprofile_main(void) {
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
+            .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
+            },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
