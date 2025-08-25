@@ -144,7 +144,7 @@ static void handle_back(void) {
 }
 
 static void handle_refresh(void) {
-    if (download_in_progress || msgbox_active || !device.DEVICE.HAS_NETWORK) return;
+    if (download_in_progress || msgbox_active || !is_network_connected()) return;
     play_sound(SND_CONFIRM);
     update_language_data();
 }
@@ -179,7 +179,7 @@ static void init_elements(void) {
             {NULL, NULL,                                0}
     });
 
-    if (device.DEVICE.HAS_NETWORK) {
+    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                       0},
                 {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},
