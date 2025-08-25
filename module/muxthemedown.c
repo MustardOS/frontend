@@ -362,9 +362,6 @@ static void adjust_panels() {
 }
 
 static void init_elements() {
-    lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
-
-    adjust_box_art();
     adjust_panels();
     header_and_footer_setup();
 
