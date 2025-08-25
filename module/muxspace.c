@@ -15,7 +15,7 @@ static void show_help(lv_obj_t *element_focused) {
     show_info_box(TS(lv_label_get_text(element_focused)), lang.MUXSPACE.HELP, 0);
 }
 
-static void update_storage_info(void) {
+static void update_storage_info() {
     struct mount storage_info[] = {
             {ui_pnlPrimary_space,   ui_pnlPrimaryBar_space,   ui_lblPrimaryValue_space,   ui_barPrimary_space,   device.STORAGE.ROM.MOUNT},
             {ui_pnlSecondary_space, ui_pnlSecondaryBar_space, ui_lblSecondaryValue_space, ui_barSecondary_space, device.STORAGE.SDCARD.MOUNT},
@@ -187,6 +187,7 @@ int muxspace_main(void) {
     update_storage_info();
 
     init_timer(ui_refresh_task, update_storage_info);
+    list_nav_next(0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

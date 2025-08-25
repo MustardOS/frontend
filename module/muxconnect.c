@@ -151,15 +151,11 @@ static void list_nav_next(int steps) {
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
-
-    play_sound(SND_NAVIGATE);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
-
-    play_sound(SND_NAVIGATE);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 

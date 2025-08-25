@@ -109,6 +109,7 @@ static void handle_a(void) {
 
             play_sound(SND_CONFIRM);
             load_mux(elements[i].mux_name);
+
             break;
         }
     }

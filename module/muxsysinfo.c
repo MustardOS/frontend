@@ -178,7 +178,7 @@ const char *get_kernel_version(void) {
     return buffer;
 }
 
-static void update_system_info(void) {
+static void update_system_info() {
     lv_label_set_text(ui_lblVersionValue_sysinfo, get_build_version());
     lv_label_set_text(ui_lblDeviceValue_sysinfo, get_device_info());
     lv_label_set_text(ui_lblKernelValue_sysinfo, get_kernel_version());
@@ -479,6 +479,7 @@ int muxsysinfo_main(void) {
     init_navigation_group();
 
     init_timer(ui_refresh_task, update_system_info);
+    list_nav_next(0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

@@ -296,7 +296,7 @@ int handle_navigate(void) {
             return 1;
         }
 
-        play_sound(SND_NAVIGATE);
+        play_sound(SND_OPTION);
 
         if (element_focused == ui_lblScan_network) {
             toggle_option(ui_lblScanValue_network, CONF_CONFIG_PATH "network/scan");

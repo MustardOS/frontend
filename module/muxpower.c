@@ -299,6 +299,7 @@ int muxpower_main(void) {
     init_dropdown_settings();
 
     init_timer(ui_refresh_task, NULL);
+    list_nav_next(0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

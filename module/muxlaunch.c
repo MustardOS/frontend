@@ -194,6 +194,7 @@ static void handle_a(void) {
             }
 
             load_mux(elements[i].mux_name);
+
             break;
         }
     }

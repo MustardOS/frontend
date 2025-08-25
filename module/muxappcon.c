@@ -158,6 +158,7 @@ static void handle_a(void) {
             play_sound(SND_CONFIRM);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].glyph_name);
             load_mux(elements[i].mux_name);
+
             break;
         }
     }

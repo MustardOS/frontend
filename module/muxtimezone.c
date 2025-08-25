@@ -182,6 +182,7 @@ int muxtimezone_main(void) {
     if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
 
     init_timer(ui_refresh_task, NULL);
+    list_nav_next(0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
