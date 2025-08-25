@@ -14,7 +14,7 @@ static void create_system_items(void) {
     if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
         add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
     }
-    
+
     DIR *ad;
     struct dirent *af;
 
@@ -26,7 +26,9 @@ static void create_system_items(void) {
     if (!ad) return;
 
     while ((af = readdir(ad))) {
-        if (af->d_type == DT_DIR) add_item(&items, &item_count, af->d_name, af->d_name, "", FOLDER);
+        if (af->d_type == DT_DIR) {
+            add_item(&items, &item_count, af->d_name, af->d_name, "", FOLDER);
+        }
     }
 
     closedir(ad);
@@ -47,7 +49,8 @@ static void create_system_items(void) {
         lv_obj_set_user_data(ui_lblSystemItem, items[i].name);
 
         lv_obj_t *ui_lblSystemItemGlyph = lv_img_create(ui_pnlSystem);
-        apply_theme_list_glyph(&theme, ui_lblSystemItemGlyph, mux_module, items[i].content_type == MENU ? "download" : "system");
+        apply_theme_list_glyph(&theme, ui_lblSystemItemGlyph, mux_module,
+                               items[i].content_type == MENU ? "download" : "system");
 
         lv_group_add_obj(ui_group, ui_lblSystemItem);
         lv_group_add_obj(ui_group_glyph, ui_lblSystemItemGlyph);
@@ -355,17 +358,17 @@ static void init_elements(void) {
         struct nav_bar nav_items[7];
         int i = 0;
 
-        nav_items[i++] = (struct nav_bar){ui_lblNavAGlyph, "",                      1};
-        nav_items[i++] = (struct nav_bar){ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1};
-        nav_items[i++] = (struct nav_bar){ui_lblNavXGlyph, "",                      1};
-        nav_items[i++] = (struct nav_bar){ui_lblNavX,      lang.GENERIC.DIRECTORY,  1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
 
         if (!at_base(rom_dir, "ROMS")) {
-            nav_items[i++] = (struct nav_bar){ui_lblNavYGlyph, "",                  1};
-            nav_items[i++] = (struct nav_bar){ui_lblNavY,      lang.GENERIC.RECURSIVE, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
         }
 
-        nav_items[i] = (struct nav_bar){NULL, NULL, 0};  // Null-terminate
+        nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
 
         setup_nav(nav_items);
     }

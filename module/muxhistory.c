@@ -209,9 +209,20 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         int fn_valid = 0;
         struct json fn_json;
 
-        if (json_valid(read_all_char_from(custom_lookup))) {
-            fn_valid = 1;
-            fn_json = json_parse(read_all_char_from(custom_lookup));
+        if (file_exist(custom_lookup)) {
+            char *lookup_content = read_all_char_from(custom_lookup);
+
+            if (lookup_content && json_valid(lookup_content)) {
+                fn_valid = 1;
+                fn_json = json_parse(read_all_char_from(custom_lookup));
+                LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup)
+            } else {
+                LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup)
+            }
+
+            free(lookup_content);
+        } else {
+            LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup)
         }
 
         if (fn_valid) {

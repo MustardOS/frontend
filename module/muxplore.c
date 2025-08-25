@@ -288,20 +288,25 @@ static void gen_item(char **file_names, int file_count) {
 
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dir);
-
-    if (!file_exist(custom_lookup)) {
-        snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/global.json");
-        LOG_INFO(mux_module, "Using Global Friendly Name file: %s", custom_lookup)
-    } else {
-        LOG_SUCCESS(mux_module, "Using Local Friendly Name file %s", custom_lookup)
-    }
+    if (!file_exist(custom_lookup)) snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/global.json");
 
     int fn_valid = 0;
-    struct json fn_json = {0};
+    struct json fn_json;
 
-    if (json_valid(read_all_char_from(custom_lookup))) {
-        fn_valid = 1;
-        fn_json = json_parse(read_all_char_from(custom_lookup));
+    if (file_exist(custom_lookup)) {
+        char *lookup_content = read_all_char_from(custom_lookup);
+
+        if (lookup_content && json_valid(lookup_content)) {
+            fn_valid = 1;
+            fn_json = json_parse(read_all_char_from(custom_lookup));
+            LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup)
+        } else {
+            LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup)
+        }
+
+        free(lookup_content);
+    } else {
+        LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup)
     }
 
     SkipList skiplist;
@@ -460,16 +465,23 @@ static void create_content_items(void) {
 
     if (config.VISUAL.FRIENDLYFOLDER) {
         char folder_name_file[MAX_BUFFER_SIZE];
-        snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
-                 INFO_NAM_PATH);
+        snprintf(folder_name_file, sizeof(folder_name_file), INFO_NAM_PATH "/folder.json");
 
-        char *file_content = read_all_char_from(folder_name_file);
-        if (file_content && json_valid(file_content)) {
-            fn_valid = 1;
-            fn_json = json_parse(strdup(file_content));
+        if (file_exist(folder_name_file)) {
+            char *file_content = read_all_char_from(folder_name_file);
+
+            if (file_content && json_valid(file_content)) {
+                fn_valid = 1;
+                fn_json = json_parse(strdup(file_content));
+                LOG_SUCCESS(mux_module, "Using Friendly Folder: %s", folder_name_file)
+            } else {
+                LOG_WARN(mux_module, "Invalid Friendly Folder: %s", folder_name_file)
+            }
+
+            free(file_content);
+        } else {
+            LOG_WARN(mux_module, "Friendly Folder does not exist: %s", folder_name_file)
         }
-
-        free(file_content);
     }
 
     update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, STORAGE_PATH);

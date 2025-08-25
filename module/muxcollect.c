@@ -234,9 +234,20 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         int fn_valid = 0;
         struct json fn_json;
 
-        if (json_valid(read_all_char_from(custom_lookup))) {
-            fn_valid = 1;
-            fn_json = json_parse(read_all_char_from(custom_lookup));
+        if (file_exist(custom_lookup)) {
+            char *lookup_content = read_all_char_from(custom_lookup);
+
+            if (lookup_content && json_valid(lookup_content)) {
+                fn_valid = 1;
+                fn_json = json_parse(read_all_char_from(custom_lookup));
+                LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup)
+            } else {
+                LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup)
+            }
+
+            free(lookup_content);
+        } else {
+            LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup)
         }
 
         if (fn_valid) {
@@ -316,23 +327,27 @@ static void create_collection_items(void) {
 
     if (config.VISUAL.FRIENDLYFOLDER) {
         char folder_name_file[MAX_BUFFER_SIZE];
-        snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
-                 INFO_NAM_PATH);
+        snprintf(folder_name_file, sizeof(folder_name_file), INFO_NAM_PATH "/folder.json");
 
-        char *file_content = read_all_char_from(folder_name_file);
-        if (file_content && json_valid(file_content)) {
-            fn_valid = 1;
-            fn_json = json_parse(file_content);
+        if (file_exist(folder_name_file)) {
+            char *file_content = read_all_char_from(folder_name_file);
+
+            if (file_content && json_valid(file_content)) {
+                fn_valid = 1;
+                fn_json = json_parse(strdup(file_content));
+                LOG_SUCCESS(mux_module, "Using Friendly Folder: %s", folder_name_file)
+            } else {
+                LOG_WARN(mux_module, "Invalid Friendly Folder: %s", folder_name_file)
+            }
+
+            free(file_content);
+        } else {
+            LOG_WARN(mux_module, "Friendly Folder does not exist: %s", folder_name_file)
         }
-
-        free(file_content);
     }
 
-    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
-                                  ? INFO_CKS_PATH
-                                  : INFO_COL_PATH;
-
-    update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, collection_path);
+    const char *col_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH)) ? INFO_CKS_PATH : INFO_COL_PATH;
+    update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, col_path);
 
     if (dir_count > 0 || file_count > 0) {
         if (at_base(sys_dir, access_mode)) {
