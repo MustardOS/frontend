@@ -53,7 +53,7 @@ static void handle_start(void) {
         if (file_exist(MUX_BLANK)) remove(MUX_BLANK);
         blank_check();
 
-        blank_timeout = 4;
+        blank_timeout = 3;
 
         return;
     }
@@ -68,6 +68,8 @@ static void handle_start(void) {
 }
 
 static void handle_idle(void) {
+    refresh_screen(ui_scrCharge_charge);
+
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
         if (file_exist(CHARGER_BRIGHT)) remove(CHARGER_BRIGHT);
@@ -78,8 +80,6 @@ static void handle_idle(void) {
 
         return;
     }
-
-    if (!is_blank) refresh_screen(ui_scrCharge_charge);
 }
 
 static void battery_task_charge() {
@@ -142,7 +142,9 @@ int main(void) {
     LOG_INFO(mux_module, "Charging Statistics Y Position: %d", theme.CHARGER.Y_POS)
     lv_obj_set_y(ui_pnlCharge_charge, theme.CHARGER.Y_POS);
 
+    check_for_cable();
     battery_task_charge();
+
     lv_timer_create(battery_task_charge, TIMER_BATTERY, NULL);
 
     refresh_screen(ui_scrCharge_charge);
