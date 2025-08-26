@@ -276,7 +276,7 @@ static void update_theme_data(void) {
 }
 
 static void handle_a(void) {
-    if (download_in_progress || msgbox_active || !ui_count) return;
+    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
 
     play_sound(SND_CONFIRM);
 
@@ -327,13 +327,13 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (download_in_progress || msgbox_active || !ui_count) return;
+    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
     play_sound(SND_CONFIRM);
     update_theme_data();
 }
 
 static void handle_y(void) {
-    if (download_in_progress || msgbox_active) return;
+    if (download_in_progress || msgbox_active || hold_call) return;
     play_sound(SND_CONFIRM);
 
     theme_down_index = current_item_index;
@@ -345,7 +345,7 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (download_in_progress || msgbox_active || !ui_count) return;
+    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();

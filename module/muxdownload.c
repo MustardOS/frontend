@@ -176,7 +176,7 @@ static void update_extra_data(void) {
 }
 
 static void handle_a(void) {
-    if (download_in_progress || !ui_count) return;
+    if (download_in_progress || !ui_count || hold_call) return;
 
     play_sound(SND_CONFIRM);
 
@@ -231,7 +231,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (download_in_progress || msgbox_active || !ui_count) return;
+    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
     play_sound(SND_CONFIRM);
     update_extra_data();
 }

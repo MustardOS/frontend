@@ -112,7 +112,7 @@ static void update_language_data(void) {
 }
 
 static void handle_a(void) {
-    if (download_in_progress || msgbox_active) return;
+    if (download_in_progress || msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
 
@@ -129,7 +129,9 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (download_in_progress || msgbox_active) {
+    if (download_in_progress || hold_call) return;
+
+    if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
@@ -143,14 +145,14 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_refresh(void) {
-    if (download_in_progress || msgbox_active || !is_network_connected()) return;
+static void handle_x(void) {
+    if (download_in_progress || msgbox_active || !is_network_connected() || hold_call) return;
     play_sound(SND_CONFIRM);
     update_language_data();
 }
 
 static void handle_help(void) {
-    if (download_in_progress || msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (download_in_progress || msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -232,7 +234,7 @@ int muxlanguage_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_refresh,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
