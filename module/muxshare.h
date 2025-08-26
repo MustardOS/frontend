@@ -106,6 +106,8 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json,
 
 void gen_label(char *module, char *item_glyph, char *item_text);
 
+int launch_flag(int mode, int held);
+
 int muxapp_main();
 
 int muxappcon_main(int auto_assign, char *name, char *dir, char *sys, int app);

@@ -784,13 +784,13 @@ static void process_load(int from_start) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
-    process_load(config.VISUAL.LAUNCH_SWAP ? 1 : 0);
+    if (hold_call) return;
+    process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 0));
 }
 
 static void handle_a_hold(void) {
     if (msgbox_active || hold_call) return;
-    process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
+    process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 1));
 }
 
 static void handle_b(void) {

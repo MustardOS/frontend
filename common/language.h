@@ -228,6 +228,8 @@ struct mux_lang {
             char TITLE[MAX_BUFFER_SIZE];
             char PRESS_A[MAX_BUFFER_SIZE];
             char HOLD_A[MAX_BUFFER_SIZE];
+            char LOAD_STATE[MAX_BUFFER_SIZE];
+            char START_FRESH[MAX_BUFFER_SIZE];
         } LAUNCH_SWAP;
         struct {
             char BOOTLOGO[MAX_BUFFER_SIZE];

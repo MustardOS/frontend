@@ -266,6 +266,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.TITLE, "Content Save State Launch");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.PRESS_A, "Press A");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.HOLD_A, "Hold A");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.LOAD_STATE, "Load State");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.START_FRESH, "Start Fresh");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOOTLOGO, "Load user created boot logos for your device");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");

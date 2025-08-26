@@ -154,7 +154,9 @@ static void init_navigation_group(void) {
 
     char *launch_swap_options[] = {
             lang.MUXCUSTOM.LAUNCH_SWAP.PRESS_A,
-            lang.MUXCUSTOM.LAUNCH_SWAP.HOLD_A
+            lang.MUXCUSTOM.LAUNCH_SWAP.HOLD_A,
+            lang.MUXCUSTOM.LAUNCH_SWAP.LOAD_STATE,
+            lang.MUXCUSTOM.LAUNCH_SWAP.START_FRESH
     };
 
     INIT_OPTION_ITEM(-1, custom, Bootlogo, lang.MUXCUSTOM.BOOTLOGO, "bootlogo", NULL, 0);
@@ -172,7 +174,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Animation, lang.MUXCUSTOM.ANIMATION, "animation", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.FADE, "blackfade", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, LaunchSwap, lang.MUXCUSTOM.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 2);
+    INIT_OPTION_ITEM(-1, custom, LaunchSwap, lang.MUXCUSTOM.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 4);
     INIT_OPTION_ITEM(-1, custom, Shuffle, lang.MUXCUSTOM.SHUFFLE, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);

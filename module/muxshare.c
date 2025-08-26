@@ -354,3 +354,17 @@ void gen_label(char *module, char *item_glyph, char *item_text) {
     apply_size_to_content(&theme, ui_pnlContent, ui_lblItem, ui_lblItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblItem);
 }
+
+/* Talk about a confusing state, but here we go!
+ * 0=Press A, 1=Hold A, 2=Load State, 3=Start Fresh
+*/
+int launch_flag(int mode, int held) {
+    static const uint8_t LAUNCH[4][2] = {
+            {1, 0}, // 0 Press A
+            {0, 1}, // 1 Hold A
+            {0, 0}, // 2 Load State (always)
+            {1, 1}  // 3 Start Fresh (always)
+    };
+    if ((unsigned) mode > 3) mode = 0;
+    return LAUNCH[mode][held ? 0 : 1];
+}
