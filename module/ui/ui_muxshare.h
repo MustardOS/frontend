@@ -168,6 +168,7 @@
     KIOSK(Language,   "language")   \
     KIOSK(Network,    "network")    \
     KIOSK(Storage,    "storage")    \
+    KIOSK(Backup,     "backup")     \
     KIOSK(WebServ,    "webserv")    \
     KIOSK(Core,       "core")       \
     KIOSK(Governor,   "governor")   \

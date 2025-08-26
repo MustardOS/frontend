@@ -405,6 +405,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXKIOSK.NETWORK, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXKIOSK.STORAGE, "Storage");
+    SPECIFIC_FIELD(lang->MUXKIOSK.BACKUP, "Backup");
     SPECIFIC_FIELD(lang->MUXKIOSK.WEBSERV, "Web Services");
     SPECIFIC_FIELD(lang->MUXKIOSK.CORE, "Content Core");
     SPECIFIC_FIELD(lang->MUXKIOSK.GOVERNOR, "Content Governor");
@@ -444,6 +445,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.LANGUAGE, "Permit changing the system language");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.NETWORK, "Allow editing of network settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.STORAGE, "Allow user to migrate or sync user based content");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.BACKUP, "Allow the use of the user based content backup tool");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.WEBSERV, "Enable use of web based features");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CORE, "Allow selection of content cores");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.GOVERNOR, "Allow selection of content governor");

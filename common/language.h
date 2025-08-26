@@ -401,6 +401,7 @@ struct mux_lang {
         char LANGUAGE[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
         char STORAGE[MAX_BUFFER_SIZE];
+        char BACKUP[MAX_BUFFER_SIZE];
         char WEBSERV[MAX_BUFFER_SIZE];
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
@@ -445,6 +446,7 @@ struct mux_lang {
             char LANGUAGE[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
             char STORAGE[MAX_BUFFER_SIZE];
+            char BACKUP[MAX_BUFFER_SIZE];
             char WEBSERV[MAX_BUFFER_SIZE];
             char CORE[MAX_BUFFER_SIZE];
             char GOVERNOR[MAX_BUFFER_SIZE];

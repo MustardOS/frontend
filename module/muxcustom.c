@@ -392,7 +392,7 @@ static void handle_a(void) {
             {"theme",     "/theme",            &kiosk.CUSTOM.THEME},
             {"bootlogo",  "package/bootlogo",  &kiosk.CUSTOM.BOOTLOGO},
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
-            {"config",    "package/config",    &kiosk.CUSTOM.CONFIGURATION}
+            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -410,7 +410,7 @@ static void handle_a(void) {
 
             return;
         } else if (!strcasecmp(u_data, elements[i].mux_name)) {
-            if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+            if (is_ksk(*elements[i].kiosk_flag)) {
                 kiosk_denied();
                 return;
             }

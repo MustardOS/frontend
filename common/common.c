@@ -2301,7 +2301,7 @@ int get_grid_row_item_count(int current_item_index) {
 }
 
 void kiosk_denied(void) {
-    if (kiosk.MESSAGE) {
+    if (is_ksk(kiosk.MESSAGE)) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.KIOSK_DISABLE, 1000);
         refresh_screen(ui_screen);

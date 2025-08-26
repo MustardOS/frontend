@@ -842,7 +842,7 @@ static void handle_y(void) {
         play_sound(SND_ERROR);
         toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000);
     } else {
-        if (kiosk.LAUNCH.COLLECTION || kiosk.COLLECT.ADD_CON) return;
+        if (is_ksk(kiosk.LAUNCH.COLLECTION) || is_ksk(kiosk.COLLECT.ADD_CON)) return;
 
         if (!load_content(1)) {
             play_sound(SND_ERROR);
@@ -870,8 +870,8 @@ static void handle_select(void) {
 
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-    if (kiosk.CONTENT.OPTION) {
-        if (!kiosk.CONTENT.SEARCH) {
+    if (is_ksk(kiosk.CONTENT.OPTION)) {
+        if (!is_ksk(kiosk.CONTENT.SEARCH)) {
             load_mux("search");
 
             close_input();
@@ -1050,7 +1050,7 @@ int muxplore_main(int index, char *dir) {
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
-    if (kiosk.LAUNCH.COLLECTION || kiosk.COLLECT.ADD_CON) {
+    if (is_ksk(kiosk.LAUNCH.COLLECTION) || is_ksk(kiosk.COLLECT.ADD_CON)) {
         lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
     }

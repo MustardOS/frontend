@@ -169,7 +169,7 @@ static void module_content_list(const char *path, const char *max_depth, int is_
 }
 
 static void module_collection(void) {
-    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+    const char *collection_path = (is_ksk(kiosk.COLLECT.ACCESS) && directory_exist(INFO_CKS_PATH))
                                   ? INFO_CKS_PATH : INFO_COL_PATH;
     module_content_list(collection_path, "2", 1);
 }

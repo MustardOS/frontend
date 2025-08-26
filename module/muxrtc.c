@@ -353,7 +353,7 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblTimezone_rtc) {
-        if (kiosk.DATETIME.TIMEZONE) return;
+        if (is_ksk(kiosk.DATETIME.TIMEZONE)) return;
 
         play_sound(SND_CONFIRM);
 

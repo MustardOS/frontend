@@ -209,7 +209,7 @@ static void handle_a(void) {
 
         for (size_t i = 0; i < A_SIZE(elements); i++) {
             if (strcasecmp(items[current_item_index].name, elements[i].mux_name) == 0) {
-                if (*(elements[i].kiosk_flag)) {
+                if (is_ksk(*elements[i].kiosk_flag)) {
                     kiosk_denied();
                     return;
                 }

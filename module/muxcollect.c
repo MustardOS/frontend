@@ -346,7 +346,8 @@ static void create_collection_items(void) {
         }
     }
 
-    const char *col_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH)) ? INFO_CKS_PATH : INFO_COL_PATH;
+    const char *col_path = (is_ksk(kiosk.COLLECT.ACCESS) && directory_exist(INFO_CKS_PATH))
+                           ? INFO_CKS_PATH : INFO_COL_PATH;
     update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, col_path);
 
     if (dir_count > 0 || file_count > 0) {
@@ -722,7 +723,7 @@ static void handle_y(void) {
 
     if (msgbox_active || hold_call) return;
 
-    if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, access_mode)) {
+    if (!is_ksk(kiosk.COLLECT.NEW_DIR) && at_base(sys_dir, access_mode)) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -874,7 +875,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     splash_valid = 0;
     nogrid_file_exists = 0;
 
-    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+    const char *collection_path = (is_ksk(kiosk.COLLECT.ACCESS) && directory_exist(INFO_CKS_PATH))
                                   ? INFO_CKS_PATH
                                   : INFO_COL_PATH;
 
@@ -992,12 +993,12 @@ int muxcollect_main(int add, char *dir, int last_index) {
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
-    if (kiosk.COLLECT.REMOVE) {
+    if (is_ksk(kiosk.COLLECT.REMOVE)) {
         lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
-    if (kiosk.COLLECT.NEW_DIR) {
+    if (is_ksk(kiosk.COLLECT.NEW_DIR)) {
         lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
     }

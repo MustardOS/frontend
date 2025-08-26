@@ -72,6 +72,8 @@ extern char box_image_previous_path[MAX_BUFFER_SIZE];
 extern char preview_image_previous_path[MAX_BUFFER_SIZE];
 extern char splash_image_previous_path[MAX_BUFFER_SIZE];
 
+int is_ksk(int k);
+
 void hold_call_set(void);
 
 void hold_call_release(void);

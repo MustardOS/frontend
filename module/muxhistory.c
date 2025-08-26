@@ -177,7 +177,7 @@ static char *get_glyph_name(size_t index) {
     const char *file_name = strip_ext(items[index].name);
     const char *system_name = read_line_char_from(history_file, CACHE_CORE_DIR);
 
-    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+    const char *collection_path = (is_ksk(kiosk.COLLECT.ACCESS) && directory_exist(INFO_CKS_PATH))
                                   ? INFO_CKS_PATH
                                   : INFO_COL_PATH;
 
@@ -469,14 +469,14 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY || hold_call) return;
+    if (msgbox_active || !ui_count || is_ksk(kiosk.CONTENT.HISTORY) || hold_call) return;
 
     play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON || hold_call) return;
+    if (msgbox_active || !ui_count || is_ksk(kiosk.COLLECT.ADD_CON) || hold_call) return;
 
     play_sound(SND_CONFIRM);
     add_to_collection();
@@ -624,12 +624,12 @@ int muxhistory_main(int his_index) {
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
-    if (kiosk.CONTENT.HISTORY) {
+    if (is_ksk(kiosk.CONTENT.HISTORY)) {
         lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
-    if (kiosk.COLLECT.ADD_CON) {
+    if (is_ksk(kiosk.COLLECT.ADD_CON)) {
         lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
     }

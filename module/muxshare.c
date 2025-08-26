@@ -37,6 +37,10 @@ char box_image_previous_path[MAX_BUFFER_SIZE];
 char preview_image_previous_path[MAX_BUFFER_SIZE];
 char splash_image_previous_path[MAX_BUFFER_SIZE];
 
+int is_ksk(int k) {
+    return kiosk.ENABLE && k;
+}
+
 void hold_call_set(void) {
     hold_call = 1;
 }
