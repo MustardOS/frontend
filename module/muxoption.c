@@ -167,7 +167,10 @@ static char *get_launch_count(void) {
 static void init_navigation_group(void) {
     int line_index = 0;
 
-    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
+    int dir_level = 4;
+    if (strcasecmp(rom_dir, STORAGE_PATH) == 0) dir_level = 3;
+
+    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', dir_level), "folder", false);
     add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
     add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
     add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
