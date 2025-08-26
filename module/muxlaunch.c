@@ -159,6 +159,7 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
+    static int16_t KIOSK_PASS = 0;
     struct {
         const char *glyph_name;
         const char *mux_name;
@@ -170,9 +171,9 @@ static void handle_a(void) {
             {"apps",       "app",        &kiosk.LAUNCH.APPLICATION},
             {"info",       "info",       &kiosk.LAUNCH.INFORMATION},
             {"config",     "config",     &kiosk.LAUNCH.CONFIGURATION},
-            {"reboot",     "reboot",   NULL},
-            {"shutdown",   "shutdown", NULL}
-    }; /* Leave the reboot and shutdown as null as they should always be available! */
+            {"reboot",     "reboot",     &KIOSK_PASS},
+            {"shutdown",   "shutdown",   &KIOSK_PASS}
+    };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     const char *u_data = lv_obj_get_user_data(element_focused);
