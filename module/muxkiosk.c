@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 39
+#define UI_COUNT 40
 
 #define KIOSK(NAME, UDATA) static int NAME##_original;
 KIOSK_ELEMENTS
@@ -17,6 +17,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblLanguage_kiosk,   lang.MUXKIOSK.HELP.LANGUAGE},
             {ui_lblNetwork_kiosk,    lang.MUXKIOSK.HELP.NETWORK},
             {ui_lblStorage_kiosk,    lang.MUXKIOSK.HELP.STORAGE},
+            {ui_lblBackup_kiosk,     lang.MUXKIOSK.HELP.BACKUP},
             {ui_lblWebServ_kiosk,    lang.MUXKIOSK.HELP.WEBSERV},
             {ui_lblCore_kiosk,       lang.MUXKIOSK.HELP.CORE},
             {ui_lblGovernor_kiosk,   lang.MUXKIOSK.HELP.GOVERNOR},
@@ -68,6 +69,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droLanguage_kiosk, kiosk.CONFIG.LANGUAGE);
     lv_dropdown_set_selected(ui_droNetwork_kiosk, kiosk.CONFIG.NETWORK);
     lv_dropdown_set_selected(ui_droStorage_kiosk, kiosk.CONFIG.STORAGE);
+    lv_dropdown_set_selected(ui_droBackup_kiosk, kiosk.CONFIG.BACKUP);
     lv_dropdown_set_selected(ui_droWebServ_kiosk, kiosk.CONFIG.WEB_SERVICES);
     lv_dropdown_set_selected(ui_droCore_kiosk, kiosk.CONTENT.CORE);
     lv_dropdown_set_selected(ui_droGovernor_kiosk, kiosk.CONTENT.GOVERNOR);
@@ -78,7 +80,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droTag_kiosk, kiosk.CONTENT.TAG);
     lv_dropdown_set_selected(ui_droBootlogo_kiosk, kiosk.CUSTOM.BOOTLOGO);
     lv_dropdown_set_selected(ui_droCatalogue_kiosk, kiosk.CUSTOM.CATALOGUE);
-    lv_dropdown_set_selected(ui_droRAConfig_kiosk, kiosk.CUSTOM.CONFIGURATION);
+    lv_dropdown_set_selected(ui_droRAConfig_kiosk, kiosk.CUSTOM.RACONFIG);
     lv_dropdown_set_selected(ui_droTheme_kiosk, kiosk.CUSTOM.THEME);
     lv_dropdown_set_selected(ui_droThemeDown_kiosk, kiosk.CUSTOM.THEME_DOWN);
     lv_dropdown_set_selected(ui_droClock_kiosk, kiosk.DATETIME.CLOCK);
@@ -108,18 +110,24 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Message, "message", INT);
     CHECK_AND_SAVE_KSK(kiosk, Archive, "application/archive", INT);
     CHECK_AND_SAVE_KSK(kiosk, Task, "application/task", INT);
-    CHECK_AND_SAVE_KSK(kiosk, Custom, "config/customisation", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Custom, "config/custom", INT);
     CHECK_AND_SAVE_KSK(kiosk, Language, "config/language", INT);
     CHECK_AND_SAVE_KSK(kiosk, Network, "config/network", INT);
     CHECK_AND_SAVE_KSK(kiosk, Storage, "config/storage", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Backup, "config/backup", INT);
     CHECK_AND_SAVE_KSK(kiosk, WebServ, "config/webserv", INT);
     CHECK_AND_SAVE_KSK(kiosk, Core, "content/core", INT);
     CHECK_AND_SAVE_KSK(kiosk, Governor, "content/governor", INT);
     CHECK_AND_SAVE_KSK(kiosk, Control, "content/control", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Tag, "content/tag", INT);
     CHECK_AND_SAVE_KSK(kiosk, Option, "content/option", INT);
     CHECK_AND_SAVE_KSK(kiosk, RetroArch, "content/retroarch", INT);
     CHECK_AND_SAVE_KSK(kiosk, Search, "content/search", INT);
-    CHECK_AND_SAVE_KSK(kiosk, Tag, "content/tag", INT);
+    CHECK_AND_SAVE_KSK(kiosk, HistoryRem, "content/history", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectAdd, "collect/add_con", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectNew, "collect/new_dir", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectRem, "collect/remove", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectAcc, "collect/access", INT);
     CHECK_AND_SAVE_KSK(kiosk, Bootlogo, "custom/bootlogo", INT);
     CHECK_AND_SAVE_KSK(kiosk, Catalogue, "custom/catalogue", INT);
     CHECK_AND_SAVE_KSK(kiosk, RAConfig, "custom/raconfig", INT);
@@ -131,12 +139,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Config, "launch/config", INT);
     CHECK_AND_SAVE_KSK(kiosk, Explore, "launch/explore", INT);
     CHECK_AND_SAVE_KSK(kiosk, CollectMod, "launch/collection", INT);
-    CHECK_AND_SAVE_KSK(kiosk, CollectAdd, "collect/add_con", INT);
-    CHECK_AND_SAVE_KSK(kiosk, CollectNew, "collect/new_dir", INT);
-    CHECK_AND_SAVE_KSK(kiosk, CollectRem, "collect/remove", INT);
-    CHECK_AND_SAVE_KSK(kiosk, CollectAcc, "collect/access", INT);
     CHECK_AND_SAVE_KSK(kiosk, HistoryMod, "launch/history", INT);
-    CHECK_AND_SAVE_KSK(kiosk, HistoryRem, "content/history", INT);
     CHECK_AND_SAVE_KSK(kiosk, Info, "launch/info", INT);
     CHECK_AND_SAVE_KSK(kiosk, Advanced, "setting/advanced", INT);
     CHECK_AND_SAVE_KSK(kiosk, General, "setting/general", INT);
@@ -169,6 +172,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Language, lang.MUXKIOSK.LANGUAGE, "language", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Network, lang.MUXKIOSK.NETWORK, "network", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Storage, lang.MUXKIOSK.STORAGE, "storage", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Backup, lang.MUXKIOSK.BACKUP, "backup", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, WebServ, lang.MUXKIOSK.WEBSERV, "webserv", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Core, lang.MUXKIOSK.CORE, "core", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Governor, lang.MUXKIOSK.GOVERNOR, "governor", allowed_restricted, 2);
