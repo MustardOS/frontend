@@ -825,6 +825,10 @@ static void handle_x(void) {
     toast_message(lang.MUXPLORE.REFRESH_RUN, 0);
     lv_obj_move_foreground(ui_pnlMessage);
 
+    // Refresh and add a small delay to actually display the message!
+    lv_task_handler();
+    usleep(256);
+
     const char *args[] = {(INTERNAL_PATH "script/mount/union.sh"), "restart", NULL};
     run_exec(args, A_SIZE(args), 0);
 
