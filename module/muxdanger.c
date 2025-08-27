@@ -51,8 +51,8 @@ static void restore_danger_options(void) {
     map_drop_down_to_index(ui_droReadAhead_danger, config.DANGER.READAHEAD, read_ahead_values, 9, 6);
     map_drop_down_to_index(ui_droTimeSlice_danger, config.DANGER.TIMESLICE, time_slice_values, 11, 1);
 
-    lv_dropdown_set_selected(ui_droCardMode_danger, !strcasecmp(config.DANGER.CARDMODE, "noop"));
-    lv_dropdown_set_selected(ui_droState_danger, !strcasecmp(config.DANGER.STATE, "mem"));
+    lv_dropdown_set_selected(ui_droCardMode_danger, strcasecmp(config.DANGER.CARDMODE, "deadline") != 0);
+    lv_dropdown_set_selected(ui_droState_danger, strcasecmp(config.DANGER.STATE, "mem") != 0);
 }
 
 static void save_danger_options(void) {
