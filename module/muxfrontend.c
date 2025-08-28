@@ -1,5 +1,11 @@
+#include <signal.h>
+#include <sys/prctl.h>
+
 #include "muxshare.h"
 #include "../lvgl/src/drivers/display/sdl.h"
+
+static volatile sig_atomic_t quit_signal = 0;
+static volatile sig_atomic_t shutting_down = 0;
 
 int first_boot = 1;
 
@@ -24,6 +30,24 @@ typedef struct {
 
     void (*mux_func)(void);
 } ModuleEntry;
+
+static void on_signal(int sig) {
+    quit_signal = sig ? sig : 1;
+}
+
+static void install_signal_handlers(void) {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = on_signal;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; // Do NOT use SA_RESTART (we want blocking syscalls to unblock)
+
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGUSR1, &sa, NULL);
+}
 
 static void cleanup_screen(void) {
     SAFE_DELETE(toast_timer, lv_timer_del);
@@ -53,6 +77,22 @@ static void cleanup_screen(void) {
     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
     snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "");
     snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "");
+}
+
+static void quit_watchdog(lv_timer_t *t) {
+    (void) t;
+
+    if (shutting_down) return;
+
+    if (file_exist(SAFE_QUIT) || quit_signal) {
+        LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal)
+        shutting_down = 1;
+
+        cleanup_screen();
+        sdl_cleanup();
+
+        exit(0);
+    }
 }
 
 static void process_action(char *action, char *module) {
@@ -91,8 +131,7 @@ static int set_splash_image_path(char *splash_image_name) {
         (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s/%s.png",
                   theme, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
         (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s.png",
-                  theme, splash_image_name) >= 0 && file_exist(splash_image_path))
-            )
+                  theme, splash_image_name) >= 0 && file_exist(splash_image_path)))
         return 1;
 
     return 0;
@@ -402,6 +441,14 @@ void init_audio(void) {
 }
 
 int main(void) {
+    install_signal_handlers();
+
+    // If parent (frontend.sh) dies, ask the kernel nicely to send us a SIGTERM hopefully
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Close the stupid race where the parent already died before the prctl call or we get a segfault...
+    if (getppid() == 1) raise(SIGTERM);
+
     load_device(&device);
     load_config(&config);
     load_kiosk(&kiosk);
@@ -412,6 +459,8 @@ int main(void) {
     // as we call upon the theme variables for specific settings within display init
     init_theme(0, 0);
     init_display(0);
+
+    lv_timer_create(quit_watchdog, 100, NULL);
 
     int show_alert = 0;
     if (!file_exist(DONE_RESET) && read_line_int_from(USED_RESET, 1)) show_alert = 1;
@@ -439,7 +488,10 @@ int main(void) {
 
         if (refresh_resolution || !directory_exist(folder)) {
             LOG_DEBUG("muxfrontend", "Resolution or Theme Refreshed... exiting!")
+
+            shutting_down = 1;
             safe_quit(0);
+
             break;
         }
 
@@ -493,6 +545,8 @@ int main(void) {
         cleanup_screen();
     }
 
+    cleanup_screen();
     sdl_cleanup();
+
     return 0;
 }
