@@ -36,8 +36,8 @@ static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     if (purge) delete_files_of_type(core_dir, ".gov", NULL, 0);
 
     char gov_path[MAX_BUFFER_SIZE];
-    snprintf(gov_path, sizeof(gov_path), "%s/%s/core.gov",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(gov_path, sizeof(gov_path), INFO_COR_PATH "/%s/core.gov",
+             get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(gov_path);
 
     write_gov_file(gov_path, gov, "Assign Governor (Directory)");
@@ -65,9 +65,11 @@ static void create_gov_assignment(const char *gov, char *rom, enum gen_type meth
     char core_dir[MAX_BUFFER_SIZE];
 
     if (is_app) {
-        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
+        snprintf(core_dir, sizeof(core_dir), "%s/",
+                 rom_dir);
     } else {
-        snprintf(core_dir, sizeof(core_dir), "%s/%s/", INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s/",
+                 get_last_subdir(rom_dir, '/', 4));
     }
 
     remove_double_slashes(core_dir);
@@ -141,8 +143,8 @@ static void create_gov_items(const char *target) {
     if (!strcmp(target, "none")) generate_available_governors(target);
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
+             target);
 
     char global_assign[FILENAME_MAX];
     snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
@@ -347,8 +349,8 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/%s/core.gov",
-                 INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.gov",
+                 get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
         if (file_exist(core_file)) {
@@ -357,8 +359,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         }
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "%s/%s/assign.json",
-                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
+        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
         if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
@@ -377,8 +378,8 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config)
 
                 char assigned_global[MAX_BUFFER_SIZE];
-                snprintf(assigned_global, sizeof(assigned_global), "%s/%s/%s/global.ini",
-                         device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
+                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini",
+                         ass_config);
 
                 LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global)
 
@@ -392,8 +393,8 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
                 if (strcmp(def_gov, "none") != 0) {
                     char default_core[MAX_BUFFER_SIZE];
-                    snprintf(default_core, sizeof(default_core), "%s/%s/%s/%s.ini",
-                             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config, def_sys);
+                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini",
+                             ass_config, def_sys);
 
                     static char core_governor[MAX_BUFFER_SIZE];
                     mini_t *local_ini = mini_load(default_core);
@@ -443,8 +444,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
     if (!strcasecmp(rom_system, "none") && !is_app) {
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
-                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
+        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
         if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];

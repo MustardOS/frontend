@@ -139,7 +139,7 @@ static int set_splash_image_path(char *splash_image_name) {
 
 static int set_alert_image_path(void) {
     if ((snprintf(alert_image_path, sizeof(alert_image_path),
-                  INTERNAL_PATH "share/media/alert-%s.png", device.SCREEN.HEIGHT < 720 ? "small" : "big") >= 0 &&
+                  OPT_PATH "share/media/alert-%s.png", device.SCREEN.HEIGHT < 720 ? "small" : "big") >= 0 &&
          file_exist(alert_image_path)))
         return 1;
 

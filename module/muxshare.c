@@ -157,13 +157,11 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
         last_subdir = get_last_subdir(sys_dir, '/', 4);
 
         if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
-            snprintf(path, sizeof(path), "%s/core.%s", INFO_COR_PATH, ext);
-        } else {
-            snprintf(path, sizeof(path), "%s/%s/%s.%s",
-                     INFO_COR_PATH,
-                     last_subdir,
-                     strip_ext(items[current_item_index].name),
+            snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
                      ext);
+        } else {
+            snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
+                     last_subdir, strip_ext(items[current_item_index].name), ext);
 
             if (file_exist(path) && !force) {
                 LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path)
@@ -174,7 +172,8 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
                 LOG_ERROR(mux_module, "Failed to read individual %s", label)
             }
 
-            snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, last_subdir, ext);
+            snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
+                     last_subdir, ext);
         }
     } else {
         snprintf(path, sizeof(path), "%s.%s", strip_ext(pointer), ext);
@@ -185,8 +184,10 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
         }
 
         const char *replaced = str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), "");
-        snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, replaced, ext);
-        snprintf(path, sizeof(path), "%s", str_replace(path, "//", "/"));
+        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
+                 replaced, ext);
+        snprintf(path, sizeof(path), "%s",
+                 str_replace(path, "//", "/"));
     }
 
     if (file_exist(path) && !force) {

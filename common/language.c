@@ -12,36 +12,36 @@ void load_lang(struct mux_lang *lang) {
         strncpy(field, buffer, MAX_BUFFER_SIZE - 1),    \
         field[MAX_BUFFER_SIZE - 1] = '\0'
 
-#define GENERIC_FIELD(field, string)                     \
-        snprintf(buffer, sizeof(buffer), "%s", string),  \
+#define GENERIC_FIELD(field, string)                                    \
+        snprintf(buffer, sizeof(buffer), "%s", string),                 \
         strncpy(field, translate_generic(buffer), MAX_BUFFER_SIZE - 1), \
         field[MAX_BUFFER_SIZE - 1] = '\0'
 
-#define SPECIFIC_FIELD(field, string)                    \
-        snprintf(buffer, sizeof(buffer), "%s", string),  \
+#define SPECIFIC_FIELD(field, string)                                    \
+        snprintf(buffer, sizeof(buffer), "%s", string),                  \
         strncpy(field, translate_specific(buffer), MAX_BUFFER_SIZE - 1), \
         field[MAX_BUFFER_SIZE - 1] = '\0'
 
     // system language
-    GENERIC_FIELD(lang->SYSTEM.NO_JOY_GENERAL, "Failed to open GENERAL joystick device");
-    GENERIC_FIELD(lang->SYSTEM.NO_JOY_POWER, "Failed to open POWER joystick device");
-    GENERIC_FIELD(lang->SYSTEM.NO_JOY_VOLUME, "Failed to open VOLUME joystick device");
-    GENERIC_FIELD(lang->SYSTEM.NO_JOY_EXTRA, "Failed to open EXTRA joystick device");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_ALLOCATE_MEM, "Failed to allocate memory");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_DUP_STRING, "Failed to duplicate string");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_DIR_OPEN, "Failed to open directory");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_FILE_OPEN, "Failed to open file");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_FILE_WRITE, "Failed to open file for writing");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_FILE_READ, "Failed to open file for reading");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_FORK, "Failed to fork");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_RUN_COMMAND, "Failed to run command");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_READ_COMMAND, "Failed read command output");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_CLOSE_COMMAND, "Failed to close command stream");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_DELETE_FILE, "Failed to delete file");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_CREATE_FILE, "Failed to create file");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_STAT, "Failed to retrieve file or directory status");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_PROC_PART, "Failed to open /proc/partitions");
-    GENERIC_FIELD(lang->SYSTEM.FAIL_INT16_LENGTH, "Failed to use int16 - out of range");
+    SYSTEM_FIELD(lang->SYSTEM.NO_JOY_GENERAL, "Failed to open GENERAL joystick device");
+    SYSTEM_FIELD(lang->SYSTEM.NO_JOY_POWER, "Failed to open POWER joystick device");
+    SYSTEM_FIELD(lang->SYSTEM.NO_JOY_VOLUME, "Failed to open VOLUME joystick device");
+    SYSTEM_FIELD(lang->SYSTEM.NO_JOY_EXTRA, "Failed to open EXTRA joystick device");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_ALLOCATE_MEM, "Failed to allocate memory");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_DUP_STRING, "Failed to duplicate string");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_DIR_OPEN, "Failed to open directory");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_FILE_OPEN, "Failed to open file");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_FILE_WRITE, "Failed to open file for writing");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_FILE_READ, "Failed to open file for reading");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_FORK, "Failed to fork");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_RUN_COMMAND, "Failed to run command");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_READ_COMMAND, "Failed read command output");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_CLOSE_COMMAND, "Failed to close command stream");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_DELETE_FILE, "Failed to delete file");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_CREATE_FILE, "Failed to create file");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_STAT, "Failed to retrieve file or directory status");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_PROC_PART, "Failed to open /proc/partitions");
+    SYSTEM_FIELD(lang->SYSTEM.FAIL_INT16_LENGTH, "Failed to use int16 - out of range");
 
     // generic common language
     GENERIC_FIELD(lang->GENERIC.BACK, "Back");

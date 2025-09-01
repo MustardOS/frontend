@@ -58,8 +58,8 @@ void create_controller_profile(char *controller_profile_path) {
 
 void load_controller_profile(struct controller_profile *controller, char *controller_name) {
     char controller_profile_path[MAX_BUFFER_SIZE];
-    snprintf(controller_profile_path, sizeof(controller_profile_path), "%s/%s.ini",
-             INFO_CNT_PATH, controller_name);
+    snprintf(controller_profile_path, sizeof(controller_profile_path), INFO_CNT_PATH "/%s.ini",
+             controller_name);
 
     printf("Loading Controller Profile: %s\n", controller_profile_path);
 

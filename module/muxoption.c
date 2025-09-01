@@ -63,7 +63,6 @@ static void add_static_item(int index, const char *item_label, const char *item_
 static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *get_dir,
                                const char *opt_type, bool cap_label) {
     const char *value = get_file;
-
     if (!*value) value = get_dir;
 
     if (!*value) {
@@ -73,7 +72,8 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     }
 
     char cap_value[MAX_BUFFER_SIZE];
-    snprintf(cap_value, sizeof(cap_value), "%s", value);
+    snprintf(cap_value, sizeof(cap_value), "%s",
+             value);
 
     apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
 }

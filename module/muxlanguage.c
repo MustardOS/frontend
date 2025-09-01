@@ -9,10 +9,7 @@ static void show_help(void) {
 
 static void populate_languages(void) {
     struct dirent *entry;
-
-    char lang_dir[MAX_BUFFER_SIZE];
-    snprintf(lang_dir, sizeof(lang_dir), (RUN_STORAGE_PATH "language"));
-    DIR *dir = opendir(lang_dir);
+    DIR *dir = opendir(STORAGE_LANG);
 
     if (!dir) {
         perror(lang.SYSTEM.FAIL_DIR_OPEN);

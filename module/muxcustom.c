@@ -374,7 +374,7 @@ static void save_custom_options(void) {
     }
 
     if (is_modified > 0) {
-        const char *args[] = {INTERNAL_PATH "script/mux/tweak.sh", NULL};
+        const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
         run_exec(args, A_SIZE(args), 0);
 
         refresh_config = 1;

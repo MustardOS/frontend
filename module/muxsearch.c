@@ -65,12 +65,12 @@ static void image_refresh(char *image_type) {
     char *last_dir = get_last_dir(strip_ext(all_items[current_item_index].extra_data));
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_COR_PATH, str_replace(file_name, last_dir, ""));
+    snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s.cfg",
+             str_replace(file_name, last_dir, ""));
 
     if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), "%s/%score.cfg",
-                 INFO_COR_PATH, str_replace(file_name, last_dir, ""));
+        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%score.cfg",
+                 str_replace(file_name, last_dir, ""));
         snprintf(core_artwork, sizeof(core_artwork), "%s",
                  read_line_char_from(core_file, 2));
     } else {
@@ -423,12 +423,12 @@ static void handle_confirm(void) {
         toast_message(lang.MUXSEARCH.SEARCH, 0);
 
         if (element_focused == ui_lblSearchLocal_search) {
-            const char *args[] = {(INTERNAL_PATH "script/mux/find.sh"),
+            const char *args[] = {(OPT_PATH "script/mux/find.sh"),
                                   str_trim(lv_label_get_text(ui_lblLookupValue_search)), rom_dir,
                                   NULL};
             run_exec(args, A_SIZE(args), 0);
         } else {
-            const char *args[] = {(INTERNAL_PATH "script/mux/find.sh"),
+            const char *args[] = {(OPT_PATH "script/mux/find.sh"),
                                   str_trim(lv_label_get_text(ui_lblLookupValue_search)), SD1, SD2, E_USB,
                                   NULL};
             run_exec(args, A_SIZE(args), 0);

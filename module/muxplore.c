@@ -52,10 +52,10 @@ static char *load_content_core(int force, int run_quit) {
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
     if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
-        snprintf(content_core, sizeof(content_core), "%s/core.cfg", INFO_COR_PATH);
+        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/core.cfg");
     } else {
-        snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-                 INFO_COR_PATH, last_subdir, strip_ext(items[current_item_index].name));
+        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",
+                 last_subdir, strip_ext(items[current_item_index].name));
 
         if (file_exist(content_core) && !force) {
             LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
@@ -68,7 +68,7 @@ static char *load_content_core(int force, int run_quit) {
             LOG_ERROR(mux_module, "Failed to build individual core")
         }
 
-        snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg", INFO_COR_PATH, last_subdir);
+        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/core.cfg", last_subdir);
     }
 
     if (file_exist(content_core) && !force) {
@@ -280,7 +280,8 @@ static void gen_item(char **file_names, int file_count) {
         while (*sub_path == '/') sub_path++;
     }
 
-    snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/", INFO_COR_PATH, sub_path);
+    snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
+             sub_path);
     create_directories(init_meta_dir);
 
     const char *last_dir = str_tolower(get_last_dir(sub_path));
@@ -383,15 +384,15 @@ static void gen_item(char **file_names, int file_count) {
 
         const char *basename = strip_ext(items[i].name);
 
-        snprintf(content_tag, sizeof(content_tag), "%s/%s/%s.tag",
-                 INFO_COR_PATH, last_subdir, basename);
+        snprintf(content_tag, sizeof(content_tag), INFO_COR_PATH "/%s/%s.tag",
+                 last_subdir, basename);
 
         if (file_exist(content_tag)) {
             items[i].glyph_icon = strdup(str_remchar(read_line_char_from(content_tag, 1), ' '));
             items[i].use_module = strdup("muxtag");
         } else {
-            snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-                     INFO_COR_PATH, last_subdir, basename);
+            snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",
+                     last_subdir, basename);
 
             items[i].glyph_icon = strdup(get_content_explorer_glyph_name(content_core));
             items[i].use_module = strdup(mux_module);
@@ -829,7 +830,7 @@ static void handle_x(void) {
     lv_task_handler();
     usleep(256);
 
-    const char *args[] = {(INTERNAL_PATH "script/mount/union.sh"), "restart", NULL};
+    const char *args[] = {(OPT_PATH "script/mount/union.sh"), "restart", NULL};
     run_exec(args, A_SIZE(args), 0);
 
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);

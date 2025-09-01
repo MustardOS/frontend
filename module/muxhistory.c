@@ -18,8 +18,8 @@ static char *load_content_description(void) {
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
     char pointer[MAX_BUFFER_SIZE];
-    snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
+    snprintf(pointer, sizeof(pointer), INFO_COR_PATH "/%s",
+             get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
@@ -46,8 +46,8 @@ static void image_refresh(char *image_type) {
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
     char pointer[MAX_BUFFER_SIZE];
-    snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
+    snprintf(pointer, sizeof(pointer), INFO_COR_PATH "/%s",
+             get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
 
     char *h_file_name = strip_ext(read_line_char_from(pointer, CONTENT_FULL));
 

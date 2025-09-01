@@ -70,6 +70,7 @@ int is_blank = 0;
 
 char *theme_back_compat[] = {
         config.SYSTEM.VERSION,
+        "2508.0_GOOSE",
         "2502.0_PIXIE",
         NULL
 };
@@ -108,7 +109,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     if (!exec) return NULL;
 
     size_t i = 0;
-    exec[i++] = (INTERNAL_PATH "frontend/muterm");
+    exec[i++] = (OPT_PATH "frontend/muterm");
     exec[i++] = "-s";
     exec[i++] = (char *) theme.TERMINAL.FONT_SIZE;
 
@@ -138,7 +139,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
 
 void extract_archive(char *filename, char *screen) {
     size_t exec_count;
-    const char *args[] = {(INTERNAL_PATH "script/mux/extract.sh"), filename, screen, NULL};
+    const char *args[] = {(OPT_PATH "script/mux/extract.sh"), filename, screen, NULL};
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
@@ -1797,7 +1798,7 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language_file(const char *module) {
     char language_file[MAX_BUFFER_SIZE];
-    snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
+    snprintf(language_file, sizeof(language_file), STORAGE_LANG "/%s.json",
              config.SETTINGS.GENERAL.LANGUAGE);
 
     if (json_valid(read_all_char_from(language_file))) {
@@ -2340,13 +2341,17 @@ void run_exec(const char *args[], size_t size, int background) {
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line) {
     static char path[MAX_BUFFER_SIZE];
-    char *subdir = str_tolower(get_last_subdir(dir, '/', 4));
+    char *subdir = get_last_subdir(dir, '/', 4);
 
     if (name == NULL) {
-        snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, subdir, ext);
+        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
+                 subdir, ext);
     } else {
-        snprintf(path, sizeof(path), "%s/%s/%s.%s", INFO_COR_PATH, subdir, strip_ext(name), ext);
+        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
+                 subdir, strip_ext(name), ext);
     }
+
+    puts(path);
 
     if (file_exist(path)) return read_line_char_from(path, line);
 
@@ -2355,7 +2360,8 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line) {
 
 char *get_application_line(char *dir, char *ext, size_t line) {
     static char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), "%s/mux_option.%s", dir, ext);
+    snprintf(path, sizeof(path), "%s/mux_option.%s",
+             dir, ext);
 
     if (file_exist(path)) return read_line_char_from(path, line);
 

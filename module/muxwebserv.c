@@ -49,7 +49,7 @@ static void save_web_options(void) {
         toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
 
-        const char *args[] = {(INTERNAL_PATH "script/web/service.sh"), NULL};
+        const char *args[] = {(OPT_PATH "script/web/service.sh"), NULL};
         run_exec(args, A_SIZE(args), 1);
 
         refresh_config = 1;

@@ -10,7 +10,7 @@ static void scan_networks(void) {
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
 
-    const char *args[] = {(INTERNAL_PATH "script/web/ssid.sh"), NULL};
+    const char *args[] = {(OPT_PATH "script/web/ssid.sh"), NULL};
     run_exec(args, A_SIZE(args), 0);
 }
 

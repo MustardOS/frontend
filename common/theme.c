@@ -1104,7 +1104,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 
     char scheme_override[MAX_BUFFER_SIZE];
-    snprintf(scheme_override, sizeof(scheme_override), (RUN_STORAGE_PATH "theme/override/%s.ini"), mux_module);
+    snprintf(scheme_override, sizeof(scheme_override), RUN_STORAGE_PATH "theme/override/%s.ini",
+             mux_module);
     if (file_exist(scheme_override)) {
         load_theme_from_scheme(scheme_override, theme, device);
     }

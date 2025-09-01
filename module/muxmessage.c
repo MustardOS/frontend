@@ -134,7 +134,8 @@ int main(int argc, char *argv[]) {
             struct stat st;
 
             if (stat(live_file, &st) == 0) {
-                lv_label_set_text_fmt(ui_lblMessage, "%s", parse_newline(read_line_char_from(live_file, 1)));
+                lv_label_set_text_fmt(ui_lblMessage, "%s",
+                                      parse_newline(read_line_char_from(live_file, 1)));
             }
 
             if (file_exist(PROGRESS_FILE)) {

@@ -19,15 +19,16 @@ static void create_system_items(void) {
     struct dirent *af;
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "%s/%s",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN);
 
     ad = opendir(assign_dir);
     if (!ad) return;
 
     while ((af = readdir(ad))) {
         if (af->d_type == DT_DIR) {
-            add_item(&items, &item_count, af->d_name, af->d_name, "", FOLDER);
+            if (strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
+                add_item(&items, &item_count, af->d_name, af->d_name, "", FOLDER);
+            }
         }
     }
 
@@ -70,8 +71,8 @@ static void create_system_items(void) {
 
 static void create_core_items(const char *target) {
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
+             target);
 
     char global_assign[FILENAME_MAX];
     snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
@@ -231,8 +232,8 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, lv_label_get_text(lv_group_get_focused(ui_group)))
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
+             rom_system);
 
     char global_core[FILENAME_MAX];
     snprintf(global_core, sizeof(global_core), "%s/global.ini",

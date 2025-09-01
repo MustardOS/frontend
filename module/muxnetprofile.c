@@ -15,8 +15,8 @@ static void sanitise_ssid_name(char *dest, const char *src) {
 
 static int remove_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
-    snprintf(profile_file, sizeof(profile_file),
-             (RUN_STORAGE_PATH "network/%s.ini"), name);
+    snprintf(profile_file, sizeof(profile_file), RUN_STORAGE_PATH "network/%s.ini",
+            name);
 
     if (file_exist(profile_file)) {
         remove(profile_file);
@@ -31,8 +31,8 @@ static void load_profile(char *name) {
     refresh_screen(ui_screen);
 
     static char profile_file[MAX_BUFFER_SIZE];
-    snprintf(profile_file, sizeof(profile_file),
-             (RUN_STORAGE_PATH "network/%s.ini"), name);
+    snprintf(profile_file, sizeof(profile_file), RUN_STORAGE_PATH "network/%s.ini",
+             name);
 
     mini_t *net_profile = mini_try_load(profile_file);
 
@@ -107,12 +107,12 @@ static int save_profile(void) {
     char sanitised_ssid[MAX_BUFFER_SIZE];
     sanitise_ssid_name(sanitised_ssid, p_ssid);
 
-    snprintf(profile_file, sizeof(profile_file),
-             (RUN_STORAGE_PATH "network/%s.ini"), sanitised_ssid);
+    snprintf(profile_file, sizeof(profile_file), RUN_STORAGE_PATH "network/%s.ini",
+             sanitised_ssid);
 
     while (file_exist(profile_file)) {
-        snprintf(profile_file, sizeof(profile_file),
-                 (RUN_STORAGE_PATH "network/%s - %d.ini"), sanitised_ssid, ++counter);
+        snprintf(profile_file, sizeof(profile_file), RUN_STORAGE_PATH "network/%s - %d.ini",
+                 sanitised_ssid, ++counter);
     }
 
     mini_t *net_profile = mini_try_load(profile_file);
@@ -166,7 +166,7 @@ static void list_nav_next(int steps) {
 
 static void create_profile_items(void) {
     char profile_path[MAX_BUFFER_SIZE];
-    snprintf(profile_path, sizeof(profile_path), (RUN_STORAGE_PATH "network"));
+    snprintf(profile_path, sizeof(profile_path), RUN_STORAGE_PATH "network");
 
     const char *profile_directories[] = {
             profile_path
@@ -228,7 +228,8 @@ static void create_profile_items(void) {
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
         static char profile_store[MAX_BUFFER_SIZE];
-        snprintf(profile_store, sizeof(profile_store), "%s", strip_ext(profile_name));
+        snprintf(profile_store, sizeof(profile_store), "%s",
+                 strip_ext(profile_name));
 
         ui_count++;
 

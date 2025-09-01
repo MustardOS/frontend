@@ -3,9 +3,9 @@
 
 #define UI_COUNT 11
 
-const char *pass_args[] = {(INTERNAL_PATH "script/web/password.sh"), NULL};
-const char *net_c_args[] = {(INTERNAL_PATH "script/system/network.sh"), "connect", NULL};
-const char *net_d_args[] = {(INTERNAL_PATH "script/system/network.sh"), "disconnect", NULL};
+const char *pass_args[] = {(OPT_PATH "script/web/password.sh"), NULL};
+const char *net_c_args[] = {(OPT_PATH "script/system/network.sh"), "connect", NULL};
+const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect", NULL};
 
 #define PASS_ENCODE "********"
 

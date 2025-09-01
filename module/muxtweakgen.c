@@ -62,7 +62,7 @@ static void restore_tweak_options(void) {
 
 static void set_setting_value(const char *script_name, int value, int offset) {
     char script_path[MAX_BUFFER_SIZE];
-    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/script/%s.sh", script_name);
+    snprintf(script_path, sizeof(script_path), OPT_PATH "device/script/%s.sh", script_name);
 
     char value_str[8];
     snprintf(value_str, sizeof(value_str), "%d", value + offset);
@@ -112,7 +112,7 @@ static void save_tweak_options(void) {
         toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
 
-        const char *args[] = {(INTERNAL_PATH "script/mux/tweak.sh"), NULL};
+        const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};
         run_exec(args, A_SIZE(args), 0);
 
         refresh_config = 1;

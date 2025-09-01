@@ -26,7 +26,8 @@ static void show_help(void) {
 
 static bool is_downloaded(int index) {
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm", RUN_STORAGE_PATH, theme_items[index].name);
+    snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm",
+             RUN_STORAGE_PATH, theme_items[index].name);
     return (file_exist(theme_path));
 }
 
@@ -281,8 +282,8 @@ static void handle_a(void) {
     play_sound(SND_CONFIRM);
 
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm", RUN_STORAGE_PATH,
-             theme_items[current_item_index].name);
+    snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm",
+             RUN_STORAGE_PATH, theme_items[current_item_index].name);
     if (file_exist(theme_path)) {
         remove(theme_path);
         theme_download_finished(0);
@@ -310,8 +311,8 @@ static void handle_b(void) {
     if (download_in_progress) {
         cancel_download = true;
         char theme_path[MAX_BUFFER_SIZE];
-        snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm", RUN_STORAGE_PATH,
-                 theme_items[current_item_index].name);
+        snprintf(theme_path, sizeof(theme_path), "%stheme/%s.muxthm",
+                 RUN_STORAGE_PATH, theme_items[current_item_index].name);
         if (file_exist(theme_path)) {
             remove(theme_path);
         }

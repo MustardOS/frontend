@@ -223,9 +223,9 @@ static void handle_a(void) {
 
     static char storage_script[MAX_BUFFER_SIZE];
     if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
-        snprintf(storage_script, sizeof(storage_script), "%s/script/mux/sync.sh", INTERNAL_PATH);
+        snprintf(storage_script, sizeof(storage_script), "%s/script/mux/sync.sh", OPT_PATH);
     } else {
-        snprintf(storage_script, sizeof(storage_script), "%s/script/mux/migrate.sh", INTERNAL_PATH);
+        snprintf(storage_script, sizeof(storage_script), "%s/script/mux/migrate.sh", OPT_PATH);
     }
 
     size_t exec_count;

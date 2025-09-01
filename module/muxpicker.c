@@ -47,7 +47,8 @@ static int extract_preview(char *dimension, char *extract_path) {
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
 
     char device_preview[PATH_MAX];
-    snprintf(device_preview, sizeof(device_preview), "%s" TEMP_PREVIEW, dimension);
+    snprintf(device_preview, sizeof(device_preview), "%s" TEMP_PREVIEW,
+             dimension);
 
     return extract_file_from_zip(picker_archive, device_preview, extract_path);
 }
@@ -62,7 +63,8 @@ static void image_refresh(void) {
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
     char image_picker[MAX_BUFFER_SIZE];
-    snprintf(image_picker, sizeof(image_picker), "%s", get_last_subdir(picker_type, '/', 1));
+    snprintf(image_picker, sizeof(image_picker), "%s",
+             get_last_subdir(picker_type, '/', 1));
 
     char *name = lv_label_get_text(lv_group_get_focused(ui_group));
     char preview_path[PATH_MAX];
@@ -232,7 +234,7 @@ static void handle_a(void) {
 
         static char picker_script[MAX_BUFFER_SIZE];
         snprintf(picker_script, sizeof(picker_script),
-                 "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+                 "%sscript/package/%s.sh", OPT_PATH, get_last_subdir(picker_type, '/', 1));
 
         char *selected_item = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -282,7 +284,7 @@ static void handle_a_force(void) {
 
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(picker_script, sizeof(picker_script),
-             "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+             "%sscript/package/%s.sh", OPT_PATH, get_last_subdir(picker_type, '/', 1));
 
     char *selected_item = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -352,7 +354,7 @@ static void handle_save(void) {
 
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(picker_script, sizeof(picker_script),
-             "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+             "%s/script/package/%s.sh", OPT_PATH, get_last_subdir(picker_type, '/', 1));
 
     size_t exec_count;
     const char *args[] = {picker_script, "save", "-", NULL};
@@ -426,7 +428,7 @@ static void ui_refresh_task() {
 int muxpicker_main(char *type, char *ex_dir) {
     snprintf(picker_type, sizeof(picker_type), "%s", type);
     snprintf(sys_dir, sizeof(sys_dir), "%s", ex_dir);
-    snprintf(base_dir, sizeof(base_dir), (RUN_STORAGE_PATH "%s"), picker_type);
+    snprintf(base_dir, sizeof(base_dir), RUN_STORAGE_PATH "%s", picker_type);
     if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
     remove_double_slashes(sys_dir);
     remove_double_slashes(base_dir);

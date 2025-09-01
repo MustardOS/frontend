@@ -1,6 +1,6 @@
 #pragma once
 
-#define TEST_IMAGE 1
+#define TEST_IMAGE 0
 #define MUX_CALLER "MustardOS FE Spectacular"
 
 #define MAX_BUFFER_SIZE 1024
@@ -50,14 +50,14 @@
 #define STORAGE_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP  "/tmp/skip_opt"
 
-#define INTERNAL_PATH    "/opt/muos/"
-#define INTERNAL_THEME   INTERNAL_PATH "default/MUOS/theme/active"
-#define INTERNAL_OVERLAY INTERNAL_PATH "share/overlay"
-
-#define LAST_PLAY_FILE INTERNAL_PATH "config/boot/last_play"
-#define BGM_SILENCE    INTERNAL_PATH "share/media/silence.ogg"
-
+#define OPT_PATH "/opt/muos/"
 #define RUN_PATH "/run/muos/"
+
+#define INTERNAL_THEME   OPT_PATH "default/MUOS/theme/active"
+#define INTERNAL_OVERLAY OPT_PATH "share/overlay"
+
+#define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
+#define BGM_SILENCE    OPT_PATH "share/media/silence.ogg"
 
 #define ADD_MODE_WORK "/tmp/add_mode_work"
 #define ADD_MODE_DONE "/tmp/add_mode_done"
@@ -65,24 +65,26 @@
 
 #define COLLECTION_DIR "/tmp/collection_dir"
 
-#define CONF_DEVICE_PATH INTERNAL_PATH "device/config/"
-#define CONF_CONFIG_PATH INTERNAL_PATH "config/"
-#define CONF_KIOSK_PATH  INTERNAL_PATH "kiosk/"
+#define CONF_DEVICE_PATH OPT_PATH "device/config/"
+#define CONF_CONFIG_PATH OPT_PATH "config/"
+#define CONF_KIOSK_PATH  OPT_PATH "kiosk/"
 
 #define RUN_STORAGE_PATH RUN_PATH "storage/"
+#define RUN_SHARE_PATH   OPT_PATH "share/"
 
 #define STORAGE_THEME RUN_STORAGE_PATH "theme/active"
 #define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
 #define STORAGE_MUSIC RUN_STORAGE_PATH "music"
 #define STORAGE_SOUND RUN_STORAGE_PATH "sound"
+#define STORAGE_LANG  RUN_SHARE_PATH   "language"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
-#define INFO_COR_PATH RUN_STORAGE_PATH "info/core"
-#define INFO_CFG_PATH RUN_STORAGE_PATH "info/config"
-#define INFO_CNT_PATH RUN_STORAGE_PATH "info/controller"
+#define INFO_COR_PATH RUN_SHARE_PATH   "info/core"
+#define INFO_CFG_PATH RUN_SHARE_PATH   "info/config"
+#define INFO_CNT_PATH RUN_SHARE_PATH   "info/controller"
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_CKS_PATH RUN_STORAGE_PATH "info/collection/kiosk"
-#define INFO_GCD_PATH RUN_STORAGE_PATH "info/gamecontrollerdb"
+#define INFO_GCD_PATH RUN_SHARE_PATH   "info/gamecontrollerdb"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
@@ -108,12 +110,12 @@
 #define STORE_LOC_INIT "MUOS/init"
 #define STORE_LOC_ACTI "MUOS/info/track"
 
-#define STORE_LOC_ASIN MUOS_INFO_PATH "/assign"
+#define STORE_LOC_ASIN RUN_SHARE_PATH "info/assign"
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
-#define STORE_LOC_CONF MUOS_INFO_PATH "/config"
-#define STORE_LOC_CORE MUOS_INFO_PATH "/core"
-#define STORE_LOC_GCDB MUOS_INFO_PATH "/gamecontrollerdb"
+#define STORE_LOC_CONF RUN_SHARE_PATH "info/config"
+#define STORE_LOC_CORE RUN_SHARE_PATH "info/core"
+#define STORE_LOC_GCDB RUN_SHARE_PATH "info/gamecontrollerdb"
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 #define STORE_LOC_PLAY MUOS_INFO_PATH "/track"

@@ -17,12 +17,12 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
     }
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s%s.cfg",
-             INFO_COR_PATH, sys_dir_lower, strip_ext(content_label));
+    snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s%s.cfg",
+             sys_dir_lower, strip_ext(content_label));
 
     if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), "%s/%score.cfg",
-                 INFO_COR_PATH, sys_dir_lower);
+        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%score.cfg",
+                 sys_dir_lower);
         snprintf(catalogue_name, catalogue_name_size, "%s",
                  read_line_char_from(core_file, GLOBAL_CATALOGUE));
     } else {
@@ -181,8 +181,8 @@ void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *cor
 void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys, char *cat, char *rom,
                             char *gov, char *control, int lookup, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s",
+             get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_dir);
 
     create_directories(core_dir);
@@ -213,16 +213,15 @@ bool automatic_assign_core(char *rom_dir) {
     LOG_INFO(mux_module, "Automatic Assign Core Initiated")
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.cfg",
+             get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_file);
 
     if (file_exist(core_file)) return true;
     int auto_assign_good = 0;
 
     char assign_file[MAX_BUFFER_SIZE];
-    snprintf(assign_file, sizeof(assign_file), "%s/%s/assign.json",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
+    snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
     if (json_valid(read_all_char_from(assign_file))) {
         static char assign_check[MAX_BUFFER_SIZE];
@@ -241,8 +240,8 @@ bool automatic_assign_core(char *rom_dir) {
             LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config)
 
             char assigned_core_global[MAX_BUFFER_SIZE];
-            snprintf(assigned_core_global, sizeof(assigned_core_global), "%s/%s/%s/global.ini",
-                     device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
+            snprintf(assigned_core_global, sizeof(assigned_core_global), STORE_LOC_ASIN "/%s/global.ini",
+                     ass_config);
 
             LOG_INFO(mux_module, "\tObtaining System Global INI: %s", assigned_core_global)
 
@@ -255,8 +254,8 @@ bool automatic_assign_core(char *rom_dir) {
 
             if (strcmp(def_core, "none") != 0) {
                 char default_core[MAX_BUFFER_SIZE];
-                snprintf(default_core, sizeof(default_core), "%s/%s/%s/%s.ini",
-                         device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config, def_core);
+                snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini",
+                         ass_config, def_core);
 
                 mini_t *core_ini = mini_load(default_core);
 

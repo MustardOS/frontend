@@ -447,7 +447,7 @@ static void handle_a(void) {
             return;
         }
 
-        const char *mac_change_args[] = {INTERNAL_PATH "script/web/macchange.sh", NULL};
+        const char *mac_change_args[] = {OPT_PATH "script/web/macchange.sh", NULL};
         run_exec(mac_change_args, A_SIZE(mac_change_args), 1);
     }
 }

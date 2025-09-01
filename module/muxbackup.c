@@ -331,7 +331,7 @@ static void handle_a(void) {
     }
     fclose(fp);
 
-    snprintf(backup_script_path, sizeof(backup_script_path), INTERNAL_PATH "script/mux/backup.sh");
+    snprintf(backup_script_path, sizeof(backup_script_path), OPT_PATH "script/mux/backup.sh");
 
     const char *args[] = {backup_script_path, NULL};
     size_t exec_count;
