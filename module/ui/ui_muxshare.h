@@ -53,10 +53,7 @@
     BACKUP(Bios,             "bios")           \
     BACKUP(Catalogue,        "catalogue")      \
     BACKUP(Name,             "name")           \
-    BACKUP(RetroArch,        "retroarch")      \
     BACKUP(Config,           "config")         \
-    BACKUP(Core,             "core")           \
-    BACKUP(Scheme,           "scheme")         \
     BACKUP(Collection,       "collection")     \
     BACKUP(History,          "history")        \
     BACKUP(Music,            "music")          \
@@ -65,8 +62,6 @@
     BACKUP(Theme,            "theme")          \
     BACKUP(CataloguePackage, "pack-catalogue") \
     BACKUP(ConfigPackage,    "pack-config")    \
-    BACKUP(BootlogoPackage,  "pack-bootlogo")  \
-    BACKUP(Language,         "language")       \
     BACKUP(Network,          "network")        \
     BACKUP(Syncthing,        "syncthing")      \
     BACKUP(UserInit,         "userinit")       \
@@ -274,10 +269,6 @@
     STORAGE(Bios,             "bios")           \
     STORAGE(Catalogue,        "catalogue")      \
     STORAGE(Name,             "name")           \
-    STORAGE(RetroArch,        "retroarch")      \
-    STORAGE(Config,           "config")         \
-    STORAGE(Core,             "core")           \
-    STORAGE(Scheme,           "scheme")         \
     STORAGE(Collection,       "collection")     \
     STORAGE(History,          "history")        \
     STORAGE(Music,            "music")          \
@@ -286,8 +277,6 @@
     STORAGE(Theme,            "theme")          \
     STORAGE(CataloguePackage, "pack-catalogue") \
     STORAGE(ConfigPackage,    "pack-config")    \
-    STORAGE(BootlogoPackage,  "pack-bootlogo")  \
-    STORAGE(Language,         "language")       \
     STORAGE(Network,          "network")        \
     STORAGE(Syncthing,        "syncthing")      \
     STORAGE(UserInit,         "userinit")

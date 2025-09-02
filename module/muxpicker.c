@@ -233,8 +233,8 @@ static void handle_a(void) {
         }
 
         static char picker_script[MAX_BUFFER_SIZE];
-        snprintf(picker_script, sizeof(picker_script),
-                 "%sscript/package/%s.sh", OPT_PATH, get_last_subdir(picker_type, '/', 1));
+        snprintf(picker_script, sizeof(picker_script), OPT_PATH "script/package/%s.sh",
+                 get_last_subdir(picker_type, '/', 1));
 
         char *selected_item = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -270,7 +270,7 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
-static void handle_a_force(void) {
+static void handle_x(void) {
     if (msgbox_active || hold_call || !ui_count ||
         strcasecmp(picker_type, "/theme") != 0 ||
         items[current_item_index].content_type == FOLDER ||
@@ -283,8 +283,8 @@ static void handle_a_force(void) {
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     static char picker_script[MAX_BUFFER_SIZE];
-    snprintf(picker_script, sizeof(picker_script),
-             "%sscript/package/%s.sh", OPT_PATH, get_last_subdir(picker_type, '/', 1));
+    snprintf(picker_script, sizeof(picker_script), OPT_PATH "script/package/%s.sh",
+             get_last_subdir(picker_type, '/', 1));
 
     char *selected_item = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -305,9 +305,7 @@ static void handle_a_force(void) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "/theme")) {
-            play_silence_bgm();
-        }
+        if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "/theme")) play_silence_bgm();
         run_exec(exec, exec_count, 0);
     }
     free(exec);
@@ -345,7 +343,7 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_save(void) {
+static void handle_y(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
@@ -353,8 +351,8 @@ static void handle_save(void) {
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     static char picker_script[MAX_BUFFER_SIZE];
-    snprintf(picker_script, sizeof(picker_script),
-             "%s/script/package/%s.sh", OPT_PATH, get_last_subdir(picker_type, '/', 1));
+    snprintf(picker_script, sizeof(picker_script), OPT_PATH "/script/package/%s.sh",
+             get_last_subdir(picker_type, '/', 1));
 
     size_t exec_count;
     const char *args[] = {picker_script, "save", "-", NULL};
@@ -506,8 +504,8 @@ int muxpicker_main(char *type, char *ex_dir) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_a_force,
-                    [MUX_INPUT_Y] = handle_save,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

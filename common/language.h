@@ -115,6 +115,56 @@ struct mux_lang {
     } MUXASSIGN;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char BIOS[MAX_BUFFER_SIZE];
+        char CATALOGUE[MAX_BUFFER_SIZE];
+        char FRIENDLY[MAX_BUFFER_SIZE];
+        char RA_CONFIG[MAX_BUFFER_SIZE];
+        char COLLECTION[MAX_BUFFER_SIZE];
+        char HISTORY[MAX_BUFFER_SIZE];
+        char MUSIC[MAX_BUFFER_SIZE];
+        char SAVE[MAX_BUFFER_SIZE];
+        char SCREENSHOT[MAX_BUFFER_SIZE];
+        char NET_PROFILE[MAX_BUFFER_SIZE];
+        char SYNCTHING[MAX_BUFFER_SIZE];
+        char USER_INIT[MAX_BUFFER_SIZE];
+        char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
+        char EXTERNAL[MAX_BUFFER_SIZE];
+        char MUOS_CONFIG[MAX_BUFFER_SIZE];
+        char BACKUP_TARGET[MAX_BUFFER_SIZE];
+        char START_BACKUP[MAX_BUFFER_SIZE];
+        struct {
+            char THEME[MAX_BUFFER_SIZE];
+            char CATALOGUE[MAX_BUFFER_SIZE];
+            char RA_CONFIG[MAX_BUFFER_SIZE];
+        } PACKAGE;
+        struct {
+            char BIOS[MAX_BUFFER_SIZE];
+            char CATALOGUE[MAX_BUFFER_SIZE];
+            char FRIENDLY[MAX_BUFFER_SIZE];
+            char RA_CONFIG[MAX_BUFFER_SIZE];
+            char COLLECTION[MAX_BUFFER_SIZE];
+            char HISTORY[MAX_BUFFER_SIZE];
+            char MUSIC[MAX_BUFFER_SIZE];
+            char SAVE[MAX_BUFFER_SIZE];
+            char SCREENSHOT[MAX_BUFFER_SIZE];
+            char NET_PROFILE[MAX_BUFFER_SIZE];
+            char SYNCTHING[MAX_BUFFER_SIZE];
+            char USER_INIT[MAX_BUFFER_SIZE];
+            char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
+            char EXTERNAL[MAX_BUFFER_SIZE];
+            char MUOS_CONFIG[MAX_BUFFER_SIZE];
+            char BACKUP_TARGET[MAX_BUFFER_SIZE];
+            char START_BACKUP[MAX_BUFFER_SIZE];
+            struct {
+                char THEME[MAX_BUFFER_SIZE];
+                char CATALOGUE[MAX_BUFFER_SIZE];
+                char RA_CONFIG[MAX_BUFFER_SIZE];
+            } PACKAGE;
+        } HELP;
+    } MUXBACKUP;
+
+    struct {
         char BOOT[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
         char START[MAX_BUFFER_SIZE];
@@ -767,16 +817,11 @@ struct mux_lang {
         char BIOS[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char FRIENDLY[MAX_BUFFER_SIZE];
-        char RA_SYSTEM[MAX_BUFFER_SIZE];
-        char RA_CONFIG[MAX_BUFFER_SIZE];
-        char ASSIGNED[MAX_BUFFER_SIZE];
-        char CONTROL_SCHEME[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
         char SCREENSHOT[MAX_BUFFER_SIZE];
-        char LANGUAGE[MAX_BUFFER_SIZE];
         char NET_PROFILE[MAX_BUFFER_SIZE];
         char SYNCTHING[MAX_BUFFER_SIZE];
         char USER_INIT[MAX_BUFFER_SIZE];
@@ -784,22 +829,16 @@ struct mux_lang {
             char THEME[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
-            char BOOTLOGO[MAX_BUFFER_SIZE];
         } PACKAGE;
         struct {
             char BIOS[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char FRIENDLY[MAX_BUFFER_SIZE];
-            char RA_SYSTEM[MAX_BUFFER_SIZE];
-            char RA_CONFIG[MAX_BUFFER_SIZE];
-            char ASSIGNED[MAX_BUFFER_SIZE];
-            char CONTROL_SCHEME[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
             char SAVE[MAX_BUFFER_SIZE];
             char SCREENSHOT[MAX_BUFFER_SIZE];
-            char LANGUAGE[MAX_BUFFER_SIZE];
             char NET_PROFILE[MAX_BUFFER_SIZE];
             char SYNCTHING[MAX_BUFFER_SIZE];
             char USER_INIT[MAX_BUFFER_SIZE];
@@ -807,70 +846,9 @@ struct mux_lang {
                 char THEME[MAX_BUFFER_SIZE];
                 char CATALOGUE[MAX_BUFFER_SIZE];
                 char RA_CONFIG[MAX_BUFFER_SIZE];
-                char BOOTLOGO[MAX_BUFFER_SIZE];
             } PACKAGE;
         } HELP;
     } MUXSTORAGE;
-
-    struct {
-        char TITLE[MAX_BUFFER_SIZE];
-        char BIOS[MAX_BUFFER_SIZE];
-        char CATALOGUE[MAX_BUFFER_SIZE];
-        char FRIENDLY[MAX_BUFFER_SIZE];
-        char RA_SYSTEM[MAX_BUFFER_SIZE];
-        char RA_CONFIG[MAX_BUFFER_SIZE];
-        char ASSIGNED[MAX_BUFFER_SIZE];
-        char CONTROL_SCHEME[MAX_BUFFER_SIZE];
-        char COLLECTION[MAX_BUFFER_SIZE];
-        char HISTORY[MAX_BUFFER_SIZE];
-        char MUSIC[MAX_BUFFER_SIZE];
-        char SAVE[MAX_BUFFER_SIZE];
-        char SCREENSHOT[MAX_BUFFER_SIZE];
-        char LANGUAGE[MAX_BUFFER_SIZE];
-        char NET_PROFILE[MAX_BUFFER_SIZE];
-        char SYNCTHING[MAX_BUFFER_SIZE];
-        char USER_INIT[MAX_BUFFER_SIZE];
-        char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
-        char EXTERNAL[MAX_BUFFER_SIZE];
-        char MUOS_CONFIG[MAX_BUFFER_SIZE];
-        char BACKUP_TARGET[MAX_BUFFER_SIZE];
-        char START_BACKUP[MAX_BUFFER_SIZE];
-        struct {
-            char THEME[MAX_BUFFER_SIZE];
-            char CATALOGUE[MAX_BUFFER_SIZE];
-            char RA_CONFIG[MAX_BUFFER_SIZE];
-            char BOOTLOGO[MAX_BUFFER_SIZE];
-        } PACKAGE;
-        struct {
-            char BIOS[MAX_BUFFER_SIZE];
-            char CATALOGUE[MAX_BUFFER_SIZE];
-            char FRIENDLY[MAX_BUFFER_SIZE];
-            char RA_SYSTEM[MAX_BUFFER_SIZE];
-            char RA_CONFIG[MAX_BUFFER_SIZE];
-            char ASSIGNED[MAX_BUFFER_SIZE];
-            char CONTROL_SCHEME[MAX_BUFFER_SIZE];
-            char COLLECTION[MAX_BUFFER_SIZE];
-            char HISTORY[MAX_BUFFER_SIZE];
-            char MUSIC[MAX_BUFFER_SIZE];
-            char SAVE[MAX_BUFFER_SIZE];
-            char SCREENSHOT[MAX_BUFFER_SIZE];
-            char LANGUAGE[MAX_BUFFER_SIZE];
-            char NET_PROFILE[MAX_BUFFER_SIZE];
-            char SYNCTHING[MAX_BUFFER_SIZE];
-            char USER_INIT[MAX_BUFFER_SIZE];
-            char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
-            char EXTERNAL[MAX_BUFFER_SIZE];
-            char MUOS_CONFIG[MAX_BUFFER_SIZE];
-            char BACKUP_TARGET[MAX_BUFFER_SIZE];
-            char START_BACKUP[MAX_BUFFER_SIZE];
-            struct {
-                char THEME[MAX_BUFFER_SIZE];
-                char CATALOGUE[MAX_BUFFER_SIZE];
-                char RA_CONFIG[MAX_BUFFER_SIZE];
-                char BOOTLOGO[MAX_BUFFER_SIZE];
-            } PACKAGE;
-        } HELP;
-    } MUXBACKUP;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
