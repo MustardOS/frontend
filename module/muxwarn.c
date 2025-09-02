@@ -16,14 +16,14 @@ int main(void) {
 
     lv_obj_t *ui_scrWarn = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrWarn, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(ui_scrWarn, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_scrWarn, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrWarn, 255, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_t *ui_conWarn = lv_obj_create(ui_scrWarn);
     lv_obj_remove_style_all(ui_conWarn);
     lv_obj_set_width(ui_conWarn, lv_pct(100));
     lv_obj_set_height(ui_conWarn, lv_pct(100));
-    lv_obj_set_style_bg_color(ui_conWarn, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_conWarn, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_conWarn, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_align(ui_conWarn, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_conWarn, LV_FLEX_FLOW_COLUMN_WRAP);
@@ -59,7 +59,7 @@ int main(void) {
     lv_obj_set_size(ui_barProgress, device.MUX.WIDTH, device.MUX.HEIGHT <= 480 ? 12 : 24);
     lv_obj_set_style_pad_all(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgress, 25, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(0xFFFFFF), MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgress, 255, MU_OBJ_INDI_DEFAULT);
