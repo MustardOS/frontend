@@ -144,7 +144,7 @@ const char *join_names(const char **names) {
 void init_muxcredits(const lv_font_t *header_font) {
     ui_scrCredits = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrCredits, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(ui_scrCredits, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_scrCredits, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrCredits, 255, MU_OBJ_MAIN_DEFAULT);
 
     ui_conCredits = lv_obj_create(ui_scrCredits);
@@ -190,7 +190,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblStartTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblStartTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblStartTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblStartTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblStartTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblStartTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblStartTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblStartTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -271,7 +271,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblCommanderTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblCommanderTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCommanderTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblCommanderTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblCommanderTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblCommanderTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblCommanderTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblCommanderTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -326,7 +326,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblEnforcerTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblEnforcerTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblEnforcerTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblEnforcerTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblEnforcerTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblEnforcerTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblEnforcerTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblEnforcerTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -402,7 +402,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblWizardTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblWizardTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblWizardTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblWizardTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblWizardTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblWizardTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblWizardTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblWizardTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -478,7 +478,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblHeroTitleOne, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblHeroTitleOne, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblHeroTitleOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblHeroTitleOne, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblHeroTitleOne, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblHeroTitleOne, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblHeroTitleOne, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblHeroTitleOne, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -554,7 +554,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblHeroTitleTwo, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblHeroTitleTwo, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblHeroTitleTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblHeroTitleTwo, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblHeroTitleTwo, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblHeroTitleTwo, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblHeroTitleTwo, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblHeroTitleTwo, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -630,7 +630,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblKnightTitleOne, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblKnightTitleOne, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblKnightTitleOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblKnightTitleOne, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblKnightTitleOne, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblKnightTitleOne, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblKnightTitleOne, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblKnightTitleOne, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -706,7 +706,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblKnightTitleTwo, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblKnightTitleTwo, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblKnightTitleTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblKnightTitleTwo, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblKnightTitleTwo, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblKnightTitleTwo, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblKnightTitleTwo, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblKnightTitleTwo, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -782,7 +782,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblContribTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblContribTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblContribTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblContribTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblContribTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblContribTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblContribTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblContribTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -858,7 +858,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblSpecialTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblSpecialTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblSpecialTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblSpecialTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblSpecialTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblSpecialTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblSpecialTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblSpecialTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -920,7 +920,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblBongleTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblBongleTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblBongleTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblBongleTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblBongleTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblBongleTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblBongleTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblBongleTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -999,7 +999,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblKofiTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblKofiTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblKofiTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblKofiTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblKofiTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblKofiTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblKofiTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblKofiTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
@@ -1110,7 +1110,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_font(ui_lblMusicTitle, header_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblMusicTitle, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblMusicTitle, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblMusicTitle, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblMusicTitle, lv_color_hex(0x0), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblMusicTitle, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblMusicTitle, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblMusicTitle, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
