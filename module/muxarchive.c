@@ -122,8 +122,8 @@ static void create_archive_items(void) {
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
         char install_check[MAX_BUFFER_SIZE];
-        snprintf(install_check, sizeof(install_check), "%s/muos/update/installed/%s.done",
-                 mount_points[0], archive_name);
+        snprintf(install_check, sizeof(install_check), OPT_PATH "update/installed/%s.done",
+                 archive_name);
 
         int is_installed = file_exist(install_check);
 

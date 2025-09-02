@@ -74,8 +74,8 @@
 
 #define STORAGE_THEME RUN_STORAGE_PATH "theme/active"
 #define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
-#define STORAGE_MUSIC RUN_STORAGE_PATH "music"
-#define STORAGE_SOUND RUN_STORAGE_PATH "sound"
+#define STORAGE_MUSIC RUN_SHARE_PATH   "media/music"
+#define STORAGE_SOUND RUN_SHARE_PATH   "media/sound"
 #define STORAGE_LANG  RUN_SHARE_PATH   "language"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"

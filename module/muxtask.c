@@ -7,8 +7,8 @@ static void show_help(void) {
     char *title = items[current_item_index].name;
 
     char help_info[MAX_BUFFER_SIZE];
-    snprintf(help_info, sizeof(help_info),
-             "%s/%s/%s.sh", device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, title);
+    snprintf(help_info, sizeof(help_info), RUN_SHARE_PATH "task/%s.sh",
+             title);
 
     char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
     show_info_box(TS(title), TS(message), 0);
@@ -212,7 +212,7 @@ static void ui_refresh_task() {
 
 int muxtask_main(char *ex_dir) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", ex_dir);
-    snprintf(base_dir, sizeof(base_dir), ("%s/" MUOS_TASK_PATH), device.STORAGE.ROM.MOUNT);
+    snprintf(base_dir, sizeof(base_dir), RUN_SHARE_PATH "task/");
     if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
 
     init_module("muxtask");
