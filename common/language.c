@@ -189,7 +189,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage");
     SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "Connect your device via Wi-Fi, enable web services, or enable USB functions");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language");
