@@ -22,7 +22,7 @@ static void create_task_items(void) {
     if (!td) return;
 
     while ((tf = readdir(td))) {
-        if (tf->d_type == DT_DIR) {
+        if (tf->d_type == DT_DIR && strcmp(tf->d_name, ".") != 0 && strcmp(tf->d_name, "..") != 0) {
             add_item(&items, &item_count, tf->d_name, tf->d_name, "", FOLDER);
         } else if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
