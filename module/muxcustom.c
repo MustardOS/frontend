@@ -45,7 +45,6 @@ static void restore_theme_resolution(void) {
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBootlogo_custom,        lang.MUXCUSTOM.HELP.BOOTLOGO},
             {ui_lblCatalogue_custom,       lang.MUXCUSTOM.HELP.CATALOGUE},
             {ui_lblConfig_custom,          lang.MUXCUSTOM.HELP.CONFIG},
             {ui_lblTheme_custom,           lang.MUXCUSTOM.HELP.THEME},
@@ -159,7 +158,6 @@ static void init_navigation_group(void) {
             lang.MUXCUSTOM.LAUNCH_SWAP.START_FRESH
     };
 
-    INIT_OPTION_ITEM(-1, custom, Bootlogo, lang.MUXCUSTOM.BOOTLOGO, "bootlogo", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
@@ -211,14 +209,13 @@ static void init_navigation_group(void) {
 
     // Temporary removal of elements
     HIDE_OPTION_ITEM(custom, Animation);
-    HIDE_OPTION_ITEM(custom, Bootlogo);
 
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
 static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
+    if (element_focused == ui_lblCatalogue_custom ||
         element_focused == ui_lblConfig_custom ||
         element_focused == ui_lblTheme_custom) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -390,7 +387,6 @@ static void handle_a(void) {
         int16_t *kiosk_flag;
     } elements[] = {
             {"theme",     "/theme",            &kiosk.CUSTOM.THEME},
-            {"bootlogo",  "package/bootlogo",  &kiosk.CUSTOM.BOOTLOGO},
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
             {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG}
     };

@@ -26,7 +26,6 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblRetroArch_kiosk,  lang.MUXKIOSK.HELP.RETROARCH},
             {ui_lblSearch_kiosk,     lang.MUXKIOSK.HELP.SEARCH},
             {ui_lblTag_kiosk,        lang.MUXKIOSK.HELP.TAG},
-            {ui_lblBootlogo_kiosk,   lang.MUXKIOSK.HELP.BOOTLOGO},
             {ui_lblCatalogue_kiosk,  lang.MUXKIOSK.HELP.CATALOGUE},
             {ui_lblRAConfig_kiosk,   lang.MUXKIOSK.HELP.RACONFIG},
             {ui_lblTheme_kiosk,      lang.MUXKIOSK.HELP.THEME},
@@ -78,7 +77,6 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droRetroArch_kiosk, kiosk.CONTENT.RETROARCH);
     lv_dropdown_set_selected(ui_droSearch_kiosk, kiosk.CONTENT.SEARCH);
     lv_dropdown_set_selected(ui_droTag_kiosk, kiosk.CONTENT.TAG);
-    lv_dropdown_set_selected(ui_droBootlogo_kiosk, kiosk.CUSTOM.BOOTLOGO);
     lv_dropdown_set_selected(ui_droCatalogue_kiosk, kiosk.CUSTOM.CATALOGUE);
     lv_dropdown_set_selected(ui_droRAConfig_kiosk, kiosk.CUSTOM.RACONFIG);
     lv_dropdown_set_selected(ui_droTheme_kiosk, kiosk.CUSTOM.THEME);
@@ -128,7 +126,6 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, CollectNew, "collect/new_dir", INT);
     CHECK_AND_SAVE_KSK(kiosk, CollectRem, "collect/remove", INT);
     CHECK_AND_SAVE_KSK(kiosk, CollectAcc, "collect/access", INT);
-    CHECK_AND_SAVE_KSK(kiosk, Bootlogo, "custom/bootlogo", INT);
     CHECK_AND_SAVE_KSK(kiosk, Catalogue, "custom/catalogue", INT);
     CHECK_AND_SAVE_KSK(kiosk, RAConfig, "custom/raconfig", INT);
     CHECK_AND_SAVE_KSK(kiosk, Theme, "custom/theme", INT);
@@ -181,7 +178,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, RetroArch, lang.MUXKIOSK.RETROARCH, "retroarch", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Search, lang.MUXKIOSK.SEARCH, "search", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Tag, lang.MUXKIOSK.TAG, "tag", allowed_restricted, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Bootlogo, lang.MUXKIOSK.BOOTLOGO, "bootlogo", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Theme, lang.MUXKIOSK.THEME, "theme", allowed_restricted, 2);

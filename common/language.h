@@ -226,7 +226,6 @@ struct mux_lang {
     } MUXCONTROL;
 
     struct {
-        char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME_DOWN[MAX_BUFFER_SIZE];
@@ -282,7 +281,6 @@ struct mux_lang {
             char START_FRESH[MAX_BUFFER_SIZE];
         } LAUNCH_SWAP;
         struct {
-            char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char THEME_DOWN[MAX_BUFFER_SIZE];
@@ -460,7 +458,6 @@ struct mux_lang {
         char RETROARCH[MAX_BUFFER_SIZE];
         char SEARCH[MAX_BUFFER_SIZE];
         char TAG[MAX_BUFFER_SIZE];
-        char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char RACONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
@@ -505,7 +502,6 @@ struct mux_lang {
             char RETROARCH[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
             char TAG[MAX_BUFFER_SIZE];
-            char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RACONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
@@ -698,7 +694,6 @@ struct mux_lang {
 
     struct {
         char CUSTOM[MAX_BUFFER_SIZE];
-        char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
@@ -707,7 +702,6 @@ struct mux_lang {
         char INVALID_RES[MAX_BUFFER_SIZE];
         struct {
             char CREDIT[MAX_BUFFER_SIZE];
-            char BOOTLOGO[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];

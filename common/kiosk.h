@@ -42,7 +42,6 @@ struct mux_kiosk {
     } COLLECT;
 
     struct {
-        int16_t BOOTLOGO;
         int16_t CATALOGUE;
         int16_t RACONFIG;
         int16_t THEME;

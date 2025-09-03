@@ -103,7 +103,6 @@
 #define STORE_LOC_THEM "MUOS/theme"
 #define STORE_LOC_PCAT "MUOS/package/catalogue"
 #define STORE_LOC_PCON "MUOS/package/config"
-#define STORE_LOC_PLOG "MUOS/package/bootlogo"
 #define STORE_LOC_LANG "MUOS/language"
 #define STORE_LOC_NETW "MUOS/network"
 #define STORE_LOC_SYCT "MUOS/syncthing"

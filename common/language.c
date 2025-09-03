@@ -217,7 +217,6 @@ void load_lang(struct mux_lang *lang) {
 
     // muxcustom
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.BOOTLOGO, "Bootlogo Images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_DOWN, "Theme Download");
@@ -259,7 +258,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.LOAD_STATE, "Load State");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.START_FRESH, "Start Fresh");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOOTLOGO, "Load user created boot logos for your device");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_DOWN, "Download themes from the muOS website");
@@ -404,7 +402,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.RETROARCH, "RetroArch Kiosk");
     SPECIFIC_FIELD(lang->MUXKIOSK.SEARCH, "Content Search");
     SPECIFIC_FIELD(lang->MUXKIOSK.TAG, "Content Tag");
-    SPECIFIC_FIELD(lang->MUXKIOSK.BOOTLOGO, "Custom Bootlogo");
     SPECIFIC_FIELD(lang->MUXKIOSK.CATALOGUE, "Custom Catalogue");
     SPECIFIC_FIELD(lang->MUXKIOSK.RACONFIG, "Custom RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.THEME, "Custom Themes");
@@ -444,7 +441,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RETROARCH, "Enable or restrict RetroArch settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.SEARCH, "Allow searching for content");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.TAG, "Permit tagging and metadata changes");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.BOOTLOGO, "Allow custom bootlogo selection");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CATALOGUE, "Allow access to install content catalogues");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RACONFIG, "Allow access to use custom RetroArch configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEME, "Permit changing system themes");
@@ -609,7 +605,6 @@ void load_lang(struct mux_lang *lang) {
 
     // muxpicker
     SPECIFIC_FIELD(lang->MUXPICKER.CUSTOM, "CUSTOM PICKER");
-    SPECIFIC_FIELD(lang->MUXPICKER.BOOTLOGO, "BOOTLOGO PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CATALOGUE, "CATALOGUE PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CONFIG, "CONFIG PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.THEME, "THEME PICKER");
@@ -618,7 +613,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_RES, "Incompatible Theme Resolution Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CREDIT, "There are no attributed credits!");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CUSTOM, "No Custom Packages Found");
-    SPECIFIC_FIELD(lang->MUXPICKER.NONE.BOOTLOGO, "No Boot Logos Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CATALOGUE, "No Catalogue Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CONFIG, "No Configuration Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.THEME, "No Theme Packages Found");

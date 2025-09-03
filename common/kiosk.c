@@ -33,7 +33,6 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->COLLECT.REMOVE, CONF_KIOSK_PATH "collect/remove", 0)
     CFG_INT_FIELD(kiosk->COLLECT.ACCESS, CONF_KIOSK_PATH "collect/access", 0)
 
-    CFG_INT_FIELD(kiosk->CUSTOM.BOOTLOGO, CONF_KIOSK_PATH "custom/bootlogo", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.CATALOGUE, CONF_KIOSK_PATH "custom/catalogue", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.RACONFIG, CONF_KIOSK_PATH "custom/raconfig", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.THEME, CONF_KIOSK_PATH "custom/theme", 0)

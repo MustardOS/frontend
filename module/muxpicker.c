@@ -54,8 +54,9 @@ static int extract_preview(char *dimension, char *extract_path) {
 }
 
 static void image_refresh(void) {
-    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU ||
-        (!strcasecmp(picker_type, "/theme") && !strcasecmp(picker_type, "package/bootlogo"))) {
+    if (items[current_item_index].content_type == FOLDER ||
+        items[current_item_index].content_type == MENU ||
+        (!strcasecmp(picker_type, "/theme"))) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
@@ -404,11 +405,6 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-    if (!strcasecmp(picker_type, "package/bootlogo")) {
-        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    }
-
     overlay_display();
 }
 
@@ -439,9 +435,6 @@ int muxpicker_main(char *type, char *ex_dir) {
     if (!strcasecmp(picker_type, "/theme")) {
         picker_extension = "muxthm";
         picker_title = lang.MUXPICKER.THEME;
-    } else if (!strcasecmp(picker_type, "package/bootlogo")) {
-        picker_extension = "muxblg";
-        picker_title = lang.MUXPICKER.BOOTLOGO;
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
         picker_extension = "muxcat";
         picker_title = lang.MUXPICKER.CATALOGUE;
@@ -485,8 +478,6 @@ int muxpicker_main(char *type, char *ex_dir) {
         const char *message_text = NULL;
         if (!strcasecmp(picker_type, "/theme")) {
             message_text = lang.MUXPICKER.NONE.THEME;
-        } else if (!strcasecmp(picker_type, "package/bootlogo")) {
-            message_text = lang.MUXPICKER.NONE.BOOTLOGO;
         } else if (!strcasecmp(picker_type, "package/catalogue")) {
             message_text = lang.MUXPICKER.NONE.CATALOGUE;
         } else if (!strcasecmp(picker_type, "package/config")) {

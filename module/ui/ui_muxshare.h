@@ -88,7 +88,6 @@
     CONFIG(Backup,    "backup")
 
 #define CUSTOM_ELEMENTS                    \
-    CUSTOM(Bootlogo,        "bootlogo")    \
     CUSTOM(Catalogue,       "catalogue")   \
     CUSTOM(Config,          "config")      \
     CUSTOM(Theme,           "theme")       \
@@ -172,7 +171,6 @@
     KIOSK(RetroArch,  "retroarch")  \
     KIOSK(Search,     "search")     \
     KIOSK(Tag,        "tag")        \
-    KIOSK(Bootlogo,   "bootlogo")   \
     KIOSK(Catalogue,  "catalogue")  \
     KIOSK(RAConfig,   "raconfig")   \
     KIOSK(Theme,      "theme")      \
