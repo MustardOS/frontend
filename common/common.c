@@ -2500,12 +2500,30 @@ char *get_content_explorer_glyph_name(char *file_path) {
     return "rom";
 }
 
-uint32_t fnv1a_hash(const char *str) {
+uint32_t fnv1a_hash_str(const char *str) {
     uint32_t hash = 2166136261U; // FNV offset basis
+
     for (const char *p = str; *p; p++) {
         hash ^= (uint8_t) (*p);
         hash *= 16777619; // FNV prime
     }
+
+    return hash;
+}
+
+uint32_t fnv1a_hash_file(FILE *file) {
+    uint32_t hash = 2166136261U; // FNV offset basis
+    unsigned char buf[65535];
+    size_t n;
+
+    while ((n = fread(buf, 1, sizeof buf, file)) > 0) {
+        for (size_t i = 0; i < n; i++) {
+            hash ^= buf[i];
+            hash *= 16777619; // FNV prime
+        }
+    }
+
+    if (ferror(file)) return 0;
     return hash;
 }
 
@@ -2723,4 +2741,70 @@ char *get_build_version(void) {
     snprintf(build_version, sizeof(build_version), "%s (%s)",
              str_replace(config.SYSTEM.VERSION, "_", " "), config.SYSTEM.BUILD);
     return build_version;
+}
+
+int copy_file(const char *from, const char *to) {
+    int fd_to = -1;
+    int fd_from = -1;
+    int saved_errno = 0;
+
+    struct stat st;
+
+    fd_from = open(from, O_RDONLY | O_CLOEXEC);
+    if (fd_from < 0) return -1;
+
+    if (fstat(fd_from, &st) < 0) goto out_error;
+
+    fd_to = open(to, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, st.st_mode & 0777);
+    if (fd_to < 0) goto out_error;
+
+    char buf[65536];
+    ssize_t f_read;
+    while (1) {
+        f_read = read(fd_from, buf, sizeof buf);
+
+        if (f_read == 0) break;
+
+        if (f_read < 0) {
+            if (errno == EINTR) continue;
+            goto out_error;
+        }
+
+        size_t off = 0;
+        while (off < (size_t) f_read) {
+            ssize_t nw = write(fd_to, buf + off, (size_t) f_read - off);
+
+            if (nw < 0) {
+                if (errno == EINTR) continue;
+                goto out_error;
+            }
+
+            off += (size_t) nw;
+        }
+    }
+
+    if (fsync(fd_to) < 0) goto out_error;
+
+    if (fchmod(fd_to, st.st_mode & 0777) < 0) goto out_error;
+
+    if (close(fd_to) < 0) {
+        fd_to = -1;
+        goto out_error;
+    }
+
+    close(fd_from);
+    return 0;
+
+    out_error:
+    saved_errno = errno;
+
+    if (fd_from >= 0) close(fd_from);
+
+    if (fd_to >= 0) {
+        close(fd_to);
+        unlink(to);
+    }
+
+    errno = saved_errno;
+    return -1;
 }

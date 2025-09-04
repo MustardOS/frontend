@@ -700,6 +700,9 @@ struct mux_lang {
         char THEME_DOWN[MAX_BUFFER_SIZE];
         char INVALID_VER[MAX_BUFFER_SIZE];
         char INVALID_RES[MAX_BUFFER_SIZE];
+        char HOLD_CONFIRM[MAX_BUFFER_SIZE];
+        char PROTECTED[MAX_BUFFER_SIZE];
+        char FAILED[MAX_BUFFER_SIZE];
         struct {
             char CREDIT[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];

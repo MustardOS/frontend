@@ -611,6 +611,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.THEME_DOWN, "Theme Download");
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_VER, "Incompatible Theme Version Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_RES, "Incompatible Theme Resolution Detected");
+    SPECIFIC_FIELD(lang->MUXPICKER.HOLD_CONFIRM, "Hold L2 and press X to confirm deletion!");
+    SPECIFIC_FIELD(lang->MUXPICKER.PROTECTED, "This theme is protected from deletion!");
+    SPECIFIC_FIELD(lang->MUXPICKER.FAILED, "Failed to remove item...");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CREDIT, "There are no attributed credits!");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CUSTOM, "No Custom Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CATALOGUE, "No Catalogue Packages Found");

@@ -359,7 +359,9 @@ int at_base(char *sys_dir, char *base_name);
 
 int search_for_config(const char *base_path, const char *file_name, const char *system_name);
 
-uint32_t fnv1a_hash(const char *str);
+uint32_t fnv1a_hash_str(const char *str);
+
+uint32_t fnv1a_hash_file(FILE *fp);
 
 bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size);
@@ -389,3 +391,5 @@ int is_partition_mounted(const char *partition);
 void get_storage_info(const char *partition, double *total, double *free, double *used);
 
 char *get_build_version();
+
+int copy_file(const char *from, const char *to);

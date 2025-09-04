@@ -522,7 +522,7 @@ static void add_collection_item(void) {
 
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s-%08X.cfg",
-             sys_dir, strip_ext(base_file_name), fnv1a_hash(cache_file));
+             sys_dir, strip_ext(base_file_name), fnv1a_hash_str(cache_file));
 
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 

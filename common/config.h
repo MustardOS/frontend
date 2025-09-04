@@ -44,6 +44,8 @@ struct mux_config {
     } EXTRA;
 
     struct {
+        char DEFAULT_HASH[MAX_BUFFER_SIZE];
+
         struct {
             int16_t ALL_THEMES;
             int16_t RESOLUTION_640x480;

@@ -602,7 +602,7 @@ static int load_content(int add_collection) {
                                                "system", "Control Scheme");
 
             snprintf(content, sizeof(content), INFO_HIS_PATH "/%s-%08X.cfg",
-                     content_name, fnv1a_hash(cache_file));
+                     content_name, fnv1a_hash_str(cache_file));
 
             write_text_to_file(content, "w", CHAR, pointer);
             write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
