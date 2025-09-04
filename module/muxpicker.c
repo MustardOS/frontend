@@ -457,6 +457,7 @@ int muxpicker_main(char *type, char *ex_dir) {
     if (!strcasecmp(picker_type, "/theme")) {
         // Check if our default `MustardOS.muxthm` exists! If not...
         // Put That Thing Back Where It Came From Or So Help Me!
+        if (TEST_IMAGE) goto debug_pass;
 
         int do_copy = 0;
         char *mustard_theme = STORAGE_THEME "/../MustardOS.muxthm";
@@ -482,6 +483,7 @@ int muxpicker_main(char *type, char *ex_dir) {
         }
 
         // Okay we're good?
+        debug_pass:
         picker_extension = "muxthm";
         picker_title = lang.MUXPICKER.THEME;
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
