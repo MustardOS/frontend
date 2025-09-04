@@ -220,7 +220,7 @@ static void handle_a(void) {
 
         if (!strcasecmp(picker_type, "/theme") && !version_check()) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXPICKER.INVALID_VER, 1000);
+            toast_message(lang.MUXPICKER.INVALID_VER, SHORT);
             return;
         }
 
@@ -229,7 +229,7 @@ static void handle_a(void) {
                  sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
         if (!strcasecmp(picker_type, "/theme") && !resolution_check(picker_archive)) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXPICKER.INVALID_RES, 1000);
+            toast_message(lang.MUXPICKER.INVALID_RES, SHORT);
             return;
         }
 

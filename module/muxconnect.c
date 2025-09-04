@@ -65,7 +65,7 @@ static void save_options(void) {
     }
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
 
         const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};

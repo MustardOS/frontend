@@ -76,7 +76,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
         refresh_config = 1;
     }

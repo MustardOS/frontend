@@ -27,7 +27,7 @@ static int remove_profile(char *name) {
 }
 
 static void load_profile(char *name) {
-    toast_message(lang.GENERIC.LOADING, 0);
+    toast_message(lang.GENERIC.LOADING, FOREVER);
     refresh_screen(ui_screen);
 
     static char profile_file[MAX_BUFFER_SIZE];
@@ -67,7 +67,7 @@ static void load_profile(char *name) {
 }
 
 static int save_profile(void) {
-    toast_message(lang.GENERIC.SAVING, 0);
+    toast_message(lang.GENERIC.SAVING, FOREVER);
     refresh_screen(ui_screen);
 
     const char *p_type = read_all_char_from((CONF_CONFIG_PATH "network/type"));
@@ -81,7 +81,7 @@ static int save_profile(void) {
     const char *p_hostname = read_line_char_from("/etc/hostname", 1);
 
     if (!p_ssid || !strlen(p_ssid)) {
-        toast_message(lang.MUXNETPROFILE.INVALID_SSID, 1000);
+        toast_message(lang.MUXNETPROFILE.INVALID_SSID, SHORT);
         return 0;
     }
 
@@ -91,7 +91,7 @@ static int save_profile(void) {
             !p_subnet || !strlen(p_subnet) ||
             !p_gateway || !strlen(p_gateway) ||
             !p_dns || !strlen(p_dns)) {
-            toast_message(lang.MUXNETPROFILE.INVALID_NETWORK, 1000);
+            toast_message(lang.MUXNETPROFILE.INVALID_NETWORK, SHORT);
             return 0;
         }
     } else {

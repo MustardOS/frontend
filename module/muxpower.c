@@ -70,7 +70,7 @@ static int save_power_options(void) {
     if (idx_idle_display && idx_idle_sleep && idx_idle_display >= idx_idle_sleep) {
         play_sound(SND_ERROR);
 
-        toast_message(lang.MUXPOWER.IDLE.ERROR, 2000);
+        toast_message(lang.MUXPOWER.IDLE.ERROR, LONG);
         refresh_screen(ui_screen);
 
         return 0;
@@ -108,7 +108,7 @@ static int save_power_options(void) {
     CHECK_AND_SAVE_STD(power, IdleMute, "settings/power/idle_mute", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};

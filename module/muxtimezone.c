@@ -73,7 +73,7 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
-    toast_message(lang.MUXTIMEZONE.SAVE, 0);
+    toast_message(lang.MUXTIMEZONE.SAVE, FOREVER);
     refresh_screen(ui_screen);
 
     char zone_group[MAX_BUFFER_SIZE];

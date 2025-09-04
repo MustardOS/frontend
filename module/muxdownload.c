@@ -164,7 +164,7 @@ static void refresh_extra_data_finished(int result) {
         mux_input_stop();
     } else {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXDOWNLOAD.ERROR_GET_DATA, 0);
+        toast_message(lang.MUXDOWNLOAD.ERROR_GET_DATA, FOREVER);
     }
 }
 
@@ -188,7 +188,7 @@ static void handle_a(void) {
     if (file_exist(file_path)) {
         remove(file_path);
         download_finished(-1);
-        toast_message(lang.MUXDOWNLOAD.ARCHIVE_REMOVED, 1000);
+        toast_message(lang.MUXDOWNLOAD.ARCHIVE_REMOVED, SHORT);
     } else {
         set_download_callbacks(download_finished);
         initiate_download(items[current_item_index].extra_data, file_path, true,

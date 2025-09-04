@@ -253,7 +253,7 @@ static void refresh_theme_previews_finished(int result) {
         mux_input_stop();
     } else {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, 0);
+        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, FOREVER);
     }
 }
 
@@ -265,7 +265,7 @@ static void refresh_theme_data_finished(int result) {
                           lang.MUXTHEMEDOWN.DOWN.PREVIEW);
     } else {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, 0);
+        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, FOREVER);
     }
 }
 
@@ -287,7 +287,7 @@ static void handle_a(void) {
     if (file_exist(theme_path)) {
         remove(theme_path);
         theme_download_finished(0);
-        toast_message(lang.MUXTHEMEDOWN.THEME_REMOVED, 1000);
+        toast_message(lang.MUXTHEMEDOWN.THEME_REMOVED, SHORT);
     } else {
         set_download_callbacks(theme_download_finished);
         initiate_download(theme_items[current_item_index].url, theme_path, true,

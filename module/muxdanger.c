@@ -77,7 +77,7 @@ static void save_danger_options(void) {
     CHECK_AND_SAVE_VAL(danger, State, "danger/state", CHAR, state_values);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
 
         refresh_config = 1;

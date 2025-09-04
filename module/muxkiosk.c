@@ -145,7 +145,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Visual, "setting/visual", INT);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
 
         if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
         if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);

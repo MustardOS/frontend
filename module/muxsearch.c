@@ -416,11 +416,11 @@ static void handle_confirm(void) {
         lv_textarea_set_text(ui_txtEntry_search, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else if (element_focused == ui_lblSearchLocal_search || element_focused == ui_lblSearchGlobal_search) {
         if (strlen(lv_label_get_text(ui_lblLookupValue_search)) <= 2) {
-            toast_message(lang.MUXSEARCH.ERROR, 1000);
+            toast_message(lang.MUXSEARCH.ERROR, SHORT);
             return;
         }
 
-        toast_message(lang.MUXSEARCH.SEARCH, 0);
+        toast_message(lang.MUXSEARCH.SEARCH, FOREVER);
 
         if (element_focused == ui_lblSearchLocal_search) {
             const char *args[] = {(OPT_PATH "script/mux/find.sh"),

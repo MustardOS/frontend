@@ -291,7 +291,7 @@ int handle_navigate(void) {
         element_focused == ui_lblBoot_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, SHORT);
 
             return 1;
         }
@@ -374,7 +374,7 @@ static void handle_confirm(void) {
                 get_current_ip();
             } else {
                 play_sound(SND_ERROR);
-                toast_message(lang.MUXNETWORK.CHECK, 1000);
+                toast_message(lang.MUXNETWORK.CHECK, SHORT);
             }
         }
     } else {
@@ -415,7 +415,7 @@ static void handle_confirm(void) {
             }
         } else {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, SHORT);
         }
     }
 }
@@ -423,7 +423,7 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     play_sound(SND_BACK);
 
-    toast_message(lang.GENERIC.SAVING, 0);
+    toast_message(lang.GENERIC.SAVING, FOREVER);
     refresh_screen(ui_screen);
 
     save_network_config();

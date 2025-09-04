@@ -49,7 +49,7 @@ static void save_device_options(void) {
     CHECK_AND_SAVE_DEV(device, HasPortmaster, "board/portmaster", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
 
         refresh_device = 1;

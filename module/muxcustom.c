@@ -416,7 +416,7 @@ static void handle_a(void) {
 
             play_sound(SND_CONFIRM);
 
-            toast_message(lang.GENERIC.LOADING, 0);
+            toast_message(lang.GENERIC.LOADING, FOREVER);
             lv_obj_move_foreground(ui_pnlMessage);
 
             // Refresh and add a small delay to actually display the message!

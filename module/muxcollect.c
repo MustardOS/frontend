@@ -426,7 +426,7 @@ static int load_content(const char *content_name) {
         return 1;
     }
 
-    toast_message(lang.MUXCOLLECT.ERROR.LOAD, 1000);
+    toast_message(lang.MUXCOLLECT.ERROR.LOAD, SHORT);
     LOG_ERROR(mux_module, "Cache Pointer Not Found: %s", cache_file)
 
     return 0;
@@ -609,7 +609,7 @@ static void process_load(int from_start) {
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
 
     if (load_message) {
-        toast_message(lang.GENERIC.LOADING, 0);
+        toast_message(lang.GENERIC.LOADING, FOREVER);
         lv_obj_move_foreground(ui_pnlMessage);
 
         // Refresh and add a small delay to actually display the message!
@@ -692,7 +692,7 @@ static void handle_x(void) {
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, 1000);
+            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
             return;
         } else {
             char empty_dir[MAX_BUFFER_SIZE];

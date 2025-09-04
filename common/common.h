@@ -53,6 +53,13 @@ struct grid_info {
 
 extern struct grid_info grid_info;
 
+enum toast_show {
+    FOREVER,
+    SHORT = 1000,
+    MEDIUM = 1750,
+    LONG = 2500
+};
+
 /* The following enums start at 1 because the values are used to
  * reference specific line numbers in associated core content files.
  *

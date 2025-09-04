@@ -772,7 +772,7 @@ static void process_load(int from_start) {
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
 
     if (load_message) {
-        toast_message(lang.GENERIC.LOADING, 0);
+        toast_message(lang.GENERIC.LOADING, FOREVER);
         lv_obj_move_foreground(ui_pnlMessage);
 
         // Refresh and add a small delay to actually display the message!
@@ -823,7 +823,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    toast_message(lang.MUXPLORE.REFRESH_RUN, 0);
+    toast_message(lang.MUXPLORE.REFRESH_RUN, FOREVER);
     lv_obj_move_foreground(ui_pnlMessage);
 
     // Refresh and add a small delay to actually display the message!
@@ -845,13 +845,13 @@ static void handle_y(void) {
 
     if (items[current_item_index].content_type == FOLDER) {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000);
+        toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, SHORT);
     } else {
         if (is_ksk(kiosk.LAUNCH.COLLECTION) || is_ksk(kiosk.COLLECT.ADD_CON)) return;
 
         if (!load_content(1)) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000);
+            toast_message(lang.MUXPLORE.ERROR.NO_CORE, SHORT);
         }
     }
 }
@@ -1064,7 +1064,7 @@ int muxplore_main(int index, char *dir) {
 
     if (file_exist(ADD_MODE_DONE)) {
         if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
-            toast_message(lang.GENERIC.ADD_COLLECT, 1000);
+            toast_message(lang.GENERIC.ADD_COLLECT, SHORT);
         }
         remove(ADD_MODE_DONE);
     }

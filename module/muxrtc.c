@@ -338,7 +338,7 @@ static void adjust_option(int direction) {
 }
 
 static void save_and_exit(char *message) {
-    toast_message(message, 0);
+    toast_message(message, FOREVER);
     refresh_screen(ui_screen);
 
     // Validate the final RTC state before saving

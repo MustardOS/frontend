@@ -46,7 +46,7 @@ static void save_web_options(void) {
     CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/web/service.sh"), NULL};

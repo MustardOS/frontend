@@ -190,7 +190,8 @@ static void handle_a(void) {
                 play_sound(SND_CONFIRM);
             } else {
                 toast_message(!strcmp(elements[i].mux_name, "reboot") ? lang.GENERIC.REBOOTING
-                                                                      : lang.GENERIC.SHUTTING_DOWN, 0);
+                                                                      : lang.GENERIC.SHUTTING_DOWN,
+                              FOREVER);
                 refresh_screen(ui_screen);
             }
 

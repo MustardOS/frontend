@@ -48,7 +48,7 @@ static void save_hdmi_options(void) {
     CHECK_AND_SAVE_STD(hdmi, Audio, "settings/hdmi/audio", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
         refresh_config = 1;
     }

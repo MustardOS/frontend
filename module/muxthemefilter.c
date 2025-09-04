@@ -49,7 +49,7 @@ static void save_theme_filter_options(void) {
     }
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
         refresh_config = 1;
         theme_down_index = 0;

@@ -141,7 +141,7 @@ int muxpass_main(char *p_type) {
     init_muxpass(ui_pnlContent);
     init_elements();
 
-    if (strlen(p_msg) > 1) toast_message(p_msg, 0);
+    if (strlen(p_msg) > 1) toast_message(p_msg, FOREVER);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());

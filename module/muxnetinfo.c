@@ -427,7 +427,7 @@ static void handle_a(void) {
     if (element_focused == ui_lblHostname_netinfo) {
         if (is_network_connected()) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXNETINFO.ERROR.EDIT, 1000);
+            toast_message(lang.MUXNETINFO.ERROR.EDIT, SHORT);
             return;
         }
 
@@ -443,7 +443,7 @@ static void handle_a(void) {
     } else if (element_focused == ui_lblMac_netinfo) {
         if (is_network_connected()) {
             play_sound(SND_ERROR);
-            toast_message(lang.MUXNETINFO.ERROR.CHANGE, 1000);
+            toast_message(lang.MUXNETINFO.ERROR.CHANGE, SHORT);
             return;
         }
 

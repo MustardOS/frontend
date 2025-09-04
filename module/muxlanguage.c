@@ -94,7 +94,7 @@ static void refresh_language_data_finished(int result) {
         extract_archive(language_data_local_path, "language");
     } else {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXLANGUAGE.ERROR_GET_DATA, 0);
+        toast_message(lang.MUXLANGUAGE.ERROR_GET_DATA, FOREVER);
     }
 }
 
@@ -113,7 +113,7 @@ static void handle_a(void) {
 
     play_sound(SND_CONFIRM);
 
-    toast_message(lang.GENERIC.SAVING, 0);
+    toast_message(lang.GENERIC.SAVING, FOREVER);
     refresh_screen(ui_screen);
 
     write_text_to_file((CONF_CONFIG_PATH "settings/general/language"), "w", CHAR,

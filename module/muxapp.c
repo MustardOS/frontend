@@ -221,7 +221,7 @@ static void handle_a(void) {
         play_sound(SND_CONFIRM);
 
         if (!skip_toast) {
-            toast_message(lang.MUXAPP.LOAD_APP, 0);
+            toast_message(lang.MUXAPP.LOAD_APP, FOREVER);
             refresh_screen(ui_screen);
 
             char app_dir[MAX_BUFFER_SIZE];
