@@ -1,13 +1,47 @@
 #include "muxshare.h"
 
+typedef struct {
+    char *name;
+    char *icon;
+    char *grid;
+    char *help;
+
+    int16_t *(*kiosk_flag)(void);
+} mux_apps;
+
+static int16_t *flag_archive(void) { return &kiosk.APPLICATION.ARCHIVE; }
+
+static int16_t *flag_task(void) { return &kiosk.APPLICATION.TASK; }
+
+static mux_apps app[] = {
+        {"Archive Manager", "archive", "Archive", "", flag_archive},
+        {"Task Toolkit",    "task",    "Toolkit", "", flag_task},
+};
+
+static inline mux_apps *get_mux_app(const char *name) {
+    if (!name) return NULL;
+
+    for (size_t i = 0; i < A_SIZE(app); i++) {
+        if (strcasecmp(name, app[i].name) == 0) return &app[i];
+    }
+
+    return NULL;
+}
+
 static void show_help(void) {
     char *title = items[current_item_index].name;
+    char *message = NULL;
 
-    char help_info[MAX_BUFFER_SIZE];
-    snprintf(help_info, sizeof(help_info), "%s/%s/%s.sh",
-             device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, title);
+    mux_apps *mux_app = get_mux_app(title);
+    if (mux_app && mux_app->help) {
+        message = mux_app->help;
+    } else {
+        char help_info[MAX_BUFFER_SIZE];
+        snprintf(help_info, sizeof(help_info), "%s/%s/%s.sh",
+                 device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, title);
+        message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
+    }
 
-    char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
     show_info_box(TS(title), TS(message), 0);
 }
 
@@ -31,7 +65,16 @@ static void init_navigation_group_grid(const char *app_path) {
         char app_launcher[MAX_BUFFER_SIZE];
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, items[i].extra_data);
 
-        char *glyph_name = get_script_value(app_launcher, "ICON", "app");
+        const char *glyph_name = NULL;
+
+        mux_apps *mux_app = get_mux_app(items[i].extra_data);
+        if (mux_app && mux_app->icon) {
+            glyph_name = mux_app->icon;
+        } else {
+            char app_launcher[MAX_BUFFER_SIZE];
+            snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, items[i].extra_data);
+            glyph_name = get_script_value(app_launcher, "ICON", "app");
+        }
 
         char grid_image[MAX_BUFFER_SIZE];
         load_image_catalogue("Application", glyph_name, "default", mux_dimension, "grid",
@@ -53,6 +96,22 @@ static void init_navigation_group_grid(const char *app_path) {
     }
 }
 
+static int append_mux_app(char ***arr, size_t *count, const char *name) {
+    for (size_t i = 0; i < *count; i++) {
+        if ((*arr)[i] && strcmp((*arr)[i], name) == 0) return 0;
+    }
+
+    char **tmp = realloc(*arr, (*count + 1) * sizeof(char *));
+    if (!tmp) return -1;
+    *arr = tmp;
+
+    (*arr)[*count] = strdup(name);
+    if (!(*arr)[*count]) return -1;
+    (*count)++;
+
+    return 0;
+}
+
 static void create_app_items(void) {
     char app_path[MAX_BUFFER_SIZE];
     snprintf(app_path, sizeof(app_path), "%s/%s", device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH);
@@ -71,25 +130,35 @@ static void create_app_items(void) {
 
             if (access(launch_script, F_OK) == 0) {
                 char **temp = realloc(dir_names, (dir_count + 1) * sizeof(char *));
+
                 if (!temp) {
                     perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                     free(dir_names);
                     closedir(app_dir);
                     return;
                 }
+
                 dir_names = temp;
                 dir_names[dir_count] = strdup(entry->d_name);
+
                 if (!dir_names[dir_count]) {
                     perror(lang.SYSTEM.FAIL_DUP_STRING);
                     free(dir_names);
                     closedir(app_dir);
                     return;
                 }
+
                 dir_count++;
             }
         }
     }
     closedir(app_dir);
+
+    for (size_t i = 0; i < A_SIZE(app); i++) {
+        if (append_mux_app(&dir_names, &dir_count, app[i].name) < 0) {
+            perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        }
+    }
 
     if (!dir_names) return;
     qsort(dir_names, dir_count, sizeof(char *), str_compare);
@@ -103,10 +172,20 @@ static void create_app_items(void) {
 
         char app_launcher[MAX_BUFFER_SIZE];
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, dir_names[i]);
-        char *app_name_for_grid = get_script_value(app_launcher, "GRID", dir_names[i]);
+
+        char *grid_label = dir_names[i];
+        if (theme.GRID.ENABLED) {
+            mux_apps *mux_app = get_mux_app(dir_names[i]);
+            if (mux_app && mux_app->grid) {
+                grid_label = mux_app->grid;
+            } else {
+                char *from_script = get_script_value(app_launcher, "GRID", dir_names[i]);
+                grid_label = from_script ? from_script : dir_names[i];
+            }
+        }
 
         char app_store[MAX_BUFFER_SIZE];
-        snprintf(app_store, sizeof(app_store), "%s", theme.GRID.ENABLED ? app_name_for_grid : dir_names[i]);
+        snprintf(app_store, sizeof(app_store), "%s", grid_label);
 
         add_item(&items, &item_count, dir_names[i], TS(app_store), dir_names[i], ITEM);
 
@@ -132,8 +211,18 @@ static void create_app_items(void) {
                     char app_launcher[MAX_BUFFER_SIZE];
                     snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, items[i].name);
 
-                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module,
-                                           get_script_value(app_launcher, "ICON", "app"));
+                    char *glyph_name = NULL;
+
+                    mux_apps *mux_app = get_mux_app(items[i].name);
+                    if (mux_app && mux_app->icon) {
+                        glyph_name = mux_app->icon;
+                    } else {
+                        char app_launcher[MAX_BUFFER_SIZE];
+                        snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, items[i].name);
+                        glyph_name = get_script_value(app_launcher, "ICON", "app");
+                    }
+
+                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, glyph_name);
                 }
 
                 lv_group_add_obj(ui_group, ui_lblAppItem);
@@ -197,24 +286,19 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (ui_count > 0) {
-        struct {
-            const char *mux_name;
-            int16_t *kiosk_flag;
-        } elements[] = {
-                {"Archive Manager", &kiosk.APPLICATION.ARCHIVE},
-                {"Task Toolkit",    &kiosk.APPLICATION.TASK}
-        };
-
         int skip_toast = 0;
 
-        for (size_t i = 0; i < A_SIZE(elements); i++) {
-            if (strcasecmp(items[current_item_index].name, elements[i].mux_name) == 0) {
-                if (is_ksk(*elements[i].kiosk_flag)) {
+        for (size_t i = 0; i < A_SIZE(app); i++) {
+            if (strcasecmp(items[current_item_index].name, app[i].name) == 0) {
+                int16_t *kf = app[i].kiosk_flag ? app[i].kiosk_flag() : NULL;
+
+                if (kf && is_ksk(*kf)) {
                     kiosk_denied();
                     return;
                 }
 
                 skip_toast = 1;
+                break;
             }
         }
 
@@ -274,15 +358,8 @@ static void handle_menu(void) {
 static void handle_select(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    struct {
-        const char *mux_name;
-    } elements[] = {
-            {"Archive Manager"},
-            {"Task Toolkit"}
-    };
-
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(items[current_item_index].name, elements[i].mux_name) == 0) {
+    for (size_t i = 0; i < A_SIZE(app); i++) {
+        if (strcasecmp(items[current_item_index].name, app[i].name) == 0) {
             return;
         }
     }
