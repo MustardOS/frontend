@@ -13,7 +13,7 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
     if (!strcmp(raw, "")) {
         sys_dir_lower[0] = '\0';
     } else {
-        snprintf(sys_dir_lower, sizeof(sys_dir_lower), "%s/", str_tolower(raw));
+        snprintf(sys_dir_lower, sizeof(sys_dir_lower), "%s/", raw);
     }
 
     char core_file[MAX_BUFFER_SIZE];
