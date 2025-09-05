@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "../common/init.h"
 #include "../common/common.h"
+#include "../common/log.h"
 #include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -324,25 +325,25 @@ int main(int argc, char *argv[]) {
 
     input_opts.general_fd = open(device.INPUT_EVENT.JOY_GENERAL, O_RDONLY);
     if (input_opts.general_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY_GENERAL);
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_GENERAL)
         return 1;
     }
 
     input_opts.power_fd = open(device.INPUT_EVENT.JOY_POWER, O_RDONLY);
     if (input_opts.power_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY_POWER);
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_POWER)
         return 1;
     }
 
     input_opts.volume_fd = open(device.INPUT_EVENT.JOY_VOLUME, O_RDONLY);
     if (input_opts.volume_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY_VOLUME);
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_VOLUME)
         return 1;
     }
 
     input_opts.extra_fd = open(device.INPUT_EVENT.JOY_EXTRA, O_RDONLY);
     if (input_opts.extra_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY_EXTRA);
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_EXTRA)
         return 1;
     }
 

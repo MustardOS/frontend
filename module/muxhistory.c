@@ -131,7 +131,7 @@ static void add_file_names(const char *base_dir, char ***file_names, char ***las
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
     if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
         return;
     }
 

@@ -11,6 +11,7 @@
 #include "init.h"
 #include "input.h"
 #include "common.h"
+#include "log.h"
 #include "ui_common.h"
 #include "language.h"
 #include "options.h"
@@ -52,7 +53,7 @@ void setup_background_process(void) {
     pid_t pid = fork();
 
     if (pid == -1) {
-        perror(lang.SYSTEM.FAIL_FORK);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_FORK)
         exit(1);
     } else if (pid > 0) {
         exit(0);

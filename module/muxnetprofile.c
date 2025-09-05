@@ -189,7 +189,7 @@ static void create_profile_items(void) {
                 if (last_dot && !strcasecmp(last_dot, ".ini")) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (!temp) {
-                        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
                         free(file_names);
                         closedir(pd);
                         return;
@@ -200,7 +200,7 @@ static void create_profile_items(void) {
                     snprintf(full_app_name, sizeof(full_app_name), "%s%s", profile_dir, pf->d_name);
                     file_names[file_count] = strdup(full_app_name);
                     if (!file_names[file_count]) {
-                        perror(lang.SYSTEM.FAIL_DUP_STRING);
+                        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
                         free(file_names);
                         closedir(pd);
                         return;

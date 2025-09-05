@@ -44,7 +44,7 @@ void write_core_file(char *def_core, char *path, char *core, char *sys, char *ca
                      char *rom_name, char *rom_mount, char *rom_base, char *rom_full) {
     FILE *f = fopen(path, "w");
     if (!f) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
         return;
     }
 
@@ -64,7 +64,7 @@ void write_core_file(char *def_core, char *path, char *core, char *sys, char *ca
 void write_gov_file(char *path, char *gov, char *rom_name) {
     FILE *f = fopen(path, "w");
     if (!f) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
         return;
     }
 
@@ -82,7 +82,7 @@ void write_gov_file(char *path, char *gov, char *rom_name) {
 void write_control_file(char *path, char *control, char *rom_name) {
     FILE *f = fopen(path, "w");
     if (!f) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
         return;
     }
 

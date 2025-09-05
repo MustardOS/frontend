@@ -141,7 +141,7 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
 
             return;
         } else {
-            perror(lang.SYSTEM.FAIL_RUN_COMMAND);
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_RUN_COMMAND)
             rtc_retry_attempt++;
             sleep(RTC_RETRY_DELAY);
         }

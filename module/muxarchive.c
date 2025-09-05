@@ -61,7 +61,7 @@ static void create_archive_items(void) {
 
                 char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                 if (!temp) {
-                    perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
                     free(file_names);
                     closedir(ad);
                     return;
@@ -70,7 +70,7 @@ static void create_archive_items(void) {
                 file_names = temp;
                 file_names[file_count] = strdup(full_app_name);
                 if (!file_names[file_count++]) {
-                    perror(lang.SYSTEM.FAIL_DUP_STRING);
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
                     free(file_names);
                     closedir(ad);
                     return;

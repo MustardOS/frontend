@@ -13,7 +13,7 @@ static void write_tag_file(char *path, char *tag, char *log) {
 
     FILE *file = fopen(path, "w");
     if (!file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
         return;
     }
 

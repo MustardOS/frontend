@@ -267,7 +267,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
 
     DIR *dir = opendir(full_path);
     if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
         return 0;
     }
 

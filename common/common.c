@@ -497,13 +497,13 @@ int read_battery_capacity(void) {
     FILE *file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY)
         return 0;
     }
 
     int capacity;
     if (fscanf(file, "%d", &capacity) != 1) {
-        perror(lang.SYSTEM.FAIL_FILE_READ);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY)
         return 0;
     }
 
@@ -517,13 +517,13 @@ char *read_battery_voltage(void) {
     FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE)
         return "0.00 V";
     }
 
     int raw_voltage;
     if (fscanf(file, "%d", &raw_voltage) != 1) {
-        perror(lang.SYSTEM.FAIL_FILE_READ);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE)
         fclose(file);
         return "0.00 V";
     }
@@ -532,7 +532,7 @@ char *read_battery_voltage(void) {
 
     char *form_voltage = (char *) malloc(10);
     if (form_voltage == NULL) {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
         return "0.00 V";
     }
 
@@ -561,7 +561,7 @@ char *read_all_char_from(const char *filename) {
             text[bytesRead] = '\0';
         }
     } else {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
     }
 
     fclose(file);
@@ -576,13 +576,13 @@ char *read_line_char_from(const char *filename, size_t line_number) {
 
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
         return "";
     }
 
     char *line = (char *) malloc(MAX_BUFFER_SIZE);
     if (!line) {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
         fclose(file);
         return "";
     }
@@ -705,7 +705,7 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_WRITE);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename)
         return;
     }
 
@@ -846,7 +846,7 @@ void decrease_option_value(lv_obj_t *element) {
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {
     FILE *file = fopen(loader, "w");
     if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, loader)
         return;
     }
 
@@ -857,7 +857,7 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 void load_mux(const char *value) {
     FILE *file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, MUOS_ACT_LOAD)
         return;
     }
 
@@ -920,7 +920,7 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
         closedir(dir);
     } else {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
     }
 }
 
@@ -947,7 +947,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
         }
         closedir(dir);
     } else {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
     }
 }
 
@@ -1543,7 +1543,7 @@ void load_skip_patterns(void) {
 
     FILE *file = fopen(skip_ini, "r");
     if (!file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, skip_ini)
         return;
     }
 
@@ -2002,7 +2002,7 @@ void collect_subdirectories(const char *base_dir, char ***list, int *size, int *
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
         return;
     }
 
@@ -2392,7 +2392,7 @@ void set_nav_flags(struct nav_flag *nav_flags, size_t count) {
 
 int16_t validate_int16(int value, const char *field) {
     if (value < INT16_MIN || value > INT16_MAX) {
-        perror(lang.SYSTEM.FAIL_INT16_LENGTH);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_INT16_LENGTH)
         return (value < INT16_MIN) ? INT16_MIN : INT16_MAX;
     }
     return (int16_t) value;
@@ -2409,7 +2409,7 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     DIR *dir = opendir(base_path);
 
     if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
         return 0;
     }
 
@@ -2446,7 +2446,7 @@ void populate_items(const char *base_path, const char ***items, int *item_count)
     DIR *dir = opendir(base_path);
 
     if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
         return;
     }
 
@@ -2456,7 +2456,7 @@ void populate_items(const char *base_path, const char ***items, int *item_count)
 
         struct stat st;
         if (stat(full_path, &st) == -1) {
-            perror(lang.SYSTEM.FAIL_STAT);
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_STAT)
             continue;
         }
 
@@ -2629,13 +2629,13 @@ int volume_to_percent(int val) {
 char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
         return NULL;
     }
 
     char **list = malloc(MAX_BUFFER_SIZE * sizeof(char *));
     if (!list) {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
         fclose(file);
         return NULL;
     }
@@ -2678,7 +2678,7 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     fclose(file);
 
     if (failed) {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
         for (int i = 0; i < *count; i++) free(list[i]);
         free(list);
 

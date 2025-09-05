@@ -13,7 +13,7 @@ static void show_help(void) {
 static void write_control_file(char *path, const char *control, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
         return;
     }
 

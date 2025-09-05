@@ -132,7 +132,7 @@ static void create_app_items(void) {
                 char **temp = realloc(dir_names, (dir_count + 1) * sizeof(char *));
 
                 if (!temp) {
-                    perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
                     free(dir_names);
                     closedir(app_dir);
                     return;
@@ -142,7 +142,7 @@ static void create_app_items(void) {
                 dir_names[dir_count] = strdup(entry->d_name);
 
                 if (!dir_names[dir_count]) {
-                    perror(lang.SYSTEM.FAIL_DUP_STRING);
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
                     free(dir_names);
                     closedir(app_dir);
                     return;
@@ -156,7 +156,7 @@ static void create_app_items(void) {
 
     for (size_t i = 0; i < A_SIZE(app); i++) {
         if (append_mux_app(&dir_names, &dir_count, app[i].name) < 0) {
-            perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
         }
     }
 

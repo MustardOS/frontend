@@ -236,7 +236,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
         return;
     }
 
