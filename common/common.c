@@ -2351,8 +2351,6 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line) {
                  subdir, strip_ext(name), ext);
     }
 
-    puts(path);
-
     if (file_exist(path)) return read_line_char_from(path, line);
 
     return "";
