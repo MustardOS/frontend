@@ -56,7 +56,8 @@ static int extract_preview(char *dimension, char *extract_path) {
 static void image_refresh(void) {
     if (items[current_item_index].content_type == FOLDER ||
         items[current_item_index].content_type == MENU ||
-        (!strcasecmp(picker_type, "/theme"))) {
+        strcasecmp(picker_type, "/theme")) {
+
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
@@ -82,7 +83,8 @@ static void image_refresh(void) {
                  str_capital(image_picker), mux_dimension);
         create_directories(catalogue_path);
 
-        extract_preview(mux_dimension, preview_path);
+        if (!extract_preview(mux_dimension, preview_path) && !strcmp("640x480/", mux_dimension))
+            extract_preview("640x480/", fallback_path);
     }
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
