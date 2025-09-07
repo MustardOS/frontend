@@ -101,6 +101,7 @@
     CUSTOM(BoxArtImage,     "boxart")      \
     CUSTOM(BoxArtAlign,     "align")       \
     CUSTOM(LaunchSplash,    "splash")      \
+    CUSTOM(BoxArtHide,      "boxarthide")  \
     CUSTOM(Font,            "font")        \
     CUSTOM(Sound,           "sound")       \
     CUSTOM(Chime,           "chime")

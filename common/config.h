@@ -133,6 +133,7 @@ struct mux_config {
         int16_t OVERLAY_TRANSPARENCY;
         int16_t BOX_ART;
         int16_t BOX_ART_ALIGN;
+        int16_t BOX_ART_HIDE;
         int16_t NAME;
         int16_t DASH;
         int16_t LAUNCH_SWAP;

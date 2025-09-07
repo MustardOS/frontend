@@ -88,8 +88,11 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
-                             image, sizeof(image));
+        if (strcasecmp(image_type, "box") || items[current_item_index].content_type != FOLDER || 
+                !grid_mode_enabled || (grid_mode_enabled && !config.VISUAL.BOX_ART_HIDE)) {
+            load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
+                                image, sizeof(image));
+        }
         if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
