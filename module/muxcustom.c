@@ -82,7 +82,7 @@ static int populate_theme_alternates(void) {
             size_t len = strlen(filename);
 
             if ((len > 4 && strcmp(str_tolower(filename + len - 4), ".ini") == 0) ||
-                (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxzip") == 0)) {
+                (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxalt") == 0)) {
                 char *name_without_ext = strip_ext(filename);
                 if (!item_exists(items, item_count, name_without_ext)) {
                     add_item(&items, &item_count, name_without_ext, name_without_ext, "", ITEM);
@@ -333,23 +333,27 @@ static void save_custom_options(void) {
             write_text_to_file((STORAGE_THEME "/active.txt"), "w", CHAR, theme_alt);
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
-            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxzip", STORAGE_THEME, theme_alt);
+            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt",
+                     STORAGE_THEME, theme_alt);
+
             if (file_exist(theme_alt_archive)) {
+                LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
                 extract_archive(theme_alt_archive, "custom");
-                update_bootlogo();
             }
 
             static char rgb_script[MAX_BUFFER_SIZE];
-            snprintf(rgb_script, sizeof(rgb_script),
-                     "%s/alternate/rgb/%s/rgbconf.sh", STORAGE_THEME, theme_alt);
+            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh",
+                     STORAGE_THEME, theme_alt);
             if (file_exist(rgb_script)) {
-                if (config.SETTINGS.GENERAL.RGB) {
+                if (device.DEVICE.RGB && config.SETTINGS.GENERAL.RGB) {
                     const char *args[] = {rgb_script, NULL};
                     run_exec(args, A_SIZE(args), 0);
                 }
 
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
-                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", STORAGE_THEME);
+                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh",
+                         STORAGE_THEME);
+
                 create_directories(strip_dir(rgb_script_dest));
                 write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
             }
@@ -375,10 +379,10 @@ static void save_custom_options(void) {
     }
 
     if (is_modified > 0) {
+        refresh_config = 1;
+
         const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
         run_exec(args, A_SIZE(args), 0);
-
-        refresh_config = 1;
     }
 }
 

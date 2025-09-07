@@ -1044,49 +1044,53 @@ void load_splash_image_fallback(const char *mux_dimension, char *image, size_t i
 
 bool is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
     return (strcmp(catalogue_name, "Application") && strcmp(image_type, "box")) ||
-        (strcmp(catalogue_name, "Application") && strcmp(image_type, "grid")) ||
-        (strcmp(catalogue_name, "Collection") && strcmp(image_type, "box")) ||
-        (strcmp(catalogue_name, "Collection") && strcmp(image_type, "grid")) ||
-        (strcmp(catalogue_name, "Folder") && strcmp(image_type, "box")) ||
-        (strcmp(catalogue_name, "Folder") && strcmp(image_type, "grid"));
+           (strcmp(catalogue_name, "Application") && strcmp(image_type, "grid")) ||
+           (strcmp(catalogue_name, "Collection") && strcmp(image_type, "box")) ||
+           (strcmp(catalogue_name, "Collection") && strcmp(image_type, "grid")) ||
+           (strcmp(catalogue_name, "Folder") && strcmp(image_type, "box")) ||
+           (strcmp(catalogue_name, "Folder") && strcmp(image_type, "grid"));
 }
 
-int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
-                         const char *mux_dimension, const char *image_type, char *image_path, size_t path_size) {
-    
-    enum catalogue_kind { CAT_THEME, CAT_INFO };
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt,
+                         const char *program_default, const char *mux_dimension, const char *image_type,
+                         char *image_path, size_t path_size) {
+    enum catalogue_kind {
+        CAT_THEME, CAT_INFO
+    };
+
     const char *path_format = "%s/%s/%s/%s%s.png";
-    const bool skip_theme_catalogue = !directory_exist(THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
-    
+    const bool skip_theme_catalogue =
+            !directory_exist(THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
+
     struct {
         enum catalogue_kind kind;
         const char *catalogue_path;
         const char *dimension;
-        const char *program;        
+        const char *program;
     } args[] = {
-        { CAT_THEME, THEME_CAT_PATH, mux_dimension, program         },
-        { CAT_THEME, THEME_CAT_PATH, mux_dimension, program_alt     },
-        { CAT_THEME, THEME_CAT_PATH, "",            program         },
-        { CAT_THEME, THEME_CAT_PATH, "",            program_alt     },
-        { CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program         },
-        { CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_alt     },
-        { CAT_INFO,  INFO_CAT_PATH,  "",            program         },
-        { CAT_INFO,  INFO_CAT_PATH,  "",            program_alt     },
-        { CAT_THEME, THEME_CAT_PATH, mux_dimension, program_default },
-        { CAT_THEME, THEME_CAT_PATH, "",            program_default },
-        { CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_default },
-        { CAT_INFO,  INFO_CAT_PATH,  "",            program_default },
+            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program},
+            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program_alt},
+            {CAT_THEME, THEME_CAT_PATH, "",            program},
+            {CAT_THEME, THEME_CAT_PATH, "",            program_alt},
+            {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program},
+            {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_alt},
+            {CAT_INFO,  INFO_CAT_PATH,  "",            program},
+            {CAT_INFO,  INFO_CAT_PATH,  "",            program_alt},
+            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program_default},
+            {CAT_THEME, THEME_CAT_PATH, "",            program_default},
+            {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_default},
+            {CAT_INFO,  INFO_CAT_PATH,  "",            program_default},
     };
 
     for (size_t i = 0; i < A_SIZE(args); i++) {
         if ((args[i].kind == CAT_THEME && skip_theme_catalogue) ||
-                args[i].program[0] == '\0') {
+            args[i].program[0] == '\0') {
             continue;
         }
 
         int written;
         written = snprintf(image_path, path_size, path_format, args[i].catalogue_path, catalogue_name,
-                        image_type, args[i].dimension, args[i].program);
+                           image_type, args[i].dimension, args[i].program);
         if (written >= 0 && file_exist(image_path)) return 1;
     }
 
@@ -2618,28 +2622,6 @@ int theme_compat(void) {
     }
 
     return 0;
-}
-
-void update_bootlogo(void) {
-    char bootlogo_image[MAX_BUFFER_SIZE];
-    snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/%simage/bootlogo.bmp", STORAGE_THEME, mux_dimension);
-
-    if (!file_exist(bootlogo_image)) {
-        snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/image/bootlogo.bmp", STORAGE_THEME);
-    }
-
-    if (file_exist(bootlogo_image)) {
-        char bootlogo_dest[MAX_BUFFER_SIZE];
-        snprintf(bootlogo_dest, sizeof(bootlogo_dest), "%s/bootlogo.bmp", device.STORAGE.BOOT.MOUNT);
-
-        const char *args[] = {"cp", bootlogo_image, bootlogo_dest, NULL};
-        run_exec(args, A_SIZE(args), 0);
-
-        if (strcasecmp(device.DEVICE.NAME, "rg28xx-h") == 0) {
-            const char *args[] = {"convert", bootlogo_dest, "-rotate", "270", bootlogo_dest, NULL};
-            run_exec(args, A_SIZE(args), 0);
-        }
-    }
 }
 
 int brightness_to_percent(int val) {
