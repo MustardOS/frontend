@@ -353,7 +353,7 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line);
 
 char *get_application_line(char *dir, char *ext, size_t line);
 
-int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);
 
 struct screen_dimension get_device_dimensions();

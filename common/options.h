@@ -77,6 +77,7 @@
 #define STORAGE_MUSIC RUN_SHARE_PATH   "media/music"
 #define STORAGE_SOUND RUN_SHARE_PATH   "media/sound"
 #define STORAGE_LANG  RUN_SHARE_PATH   "language"
+#define THEME_CAT_PATH STORAGE_THEME   "/catalogue"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COR_PATH RUN_SHARE_PATH   "info/core"

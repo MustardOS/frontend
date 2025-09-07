@@ -37,11 +37,11 @@ static void image_refresh(char *image_type) {
     char image[MAX_BUFFER_SIZE];
     char *core_artwork = "theme";
 
-    load_image_catalogue(core_artwork, theme_items[current_item_index].name, "default", mux_dimension,
+    load_image_catalogue(core_artwork, theme_items[current_item_index].name, "", "default", mux_dimension,
                          image_type,
                          image, sizeof(image));
     if (!file_exist(image)) {
-        load_image_catalogue(core_artwork, theme_items[current_item_index].name, "default", "640x480/",
+        load_image_catalogue(core_artwork, theme_items[current_item_index].name, "", "default", "640x480/",
                              image_type,
                              image, sizeof(image));
     }

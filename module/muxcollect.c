@@ -88,7 +88,7 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        load_image_catalogue(h_core_artwork, h_file_name, "default", mux_dimension, image_type,
+        load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
                              image, sizeof(image));
         if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
@@ -296,14 +296,14 @@ static void init_navigation_group_grid(void) {
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
         char grid_image[MAX_BUFFER_SIZE];
-        load_image_catalogue("Collection", strip_ext(items[i].name), "default", mux_dimension, "grid",
+        load_image_catalogue("Collection", strip_ext(items[i].name), "", "default", mux_dimension, "grid",
                              grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
 
         char grid_image_focused[MAX_BUFFER_SIZE];
-        load_image_catalogue("Collection", glyph_name_focused, "default_focused", mux_dimension, "grid",
+        load_image_catalogue("Collection", glyph_name_focused, "", "default_focused", mux_dimension, "grid",
                              grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,

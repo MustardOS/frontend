@@ -88,7 +88,7 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        load_image_catalogue(core_artwork, last_dir, "default", mux_dimension, image_type,
+        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, image_type,
                              image, sizeof(image));
     }
 

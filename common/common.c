@@ -1041,31 +1041,52 @@ void load_splash_image_fallback(const char *mux_dimension, char *image, size_t i
     snprintf(image, image_size, "%s/image/splash.png", theme);
 }
 
-int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
+bool is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
+    return (strcmp(catalogue_name, "Application") && strcmp(image_type, "box")) ||
+        (strcmp(catalogue_name, "Application") && strcmp(image_type, "grid")) ||
+        (strcmp(catalogue_name, "Collection") && strcmp(image_type, "box")) ||
+        (strcmp(catalogue_name, "Collection") && strcmp(image_type, "grid")) ||
+        (strcmp(catalogue_name, "Folder") && strcmp(image_type, "box")) ||
+        (strcmp(catalogue_name, "Folder") && strcmp(image_type, "grid"));
+}
+
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size) {
-    const char *paths[] = {
-            "%s/%s/%s/%s%s.png",
-            "%s/%s/%s/%s.png"
+    
+    enum catalogue_kind { CAT_THEME, CAT_INFO };
+    const char *path_format = "%s/%s/%s/%s%s.png";
+    const bool skip_theme_catalogue = !directory_exist(THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
+    
+    struct {
+        enum catalogue_kind kind;
+        const char *catalogue_path;
+        const char *dimension;
+        const char *program;        
+    } args[] = {
+        { CAT_THEME, THEME_CAT_PATH, mux_dimension, program         },
+        { CAT_THEME, THEME_CAT_PATH, mux_dimension, program_alt     },
+        { CAT_THEME, THEME_CAT_PATH, "",            program         },
+        { CAT_THEME, THEME_CAT_PATH, "",            program_alt     },
+        { CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program         },
+        { CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_alt     },
+        { CAT_INFO,  INFO_CAT_PATH,  "",            program         },
+        { CAT_INFO,  INFO_CAT_PATH,  "",            program_alt     },
+        { CAT_THEME, THEME_CAT_PATH, mux_dimension, program_default },
+        { CAT_THEME, THEME_CAT_PATH, "",            program_default },
+        { CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_default },
+        { CAT_INFO,  INFO_CAT_PATH,  "",            program_default },
     };
 
-    const char *programs[] = {program, program_fallback};
-    for (size_t i = 0; i < A_SIZE(paths); ++i) {
-        for (size_t j = 0; j < A_SIZE(programs); ++j) {
-            int written;
-
-            switch (i) {
-                case 0:
-                    written = snprintf(image_path, path_size, paths[i], INFO_CAT_PATH, catalogue_name,
-                                       image_type, mux_dimension, programs[j]);
-                    break;
-                case 1:
-                default:
-                    written = snprintf(image_path, path_size, paths[i], INFO_CAT_PATH, catalogue_name,
-                                       image_type, programs[j]);
-            }
-
-            if (written >= 0 && file_exist(image_path)) return 1;
+    for (size_t i = 0; i < A_SIZE(args); i++) {
+        if ((args[i].kind == CAT_THEME && skip_theme_catalogue) ||
+                args[i].program[0] == '\0') {
+            continue;
         }
+
+        int written;
+        written = snprintf(image_path, path_size, path_format, args[i].catalogue_path, catalogue_name,
+                        image_type, args[i].dimension, args[i].program);
+        if (written >= 0 && file_exist(image_path)) return 1;
     }
 
     return 0;
@@ -1084,7 +1105,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         const char *element = lv_obj_get_user_data(element_focused);
         switch (wall_type) {
             case APPLICATION:
-                if (load_image_catalogue("Application", element, "default", mux_dimension, "wall",
+                if (load_image_catalogue("Application", element, "", "default", mux_dimension, "wall",
                                          wall_image_path, sizeof(wall_image_path))) {
                     int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                     if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1092,7 +1113,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                 }
                 break;
             case ARCHIVE:
-                if (load_image_catalogue("Archive", element, "default", mux_dimension, "wall",
+                if (load_image_catalogue("Archive", element, "", "default", mux_dimension, "wall",
                                          wall_image_path, sizeof(wall_image_path))) {
                     int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                     if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1100,7 +1121,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                 }
                 break;
             case TASK:
-                if (load_image_catalogue("Task", element, "default", mux_dimension, "wall",
+                if (load_image_catalogue("Task", element, "", "default", mux_dimension, "wall",
                                          wall_image_path, sizeof(wall_image_path))) {
                     int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                     if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1177,7 +1198,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
         const char *element = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         switch (wall_type) {
             case APPLICATION:
-                if (load_image_catalogue("Application", element, "default", mux_dimension, "box",
+                if (load_image_catalogue("Application", element, "", "default", mux_dimension, "box",
                                          static_image_path, sizeof(static_image_path))) {
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
                                            static_image_path);
@@ -1186,7 +1207,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 }
                 break;
             case ARCHIVE:
-                if (load_image_catalogue("Archive", element, "default", mux_dimension, "box",
+                if (load_image_catalogue("Archive", element, "", "default", mux_dimension, "box",
                                          static_image_path, sizeof(static_image_path))) {
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
                                            static_image_path);
@@ -1195,7 +1216,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 }
                 break;
             case TASK:
-                if (load_image_catalogue("Task", element, "default", mux_dimension, "box",
+                if (load_image_catalogue("Task", element, "", "default", mux_dimension, "box",
                                          static_image_path, sizeof(static_image_path))) {
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
                                            static_image_path);
