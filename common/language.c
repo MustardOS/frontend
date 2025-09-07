@@ -243,7 +243,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_LEFT, "Top Left");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_MID, "Top Middle");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT, "Top Right");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "Hide Box Art in Grid Mode");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "Hide Grid Mode Box Art");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Interface Font Type");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
