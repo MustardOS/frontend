@@ -148,9 +148,11 @@ static void image_refresh(char *image_type) {
             }
         } else {
             if (items[current_item_index].content_type == FOLDER) {
-                char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
-                load_image_catalogue("Folder", file_name, catalogue_name, "default", 
-                                     mux_dimension, image_type, image, sizeof(image));
+                if (strcasecmp(image_type, "box") || !grid_mode_enabled || (grid_mode_enabled && !config.VISUAL.BOX_ART_HIDE)) {
+                    char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
+                    load_image_catalogue("Folder", file_name, catalogue_name, "default", 
+                                        mux_dimension, image_type, image, sizeof(image));
+                }
             } else {
                 load_image_catalogue(core_artwork, file_name, "", "default", mux_dimension,
                                      image_type, image, sizeof(image));

@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcustom.h"
 
-#define UI_COUNT 17
+#define UI_COUNT 18
 
 #define CUSTOM(NAME, UDATA) static int NAME##_original;
 CUSTOM_ELEMENTS
@@ -58,6 +58,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
             {ui_lblLaunchSplash_custom,    lang.MUXCUSTOM.HELP.SPLASH},
+            {ui_lblBoxArtHide_custom,      lang.MUXCUSTOM.HELP.BOX_HIDE},
             {ui_lblFont_custom,            lang.MUXCUSTOM.HELP.FONT},
             {ui_lblSound_custom,           lang.MUXCUSTOM.HELP.SOUND},
             {ui_lblChime_custom,           lang.MUXCUSTOM.HELP.CHIME},
@@ -177,6 +178,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
     INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.SPLASH, "splash", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", font_options, 2);
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
@@ -286,6 +288,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droBoxArtAlign_custom, config.VISUAL.BOX_ART_ALIGN - 1);
     lv_dropdown_set_selected(ui_droAnimation_custom, config.VISUAL.BACKGROUNDANIMATION);
     lv_dropdown_set_selected(ui_droLaunchSplash_custom, config.VISUAL.LAUNCHSPLASH);
+    lv_dropdown_set_selected(ui_droBoxArtHide_custom, config.VISUAL.BOX_ART_HIDE);
     lv_dropdown_set_selected(ui_droBlackFade_custom, config.VISUAL.BLACKFADE);
     lv_dropdown_set_selected(ui_droLaunchSwap_custom, config.VISUAL.LAUNCH_SWAP);
     lv_dropdown_set_selected(ui_droShuffle_custom, config.VISUAL.SHUFFLE);
@@ -306,6 +309,7 @@ static void save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, BoxArtImage, "visual/boxart", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtAlign, "visual/boxartalign", INT, 1);
     CHECK_AND_SAVE_STD(custom, LaunchSplash, "visual/launchsplash", INT, 0);
+    CHECK_AND_SAVE_STD(custom, BoxArtHide, "visual/boxarthide", INT, 0);
     CHECK_AND_SAVE_STD(custom, Font, "settings/advanced/font", INT, 0);
     CHECK_AND_SAVE_STD(custom, Sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_STD(custom, Chime, "settings/general/chime", INT, 0);

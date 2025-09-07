@@ -35,6 +35,7 @@
 #include "config.h"
 #include "device.h"
 #include "kiosk.h"
+#include "input/list_nav.h"
 #include "theme.h"
 #include "mini/mini.h"
 
@@ -1198,6 +1199,9 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
         const char *element = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         switch (wall_type) {
             case APPLICATION:
+                if (grid_mode_enabled && config.VISUAL.BOX_ART_HIDE) {
+                    return "";
+                }
                 if (load_image_catalogue("Application", element, "", "default", mux_dimension, "box",
                                          static_image_path, sizeof(static_image_path))) {
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",

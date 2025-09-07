@@ -243,6 +243,7 @@ struct mux_lang {
             char TITLE[MAX_BUFFER_SIZE];
             char BEHIND[MAX_BUFFER_SIZE];
             char FRONT[MAX_BUFFER_SIZE];
+            char HIDE_GRID_MODE[MAX_BUFFER_SIZE];
             char FS_BEHIND[MAX_BUFFER_SIZE];
             char FS_FRONT[MAX_BUFFER_SIZE];
             struct {
@@ -290,6 +291,7 @@ struct mux_lang {
             char ANIMATION[MAX_BUFFER_SIZE];
             char BOX_ART[MAX_BUFFER_SIZE];
             char BOX_ALIGN[MAX_BUFFER_SIZE];
+            char BOX_HIDE[MAX_BUFFER_SIZE];
             char FADE[MAX_BUFFER_SIZE];
             char SPLASH[MAX_BUFFER_SIZE];
             char SHUFFLE[MAX_BUFFER_SIZE];
