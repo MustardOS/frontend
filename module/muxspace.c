@@ -15,12 +15,43 @@ static void show_help(lv_obj_t *element_focused) {
     show_info_box(TS(lv_label_get_text(element_focused)), lang.MUXSPACE.HELP, 0);
 }
 
+static void init_space_bars(void) {
+    lv_bar_set_range(ui_barPrimary_space, 0, 100);
+    lv_bar_set_range(ui_barSecondary_space, 0, 100);
+    lv_bar_set_range(ui_barExternal_space, 0, 100);
+    lv_bar_set_range(ui_barSystem_space, 0, 100);
+
+    lv_bar_set_mode(ui_barPrimary_space, LV_BAR_MODE_NORMAL);
+    lv_bar_set_mode(ui_barSecondary_space, LV_BAR_MODE_NORMAL);
+    lv_bar_set_mode(ui_barExternal_space, LV_BAR_MODE_NORMAL);
+    lv_bar_set_mode(ui_barSystem_space, LV_BAR_MODE_NORMAL);
+}
+
 static void update_storage_info() {
     struct mount storage_info[] = {
-            {ui_pnlPrimary_space,   ui_pnlPrimaryBar_space,   ui_lblPrimaryValue_space,   ui_barPrimary_space,   device.STORAGE.ROM.MOUNT},
-            {ui_pnlSecondary_space, ui_pnlSecondaryBar_space, ui_lblSecondaryValue_space, ui_barSecondary_space, device.STORAGE.SDCARD.MOUNT},
-            {ui_pnlExternal_space,  ui_pnlExternalBar_space,  ui_lblExternalValue_space,  ui_barExternal_space,  device.STORAGE.USB.MOUNT},
-            {ui_pnlSystem_space,    ui_pnlSystemBar_space,    ui_lblSystemValue_space,    ui_barSystem_space,    device.STORAGE.ROOT.MOUNT}
+            {ui_pnlPrimary_space,
+                    ui_pnlPrimaryBar_space,
+                    ui_lblPrimaryValue_space,
+                    ui_barPrimary_space,
+                    device.STORAGE.ROM.MOUNT},
+
+            {ui_pnlSecondary_space,
+                    ui_pnlSecondaryBar_space,
+                    ui_lblSecondaryValue_space,
+                    ui_barSecondary_space,
+                    device.STORAGE.SDCARD.MOUNT},
+
+            {ui_pnlExternal_space,
+                    ui_pnlExternalBar_space,
+                    ui_lblExternalValue_space,
+                    ui_barExternal_space,
+                    device.STORAGE.USB.MOUNT},
+
+            {ui_pnlSystem_space,
+                    ui_pnlSystemBar_space,
+                    ui_lblSystemValue_space,
+                    ui_barSystem_space,
+                    device.STORAGE.ROOT.MOUNT},
     };
 
     for (size_t i = 0; i < A_SIZE(storage_info); i++) {
@@ -31,7 +62,11 @@ static void update_storage_info() {
             lv_obj_clear_flag(storage_info[i].value_panel, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(storage_info[i].bar_panel, LV_OBJ_FLAG_HIDDEN);
 
-            int percentage = (total_space > 0) ? (int) ((used_space * 100) / total_space) : 0;
+            int percentage = (int) ((used_space / total_space) * 100.0 + 0.5);
+
+            if (percentage < 0) percentage = 0;
+            if (percentage > 100) percentage = 100;
+
             lv_bar_set_value(storage_info[i].bar, percentage, LV_ANIM_ON);
 
             char space_info[32];
@@ -173,8 +208,10 @@ int muxspace_main(void) {
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSPACE.TITLE);
+
     init_muxspace(ui_pnlContent);
     init_elements();
+    init_space_bars();
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
