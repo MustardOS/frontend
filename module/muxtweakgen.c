@@ -57,7 +57,8 @@ static void restore_tweak_options(void) {
                              !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "collection") ? 2 :
                              !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "history") ? 3 :
                              !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "last") ? 4 :
-                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") ? 5 : 0);
+                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") ? 5 :
+                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "lastapp") ? 6 : 0);
 }
 
 static void set_setting_value(const char *script_name, int value, int offset) {
@@ -86,7 +87,8 @@ static void save_tweak_options(void) {
             "collection",
             "history",
             "last",
-            "resume"
+            "resume",
+            "lastapp"
     };
 
     CHECK_AND_SAVE_VAL(tweakgen, Startup, "settings/general/startup", CHAR, startup_options);
@@ -131,7 +133,8 @@ static void init_navigation_group(void) {
             lang.MUXTWEAKGEN.STARTUP.COLLECTION,
             lang.MUXTWEAKGEN.STARTUP.HISTORY,
             lang.MUXTWEAKGEN.STARTUP.LAST,
-            lang.MUXTWEAKGEN.STARTUP.RESUME
+            lang.MUXTWEAKGEN.STARTUP.RESUME,
+            lang.MUXTWEAKGEN.STARTUP.LASTAPP
     };
 
     INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
@@ -141,7 +144,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
+    INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 7);
 
     char *brightness_values = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBrightness_tweakgen, brightness_values);
