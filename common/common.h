@@ -400,3 +400,12 @@ void get_storage_info(const char *partition, double *total, double *free, double
 char *get_build_version();
 
 int copy_file(const char *from, const char *to);
+
+int load_content(int add_collection, char *sys_dir, char *file_name);
+
+char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name) ;
+
+char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system,
+                        int line_catalogue, int line_lookup, int line_launch);
+
+void add_to_collection(char *filename, const char *pointer, char *sys_dir);

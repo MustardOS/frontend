@@ -38,6 +38,7 @@
 #include "input/list_nav.h"
 #include "theme.h"
 #include "mini/mini.h"
+#include "../module/muxshare.h"
 
 char mux_module[MAX_BUFFER_SIZE];
 char mux_dimension[15];
@@ -2812,4 +2813,161 @@ int copy_file(const char *from, const char *to) {
 
     errno = saved_errno;
     return -1;
+}
+
+int load_content(int add_collection, char *sys_dir, char *file_name) {
+    char *assigned_core = load_content_core(0, !add_collection, sys_dir, file_name);
+    if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
+
+    const char *content_name = strip_ext(file_name);
+    const char *system_sub = get_last_subdir(sys_dir, '/', 4);
+
+    char content_loader_file[MAX_BUFFER_SIZE];
+    snprintf(content_loader_file, sizeof(content_loader_file), INFO_COR_PATH "/%s/%s.cfg",
+             system_sub,
+             content_name);
+    LOG_INFO(mux_module, "Configuration File: %s", content_loader_file)
+
+    if (!file_exist(content_loader_file)) {
+        char content_loader_data[MAX_BUFFER_SIZE];
+        snprintf(content_loader_data, sizeof(content_loader_data), "%s|%s|%s/|%s|%s",
+                 content_name,
+                 str_replace(assigned_core, "\n", "|"),
+                 STORAGE_PATH,
+                 system_sub,
+                 file_name);
+
+        write_text_to_file(content_loader_file, "w", CHAR, str_replace(content_loader_data, "|", "\n"));
+        LOG_INFO(mux_module, "Configuration Data: %s", content_loader_data)
+    }
+
+    if (file_exist(content_loader_file)) {
+        char pointer[MAX_BUFFER_SIZE];
+        char content[MAX_BUFFER_SIZE];
+
+        char cache_file[MAX_BUFFER_SIZE];
+        snprintf(cache_file, sizeof(cache_file), INFO_COR_PATH "/%s/%s.cfg",
+                 system_sub, content_name);
+
+        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
+
+        if (add_collection) {
+            add_to_collection(file_name, cache_file, sys_dir);
+        } else {
+            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
+
+            char *assigned_gov = specify_asset(load_content_governor(sys_dir, NULL, 0, 1, 0),
+                                               device.CPU.DEFAULT, "Governor");
+
+            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, NULL, 0, 1, 0),
+                                               "system", "Control Scheme");
+
+            char full_file_path[MAX_BUFFER_SIZE];
+            snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s",
+                    read_line_char_from(cache_file, CONTENT_MOUNT), 
+                    read_line_char_from(cache_file, CONTENT_DIR),
+                    file_name);
+
+            snprintf(pointer, sizeof(pointer), "%s\n%s\n%s",
+                    full_file_path, system_sub, content_name);
+
+            snprintf(content, sizeof(content), INFO_HIS_PATH "/%s-%08X.cfg",
+                     content_name, fnv1a_hash_str(full_file_path));
+
+            write_text_to_file(content, "w", CHAR, pointer);
+            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
+
+            write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+            write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
+            write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(content_loader_file));
+        }
+
+        LOG_SUCCESS(mux_module, "Content Loaded Successfully")
+
+        return 1;
+    }
+
+    return 0;
+}
+
+char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name) {
+    char content_core[MAX_BUFFER_SIZE] = {0};
+    const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
+
+    if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
+        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/core.cfg");
+    } else {
+        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",
+                 last_subdir, strip_ext(file_name));
+
+        if (file_exist(content_core) && !force) {
+            LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
+
+            char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
+                                    CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
+
+            if (core) return core;
+
+            LOG_ERROR(mux_module, "Failed to build individual core")
+        }
+
+        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/core.cfg", last_subdir);
+    }
+
+    if (file_exist(content_core) && !force) {
+        LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core)
+
+        char *core = build_core(content_core, GLOBAL_CORE, GLOBAL_SYSTEM,
+                                GLOBAL_CATALOGUE, GLOBAL_LOOKUP, GLOBAL_ASSIGN);
+
+        if (core) return core;
+
+        LOG_ERROR(mux_module, "Failed to build global core")
+    }
+
+    load_assign(MUOS_ASS_LOAD, file_name, sys_dir, "none", force, 0);
+    if (run_quit) mux_input_stop();
+
+    LOG_INFO(mux_module, "No core detected")
+    return NULL;
+}
+
+char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system,
+                        int line_catalogue, int line_lookup, int line_launch) {
+    const char *core_line = read_line_char_from(core_path, line_core) ?: "unknown";
+    const char *system_line = read_line_char_from(core_path, line_system) ?: "unknown";
+    const char *catalogue_line = read_line_char_from(core_path, line_catalogue) ?: "unknown";
+    const char *lookup_line = read_line_char_from(core_path, line_lookup) ?: "unknown";
+    const char *launch_line = read_line_char_from(core_path, line_launch) ?: "unknown";
+
+    size_t required_size = snprintf(NULL, 0, "%s\n%s\n%s\n%s\n%s",
+                                    core_line, system_line, catalogue_line, lookup_line, launch_line) + 1;
+
+    char *b_core = malloc(required_size);
+    if (!b_core) {
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        return NULL;
+    }
+
+    snprintf(b_core, required_size, "%s\n%s\n%s\n%s\n%s",
+             core_line, system_line, catalogue_line, lookup_line, launch_line);
+
+    return b_core;
+}
+
+void add_to_collection(char *filename, const char *pointer, char *sys_dir) {
+    play_sound(SND_CONFIRM);
+
+    char new_content[MAX_BUFFER_SIZE];
+    snprintf(new_content, sizeof(new_content), "%s\n%s\n%s",
+             filename, pointer, get_last_subdir(sys_dir, '/', 4));
+
+    write_text_to_file(ADD_MODE_WORK, "w", CHAR, new_content);
+
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
+    load_mux("collection");
+
+    close_input();
+    mux_input_stop();
 }

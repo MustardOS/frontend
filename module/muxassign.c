@@ -198,6 +198,13 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void load_return_module() {
+    if (file_exist(MUOS_ASS_FROM)) {
+        load_mux(read_all_char_from(MUOS_ASS_FROM));
+        remove(MUOS_ASS_FROM);
+    }    
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -214,6 +221,7 @@ static void handle_b(void) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
         fclose(file);
+        load_return_module();
     } else {
         load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, "none", 0, 0);
     }
@@ -288,6 +296,8 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
 
     mini_free(global_ini);
     mini_free(local_ini);
+
+    load_return_module();
 }
 
 static void handle_a(void) {

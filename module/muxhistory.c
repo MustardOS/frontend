@@ -13,18 +13,17 @@ static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
 static char *load_content_description(void) {
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
+    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
 
-    char pointer[MAX_BUFFER_SIZE];
-    snprintf(pointer, sizeof(pointer), INFO_COR_PATH "/%s",
-             get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
+    char core_desc[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name, core_desc, sizeof(core_desc));
+
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.GENERIC.NO_INFO;
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-             INFO_CAT_PATH, read_line_char_from(pointer, CONTENT_SYSTEM),
-             strip_ext(read_line_char_from(pointer, CONTENT_FULL)));
+             INFO_CAT_PATH, core_desc, strip_ext(item_file_name));
 
     if (file_exist(content_desc)) {
         return read_all_char_from(content_desc);
@@ -37,21 +36,17 @@ static char *load_content_description(void) {
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
+    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
+
+    char h_core_artwork[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name, h_core_artwork, sizeof(h_core_artwork));
+
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
-    char core_artwork[MAX_BUFFER_SIZE];
 
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
+    char *h_file_name = strip_ext(item_file_name);
 
-    char pointer[MAX_BUFFER_SIZE];
-    snprintf(pointer, sizeof(pointer), INFO_COR_PATH "/%s",
-             get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
-
-    char *h_file_name = strip_ext(read_line_char_from(pointer, CONTENT_FULL));
-
-    char *h_core_artwork = read_line_char_from(pointer, CONTENT_SYSTEM);
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
                  STORAGE_THEME, mux_dimension, image_type);
@@ -66,7 +61,6 @@ static void image_refresh(char *image_type) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
     }
-    snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
 
@@ -103,14 +97,14 @@ static void image_refresh(char *image_type) {
         if (strcasecmp(box_image_previous_path, image) != 0) {
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
-                     INFO_CAT_PATH, core_artwork);
+                     INFO_CAT_PATH, h_core_artwork);
             if (!file_exist(artwork_config_path)) {
                 snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
                          INFO_CAT_PATH);
             }
 
             if (file_exist(artwork_config_path)) {
-                viewport_refresh(ui_viewport_objects, artwork_config_path, core_artwork, h_file_name);
+                viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
                 if (file_exist(image)) {
@@ -187,6 +181,7 @@ static char *get_glyph_name(size_t index) {
 }
 
 static void gen_item(int file_count, char **file_names, char **last_dirs) {
+    char init_meta_dir[MAX_BUFFER_SIZE];
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
@@ -195,12 +190,18 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         snprintf(history_file, sizeof(history_file), "%s/%s",
                  INFO_HIS_PATH, file_names[i]);
 
-        char *cache_file = read_line_char_from(history_file, CACHE_CORE_PATH);
+        char *file_path = read_line_char_from(history_file, CACHE_CORE_PATH);
+        char *file_name = get_last_dir(strdup(file_path));
         char *stripped_name = read_line_char_from(history_file, CACHE_CORE_NAME);
+        char *sub_path =  read_line_char_from(history_file, CACHE_CORE_DIR);
 
         if (stripped_name && stripped_name[0] == '\0') {
-            stripped_name = strip_ext(read_line_char_from(cache_file, CONTENT_FULL));
+            stripped_name = strip_ext(file_name);
         }
+
+        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
+                sub_path);
+        create_directories(init_meta_dir);
 
         char custom_lookup[MAX_BUFFER_SIZE];
         snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dirs[i]);
@@ -233,12 +234,21 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
             }
         }
 
+        int lookup_line = CONTENT_LOOKUP;
+        char name_lookup[MAX_BUFFER_SIZE];
+        snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
+
+        if (!file_exist(name_lookup)) {
+            snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
+            lookup_line = GLOBAL_LOOKUP;
+        }
+
         if (!has_custom_name) {
-            const char *lookup_result = read_line_int_from(cache_file, CONTENT_LOOKUP) ? lookup(stripped_name) : NULL;
+            const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
             snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
         }
 
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
+        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         ui_count++;
@@ -288,71 +298,6 @@ static void remove_from_history(void) {
         play_sound(SND_ERROR);
         toast_message(lang.MUXHISTORY.ERROR.REMOVE, SHORT);
     }
-}
-
-static void add_to_collection(void) {
-    char pointer_file[MAX_BUFFER_SIZE];
-    snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
-             items[current_item_index].name);
-
-    char *cache_file = read_line_char_from(pointer_file, CACHE_CORE_PATH);
-    char history_content[MAX_BUFFER_SIZE];
-    snprintf(history_content, sizeof(history_content), "%s\n%s\n%s",
-             get_last_dir(cache_file),
-             cache_file,
-             read_line_char_from(pointer_file, CACHE_CORE_DIR)
-    );
-
-    write_text_to_file(ADD_MODE_WORK, "w", CHAR, history_content);
-    write_text_to_file(ADD_MODE_FROM, "w", CHAR, "history");
-
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-
-    load_mux("collection");
-
-    close_input();
-    mux_input_stop();
-}
-
-static int load_content(const char *content_name) {
-    char pointer_file[MAX_BUFFER_SIZE];
-    snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
-             content_name);
-
-    char cache_file[MAX_BUFFER_SIZE];
-    snprintf(cache_file, sizeof(cache_file), "%s",
-             read_line_char_from(pointer_file, CACHE_CORE_PATH));
-
-    if (file_exist(cache_file)) {
-        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
-
-        char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
-
-        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
-
-        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0, 0),
-                                           device.CPU.DEFAULT, "Governor");
-
-        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0, 0),
-                                           "system", "Control Scheme");
-
-        char add_to_history[MAX_BUFFER_SIZE];
-        snprintf(add_to_history, sizeof(add_to_history), INFO_HIS_PATH "/%s", content_name);
-        write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
-
-        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, CONTENT_NAME));
-
-        write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
-        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
-        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
-
-        return 1;
-    }
-
-    toast_message(lang.MUXHISTORY.ERROR.LOAD, SHORT);
-    LOG_ERROR(mux_module, "Cache Pointer Not Found: %s", cache_file)
-
-    return 0;
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -405,11 +350,10 @@ static void process_load(int from_start) {
 
     play_sound(SND_CONFIRM);
 
-    char f_content[MAX_BUFFER_SIZE];
-    snprintf(f_content, sizeof(f_content), "%s.cfg",
-             strip_ext(items[current_item_index].name));
+    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
 
-    if (load_content(f_content)) {
+    if (load_content(0, item_dir, item_file_name)) {
         if (config.VISUAL.LAUNCHSPLASH) {
             image_refresh("splash");
             if (splash_valid) {
@@ -430,7 +374,10 @@ static void process_load(int from_start) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
         exit_status = 1;
     } else {
-        return;
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+        write_text_to_file(OPTION_SKIP, "w", CHAR, "");
+        write_text_to_file(MUOS_ASS_FROM, "w", CHAR, "history");
+        load_mux("assign");
     }
 
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
@@ -479,7 +426,15 @@ static void handle_y(void) {
     if (msgbox_active || !ui_count || is_ksk(kiosk.COLLECT.ADD_CON) || hold_call) return;
 
     play_sound(SND_CONFIRM);
-    add_to_collection();
+
+    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
+    write_text_to_file(ADD_MODE_FROM, "w", CHAR, "history");
+    if (!load_content(1, item_dir, item_file_name)) {
+        remove(ADD_MODE_FROM);
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXPLORE.ERROR.NO_CORE, SHORT);
+    }
 }
 
 static void handle_menu(void) {

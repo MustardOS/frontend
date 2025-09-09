@@ -29,21 +29,21 @@ static void check_for_disable_grid_file(char *item_curr_dir) {
 }
 
 static char *load_content_description(void) {
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             sys_dir, strip_ext(items[current_item_index].name));
+    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
 
-    char pointer[MAX_BUFFER_SIZE];
-    snprintf(pointer, sizeof(pointer), INFO_COR_PATH "/%s",
-             get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
+    char core_desc[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name, core_desc, sizeof(core_desc));
+
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.GENERIC.NO_INFO;
 
     char *h_file_name = items[current_item_index].content_type == FOLDER
                         ? items[current_item_index].name
-                        : strip_ext(read_line_char_from(pointer, CONTENT_FULL));
+                        : strip_ext(item_file_name);
 
     char *h_core_artwork = items[current_item_index].content_type == FOLDER
                            ? "Collection"
-                           : read_line_char_from(pointer, CONTENT_SYSTEM);
+                           : core_desc;
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
@@ -60,25 +60,22 @@ static char *load_content_description(void) {
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
+    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
+
+    char core_desc[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name, core_desc, sizeof(core_desc));
+
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
-    char core_artwork[MAX_BUFFER_SIZE];
-
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             sys_dir, strip_ext(items[current_item_index].name));
-
-    char pointer[MAX_BUFFER_SIZE];
-    snprintf(pointer, sizeof(pointer), INFO_COR_PATH "/%s",
-             get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
 
     char *h_file_name = items[current_item_index].content_type == FOLDER
                         ? items[current_item_index].name
-                        : strip_ext(read_line_char_from(pointer, CONTENT_FULL));
+                        : strip_ext(item_file_name);
 
     char *h_core_artwork = items[current_item_index].content_type == FOLDER
                            ? "Collection"
-                           : read_line_char_from(pointer, CONTENT_SYSTEM);
+                           : core_desc;
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -97,7 +94,6 @@ static void image_refresh(char *image_type) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
     }
-    snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
 
@@ -215,6 +211,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
 }
 
 static void gen_item(int file_count, char **file_names, char **last_dirs) {
+    char init_meta_dir[MAX_BUFFER_SIZE];
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
@@ -223,12 +220,18 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  sys_dir, file_names[i]);
 
-        char *cache_file = read_line_char_from(collection_file, CACHE_CORE_PATH);
+        char *file_path = read_line_char_from(collection_file, CACHE_CORE_PATH);
+        char *file_name = get_last_dir(strdup(file_path));
         char *stripped_name = read_line_char_from(collection_file, CACHE_CORE_NAME);
+        char *sub_path =  read_line_char_from(collection_file, CACHE_CORE_DIR);
 
         if (stripped_name && stripped_name[0] == '\0') {
-            stripped_name = strip_ext(read_line_char_from(cache_file, CONTENT_FULL));
+            stripped_name = strip_ext(file_name);
         }
+
+        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
+                sub_path);
+        create_directories(init_meta_dir);
 
         char custom_lookup[MAX_BUFFER_SIZE];
         snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dirs[i]);
@@ -261,12 +264,21 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
             }
         }
 
+        int lookup_line = CONTENT_LOOKUP;
+        char name_lookup[MAX_BUFFER_SIZE];
+        snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
+
+        if (!file_exist(name_lookup)) {
+            snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
+            lookup_line = GLOBAL_LOOKUP;
+        }
+
         if (!has_custom_name) {
-            const char *lookup_result = read_line_int_from(cache_file, CONTENT_LOOKUP) ? lookup(stripped_name) : NULL;
+            const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
             snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
         }
 
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
+        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         ui_count++;
@@ -394,47 +406,6 @@ static void create_collection_items(void) {
     }
 }
 
-static int load_content(const char *content_name) {
-    char pointer_file[MAX_BUFFER_SIZE];
-    snprintf(pointer_file, sizeof(pointer_file), "%s/%s",
-             sys_dir, content_name);
-
-    char cache_file[MAX_BUFFER_SIZE];
-    snprintf(cache_file, sizeof(cache_file), "%s",
-             read_line_char_from(pointer_file, CACHE_CORE_PATH));
-
-    if (file_exist(cache_file)) {
-        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
-
-        char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
-
-        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
-
-        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0, 0),
-                                           device.CPU.DEFAULT, "Governor");
-
-        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0, 0),
-                                           "system", "Control Scheme");
-
-        char add_to_history[MAX_BUFFER_SIZE];
-        snprintf(add_to_history, sizeof(add_to_history), INFO_HIS_PATH "/%s", content_name);
-        write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
-
-        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, CONTENT_NAME));
-
-        write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
-        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
-        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
-
-        return 1;
-    }
-
-    toast_message(lang.MUXCOLLECT.ERROR.LOAD, SHORT);
-    LOG_ERROR(mux_module, "Cache Pointer Not Found: %s", cache_file)
-
-    return 0;
-}
-
 static void update_footer_glyph(void) {
     if (!add_mode) return;
     lv_label_set_text(ui_lblNavA,
@@ -517,15 +488,21 @@ static void handle_keyboard_press(void) {
 static void add_collection_item(void) {
     char *base_file_name = read_line_char_from(ADD_MODE_WORK, 1);
     char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
+    char *system_sub = read_line_char_from(ADD_MODE_WORK, 3);
+    char full_file_path[MAX_BUFFER_SIZE];
+    snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s",
+             read_line_char_from(cache_file, CONTENT_MOUNT), 
+             read_line_char_from(cache_file, CONTENT_DIR),
+             base_file_name);
 
     char collection_content[MAX_BUFFER_SIZE];
     snprintf(collection_content, sizeof(collection_content), "%s\n%s\n%s",
-             cache_file, read_line_char_from(ADD_MODE_WORK, 3),
-             strip_ext(read_line_char_from(cache_file, CONTENT_FULL)));
+             full_file_path, system_sub,
+             strip_ext(base_file_name));
 
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s-%08X.cfg",
-             sys_dir, strip_ext(base_file_name), fnv1a_hash_str(cache_file));
+             sys_dir, strip_ext(base_file_name), fnv1a_hash_str(full_file_path));
 
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 
@@ -579,11 +556,11 @@ static void process_load(int from_start) {
             goto acq;
         } else {
             write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-            char f_content[MAX_BUFFER_SIZE];
-            snprintf(f_content, sizeof(f_content), "%s.cfg",
-                     strip_ext(items[current_item_index].name));
 
-            if (load_content(f_content)) {
+            char *item_dir = strip_dir(items[current_item_index].extra_data);
+            char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
+
+            if (load_content(0, item_dir, item_file_name)) {
                 if (config.VISUAL.LAUNCHSPLASH) {
                     image_refresh("splash");
                     if (splash_valid) {
@@ -604,7 +581,10 @@ static void process_load(int from_start) {
                 config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
                 exit_status = 1;
             } else {
-                return;
+                write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+                write_text_to_file(MUOS_ASS_FROM, "w", CHAR, "collection");
+                write_text_to_file(OPTION_SKIP, "w", CHAR, "");
+                load_mux("assign");
             }
         }
     }
