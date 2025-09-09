@@ -581,6 +581,8 @@ static void process_load(int from_start) {
                 config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
                 exit_status = 1;
             } else {
+                write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+                write_text_to_file(MUOS_ASS_FROM, "w", CHAR, "collection");
                 write_text_to_file(OPTION_SKIP, "w", CHAR, "");
                 load_mux("assign");
             }

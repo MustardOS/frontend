@@ -125,6 +125,7 @@
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_ASS_FROM "/tmp/ass_from" // Core/System Assignment Loader return to module
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
