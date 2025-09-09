@@ -308,7 +308,6 @@ static void gen_item(char **file_names, int file_count) {
     populate_collection_items();
 
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
-    char content_core[MAX_BUFFER_SIZE];
     char content_tag[MAX_BUFFER_SIZE];
     char content_file[MAX_BUFFER_SIZE];
 
@@ -324,13 +323,7 @@ static void gen_item(char **file_names, int file_count) {
             items[i].glyph_icon = strdup(str_remchar(read_line_char_from(content_tag, 1), ' '));
             items[i].use_module = strdup("muxtag");
         } else {
-            snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",
-                     last_subdir, basename);
-
-            snprintf(content_file, sizeof(content_file), "%s%s/%s",
-                     read_line_char_from(content_core, CONTENT_MOUNT),
-                     read_line_char_from(content_core, CONTENT_DIR),
-                     read_line_char_from(content_core, CONTENT_FULL));
+            snprintf(content_file, sizeof(content_file), "%s/%s", sys_dir, items[i].name);
 
             items[i].glyph_icon = strdup(get_content_explorer_glyph_name(content_file));
             items[i].use_module = strdup(mux_module);
