@@ -2514,15 +2514,11 @@ void populate_collection_items(void) {
 
 char *get_content_explorer_glyph_name(char *file_path) {
     for (int i = 0; i < collection_item_count; i++) {
-        if (strcmp(collection_items[i], file_path) == 0) {
-            return "collection";
-        }
+        if (strcmp(collection_items[i], file_path) == 0) return "collection";
     }
 
     for (int i = 0; i < history_item_count; i++) {
-        if (strcmp(history_items[i], file_path) == 0) {
-            return "history";
-        }
+        if (strcmp(history_items[i], file_path) == 0) return "history";
     }
 
     return "rom";
@@ -2864,12 +2860,12 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
 
             char full_file_path[MAX_BUFFER_SIZE];
             snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s",
-                    read_line_char_from(cache_file, CONTENT_MOUNT), 
-                    read_line_char_from(cache_file, CONTENT_DIR),
-                    file_name);
+                     read_line_char_from(cache_file, CONTENT_MOUNT),
+                     read_line_char_from(cache_file, CONTENT_DIR),
+                     file_name);
 
             snprintf(pointer, sizeof(pointer), "%s\n%s\n%s",
-                    full_file_path, system_sub, content_name);
+                     full_file_path, system_sub, content_name);
 
             snprintf(content, sizeof(content), INFO_HIS_PATH "/%s-%08X.cfg",
                      content_name, fnv1a_hash_str(full_file_path));
@@ -2933,7 +2929,7 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
 }
 
 char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system,
-                        int line_catalogue, int line_lookup, int line_launch) {
+                 int line_catalogue, int line_lookup, int line_launch) {
     const char *core_line = read_line_char_from(core_path, line_core) ?: "unknown";
     const char *system_line = read_line_char_from(core_path, line_system) ?: "unknown";
     const char *catalogue_line = read_line_char_from(core_path, line_catalogue) ?: "unknown";
@@ -2941,7 +2937,8 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system
     const char *launch_line = read_line_char_from(core_path, line_launch) ?: "unknown";
 
     size_t required_size = snprintf(NULL, 0, "%s\n%s\n%s\n%s\n%s",
-                                    core_line, system_line, catalogue_line, lookup_line, launch_line) + 1;
+                                    core_line, system_line, catalogue_line,
+                                    lookup_line, launch_line) + 1;
 
     char *b_core = malloc(required_size);
     if (!b_core) {

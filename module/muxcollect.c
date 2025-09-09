@@ -85,11 +85,12 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        if (strcasecmp(image_type, "box") || items[current_item_index].content_type != FOLDER || 
-                !grid_mode_enabled || (grid_mode_enabled && !config.VISUAL.BOX_ART_HIDE)) {
-            load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
-                                image, sizeof(image));
+        if (strcasecmp(image_type, "box") == 0 || items[current_item_index].content_type != FOLDER ||
+            !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+            load_image_catalogue(h_core_artwork, h_file_name, "", "default",
+                                 mux_dimension, image_type, image, sizeof(image));
         }
+
         if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
@@ -223,14 +224,11 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         char *file_path = read_line_char_from(collection_file, CACHE_CORE_PATH);
         char *file_name = get_last_dir(strdup(file_path));
         char *stripped_name = read_line_char_from(collection_file, CACHE_CORE_NAME);
-        char *sub_path =  read_line_char_from(collection_file, CACHE_CORE_DIR);
+        char *sub_path = read_line_char_from(collection_file, CACHE_CORE_DIR);
 
-        if (stripped_name && stripped_name[0] == '\0') {
-            stripped_name = strip_ext(file_name);
-        }
+        if (stripped_name && stripped_name[0] == '\0') stripped_name = strip_ext(file_name);
 
-        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
-                sub_path);
+        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/", sub_path);
         create_directories(init_meta_dir);
 
         char custom_lookup[MAX_BUFFER_SIZE];
@@ -491,7 +489,7 @@ static void add_collection_item(void) {
     char *system_sub = read_line_char_from(ADD_MODE_WORK, 3);
     char full_file_path[MAX_BUFFER_SIZE];
     snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s",
-             read_line_char_from(cache_file, CONTENT_MOUNT), 
+             read_line_char_from(cache_file, CONTENT_MOUNT),
              read_line_char_from(cache_file, CONTENT_DIR),
              base_file_name);
 

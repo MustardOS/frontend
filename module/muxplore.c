@@ -83,10 +83,10 @@ static void image_refresh(char *image_type) {
             }
         } else {
             if (items[current_item_index].content_type == FOLDER) {
-                if (strcasecmp(image_type, "box") || !grid_mode_enabled || (grid_mode_enabled && !config.VISUAL.BOX_ART_HIDE)) {
+                if (strcasecmp(image_type, "box") == 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
                     char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
-                    load_image_catalogue("Folder", file_name, catalogue_name, "default", 
-                                        mux_dimension, image_type, image, sizeof(image));
+                    load_image_catalogue("Folder", file_name, catalogue_name, "default",
+                                         mux_dimension, image_type, image, sizeof(image));
                 }
             } else {
                 load_image_catalogue(core_artwork, file_name, "", "default", mux_dimension,
@@ -349,10 +349,13 @@ static void gen_item(char **file_names, int file_count) {
 
 static void init_navigation_group_grid(void) {
     grid_mode_enabled = 1;
+
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
+
     load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+
     for (size_t i = 0; i < item_count; i++) {
         if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
 
@@ -366,17 +369,18 @@ static void init_navigation_group_grid(void) {
         char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[i].name);
 
         char grid_image[MAX_BUFFER_SIZE];
-        load_image_catalogue("Folder", strip_ext(items[i].name), catalogue_name, "default", mux_dimension, "grid",
-                                grid_image, sizeof(grid_image));
+        load_image_catalogue("Folder", strip_ext(items[i].name), catalogue_name, "default",
+                             mux_dimension, "grid", grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
+
         char catalogue_name_focused[MAX_BUFFER_SIZE];
         snprintf(catalogue_name_focused, sizeof(catalogue_name_focused), "%s_focused", catalogue_name);
 
         char grid_image_focused[MAX_BUFFER_SIZE];
-        load_image_catalogue("Folder", glyph_name_focused, catalogue_name_focused, "default_focused", mux_dimension, "grid",
-                                grid_image_focused, sizeof(grid_image_focused));
+        load_image_catalogue("Folder", glyph_name_focused, catalogue_name_focused, "default_focused",
+                             mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, items[i].display_name);

@@ -193,14 +193,11 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         char *file_path = read_line_char_from(history_file, CACHE_CORE_PATH);
         char *file_name = get_last_dir(strdup(file_path));
         char *stripped_name = read_line_char_from(history_file, CACHE_CORE_NAME);
-        char *sub_path =  read_line_char_from(history_file, CACHE_CORE_DIR);
+        char *sub_path = read_line_char_from(history_file, CACHE_CORE_DIR);
 
-        if (stripped_name && stripped_name[0] == '\0') {
-            stripped_name = strip_ext(file_name);
-        }
+        if (stripped_name && stripped_name[0] == '\0') stripped_name = strip_ext(file_name);
 
-        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
-                sub_path);
+        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/", sub_path);
         create_directories(init_meta_dir);
 
         char custom_lookup[MAX_BUFFER_SIZE];

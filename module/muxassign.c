@@ -202,7 +202,7 @@ static void load_return_module() {
     if (file_exist(MUOS_ASS_FROM)) {
         load_mux(read_all_char_from(MUOS_ASS_FROM));
         remove(MUOS_ASS_FROM);
-    }    
+    }
 }
 
 static void handle_b(void) {
