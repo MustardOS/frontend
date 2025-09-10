@@ -1,17 +1,14 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 17
+#define UI_COUNT 20
 #define STORAGE_COUNT (UI_COUNT - 2)
-#define START_BACKUP_INDEX (UI_COUNT - 1)
-#define BACKUP_TARGET_INDEX (UI_COUNT - 2)
-#define MUOS_CONFIG_INDEX (UI_COUNT - 3)
-#define EXTERNAL_INDEX (UI_COUNT - 4)
+#define START_INDEX (UI_COUNT - 1)
+#define TARGET_INDEX (UI_COUNT - 2)
 
 struct backup {
-    const char *path_suffix;
-    const char *shortname;
     lv_obj_t *ui_label;
+    const char *archive_runner;
 };
 
 struct backup backup_path[STORAGE_COUNT];
@@ -20,122 +17,64 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBiosValue_backup,        lang.MUXBACKUP.HELP.BIOS},
-            {ui_lblCatalogue_backup,        lang.MUXBACKUP.HELP.CATALOGUE},
-            {ui_lblName_backup,             lang.MUXBACKUP.HELP.FRIENDLY},
-            {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
-            {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
-            {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
-            {ui_lblSave_backup,             lang.MUXBACKUP.HELP.SAVE},
-            {ui_lblScreenshot_backup,       lang.MUXBACKUP.HELP.SCREENSHOT},
-            {ui_lblTheme_backup,            lang.MUXBACKUP.HELP.PACKAGE.THEME},
-            {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
-            {ui_lblConfigPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
-            {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
-            {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
-            {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
-            {ui_lblActivityTracker_backup,  lang.MUXBACKUP.HELP.ACTIVITY_TRACKER},
-            {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
-            {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
+            {ui_lblBiosValue_backup,  lang.MUXBACKUP.HELP.BIOS},
+            {ui_lblCatalogue_backup,  lang.MUXBACKUP.HELP.CATALOGUE},
+            {ui_lblCheats_backup,     lang.MUXBACKUP.HELP.CHEATS},
+            {ui_lblCollection_backup, lang.MUXBACKUP.HELP.COLLECTION},
+            {ui_lblConfig_backup,     lang.MUXBACKUP.HELP.CONFIG},
+            {ui_lblHistory_backup,    lang.MUXBACKUP.HELP.HISTORY},
+            {ui_lblInit_backup,       lang.MUXBACKUP.HELP.INIT},
+            {ui_lblName_backup,       lang.MUXBACKUP.HELP.NAME},
+            {ui_lblNetwork_backup,    lang.MUXBACKUP.HELP.NETWORK},
+            {ui_lblOverlays_backup,   lang.MUXBACKUP.HELP.OVERLAYS},
+            {ui_lblOverride_backup,   lang.MUXBACKUP.HELP.OVERRIDE},
+            {ui_lblPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE},
+            {ui_lblSave_backup,       lang.MUXBACKUP.HELP.SAVE},
+            {ui_lblScreenshot_backup, lang.MUXBACKUP.HELP.SCREENSHOT},
+            {ui_lblShaders_backup,    lang.MUXBACKUP.HELP.SHADERS},
+            {ui_lblSyncthing_backup,  lang.MUXBACKUP.HELP.SYNCTHING},
+            {ui_lblTheme_backup,      lang.MUXBACKUP.HELP.THEME},
+            {ui_lblTrack_backup,      lang.MUXBACKUP.HELP.TRACK},
+            {ui_lblTarget_backup,     lang.MUXBACKUP.HELP.TARGET},
+            {ui_lblStart_backup,      lang.MUXBACKUP.HELP.START},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
+static inline void add_backup(int *bp, lv_obj_t *label, const char *runner) {
+    backup_path[*bp].ui_label = label;
+    backup_path[*bp].archive_runner = runner;
+    (*bp)++;
+}
+
 static void update_backup_info(void) {
     int bp = 0;
 
-    /*
-     * Check for SD2 pathing, otherwise it should be on SD1.
-     * If it's not on SD1 then you have bigger problems!
-     */
+    add_backup(&bp, ui_lblBiosValue_backup, "bios");
+    add_backup(&bp, ui_lblCatalogueValue_backup, "catalogue");
+    add_backup(&bp, ui_lblCheatsValue_backup, "cheats");
+    add_backup(&bp, ui_lblCollectionValue_backup, "collection");
+    add_backup(&bp, ui_lblConfigValue_backup, "config");
+    add_backup(&bp, ui_lblHistoryValue_backup, "history");
+    add_backup(&bp, ui_lblInitValue_backup, "init");
+    add_backup(&bp, ui_lblNameValue_backup, "name");
+    add_backup(&bp, ui_lblNetworkValue_backup, "network");
+    add_backup(&bp, ui_lblOverlaysValue_backup, "overlays");
+    add_backup(&bp, ui_lblOverrideValue_backup, "override");
+    add_backup(&bp, ui_lblPackageValue_backup, "package");
+    add_backup(&bp, ui_lblSaveValue_backup, "save");
+    add_backup(&bp, ui_lblScreenshotValue_backup, "screenshot");
+    add_backup(&bp, ui_lblShadersValue_backup, "shaders");
+    add_backup(&bp, ui_lblSyncthingValue_backup, "syncthing");
+    add_backup(&bp, ui_lblThemeValue_backup, "theme");
+    add_backup(&bp, ui_lblTrackValue_backup, "track");
 
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "bios";
-    backup_path[bp].ui_label = ui_lblBiosValue_backup;
-    backup_path[bp].shortname = "bios";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "info/catalogue";
-    backup_path[bp].ui_label = ui_lblCatalogueValue_backup;
-    backup_path[bp].shortname = "catalogue";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "info/name";
-    backup_path[bp].ui_label = ui_lblNameValue_backup;
-    backup_path[bp].shortname = "name";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_SHARE_PATH "info/config";
-    backup_path[bp].ui_label = ui_lblConfigValue_backup;
-    backup_path[bp].shortname = "config";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "info/collection";
-    backup_path[bp].ui_label = ui_lblCollectionValue_backup;
-    backup_path[bp].shortname = "collection";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "info/history";
-    backup_path[bp].ui_label = ui_lblHistoryValue_backup;
-    backup_path[bp].shortname = "history";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "save";
-    backup_path[bp].ui_label = ui_lblSaveValue_backup;
-    backup_path[bp].shortname = "save";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "screenshot";
-    backup_path[bp].ui_label = ui_lblScreenshotValue_backup;
-    backup_path[bp].shortname = "screenshot";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "theme";
-    backup_path[bp].ui_label = ui_lblThemeValue_backup;
-    backup_path[bp].shortname = "theme";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "package/catalogue";
-    backup_path[bp].ui_label = ui_lblCataloguePackageValue_backup;
-    backup_path[bp].shortname = "package";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "package/config";
-    backup_path[bp].ui_label = ui_lblConfigPackageValue_backup;
-    backup_path[bp].shortname = "package";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "network";
-    backup_path[bp].ui_label = ui_lblNetworkValue_backup;
-    backup_path[bp].shortname = "network";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "syncthing";
-    backup_path[bp].ui_label = ui_lblSyncthingValue_backup;
-    backup_path[bp].shortname = "syncthing";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "init";
-    backup_path[bp].ui_label = ui_lblUserInitValue_backup;
-    backup_path[bp].shortname = "init";
-    bp++;
-
-    backup_path[bp].path_suffix = RUN_STORAGE_PATH "info/track";
-    backup_path[bp].ui_label = ui_lblActivityTrackerValue_backup;
-    backup_path[bp].shortname = "track";
-
-    char dir[FILENAME_MAX];
-    for (int i = 0; i < A_SIZE(backup_path); i++) {
-        snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, backup_path[i].path_suffix);
-        if (is_partition_mounted(device.STORAGE.SDCARD.MOUNT) && directory_exist(dir)) {
-            lv_label_set_text(backup_path[i].ui_label, "SD2");
-        } else {
-            lv_label_set_text(backup_path[i].ui_label, "SD1");
-        }
-    }
+    const char *sd = is_partition_mounted(device.STORAGE.SDCARD.MOUNT) ? "SD2" : "SD1";
+    for (int i = 0; i < bp; i++) lv_label_set_text(backup_path[i].ui_label, sd);
 
     // Set target to SD1 by default
-    lv_label_set_text(ui_lblBackupTargetValue_backup, "SD1");
+    lv_label_set_text(ui_lblTargetValue_backup, "SD1");
 }
 
 static void init_navigation_group(void) {
@@ -146,21 +85,24 @@ static void init_navigation_group(void) {
 
     INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
-    INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.FRIENDLY, "name", "");
-    INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.RA_CONFIG, "config", "");
+    INIT_VALUE_ITEM(-1, backup, Cheats, lang.MUXBACKUP.CHEATS, "cheats", "");
     INIT_VALUE_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", "");
+    INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.CONFIG, "config", "");
     INIT_VALUE_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", "");
+    INIT_VALUE_ITEM(-1, backup, Init, lang.MUXBACKUP.INIT, "init", "");
+    INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.NAME, "name", "");
+    INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NETWORK, "network", "");
+    INIT_VALUE_ITEM(-1, backup, Overlays, lang.MUXBACKUP.OVERLAYS, "overlays", "");
+    INIT_VALUE_ITEM(-1, backup, Override, lang.MUXBACKUP.OVERRIDE, "override", "");
+    INIT_VALUE_ITEM(-1, backup, Package, lang.MUXBACKUP.PACKAGE, "package", "");
     INIT_VALUE_ITEM(-1, backup, Save, lang.MUXBACKUP.SAVE, "save", "");
     INIT_VALUE_ITEM(-1, backup, Screenshot, lang.MUXBACKUP.SCREENSHOT, "screenshot", "");
-    INIT_VALUE_ITEM(-1, backup, Theme, lang.MUXBACKUP.PACKAGE.THEME, "theme", "");
-    INIT_VALUE_ITEM(-1, backup, CataloguePackage, lang.MUXBACKUP.PACKAGE.CATALOGUE, "pack-catalogue", "");
-    INIT_VALUE_ITEM(-1, backup, ConfigPackage, lang.MUXBACKUP.PACKAGE.RA_CONFIG, "pack-config", "");
-    INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NET_PROFILE, "network", "");
+    INIT_VALUE_ITEM(-1, backup, Shaders, lang.MUXBACKUP.SHADERS, "shaders", "");
     INIT_VALUE_ITEM(-1, backup, Syncthing, lang.MUXBACKUP.SYNCTHING, "syncthing", "");
-    INIT_VALUE_ITEM(-1, backup, UserInit, lang.MUXBACKUP.USER_INIT, "userinit", "");
-    INIT_VALUE_ITEM(-1, backup, ActivityTracker, lang.MUXBACKUP.ACTIVITY_TRACKER, "activity", "");
-    INIT_VALUE_ITEM(-1, backup, BackupTarget, lang.MUXBACKUP.BACKUP_TARGET, "backuptarget", "");
-    INIT_VALUE_ITEM(-1, backup, StartBackup, lang.MUXBACKUP.START_BACKUP, "startbackup", "");
+    INIT_VALUE_ITEM(-1, backup, Theme, lang.MUXBACKUP.THEME, "theme", "");
+    INIT_VALUE_ITEM(-1, backup, Track, lang.MUXBACKUP.TRACK, "track", "");
+    INIT_VALUE_ITEM(-1, backup, Target, lang.MUXBACKUP.TARGET, "target", "");
+    INIT_VALUE_ITEM(-1, backup, Start, lang.MUXBACKUP.START, "start", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -235,10 +177,10 @@ static void handle_b(void) {
 
 // Fuck you I'm a ukulele
 static int get_focused_element_index(struct _lv_obj_t *element_focused) {
-    if (ui_lblStartBackupValue_backup == element_focused) {
-        return START_BACKUP_INDEX;
-    } else if (ui_lblBackupTargetValue_backup == element_focused) {
-        return BACKUP_TARGET_INDEX;
+    if (ui_lblStartValue_backup == element_focused) {
+        return START_INDEX;
+    } else if (ui_lblTargetValue_backup == element_focused) {
+        return TARGET_INDEX;
     } else
         for (int i = 0; i < STORAGE_COUNT; i++) {
             if (backup_path[i].ui_label == element_focused) return i;
@@ -257,9 +199,9 @@ static void handle_a(void) {
     const char *label_value = lv_label_get_text(element_focused);
 
     // Return if backup set to NONE or if on Toggle Target Storage
-    if (strcasecmp(label_value, "NONE") == 0 || focused_index == BACKUP_TARGET_INDEX) return;
+    if (strcasecmp(label_value, "NONE") == 0 || focused_index == TARGET_INDEX) return;
 
-    const char *target_value = lv_label_get_text(ui_lblBackupTargetValue_backup);
+    const char *target_value = lv_label_get_text(ui_lblTargetValue_backup);
     char datetime[64];
 
     strncpy(datetime, get_datetime(), sizeof(datetime) - 1);
@@ -274,7 +216,7 @@ static void handle_a(void) {
     }
 
     // Write for batch backup
-    if (focused_index == START_BACKUP_INDEX) {
+    if (focused_index == START_INDEX) {
         fprintf(fp, "%s %s\n", "BATCH", target_value);
 
         for (int i = 0; i < STORAGE_COUNT; i++) {
@@ -282,16 +224,14 @@ static void handle_a(void) {
 
             // Skip if set to NONE
             if (strcasecmp(label_value, "NONE") == 0) continue;
-            fprintf(fp, "%s %s %s\n", label_value,
-                    backup_path[i].shortname, backup_path[i].path_suffix);
+            fprintf(fp, "%s %s\n", label_value, backup_path[i].archive_runner);
         }
     } else { // For other backup paths, write the focused label and its path suffix
         fprintf(fp, "%s %s\n", "INDIVIDUAL", target_value);
 
         const char *label_value = lv_label_get_text(backup_path[focused_index].ui_label);
         if (strcasecmp(label_value, "NONE") != 0) {
-            fprintf(fp, "%s %s %s\n", label_value,
-                    backup_path[focused_index].shortname, backup_path[focused_index].path_suffix);
+            fprintf(fp, "%s %s\n", label_value, backup_path[focused_index].archive_runner);
         }
     }
     fclose(fp);
@@ -323,7 +263,7 @@ static void handle_x(void) {
     const char *label_text = lv_label_get_text(element_focused);
     int focused_index = get_focused_element_index(element_focused);
 
-    if (focused_index == BACKUP_TARGET_INDEX) {
+    if (focused_index == TARGET_INDEX) {
         play_sound(SND_CONFIRM);
 
         if (strcasecmp(label_text, "SD2") == 0 && is_partition_mounted(device.STORAGE.USB.MOUNT)) {
@@ -335,18 +275,9 @@ static void handle_x(void) {
         }
 
         return;
-    } else if (focused_index == START_BACKUP_INDEX) {
+    } else if (focused_index == START_INDEX) {
         // If focused on Start Backup, just return
         return;
-    } else if (focused_index == EXTERNAL_INDEX
-               || focused_index == MUOS_CONFIG_INDEX) {
-        play_sound(SND_CONFIRM);
-
-        if (strcasecmp(label_text, "NONE") == 0) {
-            lv_label_set_text(element_focused, "CUSTOM");
-        }
-
-        nav_moved = 1;
     } else {
         play_sound(SND_CONFIRM);
 
@@ -372,8 +303,8 @@ static void handle_y(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
 
     int focused_index = get_focused_element_index(element_focused);
-    if (focused_index == BACKUP_TARGET_INDEX
-        || focused_index == START_BACKUP_INDEX) {
+    if (focused_index == TARGET_INDEX
+        || focused_index == START_INDEX) {
         // If focused on Toggle Target or Start Backup, just return
         return;
     }
@@ -442,7 +373,7 @@ static void ui_refresh_task() {
         int focused_index = get_focused_element_index(element_focused);
 
         // Focused on Start Backup label
-        if (focused_index == START_BACKUP_INDEX) {
+        if (focused_index == START_INDEX) {
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
@@ -450,7 +381,7 @@ static void ui_refresh_task() {
             lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
             // Focused on Toggle Target label
-        } else if (focused_index == BACKUP_TARGET_INDEX) {
+        } else if (focused_index == TARGET_INDEX) {
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);

@@ -49,24 +49,27 @@
     APPCON(Governor, "governor") \
     APPCON(Control,  "control")
 
-#define BACKUP_ELEMENTS                        \
-    BACKUP(Bios,             "bios")           \
-    BACKUP(Catalogue,        "catalogue")      \
-    BACKUP(Name,             "name")           \
-    BACKUP(Config,           "config")         \
-    BACKUP(Collection,       "collection")     \
-    BACKUP(History,          "history")        \
-    BACKUP(Save,             "save")           \
-    BACKUP(Screenshot,       "screenshot")     \
-    BACKUP(Theme,            "theme")          \
-    BACKUP(CataloguePackage, "pack-catalogue") \
-    BACKUP(ConfigPackage,    "pack-config")    \
-    BACKUP(Network,          "network")        \
-    BACKUP(Syncthing,        "syncthing")      \
-    BACKUP(UserInit,         "userinit")       \
-    BACKUP(ActivityTracker,  "activity")       \
-    BACKUP(BackupTarget,     "backuptarget")   \
-    BACKUP(StartBackup,      "startbackup")
+#define BACKUP_ELEMENTS              \
+    BACKUP(Bios,       "bios")       \
+    BACKUP(Catalogue,  "catalogue")  \
+    BACKUP(Cheats,     "cheats")     \
+    BACKUP(Collection, "collection") \
+    BACKUP(Config,     "config")     \
+    BACKUP(History,    "history")    \
+    BACKUP(Init,       "init")       \
+    BACKUP(Name,       "name")       \
+    BACKUP(Network,    "network")    \
+    BACKUP(Overlays,   "overlays")   \
+    BACKUP(Override,   "override")   \
+    BACKUP(Package,    "package")    \
+    BACKUP(Save,       "save")       \
+    BACKUP(Screenshot, "screenshot") \
+    BACKUP(Shaders,    "shaders")    \
+    BACKUP(Syncthing,  "syncthing")  \
+    BACKUP(Theme,      "theme")      \
+    BACKUP(Track,      "track")      \
+    BACKUP(Target,     "target")     \
+    BACKUP(Start,      "start")
 
 #define CONNECT_ELEMENTS                \
     CONNECT(Network,     "network")     \
