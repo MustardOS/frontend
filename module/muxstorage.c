@@ -33,79 +33,44 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
+static inline void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
+    storage_path[*sp].path_suffix = suffix;
+    storage_path[*sp].ui_label = label;
+    (*sp)++;
+}
+
 static void update_storage_info(void) {
     int sp = 0;
 
-    /*
-     * Check for SD2 pathing, otherwise it should be on SD1.
-     * If it's not on SD1 then you have bigger problems!
-    */
-    storage_path[sp].path_suffix = STORE_LOC_BIOS;
-    storage_path[sp].ui_label = ui_lblBiosValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_CLOG;
-    storage_path[sp].ui_label = ui_lblCatalogueValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_NAME;
-    storage_path[sp].ui_label = ui_lblNameValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_COLL;
-    storage_path[sp].ui_label = ui_lblCollectionValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_HIST;
-    storage_path[sp].ui_label = ui_lblHistoryValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_MUSC;
-    storage_path[sp].ui_label = ui_lblMusicValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_SAVE;
-    storage_path[sp].ui_label = ui_lblSaveValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_SCRS;
-    storage_path[sp].ui_label = ui_lblScreenshotValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_THEM;
-    storage_path[sp].ui_label = ui_lblThemeValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_PCAT;
-    storage_path[sp].ui_label = ui_lblCataloguePackageValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_PCON;
-    storage_path[sp].ui_label = ui_lblConfigPackageValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_NETW;
-    storage_path[sp].ui_label = ui_lblNetworkValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_SYCT;
-    storage_path[sp].ui_label = ui_lblSyncthingValue_storage;
-    sp++;
-
-    storage_path[sp].path_suffix = STORE_LOC_INIT;
-    storage_path[sp].ui_label = ui_lblUserInitValue_storage;
+    add_storage(&sp, STORE_LOC_BIOS, ui_lblBiosValue_storage);
+    add_storage(&sp, STORE_LOC_CLOG, ui_lblCatalogueValue_storage);
+    add_storage(&sp, STORE_LOC_NAME, ui_lblNameValue_storage);
+    add_storage(&sp, STORE_LOC_COLL, ui_lblCollectionValue_storage);
+    add_storage(&sp, STORE_LOC_HIST, ui_lblHistoryValue_storage);
+    add_storage(&sp, STORE_LOC_MUSC, ui_lblMusicValue_storage);
+    add_storage(&sp, STORE_LOC_SAVE, ui_lblSaveValue_storage);
+    add_storage(&sp, STORE_LOC_SCRS, ui_lblScreenshotValue_storage);
+    add_storage(&sp, STORE_LOC_THEM, ui_lblThemeValue_storage);
+    add_storage(&sp, STORE_LOC_PCAT, ui_lblCataloguePackageValue_storage);
+    add_storage(&sp, STORE_LOC_PCON, ui_lblConfigPackageValue_storage);
+    add_storage(&sp, STORE_LOC_NETW, ui_lblNetworkValue_storage);
+    add_storage(&sp, STORE_LOC_SYCT, ui_lblSyncthingValue_storage);
+    add_storage(&sp, STORE_LOC_INIT, ui_lblUserInitValue_storage);
 
     char dir[FILENAME_MAX];
-    for (int i = 0; i < A_SIZE(storage_path); i++) {
+    int has_sd2 = 0;
+
+    for (int i = 0; i < sp; i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
         if (directory_exist(dir)) {
             lv_label_set_text(storage_path[i].ui_label, "SD2");
-            lv_label_set_text(ui_lblNavX, lang.GENERIC.SYNC);
+            has_sd2 = 1;
         } else {
             lv_label_set_text(storage_path[i].ui_label, "SD1");
-            lv_label_set_text(ui_lblNavX, lang.GENERIC.MIGRATE);
         }
     }
+
+    lv_label_set_text(ui_lblNavX, has_sd2 ? lang.GENERIC.SYNC : lang.GENERIC.MIGRATE);
 }
 
 static void init_navigation_group(void) {
