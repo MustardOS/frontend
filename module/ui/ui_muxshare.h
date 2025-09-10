@@ -56,7 +56,6 @@
     BACKUP(Config,           "config")         \
     BACKUP(Collection,       "collection")     \
     BACKUP(History,          "history")        \
-    BACKUP(Music,            "music")          \
     BACKUP(Save,             "save")           \
     BACKUP(Screenshot,       "screenshot")     \
     BACKUP(Theme,            "theme")          \
@@ -66,8 +65,6 @@
     BACKUP(Syncthing,        "syncthing")      \
     BACKUP(UserInit,         "userinit")       \
     BACKUP(ActivityTracker,  "activity")       \
-    BACKUP(External,         "external")       \
-    BACKUP(MuosConfig,       "muosconfig")     \
     BACKUP(BackupTarget,     "backuptarget")   \
     BACKUP(StartBackup,      "startbackup")
 
