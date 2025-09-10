@@ -264,21 +264,20 @@
     SPACE(External,  "external")  \
     SPACE(System,    "system")
 
-#define STORAGE_ELEMENTS                        \
-    STORAGE(Bios,             "bios")           \
-    STORAGE(Catalogue,        "catalogue")      \
-    STORAGE(Name,             "name")           \
-    STORAGE(Collection,       "collection")     \
-    STORAGE(History,          "history")        \
-    STORAGE(Music,            "music")          \
-    STORAGE(Save,             "save")           \
-    STORAGE(Screenshot,       "screenshot")     \
-    STORAGE(Theme,            "theme")          \
-    STORAGE(CataloguePackage, "pack-catalogue") \
-    STORAGE(ConfigPackage,    "pack-config")    \
-    STORAGE(Network,          "network")        \
-    STORAGE(Syncthing,        "syncthing")      \
-    STORAGE(UserInit,         "userinit")
+#define STORAGE_ELEMENTS              \
+    STORAGE(Bios,       "bios")       \
+    STORAGE(Catalogue,  "catalogue")  \
+    STORAGE(Collection, "collection") \
+    STORAGE(History,    "history")    \
+    STORAGE(Init,       "init")       \
+    STORAGE(Name,       "name")       \
+    STORAGE(Network,    "network")    \
+    STORAGE(Package,    "package")    \
+    STORAGE(Save,       "save")       \
+    STORAGE(Screenshot, "screenshot") \
+    STORAGE(Syncthing,  "syncthing")  \
+    STORAGE(Theme,      "theme")      \
+    STORAGE(Track,      "track")
 
 #define SYSINFO_ELEMENTS          \
     SYSINFO(Version,  "version")  \

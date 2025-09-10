@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxstorage.h"
 
-#define UI_COUNT 14
+#define UI_COUNT 13
 
 struct storage {
     const char *path_suffix;
@@ -14,20 +14,19 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBios_storage,             lang.MUXSTORAGE.HELP.BIOS},
-            {ui_lblCatalogue_storage,        lang.MUXSTORAGE.HELP.CATALOGUE},
-            {ui_lblName_storage,             lang.MUXSTORAGE.HELP.FRIENDLY},
-            {ui_lblCollection_storage,       lang.MUXSTORAGE.HELP.COLLECTION},
-            {ui_lblHistory_storage,          lang.MUXSTORAGE.HELP.HISTORY},
-            {ui_lblMusic_storage,            lang.MUXSTORAGE.HELP.MUSIC},
-            {ui_lblSave_storage,             lang.MUXSTORAGE.HELP.SAVE},
-            {ui_lblScreenshot_storage,       lang.MUXSTORAGE.HELP.SCREENSHOT},
-            {ui_lblTheme_storage,            lang.MUXSTORAGE.HELP.PACKAGE.THEME},
-            {ui_lblCataloguePackage_storage, lang.MUXSTORAGE.HELP.PACKAGE.CATALOGUE},
-            {ui_lblConfigPackage_storage,    lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
-            {ui_lblNetwork_storage,          lang.MUXSTORAGE.HELP.NET_PROFILE},
-            {ui_lblSyncthing_storage,        lang.MUXSTORAGE.HELP.SYNCTHING},
-            {ui_lblUserInit_storage,         lang.MUXSTORAGE.HELP.USER_INIT},
+            {ui_lblBios_storage,       lang.MUXSTORAGE.HELP.BIOS},
+            {ui_lblCatalogue_storage,  lang.MUXSTORAGE.HELP.CATALOGUE},
+            {ui_lblCollection_storage, lang.MUXSTORAGE.HELP.COLLECTION},
+            {ui_lblHistory_storage,    lang.MUXSTORAGE.HELP.HISTORY},
+            {ui_lblInit_storage,       lang.MUXSTORAGE.HELP.INIT},
+            {ui_lblName_storage,       lang.MUXSTORAGE.HELP.NAME},
+            {ui_lblNetwork_storage,    lang.MUXSTORAGE.HELP.NETWORK},
+            {ui_lblPackage_storage,    lang.MUXSTORAGE.HELP.PACKAGE},
+            {ui_lblSave_storage,       lang.MUXSTORAGE.HELP.SAVE},
+            {ui_lblScreenshot_storage, lang.MUXSTORAGE.HELP.SCREENSHOT},
+            {ui_lblSyncthing_storage,  lang.MUXSTORAGE.HELP.SYNCTHING},
+            {ui_lblTheme_storage,      lang.MUXSTORAGE.HELP.THEME},
+            {ui_lblTrack_storage,      lang.MUXSTORAGE.HELP.TRACK},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -44,18 +43,17 @@ static void update_storage_info(void) {
 
     add_storage(&sp, STORE_LOC_BIOS, ui_lblBiosValue_storage);
     add_storage(&sp, STORE_LOC_CLOG, ui_lblCatalogueValue_storage);
-    add_storage(&sp, STORE_LOC_NAME, ui_lblNameValue_storage);
     add_storage(&sp, STORE_LOC_COLL, ui_lblCollectionValue_storage);
     add_storage(&sp, STORE_LOC_HIST, ui_lblHistoryValue_storage);
-    add_storage(&sp, STORE_LOC_MUSC, ui_lblMusicValue_storage);
+    add_storage(&sp, STORE_LOC_INIT, ui_lblInitValue_storage);
+    add_storage(&sp, STORE_LOC_NAME, ui_lblNameValue_storage);
+    add_storage(&sp, STORE_LOC_NETW, ui_lblNetworkValue_storage);
+    add_storage(&sp, STORE_LOC_PACK, ui_lblPackageValue_storage);
     add_storage(&sp, STORE_LOC_SAVE, ui_lblSaveValue_storage);
     add_storage(&sp, STORE_LOC_SCRS, ui_lblScreenshotValue_storage);
-    add_storage(&sp, STORE_LOC_THEM, ui_lblThemeValue_storage);
-    add_storage(&sp, STORE_LOC_PCAT, ui_lblCataloguePackageValue_storage);
-    add_storage(&sp, STORE_LOC_PCON, ui_lblConfigPackageValue_storage);
-    add_storage(&sp, STORE_LOC_NETW, ui_lblNetworkValue_storage);
     add_storage(&sp, STORE_LOC_SYCT, ui_lblSyncthingValue_storage);
-    add_storage(&sp, STORE_LOC_INIT, ui_lblUserInitValue_storage);
+    add_storage(&sp, STORE_LOC_THEM, ui_lblThemeValue_storage);
+    add_storage(&sp, STORE_LOC_TRAK, ui_lblTrackValue_storage);
 
     char dir[FILENAME_MAX];
     int has_sd2 = 0;
@@ -81,18 +79,17 @@ static void init_navigation_group(void) {
 
     INIT_VALUE_ITEM(-1, storage, Bios, lang.MUXSTORAGE.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, storage, Catalogue, lang.MUXSTORAGE.CATALOGUE, "catalogue", "");
-    INIT_VALUE_ITEM(-1, storage, Name, lang.MUXSTORAGE.FRIENDLY, "name", "");
     INIT_VALUE_ITEM(-1, storage, Collection, lang.MUXSTORAGE.COLLECTION, "collection", "");
     INIT_VALUE_ITEM(-1, storage, History, lang.MUXSTORAGE.HISTORY, "history", "");
-    INIT_VALUE_ITEM(-1, storage, Music, lang.MUXSTORAGE.MUSIC, "music", "");
+    INIT_VALUE_ITEM(-1, storage, Init, lang.MUXSTORAGE.INIT, "init", "");
+    INIT_VALUE_ITEM(-1, storage, Name, lang.MUXSTORAGE.NAME, "name", "");
+    INIT_VALUE_ITEM(-1, storage, Network, lang.MUXSTORAGE.NETWORK, "network", "");
+    INIT_VALUE_ITEM(-1, storage, Package, lang.MUXSTORAGE.PACKAGE, "package", "");
     INIT_VALUE_ITEM(-1, storage, Save, lang.MUXSTORAGE.SAVE, "save", "");
     INIT_VALUE_ITEM(-1, storage, Screenshot, lang.MUXSTORAGE.SCREENSHOT, "screenshot", "");
-    INIT_VALUE_ITEM(-1, storage, Theme, lang.MUXSTORAGE.PACKAGE.THEME, "theme", "");
-    INIT_VALUE_ITEM(-1, storage, CataloguePackage, lang.MUXSTORAGE.PACKAGE.CATALOGUE, "pack-catalogue", "");
-    INIT_VALUE_ITEM(-1, storage, ConfigPackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG, "pack-config", "");
-    INIT_VALUE_ITEM(-1, storage, Network, lang.MUXSTORAGE.NET_PROFILE, "network", "");
     INIT_VALUE_ITEM(-1, storage, Syncthing, lang.MUXSTORAGE.SYNCTHING, "syncthing", "");
-    INIT_VALUE_ITEM(-1, storage, UserInit, lang.MUXSTORAGE.USER_INIT, "userinit", "");
+    INIT_VALUE_ITEM(-1, storage, Theme, lang.MUXSTORAGE.THEME, "theme", "");
+    INIT_VALUE_ITEM(-1, storage, Track, lang.MUXSTORAGE.TRACK, "track", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
