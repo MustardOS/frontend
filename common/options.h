@@ -53,7 +53,7 @@
 #define OPT_PATH "/opt/muos/"
 #define RUN_PATH "/run/muos/"
 
-#define INTERNAL_THEME   OPT_PATH "default/MUOS/theme/active"
+#define INTERNAL_THEME   OPT_PATH "share/theme/active"
 #define INTERNAL_OVERLAY OPT_PATH "share/overlay"
 
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
