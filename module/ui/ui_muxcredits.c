@@ -60,6 +60,27 @@ lv_obj_t *ui_lblKofiMessageTwo;
 lv_obj_t *ui_lblMusicTitle;
 lv_obj_t *ui_lblMusicMessage;
 
+static lv_obj_t *name_flow(lv_obj_t *parent, const char **list, lv_color_t hex) {
+    lv_obj_t *wrap = lv_obj_create(parent);
+    lv_obj_remove_style_all(wrap);
+
+    lv_obj_set_size(wrap, lv_pct(90), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(wrap, 0, 0);
+    lv_obj_set_flex_flow(wrap, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(wrap, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_column(wrap, 16, 0);
+    lv_obj_set_style_pad_row(wrap, 4, 0);
+
+    for (size_t i = 0; list[i]; ++i) {
+        lv_obj_t *lbl = lv_label_create(wrap);
+        lv_label_set_text(lbl, list[i]);
+        lv_obj_set_style_text_color(lbl, hex, 0);
+        lv_obj_set_style_text_opa(lbl, 255, 0);
+    }
+
+    return wrap;
+}
+
 const char *commanders[] = {
         "xonglebongle", "antikk", "corey", "bitter_bizarro",
         NULL
@@ -71,75 +92,62 @@ const char *enforcers[] = {
 };
 
 const char *wizards[] = {
-        "xquader", "ee1000", "kloptops", "thegammasqueeze", "tokyovigilante", "joyrider3774",
-        "cebion", "irilivibi", "vagueparade", "shengy", "siliconexarch", "shauninman",
-        "johnnyonflame", "snowram", "habbening", "trngaje", "rosemelody254", "skorpy",
-        "stanley_00", "ajmandourah", "bcat24", "xanxic", "midwan", "arkun_",
-        "mikhailzrick", "retrogfx_", "aeverdyn", "spycat88",
+        "xquader", "ee1000", "kloptops", "thegammasqueeze", ".tokyovigilante", "joyrider3774",
+        ".cebion", "irilivibi", "vagueparade", "shengy.", "siliconexarch", "shauninman",
+        "johnnyonflame", "snowram", "habbening", "trngaje", "skorpy", "stanley_00",
+        "ajmandourah", "bcat24", "xanxic", "midwan", "arkun_", "mikhailzrick",
+        "retrogfx_", "aeverdyn", "spycat88",
         NULL
 };
 
 const char *hero_one[] = {
-        "romus85", "x_tremis", "lmarcomiranda", "jottenmiller", "timecarp", "intelliaim",
-        "kentonftw", "bazkart", "msx6011", "joeysretrohandhelds", "btreecat", "teggydave",
-        "zazouboy", "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "bigbossman0816",
-        "superzu", "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3",
-        "kaeltis", "reitw", "raouldook", "gamerguy1975", "paletochen", "benjaminbercy",
-        "suribii", "tobitaibuta", "opinion_panda", "hueykablooey", "mrwhistles", "zerohalo",
-        "losermatic", "jimmycrackedcorn_4711", "milkworlds",
+        "romus85", "x_tremis", "lmarcomiranda", "timecarp", "intelliaim", "kentonftw",
+        "bazkart", "msx6011", "joeysretrohandhelds", "btreecat", "teggydave", "zazouboy",
+        "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "bigbossman0816", "superzu",
+        "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3", "kaeltis",
+        "reitw", "raouldook.", "paletochen", "benjaminbercy", "suribii", "tobitaibuta",
+        "opinion_panda", "hueykablooey", "mrwhistles", ".zerohalo", "losermatic", "milkworlds",
+        "rosemelody254", "lilaclobotomies",
         NULL
 };
 
 const char *hero_two[] = {
-        "ivar2028", "piatypos", "dririan", "spivvmeister", "sol6_vi", "izzythefool",
-        "n3vurmynd", "qpla", "supremedialects", "amos_06286", "techagent", "ayan4m1",
-        "meanagar", "roundpi", "turner74", "chiefwally_73445", "bigfoothenders", "scy0n",
-        "luckyphil", "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith",
-        "suuuuuuper", "mxdamp", "ownedmumbles", "zenith_rose", "techyysean", "cliffupperlip",
-        "roymustang", "frizzin78", "kernelkritic", "verctexius", "misfitsorbet", "jelzer",
-        "bigolpeewee", "iam8bitwolf", "manny", "amildinconvenience",
+        "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "izzythefool", "n3vurmynd",
+        "qpla", "supremedialects", "amos_06286", "techagent", "meanagar", "roundpi",
+        "turner74.", "chiefwally_73445", "bigfoothenders", "scy0n", "luckyphil", "nahck",
+        "mach5682", "foamygames", "xraygoggles", "hybrid_sith", "mxdamp", "ownedmumbles",
+        "existentialrose", "techyysean", "cliffupperlip", "roymustang", "kernelkritic", "jelzer.",
+        "misfitsorbet", "verctexius", "bigolpeewee", "amildinconvenience.", "kalamer.", "yotakon",
+        "jimmycrackedcorn_4711",
         NULL
 };
 
 const char *knight_one[] = {
         "allanc5963", "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc",
-        "ben819", "_maxwellsdemon", "status_quo_exile", "phyrex", "delored", "kiko_lake",
-        "arkholt", "julas8799", "starship9", "fibroidjames", "allepac", "pakwan8243",
-        "heyitscap", "xluuke", "drisc", "clempurp9868", "aj15", "retrogamecorps",
-        "biffout", "rbndr_", "sanelessone", "retrogamingmonkey", "billynaing", "gasqbduv",
+        "ben819.", "_maxwellsdemon", "status.quo.exile", "phyrex", "delored", "kiko_lake",
+        "arkholt", "julas8799", ".starship9", "fibroidjames", "allepac", "pakwan8243",
+        "heyitscap.", "drisc", "clempurp9868", "aj15", "retrogamecorps", "biffoutt",
+        "rbndr_", "sanelessone", ".retrogamingmonkey", "billynaing", "gasqbduv", ".manny.",
         NULL
 };
 
 const char *knight_two[] = {
         "_wizdude", "blkxltng", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891",
-        "poppajonzz", "wmaddler", "yomama78", "pixelgabz", "admiralthrawn_1", "penpen2crayon",
-        "jupyter", "lander95", "rxepicness", "bburbank", "crownlessk", "johnunsc",
-        "nuke_67641", "misjbaksel", "zauberpony", "dreadpirates", "artur_ditu", "wizardfights",
-        "smittywerbenjaegermanjensen9250", "stin87", "rkevinc", "obitomatheus", "johnrich340",
+        "yomama78", "pixelgabz", "admiralthrawn_1", "penpen2crayon", "jupyter.", "lander95",
+        "bburbank", "crownlessk", "johnunsc", "nuke_67641", "misjbaksel", "zauberpony",
+        "dreadpirates", "artur_ditu", "wizardfights", "stin87", "obitomatheus", "johnrich340",
+        "frickinfrogs", "smittywerbenjaegermanjensen9250", "leberwurstmitsauregurken",
         NULL
 };
 
 const char *contributors[] = {
-        "acmeplus", "aeverdyn", "antikk", "arkun", "bgelmini", "bitter_bizarro",
-        "cart_su", "chronoss09", "duncanyoyo1", "habbening", "imcokeman", "incognitoman",
-        "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "voodatari",
-        "wakeboxer", "xonglebongle", "zarquon",
+        "acmeplus", "aeverdyn", "antikk", "arkun_", "bgelmini", "bitter_bizarro",
+        "cart_su", "chrismsnz", "chronoss0109", "corey", "crypto_str", "duncanyoyo1",
+        "eqagunn", "habbening", "imcokeman", "incognitoman", "johnnyonflame", "kriznick",
+        "mikhailzrick", "pcorbel", "rodneyshupe", "synthic", "voodatari", "wakeboxer",
+        "xonglebongle",
         NULL
 };
-
-const char *join_names(const char **names) {
-    static char buffer[MAX_BUFFER_SIZE];
-    size_t len = 0;
-    buffer[0] = '\0';
-
-    for (size_t i = 0; names[i] != NULL; i++) {
-        int written = snprintf(buffer + len, sizeof(buffer) - len, "%s%s", names[i], names[i + 1] ? " \t " : "");
-        if (written < 0 || (size_t) written >= sizeof(buffer) - len) break;
-        len += (size_t) written;
-    }
-
-    return buffer;
-}
 
 void init_muxcredits(const lv_font_t *header_font) {
     ui_scrCredits = lv_obj_create(NULL);
@@ -182,7 +190,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_x(ui_lblStartTitle, 0);
     lv_obj_set_y(ui_lblStartTitle, 0);
     lv_obj_set_align(ui_lblStartTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblStartTitle, "Thank you for choosing muOS");
+    lv_label_set_text(ui_lblStartTitle, "Thank you for choosing MustardOS");
     lv_obj_set_scroll_dir(ui_lblStartTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblStartTitle, lv_color_hex(0xF7E318), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblStartTitle, 255, MU_OBJ_MAIN_DEFAULT);
@@ -215,9 +223,9 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_y(ui_lblStartMessage, 0);
     lv_obj_set_align(ui_lblStartMessage, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblStartMessage,
-                      "\nThe following people play a huge part in the development and future for this custom firmware."
-                      "\n\nFrom the bottom of my heart thank you so much."
-                      "\nI appreciate you more than a simple thank you ever could.");
+                      "\nThe people listed throughout have been amazing supporters and contributors to MustardOS "
+                      "and shaping its future.\n\nFrom the bottom of my heart, thank you for your time, ideas, "
+                      "testing, and support. I appreciate you all more than a simple \"thank you\" could express!");
     lv_obj_set_scroll_dir(ui_lblStartMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblStartMessage, lv_color_hex(0xDDA200), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblStartMessage, 255, MU_OBJ_MAIN_DEFAULT);
@@ -241,6 +249,8 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_remove_style_all(ui_conOfficial);
     lv_obj_set_width(ui_conOfficial, lv_pct(100));
     lv_obj_set_height(ui_conOfficial, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conOfficial, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conOfficial, lv_pct(100), 0);
     lv_obj_set_x(ui_conOfficial, lv_pct(0));
     lv_obj_set_y(ui_conOfficial, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conOfficial, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -288,30 +298,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblCommanderTitle, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblCommanderTitle, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblCommanderCrew = lv_label_create(ui_conOfficial);
-    lv_label_set_text(ui_lblCommanderCrew, "");
-    lv_obj_set_width(ui_lblCommanderCrew, lv_pct(100));
-    lv_obj_set_height(ui_lblCommanderCrew, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblCommanderCrew, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblCommanderCrew, join_names(commanders));
-    lv_obj_set_scroll_dir(ui_lblCommanderCrew, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblCommanderCrew, lv_color_hex(0xFF0000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblCommanderCrew, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblCommanderCrew, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblCommanderCrew, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblCommanderCrew, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblCommanderCrew, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblCommanderCrew, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblCommanderCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblCommanderCrew, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblCommanderCrew, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conOfficial, commanders, lv_color_hex(0xFF0000));
 
     ui_lblEnforcerTitle = lv_label_create(ui_conOfficial);
     lv_label_set_text(ui_lblEnforcerTitle, "");
@@ -343,35 +330,14 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblEnforcerTitle, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblEnforcerTitle, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblEnforcerCrew = lv_label_create(ui_conOfficial);
-    lv_label_set_text(ui_lblEnforcerCrew, "");
-    lv_obj_set_width(ui_lblEnforcerCrew, lv_pct(100));
-    lv_obj_set_height(ui_lblEnforcerCrew, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblEnforcerCrew, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblEnforcerCrew, join_names(enforcers));
-    lv_obj_set_scroll_dir(ui_lblEnforcerCrew, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblEnforcerCrew, lv_color_hex(0xFF4500), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblEnforcerCrew, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblEnforcerCrew, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblEnforcerCrew, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblEnforcerCrew, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblEnforcerCrew, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblEnforcerCrew, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblEnforcerCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblEnforcerCrew, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblEnforcerCrew, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conOfficial, enforcers, lv_color_hex(0xFF4500));
 
     ui_conWizard = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conWizard);
     lv_obj_set_width(ui_conWizard, lv_pct(100));
     lv_obj_set_height(ui_conWizard, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conWizard, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conWizard, lv_pct(100), 0);
     lv_obj_set_x(ui_conWizard, lv_pct(0));
     lv_obj_set_y(ui_conWizard, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conWizard, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -419,35 +385,14 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblWizardTitle, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblWizardTitle, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblWizardCrew = lv_label_create(ui_conWizard);
-    lv_label_set_text(ui_lblWizardCrew, "");
-    lv_obj_set_width(ui_lblWizardCrew, lv_pct(100));
-    lv_obj_set_height(ui_lblWizardCrew, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblWizardCrew, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblWizardCrew, join_names(wizards));
-    lv_obj_set_scroll_dir(ui_lblWizardCrew, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblWizardCrew, lv_color_hex(0xED6900), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblWizardCrew, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblWizardCrew, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblWizardCrew, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblWizardCrew, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblWizardCrew, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblWizardCrew, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblWizardCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblWizardCrew, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblWizardCrew, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conWizard, wizards, lv_color_hex(0xED6900));
 
     ui_conHeroOne = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conHeroOne);
     lv_obj_set_width(ui_conHeroOne, lv_pct(100));
     lv_obj_set_height(ui_conHeroOne, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conHeroOne, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conHeroOne, lv_pct(100), 0);
     lv_obj_set_x(ui_conHeroOne, lv_pct(0));
     lv_obj_set_y(ui_conHeroOne, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conHeroOne, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -495,35 +440,14 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblHeroTitleOne, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblHeroTitleOne, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblHeroCrewOne = lv_label_create(ui_conHeroOne);
-    lv_label_set_text(ui_lblHeroCrewOne, "");
-    lv_obj_set_width(ui_lblHeroCrewOne, lv_pct(100));
-    lv_obj_set_height(ui_lblHeroCrewOne, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblHeroCrewOne, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblHeroCrewOne, join_names(hero_one));
-    lv_obj_set_scroll_dir(ui_lblHeroCrewOne, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblHeroCrewOne, lv_color_hex(0xFFDD22), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHeroCrewOne, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblHeroCrewOne, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblHeroCrewOne, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblHeroCrewOne, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblHeroCrewOne, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblHeroCrewOne, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblHeroCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblHeroCrewOne, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblHeroCrewOne, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conHeroOne, hero_one, lv_color_hex(0xFFDD22));
 
     ui_conHeroTwo = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conHeroTwo);
     lv_obj_set_width(ui_conHeroTwo, lv_pct(100));
     lv_obj_set_height(ui_conHeroTwo, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conHeroTwo, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conHeroTwo, lv_pct(100), 0);
     lv_obj_set_x(ui_conHeroTwo, lv_pct(0));
     lv_obj_set_y(ui_conHeroTwo, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conHeroTwo, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -571,35 +495,14 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblHeroTitleTwo, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblHeroTitleTwo, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblHeroCrewTwo = lv_label_create(ui_conHeroTwo);
-    lv_label_set_text(ui_lblHeroCrewTwo, "");
-    lv_obj_set_width(ui_lblHeroCrewTwo, lv_pct(100));
-    lv_obj_set_height(ui_lblHeroCrewTwo, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblHeroCrewTwo, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblHeroCrewTwo, join_names(hero_two));
-    lv_obj_set_scroll_dir(ui_lblHeroCrewTwo, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblHeroCrewTwo, lv_color_hex(0xFFDD22), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHeroCrewTwo, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblHeroCrewTwo, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblHeroCrewTwo, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblHeroCrewTwo, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblHeroCrewTwo, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblHeroCrewTwo, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblHeroCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblHeroCrewTwo, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblHeroCrewTwo, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conHeroTwo, hero_two, lv_color_hex(0xFFDD22));
 
     ui_conKnightOne = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conKnightOne);
     lv_obj_set_width(ui_conKnightOne, lv_pct(100));
     lv_obj_set_height(ui_conKnightOne, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conKnightOne, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conKnightOne, lv_pct(100), 0);
     lv_obj_set_x(ui_conKnightOne, lv_pct(0));
     lv_obj_set_y(ui_conKnightOne, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conKnightOne, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -647,35 +550,14 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblKnightTitleOne, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblKnightTitleOne, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblKnightCrewOne = lv_label_create(ui_conKnightOne);
-    lv_label_set_text(ui_lblKnightCrewOne, "");
-    lv_obj_set_width(ui_lblKnightCrewOne, lv_pct(100));
-    lv_obj_set_height(ui_lblKnightCrewOne, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblKnightCrewOne, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblKnightCrewOne, join_names(knight_one));
-    lv_obj_set_scroll_dir(ui_lblKnightCrewOne, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblKnightCrewOne, lv_color_hex(0xED6900), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblKnightCrewOne, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblKnightCrewOne, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblKnightCrewOne, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblKnightCrewOne, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblKnightCrewOne, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblKnightCrewOne, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblKnightCrewOne, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblKnightCrewOne, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblKnightCrewOne, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conKnightOne, knight_one, lv_color_hex(0xED6900));
 
     ui_conKnightTwo = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conKnightTwo);
     lv_obj_set_width(ui_conKnightTwo, lv_pct(100));
     lv_obj_set_height(ui_conKnightTwo, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conKnightTwo, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conKnightTwo, lv_pct(100), 0);
     lv_obj_set_x(ui_conKnightTwo, lv_pct(0));
     lv_obj_set_y(ui_conKnightTwo, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conKnightTwo, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -723,35 +605,14 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblKnightTitleTwo, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblKnightTitleTwo, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblKnightCrewTwo = lv_label_create(ui_conKnightTwo);
-    lv_label_set_text(ui_lblKnightCrewTwo, "");
-    lv_obj_set_width(ui_lblKnightCrewTwo, lv_pct(100));
-    lv_obj_set_height(ui_lblKnightCrewTwo, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblKnightCrewTwo, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblKnightCrewTwo, join_names(knight_two));
-    lv_obj_set_scroll_dir(ui_lblKnightCrewTwo, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblKnightCrewTwo, lv_color_hex(0xED6900), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblKnightCrewTwo, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblKnightCrewTwo, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblKnightCrewTwo, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblKnightCrewTwo, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblKnightCrewTwo, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblKnightCrewTwo, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblKnightCrewTwo, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblKnightCrewTwo, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblKnightCrewTwo, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conKnightTwo, knight_two, lv_color_hex(0xED6900));
 
     ui_conContrib = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conContrib);
     lv_obj_set_width(ui_conContrib, lv_pct(100));
     lv_obj_set_height(ui_conContrib, LV_SIZE_CONTENT);
+    lv_obj_set_scroll_dir(ui_conContrib, LV_DIR_VER);
+    lv_obj_set_style_max_height(ui_conContrib, lv_pct(100), 0);
     lv_obj_set_x(ui_conContrib, lv_pct(0));
     lv_obj_set_y(ui_conContrib, lv_pct(0));
     lv_obj_set_style_bg_color(ui_conContrib, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
@@ -774,7 +635,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_width(ui_lblContribTitle, lv_pct(100));
     lv_obj_set_height(ui_lblContribTitle, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblContribTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text_fmt(ui_lblContribTitle, "%s Contributors", str_replace(config.SYSTEM.VERSION, "_", " "));
+    lv_label_set_text_fmt(ui_lblContribTitle, "%s\nContributors", str_replace(config.SYSTEM.VERSION, "_", " "));
     lv_obj_set_scroll_dir(ui_lblContribTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblContribTitle, lv_color_hex(0x87C97C), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblContribTitle, 255, MU_OBJ_MAIN_DEFAULT);
@@ -799,30 +660,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_text_color(ui_lblContribTitle, lv_color_hex(0x87C97C), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblContribTitle, 255, MU_OBJ_MAIN_FOCUS);
 
-    ui_lblContribCrew = lv_label_create(ui_conContrib);
-    lv_label_set_text(ui_lblContribCrew, "");
-    lv_obj_set_width(ui_lblContribCrew, lv_pct(100));
-    lv_obj_set_height(ui_lblContribCrew, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblContribCrew, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblContribCrew, join_names(contributors));
-    lv_obj_set_scroll_dir(ui_lblContribCrew, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblContribCrew, lv_color_hex(0x87C97C), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblContribCrew, 255, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblContribCrew, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblContribCrew, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblContribCrew, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblContribCrew, 5, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblContribCrew, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_lblContribCrew, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblContribCrew, lv_color_hex(0x87C97C), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblContribCrew, 255, MU_OBJ_MAIN_FOCUS);
+    name_flow(ui_conContrib, contributors, lv_color_hex(0x87C97C));
 
     ui_conSpecial = lv_obj_create(ui_conCredits);
     lv_obj_remove_style_all(ui_conSpecial);
@@ -883,9 +721,10 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_y(ui_lblSpecialMid, 20);
     lv_obj_set_align(ui_lblSpecialMid, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblSpecialMid,
-                      "A heartfelt thank you to the artificers, druids, porters, theme creators, and translators "
-                      "for your invaluable contributions to muOS. Your hard work and commitment have truly enriched "
-                      "this project, and I am deeply grateful for each of you and the unique talents you bring!");
+                      "A heartfelt thanks to artificers, druids, porters, theme creators, and translators "
+                      "for your contributions to MustardOS. Your dedication has enriched this project, and I am "
+                      "truly grateful for all your contributions and testing!"
+    );
     lv_obj_set_scroll_dir(ui_lblSpecialMid, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblSpecialMid, lv_color_hex(0x87C97C), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblSpecialMid, 255, MU_OBJ_MAIN_DEFAULT);
@@ -991,7 +830,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_width(ui_lblKofiTitle, lv_pct(100));
     lv_obj_set_height(ui_lblKofiTitle, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblKofiTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblKofiTitle, "Thank you for choosing muOS");
+    lv_label_set_text(ui_lblKofiTitle, "Thank you for choosing MustardOS");
     lv_obj_set_scroll_dir(ui_lblKofiTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKofiTitle, lv_color_hex(0xF7E318), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKofiTitle, 255, MU_OBJ_MAIN_DEFAULT);
@@ -1022,8 +861,8 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_height(ui_lblKofiMessageOne, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblKofiMessageOne, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblKofiMessageOne,
-                      "You can support muOS by donating or subscribing which helps the "
-                      "development of this project. This project is done as a hobby!");
+                      "You can support us by donating or subscribing which helps the "
+                      "development of this project.\n\nThis project is done as a hobby!");
     lv_obj_set_scroll_dir(ui_lblKofiMessageOne, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKofiMessageOne, lv_color_hex(0xDDA200), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKofiMessageOne, 255, MU_OBJ_MAIN_DEFAULT);
@@ -1048,7 +887,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_width(ui_lblKofiMessageTwo, lv_pct(100));
     lv_obj_set_height(ui_lblKofiMessageTwo, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblKofiMessageTwo, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblKofiMessageTwo, "Scanning the below QR Code will take you to the Ko-fi page!");
+    lv_label_set_text(ui_lblKofiMessageTwo, "Scan the below QR Code to take you to the Ko-fi page!");
     lv_obj_set_scroll_dir(ui_lblKofiMessageTwo, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKofiMessageTwo, lv_color_hex(0xDDA200), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKofiMessageTwo, 255, MU_OBJ_MAIN_DEFAULT);
