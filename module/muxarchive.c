@@ -8,13 +8,14 @@ static void create_archive_items(void) {
     const char *mount_points[] = {
             device.STORAGE.ROM.MOUNT,
             device.STORAGE.SDCARD.MOUNT,
-            device.STORAGE.USB.MOUNT
+            device.STORAGE.USB.MOUNT,
+            STORAGE_THEME
     };
 
     const char *subdirs[] = {"/muos/update", "/backup", "/archive"};
-    char archive_directories[9][MAX_BUFFER_SIZE];
+    char archive_directories[12][MAX_BUFFER_SIZE];
 
-    for (int i = 0, k = 0; i < 3; ++i) {
+    for (int i = 0, k = 0; i < 4; ++i) {
         for (int j = 0; j < 3; ++j, ++k) {
             snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
         }
@@ -109,7 +110,10 @@ static void create_archive_items(void) {
                 if (!ext_type) ext_type = "UNK";
 
                 snprintf(storage_prefix, sizeof(storage_prefix), "[%s-%s]",
-                         j == 0 ? "SD1" : (j == 1 ? "SD2" : "USB"), ext_type);
+                        j == 0 ? "SD1" :
+                        j == 1 ? "SD2" :
+                        j == 2 ? "USB" : "THM",
+                        ext_type);
                 prefix = storage_prefix;
                 break;
             }
