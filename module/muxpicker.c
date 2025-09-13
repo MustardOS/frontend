@@ -465,18 +465,6 @@ int muxpicker_main(char *type, char *ex_dir) {
         char *mustard_theme = STORAGE_THEME "/../MustardOS.muxthm";
         if (!file_exist(mustard_theme)) {
             do_copy = 1;
-        } else {
-            // Okay cool, but what if it has been modified? Fuck you replace it!
-
-            char theme_hash[9];
-            FILE *tf = fopen(mustard_theme, "rb");
-            snprintf(theme_hash, sizeof theme_hash, "%08" PRIx32, fnv1a_hash_file(tf));
-            fclose(tf);
-
-            if (strcasecmp(theme_hash, config.THEME.DEFAULT_HASH) != 0) {
-                if (file_exist(mustard_theme)) remove(mustard_theme);
-                do_copy = 1;
-            }
         }
 
         if (do_copy) {
