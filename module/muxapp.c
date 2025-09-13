@@ -116,6 +116,7 @@ static void init_navigation_group_grid(void) {
         char grid_image[MAX_BUFFER_SIZE];
         load_image_catalogue("Application", glyph_name, "", "default", mux_dimension, "grid",
                              grid_image, sizeof(grid_image));
+        get_app_grid_glyph(items[i].name, glyph_name, "default", grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);
@@ -123,6 +124,7 @@ static void init_navigation_group_grid(void) {
         char grid_image_focused[MAX_BUFFER_SIZE];
         load_image_catalogue("Application", glyph_name_focused, "", "default_focused", mux_dimension, "grid",
                              grid_image_focused, sizeof(grid_image_focused));
+        get_app_grid_glyph(items[i].name, glyph_name_focused, "default_focused", grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, items[i].display_name);
@@ -269,6 +271,9 @@ static void create_app_items(void) {
                     }
 
                     apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, glyph_name);
+                    if (lv_img_get_src(ui_lblAppItemGlyph) == NULL) {
+                        apply_app_glyph(items[i].name, glyph_name, ui_lblAppItemGlyph);
+                    }
                 }
 
                 lv_group_add_obj(ui_group, ui_lblAppItem);
