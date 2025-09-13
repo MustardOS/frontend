@@ -138,6 +138,8 @@ static void handle_b(void) {
 
     play_sound(SND_BACK);
 
+    if (config.BOOT.FACTORY_RESET) load_mux("installer");
+
     close_input();
     mux_input_stop();
 }

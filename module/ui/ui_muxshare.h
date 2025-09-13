@@ -154,6 +154,12 @@
     HDMI(Scan,       "scan")       \
     HDMI(Audio,      "audio")
 
+#define INSTALL_ELEMENTS          \
+    INSTALL(Rtc,      "clock")    \
+    INSTALL(Language, "language") \
+    INSTALL(Shutdown, "shutdown") \
+    INSTALL(Install,  "install")
+
 #define KIOSK_ELEMENTS              \
     KIOSK(Enable,     "enable")     \
     KIOSK(Message,    "message")    \

@@ -439,6 +439,26 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char DATETIME[MAX_BUFFER_SIZE];
+        char LANGUAGE[MAX_BUFFER_SIZE];
+        char INSTALL[MAX_BUFFER_SIZE];
+        char SHUTDOWN[MAX_BUFFER_SIZE];
+        struct {
+            char DATETIME[MAX_BUFFER_SIZE];
+            char LANGUAGE[MAX_BUFFER_SIZE];
+            char INSTALL[MAX_BUFFER_SIZE];
+            char SHUTDOWN[MAX_BUFFER_SIZE];
+        } SHORT;
+        struct {
+            char DATETIME[MAX_BUFFER_SIZE];
+            char LANGUAGE[MAX_BUFFER_SIZE];
+            char INSTALL[MAX_BUFFER_SIZE];
+            char SHUTDOWN[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXINSTALL;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char ENABLE[MAX_BUFFER_SIZE];
         char MESSAGE[MAX_BUFFER_SIZE];
         char ARCHIVE[MAX_BUFFER_SIZE];

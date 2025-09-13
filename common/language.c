@@ -385,6 +385,21 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current muOS supporters and extra credits");
 
+    // muxinstall
+    SPECIFIC_FIELD(lang->MUXINSTALL.TITLE, "INSTALLER");
+    SPECIFIC_FIELD(lang->MUXINSTALL.DATETIME, "Date and Time");
+    SPECIFIC_FIELD(lang->MUXINSTALL.LANGUAGE, "Language");
+    SPECIFIC_FIELD(lang->MUXINSTALL.INSTALL, "Install");
+    SPECIFIC_FIELD(lang->MUXINSTALL.SHUTDOWN, "Shutdown");
+    SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.DATETIME, "Clock");
+    SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.LANGUAGE, "Language");
+    SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.INSTALL, "Install");
+    SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.SHUTDOWN, "Shutdown");
+    SPECIFIC_FIELD(lang->MUXINSTALL.HELP.DATETIME, "Change your current date, time, and timezone");
+    SPECIFIC_FIELD(lang->MUXINSTALL.HELP.LANGUAGE, "Select your preferred language\n\nTranslations supported by Weblate");
+    SPECIFIC_FIELD(lang->MUXINSTALL.HELP.INSTALL, "Prepare and install MustardOS");
+    SPECIFIC_FIELD(lang->MUXINSTALL.HELP.SHUTDOWN, "Shut down your device safely");
+
     // muxkiosk
     SPECIFIC_FIELD(lang->MUXKIOSK.TITLE, "KIOSK SETTINGS");
     SPECIFIC_FIELD(lang->MUXKIOSK.ENABLE, "Kiosk Mode");

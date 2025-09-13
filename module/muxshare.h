@@ -144,6 +144,8 @@ int muxhistory_main(int his_index);
 
 int muxinfo_main();
 
+int muxinstall_main();
+
 int muxkiosk_main();
 
 int muxlanguage_main();
