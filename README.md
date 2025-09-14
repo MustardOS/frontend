@@ -23,6 +23,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 ### Modules
 
 * `muxapp`: Application List
+* `muxappcon`: Application Control Manager
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
 * `muxbackup`: Device Backup Menu
@@ -33,13 +34,16 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxcustom`: Customisation Menu
 * `muxdanger`: Dangerous Settings
 * `muxdevice`: Device Settings
+* `muxdownload`: Archive Downloader
 * `muxgov`: System Governor Selector
 * `muxhdmi`: HDMI Configuration
 * `muxhistory`: Content History Menu
 * `muxinfo`: Information Menu
+* `muxinstall`: First Time Install Menu
 * `muxkiosk`: Kiosk Mode Management
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
+* `muxnetinfo`: Network Information
 * `muxnetprofile`: Network Profile Manager
 * `muxnetscan`: Network SSID Scanner
 * `muxnetwork`: Network Configuration
