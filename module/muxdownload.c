@@ -39,8 +39,10 @@ static void create_content_items(void) {
 
         char name[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(item, "name"), name, sizeof(name));
+
         char url[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(item, "url"), url, sizeof(url));
+
         char help[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(item, "help"), help, sizeof(help));
 
@@ -61,8 +63,8 @@ static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, in
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
-        get_glyph_path(mux_module, is_downloaded(index) ? "downloaded" : "download", glyph_image_embed,
-                       MAX_BUFFER_SIZE);
+        get_glyph_path(mux_module, is_downloaded(index) ? "downloaded" : "download",
+                       glyph_image_embed, MAX_BUFFER_SIZE);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 
@@ -104,8 +106,10 @@ static void list_nav_move(int steps, int direction) {
                 } else {
                     if (current_item_index >= items_before_selected &&
                         current_item_index < item_count - items_after_selected - 1) {
-                        lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent,
-                                                               theme.MUX.ITEM.COUNT - 1); // Get the last child
+
+                        // Get the last child
+                        lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent, theme.MUX.ITEM.COUNT - 1);
+
                         lv_obj_move_to_index(last_item, 0);
                         update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
                                          current_item_index - items_before_selected);
@@ -128,9 +132,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.GENERIC.REMOVE
-                                                                    : lang.GENERIC.DOWNLOAD);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.GENERIC.REMOVE : lang.GENERIC.DOWNLOAD);
 
     nav_moved = 1;
 }
@@ -147,8 +149,8 @@ static void list_nav_next(int steps) {
 
 static void download_finished(int result) {
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.GENERIC.REMOVE
-                                                                    : lang.GENERIC.DOWNLOAD);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.GENERIC.REMOVE : lang.GENERIC.DOWNLOAD);
+
     if (result == 0) {
         char file_path[MAX_BUFFER_SIZE];
         snprintf(file_path, sizeof(file_path), "%s/%s/%s.muxzip",
@@ -170,9 +172,9 @@ static void refresh_extra_data_finished(int result) {
 
 static void update_extra_data(void) {
     if (file_exist(data_local_path)) remove(data_local_path);
+
     set_download_callbacks(refresh_extra_data_finished);
-    initiate_download(config.EXTRA.DOWNLOAD.DATA, data_local_path, true,
-                      lang.MUXDOWNLOAD.DOWN.DATA);
+    initiate_download(config.EXTRA.DOWNLOAD.DATA, data_local_path, true, lang.MUXDOWNLOAD.DOWN.DATA);
 }
 
 static void handle_a(void) {
@@ -185,14 +187,14 @@ static void handle_a(void) {
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s/%s.muxzip",
              device.STORAGE.ROM.MOUNT, MUOS_ARCH_PATH, items[current_item_index].name);
+
     if (file_exist(file_path)) {
         remove(file_path);
         download_finished(-1);
         toast_message(lang.MUXDOWNLOAD.ARCHIVE_REMOVED, SHORT);
     } else {
         set_download_callbacks(download_finished);
-        initiate_download(items[current_item_index].extra_data, file_path, true,
-                          lang.MUXDOWNLOAD.DOWN.ARCHIVE);
+        initiate_download(items[current_item_index].extra_data, file_path, true, lang.MUXDOWNLOAD.DOWN.ARCHIVE);
     }
 }
 
@@ -211,18 +213,19 @@ static void handle_b(void) {
 
     if (download_in_progress) {
         cancel_download = true;
+
         char file_path[MAX_BUFFER_SIZE];
         snprintf(file_path, sizeof(file_path), "%s/%s/%s.muxzip",
                  device.STORAGE.ROM.MOUNT, MUOS_ARCH_PATH, items[current_item_index].name);
-        if (file_exist(file_path)) {
-            remove(file_path);
-        }
+
+        if (file_exist(file_path)) remove(file_path);
     } else {
         if (file_exist(MUOS_ASS_LOAD "_temp")) {
             const char *text = read_all_char_from(MUOS_ASS_LOAD "_temp");
             write_text_to_file(MUOS_ASS_LOAD, "w", CHAR, text);
             remove(MUOS_ASS_LOAD "_temp");
         }
+
         load_mux("assign");
 
         close_input();
@@ -232,6 +235,7 @@ static void handle_b(void) {
 
 static void handle_x(void) {
     if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
+
     play_sound(SND_CONFIRM);
     update_extra_data();
 }
@@ -286,9 +290,10 @@ static void ui_refresh_task() {
 int muxdownload_main(char *type) {
     exit_status = 0;
     starter_image = 0;
+
     snprintf(data_local_path, sizeof(data_local_path), "%s/%s",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" EXTRA_DATA);
-    snprintf(data_type, sizeof(data_type), type);
+    snprintf(data_type, sizeof(data_type), "%s", type);
 
     init_module("muxdownload");
     init_theme(1, 1);
@@ -296,6 +301,7 @@ int muxdownload_main(char *type) {
     init_ui_common_screen(&theme, &device, &lang,
                           !strcmp(type, "core") ? lang.MUXDOWNLOAD.TITLE.CORE : lang.MUXDOWNLOAD.TITLE.APP);
     lv_obj_set_user_data(ui_screen, mux_module);
+
     lv_label_set_text(ui_lblDatetime, get_datetime());
     init_fonts();
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
@@ -329,8 +335,10 @@ int muxdownload_main(char *type) {
         sys_index = read_line_int_from(MUOS_IDX_LOAD, 1);
         remove(MUOS_IDX_LOAD);
     }
-    if (ui_count > 0 && sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count)
+
+    if (ui_count > 0 && sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
         list_nav_move(sys_index, +1);
+    }
 
     init_timer(ui_refresh_task, NULL);
 
