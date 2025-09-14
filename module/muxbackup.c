@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 20
+#define UI_COUNT 21
 #define STORAGE_COUNT (UI_COUNT - 2)
 #define START_INDEX (UI_COUNT - 1)
 #define TARGET_INDEX (UI_COUNT - 2)
@@ -17,6 +17,7 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
+            {ui_lblAppsValue_backup,  lang.MUXBACKUP.HELP.APPS},
             {ui_lblBiosValue_backup,  lang.MUXBACKUP.HELP.BIOS},
             {ui_lblCatalogue_backup,  lang.MUXBACKUP.HELP.CATALOGUE},
             {ui_lblCheats_backup,     lang.MUXBACKUP.HELP.CHEATS},
@@ -51,6 +52,7 @@ static inline void add_backup(int *bp, lv_obj_t *label, const char *runner) {
 static void update_backup_info(void) {
     int bp = 0;
 
+    add_backup(&bp, ui_lblAppsValue_backup, "apps");
     add_backup(&bp, ui_lblBiosValue_backup, "bios");
     add_backup(&bp, ui_lblCatalogueValue_backup, "catalogue");
     add_backup(&bp, ui_lblCheatsValue_backup, "cheats");
@@ -83,6 +85,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+    INIT_VALUE_ITEM(-1, backup, Apps, lang.MUXBACKUP.APPS, "apps", "");
     INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
     INIT_VALUE_ITEM(-1, backup, Cheats, lang.MUXBACKUP.CHEATS, "cheats", "");

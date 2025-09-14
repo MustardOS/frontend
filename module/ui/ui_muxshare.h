@@ -50,6 +50,7 @@
     APPCON(Control,  "control")
 
 #define BACKUP_ELEMENTS              \
+    BACKUP(Apps,       "apps")       \
     BACKUP(Bios,       "bios")       \
     BACKUP(Catalogue,  "catalogue")  \
     BACKUP(Cheats,     "cheats")     \

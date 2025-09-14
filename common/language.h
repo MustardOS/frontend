@@ -116,6 +116,7 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char APPS[MAX_BUFFER_SIZE];
         char BIOS[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CHEATS[MAX_BUFFER_SIZE];
@@ -137,6 +138,7 @@ struct mux_lang {
         char TARGET[MAX_BUFFER_SIZE];
         char START[MAX_BUFFER_SIZE];
         struct {
+            char APPS[MAX_BUFFER_SIZE];
             char BIOS[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CHEATS[MAX_BUFFER_SIZE];

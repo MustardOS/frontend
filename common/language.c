@@ -125,6 +125,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxbackup
     SPECIFIC_FIELD(lang->MUXBACKUP.TITLE, "DEVICE BACKUP");
+    SPECIFIC_FIELD(lang->MUXBACKUP.APPS, "Applications");
     SPECIFIC_FIELD(lang->MUXBACKUP.BIOS, "System BIOS");
     SPECIFIC_FIELD(lang->MUXBACKUP.CATALOGUE, "Metadata Catalogue");
     SPECIFIC_FIELD(lang->MUXBACKUP.CHEATS, "RetroArch Cheats");
@@ -145,6 +146,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.TRACK, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXBACKUP.TARGET, "Backup Target");
     SPECIFIC_FIELD(lang->MUXBACKUP.START, "Start Backup");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.APPS, "Location of installed applications");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BIOS, "Location of system BIOS files");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CATALOGUE, "Location of content images and text");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CHEATS, "Location of the RetroArch cheats");
