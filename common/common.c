@@ -2570,6 +2570,36 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
     return false;
 }
 
+void apply_app_glyph(const char *app_name, const char *glyph_name, lv_obj_t *ui_lblItemGlyph) {
+    char glyph_image_path[MAX_BUFFER_SIZE];
+
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%s/%s/glyph/%s%s.png",
+                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, mux_dimension, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%s/%s/glyph/%s.png",
+                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, glyph_name) >= 0 && file_exist(glyph_image_path))
+    ) {
+        char glyph_image_embed[MAX_BUFFER_SIZE];
+        snprintf(glyph_image_embed, glyph_image_embed, "M:%s", glyph_image_path);
+        lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
+    }
+}
+
+void get_app_grid_glyph(const char *app_name, const char *glyph_name, const char *fallback_name, char *glyph_image_path, size_t glyph_image_path_size) {
+    if (file_exist(glyph_image_path) && !strstr(glyph_image_path, fallback_name)){
+        return;
+    }
+
+    char image_path[MAX_BUFFER_SIZE];
+    if ((snprintf(image_path, sizeof(image_path), "%s/%s/%s/grid/%s%s.png",
+                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, mux_dimension, glyph_name) >= 0 && file_exist(image_path)) ||
+        (snprintf(image_path, sizeof(image_path), "%s/%s/%s/grid/%s.png",
+                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, glyph_name) >= 0 && file_exist(image_path))
+    ) {
+        char glyph_image_embed[MAX_BUFFER_SIZE];
+        snprintf(glyph_image_path, glyph_image_path_size, image_path);
+    }
+}
+
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     if (!file_exist(MUOS_PDI_LOAD)) return 0;
 
