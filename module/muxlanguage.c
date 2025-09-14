@@ -119,6 +119,8 @@ static void handle_a(void) {
     write_text_to_file((CONF_CONFIG_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
 
+    if (config.BOOT.FACTORY_RESET) load_mux("installer");
+
     refresh_config = 1;
 
     close_input();
