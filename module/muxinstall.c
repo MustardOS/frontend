@@ -23,6 +23,8 @@ static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels
     load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
+    const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+
     for (int i = 0; i < UI_COUNT; i++) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
@@ -38,14 +40,14 @@ static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels
         ui_objects[i] = cell_label;
 
         char grid_img[MAX_BUFFER_SIZE];
-        load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
+        load_element_image_specifics(theme_location, mux_dimension, mux_module, "grid", glyph_names[i],
                                      "default", "png", grid_img, sizeof(grid_img));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
 
         char grid_img_foc[MAX_BUFFER_SIZE];
-        load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
+        load_element_image_specifics(theme_location, mux_dimension, mux_module, "grid", glyph_name_focused,
                                      "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row, grid_img, grid_img_foc, item_labels[i]);
