@@ -720,6 +720,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxstorage
     SPECIFIC_FIELD(lang->MUXSTORAGE.TITLE, "STORAGE");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.APPS, "Applications");
     SPECIFIC_FIELD(lang->MUXSTORAGE.BIOS, "System BIOS");
     SPECIFIC_FIELD(lang->MUXSTORAGE.CATALOGUE, "Metadata Catalogue");
     SPECIFIC_FIELD(lang->MUXSTORAGE.COLLECTION, "Content Collection");
@@ -733,6 +734,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.SYNCTHING, "Syncthing Configs");
     SPECIFIC_FIELD(lang->MUXSTORAGE.THEME, "Themes");
     SPECIFIC_FIELD(lang->MUXSTORAGE.TRACK, "Activity Tracker");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.APPS, "Location of installed applications");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.BIOS, "Location of system BIOS files");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.CATALOGUE, "Location of content images and text");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.COLLECTION, "Location of content collection");

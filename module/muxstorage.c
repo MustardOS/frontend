@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxstorage.h"
 
-#define UI_COUNT 13
+#define UI_COUNT 14
 
 struct storage {
     const char *path_suffix;
@@ -14,6 +14,7 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
+            {ui_lblApps_storage,       lang.MUXSTORAGE.HELP.APPS},
             {ui_lblBios_storage,       lang.MUXSTORAGE.HELP.BIOS},
             {ui_lblCatalogue_storage,  lang.MUXSTORAGE.HELP.CATALOGUE},
             {ui_lblCollection_storage, lang.MUXSTORAGE.HELP.COLLECTION},
@@ -41,6 +42,7 @@ static inline void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
 static void update_storage_info(void) {
     int sp = 0;
 
+    add_storage(&sp, STORE_LOC_APPS, ui_lblAppsValue_storage);
     add_storage(&sp, STORE_LOC_BIOS, ui_lblBiosValue_storage);
     add_storage(&sp, STORE_LOC_CLOG, ui_lblCatalogueValue_storage);
     add_storage(&sp, STORE_LOC_COLL, ui_lblCollectionValue_storage);
@@ -56,19 +58,19 @@ static void update_storage_info(void) {
     add_storage(&sp, STORE_LOC_TRAK, ui_lblTrackValue_storage);
 
     char dir[FILENAME_MAX];
-    int has_sd2 = 0;
+    int on_sd2 = 0;
 
     for (int i = 0; i < sp; i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
         if (directory_exist(dir)) {
             lv_label_set_text(storage_path[i].ui_label, "SD2");
-            has_sd2 = 1;
+            on_sd2 = 1;
         } else {
             lv_label_set_text(storage_path[i].ui_label, "SD1");
         }
     }
 
-    lv_label_set_text(ui_lblNavX, has_sd2 ? lang.GENERIC.SYNC : lang.GENERIC.MIGRATE);
+    lv_label_set_text(ui_lblNavX, on_sd2 ? lang.GENERIC.SYNC : lang.GENERIC.MIGRATE);
 }
 
 static void init_navigation_group(void) {
@@ -77,6 +79,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+    INIT_VALUE_ITEM(-1, storage, Apps, lang.MUXSTORAGE.APPS, "apps", "");
     INIT_VALUE_ITEM(-1, storage, Bios, lang.MUXSTORAGE.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, storage, Catalogue, lang.MUXSTORAGE.CATALOGUE, "catalogue", "");
     INIT_VALUE_ITEM(-1, storage, Collection, lang.MUXSTORAGE.COLLECTION, "collection", "");

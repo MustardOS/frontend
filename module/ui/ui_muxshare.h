@@ -272,6 +272,7 @@
     SPACE(System,    "system")
 
 #define STORAGE_ELEMENTS              \
+    STORAGE(Apps,       "apps")       \
     STORAGE(Bios,       "bios")       \
     STORAGE(Catalogue,  "catalogue")  \
     STORAGE(Collection, "collection") \

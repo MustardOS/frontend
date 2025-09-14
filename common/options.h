@@ -95,6 +95,7 @@
 #define MUOS_TASK_PATH "MUOS/task"
 #define MUOS_INFO_PATH "MUOS/info"
 
+#define STORE_LOC_APPS "MUOS/application"
 #define STORE_LOC_BIOS "MUOS/bios"
 #define STORE_LOC_SAVE "MUOS/save"
 #define STORE_LOC_SCRS "MUOS/screenshot"
