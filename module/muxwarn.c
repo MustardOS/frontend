@@ -33,7 +33,7 @@ int main(void) {
     lv_obj_set_width(ui_lblHeader, lv_pct(90));
     lv_obj_set_height(ui_lblHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHeader, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblHeader, "muOS Disclaimer\n");
+    lv_label_set_text(ui_lblHeader, "MustardOS Disclaimer\n");
     lv_obj_set_style_text_color(ui_lblHeader, lv_color_hex(0xF7E318), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(ui_lblHeader, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(ui_lblHeader, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
@@ -44,7 +44,7 @@ int main(void) {
     lv_obj_set_height(ui_lblMessage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_TOP_MID);
     lv_label_set_text(ui_lblMessage, "MustardOS (muOS) is built with respect for developers, artists, and content "
-                                     "creators. While we understand how common content sharing is, muOS does not "
+                                     "creators. While we understand how common content sharing is, it does not "
                                      "include or support pirated content. The system and tools are designed to work "
                                      "with legally obtained files, and it is up to users to source their own content "
                                      "responsibly.\n\nBy installing and using muOS, you acknowledge this approach and "
