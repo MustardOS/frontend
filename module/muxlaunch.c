@@ -290,7 +290,7 @@ static void handle_up_hold(void) {//prev
 }
 
 static void handle_down_hold(void) {//next
-    if (msgbox_active || (theme.GRID.CUBE_SPECIFIC && current_item_index == 4)) return;
+    if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
     if ((theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -307,12 +307,7 @@ static void handle_down_hold(void) {//next
 }
 
 static void handle_left(void) {
-    if (msgbox_active || (theme.GRID.CUBE_SPECIFIC && current_item_index == 1)) return;
-
-    if (theme.GRID.CUBE_SPECIFIC && current_item_index == 7) {
-        list_nav_prev(2);
-        return;
-    }
+    if (msgbox_active) return;
 
     // Horizontal Navigation with 2 rows of 4 items
     if (theme.GRID.ENABLED && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
@@ -347,7 +342,7 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
-    if (msgbox_active || (theme.GRID.CUBE_SPECIFIC && current_item_index == 4)) return;
+    if (msgbox_active) return;
 
     // Horizontal Navigation with 2 rows of 4 items
     if (theme.GRID.ENABLED && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {

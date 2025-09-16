@@ -202,7 +202,6 @@ struct theme_config {
         int16_t COLUMN_WIDTH;
         int16_t ROW_COUNT;
         int16_t ROW_HEIGHT;
-        int16_t CUBE_SPECIFIC;
         struct {
             int16_t ALIGNMENT;
             int16_t WIDTH;

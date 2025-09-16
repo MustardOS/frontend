@@ -1427,19 +1427,6 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
 
-    if (theme->GRID.CUBE_SPECIFIC) {
-        if (theme->GRID.COLUMN_COUNT == 3 && theme->GRID.ROW_COUNT == 3) {
-            if (col == 0 && row == 2) {
-                lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH + 40);
-                lv_obj_set_style_translate_x(cell_pnl, 55, MU_OBJ_MAIN_DEFAULT);
-            }
-            if (col == 1 && row == 2) {
-                lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH + 40);
-                lv_obj_set_style_translate_x(cell_pnl, 105, MU_OBJ_MAIN_DEFAULT);
-            }
-        }
-    }
-
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
 
