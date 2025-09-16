@@ -646,7 +646,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_text(ui_lblPreviewHeader, lang->GENERIC.SWITCH_IMAGE);
 
     ui_lblHelpNavBGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
-                                                   theme->NAV.B, 0);
+                                              theme->NAV.B, 0);
 
     ui_lblHelpNavB = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpNavB, lang->GENERIC.CLOSE);
@@ -720,10 +720,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                                                       theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpPreviewInfoMessage, lang->GENERIC.SWITCH_INFO);
 
-    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
-                                                   theme->NAV.B, 0);
+    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme,
+                                                     (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
+                                                     theme->NAV.B, 0);
 
-    ui_lblHelpPreviewNavB = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
+    ui_lblHelpPreviewNavB = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA,
+                                               0);
     lv_label_set_text(ui_lblHelpPreviewNavB, lang->GENERIC.CLOSE);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
@@ -860,7 +862,8 @@ void init_ui_item_counter(struct theme_config *theme) {
     lv_obj_set_style_text_align(ui_lblCounter_explore, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter_explore, theme->COUNTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.BORDER_COLOUR), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
+                                  MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblCounter_explore, theme->COUNTER.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_lblCounter_explore, theme->COUNTER.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblCounter_explore, theme->COUNTER.PADDING_AROUND, MU_OBJ_MAIN_DEFAULT);
@@ -882,7 +885,7 @@ void init_ui_item_counter(struct theme_config *theme) {
             lv_obj_set_align(ui_lblCounter_explore, LV_ALIGN_TOP_LEFT);
             lv_obj_set_x(ui_lblCounter_explore, theme->COUNTER.PADDING_SIDE);
             break;
-    }                            
+    }
 }
 
 static int blank_check(void) {
@@ -1423,6 +1426,20 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
                       int16_t col, int16_t row, char *item_image_path, char *item_image_focused_path, char *item_text) {
     lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
+
+    if (theme->GRID.CUBE_SPECIFIC) {
+        if (theme->GRID.COLUMN_COUNT == 3 && theme->GRID.ROW_COUNT == 3) {
+            if (col == 0 && row == 2) {
+                lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH + 40);
+                lv_obj_set_style_translate_x(cell_pnl, 55, MU_OBJ_MAIN_DEFAULT);
+            }
+            if (col == 1 && row == 2) {
+                lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH + 40);
+                lv_obj_set_style_translate_x(cell_pnl, 105, MU_OBJ_MAIN_DEFAULT);
+            }
+        }
+    }
+
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
 
@@ -1448,7 +1465,6 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(cell_label, theme->GRID.CELL.TEXT_LINE_SPACING, MU_OBJ_MAIN_DEFAULT);
 
-
     lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR),
                                  MU_OBJ_MAIN_DEFAULT);
@@ -1467,7 +1483,6 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
     lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_FOCUS.TEXT), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_FOCUS.TEXT_ALPHA, MU_OBJ_MAIN_FOCUS);
-
 
     lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_ALPHA, MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR), MU_OBJ_MAIN_FOCUS);
