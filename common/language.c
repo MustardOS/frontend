@@ -790,6 +790,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTESTER.TITLE, "INPUT TESTER");
     SPECIFIC_FIELD(lang->MUXTESTER.ANY, "Press any button to start input testing!");
     SPECIFIC_FIELD(lang->MUXTESTER.QUIT, "Press DOWN + B to finish testing");
+    SPECIFIC_FIELD(lang->MUXTESTER.QUIT_ALT, "Press DOWN + A to finish testing");
 
     // muxthemedown
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.TITLE, "THEME DOWNLOAD");

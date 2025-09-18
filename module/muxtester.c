@@ -72,7 +72,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
     }
 }
 
-static void handle_power(void) {
+static void handle_quit(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
 
     close_input();
@@ -85,12 +85,10 @@ static void init_elements(void) {
     ui_imgButton = lv_img_create(ui_screen);
     lv_obj_set_align(ui_imgButton, LV_ALIGN_CENTER);
     lv_img_set_src(ui_imgButton, &ui_image_Nothing);
-    lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR),
-                                 MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA,
-                                     MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
-    lv_label_set_text(ui_lblMessage, lang.MUXTESTER.QUIT);
+    lv_label_set_text(ui_lblMessage, config.SETTINGS.ADVANCED.SWAP ? lang.MUXTESTER.QUIT_ALT : lang.MUXTESTER.QUIT);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_y(ui_pnlMessage, -12);
 
@@ -121,9 +119,10 @@ int muxtester_main(void) {
             .input_handler = handle_input,
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) | BIT(MUX_INPUT_B),
-                            .press_handler = handle_power,
-                            .hold_handler = handle_power,
+                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) |
+                                         BIT(config.SETTINGS.ADVANCED.SWAP ? MUX_INPUT_A : MUX_INPUT_B),
+                            .press_handler = handle_quit,
+                            .hold_handler = handle_quit,
                     }
             }
     };
