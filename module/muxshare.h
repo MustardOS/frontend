@@ -178,7 +178,7 @@ int muxshot_main();
 
 int muxspace_main();
 
-int muxsplash_main(char *splash_image);
+int muxsplash_main(char *splash_image, bool apply_recolour);
 
 int muxstorage_main();
 

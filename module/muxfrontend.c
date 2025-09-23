@@ -158,23 +158,23 @@ static void module_reset(void) {
     if (config.BOOT.FACTORY_RESET) safe_quit(0);
 }
 
-static void module_exit(char *module) {
-    if (set_splash_image_path(module)) muxsplash_main(splash_image_path);
+static void module_exit(char *module, bool apply_recolour) {
+    if (set_splash_image_path(module)) muxsplash_main(splash_image_path, apply_recolour);
 
     load_mux(module);
     safe_quit(0);
 }
 
 static void module_shutdown(void) {
-    module_exit("shutdown");
+    module_exit("shutdown", true);
 }
 
 static void module_reboot(void) {
-    module_exit("reboot");
+    module_exit("reboot", true);
 }
 
 static void module_install(void) {
-    module_exit("install");
+    module_exit("install", false);
 }
 
 static void module_quit(void) {
@@ -485,7 +485,7 @@ int main(void) {
     write_text_to_file(DONE_RESET, "w", INT, 1);
 
     if (!config.BOOT.FACTORY_RESET && show_alert && set_alert_image_path()) {
-        muxsplash_main(alert_image_path);
+        muxsplash_main(alert_image_path, false);
         sleep(3);
     }
 
