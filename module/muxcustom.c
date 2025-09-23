@@ -339,6 +339,8 @@ static void save_custom_options(void) {
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
                 extract_archive(theme_alt_archive, "custom");
+            } else {
+                update_bootlogo();
             }
 
             static char rgb_script[MAX_BUFFER_SIZE];
