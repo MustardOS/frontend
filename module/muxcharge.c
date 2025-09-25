@@ -130,6 +130,10 @@ int main(void) {
     lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.START);
 
     load_wallpaper(ui_scrCharge_charge, NULL, ui_pnlWall_charge, ui_imgWall_charge, GENERAL);
+    if (theme.IMAGE_LIST.RECOLOUR_ALPHA > 0) {
+        lv_obj_set_style_img_recolor(ui_imgWall_charge, lv_color_hex(theme.IMAGE_LIST.RECOLOUR), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_imgWall_charge, theme.IMAGE_LIST.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    }
     load_font_text(ui_scrCharge_charge);
 
 #if TEST_IMAGE

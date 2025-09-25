@@ -151,6 +151,18 @@ void extract_archive(char *filename, char *screen) {
     free(exec);
 }
 
+void update_bootlogo() {
+    size_t exec_count;
+    const char *args[] = {(OPT_PATH "script/package/theme.sh"), "bootlogo", "N/A", NULL};
+    const char **exec = build_term_exec(args, &exec_count);
+
+    if (exec) {
+        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+        run_exec(exec, exec_count, 0);
+    }
+    free(exec);
+}
+
 int str_compare(const void *a, const void *b) {
     const char *str1 = *(const char **) a;
     const char *str2 = *(const char **) b;

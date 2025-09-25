@@ -339,6 +339,14 @@ static void save_custom_options(void) {
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
                 extract_archive(theme_alt_archive, "custom");
+            } else {
+                char png_bootlogo[MAX_BUFFER_SIZE];
+                snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/%simage/bootlogo.png",
+                        STORAGE_THEME, mux_dimension);
+                if (!file_exist(png_bootlogo)) {
+                    snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/image/bootlogo.png", STORAGE_THEME);
+                }
+                if (file_exist(png_bootlogo)) update_bootlogo();
             }
 
             static char rgb_script[MAX_BUFFER_SIZE];
