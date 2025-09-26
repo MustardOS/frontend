@@ -124,6 +124,7 @@ struct mux_lang {
         char CONFIG[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char INIT[MAX_BUFFER_SIZE];
+        char MUSIC[MAX_BUFFER_SIZE];;
         char NAME[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
         char OVERLAYS[MAX_BUFFER_SIZE];
@@ -136,6 +137,7 @@ struct mux_lang {
         char THEME[MAX_BUFFER_SIZE];
         char TRACK[MAX_BUFFER_SIZE];
         char TARGET[MAX_BUFFER_SIZE];
+        char MERGE[MAX_BUFFER_SIZE];
         char START[MAX_BUFFER_SIZE];
         struct {
             char APPS[MAX_BUFFER_SIZE];
@@ -146,6 +148,7 @@ struct mux_lang {
             char CONFIG[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char INIT[MAX_BUFFER_SIZE];
+            char MUSIC[MAX_BUFFER_SIZE];;
             char NAME[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
             char OVERLAYS[MAX_BUFFER_SIZE];
@@ -158,6 +161,7 @@ struct mux_lang {
             char THEME[MAX_BUFFER_SIZE];
             char TRACK[MAX_BUFFER_SIZE];
             char TARGET[MAX_BUFFER_SIZE];
+            char MERGE[MAX_BUFFER_SIZE];
             char START[MAX_BUFFER_SIZE];
         } HELP;
     } MUXBACKUP;
@@ -837,6 +841,7 @@ struct mux_lang {
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char INIT[MAX_BUFFER_SIZE];
+        char MUSIC[MAX_BUFFER_SIZE];;
         char NAME[MAX_BUFFER_SIZE];;
         char NETWORK[MAX_BUFFER_SIZE];
         char PACKAGE[MAX_BUFFER_SIZE];
@@ -852,6 +857,7 @@ struct mux_lang {
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char INIT[MAX_BUFFER_SIZE];
+            char MUSIC[MAX_BUFFER_SIZE];;
             char NAME[MAX_BUFFER_SIZE];;
             char NETWORK[MAX_BUFFER_SIZE];
             char PACKAGE[MAX_BUFFER_SIZE];

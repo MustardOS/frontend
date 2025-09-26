@@ -133,6 +133,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.CONFIG, "RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXBACKUP.INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
     SPECIFIC_FIELD(lang->MUXBACKUP.NAME, "Friendly Name Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.NETWORK, "Network Profiles");
     SPECIFIC_FIELD(lang->MUXBACKUP.OVERLAYS, "RetroArch Overlays");
@@ -145,6 +146,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.THEME, "Themes");
     SPECIFIC_FIELD(lang->MUXBACKUP.TRACK, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXBACKUP.TARGET, "Backup Target");
+    SPECIFIC_FIELD(lang->MUXBACKUP.MERGE, "Merge Backups");
     SPECIFIC_FIELD(lang->MUXBACKUP.START, "Start Backup");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.APPS, "Location of installed applications");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BIOS, "Location of system BIOS files");
@@ -154,6 +156,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CONFIG, "Location of RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.HISTORY, "Location of history");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.INIT, "Location of User Initialisation scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUSIC, "Location of background music");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NAME, "Location of friendly name configurations");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NETWORK, "Location of Network Profiles");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.OVERLAYS, "Location of the RetroArch overlays");
@@ -166,6 +169,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.THEME, "Location of themes");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.TRACK, "Location of Game Activity Tracker");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.TARGET, "Toggle the target storage device for the backup");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MERGE, "Merge all backup targets to a single archive");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.START, "Start the backup process for the selected items");
 
     // muxcharge
@@ -726,6 +730,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.COLLECTION, "Content Collection");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXSTORAGE.INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.MUSIC, "Background Music");
     SPECIFIC_FIELD(lang->MUXSTORAGE.NAME, "Friendly Name System");
     SPECIFIC_FIELD(lang->MUXSTORAGE.NETWORK, "Network Profiles");
     SPECIFIC_FIELD(lang->MUXSTORAGE.PACKAGE, "Custom Packages");
@@ -740,6 +745,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.COLLECTION, "Location of content collection");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.HISTORY, "Location of history");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.INIT, "Location of User Initialisation scripts");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.MUSIC, "Location of background music");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.NAME, "Location of friendly name configurations");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.NETWORK, "Location of Network Profiles");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.PACKAGE, "Location of custom packages");

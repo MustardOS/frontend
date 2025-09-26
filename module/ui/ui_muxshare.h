@@ -58,6 +58,7 @@
     BACKUP(Config,     "config")     \
     BACKUP(History,    "history")    \
     BACKUP(Init,       "init")       \
+    BACKUP(Music,      "music")      \
     BACKUP(Name,       "name")       \
     BACKUP(Network,    "network")    \
     BACKUP(Overlays,   "overlays")   \
@@ -70,6 +71,7 @@
     BACKUP(Theme,      "theme")      \
     BACKUP(Track,      "track")      \
     BACKUP(Target,     "target")     \
+    BACKUP(Merge,      "merge")      \
     BACKUP(Start,      "start")
 
 #define CONNECT_ELEMENTS                \
@@ -278,6 +280,7 @@
     STORAGE(Collection, "collection") \
     STORAGE(History,    "history")    \
     STORAGE(Init,       "init")       \
+    STORAGE(Music,      "music")      \
     STORAGE(Name,       "name")       \
     STORAGE(Network,    "network")    \
     STORAGE(Package,    "package")    \

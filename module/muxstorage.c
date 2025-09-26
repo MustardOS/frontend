@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxstorage.h"
 
-#define UI_COUNT 14
+#define UI_COUNT 15
 
 struct storage {
     const char *path_suffix;
@@ -20,6 +20,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblCollection_storage, lang.MUXSTORAGE.HELP.COLLECTION},
             {ui_lblHistory_storage,    lang.MUXSTORAGE.HELP.HISTORY},
             {ui_lblInit_storage,       lang.MUXSTORAGE.HELP.INIT},
+            {ui_lblMusic_storage,      lang.MUXSTORAGE.HELP.MUSIC},
             {ui_lblName_storage,       lang.MUXSTORAGE.HELP.NAME},
             {ui_lblNetwork_storage,    lang.MUXSTORAGE.HELP.NETWORK},
             {ui_lblPackage_storage,    lang.MUXSTORAGE.HELP.PACKAGE},
@@ -48,6 +49,7 @@ static void update_storage_info(void) {
     add_storage(&sp, STORE_LOC_COLL, ui_lblCollectionValue_storage);
     add_storage(&sp, STORE_LOC_HIST, ui_lblHistoryValue_storage);
     add_storage(&sp, STORE_LOC_INIT, ui_lblInitValue_storage);
+    add_storage(&sp, STORE_LOC_MUSI, ui_lblMusicValue_storage);
     add_storage(&sp, STORE_LOC_NAME, ui_lblNameValue_storage);
     add_storage(&sp, STORE_LOC_NETW, ui_lblNetworkValue_storage);
     add_storage(&sp, STORE_LOC_PACK, ui_lblPackageValue_storage);
@@ -85,6 +87,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, storage, Collection, lang.MUXSTORAGE.COLLECTION, "collection", "");
     INIT_VALUE_ITEM(-1, storage, History, lang.MUXSTORAGE.HISTORY, "history", "");
     INIT_VALUE_ITEM(-1, storage, Init, lang.MUXSTORAGE.INIT, "init", "");
+    INIT_VALUE_ITEM(-1, storage, Music, lang.MUXSTORAGE.MUSIC, "music", "");
     INIT_VALUE_ITEM(-1, storage, Name, lang.MUXSTORAGE.NAME, "name", "");
     INIT_VALUE_ITEM(-1, storage, Network, lang.MUXSTORAGE.NETWORK, "network", "");
     INIT_VALUE_ITEM(-1, storage, Package, lang.MUXSTORAGE.PACKAGE, "package", "");

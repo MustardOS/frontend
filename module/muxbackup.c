@@ -1,10 +1,13 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 21
-#define STORAGE_COUNT (UI_COUNT - 2)
+#define UI_COUNT 23
+#define STORAGE_COUNT (UI_COUNT - 3)
 #define START_INDEX (UI_COUNT - 1)
-#define TARGET_INDEX (UI_COUNT - 2)
+#define MERGE_INDEX (UI_COUNT - 2)
+#define TARGET_INDEX (UI_COUNT - 3)
+
+int merge_archives = 1;
 
 struct backup {
     lv_obj_t *ui_label;
@@ -25,6 +28,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblConfig_backup,     lang.MUXBACKUP.HELP.CONFIG},
             {ui_lblHistory_backup,    lang.MUXBACKUP.HELP.HISTORY},
             {ui_lblInit_backup,       lang.MUXBACKUP.HELP.INIT},
+            {ui_lblMusic_backup,      lang.MUXBACKUP.HELP.MUSIC},
             {ui_lblName_backup,       lang.MUXBACKUP.HELP.NAME},
             {ui_lblNetwork_backup,    lang.MUXBACKUP.HELP.NETWORK},
             {ui_lblOverlays_backup,   lang.MUXBACKUP.HELP.OVERLAYS},
@@ -37,6 +41,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTheme_backup,      lang.MUXBACKUP.HELP.THEME},
             {ui_lblTrack_backup,      lang.MUXBACKUP.HELP.TRACK},
             {ui_lblTarget_backup,     lang.MUXBACKUP.HELP.TARGET},
+            {ui_lblMerge_backup,      lang.MUXBACKUP.HELP.MERGE},
             {ui_lblStart_backup,      lang.MUXBACKUP.HELP.START},
     };
 
@@ -52,7 +57,7 @@ static inline void add_backup(int *bp, lv_obj_t *label, const char *runner) {
 static void update_backup_info(void) {
     int bp = 0;
 
-    add_backup(&bp, ui_lblAppsValue_backup, "apps");
+    add_backup(&bp, ui_lblAppsValue_backup, "application");
     add_backup(&bp, ui_lblBiosValue_backup, "bios");
     add_backup(&bp, ui_lblCatalogueValue_backup, "catalogue");
     add_backup(&bp, ui_lblCheatsValue_backup, "cheats");
@@ -60,6 +65,7 @@ static void update_backup_info(void) {
     add_backup(&bp, ui_lblConfigValue_backup, "config");
     add_backup(&bp, ui_lblHistoryValue_backup, "history");
     add_backup(&bp, ui_lblInitValue_backup, "init");
+    add_backup(&bp, ui_lblMusicValue_backup, "music");
     add_backup(&bp, ui_lblNameValue_backup, "name");
     add_backup(&bp, ui_lblNetworkValue_backup, "network");
     add_backup(&bp, ui_lblOverlaysValue_backup, "overlays");
@@ -85,7 +91,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, backup, Apps, lang.MUXBACKUP.APPS, "apps", "");
+    INIT_VALUE_ITEM(-1, backup, Apps, lang.MUXBACKUP.APPS, "application", "");
     INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
     INIT_VALUE_ITEM(-1, backup, Cheats, lang.MUXBACKUP.CHEATS, "cheats", "");
@@ -93,6 +99,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.CONFIG, "config", "");
     INIT_VALUE_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", "");
     INIT_VALUE_ITEM(-1, backup, Init, lang.MUXBACKUP.INIT, "init", "");
+    INIT_VALUE_ITEM(-1, backup, Music, lang.MUXBACKUP.MUSIC, "music", "");
     INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.NAME, "name", "");
     INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NETWORK, "network", "");
     INIT_VALUE_ITEM(-1, backup, Overlays, lang.MUXBACKUP.OVERLAYS, "overlays", "");
@@ -105,6 +112,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, backup, Theme, lang.MUXBACKUP.THEME, "theme", "");
     INIT_VALUE_ITEM(-1, backup, Track, lang.MUXBACKUP.TRACK, "track", "");
     INIT_VALUE_ITEM(-1, backup, Target, lang.MUXBACKUP.TARGET, "target", "");
+    INIT_VALUE_ITEM(-1, backup, Merge, lang.MUXBACKUP.MERGE, "merge", lang.GENERIC.ENABLED);
     INIT_VALUE_ITEM(-1, backup, Start, lang.MUXBACKUP.START, "start", "");
 
     ui_group = lv_group_create();
@@ -184,6 +192,8 @@ static int get_focused_element_index(struct _lv_obj_t *element_focused) {
         return START_INDEX;
     } else if (ui_lblTargetValue_backup == element_focused) {
         return TARGET_INDEX;
+    } else if (ui_lblMergeValue_backup == element_focused) {
+        return MERGE_INDEX;
     } else
         for (int i = 0; i < STORAGE_COUNT; i++) {
             if (backup_path[i].ui_label == element_focused) return i;
@@ -195,14 +205,17 @@ static int get_focused_element_index(struct _lv_obj_t *element_focused) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    play_sound(SND_CONFIRM);
-
     lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
     int focused_index = get_focused_element_index(element_focused);
     const char *label_value = lv_label_get_text(element_focused);
 
     // Return if backup set to NONE or if on Toggle Target Storage
-    if (strcasecmp(label_value, "NONE") == 0 || focused_index == TARGET_INDEX) return;
+    if (strcasecmp(label_value, "NONE") == 0 ||
+        focused_index == MERGE_INDEX ||
+        focused_index == TARGET_INDEX)
+        return;
+
+    play_sound(SND_CONFIRM);
 
     const char *target_value = lv_label_get_text(ui_lblTargetValue_backup);
     char datetime[64];
@@ -211,7 +224,6 @@ static void handle_a(void) {
     datetime[sizeof(datetime) - 1] = '\0';
 
     FILE *fp;
-    char backup_script_path[FILENAME_MAX];
     fp = fopen("/tmp/muxbackup_manifest.txt", "w");
     if (!fp) {
         fprintf(stderr, "Failed to open /tmp/muxbackup_manifest.txt for writing\n");
@@ -239,9 +251,13 @@ static void handle_a(void) {
     }
     fclose(fp);
 
+    char backup_script_path[FILENAME_MAX];
     snprintf(backup_script_path, sizeof(backup_script_path), OPT_PATH "script/mux/backup.sh");
 
-    const char *args[] = {backup_script_path, NULL};
+    char do_merge[4];
+    sprintf(do_merge, "%d", merge_archives);
+
+    const char *args[] = {backup_script_path, do_merge, NULL};
     size_t exec_count;
     const char **exec = build_term_exec(args, &exec_count);
 
@@ -278,6 +294,18 @@ static void handle_x(void) {
         }
 
         return;
+    } else if (focused_index == MERGE_INDEX) {
+        play_sound(SND_CONFIRM);
+
+        if (strcasecmp(label_text, lang.GENERIC.ENABLED) == 0) {
+            merge_archives = 0;
+            lv_label_set_text(element_focused, lang.GENERIC.DISABLED);
+        } else {
+            merge_archives = 1;
+            lv_label_set_text(element_focused, lang.GENERIC.ENABLED);
+        }
+
+        return;
     } else if (focused_index == START_INDEX) {
         // If focused on Start Backup, just return
         return;
@@ -301,16 +329,12 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || hold_call) return;
 
-    play_sound(SND_CONFIRM);
-
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
 
     int focused_index = get_focused_element_index(element_focused);
-    if (focused_index == TARGET_INDEX
-        || focused_index == START_INDEX) {
-        // If focused on Toggle Target or Start Backup, just return
-        return;
-    }
+    if (focused_index == TARGET_INDEX || focused_index == START_INDEX) return;
+
+    play_sound(SND_CONFIRM);
 
     // If SD1 or SD2, set to NONE
     const char *label_text = lv_label_get_text(element_focused);
@@ -356,7 +380,7 @@ static void init_elements(void) {
             {ui_lblNavY,      lang.GENERIC.CLEAR,  0},
             {ui_lblNavAGlyph, "",                  0},
             {ui_lblNavA,      lang.GENERIC.LAUNCH, 0},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
 #define BACKUP(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_backup, UDATA);
@@ -384,7 +408,7 @@ static void ui_refresh_task() {
             lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
             // Focused on Toggle Target label
-        } else if (focused_index == TARGET_INDEX) {
+        } else if (focused_index == MERGE_INDEX || focused_index == TARGET_INDEX) {
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
