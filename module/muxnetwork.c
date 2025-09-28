@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetwork.h"
 
-#define UI_COUNT 11
+#define UI_COUNT 12
 
 const char *pass_args[] = {(OPT_PATH "script/web/password.sh"), NULL};
 const char *net_c_args[] = {(OPT_PATH "script/system/network.sh"), "connect", NULL};
@@ -9,8 +9,8 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 
 #define PASS_ENCODE "********"
 
-#define UI_DHCP 7
-#define UI_STATIC 11
+#define UI_DHCP 8
+#define UI_STATIC 12
 
 static void list_nav_move(int steps, int direction);
 
