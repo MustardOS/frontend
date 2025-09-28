@@ -72,6 +72,7 @@ int is_blank = 0;
 
 char *theme_back_compat[] = {
         config.SYSTEM.VERSION,
+        "2508.1_CANADA_GOOSE",
         "2508.0_GOOSE",
         "2502.0_PIXIE",
         NULL
