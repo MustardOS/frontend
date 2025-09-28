@@ -26,6 +26,7 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->NETWORK.DNS, CONF_CONFIG_PATH "network/dns", "1.1.1.1")
     CFG_INT_FIELD(config->NETWORK.MONITOR, CONF_CONFIG_PATH "network/monitor", 1)
     CFG_INT_FIELD(config->NETWORK.BOOT, CONF_CONFIG_PATH "network/boot", 1)
+    CFG_INT_FIELD(config->NETWORK.COMPAT, CONF_CONFIG_PATH "network/compat", 0)
 
     CFG_INT_FIELD(config->THEME.FILTER.ALL_THEMES, CONF_CONFIG_PATH "theme/filter/allthemes", 0)
     CFG_INT_FIELD(config->THEME.FILTER.GRID, CONF_CONFIG_PATH "theme/filter/grid", 0)

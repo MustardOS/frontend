@@ -32,6 +32,7 @@ struct mux_config {
         char DNS[MAX_BUFFER_SIZE];
         int16_t MONITOR;
         int16_t BOOT;
+        int16_t COMPAT;
     } NETWORK;
 
     struct {

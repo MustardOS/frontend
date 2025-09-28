@@ -651,6 +651,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char MONITOR[MAX_BUFFER_SIZE];
         char BOOT[MAX_BUFFER_SIZE];
+        char COMPAT[MAX_BUFFER_SIZE];
         char CONNECT[MAX_BUFFER_SIZE];
         char DISCONNECT[MAX_BUFFER_SIZE];
         char CONNECTED[MAX_BUFFER_SIZE];
@@ -684,6 +685,7 @@ struct mux_lang {
             char IP[MAX_BUFFER_SIZE];
             char MONITOR[MAX_BUFFER_SIZE];
             char BOOT[MAX_BUFFER_SIZE];
+            char COMPAT[MAX_BUFFER_SIZE];
             char CONNECT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXNETWORK;

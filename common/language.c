@@ -568,6 +568,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.TITLE, "WI-FI NETWORK");
     SPECIFIC_FIELD(lang->MUXNETWORK.MONITOR, "Connection Monitor");
     SPECIFIC_FIELD(lang->MUXNETWORK.BOOT, "Start Network on Boot");
+    SPECIFIC_FIELD(lang->MUXNETWORK.COMPAT, "Module Compatibility");
     SPECIFIC_FIELD(lang->MUXNETWORK.CONNECT, "Connect");
     SPECIFIC_FIELD(lang->MUXNETWORK.DISCONNECT, "Disconnect");
     SPECIFIC_FIELD(lang->MUXNETWORK.CONNECTED, "Connected");
@@ -600,6 +601,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.IP, "Enter the device IP address here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.MONITOR, "Enables periodic connectivity checks and triggers reconnection if network loss is detected");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.BOOT, "Enables network connection to be established automatically at boot");
+    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.CONNECT, "Connect to the network using options entered above");
 
     // muxoption

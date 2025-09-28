@@ -237,6 +237,7 @@
     NETWORK(Dns,        "dns")        \
     NETWORK(Monitor,    "monitor")    \
     NETWORK(Boot,       "boot")       \
+    NETWORK(Compat,     "compat")     \
     NETWORK(Connect,    "connect")
 
 #define OPTION_ELEMENTS          \
