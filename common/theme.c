@@ -1338,19 +1338,19 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t *ui_lblItem
     lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_FOCUS.TEXT), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_FOCUS.TEXT_ALPHA, MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_bg_color(ui_lblItemDropDown, lv_color_hex(0x403A03), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblItemDropDown, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblItemDropDown, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblItemDropDown, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblItemDropDown, theme->FONT.LIST_PAD_RIGHT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblItemDropDown, theme->FONT.LIST_PAD_TOP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblItemDropDown, theme->FONT.LIST_PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0xF7E318), MU_OBJ_MAIN_SCROLL);
-    lv_obj_set_style_text_opa(ui_lblItemDropDown, 255, MU_OBJ_MAIN_SCROLL);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, LV_OPA_COVER, MU_OBJ_MAIN_SCROLL);
     lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0x808080), MU_OBJ_INDI_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblItemDropDown, 0, MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, LV_OPA_TRANSP, MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0x02080D), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008), MU_OBJ_SELECT_DEFAULT);
-    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, MU_OBJ_SELECT_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), LV_OPA_COVER, MU_OBJ_SELECT_DEFAULT);
 }
 
 void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,

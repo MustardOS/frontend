@@ -1,13 +1,13 @@
 #pragma once
 
-#define CREATE_OPTION_ITEM(MODULE, NAME) do {                                       \
-        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                     \
-        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);         \
-        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                             \
-        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);           \
-        ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);      \
-        lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                         \
-        lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, 0, MU_OBJ_INDI_DEFAULT); \
+#define CREATE_OPTION_ITEM(MODULE, NAME) do {                                                   \
+        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                 \
+        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                     \
+        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                         \
+        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                       \
+        ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);                  \
+        lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                                     \
+        lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, LV_OPA_TRANSP, MU_OBJ_INDI_DEFAULT); \
     } while (0)
 
 #define CREATE_STATIC_ITEM(MODULE, NAME) do {                               \
@@ -42,7 +42,7 @@
     lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), MU_OBJ_MAIN_DEFAULT); \
     lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, MU_OBJ_MAIN_DEFAULT);                                      \
     lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), MU_OBJ_INDI_DEFAULT); \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, MU_OBJ_INDI_DEFAULT);                                     \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, LV_OPA_COVER, MU_OBJ_INDI_DEFAULT);                            \
 } while (0)
 
 #define APPCON_ELEMENTS          \

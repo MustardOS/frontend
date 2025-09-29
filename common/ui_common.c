@@ -254,7 +254,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_blank, device->MUX.HEIGHT);
     lv_obj_set_align(ui_blank, LV_ALIGN_CENTER);
     lv_obj_set_style_bg_color(ui_blank, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_blank, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_blank, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
     ui_screen = lv_obj_create(ui_screen_container);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
@@ -275,7 +275,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_scrollbar_mode(ui_pnlWall, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlWall, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlWall, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
@@ -283,7 +283,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlWall, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlWall, LV_OPA_TRANSP, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
     ui_imgWall = lv_img_create(ui_pnlWall);
     lv_img_set_src(ui_imgWall, &ui_image_Nothing);
@@ -318,7 +318,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_scrollbar_mode(ui_pnlContent, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlContent, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlContent, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
@@ -326,9 +326,9 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_column(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlContent, LV_OPA_TRANSP, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0xFFFFFF), LV_PART_SCROLLBAR | LV_STATE_SCROLLED);
-    lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_SCROLLBAR | LV_STATE_SCROLLED);
+    lv_obj_set_style_bg_opa(ui_pnlContent, LV_OPA_TRANSP, LV_PART_SCROLLBAR | LV_STATE_SCROLLED);
 
     ui_pnlBox = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlBox, device->MUX.WIDTH);
@@ -341,7 +341,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_scrollbar_mode(ui_pnlBox, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlBox, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlBox, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
@@ -351,7 +351,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_column(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlBox, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlBox, LV_OPA_TRANSP, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
     ui_imgBox = lv_img_create(ui_pnlBox);
     lv_img_set_src(ui_imgBox, &ui_image_Nothing);
@@ -519,13 +519,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_opa(ui_lblScreenMessage, theme->LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(ui_lblScreenMessage, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblScreenMessage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_color(ui_lblScreenMessage, lv_color_hex(0x100808), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(ui_lblScreenMessage, 200, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblScreenMessage, LV_GRAD_DIR_HOR, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblScreenMessage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_lblScreenMessage, 5, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_lblScreenMessage, LV_BORDER_SIDE_LEFT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblScreenMessage, 0, MU_OBJ_MAIN_DEFAULT);
@@ -533,7 +533,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_top(ui_lblScreenMessage, theme->FONT.LIST_PAD_TOP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblScreenMessage, theme->FONT.LIST_PAD_BOTTOM, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
-    lv_obj_set_style_text_opa(ui_lblScreenMessage, 255, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_text_opa(ui_lblScreenMessage, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
 
     ui_pnlMessage = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlMessage, device->MUX.WIDTH - 25);
@@ -599,7 +599,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_long_mode(ui_lblHelpHeader, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblHelpHeader, "");
     lv_obj_set_style_text_color(ui_lblHelpHeader, lv_color_hex(theme->HELP.TITLE), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpHeader, 255, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHelpHeader, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpContent = lv_obj_create(ui_pnlHelp);
     lv_obj_set_align(ui_pnlHelpContent, LV_ALIGN_CENTER);
@@ -616,7 +616,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_WRAP);
     lv_label_set_text(ui_lblHelpContent, "");
     lv_obj_set_style_text_color(ui_lblHelpContent, lv_color_hex(theme->HELP.CONTENT), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpContent, 255, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHelpContent, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblHelpContent, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(ui_lblHelpContent, 5, MU_OBJ_MAIN_DEFAULT);
 
@@ -632,7 +632,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                                        LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_style_radius(ui_pnlHelpExtra, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpExtra, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpExtra, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpExtra, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpExtra, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpNavUDGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, "ud", theme->NAV.UD, 0);
@@ -672,7 +672,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_long_mode(ui_lblHelpPreviewHeader, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblHelpPreviewHeader, "");
     lv_obj_set_style_text_color(ui_lblHelpPreviewHeader, lv_color_hex(theme->HELP.TITLE), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpPreviewHeader, 255, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHelpPreviewHeader, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpPreviewImage = lv_obj_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_pnlHelpPreviewImage, device->MUX.WIDTH * .9 - 60);
@@ -681,7 +681,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_pnlHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpPreviewImage, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewImage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_imgHelpPreviewImage = lv_img_create(ui_pnlHelpPreviewImage);
@@ -693,7 +693,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_imgHelpPreviewImage, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_imgHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_imgHelpPreviewImage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_clip_corner(ui_imgHelpPreviewImage, true, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor(ui_imgHelpPreviewImage, lv_color_hex(theme->IMAGE_PREVIEW.RECOLOUR),
@@ -709,7 +709,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_pnlHelpPreviewInfo, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreviewInfo, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpPreviewInfo, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme,
@@ -819,7 +819,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_row(ui_pnlDownload, 10, LV_PART_MAIN);
     lv_obj_set_style_bg_color(ui_pnlDownload, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlDownload, 230, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_opa(ui_pnlDownload, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_opa(ui_pnlDownload, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
     ui_barDownload = lv_bar_create(ui_pnlDownload);
     lv_obj_set_size(ui_barDownload, 400, 40);
@@ -892,12 +892,12 @@ static int blank_check(void) {
     if (file_exist(MUX_BLANK)) {
         is_blank = 1;
 
-        lv_obj_set_style_bg_opa(ui_blank, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(ui_blank, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
         lv_obj_move_foreground(ui_blank);
     } else {
         is_blank = 0;
 
-        lv_obj_set_style_bg_opa(ui_blank, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(ui_blank, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
         lv_obj_move_background(ui_blank);
     }
 
@@ -1017,7 +1017,7 @@ void ui_common_handle_idle(void) {
         lv_refr_now(NULL);
     }
 
-    if (!file_exist(MUX_BLANK) && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > 0) {
+    if (!file_exist(MUX_BLANK) && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > LV_OPA_TRANSP) {
         blank_check();
     }
 
@@ -1325,11 +1325,11 @@ static void fade_black(lv_obj_t *ui_screen, int start_opa, int end_opa, int step
 }
 
 void fade_to_black(lv_obj_t *ui_screen) {
-    fade_black(ui_screen, 0, 255, 25, 0);
+    fade_black(ui_screen, LV_OPA_TRANSP, LV_OPA_COVER, 25, 0);
 }
 
 void fade_from_black(lv_obj_t *ui_screen) {
-    fade_black(ui_screen, 255, 0, -25, 1);
+    fade_black(ui_screen, LV_OPA_COVER, LV_OPA_TRANSP, -25, 1);
 }
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
