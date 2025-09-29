@@ -435,7 +435,7 @@ extern uint32_t mux_tick(void);
 #define LV_TXT_LINE_BREAK_LONG_POST_MIN_LEN 3
 
 /*The control character to use for signalling text recoloring.*/
-#define LV_TXT_COLOR_CMD "§"
+#define LV_TXT_COLOR_CMD "#"
 
 /*Support bidirectional texts. Allows mixing Left-to-Right and Right-to-Left texts.
  *The direction will be processed according to the Unicode Bidirectional Algorithm:
