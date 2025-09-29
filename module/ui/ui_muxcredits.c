@@ -72,10 +72,16 @@ static lv_obj_t *name_flow(lv_obj_t *parent, const char **list, lv_color_t hex) 
     lv_obj_set_style_pad_row(wrap, 4, 0);
 
     for (size_t i = 0; list[i]; ++i) {
+        const char *txt = list[i];
         lv_obj_t *lbl = lv_label_create(wrap);
-        lv_label_set_text(lbl, list[i]);
+
+        bool use_recolor = (txt && txt[0] == LV_TXT_COLOR_CMD[0]);
+        lv_label_set_recolor(lbl, use_recolor);
+
         lv_obj_set_style_text_color(lbl, hex, 0);
-        lv_obj_set_style_text_opa(lbl, 255, 0);
+        lv_obj_set_style_text_opa(lbl, LV_OPA_COVER, 0);
+
+        lv_label_set_text(lbl, txt);
     }
 
     return wrap;
