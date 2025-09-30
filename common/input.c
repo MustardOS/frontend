@@ -575,8 +575,8 @@ static void handle_inputs(const mux_input_options *opts) {
                 // Pressed & not held: Invoke "press" handler.
                 dispatch_input(opts, i, MUX_INPUT_PRESS);
 
-                // Double delay before initial repeat.
-                hold_delay[i] = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
+                // Initial repeat delay
+                hold_delay[i] = config.SETTINGS.ADVANCED.REPEAT_DELAY;
                 hold_tick[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
                 // Pressed & held: Invoke "hold" handler.
@@ -637,8 +637,8 @@ static void handle_combos(const mux_input_options *opts) {
                 dispatch_combo(opts, i, MUX_INPUT_PRESS);
                 active_combo = i;
 
-                // Double delay before initial repeat.
-                hold_delay = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
+                // Initial repeat delay
+                hold_delay = config.SETTINGS.ADVANCED.REPEAT_DELAY;
                 hold_tick = tick;
 
                 // Only one combo can be active at a time.

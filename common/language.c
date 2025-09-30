@@ -837,6 +837,7 @@ void load_lang(struct mux_lang *lang) {
     // muxtweakadv
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TITLE, "ADVANCED SETTINGS");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SPEED, "Menu Acceleration");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.REPEAT_DELAY, "Menu Repeat Delay");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.THERMAL, "Thermal Zone Control");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.OFFSET, "Battery Offset");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LOCK, "Passcode Lock");
@@ -873,6 +874,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SECONDPART, "Secondary Partition");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.USBPART, "External Partition");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SPEED, "Adjust the rate of speed when holding navigation keys down");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEAT_DELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK, "Toggle the passcode lock - More information can be found on the muOS website");
