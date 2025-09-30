@@ -24,9 +24,6 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->NETWORK.GATEWAY, CONF_CONFIG_PATH "network/gateway", "192.168.0.1")
     CFG_STR_FIELD(config->NETWORK.SUBNET, CONF_CONFIG_PATH "network/subnet", "24")
     CFG_STR_FIELD(config->NETWORK.DNS, CONF_CONFIG_PATH "network/dns", "1.1.1.1")
-    CFG_INT_FIELD(config->NETWORK.MONITOR, CONF_CONFIG_PATH "network/monitor", 1)
-    CFG_INT_FIELD(config->NETWORK.BOOT, CONF_CONFIG_PATH "network/boot", 1)
-    CFG_INT_FIELD(config->NETWORK.COMPAT, CONF_CONFIG_PATH "network/compat", 0)
 
     CFG_INT_FIELD(config->THEME.FILTER.ALL_THEMES, CONF_CONFIG_PATH "theme/filter/allthemes", 0)
     CFG_INT_FIELD(config->THEME.FILTER.GRID, CONF_CONFIG_PATH "theme/filter/grid", 0)
@@ -130,6 +127,12 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.HDMI.RANGE, CONF_CONFIG_PATH "settings/hdmi/range", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, CONF_CONFIG_PATH "settings/hdmi/scan", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.AUDIO, CONF_CONFIG_PATH "settings/hdmi/audio", 0)
+
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.MONITOR, CONF_CONFIG_PATH "settings/network/monitor", 0)
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.BOOT, CONF_CONFIG_PATH "settings/network/boot", 1)
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.COMPAT, CONF_CONFIG_PATH "settings/network/compat", 0)
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.WAIT, CONF_CONFIG_PATH "settings/network/wait_timer", 5)
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.RETRY, CONF_CONFIG_PATH "settings/network/compat_retry", 5)
 
     CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, CONF_CONFIG_PATH "settings/power/low_battery", 0)
     CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, CONF_CONFIG_PATH "settings/power/shutdown", 0)

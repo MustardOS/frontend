@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetwork.h"
 
-#define UI_COUNT 12
+#define UI_COUNT 9
 
 const char *pass_args[] = {(OPT_PATH "script/web/password.sh"), NULL};
 const char *net_c_args[] = {(OPT_PATH "script/system/network.sh"), "connect", NULL};
@@ -9,8 +9,8 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 
 #define PASS_ENCODE "********"
 
-#define UI_DHCP 8
-#define UI_STATIC 12
+#define UI_DHCP (UI_COUNT - 4)
+#define UI_STATIC UI_COUNT
 
 static void list_nav_move(int steps, int direction);
 
@@ -23,9 +23,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblAddress_network,    lang.MUXNETWORK.HELP.IP},
             {ui_lblSubnet_network,     lang.MUXNETWORK.HELP.CIDR},
             {ui_lblGateway_network,    lang.MUXNETWORK.HELP.GATEWAY},
-            {ui_lblMonitor_network,    lang.MUXNETWORK.HELP.MONITOR},
-            {ui_lblBoot_network,       lang.MUXNETWORK.HELP.BOOT},
-            {ui_lblCompat_network,     lang.MUXNETWORK.HELP.COMPAT},
+            {ui_lblDns_network,        lang.MUXNETWORK.HELP.DNS},
             {ui_lblConnect_network,    lang.MUXNETWORK.HELP.CONNECT},
     };
 
@@ -83,12 +81,6 @@ static void restore_network_values(void) {
 
     lv_label_set_text(ui_lblScanValue_network,
                       config.NETWORK.SCAN ? lang.GENERIC.ENABLED : lang.GENERIC.DISABLED);
-    lv_label_set_text(ui_lblMonitorValue_network,
-                      config.NETWORK.MONITOR ? lang.GENERIC.ENABLED : lang.GENERIC.DISABLED);
-    lv_label_set_text(ui_lblBootValue_network,
-                      config.NETWORK.BOOT ? lang.GENERIC.ENABLED : lang.GENERIC.DISABLED);
-    lv_label_set_text(ui_lblCompatValue_network,
-                      config.NETWORK.COMPAT ? lang.GENERIC.ENABLED : lang.GENERIC.DISABLED);
 
     lv_label_set_text(ui_lblIdentifierValue_network, config.NETWORK.SSID);
     lv_label_set_text(ui_lblPasswordValue_network, config.NETWORK.PASS);
@@ -105,21 +97,12 @@ static void restore_network_values(void) {
 static void save_network_config(void) {
     int idx_type = 0;
     int idx_scan = 0;
-    int idx_monitor = 0;
-    int idx_boot = 0;
-    int idx_compat = 0;
 
     if (!strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC)) idx_type = 1;
     if (!strcasecmp(lv_label_get_text(ui_lblScanValue_network), lang.GENERIC.ENABLED)) idx_scan = 1;
-    if (!strcasecmp(lv_label_get_text(ui_lblMonitorValue_network), lang.GENERIC.ENABLED)) idx_monitor = 1;
-    if (!strcasecmp(lv_label_get_text(ui_lblBootValue_network), lang.GENERIC.ENABLED)) idx_boot = 1;
-    if (!strcasecmp(lv_label_get_text(ui_lblCompatValue_network), lang.GENERIC.ENABLED)) idx_compat = 1;
 
     write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT, idx_type);
     write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, idx_scan);
-    write_text_to_file((CONF_CONFIG_PATH "network/monitor"), "w", INT, idx_monitor);
-    write_text_to_file((CONF_CONFIG_PATH "network/boot"), "w", INT, idx_boot);
-    write_text_to_file((CONF_CONFIG_PATH "network/compat"), "w", INT, idx_compat);
 
     write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
                        lv_label_get_text(ui_lblIdentifierValue_network));
@@ -157,9 +140,6 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, network, Subnet, lang.MUXNETWORK.CIDR, "subnet", "");
     INIT_VALUE_ITEM(-1, network, Gateway, lang.MUXNETWORK.GATEWAY, "gateway", "");
     INIT_VALUE_ITEM(-1, network, Dns, lang.MUXNETWORK.DNS, "dns", "");
-    INIT_VALUE_ITEM(-1, network, Monitor, lang.MUXNETWORK.MONITOR, "monitor", "");
-    INIT_VALUE_ITEM(-1, network, Boot, lang.MUXNETWORK.BOOT, "boot", "");
-    INIT_VALUE_ITEM(-1, network, Compat, lang.MUXNETWORK.COMPAT, "compat", "");
     INIT_VALUE_ITEM(-1, network, Connect, lang.MUXNETWORK.CONNECT, "connect", "");
 
     ui_group = lv_group_create();
@@ -293,10 +273,7 @@ int handle_navigate(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblScan_network ||
-        element_focused == ui_lblType_network ||
-        element_focused == ui_lblMonitor_network ||
-        element_focused == ui_lblBoot_network ||
-        element_focused == ui_lblCompat_network) {
+        element_focused == ui_lblType_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXNETWORK.DENY_MODIFY, SHORT);
@@ -308,12 +285,6 @@ int handle_navigate(void) {
 
         if (element_focused == ui_lblScan_network) {
             toggle_option(ui_lblScanValue_network, CONF_CONFIG_PATH "network/scan");
-        } else if (element_focused == ui_lblMonitor_network) {
-            toggle_option(ui_lblMonitorValue_network, CONF_CONFIG_PATH "network/monitor");
-        } else if (element_focused == ui_lblBoot_network) {
-            toggle_option(ui_lblBootValue_network, CONF_CONFIG_PATH "network/boot");
-        } else if (element_focused == ui_lblCompat_network) {
-            toggle_option(ui_lblCompatValue_network, CONF_CONFIG_PATH "network/compat");
         } else if (element_focused == ui_lblType_network) {
             int is_static = !strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC);
             lv_label_set_text(ui_lblTypeValue_network, is_static ? lang.MUXNETWORK.DHCP : lang.MUXNETWORK.STATIC);
@@ -392,12 +363,6 @@ static void handle_confirm(void) {
             play_sound(SND_CONFIRM);
             if (element_focused == ui_lblScan_network) {
                 toggle_option(ui_lblScanValue_network, CONF_CONFIG_PATH "network/scan");
-            } else if (element_focused == ui_lblMonitor_network) {
-                toggle_option(ui_lblMonitorValue_network, CONF_CONFIG_PATH "network/monitor");
-            } else if (element_focused == ui_lblBoot_network) {
-                toggle_option(ui_lblBootValue_network, CONF_CONFIG_PATH "network/boot");
-            } else if (element_focused == ui_lblCompat_network) {
-                toggle_option(ui_lblCompatValue_network, CONF_CONFIG_PATH "network/compat");
             } else {
                 key_curr = 0;
                 if (element_focused == ui_lblIdentifier_network ||

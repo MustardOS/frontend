@@ -109,7 +109,7 @@ static void process_action(char *action, char *module) {
     if (!is_app) load_mux(forced_flag ? "option" : module);
 }
 
-static void last_index_check(void) {
+void last_index_check(void) {
     last_index = 0;
     if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
         last_index = safe_atoi(read_line_char_from(MUOS_IDX_LOAD, 1));
@@ -121,7 +121,7 @@ static void set_previous_module(char *module) {
     snprintf(previous_module, sizeof(previous_module), "%s", module);
 }
 
-static int set_splash_image_path(char *splash_image_name) {
+int set_splash_image_path(char *splash_image_name) {
     const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
     if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
                   theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
@@ -193,7 +193,7 @@ static void module_explore(void) {
     if (muxplore_main(last_index, explore_dir) == 1) safe_quit(0);
 }
 
-static void module_content_list(const char *path, const char *max_depth, int is_collection) {
+void module_content_list(const char *path, const char *max_depth, int is_collection) {
     last_index_check();
 
     const char *args[] = {"find", path, "-maxdepth", max_depth, "-type", "f", "-size", "0", "-delete", NULL};
@@ -242,7 +242,7 @@ static void module_picker(void) {
     muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
 }
 
-static void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *, int)) {
+void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *, int)) {
     load_mux(mux);
     func_to_exec(0, rom_name, rom_dir, rom_sys, is_app);
 }
@@ -332,7 +332,7 @@ static void module_config(void) {
     }
 }
 
-static void clear_auth(void) {
+void clear_auth(void) {
     if (!config.SETTINGS.ADVANCED.LOCK) {
         if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
         if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
@@ -373,29 +373,29 @@ static void module_start(void) {
 static const ModuleEntry modules[] = {
         // these modules have specific functions and are not
         // straight forward module launching
-        {"reset",      NULL, NULL, NULL, module_reset},
-        {"reboot",     NULL, NULL, NULL, module_reboot},
-        {"shutdown",   NULL, NULL, NULL, module_shutdown},
-        {"assign",     NULL, NULL, NULL, module_assign},
-        {"coredown",   NULL, NULL, NULL, module_download},
-        {"governor",   NULL, NULL, NULL, module_governor},
-        {"control",    NULL, NULL, NULL, module_control},
-        {"tag",        NULL, NULL, NULL, module_tag},
-        {"explore",    NULL, NULL, NULL, module_explore},
-        {"collection", NULL, NULL, NULL, module_collection},
-        {"history",    NULL, NULL, NULL, module_history},
-        {"search",     NULL, NULL, NULL, module_search},
-        {"picker",     NULL, NULL, NULL, module_picker},
-        {"option",     NULL, NULL, NULL, module_option},
-        {"appcon",     NULL, NULL, NULL, module_appcon},
-        {"app",        NULL, NULL, NULL, module_app},
-        {"task",       NULL, NULL, NULL, module_task},
-        {"config",     NULL, NULL, NULL, module_config},
-        {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
-        {"danger",     NULL, NULL, NULL, module_danger},
-        {"device",     NULL, NULL, NULL, module_device},
-        {"rtc",        NULL, NULL, NULL, module_rtc},
-        {"credits",    NULL, NULL, NULL, module_quit},
+        {"reset",       NULL,        NULL,             NULL,                module_reset},
+        {"reboot",      NULL,        NULL,             NULL,                module_reboot},
+        {"shutdown",    NULL,        NULL,             NULL,                module_shutdown},
+        {"assign",      NULL,        NULL,             NULL,                module_assign},
+        {"coredown",    NULL,        NULL,             NULL,                module_download},
+        {"governor",    NULL,        NULL,             NULL,                module_governor},
+        {"control",     NULL,        NULL,             NULL,                module_control},
+        {"tag",         NULL,        NULL,             NULL,                module_tag},
+        {"explore",     NULL,        NULL,             NULL,                module_explore},
+        {"collection",  NULL,        NULL,             NULL,                module_collection},
+        {"history",     NULL,        NULL,             NULL,                module_history},
+        {"search",      NULL,        NULL,             NULL,                module_search},
+        {"picker",      NULL,        NULL,             NULL,                module_picker},
+        {"option",      NULL,        NULL,             NULL,                module_option},
+        {"appcon",      NULL,        NULL,             NULL,                module_appcon},
+        {"app",         NULL,        NULL,             NULL,                module_app},
+        {"task",        NULL,        NULL,             NULL,                module_task},
+        {"config",      NULL,        NULL,             NULL,                module_config},
+        {"tweakadv",    NULL,        NULL,             NULL,                module_tweakadv},
+        {"danger",      NULL,        NULL,             NULL,                module_danger},
+        {"device",      NULL,        NULL,             NULL,                module_device},
+        {"rtc",         NULL,        NULL,             NULL,                module_rtc},
+        {"credits",     NULL,        NULL,             NULL,                module_quit},
 
         // the following modules can be loaded directly
         // without any other functionality
@@ -407,6 +407,7 @@ static const ModuleEntry modules[] = {
         {"custom",      "config",    "muxcustom",      muxcustom_main,      NULL},
         {"language",    "config",    "muxlanguage",    muxlanguage_main,    NULL},
         {"network",     "connect",   "muxnetwork",     muxnetwork_main,     NULL},
+        {"netadv",      "connect",   "muxnetadv",      muxnetadv_main,      NULL},
         {"webserv",     "connect",   "muxwebserv",     muxwebserv_main,     NULL},
         {"hdmi",        "tweakgen",  "muxhdmi",        muxhdmi_main,        NULL},
         {"storage",     "config",    "muxstorage",     muxstorage_main,     NULL},
@@ -428,10 +429,10 @@ static const ModuleEntry modules[] = {
 
         // these are custom entries specifically for the first time installer
         {"installer",   "installer", "muxinstall",     muxinstall_main,     NULL},
-        {"install",    NULL, NULL, NULL, module_install},
+        {"install",     NULL,        NULL,             NULL,                module_install},
 
         // this is required because it is the end of the table!
-        {NULL,         NULL, NULL, NULL,                                    NULL}
+        {NULL,          NULL,        NULL,             NULL,                NULL}
 };
 
 void init_audio(void) {

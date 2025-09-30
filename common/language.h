@@ -208,6 +208,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char BLUETOOTH[MAX_BUFFER_SIZE];
+        char NETADV[MAX_BUFFER_SIZE];
         char WEB[MAX_BUFFER_SIZE];
         char USB[MAX_BUFFER_SIZE];
         char WIFI[MAX_BUFFER_SIZE];
@@ -215,6 +216,7 @@ struct mux_lang {
         char MTP[MAX_BUFFER_SIZE];
         struct {
             char BLUETOOTH[MAX_BUFFER_SIZE];
+            char NETADV[MAX_BUFFER_SIZE];
             char WEB[MAX_BUFFER_SIZE];
             char USB[MAX_BUFFER_SIZE];
             char WIFI[MAX_BUFFER_SIZE];
@@ -474,6 +476,7 @@ struct mux_lang {
         char NETWORK[MAX_BUFFER_SIZE];
         char STORAGE[MAX_BUFFER_SIZE];
         char BACKUP[MAX_BUFFER_SIZE];
+        char NETADV[MAX_BUFFER_SIZE];
         char WEBSERV[MAX_BUFFER_SIZE];
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
@@ -518,6 +521,7 @@ struct mux_lang {
             char NETWORK[MAX_BUFFER_SIZE];
             char STORAGE[MAX_BUFFER_SIZE];
             char BACKUP[MAX_BUFFER_SIZE];
+            char NETADV[MAX_BUFFER_SIZE];
             char WEBSERV[MAX_BUFFER_SIZE];
             char CORE[MAX_BUFFER_SIZE];
             char GOVERNOR[MAX_BUFFER_SIZE];
@@ -603,6 +607,22 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char MONITOR[MAX_BUFFER_SIZE];
+        char BOOT[MAX_BUFFER_SIZE];
+        char COMPAT[MAX_BUFFER_SIZE];
+        char WAIT[MAX_BUFFER_SIZE];
+        char RETRY[MAX_BUFFER_SIZE];
+        struct {
+            char MONITOR[MAX_BUFFER_SIZE];
+            char BOOT[MAX_BUFFER_SIZE];
+            char COMPAT[MAX_BUFFER_SIZE];
+            char WAIT[MAX_BUFFER_SIZE];
+            char RETRY[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXNETADV;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char HOSTNAME[MAX_BUFFER_SIZE];
         char MAC[MAX_BUFFER_SIZE];
         char IP[MAX_BUFFER_SIZE];
@@ -649,9 +669,6 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char MONITOR[MAX_BUFFER_SIZE];
-        char BOOT[MAX_BUFFER_SIZE];
-        char COMPAT[MAX_BUFFER_SIZE];
         char CONNECT[MAX_BUFFER_SIZE];
         char DISCONNECT[MAX_BUFFER_SIZE];
         char CONNECTED[MAX_BUFFER_SIZE];
@@ -682,10 +699,8 @@ struct mux_lang {
             char SSID[MAX_BUFFER_SIZE];
             char GATEWAY[MAX_BUFFER_SIZE];
             char CIDR[MAX_BUFFER_SIZE];
+            char DNS[MAX_BUFFER_SIZE];
             char IP[MAX_BUFFER_SIZE];
-            char MONITOR[MAX_BUFFER_SIZE];
-            char BOOT[MAX_BUFFER_SIZE];
-            char COMPAT[MAX_BUFFER_SIZE];
             char CONNECT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXNETWORK;

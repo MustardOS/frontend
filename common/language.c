@@ -209,11 +209,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONNECT.USB, "USB Function");
     SPECIFIC_FIELD(lang->MUXCONNECT.WEB, "Web Services");
     SPECIFIC_FIELD(lang->MUXCONNECT.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.NETADV, "Network Settings");
     SPECIFIC_FIELD(lang->MUXCONNECT.ADB, "Android Debug Bridge");
     SPECIFIC_FIELD(lang->MUXCONNECT.MTP, "Media Transfer Protocol");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USB, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETADV, "Adjust network connectivity settings");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
 
     // muxcontrol
@@ -417,6 +419,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.NETWORK, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXKIOSK.STORAGE, "Storage");
     SPECIFIC_FIELD(lang->MUXKIOSK.BACKUP, "Backup");
+    SPECIFIC_FIELD(lang->MUXKIOSK.NETADV, "Network Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.WEBSERV, "Web Services");
     SPECIFIC_FIELD(lang->MUXKIOSK.CORE, "Content Core");
     SPECIFIC_FIELD(lang->MUXKIOSK.GOVERNOR, "Content Governor");
@@ -456,6 +459,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.NETWORK, "Allow editing of network settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.STORAGE, "Allow user to migrate or sync user based content");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.BACKUP, "Allow the use of the user based content backup tool");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.NETADV, "Enable access to network settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.WEBSERV, "Enable use of web based features");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CORE, "Allow selection of content cores");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.GOVERNOR, "Allow selection of content governor");
@@ -525,13 +529,18 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.SHUTDOWN, "Shut down your device safely");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.REBOOT, "Reboot your device safely");
 
-    // muxnetprofile
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.TITLE, "NETWORK PROFILE");
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.LOAD, "Loading Network Profiles…");
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.NONE, "No Saved Network Profiles Found");
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.HELP, "Quickly switch between different Wi-Fi configurations based on your location or network preferences");
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_SSID, "Invalid SSID");
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_NETWORK, "Invalid Network Settings");
+    // muxnetadv
+    SPECIFIC_FIELD(lang->MUXNETADV.TITLE, "NETWORK SETTINGS");
+    SPECIFIC_FIELD(lang->MUXNETADV.MONITOR, "Connection Monitor");
+    SPECIFIC_FIELD(lang->MUXNETADV.BOOT, "Start Network on Boot");
+    SPECIFIC_FIELD(lang->MUXNETADV.COMPAT, "Module Compatibility");
+    SPECIFIC_FIELD(lang->MUXNETADV.WAIT, "Module Wait Timer");
+    SPECIFIC_FIELD(lang->MUXNETADV.RETRY, "Module Retry");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.MONITOR, "Enables periodic connectivity checks and triggers reconnection if network loss is detected");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.BOOT, "Enables network connection to be established automatically at boot");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAIT, "Adjusts the amount of time waiting for the network interface to appear.\n\nWARNING:\nIf you enable Module Compatibility, it is not advisable to increase this setting as it may increase boot times!");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.RETRY, "Adjusts the attempts made to load the network module. This setting has no effect with Module Compatibility disabled.\n\nIt has a multiplicative relationship with the wait timer, though only the necessary amount of retries will be done in the process. Increase this setting if Module Compatibility does not seem to work for you!");
 
     // muxnetinfo
     SPECIFIC_FIELD(lang->MUXNETINFO.TITLE, "NETWORK DETAILS");
@@ -558,6 +567,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.EDIT, "Cannot edit if network is active!");
     SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.CHANGE, "Cannot change if network is active!");
 
+    // muxnetprofile
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.TITLE, "NETWORK PROFILE");
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.LOAD, "Loading Network Profiles…");
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.NONE, "No Saved Network Profiles Found");
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.HELP, "Quickly switch between different Wi-Fi configurations based on your location or network preferences");
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_SSID, "Invalid SSID");
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_NETWORK, "Invalid Network Settings");
+
     // muxnetscan
     SPECIFIC_FIELD(lang->MUXNETSCAN.TITLE, "NETWORK SCAN");
     SPECIFIC_FIELD(lang->MUXNETSCAN.SCAN, "Scanning for Wi-Fi Networks…");
@@ -566,9 +583,6 @@ void load_lang(struct mux_lang *lang) {
 
     // muxnetwork
     SPECIFIC_FIELD(lang->MUXNETWORK.TITLE, "WI-FI NETWORK");
-    SPECIFIC_FIELD(lang->MUXNETWORK.MONITOR, "Connection Monitor");
-    SPECIFIC_FIELD(lang->MUXNETWORK.BOOT, "Start Network on Boot");
-    SPECIFIC_FIELD(lang->MUXNETWORK.COMPAT, "Module Compatibility");
     SPECIFIC_FIELD(lang->MUXNETWORK.CONNECT, "Connect");
     SPECIFIC_FIELD(lang->MUXNETWORK.DISCONNECT, "Disconnect");
     SPECIFIC_FIELD(lang->MUXNETWORK.CONNECTED, "Connected");
@@ -599,9 +613,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.GATEWAY, "Enter the network gateway address here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.CIDR, "Enter the device Subnet (CIDR) number here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.IP, "Enter the device IP address here (Static only)");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.MONITOR, "Enables periodic connectivity checks and triggers reconnection if network loss is detected");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.BOOT, "Enables network connection to be established automatically at boot");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel");
+    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.DNS, "Enter the device DNS address here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.CONNECT, "Connect to the network using options entered above");
 
     // muxoption

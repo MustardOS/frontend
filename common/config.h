@@ -30,9 +30,6 @@ struct mux_config {
         char GATEWAY[MAX_BUFFER_SIZE];
         char SUBNET[MAX_BUFFER_SIZE];
         char DNS[MAX_BUFFER_SIZE];
-        int16_t MONITOR;
-        int16_t BOOT;
-        int16_t COMPAT;
     } NETWORK;
 
     struct {
@@ -115,6 +112,13 @@ struct mux_config {
             int16_t SCAN;
             int16_t AUDIO;
         } HDMI;
+        struct {
+            int16_t MONITOR;
+            int16_t BOOT;
+            int16_t COMPAT;
+            int16_t WAIT;
+            int16_t RETRY;
+        } NETWORK;
         struct {
             int16_t LOW_BATTERY;
             int16_t SHUTDOWN;

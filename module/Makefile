@@ -37,9 +37,9 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 MODULES = muxapp muxappcon muxarchive muxassign muxbackup muxcollect muxconfig \
           muxconnect muxcontrol muxcustom muxdanger muxdevice muxdownload \
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk muxlanguage \
-          muxlaunch muxnetinfo muxnetprofile muxnetscan muxnetwork muxoption \
-          muxpass muxpicker muxpower muxplore muxrtc muxsearch muxshot \
-          muxspace muxsplash muxstorage muxsysinfo muxtag muxtask \
+          muxlaunch muxnetadv muxnetinfo muxnetprofile muxnetscan muxnetwork \
+          muxoption muxpass muxpicker muxpower muxplore muxrtc muxsearch \
+          muxshot muxspace muxsplash muxstorage muxsysinfo muxtag muxtask \
           muxthemedown muxthemefilter muxtester muxtext muxtimezone \
           muxtweakadv muxtweakgen muxvisual muxwebserv muxshare
 MODULE_DIR = .

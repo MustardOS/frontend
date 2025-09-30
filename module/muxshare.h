@@ -152,6 +152,8 @@ int muxlanguage_main();
 
 int muxlaunch_main();
 
+int muxnetadv_main();
+
 int muxnetinfo_main();
 
 int muxnetprofile_main();

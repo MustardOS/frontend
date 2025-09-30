@@ -1,76 +1,52 @@
 #include "muxshare.h"
-#include "ui/ui_muxconnect.h"
+#include "ui/ui_muxnetadv.h"
 
 #define UI_COUNT 5
 
-#define CONNECT(NAME, UDATA) static int NAME##_original;
-CONNECT_ELEMENTS
-#undef CONNECT
-
-static void list_nav_move(int steps, int direction);
+#define NETADV(NAME, UDATA) static int NAME##_original;
+NETADV_ELEMENTS
+#undef NETADV
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblNetwork_connect,     lang.MUXCONNECT.HELP.WIFI},
-            {ui_lblNetAdv_connect,      lang.MUXCONNECT.HELP.NETADV},
-            {ui_lblServices_connect,    lang.MUXCONNECT.HELP.WEB},
-            {ui_lblBluetooth_connect,   lang.MUXCONNECT.HELP.BLUETOOTH},
-            {ui_lblUsbFunction_connect, lang.MUXCONNECT.HELP.USB},
+            {ui_lblMonitor_netadv, lang.MUXNETADV.HELP.MONITOR},
+            {ui_lblBoot_netadv,    lang.MUXNETADV.HELP.BOOT},
+            {ui_lblCompat_netadv,  lang.MUXNETADV.HELP.COMPAT},
+            {ui_lblWait_netadv,    lang.MUXNETADV.HELP.WAIT},
+            {ui_lblRetry_netadv,   lang.MUXNETADV.HELP.RETRY},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define CONNECT(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_connect);
-    CONNECT_ELEMENTS
-#undef CONNECT
+#define NETADV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_netadv);
+    NETADV_ELEMENTS
+#undef NETADV
 }
 
-static void restore_options(void) {
-    const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
-    if (!strcasecmp(usb_type, "adb")) {
-        lv_dropdown_set_selected(ui_droUsbFunction_connect, 1);
-    } else if (!strcasecmp(usb_type, "mtp")) {
-        lv_dropdown_set_selected(ui_droUsbFunction_connect, 2);
-    } else {
-        lv_dropdown_set_selected(ui_droUsbFunction_connect, 0);
-    }
-    lv_dropdown_set_selected(ui_droBluetooth_connect, config.VISUAL.BLUETOOTH);
+static void restore_netadv_options(void) {
+    lv_dropdown_set_selected(ui_droMonitor_netadv, config.SETTINGS.NETWORK.MONITOR);
+    lv_dropdown_set_selected(ui_droBoot_netadv, config.SETTINGS.NETWORK.BOOT);
+    lv_dropdown_set_selected(ui_droCompat_netadv, config.SETTINGS.NETWORK.COMPAT);
+
+    map_drop_down_to_index(ui_droWait_netadv, config.SETTINGS.NETWORK.WAIT, wait_retry_int, 9, 0);
+    map_drop_down_to_index(ui_droRetry_netadv, config.SETTINGS.NETWORK.RETRY, wait_retry_int, 9, 0);
 }
 
-static void save_options(void) {
-    char *idx_usbfunction;
-    switch (lv_dropdown_get_selected(ui_droUsbFunction_connect)) {
-        case 1:
-            idx_usbfunction = "adb";
-            break;
-        case 2:
-            idx_usbfunction = "mtp";
-            break;
-        default:
-            idx_usbfunction = "none";
-            break;
-    }
-
+static void save_netadv_options(void) {
     int is_modified = 0;
 
-    int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth_connect);
-    if (lv_dropdown_get_selected(ui_droBluetooth_connect) != Bluetooth_original) {
-        write_text_to_file((CONF_CONFIG_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
-    }
+    CHECK_AND_SAVE_STD(netadv, Monitor, "settings/network/monitor", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, Boot, "settings/network/boot", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, Compat, "settings/network/compat", INT, 0);
 
-    if (lv_dropdown_get_selected(ui_droUsbFunction_connect) != UsbFunction_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
-    }
+    CHECK_AND_SAVE_MAP(netadv, Wait, "settings/network/wait_timer", wait_retry_int, 9, 0);
+    CHECK_AND_SAVE_MAP(netadv, Retry, "settings/network/compat_retry", wait_retry_int, 9, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
-
-        const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
-        run_exec(args, A_SIZE(args), 0);
 
         refresh_config = 1;
     }
@@ -82,17 +58,15 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *usb_functions[] = {
-            lang.GENERIC.DISABLED,
-            lang.MUXCONNECT.ADB,
-            lang.MUXCONNECT.MTP
+    char *wait_retry_str[] = {
+            "1", "3", "5", "7", "10", "15", "20", "25", "30"
     };
 
-    INIT_OPTION_ITEM(-1, connect, Network, lang.MUXCONNECT.WIFI, "network", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, NetAdv, lang.MUXCONNECT.NETADV, "netadv", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, Services, lang.MUXCONNECT.WEB, "service", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, Bluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, UsbFunction, lang.MUXCONNECT.USB, "usbfunction", usb_functions, 3);
+    INIT_OPTION_ITEM(-1, netadv, Monitor, lang.MUXNETADV.MONITOR, "monitor", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, Boot, lang.MUXNETADV.BOOT, "boot", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, Compat, lang.MUXNETADV.COMPAT, "compat", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, Wait, lang.MUXNETADV.WAIT, "wait", wait_retry_str, 9);
+    INIT_OPTION_ITEM(-1, netadv, Retry, lang.MUXNETADV.RETRY, "retry", wait_retry_str, 9);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -104,28 +78,13 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-        apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
     }
-
-    if (!device.DEVICE.HAS_NETWORK) {
-        HIDE_OPTION_ITEM(connect, Network);
-        HIDE_OPTION_ITEM(connect, NetAdv);
-        HIDE_OPTION_ITEM(connect, Services);
-    }
-
-    if (!device.DEVICE.HAS_BLUETOOTH || true) { // TODO: remove true when bluetooth is implemented
-        HIDE_OPTION_ITEM(connect, Bluetooth);
-    }
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         } else {
@@ -139,8 +98,6 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-
     nav_moved = 1;
 }
 
@@ -154,46 +111,18 @@ static void list_nav_next(int steps) {
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
+
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
+
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
-
-    struct {
-        const char *glyph_name;
-        const char *mux_name;
-        int16_t *kiosk_flag;
-    } elements[] = {
-            {"network", "network", &kiosk.CONFIG.NETWORK},
-            {"netadv",  "netadv",  &kiosk.CONFIG.NET_SETTINGS},
-            {"service", "webserv", &kiosk.CONFIG.WEB_SERVICES}
-    };
-
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
-
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            play_sound(SND_CONFIRM);
-            load_mux(elements[i].mux_name);
-
-            close_input();
-            mux_input_stop();
-
-            break;
-        }
-    }
 
     handle_option_next();
 }
@@ -210,16 +139,15 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
+    save_netadv_options();
 
-    save_options();
-
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "connect");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netadv");
 
     close_input();
     mux_input_stop();
 }
 
-static void handle_menu(void) {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
@@ -242,16 +170,16 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  0},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {ui_lblNavLRGlyph, "",                  0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
+            {ui_lblNavBGlyph,  "",                  0},
+            {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {NULL,             NULL,                0}
     });
 
-#define CONNECT(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_connect, UDATA);
-    CONNECT_ELEMENTS
-#undef CONNECT
+#define NETADV(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netadv, UDATA);
+    NETADV_ELEMENTS
+#undef NETADV
 
     overlay_display();
 }
@@ -268,14 +196,13 @@ static void ui_refresh_task() {
     }
 }
 
-int muxconnect_main(void) {
-    init_module("muxconnect");
+int muxnetadv_main(void) {
+    init_module("muxnetadv");
 
-    init_theme(1, 1);
+    init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXCONNECT.TITLE);
-    init_muxconnect(ui_pnlContent);
-    init_elements();
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXNETADV.TITLE);
+    init_muxnetadv(ui_pnlContent);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -284,11 +211,13 @@ int muxconnect_main(void) {
 
     init_fonts();
     init_navigation_group();
+    init_elements();
 
-    restore_options();
+    restore_netadv_options();
     init_dropdown_settings();
 
     init_timer(ui_refresh_task, NULL);
+    list_nav_next(0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -297,7 +226,7 @@ int muxconnect_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

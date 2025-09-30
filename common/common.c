@@ -492,7 +492,7 @@ char *grab_ext(char *text) {
 }
 
 char *get_execute_result(const char *command) {
-    FILE *fp = popen(command, "r");
+    FILE * fp = popen(command, "r");
     if (fp == NULL) {
         fprintf(stderr, "Failed to run: %s\n", command);
         return NULL;
@@ -509,7 +509,7 @@ char *get_execute_result(const char *command) {
 }
 
 int read_battery_capacity(void) {
-    FILE *file = fopen(device.BATTERY.CAPACITY, "r");
+    FILE * file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY)
@@ -529,7 +529,7 @@ int read_battery_capacity(void) {
 }
 
 char *read_battery_voltage(void) {
-    FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
+    FILE * file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE)
@@ -557,7 +557,7 @@ char *read_battery_voltage(void) {
 
 char *read_all_char_from(const char *filename) {
     char *text = NULL;
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
 
     if (file == NULL) return "";
 
@@ -589,7 +589,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
         return "";
     }
 
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
         return "";
@@ -622,7 +622,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
 }
 
 int read_all_int_from(const char *filename, size_t buffer) {
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
     if (!file) return 0;
 
     char line[buffer];
@@ -639,7 +639,7 @@ int read_all_int_from(const char *filename, size_t buffer) {
 
 int read_line_int_from(const char *filename, size_t line_number) {
     char line[MAX_BUFFER_SIZE];
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
     if (!file) return 0;
 
     for (size_t i = 1; i <= line_number && fgets(line, sizeof(line), file); i++) {
@@ -657,7 +657,7 @@ int read_line_int_from(const char *filename, size_t line_number) {
 }
 
 unsigned long long read_all_long_from(const char *filename) {
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
     if (!file) return 0;
 
     unsigned long long value = 0;
@@ -686,7 +686,8 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, u
     if (strcmp(meta, "NOT FOUND") == 0) {
         result = default_value;
     } else {
-        result = (uint32_t) strtoul(meta, NULL, 16);
+        result = (uint32_t)
+        strtoul(meta, NULL, 16);
     }
 
     return result;
@@ -700,7 +701,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
         result = default_value;
     } else {
         result = (int16_t)
-                strtol(meta, NULL, 10);
+        strtol(meta, NULL, 10);
     }
 
     return result;
@@ -717,7 +718,7 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
 }
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...) {
-    FILE *file = fopen(filename, mode);
+    FILE * file = fopen(filename, mode);
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename)
@@ -729,10 +730,10 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 
     if (type == CHAR) { // type is general text!
         fprintf(file, "%s", va_arg(args,
-                                   const char *));
+        const char *));
     } else if (type == INT) { // type is a number!
         fprintf(file, "%d", va_arg(args,
-                                   int));
+        int));
     }
 
     va_end(args);
@@ -773,7 +774,7 @@ void show_info_box(char *title, char *content, int is_content) {
 
         if (is_content) lv_label_set_text(ui_lblHelpPreviewHeader, title);
 
-        lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
+        lv_obj_t * ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
         lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
     }
 }
@@ -859,7 +860,7 @@ void decrease_option_value(lv_obj_t *element) {
 }
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {
-    FILE *file = fopen(loader, "w");
+    FILE * file = fopen(loader, "w");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, loader)
         return;
@@ -870,7 +871,7 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 }
 
 void load_mux(const char *value) {
-    FILE *file = fopen(MUOS_ACT_LOAD, "w");
+    FILE * file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, MUOS_ACT_LOAD)
         return;
@@ -1436,7 +1437,7 @@ int get_font_size(void) {
 lv_font_t *get_language_font(void) {
     int font_size = get_font_size();
     size_t cache_size = 1024 * 10;
-    lv_font_t *font;
+    lv_font_t * font;
     if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
         font = lv_tiny_ttf_create_data_ex(&notosans_sc_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
     } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
@@ -1456,13 +1457,13 @@ lv_font_t *get_language_font(void) {
 void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
     char theme_font_text_fs[MAX_BUFFER_SIZE];
     snprintf(theme_font_text_fs, sizeof(theme_font_text_fs), "M:%s", filepath);
-    lv_font_t *font = lv_font_load(theme_font_text_fs);
+    lv_font_t * font = lv_font_load(theme_font_text_fs);
     font->fallback = get_language_font();
     lv_obj_set_style_text_font(element, font, MU_OBJ_MAIN_DEFAULT);
 }
 
 void load_font_text(lv_obj_t *screen) {
-    lv_font_t *language_font = get_language_font();
+    lv_font_t * language_font = get_language_font();
 
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
@@ -1584,7 +1585,7 @@ void load_skip_patterns(void) {
         if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
     }
 
-    FILE *file = fopen(skip_ini, "r");
+    FILE * file = fopen(skip_ini, "r");
     if (!file) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, skip_ini)
         return;
@@ -1660,7 +1661,7 @@ void display_testing_message(lv_obj_t *screen) {
                          "test image! This is a test image! This is a test image! This is a test image! This is a\n"
                          "image! This is a test image! This is a test image! This is a test image! This is a test\n";
 
-    lv_obj_t *ui_conTest = lv_obj_create(screen);
+    lv_obj_t * ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);
     lv_obj_set_width(ui_conTest, dims.WIDTH);
     lv_obj_set_height(ui_conTest, dims.HEIGHT);
@@ -1672,7 +1673,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_obj_set_style_text_letter_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
+    lv_obj_t * ui_lblTestBottom = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestBottom, 0);
@@ -1681,7 +1682,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_label_set_text(ui_lblTestBottom, test_message);
     lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
 
-    lv_obj_t *ui_lblTestTop = lv_label_create(ui_conTest);
+    lv_obj_t * ui_lblTestTop = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestTop, 0);
@@ -1933,7 +1934,7 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 }
 
 char *get_script_value(const char *filename, const char *key, const char *not_found) {
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file!");
         return strdup("");
@@ -2438,7 +2439,8 @@ int16_t validate_int16(int value, const char *field) {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_INT16_LENGTH)
         return (value < INT16_MIN) ? INT16_MIN : INT16_MAX;
     }
-    return (int16_t) value;
+    return (int16_t)
+    value;
 }
 
 int at_base(char *sys_dir, char *base_name) {
@@ -2541,7 +2543,7 @@ uint32_t fnv1a_hash_str(const char *str) {
     uint32_t hash = 2166136261U; // FNV offset basis
 
     for (const char *p = str; *p; p++) {
-        hash ^= (uint8_t) (*p);
+        hash ^= (uint8_t)(*p);
         hash *= 16777619; // FNV prime
     }
 
@@ -2585,30 +2587,29 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
 
 void apply_app_glyph(const char *app_name, const char *glyph_name, lv_obj_t *ui_lblItemGlyph) {
     char glyph_image_path[MAX_BUFFER_SIZE];
-
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%s/%s/glyph/%s%s.png",
-                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, mux_dimension, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, mux_dimension, glyph_name) >= 0 &&
+         file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%s/%s/glyph/%s.png",
                   device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, glyph_name) >= 0 && file_exist(glyph_image_path))
-    ) {
+            ) {
         char glyph_image_embed[MAX_BUFFER_SIZE];
-        snprintf(glyph_image_embed, glyph_image_embed, "M:%s", glyph_image_path);
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 }
 
-void get_app_grid_glyph(const char *app_name, const char *glyph_name, const char *fallback_name, char *glyph_image_path, size_t glyph_image_path_size) {
-    if (file_exist(glyph_image_path) && !strstr(glyph_image_path, fallback_name)){
-        return;
-    }
+void get_app_grid_glyph(const char *app_name, const char *glyph_name, const char *fallback_name,
+                        char *glyph_image_path, size_t glyph_image_path_size) {
+    if (file_exist(glyph_image_path) && !strstr(glyph_image_path, fallback_name)) return;
 
     char image_path[MAX_BUFFER_SIZE];
     if ((snprintf(image_path, sizeof(image_path), "%s/%s/%s/grid/%s%s.png",
-                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, mux_dimension, glyph_name) >= 0 && file_exist(image_path)) ||
+                  device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, mux_dimension, glyph_name) >= 0 &&
+         file_exist(image_path)) ||
         (snprintf(image_path, sizeof(image_path), "%s/%s/%s/grid/%s.png",
                   device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, app_name, glyph_name) >= 0 && file_exist(image_path))
-    ) {
-        char glyph_image_embed[MAX_BUFFER_SIZE];
+            ) {
         snprintf(glyph_image_path, glyph_image_path_size, image_path);
     }
 }
@@ -2674,7 +2675,7 @@ int volume_to_percent(int val) {
 }
 
 char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
-    FILE *file = fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
     if (!file) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
         return NULL;
@@ -2738,7 +2739,7 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
 int is_partition_mounted(const char *partition) {
     if (strcmp(partition, "/") == 0) return 1; // this is rootfs so I mean it should always be mounted
 
-    FILE *fp = fopen("/proc/mounts", "r");
+    FILE * fp = fopen("/proc/mounts", "r");
     if (!fp) {
         perror("fopen /proc/mounts");
         return 0;

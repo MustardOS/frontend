@@ -76,6 +76,7 @@
 
 #define CONNECT_ELEMENTS                \
     CONNECT(Network,     "network")     \
+    CONNECT(NetAdv,      "netadv")      \
     CONNECT(Services,    "service")     \
     CONNECT(Bluetooth,   "bluetooth")   \
     CONNECT(UsbFunction, "usbfunction")
@@ -173,6 +174,7 @@
     KIOSK(Network,    "network")    \
     KIOSK(Storage,    "storage")    \
     KIOSK(Backup,     "backup")     \
+    KIOSK(NetAdv,     "netadv")     \
     KIOSK(WebServ,    "webserv")    \
     KIOSK(Core,       "core")       \
     KIOSK(Governor,   "governor")   \
@@ -214,6 +216,13 @@
     LAUNCH(Reboot,     "reboot")     \
     LAUNCH(Shutdown,   "shutdown")
 
+#define NETADV_ELEMENTS        \
+    NETADV(Monitor, "monitor") \
+    NETADV(Boot,    "boot")    \
+    NETADV(Compat,  "compat")  \
+    NETADV(Wait,    "wait")    \
+    NETADV(Retry,   "retry")
+
 #define NETINFO_ELEMENTS            \
     NETINFO(Hostname,  "hostname")  \
     NETINFO(Mac,       "mac")       \
@@ -235,9 +244,6 @@
     NETWORK(Subnet,     "subnet")     \
     NETWORK(Gateway,    "gateway")    \
     NETWORK(Dns,        "dns")        \
-    NETWORK(Monitor,    "monitor")    \
-    NETWORK(Boot,       "boot")       \
-    NETWORK(Compat,     "compat")     \
     NETWORK(Connect,    "connect")
 
 #define OPTION_ELEMENTS          \
