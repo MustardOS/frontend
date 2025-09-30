@@ -6,6 +6,7 @@
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
+static bool is_directory = false;
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -91,9 +92,11 @@ static void add_info_items(void) {
     const char *control_dir = get_content_line(rom_dir, NULL, "con", 1);
     add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "con", true);
 
-    const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
-    const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
-    add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
+    if (!is_directory) {
+        const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
+        const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
+        add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
+    }
 }
 
 static struct json get_playtime_json(void) {
@@ -177,16 +180,11 @@ static void init_navigation_group(void) {
     add_static_item(line_index, "", "", "", true);
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
-
-    const char *dot = strrchr(rom_name, '.');
-    if ((dot && dot != rom_name)) {
-        INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
-        INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
-        INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
-        INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
-
-        add_info_items();
-    }
+    INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
+    INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
+    INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
+    if (!is_directory) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
+    add_info_items();
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -344,8 +342,11 @@ static void ui_refresh_task() {
 int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     group_index = 0;
 
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+    is_directory = directory_exist(rom_dir);
+    if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+
     snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
     init_module("muxoption");

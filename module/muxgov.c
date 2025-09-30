@@ -3,6 +3,7 @@
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
+static bool is_directory = false;
 
 static int is_app = 0;
 
@@ -208,7 +209,7 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || is_directory) return;
 
     LOG_INFO(mux_module, "Single Governor Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -293,8 +294,10 @@ static void init_elements(void) {
     struct nav_bar nav_items[9];
     int i = 0;
 
-    nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-    nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+    if (!is_directory) {
+        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+    }
     nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
     nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
 
@@ -328,8 +331,10 @@ static void ui_refresh_task() {
 }
 
 int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+    is_directory = directory_exist(rom_dir) && !app;
+    if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_dir, sizeof(rom_name), "%s", dir);
     snprintf(rom_system, sizeof(rom_name), "%s", sys);
 
     is_app = app;

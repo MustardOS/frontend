@@ -1,8 +1,10 @@
 #include "muxshare.h"
 
 static char rom_name[PATH_MAX];
+static char explore_dir[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
+static bool is_directory = false;
 
 static lv_obj_t *ui_lblCoreDownloader;
 
@@ -223,7 +225,7 @@ static void handle_b(void) {
         fclose(file);
         load_return_module();
     } else {
-        load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, "none", 0, 0);
+        load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, "none", 0, 0);
     }
 
     remove(MUOS_SAA_LOAD);
@@ -304,13 +306,14 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblCoreDownloader) {
-        load_assign(MUOS_ASS_LOAD "_temp", rom_name, rom_dir, "none", 0, 0);
+        load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
         load_mux("coredown");
     } else {
         if (!strcasecmp(rom_system, "none")) {
             play_sound(SND_CONFIRM);
-            load_assign(MUOS_ASS_LOAD, rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
+            load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
         } else {
+            if (is_directory) return;
             handle_core_assignment("Single Core Assignment Triggered", SINGLE);
         }
     }
@@ -359,20 +362,24 @@ static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  1},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 1},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
-    });
+    struct nav_bar nav_items[7];
+    int i = 0;
+    if (!is_directory) {
+        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.SELECT, 1};
+    }
+    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
+    setup_nav(nav_items);
 
     if (strcasecmp(rom_system, "none") != 0) {
-        struct nav_bar nav_items[7];
-        int i = 0;
+        i = 0;
 
-        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+        if (!is_directory) {
+            nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+        }
         nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
         nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
 
@@ -402,12 +409,17 @@ static void ui_refresh_task() {
 }
 
 int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+    is_directory = directory_exist(rom_dir);
+    if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+
     snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_dir, sizeof(rom_name), "%s", dir);
-    snprintf(rom_system, sizeof(rom_name), "%s", sys);
+    snprintf(explore_dir, sizeof(explore_dir), "%s", dir);
+    snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
     init_module("muxassign");
 
+    LOG_INFO(mux_module, "Assign Core explore_dir: \"%s\"", explore_dir)
     LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)
