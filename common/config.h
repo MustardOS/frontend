@@ -69,6 +69,7 @@ struct mux_config {
     struct {
         struct {
             int16_t ACCELERATE;
+            int16_t REPEAT_DELAY;
             int16_t SWAP;
             int16_t THERMAL;
             int16_t FONT;

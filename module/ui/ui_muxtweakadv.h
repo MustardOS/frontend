@@ -20,4 +20,6 @@ extern const char *brightness_values[];
 
 extern const int accelerate_values[];
 
+extern const int repeat_delay_values[];
+
 extern const int zram_swap_values[];

@@ -973,6 +973,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char SPEED[MAX_BUFFER_SIZE];
+        char REPEAT_DELAY[MAX_BUFFER_SIZE];
         char THERMAL[MAX_BUFFER_SIZE];
         char OFFSET[MAX_BUFFER_SIZE];
         char LOCK[MAX_BUFFER_SIZE];
@@ -1018,6 +1019,7 @@ struct mux_lang {
         } RUMBLE;
         struct {
             char SPEED[MAX_BUFFER_SIZE];
+            char REPEAT_DELAY[MAX_BUFFER_SIZE];
             char THERMAL[MAX_BUFFER_SIZE];
             char OFFSET[MAX_BUFFER_SIZE];
             char LOCK[MAX_BUFFER_SIZE];

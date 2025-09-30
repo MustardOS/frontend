@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 22
+#define UI_COUNT 23
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
 TWEAKADV_ELEMENTS
@@ -10,6 +10,7 @@ TWEAKADV_ELEMENTS
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblAccelerate_tweakadv,  lang.MUXTWEAKADV.HELP.SPEED},
+            {ui_lblRepeatDelay_tweakadv, lang.MUXTWEAKADV.HELP.REPEAT_DELAY},
             {ui_lblOffset_tweakadv,      lang.MUXTWEAKADV.HELP.OFFSET},
             {ui_lblSwap_tweakadv,        lang.MUXTWEAKADV.HELP.SWAP},
             {ui_lblVolume_tweakadv,      lang.MUXTWEAKADV.HELP.VOLUME},
@@ -72,6 +73,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droUsbPart_tweakadv, device.STORAGE.USB.PARTITION - 1);
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
+    map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33, 13);
     map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, zram_swap_values, 11, 0);
     map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, zram_swap_values, 11, 0);
 }
@@ -115,6 +117,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_VAL(tweakadv, Brightness, "settings/advanced/brightness", CHAR, brightness_values);
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
+    CHECK_AND_SAVE_MAP(tweakadv, RepeatDelay, "settings/advanced/repeat_delay", repeat_delay_values, 33, 13);
     CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", zram_swap_values, 11, 0);
     CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", zram_swap_values, 11, 0);
 
@@ -165,6 +168,7 @@ static void init_navigation_group(void) {
     };
 
     INIT_OPTION_ITEM(-1, tweakadv, Accelerate, lang.MUXTWEAKADV.SPEED, "accelerate", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakadv, RepeatDelay, lang.MUXTWEAKADV.REPEAT_DELAY, "repeat", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Offset, lang.MUXTWEAKADV.OFFSET, "offset", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Swap, lang.MUXTWEAKADV.SWAP.TITLE, "swap", swap_options, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Volume, lang.MUXTWEAKADV.VOLUME.TITLE, "volume", volume_options, 4);
@@ -190,6 +194,10 @@ static void init_navigation_group(void) {
     char *accelerate_values = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate_tweakadv, accelerate_values);
     free(accelerate_values);
+
+    char *repeat_delay_values = generate_number_string(16, 512, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droRepeatDelay_tweakadv, repeat_delay_values);
+    free(repeat_delay_values);
 
     char *offset_values = generate_number_string(-50, 50, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droOffset_tweakadv, offset_values);
