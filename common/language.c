@@ -534,13 +534,15 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETADV.MONITOR, "Connection Monitor");
     SPECIFIC_FIELD(lang->MUXNETADV.BOOT, "Start Network on Boot");
     SPECIFIC_FIELD(lang->MUXNETADV.COMPAT, "Module Compatibility");
+    SPECIFIC_FIELD(lang->MUXNETADV.ASYNCLOAD, "Module Async Load");
     SPECIFIC_FIELD(lang->MUXNETADV.WAIT, "Module Wait Timer");
     SPECIFIC_FIELD(lang->MUXNETADV.RETRY, "Module Retry");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.MONITOR, "Enables periodic connectivity checks and triggers reconnection if network loss is detected");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.BOOT, "Enables network connection to be established automatically at boot");
-    SPECIFIC_FIELD(lang->MUXNETADV.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel");
-    SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAIT, "Adjusts the amount of time waiting for the network interface to appear.\n\nWARNING:\nIf you enable Module Compatibility, it is not advisable to increase this setting as it may increase boot times!");
-    SPECIFIC_FIELD(lang->MUXNETADV.HELP.RETRY, "Adjusts the attempts made to load the network module. This setting has no effect with Module Compatibility disabled.\n\nIt has a multiplicative relationship with the wait timer, though only the necessary amount of retries will be done in the process. Increase this setting if Module Compatibility does not seem to work for you!");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel\n\nIncreases boot times moderately");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.ASYNCLOAD, "Enable the background handling of compatibility handling\n\nProvides faster boot times with compatibility enabled, disable this only if all else has failed");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAIT, "Adjusts the maximum amount of time waiting for the network interface to appear.\n\nWARNING:\nIf you enable Module Compatibility, it is not advisable to increase this setting as it will increase boot times!");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.RETRY, "Adjusts the maximum amount of attempts at loading the network module with Module Compatibility enabled. Increase this setting if you are still unable to connect to wifi.\n\nIncreasing this setting may increase boot times importantly.");
 
     // muxnetinfo
     SPECIFIC_FIELD(lang->MUXNETINFO.TITLE, "NETWORK DETAILS");

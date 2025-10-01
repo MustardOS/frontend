@@ -610,12 +610,14 @@ struct mux_lang {
         char MONITOR[MAX_BUFFER_SIZE];
         char BOOT[MAX_BUFFER_SIZE];
         char COMPAT[MAX_BUFFER_SIZE];
+        char ASYNCLOAD[MAX_BUFFER_SIZE];
         char WAIT[MAX_BUFFER_SIZE];
         char RETRY[MAX_BUFFER_SIZE];
         struct {
             char MONITOR[MAX_BUFFER_SIZE];
             char BOOT[MAX_BUFFER_SIZE];
             char COMPAT[MAX_BUFFER_SIZE];
+            char ASYNCLOAD[MAX_BUFFER_SIZE];
             char WAIT[MAX_BUFFER_SIZE];
             char RETRY[MAX_BUFFER_SIZE];
         } HELP;
