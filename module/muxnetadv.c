@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetadv.h"
 
-#define UI_COUNT 5
+#define UI_COUNT 6
 
 #define NETADV(NAME, UDATA) static int NAME##_original;
 NETADV_ELEMENTS
@@ -12,6 +12,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblMonitor_netadv, lang.MUXNETADV.HELP.MONITOR},
             {ui_lblBoot_netadv,    lang.MUXNETADV.HELP.BOOT},
             {ui_lblCompat_netadv,  lang.MUXNETADV.HELP.COMPAT},
+            {ui_lblAsyncLoad_netadv, lang.MUXNETADV.HELP.ASYNCLOAD},
             {ui_lblWait_netadv,    lang.MUXNETADV.HELP.WAIT},
             {ui_lblRetry_netadv,   lang.MUXNETADV.HELP.RETRY},
     };
@@ -29,6 +30,7 @@ static void restore_netadv_options(void) {
     lv_dropdown_set_selected(ui_droMonitor_netadv, config.SETTINGS.NETWORK.MONITOR);
     lv_dropdown_set_selected(ui_droBoot_netadv, config.SETTINGS.NETWORK.BOOT);
     lv_dropdown_set_selected(ui_droCompat_netadv, config.SETTINGS.NETWORK.COMPAT);
+    lv_dropdown_set_selected(ui_droAsyncLoad_netadv, config.SETTINGS.NETWORK.ASYNCLOAD);
 
     map_drop_down_to_index(ui_droWait_netadv, config.SETTINGS.NETWORK.WAIT, wait_retry_int, 9, 0);
     map_drop_down_to_index(ui_droRetry_netadv, config.SETTINGS.NETWORK.RETRY, wait_retry_int, 9, 0);
@@ -40,6 +42,7 @@ static void save_netadv_options(void) {
     CHECK_AND_SAVE_STD(netadv, Monitor, "settings/network/monitor", INT, 0);
     CHECK_AND_SAVE_STD(netadv, Boot, "settings/network/boot", INT, 0);
     CHECK_AND_SAVE_STD(netadv, Compat, "settings/network/compat", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, AsyncLoad, "settings/network/async_load", INT, 0);
 
     CHECK_AND_SAVE_MAP(netadv, Wait, "settings/network/wait_timer", wait_retry_int, 9, 0);
     CHECK_AND_SAVE_MAP(netadv, Retry, "settings/network/compat_retry", wait_retry_int, 9, 0);
@@ -65,6 +68,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, netadv, Monitor, lang.MUXNETADV.MONITOR, "monitor", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, Boot, lang.MUXNETADV.BOOT, "boot", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, Compat, lang.MUXNETADV.COMPAT, "compat", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, AsyncLoad, lang.MUXNETADV.ASYNCLOAD, "asyncload", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, Wait, lang.MUXNETADV.WAIT, "wait", wait_retry_str, 9);
     INIT_OPTION_ITEM(-1, netadv, Retry, lang.MUXNETADV.RETRY, "retry", wait_retry_str, 9);
 

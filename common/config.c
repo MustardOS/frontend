@@ -131,8 +131,9 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.NETWORK.MONITOR, CONF_CONFIG_PATH "settings/network/monitor", 0)
     CFG_INT_FIELD(config->SETTINGS.NETWORK.BOOT, CONF_CONFIG_PATH "settings/network/boot", 1)
     CFG_INT_FIELD(config->SETTINGS.NETWORK.COMPAT, CONF_CONFIG_PATH "settings/network/compat", 0)
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.ASYNCLOAD, CONF_CONFIG_PATH "settings/network/async_load", 1)
     CFG_INT_FIELD(config->SETTINGS.NETWORK.WAIT, CONF_CONFIG_PATH "settings/network/wait_timer", 5)
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.RETRY, CONF_CONFIG_PATH "settings/network/compat_retry", 5)
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.RETRY, CONF_CONFIG_PATH "settings/network/compat_retry", 1)
 
     CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, CONF_CONFIG_PATH "settings/power/low_battery", 0)
     CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, CONF_CONFIG_PATH "settings/power/shutdown", 0)

@@ -220,6 +220,7 @@
     NETADV(Monitor, "monitor") \
     NETADV(Boot,    "boot")    \
     NETADV(Compat,  "compat")  \
+    NETADV(AsyncLoad, "asyncload") \
     NETADV(Wait,    "wait")    \
     NETADV(Retry,   "retry")
 
