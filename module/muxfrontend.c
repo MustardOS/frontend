@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <signal.h>
 #include <sys/prctl.h>
 
@@ -435,26 +436,82 @@ static const ModuleEntry modules[] = {
         {NULL,          NULL,        NULL,             NULL,                NULL}
 };
 
-void init_audio(void) {
-    int r = 10;
-    while (r-- > 0) {
+static void reset_alert(void) {
+    if (config.BOOT.FACTORY_RESET) return;
+
+    int show_alert = 0;
+    if (!file_exist(DONE_RESET) && read_line_int_from(USED_RESET, 1)) show_alert = 1;
+
+    write_text_to_file(USED_RESET, "w", INT, 1);
+    write_text_to_file(DONE_RESET, "w", INT, 1);
+
+    if (show_alert && set_alert_image_path()) {
+        muxsplash_main(alert_image_path, false);
+        lv_timer_t *dismiss = lv_timer_create_basic();
+
+        lv_timer_set_period(dismiss, 1200);
+        lv_timer_set_repeat_count(dismiss, 1);
+
+        lv_timer_set_cb(dismiss, (lv_timer_cb_t) cleanup_screen);
+    }
+}
+
+static void *audio_thread(void *_) {
+    const useconds_t backoff[] = {10000, 25000, 50000, 100000, 200000, 400000, 800000};
+    size_t tries = sizeof(backoff) / sizeof(backoff[0]);
+
+    for (size_t i = 0; i < tries; ++i) {
         if (init_audio_backend()) {
             init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
             init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
 
-            break;
+            if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP);
+            write_text_to_file(CHIME_DONE, "w", CHAR, "");
+            return NULL;
         }
 
-        // start at 50ms then double exponent - stop at 1s max
-        // tbqh if it isn't initialised in this time something
-        // is really wrong with the device audio initialisation...
-        useconds_t delay = (50000U << r);
-        if (delay > 1000000U) delay = 1000000U;
-        usleep(delay);
+        usleep(backoff[i]);
     }
 
-    if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP);
-    write_text_to_file(CHIME_DONE, "w", CHAR, "");
+    return NULL;
+}
+
+static void init_audio(void) {
+    pthread_t th;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    (void) pthread_create(&th, &attr, audio_thread, NULL);
+    pthread_attr_destroy(&attr);
+}
+
+typedef void *(*loader_fn)(void *);
+
+static void *device_thread(void *_) {
+    load_device(&device);
+    return NULL;
+}
+
+static void *config_thread(void *_) {
+    load_config(&config);
+    return NULL;
+}
+
+static void *kiosk_thread(void *_) {
+    load_kiosk(&kiosk);
+    return NULL;
+}
+
+static void load_all_vars(void) {
+    pthread_t dev, con, kio;
+
+    pthread_create(&dev, NULL, device_thread, NULL);
+    pthread_create(&con, NULL, config_thread, NULL);
+    pthread_create(&kio, NULL, kiosk_thread, NULL);
+
+    pthread_join(dev, NULL);
+    pthread_join(con, NULL);
+    pthread_join(kio, NULL);
 }
 
 int main(void) {
@@ -466,10 +523,7 @@ int main(void) {
     // Close the stupid race where the parent already died before the prctl call or we get a segfault...
     if (getppid() == 1) raise(SIGTERM);
 
-    load_device(&device);
-    load_config(&config);
-    load_kiosk(&kiosk);
-
+    load_all_vars();
     LOG_SUCCESS("hello", "Welcome to the %s - %s", MUX_CALLER, get_build_version())
 
     // For future reference we need to initialise the theme before we do the display
@@ -485,11 +539,7 @@ int main(void) {
     write_text_to_file(USED_RESET, "w", INT, 1);
     write_text_to_file(DONE_RESET, "w", INT, 1);
 
-    if (!config.BOOT.FACTORY_RESET && show_alert && set_alert_image_path()) {
-        muxsplash_main(alert_image_path, false);
-        sleep(3);
-    }
-
+    reset_alert();
     init_audio();
 
     while (1) {
