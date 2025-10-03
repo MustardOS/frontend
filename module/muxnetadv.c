@@ -9,12 +9,12 @@ NETADV_ELEMENTS
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblMonitor_netadv, lang.MUXNETADV.HELP.MONITOR},
-            {ui_lblBoot_netadv,    lang.MUXNETADV.HELP.BOOT},
-            {ui_lblCompat_netadv,  lang.MUXNETADV.HELP.COMPAT},
+            {ui_lblMonitor_netadv,   lang.MUXNETADV.HELP.MONITOR},
+            {ui_lblBoot_netadv,      lang.MUXNETADV.HELP.BOOT},
+            {ui_lblCompat_netadv,    lang.MUXNETADV.HELP.COMPAT},
             {ui_lblAsyncLoad_netadv, lang.MUXNETADV.HELP.ASYNCLOAD},
-            {ui_lblWait_netadv,    lang.MUXNETADV.HELP.WAIT},
-            {ui_lblRetry_netadv,   lang.MUXNETADV.HELP.RETRY},
+            {ui_lblWait_netadv,      lang.MUXNETADV.HELP.WAIT},
+            {ui_lblRetry_netadv,     lang.MUXNETADV.HELP.RETRY},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));

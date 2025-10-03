@@ -216,13 +216,13 @@
     LAUNCH(Reboot,     "reboot")     \
     LAUNCH(Shutdown,   "shutdown")
 
-#define NETADV_ELEMENTS        \
-    NETADV(Monitor, "monitor") \
-    NETADV(Boot,    "boot")    \
-    NETADV(Compat,  "compat")  \
+#define NETADV_ELEMENTS            \
+    NETADV(Monitor,   "monitor")   \
+    NETADV(Boot,      "boot")      \
+    NETADV(Compat,    "compat")    \
     NETADV(AsyncLoad, "asyncload") \
-    NETADV(Wait,    "wait")    \
-    NETADV(Retry,   "retry")
+    NETADV(Wait,      "wait")      \
+    NETADV(Retry,     "retry")
 
 #define NETINFO_ELEMENTS            \
     NETINFO(Hostname,  "hostname")  \
