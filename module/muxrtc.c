@@ -157,13 +157,13 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+    INIT_VALUE_ITEM(-1, rtc, Timezone, lang.MUXRTC.TIMEZONE, "timezone", "");
     INIT_VALUE_ITEM(-1, rtc, Year, lang.MUXRTC.YEAR, "year", "");
     INIT_VALUE_ITEM(-1, rtc, Month, lang.MUXRTC.MONTH, "month", "");
     INIT_VALUE_ITEM(-1, rtc, Day, lang.MUXRTC.DAY, "day", "");
     INIT_VALUE_ITEM(-1, rtc, Hour, lang.MUXRTC.HOUR, "hour", "");
     INIT_VALUE_ITEM(-1, rtc, Minute, lang.MUXRTC.MINUTE, "minute", "");
     INIT_VALUE_ITEM(-1, rtc, Notation, lang.MUXRTC.NOTATION, "notation", "");
-    INIT_VALUE_ITEM(-1, rtc, Timezone, lang.MUXRTC.TIMEZONE, "timezone", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -425,8 +425,6 @@ static void init_elements(void) {
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
             {NULL, NULL,                            0}
     });
-
-    if (config.BOOT.FACTORY_RESET) lv_label_set_text(ui_lblNavB, lang.GENERIC.INSTALL);
 
 #define RTC(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);
     RTC_ELEMENTS
