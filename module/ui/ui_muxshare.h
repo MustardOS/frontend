@@ -262,13 +262,13 @@
     POWER(IdleMute,    "idle_mute")
 
 #define RTC_ELEMENTS          \
+    RTC(Timezone, "timezone") \
     RTC(Year,     "year")     \
     RTC(Month,    "month")    \
     RTC(Day,      "day")      \
     RTC(Hour,     "hour")     \
     RTC(Minute,   "minute")   \
-    RTC(Notation, "notation") \
-    RTC(Timezone, "timezone")
+    RTC(Notation, "notation")
 
 #define SEARCH_ELEMENTS            \
     SEARCH(Lookup,       "lookup") \
