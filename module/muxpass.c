@@ -6,6 +6,9 @@
 static int exit_status_muxpass = 0;
 
 struct mux_passcode passcode;
+
+static int p_type;
+
 static char *p_code;
 static char *p_msg;
 
@@ -27,8 +30,6 @@ static void init_navigation_group(void) {
 }
 
 static void handle_a(void) {
-    play_sound(SND_CONFIRM);
-
     char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
     uint32_t bs = sizeof(b1);
 
@@ -43,14 +44,17 @@ static void handle_a(void) {
     sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
 
     if (strcasecmp(try_code, p_code) == 0) {
+        play_sound(SND_MUOS);
         exit_status_muxpass = 1;
         close_input();
         mux_input_stop();
+    } else {
+        play_sound(SND_ERROR);
     }
 }
 
 static void handle_b(void) {
-    play_sound(SND_BACK);
+    if (!PCT_BOOT) play_sound(SND_BACK);
 
     exit_status_muxpass = 2;
     close_input();
@@ -98,42 +102,39 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  0},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
+            {ui_lblNavAGlyph, "",                 0},
+            {ui_lblNavA,      lang.GENERIC.CHECK, 0},
+            {ui_lblNavBGlyph, "",                 0},
+            {ui_lblNavB,      lang.GENERIC.BACK,  0},
+            {NULL,            NULL,               0}
     });
+
+    if (p_type == PCT_BOOT) lv_label_set_text(ui_lblNavB, lang.MUXLAUNCH.SHUTDOWN);
 
     overlay_display();
 }
 
-int muxpass_main(char *p_type) {
+int muxpass_main(int auth_type) {
+    p_type = auth_type;
     exit_status_muxpass = 0;
-    char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
-                     "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
     init_module("muxpass");
-
     load_passcode(&passcode, &device);
 
-    if (strcasecmp(p_type, "boot") == 0) {
+    if (p_type == PCT_BOOT) {
         p_code = passcode.CODE.BOOT;
         p_msg = passcode.MESSAGE.BOOT;
-    } else if (strcasecmp(p_type, "launch") == 0) {
-        p_code = passcode.CODE.LAUNCH;
-        p_msg = passcode.MESSAGE.LAUNCH;
-    } else if (strcasecmp(p_type, "setting") == 0) {
+    } else if (p_type == PCT_CONFIG) {
         p_code = passcode.CODE.SETTING;
         p_msg = passcode.MESSAGE.SETTING;
+    } else if (p_type == PCT_LAUNCH) {
+        p_code = passcode.CODE.LAUNCH;
+        p_msg = passcode.MESSAGE.LAUNCH;
     } else {
-        fprintf(stderr, cmd_help, p_type);
         return 2;
     }
 
-    if (strcasecmp(p_code, "000000") == 0) {
-        return 1;
-    }
+    if (strcasecmp(p_code, "000000") == 0) return 1;
 
     init_theme(0, 0);
 
@@ -156,6 +157,7 @@ int muxpass_main(char *p_type) {
     init_navigation_group();
 
     init_timer(NULL, NULL);
+    refresh_screen(ui_screen);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

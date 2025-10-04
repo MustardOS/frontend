@@ -29,6 +29,7 @@ struct mux_lang {
 
     struct {
         char BACK[MAX_BUFFER_SIZE];
+        char CHECK[MAX_BUFFER_SIZE];
         char TOP[MAX_BUFFER_SIZE];
         char CLEAR[MAX_BUFFER_SIZE];
         char CLOSE[MAX_BUFFER_SIZE];

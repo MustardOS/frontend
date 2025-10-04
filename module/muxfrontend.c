@@ -280,12 +280,11 @@ static void module_appcon(void) {
 static void module_app(void) {
     int auth = 0; // no more fights about 's' vs 'z'...
 
-    if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_LAUNCHER_AUTH)) {
+    if (config.SETTINGS.ADVANCED.LOCK) {
         load_mux("launcher");
 
-        if (muxpass_main("launch") == 1) {
+        if (muxpass_main(PCT_LAUNCH) == 1) {
             cleanup_screen();
-            write_text_to_file(MUX_LAUNCHER_AUTH, "w", CHAR, "");
             auth = 1;
         }
     } else {
@@ -318,14 +317,12 @@ static void module_task(void) {
 }
 
 static void module_config(void) {
-    if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) &&
-        strcmp(previous_module, "muxtweakgen") != 0) {
+    if (config.SETTINGS.ADVANCED.LOCK && strcmp(previous_module, "muxtweakgen") != 0) {
         load_mux("launcher");
 
-        if (muxpass_main("setting") == 1) {
+        if (muxpass_main(PCT_CONFIG) == 1) {
             cleanup_screen();
 
-            write_text_to_file(MUX_AUTH, "w", CHAR, "");
             exec_mux("launcher", "muxconfig", muxconfig_main);
         }
     } else {
@@ -333,26 +330,16 @@ static void module_config(void) {
     }
 }
 
-void clear_auth(void) {
-    if (!config.SETTINGS.ADVANCED.LOCK) {
-        if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
-        if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
-    }
-}
-
 static void module_tweakadv(void) {
     exec_mux("tweakgen", "muxtweakadv", muxtweakadv_main);
-    clear_auth();
 }
 
 static void module_danger(void) {
     exec_mux("tweakgen", "muxdanger", muxdanger_main);
-    clear_auth();
 }
 
 static void module_device(void) {
     exec_mux("sysinfo", "muxdevice", muxdevice_main);
-    clear_auth();
 }
 
 static void module_rtc(void) {
@@ -465,7 +452,11 @@ static void *audio_thread(void *_) {
             init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
             init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
 
-            if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP);
+            if (!file_exist(CHIME_DONE) &&
+                config.SETTINGS.GENERAL.CHIME &&
+                !config.SETTINGS.ADVANCED.LOCK)
+                play_sound(SND_STARTUP);
+
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
             return NULL;
         }
@@ -533,14 +524,24 @@ int main(void) {
 
     lv_timer_create(quit_watchdog, 100, NULL);
 
-    int show_alert = 0;
-    if (!file_exist(DONE_RESET) && read_line_int_from(USED_RESET, 1)) show_alert = 1;
-
-    write_text_to_file(USED_RESET, "w", INT, 1);
-    write_text_to_file(DONE_RESET, "w", INT, 1);
-
     reset_alert();
     init_audio();
+
+    if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_BOOT_AUTH)) {
+        int result = 0;
+
+        while (result != 1) {
+            result = muxpass_main(PCT_BOOT);
+
+            if (result == 2) {
+                cleanup_screen();
+                module_shutdown();
+            }
+        }
+
+        cleanup_screen();
+        write_text_to_file(MUX_BOOT_AUTH, "w", CHAR, "");
+    }
 
     while (1) {
         if (file_exist(SAFE_QUIT)) {

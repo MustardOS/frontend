@@ -72,6 +72,12 @@ extern char box_image_previous_path[MAX_BUFFER_SIZE];
 extern char preview_image_previous_path[MAX_BUFFER_SIZE];
 extern char splash_image_previous_path[MAX_BUFFER_SIZE];
 
+enum passcode_type {
+    PCT_BOOT,
+    PCT_CONFIG,
+    PCT_LAUNCH
+};
+
 int is_ksk(int k);
 
 void hold_call_set(void);
@@ -164,7 +170,7 @@ int muxnetwork_main();
 
 int muxoption_main(int nothing, char *name, char *dir, char *sys, int app);
 
-int muxpass_main(char *p_type);
+int muxpass_main(int auth_type);
 
 int muxpicker_main(char *type, char *ex_dir);
 

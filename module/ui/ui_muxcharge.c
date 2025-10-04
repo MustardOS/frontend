@@ -74,7 +74,7 @@ void init_muxcharge(void) {
     lv_obj_set_width(ui_lblCapacity_charge, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblCapacity_charge, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblCapacity_charge, LV_LABEL_LONG_CLIP);
-    lv_label_set_recolor(ui_lblCapacity_charge, "true");
+    lv_label_set_recolor(ui_lblCapacity_charge, 1);
     lv_obj_clear_flag(ui_lblCapacity_charge,
                       LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
@@ -92,7 +92,7 @@ void init_muxcharge(void) {
     lv_obj_set_width(ui_lblVoltage_charge, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblVoltage_charge, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblVoltage_charge, LV_LABEL_LONG_CLIP);
-    lv_label_set_recolor(ui_lblVoltage_charge, "true");
+    lv_label_set_recolor(ui_lblVoltage_charge, 1);
     lv_obj_clear_flag(ui_lblVoltage_charge,
                       LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
@@ -110,7 +110,7 @@ void init_muxcharge(void) {
     lv_obj_set_width(ui_lblBoot_charge, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblBoot_charge, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblBoot_charge, LV_LABEL_LONG_CLIP);
-    lv_label_set_recolor(ui_lblBoot_charge, "true");
+    lv_label_set_recolor(ui_lblBoot_charge, 1);
     lv_obj_clear_flag(ui_lblBoot_charge,
                       LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |

@@ -141,8 +141,7 @@
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 
-#define MUX_AUTH "/tmp/mux_auth" // Muxpass Config Authorization
-#define MUX_LAUNCHER_AUTH "/tmp/mux_launcher_auth" // Muxpass App and Launcher Authorization
+#define MUX_BOOT_AUTH   "/tmp/mux_boot_auth"
 
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"

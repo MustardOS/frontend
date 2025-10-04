@@ -206,8 +206,8 @@ static lv_obj_t *name(lv_obj_t *parent, const char **list, lv_color_t hex) {
         const char *txt = list[i];
         lv_obj_t *lbl = lv_label_create(wrap);
 
-        bool re_col = false;
-        if (txt && (txt[0] == LV_TXT_COLOR_CMD[0] || txt[0] == '#')) re_col = true;
+        int re_col = 0;
+        if (txt && (txt[0] == LV_TXT_COLOR_CMD[0] || txt[0] == '#')) re_col = 1;
         lv_label_set_recolor(lbl, re_col);
 
         MU_STYLE(lbl, text_color, hex);
@@ -284,7 +284,7 @@ const char *knight_two[] = {
 };
 
 const char *contributors[] = {
-        "antikk", "bitter_bizarro", "imcokeman", "#55CDFC sh##F7A8B8 ij##FFFFFF i##F7A8B8 ko##55CDFC ri#",
+        "antikk", "bitter_bizarro", "guzzloid", "imcokeman", "#55CDFC sh##F7A8B8 ij##FFFFFF i##F7A8B8 ko##55CDFC ri#",
         "wakeboxer", "xonglebongle",
         NULL
 };

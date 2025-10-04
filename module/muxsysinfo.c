@@ -439,7 +439,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {
             {ui_lblNavBGlyph, "",                0},
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL, NULL,                         0}
+            {NULL,            NULL,              0}
     });
 
 #define SYSINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_sysinfo, UDATA);
