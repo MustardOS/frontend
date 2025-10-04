@@ -102,7 +102,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
     overlay_display();
@@ -110,11 +110,8 @@ static void init_elements(void) {
 
 int muxpass_main(char *p_type) {
     exit_status_muxpass = 0;
-    char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
-                     "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
     init_module("muxpass");
-
     load_passcode(&passcode, &device);
 
     if (strcasecmp(p_type, "boot") == 0) {
@@ -127,13 +124,10 @@ int muxpass_main(char *p_type) {
         p_code = passcode.CODE.SETTING;
         p_msg = passcode.MESSAGE.SETTING;
     } else {
-        fprintf(stderr, cmd_help, p_type);
         return 2;
     }
 
-    if (strcasecmp(p_code, "000000") == 0) {
-        return 1;
-    }
+    if (strcasecmp(p_code, "000000") == 0) return 1;
 
     init_theme(0, 0);
 

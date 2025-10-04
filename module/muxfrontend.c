@@ -542,6 +542,23 @@ int main(void) {
     reset_alert();
     init_audio();
 
+    if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_BOOT_AUTH)) {
+        int result = 0;
+
+        while (result != 1) {
+            result = muxpass_main("boot");
+
+            if (result == 2) {
+                cleanup_screen();
+                module_shutdown();
+                return;
+            }
+        }
+
+        cleanup_screen();
+        write_text_to_file(MUX_BOOT_AUTH, "w", CHAR, "");
+    }
+
     while (1) {
         if (file_exist(SAFE_QUIT)) {
             LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
