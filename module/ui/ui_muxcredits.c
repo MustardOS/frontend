@@ -206,8 +206,8 @@ static lv_obj_t *name(lv_obj_t *parent, const char **list, lv_color_t hex) {
         const char *txt = list[i];
         lv_obj_t *lbl = lv_label_create(wrap);
 
-        bool re_col = false;
-        if (txt && (txt[0] == LV_TXT_COLOR_CMD[0] || txt[0] == '#')) re_col = true;
+        int re_col = 0;
+        if (txt && (txt[0] == LV_TXT_COLOR_CMD[0] || txt[0] == '#')) re_col = 1;
         lv_label_set_recolor(lbl, re_col);
 
         MU_STYLE(lbl, text_color, hex);

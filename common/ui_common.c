@@ -558,7 +558,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblMessage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblMessage, "");
-    lv_label_set_recolor(ui_lblMessage, "true");
+    lv_label_set_recolor(ui_lblMessage, 1);
     lv_obj_set_style_text_color(ui_lblMessage, lv_color_hex(theme->MESSAGE.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblMessage, theme->MESSAGE.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblMessage, 4, MU_OBJ_MAIN_DEFAULT);
@@ -615,6 +615,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblHelpContent, LV_ALIGN_TOP_LEFT);
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_WRAP);
     lv_label_set_text(ui_lblHelpContent, "");
+    lv_label_set_recolor(ui_lblHelpContent, 1);
     lv_obj_set_style_text_color(ui_lblHelpContent, lv_color_hex(theme->HELP.CONTENT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpContent, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblHelpContent, 0, MU_OBJ_MAIN_DEFAULT);
@@ -1087,7 +1088,7 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     lv_obj_set_height(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblNavText, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavText, "");
-    lv_label_set_recolor(ui_lblNavText, "true");
+    lv_label_set_recolor(ui_lblNavText, 1);
     lv_obj_set_style_text_color(ui_lblNavText, lv_color_hex(text_color), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavText, text_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavText, 0, MU_OBJ_MAIN_DEFAULT);
@@ -1220,6 +1221,8 @@ static void hide_message(lv_timer_t *msg_timer) {
 
 static void show_message(lv_obj_t *panel, lv_obj_t *label, const char *msg, uint32_t delay, lv_timer_t **msg_timer) {
     lv_label_set_text(label, msg);
+    lv_label_set_recolor(label, 1);
+
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_opa(panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
