@@ -465,7 +465,11 @@ static void *audio_thread(void *_) {
             init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
             init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
 
-            if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP);
+            if (!file_exist(CHIME_DONE) &&
+                config.SETTINGS.GENERAL.CHIME &&
+                !config.SETTINGS.ADVANCED.LOCK)
+                play_sound(SND_STARTUP);
+
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
             return NULL;
         }

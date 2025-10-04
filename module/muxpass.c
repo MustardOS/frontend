@@ -6,6 +6,8 @@
 static int exit_status_muxpass = 0;
 
 struct mux_passcode passcode;
+
+static char *p_type;
 static char *p_code;
 static char *p_msg;
 
@@ -98,17 +100,22 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  0},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {ui_lblNavAGlyph, "",                 0},
+            {ui_lblNavA,      lang.GENERIC.CHECK, 0},
+            {ui_lblNavBGlyph, "",                 0},
+            {ui_lblNavB,      lang.GENERIC.BACK,  0},
+            {NULL,            NULL,               0}
     });
+
+    if (strcasecmp(p_type, "boot") == 0) {
+        lv_label_set_text(ui_lblNavB, lang.MUXLAUNCH.SHUTDOWN);
+    }
 
     overlay_display();
 }
 
-int muxpass_main(char *p_type) {
+int muxpass_main(char *auth_type) {
+    p_type = auth_type;
     exit_status_muxpass = 0;
 
     init_module("muxpass");
@@ -150,6 +157,7 @@ int muxpass_main(char *p_type) {
     init_navigation_group();
 
     init_timer(NULL, NULL);
+    refresh_screen(ui_screen);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
