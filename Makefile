@@ -39,7 +39,7 @@ MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
 LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lmuxmodule \
           -lnotosans_big -lnotosans_big_hd -lnotosans_medium \
           -lnotosans_sc_medium -lnotosans_tc_medium -lnotosans_jp_medium -lnotosans_kr_medium -lnotosans_ar_medium \
-          -lpthread -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -Wl,--gc-sections -s -Wl,-rpath,'./lib'
+          -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
          -fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
