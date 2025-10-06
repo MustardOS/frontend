@@ -286,7 +286,7 @@ const char *knight_two[] = {
 const char *contributors[] = {
         "antikk", "bitter_bizarro", "guzzloid", "imcokeman",
         "#55CDFC sh##F7A8B8 ij##FFFFFF i##F7A8B8 ko##55CDFC ri#",
-        "void_linux", "wakeboxer", "xonglebongle",
+        "thewalruzz", "void_linux", "wakeboxer", "xonglebongle",
         NULL
 };
 
