@@ -173,6 +173,18 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
+static void handle_b(void) {
+    if (hold_call) return;
+
+    if (msgbox_active) {
+        play_sound(SND_INFO_CLOSE);
+        msgbox_active = 0;
+        progress_onscreen = 0;
+        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+}
+
 static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || hold_call) return;
 
@@ -347,7 +359,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {
             {ui_lblNavAGlyph, "",                  0},
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
 #define INSTALL(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_install, UDATA);
@@ -392,6 +404,7 @@ int muxinstall_main(void) {
                          (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
