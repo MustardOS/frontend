@@ -5,7 +5,6 @@ static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
 
 static char *prev_dir = "";
-static char sys_dir[MAX_BUFFER_SIZE];
 static char new_dir[MAX_BUFFER_SIZE];
 
 static int exit_status = 0;

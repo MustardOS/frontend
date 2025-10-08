@@ -1,7 +1,6 @@
 #include "muxshare.h"
 
 static char base_dir[PATH_MAX];
-static char sys_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
 

@@ -71,6 +71,7 @@ extern lv_group_t *ui_group_value;
 extern char box_image_previous_path[MAX_BUFFER_SIZE];
 extern char preview_image_previous_path[MAX_BUFFER_SIZE];
 extern char splash_image_previous_path[MAX_BUFFER_SIZE];
+extern char sys_dir[MAX_BUFFER_SIZE];
 
 enum passcode_type {
     PCT_BOOT,
