@@ -800,11 +800,19 @@ struct mux_lang {
             char t60m[MAX_BUFFER_SIZE];
         } SLEEP;
         struct {
+            char DEFAULT[MAX_BUFFER_SIZE];
+            char IDLE[MAX_BUFFER_SIZE];
+        } GOV;
+        struct {
             struct {
                 char DISPLAY[MAX_BUFFER_SIZE];
                 char SLEEP[MAX_BUFFER_SIZE];
                 char MUTE[MAX_BUFFER_SIZE];
             } IDLE;
+            struct {
+                char DEFAULT[MAX_BUFFER_SIZE];
+                char IDLE[MAX_BUFFER_SIZE];
+            } GOV;
             char LOW_BATTERY[MAX_BUFFER_SIZE];
             char SLEEP_FUNCTION[MAX_BUFFER_SIZE];
         } HELP;

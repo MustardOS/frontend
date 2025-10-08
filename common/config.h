@@ -128,6 +128,10 @@ struct mux_config {
                 int16_t SLEEP;
                 int16_t MUTE;
             } IDLE;
+            struct {
+                char DEFAULT[MAX_BUFFER_SIZE];
+                char IDLE[MAX_BUFFER_SIZE];
+            } GOV;
         } POWER;
     } SETTINGS;
 

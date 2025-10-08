@@ -3012,3 +3012,24 @@ void add_to_collection(char *filename, const char *pointer, char *sys_dir) {
     close_input();
     mux_input_stop();
 }
+
+int set_scaling_governor(const char *governor) {
+    if (!governor) return -1;
+
+    FILE *fp = fopen(device.CPU.GOVERNOR, "w");
+    if (!fp) {
+        LOG_ERROR(mux_module, "Failed to open %s: %s", device.CPU.GOVERNOR, strerror(errno))
+        return -1;
+    }
+
+    if (fprintf(fp, "%s", governor) < 0) {
+        LOG_ERROR(mux_module, "Failed to write '%s' to %s: %s", governor, device.CPU.GOVERNOR, strerror(errno))
+        fclose(fp);
+        return -1;
+    }
+
+    LOG_SUCCESS(mux_module, "Governor switched to '%s' successfully", governor);
+
+    fclose(fp);
+    return 0;
+}

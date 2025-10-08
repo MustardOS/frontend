@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxpower.h"
 
-#define UI_COUNT 5
+#define UI_COUNT 7
 
 #define POWER(NAME, UDATA) static int NAME##_original;
 POWER_ELEMENTS
@@ -16,6 +16,11 @@ static const int battery_values[] = {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
 
+char **gov_values_lower = NULL;
+char **gov_values_disp = NULL;
+
+size_t gov_count = 0;
+
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblShutdown_power,    lang.MUXPOWER.HELP.SLEEP_FUNCTION},
@@ -23,6 +28,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblIdleDisplay_power, lang.MUXPOWER.HELP.IDLE.DISPLAY},
             {ui_lblIdleSleep_power,   lang.MUXPOWER.HELP.IDLE.SLEEP},
             {ui_lblIdleMute_power,    lang.MUXPOWER.HELP.IDLE.MUTE},
+            {ui_lblGovIdle_power,     lang.MUXPOWER.HELP.GOV.IDLE},
+            {ui_lblGovDefault_power,  lang.MUXPOWER.HELP.GOV.DEFAULT},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -34,14 +41,90 @@ static void init_dropdown_settings(void) {
 #undef POWER
 }
 
+static void generate_governor_values(void) {
+    int count = 0;
+    char **list = str_parse_file(device.CPU.AVAILABLE, &count, TOKENS);
+
+    if (gov_values_lower) {
+        for (size_t i = 0; i < gov_count; i++) free(gov_values_lower[i]);
+        free(gov_values_lower);
+        gov_values_lower = NULL;
+    }
+
+    if (gov_values_disp) {
+        for (size_t i = 0; i < gov_count; i++) free(gov_values_disp[i]);
+        free(gov_values_disp);
+        gov_values_disp = NULL;
+    }
+
+    gov_count = 0;
+
+    if (!list || count <= 0) {
+        static const char *fallback[] = {"performance", "powersave"};
+        gov_count = sizeof(fallback) / sizeof(fallback[0]);
+
+        gov_values_lower = calloc(gov_count, sizeof(char *));
+        gov_values_disp = calloc(gov_count, sizeof(char *));
+        for (size_t i = 0; i < gov_count; i++) {
+            gov_values_lower[i] = strdup(fallback[i]);
+            gov_values_disp[i] = strdup(fallback[i]);
+            str_capital(gov_values_disp[i]);
+        }
+
+        if (list) free(list);
+        return;
+    }
+
+    gov_count = (size_t) count;
+    gov_values_lower = calloc(gov_count, sizeof(char *));
+    gov_values_disp = calloc(gov_count, sizeof(char *));
+    for (size_t i = 0; i < gov_count; i++) {
+        gov_values_lower[i] = strdup(list[i]);
+        gov_values_disp[i] = strdup(list[i]);
+        str_capital(gov_values_disp[i]);
+    }
+
+    for (int i = 0; i < count; i++) free(list[i]);
+    free(list);
+}
+
+static void free_governor_values(void) {
+    if (gov_values_lower) {
+        for (size_t i = 0; i < gov_count; i++) free(gov_values_lower[i]);
+        free(gov_values_lower);
+        gov_values_lower = NULL;
+    }
+
+    if (gov_values_disp) {
+        for (size_t i = 0; i < gov_count; i++) free(gov_values_disp[i]);
+        free(gov_values_disp);
+        gov_values_disp = NULL;
+    }
+
+    gov_count = 0;
+}
+
+static int find_governor(char *governor) {
+    if (!gov_values_lower || !governor) return 0;
+
+    for (size_t i = 0; i < gov_count; i++) {
+        if (gov_values_lower[i] && strcmp(gov_values_lower[i], governor) == 0) return (int) i;
+    }
+
+    return 0;
+}
+
 static void restore_power_options(void) {
-    lv_obj_t *ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
-    int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
+    lv_obj_t * ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
+    int16_t * config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
 
     map_drop_down_to_index(ui_droShutdown_power, config.SETTINGS.POWER.SHUTDOWN, shutdown_values, SHUTDOWN_COUNT, 0);
     map_drop_down_to_index(ui_droBattery_power, config.SETTINGS.POWER.LOW_BATTERY, battery_values, BATTERY_COUNT, 5);
 
     lv_dropdown_set_selected(ui_droIdleMute_power, config.SETTINGS.POWER.IDLE.MUTE);
+
+    lv_dropdown_set_selected(ui_droGovIdle_power, find_governor(config.SETTINGS.POWER.GOV.IDLE));
+    lv_dropdown_set_selected(ui_droGovDefault_power, find_governor(config.SETTINGS.POWER.GOV.DEFAULT));
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
@@ -107,6 +190,9 @@ static int save_power_options(void) {
 
     CHECK_AND_SAVE_STD(power, IdleMute, "settings/power/idle_mute", INT, 0);
 
+    CHECK_AND_SAVE_VAL(power, GovIdle, "settings/power/gov_idle", CHAR, gov_values_lower);
+    CHECK_AND_SAVE_DEV(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
+
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
         refresh_screen(ui_screen);
@@ -117,6 +203,7 @@ static int save_power_options(void) {
         refresh_config = 1;
     }
 
+    free_governor_values();
     play_sound(SND_BACK);
 
     return 1;
@@ -146,6 +233,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, IdleSleep, lang.MUXPOWER.IDLE.SLEEP, "idle_sleep", idle_timer, IDLE_COUNT);
     INIT_OPTION_ITEM(-1, power, IdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, "idle_display", idle_timer, IDLE_COUNT);
     INIT_OPTION_ITEM(-1, power, IdleMute, lang.MUXPOWER.IDLE.MUTE, "idle_mute", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, power, GovIdle, lang.MUXPOWER.GOV.IDLE, "gov_idle", gov_values_disp, (int) gov_count);
+    INIT_OPTION_ITEM(-1, power, GovDefault, lang.MUXPOWER.GOV.DEFAULT, "gov_fe", gov_values_disp, (int) gov_count);
 
     char *battery_string = generate_number_string(5, 50, 5, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_string);
@@ -256,7 +345,7 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
+            {NULL,             NULL,                0}
     });
 
 #define POWER(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_power, UDATA);
@@ -282,6 +371,7 @@ int muxpower_main(void) {
     init_module("muxpower");
 
     init_theme(1, 0);
+    generate_governor_values();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPOWER.TITLE);
     init_muxpower(ui_pnlContent);

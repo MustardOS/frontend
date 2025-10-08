@@ -696,9 +696,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t15m, "Sleep 15m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t30m, "Sleep 30m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60m, "Sleep 60m + Shutdown");
+    SPECIFIC_FIELD(lang->MUXPOWER.GOV.IDLE, "Idle Governor");
+    SPECIFIC_FIELD(lang->MUXPOWER.GOV.DEFAULT, "Default Governor");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.SLEEP, "Configure the time the device will sleep when no input is detected");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.DISPLAY, "Configure the time the screen will dim when no input is detected");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.MUTE, "Toggle if the audio is muted when display is dimmed");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOV.IDLE, "Configure the frontend and device power governor on idle input");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOV.DEFAULT, "Configure the default frontend and device power governor");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY, "Configure when the red LED will display based on the current capacity percentage");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION, "Configure how the power button functions on short press");
 

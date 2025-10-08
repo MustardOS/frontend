@@ -416,3 +416,5 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system
                  int line_catalogue, int line_lookup, int line_launch);
 
 void add_to_collection(char *filename, const char *pointer, char *sys_dir);
+
+int set_scaling_governor(const char *governor);

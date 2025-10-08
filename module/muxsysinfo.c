@@ -75,7 +75,7 @@ const char *get_current_frequency(void) {
 
 const char *get_scaling_governor(void) {
     static char buffer[MAX_BUFFER_SIZE];
-    char *governor_str = read_all_char_from("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
+    char *governor_str = read_all_char_from(device.CPU.GOVERNOR);
 
     if (!governor_str || governor_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);

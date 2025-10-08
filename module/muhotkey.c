@@ -108,17 +108,18 @@ static bool verbose = false;
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
 
+static char *running_governor;
+
 static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
     uint32_t idle_ms = mux_input_tick() - timer->tick;
     if (idle_ms >= timeout_ms && !timer->idle) {
-        if (timer->idle_name) {
-            printf("%s\n", timer->idle_name);
-        }
+        running_governor = read_all_char_from(device.CPU.GOVERNOR);
+        set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE);
+        if (timer->idle_name) printf("%s\n", timer->idle_name);
         timer->idle = true;
     } else if (idle_ms < timeout_ms && timer->idle) {
-        if (timer->active_name) {
-            printf("%s\n", timer->active_name);
-        }
+        set_scaling_governor(running_governor);
+        if (timer->active_name) printf("%s\n", timer->active_name);
         timer->idle = false;
     }
 }
@@ -322,6 +323,8 @@ int main(int argc, char *argv[]) {
     // Read config and open input devices.
     load_device(&device);
     load_config(&config);
+
+    running_governor = read_all_char_from(device.CPU.GOVERNOR);
 
     input_opts.general_fd = open(device.INPUT_EVENT.JOY_GENERAL, O_RDONLY);
     if (input_opts.general_fd < 0) {
