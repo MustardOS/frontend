@@ -2346,8 +2346,15 @@ int get_grid_row_item_count(int current_item_index) {
 }
 
 void update_grid_image_paths(int index) {
-    char *catalogue_name = "Folder";
-    char *alt_name = strcmp(catalogue_name, "Folder") == 0 ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "";
+    char catalogue_name[MAX_BUFFER_SIZE];
+    char alt_name[MAX_BUFFER_SIZE];
+    if (!strcmp(mux_module, "muxplore")) {
+        snprintf(catalogue_name, sizeof(catalogue_name), "Folder");
+        snprintf(alt_name, sizeof(alt_name), get_catalogue_name_from_rom_path(sys_dir, items[index].name));
+    } else {
+        snprintf(catalogue_name, sizeof(catalogue_name), "Collection");
+        snprintf(alt_name, sizeof(alt_name), "");
+    }
 
     char grid_image[MAX_BUFFER_SIZE];
     load_image_catalogue(catalogue_name, strip_ext(items[index].name), alt_name, "default",
