@@ -442,7 +442,7 @@ static void reset_alert(void) {
     }
 }
 
-static void *init_audio(void) {
+static void init_audio(void) {
     const useconds_t backoff[] = {10000, 25000, 50000, 100000, 200000, 400000, 800000};
     size_t tries = sizeof(backoff) / sizeof(backoff[0]);
 
@@ -457,7 +457,7 @@ static void *init_audio(void) {
                 play_sound(SND_STARTUP);
 
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
-            return NULL;
+            return;
         }
 
         usleep(backoff[i]);
