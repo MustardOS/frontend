@@ -191,7 +191,7 @@ static int save_power_options(void) {
     CHECK_AND_SAVE_STD(power, IdleMute, "settings/power/idle_mute", INT, 0);
 
     CHECK_AND_SAVE_VAL(power, GovIdle, "settings/power/gov_idle", CHAR, gov_values_lower);
-    CHECK_AND_SAVE_DEV(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
+    CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);

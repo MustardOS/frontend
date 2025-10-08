@@ -339,6 +339,15 @@ int muxwebserv_main();
         }                                                                             \
     } while (0)
 
+#define CHECK_AND_SAVE_DEV_VAL(MODULE, NAME, FILE, TYPE, VALUES)                     \
+    do {                                                                             \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
+        if (current != NAME##_original) {                                            \
+            is_modified++;                                                           \
+            write_text_to_file((CONF_DEVICE_PATH FILE), "w", TYPE, VALUES[current]); \
+        }                                                                            \
+    } while (0)
+
 #define CHECK_AND_SAVE_VAL(MODULE, NAME, FILE, TYPE, VALUES)                         \
     do {                                                                             \
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
