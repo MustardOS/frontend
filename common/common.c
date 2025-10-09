@@ -2345,23 +2345,42 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-void set_grid_catalogue_name(int index, char *catalogue_name, size_t catalogue_name_size) {
-    if (!strcmp(mux_module, "muxplore")) {
-        snprintf(catalogue_name, catalogue_name_size, "Folder");
-    } else if (!strcmp(mux_module, "muxapp")) {
+static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, size_t catalogue_name_size, char *program, size_t program_size) {
+    if (strcmp(mux_module, "muxapp") == 0) {
         snprintf(catalogue_name, catalogue_name_size, "Application");
-    } else {
-        snprintf(catalogue_name, catalogue_name_size, "Collection");
+        snprintf(program, program_size, "%s", items[index].glyph_icon);
+        return;
     }
+
+    if (items[index].content_type == ITEM) {
+        if (strcmp(mux_module, "muxcollect") == 0) {
+            char *item_dir = strip_dir(items[index].extra_data);
+            char *file_path = strdup(items[index].extra_data);
+            char *item_file = get_last_dir(file_path);
+            if (item_dir && item_file) {
+                get_catalogue_name(item_dir, item_file, catalogue_name, catalogue_name_size);
+                snprintf(program, program_size, "%s", strip_ext(item_file));
+            }
+            free(item_dir);
+            free(file_path);
+        } else {
+            get_catalogue_name(strdup(sys_dir), items[index].name, catalogue_name, catalogue_name_size);
+            snprintf(program, program_size, "%s", strip_ext(items[index].name));
+        }
+        return;
+    }
+
+    const char *cat_label = strcmp(mux_module, "muxplore") == 0 ? "Folder" : "Collection";
+    snprintf(catalogue_name, catalogue_name_size, "%s", cat_label);
+    snprintf(program, program_size, "%s", strip_ext(items[index].name));
 }
 
 void update_grid_image_paths(int index) {
     char catalogue_name[MAX_BUFFER_SIZE];
-    set_grid_catalogue_name(index, catalogue_name, sizeof(catalogue_name));
+    char program[MAX_BUFFER_SIZE];
+    set_grid_catalogue_and_program_name(index, catalogue_name, sizeof(catalogue_name), program, sizeof(program));
     char alt_name[MAX_BUFFER_SIZE];
     snprintf(alt_name, sizeof(alt_name), !strcmp(mux_module, "muxplore") ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "");
-    char program[MAX_BUFFER_SIZE];
-    snprintf(program, sizeof(program), !strcmp(mux_module, "muxapp") ? items[index].glyph_icon : strip_ext(items[index].name));
 
     char grid_image[MAX_BUFFER_SIZE];
     load_image_catalogue(catalogue_name, program, alt_name, "default",
@@ -2380,7 +2399,6 @@ void update_grid_image_paths(int index) {
     if (!strcmp(mux_module, "muxapp")) {
         get_app_grid_glyph(items[index].name, program, "default", grid_image, sizeof(grid_image));
         get_app_grid_glyph(items[index].name, glyph_name_focused, "default_focused", grid_image_focused, sizeof(grid_image_focused));
-
     }
 
     items[index].grid_image = strdup(grid_image);
@@ -2428,7 +2446,7 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
     }
 }
 
-static void update_grid_items(int direction) {
+void update_grid_items(int direction) {
     int rowIndex = get_grid_row_index(current_item_index);
     int startRowIndex = (direction < 0) ? rowIndex : rowIndex - theme.GRID.ROW_COUNT + 1;
     if (startRowIndex < 0) startRowIndex = 0;
@@ -2464,13 +2482,29 @@ void update_grid(int direction) {
             update_grid_items(-1);
         } else {
             if (current_item_index > grid_end_index) {
-                for (size_t i = 0; i < theme.GRID.COLUMN_COUNT; i++)
-                {
-                    update_grid_items(direction);
-                }
+                update_grid_items(direction);
             }
         }
     }
+}
+
+void gen_grid_item(int index) {
+    update_grid_image_paths(index);
+
+    uint8_t col = index % theme.GRID.COLUMN_COUNT;
+    uint8_t row = index / theme.GRID.COLUMN_COUNT;
+
+    lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+    lv_obj_set_user_data(cell_panel, index);
+    lv_obj_t * cell_image = lv_img_create(cell_panel);
+    lv_obj_t * cell_label = lv_label_create(cell_panel);
+
+    create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
+                    items[index].grid_image, items[index].grid_image_focused, items[index].display_name);
+
+    lv_group_add_obj(ui_group, cell_label);
+    lv_group_add_obj(ui_group_glyph, cell_image);
+    lv_group_add_obj(ui_group_panel, cell_panel);    
 }
 
 void kiosk_denied(void) {

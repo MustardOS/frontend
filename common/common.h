@@ -349,7 +349,11 @@ int get_grid_row_item_count(int current_item_index);
 
 void update_grid_image_paths(int index);
 
+void update_grid_items(int direction);
+
 void update_grid(int direction);
+
+void gen_grid_item(int index);
 
 void kiosk_denied();
 

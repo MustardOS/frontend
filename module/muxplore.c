@@ -81,15 +81,15 @@ static void image_refresh(char *image_type) {
                          STORAGE_THEME, image_type);
             }
         } else {
-            if (items[current_item_index].content_type == FOLDER) {
-                if (strcasecmp(image_type, "box") || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+            if (strcasecmp(image_type, "box") || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+                if (items[current_item_index].content_type == FOLDER) {
                     char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
                     load_image_catalogue("Folder", file_name, catalogue_name, "default",
-                                         mux_dimension, image_type, image, sizeof(image));
+                                            mux_dimension, image_type, image, sizeof(image));
+                } else {
+                    load_image_catalogue(core_artwork, file_name, "", "default", mux_dimension,
+                                        image_type, image, sizeof(image));
                 }
-            } else {
-                load_image_catalogue(core_artwork, file_name, "", "default", mux_dimension,
-                                     image_type, image, sizeof(image));
             }
             if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
                 load_splash_image_fallback(mux_dimension, image, sizeof(image));
@@ -329,6 +329,8 @@ static void gen_item(char **file_names, int file_count) {
         }
     }
 
+    if (grid_mode_enabled) return;
+
     if (dir_count < theme.MUX.ITEM.COUNT) {
         for (size_t i = 0; i < item_count; i++) {
             if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
@@ -352,22 +354,7 @@ static void init_navigation_group_grid(void) {
         if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
 
         if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-            update_grid_image_paths(i);
-
-            uint8_t col = i % theme.GRID.COLUMN_COUNT;
-            uint8_t row = i / theme.GRID.COLUMN_COUNT;
-            
-            lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
-            lv_obj_set_user_data(cell_panel, i);
-            lv_obj_t * cell_image = lv_img_create(cell_panel);
-            lv_obj_t * cell_label = lv_label_create(cell_panel);
-
-            create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                            items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
-
-            lv_group_add_obj(ui_group, cell_label);
-            lv_group_add_obj(ui_group_glyph, cell_image);
-            lv_group_add_obj(ui_group_panel, cell_panel);
+            gen_grid_item(i);
         }
     }
 }
@@ -433,9 +420,12 @@ static void create_content_items(void) {
         sort_items(items, item_count);
         check_for_disable_grid_file(item_curr_dir);
 
-        if (!nogrid_file_exists && theme.GRID.ENABLED && dir_count > 0 && !file_count) {
-            init_navigation_group_grid();
-        } else {
+        grid_mode_enabled = !nogrid_file_exists && theme.GRID.ENABLED &&
+        (
+            (file_count > 0 && config.VISUAL.GRID_MODE_CONTENT) ||
+            (dir_count > 0 && file_count == 0)
+        );
+        if (!grid_mode_enabled) {
             for (int i = 0; i < dir_count; i++) {
                 if (i < theme.MUX.ITEM.COUNT) {
                     gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
@@ -445,6 +435,10 @@ static void create_content_items(void) {
         }
 
         gen_item(file_names, file_count);
+
+        if (grid_mode_enabled) {
+            init_navigation_group_grid();
+        }
 
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 
@@ -774,7 +768,13 @@ static void handle_random_select(void) {
     int dir, target;
     shuffle_index(current_item_index, &dir, &target);
 
-    list_nav_move(target, dir);
+    if (grid_mode_enabled) {
+        current_item_index = target;
+        update_grid_items(1);
+        list_nav_next(0);
+    } else {
+        list_nav_move(target, dir);
+    }
 }
 
 static void adjust_panels(void) {

@@ -302,11 +302,11 @@ static void list_nav_move(int steps, int direction) {
         nav_move(ui_group, direction);
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
+
+        if (grid_mode_enabled) update_grid(direction);
     }
 
-    if (grid_mode_enabled) {
-        update_grid(direction);
-    } else {
+    if (!grid_mode_enabled) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
                                ui_count, current_item_index, ui_pnlContent);
     }
