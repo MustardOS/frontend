@@ -422,3 +422,5 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system
 void add_to_collection(char *filename, const char *pointer, char *sys_dir);
 
 int set_scaling_governor(const char *governor);
+
+void turbo_time(int toggle);

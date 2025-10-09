@@ -2484,6 +2484,8 @@ void kiosk_denied(void) {
 void run_exec(const char *args[], size_t size, int background) {
     const char *san[size];
 
+    turbo_time(1);
+
     size_t j = 0;
     for (size_t i = 0; i < size; ++i) {
         if (args[i]) {
@@ -2509,6 +2511,8 @@ void run_exec(const char *args[], size_t size, int background) {
     } else if (pid > 0 && !background) {
         waitpid(pid, NULL, 0);
     }
+
+    turbo_time(0);
 }
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line) {
@@ -3160,4 +3164,8 @@ int set_scaling_governor(const char *governor) {
 
     fclose(fp);
     return 0;
+}
+
+void turbo_time(int toggle) {
+    set_scaling_governor(toggle ? "performance" : device.CPU.DEFAULT);
 }

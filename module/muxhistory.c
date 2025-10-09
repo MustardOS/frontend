@@ -269,6 +269,8 @@ static void create_history_items(void) {
     char **file_names = NULL;
     char **last_dirs = NULL;
 
+    turbo_time(1);
+
     lv_label_set_text(ui_lblTitle, lang.MUXHISTORY.TITLE);
     add_file_names(INFO_HIS_PATH, &file_names, &last_dirs);
 
@@ -278,6 +280,8 @@ static void create_history_items(void) {
     }
 
     free(file_names);
+
+    turbo_time(0);
 }
 
 static void remove_from_history(void) {
