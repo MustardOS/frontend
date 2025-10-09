@@ -2345,23 +2345,30 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
+void set_grid_catalogue_name(int index, char *catalogue_name, size_t catalogue_name_size) {
+    if (!strcmp(mux_module, "muxplore")) {
+        snprintf(catalogue_name, catalogue_name_size, "Folder");
+    } else if (!strcmp(mux_module, "muxapp")) {
+        snprintf(catalogue_name, catalogue_name_size, "Application");
+    } else {
+        snprintf(catalogue_name, catalogue_name_size, "Collection");
+    }
+}
+
 void update_grid_image_paths(int index) {
     char catalogue_name[MAX_BUFFER_SIZE];
+    set_grid_catalogue_name(index, catalogue_name, sizeof(catalogue_name));
     char alt_name[MAX_BUFFER_SIZE];
-    if (!strcmp(mux_module, "muxplore")) {
-        snprintf(catalogue_name, sizeof(catalogue_name), "Folder");
-        snprintf(alt_name, sizeof(alt_name), get_catalogue_name_from_rom_path(sys_dir, items[index].name));
-    } else {
-        snprintf(catalogue_name, sizeof(catalogue_name), "Collection");
-        snprintf(alt_name, sizeof(alt_name), "");
-    }
+    snprintf(alt_name, sizeof(alt_name), !strcmp(mux_module, "muxplore") ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "");
+    char program[MAX_BUFFER_SIZE];
+    snprintf(program, sizeof(program), !strcmp(mux_module, "muxapp") ? items[index].glyph_icon : strip_ext(items[index].name));
 
     char grid_image[MAX_BUFFER_SIZE];
-    load_image_catalogue(catalogue_name, strip_ext(items[index].name), alt_name, "default",
+    load_image_catalogue(catalogue_name, program, alt_name, "default",
                         mux_dimension, "grid", grid_image, sizeof(grid_image));
 
     char glyph_name_focused[MAX_BUFFER_SIZE];
-    snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[index].name));
+    snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", program);
 
     char alt_name_focused[MAX_BUFFER_SIZE];
     snprintf(alt_name_focused, sizeof(alt_name_focused), "%s_focused", alt_name);
@@ -2369,6 +2376,12 @@ void update_grid_image_paths(int index) {
     char grid_image_focused[MAX_BUFFER_SIZE];
     load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
                         mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
+
+    if (!strcmp(mux_module, "muxapp")) {
+        get_app_grid_glyph(items[index].name, program, "default", grid_image, sizeof(grid_image));
+        get_app_grid_glyph(items[index].name, glyph_name_focused, "default_focused", grid_image_focused, sizeof(grid_image_focused));
+
+    }
 
     items[index].grid_image = strdup(grid_image);
     items[index].grid_image_focused = strdup(grid_image_focused);
