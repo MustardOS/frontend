@@ -1017,6 +1017,8 @@ struct mux_lang {
         char DISPSUSPEND[MAX_BUFFER_SIZE];
         char SECONDPART[MAX_BUFFER_SIZE];
         char USBPART[MAX_BUFFER_SIZE];
+        char INCBRIGHT[MAX_BUFFER_SIZE];
+        char INCVOLUME[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char RETRO[MAX_BUFFER_SIZE];
@@ -1067,6 +1069,8 @@ struct mux_lang {
             char DISPSUSPEND[MAX_BUFFER_SIZE];
             char SECONDPART[MAX_BUFFER_SIZE];
             char USBPART[MAX_BUFFER_SIZE];
+            char INCBRIGHT[MAX_BUFFER_SIZE];
+            char INCVOLUME[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
 

@@ -88,6 +88,8 @@ struct mux_config {
             int16_t ZRAMFILE;
             int16_t LIDSWITCH;
             int16_t DISPSUSPEND;
+            int16_t INCBRIGHT;
+            int16_t INCVOLUME;
         } ADVANCED;
         struct {
             int16_t HIDDEN;

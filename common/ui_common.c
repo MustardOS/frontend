@@ -908,11 +908,13 @@ static int blank_check(void) {
 static void adjust_brightness(int direction) {
     if (!ui_common_check() || !progress_onscreen) return;
 
+    int inc_bright = config.SETTINGS.ADVANCED.INCBRIGHT;
+
     if (direction > 0) {
-        current_brightness += (current_brightness <= 14) ? 1 : 15;
+        current_brightness += (current_brightness <= (inc_bright - 1)) ? 1 : inc_bright;
         if (current_brightness > device.SCREEN.BRIGHT) current_brightness = device.SCREEN.BRIGHT;
     } else {
-        current_brightness -= (current_brightness <= 15) ? 1 : 15;
+        current_brightness -= (current_brightness <= inc_bright) ? 1 : inc_bright;
         if (current_brightness < 0) current_brightness = 0;
     }
 
@@ -934,11 +936,13 @@ static void adjust_brightness(int direction) {
 static void adjust_volume(int direction) {
     if (!ui_common_check() || !progress_onscreen) return;
 
+    int inc_volume = config.SETTINGS.ADVANCED.INCVOLUME;
+
     if (direction > 0) {
-        current_volume += 8;
+        current_volume += inc_volume;
         if (current_volume > device.AUDIO.MAX) current_volume = device.AUDIO.MAX;
     } else {
-        current_volume -= 8;
+        current_volume -= inc_volume;
         if (current_volume < 0) current_volume = 0;
     }
 

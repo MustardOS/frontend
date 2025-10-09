@@ -316,7 +316,7 @@
 
 #define TWEAKADV_ELEMENTS                \
     TWEAKADV(Accelerate,  "accelerate")  \
-    TWEAKADV(RepeatDelay,  "repeat")  \
+    TWEAKADV(RepeatDelay, "repeat")      \
     TWEAKADV(Offset,      "offset")      \
     TWEAKADV(Swap,        "swap")        \
     TWEAKADV(Volume,      "volume")      \
@@ -337,7 +337,9 @@
     TWEAKADV(Swapfile,    "swapfile")    \
     TWEAKADV(Zramfile,    "zramfile")    \
     TWEAKADV(SecondPart,  "secondpart")  \
-    TWEAKADV(UsbPart,     "usbpart")
+    TWEAKADV(UsbPart,     "usbpart")     \
+    TWEAKADV(IncBright,   "incbright")   \
+    TWEAKADV(IncVolume,   "invvolume")
 
 #define TWEAKGEN_ELEMENTS              \
     TWEAKGEN(Rtc,        "clock")      \

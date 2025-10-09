@@ -486,7 +486,7 @@ int main(void) {
 
     lv_timer_create(quit_watchdog, 100, NULL);
 
-    reset_alert();
+    //reset_alert();
     init_audio();
 
     if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_BOOT_AUTH)) {
