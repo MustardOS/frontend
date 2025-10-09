@@ -347,6 +347,10 @@ int get_grid_column_index(int current_item_index);
 
 int get_grid_row_item_count(int current_item_index);
 
+void update_grid_image_paths(int index);
+
+void update_grid(int direction);
+
 void kiosk_denied();
 
 void run_exec(const char *args[], size_t size, int background);

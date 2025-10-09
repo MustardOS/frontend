@@ -2345,6 +2345,134 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
+void set_grid_catalogue_name(int index, char *catalogue_name, size_t catalogue_name_size) {
+    if (!strcmp(mux_module, "muxplore")) {
+        snprintf(catalogue_name, catalogue_name_size, "Folder");
+    } else if (!strcmp(mux_module, "muxapp")) {
+        snprintf(catalogue_name, catalogue_name_size, "Application");
+    } else {
+        snprintf(catalogue_name, catalogue_name_size, "Collection");
+    }
+}
+
+void update_grid_image_paths(int index) {
+    char catalogue_name[MAX_BUFFER_SIZE];
+    set_grid_catalogue_name(index, catalogue_name, sizeof(catalogue_name));
+    char alt_name[MAX_BUFFER_SIZE];
+    snprintf(alt_name, sizeof(alt_name), !strcmp(mux_module, "muxplore") ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "");
+    char program[MAX_BUFFER_SIZE];
+    snprintf(program, sizeof(program), !strcmp(mux_module, "muxapp") ? items[index].glyph_icon : strip_ext(items[index].name));
+
+    char grid_image[MAX_BUFFER_SIZE];
+    load_image_catalogue(catalogue_name, program, alt_name, "default",
+                        mux_dimension, "grid", grid_image, sizeof(grid_image));
+
+    char glyph_name_focused[MAX_BUFFER_SIZE];
+    snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", program);
+
+    char alt_name_focused[MAX_BUFFER_SIZE];
+    snprintf(alt_name_focused, sizeof(alt_name_focused), "%s_focused", alt_name);
+
+    char grid_image_focused[MAX_BUFFER_SIZE];
+    load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
+                        mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
+
+    if (!strcmp(mux_module, "muxapp")) {
+        get_app_grid_glyph(items[index].name, program, "default", grid_image, sizeof(grid_image));
+        get_app_grid_glyph(items[index].name, glyph_name_focused, "default_focused", grid_image_focused, sizeof(grid_image_focused));
+
+    }
+
+    items[index].grid_image = strdup(grid_image);
+    items[index].grid_image_focused = strdup(grid_image_focused);
+}
+
+static void update_grid_image(lv_obj_t *cell, char *image_path) {
+    if (file_exist(image_path)) {
+        char grid_image[MAX_BUFFER_SIZE];
+        snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
+        lv_img_set_src(cell, grid_image);
+    } else {
+        lv_img_set_src(cell, &ui_image_Nothing);
+    }
+}
+
+static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
+    lv_obj_set_user_data(ui_pnlItem, index);
+    lv_obj_t * ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
+    lv_obj_t * cell_image = lv_obj_get_child(ui_pnlItem, 0);
+    lv_obj_t * cell_image_focused = lv_obj_get_child(ui_pnlItem, 2);
+
+    if (index >= item_count) {
+        lv_obj_add_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_label_set_text(ui_lblItem, items[index].display_name);
+
+        if (items[index].grid_image == NULL) {
+            update_grid_image_paths(index);
+        }
+        update_grid_image(cell_image, items[index].grid_image);
+        update_grid_image(cell_image_focused, items[index].grid_image_focused);
+
+        lv_obj_clear_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
+
+        if (current_item_index == index) {
+            lv_group_focus_obj(ui_pnlItem);
+            lv_group_focus_obj(ui_lblItem);
+            lv_group_focus_obj(cell_image);
+        } 
+    }
+}
+
+static void update_grid_items(int direction) {
+    int rowIndex = get_grid_row_index(current_item_index);
+    int startRowIndex = (direction < 0) ? rowIndex : rowIndex - theme.GRID.ROW_COUNT + 1;
+    if (startRowIndex < 0) startRowIndex = 0;
+    int start_index = startRowIndex * theme.GRID.COLUMN_COUNT;
+
+    for (int index = 0; index < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT; ++index) {
+        lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
+        update_grid_item(panel_item, start_index + index);
+    }
+}
+
+static int get_grid_item_index(int index) {
+    lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
+    int item_index = (int)lv_obj_get_user_data(panel_item);
+    return item_index;
+}
+
+void update_grid(int direction) {
+    if (item_count <= theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) return;
+    int grid_start_index = get_grid_item_index(0);
+    int grid_end_index = get_grid_item_index(theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT - 1);
+
+    if (direction < 0) {
+        if (current_item_index == item_count - 1) {
+            update_grid_items(1);
+        } else {
+            if (current_item_index < grid_start_index) {
+                update_grid_items(direction);
+            }
+        }
+    } else {
+        if (current_item_index == 0) {
+            update_grid_items(-1);
+        } else {
+            if (current_item_index > grid_end_index) {
+                for (size_t i = 0; i < theme.GRID.COLUMN_COUNT; i++)
+                {
+                    update_grid_items(direction);
+                }
+            }
+        }
+    }
+}
+
 void kiosk_denied(void) {
     if (is_ksk(kiosk.MESSAGE)) {
         play_sound(SND_ERROR);

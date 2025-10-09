@@ -1,7 +1,6 @@
 #include "muxshare.h"
 
 static char base_dir[PATH_MAX];
-static char sys_dir[PATH_MAX];
 
 static void show_help(void) {
     char *title = items[current_item_index].name;

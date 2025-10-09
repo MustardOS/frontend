@@ -5,7 +5,6 @@ static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
 
 static char prev_dir[PATH_MAX];
-static char sys_dir[PATH_MAX];
 
 static int exit_status = 0;
 static int sys_index = -1;
@@ -352,35 +351,24 @@ static void init_navigation_group_grid(void) {
     for (size_t i = 0; i < item_count; i++) {
         if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
 
-        uint8_t col = i % theme.GRID.COLUMN_COUNT;
-        uint8_t row = i / theme.GRID.COLUMN_COUNT;
+        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
+            update_grid_image_paths(i);
 
-        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t * cell_image = lv_img_create(cell_panel);
-        lv_obj_t * cell_label = lv_label_create(cell_panel);
+            uint8_t col = i % theme.GRID.COLUMN_COUNT;
+            uint8_t row = i / theme.GRID.COLUMN_COUNT;
+            
+            lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+            lv_obj_set_user_data(cell_panel, i);
+            lv_obj_t * cell_image = lv_img_create(cell_panel);
+            lv_obj_t * cell_label = lv_label_create(cell_panel);
 
-        char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[i].name);
+            create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
+                            items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
 
-        char grid_image[MAX_BUFFER_SIZE];
-        load_image_catalogue("Folder", strip_ext(items[i].name), catalogue_name, "default",
-                             mux_dimension, "grid", grid_image, sizeof(grid_image));
-
-        char glyph_name_focused[MAX_BUFFER_SIZE];
-        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
-
-        char catalogue_name_focused[MAX_BUFFER_SIZE];
-        snprintf(catalogue_name_focused, sizeof(catalogue_name_focused), "%s_focused", catalogue_name);
-
-        char grid_image_focused[MAX_BUFFER_SIZE];
-        load_image_catalogue("Folder", glyph_name_focused, catalogue_name_focused, "default_focused",
-                             mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
-
-        create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                         grid_image, grid_image_focused, items[i].display_name);
-
-        lv_group_add_obj(ui_group, cell_label);
-        lv_group_add_obj(ui_group_glyph, cell_image);
-        lv_group_add_obj(ui_group_panel, cell_panel);
+            lv_group_add_obj(ui_group, cell_label);
+            lv_group_add_obj(ui_group_glyph, cell_image);
+            lv_group_add_obj(ui_group_panel, cell_panel);
+        }
     }
 }
 
@@ -488,7 +476,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -530,15 +518,12 @@ static void list_nav_move(int steps, int direction) {
                     }
                 }
             }
+        } else if (grid_mode_enabled) {
+            update_grid(direction);
         }
     }
 
-    if (grid_mode_enabled) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    }
-
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");

@@ -16,6 +16,8 @@ typedef struct {
     char *extra_data;
     char *help;
     char *glyph_icon;
+    char *grid_image;
+    char *grid_image_focused;
     char *use_module;
 } content_item;
 

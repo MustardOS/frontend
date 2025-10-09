@@ -36,6 +36,7 @@ lv_group_t *ui_group_value;
 char box_image_previous_path[MAX_BUFFER_SIZE];
 char preview_image_previous_path[MAX_BUFFER_SIZE];
 char splash_image_previous_path[MAX_BUFFER_SIZE];
+char sys_dir[MAX_BUFFER_SIZE];
 
 int is_ksk(int k) {
     return kiosk.ENABLE && k;

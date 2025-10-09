@@ -210,14 +210,13 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
 }
 
 bool automatic_assign_core(char *rom_dir) {
-    LOG_INFO(mux_module, "Automatic Assign Core Initiated")
-
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.cfg",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_file);
 
     if (file_exist(core_file)) return true;
+    LOG_INFO(mux_module, "Automatic Assign Core Initiated")
     int auto_assign_good = 0;
 
     char assign_file[MAX_BUFFER_SIZE];

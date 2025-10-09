@@ -87,19 +87,12 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
     for (size_t i = 0; i < item_count; i++) {
-        uint8_t col = i % theme.GRID.COLUMN_COUNT;
-        uint8_t row = i / theme.GRID.COLUMN_COUNT;
-
-        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t *cell_image = lv_img_create(cell_panel);
-        lv_obj_t *cell_label = lv_label_create(cell_panel);
-
         char resolved_base[MAX_BUFFER_SIZE];
         get_app_base(resolved_base, items[i].extra_data);
 
         char app_launcher[MAX_BUFFER_SIZE];
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER,
-                 resolved_base, items[i].extra_data);
+                resolved_base, items[i].extra_data);
 
         const char *glyph_name = NULL;
 
@@ -109,29 +102,29 @@ static void init_navigation_group_grid(void) {
         } else {
             char app_launcher_icon[MAX_BUFFER_SIZE];
             snprintf(app_launcher_icon, sizeof(app_launcher_icon), "%s/%s/" APP_LAUNCHER,
-                     resolved_base, items[i].extra_data);
+                    resolved_base, items[i].extra_data);
             glyph_name = get_script_value(app_launcher_icon, "ICON", "app");
         }
+        items[i].glyph_icon = strdup(glyph_name);
+        
+        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
+            update_grid_image_paths(i);
 
-        char grid_image[MAX_BUFFER_SIZE];
-        load_image_catalogue("Application", glyph_name, "", "default", mux_dimension, "grid",
-                             grid_image, sizeof(grid_image));
-        get_app_grid_glyph(items[i].name, glyph_name, "default", grid_image, sizeof(grid_image));
+            uint8_t col = i % theme.GRID.COLUMN_COUNT;
+            uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        char glyph_name_focused[MAX_BUFFER_SIZE];
-        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);
+            lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+            lv_obj_set_user_data(cell_panel, i);
+            lv_obj_t *cell_image = lv_img_create(cell_panel);
+            lv_obj_t *cell_label = lv_label_create(cell_panel);
 
-        char grid_image_focused[MAX_BUFFER_SIZE];
-        load_image_catalogue("Application", glyph_name_focused, "", "default_focused", mux_dimension, "grid",
-                             grid_image_focused, sizeof(grid_image_focused));
-        get_app_grid_glyph(items[i].name, glyph_name_focused, "default_focused", grid_image_focused, sizeof(grid_image_focused));
+            create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
+                            items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
 
-        create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                         grid_image, grid_image_focused, items[i].display_name);
-
-        lv_group_add_obj(ui_group, cell_label);
-        lv_group_add_obj(ui_group_glyph, cell_image);
-        lv_group_add_obj(ui_group_panel, cell_panel);
+            lv_group_add_obj(ui_group, cell_label);
+            lv_group_add_obj(ui_group_glyph, cell_image);
+            lv_group_add_obj(ui_group_panel, cell_panel);
+        }
     }
 }
 
@@ -298,7 +291,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -312,14 +305,13 @@ static void list_nav_move(int steps, int direction) {
     }
 
     if (grid_mode_enabled) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
+        update_grid(direction);
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
                                ui_count, current_item_index, ui_pnlContent);
     }
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     nav_moved = 1;

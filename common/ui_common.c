@@ -1491,20 +1491,18 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         }
     }
 
-    if (file_exist(item_image_focused_path)) {
-        char grid_image_focused[MAX_BUFFER_SIZE];
-        snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
-        lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
-        lv_img_set_src(cell_image_focused, grid_image_focused);
-        if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
-            lv_obj_align(cell_image_focused, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
-        } else {
-            lv_obj_align(cell_image_focused, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
-        }
-        lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
-        lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
+    char grid_image_focused[MAX_BUFFER_SIZE];
+    snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
+    lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
+    lv_img_set_src(cell_image_focused, file_exist(item_image_focused_path) ? grid_image_focused : &ui_image_Nothing);
+    if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
+        lv_obj_align(cell_image_focused, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+    } else {
+        lv_obj_align(cell_image_focused, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
     }
+    lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
+    lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
 
     lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
     lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
