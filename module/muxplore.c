@@ -349,10 +349,9 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
     for (size_t i = 0; i < item_count; i++) {
+        if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
+
         if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-
-            if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
-
             update_grid_image_paths(i);
 
             uint8_t col = i % theme.GRID.COLUMN_COUNT;

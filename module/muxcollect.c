@@ -4,7 +4,7 @@
 static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
 
-static char *prev_dir = "";
+static char prev_dir[MAX_BUFFER_SIZE];
 static char new_dir[MAX_BUFFER_SIZE];
 
 static int exit_status = 0;
@@ -298,9 +298,9 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
     for (size_t i = 0; i < item_count; i++) {
-        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-            if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
+        if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
 
+        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
             update_grid_image_paths(i);
 
             uint8_t col = i % theme.GRID.COLUMN_COUNT;
@@ -911,7 +911,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_exist(MUOS_PDI_LOAD)) prev_dir = read_all_char_from(MUOS_PDI_LOAD);
+    snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 
     create_collection_items();
     init_elements();
