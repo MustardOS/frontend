@@ -433,12 +433,7 @@ static void reset_alert(void) {
 
     if (show_alert && set_alert_image_path()) {
         muxsplash_main(alert_image_path, false);
-        lv_timer_t *dismiss = lv_timer_create_basic();
-
-        lv_timer_set_period(dismiss, 1200);
-        lv_timer_set_repeat_count(dismiss, 1);
-
-        lv_timer_set_cb(dismiss, (lv_timer_cb_t) cleanup_screen);
+        sleep(3);
     }
 }
 
@@ -486,7 +481,7 @@ int main(void) {
 
     lv_timer_create(quit_watchdog, 100, NULL);
 
-    //reset_alert();
+    reset_alert();
     init_audio();
 
     if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_BOOT_AUTH)) {
