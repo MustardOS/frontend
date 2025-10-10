@@ -35,7 +35,7 @@ struct mux_kiosk {
         int16_t HISTORY;
     } CONTENT;
 
-    struct {;
+    struct {
         int16_t ADD_CON;
         int16_t NEW_DIR;
         int16_t REMOVE;
