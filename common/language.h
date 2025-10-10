@@ -233,6 +233,7 @@ struct mux_lang {
     struct {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
+        char GRID_MODE_CONTENT[MAX_BUFFER_SIZE];
         char THEME_DOWN[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
         char THEME_RES[MAX_BUFFER_SIZE];
@@ -289,6 +290,7 @@ struct mux_lang {
         struct {
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
+            char GRID_MODE_CONTENT[MAX_BUFFER_SIZE];
             char THEME_DOWN[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
             char THEME_RES[MAX_BUFFER_SIZE];

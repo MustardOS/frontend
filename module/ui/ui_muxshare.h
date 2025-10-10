@@ -91,23 +91,24 @@
     CONFIG(Storage,   "storage")   \
     CONFIG(Backup,    "backup")
 
-#define CUSTOM_ELEMENTS                    \
-    CUSTOM(Catalogue,       "catalogue")   \
-    CUSTOM(Config,          "config")      \
-    CUSTOM(Theme,           "theme")       \
-    CUSTOM(ThemeResolution, "resolution")  \
-    CUSTOM(ThemeAlternate,  "alternate")   \
-    CUSTOM(Animation,       "animation")   \
-    CUSTOM(Music,           "music")       \
-    CUSTOM(BlackFade,       "blackfade")   \
-    CUSTOM(LaunchSwap,      "launch_swap") \
-    CUSTOM(Shuffle,         "shuffle")     \
-    CUSTOM(BoxArtImage,     "boxart")      \
-    CUSTOM(BoxArtAlign,     "align")       \
-    CUSTOM(LaunchSplash,    "splash")      \
-    CUSTOM(BoxArtHide,      "boxarthide")  \
-    CUSTOM(Font,            "font")        \
-    CUSTOM(Sound,           "sound")       \
+#define CUSTOM_ELEMENTS                         \
+    CUSTOM(Catalogue,       "catalogue")        \
+    CUSTOM(Config,          "config")           \
+    CUSTOM(Theme,           "theme")            \
+    CUSTOM(ThemeResolution, "resolution")       \
+    CUSTOM(ThemeAlternate,  "alternate")        \
+    CUSTOM(Animation,       "animation")        \
+    CUSTOM(Music,           "music")            \
+    CUSTOM(BlackFade,       "blackfade")        \
+    CUSTOM(LaunchSwap,      "launch_swap")      \
+    CUSTOM(Shuffle,         "shuffle")          \
+    CUSTOM(BoxArtImage,     "boxart")           \
+    CUSTOM(BoxArtAlign,     "align")            \
+    CUSTOM(LaunchSplash,    "splash")           \
+    CUSTOM(BoxArtHide,      "boxarthide")       \
+    CUSTOM(GridModeContent, "gridmodecontent")  \
+    CUSTOM(Font,            "font")             \
+    CUSTOM(Sound,           "sound")            \
     CUSTOM(Chime,           "chime")
 
 #define THEMEFILTER_ELEMENTS               \
