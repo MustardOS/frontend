@@ -58,8 +58,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
             {ui_lblLaunchSplash_custom,    lang.MUXCUSTOM.HELP.SPLASH},
-            {ui_lblBoxArtHide_custom,      lang.MUXCUSTOM.HELP.BOX_HIDE},
             {ui_lblGridModeContent_custom, lang.MUXCUSTOM.HELP.GRID_MODE_CONTENT},
+            {ui_lblBoxArtHide_custom,      lang.MUXCUSTOM.HELP.BOX_HIDE},
             {ui_lblFont_custom,            lang.MUXCUSTOM.HELP.FONT},
             {ui_lblSound_custom,           lang.MUXCUSTOM.HELP.SOUND},
             {ui_lblChime_custom,           lang.MUXCUSTOM.HELP.CHIME},
@@ -179,8 +179,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
     INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.SPLASH, "splash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, GridModeContent, lang.MUXCUSTOM.GRID_MODE_CONTENT, "gridmodecontent", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", font_options, 2);
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
