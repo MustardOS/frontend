@@ -36,7 +36,6 @@
 #include "../common/collection.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
-#include "../common/img/missing.h"
 #include "../common/img/nothing.h"
 #include "../common/input/list_nav.h"
 #include "../common/json/json.h"
