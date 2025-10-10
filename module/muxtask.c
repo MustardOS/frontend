@@ -186,7 +186,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.LAUNCH, 1},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
     overlay_display();

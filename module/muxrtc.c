@@ -423,7 +423,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL, NULL,                            0}
+            {NULL,             NULL,                0}
     });
 
 #define RTC(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);

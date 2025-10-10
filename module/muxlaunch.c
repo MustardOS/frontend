@@ -408,7 +408,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {
             {ui_lblNavAGlyph, "",                  0},
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
 #define LAUNCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_launch, UDATA);

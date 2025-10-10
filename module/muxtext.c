@@ -81,7 +81,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
             {ui_lblNavXGlyph, "",                0},
             {ui_lblNavX,      lang.GENERIC.TOP,  0},
-            {NULL, NULL,                         0}
+            {NULL,            NULL,              0}
     });
 
     lv_obj_set_user_data(ui_txtDocument_text, "document");

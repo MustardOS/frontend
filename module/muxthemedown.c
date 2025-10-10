@@ -377,7 +377,7 @@ static void init_elements(void) {
             {ui_lblNavX,      lang.MUXTHEMEDOWN.REFRESH,  0},
             {ui_lblNavYGlyph, "",                         0},
             {ui_lblNavY,      lang.GENERIC.FILTER,        0},
-            {NULL, NULL,                                  0}
+            {NULL,            NULL,                       0}
     });
 
     overlay_display();

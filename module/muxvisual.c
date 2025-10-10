@@ -220,7 +220,7 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
+            {NULL,             NULL,                0}
     });
 
 #define VISUAL(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_visual, UDATA);

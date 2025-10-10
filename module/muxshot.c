@@ -192,7 +192,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
             {ui_lblNavXGlyph, "",                  1},
             {ui_lblNavX,      lang.GENERIC.REMOVE, 1},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
     ui_imgScreenshot = lv_img_create(ui_screen);

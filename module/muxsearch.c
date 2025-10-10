@@ -597,7 +597,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
             {ui_lblNavXGlyph, "",                0},
             {ui_lblNavX,      "",                0},
-            {NULL, NULL,                         0}
+            {NULL,            NULL,              0}
     });
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);

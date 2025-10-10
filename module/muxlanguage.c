@@ -179,14 +179,14 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 1},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
     if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                       0},
                 {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},
-                {NULL, NULL,                                0}
+                {NULL,            NULL,                     0}
         });
     }
 

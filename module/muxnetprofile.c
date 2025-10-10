@@ -356,7 +356,7 @@ static void init_elements(void) {
             {ui_lblNavX,      lang.GENERIC.SAVE,   0},
             {ui_lblNavYGlyph, "",                  1},
             {ui_lblNavY,      lang.GENERIC.REMOVE, 1},
-            {NULL, NULL,                           0}
+            {NULL,            NULL,                0}
     });
 
     overlay_display();

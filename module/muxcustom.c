@@ -504,7 +504,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
+            {NULL,             NULL,                0}
     });
 
     check_focus();

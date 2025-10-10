@@ -249,7 +249,7 @@ static void init_elements(void) {
             {ui_lblNavX,      lang.GENERIC.DIRECTORY,  1},
             {ui_lblNavYGlyph, "",                      1},
             {ui_lblNavY,      lang.GENERIC.RECURSIVE,  1},
-            {NULL, NULL,                               0}
+            {NULL,            NULL,                    0}
     });
 
     overlay_display();

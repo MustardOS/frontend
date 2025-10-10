@@ -266,7 +266,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK,        0},
             {ui_lblNavXGlyph, "",                       0},
             {ui_lblNavX,      lang.MUXDOWNLOAD.REFRESH, 0},
-            {NULL, NULL,                                0}
+            {NULL,            NULL,                     0}
     });
 
     overlay_display();
