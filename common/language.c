@@ -228,7 +228,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.GRID_MODE_CONTENT, "Grid mode for content");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.GRID_MODE_CONTENT, "Content Grid Mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_DOWN, "Theme Download");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_RES, "Theme Resolution");
