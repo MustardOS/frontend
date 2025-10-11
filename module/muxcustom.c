@@ -396,6 +396,8 @@ static void save_custom_options(void) {
         const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
         run_exec(args, A_SIZE(args), 0);
     }
+
+    if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);
 }
 
 static void handle_a(void) {

@@ -448,6 +448,8 @@ int muxlaunch_main(void) {
 
     init_timer(ui_refresh_task, NULL);
 
+    if (file_exist(MUOS_SYS_LOAD)) remove(MUOS_SYS_LOAD);
+
     mux_input_options input_opts = {
             .swap_axis = (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5) ||
                          (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
