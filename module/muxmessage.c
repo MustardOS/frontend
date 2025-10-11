@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     refresh_screen(ui_scrMessage);
 
     char *ext = grab_ext((char *) default_message);
-    if (!strcasecmp(ext, "txt") && file_exist((char *) default_message)) is_message_file = 1;
+    if (strcasecmp(ext, "txt") == 0 && file_exist((char *) default_message)) is_message_file = 1;
     free(ext);
 
     if (live_file) {

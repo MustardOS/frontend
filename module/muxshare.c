@@ -128,7 +128,7 @@ void overlay_display(void) {
 }
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
-    if (!val || !strlen(val) || !strcasecmp(val, "(null)")) {
+    if (!val || !strlen(val) || strcasecmp(val, "(null)") == 0) {
         LOG_INFO(mux_module, "Using Default %s: %s", label, def_val)
         return strdup(def_val);
     }
@@ -157,7 +157,7 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
 
         last_subdir = get_last_subdir(sys_dir, '/', 4);
 
-        if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
+        if (strcasecmp(last_subdir, strip_dir(STORAGE_PATH)) == 0) {
             snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
                      ext);
         } else {
@@ -331,7 +331,7 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json,
     char *clean_folder_path = str_replace(folder_path, "/", "");
     char *clean_module_path = str_replace(module_path, "/", "");
 
-    if (!strcasecmp(clean_folder_path, clean_module_path) && label[0] != '\0') {
+    if (strcasecmp(clean_folder_path, clean_module_path) == 0 && label[0] != '\0') {
         snprintf(title, sizeof(title), "%s%s", label, module_type);
     } else {
         snprintf(title, sizeof(title), "%s%s", display_title, module_type);

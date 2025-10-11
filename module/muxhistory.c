@@ -57,7 +57,7 @@ static void image_refresh(char *image_type) {
     } else {
         load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
                              image, sizeof(image));
-        if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
+        if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
     }
@@ -622,7 +622,7 @@ int muxhistory_main(int his_index) {
     update_file_counter(ui_lblCounter_history, file_count);
 
     if (file_exist(ADD_MODE_DONE)) {
-        if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
+        if (strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE") == 0) {
             toast_message(lang.GENERIC.ADD_COLLECT, SHORT);
             refresh_screen(ui_screen);
         }

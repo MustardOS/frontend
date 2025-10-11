@@ -29,9 +29,9 @@ static void init_dropdown_settings(void) {
 
 static void restore_options(void) {
     const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
-    if (!strcasecmp(usb_type, "adb")) {
+    if (strcasecmp(usb_type, "adb") == 0) {
         lv_dropdown_set_selected(ui_droUsbFunction_connect, 1);
-    } else if (!strcasecmp(usb_type, "mtp")) {
+    } else if (strcasecmp(usb_type, "mtp") == 0) {
         lv_dropdown_set_selected(ui_droUsbFunction_connect, 2);
     } else {
         lv_dropdown_set_selected(ui_droUsbFunction_connect, 0);

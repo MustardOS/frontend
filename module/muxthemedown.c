@@ -48,7 +48,7 @@ static void image_refresh(char *image_type) {
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
 
-    if (!strcasecmp(image_type, "preview")) {
+    if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {

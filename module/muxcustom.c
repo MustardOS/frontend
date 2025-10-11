@@ -425,7 +425,7 @@ static void handle_a(void) {
             mux_input_stop();
 
             return;
-        } else if (!strcasecmp(u_data, elements[i].mux_name)) {
+        } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (is_ksk(*elements[i].kiosk_flag)) {
                 kiosk_denied();
                 return;

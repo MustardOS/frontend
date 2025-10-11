@@ -9,7 +9,7 @@ static void show_help(void) {
 }
 
 static void write_tag_file(char *path, char *tag, char *log) {
-    if (!strcasecmp(tag, "none")) return;
+    if (strcasecmp(tag, "none") == 0) return;
 
     FILE *file = fopen(path, "w");
     if (!file) {
@@ -45,7 +45,7 @@ static void assign_tag_directory(char *core_dir, char *tag, int purge) {
 static void assign_tag_parent(char *core_dir, char *tag) {
     delete_files_of_type(core_dir, ".tag", NULL, 1);
 
-    if (!strcasecmp(tag, "none")) return;
+    if (strcasecmp(tag, "none") == 0) return;
 
     assign_tag_directory(core_dir, tag, 0);
 

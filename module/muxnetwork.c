@@ -59,7 +59,7 @@ static void get_current_ip(void) {
     char *curr_ip = read_all_char_from(address_file);
 
     if (strlen(curr_ip) > 1) {
-        if (!strcasecmp(curr_ip, "0.0.0.0")) {
+        if (strcasecmp(curr_ip, "0.0.0.0") == 0) {
             can_scan_check(1);
         } else {
             lv_label_set_text(ui_lblConnectValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.CONNECTED : curr_ip);
@@ -98,18 +98,15 @@ static void save_network_config(void) {
     int idx_type = 0;
     int idx_scan = 0;
 
-    if (!strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC)) idx_type = 1;
-    if (!strcasecmp(lv_label_get_text(ui_lblScanValue_network), lang.GENERIC.ENABLED)) idx_scan = 1;
+    if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) idx_type = 1;
+    if (strcasecmp(lv_label_get_text(ui_lblScanValue_network), lang.GENERIC.ENABLED) == 0) idx_scan = 1;
 
     write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT, idx_type);
     write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, idx_scan);
-
-    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
-                       lv_label_get_text(ui_lblIdentifierValue_network));
+    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue_network), PASS_ENCODE) != 0) {
-        write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR,
-                           lv_label_get_text(ui_lblPasswordValue_network));
+        write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR, lv_label_get_text(ui_lblPasswordValue_network));
     }
 
     if (config.NETWORK.TYPE) {
@@ -229,7 +226,7 @@ static void handle_keyboard_press(void) {
     const char *is_key = lv_btnmatrix_get_btn_text(
             lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN) ? num_entry : key_entry, key_curr);
 
-    if (!strcasecmp(is_key, OSK_DONE)) {
+    if (strcasecmp(is_key, OSK_DONE) == 0) {
         handle_keyboard_OK_press();
     } else if (!strcmp(is_key, OSK_UPPER)) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
@@ -315,7 +312,7 @@ static void handle_confirm(void) {
             // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
             int cv_pass_ok = (!strlen(cv_pass) || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
 
-            if (!strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC)) {
+            if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue_network);
                 const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue_network);
                 const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue_network);

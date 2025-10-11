@@ -101,7 +101,7 @@ static void create_core_items(const char *target) {
             snprintf(core_file, sizeof(core_file), "%s/%s", assign_dir, af->d_name);
 
             char *last_dot = strrchr(af->d_name, '.');
-            if (last_dot && !strcasecmp(last_dot, ".ini")) {
+            if (last_dot && strcasecmp(last_dot, ".ini") == 0) {
                 *last_dot = '\0';
 
                 mini_t *core_config = mini_load(core_file);
@@ -137,9 +137,9 @@ static void create_core_items(const char *target) {
         char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
 
         char display_name[MAX_BUFFER_SIZE];
-        if (strcasecmp(file_core, directory_core) != 0 && !strcasecmp(file_core, items[i].extra_data)) {
+        if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, items[i].extra_data) == 0) {
             snprintf(display_name, sizeof(display_name), "%s (%s)", items[i].name, lang.MUXASSIGN.FILE);
-        } else if (!strcasecmp(directory_core, items[i].extra_data)) {
+        } else if (strcasecmp(directory_core, items[i].extra_data) == 0) {
             snprintf(display_name, sizeof(display_name), "%s (%s)", items[i].name, lang.MUXASSIGN.DIR);
         } else {
             snprintf(display_name, sizeof(display_name), "%s", items[i].name);
@@ -152,7 +152,7 @@ static void create_core_items(const char *target) {
         apply_theme_list_item(&theme, ui_lblCoreItem, items[i].name);
 
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-        char *glyph = !strcasecmp(items[i].name, default_assign) ? "default" : "core";
+        char *glyph = strcasecmp(items[i].name, default_assign) == 0 ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
@@ -221,7 +221,7 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
-    if (!strcasecmp(rom_system, "none")) {
+    if (strcasecmp(rom_system, "none") == 0) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
         fclose(file);
@@ -311,7 +311,7 @@ static void handle_a(void) {
         load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
         load_mux("coredown");
     } else {
-        if (!strcasecmp(rom_system, "none")) {
+        if (strcasecmp(rom_system, "none") == 0) {
             play_sound(SND_CONFIRM);
             load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
         } else {
@@ -446,7 +446,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     init_fonts();
 
-    if (!strcasecmp(rom_system, "none")) {
+    if (strcasecmp(rom_system, "none") == 0) {
         create_system_items();
     } else {
         create_core_items(rom_system);
@@ -455,7 +455,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     init_elements();
 
     if (ui_count > 0) {
-        if (!strcasecmp(rom_system, "none")) {
+        if (strcasecmp(rom_system, "none") == 0) {
             LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s")
         } else {
             LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s")

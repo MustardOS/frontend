@@ -123,7 +123,7 @@ static void generate_available_governors(const char *default_governor) {
 
         lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
 
-        char *glyph = !strcasecmp(raw_name, default_governor) ? "default" : str_remchar(raw_name, ' ');
+        char *glyph = strcasecmp(raw_name, default_governor) == 0 ? "default" : str_remchar(raw_name, ' ');
         apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblGovItem);
@@ -447,7 +447,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     init_fonts();
 
-    if (!strcasecmp(rom_system, "none") && !is_app) {
+    if (strcasecmp(rom_system, "none") == 0 && !is_app) {
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 

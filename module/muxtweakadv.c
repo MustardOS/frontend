@@ -47,14 +47,14 @@ static void init_dropdown_settings(void) {
 
 static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droVolume_tweakadv,
-                             !strcasecmp(config.SETTINGS.ADVANCED.VOLUME, "silent") ? 1 :
-                             !strcasecmp(config.SETTINGS.ADVANCED.VOLUME, "soft") ? 2 :
-                             !strcasecmp(config.SETTINGS.ADVANCED.VOLUME, "loud") ? 3 : 0);
+                             strcasecmp(config.SETTINGS.ADVANCED.VOLUME, "silent") == 0 ? 1 :
+                             strcasecmp(config.SETTINGS.ADVANCED.VOLUME, "soft") == 0 ? 2 :
+                             strcasecmp(config.SETTINGS.ADVANCED.VOLUME, "loud") == 0 ? 3 : 0);
 
     lv_dropdown_set_selected(ui_droBrightness_tweakadv,
-                             !strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "low") ? 1 :
-                             !strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "medium") ? 2 :
-                             !strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "high") ? 3 : 0);
+                             strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "low") == 0 ? 1 :
+                             strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "medium") == 0 ? 2 :
+                             strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "high") == 0 ? 3 : 0);
 
     lv_dropdown_set_selected(ui_droSwap_tweakadv, config.SETTINGS.ADVANCED.SWAP);
     lv_dropdown_set_selected(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET);

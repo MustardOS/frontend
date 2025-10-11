@@ -19,7 +19,7 @@ static void populate_languages(void) {
     while ((entry = readdir(dir))) {
         if (entry->d_type == DT_REG) {
             size_t len = strlen(entry->d_name);
-            if (len > 5 && !strcasecmp(entry->d_name + len - 5, ".json")) {
+            if (len > 5 && strcasecmp(entry->d_name + len - 5, ".json") == 0) {
                 entry->d_name[len - 5] = '\0';
                 add_item(&items, &item_count, entry->d_name, TS(entry->d_name), "", ITEM);
             }

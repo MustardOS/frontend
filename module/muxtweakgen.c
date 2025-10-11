@@ -53,11 +53,11 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
 
     lv_dropdown_set_selected(ui_droStartup_tweakgen,
-                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "explore") ? 1 :
-                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "collection") ? 2 :
-                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "history") ? 3 :
-                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "last") ? 4 :
-                             !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") ? 5 : 0);
+                             strcasecmp(config.SETTINGS.GENERAL.STARTUP, "explore") == 0 ? 1 :
+                             strcasecmp(config.SETTINGS.GENERAL.STARTUP, "collection") == 0 ? 2 :
+                             strcasecmp(config.SETTINGS.GENERAL.STARTUP, "history") == 0 ? 3 :
+                             strcasecmp(config.SETTINGS.GENERAL.STARTUP, "last") == 0 ? 4 :
+                             strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") == 0 ? 5 : 0);
 }
 
 static void set_setting_value(const char *script_name, int value, int offset) {

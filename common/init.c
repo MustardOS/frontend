@@ -287,6 +287,6 @@ void bluetooth_task(void) {
 }
 
 void network_task(void) {
-    if (!strcasecmp(mux_module, "muxnetwork")) return;
+    if (strcasecmp(mux_module, "muxnetwork") == 0) return;
     update_network_status(ui_staNetwork, &theme, 0);
 }

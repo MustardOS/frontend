@@ -102,7 +102,7 @@ static void image_refresh(void) {
 
 static void create_picker_items(void) {
     if (device.DEVICE.HAS_NETWORK && is_network_connected() &&
-        !strcasecmp(picker_type, "/theme") && strcasecmp(base_dir, sys_dir) == 0 &&
+        strcasecmp(picker_type, "/theme") == 0 && strcasecmp(base_dir, sys_dir) == 0 &&
         !is_ksk(kiosk.CUSTOM.THEME_DOWN)) {
         add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWN,
                  lang.MUXPICKER.THEME_DOWN, "", MENU);
@@ -128,7 +128,7 @@ static void create_picker_items(void) {
             snprintf(file_ext, sizeof(file_ext), ".%s", picker_extension);
 
             char *last_dot = strrchr(tf->d_name, '.');
-            if (last_dot && !strcasecmp(last_dot, file_ext)) {
+            if (last_dot && strcasecmp(last_dot, file_ext) == 0) {
                 *last_dot = '\0';
                 add_item(&items, &item_count, tf->d_name, tf->d_name, "", ITEM);
             }
@@ -219,7 +219,7 @@ static void handle_a(void) {
     } else {
         write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
-        if (!strcasecmp(picker_type, "/theme") && !version_check()) {
+        if (strcasecmp(picker_type, "/theme") == 0 && !version_check()) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_VER, SHORT);
             return;
@@ -228,7 +228,7 @@ static void handle_a(void) {
         char picker_archive[MAX_BUFFER_SIZE];
         snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
                  sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
-        if (!strcasecmp(picker_type, "/theme") && !resolution_check(picker_archive)) {
+        if (strcasecmp(picker_type, "/theme") == 0 && !resolution_check(picker_archive)) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_RES, SHORT);
             return;
@@ -251,7 +251,7 @@ static void handle_a(void) {
                      relative_path, selected_item);
         }
 
-        if (!strcasecmp(picker_type, "/theme")) delete_files_of_type(STORAGE_THEME, ".ttf", NULL, 1);
+        if (strcasecmp(picker_type, "/theme") == 0) delete_files_of_type(STORAGE_THEME, ".ttf", NULL, 1);
 
         size_t exec_count;
         const char *args[] = {picker_script, "install", relative_zip_path, NULL};
@@ -259,7 +259,7 @@ static void handle_a(void) {
 
         if (exec) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-            if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "/theme")) play_silence_bgm();
+            if (config.SETTINGS.GENERAL.BGM == 2 && strcasecmp(picker_type, "/theme") == 0) play_silence_bgm();
 
             run_exec(exec, exec_count, 0);
         }
@@ -280,14 +280,14 @@ static void handle_x(void) {
     }
 
     char relative_zip_path[PATH_MAX];
-    if (!strcasecmp(picker_extension, "muxthm")) {
+    if (strcasecmp(picker_extension, "muxthm") == 0) {
         snprintf(relative_zip_path, sizeof(relative_zip_path), STORAGE_THEME "/../%s.%s",
                  lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
-    } else if (!strcasecmp(picker_extension, "muxcat")) {
+    } else if (strcasecmp(picker_extension, "muxcat") == 0) {
         snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s/%s.%s",
                  device.STORAGE.ROM.MOUNT, STORE_LOC_PCAT,
                  lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
-    } else if (!strcasecmp(picker_extension, "muxcfg")) {
+    } else if (strcasecmp(picker_extension, "muxcfg") == 0) {
         snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s/%s.%s",
                  device.STORAGE.ROM.MOUNT, STORE_LOC_PCON,
                  lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
@@ -301,7 +301,7 @@ static void handle_x(void) {
         return;
     }
 
-    if (!strcasecmp(picker_extension, "muxthm")) {
+    if (strcasecmp(picker_extension, "muxthm") == 0) {
         char theme_hash[9];
         FILE *tf = fopen(relative_zip_path, "rb");
         snprintf(theme_hash, sizeof theme_hash, "%08" PRIx32, fnv1a_hash_file(tf));
@@ -455,7 +455,7 @@ int muxpicker_main(char *type, char *ex_dir) {
     init_theme(1, 1);
 
     const char *picker_title = NULL;
-    if (!strcasecmp(picker_type, "/theme")) {
+    if (strcasecmp(picker_type, "/theme") == 0) {
         // Check if our default `MustardOS.muxthm` exists! If not...
         // Put That Thing Back Where It Came From Or So Help Me!
         char *mustard_theme = STORAGE_THEME "/../MustardOS.muxthm";
@@ -465,10 +465,10 @@ int muxpicker_main(char *type, char *ex_dir) {
         }
         picker_extension = "muxthm";
         picker_title = lang.MUXPICKER.THEME;
-    } else if (!strcasecmp(picker_type, "package/catalogue")) {
+    } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
         picker_extension = "muxcat";
         picker_title = lang.MUXPICKER.CATALOGUE;
-    } else if (!strcasecmp(picker_type, "package/config")) {
+    } else if (strcasecmp(picker_type, "package/config") == 0) {
         picker_extension = "muxcfg";
         picker_title = lang.MUXPICKER.CONFIG;
     } else {
@@ -507,11 +507,11 @@ int muxpicker_main(char *type, char *ex_dir) {
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
 
         const char *message_text = NULL;
-        if (!strcasecmp(picker_type, "/theme")) {
+        if (strcasecmp(picker_type, "/theme") == 0) {
             message_text = lang.MUXPICKER.NONE.THEME;
-        } else if (!strcasecmp(picker_type, "package/catalogue")) {
+        } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
             message_text = lang.MUXPICKER.NONE.CATALOGUE;
-        } else if (!strcasecmp(picker_type, "package/config")) {
+        } else if (strcasecmp(picker_type, "package/config") == 0) {
             message_text = lang.MUXPICKER.NONE.CONFIG;
         } else {
             message_text = lang.MUXPICKER.NONE.CUSTOM;

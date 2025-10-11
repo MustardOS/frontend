@@ -57,7 +57,7 @@ static char *load_content_description(void) {
 }
 
 static void image_refresh(char *image_type) {
-    if (!strcasecmp(image_type, "box") && config.VISUAL.BOX_ART == 8) return;
+    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
@@ -65,7 +65,7 @@ static void image_refresh(char *image_type) {
 
     char *content_label = items[current_item_index].name;
 
-    if (!strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(STORAGE_PATH))) {
+    if (strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(STORAGE_PATH)) == 0) {
         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
                  INFO_CAT_PATH, image_type, content_label);
     } else {
@@ -91,7 +91,7 @@ static void image_refresh(char *image_type) {
                                         image_type, image, sizeof(image));
                 }
             }
-            if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
+            if (strcasecmp(image_type, "splash") && !file_exist(image) == 0) {
                 load_splash_image_fallback(mux_dimension, image, sizeof(image));
             }
         }
@@ -99,7 +99,7 @@ static void image_refresh(char *image_type) {
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
 
-    if (!strcasecmp(image_type, "preview")) {
+    if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
@@ -115,7 +115,7 @@ static void image_refresh(char *image_type) {
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
             }
         }
-    } else if (!strcasecmp(image_type, "splash")) {
+    } else if (strcasecmp(image_type, "splash") == 0) {
         if (strcasecmp(splash_image_previous_path, image) != 0) {
             if (file_exist(image)) {
                 splash_valid = 1;
@@ -295,7 +295,7 @@ static void gen_item(char **file_names, int file_count) {
     char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
         for (size_t i = 0; i < item_count; i++) {
-            if (!strcasecmp(items[i].name, e_name_line)) {
+            if (strcasecmp(items[i].name, e_name_line) == 0) {
                 sys_index = (int) i;
                 remove(EXPLORE_NAME);
                 break;
@@ -351,11 +351,8 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
     for (size_t i = 0; i < item_count; i++) {
-        if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
-
-        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-            gen_grid_item(i);
-        }
+        if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
+        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
     }
 }
 
@@ -427,10 +424,8 @@ static void create_content_items(void) {
         );
         if (!grid_mode_enabled) {
             for (int i = 0; i < dir_count; i++) {
-                if (i < theme.MUX.ITEM.COUNT) {
-                    gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
-                }
-                if (!strcasecmp(items[i].name, prev_dir)) sys_index = i;
+                if (i < theme.MUX.ITEM.COUNT) gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
+                if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = i;
             }
         }
 
@@ -925,7 +920,7 @@ int muxplore_main(int index, char *dir) {
     update_file_counter(ui_lblCounter_explore, file_count);
 
     if (file_exist(ADD_MODE_DONE)) {
-        if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
+        if (strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE") == 0) {
             toast_message(lang.GENERIC.ADD_COLLECT, SHORT);
         }
         remove(ADD_MODE_DONE);

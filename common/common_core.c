@@ -204,7 +204,7 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
 
     char pico8_splore[MAX_BUFFER_SIZE];
     snprintf(pico8_splore, sizeof(pico8_splore), "%s/Splore.p8", rom_dir);
-    if (!strcasecmp(core, "ext-pico8") && !file_exist(pico8_splore)) write_text_to_file(pico8_splore, "w", CHAR, "");
+    if (strcasecmp(core, "ext-pico8") == 0 && !file_exist(pico8_splore)) write_text_to_file(pico8_splore, "w", CHAR, "");
 
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
 }

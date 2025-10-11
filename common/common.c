@@ -2789,7 +2789,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     int text_hit = 0;
     for (size_t i = 0; i < ui_count; i++) {
         const bool item_hidden = lv_obj_has_flag(ui_objects[i], LV_OBJ_FLAG_HIDDEN);
-        if (!item_hidden && !strcasecmp(lv_obj_get_user_data(ui_objects[i]), prev)) break;
+        if (!item_hidden && strcasecmp(lv_obj_get_user_data(ui_objects[i]), prev) == 0) break;
         if (!item_hidden) text_hit++;
     }
 
@@ -2800,7 +2800,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
             nav_next_return = text_hit - !device.DEVICE.HAS_HDMI;
         } else if (!strcmp(mux_module, "muxtweakadv")) {
             nav_next_return = text_hit - !device.DEVICE.HAS_NETWORK;
-        } else if (strcmp(mux_module, "muxconfig") && !config.NETWORK.TYPE && !strcasecmp(prev, "connect")) {
+        } else if (strcmp(mux_module, "muxconfig") && !config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
             nav_next_return = 4;
         } else {
             nav_next_return = text_hit;
@@ -3100,7 +3100,7 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
     char content_core[MAX_BUFFER_SIZE] = {0};
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
-    if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
+    if (strcasecmp(last_subdir, strip_dir(STORAGE_PATH)) == 0) {
         snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/core.cfg");
     } else {
         snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",

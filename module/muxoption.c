@@ -67,8 +67,10 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     if (!*value) value = get_dir;
 
     if (!*value) {
-        value = !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE :
+        value = !strcmp(opt_type, "cfg") ? lang.MUXOPTION.NOT_ASSIGNED :
+                !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE :
                 !strcmp(opt_type, "tag") ? lang.MUXOPTION.NOT_ASSIGNED :
+                !strcmp(opt_type, "gov") ? device.CPU.DEFAULT :
                 "System";
     }
 

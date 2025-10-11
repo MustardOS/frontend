@@ -37,7 +37,7 @@ static void load_profile(char *name) {
     mini_t *net_profile = mini_try_load(profile_file);
 
     write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT,
-                       (!strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static")) ? 1 : 0);
+                       (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0) ? 1 : 0);
 
     write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
@@ -186,7 +186,7 @@ static void create_profile_items(void) {
         while ((pf = readdir(pd))) {
             if (pf->d_type == DT_REG) {
                 char *last_dot = strrchr(pf->d_name, '.');
-                if (last_dot && !strcasecmp(last_dot, ".ini")) {
+                if (last_dot && strcasecmp(last_dot, ".ini") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (!temp) {
                         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)

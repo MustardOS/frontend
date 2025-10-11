@@ -155,7 +155,7 @@ static void handle_a(void) {
     const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (!strcasecmp(u_data, elements[i].glyph_name)) {
+        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (strcmp(elements[i].mux_name, "fti-shutdown") != 0) {
                 play_sound(SND_CONFIRM);
             } else {
