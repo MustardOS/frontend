@@ -184,6 +184,15 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA = 0;
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND = 0xF7E318;
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = 0;
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR = 0xF7E318;
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START = 255;
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP = 255;
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION = 0;
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW = 0x000000;
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH = 0;
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET = 10;
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET = 10;
+    theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE = LV_LABEL_LONG_WRAP;
     theme->GRID.CURRENT_ITEM_LABEL.TEXT = 0x100808;
     theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = 0;
     theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT = LV_TEXT_ALIGN_CENTER;
@@ -620,6 +629,26 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid",
                                                                   "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA",
                                                                   theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid",
+                                                                     "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR",
+                                                                     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid",
+                                                                     "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START",
+                                                                     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid",
+                                                                    "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP",
+                                                                    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid",
+                                                                         "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION",
+                                                                         theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW", theme->GRID.CURRENT_ITEM_LABEL.SHADOW);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_WIDTH", theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_X_OFFSET",
+                                                   theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_Y_OFFSET",
+                                                   theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET);
+    theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_LABEL_LONG_MODE",
+                                                      theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
     theme->GRID.CURRENT_ITEM_LABEL.TEXT = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT",
                                                       theme->GRID.CURRENT_ITEM_LABEL.TEXT);
     theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA",

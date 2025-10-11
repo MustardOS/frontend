@@ -1390,6 +1390,16 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
                               MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA,
                             MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR),
+                                   MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_x(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_y(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET, MU_OBJ_MAIN_DEFAULT);
+    lv_label_set_long_mode(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
     lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER),
                                   MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA,

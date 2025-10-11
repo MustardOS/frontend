@@ -214,6 +214,15 @@ struct theme_config {
             int16_t BORDER_ALPHA;
             uint32_t BACKGROUND;
             int16_t BACKGROUND_ALPHA;
+            uint32_t BACKGROUND_GRADIENT_COLOR;
+            int16_t BACKGROUND_GRADIENT_START;
+            int16_t BACKGROUND_GRADIENT_STOP;
+            int16_t BACKGROUND_GRADIENT_DIRECTION;
+            uint32_t SHADOW;
+            int16_t SHADOW_WIDTH;
+            int16_t SHADOW_X_OFFSET;
+            int16_t SHADOW_Y_OFFSET;
+            int16_t LABEL_LONG_MODE;
             uint32_t TEXT;
             int16_t TEXT_ALPHA;
             int16_t TEXT_ALIGNMENT;
