@@ -177,8 +177,8 @@ static void init_navigation_group(void) {
 
     add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', dir_level), "folder", false);
     add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
-    add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
-    add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
+    if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
+    if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
     add_static_item(line_index, "", "", "", true);
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
