@@ -2416,7 +2416,7 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
 }
 
 static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
-    lv_obj_set_user_data(ui_pnlItem, index);
+    lv_obj_set_user_data(ui_pnlItem, UFI(index));
     lv_obj_t * ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
     lv_obj_t * cell_image = lv_obj_get_child(ui_pnlItem, 0);
     lv_obj_t * cell_image_focused = lv_obj_get_child(ui_pnlItem, 2);
@@ -2460,7 +2460,7 @@ void update_grid_items(int direction) {
 
 static int get_grid_item_index(int index) {
     lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
-    int item_index = (int)lv_obj_get_user_data(panel_item);
+    int item_index = IFU(lv_obj_get_user_data(panel_item));
     return item_index;
 }
 
@@ -2495,7 +2495,7 @@ void gen_grid_item(int index) {
     uint8_t row = index / theme.GRID.COLUMN_COUNT;
 
     lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
-    lv_obj_set_user_data(cell_panel, index);
+    lv_obj_set_user_data(cell_panel, UFI(index));
     lv_obj_t * cell_image = lv_img_create(cell_panel);
     lv_obj_t * cell_label = lv_label_create(cell_panel);
 

@@ -8,6 +8,8 @@
 #define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define BIT(n) (UINT64_C(1) << (n))
 #define TS(str) translate_specific(str)
+#define UFI(i) ((void *)(uintptr_t)(i))
+#define IFU(p) ((size_t)(uintptr_t)(p))
 
 extern int msgbox_active;
 extern int block_input;

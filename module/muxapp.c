@@ -114,7 +114,7 @@ static void init_navigation_group_grid(void) {
             uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
             lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-            lv_obj_set_user_data(cell_panel, i);
+            lv_obj_set_user_data(cell_panel, UFI(i));
             lv_obj_t *cell_image = lv_img_create(cell_panel);
             lv_obj_t *cell_label = lv_label_create(cell_panel);
 
