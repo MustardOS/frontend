@@ -139,16 +139,15 @@ int download_file(const char *url, const char *output_path) {
     }
 
     // Verify file is not empty
-    double cl;
-    curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD, &cl);
-    if (cl <= 0.0) {
+    curl_off_t cl = 0;
+    if (curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl) != CURLE_OK || cl <= 0) {
         fprintf(stderr, "No data downloaded\n");
         remove(output_path);
         download_finished(-5);
         return -5;
     }
 
-    printf("Download Finished (%.0f bytes)\n", cl);
+    printf("Download Finished (%.0ld bytes)\n", cl);
     download_finished(0);
     return 0;
 }
