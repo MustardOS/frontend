@@ -202,8 +202,10 @@ static void list_nav_next(int steps) {
 
 static void load_return_module() {
     if (file_exist(MUOS_ASS_FROM)) {
+        remove(OPTION_SKIP);
         load_mux(read_all_char_from(MUOS_ASS_FROM));
         remove(MUOS_ASS_FROM);
+        remove(MUOS_SYS_LOAD);
     }
 }
 
@@ -317,6 +319,9 @@ static void handle_a(void) {
             handle_core_assignment("Single Core Assignment Triggered", SINGLE);
         }
     }
+
+    remove(MUOS_SYS_LOAD);
+    remove(OPTION_SKIP);
 
     close_input();
     mux_input_stop();

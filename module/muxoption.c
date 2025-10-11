@@ -353,6 +353,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
+        remove(MUOS_SYS_LOAD);
         LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
         close_input();
         return 0;
