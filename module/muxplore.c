@@ -91,7 +91,7 @@ static void image_refresh(char *image_type) {
                                         image_type, image, sizeof(image));
                 }
             }
-            if (strcasecmp(image_type, "splash") && !file_exist(image) == 0) {
+            if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
                 load_splash_image_fallback(mux_dimension, image, sizeof(image));
             }
         }
