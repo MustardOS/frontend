@@ -312,7 +312,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, TS(items[current_item_index].name));
 
     nav_moved = 1;
 }
