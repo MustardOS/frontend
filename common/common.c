@@ -2353,7 +2353,7 @@ static void set_grid_catalogue_and_program_name(int index, char *catalogue_name,
     }
 
     if (items[index].content_type == ITEM) {
-        if (strcmp(mux_module, "muxcollect") == 0) {
+        if (strcmp(mux_module, "muxcollect") == 0 || strcmp(mux_module, "muxhistory") == 0) {
             char *item_dir = strip_dir(items[index].extra_data);
             char *file_path = strdup(items[index].extra_data);
             char *item_file = get_last_dir(file_path);
@@ -2438,7 +2438,7 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
         lv_obj_clear_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
 
-        if (current_item_index == index) {
+        if (current_item_index == index && !is_carousel_grid_mode()) {
             lv_group_focus_obj(ui_pnlItem);
             lv_group_focus_obj(ui_lblItem);
             lv_group_focus_obj(cell_image);
@@ -2447,14 +2447,24 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
 }
 
 void update_grid_items(int direction) {
-    int rowIndex = get_grid_row_index(current_item_index);
-    int startRowIndex = (direction < 0) ? rowIndex : rowIndex - theme.GRID.ROW_COUNT + 1;
-    if (startRowIndex < 0) startRowIndex = 0;
-    int start_index = startRowIndex * theme.GRID.COLUMN_COUNT;
+    if (is_carousel_grid_mode()) {
+        int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+        for (int i = 0; i < carousel_item_count; i++) {
+            int offset = i - (carousel_item_count / 2);                 // position relative to center
+            int index = (current_item_index + offset + item_count) % item_count;  // wrap around
+            lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, i);
+            update_grid_item(panel_item, index);
+        }
+    } else {
+        int rowIndex = get_grid_row_index(current_item_index);
+        int startRowIndex = (direction < 0) ? rowIndex : rowIndex - theme.GRID.ROW_COUNT + 1;
+        if (startRowIndex < 0) startRowIndex = 0;
+        int start_index = startRowIndex * theme.GRID.COLUMN_COUNT;
 
-    for (int index = 0; index < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT; ++index) {
-        lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
-        update_grid_item(panel_item, start_index + index);
+        for (int index = 0; index < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT; ++index) {
+            lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
+            update_grid_item(panel_item, start_index + index);
+        }
     }
 }
 
@@ -2465,6 +2475,11 @@ static int get_grid_item_index(int index) {
 }
 
 void update_grid(int direction) {
+    if (is_carousel_grid_mode()) {
+        update_grid_items(1);
+        return;
+    }
+
     if (item_count <= theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) return;
     int grid_start_index = get_grid_item_index(0);
     int grid_end_index = get_grid_item_index(theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT - 1);
@@ -2488,23 +2503,65 @@ void update_grid(int direction) {
     }
 }
 
-void gen_grid_item(int index) {
-    update_grid_image_paths(index);
+static void gen_grid_item_common(int item_index, int panel_index, int focus_index) {
+    update_grid_image_paths(item_index);
 
-    uint8_t col = index % theme.GRID.COLUMN_COUNT;
-    uint8_t row = index / theme.GRID.COLUMN_COUNT;
+    uint8_t col, row;
+    if (is_carousel_grid_mode()) {
+        col = (theme.GRID.COLUMN_COUNT == 1) ? 0 : panel_index;
+        row = (theme.GRID.ROW_COUNT == 1) ? 0 : panel_index;
+    } else {
+        col = item_index % theme.GRID.COLUMN_COUNT;
+        row = item_index / theme.GRID.COLUMN_COUNT;
+    }
 
-    lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
-    lv_obj_set_user_data(cell_panel, UFI(index));
-    lv_obj_t * cell_image = lv_img_create(cell_panel);
-    lv_obj_t * cell_label = lv_label_create(cell_panel);
+    lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+    lv_obj_set_user_data(cell_panel, UFI(item_index));
+
+    lv_obj_t *cell_image = lv_img_create(cell_panel);
+    lv_obj_t *cell_label = lv_label_create(cell_panel);
 
     create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                    items[index].grid_image, items[index].grid_image_focused, items[index].display_name);
+                     items[item_index].grid_image, items[item_index].grid_image_focused, items[item_index].display_name);
 
     lv_group_add_obj(ui_group, cell_label);
     lv_group_add_obj(ui_group_glyph, cell_image);
-    lv_group_add_obj(ui_group_panel, cell_panel);    
+    lv_group_add_obj(ui_group_panel, cell_panel);
+
+    if (is_carousel_grid_mode() && focus_index == panel_index) {
+        lv_group_focus_obj(cell_panel);
+        lv_group_focus_obj(cell_label);
+        lv_group_focus_obj(cell_image);
+    }
+}
+
+void gen_grid_item(int item_index) {
+    gen_grid_item_common(item_index, 0, -1);
+}
+
+static void gen_carousel_grid_item(int item_index, int panel_index, int focus_index) {
+    gen_grid_item_common(item_index, panel_index, focus_index);
+}
+
+int disable_grid_file_exists(char *item_curr_dir) {
+    char no_grid_path[PATH_MAX];
+    snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
+    return file_exist(no_grid_path);
+}
+
+void create_carousel_grid() {
+    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+    int middle_index = carousel_item_count / 2;
+    for (int i = 0; i < carousel_item_count; i++) {
+        int offset = i - (carousel_item_count / 2);                           // position relative to center
+        int item_index = (current_item_index + offset + item_count) % item_count;  // wrap around
+        gen_carousel_grid_item(item_index, i, middle_index);
+    }
+}
+
+int is_carousel_grid_mode() {
+    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+    return (grid_mode_enabled && (theme.GRID.ROW_COUNT == 1 || theme.GRID.COLUMN_COUNT == 1) && carousel_item_count > 2 && carousel_item_count %2 == 1) ? 1 : 0;
 }
 
 void kiosk_denied(void) {

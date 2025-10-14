@@ -106,26 +106,29 @@ static void init_navigation_group_grid(void) {
             glyph_name = get_script_value(app_launcher_icon, "ICON", "app");
         }
         items[i].glyph_icon = strdup(glyph_name);
-        
-        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-            update_grid_image_paths(i);
 
-            uint8_t col = i % theme.GRID.COLUMN_COUNT;
-            uint8_t row = i / theme.GRID.COLUMN_COUNT;
+        if (!is_carousel_grid_mode()) {
+            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
+                update_grid_image_paths(i);
 
-            lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-            lv_obj_set_user_data(cell_panel, UFI(i));
-            lv_obj_t *cell_image = lv_img_create(cell_panel);
-            lv_obj_t *cell_label = lv_label_create(cell_panel);
+                uint8_t col = i % theme.GRID.COLUMN_COUNT;
+                uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-            create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                            items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
+                lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+                lv_obj_set_user_data(cell_panel, UFI(i));
+                lv_obj_t *cell_image = lv_img_create(cell_panel);
+                lv_obj_t *cell_label = lv_label_create(cell_panel);
 
-            lv_group_add_obj(ui_group, cell_label);
-            lv_group_add_obj(ui_group_glyph, cell_image);
-            lv_group_add_obj(ui_group_panel, cell_panel);
+                create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
+                                items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
+
+                lv_group_add_obj(ui_group, cell_label);
+                lv_group_add_obj(ui_group_glyph, cell_image);
+                lv_group_add_obj(ui_group_panel, cell_panel);
+            }
         }
     }
+    if (is_carousel_grid_mode()) create_carousel_grid();
 }
 
 static int append_mux_app(char ***arr, size_t *count, const char *name) {
@@ -299,9 +302,11 @@ static void list_nav_move(int steps, int direction) {
             current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         }
 
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
+        if (!is_carousel_grid_mode()) {
+            nav_move(ui_group, direction);
+            nav_move(ui_group_glyph, direction);
+            nav_move(ui_group_panel, direction);
+        }
 
         if (grid_mode_enabled) update_grid(direction);
     }

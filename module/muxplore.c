@@ -12,16 +12,9 @@ static int file_count = 0;
 static int dir_count = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
-static int nogrid_file_exists = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
-
-static void check_for_disable_grid_file(char *item_curr_dir) {
-    char no_grid_path[PATH_MAX];
-    snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
-    nogrid_file_exists = file_exist(no_grid_path);
-}
 
 static char *load_content_description(void) {
     char content_desc[MAX_BUFFER_SIZE];
@@ -350,9 +343,15 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
-    for (size_t i = 0; i < item_count; i++) {
-        if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
-        if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
+    if (is_carousel_grid_mode()) {
+        create_carousel_grid();
+        int prev_dir_index = get_folder_item_index_by_name(items, item_count, prev_dir);
+        if (prev_dir_index > -1) sys_index = prev_dir_index;
+    } else {
+        for (size_t i = 0; i < item_count; i++) {
+            if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
+            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
+        }
     }
 }
 
@@ -415,9 +414,8 @@ static void create_content_items(void) {
         }
 
         sort_items(items, item_count);
-        check_for_disable_grid_file(item_curr_dir);
 
-        grid_mode_enabled = !nogrid_file_exists && theme.GRID.ENABLED &&
+        grid_mode_enabled = !disable_grid_file_exists(item_curr_dir) && theme.GRID.ENABLED &&
         (
             (file_count > 0 && config.VISUAL.GRID_MODE_CONTENT) ||
             (dir_count > 0 && file_count == 0)
@@ -477,9 +475,11 @@ static void list_nav_move(int steps, int direction) {
             current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         }
 
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
+        if (!is_carousel_grid_mode()) {
+            nav_move(ui_group, direction);
+            nav_move(ui_group_glyph, direction);
+            nav_move(ui_group_panel, direction);
+        }
 
         if (!grid_mode_enabled && item_count > theme.MUX.ITEM.COUNT) {
             int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
@@ -838,7 +838,6 @@ int muxplore_main(int index, char *dir) {
     dir_count = 0;
     starter_image = 0;
     splash_valid = 0;
-    nogrid_file_exists = 0;
 
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? STORAGE_PATH : dir);
     sys_index = index;
