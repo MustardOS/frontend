@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakgen.h"
 
-#define UI_COUNT 8
+#define UI_COUNT 10
 
 #define TWEAKGEN(NAME, UDATA) static int NAME##_original;
 TWEAKGEN_ELEMENTS
@@ -18,6 +18,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblVolume_tweakgen,     lang.MUXTWEAKGEN.HELP.VOLUME},
             {ui_lblColour_tweakgen,     lang.MUXTWEAKGEN.HELP.TEMP},
             {ui_lblRgb_tweakgen,        lang.MUXTWEAKGEN.HELP.RGB},
+            {ui_lblHkDpad_tweakgen,     lang.MUXTWEAKGEN.HELP.HKDPAD},
+            {ui_lblHkShot_tweakgen,     lang.MUXTWEAKGEN.HELP.HKSHOT},
             {ui_lblStartup_tweakgen,    lang.MUXTWEAKGEN.HELP.STARTUP},
     };
 
@@ -51,6 +53,14 @@ static void restore_tweak_options(void) {
 
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
+
+    if (device.BOARD.STICK > 0) {
+        lv_dropdown_set_selected(ui_droHkDpad_tweakgen, 0);
+    } else {
+        lv_dropdown_set_selected(ui_droHkDpad_tweakgen, config.SETTINGS.GENERAL.HKDPAD);
+    }
+
+    lv_dropdown_set_selected(ui_droHkShot_tweakgen, config.SETTINGS.GENERAL.HKSHOT);
 
     lv_dropdown_set_selected(ui_droStartup_tweakgen,
                              strcasecmp(config.SETTINGS.GENERAL.STARTUP, "explore") == 0 ? 1 :
@@ -91,6 +101,15 @@ static void save_tweak_options(void) {
 
     CHECK_AND_SAVE_VAL(tweakgen, Startup, "settings/general/startup", CHAR, startup_options);
     CHECK_AND_SAVE_STD(tweakgen, Rgb, "settings/general/rgb", INT, 0);
+
+    if (device.BOARD.STICK > 0) {
+        HkDpad_original = -1;
+        CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, -1);
+    } else {
+        CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
+    }
+
+    CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
 
     if (lv_dropdown_get_selected(ui_droColour_tweakgen) != Colour_original) {
         is_modified++;
@@ -134,6 +153,15 @@ static void init_navigation_group(void) {
             lang.MUXTWEAKGEN.STARTUP.RESUME
     };
 
+    char *hk_combos[] = {
+            "R2+L2+A",
+            "R2+L2+X",
+            "L1+MENU+A",
+            "L1+MENU+X",
+            "MENU+START",
+            "MENU+SELECT"
+    };
+
     INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
@@ -141,6 +169,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, 6);
+    INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, 6);
     INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
 
     char *brightness_values = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
@@ -167,8 +197,9 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.DEVICE.HAS_HDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
-    if (!device.DEVICE.RGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
+    if (!device.BOARD.HAS_HDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
+    if (!device.BOARD.RGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
+    if (device.BOARD.STICK > 0) HIDE_OPTION_ITEM(tweakgen, HkDpad);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
@@ -344,7 +375,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
     check_focus();

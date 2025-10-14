@@ -28,13 +28,13 @@ static void init_dropdown_settings(void) {
 }
 
 static void restore_device_options(void) {
-    lv_dropdown_set_selected(ui_droHasBluetooth_device, device.DEVICE.HAS_BLUETOOTH);
-    lv_dropdown_set_selected(ui_droHasRgb_device, device.DEVICE.RGB);
-    lv_dropdown_set_selected(ui_droHasDebugFs_device, device.DEVICE.DEBUGFS);
-    lv_dropdown_set_selected(ui_droHasHdmi_device, device.DEVICE.HAS_HDMI);
-    lv_dropdown_set_selected(ui_droHasLid_device, device.DEVICE.HAS_LID);
-    lv_dropdown_set_selected(ui_droHasNetwork_device, device.DEVICE.HAS_NETWORK);
-    lv_dropdown_set_selected(ui_droHasPortmaster_device, device.DEVICE.HAS_PORTMASTER);
+    lv_dropdown_set_selected(ui_droHasBluetooth_device, device.BOARD.HAS_BLUETOOTH);
+    lv_dropdown_set_selected(ui_droHasRgb_device, device.BOARD.RGB);
+    lv_dropdown_set_selected(ui_droHasDebugFs_device, device.BOARD.DEBUGFS);
+    lv_dropdown_set_selected(ui_droHasHdmi_device, device.BOARD.HAS_HDMI);
+    lv_dropdown_set_selected(ui_droHasLid_device, device.BOARD.HAS_LID);
+    lv_dropdown_set_selected(ui_droHasNetwork_device, device.BOARD.HAS_NETWORK);
+    lv_dropdown_set_selected(ui_droHasPortmaster_device, device.BOARD.HAS_PORTMASTER);
 }
 
 static void save_device_options(void) {

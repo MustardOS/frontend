@@ -10,7 +10,7 @@ int main(void) {
     init_theme(0, 0);
     init_display(0);
 
-    const lv_font_t *header_font = (strcasecmp(device.DEVICE.NAME, "tui-brick") == 0)
+    const lv_font_t *header_font = (strcasecmp(device.BOARD.NAME, "tui-brick") == 0)
                                    ? &ui_font_NotoSansBigHD
                                    : &ui_font_NotoSansBig;
 

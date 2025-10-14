@@ -876,7 +876,7 @@ void mux_input_task(const mux_input_options *opts) {
         LOG_WARN("input", "Failed to create wake pipe; shutdown may be slower")
     }
 
-    struct epoll_event epoll_event_arr[device.DEVICE.EVENT];
+    struct epoll_event epoll_event_arr[device.BOARD.EVENT];
     struct epoll_event ev;
     memset(&ev, 0, sizeof(ev));
 
@@ -934,7 +934,7 @@ void mux_input_task(const mux_input_options *opts) {
     if (is_switch_held(opts->general_fd)) pressed = (pressed | BIT(MUX_INPUT_SWITCH));
 
     while (!stop_flag) {
-        int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.DEVICE.EVENT, held ? timeout_hold : timeout);
+        int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.EVENT, held ? timeout_hold : timeout);
 
         if (num_events == -1) {
             int e = errno;

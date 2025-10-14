@@ -350,6 +350,8 @@
     TWEAKGEN(Volume,     "volume")     \
     TWEAKGEN(Colour,     "colour")     \
     TWEAKGEN(Rgb,        "rgb")        \
+    TWEAKGEN(HkDpad,     "hkdpad")     \
+    TWEAKGEN(HkShot,     "hkshot")     \
     TWEAKGEN(Startup,    "startup")
 
 #define VISUAL_ELEMENTS                                    \

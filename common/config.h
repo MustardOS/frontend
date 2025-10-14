@@ -105,6 +105,8 @@ struct mux_config {
             int16_t THEME_RESOLUTION;
             int16_t THEME_RESOLUTION_WIDTH;
             int16_t THEME_RESOLUTION_HEIGHT;
+            int16_t HKDPAD;
+            int16_t HKSHOT;
         } GENERAL;
         struct {
             int16_t RESOLUTION;

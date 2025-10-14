@@ -182,7 +182,7 @@ static void init_elements(void) {
             {NULL,            NULL,                0}
     });
 
-    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                       0},
                 {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},

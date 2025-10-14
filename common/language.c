@@ -931,6 +931,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.ADVANCED, "Advanced Settings");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.RGB, "Device RGB Lights");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HKDPAD, "DPAD Swap Hotkey");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HKSHOT, "Screenshot Hotkey");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.TITLE, "Device Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.MENU, "Main Menu");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.EXPLORE, "Content Explorer");
@@ -945,6 +947,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED, "Settings that should only be changed by those who know what they are doing!");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.RGB, "Toggle the device fancy RGB light system");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKDPAD, "Switch between different hotkeys for toggling DPAD swap");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKSHOT, "Switch between different hotkeys for taking a screenshot");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
 
     // muxvisual

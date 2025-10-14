@@ -357,7 +357,7 @@ static void save_custom_options(void) {
             snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh",
                      STORAGE_THEME, theme_alt);
             if (file_exist(rgb_script)) {
-                if (device.DEVICE.RGB && config.SETTINGS.GENERAL.RGB) {
+                if (device.BOARD.RGB && config.SETTINGS.GENERAL.RGB) {
                     const char *args[] = {rgb_script, NULL};
                     run_exec(args, A_SIZE(args), 0);
                 }

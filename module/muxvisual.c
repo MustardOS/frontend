@@ -131,7 +131,7 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.DEVICE.HAS_NETWORK) HIDE_OPTION_ITEM(visual, Network);
+    if (!device.BOARD.HAS_NETWORK) HIDE_OPTION_ITEM(visual, Network);
 }
 
 static void list_nav_move(int steps, int direction) {

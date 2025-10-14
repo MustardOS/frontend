@@ -2797,9 +2797,9 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     if (text_hit > 0) {
         *nav_moved = 1;
         if (!strcmp(mux_module, "muxtweakgen")) {
-            nav_next_return = text_hit - !device.DEVICE.HAS_HDMI;
+            nav_next_return = text_hit - !device.BOARD.HAS_HDMI;
         } else if (!strcmp(mux_module, "muxtweakadv")) {
-            nav_next_return = text_hit - !device.DEVICE.HAS_NETWORK;
+            nav_next_return = text_hit - !device.BOARD.HAS_NETWORK;
         } else if (strcmp(mux_module, "muxconfig") && !config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
             nav_next_return = 4;
         } else {

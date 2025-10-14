@@ -255,8 +255,8 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.DEVICE.HAS_NETWORK) HIDE_OPTION_ITEM(tweakadv, RetroWait);
-    if (!device.DEVICE.HAS_LID) HIDE_OPTION_ITEM(tweakadv, LidSwitch);
+    if (!device.BOARD.HAS_NETWORK) HIDE_OPTION_ITEM(tweakadv, RetroWait);
+    if (!device.BOARD.HAS_LID) HIDE_OPTION_ITEM(tweakadv, LidSwitch);
 
     // Removal of random theme because it is causing a number of issues
     HIDE_OPTION_ITEM(tweakadv, Theme);

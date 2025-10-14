@@ -1085,6 +1085,8 @@ struct mux_lang {
         char HDMI[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
         char RGB[MAX_BUFFER_SIZE];
+        char HKDPAD[MAX_BUFFER_SIZE];
+        char HKSHOT[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char MENU[MAX_BUFFER_SIZE];
@@ -1104,6 +1106,8 @@ struct mux_lang {
             char HDMI[MAX_BUFFER_SIZE];
             char ADVANCED[MAX_BUFFER_SIZE];
             char RGB[MAX_BUFFER_SIZE];
+            char HKDPAD[MAX_BUFFER_SIZE];
+            char HKSHOT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
 

@@ -298,7 +298,7 @@ int main(int argc, char *argv[]) {
     if (term_height == 0) term_height = device.SCREEN.HEIGHT;
 
     if (!font_size) {
-        if (strcasecmp(device.DEVICE.NAME, "tui-brick") == 0) {
+        if (strcasecmp(device.BOARD.NAME, "tui-brick") == 0) {
             font_size = 28;
         } else {
             font_size = 16;

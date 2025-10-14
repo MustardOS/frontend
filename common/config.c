@@ -93,6 +93,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.RGB, CONF_CONFIG_PATH "settings/general/rgb", 1)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.HKDPAD, CONF_CONFIG_PATH "settings/hotkey/dpad_toggle", 1)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.HKSHOT, CONF_CONFIG_PATH "settings/hotkey/screenshot", 0)
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, CONF_CONFIG_PATH "settings/general/startup", "launcher")
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, CONF_CONFIG_PATH "settings/general/language", "English")
     CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_RESOLUTION, CONF_CONFIG_PATH "settings/general/theme_resolution", 0)

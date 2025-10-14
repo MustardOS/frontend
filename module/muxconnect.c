@@ -107,13 +107,13 @@ static void init_navigation_group(void) {
         apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
     }
 
-    if (!device.DEVICE.HAS_NETWORK) {
+    if (!device.BOARD.HAS_NETWORK) {
         HIDE_OPTION_ITEM(connect, Network);
         HIDE_OPTION_ITEM(connect, NetAdv);
         HIDE_OPTION_ITEM(connect, Services);
     }
 
-    if (!device.DEVICE.HAS_BLUETOOTH || true) { // TODO: remove true when bluetooth is implemented
+    if (!device.BOARD.HAS_BLUETOOTH || true) { // TODO: remove true when bluetooth is implemented
         HIDE_OPTION_ITEM(connect, Bluetooth);
     }
 
