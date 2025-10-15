@@ -2427,6 +2427,7 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
         lv_obj_add_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_label_set_text(ui_lblItem, items[index].display_name);
+        if (items[index].glyph_icon != NULL) lv_obj_set_user_data(ui_lblItem, items[index].glyph_icon);
 
         if (items[index].grid_image == NULL) {
             update_grid_image_paths(index);
@@ -2504,7 +2505,7 @@ void update_grid(int direction) {
 }
 
 static void gen_grid_item_common(int item_index, int panel_index, int focus_index) {
-    update_grid_image_paths(item_index);
+    if (items[item_index].grid_image == NULL) update_grid_image_paths(item_index);
 
     uint8_t col, row;
     if (is_carousel_grid_mode()) {
@@ -2520,6 +2521,7 @@ static void gen_grid_item_common(int item_index, int panel_index, int focus_inde
 
     lv_obj_t *cell_image = lv_img_create(cell_panel);
     lv_obj_t *cell_label = lv_label_create(cell_panel);
+    if (items[item_index].glyph_icon != NULL) lv_obj_set_user_data(cell_label, items[item_index].glyph_icon);
 
     create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                      items[item_index].grid_image, items[item_index].grid_image_focused, items[item_index].display_name);
