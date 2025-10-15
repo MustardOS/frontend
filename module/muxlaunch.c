@@ -6,18 +6,21 @@
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
-    struct help_msg help_messages[] = {
-            {ui_lblExplore_launch,    lang.MUXLAUNCH.HELP.EXPLORE},
-            {ui_lblCollection_launch, lang.MUXLAUNCH.HELP.COLLECTION},
-            {ui_lblHistory_launch,    lang.MUXLAUNCH.HELP.HISTORY},
-            {ui_lblApps_launch,       lang.MUXLAUNCH.HELP.APP},
-            {ui_lblInfo_launch,       lang.MUXLAUNCH.HELP.INFO},
-            {ui_lblConfig_launch,     lang.MUXLAUNCH.HELP.CONFIG},
-            {ui_lblReboot_launch,     lang.MUXLAUNCH.HELP.REBOOT},
-            {ui_lblShutdown_launch,   lang.MUXLAUNCH.HELP.SHUTDOWN},
+    struct {
+        const char *title;
+        const char *content;
+    } help_messages[] = {
+            {lang.MUXLAUNCH.EXPLORE,    lang.MUXLAUNCH.HELP.EXPLORE},
+            {lang.MUXLAUNCH.COLLECTION, lang.MUXLAUNCH.HELP.COLLECTION},
+            {lang.MUXLAUNCH.HISTORY,    lang.MUXLAUNCH.HELP.HISTORY},
+            {lang.MUXLAUNCH.APP,        lang.MUXLAUNCH.HELP.APP},
+            {lang.MUXLAUNCH.INFO,       lang.MUXLAUNCH.HELP.INFO},
+            {lang.MUXLAUNCH.CONFIG,     lang.MUXLAUNCH.HELP.CONFIG},
+            {lang.MUXLAUNCH.REBOOT,     lang.MUXLAUNCH.HELP.REBOOT},
+            {lang.MUXLAUNCH.SHUTDOWN,   lang.MUXLAUNCH.HELP.SHUTDOWN},
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    show_info_box(help_messages[current_item_index].title, help_messages[current_item_index].content, 0);
 }
 
 static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
@@ -134,6 +137,8 @@ static void list_nav_move(int steps, int direction) {
             nav_move(ui_group_glyph, direction);
             nav_move(ui_group_panel, direction);
         }
+
+        if (grid_mode_enabled) update_grid(direction);
     }
 
     if (!grid_mode_enabled) {
@@ -282,7 +287,8 @@ static void handle_up_hold(void) {//prev
         (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 4) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 0 && current_item_index <= 2) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 3) ||
-        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index > 0)) {
+        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
+        is_carousel_grid_mode()) {
         handle_up();
     }
 }
@@ -299,7 +305,8 @@ static void handle_down_hold(void) {//next
         (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < 3) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < UI_COUNT - 1 && current_item_index > 2) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < 2) ||
-        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1)) {
+        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1) ||
+        is_carousel_grid_mode()) {
         handle_down();
     }
 }
@@ -374,6 +381,28 @@ static void handle_right(void) {
             default:
                 break;
         }
+    }
+}
+
+static void handle_left_hold(void) {
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+        get_grid_row_index(current_item_index) > 0 ||
+        is_carousel_grid_mode()) {
+        handle_left();
+    }
+}
+
+static void handle_right_hold(void) {
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+        get_grid_row_index(current_item_index) < grid_info.last_row_index ||
+        is_carousel_grid_mode()) {
+        handle_right();
     }
 }
 
@@ -466,6 +495,8 @@ int muxlaunch_main(void) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L2] = hold_call_set,
             },
             .combo = {
