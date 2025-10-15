@@ -355,7 +355,13 @@ void update_grid_items(int direction);
 
 void update_grid(int direction);
 
-void gen_grid_item(int index);
+void gen_grid_item(int item_index);
+
+int disable_grid_file_exists(char *item_curr_dir);
+
+void create_carousel_grid();
+
+int is_carousel_grid_mode();
 
 void kiosk_denied();
 

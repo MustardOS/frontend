@@ -55,8 +55,10 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
-                             image, sizeof(image));
+        if (strcasecmp(image_type, "box") || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+            load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
+                                image, sizeof(image));
+        }
         if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
@@ -130,7 +132,7 @@ static void add_file_names(const char *base_dir, char ***file_names, char ***las
     }
 
     while ((entry = readdir(dir))) {
-        if (entry->d_type != DT_REG) continue;
+        if (entry->d_type != DT_REG || strcmp(entry->d_name, ".nogrid") == 0) continue;
 
         char full_path[PATH_MAX];
         snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
@@ -258,9 +260,30 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         glyph_icons[i] = (items[i].content_type == ITEM) ? get_glyph_name(i) : "unknown";
     }
 
+    if (grid_mode_enabled) return;
+
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ITEM) {
             gen_label(mux_module, glyph_icons[i], items[i].display_name);
+        }
+    }
+}
+
+static void init_navigation_group_grid(void) {
+    grid_mode_enabled = 1;
+    init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
+    create_grid_panel(&theme, (int) item_count);
+    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
+    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+
+
+    if (is_carousel_grid_mode()) {
+        create_carousel_grid();
+    } else {
+        for (size_t i = 0; i < item_count; i++) {
+            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
+                gen_grid_item(i);
+            }
         }
     }
 }
@@ -274,9 +297,14 @@ static void create_history_items(void) {
     lv_label_set_text(ui_lblTitle, lang.MUXHISTORY.TITLE);
     add_file_names(INFO_HIS_PATH, &file_names, &last_dirs);
 
+    grid_mode_enabled = !disable_grid_file_exists(INFO_HIS_PATH) && theme.GRID.ENABLED && file_count > 0 && config.VISUAL.GRID_MODE_CONTENT;
     if (file_count > 0) {
         gen_item(file_count, file_names, last_dirs);
         lv_obj_update_layout(ui_pnlContent);
+    }
+
+    if (grid_mode_enabled) {
+        init_navigation_group_grid();
     }
 
     free(file_names);
@@ -306,7 +334,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -314,13 +342,20 @@ static void list_nav_move(int steps, int direction) {
             current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         }
 
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
+        if (!is_carousel_grid_mode()) {
+            nav_move(ui_group, direction);
+            nav_move(ui_group_glyph, direction);
+            nav_move(ui_group_panel, direction);
+        }
+
+        if (grid_mode_enabled) update_grid(direction);
     }
 
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (!grid_mode_enabled) {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    }
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");
     nav_moved = 1;
@@ -632,7 +667,8 @@ int muxhistory_main(int his_index) {
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
+                          (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .press_handler = {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,

@@ -6,40 +6,36 @@
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
-    struct help_msg help_messages[] = {
-            {ui_lblExplore_launch,    lang.MUXLAUNCH.HELP.EXPLORE},
-            {ui_lblCollection_launch, lang.MUXLAUNCH.HELP.COLLECTION},
-            {ui_lblHistory_launch,    lang.MUXLAUNCH.HELP.HISTORY},
-            {ui_lblApps_launch,       lang.MUXLAUNCH.HELP.APP},
-            {ui_lblInfo_launch,       lang.MUXLAUNCH.HELP.INFO},
-            {ui_lblConfig_launch,     lang.MUXLAUNCH.HELP.CONFIG},
-            {ui_lblReboot_launch,     lang.MUXLAUNCH.HELP.REBOOT},
-            {ui_lblShutdown_launch,   lang.MUXLAUNCH.HELP.SHUTDOWN},
+    struct {
+        const char *title;
+        const char *content;
+    } help_messages[] = {
+            {lang.MUXLAUNCH.EXPLORE,    lang.MUXLAUNCH.HELP.EXPLORE},
+            {lang.MUXLAUNCH.COLLECTION, lang.MUXLAUNCH.HELP.COLLECTION},
+            {lang.MUXLAUNCH.HISTORY,    lang.MUXLAUNCH.HELP.HISTORY},
+            {lang.MUXLAUNCH.APP,        lang.MUXLAUNCH.HELP.APP},
+            {lang.MUXLAUNCH.INFO,       lang.MUXLAUNCH.HELP.INFO},
+            {lang.MUXLAUNCH.CONFIG,     lang.MUXLAUNCH.HELP.CONFIG},
+            {lang.MUXLAUNCH.REBOOT,     lang.MUXLAUNCH.HELP.REBOOT},
+            {lang.MUXLAUNCH.SHUTDOWN,   lang.MUXLAUNCH.HELP.SHUTDOWN},
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    show_info_box(help_messages[current_item_index].title, help_messages[current_item_index].content, 0);
 }
 
 static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
+    grid_mode_enabled = 1;
     init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, UI_COUNT);
 
     load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
+    char prev_dir[MAX_BUFFER_SIZE];
+    snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
+    int steps = 0;
     for (int i = 0; i < UI_COUNT; i++) {
-        uint8_t col = i % theme.GRID.COLUMN_COUNT;
-        uint8_t row = i / theme.GRID.COLUMN_COUNT;
-
-        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_set_user_data(cell_panel, strdup(item_labels[i]));
-
-        lv_obj_t *cell_image = lv_img_create(cell_panel);
-
-        lv_obj_t *cell_label = lv_label_create(cell_panel);
-        lv_obj_set_user_data(cell_label, glyph_names[i]);
-
-        ui_objects[i] = cell_label;
+        if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
 
         char grid_img[MAX_BUFFER_SIZE];
         load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
@@ -52,12 +48,19 @@ static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels
         load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
                                      "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
 
-        create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row, grid_img, grid_img_foc, item_grid_labels[i]);
-
-        lv_group_add_obj(ui_group, cell_label);
-        lv_group_add_obj(ui_group_glyph, cell_image);
-        lv_group_add_obj(ui_group_panel, cell_panel);
+        content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);
+        new_item->glyph_icon = strdup(glyph_names[i]);
+        new_item->grid_image = strdup(grid_img);
+        new_item->grid_image_focused = strdup(grid_img_foc);
     }
+    if (is_carousel_grid_mode()) {
+        create_carousel_grid();
+    } else {
+        for (size_t i = 0; i < item_count; i++) {
+            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
+        }
+    }
+    list_nav_move(steps, +1);
 }
 
 static void init_navigation_group(void) {
@@ -113,16 +116,15 @@ static void init_navigation_group(void) {
             lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
             lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
         }
+        list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
     }
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
@@ -130,20 +132,21 @@ static void list_nav_move(int steps, int direction) {
             current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         }
 
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
+        if (!is_carousel_grid_mode()) { 
+            nav_move(ui_group, direction);
+            nav_move(ui_group_glyph, direction);
+            nav_move(ui_group_panel, direction);
+        }
+
+        if (grid_mode_enabled) update_grid(direction);
     }
 
-    if (theme.GRID.ENABLED) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    } else {
+    if (!grid_mode_enabled) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    } else {
+        lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].name);
     }
-
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
 
     nav_moved = 1;
 }
@@ -284,7 +287,8 @@ static void handle_up_hold(void) {//prev
         (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 4) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 0 && current_item_index <= 2) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 3) ||
-        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index > 0)) {
+        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
+        is_carousel_grid_mode()) {
         handle_up();
     }
 }
@@ -301,7 +305,8 @@ static void handle_down_hold(void) {//next
         (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < 3) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < UI_COUNT - 1 && current_item_index > 2) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < 2) ||
-        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1)) {
+        (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1) ||
+        is_carousel_grid_mode()) {
         handle_down();
     }
 }
@@ -376,6 +381,28 @@ static void handle_right(void) {
             default:
                 break;
         }
+    }
+}
+
+static void handle_left_hold(void) {
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+        get_grid_row_index(current_item_index) > 0 ||
+        is_carousel_grid_mode()) {
+        handle_left();
+    }
+}
+
+static void handle_right_hold(void) {
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+        get_grid_row_index(current_item_index) < grid_info.last_row_index ||
+        is_carousel_grid_mode()) {
+        handle_right();
     }
 }
 
@@ -468,6 +495,8 @@ int muxlaunch_main(void) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L2] = hold_call_set,
             },
             .combo = {
@@ -510,6 +539,8 @@ int muxlaunch_main(void) {
     };
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
+
+    if (item_count > 0) free_items(&items, &item_count);
 
     return 0;
 }

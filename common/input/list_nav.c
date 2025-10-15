@@ -71,7 +71,8 @@ void handle_list_nav_up_hold(void) {
     // Don't wrap around when scrolling on hold.
     if ((grid_mode_enabled && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
         (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
-        (!grid_mode_enabled && current_item_index > 0)) {
+        (!grid_mode_enabled && current_item_index > 0) ||
+        is_carousel_grid_mode()) {
         handle_list_nav_up();
     }
 }
@@ -87,7 +88,8 @@ void handle_list_nav_down_hold(void) {
     if ((grid_mode_enabled && theme.GRID.NAVIGATION_TYPE == 4 &&
          get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1) ||
         (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index < ui_count - 1) ||
-        (!grid_mode_enabled && current_item_index < ui_count - 1)) {
+        (!grid_mode_enabled && current_item_index < ui_count - 1) ||
+        is_carousel_grid_mode()) {
         handle_list_nav_down();
     }
 }
@@ -146,7 +148,8 @@ void handle_list_nav_left_hold(void) {
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
-        get_grid_row_index(current_item_index) > 0) {
+        get_grid_row_index(current_item_index) > 0 ||
+        is_carousel_grid_mode()) {
         handle_list_nav_left();
     }
 }
@@ -160,7 +163,8 @@ void handle_list_nav_right_hold(void) {
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
-        get_grid_row_index(current_item_index) < grid_info.last_row_index) {
+        get_grid_row_index(current_item_index) < grid_info.last_row_index ||
+        is_carousel_grid_mode()) {
         handle_list_nav_right();
     }
 }
