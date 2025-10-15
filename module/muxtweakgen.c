@@ -138,6 +138,65 @@ static void save_tweak_options(void) {
     }
 }
 
+static char **load_combos(const char *filename, int *count) {
+    int line_count = 0;
+    char **combos = str_parse_file(filename, &line_count, LINES);
+    if (!combos || line_count == 0) return NULL;
+
+    char **hk_lines = calloc(line_count, sizeof(char *));
+    if (!hk_lines) {
+        for (int i = 0; i < line_count; i++) free(combos[i]);
+        free(combos);
+        return NULL;
+    }
+
+    for (int i = 0; i < line_count; i++) {
+        char *combo = combos[i];
+
+        char *open_bracket = strchr(combo, '[');
+        char *close_bracket = strrchr(combo, ']');
+
+        if (!open_bracket || !close_bracket || open_bracket >= close_bracket) continue;
+
+        *close_bracket = '\0';
+        char *scan_pos = open_bracket + 1;
+
+        char buffer[128] = {0};
+        char *write_pos = buffer;
+        int is_first = 1;
+
+        while (*scan_pos) {
+            if (*scan_pos == '"') {
+                char *entry_start = ++scan_pos;
+                while (*scan_pos && *scan_pos != '"') scan_pos++;
+
+                size_t entry_len = scan_pos - entry_start;
+                if (entry_len > 0) {
+                    if (!is_first) *write_pos++ = '+';
+
+                    for (size_t j = 0; j < entry_len; j++) {
+                        char c = entry_start[j];
+                        *write_pos++ = (c == '_') ? ' ' : c;
+                    }
+
+                    is_first = 0;
+                }
+            }
+
+            if (*scan_pos) scan_pos++;
+        }
+
+        *write_pos = '\0';
+        hk_lines[i] = strdup(buffer);
+    }
+
+    for (int i = 0; i < line_count; i++) free(combos[i]);
+    free(combos);
+
+    *count = line_count;
+    return hk_lines;
+}
+
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
@@ -153,14 +212,17 @@ static void init_navigation_group(void) {
             lang.MUXTWEAKGEN.STARTUP.RESUME
     };
 
-    char *hk_combos[] = {
-            "R2+L2+A",
-            "R2+L2+X",
-            "L1+MENU+A",
-            "L1+MENU+X",
-            "MENU+START",
-            "MENU+SELECT"
-    };
+    int hk_combo_count = 0;
+    char **hk_combos = NULL;
+
+    const char *combo_path = NULL;
+    if (str_startswith(device.BOARD.NAME, "rg")) {
+        combo_path = OPT_PATH "share/hotkey/rg.ini";
+    } else if (str_startswith(device.BOARD.NAME, "tui")) {
+        combo_path = OPT_PATH "share/hotkey/tui.ini";
+    }
+
+    if (combo_path) hk_combos = load_combos(combo_path, &hk_combo_count);
 
     INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
@@ -169,8 +231,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, 6);
-    INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, 6);
+    INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, hk_combo_count);
+    INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, hk_combo_count);
+
     INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
 
     char *brightness_values = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
@@ -200,6 +263,11 @@ static void init_navigation_group(void) {
     if (!device.BOARD.HAS_HDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
     if (!device.BOARD.RGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
     if (device.BOARD.STICK > 0) HIDE_OPTION_ITEM(tweakgen, HkDpad);
+
+    if (!hk_combo_count) {
+        HIDE_OPTION_ITEM(tweakgen, HkDpad);
+        HIDE_OPTION_ITEM(tweakgen, HkShot);
+    }
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }

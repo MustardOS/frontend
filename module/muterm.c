@@ -74,7 +74,7 @@ void print_help(const char *name) {
     printf("\t\t\t\tDefault: 16\n");
 
     printf("\t-f, --font <path.ttf>\tPath to TTF font file\n");
-    printf("\t\t\t\tDefault: /opt/muos/share/font/muterm.ttf\n");
+    printf("\t\t\t\tDefault: " OPT_PATH "/share/font/muterm.ttf\n");
 
     printf("\t-i, --image <image>\tPath to PNG background image\n");
     printf("\t\t\t\tDefault: none\n");
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
             font_size = 16;
         }
     }
-    if (!font_path) font_path = "/opt/muos/share/font/muterm.ttf";
+    if (!font_path) font_path = OPT_PATH "share/font/muterm.ttf";
 
     if (!cmd) print_help(argv[0]);
 

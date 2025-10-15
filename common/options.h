@@ -33,7 +33,10 @@
 
 #define LOCAL_TIME "/etc/localtime"
 
-#define USED_RESET "/opt/muos/config/system/used_reset"
+#define OPT_PATH "/opt/muos/"
+#define RUN_PATH "/run/muos/"
+
+#define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"
 
 #define OSK_UPPER "ABC"
@@ -49,9 +52,6 @@
 
 #define STORAGE_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP  "/tmp/skip_opt"
-
-#define OPT_PATH "/opt/muos/"
-#define RUN_PATH "/run/muos/"
 
 #define INTERNAL_THEME   OPT_PATH "share/theme/active"
 #define INTERNAL_OVERLAY OPT_PATH "share/overlay"
