@@ -88,21 +88,21 @@ static void init_navigation_group_grid(void) {
 
     for (size_t i = 0; i < item_count; i++) {
         char resolved_base[MAX_BUFFER_SIZE];
-        get_app_base(resolved_base, items[i].extra_data);
+        get_app_base(resolved_base, items[i].name);
 
         char app_launcher[MAX_BUFFER_SIZE];
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER,
-                resolved_base, items[i].extra_data);
+                resolved_base, items[i].name);
 
         const char *glyph_name = NULL;
 
-        mux_apps *mux_app = get_mux_app(items[i].extra_data);
+        mux_apps *mux_app = get_mux_app(items[i].name);
         if (mux_app && mux_app->icon) {
             glyph_name = mux_app->icon;
         } else {
             char app_launcher_icon[MAX_BUFFER_SIZE];
             snprintf(app_launcher_icon, sizeof(app_launcher_icon), "%s/%s/" APP_LAUNCHER,
-                    resolved_base, items[i].extra_data);
+                    resolved_base, items[i].name);
             glyph_name = get_script_value(app_launcher_icon, "ICON", "app");
         }
         items[i].glyph_icon = strdup(glyph_name);
@@ -210,6 +210,9 @@ static void create_app_items(void) {
         char resolved_base[MAX_BUFFER_SIZE];
         get_app_base(resolved_base, dir_names[i]);
 
+        char app_folder[MAX_BUFFER_SIZE];
+        snprintf(app_folder, sizeof(app_folder), "%s/%s", resolved_base, dir_names[i]);
+
         char app_launcher[MAX_BUFFER_SIZE];
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER,
                  resolved_base, dir_names[i]);
@@ -228,7 +231,7 @@ static void create_app_items(void) {
         char app_store[MAX_BUFFER_SIZE];
         snprintf(app_store, sizeof(app_store), "%s", grid_label);
 
-        add_item(&items, &item_count, dir_names[i], TS(app_store), dir_names[i], ITEM);
+        add_item(&items, &item_count, dir_names[i], TS(app_store), app_folder, ITEM);
 
         free(dir_names[i]);
     }
@@ -268,7 +271,7 @@ static void create_app_items(void) {
 
                     apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, glyph_name);
                     if (lv_img_get_src(ui_lblAppItemGlyph) == NULL) {
-                        apply_app_glyph(items[i].name, glyph_name, ui_lblAppItemGlyph);
+                        apply_app_glyph(items[i].extra_data, glyph_name, ui_lblAppItemGlyph);
                     }
                 }
 
@@ -373,7 +376,7 @@ static void handle_a(void) {
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
         } else {
             snprintf(app_dir, sizeof(app_dir), "%s",
-                     items[current_item_index].extra_data);
+                     items[current_item_index].name);
         }
 
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, app_dir);
