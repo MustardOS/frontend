@@ -151,6 +151,7 @@
 #define FRIENDLY_RESULT "/tmp/f_result.json"
 #define MANUAL_RA_LOAD  "/tmp/ra_no_load"
 #define APP_LAUNCHER    "mux_launch.sh"
+#define APP_LANGUAGE    "mux_lang.ini"
 
 #define THEME_DATA   "theme_data.json"
 #define EXTRA_DATA   "extra_data.json"
