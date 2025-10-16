@@ -902,6 +902,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char VERSION[MAX_BUFFER_SIZE];
+        char BUILD[MAX_BUFFER_SIZE];
         char DEVICE[MAX_BUFFER_SIZE];
         char KERNEL[MAX_BUFFER_SIZE];
         char UPTIME[MAX_BUFFER_SIZE];
@@ -920,6 +921,7 @@ struct mux_lang {
         } CPU;
         struct {
             char VERSION[MAX_BUFFER_SIZE];
+            char BUILD[MAX_BUFFER_SIZE];
             char DEVICE[MAX_BUFFER_SIZE];
             char KERNEL[MAX_BUFFER_SIZE];
             char UPTIME[MAX_BUFFER_SIZE];

@@ -3004,11 +3004,16 @@ void get_storage_info(const char *partition, double *total, double *free, double
     *used = *total - *free;
 }
 
-char *get_build_version(void) {
-    static char build_version[32];
-    snprintf(build_version, sizeof(build_version), "%s (%s)",
-             str_replace(config.SYSTEM.VERSION, "_", " "), config.SYSTEM.BUILD);
-    return build_version;
+char *get_version(void) {
+    static char version[64];
+    snprintf(version, sizeof(version), "%s", str_replace(config.SYSTEM.VERSION, "_", " "));
+    return version;
+}
+
+char *get_build(void) {
+    static char build[16];
+    snprintf(build, sizeof(build), "%s", config.SYSTEM.BUILD);
+    return build;
 }
 
 int copy_file(const char *from, const char *to) {

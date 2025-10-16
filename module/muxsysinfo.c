@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxsysinfo.h"
 
-#define UI_COUNT  12
+#define UI_COUNT 13
 
 static char hostname[32];
 static int tap_count = 0;
@@ -9,6 +9,7 @@ static int tap_count = 0;
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblVersion_sysinfo,  lang.MUXSYSINFO.HELP.VERSION},
+            {ui_lblBuild_sysinfo,    lang.MUXSYSINFO.HELP.BUILD},
             {ui_lblDevice_sysinfo,   lang.MUXSYSINFO.HELP.DEVICE},
             {ui_lblKernel_sysinfo,   lang.MUXSYSINFO.HELP.KERNEL},
             {ui_lblUptime_sysinfo,   lang.MUXSYSINFO.HELP.UPTIME},
@@ -179,7 +180,8 @@ const char *get_kernel_version(void) {
 }
 
 static void update_system_info() {
-    lv_label_set_text(ui_lblVersionValue_sysinfo, get_build_version());
+    lv_label_set_text(ui_lblVersionValue_sysinfo, get_version());
+    lv_label_set_text(ui_lblBuildValue_sysinfo, get_build());
     lv_label_set_text(ui_lblDeviceValue_sysinfo, get_device_info());
     lv_label_set_text(ui_lblKernelValue_sysinfo, get_kernel_version());
     lv_label_set_text(ui_lblUptimeValue_sysinfo, get_uptime());
@@ -199,7 +201,8 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_build_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Build, lang.MUXSYSINFO.BUILD, "build", get_build());
     INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
     INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
     INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_uptime());
@@ -256,7 +259,7 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblVersion_sysinfo) {
+    if (lv_group_get_focused(ui_group) == ui_lblBuild_sysinfo) {
         play_sound(SND_MUOS);
 
         switch (tap_count) {
@@ -439,7 +442,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {
             {ui_lblNavBGlyph, "",                0},
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
 #define SYSINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_sysinfo, UDATA);

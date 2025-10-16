@@ -303,6 +303,7 @@
 
 #define SYSINFO_ELEMENTS          \
     SYSINFO(Version,  "version")  \
+    SYSINFO(Build,    "build")    \
     SYSINFO(Device,   "device")   \
     SYSINFO(Kernel,   "kernel")   \
     SYSINFO(Uptime,   "uptime")   \

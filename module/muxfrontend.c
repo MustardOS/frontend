@@ -472,7 +472,7 @@ int main(void) {
     load_config(&config);
     load_kiosk(&kiosk);
 
-    LOG_SUCCESS("hello", "Welcome to the %s - %s", MUX_CALLER, get_build_version())
+    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(), get_build())
 
     // For future reference we need to initialise the theme before we do the display
     // as we call upon the theme variables for specific settings within display init

@@ -394,7 +394,8 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
 
 void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lblItemGlyph);
 
-void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const char *fallback_name, char *glyph_image_path, size_t glyph_image_path_size);
+void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const char *fallback_name,
+                        char *glyph_image_path, size_t glyph_image_path_size);
 
 void populate_history_items();
 
@@ -408,8 +409,6 @@ void load_splash_image_fallback(const char *mux_dimension, char *image, size_t i
 
 int theme_compat();
 
-void update_bootlogo();
-
 int brightness_to_percent(int val);
 
 int volume_to_percent(int val);
@@ -420,7 +419,9 @@ int is_partition_mounted(const char *partition);
 
 void get_storage_info(const char *partition, double *total, double *free, double *used);
 
-char *get_build_version();
+char *get_version();
+
+char *get_build();
 
 int copy_file(const char *from, const char *to);
 

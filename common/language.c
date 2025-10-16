@@ -780,7 +780,8 @@ void load_lang(struct mux_lang *lang) {
 
     // muxsysinfo
     SPECIFIC_FIELD(lang->MUXSYSINFO.TITLE, "SYSTEM DETAILS");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.VERSION, "muOS Version");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.VERSION, "Version");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.BUILD, "Build ID");
     SPECIFIC_FIELD(lang->MUXSYSINFO.DEVICE, "Device Type");
     SPECIFIC_FIELD(lang->MUXSYSINFO.KERNEL, "Linux Kernel");
     SPECIFIC_FIELD(lang->MUXSYSINFO.UPTIME, "System Uptime");
@@ -793,7 +794,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.INFO, "CPU Information");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.SPEED, "CPU Speed");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.GOVERNOR, "CPU Governor");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VERSION, "The current version of muOS running on the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VERSION, "The current version of MustardOS running on the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.BUILD, "The current build ID of MustardOS running on the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.DEVICE, "The current device type detected and configured");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.KERNEL, "The current Linux kernel");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.UPTIME, "The current running time of the system");
