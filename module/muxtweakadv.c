@@ -263,6 +263,9 @@ static void init_navigation_group(void) {
 
     // Removal of verbose messages due to changes to muterm not playing ball
     HIDE_OPTION_ITEM(tweakadv, Verbose);
+
+    // There is no current ZRAM module for the TrimUI devices
+    if (str_startswith(device.BOARD.NAME, "tui")) HIDE_OPTION_ITEM(tweakadv, Zramfile);
 }
 
 static void list_nav_move(int steps, int direction) {
