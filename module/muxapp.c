@@ -57,10 +57,8 @@ static int get_app_base(char *out_base, const char *app_name) {
 }
 
 static void show_help(void) {
-    mux_apps *mux_app = get_mux_app(items[current_item_index].name);
-
-    char resolved_base[MAX_BUFFER_SIZE];
-    get_app_base(resolved_base, items[current_item_index].name);
+    char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+    mux_apps *mux_app = get_mux_app(item_name);
 
     if (mux_app && mux_app->help) {
         char message[MAX_BUFFER_SIZE];
@@ -69,34 +67,26 @@ static void show_help(void) {
         show_info_box(TS(items[current_item_index].name), TS(message), 0);
     } else {
         char app_lang_file[FILENAME_MAX];
-        snprintf(app_lang_file, sizeof(app_lang_file), "%s/%s/" APP_LANGUAGE,
-                 resolved_base, items[current_item_index].name);
+        snprintf(app_lang_file, sizeof(app_lang_file), "%s/" APP_LANGUAGE, items[current_item_index].extra_data);
 
-        char app_name[MAX_BUFFER_SIZE];
         char app_help[MAX_BUFFER_SIZE];
         if (file_exist(app_lang_file)) {
             LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
 
             mini_t *app_lang = mini_load(app_lang_file);
 
-            strncpy(app_name, get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE,
-                                             TS(items[current_item_index].name)), sizeof(app_name));
-            app_name[sizeof(app_name) - 1] = '\0';
-
             strncpy(app_help, get_ini_string(app_lang, "help", config.SETTINGS.GENERAL.LANGUAGE,
                                              TS(lang.GENERIC.NO_HELP)), sizeof(app_help));
-            app_name[sizeof(app_name) - 1] = '\0';
+            app_help[sizeof(app_help) - 1] = '\0';
 
             mini_free(app_lang);
         } else {
             LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file)
-            snprintf(app_name, sizeof(app_name), "%s",
-                     TS(items[current_item_index].name));
             snprintf(app_help, sizeof(app_help), "%s",
                      lang.GENERIC.NO_HELP);
         }
 
-        show_info_box(app_name, app_help, 0);
+        show_info_box(TS(items[current_item_index].name), app_help, 0);
     }
 }
 
@@ -110,50 +100,6 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
 
     for (int i = 0; i < item_count; i++) {
-        mux_apps *mux_app = get_mux_app(items[i].name);
-
-        char resolved_base[MAX_BUFFER_SIZE];
-        get_app_base(resolved_base, items[i].name);
-
-        char app_name[MAX_BUFFER_SIZE];
-        if (mux_app && mux_app->grid) {
-            snprintf(app_name, sizeof(app_name), "%s",
-                     TS(items[i].name));
-        } else {
-            char app_lang_file[MAX_BUFFER_SIZE];
-            snprintf(app_lang_file, sizeof(app_lang_file), "%s/%s/" APP_LANGUAGE,
-                     resolved_base, items[i].name);
-
-            if (file_exist(app_lang_file)) {
-                LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
-                char app_name[MAX_BUFFER_SIZE];
-                mini_t *app_lang = mini_load(app_lang_file);
-                strncpy(app_name, get_ini_string(app_lang, "grid", config.SETTINGS.GENERAL.LANGUAGE,
-                                                 items[i].display_name), sizeof(app_name));
-                app_name[sizeof(app_name) - 1] = '\0';
-                mini_free(app_lang);
-            } else {
-                LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file)
-                snprintf(app_name, sizeof(app_name), "%s",
-                         items[i].display_name);
-            }
-        }
-
-        char app_launcher[MAX_BUFFER_SIZE];
-        snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER,
-                 resolved_base, items[i].name);
-
-        const char *glyph_name = NULL;
-        if (mux_app && mux_app->icon) {
-            glyph_name = mux_app->icon;
-        } else {
-            char app_launcher_icon[MAX_BUFFER_SIZE];
-            snprintf(app_launcher_icon, sizeof(app_launcher_icon), "%s/%s/" APP_LAUNCHER,
-                     resolved_base, items[i].name);
-            glyph_name = get_script_value(app_launcher_icon, "ICON", "app");
-        }
-        items[i].glyph_icon = strdup(glyph_name);
-
         if (!is_carousel_grid_mode()) {
             if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
                 update_grid_image_paths(i);
@@ -167,7 +113,7 @@ static void init_navigation_group_grid(void) {
                 lv_obj_t *cell_label = lv_label_create(cell_panel);
 
                 create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                                 items[i].grid_image, items[i].grid_image_focused, app_name);
+                                 items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
 
                 lv_group_add_obj(ui_group, cell_label);
                 lv_group_add_obj(ui_group_glyph, cell_image);
@@ -264,21 +210,45 @@ static void create_app_items(void) {
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER,
                  resolved_base, dir_names[i]);
 
-        char *grid_label = dir_names[i];
-        if (theme.GRID.ENABLED) {
-            mux_apps *mux_app = get_mux_app(dir_names[i]);
-            if (mux_app && mux_app->grid) {
-                grid_label = mux_app->grid;
+        mux_apps *mux_app = get_mux_app(dir_names[i]);
+
+        char full_app_name[MAX_BUFFER_SIZE];
+        char grid_app_name[MAX_BUFFER_SIZE];
+        if (mux_app && mux_app->grid) {
+            snprintf(full_app_name, sizeof(full_app_name), "%s", TS(dir_names[i]));
+            snprintf(grid_app_name, sizeof(grid_app_name), "%s", TS(mux_app->grid));
+        } else {
+            char app_lang_file[FILENAME_MAX];
+            snprintf(app_lang_file, sizeof(app_lang_file), "%s/%s/" APP_LANGUAGE,
+                        resolved_base, dir_names[i]);
+
+            if (file_exist(app_lang_file)) {
+                LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
+
+                mini_t *app_lang = mini_load(app_lang_file);
+                snprintf(full_app_name, sizeof(full_app_name), "%s", get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
+                snprintf(grid_app_name, sizeof(grid_app_name), "%s", get_ini_string(app_lang, "grid", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
+
+                mini_free(app_lang);
             } else {
+                LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file)
+                snprintf(full_app_name, sizeof(full_app_name), "%s", TS(dir_names[i]));
                 char *from_script = get_script_value(app_launcher, "GRID", dir_names[i]);
-                grid_label = from_script ? from_script : dir_names[i];
+                snprintf(grid_app_name, sizeof(grid_app_name), "%s", from_script ? from_script : dir_names[i]);
             }
         }
 
-        char app_store[MAX_BUFFER_SIZE];
-        snprintf(app_store, sizeof(app_store), "%s", grid_label);
+        const char *glyph_name = NULL;
+        if (mux_app && mux_app->icon) {
+            glyph_name = mux_app->icon;
+        } else {
+            char app_launcher_icon[MAX_BUFFER_SIZE];
+            snprintf(app_launcher_icon, sizeof(app_launcher_icon), "%s/" APP_LAUNCHER, app_folder);
+            glyph_name = get_script_value(app_launcher_icon, "ICON", "app");
+        }
 
-        add_item(&items, &item_count, dir_names[i], TS(app_store), app_folder, ITEM);
+        content_item *new_item = add_item(&items, &item_count, full_app_name, (theme.GRID.ENABLED) ? grid_app_name : full_app_name, app_folder, ITEM);
+        new_item->glyph_icon = strdup(glyph_name);
 
         free(dir_names[i]);
     }
@@ -293,57 +263,16 @@ static void create_app_items(void) {
         for (int i = 0; i < item_count; i++) {
             lv_obj_t *ui_pnlApp = lv_obj_create(ui_pnlContent);
             if (ui_pnlApp) {
-                mux_apps *mux_app = get_mux_app(items[i].name);
-
-                char resolved_base[MAX_BUFFER_SIZE];
-                get_app_base(resolved_base, items[i].name);
-
-                char app_name[MAX_BUFFER_SIZE];
-                if (mux_app && mux_app->grid) {
-                    snprintf(app_name, sizeof(app_name), "%s",
-                             TS(items[i].name));
-                } else {
-                    char app_lang_file[FILENAME_MAX];
-                    snprintf(app_lang_file, sizeof(app_lang_file), "%s/%s/" APP_LANGUAGE,
-                             resolved_base, items[i].name);
-
-                    char app_name[MAX_BUFFER_SIZE];
-                    if (file_exist(app_lang_file)) {
-                        LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
-
-                        mini_t *app_lang = mini_load(app_lang_file);
-                        strncpy(app_name, get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE,
-                                                         TS(items[i].name)), sizeof(app_name));
-                        app_name[sizeof(app_name) - 1] = '\0';
-                        mini_free(app_lang);
-                    } else {
-                        LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file)
-                        snprintf(app_name, sizeof(app_name), "%s",
-                                 TS(items[i].name));
-                    }
-                }
-
                 apply_theme_list_panel(ui_pnlApp);
 
                 lv_obj_t *ui_lblAppItem = lv_label_create(ui_pnlApp);
-                if (ui_lblAppItem) apply_theme_list_item(&theme, ui_lblAppItem, app_name);
+                if (ui_lblAppItem) apply_theme_list_item(&theme, ui_lblAppItem, items[i].display_name);
 
                 lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
                 if (ui_lblAppItemGlyph) {
-                    char app_icon[MAX_BUFFER_SIZE];
-                    snprintf(app_icon, sizeof(app_icon), "%s/%s/" APP_LAUNCHER,
-                             resolved_base, items[i].name);
-
-                    char *glyph_name = NULL;
-                    if (mux_app && mux_app->icon) {
-                        glyph_name = mux_app->icon;
-                    } else {
-                        glyph_name = get_script_value(app_icon, "ICON", "app");
-                    }
-
-                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, glyph_name);
+                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, items[i].glyph_icon);
                     if (lv_img_get_src(ui_lblAppItemGlyph) == NULL) {
-                        apply_app_glyph(items[i].extra_data, glyph_name, ui_lblAppItemGlyph);
+                        apply_app_glyph(items[i].extra_data, items[i].glyph_icon, ui_lblAppItemGlyph);
                     }
                 }
 
@@ -351,7 +280,7 @@ static void create_app_items(void) {
                 lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
                 lv_group_add_obj(ui_group_panel, ui_pnlApp);
 
-                apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, app_name);
+                apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, items[i].display_name);
                 apply_text_long_dot(&theme, ui_pnlContent, ui_lblAppItem);
 
                 ui_count++;
@@ -411,8 +340,9 @@ static void handle_a(void) {
     if (ui_count > 0) {
         int skip_toast = 0;
 
+        char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
         for (size_t i = 0; i < A_SIZE(app); i++) {
-            if (strcasecmp(items[current_item_index].name, app[i].name) == 0) {
+            if (strcasecmp(item_name, app[i].name) == 0) {
                 int16_t *kf = app[i].kiosk_flag ? app[i].kiosk_flag() : NULL;
 
                 if (kf && is_ksk(*kf)) {
@@ -427,31 +357,21 @@ static void handle_a(void) {
 
         play_sound(SND_CONFIRM);
 
-        char app_dir[MAX_BUFFER_SIZE];
-        char resolved_base[MAX_BUFFER_SIZE];
-        get_app_base(resolved_base, items[current_item_index].name);
-
         if (!skip_toast) {
-            snprintf(app_dir, sizeof(app_dir), "%s/%s",
-                     resolved_base, items[current_item_index].name);
-
             toast_message(lang.MUXAPP.LOAD_APP, FOREVER);
             refresh_screen(ui_screen);
 
-            char *assigned_gov = specify_asset(load_content_governor(app_dir, NULL, 0, 1, 1),
+            char *assigned_gov = specify_asset(load_content_governor(items[current_item_index].extra_data, NULL, 0, 1, 1),
                                                device.CPU.DEFAULT, "Governor");
 
-            char *assigned_con = specify_asset(load_content_control_scheme(app_dir, NULL, 0, 1, 1),
+            char *assigned_con = specify_asset(load_content_control_scheme(items[current_item_index].extra_data, NULL, 0, 1, 1),
                                                "system", "Control Scheme");
 
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
-        } else {
-            snprintf(app_dir, sizeof(app_dir), "%s",
-                     items[current_item_index].name);
         }
 
-        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, app_dir);
+        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, skip_toast ? item_name : items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
         close_input();
@@ -487,18 +407,13 @@ static void handle_menu(void) {
 static void handle_select(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
+    char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+
     for (size_t i = 0; i < A_SIZE(app); i++) {
-        if (strcasecmp(items[current_item_index].name, app[i].name) == 0) return;
+        if (strcasecmp(item_name, app[i].name) == 0) return;
     }
 
-    char resolved_base[MAX_BUFFER_SIZE];
-    get_app_base(resolved_base, items[current_item_index].name);
-
-    char app_dir[MAX_BUFFER_SIZE];
-    snprintf(app_dir, sizeof(app_dir), "%s/%s",
-             resolved_base, items[current_item_index].name);
-
-    load_assign(MUOS_APL_LOAD, items[current_item_index].name, app_dir, "none", 0, 1);
+    load_assign(MUOS_APL_LOAD, item_name, items[current_item_index].extra_data, "none", 0, 1);
 
     play_sound(SND_CONFIRM);
     write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
@@ -539,7 +454,8 @@ static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-            lv_obj_set_user_data(element_focused, items[current_item_index].name);
+            char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+            lv_obj_set_user_data(element_focused, item_name);
 
             adjust_wallpaper_element(ui_group, 0, APPLICATION);
         }
@@ -573,7 +489,8 @@ int muxapp_main(void) {
         remove(MUOS_AIN_LOAD);
     }
 
-    lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
+    char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+    lv_obj_set_user_data(lv_group_get_focused(ui_group), item_name);
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, APPLICATION);
 
     if (ui_count > 0) {

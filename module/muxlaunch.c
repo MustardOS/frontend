@@ -7,8 +7,8 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct {
-        const char *title;
-        const char *content;
+        char *title;
+        char *content;
     } help_messages[] = {
             {lang.MUXLAUNCH.EXPLORE,    lang.MUXLAUNCH.HELP.EXPLORE},
             {lang.MUXLAUNCH.COLLECTION, lang.MUXLAUNCH.HELP.COLLECTION},
@@ -389,8 +389,8 @@ static void handle_left_hold(void) {
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
-        get_grid_row_index(current_item_index) > 0 ||
-        is_carousel_grid_mode()) {
+        (get_grid_row_index(current_item_index) > 0 ||
+        is_carousel_grid_mode())) {
         handle_left();
     }
 }
@@ -400,8 +400,8 @@ static void handle_right_hold(void) {
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
-        get_grid_row_index(current_item_index) < grid_info.last_row_index ||
-        is_carousel_grid_mode()) {
+        (get_grid_row_index(current_item_index) < grid_info.last_row_index ||
+        is_carousel_grid_mode())) {
         handle_right();
     }
 }
