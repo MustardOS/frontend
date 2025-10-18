@@ -18,6 +18,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblNetwork_kiosk,    lang.MUXKIOSK.HELP.NETWORK},
             {ui_lblStorage_kiosk,    lang.MUXKIOSK.HELP.STORAGE},
             {ui_lblBackup_kiosk,     lang.MUXKIOSK.HELP.BACKUP},
+            {ui_lblNetAdv_kiosk,     lang.MUXKIOSK.HELP.NETADV},
             {ui_lblWebServ_kiosk,    lang.MUXKIOSK.HELP.WEBSERV},
             {ui_lblCore_kiosk,       lang.MUXKIOSK.HELP.CORE},
             {ui_lblGovernor_kiosk,   lang.MUXKIOSK.HELP.GOVERNOR},
@@ -69,6 +70,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droNetwork_kiosk, kiosk.CONFIG.NETWORK);
     lv_dropdown_set_selected(ui_droStorage_kiosk, kiosk.CONFIG.STORAGE);
     lv_dropdown_set_selected(ui_droBackup_kiosk, kiosk.CONFIG.BACKUP);
+    lv_dropdown_set_selected(ui_droNetAdv_kiosk, kiosk.CONFIG.NET_SETTINGS);
     lv_dropdown_set_selected(ui_droWebServ_kiosk, kiosk.CONFIG.WEB_SERVICES);
     lv_dropdown_set_selected(ui_droCore_kiosk, kiosk.CONTENT.CORE);
     lv_dropdown_set_selected(ui_droGovernor_kiosk, kiosk.CONTENT.GOVERNOR);
@@ -113,6 +115,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Network, "config/network", INT);
     CHECK_AND_SAVE_KSK(kiosk, Storage, "config/storage", INT);
     CHECK_AND_SAVE_KSK(kiosk, Backup, "config/backup", INT);
+    CHECK_AND_SAVE_KSK(kiosk, NetAdv, "config/netadv", INT);
     CHECK_AND_SAVE_KSK(kiosk, WebServ, "config/webserv", INT);
     CHECK_AND_SAVE_KSK(kiosk, Core, "content/core", INT);
     CHECK_AND_SAVE_KSK(kiosk, Governor, "content/governor", INT);
@@ -170,6 +173,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Network, lang.MUXKIOSK.NETWORK, "network", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Storage, lang.MUXKIOSK.STORAGE, "storage", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Backup, lang.MUXKIOSK.BACKUP, "backup", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, NetAdv, lang.MUXKIOSK.NETADV, "netadv", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, WebServ, lang.MUXKIOSK.WEBSERV, "webserv", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Core, lang.MUXKIOSK.CORE, "core", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Governor, lang.MUXKIOSK.GOVERNOR, "governor", allowed_restricted, 2);
@@ -301,7 +305,7 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
 #define KIOSK(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_kiosk, UDATA);
