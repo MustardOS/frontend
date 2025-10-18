@@ -188,7 +188,6 @@ static lv_obj_t *content(lv_obj_t *parent, const char *text, lv_color_t col, int
     return lbl;
 }
 
-
 static lv_obj_t *name(lv_obj_t *parent, const char **list, lv_color_t hex) {
     lv_obj_t *wrap = lv_obj_create(parent);
     lv_obj_remove_style_all(wrap);
@@ -239,54 +238,50 @@ const char *wizards[] = {
         ".cebion", "irilivibi", "vagueparade", "shengy.", "siliconexarch", "shauninman",
         "johnnyonflame", "snowram", "habbening", "trngaje", "skorpy", "stanley_00",
         "ajmandourah", "bcat24", "xanxic", "midwan", "arkun_", "mikhailzrick",
-        "retrogfx_", "aeverdyn", "spycat88",
+        "retrogfx_", "aeverdyn", "kitfox618", "spycat88",
         NULL
 };
 
 const char *hero_one[] = {
         "romus85", "x_tremis", "lmarcomiranda", "timecarp", "intelliaim", "kentonftw",
         "bazkart", "msx6011", "joeysretrohandhelds", "btreecat", "teggydave", "zazouboy",
-        "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "bigbossman0816", "superzu",
-        "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3", "kaeltis",
-        "reitw", "raouldook.", "paletochen", "benjaminbercy", "suribii", "tobitaibuta",
-        "opinion_panda", "hueykablooey", "mrwhistles", ".zerohalo", "losermatic", "milkworlds",
-        "rosemelody254", "lilaclobotomies",
+        "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "zaka1w3", "superzu",
+        "nico_linber_36894", "nico_linber", "pr0j3kt2501", "rosemelody254", "bigbossman0816", "meowman_",
+        "kaeltis", "reitw", "raouldook.", "paletochen", "benjaminbercy", "snesfan1",
+        "suribii", "tobitaibuta", "asiaclonk", "jimmycrackedcorn_4711", "opinion_panda", "hueykablooey",
         NULL
 };
 
 const char *hero_two[] = {
-        "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "izzythefool", "n3vurmynd",
-        "qpla", "supremedialects", "amos_06286", "techagent", "meanagar", "roundpi",
-        "turner74.", "chiefwally_73445", "bigfoothenders", "scy0n", "luckyphil", "nahck",
-        "mach5682", "foamygames", "xraygoggles", "hybrid_sith", "mxdamp", "ownedmumbles",
-        "existentialrose", "techyysean", "cliffupperlip", "roymustang", "kernelkritic", "jelzer.",
-        "misfitsorbet", "verctexius", "bigolpeewee", "amildinconvenience.", "kalamer.", "yotakon",
-        "jimmycrackedcorn_4711",
+        "mrwhistles", "losermatic", "ivar2028", ".dririan", "spivvmeister", "sol6_vi",
+        "n3vurmynd", "qpla", "supremedialects", "amos_06286", "techagent", "meanagar",
+        "roundpi", "turner74.", "chiefwally_73445", "bigfoothenders", "scy0n", "luckyphil",
+        "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith", "lilaclobotomies",
+        "mxdamp", "ownedmumbles", "kernelkritic", "verctexius", "misfitsorbet", "izzythefool",
+        "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.", "kalamer.", "kularose",
         NULL
 };
 
 const char *knight_one[] = {
         "allanc5963", "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc",
-        "ben819.", "_maxwellsdemon", "status.quo.exile", "phyrex", "delored", "kiko_lake",
-        "arkholt", "julas8799", ".starship9", "fibroidjames", "allepac", "pakwan8243",
-        "heyitscap.", "drisc", "clempurp9868", "aj15", "retrogamecorps", "biffoutt",
-        "rbndr_", "sanelessone", ".retrogamingmonkey", "billynaing", "gasqbduv", ".manny.",
+        "_maxwellsdemon", "status.quo.exile", "phyrex", "delored", "kiko_lake", "arkholt",
+        "julas8799", ".starship9", "fibroidjames", "allepac", "pakwan8234", "heyitscap.",
+        "drisc", "clempurp9868", "aj15", "retrogamecorps", "biffout", "rbndr_", "sanelessone",
+        ".retrogamingmonkey",
         NULL
 };
 
 const char *knight_two[] = {
-        "_wizdude", "blkxltng", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891",
-        "yomama78", "pixelgabz", "admiralthrawn_1", "penpen2crayon", "jupyter.", "lander95",
-        "bburbank", "crownlessk", "johnunsc", "nuke_67641", "misjbaksel", "zauberpony",
-        "dreadpirates", "artur_ditu", "wizardfights", "stin87", "obitomatheus", "johnrich340",
-        "frickinfrogs", "smittywerbenjaegermanjensen9250", "leberwurstmitsauregurken",
+        "billynaing", "gasqbduv", "nuke_67641", "misjbaksel", "zauberpony", "dreadpirates",
+        "frickinfrogs", "smittywerbenjaegermanjensen9250", "wizardfights", "_wizdude", "stin87",
+        "blkxltng", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891", "yomama78",
+        "admiralthrawn_1", "penpen2crayon", "jupyter.", "lander95", ".manny.", "bburbank",
+        "crownlessk", "johnunsc", "obitomatheus",
         NULL
 };
 
 const char *contributors[] = {
-        "antikk", "bitter_bizarro", "guzzloid", "imcokeman",
-        "#55CDFC sh##F7A8B8 ij##FFFFFF i##F7A8B8 ko##55CDFC ri#",
-        "thewalruzz", "void_linux", "wakeboxer", "xonglebongle",
+        "bitter_bizarro", "thewalruzz", "xonglebongle",
         NULL
 };
 
@@ -432,8 +427,8 @@ void init_muxcredits(const lv_font_t *header_font) {
 
     ui_lblMusicMessage = content(
             ui_conMusic, config.BOOT.FACTORY_RESET
-            ? "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\nYour device will now reboot..."
-            : "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\nHave a blessed day...",
+                         ? "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\nYour device will now reboot..."
+                         : "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\nHave a blessed day...",
             lv_color_hex(COL_TEXT_AMBER), 100, 30);
 
     lv_disp_load_scr(ui_scrCredits);
