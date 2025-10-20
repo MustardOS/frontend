@@ -5,7 +5,7 @@
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct {
         char *title;
         char *content;
@@ -23,8 +23,9 @@ static void show_help(lv_obj_t *element_focused) {
     show_info_box(help_messages[current_item_index].title, help_messages[current_item_index].content, 0);
 }
 
-static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
+static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
     grid_mode_enabled = 1;
+
     init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, UI_COUNT);
 
@@ -33,6 +34,7 @@ static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels
 
     char prev_dir[MAX_BUFFER_SIZE];
     snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
+
     int steps = 0;
     for (int i = 0; i < UI_COUNT; i++) {
         if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
@@ -49,17 +51,20 @@ static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels
                                      "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
 
         content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);
+
         new_item->glyph_icon = strdup(glyph_names[i]);
         new_item->grid_image = strdup(grid_img);
         new_item->grid_image_focused = strdup(grid_img_foc);
     }
+
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
     } else {
-        for (size_t i = 0; i < item_count; i++) {
+        for (int i = 0; i < item_count; i++) {
             if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
         }
     }
+
     list_nav_move(steps, +1);
 }
 
@@ -100,7 +105,7 @@ static void init_navigation_group(void) {
     ui_group_panel = lv_group_create();
 
     if (theme.GRID.ENABLED) {
-        init_navigation_group_grid(ui_objects, item_labels, item_labels_short, glyph_names);
+        init_navigation_group_grid(item_labels, item_labels_short, glyph_names);
     } else {
         INIT_STATIC_ITEM(-1, launch, Explore, item_labels[0], glyph_names[0], 0);
         INIT_STATIC_ITEM(-1, launch, Collection, item_labels[1], glyph_names[1], 0);
@@ -116,6 +121,7 @@ static void init_navigation_group(void) {
             lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
             lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
         }
+
         list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
     }
 }
@@ -132,7 +138,7 @@ static void list_nav_move(int steps, int direction) {
             current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         }
 
-        if (!is_carousel_grid_mode()) { 
+        if (!is_carousel_grid_mode()) {
             nav_move(ui_group, direction);
             nav_move(ui_group_glyph, direction);
             nav_move(ui_group_panel, direction);
@@ -230,7 +236,7 @@ static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void handle_up(void) {
@@ -390,7 +396,7 @@ static void handle_left_hold(void) {
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
         (get_grid_row_index(current_item_index) > 0 ||
-        is_carousel_grid_mode())) {
+         is_carousel_grid_mode())) {
         handle_left();
     }
 }
@@ -401,7 +407,7 @@ static void handle_right_hold(void) {
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
         (get_grid_row_index(current_item_index) < grid_info.last_row_index ||
-        is_carousel_grid_mode())) {
+         is_carousel_grid_mode())) {
         handle_right();
     }
 }
@@ -435,7 +441,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {
             {ui_lblNavAGlyph, "",                  0},
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define LAUNCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_launch, UDATA);
