@@ -50,6 +50,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
 
     switch (action) {
         case MUX_INPUT_PRESS:
+        case MUX_INPUT_DOUBLE_PRESS:
             if (glyph[type]) {
                 lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
                 if (generate_image_embed(STORAGE_THEME, mux_dimension, mux_module, glyph[type], image_path,
@@ -65,9 +66,11 @@ static void handle_input(mux_input_type type, mux_input_action action) {
             }
             break;
         case MUX_INPUT_RELEASE:
+        case MUX_INPUT_DOUBLE_RELEASE:
             lv_img_set_src(ui_imgButton, &ui_image_Nothing);
             break;
         case MUX_INPUT_HOLD:
+        case MUX_INPUT_DOUBLE_HOLD:
             break;
     }
 }

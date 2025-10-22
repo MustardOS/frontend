@@ -3289,6 +3289,7 @@ char **split_command(const char *cmd, size_t *argc_out) {
     if (!argv) return NULL;
 
     const char *p = cmd;
+
     while (*p) {
         while (*p == ' ' || *p == '\t') p++;
         if (!*p) break;
@@ -3324,6 +3325,7 @@ char **split_command(const char *cmd, size_t *argc_out) {
 
             char **tmp = realloc(argv, new_cap * sizeof(char *));
             if (!tmp) FREE_ARGV;
+
             argv = tmp;
             cap = new_cap;
         }

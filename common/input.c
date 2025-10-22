@@ -532,6 +532,15 @@ static void dispatch_input(const mux_input_options *opts,
         case MUX_INPUT_RELEASE:
             handler = opts->release_handler[mux_type];
             break;
+        case MUX_INPUT_DOUBLE_PRESS:
+            handler = opts->double_press_handler[mux_type];
+            break;
+        case MUX_INPUT_DOUBLE_HOLD:
+            handler = opts->double_hold_handler[mux_type];
+            break;
+        case MUX_INPUT_DOUBLE_RELEASE:
+            handler = opts->double_release_handler[mux_type];
+            break;
     }
 
     // First invoke specific handler (if one was registered for this input mux_type and action).
@@ -554,6 +563,15 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
         case MUX_INPUT_RELEASE:
             handler = opts->combo[num].release_handler;
             break;
+        case MUX_INPUT_DOUBLE_PRESS:
+            handler = opts->combo[num].double_press_handler;
+            break;
+        case MUX_INPUT_DOUBLE_HOLD:
+            handler = opts->combo[num].double_hold_handler;
+            break;
+        case MUX_INPUT_DOUBLE_RELEASE:
+            handler = opts->combo[num].double_release_handler;
+            break;
     }
 
     // First invoke specific handler (if one was registered for this combo number and action).
@@ -569,26 +587,60 @@ static void handle_inputs(const mux_input_options *opts) {
     // Tick (millis) of last press or hold.
     static uint32_t hold_tick[MUX_INPUT_COUNT] = {};
 
+    //
+    static uint32_t last_release_tick[MUX_INPUT_COUNT] = {};
+    static bool first_press[MUX_INPUT_COUNT] = {};
+    static bool in_double_press[MUX_INPUT_COUNT] = {};
+    const uint32_t double_press_window = 250;
+
     for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
         if (pressed & BIT(i)) {
             if (!(held & BIT(i))) {
-                // Pressed & not held: Invoke "press" handler.
-                dispatch_input(opts, i, MUX_INPUT_PRESS);
+                uint32_t delta = tick - last_release_tick[i];
+
+                if (first_press[i] && delta <= double_press_window) {
+                    // Double-press detected
+                    dispatch_input(opts, i, MUX_INPUT_DOUBLE_PRESS);
+                    in_double_press[i] = true;
+                    first_press[i] = false;
+                } else {
+                    // Pressed & not held: Invoke "press" handler.
+                    dispatch_input(opts, i, MUX_INPUT_PRESS);
+                    first_press[i] = true;
+                    in_double_press[i] = false;
+                }
 
                 // Initial repeat delay
                 hold_delay[i] = config.SETTINGS.ADVANCED.REPEAT_DELAY;
                 hold_tick[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
-                // Pressed & held: Invoke "hold" handler.
-                dispatch_input(opts, i, MUX_INPUT_HOLD);
+                if (in_double_press[i]) {
+                    // Second press being held: double-hold
+                    dispatch_input(opts, i, MUX_INPUT_DOUBLE_HOLD);
+                } else {
+                    // Pressed & held: Invoke "hold" handler.
+                    dispatch_input(opts, i, MUX_INPUT_HOLD);
+                }
 
                 // Single delay for each subsequent repeat.
                 hold_delay[i] = config.SETTINGS.ADVANCED.ACCELERATE;
                 hold_tick[i] = tick;
             }
         } else if (held & BIT(i)) {
-            // Held & not pressed: Invoke "release" handler.
-            dispatch_input(opts, i, MUX_INPUT_RELEASE);
+            if (in_double_press[i]) {
+                // Either pressed or held on double: Invoke "release" handler.
+                dispatch_input(opts, i, MUX_INPUT_DOUBLE_RELEASE);
+                in_double_press[i] = false;
+            } else {
+                // Held & not pressed: Invoke "release" handler.
+                dispatch_input(opts, i, MUX_INPUT_RELEASE);
+            }
+            last_release_tick[i] = tick;
+        } else {
+            // Not pressed, not held — clear first_press after timeout
+            if (first_press[i] && tick - last_release_tick[i] > double_press_window) {
+                first_press[i] = false;
+            }
         }
     }
 }
@@ -598,6 +650,11 @@ static void handle_combos(const mux_input_options *opts) {
     static uint32_t hold_delay = 0;
     // Tick (millis) of last press or hold.
     static uint32_t hold_tick = 0;
+
+    static uint32_t last_release_tick = 0;
+    static bool first_press = false;
+    static bool in_double_press = false;
+    const uint32_t double_press_window = 250;
 
     // Combo number that was active during the previous iteration of the event loop, or
     // MUX_INPUT_COMBO_COUNT when no combo is held.
@@ -609,16 +666,27 @@ static void handle_combos(const mux_input_options *opts) {
 
         if ((pressed & mask) == mask) {
             if (tick - hold_tick >= hold_delay) {
-                // Pressed & held: Invoke "hold" handler.
-                dispatch_combo(opts, active_combo, MUX_INPUT_HOLD);
+                if (in_double_press) {
+                    // Double-press being held: double-hold
+                    dispatch_combo(opts, active_combo, MUX_INPUT_DOUBLE_HOLD);
+                } else {
+                    // Single hold
+                    dispatch_combo(opts, active_combo, MUX_INPUT_HOLD);
+                }
 
                 // Single delay for each subsequent repeat.
                 hold_delay = config.SETTINGS.ADVANCED.ACCELERATE;
                 hold_tick = tick;
             }
         } else {
-            // Held & not pressed: Invoke "release" handler.
-            dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
+            // Held & not pressed: Invoke release handler.
+            if (in_double_press) {
+                dispatch_combo(opts, active_combo, MUX_INPUT_DOUBLE_RELEASE);
+                in_double_press = false;
+            } else {
+                dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
+            }
+            last_release_tick = tick;
             active_combo = MUX_INPUT_COMBO_COUNT;
         }
     }
@@ -633,17 +701,33 @@ static void handle_combos(const mux_input_options *opts) {
             uint64_t mask = opts->combo[i].type_mask;
 
             if (mask && (pressed & mask) == mask) {
-                // Pressed & not held: Invoke "press" handler.
-                dispatch_combo(opts, i, MUX_INPUT_PRESS);
-                active_combo = i;
+                uint32_t delta = tick - last_release_tick;
+
+                if (first_press && delta <= double_press_window) {
+                    // Pressed and then pressed again in double press window
+                    dispatch_combo(opts, i, MUX_INPUT_DOUBLE_PRESS);
+                    in_double_press = true;
+                    first_press = false;
+                } else {
+                    // Pressed & not held: Invoke "press" handler.
+                    dispatch_combo(opts, i, MUX_INPUT_PRESS);
+                    first_press = true;
+                    in_double_press = false;
+                }
 
                 // Initial repeat delay
                 hold_delay = config.SETTINGS.ADVANCED.REPEAT_DELAY;
                 hold_tick = tick;
+                active_combo = i;
 
                 // Only one combo can be active at a time.
                 break;
             }
+        }
+    } else if (active_combo == MUX_INPUT_COMBO_COUNT) {
+        // If nothing pressed, clear press window after timeout
+        if (first_press && tick - last_release_tick > double_press_window) {
+            first_press = false;
         }
     }
 }

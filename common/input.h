@@ -64,6 +64,9 @@ typedef enum {
     MUX_INPUT_PRESS,
     MUX_INPUT_HOLD,
     MUX_INPUT_RELEASE,
+    MUX_INPUT_DOUBLE_PRESS,
+    MUX_INPUT_DOUBLE_HOLD,
+    MUX_INPUT_DOUBLE_RELEASE,
 } mux_input_action;
 
 // Callback function invoked in response to a single specific input type and action.
@@ -91,6 +94,9 @@ typedef struct {
     mux_input_handler press_handler;
     mux_input_handler hold_handler;
     mux_input_handler release_handler;
+    mux_input_handler double_press_handler;
+    mux_input_handler double_hold_handler;
+    mux_input_handler double_release_handler;
 } mux_input_combo;
 
 // Configuration for the muOS input subsystem.
@@ -121,6 +127,9 @@ typedef struct {
     mux_input_handler press_handler[MUX_INPUT_COUNT];
     mux_input_handler hold_handler[MUX_INPUT_COUNT];
     mux_input_handler release_handler[MUX_INPUT_COUNT];
+    mux_input_handler double_press_handler[MUX_INPUT_COUNT];
+    mux_input_handler double_hold_handler[MUX_INPUT_COUNT];
+    mux_input_handler double_release_handler[MUX_INPUT_COUNT];
 
     // Generic handler for input press/hold/release events. For programs that want to "go offroad"
     // and handle every input event in a custom way.
