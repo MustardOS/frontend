@@ -148,7 +148,7 @@ void extract_archive(char *filename, char *screen) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1);
+        run_exec(exec, exec_count, 0, 1, NULL);
     }
     free(exec);
 }
@@ -160,7 +160,7 @@ void update_bootlogo() {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1);
+        run_exec(exec, exec_count, 0, 1, NULL);
     }
     free(exec);
 }
@@ -2575,7 +2575,7 @@ void kiosk_denied(void) {
     }
 }
 
-void run_exec(const char *args[], size_t size, int background, int turbo) {
+void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file) {
     const char *san[size];
 
     if (turbo) turbo_time(1, 0);
@@ -2598,9 +2598,42 @@ void run_exec(const char *args[], size_t size, int background, int turbo) {
 
     pid_t pid = fork();
     if (pid == 0) {
-        execvp(san[0], (char *const *) san);
+        if (background) {
+            // If we run in the background lets disconnect from the parent...
+            setsid();
+
+            // Perform a second fork to ensure the background process is reaped by init,
+            // preventing zombie processes from hanging around after completion...
+            pid_t pid2 = fork();
+            if (pid2 < 0) _exit(EXIT_FAILURE);
+            if (pid2 > 0) _exit(EXIT_SUCCESS);
+
+            // Secondary child continues here, now fully detached from the parent
+            int fd;
+            if (log_file && *log_file) {
+                fd = open(log_file, O_WRONLY | O_CREAT | O_APPEND, 0644);
+                if (fd < 0) fd = open("/dev/null", O_RDWR);
+            } else {
+                fd = open("/dev/null", O_RDWR);
+            }
+
+            if (fd != -1) {
+                dup2(fd, STDIN_FILENO);
+                dup2(fd, STDOUT_FILENO);
+                dup2(fd, STDERR_FILENO);
+
+                if (fd > 2) close(fd);
+            }
+        }
+
+        execvp(san[0], (char *const *)san);
         _exit(EXIT_FAILURE);
     } else if (pid > 0 && !background) {
+        // Foreground process, block until child finishes execution
+        waitpid(pid, NULL, 0);
+    } else if (pid > 0 && background) {
+        // Parent process does not wait for background process
+        // Destroy the intermediate child immediately to avoid zombies... oh no
         waitpid(pid, NULL, 0);
     }
 

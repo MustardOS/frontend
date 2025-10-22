@@ -263,7 +263,7 @@ static void handle_a(void) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1);
+        run_exec(exec, exec_count, 0, 1, NULL);
     }
     free(exec);
 

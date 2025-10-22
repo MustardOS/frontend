@@ -194,7 +194,7 @@ static void run_command(const combo_config *c) {
     char **args = split_command(c->exec_cmd, &argc);
     if (!args || argc == 0) return;
 
-    run_exec((const char **) args, argc + 1, 1, 0);
+    run_exec((const char **) args, argc + 1, 1, 0, NULL);
 
     for (size_t i = 0; i < argc; i++) free(args[i]);
     free(args);

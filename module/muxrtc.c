@@ -35,7 +35,7 @@ static void confirm_rtc_config(void) {
     write_text_to_file((CONF_CONFIG_PATH "clock/notation"), "w", INT, idx_notation);
 
     const char *args[] = {"hwclock", "-w", NULL};
-    run_exec(args, A_SIZE(args), 1, 0);
+    run_exec(args, A_SIZE(args), 1, 0, NULL);
 }
 
 static int days_in_month(int year, int month) {

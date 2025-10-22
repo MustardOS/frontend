@@ -365,7 +365,7 @@ int is_carousel_grid_mode();
 
 void kiosk_denied();
 
-void run_exec(const char *args[], size_t size, int background, int turbo);
+void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file);
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line);
 
