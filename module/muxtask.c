@@ -6,7 +6,7 @@ static void show_help(void) {
     char *title = items[current_item_index].name;
 
     char help_info[MAX_BUFFER_SIZE];
-    snprintf(help_info, sizeof(help_info), RUN_SHARE_PATH "task/%s.sh",
+    snprintf(help_info, sizeof(help_info), OPT_SHARE_PATH "task/%s.sh",
              title);
 
     char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
@@ -122,7 +122,7 @@ static void handle_a(void) {
 
         if (exec) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-            run_exec(exec, exec_count, 0);
+            run_exec(exec, exec_count, 0, 1);
         }
         free(exec);
     }
@@ -211,7 +211,7 @@ static void ui_refresh_task() {
 
 int muxtask_main(char *ex_dir) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", ex_dir);
-    snprintf(base_dir, sizeof(base_dir), RUN_SHARE_PATH "task/");
+    snprintf(base_dir, sizeof(base_dir), OPT_SHARE_PATH "task/");
     if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
 
     init_module("muxtask");

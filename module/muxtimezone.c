@@ -88,10 +88,10 @@ static void handle_a(void) {
     // Because weirdos live in different timezones...
     if (config.BOOT.FACTORY_RESET) {
         const char *args_date[] = {"date", "010100002025", NULL};
-        run_exec(args_date, A_SIZE(args_date), 0);
+        run_exec(args_date, A_SIZE(args_date), 0, 1);
 
         const char *args_hw_clock[] = {"hwclock", "-w", NULL};
-        run_exec(args_hw_clock, A_SIZE(args_hw_clock), 0);
+        run_exec(args_hw_clock, A_SIZE(args_hw_clock), 0, 1);
     }
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");

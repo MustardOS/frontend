@@ -11,7 +11,7 @@ static void scan_networks(void) {
     lv_refr_now(NULL);
 
     const char *args[] = {(OPT_PATH "script/web/ssid.sh"), NULL};
-    run_exec(args, A_SIZE(args), 0);
+    run_exec(args, A_SIZE(args), 0, 1);
 }
 
 static void list_nav_move(int steps, int direction) {

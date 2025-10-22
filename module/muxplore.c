@@ -366,7 +366,7 @@ static void create_content_items(void) {
     int fn_valid = 0;
     struct json fn_json = {0};
 
-    turbo_time(1);
+    turbo_time(1, 1);
 
     if (config.VISUAL.FRIENDLYFOLDER) {
         char folder_name_file[MAX_BUFFER_SIZE];
@@ -439,7 +439,7 @@ static void create_content_items(void) {
         free(dir_names);
     }
 
-    turbo_time(0);
+    turbo_time(0, 1);
 }
 
 static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, int index) {
@@ -680,7 +680,7 @@ static void handle_x(void) {
     usleep(256);
 
     const char *args[] = {(OPT_PATH "script/mount/union.sh"), "restart", NULL};
-    run_exec(args, A_SIZE(args), 0);
+    run_exec(args, A_SIZE(args), 0, 1);
 
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     load_mux("explore");

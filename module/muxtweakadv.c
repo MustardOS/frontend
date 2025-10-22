@@ -146,7 +146,7 @@ static void save_tweak_options(void) {
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};
-        run_exec(args, A_SIZE(args), 0);
+        run_exec(args, A_SIZE(args), 0, 1);
 
         refresh_config = 1;
     }

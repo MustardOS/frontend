@@ -197,7 +197,7 @@ void module_content_list(const char *path, const char *max_depth, int is_collect
     last_index_check();
 
     const char *args[] = {"find", path, "-maxdepth", max_depth, "-type", "f", "-size", "0", "!", "-name", ".nogrid", "-delete", NULL};
-    run_exec(args, A_SIZE(args), 0);
+    run_exec(args, A_SIZE(args), 0, 1);
 
     load_mux("launcher");
 

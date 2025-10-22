@@ -365,7 +365,7 @@ int is_carousel_grid_mode();
 
 void kiosk_denied();
 
-void run_exec(const char *args[], size_t size, int background);
+void run_exec(const char *args[], size_t size, int background, int turbo);
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line);
 
@@ -434,6 +434,10 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system
 
 void add_to_collection(char *filename, const char *pointer, char *sys_dir);
 
-int set_scaling_governor(const char *governor);
+int set_scaling_governor(const char *governor, int show_done);
 
-void turbo_time(int toggle);
+void turbo_time(int toggle, int show_done);
+
+int bc64(uint64_t n);
+
+char **split_command(const char *cmd, size_t *argc_out);

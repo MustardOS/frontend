@@ -36,7 +36,7 @@ static void set_brightness(int brightness) {
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
 
     const char *args[] = {(OPT_PATH "script/device/bright.sh"), bright_value, NULL};
-    run_exec(args, A_SIZE(args), 0);
+    run_exec(args, A_SIZE(args), 0, 0);
 
     load_config(&config);
 }

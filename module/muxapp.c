@@ -146,7 +146,7 @@ static void create_app_items(void) {
     char **dir_names = NULL;
     size_t dir_count = 0;
 
-    app_paths[0] = RUN_SHARE_PATH "application";
+    app_paths[0] = OPT_SHARE_PATH "application";
     app_paths[1] = device.STORAGE.SDCARD.MOUNT;
     app_paths[2] = device.STORAGE.ROM.MOUNT;
 

@@ -318,7 +318,7 @@ static void create_collection_items(void) {
     int fn_valid = 0;
     struct json fn_json = {0};
 
-    turbo_time(1);
+    turbo_time(1, 1);
 
     if (config.VISUAL.FRIENDLYFOLDER) {
         char folder_name_file[MAX_BUFFER_SIZE];
@@ -391,7 +391,7 @@ static void create_collection_items(void) {
         free(dir_names);
     }
 
-    turbo_time(0);
+    turbo_time(0, 1);
 }
 
 static void update_footer_glyph(void) {
