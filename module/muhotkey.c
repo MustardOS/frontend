@@ -114,9 +114,6 @@ static const char *action_name[] = {
         [MUX_INPUT_PRESS] = "PRESS",
         [MUX_INPUT_HOLD] = "HOLD",
         [MUX_INPUT_RELEASE] = "RELEASE",
-        [MUX_INPUT_DOUBLE_PRESS] = "DOUBLE_PRESS",
-        [MUX_INPUT_DOUBLE_HOLD] = "DOUBLE_HOLD",
-        [MUX_INPUT_DOUBLE_RELEASE] = "DOUBLE_RELEASE",
 };
 
 static mux_input_options input_opts = {

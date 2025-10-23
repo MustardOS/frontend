@@ -30,8 +30,6 @@ pthread_t keyboard_thread;
 
 struct controller_profile controller;
 
-extern uint32_t mux_tick(void);
-
 bool swap_axis = false;
 
 // Cross-thread quit flag (set during shutdown)
@@ -87,6 +85,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
 // Processes gamepad buttons.
 static void process_key(const mux_input_options *opts, const struct input_event *event) {
     mux_input_type mux_type;
+
     if (event->type == device.INPUT_TYPE.BUTTON.A &&
         event->code == device.INPUT_CODE.BUTTON.A) {
         mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
@@ -138,12 +137,14 @@ static void process_key(const mux_input_options *opts, const struct input_event 
     } else {
         return;
     }
+
     pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 // Processes volume buttons.
 static void process_volume(const mux_input_options *opts, const struct input_event *event) {
     mux_input_type mux_type;
+
     if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_UP &&
         event->code == device.INPUT_CODE.BUTTON.VOLUME_UP) {
         mux_type = MUX_INPUT_VOL_UP;
@@ -153,6 +154,7 @@ static void process_volume(const mux_input_options *opts, const struct input_eve
     } else {
         return;
     }
+
     pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
@@ -161,6 +163,7 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     mux_input_type mux_type;
     int axis;
     bool analog;
+
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
         event->code == device.INPUT_CODE.DPAD.UP) {
         // Axis: D-pad vertical
@@ -228,8 +231,8 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
 
 // Processes gamepad button D-pad.  // Some devices like zero28 the DPAD triggers button press events
 static void process_dpad_as_buttons(const mux_input_options *opts, const struct input_event *event) {
-    int axis;
-    int direction;
+    int axis, direction;
+
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
         event->code == device.INPUT_CODE.DPAD.UP) {
         // Axis: D-pad vertical
@@ -289,17 +292,20 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 // Process switch that is currently on the trim-ui devices
 static void process_sw(const mux_input_options *opts, const struct input_event *event) {
     mux_input_type mux_type;
+
     if (event->type == device.INPUT_TYPE.BUTTON.SWITCH && event->code == device.INPUT_CODE.BUTTON.SWITCH) {
         mux_type = MUX_INPUT_SWITCH;
     } else {
         return;
     }
+
     pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
 static void process_usb_key(const mux_input_options *opts, struct js_event js) {
     mux_input_type mux_type;
+
     if (js.number == controller.BUTTON.A) {
         mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
     } else if (js.number == controller.BUTTON.B) {
@@ -329,13 +335,14 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
     } else {
         return;
     }
+
     pressed = (js.value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
-    int axis;
-    int axis_max = 32767;
+    int axis, axis_max;
+
     if (js.number == controller.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
@@ -399,8 +406,8 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
 
 // Processes gamepad button D-pad. Some controllers like PS3 the DPAD triggers button press events
 static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js_event js) {
-    int axis;
-    int direction;
+    int axis, direction;
+
     if (js.number == controller.BUTTON.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
@@ -435,6 +442,7 @@ static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js
 
 static void process_usb_keyboard_keys(const mux_input_options *opts, struct input_event event) {
     mux_input_type mux_type;
+
     if (event.code == KEY_ENTER || event.code == KEY_A) {
         mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
     } else if (event.code == KEY_BACKSPACE || event.code == KEY_B) {
@@ -458,12 +466,13 @@ static void process_usb_keyboard_keys(const mux_input_options *opts, struct inpu
     } else {
         return;
     }
+
     pressed = (event.value > 0) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 static void process_usb_keyboard_arrow_keys(const mux_input_options *opts, struct input_event event) {
-    int axis;
-    int direction;
+    int axis, direction;
+
     if (event.code == KEY_UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
@@ -532,15 +541,6 @@ static void dispatch_input(const mux_input_options *opts,
         case MUX_INPUT_RELEASE:
             handler = opts->release_handler[mux_type];
             break;
-        case MUX_INPUT_DOUBLE_PRESS:
-            handler = opts->double_press_handler[mux_type];
-            break;
-        case MUX_INPUT_DOUBLE_HOLD:
-            handler = opts->double_hold_handler[mux_type];
-            break;
-        case MUX_INPUT_DOUBLE_RELEASE:
-            handler = opts->double_release_handler[mux_type];
-            break;
     }
 
     // First invoke specific handler (if one was registered for this input mux_type and action).
@@ -563,15 +563,6 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
         case MUX_INPUT_RELEASE:
             handler = opts->combo[num].release_handler;
             break;
-        case MUX_INPUT_DOUBLE_PRESS:
-            handler = opts->combo[num].double_press_handler;
-            break;
-        case MUX_INPUT_DOUBLE_HOLD:
-            handler = opts->combo[num].double_hold_handler;
-            break;
-        case MUX_INPUT_DOUBLE_RELEASE:
-            handler = opts->combo[num].double_release_handler;
-            break;
     }
 
     // First invoke specific handler (if one was registered for this combo number and action).
@@ -587,60 +578,26 @@ static void handle_inputs(const mux_input_options *opts) {
     // Tick (millis) of last press or hold.
     static uint32_t hold_tick[MUX_INPUT_COUNT] = {};
 
-    //
-    static uint32_t last_release_tick[MUX_INPUT_COUNT] = {};
-    static bool first_press[MUX_INPUT_COUNT] = {};
-    static bool in_double_press[MUX_INPUT_COUNT] = {};
-    const uint32_t double_press_window = 250;
-
     for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
         if (pressed & BIT(i)) {
             if (!(held & BIT(i))) {
-                uint32_t delta = tick - last_release_tick[i];
-
-                if (first_press[i] && delta <= double_press_window) {
-                    // Double-press detected
-                    dispatch_input(opts, i, MUX_INPUT_DOUBLE_PRESS);
-                    in_double_press[i] = true;
-                    first_press[i] = false;
-                } else {
-                    // Pressed & not held: Invoke "press" handler.
-                    dispatch_input(opts, i, MUX_INPUT_PRESS);
-                    first_press[i] = true;
-                    in_double_press[i] = false;
-                }
+                // Pressed & not held: Invoke "press" handler.
+                dispatch_input(opts, i, MUX_INPUT_PRESS);
 
                 // Initial repeat delay
                 hold_delay[i] = config.SETTINGS.ADVANCED.REPEAT_DELAY;
                 hold_tick[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
-                if (in_double_press[i]) {
-                    // Second press being held: double-hold
-                    dispatch_input(opts, i, MUX_INPUT_DOUBLE_HOLD);
-                } else {
-                    // Pressed & held: Invoke "hold" handler.
-                    dispatch_input(opts, i, MUX_INPUT_HOLD);
-                }
+                // Pressed & held: Invoke "hold" handler.
+                dispatch_input(opts, i, MUX_INPUT_HOLD);
 
                 // Single delay for each subsequent repeat.
                 hold_delay[i] = config.SETTINGS.ADVANCED.ACCELERATE;
                 hold_tick[i] = tick;
             }
         } else if (held & BIT(i)) {
-            if (in_double_press[i]) {
-                // Either pressed or held on double: Invoke "release" handler.
-                dispatch_input(opts, i, MUX_INPUT_DOUBLE_RELEASE);
-                in_double_press[i] = false;
-            } else {
-                // Held & not pressed: Invoke "release" handler.
-                dispatch_input(opts, i, MUX_INPUT_RELEASE);
-            }
-            last_release_tick[i] = tick;
-        } else {
-            // Not pressed, not held — clear first_press after timeout
-            if (first_press[i] && tick - last_release_tick[i] > double_press_window) {
-                first_press[i] = false;
-            }
+            // Held & not pressed: Invoke "release" handler.
+            dispatch_input(opts, i, MUX_INPUT_RELEASE);
         }
     }
 }
@@ -650,11 +607,6 @@ static void handle_combos(const mux_input_options *opts) {
     static uint32_t hold_delay = 0;
     // Tick (millis) of last press or hold.
     static uint32_t hold_tick = 0;
-
-    static uint32_t last_release_tick = 0;
-    static bool first_press = false;
-    static bool in_double_press = false;
-    const uint32_t double_press_window = 250;
 
     // Combo number that was active during the previous iteration of the event loop, or
     // MUX_INPUT_COMBO_COUNT when no combo is held.
@@ -666,13 +618,8 @@ static void handle_combos(const mux_input_options *opts) {
 
         if ((pressed & mask) == mask) {
             if (tick - hold_tick >= hold_delay) {
-                if (in_double_press) {
-                    // Double-press being held: double-hold
-                    dispatch_combo(opts, active_combo, MUX_INPUT_DOUBLE_HOLD);
-                } else {
-                    // Single hold
-                    dispatch_combo(opts, active_combo, MUX_INPUT_HOLD);
-                }
+                // Single hold
+                dispatch_combo(opts, active_combo, MUX_INPUT_HOLD);
 
                 // Single delay for each subsequent repeat.
                 hold_delay = config.SETTINGS.ADVANCED.ACCELERATE;
@@ -680,13 +627,7 @@ static void handle_combos(const mux_input_options *opts) {
             }
         } else {
             // Held & not pressed: Invoke release handler.
-            if (in_double_press) {
-                dispatch_combo(opts, active_combo, MUX_INPUT_DOUBLE_RELEASE);
-                in_double_press = false;
-            } else {
-                dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
-            }
-            last_release_tick = tick;
+            dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
             active_combo = MUX_INPUT_COMBO_COUNT;
         }
     }
@@ -701,19 +642,8 @@ static void handle_combos(const mux_input_options *opts) {
             uint64_t mask = opts->combo[i].type_mask;
 
             if (mask && (pressed & mask) == mask) {
-                uint32_t delta = tick - last_release_tick;
-
-                if (first_press && delta <= double_press_window) {
-                    // Pressed and then pressed again in double press window
-                    dispatch_combo(opts, i, MUX_INPUT_DOUBLE_PRESS);
-                    in_double_press = true;
-                    first_press = false;
-                } else {
-                    // Pressed & not held: Invoke "press" handler.
-                    dispatch_combo(opts, i, MUX_INPUT_PRESS);
-                    first_press = true;
-                    in_double_press = false;
-                }
+                // Pressed & not held: Invoke "press" handler.
+                dispatch_combo(opts, i, MUX_INPUT_PRESS);
 
                 // Initial repeat delay
                 hold_delay = config.SETTINGS.ADVANCED.REPEAT_DELAY;
@@ -723,11 +653,6 @@ static void handle_combos(const mux_input_options *opts) {
                 // Only one combo can be active at a time.
                 break;
             }
-        }
-    } else if (active_combo == MUX_INPUT_COMBO_COUNT) {
-        // If nothing pressed, clear press window after timeout
-        if (first_press && tick - last_release_tick > double_press_window) {
-            first_press = false;
         }
     }
 }
