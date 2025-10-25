@@ -204,10 +204,12 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
         running_governor = read_all_char_from(device.CPU.GOVERNOR);
         set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
         if (verbose) LOG_INFO("input", "Device is now IDLE")
+        if (timer->idle_name) printf("%s\n", timer->idle_name);
         timer->idle = true;
     } else if (idle_ms < timeout_ms && timer->idle) {
         set_scaling_governor(running_governor, 0);
         if (verbose) LOG_INFO("input", "Device is now ACTIVE")
+        if (timer->active_name) printf("%s\n", timer->active_name);
         timer->idle = false;
     }
 }
