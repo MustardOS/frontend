@@ -438,11 +438,11 @@ static void parse_combos_file(const char *filename) {
         return;
     }
 
-    struct json boards = json_object_get(root, "boards");
-    if (json_exists(boards) && json_type(boards) == JSON_ARRAY) {
+    struct json devices = json_object_get(root, "devices");
+    if (json_exists(devices) && json_type(devices) == JSON_ARRAY) {
         int match = 0;
 
-        for (struct json j = json_first(boards); json_exists(j); j = json_next(j)) {
+        for (struct json j = json_first(devices); json_exists(j); j = json_next(j)) {
             if (!json_string_compare(j, device.BOARD.NAME)) {
                 match = 1;
                 break;
