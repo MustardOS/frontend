@@ -1494,15 +1494,15 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
     lv_obj_set_grid_cell(cell_pnl, theme->GRID.CELL.COLUMN_ALIGN, col, 1, theme->GRID.CELL.ROW_ALIGN, row, 1);
 
+    if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
+        lv_obj_align(cell_image, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+    } else {
+        lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+    }
     if (file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
         snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
         lv_img_set_src(cell_image, grid_image);
-        if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
-            lv_obj_align(cell_image, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
-        } else {
-            lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
-        }
     }
 
     char grid_image_focused[MAX_BUFFER_SIZE];
