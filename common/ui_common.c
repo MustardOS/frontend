@@ -1340,8 +1340,7 @@ void fade_from_black(lv_obj_t *ui_screen) {
 }
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
-    int carousel_item_count = (theme->GRID.COLUMN_COUNT > theme->GRID.ROW_COUNT) ? theme->GRID.COLUMN_COUNT : theme->GRID.ROW_COUNT;
-    int row_count = is_carousel_grid_mode ? carousel_item_count : item_count / theme->GRID.COLUMN_COUNT + 1;
+    int row_count = is_carousel_grid_mode ? theme->GRID.ROW_COUNT : item_count / theme->GRID.COLUMN_COUNT + 1;
     lv_coord_t *col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
     lv_coord_t *row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
 
