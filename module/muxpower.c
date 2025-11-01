@@ -115,8 +115,8 @@ static int find_governor(char *governor) {
 }
 
 static void restore_power_options(void) {
-    lv_obj_t * ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
-    int16_t * config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
+    lv_obj_t *ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
+    int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
 
     map_drop_down_to_index(ui_droShutdown_power, config.SETTINGS.POWER.SHUTDOWN, shutdown_values, SHUTDOWN_COUNT, 0);
     map_drop_down_to_index(ui_droBattery_power, config.SETTINGS.POWER.LOW_BATTERY, battery_values, BATTERY_COUNT, 5);
@@ -188,10 +188,23 @@ static int save_power_options(void) {
         write_text_to_file((CONF_CONFIG_PATH "settings/power/idle_sleep"), "w", INT, idx_idle_sleep);
     }
 
-    CHECK_AND_SAVE_STD(power, IdleMute, "settings/power/idle_mute", INT, 0);
+    if (lv_dropdown_get_option_cnt(ui_droIdleMute_power) > 1 &&
+        lv_dropdown_get_selected(ui_droIdleMute_power) != IdleMute_original) {
+        is_modified++;
+        CHECK_AND_SAVE_STD(power, IdleMute, "settings/power/idle_mute", INT, 0);
+    }
 
-    CHECK_AND_SAVE_VAL(power, GovIdle, "settings/power/gov_idle", CHAR, gov_values_lower);
-    CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
+    if (lv_dropdown_get_option_cnt(ui_droGovIdle_power) > 1 &&
+        lv_dropdown_get_selected(ui_droGovIdle_power) != GovIdle_original) {
+        is_modified++;
+        CHECK_AND_SAVE_VAL(power, GovIdle, "settings/power/gov_idle", CHAR, gov_values_lower);
+    }
+
+    if (lv_dropdown_get_option_cnt(ui_droGovDefault_power) > 1 &&
+        lv_dropdown_get_selected(ui_droGovDefault_power) != GovDefault_original) {
+        is_modified++;
+        CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
+    }
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -345,7 +358,7 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
 #define POWER(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_power, UDATA);

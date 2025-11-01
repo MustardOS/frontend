@@ -20,6 +20,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTemp_sysinfo,     lang.MUXSYSINFO.HELP.TEMP},
             {ui_lblCapacity_sysinfo, lang.MUXSYSINFO.HELP.CAPACITY},
             {ui_lblVoltage_sysinfo,  lang.MUXSYSINFO.HELP.VOLTAGE},
+            {ui_lblCharger_sysinfo,  lang.MUXSYSINFO.HELP.CHARGER},
             {ui_lblRefresh_sysinfo,  lang.MUXSYSINFO.HELP.REFRESH},
     };
 
@@ -179,20 +180,31 @@ const char *get_kernel_version(void) {
     return buffer;
 }
 
+const char *get_charger_status(void) {
+    static char buffer[128];
+
+    if (file_exist(device.BATTERY.CHARGER)) {
+        const char *status = read_line_int_from(device.BATTERY.CHARGER, 1)
+                             ? lang.GENERIC.ONLINE
+                             : lang.GENERIC.OFFLINE;
+
+        snprintf(buffer, sizeof(buffer), "%s", status);
+    } else {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+    }
+
+    return buffer;
+}
+
 static void update_system_info() {
-    lv_label_set_text(ui_lblVersionValue_sysinfo, get_version());
-    lv_label_set_text(ui_lblBuildValue_sysinfo, get_build());
-    lv_label_set_text(ui_lblDeviceValue_sysinfo, get_device_info());
-    lv_label_set_text(ui_lblKernelValue_sysinfo, get_kernel_version());
     lv_label_set_text(ui_lblUptimeValue_sysinfo, get_uptime());
-    lv_label_set_text(ui_lblCpuValue_sysinfo, get_cpu_model());
     lv_label_set_text(ui_lblSpeedValue_sysinfo, get_current_frequency());
     lv_label_set_text(ui_lblGovernorValue_sysinfo, get_scaling_governor());
     lv_label_set_text(ui_lblMemoryValue_sysinfo, get_memory_usage());
     lv_label_set_text(ui_lblTempValue_sysinfo, get_temperature());
     lv_label_set_text(ui_lblCapacityValue_sysinfo, get_battery_cap());
     lv_label_set_text(ui_lblVoltageValue_sysinfo, read_battery_voltage());
-    lv_label_set_text(ui_lblRefreshValue_sysinfo, "");
+    lv_label_set_text(ui_lblChargerValue_sysinfo, get_charger_status());
 }
 
 static void init_navigation_group(void) {
@@ -213,6 +225,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
     INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
     INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", read_battery_voltage());
+    INIT_VALUE_ITEM(-1, sysinfo, Charger, lang.MUXSYSINFO.CHARGER, "charger", get_charger_status());
     INIT_VALUE_ITEM(-1, sysinfo, Refresh, lang.MUXSYSINFO.REFRESH, "refresh", "");
 
     ui_group = lv_group_create();

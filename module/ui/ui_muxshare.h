@@ -314,6 +314,7 @@
     SYSINFO(Temp,     "temp")     \
     SYSINFO(Capacity, "capacity") \
     SYSINFO(Voltage,  "voltage")  \
+    SYSINFO(Charger,  "charger")  \
     SYSINFO(Refresh,  "refresh")
 
 #define TWEAKADV_ELEMENTS                \
