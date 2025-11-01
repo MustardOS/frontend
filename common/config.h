@@ -16,7 +16,27 @@ struct mux_config {
     } BOOT;
 
     struct {
+        int16_t APPS;
+        int16_t BIOS;
+        int16_t CATALOGUE;
+        int16_t CHEATS;
+        int16_t COLLECTION;
+        int16_t CONFIG;
+        int16_t HISTORY;
+        int16_t INIT;
         int16_t MERGE;
+        int16_t MUSIC;
+        int16_t NAME;
+        int16_t NETWORK;
+        int16_t OVERLAYS;
+        int16_t OVERRIDE;
+        int16_t PACKAGE;
+        int16_t SAVE;
+        int16_t SCREENSHOT;
+        int16_t SHADERS;
+        int16_t SYNCTHING;
+        int16_t THEME;
+        int16_t TRACK;
     } BACKUP;
 
     struct {

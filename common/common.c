@@ -84,6 +84,11 @@ char *disabled_enabled[] = {
         lang.GENERIC.ENABLED
 };
 
+char *excluded_included[] = {
+        lang.GENERIC.EXCLUDED,
+        lang.GENERIC.INCLUDED
+};
+
 char *allowed_restricted[] = {
         lang.GENERIC.ALLOWED,
         lang.GENERIC.RESTRICTED

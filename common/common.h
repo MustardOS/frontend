@@ -31,6 +31,7 @@ extern int is_blank;
 extern char *theme_back_compat[];
 
 extern char *disabled_enabled[];
+extern char *excluded_included[];
 extern char *allowed_restricted[];
 
 #define SOUND_TOTAL 12

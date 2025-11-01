@@ -49,29 +49,29 @@
     APPCON(Governor, "governor") \
     APPCON(Control,  "control")
 
-#define BACKUP_ELEMENTS              \
-    BACKUP(Track,      "track")      \
-    BACKUP(Apps,       "apps")       \
-    BACKUP(Music,      "music")      \
-    BACKUP(Collection, "collection") \
-    BACKUP(Override,   "override")   \
-    BACKUP(Package,    "package")    \
-    BACKUP(Name,       "name")       \
-    BACKUP(History,    "history")    \
-    BACKUP(Catalogue,  "catalogue")  \
-    BACKUP(Network,    "network")    \
-    BACKUP(Cheats,     "cheats")     \
-    BACKUP(Config,     "config")     \
-    BACKUP(Overlays,   "overlays")   \
-    BACKUP(Shaders,    "shaders")    \
-    BACKUP(Save,       "save")       \
-    BACKUP(Screenshot, "screenshot") \
-    BACKUP(Syncthing,  "syncthing")  \
-    BACKUP(Bios,       "bios")       \
-    BACKUP(Theme,      "theme")      \
-    BACKUP(Init,       "init")       \
-    BACKUP(Target,     "target")     \
-    BACKUP(Merge,      "merge")      \
+#define BACKUP_ELEMENTS               \
+    BACKUP(Track,      "track")       \
+    BACKUP(Apps,       "application") \
+    BACKUP(Music,      "music")       \
+    BACKUP(Collection, "collection")  \
+    BACKUP(Override,   "override")    \
+    BACKUP(Package,    "package")     \
+    BACKUP(Name,       "name")        \
+    BACKUP(History,    "history")     \
+    BACKUP(Catalogue,  "catalogue")   \
+    BACKUP(Network,    "network")     \
+    BACKUP(Cheats,     "cheats")      \
+    BACKUP(Config,     "config")      \
+    BACKUP(Overlays,   "overlays")    \
+    BACKUP(Shaders,    "shaders")     \
+    BACKUP(Save,       "save")        \
+    BACKUP(Screenshot, "screenshot")  \
+    BACKUP(Syncthing,  "syncthing")   \
+    BACKUP(Bios,       "bios")        \
+    BACKUP(Theme,      "theme")       \
+    BACKUP(Init,       "init")        \
+    BACKUP(Target,     "target")      \
+    BACKUP(Merge,      "merge")       \
     BACKUP(Start,      "start")
 
 #define CONNECT_ELEMENTS                \

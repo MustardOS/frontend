@@ -54,8 +54,11 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.DOWNLOAD, "Download");
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
+    GENERIC_FIELD(lang->GENERIC.TOGGLE_ALL, "Toggle All");
+    GENERIC_FIELD(lang->GENERIC.EXCLUDED, "Excluded");
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
+    GENERIC_FIELD(lang->GENERIC.INCLUDED, "Included");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
     GENERIC_FIELD(lang->GENERIC.INSTALL, "Install");
