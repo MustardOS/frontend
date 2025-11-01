@@ -18,7 +18,7 @@
 #include "../common/json/json.h"
 
 #define MAX_SEQUENCE 12
-#define SAFE_BIT(i) ((i) < 64 ? (1ULL << (i)) : 0ULL)
+#define SAFE_BIT(i) ((uint64_t)1 << ((i) & 63))
 #define SEQUENCE_WIN (400 + 150 * seq_buf.count)
 
 static void handle_combo(int num, mux_input_action action);
@@ -132,15 +132,23 @@ static uint32_t global_tick = 0;
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
 
-static char *running_governor;
+static char *boot_governor = NULL;
+static char *running_governor = NULL;
 
 static void cleanup(int signo) {
     (void) signo;
-    set_scaling_governor(running_governor, 0);
-    close(input_opts.general_fd);
-    close(input_opts.power_fd);
-    close(input_opts.volume_fd);
-    close(input_opts.extra_fd);
+
+    const char *restore_governor = running_governor ? running_governor : boot_governor;
+    if (restore_governor) set_scaling_governor(restore_governor, 0);
+
+    if (input_opts.general_fd >= 0) close(input_opts.general_fd);
+    if (input_opts.power_fd >= 0) close(input_opts.power_fd);
+    if (input_opts.volume_fd >= 0) close(input_opts.volume_fd);
+    if (input_opts.extra_fd >= 0) close(input_opts.extra_fd);
+
+    free(boot_governor);
+    free(running_governor);
+
     exit(0);
 }
 
@@ -201,16 +209,28 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
     uint32_t idle_ms = global_tick - timer->tick;
 
     if (idle_ms >= timeout_ms && !timer->idle) {
-        running_governor = read_all_char_from(device.CPU.GOVERNOR);
-        set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
         if (verbose) LOG_INFO("input", "Device is now IDLE")
         if (timer->idle_name) printf("%s\n", timer->idle_name);
+
+        if (!running_governor) {
+            running_governor = read_all_char_from(device.CPU.GOVERNOR);
+            if (running_governor) write_text_to_file("/tmp/wake_cpu_gov", "w", CHAR, running_governor);
+        }
+
+        set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
         timer->idle = true;
     } else if (idle_ms < timeout_ms && timer->idle) {
-        set_scaling_governor(running_governor, 0);
         if (verbose) LOG_INFO("input", "Device is now ACTIVE")
         if (timer->active_name) printf("%s\n", timer->active_name);
+
+        if (running_governor) {
+            set_scaling_governor(boot_governor, 0);
+            free(running_governor);
+            running_governor = NULL;
+        }
+
         timer->idle = false;
+        timer->tick = global_tick;
     }
 }
 
@@ -249,7 +269,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
 
             if (match) {
                 printf("%s\n", c->name);
-                seq_buf.count = 0; // reset after successful sequence math
+                seq_buf.count = 0; // reset after successful sequence match
                 run_command(c);
                 break;
             }
@@ -580,14 +600,23 @@ static void usage(FILE *file) {
 }
 
 int main(int argc, char *argv[]) {
-    signal(SIGINT, cleanup);
-    signal(SIGTERM, cleanup);
+    atexit((void (*)(void)) cleanup);
+
+    struct sigaction sa = {.sa_handler = cleanup};
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
 
     // Read config and open input devices.
     load_device(&device);
     load_config(&config);
 
-    running_governor = read_all_char_from(device.CPU.GOVERNOR);
+    boot_governor = read_all_char_from(device.CPU.GOVERNOR);
+    if (!boot_governor) {
+        LOG_WARN("input", "Could not read initial CPU governor")
+        boot_governor = strdup("ondemand");
+    } else {
+        LOG_INFO("input", "Initial CPU governor: %s", boot_governor)
+    }
 
     input_opts.general_fd = open(device.INPUT_EVENT.JOY_GENERAL, O_RDONLY);
     if (input_opts.general_fd < 0) {
@@ -677,6 +706,7 @@ int main(int argc, char *argv[]) {
     idle_display.tick = idle_sleep.tick = global_tick;
 
     // Process input and respond to combos indefinitely.
+    LOG_INFO("input", "Hotkey daemon ready! Monitoring input events...")
     mux_input_task(&input_opts);
 
     cleanup(0);
