@@ -1340,7 +1340,7 @@ void fade_from_black(lv_obj_t *ui_screen) {
 }
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
-    int row_count = item_count / theme->GRID.COLUMN_COUNT + 1;
+    int row_count = is_carousel_grid_mode ? theme->GRID.ROW_COUNT : item_count / theme->GRID.COLUMN_COUNT + 1;
     lv_coord_t *col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
     lv_coord_t *row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
 
@@ -1494,15 +1494,15 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
     lv_obj_set_grid_cell(cell_pnl, theme->GRID.CELL.COLUMN_ALIGN, col, 1, theme->GRID.CELL.ROW_ALIGN, row, 1);
 
+    if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
+        lv_obj_align(cell_image, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+    } else {
+        lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+    }
     if (file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
         snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
         lv_img_set_src(cell_image, grid_image);
-        if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
-            lv_obj_align(cell_image, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
-        } else {
-            lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
-        }
     }
 
     char grid_image_focused[MAX_BUFFER_SIZE];
