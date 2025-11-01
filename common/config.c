@@ -9,6 +9,8 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SYSTEM.BUILD, CONF_CONFIG_PATH "system/build", "Unknown")
     CFG_STR_FIELD(config->SYSTEM.VERSION, CONF_CONFIG_PATH "system/version", "Edge")
 
+    CFG_INT_FIELD(config->BACKUP.MERGE,      CONF_CONFIG_PATH "backup/merge", 0)
+
     CFG_INT_FIELD(config->BOOT.FACTORY_RESET, CONF_CONFIG_PATH "boot/factory_reset", 0)
     CFG_INT_FIELD(config->BOOT.DEVICE_MODE, CONF_CONFIG_PATH "boot/device_mode", 0)
 

@@ -16,6 +16,10 @@ struct mux_config {
     } BOOT;
 
     struct {
+        int16_t MERGE;
+    } BACKUP;
+
+    struct {
         int16_t NOTATION;
         char POOL[MAX_BUFFER_SIZE];
     } CLOCK;

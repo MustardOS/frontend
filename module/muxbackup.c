@@ -7,7 +7,7 @@
 #define MERGE_INDEX (UI_COUNT - 2)
 #define TARGET_INDEX (UI_COUNT - 3)
 
-int merge_archives = 1;
+static int Merge_original;
 
 struct backup {
     lv_obj_t *ui_label;
@@ -81,8 +81,19 @@ static void update_backup_info(void) {
     const char *sd = is_partition_mounted(device.STORAGE.SDCARD.MOUNT) ? "SD2" : "SD1";
     for (int i = 0; i < bp; i++) lv_label_set_text(backup_path[i].ui_label, sd);
 
-    // Set target to SD1 by default
-    lv_label_set_text(ui_lblTargetValue_backup, "SD1");
+    lv_label_set_text(ui_lblTargetValue_backup, sd);
+
+    Merge_original = config.BACKUP.MERGE;
+    lv_label_set_text(ui_lblMergeValue_backup, config.BACKUP.MERGE == 0 ? lang.GENERIC.DISABLED : lang.GENERIC.ENABLED);
+}
+
+static void save_backup_options(void) {
+    if (Merge_original != config.BACKUP.MERGE) {
+        write_text_to_file((CONF_CONFIG_PATH "backup/merge"), "w", INT, config.BACKUP.MERGE);
+        toast_message(lang.GENERIC.SAVING, FOREVER);
+        refresh_screen(ui_screen);
+        refresh_config = 1;
+    }
 }
 
 static void init_navigation_group(void) {
@@ -91,26 +102,26 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+    INIT_VALUE_ITEM(-1, backup, Track, lang.MUXBACKUP.TRACK, "track", "");
     INIT_VALUE_ITEM(-1, backup, Apps, lang.MUXBACKUP.APPS, "application", "");
-    INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
-    INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
-    INIT_VALUE_ITEM(-1, backup, Cheats, lang.MUXBACKUP.CHEATS, "cheats", "");
-    INIT_VALUE_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", "");
-    INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.CONFIG, "config", "");
-    INIT_VALUE_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", "");
-    INIT_VALUE_ITEM(-1, backup, Init, lang.MUXBACKUP.INIT, "init", "");
     INIT_VALUE_ITEM(-1, backup, Music, lang.MUXBACKUP.MUSIC, "music", "");
-    INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.NAME, "name", "");
-    INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NETWORK, "network", "");
-    INIT_VALUE_ITEM(-1, backup, Overlays, lang.MUXBACKUP.OVERLAYS, "overlays", "");
+    INIT_VALUE_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", "");
     INIT_VALUE_ITEM(-1, backup, Override, lang.MUXBACKUP.OVERRIDE, "override", "");
     INIT_VALUE_ITEM(-1, backup, Package, lang.MUXBACKUP.PACKAGE, "package", "");
+    INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.NAME, "name", "");
+    INIT_VALUE_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", "");
+    INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
+    INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NETWORK, "network", "");
+    INIT_VALUE_ITEM(-1, backup, Cheats, lang.MUXBACKUP.CHEATS, "cheats", "");
+    INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.CONFIG, "config", "");
+    INIT_VALUE_ITEM(-1, backup, Overlays, lang.MUXBACKUP.OVERLAYS, "overlays", "");
+    INIT_VALUE_ITEM(-1, backup, Shaders, lang.MUXBACKUP.SHADERS, "shaders", "");
     INIT_VALUE_ITEM(-1, backup, Save, lang.MUXBACKUP.SAVE, "save", "");
     INIT_VALUE_ITEM(-1, backup, Screenshot, lang.MUXBACKUP.SCREENSHOT, "screenshot", "");
-    INIT_VALUE_ITEM(-1, backup, Shaders, lang.MUXBACKUP.SHADERS, "shaders", "");
     INIT_VALUE_ITEM(-1, backup, Syncthing, lang.MUXBACKUP.SYNCTHING, "syncthing", "");
+    INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, backup, Theme, lang.MUXBACKUP.THEME, "theme", "");
-    INIT_VALUE_ITEM(-1, backup, Track, lang.MUXBACKUP.TRACK, "track", "");
+    INIT_VALUE_ITEM(-1, backup, Init, lang.MUXBACKUP.INIT, "init", "");
     INIT_VALUE_ITEM(-1, backup, Target, lang.MUXBACKUP.TARGET, "target", "");
     INIT_VALUE_ITEM(-1, backup, Merge, lang.MUXBACKUP.MERGE, "merge", lang.GENERIC.ENABLED);
     INIT_VALUE_ITEM(-1, backup, Start, lang.MUXBACKUP.START, "start", "");
@@ -179,6 +190,8 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
+
+    save_backup_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "backup");
 
@@ -255,7 +268,7 @@ static void handle_a(void) {
     snprintf(backup_script_path, sizeof(backup_script_path), OPT_PATH "script/mux/backup.sh");
 
     char do_merge[4];
-    sprintf(do_merge, "%d", merge_archives);
+    sprintf(do_merge, "%d", config.BACKUP.MERGE);
 
     const char *args[] = {backup_script_path, do_merge, NULL};
     size_t exec_count;
@@ -298,10 +311,10 @@ static void handle_x(void) {
         play_sound(SND_CONFIRM);
 
         if (strcasecmp(label_text, lang.GENERIC.ENABLED) == 0) {
-            merge_archives = 0;
+            config.BACKUP.MERGE = 0;
             lv_label_set_text(element_focused, lang.GENERIC.DISABLED);
         } else {
-            merge_archives = 1;
+            config.BACKUP.MERGE = 1;
             lv_label_set_text(element_focused, lang.GENERIC.ENABLED);
         }
 
@@ -372,14 +385,14 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
+            {ui_lblNavAGlyph, "",                  0},
+            {ui_lblNavA,      lang.GENERIC.LAUNCH, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
             {ui_lblNavXGlyph, "",                  0},
             {ui_lblNavX,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavYGlyph, "",                  0},
             {ui_lblNavY,      lang.GENERIC.CLEAR,  0},
-            {ui_lblNavAGlyph, "",                  0},
-            {ui_lblNavA,      lang.GENERIC.LAUNCH, 0},
             {NULL,            NULL,                0}
     });
 

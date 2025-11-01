@@ -50,26 +50,26 @@
     APPCON(Control,  "control")
 
 #define BACKUP_ELEMENTS              \
+    BACKUP(Track,      "track")      \
     BACKUP(Apps,       "apps")       \
-    BACKUP(Bios,       "bios")       \
-    BACKUP(Catalogue,  "catalogue")  \
-    BACKUP(Cheats,     "cheats")     \
-    BACKUP(Collection, "collection") \
-    BACKUP(Config,     "config")     \
-    BACKUP(History,    "history")    \
-    BACKUP(Init,       "init")       \
     BACKUP(Music,      "music")      \
-    BACKUP(Name,       "name")       \
-    BACKUP(Network,    "network")    \
-    BACKUP(Overlays,   "overlays")   \
+    BACKUP(Collection, "collection") \
     BACKUP(Override,   "override")   \
     BACKUP(Package,    "package")    \
+    BACKUP(Name,       "name")       \
+    BACKUP(History,    "history")    \
+    BACKUP(Catalogue,  "catalogue")  \
+    BACKUP(Network,    "network")    \
+    BACKUP(Cheats,     "cheats")     \
+    BACKUP(Config,     "config")     \
+    BACKUP(Overlays,   "overlays")   \
+    BACKUP(Shaders,    "shaders")    \
     BACKUP(Save,       "save")       \
     BACKUP(Screenshot, "screenshot") \
-    BACKUP(Shaders,    "shaders")    \
     BACKUP(Syncthing,  "syncthing")  \
+    BACKUP(Bios,       "bios")       \
     BACKUP(Theme,      "theme")      \
-    BACKUP(Track,      "track")      \
+    BACKUP(Init,       "init")       \
     BACKUP(Target,     "target")     \
     BACKUP(Merge,      "merge")      \
     BACKUP(Start,      "start")
