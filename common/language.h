@@ -78,6 +78,8 @@ struct mux_lang {
         char ALLOWED[MAX_BUFFER_SIZE];
         char RESTRICTED[MAX_BUFFER_SIZE];
         char REFRESH[MAX_BUFFER_SIZE];
+        char ONLINE[MAX_BUFFER_SIZE];
+        char OFFLINE[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -913,6 +915,7 @@ struct mux_lang {
         char TEMP[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
+        char CHARGER[MAX_BUFFER_SIZE];
         char REFRESH[MAX_BUFFER_SIZE];
         struct {
             char INFO[MAX_BUFFER_SIZE];
@@ -930,6 +933,7 @@ struct mux_lang {
             char SERVICE[MAX_BUFFER_SIZE];
             char CAPACITY[MAX_BUFFER_SIZE];
             char VOLTAGE[MAX_BUFFER_SIZE];
+            char CHARGER[MAX_BUFFER_SIZE];
             char REFRESH[MAX_BUFFER_SIZE];
             struct {
                 char INFO[MAX_BUFFER_SIZE];
