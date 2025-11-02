@@ -99,6 +99,8 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.REFRESH, "Refreshing…");
     GENERIC_FIELD(lang->GENERIC.ONLINE, "Online");
     GENERIC_FIELD(lang->GENERIC.OFFLINE, "Offline");
+    GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
+    GENERIC_FIELD(lang->GENERIC.VISIBLE, "Visible");
 
     // muxapp
     SPECIFIC_FIELD(lang->MUXAPP.TITLE, "APPLICATIONS");
@@ -970,7 +972,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.REFORMAT, "Display Title Reformatting");
     SPECIFIC_FIELD(lang->MUXVISUAL.ROOT, "Title Include Root Drive");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT, "Folder Item Count");
-    SPECIFIC_FIELD(lang->MUXVISUAL.EMPTY, "Display Empty Folder");
+    SPECIFIC_FIELD(lang->MUXVISUAL.EMPTY, "Empty Folders");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FOLDER, "Menu Counter Folder");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FILE, "Menu Counter File");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.TITLE, "Content Name Scheme");
@@ -979,6 +981,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_PA, "Remove ( )");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQPA, "Remove [ ] and ( )");
     SPECIFIC_FIELD(lang->MUXVISUAL.HIDDEN, "Show Hidden Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HIDE_COLLECT, "Collection Visibility");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HISTORY_ICON, "History Glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.IMAGE, "Overlay Image");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.TRANSPARENCY, "Overlay Transparency");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.THEME, "Theme Provided");
@@ -1010,6 +1014,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE, "Toggle the visibility of currently selected file along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME, "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HIDE_COLLECT, "Toggle the visibility of content within Explore Content that has been added to collections");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HISTORY_ICON, "Toggle the history glyph next to already played content within Explore Content");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");

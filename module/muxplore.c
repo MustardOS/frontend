@@ -328,6 +328,7 @@ static void gen_item(char **file_names, int file_count) {
         for (size_t i = 0; i < item_count; i++) {
             if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
             if (items[i].content_type == ITEM) {
+                if (!config.VISUAL.HIDECOLLECT && strcasecmp(items[i].glyph_icon, "collection") == 0) continue;
                 gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
             }
         }

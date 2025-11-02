@@ -94,6 +94,11 @@ char *allowed_restricted[] = {
         lang.GENERIC.RESTRICTED
 };
 
+char *hidden_visible[] = {
+        lang.GENERIC.HIDDEN,
+        lang.GENERIC.VISIBLE
+};
+
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",
         "error", "muos", "reboot", "shutdown",
@@ -2794,8 +2799,10 @@ char *get_content_explorer_glyph_name(char *file_path) {
         if (strcmp(collection_items[i], file_path) == 0) return "collection";
     }
 
-    for (int i = 0; i < history_item_count; i++) {
-        if (strcmp(history_items[i], file_path) == 0) return "history";
+    if (config.VISUAL.HISTORYICON) {
+        for (int i = 0; i < history_item_count; i++) {
+            if (strcmp(history_items[i], file_path) == 0) return "history";
+        }
     }
 
     return "rom";

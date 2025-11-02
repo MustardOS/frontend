@@ -370,6 +370,8 @@
     VISUAL(MenuCounterFolder,     "counterfolder")         \
     VISUAL(MenuCounterFile,       "counterfile")           \
     VISUAL(Hidden,                "hidden")                \
+    VISUAL(HideCollect,           "hidecollect")           \
+    VISUAL(HistoryIcon,           "historyicon")           \
     VISUAL(OverlayImage,          "overlayimage")          \
     VISUAL(OverlayTransparency,   "overlaytransparency")
 

@@ -194,6 +194,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, CONF_CONFIG_PATH "visual/backgroundanimation", 0)
     CFG_INT_FIELD(config->VISUAL.LAUNCHSPLASH, CONF_CONFIG_PATH "visual/launchsplash", 0)
     CFG_INT_FIELD(config->VISUAL.BLACKFADE, CONF_CONFIG_PATH "visual/blackfade", 1)
+    CFG_INT_FIELD(config->VISUAL.HIDECOLLECT, CONF_CONFIG_PATH "visual/hidecollect", 0)
+    CFG_INT_FIELD(config->VISUAL.HISTORYICON, CONF_CONFIG_PATH "visual/historyicon", 1)
 
     CFG_INT_FIELD(config->WEB.SSHD, CONF_CONFIG_PATH "web/sshd", 1)
     CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0)
