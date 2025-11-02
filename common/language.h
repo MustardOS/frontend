@@ -39,7 +39,10 @@ struct mux_lang {
         char DOWNLOAD[MAX_BUFFER_SIZE];
         char ENABLED[MAX_BUFFER_SIZE];
         char EXTRACT[MAX_BUFFER_SIZE];
+        char TOGGLE_ALL[MAX_BUFFER_SIZE];
+        char EXCLUDED[MAX_BUFFER_SIZE];
         char FILTER[MAX_BUFFER_SIZE];
+        char INCLUDED[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
         char INSTALL[MAX_BUFFER_SIZE];
