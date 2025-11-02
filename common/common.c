@@ -72,6 +72,7 @@ int is_blank = 0;
 
 char *theme_back_compat[] = {
         config.SYSTEM.VERSION,
+        "2508.3_GOLDEN_GOOSE",
         "2508.2_SILLY_GOOSE",
         "2508.1_CANADA_GOOSE",
         "2508.0_GOOSE",
@@ -503,7 +504,7 @@ char *grab_ext(char *text) {
 }
 
 char *get_execute_result(const char *command) {
-    FILE * fp = popen(command, "r");
+    FILE *fp = popen(command, "r");
     if (fp == NULL) {
         fprintf(stderr, "Failed to run: %s\n", command);
         return NULL;
@@ -520,7 +521,7 @@ char *get_execute_result(const char *command) {
 }
 
 int read_battery_capacity(void) {
-    FILE * file = fopen(device.BATTERY.CAPACITY, "r");
+    FILE *file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY)
@@ -540,7 +541,7 @@ int read_battery_capacity(void) {
 }
 
 char *read_battery_voltage(void) {
-    FILE * file = fopen(device.BATTERY.VOLTAGE, "r");
+    FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE)
@@ -568,7 +569,7 @@ char *read_battery_voltage(void) {
 
 char *read_all_char_from(const char *filename) {
     char *text = NULL;
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
 
     if (file == NULL) return "";
 
@@ -600,7 +601,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
         return "";
     }
 
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
         return "";
@@ -633,7 +634,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
 }
 
 int read_all_int_from(const char *filename, size_t buffer) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
     char line[buffer];
@@ -650,7 +651,7 @@ int read_all_int_from(const char *filename, size_t buffer) {
 
 int read_line_int_from(const char *filename, size_t line_number) {
     char line[MAX_BUFFER_SIZE];
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
     for (size_t i = 1; i <= line_number && fgets(line, sizeof(line), file); i++) {
@@ -668,7 +669,7 @@ int read_line_int_from(const char *filename, size_t line_number) {
 }
 
 unsigned long long read_all_long_from(const char *filename) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
     unsigned long long value = 0;
@@ -698,7 +699,7 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, u
         result = default_value;
     } else {
         result = (uint32_t)
-        strtoul(meta, NULL, 16);
+                strtoul(meta, NULL, 16);
     }
 
     return result;
@@ -712,7 +713,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
         result = default_value;
     } else {
         result = (int16_t)
-        strtol(meta, NULL, 10);
+                strtol(meta, NULL, 10);
     }
 
     return result;
@@ -729,7 +730,7 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
 }
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...) {
-    FILE * file = fopen(filename, mode);
+    FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename)
@@ -741,10 +742,10 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 
     if (type == CHAR) { // type is general text!
         fprintf(file, "%s", va_arg(args,
-        const char *));
+                                   const char *));
     } else if (type == INT) { // type is a number!
         fprintf(file, "%d", va_arg(args,
-        int));
+                                   int));
     }
 
     va_end(args);
@@ -785,7 +786,7 @@ void show_info_box(char *title, char *content, int is_content) {
 
         if (is_content) lv_label_set_text(ui_lblHelpPreviewHeader, title);
 
-        lv_obj_t * ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
+        lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
         lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
     }
 }
@@ -871,7 +872,7 @@ void decrease_option_value(lv_obj_t *element) {
 }
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {
-    FILE * file = fopen(loader, "w");
+    FILE *file = fopen(loader, "w");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, loader)
         return;
@@ -882,7 +883,7 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 }
 
 void load_mux(const char *value) {
-    FILE * file = fopen(MUOS_ACT_LOAD, "w");
+    FILE *file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, MUOS_ACT_LOAD)
         return;
@@ -1596,7 +1597,7 @@ void load_skip_patterns(void) {
         if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
     }
 
-    FILE * file = fopen(skip_ini, "r");
+    FILE *file = fopen(skip_ini, "r");
     if (!file) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, skip_ini)
         return;
@@ -1672,7 +1673,7 @@ void display_testing_message(lv_obj_t *screen) {
                          "test image! This is a test image! This is a test image! This is a test image! This is a\n"
                          "image! This is a test image! This is a test image! This is a test image! This is a test\n";
 
-    lv_obj_t * ui_conTest = lv_obj_create(screen);
+    lv_obj_t *ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);
     lv_obj_set_width(ui_conTest, dims.WIDTH);
     lv_obj_set_height(ui_conTest, dims.HEIGHT);
@@ -1684,7 +1685,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_obj_set_style_text_letter_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_t * ui_lblTestBottom = lv_label_create(ui_conTest);
+    lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestBottom, 0);
@@ -1693,7 +1694,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_label_set_text(ui_lblTestBottom, test_message);
     lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
 
-    lv_obj_t * ui_lblTestTop = lv_label_create(ui_conTest);
+    lv_obj_t *ui_lblTestTop = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestTop, 0);
@@ -1945,7 +1946,7 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 }
 
 char *get_script_value(const char *filename, const char *key, const char *not_found) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file!");
         return strdup("");
@@ -2356,7 +2357,8 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, size_t catalogue_name_size, char *program, size_t program_size) {
+static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, size_t catalogue_name_size,
+                                                char *program, size_t program_size) {
     if (strcmp(mux_module, "muxapp") == 0) {
         snprintf(catalogue_name, catalogue_name_size, "Application");
         snprintf(program, program_size, "%s", items[index].glyph_icon);
@@ -2388,14 +2390,17 @@ static void set_grid_catalogue_and_program_name(int index, char *catalogue_name,
 
 void update_grid_image_paths(int index) {
     char catalogue_name[MAX_BUFFER_SIZE];
+
     char program[MAX_BUFFER_SIZE];
     set_grid_catalogue_and_program_name(index, catalogue_name, sizeof(catalogue_name), program, sizeof(program));
+
     char alt_name[MAX_BUFFER_SIZE];
-    snprintf(alt_name, sizeof(alt_name), !strcmp(mux_module, "muxplore") ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "");
+    snprintf(alt_name, sizeof(alt_name), "%s",
+             strcmp(mux_module, "muxplore") == 0 ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "");
 
     char grid_image[MAX_BUFFER_SIZE];
     load_image_catalogue(catalogue_name, program, alt_name, "default",
-                        mux_dimension, "grid", grid_image, sizeof(grid_image));
+                         mux_dimension, "grid", grid_image, sizeof(grid_image));
 
     char glyph_name_focused[MAX_BUFFER_SIZE];
     snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", program);
@@ -2405,11 +2410,12 @@ void update_grid_image_paths(int index) {
 
     char grid_image_focused[MAX_BUFFER_SIZE];
     load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
-                        mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
+                         mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
 
     if (!strcmp(mux_module, "muxapp")) {
         get_app_grid_glyph(items[index].extra_data, program, "default", grid_image, sizeof(grid_image));
-        get_app_grid_glyph(items[index].extra_data, glyph_name_focused, "default_focused", grid_image_focused, sizeof(grid_image_focused));
+        get_app_grid_glyph(items[index].extra_data, glyph_name_focused, "default_focused", grid_image_focused,
+                           sizeof(grid_image_focused));
     }
 
     items[index].grid_image = strdup(grid_image);
@@ -2428,9 +2434,9 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
 
 static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
     lv_obj_set_user_data(ui_pnlItem, UFI(index));
-    lv_obj_t * ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
-    lv_obj_t * cell_image = lv_obj_get_child(ui_pnlItem, 0);
-    lv_obj_t * cell_image_focused = lv_obj_get_child(ui_pnlItem, 2);
+    lv_obj_t *ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
+    lv_obj_t *cell_image = lv_obj_get_child(ui_pnlItem, 0);
+    lv_obj_t *cell_image_focused = lv_obj_get_child(ui_pnlItem, 2);
 
     if (index >= item_count) {
         lv_obj_add_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
@@ -2460,11 +2466,12 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
 
 void update_grid_items(int direction) {
     if (is_carousel_grid_mode()) {
-        int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+        int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT
+                                                                                   : theme.GRID.ROW_COUNT;
         for (int i = 0; i < carousel_item_count; i++) {
             int offset = i - (carousel_item_count / 2);                 // position relative to center
             int index = (current_item_index + offset + item_count) % item_count;  // wrap around
-            lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, i);
+            lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, i);
             update_grid_item(panel_item, index);
         }
     } else {
@@ -2474,14 +2481,14 @@ void update_grid_items(int direction) {
         int start_index = startRowIndex * theme.GRID.COLUMN_COUNT;
 
         for (int index = 0; index < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT; ++index) {
-            lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
+            lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
             update_grid_item(panel_item, start_index + index);
         }
     }
 }
 
 static int get_grid_item_index(int index) {
-    lv_obj_t * panel_item = lv_obj_get_child(ui_pnlGrid, index);
+    lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
     int item_index = IFU(lv_obj_get_user_data(panel_item));
     return item_index;
 }
@@ -2535,7 +2542,8 @@ static void gen_grid_item_common(int item_index, int panel_index, int focus_inde
     if (items[item_index].glyph_icon != NULL) lv_obj_set_user_data(cell_label, items[item_index].glyph_icon);
 
     create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                     items[item_index].grid_image, items[item_index].grid_image_focused, items[item_index].display_name);
+                     items[item_index].grid_image, items[item_index].grid_image_focused,
+                     items[item_index].display_name);
 
     lv_group_add_obj(ui_group, cell_label);
     lv_group_add_obj(ui_group_glyph, cell_image);
@@ -2563,7 +2571,8 @@ int disable_grid_file_exists(char *item_curr_dir) {
 }
 
 void create_carousel_grid() {
-    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT
+                                                                               : theme.GRID.ROW_COUNT;
     int middle_index = carousel_item_count / 2;
     for (int i = 0; i < carousel_item_count; i++) {
         int offset = i - (carousel_item_count / 2);                           // position relative to center
@@ -2573,8 +2582,10 @@ void create_carousel_grid() {
 }
 
 int is_carousel_grid_mode() {
-    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
-    return (grid_mode_enabled && (theme.GRID.ROW_COUNT == 1 || theme.GRID.COLUMN_COUNT == 1) && carousel_item_count > 2 && carousel_item_count %2 == 1) ? 1 : 0;
+    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT
+                                                                               : theme.GRID.ROW_COUNT;
+    return (grid_mode_enabled && (theme.GRID.ROW_COUNT == 1 || theme.GRID.COLUMN_COUNT == 1) &&
+            carousel_item_count > 2 && carousel_item_count % 2 == 1) ? 1 : 0;
 }
 
 void kiosk_denied(void) {
@@ -2636,7 +2647,7 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
             }
         }
 
-        execvp(san[0], (char *const *)san);
+        execvp(san[0], (char *const *) san);
         _exit(EXIT_FAILURE);
     } else if (pid > 0 && !background) {
         // Foreground process, block until child finishes execution
@@ -2707,7 +2718,7 @@ int16_t validate_int16(int value, const char *field) {
         return (value < INT16_MIN) ? INT16_MIN : INT16_MAX;
     }
     return (int16_t)
-    value;
+            value;
 }
 
 int at_base(char *sys_dir, char *base_name) {
@@ -2812,7 +2823,7 @@ uint32_t fnv1a_hash_str(const char *str) {
     uint32_t hash = 2166136261U; // FNV offset basis
 
     for (const char *p = str; *p; p++) {
-        hash ^= (uint8_t)(*p);
+        hash ^= (uint8_t) (*p);
         hash *= 16777619; // FNV prime
     }
 
@@ -2856,9 +2867,11 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
 
 void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lblItemGlyph) {
     char glyph_image_path[MAX_BUFFER_SIZE];
-    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s%s.png", app_folder, mux_dimension, glyph_name) >= 0 &&
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s%s.png", app_folder, mux_dimension,
+                  glyph_name) >= 0 &&
          file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s.png", app_folder, glyph_name) >= 0 && file_exist(glyph_image_path))
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s.png", app_folder, glyph_name) >= 0 &&
+         file_exist(glyph_image_path))
             ) {
         char glyph_image_embed[MAX_BUFFER_SIZE];
         snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
@@ -2873,9 +2886,10 @@ void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const ch
     char image_path[MAX_BUFFER_SIZE];
     if ((snprintf(image_path, sizeof(image_path), "%s/grid/%s%s.png", app_folder, mux_dimension, glyph_name) >= 0 &&
          file_exist(image_path)) ||
-        (snprintf(image_path, sizeof(image_path), "%s/grid/%s.png", app_folder, glyph_name) >= 0 && file_exist(image_path))
+        (snprintf(image_path, sizeof(image_path), "%s/grid/%s.png", app_folder, glyph_name) >= 0 &&
+         file_exist(image_path))
             ) {
-        snprintf(glyph_image_path, glyph_image_path_size, image_path);
+        snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path);
     }
 }
 
@@ -2940,7 +2954,7 @@ int volume_to_percent(int val) {
 }
 
 char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (!file) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
         return NULL;
@@ -3004,7 +3018,7 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
 int is_partition_mounted(const char *partition) {
     if (strcmp(partition, "/") == 0) return 1; // this is rootfs so I mean it should always be mounted
 
-    FILE * fp = fopen("/proc/mounts", "r");
+    FILE *fp = fopen("/proc/mounts", "r");
     if (!fp) {
         perror("fopen /proc/mounts");
         return 0;
@@ -3283,7 +3297,7 @@ void add_to_collection(char *filename, const char *pointer, char *sys_dir) {
     mux_input_stop();
 }
 
-int set_scaling_governor(const char *governor,  int show_done) {
+int set_scaling_governor(const char *governor, int show_done) {
     if (!governor) return -1;
 
     FILE *fp = fopen(device.CPU.GOVERNOR, "w");
