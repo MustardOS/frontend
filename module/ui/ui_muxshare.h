@@ -220,6 +220,7 @@
 #define NETADV_ELEMENTS            \
     NETADV(Monitor,   "monitor")   \
     NETADV(Boot,      "boot")      \
+    NETADV(Wake,      "wake")      \
     NETADV(Compat,    "compat")    \
     NETADV(AsyncLoad, "asyncload") \
     NETADV(Wait,      "wait")      \

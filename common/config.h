@@ -143,6 +143,7 @@ struct mux_config {
         struct {
             int16_t MONITOR;
             int16_t BOOT;
+            int16_t WAKE;
             int16_t COMPAT;
             int16_t ASYNCLOAD;
             int16_t WAIT;

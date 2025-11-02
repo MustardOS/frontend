@@ -543,12 +543,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETADV.TITLE, "NETWORK SETTINGS");
     SPECIFIC_FIELD(lang->MUXNETADV.MONITOR, "Connection Monitor");
     SPECIFIC_FIELD(lang->MUXNETADV.BOOT, "Start Network on Boot");
+    SPECIFIC_FIELD(lang->MUXNETADV.WAKE, "Start Network on Wake");
     SPECIFIC_FIELD(lang->MUXNETADV.COMPAT, "Module Compatibility");
     SPECIFIC_FIELD(lang->MUXNETADV.ASYNCLOAD, "Module Async Load");
     SPECIFIC_FIELD(lang->MUXNETADV.WAIT, "Module Wait Timer");
     SPECIFIC_FIELD(lang->MUXNETADV.RETRY, "Module Retry");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.MONITOR, "Enables periodic connectivity checks and triggers reconnection if network loss is detected");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.BOOT, "Enables network connection to be established automatically at boot");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAKE, "Enables network connection to be re-established automatically upon suspend wake");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel\n\nIncreases boot times moderately");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.ASYNCLOAD, "Enable the background handling of compatibility handling\n\nProvides faster boot times with compatibility enabled, disable this only if all else has failed");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAIT, "Adjusts the maximum amount of time waiting for the network interface to appear.\n\nWARNING:\nIf you enable Module Compatibility, it is not advisable to increase this setting as it will increase boot times!");
