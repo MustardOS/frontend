@@ -209,7 +209,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->DANGER.DIRTYRATIO, CONF_CONFIG_PATH "danger/dirty_ratio", 16)
     CFG_INT_FIELD(config->DANGER.DIRTYBACK, CONF_CONFIG_PATH "danger/dirty_back_ratio", 4)
     CFG_INT_FIELD(config->DANGER.CACHE, CONF_CONFIG_PATH "danger/cache_pressure", 64)
-    CFG_INT_FIELD(config->DANGER.MERGE, CONF_CONFIG_PATH "danger/nomerges", 2)
+    CFG_INT_FIELD(config->DANGER.MERGE, CONF_CONFIG_PATH "danger/nomerges", 0)
     CFG_INT_FIELD(config->DANGER.REQUESTS, CONF_CONFIG_PATH "danger/nr_requests", 128)
     CFG_INT_FIELD(config->DANGER.READAHEAD, CONF_CONFIG_PATH "danger/read_ahead", 4096)
     CFG_INT_FIELD(config->DANGER.PAGECLUSTER, CONF_CONFIG_PATH "danger/page_cluster", 3)
