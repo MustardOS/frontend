@@ -20,6 +20,8 @@ extern int fe_bgm;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_dimension[15];
+extern const char **collection_items;
+extern int collection_item_count;
 extern char mux_module[MAX_BUFFER_SIZE];
 extern char current_wall[MAX_BUFFER_SIZE];
 extern int is_silence_playing;
