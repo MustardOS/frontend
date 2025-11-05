@@ -234,7 +234,7 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
     for (int index = 1; index < 6; index++) {
         char section_name[15];
         snprintf(section_name, sizeof(section_name), "image%d", index);
-        char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
+        char *folder_name = str_trim(get_ini_string(artwork_config_ini, section_name, "FOLDER", ""));
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
