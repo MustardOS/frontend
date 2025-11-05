@@ -302,14 +302,12 @@ static void gen_item(char **file_names, int file_count) {
     // Maybe we could do something similar for history items?
     if (!config.VISUAL.HIDECOLLECT) {
         for (int c = 0; c < collection_item_count; c++) {
-            const char *col_name = collection_items[c];
-            const char *base = strrchr(col_name, '/');
-
-            base = base ? base + 1 : col_name;
-
             for (size_t i = 0; i < item_count; i++) {
-                if (strcasecmp(items[i].name, base) == 0) {
-                    LOG_DEBUG(mux_module, "Skipping Collected Item: %s", base)
+                char item_path[PATH_MAX];
+                snprintf(item_path, sizeof(item_path), "%s/%s", sys_dir, items[i].name);
+
+                if (strcasecmp(item_path, collection_items[c]) == 0) {
+                    LOG_DEBUG(mux_module, "Skipping Collected Item: %s", item_path)
                     remove_item(&items, &item_count, i);
                     i--;
                     break;
