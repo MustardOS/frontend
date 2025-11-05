@@ -1649,6 +1649,8 @@ void load_skip_patterns(void) {
 }
 
 int should_skip(const char *name, int is_dir) {
+    if (config.SETTINGS.GENERAL.HIDDEN) return 0;
+
     for (size_t i = 0; i < skip_pattern_list.count; i++) {
         const char *pat = skip_pattern_list.patterns[i];
 
@@ -1660,6 +1662,7 @@ int should_skip(const char *name, int is_dir) {
 
         if (fnmatch(pat, name, 0) == 0) return 1;
     }
+
     return 0;
 }
 
