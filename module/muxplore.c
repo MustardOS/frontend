@@ -195,16 +195,24 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
-static void remove_match_items(const char *filter_name, content_item **items, size_t *item_count,
-                                 const char **filter_list, int filter_count, const char *sys_dir) {
-    if (!filter_list || filter_count == 0) return;
+static void remove_match_items(const char *filter_name, int mode, const char ***filter_list, int *filter_count,
+                               void (*pop_func)(void), content_item **items, size_t *item_count, const char *sys_dir) {
+    if (mode == 2) {
+        free((void *) *filter_list);
+        *filter_list = NULL;
+        *filter_count = 0;
+    }
 
-    for (int c = 0; c < filter_count; c++) {
+    pop_func();
+
+    if (mode != 2 || !*filter_list || *filter_count == 0) return;
+
+    for (int c = 0; c < *filter_count; c++) {
         for (size_t i = 0; i < *item_count; i++) {
             char item_path[PATH_MAX];
             snprintf(item_path, sizeof(item_path), "%s/%s", sys_dir, (*items)[i].name);
 
-            if (strcasecmp(item_path, filter_list[c]) == 0) {
+            if (strcasecmp(item_path, (*filter_list)[c]) == 0) {
                 LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
                 remove_item(items, item_count, i);
                 i--;
@@ -315,23 +323,11 @@ static void gen_item(char **file_names, int file_count) {
         }
     }
 
-    free(history_items);
-    history_items = NULL;
-    history_item_count = 0;
-    populate_history_items();
+    remove_match_items("History", config.VISUAL.CONTENTHISTORY, &history_items, &history_item_count,
+                       populate_history_items, &items, &item_count, sys_dir);
 
-    if (config.VISUAL.CONTENTHISTORY == 2) {
-        remove_match_items("History", &items, &item_count, history_items, history_item_count, sys_dir);
-    }
-
-    free(collection_items);
-    collection_items = NULL;
-    collection_item_count = 0;
-    populate_collection_items();
-
-    if (config.VISUAL.CONTENTCOLLECT == 2) {
-        remove_match_items("Collected", &items, &item_count, collection_items, collection_item_count, sys_dir);
-    }
+    remove_match_items("Collected", config.VISUAL.CONTENTCOLLECT, &collection_items, &collection_item_count,
+                       populate_collection_items, &items, &item_count, sys_dir);
 
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
     char content_tag[MAX_BUFFER_SIZE];
