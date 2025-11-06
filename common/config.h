@@ -189,8 +189,8 @@ struct mux_config {
         int16_t BACKGROUNDANIMATION;
         int16_t LAUNCHSPLASH;
         int16_t BLACKFADE;
-        int16_t HIDECOLLECT;
-        int16_t HISTORYICON;
+        int16_t CONTENTCOLLECT;
+        int16_t CONTENTHISTORY;
     } VISUAL;
 
     struct {

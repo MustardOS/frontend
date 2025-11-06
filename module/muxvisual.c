@@ -24,8 +24,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblMenuCounterFolder_visual,     lang.MUXVISUAL.HELP.COUNT_FOLDER},
             {ui_lblMenuCounterFile_visual,       lang.MUXVISUAL.HELP.COUNT_FILE},
             {ui_lblHidden_visual,                lang.MUXVISUAL.HELP.HIDDEN},
-            {ui_lblHideCollect_visual,           lang.MUXVISUAL.HELP.HIDE_COLLECT},
-            {ui_lblHistoryIcon_visual,           lang.MUXVISUAL.HELP.HISTORY_ICON},
+            {ui_lblContentCollect_visual,        lang.MUXVISUAL.HELP.CONTENTCOLLECT},
+            {ui_lblContentHistory_visual,        lang.MUXVISUAL.HELP.CONTENTHISTORY},
             {ui_lblOverlayImage_visual,          lang.MUXVISUAL.HELP.OVERLAY_IMAGE},
             {ui_lblOverlayTransparency_visual,   lang.MUXVISUAL.HELP.OVERLAY_TRANSPARENCY},
     };
@@ -53,8 +53,8 @@ static void restore_visual_options(void) {
     lv_dropdown_set_selected(ui_droMenuCounterFolder_visual, config.VISUAL.COUNTERFOLDER);
     lv_dropdown_set_selected(ui_droMenuCounterFile_visual, config.VISUAL.COUNTERFILE);
     lv_dropdown_set_selected(ui_droHidden_visual, config.SETTINGS.GENERAL.HIDDEN);
-    lv_dropdown_set_selected(ui_droHideCollect_visual, config.VISUAL.HIDECOLLECT);
-    lv_dropdown_set_selected(ui_droHistoryIcon_visual, config.VISUAL.HISTORYICON);
+    lv_dropdown_set_selected(ui_droContentCollect_visual, config.VISUAL.CONTENTCOLLECT);
+    lv_dropdown_set_selected(ui_droContentHistory_visual, config.VISUAL.CONTENTHISTORY);
     lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
     lv_dropdown_set_selected(ui_droOverlayTransparency_visual, config.VISUAL.OVERLAY_TRANSPARENCY);
 }
@@ -75,8 +75,8 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, MenuCounterFolder, "visual/counterfolder", INT, 0);
     CHECK_AND_SAVE_STD(visual, MenuCounterFile, "visual/counterfile", INT, 0);
     CHECK_AND_SAVE_STD(visual, Hidden, "settings/general/hidden", INT, 0);
-    CHECK_AND_SAVE_STD(visual, HideCollect, "visual/hidecollect", INT, 0);
-    CHECK_AND_SAVE_STD(visual, HistoryIcon, "visual/historyicon", INT, 0);
+    CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
+    CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0);
 
@@ -113,8 +113,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, MenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, "counterfolder", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, MenuCounterFile, lang.MUXVISUAL.COUNT_FILE, "counterfile", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, HideCollect, lang.MUXVISUAL.HIDE_COLLECT, "collection", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, HistoryIcon, lang.MUXVISUAL.HISTORY_ICON, "history", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", show_noicon_hide, 3);
+    INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", show_noicon_hide, 3);
     INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
 

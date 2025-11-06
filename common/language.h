@@ -85,6 +85,7 @@ struct mux_lang {
         char OFFLINE[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
         char VISIBLE[MAX_BUFFER_SIZE];
+        char NOGLYPH[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -1138,8 +1139,8 @@ struct mux_lang {
         char COUNT_FOLDER[MAX_BUFFER_SIZE];
         char COUNT_FILE[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
-        char HIDE_COLLECT[MAX_BUFFER_SIZE];
-        char HISTORY_ICON[MAX_BUFFER_SIZE];
+        char CONTENTCOLLECT[MAX_BUFFER_SIZE];
+        char CONTENTHISTORY[MAX_BUFFER_SIZE];
         struct {
             char IMAGE[MAX_BUFFER_SIZE];
             char TRANSPARENCY[MAX_BUFFER_SIZE];
@@ -1189,8 +1190,8 @@ struct mux_lang {
             char COUNT_FILE[MAX_BUFFER_SIZE];
             char NAME[MAX_BUFFER_SIZE];
             char HIDDEN[MAX_BUFFER_SIZE];
-            char HIDE_COLLECT[MAX_BUFFER_SIZE];
-            char HISTORY_ICON[MAX_BUFFER_SIZE];
+            char CONTENTCOLLECT[MAX_BUFFER_SIZE];
+            char CONTENTHISTORY[MAX_BUFFER_SIZE];
             char OVERLAY_IMAGE[MAX_BUFFER_SIZE];
             char OVERLAY_TRANSPARENCY[MAX_BUFFER_SIZE];
         } HELP;

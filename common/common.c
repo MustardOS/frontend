@@ -100,6 +100,12 @@ char *hidden_visible[] = {
         lang.GENERIC.VISIBLE
 };
 
+char *show_noicon_hide[] = {
+        lang.GENERIC.VISIBLE,
+        lang.GENERIC.NOGLYPH,
+        lang.GENERIC.HIDDEN,
+};
+
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",
         "error", "muos", "reboot", "shutdown",
@@ -2809,11 +2815,13 @@ void populate_collection_items(void) {
 }
 
 char *get_content_explorer_glyph_name(char *file_path) {
-    for (int i = 0; i < collection_item_count; i++) {
-        if (strcmp(collection_items[i], file_path) == 0) return "collection";
+    if (config.VISUAL.CONTENTCOLLECT == 0) {
+        for (int i = 0; i < collection_item_count; i++) {
+            if (strcmp(collection_items[i], file_path) == 0) return "collection";
+        }
     }
 
-    if (config.VISUAL.HISTORYICON) {
+    if (config.VISUAL.CONTENTHISTORY == 0) {
         for (int i = 0; i < history_item_count; i++) {
             if (strcmp(history_items[i], file_path) == 0) return "history";
         }

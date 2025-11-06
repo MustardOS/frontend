@@ -20,6 +20,8 @@ extern int fe_bgm;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_dimension[15];
+extern const char **history_items;
+extern int history_item_count;
 extern const char **collection_items;
 extern int collection_item_count;
 extern char mux_module[MAX_BUFFER_SIZE];
@@ -36,6 +38,7 @@ extern char *disabled_enabled[];
 extern char *excluded_included[];
 extern char *allowed_restricted[];
 extern char *hidden_visible[];
+extern char *show_noicon_hide[];
 
 #define SOUND_TOTAL 12
 
