@@ -343,7 +343,8 @@
     TWEAKADV(SecondPart,  "secondpart")  \
     TWEAKADV(UsbPart,     "usbpart")     \
     TWEAKADV(IncBright,   "incbright")   \
-    TWEAKADV(IncVolume,   "invvolume")
+    TWEAKADV(IncVolume,   "invvolume")   \
+    TWEAKADV(MaxGpu,      "maxgpu")
 
 #define TWEAKGEN_ELEMENTS              \
     TWEAKGEN(Rtc,        "clock")      \

@@ -114,6 +114,7 @@ struct mux_config {
             int16_t DISPSUSPEND;
             int16_t INCBRIGHT;
             int16_t INCVOLUME;
+            int16_t MAXGPU;
         } ADVANCED;
         struct {
             int16_t HIDDEN;

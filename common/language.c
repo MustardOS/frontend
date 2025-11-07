@@ -910,6 +910,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.USBPART, "External Partition");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.INCBRIGHT, "Brightness Increment");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.INCVOLUME, "Volume Increment");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.MAXGPU, "GPU Performance Mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SPEED, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEAT_DELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
@@ -935,6 +936,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USBPART, "Change the partition number requested upon external storage mount");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.INCBRIGHT, "Change the level of brightness incrementation when adjusting");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.INCVOLUME, "Change the level of volume incrementation when adjusting");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.MAXGPU, "Push the onboard GPU to the maximum frequency at all times");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
