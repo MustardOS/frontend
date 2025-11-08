@@ -134,6 +134,7 @@ static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
 
 static char *boot_governor = NULL;
 static char *running_governor = NULL;
+static char *previous_governor = NULL;
 
 static void cleanup(int signo) {
     (void) signo;
@@ -148,6 +149,7 @@ static void cleanup(int signo) {
 
     free(boot_governor);
     free(running_governor);
+    free(previous_governor);
 
     exit(0);
 }
@@ -217,16 +219,20 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
             if (running_governor) write_text_to_file("/tmp/wake_cpu_gov", "w", CHAR, running_governor);
         }
 
+        if (!previous_governor) previous_governor = read_all_char_from(device.CPU.GOVERNOR);
         set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
+
         timer->idle = true;
     } else if (idle_ms < timeout_ms && timer->idle) {
         if (verbose) LOG_INFO("input", "Device is now ACTIVE")
         if (timer->active_name) printf("%s\n", timer->active_name);
 
-        if (running_governor) {
-            set_scaling_governor(boot_governor, 0);
+        if (running_governor && previous_governor) {
+            set_scaling_governor(previous_governor, 0);
             free(running_governor);
             running_governor = NULL;
+            free(previous_governor);
+            previous_governor = NULL;
         }
 
         timer->idle = false;
