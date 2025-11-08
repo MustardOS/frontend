@@ -215,7 +215,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, UsbPart, lang.MUXTWEAKADV.USBPART, "usbpart", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, IncBright, lang.MUXTWEAKADV.INCBRIGHT, "incbright", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, IncVolume, lang.MUXTWEAKADV.INCVOLUME, "incvolume", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakadv, MaxGpu, lang.MUXTWEAKADV.MAXGPU, "maxgpu", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakadv, MaxGpu, lang.MUXTWEAKADV.MAXGPU, "maxgpu", disabled_enabled, 2);
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate_tweakadv, accelerate_values);
