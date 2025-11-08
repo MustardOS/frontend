@@ -214,6 +214,7 @@ static int save_power_options(void) {
         run_exec(args, A_SIZE(args), 0, 0, NULL);
 
         refresh_config = 1;
+        refresh_device = 1;
     }
 
     free_governor_values();
