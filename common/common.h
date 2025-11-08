@@ -155,7 +155,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
 void extract_archive(char *filename, char *screen);
 
-void update_bootlogo();
+void update_bootlogo(char *next_screen);
 
 int str_compare(const void *a, const void *b);
 
