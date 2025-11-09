@@ -170,9 +170,9 @@ void extract_archive(char *filename, char *screen) {
     free(exec);
 }
 
-void update_bootlogo() {
+void update_bootlogo(char *next_screen) {
     size_t exec_count;
-    const char *args[] = {(OPT_PATH "script/package/theme.sh"), "bootlogo", "N/A", NULL};
+    const char *args[] = {(OPT_PATH "script/package/theme.sh"), "bootlogo", next_screen, NULL};
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {

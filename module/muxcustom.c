@@ -301,7 +301,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droChime_custom, config.SETTINGS.GENERAL.CHIME);
 }
 
-static void save_custom_options(void) {
+static void save_custom_options(char *next_screen) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
@@ -342,7 +342,7 @@ static void save_custom_options(void) {
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
-                extract_archive(theme_alt_archive, "custom");
+                extract_archive(theme_alt_archive, next_screen);
             } else {
                 char png_bootlogo[MAX_BUFFER_SIZE];
                 snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/%simage/bootlogo.png",
@@ -350,7 +350,7 @@ static void save_custom_options(void) {
                 if (!file_exist(png_bootlogo)) {
                     snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/image/bootlogo.png", STORAGE_THEME);
                 }
-                if (file_exist(png_bootlogo)) update_bootlogo();
+                if (file_exist(png_bootlogo)) update_bootlogo(next_screen);
             }
 
             static char rgb_script[MAX_BUFFER_SIZE];
@@ -416,18 +416,13 @@ static void handle_a(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     const char *u_data = lv_obj_get_user_data(element_focused);
 
-    save_custom_options();
+    if (lv_group_get_focused(ui_group) == ui_lblThemeAlternate_custom) {
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
+    }
+    save_custom_options("custom");
 
     for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, "alternate") == 0) {
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
-            load_mux("custom");
-
-            close_input();
-            mux_input_stop();
-
-            return;
-        } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
+        if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (is_ksk(*elements[i].kiosk_flag)) {
                 kiosk_denied();
                 return;
@@ -468,10 +463,10 @@ static void handle_b(void) {
         return;
     }
 
-    save_custom_options();
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
-
     play_sound(SND_BACK);
+
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
+    save_custom_options("config");
 
     close_input();
     mux_input_stop();
