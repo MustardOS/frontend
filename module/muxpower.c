@@ -168,24 +168,24 @@ static int save_power_options(void) {
 
     if (lv_dropdown_get_selected(ui_droShutdown_power) != Shutdown_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/shutdown"), "w", INT, idx_shutdown);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/shutdown", "w", INT, idx_shutdown);
     }
 
     if (lv_dropdown_get_selected(ui_droBattery_power) != Battery_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/low_battery"), "w", INT, idx_battery);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/low_battery", "w", INT, idx_battery);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droIdleDisplay_power) > 1 &&
         lv_dropdown_get_selected(ui_droIdleDisplay_power) != IdleDisplay_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/idle_display"), "w", INT, idx_idle_display);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_display", "w", INT, idx_idle_display);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droIdleSleep_power) > 1 &&
         lv_dropdown_get_selected(ui_droIdleSleep_power) != IdleSleep_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/idle_sleep"), "w", INT, idx_idle_sleep);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_sleep", "w", INT, idx_idle_sleep);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droIdleMute_power) > 1 &&

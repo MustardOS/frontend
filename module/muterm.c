@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
     const char *bg_path = NULL;
     const char **cmd = NULL;
 
-    if (argc == 2 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) print_help(argv[0]);
+    if (argc == 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)) print_help(argv[0]);
 
     for (int i = 1; i < argc; i++) {
         const char *arg = argv[i];

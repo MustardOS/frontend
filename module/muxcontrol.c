@@ -161,7 +161,7 @@ static void generate_available_controls(const char *default_control) {
 }
 
 static void create_control_items(const char *target) {
-    if (!strcmp(target, "none")) generate_available_controls(target);
+    if (strcmp(target, "none") == 0) generate_available_controls(target);
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
@@ -173,7 +173,7 @@ static void create_control_items(const char *target) {
     mini_t *global_config = mini_load(global_assign);
 
     char *target_default = get_ini_string(global_config, "global", "name", "none");
-    if (!strcmp(target_default, "none")) return;
+    if (strcmp(target_default, "none") == 0) return;
 
     char local_assign[FILENAME_MAX];
     snprintf(local_assign, sizeof(local_assign), "%s/%s.ini", assign_dir, target_default);

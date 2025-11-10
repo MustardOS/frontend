@@ -44,7 +44,7 @@ static void save_theme_filter_options(void) {
 
     if (strcmp(lookup_original_value, lv_label_get_text(ui_lblLookupValue_themefilter)) != 0) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "theme/filter/lookup"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "theme/filter/lookup", "w", CHAR,
                            lv_label_get_text(ui_lblLookupValue_themefilter));
     }
 
@@ -313,7 +313,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
     check_focus();

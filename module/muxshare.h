@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -317,7 +318,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
         if (current != NAME##_original) {                                    \
             is_modified++;                                                   \
-            write_text_to_file((CONF_KIOSK_PATH FILE), "w", TYPE, current);  \
+            write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current);  \
         }                                                                    \
     } while (0)
 
@@ -326,7 +327,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
         if (current != NAME##_original) {                                             \
             is_modified++;                                                            \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current + OFFSET); \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, current + OFFSET); \
         }                                                                             \
     } while (0)
 
@@ -335,7 +336,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
         if (current != NAME##_original) {                                             \
             is_modified++;                                                            \
-            write_text_to_file((CONF_DEVICE_PATH FILE), "w", TYPE, current + OFFSET); \
+            write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, current + OFFSET); \
         }                                                                             \
     } while (0)
 
@@ -344,7 +345,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
         if (current != NAME##_original) {                                            \
             is_modified++;                                                           \
-            write_text_to_file((CONF_DEVICE_PATH FILE), "w", TYPE, VALUES[current]); \
+            write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, VALUES[current]); \
         }                                                                            \
     } while (0)
 
@@ -353,7 +354,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
         if (current != NAME##_original) {                                            \
             is_modified++;                                                           \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, VALUES[current]); \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, VALUES[current]); \
         }                                                                            \
     } while (0)
 
@@ -363,6 +364,6 @@ int muxwebserv_main();
         if (current != NAME##_original) {                                         \
             int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT); \
             is_modified++;                                                        \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", INT, mapped);        \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped);        \
         }                                                                         \
     } while (0)

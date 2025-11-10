@@ -67,10 +67,10 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     if (!*value) value = get_dir;
 
     if (!*value) {
-        value = !strcmp(opt_type, "cfg") ? lang.MUXOPTION.NOT_ASSIGNED :
-                !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE :
-                !strcmp(opt_type, "tag") ? lang.MUXOPTION.NOT_ASSIGNED :
-                !strcmp(opt_type, "gov") ? device.CPU.DEFAULT :
+        value = strcmp(opt_type, "cfg") == 0 ? lang.MUXOPTION.NOT_ASSIGNED :
+                strcmp(opt_type, "con") == 0 ? lang.MUXOPTION.NONE :
+                strcmp(opt_type, "tag") == 0 ? lang.MUXOPTION.NOT_ASSIGNED :
+                strcmp(opt_type, "gov") == 0 ? device.CPU.DEFAULT :
                 "System";
     }
 
@@ -319,7 +319,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define OPTION(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);

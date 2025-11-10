@@ -128,7 +128,7 @@ void overlay_display(void) {
 }
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
-    if (!val || !strlen(val) || strcasecmp(val, "(null)") == 0) {
+    if (!val || strlen(val) == 0 || strcasecmp(val, "(null)") == 0) {
         LOG_INFO(mux_module, "Using Default %s: %s", label, def_val)
         return strdup(def_val);
     }
@@ -218,7 +218,7 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
                       char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
-    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) device.MUX.WIDTH / 2);
+    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) (device.MUX.WIDTH / 2));
     int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
     int16_t column_mode = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE", 0);
     int16_t column_mode_alignment = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE_ALIGNMENT", 2);

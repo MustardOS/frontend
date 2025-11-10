@@ -51,7 +51,7 @@ static void create_content_items(void) {
     }
     sort_items(items, item_count);
 
-    for (size_t i = 0; i < item_count; i++) {
+    for (int i = 0; i < item_count; i++) {
         if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
 
         gen_label(mux_module, is_downloaded(i) ? "downloaded" : "download", items[i].name);
@@ -266,7 +266,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK,        0},
             {ui_lblNavXGlyph, "",                       0},
             {ui_lblNavX,      lang.MUXDOWNLOAD.REFRESH, 0},
-            {NULL,            NULL,                     0}
+            {NULL, NULL,                                0}
     });
 
     overlay_display();
@@ -298,8 +298,10 @@ int muxdownload_main(char *type) {
     init_module("muxdownload");
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang,
-                          !strcmp(type, "core") ? lang.MUXDOWNLOAD.TITLE.CORE : lang.MUXDOWNLOAD.TITLE.APP);
+    init_ui_common_screen(&theme, &device, &lang, strcmp(type, "core") == 0
+                                                  ? lang.MUXDOWNLOAD.TITLE.CORE
+                                                  : lang.MUXDOWNLOAD.TITLE.APP);
+
     lv_obj_set_user_data(ui_screen, mux_module);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());

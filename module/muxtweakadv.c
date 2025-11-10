@@ -111,7 +111,7 @@ static void save_tweak_options(void) {
         int sd2_current = lv_dropdown_get_selected(ui_droSecondPart_tweakadv);
         if (sd2_current != SecondPart_original) {
             is_modified++;
-            write_text_to_file((CONF_DEVICE_PATH "storage/sdcard/num"), "w", INT, sd2_current + 1);
+            write_text_to_file(CONF_DEVICE_PATH "storage/sdcard/num", "w", INT, sd2_current + 1);
         }
     } while (0);
 
@@ -119,7 +119,7 @@ static void save_tweak_options(void) {
         int usb_current = lv_dropdown_get_selected(ui_droUsbPart_tweakadv);
         if (usb_current != UsbPart_original) {
             is_modified++;
-            write_text_to_file((CONF_DEVICE_PATH "storage/usb/num"), "w", INT, usb_current + 1);
+            write_text_to_file(CONF_DEVICE_PATH "storage/usb/num", "w", INT, usb_current + 1);
         }
     } while (0);
 
@@ -127,7 +127,7 @@ static void save_tweak_options(void) {
         int bright_current = lv_dropdown_get_selected(ui_droIncBright_tweakadv);
         if (bright_current != IncBright_original) {
             is_modified++;
-            write_text_to_file((CONF_CONFIG_PATH "settings/advanced/incbright"), "w", INT, bright_current + 1);
+            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/incbright", "w", INT, bright_current + 1);
         }
     } while (0);
 
@@ -135,7 +135,7 @@ static void save_tweak_options(void) {
         int volume_current = lv_dropdown_get_selected(ui_droIncVolume_tweakadv);
         if (volume_current != IncVolume_original) {
             is_modified++;
-            write_text_to_file((CONF_CONFIG_PATH "settings/advanced/incvolume"), "w", INT, volume_current + 1);
+            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/incvolume", "w", INT, volume_current + 1);
         }
     } while (0);
 

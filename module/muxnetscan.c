@@ -57,7 +57,7 @@ static void create_network_items(void) {
     char ssid[40];
     while (fgets(ssid, sizeof(ssid), file)) {
         str_remchar(ssid, '\n');
-        if (!strlen(ssid)) continue;
+        if (strlen(ssid) == 0) continue;
 
         ui_count++;
 
@@ -87,13 +87,13 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
-    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR,
                        lv_label_get_text(lv_group_get_focused(ui_group)));
-    write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR, "");
-    write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR, "");
-    write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR, "");
-    write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR, "");
-    write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR, "");
+    write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR, "");
+    write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR, "");
+    write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR, "");
+    write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR, "");
+    write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR, "");
 
     refresh_config = 1;
 
@@ -157,7 +157,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
             {ui_lblNavXGlyph, "",                  0},
             {ui_lblNavX,      lang.GENERIC.RESCAN, 0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     overlay_display();

@@ -9,9 +9,13 @@ typedef struct {
     int16_t *(*kiosk_flag)(void);
 } mux_apps;
 
-static int16_t *flag_archive(void) { return &kiosk.APPLICATION.ARCHIVE; }
+static int16_t *flag_archive(void) {
+    return &kiosk.APPLICATION.ARCHIVE;
+}
 
-static int16_t *flag_task(void) { return &kiosk.APPLICATION.TASK; }
+static int16_t *flag_task(void) {
+    return &kiosk.APPLICATION.TASK;
+}
 
 static mux_apps app[] = {
         {"Archive Manager", "archive", "Archive", "", flag_archive},
@@ -220,14 +224,16 @@ static void create_app_items(void) {
         } else {
             char app_lang_file[FILENAME_MAX];
             snprintf(app_lang_file, sizeof(app_lang_file), "%s/%s/" APP_LANGUAGE,
-                        resolved_base, dir_names[i]);
+                     resolved_base, dir_names[i]);
 
             if (file_exist(app_lang_file)) {
                 LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
 
                 mini_t *app_lang = mini_load(app_lang_file);
-                snprintf(full_app_name, sizeof(full_app_name), "%s", get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
-                snprintf(grid_app_name, sizeof(grid_app_name), "%s", get_ini_string(app_lang, "grid", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
+                snprintf(full_app_name, sizeof(full_app_name), "%s",
+                         get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
+                snprintf(grid_app_name, sizeof(grid_app_name), "%s",
+                         get_ini_string(app_lang, "grid", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
 
                 mini_free(app_lang);
             } else {
@@ -247,7 +253,8 @@ static void create_app_items(void) {
             glyph_name = get_script_value(app_launcher_icon, "ICON", "app");
         }
 
-        content_item *new_item = add_item(&items, &item_count, full_app_name, (theme.GRID.ENABLED) ? grid_app_name : full_app_name, app_folder, ITEM);
+        content_item *new_item = add_item(&items, &item_count, full_app_name,
+                                          (theme.GRID.ENABLED) ? grid_app_name : full_app_name, app_folder, ITEM);
         new_item->glyph_icon = strdup(glyph_name);
 
         free(dir_names[i]);
@@ -361,11 +368,13 @@ static void handle_a(void) {
             toast_message(lang.MUXAPP.LOAD_APP, FOREVER);
             refresh_screen(ui_screen);
 
-            char *assigned_gov = specify_asset(load_content_governor(items[current_item_index].extra_data, NULL, 0, 1, 1),
-                                               device.CPU.DEFAULT, "Governor");
+            char *assigned_gov = specify_asset(
+                    load_content_governor(items[current_item_index].extra_data, NULL, 0, 1, 1),
+                    device.CPU.DEFAULT, "Governor");
 
-            char *assigned_con = specify_asset(load_content_control_scheme(items[current_item_index].extra_data, NULL, 0, 1, 1),
-                                               "system", "Control Scheme");
+            char *assigned_con = specify_asset(
+                    load_content_control_scheme(items[current_item_index].extra_data, NULL, 0, 1, 1),
+                    "system", "Control Scheme");
 
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);

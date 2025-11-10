@@ -32,7 +32,8 @@ static void confirm_rtc_config(void) {
     const char *notation_type = lv_label_get_text(ui_lblNotationValue_rtc);
     int idx_notation = (notation_type && strcmp(notation_type, notation[1]) == TIME_12H) ? TIME_24H : TIME_12H;
 
-    write_text_to_file((CONF_CONFIG_PATH "clock/notation"), "w", INT, idx_notation);
+    write_text_to_file(CONF_CONFIG_PATH
+                       "clock/notation", "w", INT, idx_notation);
 
     const char *args[] = {"hwclock", "-w", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL);
@@ -378,7 +379,7 @@ static void handle_b(void) {
     play_sound(SND_BACK);
 
     if (config.BOOT.FACTORY_RESET) {
-        write_text_to_file((CONF_CONFIG_PATH "boot/clock_setup"), "w", INT, 0);
+        write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
     } else {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
     }
@@ -423,7 +424,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
 #define RTC(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);

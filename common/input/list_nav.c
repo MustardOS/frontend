@@ -147,8 +147,9 @@ void handle_list_nav_left_hold(void) {
     }
 
     // Don't wrap around when scrolling on hold.
-    if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
-        get_grid_row_index(current_item_index) > 0 ||
+    if ((grid_mode_enabled &&
+         (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+         get_grid_row_index(current_item_index) > 0) ||
         is_carousel_grid_mode()) {
         handle_list_nav_left();
     }
@@ -162,8 +163,9 @@ void handle_list_nav_right_hold(void) {
     }
 
     // Don't wrap around when scrolling on hold.
-    if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
-        get_grid_row_index(current_item_index) < grid_info.last_row_index ||
+    if ((grid_mode_enabled &&
+         (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+         get_grid_row_index(current_item_index) < grid_info.last_row_index) ||
         is_carousel_grid_mode()) {
         handle_list_nav_right();
     }

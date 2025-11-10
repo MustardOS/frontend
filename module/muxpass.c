@@ -106,7 +106,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.CHECK, 0},
             {ui_lblNavBGlyph, "",                 0},
             {ui_lblNavB,      lang.GENERIC.BACK,  0},
-            {NULL,            NULL,               0}
+            {NULL, NULL,                          0}
     });
 
     if (p_type == PCT_BOOT) lv_label_set_text(ui_lblNavB, lang.MUXLAUNCH.SHUTDOWN);

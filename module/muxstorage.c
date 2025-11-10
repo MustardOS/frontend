@@ -226,7 +226,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
             {ui_lblNavXGlyph, "",                0},
             {ui_lblNavX,      "",                0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
 #define STORAGE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_storage, UDATA);

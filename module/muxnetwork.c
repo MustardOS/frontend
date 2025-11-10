@@ -101,22 +101,23 @@ static void save_network_config(void) {
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) idx_type = 1;
     if (strcasecmp(lv_label_get_text(ui_lblScanValue_network), lang.GENERIC.ENABLED) == 0) idx_scan = 1;
 
-    write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT, idx_type);
-    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, idx_scan);
-    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
+    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT, idx_type);
+    write_text_to_file(CONF_CONFIG_PATH "network/scan", "w", INT, idx_scan);
+    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue_network), PASS_ENCODE) != 0) {
-        write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR, lv_label_get_text(ui_lblPasswordValue_network));
+        write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR,
+                           lv_label_get_text(ui_lblPasswordValue_network));
     }
 
     if (config.NETWORK.TYPE) {
-        write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR,
                            lv_label_get_text(ui_lblAddressValue_network));
-        write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR,
                            lv_label_get_text(ui_lblSubnetValue_network));
-        write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR,
                            lv_label_get_text(ui_lblGatewayValue_network));
-        write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR,
                            lv_label_get_text(ui_lblDnsValue_network));
     }
 
@@ -228,11 +229,11 @@ static void handle_keyboard_press(void) {
 
     if (strcasecmp(is_key, OSK_DONE) == 0) {
         handle_keyboard_OK_press();
-    } else if (!strcmp(is_key, OSK_UPPER)) {
+    } else if (strcmp(is_key, OSK_UPPER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (!strcmp(is_key, OSK_CHAR)) {
+    } else if (strcmp(is_key, OSK_CHAR) == 0) {
         lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (!strcmp(is_key, OSK_LOWER)) {
+    } else if (strcmp(is_key, OSK_LOWER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
         if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -260,7 +261,7 @@ static void toggle_static_panels(int is_static) {
 
 static void toggle_option(lv_obj_t *element, const char *config_path) {
     const char *current = lv_label_get_text(element);
-    int is_enabled = !strcasecmp(current, lang.GENERIC.ENABLED);
+    int is_enabled = strcasecmp(current, lang.GENERIC.ENABLED) == 0;
 
     write_text_to_file(config_path, "w", INT, is_enabled ? 0 : 1);
     lv_label_set_text(element, is_enabled ? lang.GENERIC.DISABLED : lang.GENERIC.ENABLED);
@@ -283,7 +284,7 @@ int handle_navigate(void) {
         if (element_focused == ui_lblScan_network) {
             toggle_option(ui_lblScanValue_network, CONF_CONFIG_PATH "network/scan");
         } else if (element_focused == ui_lblType_network) {
-            int is_static = !strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC);
+            int is_static = strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0;
             lv_label_set_text(ui_lblTypeValue_network, is_static ? lang.MUXNETWORK.DHCP : lang.MUXNETWORK.STATIC);
             ui_count = is_static ? UI_DHCP : UI_STATIC;
             toggle_static_panels(is_static);
@@ -310,7 +311,7 @@ static void handle_confirm(void) {
             const char *cv_pass = lv_label_get_text(ui_lblPasswordValue_network);
 
             // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
-            int cv_pass_ok = (!strlen(cv_pass) || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
+            int cv_pass_ok = (strlen(cv_pass) == 0 || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
 
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue_network);
@@ -546,7 +547,7 @@ static void init_elements(void) {
             {ui_lblNavX,       lang.MUXNETWORK.SCAN,     0},
             {ui_lblNavYGlyph,  "",                       0},
             {ui_lblNavY,       lang.MUXNETWORK.PROFILES, 0},
-            {NULL,             NULL,                     0}
+            {NULL, NULL,                                 0}
     });
 
     lv_obj_t *connect_items[] = {

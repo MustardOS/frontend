@@ -82,7 +82,7 @@ static void image_refresh(void) {
                  str_capital(image_picker), mux_dimension);
         create_directories(catalogue_path);
 
-        if (!extract_preview(mux_dimension, preview_path) && !strcmp("640x480/", mux_dimension))
+        if (!extract_preview(mux_dimension, preview_path) && strcmp("640x480/", mux_dimension) == 0)
             extract_preview("640x480/", fallback_path);
     }
 
@@ -351,7 +351,10 @@ static void handle_b(void) {
     } else {
         char *base_dir = strrchr(sys_dir, '/');
         if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
+
+        assert(base_dir != NULL);
         base_dir++; // skip the '/' at the start
+
         write_text_to_file(EXPLORE_NAME, "w", CHAR, base_dir);
         load_mux("picker");
     }

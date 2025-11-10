@@ -168,8 +168,8 @@ void generate_gradient_with_bayer_dither(lv_color_t *buf, int width, int height,
                                          bool apply_dither, bool vertical,
                                          uint8_t main_stop, uint8_t grad_stop) {
     // Convert gradient stop values (0-255) to pixel positions
-    int start_pos = (main_stop / 255.0) * (vertical ? height : width);
-    int end_pos = (grad_stop / 255.0) * (vertical ? height : width);
+    int start_pos = (int) round(main_stop / 255.0) * (vertical ? height : width);
+    int end_pos = (int) round(grad_stop / 255.0) * (vertical ? height : width);
 
     // Prevent invalid cases where start is beyond end
     if (start_pos >= end_pos) {
@@ -580,8 +580,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlHelp, 1, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpMessage = lv_obj_create(ui_pnlHelp);
-    lv_obj_set_width(ui_pnlHelpMessage, device->MUX.WIDTH * .9);
-    lv_obj_set_height(ui_pnlHelpMessage, device->MUX.HEIGHT * .9);
+    lv_obj_set_width(ui_pnlHelpMessage, (int) round(device->MUX.WIDTH * .9));
+    lv_obj_set_height(ui_pnlHelpMessage, (int) round(device->MUX.HEIGHT * .9));
     lv_obj_set_align(ui_pnlHelpMessage, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpMessage, theme->HELP.RADIUS, MU_OBJ_MAIN_DEFAULT);
@@ -593,7 +593,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_side(ui_pnlHelpMessage, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpHeader = lv_label_create(ui_pnlHelpMessage);
-    lv_obj_set_width(ui_lblHelpHeader, device->MUX.WIDTH * .9 - 60);
+    lv_obj_set_width(ui_lblHelpHeader, (int) round(device->MUX.WIDTH * .9) - 60);
     lv_obj_set_height(ui_lblHelpHeader, LV_SIZE_CONTENT);
     lv_obj_align(ui_lblHelpHeader, LV_ALIGN_TOP_LEFT, 15, 15);
     lv_label_set_long_mode(ui_lblHelpHeader, LV_LABEL_LONG_DOT);
@@ -603,14 +603,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     ui_pnlHelpContent = lv_obj_create(ui_pnlHelp);
     lv_obj_set_align(ui_pnlHelpContent, LV_ALIGN_CENTER);
-    lv_obj_set_width(ui_pnlHelpContent, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_pnlHelpContent, device->MUX.HEIGHT * .9 - 120);
+    lv_obj_set_width(ui_pnlHelpContent, (int) round(device->MUX.WIDTH * .9) - 60);
+    lv_obj_set_height(ui_pnlHelpContent, (int) round(device->MUX.HEIGHT * .9) - 120);
     lv_obj_clear_flag(ui_pnlHelpContent, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(ui_pnlHelpContent, LV_DIR_VER);
     lv_obj_set_scroll_snap_y(ui_pnlHelpContent, LV_SCROLL_SNAP_NONE);
 
     ui_lblHelpContent = lv_label_create(ui_pnlHelpContent);
-    lv_obj_set_width(ui_lblHelpContent, device->MUX.WIDTH * .9 - 60);
+    lv_obj_set_width(ui_lblHelpContent, (int) round(device->MUX.WIDTH * .9) - 60);
     lv_obj_set_height(ui_lblHelpContent, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpContent, LV_ALIGN_TOP_LEFT);
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_WRAP);
@@ -622,7 +622,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_line_space(ui_lblHelpContent, 5, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpExtra = lv_obj_create(ui_pnlHelpMessage);
-    lv_obj_set_width(ui_pnlHelpExtra, device->MUX.WIDTH * .9 - 60);
+    lv_obj_set_width(ui_pnlHelpExtra, (int) round(device->MUX.WIDTH * .9) - 60);
     lv_obj_set_height(ui_pnlHelpExtra, theme->FOOTER.HEIGHT);
     lv_obj_align(ui_pnlHelpExtra, LV_ALIGN_BOTTOM_LEFT, 15, 0);
     lv_obj_set_flex_flow(ui_pnlHelpExtra, LV_FLEX_FLOW_ROW);
@@ -653,8 +653,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_text(ui_lblHelpNavB, lang->GENERIC.CLOSE);
 
     ui_pnlHelpPreview = lv_obj_create(ui_pnlHelp);
-    lv_obj_set_width(ui_pnlHelpPreview, device->MUX.WIDTH * .9);
-    lv_obj_set_height(ui_pnlHelpPreview, device->MUX.HEIGHT * .9);
+    lv_obj_set_width(ui_pnlHelpPreview, (int) round(device->MUX.WIDTH * .9));
+    lv_obj_set_height(ui_pnlHelpPreview, (int) round(device->MUX.HEIGHT * .9));
     lv_obj_set_align(ui_pnlHelpPreview, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_SCROLLABLE);
@@ -667,7 +667,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_side(ui_pnlHelpPreview, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
     ui_lblHelpPreviewHeader = lv_label_create(ui_pnlHelpPreview);
-    lv_obj_set_width(ui_lblHelpPreviewHeader, device->MUX.WIDTH * .9 - 60);
+    lv_obj_set_width(ui_lblHelpPreviewHeader, (int) round(device->MUX.WIDTH * .9) - 60);
     lv_obj_set_height(ui_lblHelpPreviewHeader, LV_SIZE_CONTENT);
     lv_obj_align(ui_lblHelpPreviewHeader, LV_ALIGN_TOP_LEFT, 15, 15);
     lv_label_set_long_mode(ui_lblHelpPreviewHeader, LV_LABEL_LONG_DOT);
@@ -676,8 +676,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_opa(ui_lblHelpPreviewHeader, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpPreviewImage = lv_obj_create(ui_pnlHelpPreview);
-    lv_obj_set_width(ui_pnlHelpPreviewImage, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_pnlHelpPreviewImage, device->MUX.HEIGHT * .9 - 120);
+    lv_obj_set_width(ui_pnlHelpPreviewImage, (int) round(device->MUX.WIDTH * .9) - 60);
+    lv_obj_set_height(ui_pnlHelpPreviewImage, (int) round(device->MUX.HEIGHT * .9) - 120);
     lv_obj_set_align(ui_pnlHelpPreviewImage, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
@@ -702,7 +702,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_img_recolor_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpPreviewInfo = lv_obj_create(ui_pnlHelpPreview);
-    lv_obj_set_width(ui_pnlHelpPreviewInfo, device->MUX.WIDTH * .9 - 60);
+    lv_obj_set_width(ui_pnlHelpPreviewInfo, (int) round(device->MUX.WIDTH * .9) - 60);
     lv_obj_set_height(ui_pnlHelpPreviewInfo, theme->FOOTER.HEIGHT);
     lv_obj_align(ui_pnlHelpPreviewInfo, LV_ALIGN_BOTTOM_LEFT, 15, 0);
     lv_obj_set_flex_flow(ui_pnlHelpPreviewInfo, LV_FLEX_FLOW_ROW);
@@ -978,7 +978,7 @@ void ui_common_handle_volume_down(void) {
 }
 
 void ui_common_handle_idle(void) {
-    if (!strcmp(mux_module, "muxcredits") || !strcmp(mux_module, "muxcharge")) {
+    if (strcmp(mux_module, "muxcredits") == 0 || strcmp(mux_module, "muxcharge") == 0) {
         lv_task_handler();
         return;
     }
@@ -1340,9 +1340,10 @@ void fade_from_black(lv_obj_t *ui_screen) {
 }
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
-    int row_count = is_carousel_grid_mode ? theme->GRID.ROW_COUNT : item_count / theme->GRID.COLUMN_COUNT + 1;
-    lv_coord_t *col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
-    lv_coord_t *row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
+    int row_count = is_carousel_grid_mode() ? theme->GRID.ROW_COUNT : item_count / theme->GRID.COLUMN_COUNT + 1;
+
+    lv_coord_t * col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
+    lv_coord_t * row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
 
     for (int i = 0; i < theme->GRID.COLUMN_COUNT; i++) {
         col_dsc[i] = theme->GRID.COLUMN_WIDTH;
@@ -1390,15 +1391,23 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
                               MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA,
                             MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR),
+    lv_obj_set_style_bg_grad_color(ui_lblGridCurrentItem,
+                                   lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR),
                                    MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_ofs_x(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_ofs_y(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START,
+                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP,
+                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION,
+                                 MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH,
+                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW),
+                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_x(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET,
+                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_y(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET,
+                                  MU_OBJ_MAIN_DEFAULT);
     lv_label_set_long_mode(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
     lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER),
                                   MU_OBJ_MAIN_DEFAULT);
@@ -1424,17 +1433,18 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
 void grid_item_focus_event_cb(lv_event_t *e) {
     lv_obj_t *cell_pnl = lv_event_get_target(e);
     uint32_t child_cnt = lv_obj_get_child_cnt(cell_pnl);
-    if (child_cnt == 0) {
-        // Panel has no children (maybe being deleted)
-        return;
-    }
 
-    lv_obj_t *cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
+    // Panel has no children (maybe being deleted)
+    if (child_cnt == 0) return;
+
+    int32_t last_index = (int32_t) (child_cnt - 1);
+    lv_obj_t *cell_image_focused = lv_obj_get_child(cell_pnl, last_index);
     if (!cell_image_focused) return;
 
-    if (lv_event_get_code(e) == LV_EVENT_FOCUSED) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_FOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 255, MU_OBJ_MAIN_DEFAULT);
-    } else if (lv_event_get_code(e) == LV_EVENT_DEFOCUSED) {
+    } else if (code == LV_EVENT_DEFOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
     }
 }

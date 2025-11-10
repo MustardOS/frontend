@@ -198,8 +198,8 @@ static void handle_a(void) {
                 strcmp(elements[i].mux_name, "shutdown") != 0) {
                 play_sound(SND_CONFIRM);
             } else {
-                toast_message(!strcmp(elements[i].mux_name, "reboot") ? lang.GENERIC.REBOOTING
-                                                                      : lang.GENERIC.SHUTTING_DOWN,
+                toast_message(strcmp(elements[i].mux_name, "reboot") == 0 ? lang.GENERIC.REBOOTING
+                                                                          : lang.GENERIC.SHUTTING_DOWN,
                               FOREVER);
                 refresh_screen(ui_screen);
             }

@@ -116,7 +116,7 @@ static void handle_a(void) {
     toast_message(lang.GENERIC.SAVING, FOREVER);
     refresh_screen(ui_screen);
 
-    write_text_to_file((CONF_CONFIG_PATH "settings/general/language"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "settings/general/language", "w", CHAR,
                        items[current_item_index].name);
 
     if (config.BOOT.FACTORY_RESET) load_mux("installer");
@@ -179,14 +179,14 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 1},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     if (device.BOARD.HAS_NETWORK && is_network_connected()) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                       0},
                 {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},
-                {NULL,            NULL,                     0}
+                {NULL, NULL,                                0}
         });
     }
 

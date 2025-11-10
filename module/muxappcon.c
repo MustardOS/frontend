@@ -59,7 +59,7 @@ static void add_static_item(int index, const char *item_label, const char *item_
 static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *opt_type) {
     const char *value = get_file;
 
-    if (!*value) value = !strcmp(opt_type, "gov") ? device.CPU.DEFAULT : "System";
+    if (!*value) value = strcmp(opt_type, "gov") == 0 ? device.CPU.DEFAULT : "System";
 
     char cap_value[MAX_BUFFER_SIZE];
     snprintf(cap_value, sizeof(cap_value), "%s", value);
@@ -214,7 +214,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define APPCON(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_appcon, UDATA);

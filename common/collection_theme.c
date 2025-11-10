@@ -3,19 +3,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <limits.h>
 #include "collection_theme.h"
 #include "common.h"
-#include "config.h"
-#include "device.h"
-#include "options.h"
 
-theme_item *add_theme_item(theme_item **theme_items, size_t *count, const char *name, const char *url, 
-    bool grid_enabled, bool hdmi_enabled, bool language_enabled, bool resolution640x480, 
-    bool resolution720x480, bool resolution720x720, bool resolution1024x768, bool resolution1280x720) {
+theme_item *add_theme_item(theme_item **theme_items, size_t *count, const char *name, const char *url,
+                           bool grid_enabled, bool hdmi_enabled, bool language_enabled, bool resolution640x480,
+                           bool resolution720x480, bool resolution720x720, bool resolution1024x768,
+                           bool resolution1280x720) {
 
     if (*theme_items == NULL) {
         *theme_items = malloc(sizeof(theme_item));

@@ -196,7 +196,9 @@ static void module_explore(void) {
 void module_content_list(const char *path, const char *max_depth, int is_collection) {
     last_index_check();
 
-    const char *args[] = {"find", path, "-maxdepth", max_depth, "-type", "f", "-size", "0", "!", "-name", ".nogrid", "-delete", NULL};
+    const char *args[] = {"find", path, "-maxdepth", max_depth,
+                          "-type", "f", "-size", "0", "!", "-name", ".nogrid",
+                          "-delete", NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL);
 
     load_mux("launcher");
@@ -360,29 +362,29 @@ static void module_start(void) {
 static const ModuleEntry modules[] = {
         // these modules have specific functions and are not
         // straight forward module launching
-        {"reset",       NULL,        NULL,             NULL,                module_reset},
-        {"reboot",      NULL,        NULL,             NULL,                module_reboot},
-        {"shutdown",    NULL,        NULL,             NULL,                module_shutdown},
-        {"assign",      NULL,        NULL,             NULL,                module_assign},
-        {"coredown",    NULL,        NULL,             NULL,                module_download},
-        {"governor",    NULL,        NULL,             NULL,                module_governor},
-        {"control",     NULL,        NULL,             NULL,                module_control},
-        {"tag",         NULL,        NULL,             NULL,                module_tag},
-        {"explore",     NULL,        NULL,             NULL,                module_explore},
-        {"collection",  NULL,        NULL,             NULL,                module_collection},
-        {"history",     NULL,        NULL,             NULL,                module_history},
-        {"search",      NULL,        NULL,             NULL,                module_search},
-        {"picker",      NULL,        NULL,             NULL,                module_picker},
-        {"option",      NULL,        NULL,             NULL,                module_option},
-        {"appcon",      NULL,        NULL,             NULL,                module_appcon},
-        {"app",         NULL,        NULL,             NULL,                module_app},
-        {"task",        NULL,        NULL,             NULL,                module_task},
-        {"config",      NULL,        NULL,             NULL,                module_config},
-        {"tweakadv",    NULL,        NULL,             NULL,                module_tweakadv},
-        {"danger",      NULL,        NULL,             NULL,                module_danger},
-        {"device",      NULL,        NULL,             NULL,                module_device},
-        {"rtc",         NULL,        NULL,             NULL,                module_rtc},
-        {"credits",     NULL,        NULL,             NULL,                module_quit},
+        {"reset",      NULL, NULL, NULL, module_reset},
+        {"reboot",     NULL, NULL, NULL, module_reboot},
+        {"shutdown",   NULL, NULL, NULL, module_shutdown},
+        {"assign",     NULL, NULL, NULL, module_assign},
+        {"coredown",   NULL, NULL, NULL, module_download},
+        {"governor",   NULL, NULL, NULL, module_governor},
+        {"control",    NULL, NULL, NULL, module_control},
+        {"tag",        NULL, NULL, NULL, module_tag},
+        {"explore",    NULL, NULL, NULL, module_explore},
+        {"collection", NULL, NULL, NULL, module_collection},
+        {"history",    NULL, NULL, NULL, module_history},
+        {"search",     NULL, NULL, NULL, module_search},
+        {"picker",     NULL, NULL, NULL, module_picker},
+        {"option",     NULL, NULL, NULL, module_option},
+        {"appcon",     NULL, NULL, NULL, module_appcon},
+        {"app",        NULL, NULL, NULL, module_app},
+        {"task",       NULL, NULL, NULL, module_task},
+        {"config",     NULL, NULL, NULL, module_config},
+        {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
+        {"danger",     NULL, NULL, NULL, module_danger},
+        {"device",     NULL, NULL, NULL, module_device},
+        {"rtc",        NULL, NULL, NULL, module_rtc},
+        {"credits",    NULL, NULL, NULL, module_quit},
 
         // the following modules can be loaded directly
         // without any other functionality
@@ -416,10 +418,10 @@ static const ModuleEntry modules[] = {
 
         // these are custom entries specifically for the first time installer
         {"installer",   "installer", "muxinstall",     muxinstall_main,     NULL},
-        {"install",     NULL,        NULL,             NULL,                module_install},
+        {"install",    NULL, NULL, NULL, module_install},
 
         // this is required because it is the end of the table!
-        {NULL,          NULL,        NULL,             NULL,                NULL}
+        {NULL,         NULL, NULL, NULL,                                    NULL}
 };
 
 static void reset_alert(void) {

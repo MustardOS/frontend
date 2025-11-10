@@ -159,8 +159,14 @@ static void init_navigation_group(void) {
 
     lv_dropdown_clear_options(ui_droTarget_backup);
     lv_dropdown_add_option(ui_droTarget_backup, "SD1", LV_DROPDOWN_POS_LAST);
-    if (is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) lv_dropdown_add_option(ui_droTarget_backup, "SD2", LV_DROPDOWN_POS_LAST);
-    if (is_partition_mounted(device.STORAGE.USB.MOUNT)) lv_dropdown_add_option(ui_droTarget_backup, "USB", LV_DROPDOWN_POS_LAST);
+
+    if (is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
+        lv_dropdown_add_option(ui_droTarget_backup, "SD2", LV_DROPDOWN_POS_LAST);
+    }
+
+    if (is_partition_mounted(device.STORAGE.USB.MOUNT)) {
+        lv_dropdown_add_option(ui_droTarget_backup, "USB", LV_DROPDOWN_POS_LAST);
+    }
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -284,9 +290,9 @@ static void handle_a(void) {
         fprintf(fp, "%s %s\n", "BATCH", target_value);
 
         for (int i = 0; i < STORAGE_COUNT; i++) {
-            lv_obj_t * ui_pnlItem = lv_obj_get_child(ui_pnlContent, i);
-            lv_obj_t * ui_lblItem = lv_obj_get_child(ui_pnlItem, 0);
-            lv_obj_t * ui_droItem = lv_obj_get_child(ui_pnlItem, 2);
+            lv_obj_t *ui_pnlItem = lv_obj_get_child(ui_pnlContent, i);
+            lv_obj_t *ui_lblItem = lv_obj_get_child(ui_pnlItem, 0);
+            lv_obj_t *ui_droItem = lv_obj_get_child(ui_pnlItem, 2);
             int value = lv_dropdown_get_selected(ui_droItem);
             // Skip if set to NONE
             if (value == 0) continue;
@@ -326,7 +332,7 @@ static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
-    
+
     int value = lv_dropdown_get_selected(ui_droApps_backup);
     set_all_options(value == 0 ? 1 : 0);
 
@@ -358,15 +364,15 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavAGlyph, "",                  0},
-            {ui_lblNavA,      lang.GENERIC.LAUNCH, 0},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph, "",                  0},
-            {ui_lblNavX,      lang.GENERIC.TOGGLE_ALL, 0},
-            {NULL,            NULL,                0}
+            {ui_lblNavLRGlyph, "",                      0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE,     0},
+            {ui_lblNavAGlyph,  "",                      0},
+            {ui_lblNavA,       lang.GENERIC.LAUNCH,     0},
+            {ui_lblNavBGlyph,  "",                      0},
+            {ui_lblNavB,       lang.GENERIC.BACK,       0},
+            {ui_lblNavXGlyph,  "",                      0},
+            {ui_lblNavX,       lang.GENERIC.TOGGLE_ALL, 0},
+            {NULL, NULL,                                0}
     });
 
 #define BACKUP(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_backup, UDATA);

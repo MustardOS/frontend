@@ -57,12 +57,12 @@ static void save_options(void) {
 
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth_connect);
     if (lv_dropdown_get_selected(ui_droBluetooth_connect) != Bluetooth_original) {
-        write_text_to_file((CONF_CONFIG_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
+        write_text_to_file(CONF_CONFIG_PATH "visual/bluetooth", "w", INT, idx_bluetooth);
     }
 
     if (lv_dropdown_get_selected(ui_droUsbFunction_connect) != UsbFunction_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
+        write_text_to_file(CONF_CONFIG_PATH "settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
     }
 
     if (is_modified > 0) {
@@ -246,7 +246,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define CONNECT(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_connect, UDATA);

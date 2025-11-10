@@ -74,7 +74,7 @@ static void image_refresh(char *image_type) {
                          STORAGE_THEME, image_type);
             }
         } else {
-            if (strcasecmp(image_type, "box") || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+            if (strcasecmp(image_type, "box") == 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
                 if (items[current_item_index].content_type == FOLDER) {
                     char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
                     load_image_catalogue("Folder", file_name, catalogue_name, "default",
@@ -195,7 +195,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
-static void remove_match_items(const char *filter_name, int mode, const char ***filter_list, int *filter_count,
+static void remove_match_items(const char *filter_name, int mode, char ***filter_list, int *filter_count,
                                void (*pop_func)(void), content_item **items, size_t *item_count, const char *sys_dir) {
     if (mode == 2) {
         free((void *) *filter_list);
@@ -213,10 +213,9 @@ static void remove_match_items(const char *filter_name, int mode, const char ***
             snprintf(item_path, sizeof(item_path), "%s/%s", sys_dir, (*items)[i].name);
 
             if (strcasecmp(item_path, (*filter_list)[c]) == 0) {
-                LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
+                LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path)
                 remove_item(items, item_count, i);
-                i--;
-                break;
+                continue;
             }
         }
     }
@@ -226,7 +225,7 @@ static void gen_item(char **file_names, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
     char *sub_path = sys_dir;
 
-    if (!strncasecmp(sys_dir, STORAGE_PATH, strlen(STORAGE_PATH))) {
+    if (strncasecmp(sys_dir, STORAGE_PATH, strlen(STORAGE_PATH)) == 0) {
         sub_path = sys_dir + strlen(STORAGE_PATH);
         while (*sub_path == '/') sub_path++;
     }
@@ -378,7 +377,7 @@ static void init_navigation_group_grid(void) {
         int prev_dir_index = get_folder_item_index_by_name(items, item_count, prev_dir);
         if (prev_dir_index > -1) sys_index = prev_dir_index;
     } else {
-        for (size_t i = 0; i < item_count; i++) {
+        for (int i = 0; i < item_count; i++) {
             if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
             if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
         }

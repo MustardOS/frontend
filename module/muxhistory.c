@@ -55,9 +55,9 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        if (strcasecmp(image_type, "box") || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+        if (strcasecmp(image_type, "box") == 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
             load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
-                                image, sizeof(image));
+                                 image, sizeof(image));
         }
         if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
@@ -71,8 +71,8 @@ static void image_refresh(char *image_type) {
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
                         image, LV_ALIGN_CENTER,
-                        validate_int16((int16_t)(device.MUX.WIDTH * .9) - 60, "width"),
-                        validate_int16((int16_t)(device.MUX.HEIGHT * .9) - 120, "height"),
+                        validate_int16((int16_t) (device.MUX.WIDTH * .9) - 60, "width"),
+                        validate_int16((int16_t) (device.MUX.HEIGHT * .9) - 120, "height"),
                         0, 0, 0, 0
                 };
                 update_image(ui_imgHelpPreviewImage, image_settings);
@@ -280,7 +280,7 @@ static void init_navigation_group_grid(void) {
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
     } else {
-        for (size_t i = 0; i < item_count; i++) {
+        for (int i = 0; i < item_count; i++) {
             if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
                 gen_grid_item(i);
             }
@@ -297,7 +297,11 @@ static void create_history_items(void) {
     lv_label_set_text(ui_lblTitle, lang.MUXHISTORY.TITLE);
     add_file_names(INFO_HIS_PATH, &file_names, &last_dirs);
 
-    grid_mode_enabled = !disable_grid_file_exists(INFO_HIS_PATH) && theme.GRID.ENABLED && file_count > 0 && config.VISUAL.GRID_MODE_CONTENT;
+    grid_mode_enabled = !disable_grid_file_exists(INFO_HIS_PATH)
+                        && theme.GRID.ENABLED
+                        && file_count > 0
+                        && config.VISUAL.GRID_MODE_CONTENT;
+
     if (file_count > 0) {
         gen_item(file_count, file_names, last_dirs);
         lv_obj_update_layout(ui_pnlContent);
@@ -554,7 +558,7 @@ static void init_elements(void) {
             {ui_lblNavY,         lang.GENERIC.COLLECT, 1},
             {ui_lblNavMenuGlyph, "",                   1},
             {ui_lblNavMenu,      lang.GENERIC.INFO,    1},
-            {NULL,               NULL,                 0}
+            {NULL, NULL,                               0}
     });
 
     overlay_display();

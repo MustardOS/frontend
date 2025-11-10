@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
             {"modes",  no_argument,       0, 'm'},
             {"clear",  no_argument,       0, 'c'},
             {"help",   no_argument,       0, 'H'},
-            {0,        0,                 0, 0}
+            {0, 0,                        0, 0}
     };
 
     while ((opt = getopt_long(argc, argv, "w:h:d:x:y:imcH", long_options, NULL)) != -1) {

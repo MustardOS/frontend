@@ -55,7 +55,8 @@ static void restore_visual_options(void) {
     lv_dropdown_set_selected(ui_droHidden_visual, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droContentCollect_visual, config.VISUAL.CONTENTCOLLECT);
     lv_dropdown_set_selected(ui_droContentHistory_visual, config.VISUAL.CONTENTHISTORY);
-    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
+    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count)
+                                                        ? 0 : config.VISUAL.OVERLAY_IMAGE);
     lv_dropdown_set_selected(ui_droOverlayTransparency_visual, config.VISUAL.OVERLAY_TRANSPARENCY);
 }
 

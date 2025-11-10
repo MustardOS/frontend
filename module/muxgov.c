@@ -141,7 +141,7 @@ static void generate_available_governors(const char *default_governor) {
 }
 
 static void create_gov_items(const char *target) {
-    if (!strcmp(target, "none")) generate_available_governors(target);
+    if (strcmp(target, "none") == 0) generate_available_governors(target);
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
@@ -153,7 +153,7 @@ static void create_gov_items(const char *target) {
     mini_t *global_config = mini_load(global_assign);
 
     char *target_default = get_ini_string(global_config, "global", "name", "none");
-    if (!strcmp(target_default, "none")) return;
+    if (strcmp(target_default, "none") == 0) return;
 
     char local_assign[FILENAME_MAX];
     snprintf(local_assign, sizeof(local_assign), "%s/%s.ini", assign_dir, target_default);

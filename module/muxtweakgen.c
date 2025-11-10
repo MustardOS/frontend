@@ -113,7 +113,7 @@ static void save_tweak_options(void) {
 
     if (lv_dropdown_get_selected(ui_droColour_tweakgen) != Colour_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/general/colour"), "w", INT,
+        write_text_to_file(CONF_CONFIG_PATH "settings/general/colour", "w", INT,
                            lv_dropdown_get_selected(ui_droColour_tweakgen) - 255);
     }
 

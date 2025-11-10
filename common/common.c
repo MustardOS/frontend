@@ -52,11 +52,11 @@ struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
 lv_anim_t animation;
 lv_obj_t *img_obj;
-const char **img_paths = NULL;
+char **img_paths = NULL;
 int img_paths_count = 0;
-const char **history_items = NULL;
+char **history_items = NULL;
 int history_item_count = 0;
-const char **collection_items = NULL;
+char **collection_items = NULL;
 int collection_item_count = 0;
 char current_wall[MAX_BUFFER_SIZE];
 lv_obj_t *wall_img = NULL;
@@ -187,16 +187,25 @@ int str_compare(const void *a, const void *b) {
     const char *str2 = *(const char **) b;
 
     while (*str1 && *str2) {
-        char c1 = tolower(*str1);
-        char c2 = tolower(*str2);
+        unsigned char c1 = tolower((unsigned char) *str1);
+        unsigned char c2 = tolower((unsigned char) *str2);
 
-        if (c1 != c2) return c1 - c2;
+        if (isdigit(c1) && isdigit(c2)) {
+            unsigned long long n1 = 0, n2 = 0;
+            while (isdigit(*str1)) n1 = n1 * 10 + (*str1++ - '0');
+            while (isdigit(*str2)) n2 = n2 * 10 + (*str2++ - '0');
+
+            if (n1 != n2) return (n1 > n2) - (n1 < n2);
+            continue;
+        }
+
+        if (c1 != c2) return (c1 > c2) - (c1 < c2);
 
         str1++;
         str2++;
     }
 
-    return *str1 - *str2;
+    return (unsigned char) *str1 - (unsigned char) *str2;
 }
 
 int str_startswith(const char *a, const char *b) {
@@ -528,34 +537,46 @@ char *get_execute_result(const char *command) {
 
 int read_battery_capacity(void) {
     FILE *file = fopen(device.BATTERY.CAPACITY, "r");
-
-    if (file == NULL) {
+    if (!file) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY)
         return 0;
     }
 
-    int capacity;
-    if (fscanf(file, "%d", &capacity) != 1) {
+    char buf[32];
+    if (!fgets(buf, sizeof(buf), file)) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY)
+        fclose(file);
         return 0;
     }
 
     fclose(file);
 
+    char *end_ptr;
+    long capacity = strtol(buf, &end_ptr, 10);
+
+    int invalid_input = (end_ptr == buf);
+    int trailing_garbage = (*end_ptr != '\0' && *end_ptr != '\n');
+
+    if (invalid_input || trailing_garbage) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY)
+        return 0;
+    }
+
     capacity += (config.SETTINGS.ADVANCED.OFFSET - 50);
-    return capacity > 100 ? 100 : capacity;
+    if (capacity > 100) capacity = 100;
+    if (capacity < 0) capacity = 0;
+    return (int) capacity;
 }
 
 char *read_battery_voltage(void) {
     FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
-
-    if (file == NULL) {
+    if (!file) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE)
         return "0.00 V";
     }
 
-    int raw_voltage;
-    if (fscanf(file, "%d", &raw_voltage) != 1) {
+    char buf[32];
+    if (!fgets(buf, sizeof(buf), file)) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE)
         fclose(file);
         return "0.00 V";
@@ -563,13 +584,20 @@ char *read_battery_voltage(void) {
 
     fclose(file);
 
-    char *form_voltage = (char *) malloc(10);
-    if (form_voltage == NULL) {
+    char *end_ptr;
+    long raw_voltage = strtol(buf, &end_ptr, 10);
+    if (end_ptr == buf) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE)
+        return "0.00 V";
+    }
+
+    char *form_voltage = malloc(10);
+    if (!form_voltage) {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
         return "0.00 V";
     }
 
-    snprintf(form_voltage, 8, "%.2f V", raw_voltage / 1000000.0);
+    snprintf(form_voltage, 10, "%.2f V", (double) raw_voltage / 1000000.0);
     return form_voltage;
 }
 
@@ -644,7 +672,10 @@ int read_all_int_from(const char *filename, size_t buffer) {
     if (!file) return 0;
 
     char line[buffer];
-    if (!fgets(line, sizeof(line), file)) {
+    size_t buf_size = sizeof(line);
+    if (buf_size > INT_MAX) buf_size = INT_MAX;
+
+    if (!fgets(line, (int) buf_size, file)) {
         fclose(file);
         return 0;
     }
@@ -653,7 +684,6 @@ int read_all_int_from(const char *filename, size_t buffer) {
     long value = strtol(line, NULL, 10);
     return (value > INT_MAX || value < INT_MIN) ? 0 : (int) value;
 }
-
 
 int read_line_int_from(const char *filename, size_t line_number) {
     char line[MAX_BUFFER_SIZE];
@@ -678,23 +708,38 @@ unsigned long long read_all_long_from(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
-    unsigned long long value = 0;
-
-    fscanf(file, "%llu", &value);
+    char buf[64];
+    if (!fgets(buf, sizeof(buf), file)) {
+        fclose(file);
+        return 0;
+    }
     fclose(file);
+
+    char *end_ptr;
+    errno = 0;
+
+    unsigned long long value = strtoull(buf, &end_ptr, 10);
+    if (errno != 0 || end_ptr == buf || (*end_ptr && *end_ptr != '\n')) return 0;
 
     return value;
 }
 
 const char *get_random_hex(void) {
-    int red = rand() % UINT8_MAX;
-    int green = rand() % UINT8_MAX;
-    int blue = rand() % UINT8_MAX;
+    static int seeded = 0;
+    if (!seeded) {
+        srandom((unsigned) time(NULL) ^ (uintptr_t) &seeded);
+        seeded = 1;
+    }
 
-    char *colour_hex = (char *) malloc(7 * sizeof(char));
-    sprintf(colour_hex, "%02X%02X%02X", red, green, blue);
+    unsigned char r = random() % 256;
+    unsigned char g = random() % 256;
+    unsigned char b = random() % 256;
 
-    return colour_hex;
+    char *hex = malloc(8);
+    if (!hex) return NULL;
+    snprintf(hex, 8, "%02X%02X%02X", r, g, b);
+
+    return hex;
 }
 
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value) {
@@ -1076,12 +1121,12 @@ void load_splash_image_fallback(const char *mux_dimension, char *image, size_t i
 }
 
 bool is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
-    return (strcmp(catalogue_name, "Application") && strcmp(image_type, "box")) ||
-           (strcmp(catalogue_name, "Application") && strcmp(image_type, "grid")) ||
-           (strcmp(catalogue_name, "Collection") && strcmp(image_type, "box")) ||
-           (strcmp(catalogue_name, "Collection") && strcmp(image_type, "grid")) ||
-           (strcmp(catalogue_name, "Folder") && strcmp(image_type, "box")) ||
-           (strcmp(catalogue_name, "Folder") && strcmp(image_type, "grid"));
+    return (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "box") == 0) ||
+           (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "grid") == 0) ||
+           (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "box") == 0) ||
+           (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "grid") == 0) ||
+           (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "box") == 0) ||
+           (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "grid") == 0);
 }
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt,
@@ -1171,7 +1216,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                 break;
         }
         if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
-                                         !strcmp(program, "muxlaunch") ? element : "default",
+                                         strcmp(program, "muxlaunch") == 0 ? element : "default",
                                          "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
             if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1268,7 +1313,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
             case GENERAL:
             default:
                 if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                                                 !strcmp(program, "muxlaunch") ? element : "default",
+                                                 strcmp(program, "muxlaunch") == 0 ? element : "default",
                                                  "default", "png", static_image_path,
                                                  sizeof(static_image_path))) {
 
@@ -1362,8 +1407,8 @@ void build_image_array(char *base_image_path) {
     size_t base_len = strlen(base_image_path) - 6;
 
     if (base_len >= PATH_MAX) {
-        fprintf(stderr, "Error: base_path exceeds maximum allowed length\n");
-        exit(EXIT_FAILURE);
+        LOG_ERROR("image", "Base path exceeds maximum allowed length: %s", base_image_path)
+        return;
     }
 
     strncpy(base_path, base_image_path, base_len);
@@ -1380,18 +1425,20 @@ void build_image_array(char *base_image_path) {
             size_t needed_size = snprintf(NULL, 0, "%s.%d.png", base_path, index) + 1;
             char *path_embed = malloc(needed_size);
             if (!path_embed) {
-                perror("malloc failed");
-                exit(EXIT_FAILURE);
+                LOG_ERROR("image", "Failed to allocate memory for image: %s.%d.png", base_path, index)
+                break;
             }
 
             snprintf(path_embed, needed_size, "%s.%d.png", base_path, index);
-            img_paths = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
-            if (!img_paths) {
-                perror("realloc failed");
+
+            char **img_temp = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
+            if (!img_temp) {
+                LOG_ERROR("image", "Failed to reallocate image path array")
                 free(path_embed);
-                exit(EXIT_FAILURE);
+                break;
             }
 
+            img_paths = img_temp;
             img_paths[img_paths_count] = path_embed;
             img_paths_count++;
         }
@@ -1716,26 +1763,33 @@ void display_testing_message(lv_obj_t *screen) {
 }
 
 void adjust_visual_label(char *text, int method, int rep_dash) {
-    int text_index = 0;
+    size_t len = strlen(text);
+    size_t text_index = 0;
+
     int with_bracket = 0;
 
-    char b_open_1, b_open_2, b_close_1, b_close_2;
-    b_open_1 = b_open_2 = b_close_1 = b_close_2 = '\0';
+    char b_open_1 = 0, b_open_2 = 0, b_close_1 = 0, b_close_2 = 0;
 
-    if (method == 1) {
-        b_open_1 = '[';
-        b_close_1 = ']';
-    } else if (method == 2) {
-        b_open_1 = '(';
-        b_close_1 = ')';
-    } else if (method == 3) {
-        b_open_1 = '(';
-        b_open_2 = '[';
-        b_close_1 = ')';
-        b_close_2 = ']';
+    switch (method) {
+        case 1:
+            b_open_1 = '[';
+            b_close_1 = ']';
+            break;
+        case 2:
+            b_open_1 = '(';
+            b_close_1 = ')';
+            break;
+        case 3:
+            b_open_1 = '(';
+            b_open_2 = '[';
+            b_close_1 = ')';
+            b_close_2 = ']';
+            break;
+        default:
+            break;
     }
 
-    for (int i = 0; i < strlen(text); i++) {
+    for (size_t i = 0; i < len; i++) {
         if (text[i] == b_open_1 || (method == 3 && text[i] == b_open_2)) {
             with_bracket = 1;
         } else if (text[i] == b_close_1 || (method == 3 && text[i] == b_close_2)) {
@@ -1747,30 +1801,28 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
 
     text[text_index] = '\0';
 
-    int start = 0;
-    while (isspace((unsigned char) text[start])) {
-        start++;
-    }
+    size_t start = 0;
+    while (isspace((unsigned char) text[start])) start++;
 
-    int end = strlen(text) - 1;
-    while (end >= 0 && isspace((unsigned char) text[end])) {
+    len = strlen(text);
+    size_t end = len ? len - 1 : 0;
+    while (end < len && isspace((unsigned char) text[end])) {
+        if (end == 0) break;
         end--;
     }
 
-    if (start > 0 || end < (int) strlen(text) - 1) {
-        for (int i = start; i <= end; i++) {
-            text[i - start] = text[i];
-        }
-        text[end - start + 1] = '\0';
+    if (start > 0 || end < len - 1) {
+        size_t new_len = end - start + 1;
+        memmove(text, text + start, new_len);
+        text[new_len] = '\0';
     }
 
     if (rep_dash) {
         char *found = strstr(text, " - ");
-        if (found != NULL) {
-            size_t offset = found - text;
-            text[offset] = ':';
-            memmove(text + offset + 2, text + offset + 3, strlen(text) - offset - 2);
-            text[offset + 1] = ' ';
+        if (found) {
+            found[0] = ':';
+            memmove(found + 2, found + 3, strlen(found + 3) + 1);
+            found[1] = ' ';
         }
     }
 }
@@ -1784,8 +1836,8 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
             lv_img_header_t img_header;
             lv_img_decoder_get_info(image_path, &img_header);
 
-            float width_ratio = (float) image_settings.max_width / img_header.w;
-            float height_ratio = (float) image_settings.max_height / img_header.h;
+            float width_ratio = (float) image_settings.max_width / (float) img_header.w;
+            float height_ratio = (float) image_settings.max_height / (float) img_header.h;
             float zoom_ratio = (width_ratio < height_ratio) ? width_ratio : height_ratio;
 
             int zoom_factor = (int) (zoom_ratio * 256);
@@ -1856,7 +1908,7 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
         lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_START);
     }
 
-    int content_panel_y = scroll_multiplier * mux_item_panel;
+    int content_panel_y = (int) round(scroll_multiplier * mux_item_panel);
     lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
     lv_obj_update_snap(ui_pnlContent, LV_ANIM_OFF);
 }
@@ -1904,51 +1956,39 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
 
 char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
                              const char *suffix, int infix_position) {
-    int buffer_size = 0;
-    int prefix_len = prefix ? strlen(prefix) : 0;
-    int infix_len = infix ? strlen(infix) : 0;
-    int suffix_len = suffix ? strlen(suffix) : 0;
+    size_t buffer_size = 0;
 
-    if (prefix) {
-        buffer_size += prefix_len + 1;
-    }
+    size_t prefix_len = prefix ? strlen(prefix) : 0;
+    size_t infix_len = infix ? strlen(infix) : 0;
+    size_t suffix_len = suffix ? strlen(suffix) : 0;
+
+    if (prefix) buffer_size += prefix_len + 1;
+
     for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
-        buffer_size += snprintf(NULL, 0, "%d", i);
-        if (infix) {
-            buffer_size += infix_len;
-        }
-        if ((increment > 0 ? i + increment <= max : i + increment >= max)) {
-            buffer_size += 1;
-        }
-    }
-    if (suffix) {
-        buffer_size += suffix_len;
+        buffer_size += (size_t) snprintf(NULL, 0, "%d", i);
+        if (infix) buffer_size += infix_len;
+        if ((increment > 0 ? i + increment <= max : i + increment >= max)) buffer_size += 1;
     }
 
-    char *number_string = (char *) malloc(buffer_size + 1);
-    if (number_string == NULL) {
-        return NULL;
-    }
+    if (suffix) buffer_size += suffix_len;
+
+    char *number_string = malloc(buffer_size + 1);
+    if (!number_string) return NULL;
 
     char *ptr = number_string;
-    if (prefix) {
-        ptr += sprintf(ptr, "%s\n", prefix);
-    }
+    if (prefix) ptr += sprintf(ptr, "%s\n", prefix);
+
     for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
-        if (infix && infix_position == 0) {
-            ptr += sprintf(ptr, "%s", infix);
-        }
+        if (infix && infix_position == 0) ptr += sprintf(ptr, "%s", infix);
+
         ptr += sprintf(ptr, "%d", i);
-        if (infix && infix_position == 1) {
-            ptr += sprintf(ptr, "%s", infix);
-        }
-        if ((increment > 0 ? i + increment <= max : i + increment >= max)) {
-            *ptr++ = '\n';
-        }
+
+        if (infix && infix_position == 1) ptr += sprintf(ptr, "%s", infix);
+        if ((increment > 0 ? i + increment <= max : i + increment >= max)) *ptr++ = '\n';
     }
-    if (suffix) {
-        ptr += sprintf(ptr, "%s", suffix);
-    }
+
+    if (suffix) ptr += sprintf(ptr, "%s", suffix);
+
     *ptr = '\0';
 
     return number_string;
@@ -2051,17 +2091,24 @@ int extract_file_from_zip(const char *zip_path, const char *filename, const char
     return 1;
 }
 
-void add_directory_to_list(char ***list, int *size, int *count, const char *dir) {
+void add_directory_to_list(char ***list, size_t *size, size_t *count, const char *dir) {
     if (*count >= *size) {
-        *size += 10;
-        *list = realloc(*list, *size * sizeof(char *));
+        size_t new_size = *size + 10;
+
+        char **new_list = realloc(*list, new_size * sizeof(char *));
+        if (!new_list) return;
+
+        *list = new_list;
+        *size = new_size;
     }
 
     (*list)[*count] = strdup(dir);
+    if (!(*list)[*count]) return;
+
     (*count)++;
 }
 
-void collect_subdirectories(const char *base_dir, char ***list, int *size, int *count, int trim_start_count) {
+void collect_subdirectories(const char *base_dir, char ***list, size_t *size, size_t *count, size_t trim_start_count) {
     char subdir_path[PATH_MAX];
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
@@ -2075,38 +2122,41 @@ void collect_subdirectories(const char *base_dir, char ***list, int *size, int *
 
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_DIR) {
-            if (!should_skip(entry->d_name, 1)) {
-                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                    snprintf(subdir_path, sizeof(subdir_path), "%s/%s", base_dir, entry->d_name);
-                    const char *trimmed_path = subdir_path + trim_start_count;
-                    add_directory_to_list(list, size, count, trimmed_path);
-                    collect_subdirectories(subdir_path, list, size, count, trim_start_count);
-                }
-            }
+            const char *name = entry->d_name;
+
+            if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
+            if (should_skip(name, 1)) continue;
+
+            snprintf(subdir_path, sizeof(subdir_path), "%s/%s", base_dir, name);
+            const char *trimmed_path = subdir_path + trim_start_count;
+
+            add_directory_to_list(list, size, count, trimmed_path);
+            collect_subdirectories(subdir_path, list, size, count, trim_start_count);
         }
     }
+
     closedir(dir);
 }
 
 char **get_subdirectories(const char *base_dir) {
-    int trim_start_count = strlen(base_dir) + 1;
-    int list_size = 10;
-    int count = 0;
+    size_t trim_start_count = strlen(base_dir) + 1;
+    size_t list_size = 10;
+    size_t count = 0;
 
-    char **subdir_list = malloc(list_size * PATH_MAX);
+    char **subdir_list = malloc(list_size * sizeof(char *));
+    if (!subdir_list) return NULL;
+
     collect_subdirectories(base_dir, &subdir_list, &list_size, &count, trim_start_count);
     subdir_list[count] = NULL;
 
     return subdir_list;
 }
 
-
 void free_subdirectories(char **dir_names) {
     if (dir_names == NULL) return;
 
-    for (int i = 0; dir_names[i] != NULL; i++) {
-        free(dir_names[i]);
-    }
+    for (int i = 0; dir_names[i] != NULL; i++) free(dir_names[i]);
+
     free(dir_names);
 }
 
@@ -2138,14 +2188,6 @@ void free_sound_cache(void) {
     }
 }
 
-void free_bgm_list(void) {
-    for (size_t i = 0; i < bgm_file_count; ++i) free(bgm_files[i]);
-    free(bgm_files);
-
-    bgm_files = NULL;
-    bgm_file_count = 0;
-}
-
 void free_bgm(void) {
     if (current_bgm) {
         Mix_HaltMusic();
@@ -2157,14 +2199,22 @@ void free_bgm(void) {
 void play_random_bgm(void) {
     if (bgm_file_count == 0) return;
 
+    static int seeded = 0;
+    if (!seeded) {
+        srandom((unsigned) time(NULL) ^ (uintptr_t) &seeded);
+        seeded = 1;
+    }
+
     static size_t last_index = SIZE_MAX;
+
     size_t index;
 
     if (bgm_file_count == 1) {
         index = 0;
     } else {
-        index = rand() % bgm_file_count;
-        while (index == last_index) index = rand() % bgm_file_count;
+        do {
+            index = random() % bgm_file_count;
+        } while (index == last_index);
     }
 
     const char *path = bgm_files[index];
@@ -2289,6 +2339,12 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
     size_t capacity = 8;
     bgm_files = malloc(capacity * sizeof(char *));
+    if (!bgm_files) {
+        LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        closedir(dir);
+        return;
+    }
+
     bgm_file_count = 0;
 
     struct dirent *entry;
@@ -2297,18 +2353,33 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         if (len > 4 && strcmp(entry->d_name + len - 4, ".ogg") == 0) {
             if (bgm_file_count >= capacity) {
                 capacity *= 2;
-                bgm_files = realloc(bgm_files, capacity * sizeof(char *));
+                char **bgm_temp = realloc(bgm_files, capacity * sizeof(char *));
+
+                if (!bgm_temp) {
+                    LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                    closedir(dir);
+                    return;
+                }
+
+                bgm_files = bgm_temp;
             }
 
             char full_path[MAX_BUFFER_SIZE];
             snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
-            bgm_files[bgm_file_count++] = strdup(full_path);
+
+            bgm_files[bgm_file_count] = strdup(full_path);
+            if (!bgm_files[bgm_file_count]) {
+                LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                continue;
+            }
+
+            bgm_file_count++;
         }
     }
+
     closedir(dir);
 
     if (bgm_file_count > 0) {
-        srand(time(NULL));
         Mix_HookMusicFinished(play_random_bgm);
         play_random_bgm();
         *fe_bgm = 1;
@@ -2421,7 +2492,7 @@ void update_grid_image_paths(int index) {
     load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
                          mux_dimension, "grid", grid_image_focused, sizeof(grid_image_focused));
 
-    if (!strcmp(mux_module, "muxapp")) {
+    if (strcmp(mux_module, "muxapp") == 0) {
         get_app_grid_glyph(items[index].extra_data, program, "default", grid_image, sizeof(grid_image));
         get_app_grid_glyph(items[index].extra_data, glyph_name_focused, "default_focused", grid_image_focused,
                            sizeof(grid_image_focused));
@@ -2475,21 +2546,28 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
 
 void update_grid_items(int direction) {
     if (is_carousel_grid_mode()) {
-        int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT
-                                                                                   : theme.GRID.ROW_COUNT;
+        int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT)
+                                  ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+
         for (int i = 0; i < carousel_item_count; i++) {
-            int offset = i - (carousel_item_count / 2);                 // position relative to center
-            int index = (current_item_index + offset + item_count) % item_count;  // wrap around
+            int offset = i - (carousel_item_count / 2);
+
+            size_t raw_index = ((size_t) current_item_index + offset + (size_t) item_count) % (size_t) item_count;
+            int index = (int) raw_index;
+
             lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, i);
             update_grid_item(panel_item, index);
         }
     } else {
-        int rowIndex = get_grid_row_index(current_item_index);
-        int startRowIndex = (direction < 0) ? rowIndex : rowIndex - theme.GRID.ROW_COUNT + 1;
-        if (startRowIndex < 0) startRowIndex = 0;
-        int start_index = startRowIndex * theme.GRID.COLUMN_COUNT;
+        int row_index = get_grid_row_index(current_item_index);
+        int start_row_index = (direction < 0) ? row_index : row_index - theme.GRID.ROW_COUNT + 1;
 
-        for (int index = 0; index < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT; ++index) {
+        if (start_row_index < 0) start_row_index = 0;
+
+        int start_index = start_row_index * theme.GRID.COLUMN_COUNT;
+        int total_items = theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT;
+
+        for (int index = 0; index < total_items; ++index) {
             lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
             update_grid_item(panel_item, start_index + index);
         }
@@ -2579,13 +2657,18 @@ int disable_grid_file_exists(char *item_curr_dir) {
     return file_exist(no_grid_path);
 }
 
-void create_carousel_grid() {
-    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT
-                                                                               : theme.GRID.ROW_COUNT;
+void create_carousel_grid(void) {
+    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT)
+                              ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+
     int middle_index = carousel_item_count / 2;
+
     for (int i = 0; i < carousel_item_count; i++) {
-        int offset = i - (carousel_item_count / 2);                           // position relative to center
-        int item_index = (current_item_index + offset + item_count) % item_count;  // wrap around
+        int offset = i - (carousel_item_count / 2);
+
+        size_t raw_index = ((size_t) current_item_index + offset + (size_t) item_count) % (size_t) item_count;
+        int item_index = (int) raw_index;
+
         gen_carousel_grid_item(item_index, i, middle_index);
     }
 }
@@ -2658,10 +2741,8 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
 
         execvp(san[0], (char *const *) san);
         _exit(EXIT_FAILURE);
-    } else if (pid > 0 && !background) {
+    } else if (pid > 0) {
         // Foreground process, block until child finishes execution
-        waitpid(pid, NULL, 0);
-    } else if (pid > 0 && background) {
         // Parent process does not wait for background process
         // Destroy the intermediate child immediately to avoid zombies... oh no
         waitpid(pid, NULL, 0);
@@ -2772,7 +2853,7 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     return 0;
 }
 
-void populate_items(const char *base_path, const char ***items, int *item_count) {
+void populate_items(const char *base_path, char ***items, int *item_count) {
     struct dirent *entry;
     char full_path[PATH_MAX];
     DIR *dir = opendir(base_path);
@@ -2892,7 +2973,7 @@ void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *u
 
 void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const char *fallback_name,
                         char *glyph_image_path, size_t glyph_image_path_size) {
-    if (file_exist(glyph_image_path) && !strstr(glyph_image_path, fallback_name)) return;
+    if (file_exist(glyph_image_path) && strstr(glyph_image_path, fallback_name) == 0) return;
 
     char image_path[MAX_BUFFER_SIZE];
     if ((snprintf(image_path, sizeof(image_path), "%s/grid/%s%s.png", app_folder, mux_dimension, glyph_name) >= 0 &&
@@ -2920,11 +3001,11 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     int nav_next_return = 0;
     if (text_hit > 0) {
         *nav_moved = 1;
-        if (!strcmp(mux_module, "muxtweakgen")) {
+        if (strcmp(mux_module, "muxtweakgen") == 0) {
             nav_next_return = text_hit - !device.BOARD.HAS_HDMI;
-        } else if (!strcmp(mux_module, "muxtweakadv")) {
+        } else if (strcmp(mux_module, "muxtweakadv") == 0) {
             nav_next_return = text_hit - !device.BOARD.HAS_NETWORK;
-        } else if (strcmp(mux_module, "muxconfig") && !config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
+        } else if (strcmp(mux_module, "muxconfig") == 0 && !config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
             nav_next_return = 4;
         } else {
             nav_next_return = text_hit;

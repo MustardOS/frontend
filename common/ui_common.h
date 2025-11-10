@@ -41,7 +41,8 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme);
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
                               struct footer_glyph nav_footer_glyph, int16_t add_hide_flag);
 
-lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha, int16_t add_hide_flag);
+lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha,
+                             int16_t add_hide_flag);
 
 int load_header_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_name,
                       char *image_path, size_t image_size);
@@ -146,7 +147,6 @@ extern lv_obj_t *ui_pnlDownload;
 extern lv_obj_t *ui_barDownload;
 extern lv_obj_t *ui_lblDownload;
 extern lv_obj_t *ui_lblCounter_explore;
-
 
 LV_IMG_DECLARE(ui_img_nothing_png)
 LV_IMG_DECLARE(ui_img_muoskofi_png)
