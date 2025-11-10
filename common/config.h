@@ -122,6 +122,7 @@ struct mux_config {
             int16_t SOUND;
             int16_t CHIME;
             int16_t BGM;
+            int16_t BGMVOL;
             char STARTUP[MAX_BUFFER_SIZE];
             int16_t COLOUR;
             int16_t BRIGHTNESS;

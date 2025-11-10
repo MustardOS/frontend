@@ -113,6 +113,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, CONF_CONFIG_PATH "settings/general/sound", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.CHIME, CONF_CONFIG_PATH "settings/general/chime", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BGM, CONF_CONFIG_PATH "settings/general/bgm", 0)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.BGMVOL, CONF_CONFIG_PATH "settings/general/bgmvol", 35)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.COLOUR, CONF_CONFIG_PATH "settings/general/colour", 32)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)

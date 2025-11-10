@@ -99,6 +99,7 @@
     CUSTOM(ThemeAlternate,  "alternate")       \
     CUSTOM(Animation,       "animation")       \
     CUSTOM(Music,           "music")           \
+    CUSTOM(MusicVolume,     "musicvolume")     \
     CUSTOM(BlackFade,       "blackfade")       \
     CUSTOM(LaunchSwap,      "launch_swap")     \
     CUSTOM(Shuffle,         "shuffle")         \

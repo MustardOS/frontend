@@ -66,6 +66,7 @@ int is_silence_playing = 0;
 Mix_Music *current_bgm = NULL;
 char **bgm_files = NULL;
 size_t bgm_file_count = 0;
+int bgm_volume = 90;
 int current_brightness = 0;
 int current_volume = 0;
 int is_blank = 0;
@@ -2196,6 +2197,16 @@ void free_bgm(void) {
     }
 }
 
+void set_bgm_volume(int volume) {
+    if (current_bgm) {
+        if (volume < 0) volume = 0;
+        if (volume > MIX_MAX_VOLUME) volume = MIX_MAX_VOLUME;
+
+        bgm_volume = volume;
+        Mix_VolumeMusic(bgm_volume);
+    }
+}
+
 void play_random_bgm(void) {
     if (bgm_file_count == 0) return;
 
@@ -2225,6 +2236,7 @@ void play_random_bgm(void) {
     current_bgm = Mix_LoadMUS(path);
     if (current_bgm) {
         is_silence_playing = 0;
+        Mix_VolumeMusic((config.SETTINGS.GENERAL.BGMVOL * MIX_MAX_VOLUME) / 100);
         Mix_PlayMusic(current_bgm, 1);
     }
 }

@@ -44,20 +44,25 @@ void load_lang(struct mux_lang *lang) {
     SYSTEM_FIELD(lang->SYSTEM.FAIL_INT16_LENGTH, "Failed to use int16 - out of range");
 
     // generic common language
+    GENERIC_FIELD(lang->GENERIC.ADD, "Add");
+    GENERIC_FIELD(lang->GENERIC.ADD_COLLECT, "Added to Collection");
+    GENERIC_FIELD(lang->GENERIC.ALLOWED, "Allowed");
     GENERIC_FIELD(lang->GENERIC.BACK, "Back");
+    GENERIC_FIELD(lang->GENERIC.CHANGE, "Change");
+    GENERIC_FIELD(lang->GENERIC.CHANNEL, "Channel");
     GENERIC_FIELD(lang->GENERIC.CHECK, "Check");
-    GENERIC_FIELD(lang->GENERIC.TOP, "Top");
     GENERIC_FIELD(lang->GENERIC.CLEAR, "Clear");
     GENERIC_FIELD(lang->GENERIC.CLOSE, "Close");
     GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
     GENERIC_FIELD(lang->GENERIC.DIRECTORY, "Directory");
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.DOWNLOAD, "Download");
+    GENERIC_FIELD(lang->GENERIC.EDIT, "Edit");
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
-    GENERIC_FIELD(lang->GENERIC.TOGGLE_ALL, "Toggle All");
     GENERIC_FIELD(lang->GENERIC.EXCLUDED, "Excluded");
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
+    GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
     GENERIC_FIELD(lang->GENERIC.INCLUDED, "Included");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
@@ -66,42 +71,38 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.LAUNCH, "Launch");
     GENERIC_FIELD(lang->GENERIC.LOAD, "Load");
     GENERIC_FIELD(lang->GENERIC.LOADING, "Loading…");
-    GENERIC_FIELD(lang->GENERIC.SAVING, "Saving…");
     GENERIC_FIELD(lang->GENERIC.MIGRATE, "Migrate to SD2");
     GENERIC_FIELD(lang->GENERIC.NEW, "New");
+    GENERIC_FIELD(lang->GENERIC.NOGLYPH, "No Glyph");
+    GENERIC_FIELD(lang->GENERIC.NOT_CONNECTED, "Not Connected");
     GENERIC_FIELD(lang->GENERIC.NO_HELP, "No Help Information Found");
     GENERIC_FIELD(lang->GENERIC.NO_INFO, "No Information Found");
-    GENERIC_FIELD(lang->GENERIC.ADD, "Add");
-    GENERIC_FIELD(lang->GENERIC.ADD_COLLECT, "Added to Collection");
+    GENERIC_FIELD(lang->GENERIC.OFFLINE, "Offline");
+    GENERIC_FIELD(lang->GENERIC.ONLINE, "Online");
     GENERIC_FIELD(lang->GENERIC.OPEN, "Open");
     GENERIC_FIELD(lang->GENERIC.PREVIOUS, "Previous");
+    GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting…");
     GENERIC_FIELD(lang->GENERIC.RECURSIVE, "Recursive");
+    GENERIC_FIELD(lang->GENERIC.REFRESH, "Refreshing…");
     GENERIC_FIELD(lang->GENERIC.REMOVE, "Remove");
     GENERIC_FIELD(lang->GENERIC.RESCAN, "Rescan");
     GENERIC_FIELD(lang->GENERIC.RESTORE, "Restore");
+    GENERIC_FIELD(lang->GENERIC.RESTRICTED, "Restricted");
     GENERIC_FIELD(lang->GENERIC.SAVE, "Save");
+    GENERIC_FIELD(lang->GENERIC.SAVING, "Saving…");
     GENERIC_FIELD(lang->GENERIC.SCROLL, "Scroll");
     GENERIC_FIELD(lang->GENERIC.SELECT, "Select");
+    GENERIC_FIELD(lang->GENERIC.SET, "Set");
+    GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down…");
     GENERIC_FIELD(lang->GENERIC.SWITCH_IMAGE, "Preview Image");
     GENERIC_FIELD(lang->GENERIC.SWITCH_INFO, "Information");
     GENERIC_FIELD(lang->GENERIC.SYNC, "Sync to SD1");
+    GENERIC_FIELD(lang->GENERIC.TOGGLE_ALL, "Toggle All");
+    GENERIC_FIELD(lang->GENERIC.TOP, "Top");
     GENERIC_FIELD(lang->GENERIC.UNKNOWN, "Unknown");
-    GENERIC_FIELD(lang->GENERIC.CHANNEL, "Channel");
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
     GENERIC_FIELD(lang->GENERIC.USER_DEFINED, "User Defined");
-    GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting…");
-    GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down…");
-    GENERIC_FIELD(lang->GENERIC.NOT_CONNECTED, "Not Connected");
-    GENERIC_FIELD(lang->GENERIC.EDIT, "Edit");
-    GENERIC_FIELD(lang->GENERIC.CHANGE, "Change");
-    GENERIC_FIELD(lang->GENERIC.ALLOWED, "Allowed");
-    GENERIC_FIELD(lang->GENERIC.RESTRICTED, "Restricted");
-    GENERIC_FIELD(lang->GENERIC.REFRESH, "Refreshing…");
-    GENERIC_FIELD(lang->GENERIC.ONLINE, "Online");
-    GENERIC_FIELD(lang->GENERIC.OFFLINE, "Offline");
-    GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
     GENERIC_FIELD(lang->GENERIC.VISIBLE, "Visible");
-    GENERIC_FIELD(lang->GENERIC.NOGLYPH, "No Glyph");
 
     // muxapp
     SPECIFIC_FIELD(lang->MUXAPP.TITLE, "APPLICATIONS");
@@ -142,6 +143,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.CONFIG, "RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXBACKUP.INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
     SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
     SPECIFIC_FIELD(lang->MUXBACKUP.NAME, "Friendly Name Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.NETWORK, "Network Profiles");
@@ -205,8 +207,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "Connect your device via Wi-Fi, enable web services, or enable USB functions");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your MustardOS setup with user created packages");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and MustardOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language\n\nTranslations supported by Weblate");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
@@ -266,6 +268,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.TITLE, "Background Music");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.VOLUME, "Background Music Volume");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.SET, "Setting Volume");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.GLOBAL, "Global");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.TITLE, "Navigation Sound");
@@ -280,8 +284,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.GRID_MODE_CONTENT, "Allow grid mode for content");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_DOWN, "Download themes from the muOS website");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_DOWN, "Download themes from the MustardOS website");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the MustardOS frontend launcher");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_RES, "Allows for testing different theme resolutions");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_ALT, "Switch between different theme alternatives");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
@@ -292,6 +296,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_HIDE, "Hide system box art images in Content Explorer when theme uses grid mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC_VOLUME, "The volume of the background music currently playing, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
@@ -402,7 +407,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");
-    SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current muOS supporters and extra credits");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current MustardOS supporters and extra credits");
 
     // muxinstall
     SPECIFIC_FIELD(lang->MUXINSTALL.TITLE, "INSTALLER");
@@ -857,10 +862,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HDMI, "HDMI");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.LOOKUP, "Lookup");
-    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.COMPATIBILITY, "Filter to themes for this device or all themes.  All themes can work on any device but if the theme does not implement your devices resolution it will be letterboxed.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.COMPATIBILITY, "Filter to themes for this device or all themes. All themes can work on any device but if the theme does not implement your devices resolution it will be letterboxed.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.GRID, "Filter to themes that support displaying content folders in a tile layout");
-    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.HDMI, "Filter to themes that support HDMI resolution 1280x720.  Themes will still work on HDMI without support for 1280x720 but content will be letterboxed.");
-    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let muOS handle translating text.  Themes that use static images for the main menu will be filtere out.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.HDMI, "Filter to themes that support HDMI resolution 1280x720. Themes will still work on HDMI without support for 1280x720 but content will be letterboxed.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let MustardOS handle translating text. Themes that use static images for the main menu will be filtere out.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LOOKUP, "Filter to theme with a name containing lookup text.");
 
     // muxtimezone
@@ -916,11 +921,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEAT_DELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK, "Toggle the passcode lock - More information can be found on the muOS website");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK, "Toggle the passcode lock - More information can be found on the MustardOS website");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LED, "Toggle the power LED during content launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOM, "Change the default theme used for the next device launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.NET_WAIT, "Toggle a delayed start of RetroArch until a network connection is established");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RA_FREE, "Toggle the forced settings muOS places on RetroArch configurations");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RA_FREE, "Toggle the forced settings MustardOS places on RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VERBOSE, "Toggle startup and shutdown verbose messages used for debugging faults");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USER_INIT, "Toggle the functionality of the user initialisation scripts on device startup");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DPAD, "Toggle the functionality of the power button to switch DPAD mode");
