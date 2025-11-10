@@ -229,7 +229,8 @@ static const char *get_ac_traffic(void) {
 
     static char ac_traffic[64];
     snprintf(ac_traffic, sizeof(ac_traffic), "RX: %.1f MB TX: %.1f MB",
-             rx / 1024.0 / 1024.0, tx / 1024.0 / 1024.0);
+             (double) rx / 1024.0 / 1024.0,
+             (double) tx / 1024.0 / 1024.0);
 
     return ac_traffic;
 }
@@ -252,8 +253,8 @@ static const char *get_tp_traffic(void) {
     if (last_time > 0) {
         double delta = difftime(now, last_time);
         if (delta > 0) {
-            rx_rate = (rx - last_rx) / delta;
-            tx_rate = (tx - last_tx) / delta;
+            rx_rate = (double) (rx - last_rx) / delta;
+            tx_rate = (double) (tx - last_tx) / delta;
         }
     }
 
@@ -270,12 +271,6 @@ static const char *get_tp_traffic(void) {
 }
 
 static void update_network_info() {
-    lv_label_set_text(ui_lblHostnameValue_netinfo, get_hostname());
-    lv_label_set_text(ui_lblMacValue_netinfo, get_mac_address());
-    lv_label_set_text(ui_lblIpValue_netinfo, get_ip_address());
-    lv_label_set_text(ui_lblSsidValue_netinfo, get_ssid());
-    lv_label_set_text(ui_lblGatewayValue_netinfo, get_gateway());
-    lv_label_set_text(ui_lblDnsValue_netinfo, get_dns_servers());
     lv_label_set_text(ui_lblSignalValue_netinfo, get_signal_strength());
     lv_label_set_text(ui_lblChannelValue_netinfo, get_channel_info());
     lv_label_set_text(ui_lblAcTrafficValue_netinfo, get_ac_traffic());
@@ -545,7 +540,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.EDIT, 0},
             {ui_lblNavBGlyph, "",                0},
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
 #define NETINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netinfo, UDATA);
