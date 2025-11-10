@@ -448,3 +448,8 @@ void turbo_time(int toggle, int show_done);
 int bc64(uint64_t n);
 
 char **split_command(const char *cmd, size_t *argc_out);
+
+void free_array(char **array, size_t count);
+
+int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
+                        size_t dir_count, size_t ext_count, size_t *result_count);

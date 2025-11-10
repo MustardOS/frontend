@@ -16,7 +16,7 @@ static void sanitise_ssid_name(char *dest, const char *src) {
 static int remove_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file), RUN_STORAGE_PATH "network/%s.ini",
-            name);
+             name);
 
     if (file_exist(profile_file)) {
         remove(profile_file);
@@ -36,31 +36,31 @@ static void load_profile(char *name) {
 
     mini_t *net_profile = mini_try_load(profile_file);
 
-    write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT,
+    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT,
                        (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0) ? 1 : 0);
 
-    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT,
+    write_text_to_file(CONF_CONFIG_PATH "network/scan", "w", INT,
                        mini_get_int(net_profile, "network", "scan", 0));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR,
                        mini_get_string(net_profile, "network", "pass", ""));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR,
                        mini_get_string(net_profile, "network", "address", ""));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR,
                        mini_get_string(net_profile, "network", "subnet", ""));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR,
                        mini_get_string(net_profile, "network", "gateway", ""));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR,
                        mini_get_string(net_profile, "network", "dns", ""));
 
-    write_text_to_file((CONF_CONFIG_PATH "network/hostname"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "network/hostname", "w", CHAR,
                        mini_get_string(net_profile, "network", "hostname", read_line_char_from("/etc/hostname", 1)));
 
     mini_free(net_profile);
@@ -80,17 +80,17 @@ static int save_profile(void) {
     const char *p_dns = read_all_char_from((CONF_CONFIG_PATH "network/dns"));
     const char *p_hostname = read_line_char_from("/etc/hostname", 1);
 
-    if (!p_ssid || !strlen(p_ssid)) {
+    if (!p_ssid || strlen(p_ssid) == 0) {
         toast_message(lang.MUXNETPROFILE.INVALID_SSID, SHORT);
         return 0;
     }
 
     int type = safe_atoi(p_type);
     if (type) {
-        if (!p_address || !strlen(p_address) ||
-            !p_subnet || !strlen(p_subnet) ||
-            !p_gateway || !strlen(p_gateway) ||
-            !p_dns || !strlen(p_dns)) {
+        if (!p_address || strlen(p_address) == 0 ||
+            !p_subnet || strlen(p_subnet) == 0 ||
+            !p_gateway || strlen(p_gateway) == 0 ||
+            !p_dns || strlen(p_dns) == 0) {
             toast_message(lang.MUXNETPROFILE.INVALID_NETWORK, SHORT);
             return 0;
         }
@@ -168,66 +168,42 @@ static void create_profile_items(void) {
     char profile_path[MAX_BUFFER_SIZE];
     snprintf(profile_path, sizeof(profile_path), RUN_STORAGE_PATH "network");
 
-    const char *profile_directories[] = {
+    const char *dirs[] = {
             profile_path
     };
-    char profile_dir[MAX_BUFFER_SIZE];
 
-    char **file_names = NULL;
+    const char *exts[] = {
+            ".ini"
+    };
+
+    char **files = NULL;
     size_t file_count = 0;
 
-    for (size_t dir_index = 0; dir_index < A_SIZE(profile_directories); ++dir_index) {
-        snprintf(profile_dir, sizeof(profile_dir), "%s/", profile_directories[dir_index]);
-
-        DIR *pd = opendir(profile_dir);
-        if (!pd) continue;
-
-        struct dirent *pf;
-        while ((pf = readdir(pd))) {
-            if (pf->d_type == DT_REG) {
-                char *last_dot = strrchr(pf->d_name, '.');
-                if (last_dot && strcasecmp(last_dot, ".ini") == 0) {
-                    char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (!temp) {
-                        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
-                        free(file_names);
-                        closedir(pd);
-                        return;
-                    }
-                    file_names = temp;
-
-                    char full_app_name[MAX_BUFFER_SIZE];
-                    snprintf(full_app_name, sizeof(full_app_name), "%s%s", profile_dir, pf->d_name);
-                    file_names[file_count] = strdup(full_app_name);
-                    if (!file_names[file_count]) {
-                        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
-                        free(file_names);
-                        closedir(pd);
-                        return;
-                    }
-                    file_count++;
-                }
-            }
-        }
-        closedir(pd);
+    if (scan_directory_list(dirs, exts, &files, A_SIZE(dirs), A_SIZE(exts), &file_count) < 0) {
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        return;
     }
 
-    if (!file_names) return;
-    qsort(file_names, file_count, sizeof(char *), str_compare);
+    if (file_count == 0) {
+        free_array(files, file_count);
+        return;
+    }
+
+    qsort(files, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (size_t i = 0; i < file_count; i++) {
-        if (!file_names[i]) continue;
-        char *base_filename = file_names[i];
+    for (size_t i = 0; i < file_count; ++i) {
+        assert(files[i] != NULL);
+        char *base_filename = files[i];
 
-        static char profile_name[MAX_BUFFER_SIZE];
+        char profile_name[MAX_BUFFER_SIZE];
         snprintf(profile_name, sizeof(profile_name), "%s",
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
-        static char profile_store[MAX_BUFFER_SIZE];
+        char profile_store[MAX_BUFFER_SIZE];
         snprintf(profile_store, sizeof(profile_store), "%s",
                  strip_ext(profile_name));
 
@@ -236,31 +212,30 @@ static void create_profile_items(void) {
         add_item(&items, &item_count, profile_store, profile_store, "", ITEM);
 
         lv_obj_t *ui_pnlProfile = lv_obj_create(ui_pnlContent);
-        if (ui_pnlProfile) {
-            apply_theme_list_panel(ui_pnlProfile);
-            lv_obj_set_user_data(ui_pnlProfile, strdup(profile_store));
+        if (!ui_pnlProfile) continue;
 
-            lv_obj_t *ui_lblProfileItem = lv_label_create(ui_pnlProfile);
-            if (ui_lblProfileItem) apply_theme_list_item(&theme, ui_lblProfileItem, profile_store);
+        apply_theme_list_panel(ui_pnlProfile);
+        lv_obj_set_user_data(ui_pnlProfile, strdup(profile_store));
 
-            lv_obj_t *ui_lblProfileItemGlyph = lv_img_create(ui_pnlProfile);
-            apply_theme_list_glyph(&theme, ui_lblProfileItemGlyph, mux_module, "profile");
+        lv_obj_t *ui_lblProfileItem = lv_label_create(ui_pnlProfile);
+        if (ui_lblProfileItem) apply_theme_list_item(&theme, ui_lblProfileItem, profile_store);
 
-            lv_group_add_obj(ui_group, ui_lblProfileItem);
-            lv_group_add_obj(ui_group_glyph, ui_lblProfileItemGlyph);
-            lv_group_add_obj(ui_group_panel, ui_pnlProfile);
+        lv_obj_t *ui_lblProfileItemGlyph = lv_img_create(ui_pnlProfile);
+        apply_theme_list_glyph(&theme, ui_lblProfileItemGlyph, mux_module, "profile");
 
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblProfileItem, ui_lblProfileItemGlyph, profile_store);
-            apply_text_long_dot(&theme, ui_pnlContent, ui_lblProfileItem);
-        }
+        lv_group_add_obj(ui_group, ui_lblProfileItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblProfileItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlProfile);
 
-        free(base_filename);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblProfileItem, ui_lblProfileItemGlyph, profile_store);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblProfileItem);
     }
 
-    if (ui_count > 0) {
-        lv_obj_update_layout(ui_pnlContent);
-        free(file_names);
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 
+    free_array(files, file_count);
+
+    if (ui_count > 0) {
         if (!is_network_connected()) {
             lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
             lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -356,7 +331,7 @@ static void init_elements(void) {
             {ui_lblNavX,      lang.GENERIC.SAVE,   0},
             {ui_lblNavYGlyph, "",                  1},
             {ui_lblNavY,      lang.GENERIC.REMOVE, 1},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     overlay_display();

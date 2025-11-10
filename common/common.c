@@ -3489,3 +3489,81 @@ char **split_command(const char *cmd, size_t *argc_out) {
 
     return argv;
 }
+
+void free_array(char **array, size_t count) {
+    if (!array) return;
+    for (size_t i = 0; i < count; ++i) free(array[i]);
+    free(array);
+}
+
+int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
+                        size_t dir_count, size_t ext_count, size_t *result_count) {
+    size_t count = 0;
+    size_t capacity = 0;
+    char **list = NULL;
+
+    for (size_t d = 0; d < dir_count; ++d) {
+        DIR *dir = opendir(dirs[d]);
+        if (!dir) continue;
+
+        struct dirent *ent;
+        while ((ent = readdir(dir))) {
+            if (ent->d_type != DT_REG) continue;
+
+            const char *dot = strrchr(ent->d_name, '.');
+            if (!dot) continue;
+
+            int match = 0;
+            for (size_t e = 0; e < ext_count; ++e) {
+                if (strcasecmp(dot, exts[e]) == 0) {
+                    match = 1;
+                    break;
+                }
+            }
+
+            if (!match) continue;
+
+            if (count >= capacity) {
+                size_t new_capacity = (capacity == 0) ? 8 : capacity * 2;
+                char **tmp = realloc(list, new_capacity * sizeof(char *));
+
+                if (!tmp) {
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                    free_array(list, count);
+                    closedir(dir);
+                    return -1;
+                }
+
+                memset(tmp + capacity, 0, (new_capacity - capacity) * sizeof(char *));
+
+                list = tmp;
+                capacity = new_capacity;
+            }
+
+            char full[MAX_BUFFER_SIZE];
+            snprintf(full, sizeof(full), "%s/%s", dirs[d], ent->d_name);
+
+            list[count] = strdup(full);
+            if (!list[count]) {
+                LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
+                free_array(list, count);
+                closedir(dir);
+                return -1;
+            }
+
+            count++;
+        }
+
+        closedir(dir);
+    }
+
+    if (count == 0) {
+        free(list);
+        list = NULL;
+    }
+
+    *results = list;
+    *result_count = count;
+
+    return 0;
+}
