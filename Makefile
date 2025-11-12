@@ -19,7 +19,7 @@ endif
 BIN_DIR = ./bin
 
 MODULE_DIR = module
-MODULES = mufbset muhotkey muterm muxcharge muxcredits muxfrontend muxmessage muxwarn
+MODULES = mufbset muhotkey mulookup muterm muxcharge muxcredits muxfrontend muxmessage muxwarn
 
 DEPENDENCIES = common font lvgl lookup module
 
