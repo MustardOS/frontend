@@ -55,7 +55,7 @@ static void image_refresh(char *image_type) {
                      STORAGE_THEME, image_type);
         }
     } else {
-        if (strcasecmp(image_type, "box") == 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+        if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
             load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dimension, image_type,
                                  image, sizeof(image));
         }
