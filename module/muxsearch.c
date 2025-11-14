@@ -714,9 +714,9 @@ int muxsearch_main(char *dir) {
     ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
 
-    snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
-    snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
-    snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
+    snprintf(SD1, sizeof(SD1), "%s/ROMS", device.STORAGE.ROM.MOUNT);
+    snprintf(SD2, sizeof(SD2), "%s/ROMS", device.STORAGE.SDCARD.MOUNT);
+    snprintf(E_USB, sizeof(E_USB), "%s/ROMS", device.STORAGE.USB.MOUNT);
 
     init_elements();
 
