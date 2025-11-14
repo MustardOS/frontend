@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_z_table[] = {
         {"zaryavos",   "Zarya Vostoka"},
         {"zarzon",     "Zarzon"},
         {"zaviga",     "Zaviga"},
@@ -91,11 +86,13 @@ static const LookupName lookup_table[] = {
         {"zzyzzyxx2",  "Zzyzzyxx (set 2)"},
 };
 
+const size_t lookup_z_count = A_SIZE(lookup_z_table);
+
 const char *lookup_z(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
+    for (size_t i = 0; i < lookup_z_count; i++) {
+        if (strcmp(lookup_z_table[i].name, name) == 0) {
+            return lookup_z_table[i].value;
         }
     }
     return NULL;
@@ -103,10 +100,26 @@ const char *lookup_z(const char *name) {
 
 const char *r_lookup_z(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
+    for (size_t i = 0; i < lookup_z_count; i++) {
+        if (strstr(lookup_z_table[i].value, value)) {
+            return lookup_z_table[i].name;
         }
     }
     return NULL;
+}
+
+void lookup_z_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_z_count; i++) {
+        if (strcasestr(lookup_z_table[i].name, term))
+            emit(lookup_z_table[i].name, lookup_z_table[i].value, udata);
+    }
+}
+
+void r_lookup_z_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_z_count; i++) {
+        if (strcasestr(lookup_z_table[i].value, term))
+            emit(lookup_z_table[i].name, lookup_z_table[i].value, udata);
+    }
 }

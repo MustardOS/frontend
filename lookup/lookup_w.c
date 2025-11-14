@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_w_table[] = {
         {"wacko",      "Wacko"},
         {"waidrive",   "WaiWai Drive"},
         {"wakuwak7",   "Waku Waku 7"},
@@ -361,11 +356,13 @@ static const LookupName lookup_table[] = {
         {"wyvernwga",  "Wyvern Wings (set 2)"},
 };
 
+const size_t lookup_w_count = A_SIZE(lookup_w_table);
+
 const char *lookup_w(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
+    for (size_t i = 0; i < lookup_w_count; i++) {
+        if (strcmp(lookup_w_table[i].name, name) == 0) {
+            return lookup_w_table[i].value;
         }
     }
     return NULL;
@@ -373,10 +370,26 @@ const char *lookup_w(const char *name) {
 
 const char *r_lookup_w(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
+    for (size_t i = 0; i < lookup_w_count; i++) {
+        if (strstr(lookup_w_table[i].value, value)) {
+            return lookup_w_table[i].name;
         }
     }
     return NULL;
+}
+
+void lookup_w_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_w_count; i++) {
+        if (strcasestr(lookup_w_table[i].name, term))
+            emit(lookup_w_table[i].name, lookup_w_table[i].value, udata);
+    }
+}
+
+void r_lookup_w_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_w_count; i++) {
+        if (strcasestr(lookup_w_table[i].value, term))
+            emit(lookup_w_table[i].name, lookup_w_table[i].value, udata);
+    }
 }

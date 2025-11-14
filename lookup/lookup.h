@@ -2,149 +2,92 @@
 
 #include <stddef.h>
 
-const char *lookup_0(const char *name);
+typedef struct {
+    const char *name;
+    const char *value;
+} LookupName;
 
-const char *lookup_1(const char *name);
+#define DECLARE_LOOKUP_BLOCK(X)                                                \
+    extern const LookupName lookup_##X##_table[];                              \
+    extern const size_t lookup_##X##_count;                                    \
+    const char *lookup_##X(const char *name);                                  \
+    const char *r_lookup_##X(const char *value);                               \
+    void lookup_##X##_multi(const char *term, void (*emit)(const char *name,   \
+                            const char *value, void *udata), void *udata);     \
+    void r_lookup_##X##_multi(const char *term, void (*emit)(const char *name, \
+                              const char *value, void *udata), void *udata);
 
-const char *lookup_2(const char *name);
+DECLARE_LOOKUP_BLOCK(0)
 
-const char *lookup_3(const char *name);
+DECLARE_LOOKUP_BLOCK(1)
 
-const char *lookup_4(const char *name);
+DECLARE_LOOKUP_BLOCK(2)
 
-const char *lookup_5(const char *name);
+DECLARE_LOOKUP_BLOCK(3)
 
-const char *lookup_6(const char *name);
+DECLARE_LOOKUP_BLOCK(4)
 
-const char *lookup_7(const char *name);
+DECLARE_LOOKUP_BLOCK(5)
 
-const char *lookup_8(const char *name);
+DECLARE_LOOKUP_BLOCK(6)
 
-const char *lookup_9(const char *name);
+DECLARE_LOOKUP_BLOCK(7)
 
-const char *lookup_a(const char *name);
+DECLARE_LOOKUP_BLOCK(8)
 
-const char *lookup_b(const char *name);
+DECLARE_LOOKUP_BLOCK(9)
 
-const char *lookup_c(const char *name);
+DECLARE_LOOKUP_BLOCK(a)
 
-const char *lookup_d(const char *name);
+DECLARE_LOOKUP_BLOCK(b)
 
-const char *lookup_e(const char *name);
+DECLARE_LOOKUP_BLOCK(c)
 
-const char *lookup_f(const char *name);
+DECLARE_LOOKUP_BLOCK(d)
 
-const char *lookup_g(const char *name);
+DECLARE_LOOKUP_BLOCK(e)
 
-const char *lookup_h(const char *name);
+DECLARE_LOOKUP_BLOCK(f)
 
-const char *lookup_i(const char *name);
+DECLARE_LOOKUP_BLOCK(g)
 
-const char *lookup_j(const char *name);
+DECLARE_LOOKUP_BLOCK(h)
 
-const char *lookup_k(const char *name);
+DECLARE_LOOKUP_BLOCK(i)
 
-const char *lookup_l(const char *name);
+DECLARE_LOOKUP_BLOCK(j)
 
-const char *lookup_m(const char *name);
+DECLARE_LOOKUP_BLOCK(k)
 
-const char *lookup_n(const char *name);
+DECLARE_LOOKUP_BLOCK(l)
 
-const char *lookup_o(const char *name);
+DECLARE_LOOKUP_BLOCK(m)
 
-const char *lookup_p(const char *name);
+DECLARE_LOOKUP_BLOCK(n)
 
-const char *lookup_q(const char *name);
+DECLARE_LOOKUP_BLOCK(o)
 
-const char *lookup_r(const char *name);
+DECLARE_LOOKUP_BLOCK(p)
 
-const char *lookup_s(const char *name);
+DECLARE_LOOKUP_BLOCK(q)
 
-const char *lookup_t(const char *name);
+DECLARE_LOOKUP_BLOCK(r)
 
-const char *lookup_u(const char *name);
+DECLARE_LOOKUP_BLOCK(s)
 
-const char *lookup_v(const char *name);
+DECLARE_LOOKUP_BLOCK(t)
 
-const char *lookup_w(const char *name);
+DECLARE_LOOKUP_BLOCK(u)
 
-const char *lookup_x(const char *name);
+DECLARE_LOOKUP_BLOCK(v)
 
-const char *lookup_y(const char *name);
+DECLARE_LOOKUP_BLOCK(w)
 
-const char *lookup_z(const char *name);
+DECLARE_LOOKUP_BLOCK(x)
 
-const char *r_lookup_0(const char *value);
+DECLARE_LOOKUP_BLOCK(y)
 
-const char *r_lookup_1(const char *value);
-
-const char *r_lookup_2(const char *value);
-
-const char *r_lookup_3(const char *value);
-
-const char *r_lookup_4(const char *value);
-
-const char *r_lookup_5(const char *value);
-
-const char *r_lookup_6(const char *value);
-
-const char *r_lookup_7(const char *value);
-
-const char *r_lookup_8(const char *value);
-
-const char *r_lookup_9(const char *value);
-
-const char *r_lookup_a(const char *value);
-
-const char *r_lookup_b(const char *value);
-
-const char *r_lookup_c(const char *value);
-
-const char *r_lookup_d(const char *value);
-
-const char *r_lookup_e(const char *value);
-
-const char *r_lookup_f(const char *value);
-
-const char *r_lookup_g(const char *value);
-
-const char *r_lookup_h(const char *value);
-
-const char *r_lookup_i(const char *value);
-
-const char *r_lookup_j(const char *value);
-
-const char *r_lookup_k(const char *value);
-
-const char *r_lookup_l(const char *value);
-
-const char *r_lookup_m(const char *value);
-
-const char *r_lookup_n(const char *value);
-
-const char *r_lookup_o(const char *value);
-
-const char *r_lookup_p(const char *value);
-
-const char *r_lookup_q(const char *value);
-
-const char *r_lookup_r(const char *value);
-
-const char *r_lookup_s(const char *value);
-
-const char *r_lookup_t(const char *value);
-
-const char *r_lookup_u(const char *value);
-
-const char *r_lookup_v(const char *value);
-
-const char *r_lookup_w(const char *value);
-
-const char *r_lookup_x(const char *value);
-
-const char *r_lookup_y(const char *value);
-
-const char *r_lookup_z(const char *value);
+DECLARE_LOOKUP_BLOCK(z)
 
 const char *lookup(const char *name);
 
