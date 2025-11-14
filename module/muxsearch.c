@@ -342,7 +342,7 @@ static void process_results(const char *json_results) {
                 add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
                          folder_items[i].display_name, folder_items[i].extra_data, ITEM);
 
-                gen_result("content", strip_ext(folder_items[i].display_name),
+                gen_result("content", folder_items[i].display_name,
                            "content", folder_items[i].extra_data);
             }
         }
@@ -367,7 +367,7 @@ static void process_results(const char *json_results) {
                                               t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
             char display_name[MAX_BUFFER_SIZE];
             snprintf(display_name, sizeof(display_name), "%s",
-                     strip_ext(t_all_items[i].display_name));
+                     t_all_items[i].display_name);
             adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             new_item->display_name = strdup(display_name);
         }
