@@ -52,8 +52,8 @@ static void init_navigation_group(void) {
     }
 }
 
-static void image_refresh(char *image_type) {
-    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
+static void image_refresh() {
+    if (config.VISUAL.BOX_ART == 8) return;
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
@@ -80,17 +80,17 @@ static void image_refresh(char *image_type) {
 
     if (strlen(core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 STORAGE_THEME, mux_dimension, image_type);
+                 STORAGE_THEME, mux_dimension, "box");
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     STORAGE_THEME, image_type);
+                     STORAGE_THEME, "box");
         }
     } else {
-        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, image_type,
+        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, "box",
                              image, sizeof(image));
     }
 
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
+    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", "box", image)
 
     if (strcasecmp(box_image_previous_path, image) != 0) {
         char artwork_config_path[MAX_BUFFER_SIZE];
@@ -203,7 +203,7 @@ static void list_nav_move(int steps, int direction) {
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
 
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
-        image_refresh("box");
+        image_refresh();
         set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     } else {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
@@ -437,6 +437,7 @@ static void handle_confirm(void) {
         }
 
         toast_message(lang.MUXSEARCH.SEARCH, FOREVER);
+        refresh_screen(ui_screen);
 
         if (element_focused == ui_lblSearchLocal_search) {
             const char *args[] = {(OPT_PATH "script/mux/find.sh"),
