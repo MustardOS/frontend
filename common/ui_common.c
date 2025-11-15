@@ -842,8 +842,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_disp_load_scr(ui_screen_container);
 }
 
-int ui_common_check(void) {
-    if (config.BOOT.DEVICE_MODE || config.BOOT.FACTORY_RESET) return 0;
+int ui_common_check(int mode) {
+    if ((config.BOOT.DEVICE_MODE && mode == 0) || config.BOOT.FACTORY_RESET) return 0;
 
     progress_onscreen = 1;
     return 1;
@@ -906,7 +906,7 @@ static int blank_check(void) {
 }
 
 static void adjust_brightness(int direction) {
-    if (!ui_common_check() || !progress_onscreen) return;
+    if (!ui_common_check(0) || !progress_onscreen) return;
 
     int inc_bright = config.SETTINGS.ADVANCED.INCBRIGHT;
 
@@ -934,7 +934,7 @@ static void adjust_brightness(int direction) {
 }
 
 static void adjust_volume(int direction) {
-    if (!ui_common_check() || !progress_onscreen) return;
+    if (!ui_common_check(config.SETTINGS.HDMI.AUDIO) || !progress_onscreen) return;
 
     int inc_volume = config.SETTINGS.ADVANCED.INCVOLUME;
 
