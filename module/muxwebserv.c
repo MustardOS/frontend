@@ -50,7 +50,7 @@ static void save_web_options(void) {
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/web/service.sh"), NULL};
-        run_exec(args, A_SIZE(args), 1, 0, NULL);
+        run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 
         refresh_config = 1;
     }

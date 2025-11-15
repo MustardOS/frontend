@@ -713,7 +713,7 @@ static void handle_x(void) {
     usleep(256);
 
     const char *args[] = {(OPT_PATH "script/mount/union.sh"), "restart", NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL);
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     load_mux("explore");

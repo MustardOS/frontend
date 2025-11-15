@@ -442,12 +442,12 @@ static void handle_confirm(void) {
             const char *args[] = {(OPT_PATH "script/mux/find.sh"),
                                   str_trim(lookup_value), rom_dir,
                                   NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL);
+            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
         } else {
             const char *args[] = {(OPT_PATH "script/mux/find.sh"),
                                   str_trim(lookup_value), SD1, SD2, E_USB,
                                   NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL);
+            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);

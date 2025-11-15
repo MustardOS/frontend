@@ -374,7 +374,7 @@ static void handle_keyboard_OK_press(void) {
         write_text_to_file("/etc/hostname", "w", CHAR, new_hostname);
 
         const char *hn_set_args[] = {"hostname", new_hostname, NULL};
-        run_exec(hn_set_args, A_SIZE(hn_set_args), 1, 0, NULL);
+        run_exec(hn_set_args, A_SIZE(hn_set_args), 1, 0, NULL, NULL);
     }
 
     clear_osk:
@@ -443,7 +443,7 @@ static void handle_a(void) {
         }
 
         const char *mac_change_args[] = {OPT_PATH "script/web/macchange.sh", NULL};
-        run_exec(mac_change_args, A_SIZE(mac_change_args), 1, 0, NULL);
+        run_exec(mac_change_args, A_SIZE(mac_change_args), 1, 0, NULL, NULL);
     }
 }
 

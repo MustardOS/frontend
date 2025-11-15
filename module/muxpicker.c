@@ -261,7 +261,7 @@ static void handle_a(void) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
             if (config.SETTINGS.GENERAL.BGM == 2 && strcasecmp(picker_type, "/theme") == 0) play_silence_bgm();
 
-            run_exec(exec, exec_count, 0, 1, NULL);
+            run_exec(exec, exec_count, 0, 1, NULL, NULL);
         }
         free(exec);
     }
@@ -380,7 +380,7 @@ static void handle_y(void) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1, NULL);
+        run_exec(exec, exec_count, 0, 1, NULL, NULL);
     }
     free(exec);
 

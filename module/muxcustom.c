@@ -373,7 +373,7 @@ static void save_custom_options(char *next_screen) {
             if (file_exist(rgb_script)) {
                 if (device.BOARD.RGB && config.SETTINGS.GENERAL.RGB) {
                     const char *args[] = {rgb_script, NULL};
-                    run_exec(args, A_SIZE(args), 0, 1, NULL);
+                    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
                 }
 
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
@@ -408,7 +408,7 @@ static void save_custom_options(char *next_screen) {
         refresh_config = 1;
 
         const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
+        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
     }
 
     if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);

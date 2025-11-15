@@ -166,7 +166,7 @@ void extract_archive(char *filename, char *screen) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1, NULL);
+        run_exec(exec, exec_count, 0, 1, NULL, NULL);
     }
     free(exec);
 }
@@ -178,7 +178,7 @@ void update_bootlogo(char *next_screen) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1, NULL);
+        run_exec(exec, exec_count, 0, 1, NULL, NULL);
     }
     free(exec);
 }
@@ -2700,7 +2700,10 @@ void kiosk_denied(void) {
     }
 }
 
-void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file) {
+static pid_t pending_exec_pid = -1;
+static exec_callback pending_exec_cb = NULL;
+
+void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file, exec_callback cb) {
     const char *san[size];
 
     if (turbo) turbo_time(1, 0);
@@ -2723,7 +2726,7 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
 
     pid_t pid = fork();
     if (pid == 0) {
-        if (background) {
+        if (background && cb == NULL) {
             // If we run in the background lets disconnect from the parent...
             setsid();
 
@@ -2753,14 +2756,42 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
 
         execvp(san[0], (char *const *) san);
         _exit(EXIT_FAILURE);
-    } else if (pid > 0) {
+    }
+
+    if (pid > 0) {
         // Foreground process, block until child finishes execution
         // Parent process does not wait for background process
         // Destroy the intermediate child immediately to avoid zombies... oh no
-        waitpid(pid, NULL, 0);
+        if (!background) {
+            waitpid(pid, NULL, 0);
+        } else {
+            pending_exec_pid = pid;
+            pending_exec_cb = cb;
+        }
     }
 
     if (turbo) turbo_time(0, 0);
+}
+
+void exec_watch_task() {
+    if (pending_exec_pid <= 0) return;
+
+    int status;
+    pid_t r = waitpid(pending_exec_pid, &status, WNOHANG);
+    if (r == 0) return;
+
+    if (r < 0) {
+        pending_exec_pid = -1;
+        pending_exec_cb = NULL;
+        return;
+    }
+
+    int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+
+    if (pending_exec_cb) pending_exec_cb(exit_code);
+
+    pending_exec_pid = -1;
+    pending_exec_cb = NULL;
 }
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line) {

@@ -81,7 +81,7 @@ static void set_setting_value(const char *script_name, int value, int offset) {
         block_input = 1;
 
         const char *args[] = {script_path, value_str, NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
+        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
         block_input = 0;
     }
@@ -132,7 +132,7 @@ static void save_tweak_options(void) {
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
+        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
         refresh_config = 1;
     }

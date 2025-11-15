@@ -43,6 +43,8 @@ extern char *show_noicon_hide[];
 
 #define SOUND_TOTAL 12
 
+typedef void (*exec_callback)(int exit_code);
+
 struct ImageSettings {
     char *image_path;
     int16_t align;
@@ -375,7 +377,9 @@ int is_carousel_grid_mode();
 
 void kiosk_denied();
 
-void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file);
+void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file, exec_callback cb);
+
+void exec_watch_task();
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line);
 

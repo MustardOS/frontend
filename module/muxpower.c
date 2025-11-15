@@ -211,7 +211,7 @@ static int save_power_options(void) {
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};
-        run_exec(args, A_SIZE(args), 0, 0, NULL);
+        run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
 
         refresh_config = 1;
         refresh_device = 1;
