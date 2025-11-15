@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <dirent.h>
 #include <linux/limits.h>
 
 #include "../common/common.h"
 #include "../lookup/lookup.h"
 #include "../common/json/json.h"
+
+#define LOOKUP_DIR_PATH OPT_SHARE_PATH  "lookup/"
+#define LOOKUP_INTERNAL LOOKUP_DIR_PATH "internal.txt"
+#define LOOKUP_GLOBAL   LOOKUP_DIR_PATH "global.txt"
 
 #define FOLDER_JSON INFO_NAM_PATH "/%s.json"
 #define GLOBAL_JSON INFO_NAM_PATH "/global.json"
@@ -15,8 +20,14 @@ static char *json_cache_data = NULL;
 static struct json json_cache_root;
 
 static char term_lower[MAX_BUFFER_SIZE];
-char *term = NULL;
-char *folder = NULL;
+static char *term = NULL;
+static char *folder = NULL;
+
+static int gen_mode = 0;
+static int gen_internal = 0;
+static int gen_global = 0;
+static int gen_folder = 0;
+static int gen_all = 0;
 
 struct result_item {
     char *name;
@@ -68,7 +79,10 @@ static void results_push(struct results *r, const char *name, const char *value)
 }
 
 static int load_json_cache(const char *path) {
-    if (json_cache_data) return 1;
+    if (json_cache_data) {
+        free(json_cache_data);
+        json_cache_data = NULL;
+    }
 
     json_cache_data = read_all_char_from(path);
     if (!json_cache_data) return 0;
@@ -219,22 +233,161 @@ static void emit_pair(const char *name, const char *value, void *ud) {
     results_push((struct results *) ud, name, value);
 }
 
+static void write_results_to_file(struct results *r, const char *path) {
+    FILE *fp = fopen(path, "w");
+    if (!fp) return;
+
+    term = "";
+    qsort(r->items, r->count, sizeof(struct result_item), cmp_items);
+    dedupe_results(r);
+
+    for (size_t i = 0; i < r->count; i++) {
+        if (!r->items[i].name || !r->items[i].value) continue;
+
+        char id_lc[MAX_BUFFER_SIZE];
+        size_t j = 0;
+
+        for (; r->items[i].name[j] && j < sizeof(id_lc) - 1; j++) {
+            id_lc[j] = tolower((unsigned char) r->items[i].name[j]);
+        }
+
+        id_lc[j] = 0;
+        fprintf(fp, "%s|%s\n", id_lc, r->items[i].value);
+    }
+
+    fclose(fp);
+}
+
+static void generate_internal(void) {
+    struct results r;
+    results_reserve(&r);
+
+    for (size_t j = 0; j < A_SIZE(multi_table); j++) {
+        multi_table[j].forward_multi("", emit_pair, &r);
+        multi_table[j].reverse_multi("", emit_pair, &r);
+    }
+
+    write_results_to_file(&r, LOOKUP_INTERNAL);
+}
+
+static void generate_global(void) {
+    struct results r;
+    results_reserve(&r);
+
+    if (load_json_cache(GLOBAL_JSON)) {
+        lookup_key(&r);
+        lookup_value(&r);
+    }
+
+    write_results_to_file(&r, LOOKUP_GLOBAL);
+}
+
+static void generate_folder(const char *folder_name) {
+    char f_path[PATH_MAX];
+    snprintf(f_path, sizeof(f_path), LOOKUP_DIR_PATH "%s.txt", folder_name);
+
+    char j_path[PATH_MAX];
+    snprintf(j_path, sizeof(j_path), FOLDER_JSON, folder_name);
+
+    struct results r;
+    results_reserve(&r);
+
+    if (load_json_cache(j_path)) {
+        lookup_key(&r);
+        lookup_value(&r);
+    }
+
+    write_results_to_file(&r, f_path);
+}
+
+static void generate_all(void) {
+    generate_internal();
+    generate_global();
+
+    DIR *d = opendir(INFO_NAM_PATH);
+    if (!d) return;
+
+    struct dirent *e;
+    while ((e = readdir(d))) {
+        if (!strstr(e->d_name, ".json")) continue;
+        if (!strcmp(e->d_name, "global.json")) continue;
+        if (!strcmp(e->d_name, "folder.json")) continue;
+
+        char folder_name[MAX_BUFFER_SIZE];
+        strncpy(folder_name, e->d_name, sizeof(folder_name));
+        folder_name[strlen(folder_name) - 5] = '\0';
+
+        generate_folder(folder_name);
+    }
+
+    closedir(d);
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s [--folder|-f <folder>] <term>\n", argv[0]);
+        fprintf(stderr,
+                "Usage: %s [--gen-all] [--gen-internal] [--gen-global]\n"
+                "          [--gen-folder <folder>] [--folder <folder>] <term>\n",
+                argv[0]);
         return 1;
     }
 
     for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--folder")) {
+        if (!strcmp(argv[i], "--gen-all")) {
+            gen_all = 1;
+            gen_mode = 1;
+            continue;
+        }
+        if (!strcmp(argv[i], "--gen-internal")) {
+            gen_internal = 1;
+            gen_mode = 1;
+            continue;
+        }
+        if (!strcmp(argv[i], "--gen-global")) {
+            gen_global = 1;
+            gen_mode = 1;
+            continue;
+        }
+        if (!strcmp(argv[i], "--gen-folder")) {
+            if (i + 1 < argc) {
+                folder = argv[++i];
+                gen_folder = 1;
+                gen_mode = 1;
+            } else {
+                fprintf(stderr, "Error: missing folder name for --gen-folder\n");
+                return 1;
+            }
+            continue;
+        }
+        if (!strcmp(argv[i], "--folder") || !strcmp(argv[i], "-f")) {
             if (i + 1 < argc) folder = argv[++i];
             else {
                 fprintf(stderr, "Error: missing argument for --folder\n");
                 return 1;
             }
-        } else {
-            term = argv[i];
+            continue;
         }
+        term = argv[i];
+    }
+
+    if (gen_mode) {
+        if (gen_all) {
+            generate_all();
+            return 0;
+        }
+        if (gen_internal) {
+            generate_internal();
+            return 0;
+        }
+        if (gen_global) {
+            generate_global();
+            return 0;
+        }
+        if (gen_folder && folder) {
+            generate_folder(folder);
+            return 0;
+        }
+        return 0;
     }
 
     if (!term) {
