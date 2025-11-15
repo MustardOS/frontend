@@ -12,6 +12,8 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 #define UI_DHCP (UI_COUNT - 4)
 #define UI_STATIC UI_COUNT
 
+static int ui_network_locked = 0;
+
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
@@ -73,6 +75,11 @@ static void get_current_ip(void) {
     } else {
         can_scan_check(1);
     }
+}
+
+static void net_connect_check() {
+    ui_network_locked = 0;
+    get_current_ip();
 }
 
 static void restore_network_values(void) {
@@ -174,10 +181,16 @@ static void list_nav_move(int steps, int direction) {
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblType_network) {
-        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    if (!is_network_connected()) {
+        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+        if (element_focused == ui_lblType_network) {
+            lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        } else {
+            lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
     } else {
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -303,7 +316,7 @@ static void handle_confirm(void) {
     if (element_focused == ui_lblConnect_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_CONFIRM);
-            run_exec(net_d_args, A_SIZE(net_d_args), 0, 1, NULL);
+            run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
             can_scan_check(1);
         } else {
             int valid_info = 0;
@@ -344,13 +357,12 @@ static void handle_confirm(void) {
                 lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.CONNECT_TRY);
                 lv_task_handler();
 
-                run_exec(pass_args, A_SIZE(pass_args), 0, 1, NULL);
+                ui_network_locked = 1;
+                run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
                 lv_task_handler();
 
-                run_exec(net_c_args, A_SIZE(net_c_args), 0, 1, NULL);
+                run_exec(net_c_args, A_SIZE(net_c_args), 1, 0, NULL, net_connect_check);
                 lv_task_handler();
-
-                get_current_ip();
             } else {
                 play_sound(SND_ERROR);
                 toast_message(lang.MUXNETWORK.CHECK, SHORT);
@@ -396,6 +408,8 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
+    if (ui_network_locked) return;
+
     play_sound(SND_BACK);
 
     toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -409,6 +423,8 @@ static void handle_back(void) {
 }
 
 static void handle_scan(void) {
+    if (ui_network_locked) return;
+
     if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
         play_sound(SND_CONFIRM);
 
@@ -423,10 +439,12 @@ static void handle_scan(void) {
 }
 
 static void handle_profiles(void) {
+    if (ui_network_locked) return;
+
     play_sound(SND_CONFIRM);
 
     save_network_config();
-    run_exec(pass_args, A_SIZE(pass_args), 0, 1, NULL);
+    run_exec(pass_args, A_SIZE(pass_args), 0, 1, NULL, NULL);
 
     load_mux("net_profile");
 
@@ -437,7 +455,7 @@ static void handle_profiles(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? handle_keyboard_press() : handle_confirm();
 }
@@ -453,6 +471,8 @@ static void handle_b(void) {
         return;
     }
 
+    if (ui_network_locked) return;
+
     if (key_show) {
         close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry :
                   key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
@@ -463,13 +483,13 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? key_backspace(ui_txtEntry_network) : handle_scan();
 }
 
 static void handle_y(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? key_swap() : handle_profiles();
 }
@@ -608,6 +628,7 @@ int muxnetwork_main(void) {
     init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1);
     can_scan_check(0);
 
+    init_timer(exec_watch_task, NULL);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
