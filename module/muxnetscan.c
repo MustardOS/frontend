@@ -4,16 +4,6 @@ static void show_help(void) {
     show_info_box(lang.MUXNETSCAN.TITLE, lang.MUXNETSCAN.HELP, 0);
 }
 
-static void scan_networks(void) {
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.SCAN);
-
-    lv_obj_invalidate(ui_screen);
-    lv_refr_now(NULL);
-
-    const char *args[] = {(OPT_PATH "script/web/ssid.sh"), NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL);
-}
-
 static void list_nav_move(int steps, int direction) {
     if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
@@ -43,44 +33,6 @@ static void list_nav_prev(int steps) {
 
 static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
-}
-
-static void create_network_items(void) {
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    char *scan_file = "/tmp/net_scan";
-    FILE *file = fopen(scan_file, "r");
-    if (!file || strcmp(read_line_char_from(scan_file, 1), "[!]") == 0) return;
-
-    char ssid[40];
-    while (fgets(ssid, sizeof(ssid), file)) {
-        str_remchar(ssid, '\n');
-        if (strlen(ssid) == 0) continue;
-
-        ui_count++;
-
-        lv_obj_t *ui_pnlNetScan = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlNetScan);
-        lv_obj_set_user_data(ui_pnlNetScan, strdup(str_nonew(ssid)));
-
-        lv_obj_t *ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
-        apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid));
-
-        lv_obj_t *ui_lblNetScanGlyph = lv_img_create(ui_pnlNetScan);
-        apply_theme_list_glyph(&theme, ui_lblNetScanGlyph, mux_module, "netscan");
-
-        lv_group_add_obj(ui_group, ui_lblNetScanItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblNetScanGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlNetScan);
-
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblNetScanItem, ui_lblNetScanGlyph, str_nonew(ssid));
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblNetScanItem);
-    }
-    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-    list_nav_next(0);
-    fclose(file);
 }
 
 static void handle_a(void) {
@@ -126,6 +78,53 @@ static void handle_rescan(void) {
 
     close_input();
     mux_input_stop();
+}
+
+static void create_network_items(void) {
+    lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.SCAN);
+
+    lv_obj_invalidate(ui_screen);
+    lv_refr_now(NULL);
+
+    const char *args[] = {(OPT_PATH "script/web/ssid.sh"), NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    ui_group = lv_group_create();
+    ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
+
+    char *scan_file = "/tmp/net_scan";
+    FILE *file = fopen(scan_file, "r");
+    if (!file || strcmp(read_line_char_from(scan_file, 1), "[!]") == 0) return;
+
+    char ssid[40];
+    while (fgets(ssid, sizeof(ssid), file)) {
+        str_remchar(ssid, '\n');
+        if (strlen(ssid) == 0) continue;
+
+        ui_count++;
+
+        lv_obj_t *ui_pnlNetScan = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(ui_pnlNetScan);
+        lv_obj_set_user_data(ui_pnlNetScan, strdup(str_nonew(ssid)));
+
+        lv_obj_t *ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
+        apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid));
+
+        lv_obj_t *ui_lblNetScanGlyph = lv_img_create(ui_pnlNetScan);
+        apply_theme_list_glyph(&theme, ui_lblNetScanGlyph, mux_module, "netscan");
+
+        lv_group_add_obj(ui_group, ui_lblNetScanItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblNetScanGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlNetScan);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblNetScanItem, ui_lblNetScanGlyph, str_nonew(ssid));
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblNetScanItem);
+    }
+    fclose(file);
+
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+    list_nav_next(0);
 }
 
 static void handle_help(void) {
@@ -189,7 +188,6 @@ int muxnetscan_main(void) {
 
     init_fonts();
 
-    scan_networks();
     create_network_items();
 
     init_elements();
