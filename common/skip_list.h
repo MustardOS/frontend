@@ -16,7 +16,7 @@ void init_skiplist(SkipList *sl);
 
 void free_skiplist(SkipList *sl);
 
-void add_to_skiplist(SkipList *sl, const char *name);
+void add_to_skiplist(SkipList *sl, const char *dir, const char *name);
 
 bool in_skiplist(const SkipList *sl, const char *name);
 
