@@ -21,7 +21,9 @@ void free_skiplist(SkipList *sl) {
     sl->capacity = 0;
 }
 
-void add_to_skiplist(SkipList *sl, const char *name) {
+void add_to_skiplist(SkipList *sl, const char *dir, const char *name) {
+    char full_path[MAX_BUFFER_SIZE];
+    snprintf(full_path, sizeof(full_path), "%s/%s", dir, name);
     if (sl->count == sl->capacity) {
         size_t new_capacity = sl->capacity == 0 ? 8 : sl->capacity * 2;
         char **new_items = realloc(sl->items, new_capacity * sizeof(char*));
@@ -32,7 +34,7 @@ void add_to_skiplist(SkipList *sl, const char *name) {
         sl->items = new_items;
         sl->capacity = new_capacity;
     }
-    sl->items[sl->count] = strdup(name);
+    sl->items[sl->count] = strdup(full_path);
     if (!sl->items[sl->count]) {
         perror("strdup");
         exit(EXIT_FAILURE);
@@ -94,7 +96,7 @@ void process_cue_file(char *dir, const char *filename, SkipList *sl) {
             strncpy(name, start, len);
             name[len] = '\0';
 
-            add_to_skiplist(sl, name);
+            add_to_skiplist(sl, dir, name);
             free(name);
         }
     }
@@ -132,7 +134,7 @@ void process_gdi_file(char *dir, const char *filename, SkipList *sl) {
             strncpy(name, start, len);
             name[len] = '\0';
 
-            add_to_skiplist(sl, name);
+            add_to_skiplist(sl, dir, name);
             free(name);
         }
     }
@@ -154,7 +156,7 @@ void process_m3u_file(char *dir, const char *filename, SkipList *sl) {
         // remove newline
         line[strcspn(line, "\r\n")] = '\0';
         if (line[0] != '\0') {
-            add_to_skiplist(sl, line);
+            add_to_skiplist(sl, dir, line);
         }
     }
     fclose(f);

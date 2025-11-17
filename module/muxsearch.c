@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxsearch.h"
+#include "../common/skip_list.h"
 
 #define UI_COUNT 3
 
@@ -335,16 +336,34 @@ static void process_results(const char *json_results) {
 
         sort_items(folder_items, folder_item_count);
 
-        for (size_t i = 0; i < folder_item_count; i++) {
-            if (folder_items[i].content_type == ITEM) {
-                add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
-                         folder_items[i].display_name, folder_items[i].extra_data, ITEM);
 
-                gen_result("content", folder_items[i].display_name,
-                           "content", folder_items[i].extra_data);
+        SkipList skiplist;
+        init_skiplist(&skiplist);
+        for (int i = 0; i < folder_item_count; i++) {
+            char *item_dir = strip_dir(folder_items[i].extra_data);
+            char *item_file = get_last_dir(strdup(folder_items[i].extra_data));
+            if (ends_with(item_file, ".cue")) {
+                process_cue_file(item_dir, item_file, &skiplist);
+            } else if (ends_with(item_file, ".gdi")) {
+                process_gdi_file(item_dir, item_file, &skiplist);
+            } else if (ends_with(item_file, ".m3u")) {
+                process_m3u_file(item_dir, item_file, &skiplist);
             }
         }
 
+        for (size_t i = 0; i < folder_item_count; i++) {
+            if (folder_items[i].content_type == ITEM) {
+                if (!in_skiplist(&skiplist, folder_items[i].extra_data)) {
+                    add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
+                            folder_items[i].display_name, folder_items[i].extra_data, ITEM);
+
+                    gen_result("content", folder_items[i].display_name,
+                            "content", folder_items[i].extra_data);
+                }
+            }
+        }
+
+        free_skiplist(&skiplist);
         free_items(&folder_items, &folder_item_count);
         key = json_next(val);
     }
@@ -362,10 +381,10 @@ static void process_results(const char *json_results) {
     for (size_t i = 0; i < t_all_item_count; i++) {
         if (t_all_items[i].content_type == ITEM) {
             content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
-                                              t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
+                                            t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
             char display_name[MAX_BUFFER_SIZE];
             snprintf(display_name, sizeof(display_name), "%s",
-                     t_all_items[i].display_name);
+                    t_all_items[i].display_name);
             adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             new_item->display_name = strdup(display_name);
         }
