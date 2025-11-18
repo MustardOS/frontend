@@ -281,7 +281,8 @@ const char *knight_two[] = {
 };
 
 const char *contributors[] = {
-        "bitter_bizarro", "corey", "duncanyoyo1", "gleepglop1000", "imcokeman", "xonglebongle",
+        "bitter_bizarro", "corey", "duncanyoyo1", "gleepglop1000", "imcokeman", "joyrider3774",
+        "sundownersport", "xonglebongle",
         NULL
 };
 
