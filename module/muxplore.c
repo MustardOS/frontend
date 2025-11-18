@@ -847,6 +847,16 @@ static void init_elements(void) {
     overlay_display();
 }
 
+static void refresh_nav_items() {
+    if (items[current_item_index].content_type == FOLDER) {
+        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
 static void ui_refresh_task() {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
@@ -861,6 +871,8 @@ static void ui_refresh_task() {
 
         update_file_counter(ui_lblCounter_explore, file_count);
         lv_obj_move_foreground(overlay_image);
+
+        refresh_nav_items();
 
         nav_moved = 0;
     }
@@ -919,6 +931,7 @@ int muxplore_main(int index, char *dir) {
     }
 
     int nav_vis = 0;
+    int collect_vis = 0;
     if (ui_count > 0) {
         nav_vis = 1;
         if (sys_index > -1 && sys_index <= ui_count &&
@@ -928,6 +941,7 @@ int muxplore_main(int index, char *dir) {
             image_refresh("box");
         }
         nav_moved = 1;
+        collect_vis = items[current_item_index].content_type == ITEM ? 1 : 0;
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPLORE.NONE);
     }
@@ -937,8 +951,8 @@ int muxplore_main(int index, char *dir) {
             {ui_lblNavAGlyph,    nav_vis},
             {ui_lblNavX,         nav_vis},
             {ui_lblNavXGlyph,    nav_vis},
-            {ui_lblNavY,         nav_vis},
-            {ui_lblNavYGlyph,    nav_vis},
+            {ui_lblNavY,         collect_vis},
+            {ui_lblNavYGlyph,    collect_vis},
             {ui_lblNavMenu,      nav_vis},
             {ui_lblNavMenuGlyph, nav_vis}
     };
