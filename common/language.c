@@ -865,7 +865,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.COMPATIBILITY, "Filter to themes for this device or all themes. All themes can work on any device but if the theme does not implement your devices resolution it will be letterboxed.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.GRID, "Filter to themes that support displaying content folders in a tile layout");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.HDMI, "Filter to themes that support HDMI resolution 1280x720. Themes will still work on HDMI without support for 1280x720 but content will be letterboxed.");
-    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let MustardOS handle translating text. Themes that use static images for the main menu will be filtere out.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let MustardOS handle translating text. Themes that use static images for the main menu will be filtered out.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LOOKUP, "Filter to theme with a name containing lookup text.");
 
     // muxtimezone
