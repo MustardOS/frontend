@@ -47,6 +47,7 @@ struct mux_lang {
         char EXTRACT[MAX_BUFFER_SIZE];
         char FILTER[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
+        char HOLD_CONFIRM[MAX_BUFFER_SIZE];
         char INCLUDED[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
@@ -69,6 +70,7 @@ struct mux_lang {
         char RECURSIVE[MAX_BUFFER_SIZE];
         char REFRESH[MAX_BUFFER_SIZE];
         char REMOVE[MAX_BUFFER_SIZE];
+        char REMOVE_FAIL[MAX_BUFFER_SIZE];
         char RESCAN[MAX_BUFFER_SIZE];
         char RESTORE[MAX_BUFFER_SIZE];
         char RESTRICTED[MAX_BUFFER_SIZE];
@@ -760,9 +762,7 @@ struct mux_lang {
         char THEME_DOWN[MAX_BUFFER_SIZE];
         char INVALID_VER[MAX_BUFFER_SIZE];
         char INVALID_RES[MAX_BUFFER_SIZE];
-        char HOLD_CONFIRM[MAX_BUFFER_SIZE];
         char PROTECTED[MAX_BUFFER_SIZE];
-        char FAILED[MAX_BUFFER_SIZE];
         struct {
             char CREDIT[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];

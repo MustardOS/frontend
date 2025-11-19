@@ -297,7 +297,7 @@ static void handle_x(void) {
 
     if (!hold_call) {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXPICKER.HOLD_CONFIRM, SHORT);
+        toast_message(lang.GENERIC.HOLD_CONFIRM, SHORT);
         return;
     }
 
@@ -316,7 +316,7 @@ static void handle_x(void) {
 
     if (!file_exist(relative_zip_path)) {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXPICKER.FAILED, MEDIUM);
+        toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
         return;
     }
 

@@ -63,6 +63,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
     GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
+    GENERIC_FIELD(lang->GENERIC.HOLD_CONFIRM, "Hold L2 and press X to confirm deletion!");
     GENERIC_FIELD(lang->GENERIC.INCLUDED, "Included");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
@@ -85,6 +86,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.RECURSIVE, "Recursive");
     GENERIC_FIELD(lang->GENERIC.REFRESH, "Refreshing…");
     GENERIC_FIELD(lang->GENERIC.REMOVE, "Remove");
+    GENERIC_FIELD(lang->GENERIC.REMOVE_FAIL, "Failed to remove item…");
     GENERIC_FIELD(lang->GENERIC.RESCAN, "Rescan");
     GENERIC_FIELD(lang->GENERIC.RESTORE, "Restore");
     GENERIC_FIELD(lang->GENERIC.RESTRICTED, "Restricted");
@@ -668,9 +670,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.THEME_DOWN, "Theme Download");
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_VER, "Incompatible Theme Version Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_RES, "Incompatible Theme Resolution Detected");
-    SPECIFIC_FIELD(lang->MUXPICKER.HOLD_CONFIRM, "Hold L2 and press X to confirm deletion!");
     SPECIFIC_FIELD(lang->MUXPICKER.PROTECTED, "This theme is protected from deletion!");
-    SPECIFIC_FIELD(lang->MUXPICKER.FAILED, "Failed to remove item…");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CREDIT, "There are no attributed credits!");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CUSTOM, "No Custom Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CATALOGUE, "No Catalogue Packages Found");
