@@ -147,7 +147,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (download_in_progress || msgbox_active || !is_network_connected() || hold_call) return;
+    if (download_in_progress || msgbox_active || hold_call) return;
 
     if (is_network_connected()) {
         play_sound(SND_CONFIRM);
