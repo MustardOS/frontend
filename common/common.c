@@ -2275,7 +2275,7 @@ int init_audio_backend(void) {
         LOG_ERROR("audio", "Missing SDL_mixer support for OGG")
     }
 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    if (Mix_OpenAudio(44100, AUDIO_F32LSB, 2, 2048) < 0) {
         LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError())
         return 0;
     }
