@@ -13,7 +13,7 @@ static void show_help(void) {
 }
 
 static void create_system_items(void) {
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HAS_NETWORK) {
         add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
     }
 
@@ -308,9 +308,15 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblCoreDownloader) {
-        play_sound(SND_CONFIRM);
-        load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
-        load_mux("coredown");
+        if (is_network_connected()) {
+            play_sound(SND_CONFIRM);
+            load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
+            load_mux("coredown");
+        } else {
+            play_sound(SND_ERROR);
+            toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+            return;
+        }
     } else {
         if (strcasecmp(rom_system, "none") == 0) {
             play_sound(SND_CONFIRM);

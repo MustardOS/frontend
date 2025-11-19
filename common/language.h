@@ -57,6 +57,7 @@ struct mux_lang {
         char LOADING[MAX_BUFFER_SIZE];
         char LOAD[MAX_BUFFER_SIZE];
         char MIGRATE[MAX_BUFFER_SIZE];
+        char NEED_CONNECT[MAX_BUFFER_SIZE];
         char NEW[MAX_BUFFER_SIZE];
         char NOGLYPH[MAX_BUFFER_SIZE];
         char NOT_CONNECTED[MAX_BUFFER_SIZE];

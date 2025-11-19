@@ -148,8 +148,14 @@ static void handle_b(void) {
 
 static void handle_x(void) {
     if (download_in_progress || msgbox_active || !is_network_connected() || hold_call) return;
-    play_sound(SND_CONFIRM);
-    update_language_data();
+
+    if (is_network_connected()) {
+        play_sound(SND_CONFIRM);
+        update_language_data();
+    } else {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+    }
 }
 
 static void handle_help(void) {
@@ -182,7 +188,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HAS_NETWORK) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                       0},
                 {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},

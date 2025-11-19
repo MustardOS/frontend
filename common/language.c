@@ -73,6 +73,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.LOAD, "Load");
     GENERIC_FIELD(lang->GENERIC.LOADING, "Loading…");
     GENERIC_FIELD(lang->GENERIC.MIGRATE, "Migrate to SD2");
+    GENERIC_FIELD(lang->GENERIC.NEED_CONNECT, "Network connection required…");
     GENERIC_FIELD(lang->GENERIC.NEW, "New");
     GENERIC_FIELD(lang->GENERIC.NOGLYPH, "No Glyph");
     GENERIC_FIELD(lang->GENERIC.NOT_CONNECTED, "Not Connected");
