@@ -949,8 +949,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP, "Colour Temperature");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP_SET, "Setting Colour Temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT, "Brightness");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT_SET, "Setting Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.VOLUME, "Volume");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.VOLUME_SET, "Setting Volume");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.ADVANCED, "Advanced Settings");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.RGB, "Device RGB Lights");

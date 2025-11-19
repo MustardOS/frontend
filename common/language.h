@@ -1100,10 +1100,13 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char TEMP[MAX_BUFFER_SIZE];
         char DATETIME[MAX_BUFFER_SIZE];
+        char TEMP[MAX_BUFFER_SIZE];
+        char TEMP_SET[MAX_BUFFER_SIZE];
         char BRIGHT[MAX_BUFFER_SIZE];
+        char BRIGHT_SET[MAX_BUFFER_SIZE];
         char VOLUME[MAX_BUFFER_SIZE];
+        char VOLUME_SET[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
         char RGB[MAX_BUFFER_SIZE];
