@@ -147,16 +147,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", zram_swap_values, 11, 0);
     CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", zram_swap_values, 11, 0);
 
-    if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
-        refresh_screen(ui_screen);
-
-        const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
-        run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
-
-        refresh_config = 1;
-        refresh_device = 1;
-    }
+    if (is_modified > 0) run_tweak_script();
 }
 
 static void init_navigation_group(void) {

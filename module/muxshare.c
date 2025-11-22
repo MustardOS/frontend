@@ -50,6 +50,17 @@ void hold_call_release(void) {
     hold_call = 0;
 }
 
+void run_tweak_script() {
+    toast_message(lang.GENERIC.SAVING, FOREVER);
+    refresh_screen(ui_screen);
+
+    const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
+    run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
+
+    refresh_config = 1;
+    refresh_device = 1;
+}
+
 void shuffle_index(int current, int *dir, int *target) {
     do {
         int ran = (int) (random() % (ui_count - 1));

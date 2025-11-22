@@ -85,6 +85,8 @@ void hold_call_set(void);
 
 void hold_call_release(void);
 
+void run_tweak_script();
+
 void shuffle_index(int current, int *dir, int *target);
 
 void adjust_box_art();
