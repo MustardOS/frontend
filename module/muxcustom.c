@@ -405,10 +405,14 @@ static void save_custom_options(char *next_screen) {
     }
 
     if (is_modified > 0) {
-        refresh_config = 1;
+        toast_message(lang.GENERIC.SAVING, FOREVER);
+        refresh_screen(ui_screen);
 
         const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+        run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
+
+        refresh_config = 1;
+        refresh_device = 1;
     }
 
     if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);
