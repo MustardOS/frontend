@@ -278,21 +278,25 @@ static void process_results(const char *json_results) {
             }
         }
 
+        char folder_name_short[MAX_BUFFER_SIZE] = "";
         if (strcasecmp(storage_name_short, "UNION") == 0) {
-            key = json_next(val);
-            continue;
-        }
-
-        char folder_name_short[MAX_BUFFER_SIZE];
-        char *modified_name = NULL;
-
-        if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
-            snprintf(folder_name_short, sizeof(folder_name_short), " %s/%s",
-                     storage_name_short,
-                     str_replace(modified_name, "/mnt//ROMS/", ""));
-            free(modified_name);
+            char *after_roms = strstr(folder_name, "/ROMS/");
+            if (after_roms) {
+                after_roms += strlen("/ROMS/");
+                snprintf(folder_name_short, sizeof(folder_name_short), "%s", after_roms);
+            } else {
+                snprintf(folder_name_short, sizeof(folder_name_short), "%s", folder_name);
+            }
         } else {
-            snprintf(folder_name_short, sizeof(folder_name_short), "%s", folder_name);
+            char *modified_name = NULL;
+            if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
+                snprintf(folder_name_short, sizeof(folder_name_short), " %s/%s",
+                         storage_name_short,
+                         str_replace(modified_name, "/mnt//ROMS/", ""));
+                free(modified_name);
+            } else {
+                snprintf(folder_name_short, sizeof(folder_name_short), "%s", folder_name);
+            }
         }
 
         if (strcasecmp(folder_name, ".") != 0) {
@@ -355,10 +359,10 @@ static void process_results(const char *json_results) {
             if (folder_items[i].content_type == ITEM) {
                 if (!in_skiplist(&skiplist, folder_items[i].extra_data)) {
                     add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
-                            folder_items[i].display_name, folder_items[i].extra_data, ITEM);
+                             folder_items[i].display_name, folder_items[i].extra_data, ITEM);
 
                     gen_result("content", folder_items[i].display_name,
-                            "content", folder_items[i].extra_data);
+                               "content", folder_items[i].extra_data);
                 }
             }
         }
@@ -381,10 +385,10 @@ static void process_results(const char *json_results) {
     for (size_t i = 0; i < t_all_item_count; i++) {
         if (t_all_items[i].content_type == ITEM) {
             content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
-                                            t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
+                                              t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
             char display_name[MAX_BUFFER_SIZE];
             snprintf(display_name, sizeof(display_name), "%s",
-                    t_all_items[i].display_name);
+                     t_all_items[i].display_name);
             adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             new_item->display_name = strdup(display_name);
         }
@@ -427,14 +431,14 @@ static void handle_keyboard_press(void) {
 }
 
 static void handle_confirm(void) {
-    play_sound(SND_CONFIRM);
-
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblLookup_search) {
+        play_sound(SND_CONFIRM);
+
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -451,23 +455,46 @@ static void handle_confirm(void) {
         char *lookup_value = lv_label_get_text(ui_lblLookupValue_search);
 
         if (strlen(lookup_value) <= 2) {
+            play_sound(SND_ERROR);
+
             toast_message(lang.MUXSEARCH.ERROR, SHORT);
             return;
         }
+
+        play_sound(SND_CONFIRM);
 
         toast_message(lang.MUXSEARCH.SEARCH, FOREVER);
         refresh_screen(ui_screen);
 
         if (element_focused == ui_lblSearchLocal_search) {
-            const char *args[] = {(OPT_PATH "script/mux/find.sh"),
-                                  str_trim(lookup_value), rom_dir,
-                                  NULL};
+            const char *args[] = {(OPT_PATH "script/mux/find.sh"), "--local",
+                                  str_trim(lookup_value), rom_dir, NULL};
             run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
         } else {
-            const char *args[] = {(OPT_PATH "script/mux/find.sh"),
-                                  str_trim(lookup_value), SD1, SD2, E_USB,
-                                  NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+            const char *args[6];
+            int idx = 0;
+
+            args[idx++] = OPT_PATH "script/mux/find.sh";
+            args[idx++] = str_trim(lookup_value);
+
+            int mounts = 0;
+            double total_space, free_space, used_space;
+
+            get_storage_info(device.STORAGE.ROM.MOUNT, &total_space, &free_space, &used_space);
+            if (total_space > 0) mounts |= 1;
+
+            get_storage_info(device.STORAGE.SDCARD.MOUNT, &total_space, &free_space, &used_space);
+            if (total_space > 0) mounts |= 2;
+
+            get_storage_info(device.STORAGE.USB.MOUNT, &total_space, &free_space, &used_space);
+            if (total_space > 0) mounts |= 4;
+
+            if (mounts & 1) args[idx++] = SD1;
+            if (mounts & 2) args[idx++] = SD2;
+            if (mounts & 4) args[idx++] = E_USB;
+
+            args[idx] = NULL;
+            run_exec(args, idx, 0, 1, NULL, NULL);
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
@@ -481,6 +508,8 @@ static void handle_confirm(void) {
     }
 
     if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
+        play_sound(SND_CONFIRM);
+
         const char *selected_raw = lv_label_get_text(lv_group_get_focused(ui_group_value));
         char *selected_path = str_replace(selected_raw, "/./", "/");
 
@@ -506,7 +535,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count < 2 || hold_call) return;
+    if (msgbox_active || ui_count <= 3 || hold_call) return;
 
     uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
@@ -560,6 +589,7 @@ static void handle_x(void) {
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (file_exist(search_result)) remove(search_result);
 
+    play_sound(SND_CONFIRM);
     load_mux("search");
 
     close_input();
@@ -699,7 +729,9 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxsearch_main(char *dir) {
+    if (!strlen(dir)) dir = "/mnt/union/ROMS";
     snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+
     starter_image = 0;
     got_results = 0;
 
