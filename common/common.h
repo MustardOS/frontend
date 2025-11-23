@@ -250,9 +250,9 @@ char *get_capacity();
 
 void capacity_task();
 
-void increase_option_value(lv_obj_t *element);
+void increase_option_value(lv_obj_t *element, int count);
 
-void decrease_option_value(lv_obj_t *element);
+void decrease_option_value(lv_obj_t *element, int count);
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app);
 

@@ -891,36 +891,29 @@ void capacity_task(void) {
     update_battery_capacity(ui_staCapacity, &theme);
 }
 
-void increase_option_value(lv_obj_t *element) {
+static void move_option(lv_obj_t *element, int count) {
+    if (!count) return;
+
     uint16_t total = lv_dropdown_get_option_cnt(element);
     if (total <= 1) return;
-    uint16_t current = lv_dropdown_get_selected(element);
 
     play_sound(SND_OPTION);
 
-    if (current < (total - 1)) {
-        current++;
-        lv_dropdown_set_selected(element, current);
-    } else {
-        current = 0;
-        lv_dropdown_set_selected(element, current);
-    }
+    uint16_t current = lv_dropdown_get_selected(element);
+    int next = (int) current + count;
+
+    if (next < 0) next = total + (next % total);
+    next %= total;
+
+    lv_dropdown_set_selected(element, (uint16_t) next);
 }
 
-void decrease_option_value(lv_obj_t *element) {
-    uint16_t total = lv_dropdown_get_option_cnt(element);
-    if (total <= 1) return;
-    uint16_t current = lv_dropdown_get_selected(element);
+void increase_option_value(lv_obj_t *element, int count) {
+    move_option(element, count);
+}
 
-    play_sound(SND_OPTION);
-
-    if (current > 0) {
-        current--;
-        lv_dropdown_set_selected(element, current);
-    } else {
-        current = (total - 1);
-        lv_dropdown_set_selected(element, current);
-    }
+void decrease_option_value(lv_obj_t *element, int count) {
+    move_option(element, -count);
 }
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {

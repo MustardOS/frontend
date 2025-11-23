@@ -138,7 +138,7 @@ static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter)
-        decrease_option_value(lv_group_get_focused(ui_group_value));
+        decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_keyboard_OK_press(void) {
@@ -177,7 +177,7 @@ static void handle_option_next(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter)
-        increase_option_value(lv_group_get_focused(ui_group_value));
+        increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_confirm(void) {
