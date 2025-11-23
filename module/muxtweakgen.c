@@ -359,6 +359,32 @@ static void handle_option_next(void) {
     increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
+static int get_multi_count(void) {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    if (element_focused == ui_lblBrightness_tweakgen) {
+        return config.SETTINGS.ADVANCED.INCBRIGHT;
+    } else if (element_focused == ui_lblVolume_tweakgen) {
+        return config.SETTINGS.ADVANCED.INCVOLUME;
+    } else if (element_focused == ui_lblColour_tweakgen) {
+        return 25;
+    }
+
+    return 0;
+}
+
+static void handle_option_prev_multi(void) {
+    if (msgbox_active || block_input) return;
+
+    decrease_option_value(lv_group_get_focused(ui_group_value), get_multi_count());
+}
+
+static void handle_option_next_multi(void) {
+    if (msgbox_active || block_input) return;
+
+    increase_option_value(lv_group_get_focused(ui_group_value), get_multi_count());
+}
+
 static void handle_a(void) {
     if (msgbox_active || block_input || hold_call) return;
 
@@ -518,7 +544,9 @@ int muxtweakgen_main(void) {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = handle_option_prev_multi,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_R2] = handle_option_next_multi,
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
