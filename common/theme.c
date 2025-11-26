@@ -167,10 +167,15 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->GRID.NAVIGATION_TYPE = 2;
     theme->GRID.BACKGROUND = 0xC69200;
     theme->GRID.BACKGROUND_ALPHA = 0;
+    theme->GRID.ALIGNMENT = 0;
+    theme->GRID.ALIGNMENT_X_OFFSET = 0;
+    theme->GRID.ALIGNMENT_Y_OFFSET = 0;
     theme->GRID.LOCATION_X = 0;
     theme->GRID.LOCATION_Y = 0;
     theme->GRID.COLUMN_COUNT = 0;
+    theme->GRID.COLUMN_PADDING = 0;
     theme->GRID.ROW_COUNT = 0;
+    theme->GRID.ROW_PADDING = 0;
     theme->GRID.ENABLED = false;
 
     theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = LV_ALIGN_BOTTOM_MID;
@@ -601,10 +606,15 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.NAVIGATION_TYPE = get_ini_int(muos_theme, "grid", "NAVIGATION_TYPE", theme->GRID.NAVIGATION_TYPE);
     theme->GRID.BACKGROUND = get_ini_hex(muos_theme, "grid", "BACKGROUND", theme->GRID.BACKGROUND);
     theme->GRID.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "BACKGROUND_ALPHA", theme->GRID.BACKGROUND_ALPHA);
+    theme->GRID.ALIGNMENT = get_ini_int(muos_theme, "grid", "ALIGNMENT", theme->GRID.ALIGNMENT);
+    theme->GRID.ALIGNMENT_X_OFFSET = get_ini_int(muos_theme, "grid", "ALIGNMENT_X_OFFSET", theme->GRID.ALIGNMENT_X_OFFSET);
+    theme->GRID.ALIGNMENT_Y_OFFSET = get_ini_int(muos_theme, "grid", "ALIGNMENT_Y_OFFSET", theme->GRID.ALIGNMENT_Y_OFFSET);
     theme->GRID.LOCATION_X = get_ini_int(muos_theme, "grid", "LOCATION_X", theme->GRID.LOCATION_X);
     theme->GRID.LOCATION_Y = get_ini_int(muos_theme, "grid", "LOCATION_Y", theme->GRID.LOCATION_Y);
     theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", theme->GRID.COLUMN_COUNT);
+    theme->GRID.COLUMN_PADDING = get_ini_int(muos_theme, "grid", "COLUMN_PADDING", theme->GRID.COLUMN_PADDING);
     theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", theme->GRID.ROW_COUNT);
+    theme->GRID.ROW_PADDING = get_ini_int(muos_theme, "grid", "ROW_PADDING", theme->GRID.ROW_PADDING);
 
     theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT",
                                                            theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT);

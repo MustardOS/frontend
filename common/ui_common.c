@@ -1346,30 +1346,45 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_coord_t * row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
 
     for (int i = 0; i < theme->GRID.COLUMN_COUNT; i++) {
-        col_dsc[i] = theme->GRID.COLUMN_WIDTH;
+        col_dsc[i] = theme->GRID.COLUMN_WIDTH == 0 ? LV_GRID_CONTENT : theme->GRID.COLUMN_WIDTH;
     }
     col_dsc[theme->GRID.COLUMN_COUNT] = LV_GRID_TEMPLATE_LAST;
 
     for (int i = 0; i < row_count; i++) {
-        row_dsc[i] = theme->GRID.ROW_HEIGHT;
+        row_dsc[i] = theme->GRID.ROW_HEIGHT == 0 ? LV_GRID_CONTENT : theme->GRID.ROW_HEIGHT;
     }
     row_dsc[row_count] = LV_GRID_TEMPLATE_LAST;
 
     lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
-                    theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
-    //add padding to the bottom to make sure grid panel scrolls correctly
-    lv_obj_set_style_pad_bottom(ui_pnlGrid, (row_count - theme->GRID.ROW_COUNT + 1) * theme->GRID.ROW_HEIGHT,
-                                LV_PART_MAIN);
-    lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
-    lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
+
+    if (theme->GRID.COLUMN_WIDTH == 0 && theme->GRID.ROW_HEIGHT == 0) {
+        printf("Setting Grid size to content\n");
+        lv_obj_set_height(ui_pnlGrid, LV_SIZE_CONTENT);
+        lv_obj_set_width(ui_pnlGrid, LV_SIZE_CONTENT);
+    } else {
+        printf("Setting Grid size to height: %d width: %d\n", theme->GRID.ROW_HEIGHT, theme->GRID.COLUMN_WIDTH);
+        lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
+                        theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
+        //add padding to the bottom to make sure grid panel scrolls correctly
+        lv_obj_set_style_pad_bottom(ui_pnlGrid, (row_count - theme->GRID.ROW_COUNT + 1) * theme->GRID.ROW_HEIGHT,
+                                    LV_PART_MAIN);
+    }
+
+    if (theme->GRID.ALIGNMENT == 0 ) {
+        lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
+        lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
+    } else {
+        lv_obj_align(ui_pnlGrid, theme->GRID.ALIGNMENT, theme->GRID.ALIGNMENT_X_OFFSET, theme->GRID.ALIGNMENT_Y_OFFSET);
+    }
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
     lv_obj_set_style_bg_color(ui_pnlGrid, lv_color_hex(theme->GRID.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlGrid, theme->GRID.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_scroll_dir(ui_pnlGrid, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(ui_pnlGrid, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_snap_y(ui_pnlGrid, LV_SCROLL_SNAP_NONE);
+    lv_obj_set_style_pad_row(ui_pnlGrid, theme->GRID.ROW_PADDING, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlGrid, theme->GRID.COLUMN_PADDING, MU_OBJ_MAIN_DEFAULT); 
 
     lv_obj_clear_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
@@ -1444,15 +1459,19 @@ void grid_item_focus_event_cb(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_FOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_width(cell_image_focused, LV_SIZE_CONTENT);
+        lv_obj_set_height(cell_image_focused, LV_SIZE_CONTENT);
     } else if (code == LV_EVENT_DEFOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_width(cell_image_focused, 0);
+        lv_obj_set_height(cell_image_focused, 0);
     }
 }
 
 void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image,
                       int16_t col, int16_t row, char *item_image_path, char *item_image_focused_path, char *item_text) {
-    lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
-    lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
+    lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CELL.WIDTH);
+    lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CELL.HEIGHT);
 
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
@@ -1518,6 +1537,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     char grid_image_focused[MAX_BUFFER_SIZE];
     snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
     lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
+    lv_obj_set_width(cell_image_focused, 0);
+    lv_obj_set_height(cell_image_focused, 0);
 
     if (file_exist(item_image_focused_path)) {
         lv_img_set_src(cell_image_focused, grid_image_focused);
@@ -1535,13 +1556,18 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
 
-    lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
-    lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
-    lv_label_set_text(cell_label, item_text);
-    lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    if (theme->GRID.CELL.WIDTH == 0 || (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0)) {
+        lv_obj_set_width(cell_label, 0);
+        lv_obj_set_height(cell_label, 0);
+    } else {
+        lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
+        lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
+        lv_label_set_text(cell_label, item_text);
+        lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);
+        lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);        
+    }
 }
 
 void scroll_help_content(int direction, bool page_down) {
