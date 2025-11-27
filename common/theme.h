@@ -194,14 +194,19 @@ struct theme_config {
     struct {
         int16_t NAVIGATION_TYPE;
         bool ENABLED;
+        int16_t ALIGNMENT;
+        int16_t ALIGNMENT_X_OFFSET;
+        int16_t ALIGNMENT_Y_OFFSET;
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;
         int16_t LOCATION_X;
         int16_t LOCATION_Y;
         int16_t COLUMN_COUNT;
         int16_t COLUMN_WIDTH;
+        int16_t COLUMN_PADDING;
         int16_t ROW_COUNT;
         int16_t ROW_HEIGHT;
+        int16_t ROW_PADDING;
         struct {
             int16_t ALIGNMENT;
             int16_t WIDTH;
