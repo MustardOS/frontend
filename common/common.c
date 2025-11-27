@@ -3037,15 +3037,11 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     int nav_next_return = 0;
     if (text_hit > 0) {
         *nav_moved = 1;
-        if (strcmp(mux_module, "muxtweakgen") == 0) {
-            nav_next_return = text_hit - !device.BOARD.HAS_HDMI;
-        } else if (strcmp(mux_module, "muxtweakadv") == 0) {
-            nav_next_return = text_hit - !device.BOARD.HAS_NETWORK;
-        } else if (strcmp(mux_module, "muxconfig") == 0 && !config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
-            nav_next_return = 4;
-        } else {
-            nav_next_return = text_hit;
-        }
+        int nav_adjust = 0;
+
+        if (strcmp(mux_module, "muxtweakgen") == 0) nav_adjust += (!device.BOARD.HAS_HDMI) ? 1 : 0;
+
+        nav_next_return = text_hit - nav_adjust;
     }
 
     free(prev);
