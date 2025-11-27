@@ -28,13 +28,20 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 const char *get_cpu_model(void) {
-    static char cpu_model[48];
-    snprintf(cpu_model, sizeof(cpu_model), "%s",
-             get_execute_result("lscpu | grep 'Model name:' | awk -F: '{print $2}'"));
+    char cmd[128];
 
+    static char cpu_model[48];
     static char cpu_cores[6];
-    snprintf(cpu_cores, sizeof(cpu_cores), "%s",
-             get_execute_result("lscpu | grep '^CPU(s):' | awk '{print $2}'"));
+
+    snprintf(cmd, sizeof(cmd), "lscpu | grep 'Model name:' | awk -F: '{print $2}'");
+    char *model_result = get_execute_result(cmd);
+    snprintf(cpu_model, sizeof(cpu_model), "%s", model_result ? model_result : "");
+    free(model_result);
+
+    snprintf(cmd, sizeof(cmd), "lscpu | grep '^CPU(s):' | awk '{print $2}'");
+    char *core_result = get_execute_result(cmd);
+    snprintf(cpu_cores, sizeof(cpu_cores), "%s", core_result ? core_result : "");
+    free(core_result);
 
     str_remchar(cpu_model, ' ');
     str_remchar(cpu_cores, ' ');
@@ -76,7 +83,7 @@ const char *get_current_frequency(void) {
 }
 
 const char *get_scaling_governor(void) {
-    static char buffer[MAX_BUFFER_SIZE];
+    static char buffer[64];
     char *governor_str = read_all_char_from(device.CPU.GOVERNOR);
 
     if (!governor_str || governor_str[0] == '\0') {
@@ -91,10 +98,20 @@ const char *get_scaling_governor(void) {
 }
 
 const char *get_memory_usage(void) {
-    char *result = get_execute_result("free -m | awk '/^Mem:/ {printf \"%.2f MB / %.2f MB\", $3, $2}'");
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "free -m | awk '/^Mem:/ {printf \"%%.2f MB / %%.2f MB\", $3, $2}'");
 
-    return result;
+    char *result = get_execute_result(cmd);
+    if (!result || result[0] == '\0') {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
+
+    static char buffer[64];
+    snprintf(buffer, sizeof(buffer), "%s", result);
+    free(result);
+
+    return buffer;
 }
 
 const char *get_temperature(void) {
@@ -122,7 +139,7 @@ const char *get_temperature(void) {
 }
 
 const char *get_uptime(void) {
-    static char formatted_uptime[MAX_BUFFER_SIZE];
+    static char formatted_uptime[128];
     struct sysinfo info;
 
     if (sysinfo(&info) == 0) {

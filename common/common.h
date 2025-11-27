@@ -150,7 +150,7 @@ struct nav_flag {
     int visible;
 };
 
-int file_exist(char *filename);
+int file_exist(const char *filename);
 
 int directory_exist(char *dirname);
 

@@ -113,7 +113,7 @@ const char *snd_names[SOUND_TOTAL] = {
         "startup", "info_open", "info_close", "option"
 };
 
-int file_exist(char *filename) {
+int file_exist(const char *filename) {
     return access(filename, F_OK) == 0;
 }
 
@@ -521,19 +521,24 @@ char *grab_ext(char *text) {
 
 char *get_execute_result(const char *command) {
     FILE *fp = popen(command, "r");
-    if (fp == NULL) {
+    if (!fp) {
         fprintf(stderr, "Failed to run: %s\n", command);
         return NULL;
     }
 
-    static char result[MAX_BUFFER_SIZE];
-    fgets(result, MAX_BUFFER_SIZE, fp);
+    char result[MAX_BUFFER_SIZE];
+
+    if (!fgets(result, sizeof(result), fp)) {
+        pclose(fp);
+        return NULL;
+    }
+
     pclose(fp);
 
     char *newline = strchr(result, '\n');
-    if (newline != NULL) *newline = '\0';
+    if (newline) *newline = '\0';
 
-    return result;
+    return strdup(result);
 }
 
 int read_battery_capacity(void) {
