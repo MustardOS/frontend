@@ -1359,11 +1359,14 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, MU_OBJ_MAIN_DEFAULT);
 
     if (theme->GRID.COLUMN_WIDTH == 0 && theme->GRID.ROW_HEIGHT == 0) {
-        printf("Setting Grid size to content\n");
+        LOG_INFO(mux_module, "Setting Grid Size to: content")
+
         lv_obj_set_height(ui_pnlGrid, LV_SIZE_CONTENT);
         lv_obj_set_width(ui_pnlGrid, LV_SIZE_CONTENT);
     } else {
-        printf("Setting Grid size to height: %d width: %d\n", theme->GRID.ROW_HEIGHT, theme->GRID.COLUMN_WIDTH);
+        LOG_INFO(mux_module, "Setting Grid Size to: height (%d) width (%d)",
+                 theme->GRID.ROW_HEIGHT, theme->GRID.COLUMN_WIDTH);
+
         lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
                         theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
         //add padding to the bottom to make sure grid panel scrolls correctly
@@ -1371,7 +1374,7 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
                                     LV_PART_MAIN);
     }
 
-    if (theme->GRID.ALIGNMENT == 0 ) {
+    if (theme->GRID.ALIGNMENT == 0) {
         lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
         lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
     } else {
@@ -1384,7 +1387,7 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_scrollbar_mode(ui_pnlGrid, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_snap_y(ui_pnlGrid, LV_SCROLL_SNAP_NONE);
     lv_obj_set_style_pad_row(ui_pnlGrid, theme->GRID.ROW_PADDING, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlGrid, theme->GRID.COLUMN_PADDING, MU_OBJ_MAIN_DEFAULT); 
+    lv_obj_set_style_pad_column(ui_pnlGrid, theme->GRID.COLUMN_PADDING, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_clear_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
@@ -1556,7 +1559,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
 
-    if (theme->GRID.CELL.WIDTH == 0 || (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0)) {
+    if (theme->GRID.CELL.WIDTH == 0 ||
+        (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0)) {
         lv_obj_set_width(cell_label, 0);
         lv_obj_set_height(cell_label, 0);
     } else {
@@ -1566,7 +1570,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
-        lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);        
+        lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);
     }
 }
 
