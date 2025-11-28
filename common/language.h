@@ -671,6 +671,10 @@ struct mux_lang {
             char EDIT[MAX_BUFFER_SIZE];
             char CHANGE[MAX_BUFFER_SIZE];
         } ERROR;
+        struct {
+            char HOST[MAX_BUFFER_SIZE];
+            char MAC[MAX_BUFFER_SIZE];
+        } SAVE;
     } MUXNETINFO;
 
     struct {

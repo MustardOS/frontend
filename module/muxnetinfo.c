@@ -3,7 +3,7 @@
 
 #define UI_COUNT 10
 
-const char *hostname_original;
+static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -357,6 +357,8 @@ static void init_navigation_group(void) {
         HIDE_VALUE_ITEM(netinfo, AcTraffic);
         HIDE_VALUE_ITEM(netinfo, TpTraffic);
     }
+
+    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -401,21 +403,32 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void reload_netinfo(void) {
+    load_mux("netinfo");
+    close_input();
+    mux_input_stop();
+}
+
 static void handle_keyboard_OK_press(void) {
     key_show = 0;
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblHostname_netinfo) {
-        hostname_original = lv_label_get_text(ui_lblHostnameValue_netinfo);
-
         const char *new_hostname = lv_textarea_get_text(ui_txtEntry_netinfo);
         if (strlen(new_hostname) < 3) goto clear_osk;
+
+        play_sound(SND_CONFIRM);
+
+        toast_message(lang.MUXNETINFO.SAVE.HOST, FOREVER);
+        refresh_screen(ui_screen);
 
         lv_label_set_text(ui_lblHostnameValue_netinfo, new_hostname);
         write_text_to_file("/etc/hostname", "w", CHAR, new_hostname);
 
         const char *hn_set_args[] = {"hostname", new_hostname, NULL};
-        run_exec(hn_set_args, A_SIZE(hn_set_args), 1, 0, NULL, NULL);
+        run_exec(hn_set_args, A_SIZE(hn_set_args), 0, 0, NULL, NULL);
+
+        reload_netinfo();
     }
 
     clear_osk:
@@ -483,8 +496,15 @@ static void handle_a(void) {
             return;
         }
 
+        play_sound(SND_CONFIRM);
+
+        toast_message(lang.MUXNETINFO.SAVE.MAC, FOREVER);
+        refresh_screen(ui_screen);
+
         const char *mac_change_args[] = {OPT_PATH "script/web/macchange.sh", NULL};
-        run_exec(mac_change_args, A_SIZE(mac_change_args), 1, 0, NULL, NULL);
+        run_exec(mac_change_args, A_SIZE(mac_change_args), 0, 0, NULL, NULL);
+
+        reload_netinfo();
     }
 }
 

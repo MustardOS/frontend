@@ -589,6 +589,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.TPTRAFFIC, "The current data sent and received over the network");
     SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.EDIT, "Cannot edit if network is active!");
     SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.CHANGE, "Cannot change if network is active!");
+    SPECIFIC_FIELD(lang->MUXNETINFO.SAVE.HOST, "Saving Hostname");
+    SPECIFIC_FIELD(lang->MUXNETINFO.SAVE.MAC, "Changing MAC Address");
 
     // muxnetprofile
     SPECIFIC_FIELD(lang->MUXNETPROFILE.TITLE, "NETWORK PROFILE");
