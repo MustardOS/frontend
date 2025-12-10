@@ -130,20 +130,50 @@ int main(int argc, char *argv[]) {
     free(ext);
 
     if (live_file) {
+        int fd = inotify_init();
+        if (fd < 0) {
+            perror("inotify_init");
+            exit(1);
+        }
+
+        int wd = inotify_add_watch(fd, live_file, IN_MODIFY | IN_DELETE_SELF | IN_MOVE_SELF);
+        if (wd < 0) {
+            perror("inotify_add_watch");
+            exit(1);
+        }
+
         while (file_exist(live_file)) {
-            struct stat st;
+            union {
+                char raw[4096];
+                struct inotify_event align;
+            } buf;
 
-            if (stat(live_file, &st) == 0) {
-                lv_label_set_text_fmt(ui_lblMessage, "%s",
-                                      parse_newline(read_line_char_from(live_file, 1)));
+            ssize_t len = read(fd, buf.raw, sizeof(buf.raw));
+            if (len < 0) {
+                perror("read");
+                break;
             }
 
-            if (file_exist(PROGRESS_FILE)) {
-                lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
-            }
+            const struct inotify_event *ev;
+            for (char *p = buf.raw; p < buf.raw + len;) {
+                ev = (const struct inotify_event *) p;
 
-            refresh_screen(ui_scrMessage);
-            sleep(1);
+                if (ev->mask & IN_MODIFY) {
+                    lv_label_set_text_fmt(ui_lblMessage, "%s",
+                                          parse_newline(read_line_char_from(live_file, 1))
+                    );
+
+                    if (file_exist(PROGRESS_FILE)) {
+                        lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
+                    }
+
+                    refresh_screen(ui_scrMessage);
+                }
+
+                if (ev->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) goto done;
+
+                p += sizeof(struct inotify_event) + ev->len;
+            }
         }
     } else if (is_message_file && delay > 0) {
         load_messages(default_message);
@@ -170,6 +200,7 @@ int main(int argc, char *argv[]) {
         refresh_screen(ui_scrMessage);
     }
 
+    done:
     sdl_cleanup();
     return 0;
 }
