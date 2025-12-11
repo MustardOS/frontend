@@ -3609,3 +3609,10 @@ int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
 void set_process_name(const char *module) {
     prctl(PR_SET_NAME, module, 0, 0, 0);
 }
+
+const char *get_process_name(void) {
+    static char module[16]; // Apparently process names can only be 16 char?
+    prctl(PR_GET_NAME, module);
+    module[15] = '\0';
+    return module;
+}
