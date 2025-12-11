@@ -164,7 +164,9 @@ static void ui_refresh_task() {
 }
 
 int muxtimezone_main(void) {
-    init_module("muxtimezone");
+    const char *m = "muxtimezone";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

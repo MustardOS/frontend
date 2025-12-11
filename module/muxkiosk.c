@@ -328,7 +328,9 @@ static void ui_refresh_task() {
 }
 
 int muxkiosk_main(void) {
-    init_module("muxkiosk");
+    const char *m = "muxkiosk";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

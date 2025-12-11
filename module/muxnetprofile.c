@@ -350,7 +350,9 @@ static void ui_refresh_task() {
 }
 
 int muxnetprofile_main(void) {
-    init_module("muxnetprofile");
+    const char *m = "muxnetprofile";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

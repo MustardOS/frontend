@@ -168,7 +168,9 @@ static void ui_refresh_task() {
 }
 
 int muxinfo_main(void) {
-    init_module("muxinfo");
+    const char *m = "muxinfo";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

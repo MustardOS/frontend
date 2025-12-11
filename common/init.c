@@ -79,7 +79,7 @@ void close_input(void) {
     close(joy_extra);
 }
 
-void init_module(char *module) {
+void init_module(const char *module) {
     snprintf(mux_module, sizeof(mux_module), "%s", module);
     load_lang(&lang);
 }

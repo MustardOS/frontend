@@ -218,7 +218,9 @@ int muxtask_main(char *ex_dir) {
     snprintf(base_dir, sizeof(base_dir), OPT_SHARE_PATH "task/");
     if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
 
-    init_module("muxtask");
+    const char *m = "muxtask";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

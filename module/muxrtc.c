@@ -447,7 +447,9 @@ static void ui_refresh_task() {
 }
 
 int muxrtc_main(void) {
-    init_module("muxrtc");
+    const char *m = "muxrtc";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

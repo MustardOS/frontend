@@ -339,7 +339,9 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
     is_app = app;
 
-    init_module("muxgov");
+    const char *m = "muxgov";
+    set_process_name(m);
+    init_module(m);
 
     if (is_app) {
         LOG_INFO(mux_module, "Assign Governor APP_NAME: \"%s\"", rom_name)

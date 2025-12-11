@@ -429,7 +429,9 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     snprintf(explore_dir, sizeof(explore_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
-    init_module("muxassign");
+    const char *m = "muxassign";
+    set_process_name(m);
+    init_module(m);
 
     LOG_INFO(mux_module, "Assign Core explore_dir: \"%s\"", explore_dir)
     LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)

@@ -464,7 +464,10 @@ static void ui_refresh_task() {
 }
 
 int muxlaunch_main(void) {
-    init_module("muxlaunch");
+    const char *m = "muxlaunch";
+    set_process_name(m);
+    init_module(m);
+
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXLAUNCH.TITLE);

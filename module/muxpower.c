@@ -373,7 +373,9 @@ static void ui_refresh_task() {
 }
 
 int muxpower_main(void) {
-    init_module("muxpower");
+    const char *m = "muxpower";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
     generate_governor_values();

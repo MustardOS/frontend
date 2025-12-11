@@ -460,3 +460,5 @@ void free_array(char **array, size_t count);
 
 int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
                         size_t dir_count, size_t ext_count, size_t *result_count);
+
+void set_process_name(const char *module);

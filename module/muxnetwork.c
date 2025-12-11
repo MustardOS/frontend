@@ -607,7 +607,9 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxnetwork_main(void) {
-    init_module("muxnetwork");
+    const char *m = "muxnetwork";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

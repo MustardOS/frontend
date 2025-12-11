@@ -478,7 +478,9 @@ static void ui_refresh_task() {
 }
 
 int muxapp_main(void) {
-    init_module("muxapp");
+    const char *m = "muxapp";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

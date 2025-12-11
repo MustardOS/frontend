@@ -254,7 +254,9 @@ static void ui_refresh_task() {
 }
 
 int muxstorage_main(void) {
-    init_module("muxstorage");
+    const char *m = "muxstorage";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

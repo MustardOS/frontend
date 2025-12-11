@@ -186,7 +186,9 @@ static void ui_refresh_task() {
 }
 
 int muxconfig_main(void) {
-    init_module("muxconfig");
+    const char *m = "muxconfig";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

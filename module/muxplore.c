@@ -889,7 +889,9 @@ int muxplore_main(int index, char *dir) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? STORAGE_PATH : dir);
     sys_index = index;
 
-    init_module("muxplore");
+    const char *m = "muxplore";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

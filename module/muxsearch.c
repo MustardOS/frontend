@@ -735,7 +735,9 @@ int muxsearch_main(char *dir) {
     starter_image = 0;
     got_results = 0;
 
-    init_module("muxsearch");
+    const char *m = "muxsearch";
+    set_process_name(m);
+    init_module(m);
 
     snprintf(search_result, sizeof(search_result), "%s/%s/search.json",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);

@@ -98,7 +98,9 @@ static void init_elements(void) {
 }
 
 int muxtester_main(void) {
-    init_module("muxtester");
+    const char *m = "muxtester";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(0, 0);
 

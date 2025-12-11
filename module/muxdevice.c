@@ -197,7 +197,9 @@ static void ui_refresh_task() {
 }
 
 int muxdevice_main(void) {
-    init_module("muxdevice");
+    const char *m = "muxdevice";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

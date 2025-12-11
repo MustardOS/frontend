@@ -1,7 +1,9 @@
 #include "muxshare.h"
 
 int muxsplash_main(char *splash_image, bool apply_recolour) {
-    init_module("muxsplash");
+    const char *m = "muxsplash";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(0, 0);
 

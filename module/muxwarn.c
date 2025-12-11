@@ -2,7 +2,9 @@
 #include "../lvgl/src/drivers/display/sdl.h"
 
 int main(void) {
-    init_module("muxwarn");
+    const char *m = "muxwarn";
+    set_process_name(m);
+    init_module(m);
 
     load_device(&device);
     load_config(&config);

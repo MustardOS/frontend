@@ -539,7 +539,9 @@ static void ui_refresh_task() {
 }
 
 int muxcustom_main(void) {
-    init_module("muxcustom");
+    const char *m = "muxcustom";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

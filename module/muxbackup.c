@@ -403,7 +403,9 @@ static void ui_refresh_task() {
 }
 
 int muxbackup_main(void) {
-    init_module("muxbackup");
+    const char *m = "muxbackup";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

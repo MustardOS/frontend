@@ -192,7 +192,9 @@ static void ui_refresh_task() {
 }
 
 int muxwebserv_main(void) {
-    init_module("muxwebserv");
+    const char *m = "muxwebserv";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

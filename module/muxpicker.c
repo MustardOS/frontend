@@ -456,7 +456,9 @@ int muxpicker_main(char *type, char *ex_dir) {
     remove_double_slashes(sys_dir);
     remove_double_slashes(base_dir);
 
-    init_module("muxpicker");
+    const char *m = "muxpicker";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

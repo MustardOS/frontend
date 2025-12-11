@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <sys/prctl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/statvfs.h>
@@ -3603,4 +3604,8 @@ int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
     *result_count = count;
 
     return 0;
+}
+
+void set_process_name(const char *module) {
+    prctl(PR_SET_NAME, module, 0, 0, 0);
 }

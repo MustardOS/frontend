@@ -635,7 +635,9 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxnetinfo_main(void) {
-    init_module("muxnetinfo");
+    const char *m = "muxnetinfo";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

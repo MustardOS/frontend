@@ -338,7 +338,9 @@ static void ui_refresh_task() {
 }
 
 int muxthemefilter_main(void) {
-    init_module("muxthemefilter");
+    const char *m = "muxthemefilter";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTHEMEFILTER.TITLE);

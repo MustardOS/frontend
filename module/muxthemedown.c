@@ -406,7 +406,9 @@ int muxthemedown_main(void) {
     snprintf(theme_data_local_path, sizeof(theme_data_local_path), "%s/%s",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" THEME_DATA);
 
-    init_module("muxthemedown");
+    const char *m = "muxthemedown";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

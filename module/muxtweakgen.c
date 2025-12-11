@@ -512,7 +512,9 @@ static void ui_refresh_task() {
 }
 
 int muxtweakgen_main(void) {
-    init_module("muxtweakgen");
+    const char *m = "muxtweakgen";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

@@ -203,7 +203,9 @@ static void ui_refresh_task() {
 }
 
 int muxspace_main(void) {
-    init_module("muxspace");
+    const char *m = "muxspace";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

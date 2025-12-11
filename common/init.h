@@ -29,7 +29,7 @@ void safe_quit(int exit_status);
 
 void close_input();
 
-void init_module(char *module);
+void init_module(const char *module);
 
 void init_display(int full_refresh);
 
