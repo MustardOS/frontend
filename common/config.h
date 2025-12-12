@@ -66,6 +66,9 @@ struct mux_config {
     } EXTRA;
 
     struct {
+        char ACTIVE[MAX_BUFFER_SIZE];
+        char STORAGE_THEME[MAX_BUFFER_SIZE];
+        char THEME_CAT_PATH[MAX_BUFFER_SIZE];
         char DEFAULT_HASH[MAX_BUFFER_SIZE];
 
         struct {

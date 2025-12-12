@@ -122,7 +122,7 @@ static void set_previous_module(char *module) {
 }
 
 int set_splash_image_path(char *splash_image_name) {
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
     if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
                   theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
          file_exist(splash_image_path)) ||
@@ -510,7 +510,7 @@ int main(void) {
 
         char folder[MAX_BUFFER_SIZE];
         snprintf(folder, sizeof(folder), "%s/%dx%d",
-                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME,
+                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME,
                  device.MUX.WIDTH, device.MUX.HEIGHT);
 
         if (refresh_resolution || !directory_exist(folder)) {

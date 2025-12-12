@@ -68,10 +68,10 @@ static void image_refresh(char *image_type) {
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                     STORAGE_THEME, mux_dimension, image_type);
+                     config.THEME.STORAGE_THEME, mux_dimension, image_type);
             if (!file_exist(image)) {
                 snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         STORAGE_THEME, image_type);
+                         config.THEME.STORAGE_THEME, image_type);
             }
         } else {
             if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {

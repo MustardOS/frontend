@@ -53,7 +53,7 @@
 #define STORAGE_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP  "/tmp/skip_opt"
 
-#define INTERNAL_THEME   OPT_PATH "share/theme/active"
+#define INTERNAL_THEME   OPT_PATH "share/theme/MustardOS"
 #define INTERNAL_OVERLAY OPT_PATH "share/overlay"
 
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
@@ -73,13 +73,10 @@
 #define OPT_SHARE_PATH   OPT_PATH "share/"
 
 #define STORAGE_HOTKEY OPT_SHARE_PATH   "hotkey"
-#define STORAGE_THEME  RUN_STORAGE_PATH "theme/active"
 #define STORAGE_SHOTS  RUN_STORAGE_PATH "screenshot"
 #define STORAGE_MUSIC  RUN_STORAGE_PATH "music"
 #define STORAGE_SOUND  OPT_SHARE_PATH   "media/sound"
 #define STORAGE_LANG   OPT_SHARE_PATH   "language"
-
-#define THEME_CAT_PATH STORAGE_THEME    "/catalogue"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COR_PATH OPT_SHARE_PATH   "info/core"

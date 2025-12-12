@@ -1049,10 +1049,10 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     char footer_image_embed[MAX_BUFFER_SIZE];
 
     if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  STORAGE_THEME, mux_dimension, glyph_name) >= 0 &&
+                  config.THEME.STORAGE_THEME, mux_dimension, glyph_name) >= 0 &&
          file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                  STORAGE_THEME, glyph_name) >= 0 &&
+                  config.THEME.STORAGE_THEME, glyph_name) >= 0 &&
          file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
                   INTERNAL_THEME, mux_dimension, glyph_name) >= 0 &&
@@ -1128,7 +1128,7 @@ void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
+    if (generate_image_embed(config.THEME.STORAGE_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
         generate_image_embed(INTERNAL_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
@@ -1154,7 +1154,7 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA, MU_OBJ_MAIN_DEFAULT);
     }
 
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", battery_glyph_name, image_path,
+    if (generate_image_embed(config.THEME.STORAGE_THEME, mux_dimension, "header", battery_glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
         generate_image_embed(INTERNAL_THEME, mux_dimension, "header", battery_glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
@@ -1168,7 +1168,7 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", "bluetooth", image_path,
+    if (generate_image_embed(config.THEME.STORAGE_THEME, mux_dimension, "header", "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
         generate_image_embed(INTERNAL_THEME, mux_dimension, "header", "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
@@ -1203,7 +1203,7 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    if ((generate_image_embed(STORAGE_THEME, mux_dimension, "header", network_status_filename, image_path,
+    if ((generate_image_embed(config.THEME.STORAGE_THEME, mux_dimension, "header", network_status_filename, image_path,
                               sizeof(image_path), image_embed, sizeof(image_embed)) ||
          generate_image_embed(INTERNAL_THEME, mux_dimension, "header", network_status_filename, image_path,
                               sizeof(image_path), image_embed, sizeof(image_embed))) &&

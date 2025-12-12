@@ -1114,7 +1114,7 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size) {
     if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
 
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
     if (snprintf(image, image_size, "%s/%simage/splash.png", theme, mux_dimension) >= 0 && file_exist(image)) return;
 
     snprintf(image, image_size, "%s/image/splash.png", theme);
@@ -1138,7 +1138,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
     const char *path_format = "%s/%s/%s/%s%s.png";
     const bool skip_theme_catalogue =
-            !directory_exist(THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
+            !directory_exist(config.THEME.THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
 
     struct {
         enum catalogue_kind kind;
@@ -1146,16 +1146,16 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
         const char *dimension;
         const char *program;
     } args[] = {
-            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program},
-            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program_alt},
-            {CAT_THEME, THEME_CAT_PATH, "",            program},
-            {CAT_THEME, THEME_CAT_PATH, "",            program_alt},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program_alt},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_alt},
             {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program},
             {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_alt},
             {CAT_INFO,  INFO_CAT_PATH,  "",            program},
             {CAT_INFO,  INFO_CAT_PATH,  "",            program_alt},
-            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program_default},
-            {CAT_THEME, THEME_CAT_PATH, "",            program_default},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program_default},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_default},
             {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_default},
             {CAT_INFO,  INFO_CAT_PATH,  "",            program_default},
     };
@@ -1215,7 +1215,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             default:
                 break;
         }
-        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
+        if (load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "wall",
                                          strcmp(program, "muxlaunch") == 0 ? element : "default",
                                          "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1224,9 +1224,9 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         }
     }
 
-    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
+    if (load_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "wall",
                              wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-        load_image_specifics(STORAGE_THEME, "", program, "wall",
+        load_image_specifics(config.THEME.STORAGE_THEME, "", program, "wall",
                              wall_extension, wall_image_path, sizeof(wall_image_path))) {
         int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
         if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1312,7 +1312,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 break;
             case GENERAL:
             default:
-                if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
+                if (load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "static",
                                                  strcmp(program, "muxlaunch") == 0 ? element : "default",
                                                  "default", "png", static_image_path,
                                                  sizeof(static_image_path))) {
@@ -1338,9 +1338,9 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
         case 0:
             return;
         case 1:
-            if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "overlay", "png",
+            if (load_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "overlay", "png",
                                      static_image_path, sizeof(static_image_path)) ||
-                load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
+                load_image_specifics(config.THEME.STORAGE_THEME, "", program, "overlay", "png",
                                      static_image_path, sizeof(static_image_path))) {
 
                 int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1372,9 +1372,9 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
-    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "kiosk", "png",
+    if (load_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "kiosk", "png",
                              static_image_path, sizeof(static_image_path)) ||
-        load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
+        load_image_specifics(config.THEME.STORAGE_THEME, "", program, "kiosk", "png",
                              static_image_path, sizeof(static_image_path))) {
 
         int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1387,7 +1387,7 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size) {
     const char *dimensions[] = {mux_dimension, ""};
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
 
     for (size_t i = 0; i < 2; i++) {
         snprintf(buffer, size, "%s/%s%s/muterm.%s", theme, dimensions[i], resource, extension);
@@ -1536,7 +1536,7 @@ void load_font_text(lv_obj_t *screen) {
         char theme_font_text[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
@@ -1575,7 +1575,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
         char theme_font_section[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
@@ -2302,7 +2302,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
     if (snd_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/sound", theme_location);
     }
 
@@ -2339,7 +2339,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
     if (bgm_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/music", theme_location);
     }
 
@@ -2985,9 +2985,9 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  config.THEME.STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  config.THEME.STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
                   INTERNAL_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
@@ -3058,7 +3058,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 }
 
 int theme_compat(void) {
-    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
     char theme_version_file[MAX_BUFFER_SIZE];
     snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", theme_location);
 

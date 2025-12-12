@@ -254,7 +254,7 @@ static void handle_a(void) {
                      relative_path, selected_item);
         }
 
-        if (strcasecmp(picker_type, "/theme") == 0) delete_files_of_type(STORAGE_THEME, ".ttf", NULL, 1);
+        if (strcasecmp(picker_type, "/theme") == 0) delete_files_of_type(config.THEME.STORAGE_THEME, ".ttf", NULL, 1);
 
         size_t exec_count;
         const char *args[] = {picker_script, "install", relative_zip_path, NULL};
@@ -284,8 +284,8 @@ static void handle_x(void) {
 
     char relative_zip_path[PATH_MAX];
     if (strcasecmp(picker_extension, "muxthm") == 0) {
-        snprintf(relative_zip_path, sizeof(relative_zip_path), STORAGE_THEME "/../%s.%s",
-                 lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
+        // snprintf(relative_zip_path, sizeof(relative_zip_path), config.THEME.STORAGE_THEME "/../%s.%s",
+        //          lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
     } else if (strcasecmp(picker_extension, "muxcat") == 0) {
         snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s/%s.%s",
                  device.STORAGE.ROM.MOUNT, STORE_LOC_PCAT,
@@ -466,13 +466,13 @@ int muxpicker_main(char *type, char *ex_dir) {
     if (strcasecmp(picker_type, "/theme") == 0) {
         // Check if our default `MustardOS.muxthm` exists! If not...
         // Put That Thing Back Where It Came From Or So Help Me!
-        char *mustard_theme = STORAGE_THEME "/../MustardOS.muxthm";
-        if (!file_exist(mustard_theme)) {
-            copy_file(INTERNAL_THEME "/../MustardOS.muxthm", mustard_theme);
-            sync();
-        }
-        picker_extension = "muxthm";
-        picker_title = lang.MUXPICKER.THEME;
+        // char *mustard_theme = config.THEME.STORAGE_THEME "/../MustardOS.muxthm";
+        // if (!file_exist(mustard_theme)) {
+        //     copy_file(INTERNAL_THEME "/../MustardOS.muxthm", mustard_theme);
+        //     sync();
+        // }
+        // picker_extension = "muxthm";
+        // picker_title = lang.MUXPICKER.THEME;
     } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
         picker_extension = "muxcat";
         picker_title = lang.MUXPICKER.CATALOGUE;
