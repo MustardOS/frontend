@@ -848,6 +848,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.REFRESH, "Refresh");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.REFRESH_RUN, "Refreshing…");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.THEME_REMOVED, "Theme Removed");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWN.CANNOT_DELETE_ACTIVE_THEME, "Cannot Delete Active Theme");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.NONE, "No Content Found…");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.DOWNLOAD, "Download");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.DOWN.THEME, "Downloading Theme");
