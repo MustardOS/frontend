@@ -122,6 +122,34 @@ struct mux_lang {
             char TOTAL[MAX_BUFFER_SIZE];
             char AVERAGE[MAX_BUFFER_SIZE];
         } GLOBAL;
+        struct {
+            struct {
+                char LABEL[MAX_BUFFER_SIZE];
+                char ONE[MAX_BUFFER_SIZE];
+                char SAMPLER[MAX_BUFFER_SIZE];
+                char BURST[MAX_BUFFER_SIZE];
+                char LONG[MAX_BUFFER_SIZE];
+                char COMPLETIONIST[MAX_BUFFER_SIZE];
+                char ABANDONED[MAX_BUFFER_SIZE];
+                char MARATHONER[MAX_BUFFER_SIZE];
+                char RETURNER[MAX_BUFFER_SIZE];
+                char ONOFF[MAX_BUFFER_SIZE];
+                char WEEKEND[MAX_BUFFER_SIZE];
+            } LOCAL;
+            struct {
+                char LABEL[MAX_BUFFER_SIZE];
+                char CASUAL[MAX_BUFFER_SIZE];
+                char CORE[MAX_BUFFER_SIZE];
+                char EXPLORER[MAX_BUFFER_SIZE];
+                char BINGER[MAX_BUFFER_SIZE];
+                char COMPLETIONIST[MAX_BUFFER_SIZE];
+                char POWER[MAX_BUFFER_SIZE];
+                char COLLECTOR[MAX_BUFFER_SIZE];
+                char SPECIALIST[MAX_BUFFER_SIZE];
+                char NOMAD[MAX_BUFFER_SIZE];
+                char ROUTINE[MAX_BUFFER_SIZE];
+            } GLOBAL;
+        } STYLE;
     } MUXACTIVITY;
 
     struct {
