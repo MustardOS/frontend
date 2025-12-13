@@ -124,6 +124,15 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.AVERAGE, "Average Time");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.TOTAL, "Total Time");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.LAST, "Last Session");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.NAV, "Global Stats");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.TOP_TIME, "Top Content by Time");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.TOP_LAUNCH, "Top Content by Launch");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.CORE, "Most Frequent Core");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.DEVICE, "Most Used Device");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.MODE, "Most Used Mode");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.LAUNCH, "Total Launch Count");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.TOTAL, "Total Play Time");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.AVERAGE, "Average Play Time");
 
     // muxapp
     SPECIFIC_FIELD(lang->MUXAPP.TITLE, "APPLICATIONS");

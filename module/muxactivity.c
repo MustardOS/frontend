@@ -20,10 +20,33 @@ typedef struct {
     int last_session;
 } activity_item_t;
 
+typedef struct {
+    char core[64];
+    int core_count;
+
+    char device[64];
+    int device_count;
+
+    char mode[16];
+    int mode_count;
+
+    int total_launches;
+
+    int total_time;
+    int average_time;
+
+    char top_time[256];
+    int top_time_value;
+
+    char top_launch[256];
+    int top_launch_value;
+} global_stats_t;
+
 // 0 = Time Played
 // 1 = Launch Count
 static int activity_display_mode = 0;
 static int in_detail_view = 0;
+static int in_global_view = 0;
 
 static activity_item_t *activity_items = NULL;
 static size_t activity_count = 0;
@@ -128,6 +151,126 @@ static void load_playtime_json_once(void) {
 static struct json get_playtime_json(void) {
     load_playtime_json_once();
     return playtime_json_root;
+}
+
+static void compute_global_stats(global_stats_t *gs) {
+    memset(gs, 0, sizeof(*gs));
+
+    struct {
+        char key[64];
+        int count;
+    } core_map[256];
+
+    struct {
+        char key[64];
+        int count;
+    } device_map[256];
+
+    struct {
+        char key[16];
+        int count;
+    } mode_map[256];
+
+    int core_used = 0;
+    int device_used = 0;
+    int mode_used = 0;
+
+    gs->top_time_value = -1;
+    gs->top_launch_value = -1;
+    gs->top_time[0] = '\0';
+    gs->top_launch[0] = '\0';
+
+    for (size_t i = 0; i < activity_count; i++) {
+        activity_item_t *it = &activity_items[i];
+
+        gs->total_launches += it->launch_count;
+        gs->total_time += it->total_time;
+
+        if (it->total_time > gs->top_time_value) {
+            gs->top_time_value = it->total_time;
+            snprintf(gs->top_time, sizeof(gs->top_time), "%s", it->name);
+        }
+
+        if (it->launch_count > gs->top_launch_value) {
+            gs->top_launch_value = it->launch_count;
+            snprintf(gs->top_launch, sizeof(gs->top_launch), "%s", it->name);
+        }
+
+        int found = 0;
+        for (int j = 0; j < core_used; j++) {
+            if (strcasecmp(core_map[j].key, it->core) == 0) {
+                core_map[j].count += it->core_count;
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found && it->core[0] != '\0') {
+            strncpy(core_map[core_used].key, it->core, sizeof(core_map[core_used].key));
+            core_map[core_used].count = it->core_count;
+            core_used++;
+        }
+
+        found = 0;
+        for (int j = 0; j < device_used; j++) {
+            if (strcasecmp(device_map[j].key, it->device) == 0) {
+                device_map[j].count += it->device_count;
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found && it->device[0] != '\0') {
+            strncpy(device_map[device_used].key, it->device, sizeof(device_map[device_used].key));
+            device_map[device_used].count = it->device_count;
+            device_used++;
+        }
+
+        found = 0;
+        for (int j = 0; j < mode_used; j++) {
+            if (strcasecmp(mode_map[j].key, it->mode) == 0) {
+                mode_map[j].count += it->mode_count;
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found && it->mode[0] != '\0') {
+            strncpy(mode_map[mode_used].key, it->mode, sizeof(mode_map[mode_used].key));
+            mode_map[mode_used].count = it->mode_count;
+            mode_used++;
+        }
+    }
+
+    int max = -1;
+    for (int i = 0; i < core_used; i++) {
+        if (core_map[i].count > max) {
+            max = core_map[i].count;
+            strncpy(gs->core, core_map[i].key, sizeof(gs->core));
+            gs->core_count = core_map[i].count;
+        }
+    }
+
+    max = -1;
+    for (int i = 0; i < device_used; i++) {
+        if (device_map[i].count > max) {
+            max = device_map[i].count;
+            strncpy(gs->device, device_map[i].key, sizeof(gs->device));
+            gs->device_count = device_map[i].count;
+        }
+    }
+
+    max = -1;
+    for (int i = 0; i < mode_used; i++) {
+        if (mode_map[i].count > max) {
+            max = mode_map[i].count;
+            strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode));
+            gs->mode_count = mode_map[i].count;
+        }
+    }
+
+    if (activity_count > 0)
+        gs->average_time = gs->total_time / activity_count;
 }
 
 static void load_activity_items(void) {
@@ -388,8 +531,115 @@ static void show_detail_view(const activity_item_t *it) {
     lv_obj_update_layout(ui_pnlContent);
 }
 
+static void show_global_view(void) {
+    lv_obj_clean(ui_pnlContent);
+
+    ui_count = 0;
+    current_item_index = 0;
+    in_global_view = 1;
+
+    global_stats_t gs;
+    compute_global_stats(&gs);
+
+    char global_label[MAX_BUFFER_SIZE];
+    char global_value[MAX_BUFFER_SIZE];
+
+    enum global_field {
+        GLOBAL_TOP_TIME,
+        GLOBAL_TOP_LAUNCH,
+        GLOBAL_CORE,
+        GLOBAL_DEVICE,
+        GLOBAL_MODE,
+        GLOBAL_LAUNCHES,
+        GLOBAL_TOTAL_TIME,
+        GLOBAL_AVERAGE_TIME,
+        GLOBAL_COUNT
+    };
+
+    for (int i = 0; i < GLOBAL_COUNT; i++) {
+        global_label[0] = '\0';
+        global_value[0] = '\0';
+
+        switch (i) {
+            case GLOBAL_TOP_TIME:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.TOP_TIME);
+                snprintf(global_value, sizeof(global_value), "%s", gs.top_time);
+                break;
+            case GLOBAL_TOP_LAUNCH:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.TOP_LAUNCH);
+                snprintf(global_value, sizeof(global_value), "%s", gs.top_launch);
+                break;
+            case GLOBAL_CORE:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.CORE);
+
+                char core_tmp[64];
+                snprintf(core_tmp, sizeof(core_tmp), "%s", gs.core);
+                snprintf(global_value, sizeof(global_value), "%s",
+                         str_replace(str_capital_all(core_tmp), "_libretro.so", " (RetroArch)"));
+                break;
+            case GLOBAL_DEVICE:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.DEVICE);
+
+                char device_tmp[64];
+                snprintf(device_tmp, sizeof(device_tmp), "%s", gs.device);
+                snprintf(global_value, sizeof(global_value), "%s", str_toupper(device_tmp));
+                break;
+            case GLOBAL_MODE:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.MODE);
+
+                char mode_tmp[16];
+                snprintf(mode_tmp, sizeof(mode_tmp), "%s", gs.mode);
+                snprintf(global_value, sizeof(global_value), "%s", str_capital(mode_tmp));
+                break;
+            case GLOBAL_LAUNCHES:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.LAUNCH);
+                snprintf(global_value, sizeof(global_value), "%d", gs.total_launches);
+                break;
+            case GLOBAL_TOTAL_TIME:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.TOTAL);
+                snprintf(global_value, sizeof(global_value), "%s", format_total_time(gs.total_time));
+                break;
+            case GLOBAL_AVERAGE_TIME:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.AVERAGE);
+                snprintf(global_value, sizeof(global_value), "%s", format_total_time(gs.average_time));
+                break;
+        }
+
+        ui_count++;
+
+        lv_obj_t *ui_pnlAct = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(ui_pnlAct);
+
+        lv_obj_t *ui_lblActItem = lv_label_create(ui_pnlAct);
+        apply_theme_list_item(&theme, ui_lblActItem, global_label);
+
+        lv_obj_t *ui_lblActItemValue = lv_label_create(ui_pnlAct);
+        apply_theme_list_value(&theme, ui_lblActItemValue, global_value);
+
+        lv_obj_t *ui_lblActItemGlyph = lv_img_create(ui_pnlAct);
+        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, mux_module,
+                               str_tolower(str_replace(global_label, " ", "_")));
+
+        lv_group_add_obj(ui_group, ui_lblActItem);
+        lv_group_add_obj(ui_group_value, ui_lblActItemValue);
+        lv_group_add_obj(ui_group_glyph, ui_lblActItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlAct);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblActItem, ui_lblActItemGlyph, global_label);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
+    }
+
+    lv_obj_update_layout(ui_pnlContent);
+}
+
 static void generate_activity_items(void) {
+    playtime_json_loaded = 0;
+    playtime_json_root = (struct json) {0};
+
     load_activity_items();
+
+    free(playtime_json_str);
+    playtime_json_str = NULL;
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -432,16 +682,30 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void hide_nav(void) {
+    lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+}
+
+static void show_nav(void) {
+    lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+}
+
 static void handle_a(void) {
     if (msgbox_active || !ui_count || hold_call) return;
     if (in_detail_view) return;
 
     play_sound(SND_CONFIRM);
-
-    lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+    hide_nav();
 
     size_t idx = current_item_index;
     if (idx >= activity_count) return;
@@ -464,14 +728,22 @@ static void handle_b(void) {
     play_sound(SND_BACK);
 
     if (in_detail_view) {
-        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+        show_nav();
 
         in_detail_view = 0;
         refresh_activity_labels();
         nav_moved = 1;
+
+        return;
+    }
+
+    if (in_global_view) {
+        show_nav();
+
+        in_global_view = 0;
+        refresh_activity_labels();
+        nav_moved = 1;
+
         return;
     }
 
@@ -479,6 +751,16 @@ static void handle_b(void) {
 
     close_input();
     mux_input_stop();
+}
+
+static void handle_x(void) {
+    if (msgbox_active || !ui_count || hold_call || in_detail_view) return;
+
+    play_sound(SND_CONFIRM);
+    hide_nav();
+
+    show_global_view();
+    nav_moved = 1;
 }
 
 static void handle_y(void) {
@@ -514,13 +796,15 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                    0},
-            {ui_lblNavA,      lang.MUXACTIVITY.INFO, 0},
-            {ui_lblNavBGlyph, "",                    0},
-            {ui_lblNavB,      lang.GENERIC.BACK,     0},
-            {ui_lblNavYGlyph, "",                    0},
-            {ui_lblNavY,      "",                    0},
-            {NULL, NULL,                             0}
+            {ui_lblNavAGlyph, "",                          0},
+            {ui_lblNavA,      lang.MUXACTIVITY.INFO,       0},
+            {ui_lblNavBGlyph, "",                          0},
+            {ui_lblNavB,      lang.GENERIC.BACK,           0},
+            {ui_lblNavXGlyph, "",                          0},
+            {ui_lblNavX,      lang.MUXACTIVITY.GLOBAL.NAV, 0},
+            {ui_lblNavYGlyph, "",                          0},
+            {ui_lblNavY,      "",                          0},
+            {NULL, NULL,                                   0}
     });
 
     overlay_display();
@@ -557,7 +841,10 @@ int muxactivity_main() {
 
     generate_activity_items();
 
-    if (ui_count == 0) lv_label_set_text(ui_lblScreenMessage, lang.MUXACTIVITY.NONE);
+    if (ui_count == 0) {
+        hide_nav();
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXACTIVITY.NONE);
+    }
 
     init_timer(ui_refresh_task, NULL);
 
@@ -566,6 +853,7 @@ int muxactivity_main() {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,

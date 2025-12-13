@@ -151,6 +151,8 @@ static char *get_time_played(void) {
     } else if (minutes > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dm",
                  minutes);
+    } else {
+        snprintf(time_buffer, sizeof(time_buffer), "0m");
     }
 
     return time_buffer;
