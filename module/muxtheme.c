@@ -85,8 +85,6 @@ static void create_theme_items(void) {
             char version_path[FILENAME_MAX];
             snprintf(version_path, sizeof(version_path), "%s/%s/version.txt", sys_dir, tf->d_name);
 
-            printf("create item version_path: %s\n", version_path);
-
             if (file_exist(version_path)) {
                 add_item(&items, &item_count, tf->d_name, tf->d_name, "", ITEM);
             } else {

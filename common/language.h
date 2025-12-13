@@ -984,6 +984,7 @@ struct mux_lang {
         char REFRESH[MAX_BUFFER_SIZE];
         char REFRESH_RUN[MAX_BUFFER_SIZE];
         char THEME_REMOVED[MAX_BUFFER_SIZE];
+        char THEME_EXTRACTING[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
         struct {

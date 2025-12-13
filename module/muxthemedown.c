@@ -2,6 +2,7 @@
 #include "../common/collection_theme.h"
 #include "../common/download.h"
 
+static bool theme_extracting = false;
 static char theme_data_local_path[MAX_BUFFER_SIZE];
 static theme_item *theme_items = NULL;
 static size_t theme_item_count = 0;
@@ -246,9 +247,11 @@ static void theme_download_finished() {
     if (file_exist(theme_path)) {
         char output_path[MAX_BUFFER_SIZE];
         snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH, theme_items[current_item_index].name);
+        theme_extracting = true;
         extract_zip_to_dir(theme_path, output_path);
         remove(theme_path);
         sync();
+        theme_extracting = false;
     }
 
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
@@ -313,6 +316,11 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (theme_extracting) {
+        toast_message(lang.MUXTHEMEDOWN.THEME_EXTRACTING, LONG);
+        return;
+    }
+
     if (hold_call) return;
 
     if (msgbox_active) {
