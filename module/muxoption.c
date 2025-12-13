@@ -142,25 +142,23 @@ static char *get_time_played(void) {
     int hours = (total_time % 86400) / 3600;
     int minutes = (total_time % 3600) / 60;
 
-    if (days > 0)
+    if (days > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm",
                  days, hours, minutes);
-    else if (hours > 0)
+    } else if (hours > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dh %dm",
                  hours, minutes);
-    else if (minutes > 0)
+    } else if (minutes > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dm",
                  minutes);
-    else
-        snprintf(time_buffer, sizeof(time_buffer), "%s",
-                 lang.GENERIC.UNKNOWN);
+    }
 
     return time_buffer;
 }
 
 static char *get_launch_count(void) {
     struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
+    if (!json_exists(playtime_json)) return "0";
 
     static char launch_count[MAX_BUFFER_SIZE];
     snprintf(launch_count, sizeof(launch_count), "%d",

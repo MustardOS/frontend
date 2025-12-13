@@ -145,6 +145,7 @@
     DEVICE(HasPortmaster, "portmaster")
 
 #define INFO_ELEMENTS              \
+    INFO(Activity,   "activity")   \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \
     INFO(Tester,     "tester")     \

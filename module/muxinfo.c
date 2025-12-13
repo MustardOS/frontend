@@ -1,12 +1,13 @@
 #include "muxshare.h"
 #include "ui/ui_muxinfo.h"
 
-#define UI_COUNT 6
+#define UI_COUNT 7
 
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
+            {ui_lblActivity_info,   lang.MUXINFO.HELP.ACTIVITY},
             {ui_lblScreenshot_info, lang.MUXINFO.HELP.SCREENSHOT},
             {ui_lblSpace_info,      lang.MUXINFO.HELP.SPACE},
             {ui_lblTester_info,     lang.MUXINFO.HELP.INPUT},
@@ -23,6 +24,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+    INIT_STATIC_ITEM(-1, info, Activity, lang.MUXINFO.ACTIVITY, "activity", 0);
     INIT_STATIC_ITEM(-1, info, Screenshot, lang.MUXINFO.SCREENSHOT, "screenshot", 0);
     INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space", 0);
     INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.INPUT, "tester", 0);
@@ -82,7 +84,9 @@ static void handle_a(void) {
 
     play_sound(SND_CONFIRM);
 
-    if (element_focused == ui_lblScreenshot_info) {
+    if (element_focused == ui_lblActivity_info) {
+        load_mux("activity");
+    } else if (element_focused == ui_lblScreenshot_info) {
         load_mux("screenshot");
     } else if (element_focused == ui_lblSpace_info) {
         load_mux("space");

@@ -273,7 +273,7 @@ static void gen_item(char **file_names, int file_count) {
     }
 
     for (int i = 0; i < file_count; i++) {
-        char full_path[MAX_BUFFER_SIZE];    
+        char full_path[MAX_BUFFER_SIZE];
         snprintf(full_path, sizeof(full_path), "%s/%s", sys_dir, file_names[i]);
         if (!in_skiplist(&skiplist, full_path)) {
             int has_custom_name = 0;

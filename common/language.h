@@ -93,6 +93,16 @@ struct mux_lang {
     } GENERIC;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char INFO[MAX_BUFFER_SIZE];
+        char MODE[MAX_BUFFER_SIZE];
+        char LAUNCH[MAX_BUFFER_SIZE];
+        char TIME[MAX_BUFFER_SIZE];
+    } MUXACTIVITY;
+
+    struct {
         char LOAD_APP[MAX_BUFFER_SIZE];
         char NO_APP[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
@@ -449,6 +459,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char SYSINFO[MAX_BUFFER_SIZE];
         char NETINFO[MAX_BUFFER_SIZE];
+        char ACTIVITY[MAX_BUFFER_SIZE];
         char SCREENSHOT[MAX_BUFFER_SIZE];
         char SPACE[MAX_BUFFER_SIZE];
         char INPUT[MAX_BUFFER_SIZE];
@@ -456,6 +467,7 @@ struct mux_lang {
         struct {
             char SYSINFO[MAX_BUFFER_SIZE];
             char NETINFO[MAX_BUFFER_SIZE];
+            char ACTIVITY[MAX_BUFFER_SIZE];
             char SCREENSHOT[MAX_BUFFER_SIZE];
             char SPACE[MAX_BUFFER_SIZE];
             char INPUT[MAX_BUFFER_SIZE];
