@@ -248,6 +248,7 @@ static void theme_download_finished() {
         snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH, theme_items[current_item_index].name);
         extract_zip_to_dir(theme_path, output_path);
         remove(theme_path);
+        sync();
     }
 
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
@@ -299,6 +300,7 @@ static void handle_a(void) {
             toast_message(lang.MUXTHEMEDOWN.CANNOT_DELETE_ACTIVE_THEME, SHORT);
         } else {
             remove_directory_recursive(theme_path);
+            sync();
             theme_download_finished();
             toast_message(lang.MUXTHEMEDOWN.THEME_REMOVED, SHORT);
         }
@@ -334,7 +336,7 @@ static void handle_b(void) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
         write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, "/theme");
 
-        load_mux("picker");
+        load_mux("theme");
 
         close_input();
         mux_input_stop();

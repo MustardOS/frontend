@@ -420,10 +420,11 @@ static void handle_a(void) {
         const char *mux_name;
         const char *launch;
         int16_t *kiosk_flag;
+        const char *load_mux_name;
     } elements[] = {
-            {"theme",     "/theme",            &kiosk.CUSTOM.THEME},
-            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
-            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG}
+            {"theme",     "/theme",            &kiosk.CUSTOM.THEME, "theme"},
+            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, "picker"},
+            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG, "picker"}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -450,7 +451,7 @@ static void handle_a(void) {
             lv_task_handler();
             usleep(256);
 
-            load_mux("picker");
+            load_mux(elements[i].load_mux_name);
 
             close_input();
             mux_input_stop();

@@ -244,6 +244,11 @@ static void module_picker(void) {
     muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
 }
 
+static void module_theme(void) {
+    load_mux("custom");
+    muxtheme_main(read_line_char_from(EXPLORE_DIR, 1));
+}
+
 void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *, int)) {
     load_mux(mux);
     func_to_exec(0, rom_name, rom_dir, rom_sys, is_app);
@@ -375,6 +380,7 @@ static const ModuleEntry modules[] = {
         {"history",    NULL, NULL, NULL, module_history},
         {"search",     NULL, NULL, NULL, module_search},
         {"picker",     NULL, NULL, NULL, module_picker},
+        {"theme",      NULL, NULL, NULL, module_theme},
         {"option",     NULL, NULL, NULL, module_option},
         {"appcon",     NULL, NULL, NULL, module_appcon},
         {"app",        NULL, NULL, NULL, module_app},

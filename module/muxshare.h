@@ -178,6 +178,8 @@ int muxpass_main(int auth_type);
 
 int muxpicker_main(char *type, char *ex_dir);
 
+int muxtheme_main(char *ex_dir);
+
 int muxplore_main(int index, char *dir);
 
 int muxpower_main();

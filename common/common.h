@@ -329,7 +329,7 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 
 char *get_script_value(const char *filename, const char *key, const char *not_found);
 
-int resolution_check(const char *zip_filename);
+int resolution_check(const char *theme_path);
 
 int extract_zip_to_dir(const char *filename, const char *output);
 

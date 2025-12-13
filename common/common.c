@@ -2022,45 +2022,20 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
     return value;
 }
 
-int resolution_check(const char *filename) {
-    printf("Inspecting theme for supported resolutions: %s\n", filename);
+int resolution_check(const char *theme_path) {
+    printf("Inspecting theme for supported resolutions: %s\n", theme_path);
     const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720"};
 
-    mz_zip_archive zip;
-    mz_zip_zero_struct(&zip);
-
-    if (!mz_zip_reader_init_file(&zip, filename, 0)) {
-        printf("Failed to open ZIP archive!\n");
-        return 0;
-    }
-
-    for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++) {
-        mz_zip_archive_file_stat file_stat;
-        if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
-
-        const char *filename = file_stat.m_filename;
-        char *slash_pos = strchr(filename, '/');
-
-        if (slash_pos && slash_pos == strrchr(filename, '/')) {
-            size_t folder_length = slash_pos - filename;
-
-            // Extract folder name
-            char folder_name[256];
-            strncpy(folder_name, filename, folder_length);
-            folder_name[folder_length] = '\0';
-
-            // Check if the folder name matches any target resolutions
-            for (size_t j = 0; j < A_SIZE(resolutions); j++) {
-                if (strcmp(folder_name, resolutions[j]) == 0) {
-                    mz_zip_reader_end(&zip);
-                    printf("Found supported resolution\n");
-                    return 1;
-                }
-            }
+    // Check if the folder name matches any target resolutions
+    for (size_t j = 0; j < A_SIZE(resolutions); j++) {
+        char theme_resolution_path[MAX_BUFFER_SIZE];
+        snprintf(theme_resolution_path, sizeof(theme_resolution_path), "%s/%s", theme_path, resolutions[j]);
+        if (directory_exist(theme_resolution_path)) {
+            printf("Found supported resolution\n");
+            return 1;
         }
     }
 
-    mz_zip_reader_end(&zip);
     printf("No supported resolutions found\n");
 
     return 0;
