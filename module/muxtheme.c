@@ -246,7 +246,7 @@ static void handle_x(void) {
                 sys_dir, items[current_item_index].name);    
     if (strcasecmp(active_path, config.THEME.STORAGE_THEME) == 0) {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.CANNOT_DELETE_ACTIVE_THEME, MEDIUM);
+        toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, MEDIUM);
         return;
     }
 

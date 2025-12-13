@@ -297,7 +297,7 @@ static void handle_a(void) {
              RUN_STORAGE_PATH, theme_items[current_item_index].name);
     if (directory_exist(theme_path)) {
         if (strcasecmp(theme_path, config.THEME.STORAGE_THEME) == 0) {
-            toast_message(lang.MUXTHEMEDOWN.CANNOT_DELETE_ACTIVE_THEME, SHORT);
+            toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, SHORT);
         } else {
             remove_directory_recursive(theme_path);
             sync();

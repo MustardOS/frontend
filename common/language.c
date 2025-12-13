@@ -48,6 +48,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.ADD_COLLECT, "Added to Collection");
     GENERIC_FIELD(lang->GENERIC.ALLOWED, "Allowed");
     GENERIC_FIELD(lang->GENERIC.BACK, "Back");
+    GENERIC_FIELD(lang->GENERIC.CANNOT_DELETE_ACTIVE_THEME, "Cannot Delete Active Theme");
     GENERIC_FIELD(lang->GENERIC.CHANGE, "Change");
     GENERIC_FIELD(lang->GENERIC.CHANNEL, "Channel");
     GENERIC_FIELD(lang->GENERIC.CHECK, "Check");
@@ -848,7 +849,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.REFRESH, "Refresh");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.REFRESH_RUN, "Refreshing…");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.THEME_REMOVED, "Theme Removed");
-    SPECIFIC_FIELD(lang->MUXTHEMEDOWN.CANNOT_DELETE_ACTIVE_THEME, "Cannot Delete Active Theme");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.NONE, "No Content Found…");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.DOWNLOAD, "Download");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.DOWN.THEME, "Downloading Theme");
