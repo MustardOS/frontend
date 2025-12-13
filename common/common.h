@@ -331,6 +331,8 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
 int resolution_check(const char *zip_filename);
 
+int extract_zip_to_dir(const char *filename, const char *output);
+
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
 
 char **get_subdirectories(const char *base_dir);
@@ -438,6 +440,8 @@ char *get_version();
 char *get_build();
 
 int copy_file(const char *from, const char *to);
+
+int remove_directory_recursive(const char *path);
 
 int load_content(int add_collection, char *sys_dir, char *file_name);
 

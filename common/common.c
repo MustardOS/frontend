@@ -2066,6 +2066,40 @@ int resolution_check(const char *filename) {
     return 0;
 }
 
+int extract_zip_to_dir(const char *filename, const char *output) {
+    mz_zip_archive zip;
+    mz_zip_zero_struct(&zip);
+
+    if (!mz_zip_reader_init_file(&zip, filename, 0)) {
+        printf("Failed to open ZIP archive!\n");
+        return 0;
+    }
+
+    for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++) {
+        mz_zip_archive_file_stat file_stat;
+        if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
+
+        const char *filename = file_stat.m_filename;
+
+        char dest_file[MAX_BUFFER_SIZE];
+        snprintf(dest_file, sizeof(dest_file), "%s/%s", output, filename);
+        
+        if (file_stat.m_is_directory) {
+            create_directories(dest_file);
+            continue;
+        }
+        
+        if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
+            LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
+            mz_zip_reader_end(&zip);
+            return 0;
+        }        
+    }
+
+    mz_zip_reader_end(&zip);
+    return 0;
+}
+
 int extract_file_from_zip(const char *zip_path, const char *filename, const char *output) {
     mz_zip_archive zip;
     memset(&zip, 0, sizeof(zip));
@@ -3268,6 +3302,60 @@ int copy_file(const char *from, const char *to) {
 
     errno = saved_errno;
     return -1;
+}
+
+int remove_directory_recursive(const char *path) {
+    struct dirent *entry;
+    DIR *dp = opendir(path);
+
+    if (dp == NULL) {
+        perror("opendir");
+        return -1;
+    }
+
+    while ((entry = readdir(dp)) != NULL) {
+        char fullpath[4096];
+        struct stat statbuf;
+
+        // Skip . and ..
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+
+        if (lstat(fullpath, &statbuf) == -1) {
+            perror("lstat");
+            closedir(dp);
+            return -1;
+        }
+
+        if (S_ISDIR(statbuf.st_mode)) {
+            // Recursively delete subdirectory
+            if (remove_directory_recursive(fullpath) == -1) {
+                closedir(dp);
+                return -1;
+            }
+        } else {
+            // Delete file or symlink
+            if (unlink(fullpath) == -1) {
+                perror("unlink");
+                closedir(dp);
+                return -1;
+            }
+        }
+    }
+
+    closedir(dp);
+
+    // Directory should now be empty
+    if (rmdir(path) == -1) {
+        perror("rmdir");
+        return -1;
+    }
+
+    return 0;
 }
 
 int load_content(int add_collection, char *sys_dir, char *file_name) {
