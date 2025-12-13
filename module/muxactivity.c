@@ -383,6 +383,8 @@ static char *format_total_time(int total_time) {
     } else if (minutes > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dm",
                  minutes);
+    } else {
+        snprintf(time_buffer, sizeof(time_buffer), "0m");
     }
 
     return time_buffer;
@@ -451,55 +453,69 @@ static void show_detail_view(const activity_item_t *it) {
     char detail_label[MAX_BUFFER_SIZE];
     char detail_value[MAX_BUFFER_SIZE];
 
-    for (int i = 0; i < 9; ++i) {
+    enum detail_field {
+        DETAIL_NAME,
+        DETAIL_CORE,
+        DETAIL_LAUNCH,
+        DETAIL_DEVICE,
+        DETAIL_MODE,
+        DETAIL_START,
+        DETAIL_AVERAGE,
+        DETAIL_TOTAL,
+        DETAIL_LAST,
+        DETAIL_COUNT
+    };
+
+    for (int i = 0; i < DETAIL_COUNT; ++i) {
         detail_label[0] = '\0';
         detail_value[0] = '\0';
 
         switch (i) {
-            case 0:
+            case DETAIL_NAME:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.NAME);
                 snprintf(detail_value, sizeof(detail_value), "%s", it->name);
                 break;
-            case 1:
+            case DETAIL_CORE:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.CORE);
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", it->core);
-
-                snprintf(detail_value, sizeof(detail_value), "%s", str_replace(str_capital_all(core_tmp),
-                                                                               "_libretro.so", " (RetroArch)"));
+                snprintf(detail_value, sizeof(detail_value), "%s",
+                         str_replace(str_capital_all(core_tmp), "_libretro.so", " (RetroArch)"));
                 break;
-            case 2:
+            case DETAIL_LAUNCH:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.LAUNCH);
                 snprintf(detail_value, sizeof(detail_value), "%d", it->launch_count);
                 break;
-            case 3:
+            case DETAIL_DEVICE:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.DEVICE);
 
                 char device_tmp[64];
                 snprintf(device_tmp, sizeof(device_tmp), "%s", it->device);
                 snprintf(detail_value, sizeof(detail_value), "%s", str_toupper(device_tmp));
                 break;
-            case 4:
+            case DETAIL_MODE:
+                if (!device.BOARD.HAS_HDMI) break;
+
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.MODE);
 
                 char mode_tmp[16];
                 snprintf(mode_tmp, sizeof(mode_tmp), "%s", it->mode);
                 snprintf(detail_value, sizeof(detail_value), "%s", str_capital(mode_tmp));
                 break;
-            case 5:
+            case DETAIL_START:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.START);
                 snprintf(detail_value, sizeof(detail_value), "%s", format_timestamp(it->start_time));
                 break;
-            case 6:
+            case DETAIL_AVERAGE:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.AVERAGE);
                 snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->average_time));
                 break;
-            case 7:
+            case DETAIL_TOTAL:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.TOTAL);
                 snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->total_time));
                 break;
-            case 8:
+            case DETAIL_LAST:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.LAST);
                 snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->last_session));
                 break;
@@ -517,7 +533,8 @@ static void show_detail_view(const activity_item_t *it) {
         apply_theme_list_value(&theme, ui_lblActItemValue, detail_value);
 
         lv_obj_t *ui_lblActItemGlyph = lv_img_create(ui_pnlAct);
-        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, mux_module, "rom");
+        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, mux_module,
+                               str_tolower(str_replace(detail_label, " ", "_")));
 
         lv_group_add_obj(ui_group, ui_lblActItem);
         lv_group_add_obj(ui_group_value, ui_lblActItemValue);
