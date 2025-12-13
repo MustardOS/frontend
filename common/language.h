@@ -100,6 +100,17 @@ struct mux_lang {
         char MODE[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char TIME[MAX_BUFFER_SIZE];
+        struct {
+            char NAME[MAX_BUFFER_SIZE];
+            char CORE[MAX_BUFFER_SIZE];
+            char LAUNCH[MAX_BUFFER_SIZE];
+            char DEVICE[MAX_BUFFER_SIZE];
+            char MODE[MAX_BUFFER_SIZE];
+            char START[MAX_BUFFER_SIZE];
+            char AVERAGE[MAX_BUFFER_SIZE];
+            char TOTAL[MAX_BUFFER_SIZE];
+            char LAST[MAX_BUFFER_SIZE];
+        } DETAIL;
     } MUXACTIVITY;
 
     struct {

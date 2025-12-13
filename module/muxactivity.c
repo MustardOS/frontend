@@ -2,13 +2,28 @@
 
 typedef struct {
     char name[256]; // To be fair exFAT is max 255 :D
-    int total_time;
+
+    char core[64];
+    int core_count;
+
     int launch_count;
+
+    char device[64];
+    int device_count;
+
+    char mode[16];
+    int mode_count;
+
+    int start_time;
+    int average_time;
+    int total_time;
+    int last_session;
 } activity_item_t;
 
 // 0 = Time Played
 // 1 = Launch Count
 static int activity_display_mode = 0;
+static int in_detail_view = 0;
 
 static activity_item_t *activity_items = NULL;
 static size_t activity_count = 0;
@@ -59,6 +74,27 @@ static int cmp_activity_launch(const void *a, const void *b) {
     if (y->launch_count > x->launch_count) return 1;
 
     return 0;
+}
+
+static const char *format_timestamp(int epoch) {
+    static char buf[64];
+
+    if (epoch <= 0) {
+        snprintf(buf, sizeof(buf), "%s", lang.GENERIC.UNKNOWN);
+        return buf;
+    }
+
+    time_t t = (time_t) epoch;
+    struct tm tm_buf;
+
+    struct tm *tm = localtime_r(&t, &tm_buf);
+    if (!tm) {
+        snprintf(buf, sizeof(buf), "%s", lang.GENERIC.UNKNOWN);
+        return buf;
+    }
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
+    return buf;
 }
 
 static void load_playtime_json_once(void) {
@@ -116,11 +152,69 @@ static void load_activity_items(void) {
                 ensure_activity_capacity();
                 if (activity_count >= activity_capacity) break;
 
-                json_string_copy(name_json, activity_items[activity_count].name,
-                                 sizeof(activity_items[activity_count].name));
+                activity_item_t *it = &activity_items[activity_count];
+                json_string_copy(name_json, it->name, sizeof(it->name));
 
-                activity_items[activity_count].total_time = json_int(time_json);
-                activity_items[activity_count].launch_count = json_int(launches_json);
+                it->total_time = json_int(time_json);
+                it->launch_count = json_int(launches_json);
+
+                struct json last_core_json = json_object_get(val, "last_core");
+                struct json core_launch_json = json_object_get(val, "core_launches");
+
+                if (json_exists(last_core_json)) {
+                    json_string_copy(last_core_json, it->core, sizeof(it->core));
+                } else {
+                    it->core[0] = '\0';
+                }
+
+                it->core_count = 0;
+                if (json_exists(core_launch_json) && json_exists(last_core_json)) {
+                    char core_key[64];
+                    json_string_copy(last_core_json, core_key, sizeof(core_key));
+
+                    struct json core_count_json = json_object_get(core_launch_json, core_key);
+                    if (json_exists(core_count_json)) it->core_count = json_int(core_count_json);
+                }
+
+                struct json last_device_json = json_object_get(val, "last_device");
+                struct json device_launch_json = json_object_get(val, "device_launches");
+
+                if (json_exists(last_device_json)) {
+                    json_string_copy(last_device_json, it->device, sizeof(it->device));
+                } else {
+                    it->device[0] = '\0';
+                }
+
+                it->device_count = 0;
+                if (json_exists(device_launch_json) && json_exists(last_device_json)) {
+                    char dev_key[64];
+                    json_string_copy(last_device_json, dev_key, sizeof(dev_key));
+
+                    struct json dev_count_json = json_object_get(device_launch_json, dev_key);
+                    if (json_exists(dev_count_json)) it->device_count = json_int(dev_count_json);
+                }
+
+                struct json last_mode_json = json_object_get(val, "last_mode");
+                struct json mode_launch_json = json_object_get(val, "mode_launches");
+
+                if (json_exists(last_mode_json)) {
+                    json_string_copy(last_mode_json, it->mode, sizeof(it->mode));
+                } else {
+                    it->mode[0] = '\0';
+                }
+
+                it->mode_count = 0;
+                if (json_exists(mode_launch_json) && json_exists(last_mode_json)) {
+                    char mode_key[16];
+                    json_string_copy(last_mode_json, mode_key, sizeof(mode_key));
+
+                    struct json mode_count_json = json_object_get(mode_launch_json, mode_key);
+                    if (json_exists(mode_count_json)) it->mode_count = json_int(mode_count_json);
+                }
+
+                it->start_time = json_int(json_object_get(val, "start_time"));
+                it->average_time = json_int(json_object_get(val, "avg_time"));
+                it->last_session = json_int(json_object_get(val, "last_session"));
 
                 activity_count++;
             }
@@ -204,13 +298,105 @@ static void refresh_activity_labels(void) {
     lv_obj_update_layout(ui_pnlContent);
 }
 
+static void show_detail_view(const activity_item_t *it) {
+    lv_obj_clean(ui_pnlContent);
+
+    ui_count = 0;
+    current_item_index = 0;
+    in_detail_view = 1;
+
+    char detail_label[MAX_BUFFER_SIZE];
+    char detail_value[MAX_BUFFER_SIZE];
+
+    for (int i = 0; i < 9; ++i) {
+        detail_label[0] = '\0';
+        detail_value[0] = '\0';
+
+        switch (i) {
+            case 0:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.NAME);
+                snprintf(detail_value, sizeof(detail_value), "%s", it->name);
+                break;
+            case 1:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.CORE);
+
+                char core_tmp[64];
+                snprintf(core_tmp, sizeof(core_tmp), "%s", it->core);
+
+                snprintf(detail_value, sizeof(detail_value), "%s", str_replace(str_capital_all(core_tmp),
+                                                                               "_libretro.so", " (RetroArch)"));
+                break;
+            case 2:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.LAUNCH);
+                snprintf(detail_value, sizeof(detail_value), "%d", it->launch_count);
+                break;
+            case 3:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.DEVICE);
+
+                char device_tmp[64];
+                snprintf(device_tmp, sizeof(device_tmp), "%s", it->device);
+                snprintf(detail_value, sizeof(detail_value), "%s", str_toupper(device_tmp));
+                break;
+            case 4:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.MODE);
+
+                char mode_tmp[16];
+                snprintf(mode_tmp, sizeof(mode_tmp), "%s", it->mode);
+                snprintf(detail_value, sizeof(detail_value), "%s", str_capital(mode_tmp));
+                break;
+            case 5:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.START);
+                snprintf(detail_value, sizeof(detail_value), "%s", format_timestamp(it->start_time));
+                break;
+            case 6:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.AVERAGE);
+                snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->average_time));
+                break;
+            case 7:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.TOTAL);
+                snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->total_time));
+                break;
+            case 8:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.LAST);
+                snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->last_session));
+                break;
+        }
+
+        ui_count++;
+
+        lv_obj_t *ui_pnlAct = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(ui_pnlAct);
+
+        lv_obj_t *ui_lblActItem = lv_label_create(ui_pnlAct);
+        apply_theme_list_item(&theme, ui_lblActItem, detail_label);
+
+        lv_obj_t *ui_lblActItemValue = lv_label_create(ui_pnlAct);
+        apply_theme_list_value(&theme, ui_lblActItemValue, detail_value);
+
+        lv_obj_t *ui_lblActItemGlyph = lv_img_create(ui_pnlAct);
+        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, mux_module, "rom");
+
+        lv_group_add_obj(ui_group, ui_lblActItem);
+        lv_group_add_obj(ui_group_value, ui_lblActItemValue);
+        lv_group_add_obj(ui_group_glyph, ui_lblActItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlAct);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblActItem, ui_lblActItemGlyph, detail_label);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
+    }
+
+    lv_obj_update_layout(ui_pnlContent);
+}
+
 static void generate_activity_items(void) {
     load_activity_items();
 
     ui_group = lv_group_create();
+    ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
+    in_detail_view = 0;
     refresh_activity_labels();
 }
 
@@ -230,6 +416,7 @@ static void list_nav_move(int steps, int direction) {
         nav_move(ui_group, direction);
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
+        nav_move(ui_group_value, direction);
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
@@ -247,9 +434,20 @@ static void list_nav_next(int steps) {
 
 static void handle_a(void) {
     if (msgbox_active || !ui_count || hold_call) return;
+    if (in_detail_view) return;
 
-//    close_input();
-//    mux_input_stop();
+    play_sound(SND_CONFIRM);
+
+    lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    size_t idx = current_item_index;
+    if (idx >= activity_count) return;
+
+    show_detail_view(&activity_items[idx]);
+    nav_moved = 1;
 }
 
 static void handle_b(void) {
@@ -265,6 +463,18 @@ static void handle_b(void) {
 
     play_sound(SND_BACK);
 
+    if (in_detail_view) {
+        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+
+        in_detail_view = 0;
+        refresh_activity_labels();
+        nav_moved = 1;
+        return;
+    }
+
     free_activity_items(&activity_items, &activity_count);
 
     close_input();
@@ -272,7 +482,7 @@ static void handle_b(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || hold_call || in_detail_view) return;
 
     activity_display_mode = !activity_display_mode;
     play_sound(SND_NAVIGATE);
