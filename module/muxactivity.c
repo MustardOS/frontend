@@ -1066,7 +1066,7 @@ static void export_activity_html(void) {
             gs.top_time, format_total_time(gs.top_time_value));
 
     fprintf(f, "<tr><td>Top Content by Launch</td><td>%s (%s)</td></tr>",
-            gs.top_launch, format_total_time(gs.top_launch_value));
+            gs.top_launch, gs.top_launch);
 
     fprintf(f, "<tr><td>Most Frequent Core</td><td>%s</td></tr>",
             global_core_value);
