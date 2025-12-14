@@ -107,6 +107,7 @@ struct mux_lang {
         char INFO[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char TIME[MAX_BUFFER_SIZE];
+        char HTML[MAX_BUFFER_SIZE];
         struct {
             char NAME[MAX_BUFFER_SIZE];
             char CORE[MAX_BUFFER_SIZE];

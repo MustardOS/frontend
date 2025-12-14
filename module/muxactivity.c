@@ -276,6 +276,22 @@ static int cmp_activity_launch(const void *a, const void *b) {
     return 0;
 }
 
+static const char *export_timestamp(void) {
+    static char buf[64];
+
+    time_t now = time(NULL);
+    struct tm tm_buf;
+
+    struct tm *tm = localtime_r(&now, &tm_buf);
+    if (!tm) {
+        snprintf(buf, sizeof(buf), "%s", lang.GENERIC.UNKNOWN);
+        return buf;
+    }
+
+    strftime(buf, sizeof(buf), TIME_STRING, tm);
+    return buf;
+}
+
 static const char *format_timestamp(int epoch) {
     static char buf[64];
 
@@ -293,7 +309,7 @@ static const char *format_timestamp(int epoch) {
         return buf;
     }
 
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
+    strftime(buf, sizeof(buf), TIME_STRING, tm);
     return buf;
 }
 
@@ -961,6 +977,196 @@ static void show_global_view(void) {
     lv_obj_update_layout(ui_pnlContent);
 }
 
+static void html_escape(FILE *f, const char *s) {
+    for (; *s; s++) {
+        switch (*s) {
+            case '&':
+                fputs("&amp;", f);
+                break;
+            case '<':
+                fputs("&lt;", f);
+                break;
+            case '>':
+                fputs("&gt;", f);
+                break;
+            case '"':
+                fputs("&quot;", f);
+                break;
+            default:
+                fputc(*s, f);
+                break;
+        }
+    }
+}
+
+static void export_activity_html(void) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), INFO_ACT_PATH "/activity_report.html");
+
+    FILE *f = fopen(path, "w");
+    if (!f) {
+        toast_message("Error exporting statistics", MEDIUM);
+        refresh_screen(ui_screen);
+        return;
+    }
+
+    global_stats_t gs;
+    compute_global_stats(&gs);
+
+    fprintf(f,
+            "<!DOCTYPE html>"
+            "<html>"
+            "<head>"
+            "<meta charset='utf-8'>"
+            "<title>MustardOS - Activity Tracker</title>"
+            "<style>"
+            "body { font-family: sans-serif; background: #1F1F1F; color: #ffffff; padding: 20px }"
+            "h1, h2 { color: #f7d12e }"
+            "table { border-collapse: collapse; margin-bottom: 24px }"
+            "th, td { border: 1px solid #444; padding: 6px }"
+            "td { vertical-align: top; }"
+            "th { background: #222 }"
+            "td:first-child { colour: #c7af26; font-weight: bold }"
+            "tr:nth-child(even) { background: #1a1a1a }"
+            "#global { width: 400px }"
+            "#detail { width: 100%% }"
+            "</style>"
+            "</head>"
+            "<body>"
+    );
+
+    char global_core_value[MAX_BUFFER_SIZE];
+    char global_device_value[MAX_BUFFER_SIZE];
+    char global_mode_value[MAX_BUFFER_SIZE];
+
+    char global_core_tmp[64];
+    snprintf(global_core_tmp, sizeof(global_core_tmp), "%s", gs.core);
+
+    char global_device_tmp[64];
+    snprintf(global_device_tmp, sizeof(global_device_tmp), "%s", gs.device);
+
+    char global_mode_tmp[16];
+    snprintf(global_mode_tmp, sizeof(global_mode_tmp), "%s", gs.mode);
+
+    snprintf(global_core_value, sizeof(global_core_value), "%s",
+             str_replace(str_capital_all(global_core_tmp), "_libretro.so", " (RetroArch)"));
+
+    snprintf(global_device_value, sizeof(global_device_value), "%s",
+             str_toupper(global_device_tmp));
+
+    snprintf(global_mode_value, sizeof(global_mode_value), "%s",
+             str_capital(global_mode_tmp));
+
+    fprintf(f, "<h1>MustardOS - Activity Tracker</h1>");
+    fprintf(f, "<strong>Exported:</strong> %s", export_timestamp());
+
+    fprintf(f, "<h2>Global Summary</h2><table id='global'><tr><th>Metric</th><th>Value</th></tr>");
+
+    fprintf(f, "<tr><td>Top Content by Time</td><td>%s (%s)</td></tr>",
+            gs.top_time, format_total_time(gs.top_time_value));
+
+    fprintf(f, "<tr><td>Top Content by Launch</td><td>%s (%s)</td></tr>",
+            gs.top_launch, format_total_time(gs.top_launch_value));
+
+    fprintf(f, "<tr><td>Most Frequent Core</td><td>%s</td></tr>",
+            global_core_value);
+
+    fprintf(f, "<tr><td>Most Used Device</td><td>%s</td></tr>",
+            global_device_value);
+
+    fprintf(f, "<tr><td>Most Used Mode</td><td>%s</td></tr>",
+            global_mode_value);
+
+    fprintf(f, "<tr><td>Total Launch Count</td><td>%d</td></tr>",
+            gs.total_launches);
+
+    fprintf(f, "<tr><td>Total Play Time</td><td>%s</td></tr>",
+            format_total_time(gs.total_time));
+
+    fprintf(f, "<tr><td>Average Play Time</td><td>%s</td></tr>",
+            format_total_time(gs.average_time));
+
+    fprintf(f, "<tr><td>First Game Played</td><td>%s</td></tr>",
+            gs.first_content);
+
+    fprintf(f, "<tr><td>Longest Session</td><td>%s</td></tr>",
+            gs.longest_session);
+
+    fprintf(f, "<tr><td>Overall Play Style</td><td>%s</td></tr>",
+            global_playstyle_name(gs.global_playstyle));
+
+    fprintf(f, "<tr><td>Unique Content Played</td><td>%zu</td></tr>",
+            gs.unique_titles);
+
+    fprintf(f, "<tr><td>Unique Cores Used</td><td>%d</td></tr>",
+            gs.unique_cores);
+
+    fprintf(f, "<tr><td>Most Active Time</td><td>%s</td></tr>",
+            hour_label(gs.active_hour));
+
+    fprintf(f, "<tr><td>Favourite Day</td><td>%s</td></tr>",
+            weekday_label(gs.favourite_day));
+
+    fprintf(f, "</table>");
+
+    fprintf(f,
+            "<h2>Content Statistics</h2>"
+            "<table id='detail'><tr>"
+            "<th>Content Name</th>"
+            "<th>Core Used</th>"
+            "<th>Last Device</th>"
+            "<th>Launch Count</th>"
+            "<th>Start Time</th>"
+            "<th>Average Time</th>"
+            "<th>Total Time</th>"
+            "<th>Last Session</th>"
+            "<th>Play Style</th>"
+            "</tr>"
+    );
+
+    char detail_core_value[MAX_BUFFER_SIZE];
+    char detail_device_value[MAX_BUFFER_SIZE];
+    char detail_core_tmp[64];
+    char detail_device_tmp[64];
+
+    for (size_t i = 0; i < activity_count; i++) {
+        const activity_item_t *it = &activity_items[i];
+        local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
+
+        snprintf(detail_core_tmp, sizeof(detail_core_tmp), "%s", it->core);
+        snprintf(detail_core_value, sizeof(detail_core_value), "%s",
+                 str_replace(str_capital_all(detail_core_tmp), "_libretro.so", " (RetroArch)"));
+
+        snprintf(detail_device_tmp, sizeof(detail_device_tmp), "%s", it->device);
+        snprintf(detail_device_value, sizeof(detail_device_value), "%s", str_toupper(detail_device_tmp));
+
+        fprintf(f, "<tr><td>");
+        html_escape(f, it->name);
+        fprintf(f, "</td>");
+
+        fprintf(f, "<td>%s</td>", detail_core_value);
+        fprintf(f, "<td>%s</td>", detail_device_value);
+        fprintf(f, "<td>%d</td>", it->launch_count);
+        fprintf(f, "<td>%s</td>", format_timestamp(it->start_time));
+        fprintf(f, "<td>%s</td>", format_total_time(it->average_time));
+        fprintf(f, "<td>%s</td>", format_total_time(it->total_time));
+        fprintf(f, "<td>%s</td>", format_total_time(it->last_session));
+        fprintf(f, "<td>%s</td>", local_playstyle_name(ps));
+        fprintf(f, "</tr>");
+    }
+
+    fprintf(f,
+            "</table>"
+            "</body>"
+            "</html>"
+    );
+
+    fclose(f);
+
+    toast_message("Activity statistics exported", MEDIUM);
+    refresh_screen(ui_screen);
+}
+
 static void generate_activity_items(void) {
     load_activity_items();
 
@@ -1068,6 +1274,7 @@ static void handle_b(void) {
 
     if (in_global_view) {
         show_nav();
+        lv_label_set_text(ui_lblNavX, lang.MUXACTIVITY.GLOBAL.NAV);
 
         in_global_view = 0;
         refresh_activity_labels();
@@ -1087,7 +1294,17 @@ static void handle_x(void) {
     if (msgbox_active || !ui_count || hold_call || in_detail_view) return;
 
     play_sound(SND_CONFIRM);
+
+    if (in_global_view) {
+        export_activity_html();
+        return;
+    }
+
     hide_nav();
+
+    lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_label_set_text(ui_lblNavX, lang.MUXACTIVITY.HTML);
 
     overview_item_index = current_item_index;
 
