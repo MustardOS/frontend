@@ -77,6 +77,9 @@ typedef struct {
     char longest_session[256];
     int longest_session_duration;
 
+    int active_hour; // 0–23, -1 if unknown
+    int favourite_day; // 0–6 (Sun–Sat), -1 if unknown
+
     global_playstyle_t global_playstyle;
 } global_stats_t;
 
@@ -124,6 +127,32 @@ void free_activity_items(activity_item_t **activity_items, size_t *count) {
 
     playtime_json_str = NULL;
     playtime_json_loaded = 0;
+}
+
+static const char *hour_label(int hour) {
+    static char buf[32];
+    if (hour < 0 || hour > 23) return lang.GENERIC.UNKNOWN;
+
+    int h = hour % 12;
+    if (h == 0) h = 12;
+
+    snprintf(buf, sizeof(buf), "%d %s", h, hour < 12 ? "AM" : "PM");
+    return buf;
+}
+
+static const char *weekday_label(int day) {
+    static const char *days[] = {
+            lang.GENERIC.SUNDAY,
+            lang.GENERIC.MONDAY,
+            lang.GENERIC.TUESDAY,
+            lang.GENERIC.WEDNESDAY,
+            lang.GENERIC.THURSDAY,
+            lang.GENERIC.FRIDAY,
+            lang.GENERIC.SATURDAY
+    };
+
+    if (day < 0 || day > 6) return lang.GENERIC.UNKNOWN;
+    return days[day];
 }
 
 static const char *local_playstyle_name(local_playstyle_t ps) {
@@ -323,6 +352,11 @@ static void compute_global_stats(global_stats_t *gs) {
     int device_used = 0;
     int mode_used = 0;
 
+    int hour_buckets[24] = {0};
+    int day_buckets[7] = {0};
+
+    gs->active_hour = -1;
+    gs->favourite_day = -1;
     gs->top_time_value = -1;
     gs->top_launch_value = -1;
     gs->top_time[0] = '\0';
@@ -350,6 +384,17 @@ static void compute_global_stats(global_stats_t *gs) {
         if (it->start_time > 0 && it->start_time < gs->first_content_time) {
             gs->first_content_time = it->start_time;
             snprintf(gs->first_content, sizeof(gs->first_content), "%s", it->name);
+        }
+
+        if (it->start_time > 0 && it->last_session > 0) {
+            time_t t = (time_t) it->start_time;
+            struct tm tm_buf;
+            struct tm *tm = localtime_r(&t, &tm_buf);
+
+            if (tm) {
+                hour_buckets[tm->tm_hour] += it->last_session;
+                day_buckets[tm->tm_wday] += it->last_session;
+            }
         }
 
         if (it->last_session > gs->longest_session_duration) {
@@ -427,6 +472,22 @@ static void compute_global_stats(global_stats_t *gs) {
             max = mode_map[i].count;
             strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode));
             gs->mode_count = mode_map[i].count;
+        }
+    }
+
+    max = -1;
+    for (int i = 0; i < 24; i++) {
+        if (hour_buckets[i] > max) {
+            max = hour_buckets[i];
+            gs->active_hour = i;
+        }
+    }
+
+    max = -1;
+    for (int i = 0; i < 7; i++) {
+        if (day_buckets[i] > max) {
+            max = day_buckets[i];
+            gs->favourite_day = i;
         }
     }
 
@@ -771,6 +832,8 @@ static void show_global_view(void) {
         GLOBAL_PLAYSTYLE,
         GLOBAL_UNIQUE_TITLES,
         GLOBAL_UNIQUE_CORES,
+        GLOBAL_ACTIVE_TIME,
+        GLOBAL_FAVOURITE_DAY,
         GLOBAL_COUNT
     };
 
@@ -857,6 +920,16 @@ static void show_global_view(void) {
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.UNIQUE_CORE);
                 snprintf(global_value, sizeof(global_value), "%d", gs.unique_cores);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_uniquecore");
+                break;
+            case GLOBAL_ACTIVE_TIME:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.ACTIVE_TIME);
+                snprintf(global_value, sizeof(global_value), "%s", hour_label(gs.active_hour));
+                snprintf(global_glyph, sizeof(global_glyph), "%s", "global_active");
+                break;
+            case GLOBAL_FAVOURITE_DAY:
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.FAVOURITE_DAY);
+                snprintf(global_value, sizeof(global_value), "%s", weekday_label(gs.favourite_day));
+                snprintf(global_glyph, sizeof(global_glyph), "%s", "global_day");
                 break;
             default:
                 continue;

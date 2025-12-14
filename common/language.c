@@ -107,6 +107,13 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
     GENERIC_FIELD(lang->GENERIC.USER_DEFINED, "User Defined");
     GENERIC_FIELD(lang->GENERIC.VISIBLE, "Visible");
+    GENERIC_FIELD(lang->GENERIC.SUNDAY, "Sunday");
+    GENERIC_FIELD(lang->GENERIC.MONDAY, "Monday");
+    GENERIC_FIELD(lang->GENERIC.TUESDAY, "Tuesday");
+    GENERIC_FIELD(lang->GENERIC.WEDNESDAY, "Wednesday");
+    GENERIC_FIELD(lang->GENERIC.THURSDAY, "Thursday");
+    GENERIC_FIELD(lang->GENERIC.FRIDAY, "Friday");
+    GENERIC_FIELD(lang->GENERIC.SATURDAY, "Saturday");
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");
@@ -138,6 +145,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.OVERALL, "Overall Play Style");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.UNIQUE_PLAY, "Unique Content Played");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.UNIQUE_CORE, "Unique Cores Used");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.ACTIVE_TIME, "Most Active Time");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.FAVOURITE_DAY, "Favourite Day");
     SPECIFIC_FIELD(lang->MUXACTIVITY.STYLE.LOCAL.LABEL, "Play Style");
     SPECIFIC_FIELD(lang->MUXACTIVITY.STYLE.LOCAL.ONE, "One and Done");
     SPECIFIC_FIELD(lang->MUXACTIVITY.STYLE.LOCAL.SAMPLER, "Sampler");

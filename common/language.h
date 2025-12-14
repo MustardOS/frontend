@@ -91,6 +91,13 @@ struct mux_lang {
         char USER_DEFINED[MAX_BUFFER_SIZE];
         char USE[MAX_BUFFER_SIZE];
         char VISIBLE[MAX_BUFFER_SIZE];
+        char SUNDAY[MAX_BUFFER_SIZE];
+        char MONDAY[MAX_BUFFER_SIZE];
+        char TUESDAY[MAX_BUFFER_SIZE];
+        char WEDNESDAY[MAX_BUFFER_SIZE];
+        char THURSDAY[MAX_BUFFER_SIZE];
+        char FRIDAY[MAX_BUFFER_SIZE];
+        char SATURDAY[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -126,6 +133,8 @@ struct mux_lang {
             char OVERALL[MAX_BUFFER_SIZE];
             char UNIQUE_PLAY[MAX_BUFFER_SIZE];
             char UNIQUE_CORE[MAX_BUFFER_SIZE];
+            char ACTIVE_TIME[MAX_BUFFER_SIZE];
+            char FAVOURITE_DAY[MAX_BUFFER_SIZE];
         } GLOBAL;
         struct {
             struct {
