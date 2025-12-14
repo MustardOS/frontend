@@ -1030,7 +1030,7 @@ static void export_activity_html(void) {
             "body { font-family: sans-serif; background: #1f1f1f; color: #ffffff; padding: 20px }"
             "h1, h2 { color: #f7d12e }"
             "table { margin-bottom: 24px }"
-            "th, td { border: 1px solid #444; padding: 6px }"
+            "th, td { border: 1px solid #444444; padding: 6px }"
             "th { background: #222222 }"
             "tr:nth-child(even) { background: #1a1a1a }"
             "#global { width: 400px }"
@@ -1038,6 +1038,10 @@ static void export_activity_html(void) {
 
             ".dt-container { color: #ffffff }"
             ".dt-search input, .dt-length select { background:#111111; color:#ffffff; border:1px solid #444444 }"
+            "table.dataTable tbody tr:nth-child(even) { background-color: #1a1a1a }"
+            "table.dataTable tbody tr:nth-child(odd) { background-color: #1f1f1f }"
+            "table.dataTable tbody tr:hover { background-color: #2c2c2c }"
+
             "</style>"
 
             "</head>"
