@@ -81,10 +81,10 @@ static void image_refresh() {
 
     if (strlen(core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 STORAGE_THEME, mux_dimension, "box");
+                 config.THEME.STORAGE_THEME, mux_dimension, "box");
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     STORAGE_THEME, "box");
+                     config.THEME.STORAGE_THEME, "box");
         }
     } else {
         load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, "box",

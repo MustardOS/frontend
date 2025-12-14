@@ -9,7 +9,7 @@ static void create_archive_items(void) {
             device.STORAGE.ROM.MOUNT,
             device.STORAGE.SDCARD.MOUNT,
             device.STORAGE.USB.MOUNT,
-            STORAGE_THEME
+            config.THEME.STORAGE_THEME
     };
 
     const char *subdirs[] = {"/backup", "/archive"};

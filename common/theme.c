@@ -1007,7 +1007,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 }
 
 int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size) {
-    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
     char active_path[MAX_BUFFER_SIZE];
     snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_location);
@@ -1038,7 +1038,7 @@ void scale_theme(struct mux_device *device) {
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (size_t i = 0; i < A_SIZE(dimensions); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width,
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config.THEME.STORAGE_THEME, dimensions[i].width,
                  dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
 
@@ -1056,7 +1056,7 @@ void scale_theme(struct mux_device *device) {
 
     for (size_t i = 0; i < A_SIZE(dimensions); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width,
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config.THEME.STORAGE_THEME, dimensions[i].width,
                  dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
 
@@ -1084,7 +1084,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         char theme_device_folder[MAX_BUFFER_SIZE];
 
         if (config->SETTINGS.GENERAL.THEME_RESOLUTION > 0) {
-            snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME,
+            snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config->THEME.STORAGE_THEME,
                      config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH, config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT);
             if (directory_exist(theme_device_folder)) {
                 device->MUX.WIDTH = config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH;
@@ -1100,7 +1100,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             }
         }
 
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", config->THEME.STORAGE_THEME, mux_dimension);
         if (!directory_exist(theme_device_folder)) scale_theme(device);
 
         LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->MUX.WIDTH, device->MUX.HEIGHT)
@@ -1112,7 +1112,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     if (theme_compat()) {
         for (size_t i = 0; i < A_SIZE(schemes); i++) {
-            if (load_scheme(STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
+            if (load_scheme(config->THEME.STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
                 LOG_INFO("muxfrontend", "Loading STORAGE Theme Scheme: %s", scheme)
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);

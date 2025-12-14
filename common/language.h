@@ -32,6 +32,7 @@ struct mux_lang {
         char ADD_COLLECT[MAX_BUFFER_SIZE];
         char ALLOWED[MAX_BUFFER_SIZE];
         char BACK[MAX_BUFFER_SIZE];
+        char CANNOT_DELETE_ACTIVE_THEME[MAX_BUFFER_SIZE];
         char CHANGE[MAX_BUFFER_SIZE];
         char CHANNEL[MAX_BUFFER_SIZE];
         char CHECK[MAX_BUFFER_SIZE];
@@ -1045,6 +1046,7 @@ struct mux_lang {
         char REFRESH[MAX_BUFFER_SIZE];
         char REFRESH_RUN[MAX_BUFFER_SIZE];
         char THEME_REMOVED[MAX_BUFFER_SIZE];
+        char THEME_EXTRACTING[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
         struct {

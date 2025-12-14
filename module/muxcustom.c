@@ -73,7 +73,7 @@ static int populate_theme_alternates(void) {
     lv_dropdown_clear_options(ui_droThemeAlternate_custom);
 
     char alt_path[MAX_BUFFER_SIZE];
-    snprintf(alt_path, sizeof(alt_path), "%s/alternate", STORAGE_THEME);
+    snprintf(alt_path, sizeof(alt_path), "%s/alternate", config.THEME.STORAGE_THEME);
 
     struct dirent *entry;
     DIR *dir = opendir(alt_path);
@@ -196,7 +196,7 @@ static void init_navigation_group(void) {
 
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
-        snprintf(theme_device_folder, sizeof(theme_device_folder), STORAGE_THEME "/%s",
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", config.THEME.STORAGE_THEME, 
                  theme_resolutions[i].resolution);
 
         if (directory_exist(theme_device_folder)) {
@@ -292,8 +292,10 @@ static void handle_option_next(void) {
 }
 
 static void restore_custom_options(void) {
+    char theme_active_txt_path[MAX_BUFFER_SIZE];
+    snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", config.THEME.STORAGE_THEME);
     snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
-             str_replace(read_line_char_from(STORAGE_THEME "/active.txt", 1), "\r", ""));
+             str_replace(read_line_char_from(theme_active_txt_path, 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate_custom, theme_alt_original);
     if (option_index > 0) lv_dropdown_set_selected(ui_droThemeAlternate_custom, option_index);
 
@@ -348,10 +350,12 @@ static void save_custom_options(char *next_screen) {
         lv_dropdown_get_selected_str(ui_droThemeAlternate_custom, theme_alt, sizeof(theme_alt));
 
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
-            write_text_to_file(STORAGE_THEME "/active.txt", "w", CHAR, theme_alt);
+            char theme_active_txt_path[MAX_BUFFER_SIZE];
+            snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", config.THEME.STORAGE_THEME);
+            write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
-            snprintf(theme_alt_archive, sizeof(theme_alt_archive), STORAGE_THEME "/alternate/%s.muxalt",
+            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", config.THEME.STORAGE_THEME,
                      theme_alt);
 
             if (file_exist(theme_alt_archive)) {
@@ -359,16 +363,16 @@ static void save_custom_options(char *next_screen) {
                 extract_archive(theme_alt_archive, next_screen);
             } else {
                 char png_bootlogo[MAX_BUFFER_SIZE];
-                snprintf(png_bootlogo, sizeof(png_bootlogo), STORAGE_THEME "/%simage/bootlogo.png",
+                snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/%simage/bootlogo.png", config.THEME.STORAGE_THEME,
                          mux_dimension);
                 if (!file_exist(png_bootlogo)) {
-                    snprintf(png_bootlogo, sizeof(png_bootlogo), STORAGE_THEME "/image/bootlogo.png");
+                    snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/image/bootlogo.png", config.THEME.STORAGE_THEME);
                 }
                 if (file_exist(png_bootlogo)) update_bootlogo(next_screen);
             }
 
             static char rgb_script[MAX_BUFFER_SIZE];
-            snprintf(rgb_script, sizeof(rgb_script), STORAGE_THEME "/alternate/rgb/%s/rgbconf.sh",
+            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", config.THEME.STORAGE_THEME,
                      theme_alt);
             if (file_exist(rgb_script)) {
                 if (device.BOARD.RGB && config.SETTINGS.GENERAL.RGB) {
@@ -377,7 +381,7 @@ static void save_custom_options(char *next_screen) {
                 }
 
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
-                snprintf(rgb_script_dest, sizeof(rgb_script_dest), STORAGE_THEME "/rgb/rgbconf.sh");
+                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", config.THEME.STORAGE_THEME);
 
                 create_directories(strip_dir(rgb_script_dest));
                 write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
@@ -416,10 +420,11 @@ static void handle_a(void) {
         const char *mux_name;
         const char *launch;
         int16_t *kiosk_flag;
+        const char *load_mux_name;
     } elements[] = {
-            {"theme",     "/theme",            &kiosk.CUSTOM.THEME},
-            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
-            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG}
+            {"theme",     "/theme",            &kiosk.CUSTOM.THEME, "theme"},
+            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, "picker"},
+            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG, "picker"}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -446,7 +451,7 @@ static void handle_a(void) {
             lv_task_handler();
             usleep(256);
 
-            load_mux("picker");
+            load_mux(elements[i].load_mux_name);
 
             close_input();
             mux_input_stop();

@@ -1114,7 +1114,7 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size) {
     if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
 
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
     if (snprintf(image, image_size, "%s/%simage/splash.png", theme, mux_dimension) >= 0 && file_exist(image)) return;
 
     snprintf(image, image_size, "%s/image/splash.png", theme);
@@ -1138,7 +1138,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
     const char *path_format = "%s/%s/%s/%s%s.png";
     const bool skip_theme_catalogue =
-            !directory_exist(THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
+            !directory_exist(config.THEME.THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
 
     struct {
         enum catalogue_kind kind;
@@ -1146,16 +1146,16 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
         const char *dimension;
         const char *program;
     } args[] = {
-            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program},
-            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program_alt},
-            {CAT_THEME, THEME_CAT_PATH, "",            program},
-            {CAT_THEME, THEME_CAT_PATH, "",            program_alt},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program_alt},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_alt},
             {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program},
             {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_alt},
             {CAT_INFO,  INFO_CAT_PATH,  "",            program},
             {CAT_INFO,  INFO_CAT_PATH,  "",            program_alt},
-            {CAT_THEME, THEME_CAT_PATH, mux_dimension, program_default},
-            {CAT_THEME, THEME_CAT_PATH, "",            program_default},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program_default},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_default},
             {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_default},
             {CAT_INFO,  INFO_CAT_PATH,  "",            program_default},
     };
@@ -1215,7 +1215,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             default:
                 break;
         }
-        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
+        if (load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "wall",
                                          strcmp(program, "muxlaunch") == 0 ? element : "default",
                                          "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1224,9 +1224,9 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         }
     }
 
-    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
+    if (load_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "wall",
                              wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-        load_image_specifics(STORAGE_THEME, "", program, "wall",
+        load_image_specifics(config.THEME.STORAGE_THEME, "", program, "wall",
                              wall_extension, wall_image_path, sizeof(wall_image_path))) {
         int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
         if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1312,7 +1312,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 break;
             case GENERAL:
             default:
-                if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
+                if (load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "static",
                                                  strcmp(program, "muxlaunch") == 0 ? element : "default",
                                                  "default", "png", static_image_path,
                                                  sizeof(static_image_path))) {
@@ -1338,9 +1338,9 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
         case 0:
             return;
         case 1:
-            if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "overlay", "png",
+            if (load_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "overlay", "png",
                                      static_image_path, sizeof(static_image_path)) ||
-                load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
+                load_image_specifics(config.THEME.STORAGE_THEME, "", program, "overlay", "png",
                                      static_image_path, sizeof(static_image_path))) {
 
                 int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1372,9 +1372,9 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
-    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "kiosk", "png",
+    if (load_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, program, "kiosk", "png",
                              static_image_path, sizeof(static_image_path)) ||
-        load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
+        load_image_specifics(config.THEME.STORAGE_THEME, "", program, "kiosk", "png",
                              static_image_path, sizeof(static_image_path))) {
 
         int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1387,7 +1387,7 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size) {
     const char *dimensions[] = {mux_dimension, ""};
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
 
     for (size_t i = 0; i < 2; i++) {
         snprintf(buffer, size, "%s/%s%s/muterm.%s", theme, dimensions[i], resource, extension);
@@ -1536,7 +1536,7 @@ void load_font_text(lv_obj_t *screen) {
         char theme_font_text[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
@@ -1575,7 +1575,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
         char theme_font_section[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
@@ -2022,10 +2022,26 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
     return value;
 }
 
-int resolution_check(const char *filename) {
-    printf("Inspecting theme for supported resolutions: %s\n", filename);
+int resolution_check(const char *theme_path) {
+    printf("Inspecting theme for supported resolutions: %s\n", theme_path);
     const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720"};
 
+    // Check if the folder name matches any target resolutions
+    for (size_t j = 0; j < A_SIZE(resolutions); j++) {
+        char theme_resolution_path[MAX_BUFFER_SIZE];
+        snprintf(theme_resolution_path, sizeof(theme_resolution_path), "%s/%s", theme_path, resolutions[j]);
+        if (directory_exist(theme_resolution_path)) {
+            printf("Found supported resolution\n");
+            return 1;
+        }
+    }
+
+    printf("No supported resolutions found\n");
+
+    return 0;
+}
+
+int extract_zip_to_dir(const char *filename, const char *output) {
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
 
@@ -2039,30 +2055,23 @@ int resolution_check(const char *filename) {
         if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
 
         const char *filename = file_stat.m_filename;
-        char *slash_pos = strchr(filename, '/');
 
-        if (slash_pos && slash_pos == strrchr(filename, '/')) {
-            size_t folder_length = slash_pos - filename;
-
-            // Extract folder name
-            char folder_name[256];
-            strncpy(folder_name, filename, folder_length);
-            folder_name[folder_length] = '\0';
-
-            // Check if the folder name matches any target resolutions
-            for (size_t j = 0; j < A_SIZE(resolutions); j++) {
-                if (strcmp(folder_name, resolutions[j]) == 0) {
-                    mz_zip_reader_end(&zip);
-                    printf("Found supported resolution\n");
-                    return 1;
-                }
-            }
+        char dest_file[MAX_BUFFER_SIZE];
+        snprintf(dest_file, sizeof(dest_file), "%s/%s", output, filename);
+        
+        if (file_stat.m_is_directory) {
+            create_directories(dest_file);
+            continue;
         }
+        
+        if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
+            LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
+            mz_zip_reader_end(&zip);
+            return 0;
+        }        
     }
 
     mz_zip_reader_end(&zip);
-    printf("No supported resolutions found\n");
-
     return 0;
 }
 
@@ -2302,7 +2311,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
     if (snd_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/sound", theme_location);
     }
 
@@ -2339,7 +2348,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
     if (bgm_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/music", theme_location);
     }
 
@@ -2985,9 +2994,9 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  config.THEME.STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  config.THEME.STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
                   INTERNAL_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
@@ -3058,7 +3067,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 }
 
 int theme_compat(void) {
-    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
     char theme_version_file[MAX_BUFFER_SIZE];
     snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", theme_location);
 
@@ -3268,6 +3277,60 @@ int copy_file(const char *from, const char *to) {
 
     errno = saved_errno;
     return -1;
+}
+
+int remove_directory_recursive(const char *path) {
+    struct dirent *entry;
+    DIR *dp = opendir(path);
+
+    if (dp == NULL) {
+        perror("opendir");
+        return -1;
+    }
+
+    while ((entry = readdir(dp)) != NULL) {
+        char fullpath[4096];
+        struct stat statbuf;
+
+        // Skip . and ..
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+
+        if (lstat(fullpath, &statbuf) == -1) {
+            perror("lstat");
+            closedir(dp);
+            return -1;
+        }
+
+        if (S_ISDIR(statbuf.st_mode)) {
+            // Recursively delete subdirectory
+            if (remove_directory_recursive(fullpath) == -1) {
+                closedir(dp);
+                return -1;
+            }
+        } else {
+            // Delete file or symlink
+            if (unlink(fullpath) == -1) {
+                perror("unlink");
+                closedir(dp);
+                return -1;
+            }
+        }
+    }
+
+    closedir(dp);
+
+    // Directory should now be empty
+    if (rmdir(path) == -1) {
+        perror("rmdir");
+        return -1;
+    }
+
+    return 0;
 }
 
 int load_content(int add_collection, char *sys_dir, char *file_name) {

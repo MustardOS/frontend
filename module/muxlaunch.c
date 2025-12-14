@@ -40,14 +40,14 @@ static void init_navigation_group_grid(char *item_labels[], char *item_grid_labe
         if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
 
         char grid_img[MAX_BUFFER_SIZE];
-        load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
+        load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
                                      "default", "png", grid_img, sizeof(grid_img));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
 
         char grid_img_foc[MAX_BUFFER_SIZE];
-        load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
+        load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
                                      "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
 
         content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);

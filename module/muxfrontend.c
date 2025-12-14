@@ -122,7 +122,7 @@ static void set_previous_module(char *module) {
 }
 
 int set_splash_image_path(char *splash_image_name) {
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
     if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
                   theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
          file_exist(splash_image_path)) ||
@@ -242,6 +242,11 @@ static void module_search(void) {
 static void module_picker(void) {
     load_mux("custom");
     muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
+}
+
+static void module_theme(void) {
+    load_mux("custom");
+    muxtheme_main(read_line_char_from(EXPLORE_DIR, 1));
 }
 
 void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *, int)) {
@@ -375,6 +380,7 @@ static const ModuleEntry modules[] = {
         {"history",    NULL, NULL, NULL, module_history},
         {"search",     NULL, NULL, NULL, module_search},
         {"picker",     NULL, NULL, NULL, module_picker},
+        {"theme",      NULL, NULL, NULL, module_theme},
         {"option",     NULL, NULL, NULL, module_option},
         {"appcon",     NULL, NULL, NULL, module_appcon},
         {"app",        NULL, NULL, NULL, module_app},
@@ -511,7 +517,7 @@ int main(void) {
 
         char folder[MAX_BUFFER_SIZE];
         snprintf(folder, sizeof(folder), "%s/%dx%d",
-                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME,
+                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME,
                  device.MUX.WIDTH, device.MUX.HEIGHT);
 
         if (refresh_resolution || !directory_exist(folder)) {
