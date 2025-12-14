@@ -123,6 +123,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXACTIVITY.LAUNCH, "Launch Count");
     SPECIFIC_FIELD(lang->MUXACTIVITY.TIME, "Duration");
     SPECIFIC_FIELD(lang->MUXACTIVITY.HTML, "Export");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.UNIQUE, "Unique");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.NAME, "Content Name");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.CORE, "Core Used");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.LAUNCH, "Launch Count");

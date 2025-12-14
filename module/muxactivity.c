@@ -162,65 +162,65 @@ static const char *weekday_label(int day) {
     return days[day];
 }
 
-static const char *local_playstyle_name(local_playstyle_t ps) {
+static const char *local_playstyle_name(local_playstyle_t ps, int use_en) {
     switch (ps) {
         case LOCAL_PLAYSTYLE_ONE_AND_DONE:
-            return lang.MUXACTIVITY.STYLE.LOCAL.ONE;
+            return use_en ? "One and Done" : lang.MUXACTIVITY.STYLE.LOCAL.ONE;
         case LOCAL_PLAYSTYLE_SAMPLER:
-            return lang.MUXACTIVITY.STYLE.LOCAL.SAMPLER;
+            return use_en ? "Sampler" : lang.MUXACTIVITY.STYLE.LOCAL.SAMPLER;
         case LOCAL_PLAYSTYLE_SHORT_BURSTS:
-            return lang.MUXACTIVITY.STYLE.LOCAL.BURST;
+            return use_en ? "Short Bursts" : lang.MUXACTIVITY.STYLE.LOCAL.BURST;
         case LOCAL_PLAYSTYLE_LONG_SESSIONS:
-            return lang.MUXACTIVITY.STYLE.LOCAL.LONG;
+            return use_en ? "Long Sessions" : lang.MUXACTIVITY.STYLE.LOCAL.LONG;
         case LOCAL_PLAYSTYLE_COMPLETIONIST:
-            return lang.MUXACTIVITY.STYLE.LOCAL.COMPLETIONIST;
+            return use_en ? "Completionist" : lang.MUXACTIVITY.STYLE.LOCAL.COMPLETIONIST;
         case LOCAL_PLAYSTYLE_ABANDONED:
-            return lang.MUXACTIVITY.STYLE.LOCAL.ABANDONED;
+            return use_en ? "Abandoned" : lang.MUXACTIVITY.STYLE.LOCAL.ABANDONED;
         case LOCAL_PLAYSTYLE_MARATHONER:
-            return lang.MUXACTIVITY.STYLE.LOCAL.MARATHONER;
+            return use_en ? "Marathoner" : lang.MUXACTIVITY.STYLE.LOCAL.MARATHONER;
         case LOCAL_PLAYSTYLE_RETURNER:
-            return lang.MUXACTIVITY.STYLE.LOCAL.RETURNER;
+            return use_en ? "Returner" : lang.MUXACTIVITY.STYLE.LOCAL.RETURNER;
         case LOCAL_PLAYSTYLE_ON_OFF:
-            return lang.MUXACTIVITY.STYLE.LOCAL.ON_OFF;
+            return use_en ? "On and Off" : lang.MUXACTIVITY.STYLE.LOCAL.ON_OFF;
         case LOCAL_PLAYSTYLE_WEEKEND_WARRIOR:
-            return lang.MUXACTIVITY.STYLE.LOCAL.WEEKEND;
+            return use_en ? "Weekend Warrior" : lang.MUXACTIVITY.STYLE.LOCAL.WEEKEND;
         case LOCAL_PLAYSTYLE_COMFORT:
-            return lang.MUXACTIVITY.STYLE.LOCAL.COMFORT;
+            return use_en ? "Comfort Game" : lang.MUXACTIVITY.STYLE.LOCAL.COMFORT;
         case LOCAL_PLAYSTYLE_REGULAR:
-            return lang.MUXACTIVITY.STYLE.LOCAL.REGULAR;
+            return use_en ? "Regular Play" : lang.MUXACTIVITY.STYLE.LOCAL.REGULAR;
         default:
-            return lang.GENERIC.UNKNOWN;
+            return use_en ? "Unique" : lang.MUXACTIVITY.UNIQUE;
     }
 }
 
-static const char *global_playstyle_name(global_playstyle_t ps) {
+static const char *global_playstyle_name(global_playstyle_t ps, int use_en) {
     switch (ps) {
         case GLOBAL_PLAYSTYLE_CASUAL:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.CASUAL;
+            return use_en ? "Casual" : lang.MUXACTIVITY.STYLE.GLOBAL.CASUAL;
         case GLOBAL_PLAYSTYLE_CORE_GAMER:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.CORE;
+            return use_en ? "Core Gamer" : lang.MUXACTIVITY.STYLE.GLOBAL.CORE;
         case GLOBAL_PLAYSTYLE_EXPLORER:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.EXPLORER;
+            return use_en ? "Explorer" : lang.MUXACTIVITY.STYLE.GLOBAL.EXPLORER;
         case GLOBAL_PLAYSTYLE_BINGER:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.BINGER;
+            return use_en ? "Binger" : lang.MUXACTIVITY.STYLE.GLOBAL.BINGER;
         case GLOBAL_PLAYSTYLE_COMPLETIONIST:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.COMPLETIONIST;
+            return use_en ? "Completionist" : lang.MUXACTIVITY.STYLE.GLOBAL.COMPLETIONIST;
         case GLOBAL_PLAYSTYLE_POWER_USER:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.POWER;
+            return use_en ? "Power Player" : lang.MUXACTIVITY.STYLE.GLOBAL.POWER;
         case GLOBAL_PLAYSTYLE_COLLECTOR:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.COLLECTOR;
+            return use_en ? "Content Collector" : lang.MUXACTIVITY.STYLE.GLOBAL.COLLECTOR;
         case GLOBAL_PLAYSTYLE_SPECIALIST:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.SPECIALIST;
+            return use_en ? "Specialist" : lang.MUXACTIVITY.STYLE.GLOBAL.SPECIALIST;
         case GLOBAL_PLAYSTYLE_NOMAD:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.NOMAD;
+            return use_en ? "Device Nomad" : lang.MUXACTIVITY.STYLE.GLOBAL.NOMAD;
         case GLOBAL_PLAYSTYLE_ROUTINE:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.ROUTINE;
+            return use_en ? "Routine Player" : lang.MUXACTIVITY.STYLE.GLOBAL.ROUTINE;
         case GLOBAL_PLAYSTYLE_HABITUAL:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.HABITUAL;
+            return use_en ? "Habitual Player" : lang.MUXACTIVITY.STYLE.GLOBAL.HABITUAL;
         case GLOBAL_PLAYSTYLE_WINDOW:
-            return lang.MUXACTIVITY.STYLE.GLOBAL.WINDOW;
+            return use_en ? "Window Shopper" : lang.MUXACTIVITY.STYLE.GLOBAL.WINDOW;
         default:
-            return lang.GENERIC.UNKNOWN;
+            return use_en ? "Unique" : lang.MUXACTIVITY.UNIQUE;
     }
 }
 
@@ -928,7 +928,7 @@ static void show_detail_view(const activity_item_t *it) {
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.STYLE.LOCAL.LABEL);
 
                 local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
-                snprintf(detail_value, sizeof(detail_value), "%s", local_playstyle_name(ps));
+                snprintf(detail_value, sizeof(detail_value), "%s", local_playstyle_name(ps, 0));
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_play");
                 break;
@@ -1066,7 +1066,7 @@ static void show_global_view(void) {
                 break;
             case GLOBAL_PLAYSTYLE:
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.OVERALL);
-                snprintf(global_value, sizeof(global_value), "%s", global_playstyle_name(gs.global_playstyle));
+                snprintf(global_value, sizeof(global_value), "%s", global_playstyle_name(gs.global_playstyle, 0));
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_play");
                 break;
             case GLOBAL_UNIQUE_TITLES:
@@ -1248,7 +1248,7 @@ static void export_activity_html(void) {
             gs.longest_session);
 
     fprintf(f, "<tr><td>Overall Play Style</td><td>%s</td></tr>",
-            global_playstyle_name(gs.global_playstyle));
+            global_playstyle_name(gs.global_playstyle, 1));
 
     fprintf(f, "<tr><td>Unique Content Played</td><td>%zu</td></tr>",
             gs.unique_titles);
@@ -1307,7 +1307,7 @@ static void export_activity_html(void) {
         fprintf(f, "<td>%s</td>", format_total_time(it->average_time));
         fprintf(f, "<td>%s</td>", format_total_time(it->total_time));
         fprintf(f, "<td>%s</td>", format_total_time(it->last_session));
-        fprintf(f, "<td>%s</td>", local_playstyle_name(ps));
+        fprintf(f, "<td>%s</td>", local_playstyle_name(ps, 1));
         fprintf(f, "</tr>");
     }
 
