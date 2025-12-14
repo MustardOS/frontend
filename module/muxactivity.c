@@ -76,7 +76,10 @@ typedef struct {
     int first_content_time;
 
     size_t unique_titles;
+
     int unique_cores;
+    int unique_devices;
+    int unique_modes;
 
     char longest_session[256];
     int longest_session_duration;
@@ -221,46 +224,81 @@ static const char *global_playstyle_name(global_playstyle_t ps) {
     }
 }
 
+// Static calculated values - much nicer on the brain to calculate!
+// Abusing the enum system to get the values is quite devilish :D
+enum {
+    SEC_15M = 15 * 60,
+    SEC_20M = 20 * 60,
+    SEC_30M = 30 * 60,
+    SEC_45M = 45 * 60,
+    SEC_90M = 90 * 60,
+
+    SEC_1H = 60 * 60,
+    SEC_2H = 2 * 3600,
+    SEC_3H = 3 * 3600,
+    SEC_8H = 8 * 3600,
+    SEC_10H = 10 * 3600,
+    SEC_15H = 15 * 3600,
+    SEC_20H = 20 * 3600,
+    SEC_50H = 50 * 3600,
+    SEC_80H = 80 * 3600,
+    SEC_100H = 100 * 3600
+};
+
+// Compile-time sanity checks!
+// https://www.gnu.org/software/c-intro-and-ref/manual/html_node/Static-Assertions.html
+_Static_assert(SEC_1H == 3600, "1 hour must be exactly 3600 seconds");
+_Static_assert(SEC_30M < SEC_1H, "Minute and hour ordering broken");
+_Static_assert(SEC_2H > SEC_1H, "Hour scale 2H to 1H broken");
+_Static_assert(SEC_100H > SEC_50H, "High end hour thresholds broken");
+_Static_assert(SEC_15M < SEC_20M && SEC_20M < SEC_30M && SEC_30M < SEC_45M && SEC_45M < SEC_90M,
+               "Minute thresholds must be increasing...");
+_Static_assert(SEC_1H < SEC_2H && SEC_2H < SEC_3H && SEC_3H < SEC_8H && SEC_8H < SEC_10H &&
+               SEC_10H < SEC_15H && SEC_15H < SEC_20H && SEC_20H < SEC_50H &&
+               SEC_50H < SEC_80H && SEC_80H < SEC_100H,
+               "Hour thresholds must be increasing...");
+
 static local_playstyle_t resolve_local_playstyle(int launches, int total_time) {
     if (launches <= 0 || total_time <= 0)
         return LOCAL_PLAYSTYLE_UNKNOWN;
 
-    int avg = total_time / launches;
+    const int avg = total_time / launches;
 
-    if (launches == 1 && total_time < 2 * 3600)
+    if (launches == 1 && total_time < SEC_2H)
         return LOCAL_PLAYSTYLE_ONE_AND_DONE;
 
-    if (launches <= 2 && total_time < 30 * 60)
+    if (launches <= 2 && total_time < SEC_30M)
         return LOCAL_PLAYSTYLE_ABANDONED;
 
-    if (launches >= 3 && total_time < 3600)
+    if (launches >= 3 && total_time < SEC_1H)
         return LOCAL_PLAYSTYLE_SAMPLER;
 
-    if (total_time >= 100 * 3600 && launches >= 10)
+    if (total_time >= SEC_100H && launches >= 10)
         return LOCAL_PLAYSTYLE_MARATHONER;
 
-    if (total_time >= 20 * 3600 && launches >= 5 && avg >= 2 * 3600)
+    if (total_time >= SEC_20H && launches >= 5 && avg >= SEC_2H)
         return LOCAL_PLAYSTYLE_COMPLETIONIST;
 
-    if (launches <= 6 && avg >= 3 * 3600 && total_time >= 8 * 3600)
+    if (launches <= 6 && avg >= SEC_3H && total_time >= SEC_8H)
         return LOCAL_PLAYSTYLE_WEEKEND_WARRIOR;
 
-    if (launches >= 10 && avg < 15 * 60 && total_time >= 2 * 3600)
+    if (launches >= 10 && avg < SEC_15M && total_time >= SEC_2H)
         return LOCAL_PLAYSTYLE_SHORT_BURSTS;
 
-    if (launches >= 15 && avg >= 20 * 60 && avg <= 90 * 60 && total_time >= 15 * 3600 && total_time <= 80 * 3600)
-        return LOCAL_PLAYSTYLE_COMFORT;
-
-    if (launches >= 15 && avg < 45 * 60 && total_time < 10 * 3600)
+    if (launches >= 15 && avg < SEC_45M && total_time < SEC_10H)
         return LOCAL_PLAYSTYLE_RETURNER;
 
-    if (launches >= 3 && launches <= 8 && avg < 30 * 60)
+    if (launches >= 3 && launches <= 8 && avg < SEC_30M)
         return LOCAL_PLAYSTYLE_ON_OFF;
 
-    if (launches >= 5 && avg >= 30 * 60 && avg <= 2 * 3600)
+    if (launches >= 15 && avg >= SEC_20M && avg <= SEC_90M &&
+        total_time >= SEC_15H && total_time <= SEC_80H)
+        return LOCAL_PLAYSTYLE_COMFORT;
+
+    if (launches >= 5 && avg >= SEC_30M && avg <= SEC_2H)
         return LOCAL_PLAYSTYLE_REGULAR;
 
-    if (launches >= 3 && avg >= 60 * 60)
+    if (launches <= 5 && avg >= SEC_2H)
         return LOCAL_PLAYSTYLE_LONG_SESSIONS;
 
     return LOCAL_PLAYSTYLE_UNKNOWN;
@@ -270,41 +308,46 @@ static global_playstyle_t resolve_global_playstyle(const global_stats_t *gs) {
     if (gs->total_time <= 0)
         return GLOBAL_PLAYSTYLE_UNKNOWN;
 
-    int avg = gs->average_time;
+    const int avg = gs->average_time;
 
-    if (gs->total_time < 10 * 3600 && gs->total_launches < 20)
-        return GLOBAL_PLAYSTYLE_CASUAL;
-
-    if (gs->unique_titles >= 20 && avg < 30 * 60 && gs->total_time < 50 * 3600)
-        return GLOBAL_PLAYSTYLE_WINDOW;
-
-    if (gs->unique_titles >= 50 && avg < 20 * 60)
-        return GLOBAL_PLAYSTYLE_COLLECTOR;
-
-    if (gs->unique_titles <= 5 && gs->total_time >= 100 * 3600 && avg >= 2 * 3600)
-        return GLOBAL_PLAYSTYLE_COMPLETIONIST;
-
-    if (avg >= 2 * 3600)
-        return GLOBAL_PLAYSTYLE_BINGER;
-
-    if (gs->total_launches >= 75 && avg >= 20 * 60 && avg <= 90 * 60 &&
-        gs->unique_titles >= 5 && gs->unique_titles <= 15)
-        return GLOBAL_PLAYSTYLE_ROUTINE;
+    if (gs->unique_devices >= 3)
+        return GLOBAL_PLAYSTYLE_NOMAD;
 
     if (gs->total_launches >= 200 && gs->unique_cores >= 10)
         return GLOBAL_PLAYSTYLE_POWER_USER;
 
-    if (gs->total_launches >= 100 && avg >= 30 * 60)
-        return GLOBAL_PLAYSTYLE_CORE_GAMER;
-
-    if (gs->unique_cores <= 2 && gs->total_time >= 80 * 3600)
+    if (gs->unique_cores <= 2 && gs->total_time >= SEC_80H)
         return GLOBAL_PLAYSTYLE_SPECIALIST;
 
-    if (gs->device_count >= 4 || (gs->device_count >= 2 && gs->unique_cores >= 6))
-        return GLOBAL_PLAYSTYLE_NOMAD;
+    if (gs->unique_titles <= 5 && gs->total_time >= SEC_100H && avg >= SEC_2H)
+        return GLOBAL_PLAYSTYLE_COMPLETIONIST;
 
-    if (gs->total_launches >= 50 && avg >= 30 * 60)
+    if (avg >= SEC_2H)
+        return GLOBAL_PLAYSTYLE_BINGER;
+
+    if (gs->unique_titles >= 45 && avg < SEC_20M)
+        return GLOBAL_PLAYSTYLE_COLLECTOR;
+
+    if (gs->unique_titles >= 20 && avg < SEC_30M && gs->total_time < SEC_50H)
+        return GLOBAL_PLAYSTYLE_WINDOW;
+
+    if (gs->unique_titles >= 10 && gs->unique_titles < 45 &&
+        avg < SEC_45M && gs->total_time < SEC_80H)
+        return GLOBAL_PLAYSTYLE_EXPLORER;
+
+    if (gs->total_launches >= 75 &&
+        avg >= SEC_20M && avg <= SEC_90M &&
+        gs->unique_titles >= 5 && gs->unique_titles <= 15)
+        return GLOBAL_PLAYSTYLE_ROUTINE;
+
+    if (gs->total_launches >= 100 && avg >= SEC_30M)
+        return GLOBAL_PLAYSTYLE_CORE_GAMER;
+
+    if (gs->total_launches >= 50 && avg >= SEC_30M)
         return GLOBAL_PLAYSTYLE_HABITUAL;
+
+    if (gs->total_time < SEC_10H && gs->total_launches < 100)
+        return GLOBAL_PLAYSTYLE_CASUAL;
 
     return GLOBAL_PLAYSTYLE_UNKNOWN;
 }
@@ -399,6 +442,23 @@ static struct json get_playtime_json(void) {
     return playtime_json_root;
 }
 
+static void normalise_json_values(char *dst, size_t dst_size, const char *src) {
+    if (!src || !*src) {
+        dst[0] = '\0';
+        return;
+    }
+
+    while (*src == ' ') src++;
+
+    size_t len = strlen(src);
+    while (len > 0 && src[len - 1] == ' ') len--;
+
+    size_t n = (len < dst_size - 1) ? len : (dst_size - 1);
+    for (size_t i = 0; i < n; i++) dst[i] = (char) tolower((unsigned char) src[i]);
+
+    dst[n] = '\0';
+}
+
 static void compute_global_stats(global_stats_t *gs) {
     memset(gs, 0, sizeof(*gs));
 
@@ -421,6 +481,7 @@ static void compute_global_stats(global_stats_t *gs) {
     int device_used = 0;
     int mode_used = 0;
 
+    // It's pronounced bouquet
     int hour_buckets[24] = {0};
     int day_buckets[7] = {0};
 
@@ -432,6 +493,8 @@ static void compute_global_stats(global_stats_t *gs) {
     gs->top_launch[0] = '\0';
     gs->first_content_time = INT_MAX;
     gs->longest_session_duration = 0;
+
+    // Currently one activity item per unique title in JSON
     gs->unique_titles = activity_count;
 
     for (size_t i = 0; i < activity_count; i++) {
@@ -461,8 +524,8 @@ static void compute_global_stats(global_stats_t *gs) {
             struct tm *tm = localtime_r(&t, &tm_buf);
 
             if (tm) {
-                hour_buckets[tm->tm_hour] += it->last_session;
-                day_buckets[tm->tm_wday] += it->last_session;
+                hour_buckets[tm->tm_hour] += it->total_time;
+                day_buckets[tm->tm_wday] += it->total_time;
             }
         }
 
@@ -471,48 +534,68 @@ static void compute_global_stats(global_stats_t *gs) {
             snprintf(gs->longest_session, sizeof(gs->longest_session), "%s", it->name);
         }
 
-        int found = 0;
+        int found;
+
+        char norm_core[64];
+        normalise_json_values(norm_core, sizeof(norm_core), it->core);
+
+        found = 0;
         for (int j = 0; j < core_used; j++) {
-            if (strcasecmp(core_map[j].key, it->core) == 0) {
+            if (strcmp(core_map[j].key, norm_core) == 0) {
                 core_map[j].count += it->core_count;
                 found = 1;
                 break;
             }
         }
 
-        if (!found && it->core[0] != '\0') {
-            strncpy(core_map[core_used].key, it->core, sizeof(core_map[core_used].key));
+        if (!found && norm_core[0] != '\0' && core_used < (int) (sizeof(core_map) / sizeof(core_map[0]))) {
+            strncpy(core_map[core_used].key, norm_core, sizeof(core_map[core_used].key) - 1);
+
+            core_map[core_used].key[sizeof(core_map[0].key) - 1] = '\0';
             core_map[core_used].count = it->core_count;
+
             core_used++;
         }
 
+        char norm_device[64];
+        normalise_json_values(norm_device, sizeof(norm_device), it->device);
+
         found = 0;
         for (int j = 0; j < device_used; j++) {
-            if (strcasecmp(device_map[j].key, it->device) == 0) {
+            if (strcmp(device_map[j].key, norm_device) == 0) {
                 device_map[j].count += it->device_count;
                 found = 1;
                 break;
             }
         }
 
-        if (!found && it->device[0] != '\0') {
-            strncpy(device_map[device_used].key, it->device, sizeof(device_map[device_used].key));
+        if (!found && norm_device[0] != '\0' && device_used < (int) (sizeof(device_map) / sizeof(device_map[0]))) {
+            strncpy(device_map[device_used].key, norm_device, sizeof(device_map[device_used].key) - 1);
+
+            device_map[device_used].key[sizeof(device_map[0].key) - 1] = '\0';
             device_map[device_used].count = it->device_count;
+
             device_used++;
         }
 
+        char norm_mode[16];
+        normalise_json_values(norm_mode, sizeof(norm_mode), it->mode);
+
         found = 0;
         for (int j = 0; j < mode_used; j++) {
-            if (strcasecmp(mode_map[j].key, it->mode) == 0) {
+            if (strcmp(mode_map[j].key, norm_mode) == 0) {
                 mode_map[j].count += it->mode_count;
                 found = 1;
                 break;
             }
         }
 
-        if (!found && it->mode[0] != '\0') {
-            strncpy(mode_map[mode_used].key, it->mode, sizeof(mode_map[mode_used].key));
+        if (!found && norm_mode[0] != '\0' && mode_used < (int) (sizeof(mode_map) / sizeof(mode_map[0]))) {
+            strncpy(mode_map[mode_used].key, norm_mode, sizeof(mode_map[mode_used].key) - 1);
+
+            mode_map[mode_used].key[sizeof(mode_map[0].key) - 1] = '\0';
             mode_map[mode_used].count = it->mode_count;
+
             mode_used++;
         }
     }
@@ -521,7 +604,8 @@ static void compute_global_stats(global_stats_t *gs) {
     for (int i = 0; i < core_used; i++) {
         if (core_map[i].count > max) {
             max = core_map[i].count;
-            strncpy(gs->core, core_map[i].key, sizeof(gs->core));
+            strncpy(gs->core, core_map[i].key, sizeof(gs->core) - 1);
+            gs->core[sizeof(gs->core) - 1] = '\0';
             gs->core_count = core_map[i].count;
         }
     }
@@ -530,7 +614,8 @@ static void compute_global_stats(global_stats_t *gs) {
     for (int i = 0; i < device_used; i++) {
         if (device_map[i].count > max) {
             max = device_map[i].count;
-            strncpy(gs->device, device_map[i].key, sizeof(gs->device));
+            strncpy(gs->device, device_map[i].key, sizeof(gs->device) - 1);
+            gs->device[sizeof(gs->device) - 1] = '\0';
             gs->device_count = device_map[i].count;
         }
     }
@@ -539,7 +624,8 @@ static void compute_global_stats(global_stats_t *gs) {
     for (int i = 0; i < mode_used; i++) {
         if (mode_map[i].count > max) {
             max = mode_map[i].count;
-            strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode));
+            strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode) - 1);
+            gs->mode[sizeof(gs->mode) - 1] = '\0';
             gs->mode_count = mode_map[i].count;
         }
     }
@@ -562,6 +648,9 @@ static void compute_global_stats(global_stats_t *gs) {
 
     if (activity_count > 0) {
         gs->unique_cores = core_used;
+        gs->unique_devices = device_used;
+        gs->unique_modes = mode_used;
+
         gs->average_time = gs->total_launches > 0 ? gs->total_time / gs->total_launches : 0;
         gs->global_playstyle = resolve_global_playstyle(gs);
     }
@@ -1318,7 +1407,7 @@ static void show_nav(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || hold_call || in_global_view) return;
     if (in_detail_view) return;
 
     play_sound(SND_CONFIRM);
@@ -1398,7 +1487,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count || hold_call || in_detail_view) return;
+    if (msgbox_active || !ui_count || hold_call || in_detail_view || in_global_view) return;
 
     activity_display_mode = !activity_display_mode;
     play_sound(SND_NAVIGATE);
