@@ -37,6 +37,7 @@
 #include "device.h"
 #include "kiosk.h"
 #include "input/list_nav.h"
+#include "skip_list.h"
 #include "theme.h"
 #include "mini/mini.h"
 #include "../module/muxshare.h"
@@ -2041,16 +2042,33 @@ int resolution_check(const char *theme_path) {
     return 0;
 }
 
-int extract_zip_to_dir(const char *filename, const char *output) {
+void update_progress_bar(const char *message, int32_t value) {
+    lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
+    lv_bar_set_value(ui_barDownload, value, LV_ANIM_OFF);
+
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%s: %d%%", message, value);
+    lv_label_set_text(ui_lblDownload, buf);
+    lv_obj_move_foreground(ui_pnlDownload);
+}
+
+void hide_progress_bar() {
+    lv_obj_set_style_opa(ui_pnlDownload, 0, MU_OBJ_MAIN_DEFAULT);    
+}
+
+int extract_zip_to_dir(const char *filename, const char *output, int show_progress_updates) {
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
 
     if (!mz_zip_reader_init_file(&zip, filename, 0)) {
         printf("Failed to open ZIP archive!\n");
+        hide_progress_bar();
         return 0;
     }
 
-    for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++) {
+    mz_uint zip_file_count = mz_zip_reader_get_num_files(&zip);
+
+    for (mz_uint i = 0; i < zip_file_count; i++) {
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
 
@@ -2064,14 +2082,31 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             continue;
         }
 
+        if (file_exist(dest_file)) {
+            remove(dest_file);
+        }
+        
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
             mz_zip_reader_end(&zip);
+            hide_progress_bar();
             return 0;
+        } else {
+            if (ends_with(dest_file, ".png")) {
+                char img_source[MAX_BUFFER_SIZE];
+                snprintf(img_source, sizeof(img_source), "M:%s", dest_file);
+                lv_img_cache_invalidate_src(img_source);
+            }
+        }
+
+        if (show_progress_updates) {
+            int progress = (int)(((i + 1) * 100) / zip_file_count);
+            update_progress_bar(lang.GENERIC.EXTRACTING_ARCHIVE, progress);
         }
     }
 
     mz_zip_reader_end(&zip);
+    hide_progress_bar();
     return 0;
 }
 

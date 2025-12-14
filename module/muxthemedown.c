@@ -248,7 +248,7 @@ static void theme_download_finished() {
         char output_path[MAX_BUFFER_SIZE];
         snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH, theme_items[current_item_index].name);
         theme_extracting = true;
-        extract_zip_to_dir(theme_path, output_path);
+        extract_zip_to_dir(theme_path, output_path, 1);
         remove(theme_path);
         sync();
         theme_extracting = false;

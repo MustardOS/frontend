@@ -331,7 +331,11 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
 int resolution_check(const char *theme_path);
 
-int extract_zip_to_dir(const char *filename, const char *output);
+void update_progress_bar(const char *message, int32_t value);
+
+void hide_progress_bar();
+
+int extract_zip_to_dir(const char *filename, const char *output, int show_progress_updates);
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
 
