@@ -233,6 +233,9 @@ static local_playstyle_t resolve_local_playstyle(int launches, int total_time) {
     if (launches <= 2 && total_time < 30 * 60)
         return LOCAL_PLAYSTYLE_ABANDONED;
 
+    if (launches >= 3 && total_time < 3600)
+        return LOCAL_PLAYSTYLE_SAMPLER;
+
     if (total_time >= 100 * 3600 && launches >= 10)
         return LOCAL_PLAYSTYLE_MARATHONER;
 
@@ -241,9 +244,6 @@ static local_playstyle_t resolve_local_playstyle(int launches, int total_time) {
 
     if (launches <= 6 && avg >= 3 * 3600 && total_time >= 8 * 3600)
         return LOCAL_PLAYSTYLE_WEEKEND_WARRIOR;
-
-    if (avg >= 60 * 60 && launches >= 3)
-        return LOCAL_PLAYSTYLE_LONG_SESSIONS;
 
     if (launches >= 10 && avg < 15 * 60 && total_time >= 2 * 3600)
         return LOCAL_PLAYSTYLE_SHORT_BURSTS;
@@ -260,8 +260,8 @@ static local_playstyle_t resolve_local_playstyle(int launches, int total_time) {
     if (launches >= 5 && avg >= 30 * 60 && avg <= 2 * 3600)
         return LOCAL_PLAYSTYLE_REGULAR;
 
-    if (launches >= 3 && total_time < 3600)
-        return LOCAL_PLAYSTYLE_SAMPLER;
+    if (launches >= 3 && avg >= 60 * 60)
+        return LOCAL_PLAYSTYLE_LONG_SESSIONS;
 
     return LOCAL_PLAYSTYLE_UNKNOWN;
 }
@@ -562,8 +562,8 @@ static void compute_global_stats(global_stats_t *gs) {
 
     if (activity_count > 0) {
         gs->unique_cores = core_used;
-        gs->global_playstyle = resolve_global_playstyle(gs);
         gs->average_time = gs->total_launches > 0 ? gs->total_time / gs->total_launches : 0;
+        gs->global_playstyle = resolve_global_playstyle(gs);
     }
 }
 
