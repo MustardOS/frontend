@@ -140,6 +140,7 @@
 #define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
+#define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 
 #define MUX_BOOT_AUTH   "/tmp/mux_boot_auth"
 

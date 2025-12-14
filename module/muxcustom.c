@@ -361,15 +361,8 @@ static void save_custom_options(char *next_screen) {
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
                 extract_zip_to_dir(theme_alt_archive, config.THEME.STORAGE_THEME, 0);
-            } else {
-                char png_bootlogo[MAX_BUFFER_SIZE];
-                snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/%simage/bootlogo.png", config.THEME.STORAGE_THEME,
-                         mux_dimension);
-                if (!file_exist(png_bootlogo)) {
-                    snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/image/bootlogo.png", config.THEME.STORAGE_THEME);
-                }
-                if (file_exist(png_bootlogo)) update_bootlogo(next_screen);
             }
+            write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
             static char rgb_script[MAX_BUFFER_SIZE];
             snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", config.THEME.STORAGE_THEME,
