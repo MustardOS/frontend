@@ -1150,14 +1150,14 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program_alt},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_alt},
-            {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program},
-            {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_alt},
-            {CAT_INFO,  INFO_CAT_PATH,  "",            program},
-            {CAT_INFO,  INFO_CAT_PATH,  "",            program_alt},
+            {CAT_INFO, INFO_CAT_PATH,                mux_dimension, program},
+            {CAT_INFO, INFO_CAT_PATH,                mux_dimension, program_alt},
+            {CAT_INFO, INFO_CAT_PATH,                "",            program},
+            {CAT_INFO, INFO_CAT_PATH,                "",            program_alt},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dimension, program_default},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_default},
-            {CAT_INFO,  INFO_CAT_PATH,  mux_dimension, program_default},
-            {CAT_INFO,  INFO_CAT_PATH,  "",            program_default},
+            {CAT_INFO, INFO_CAT_PATH,                mux_dimension, program_default},
+            {CAT_INFO, INFO_CAT_PATH,                "",            program_default},
     };
 
     for (size_t i = 0; i < A_SIZE(args); i++) {
@@ -2058,17 +2058,17 @@ int extract_zip_to_dir(const char *filename, const char *output) {
 
         char dest_file[MAX_BUFFER_SIZE];
         snprintf(dest_file, sizeof(dest_file), "%s/%s", output, filename);
-        
+
         if (file_stat.m_is_directory) {
             create_directories(dest_file);
             continue;
         }
-        
+
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
             mz_zip_reader_end(&zip);
             return 0;
-        }        
+        }
     }
 
     mz_zip_reader_end(&zip);

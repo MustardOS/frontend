@@ -561,8 +561,8 @@ static void refresh_activity_labels(void) {
     lv_group_remove_all_objs(ui_group_panel);
 
     char current_activity_mode[MAX_BUFFER_SIZE];
-    snprintf(current_activity_mode, sizeof(current_activity_mode), "%s: %s",
-             lang.MUXACTIVITY.MODE, activity_display_mode ? lang.MUXACTIVITY.LAUNCH : lang.MUXACTIVITY.TIME);
+    snprintf(current_activity_mode, sizeof(current_activity_mode), "%s",
+             activity_display_mode ? lang.MUXACTIVITY.TIME : lang.MUXACTIVITY.LAUNCH);
 
     lv_label_set_text(ui_lblNavY, current_activity_mode);
 
@@ -834,27 +834,27 @@ static void show_global_view(void) {
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_average");
                 break;
             case GLOBAL_FIRST_GAME:
-                snprintf(global_label, sizeof(global_label), "First Game Played");
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.FIRST);
                 snprintf(global_value, sizeof(global_value), "%s", gs.first_content);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_first");
                 break;
             case GLOBAL_LONGEST_SESSION:
-                snprintf(global_label, sizeof(global_label), "Longest Session");
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.LONGEST);
                 snprintf(global_value, sizeof(global_value), "%s", gs.longest_session);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_longest");
                 break;
             case GLOBAL_PLAYSTYLE:
-                snprintf(global_label, sizeof(global_label), "Overall Play Style");
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.OVERALL);
                 snprintf(global_value, sizeof(global_value), "%s", global_playstyle_name(gs.global_playstyle));
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_play");
                 break;
             case GLOBAL_UNIQUE_TITLES:
-                snprintf(global_label, sizeof(global_label), "Unique Content Played");
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.UNIQUE_PLAY);
                 snprintf(global_value, sizeof(global_value), "%zu", gs.unique_titles);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_uniqueplay");
                 break;
             case GLOBAL_UNIQUE_CORES:
-                snprintf(global_label, sizeof(global_label), "Unique Cores Used");
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.UNIQUE_CORE);
                 snprintf(global_value, sizeof(global_value), "%d", gs.unique_cores);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_uniquecore");
                 break;
