@@ -1017,20 +1017,29 @@ static void export_activity_html(void) {
             "<!DOCTYPE html>"
             "<html>"
             "<head>"
-            "<meta charset='utf-8'>"
+            "<meta http-equiv='Content-type' content='text/html; charset=utf-8'>"
+            "<meta name='viewport' content='width=device-width, initial-scale=1'>"
             "<title>MustardOS - Activity Tracker</title>"
+
+            "<link rel='stylesheet' href='https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css'>"
+
+            "<script src='https://code.jquery.com/jquery-3.7.1.slim.min.js' integrity='sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=' crossorigin='anonymous'></script>"
+            "<script src='https://cdn.datatables.net/2.3.5/js/dataTables.min.js'></script>"
+
             "<style>"
-            "body { font-family: sans-serif; background: #1F1F1F; color: #ffffff; padding: 20px }"
+            "body { font-family: sans-serif; background: #1f1f1f; color: #ffffff; padding: 20px }"
             "h1, h2 { color: #f7d12e }"
-            "table { border-collapse: collapse; margin-bottom: 24px }"
+            "table { margin-bottom: 24px }"
             "th, td { border: 1px solid #444; padding: 6px }"
-            "td { vertical-align: top; }"
-            "th { background: #222 }"
-            "td:first-child { colour: #c7af26; font-weight: bold }"
+            "th { background: #222222 }"
             "tr:nth-child(even) { background: #1a1a1a }"
             "#global { width: 400px }"
             "#detail { width: 100%% }"
+
+            ".dt-container { color: #ffffff }"
+            ".dt-search input, .dt-length select { background:#111111; color:#ffffff; border:1px solid #444444 }"
             "</style>"
+
             "</head>"
             "<body>"
     );
@@ -1058,7 +1067,7 @@ static void export_activity_html(void) {
              str_capital(global_mode_tmp));
 
     fprintf(f, "<h1>MustardOS - Activity Tracker</h1>");
-    fprintf(f, "<strong>Exported:</strong> %s", export_timestamp());
+    fprintf(f, "<p><strong>Exported:</strong> %s</p>", export_timestamp());
 
     fprintf(f, "<h2>Global Summary</h2><table id='global'><tr><th>Metric</th><th>Value</th></tr>");
 
@@ -1111,17 +1120,18 @@ static void export_activity_html(void) {
 
     fprintf(f,
             "<h2>Content Statistics</h2>"
-            "<table id='detail'><tr>"
-            "<th>Content Name</th>"
-            "<th>Core Used</th>"
-            "<th>Last Device</th>"
-            "<th>Launch Count</th>"
-            "<th>Start Time</th>"
-            "<th>Average Time</th>"
-            "<th>Total Time</th>"
-            "<th>Last Session</th>"
-            "<th>Play Style</th>"
-            "</tr>"
+            "<table id='detail' class='display' data-page-length='25'>"
+            "<thead><tr>"
+            "<th data-orderable='true'>Content Name</th>"
+            "<th data-orderable='true'>Core Used</th>"
+            "<th data-orderable='true'>Last Device</th>"
+            "<th data-orderable='true'>Launch Count</th>"
+            "<th data-orderable='true'>Start Time</th>"
+            "<th data-orderable='true'>Average Time</th>"
+            "<th data-orderable='true'>Total Time</th>"
+            "<th data-orderable='true'>Last Session</th>"
+            "<th data-orderable='true'>Play Style</th>"
+            "</tr></thead><tbody>"
     );
 
     char detail_core_value[MAX_BUFFER_SIZE];
@@ -1155,8 +1165,26 @@ static void export_activity_html(void) {
         fprintf(f, "</tr>");
     }
 
+    fprintf(f, "</tbody></table>");
+
     fprintf(f,
-            "</table>"
+            "<script>"
+            "document.addEventListener('DOMContentLoaded', function(){"
+            "  new DataTable('#detail', {"
+            "    order: [[0, 'asc']],"
+            "    columnDefs: ["
+            "      { targets: 0, type: 'string-utf8', orderDataType: 'string-insensitive' },"
+            "      { targets: [1, 8], type: 'string', orderDataType: 'string-insensitive' },"
+            "      { targets: 4, type: 'date' },"
+            "      { targets: 3, type: 'num' }"
+            "    ]"
+            "  });"
+            "});"
+            "</script>"
+    );
+
+
+    fprintf(f,
             "</body>"
             "</html>"
     );
