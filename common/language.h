@@ -148,8 +148,10 @@ struct mux_lang {
                 char ABANDONED[MAX_BUFFER_SIZE];
                 char MARATHONER[MAX_BUFFER_SIZE];
                 char RETURNER[MAX_BUFFER_SIZE];
-                char ONOFF[MAX_BUFFER_SIZE];
+                char ON_OFF[MAX_BUFFER_SIZE];
                 char WEEKEND[MAX_BUFFER_SIZE];
+                char COMFORT[MAX_BUFFER_SIZE];
+                char REGULAR[MAX_BUFFER_SIZE];
             } LOCAL;
             struct {
                 char LABEL[MAX_BUFFER_SIZE];
@@ -163,6 +165,8 @@ struct mux_lang {
                 char SPECIALIST[MAX_BUFFER_SIZE];
                 char NOMAD[MAX_BUFFER_SIZE];
                 char ROUTINE[MAX_BUFFER_SIZE];
+                char HABITUAL[MAX_BUFFER_SIZE];
+                char WINDOW[MAX_BUFFER_SIZE];
             } GLOBAL;
         } STYLE;
     } MUXACTIVITY;

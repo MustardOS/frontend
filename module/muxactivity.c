@@ -1,31 +1,35 @@
 #include "muxshare.h"
 
 typedef enum {
-    LOCAL_PLAYSTYLE_UNKNOWN,
-    LOCAL_PLAYSTYLE_ONE_AND_DONE,
-    LOCAL_PLAYSTYLE_SAMPLER,
-    LOCAL_PLAYSTYLE_SHORT_BURSTS,
-    LOCAL_PLAYSTYLE_LONG_SESSIONS,
-    LOCAL_PLAYSTYLE_COMPLETIONIST,
-    LOCAL_PLAYSTYLE_ABANDONED,
-    LOCAL_PLAYSTYLE_MARATHONER,
-    LOCAL_PLAYSTYLE_RETURNER,
-    LOCAL_PLAYSTYLE_ON_OFF,
-    LOCAL_PLAYSTYLE_WEEKEND_WARRIOR
+    LOCAL_PLAYSTYLE_UNKNOWN,         // Something could not be calculated
+    LOCAL_PLAYSTYLE_ONE_AND_DONE,    // Played once with short total time
+    LOCAL_PLAYSTYLE_SAMPLER,         // Tried multiple times but never stuck
+    LOCAL_PLAYSTYLE_SHORT_BURSTS,    // Multiple very short sessions
+    LOCAL_PLAYSTYLE_LONG_SESSIONS,   // Fewer but long play sessions
+    LOCAL_PLAYSTYLE_COMPLETIONIST,   // Long sessions with high total time
+    LOCAL_PLAYSTYLE_ABANDONED,       // Dropped quickly after a try
+    LOCAL_PLAYSTYLE_MARATHONER,      // Extremely high total time investment
+    LOCAL_PLAYSTYLE_RETURNER,        // Frequently revisited with low commitment
+    LOCAL_PLAYSTYLE_ON_OFF,          // Inconsistent play pattern
+    LOCAL_PLAYSTYLE_WEEKEND_WARRIOR, // Infrequent but very long sessions
+    LOCAL_PLAYSTYLE_COMFORT,         // Regularly revisited with steady enjoyment
+    LOCAL_PLAYSTYLE_REGULAR          // Balanced and consistent play sessions
 } local_playstyle_t;
 
 typedef enum {
-    GLOBAL_PLAYSTYLE_UNKNOWN,
-    GLOBAL_PLAYSTYLE_CASUAL,
-    GLOBAL_PLAYSTYLE_CORE_GAMER,
-    GLOBAL_PLAYSTYLE_EXPLORER,
-    GLOBAL_PLAYSTYLE_BINGER,
-    GLOBAL_PLAYSTYLE_COMPLETIONIST,
-    GLOBAL_PLAYSTYLE_POWER_USER,
-    GLOBAL_PLAYSTYLE_COLLECTOR,
-    GLOBAL_PLAYSTYLE_SPECIALIST,
-    GLOBAL_PLAYSTYLE_NOMAD,
-    GLOBAL_PLAYSTYLE_ROUTINE
+    GLOBAL_PLAYSTYLE_UNKNOWN,       // Something could not be calculated
+    GLOBAL_PLAYSTYLE_CASUAL,        // Low time and low engagement overall
+    GLOBAL_PLAYSTYLE_CORE_GAMER,    // Regular and consistent engagement
+    GLOBAL_PLAYSTYLE_EXPLORER,      // Multiple titles with light commitment
+    GLOBAL_PLAYSTYLE_BINGER,        // Long average sessions
+    GLOBAL_PLAYSTYLE_COMPLETIONIST, // Deep focus on few titles
+    GLOBAL_PLAYSTYLE_POWER_USER,    // Heavy usage across many systems
+    GLOBAL_PLAYSTYLE_COLLECTOR,     // Multiple titles with short sessions
+    GLOBAL_PLAYSTYLE_SPECIALIST,    // Focused on few cores and emulators
+    GLOBAL_PLAYSTYLE_NOMAD,         // Plays across many multiple devices
+    GLOBAL_PLAYSTYLE_ROUTINE,       // Consistent play pattern
+    GLOBAL_PLAYSTYLE_HABITUAL,      // Frequent launches with steady timing
+    GLOBAL_PLAYSTYLE_WINDOW         // Dips into many titles briefly
 } global_playstyle_t;
 
 typedef struct {
@@ -174,9 +178,13 @@ static const char *local_playstyle_name(local_playstyle_t ps) {
         case LOCAL_PLAYSTYLE_RETURNER:
             return lang.MUXACTIVITY.STYLE.LOCAL.RETURNER;
         case LOCAL_PLAYSTYLE_ON_OFF:
-            return lang.MUXACTIVITY.STYLE.LOCAL.ONOFF;
+            return lang.MUXACTIVITY.STYLE.LOCAL.ON_OFF;
         case LOCAL_PLAYSTYLE_WEEKEND_WARRIOR:
             return lang.MUXACTIVITY.STYLE.LOCAL.WEEKEND;
+        case LOCAL_PLAYSTYLE_COMFORT:
+            return lang.MUXACTIVITY.STYLE.LOCAL.COMFORT;
+        case LOCAL_PLAYSTYLE_REGULAR:
+            return lang.MUXACTIVITY.STYLE.LOCAL.REGULAR;
         default:
             return lang.GENERIC.UNKNOWN;
     }
@@ -204,54 +212,99 @@ static const char *global_playstyle_name(global_playstyle_t ps) {
             return lang.MUXACTIVITY.STYLE.GLOBAL.NOMAD;
         case GLOBAL_PLAYSTYLE_ROUTINE:
             return lang.MUXACTIVITY.STYLE.GLOBAL.ROUTINE;
+        case GLOBAL_PLAYSTYLE_HABITUAL:
+            return lang.MUXACTIVITY.STYLE.GLOBAL.HABITUAL;
+        case GLOBAL_PLAYSTYLE_WINDOW:
+            return lang.MUXACTIVITY.STYLE.GLOBAL.WINDOW;
         default:
             return lang.GENERIC.UNKNOWN;
     }
 }
 
 static local_playstyle_t resolve_local_playstyle(int launches, int total_time) {
-    if (launches <= 0) return LOCAL_PLAYSTYLE_UNKNOWN;
-    if (launches == 1) return LOCAL_PLAYSTYLE_ONE_AND_DONE;
-
-    if (total_time > 100 * 3600) return LOCAL_PLAYSTYLE_MARATHONER;
-
-    if (launches <= 3 && total_time < 30 * 60) return LOCAL_PLAYSTYLE_ABANDONED;
-    if (launches <= 5 && total_time > 20 * 3600) return LOCAL_PLAYSTYLE_COMPLETIONIST;
+    if (launches <= 0 || total_time <= 0)
+        return LOCAL_PLAYSTYLE_UNKNOWN;
 
     int avg = total_time / launches;
 
-    if (launches <= 5 && avg >= 3 * 3600) return LOCAL_PLAYSTYLE_WEEKEND_WARRIOR;
-    if (launches <= 5 && avg >= 60 * 60) return LOCAL_PLAYSTYLE_LONG_SESSIONS;
-    if (launches >= 10 && avg < 15 * 60) return LOCAL_PLAYSTYLE_SHORT_BURSTS;
+    if (launches == 1 && total_time < 2 * 3600)
+        return LOCAL_PLAYSTYLE_ONE_AND_DONE;
 
-    if (launches >= 5 && total_time < 3600) return LOCAL_PLAYSTYLE_SAMPLER;
-    if (launches >= 15 && total_time < 10 * 3600) return LOCAL_PLAYSTYLE_RETURNER;
+    if (launches <= 2 && total_time < 30 * 60)
+        return LOCAL_PLAYSTYLE_ABANDONED;
 
-    if (launches >= 3 && launches <= 8 && avg < 30 * 60) return LOCAL_PLAYSTYLE_ON_OFF;
+    if (total_time >= 100 * 3600 && launches >= 10)
+        return LOCAL_PLAYSTYLE_MARATHONER;
+
+    if (total_time >= 20 * 3600 && launches >= 5 && avg >= 2 * 3600)
+        return LOCAL_PLAYSTYLE_COMPLETIONIST;
+
+    if (launches <= 6 && avg >= 3 * 3600 && total_time >= 8 * 3600)
+        return LOCAL_PLAYSTYLE_WEEKEND_WARRIOR;
+
+    if (avg >= 60 * 60 && launches >= 3)
+        return LOCAL_PLAYSTYLE_LONG_SESSIONS;
+
+    if (launches >= 10 && avg < 15 * 60 && total_time >= 2 * 3600)
+        return LOCAL_PLAYSTYLE_SHORT_BURSTS;
+
+    if (launches >= 15 && avg >= 20 * 60 && avg <= 90 * 60 && total_time >= 15 * 3600 && total_time <= 80 * 3600)
+        return LOCAL_PLAYSTYLE_COMFORT;
+
+    if (launches >= 15 && avg < 45 * 60 && total_time < 10 * 3600)
+        return LOCAL_PLAYSTYLE_RETURNER;
+
+    if (launches >= 3 && launches <= 8 && avg < 30 * 60)
+        return LOCAL_PLAYSTYLE_ON_OFF;
+
+    if (launches >= 5 && avg >= 30 * 60 && avg <= 2 * 3600)
+        return LOCAL_PLAYSTYLE_REGULAR;
+
+    if (launches >= 3 && total_time < 3600)
+        return LOCAL_PLAYSTYLE_SAMPLER;
 
     return LOCAL_PLAYSTYLE_UNKNOWN;
 }
 
 static global_playstyle_t resolve_global_playstyle(const global_stats_t *gs) {
-    if (gs->total_time <= 0) return GLOBAL_PLAYSTYLE_UNKNOWN;
-    if (gs->total_time < 10 * 3600) return GLOBAL_PLAYSTYLE_CASUAL;
+    if (gs->total_time <= 0)
+        return GLOBAL_PLAYSTYLE_UNKNOWN;
 
-    if (gs->unique_titles >= 20 && gs->average_time < 45 * 60) return GLOBAL_PLAYSTYLE_EXPLORER;
-    if (gs->unique_titles <= 5 && gs->total_time > 100 * 3600) return GLOBAL_PLAYSTYLE_COMPLETIONIST;
+    int avg = gs->average_time;
 
-    if (gs->average_time > 2 * 3600) return GLOBAL_PLAYSTYLE_BINGER;
+    if (gs->total_time < 10 * 3600 && gs->total_launches < 20)
+        return GLOBAL_PLAYSTYLE_CASUAL;
 
-    if (gs->total_launches > 200 && gs->unique_cores >= 10) return GLOBAL_PLAYSTYLE_POWER_USER;
-    if (gs->total_launches >= 100 && gs->average_time >= 30 * 60) return GLOBAL_PLAYSTYLE_CORE_GAMER;
+    if (gs->unique_titles >= 20 && avg < 30 * 60 && gs->total_time < 50 * 3600)
+        return GLOBAL_PLAYSTYLE_WINDOW;
 
-    if (gs->unique_titles >= 50 && gs->average_time < 20 * 60) return GLOBAL_PLAYSTYLE_COLLECTOR;
-    if (gs->unique_cores <= 2 && gs->total_time > 80 * 3600) return GLOBAL_PLAYSTYLE_SPECIALIST;
+    if (gs->unique_titles >= 50 && avg < 20 * 60)
+        return GLOBAL_PLAYSTYLE_COLLECTOR;
 
-    if (gs->device_count >= 3) return GLOBAL_PLAYSTYLE_NOMAD;
+    if (gs->unique_titles <= 5 && gs->total_time >= 100 * 3600 && avg >= 2 * 3600)
+        return GLOBAL_PLAYSTYLE_COMPLETIONIST;
 
-    if (gs->total_launches >= 75 && gs->total_launches <= 200 &&
-        gs->average_time >= 20 * 60 && gs->average_time <= 90 * 60)
+    if (avg >= 2 * 3600)
+        return GLOBAL_PLAYSTYLE_BINGER;
+
+    if (gs->total_launches >= 75 && avg >= 20 * 60 && avg <= 90 * 60 &&
+        gs->unique_titles >= 5 && gs->unique_titles <= 15)
         return GLOBAL_PLAYSTYLE_ROUTINE;
+
+    if (gs->total_launches >= 200 && gs->unique_cores >= 10)
+        return GLOBAL_PLAYSTYLE_POWER_USER;
+
+    if (gs->total_launches >= 100 && avg >= 30 * 60)
+        return GLOBAL_PLAYSTYLE_CORE_GAMER;
+
+    if (gs->unique_cores <= 2 && gs->total_time >= 80 * 3600)
+        return GLOBAL_PLAYSTYLE_SPECIALIST;
+
+    if (gs->device_count >= 4 || (gs->device_count >= 2 && gs->unique_cores >= 6))
+        return GLOBAL_PLAYSTYLE_NOMAD;
+
+    if (gs->total_launches >= 50 && avg >= 30 * 60)
+        return GLOBAL_PLAYSTYLE_HABITUAL;
 
     return GLOBAL_PLAYSTYLE_UNKNOWN;
 }
