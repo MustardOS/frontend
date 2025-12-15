@@ -250,7 +250,6 @@ static void theme_download_finished() {
         theme_extracting = true;
         extract_zip_to_dir(theme_path, output_path, 1);
         remove(theme_path);
-        sync();
         theme_extracting = false;
     }
 

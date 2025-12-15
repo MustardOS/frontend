@@ -9,8 +9,8 @@ static lv_timer_t *timer_update_progress;
 static char download_message[MAX_BUFFER_SIZE];
 
 typedef struct {
-    const char *url;
-    const char *save_path;
+    char *url;
+    char *save_path;
 } download_args_t;
 
 typedef struct {
@@ -19,8 +19,10 @@ typedef struct {
 
 // For writing data to a file
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    return fwrite(ptr, size, nmemb, stream);
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written * size;  // ✅ return BYTES
 }
+
 
 static void (*download_finish_cb)(int) = NULL;
 
@@ -116,10 +118,13 @@ int download_file(const char *url, const char *output_path) {
 
     // flush and close file before checking
     fflush(fp);
-    fclose(fp);    
+    fclose(fp);
 
     long response_code = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_off_t cl = 0;
+    int clresponse = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl);
 
     curl_easy_cleanup(curl);
 
@@ -131,7 +136,7 @@ int download_file(const char *url, const char *output_path) {
     }
 
     // Verify HTTP status
-    if (response_code != 200) {
+    if (response_code < 200 || response_code >= 300) {
         fprintf(stderr, "Unexpected HTTP status: %ld\n", response_code);
         remove(output_path);
         download_finished(-4);
@@ -139,8 +144,7 @@ int download_file(const char *url, const char *output_path) {
     }
 
     // Verify file is not empty
-    curl_off_t cl = 0;
-    if (curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl) != CURLE_OK || cl <= 0) {
+    if (clresponse != CURLE_OK || cl <= 0) {
         fprintf(stderr, "No data downloaded\n");
         remove(output_path);
         download_finished(-5);
@@ -156,7 +160,9 @@ static void *download_thread(void *arg) {
     download_args_t *args = (download_args_t *) arg;
 
     download_file(args->url, args->save_path);  // Your existing download function
-
+    
+    free(args->url);
+    free(args->save_path);
     free(args);  // Clean up if dynamically allocated
     return NULL;
 }
@@ -171,10 +177,10 @@ void initiate_download(const char *url, const char *output_path, bool showProgre
     snprintf(download_message, sizeof(download_message), "%s", message);
 
     showProgressUpdates = showProgress;
-    download_args_t *args = malloc(sizeof(download_args_t));
+    download_args_t *args = malloc(sizeof(*args));
 
-    args->url = url;
-    args->save_path = output_path;
+    args->url = strdup(url);
+    args->save_path = strdup(output_path);
 
     pthread_t tid;
     pthread_create(&tid, NULL, download_thread, args);
