@@ -357,8 +357,6 @@ static void init_navigation_group(void) {
         HIDE_VALUE_ITEM(netinfo, AcTraffic);
         HIDE_VALUE_ITEM(netinfo, TpTraffic);
     }
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
