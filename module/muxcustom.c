@@ -360,7 +360,7 @@ static void save_custom_options(char *next_screen) {
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
-                extract_zip_to_dir(theme_alt_archive, config.THEME.STORAGE_THEME, 0);
+                extract_zip_to_dir(theme_alt_archive, config.THEME.STORAGE_THEME);
             }
             write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
