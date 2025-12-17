@@ -38,7 +38,7 @@ typedef struct {
     char core[64];
     int core_count;
 
-    int launch_count;
+    size_t launch_count;
 
     char device[64];
     int device_count;
@@ -46,10 +46,11 @@ typedef struct {
     char mode[16];
     int mode_count;
 
-    int start_time;
-    int average_time;
-    int total_time;
-    int last_session;
+    int last_played;
+
+    size_t average_time;
+    size_t total_time;
+    size_t last_session;
 } activity_item_t;
 
 typedef struct {
@@ -62,18 +63,18 @@ typedef struct {
     char mode[16];
     int mode_count;
 
-    int total_launches;
-    int total_time;
-    int average_time;
+    size_t total_launches;
+    size_t total_time;
+    size_t average_time;
 
     char top_time[256];
-    int top_time_value;
+    size_t top_time_value;
 
     char top_launch[256];
-    int top_launch_value;
+    size_t top_launch_value;
 
-    char first_content[256];
-    int first_content_time;
+    char oldest_content[256];
+    int oldest_content_time;
 
     size_t unique_titles;
 
@@ -82,7 +83,7 @@ typedef struct {
     int unique_modes;
 
     char longest_session[256];
-    int longest_session_duration;
+    size_t longest_session_duration;
 
     int active_hour; // 0–23, -1 if unknown
     int favourite_day; // 0–6 (Sun–Sat), -1 if unknown
@@ -98,6 +99,7 @@ static int in_detail_view = 0;
 static int in_global_view = 0;
 
 static int overview_item_index = 0;
+static int last_sort_mode = -1;
 
 static activity_item_t *activity_items = NULL;
 static size_t activity_count = 0;
@@ -107,47 +109,74 @@ static char *playtime_json_str = NULL;
 static struct json playtime_json_root = {0};
 static int playtime_json_loaded = 0;
 
+#define TIME_BUF 64
+#define ACT_ROW  1024
+
+#define CORE_MAP_MAX   256
+#define DEVICE_MAP_MAX 256
+#define MODE_MAP_MAX   256
+
 static void show_help(void) {
     show_info_box(lang.MUXACTIVITY.TITLE, lang.MUXACTIVITY.HELP, 0);
 }
 
-static void ensure_activity_capacity(void) {
-    if (activity_count < activity_capacity) return;
+static size_t json_size_positive(struct json j) {
+    if (!json_exists(j)) return 0;
+
+    int v = json_int(j);
+    return (v > 0) ? (size_t) v : 0;
+}
+
+static int json_epoch_or_zero(struct json j) {
+    if (!json_exists(j)) return 0;
+
+    int v = json_int(j);
+    return (v > 0) ? v : 0;
+}
+
+static int ensure_activity_capacity(void) {
+    if (activity_count < activity_capacity) return 1;
 
     size_t new_capacity = activity_capacity ? activity_capacity * 2 : 256;
-    activity_item_t *items = realloc(activity_items, new_capacity * sizeof(activity_item_t));
+    activity_item_t *items = realloc(activity_items, new_capacity * sizeof(*items));
 
-    if (!items) return;
+    if (!items) {
+        toast_message("Activity list full (memory)", SHORT);
+        return 0;
+    }
 
     activity_items = items;
     activity_capacity = new_capacity;
+
+    return 1;
 }
 
-void free_activity_items(activity_item_t **activity_items, size_t *count) {
-    free(*activity_items);
-
-    *activity_items = NULL;
-    *count = 0;
+static void free_activity_items(void) {
+    free(activity_items);
+    activity_items = NULL;
+    activity_count = 0;
     activity_capacity = 0;
 
     free(playtime_json_str);
 
     playtime_json_str = NULL;
+    playtime_json_root = (struct json) {0};
     playtime_json_loaded = 0;
 }
 
-static const char *hour_label(int hour) {
-    static char buf[32];
-    if (hour < 0 || hour > 23) return lang.GENERIC.UNKNOWN;
+static void hour_label(char *dst, size_t dst_sz, int hour) {
+    if (hour < 0 || hour > 23) {
+        snprintf(dst, dst_sz, "%s", lang.GENERIC.UNKNOWN);
+        return;
+    }
 
     int h = hour % 12;
     if (h == 0) h = 12;
 
-    snprintf(buf, sizeof(buf), "%d %s", h, hour < 12 ? "AM" : "PM");
-    return buf;
+    snprintf(dst, dst_sz, "%d %s", h, hour < 12 ? "AM" : "PM");
 }
 
-static const char *weekday_label(int day) {
+static void weekday_label(char *dst, size_t dst_sz, int day) {
     static const char *days[] = {
             lang.GENERIC.SUNDAY,
             lang.GENERIC.MONDAY,
@@ -158,8 +187,12 @@ static const char *weekday_label(int day) {
             lang.GENERIC.SATURDAY
     };
 
-    if (day < 0 || day > 6) return lang.GENERIC.UNKNOWN;
-    return days[day];
+    if (day < 0 || day > 6) {
+        snprintf(dst, dst_sz, "%s", lang.GENERIC.UNKNOWN);
+        return;
+    }
+
+    snprintf(dst, dst_sz, "%s", days[day]);
 }
 
 static const char *local_playstyle_name(local_playstyle_t ps, int use_en) {
@@ -225,25 +258,26 @@ static const char *global_playstyle_name(global_playstyle_t ps, int use_en) {
 }
 
 // Static calculated values - much nicer on the brain to calculate!
-// Abusing the enum system to get the values is quite devilish :D
-enum {
-    SEC_15M = 15 * 60,
-    SEC_20M = 20 * 60,
-    SEC_30M = 30 * 60,
-    SEC_45M = 45 * 60,
-    SEC_90M = 90 * 60,
+#define SEC  ((size_t) 1)
+#define MIN  (60  *  SEC)
+#define HOUR (60  *  MIN)
 
-    SEC_1H = 60 * 60,
-    SEC_2H = 2 * 3600,
-    SEC_3H = 3 * 3600,
-    SEC_8H = 8 * 3600,
-    SEC_10H = 10 * 3600,
-    SEC_15H = 15 * 3600,
-    SEC_20H = 20 * 3600,
-    SEC_50H = 50 * 3600,
-    SEC_80H = 80 * 3600,
-    SEC_100H = 100 * 3600
-};
+#define SEC_15M (15 * MIN)
+#define SEC_20M (20 * MIN)
+#define SEC_30M (30 * MIN)
+#define SEC_45M (45 * MIN)
+#define SEC_90M (90 * MIN)
+
+#define SEC_1H   (1   * HOUR)
+#define SEC_2H   (2   * HOUR)
+#define SEC_3H   (3   * HOUR)
+#define SEC_8H   (8   * HOUR)
+#define SEC_10H  (10  * HOUR)
+#define SEC_15H  (15  * HOUR)
+#define SEC_20H  (20  * HOUR)
+#define SEC_50H  (50  * HOUR)
+#define SEC_80H  (80  * HOUR)
+#define SEC_100H (100 * HOUR)
 
 // Compile-time sanity checks!
 // https://www.gnu.org/software/c-intro-and-ref/manual/html_node/Static-Assertions.html
@@ -258,11 +292,11 @@ _Static_assert(SEC_1H < SEC_2H && SEC_2H < SEC_3H && SEC_3H < SEC_8H && SEC_8H <
                SEC_50H < SEC_80H && SEC_80H < SEC_100H,
                "Hour thresholds must be increasing...");
 
-static local_playstyle_t resolve_local_playstyle(int launches, int total_time) {
+static local_playstyle_t resolve_local_playstyle(size_t launches, size_t total_time) {
     if (launches <= 0 || total_time <= 0)
         return LOCAL_PLAYSTYLE_UNKNOWN;
 
-    const int avg = total_time / launches;
+    const size_t avg = total_time / launches;
 
     if (launches == 1 && total_time < SEC_2H)
         return LOCAL_PLAYSTYLE_ONE_AND_DONE;
@@ -308,7 +342,7 @@ static global_playstyle_t resolve_global_playstyle(const global_stats_t *gs) {
     if (gs->total_time <= 0)
         return GLOBAL_PLAYSTYLE_UNKNOWN;
 
-    const int avg = gs->average_time;
+    const size_t avg = gs->average_time;
 
     if (gs->unique_devices >= 3)
         return GLOBAL_PLAYSTYLE_NOMAD;
@@ -353,8 +387,8 @@ static global_playstyle_t resolve_global_playstyle(const global_stats_t *gs) {
 }
 
 static int cmp_activity_time(const void *a, const void *b) {
-    const activity_item_t *x = (const activity_item_t *) a;
-    const activity_item_t *y = (const activity_item_t *) b;
+    const activity_item_t *x = a;
+    const activity_item_t *y = b;
 
     if (y->total_time < x->total_time) return -1;
     if (y->total_time > x->total_time) return 1;
@@ -363,8 +397,8 @@ static int cmp_activity_time(const void *a, const void *b) {
 }
 
 static int cmp_activity_launch(const void *a, const void *b) {
-    const activity_item_t *x = (const activity_item_t *) a;
-    const activity_item_t *y = (const activity_item_t *) b;
+    const activity_item_t *x = a;
+    const activity_item_t *y = b;
 
     if (y->launch_count < x->launch_count) return -1;
     if (y->launch_count > x->launch_count) return 1;
@@ -372,41 +406,35 @@ static int cmp_activity_launch(const void *a, const void *b) {
     return 0;
 }
 
-static const char *export_timestamp(void) {
-    static char buf[64];
-
+static void export_timestamp(char *dst) {
     time_t now = time(NULL);
     struct tm tm_buf;
-
     struct tm *tm = localtime_r(&now, &tm_buf);
+
     if (!tm) {
-        snprintf(buf, sizeof(buf), "%s", lang.GENERIC.UNKNOWN);
-        return buf;
+        snprintf(dst, TIME_BUF, "%s", lang.GENERIC.UNKNOWN);
+        return;
     }
 
-    strftime(buf, sizeof(buf), TIME_STRING, tm);
-    return buf;
+    strftime(dst, TIME_BUF, TIME_STRING, tm);
 }
 
-static const char *format_timestamp(int epoch) {
-    static char buf[64];
-
+static void format_timestamp(char *dst, size_t dst_sz, int epoch) {
     if (epoch <= 0) {
-        snprintf(buf, sizeof(buf), "%s", lang.GENERIC.UNKNOWN);
-        return buf;
+        snprintf(dst, dst_sz, "%s", lang.GENERIC.UNKNOWN);
+        return;
     }
 
     time_t t = (time_t) epoch;
     struct tm tm_buf;
-
     struct tm *tm = localtime_r(&t, &tm_buf);
+
     if (!tm) {
-        snprintf(buf, sizeof(buf), "%s", lang.GENERIC.UNKNOWN);
-        return buf;
+        snprintf(dst, dst_sz, "%s", lang.GENERIC.UNKNOWN);
+        return;
     }
 
-    strftime(buf, sizeof(buf), TIME_STRING, tm);
-    return buf;
+    strftime(dst, dst_sz, TIME_STRING, tm);
 }
 
 static void load_playtime_json_once(void) {
@@ -448,10 +476,10 @@ static void normalise_json_values(char *dst, size_t dst_size, const char *src) {
         return;
     }
 
-    while (*src == ' ') src++;
+    while (*src && isspace((unsigned char) *src)) src++;
 
     size_t len = strlen(src);
-    while (len > 0 && src[len - 1] == ' ') len--;
+    while (len > 0 && isspace((unsigned char) src[len - 1])) len--;
 
     size_t n = (len < dst_size - 1) ? len : (dst_size - 1);
     for (size_t i = 0; i < n; i++) dst[i] = (char) tolower((unsigned char) src[i]);
@@ -465,34 +493,42 @@ static void compute_global_stats(global_stats_t *gs) {
     struct {
         char key[64];
         int count;
-    } core_map[256];
+    } core_map[CORE_MAP_MAX];
 
     struct {
         char key[64];
         int count;
-    } device_map[256];
+    } device_map[DEVICE_MAP_MAX];
 
     struct {
         char key[16];
         int count;
-    } mode_map[256];
+    } mode_map[MODE_MAP_MAX];
 
     int core_used = 0;
     int device_used = 0;
     int mode_used = 0;
 
-    // It's pronounced bouquet
-    int hour_buckets[24] = {0};
-    int day_buckets[7] = {0};
+    int core_overflow = 0;
+    int device_overflow = 0;
+    int mode_overflow = 0;
+
+    size_t hour_buckets[24] = {0};
+    size_t day_buckets[7] = {0};
 
     gs->active_hour = -1;
     gs->favourite_day = -1;
-    gs->top_time_value = -1;
-    gs->top_launch_value = -1;
+
+    gs->top_time_value = 0;
+    gs->top_launch_value = 0;
     gs->top_time[0] = '\0';
     gs->top_launch[0] = '\0';
-    gs->first_content_time = INT_MAX;
+
+    gs->oldest_content_time = INT_MAX;
+    gs->oldest_content[0] = '\0';
+
     gs->longest_session_duration = 0;
+    gs->longest_session[0] = '\0';
 
     // Currently one activity item per unique title in JSON
     gs->unique_titles = activity_count;
@@ -503,23 +539,23 @@ static void compute_global_stats(global_stats_t *gs) {
         gs->total_launches += it->launch_count;
         gs->total_time += it->total_time;
 
-        if (it->total_time > gs->top_time_value) {
+        if (it->total_time >= gs->top_time_value) {
             gs->top_time_value = it->total_time;
             snprintf(gs->top_time, sizeof(gs->top_time), "%s", it->name);
         }
 
-        if (it->launch_count > gs->top_launch_value) {
+        if (it->launch_count >= gs->top_launch_value) {
             gs->top_launch_value = it->launch_count;
             snprintf(gs->top_launch, sizeof(gs->top_launch), "%s", it->name);
         }
 
-        if (it->start_time > 0 && it->start_time < gs->first_content_time) {
-            gs->first_content_time = it->start_time;
-            snprintf(gs->first_content, sizeof(gs->first_content), "%s", it->name);
+        if (it->last_played > 0 && it->last_played < gs->oldest_content_time) {
+            gs->oldest_content_time = it->last_played;
+            snprintf(gs->oldest_content, sizeof(gs->oldest_content), "%s", it->name);
         }
 
-        if (it->start_time > 0 && it->last_session > 0) {
-            time_t t = (time_t) it->start_time;
+        if (it->last_played > 0) {
+            time_t t = (time_t) it->last_played;
             struct tm tm_buf;
             struct tm *tm = localtime_r(&t, &tm_buf);
 
@@ -529,131 +565,154 @@ static void compute_global_stats(global_stats_t *gs) {
             }
         }
 
-        if (it->last_session > gs->longest_session_duration) {
+        if (it->last_session >= gs->longest_session_duration) {
             gs->longest_session_duration = it->last_session;
             snprintf(gs->longest_session, sizeof(gs->longest_session), "%s", it->name);
         }
 
-        int found;
+        {
+            char norm_core[64];
+            normalise_json_values(norm_core, sizeof(norm_core), it->core);
 
-        char norm_core[64];
-        normalise_json_values(norm_core, sizeof(norm_core), it->core);
+            int found = 0;
+            for (int j = 0; j < core_used; j++) {
+                if (strcmp(core_map[j].key, norm_core) == 0) {
+                    core_map[j].count += it->core_count;
+                    found = 1;
+                    break;
+                }
+            }
 
-        found = 0;
-        for (int j = 0; j < core_used; j++) {
-            if (strcmp(core_map[j].key, norm_core) == 0) {
-                core_map[j].count += it->core_count;
-                found = 1;
-                break;
+            if (!found && norm_core[0] != '\0') {
+                if (core_used < CORE_MAP_MAX) {
+                    strncpy(core_map[core_used].key, norm_core, sizeof(core_map[core_used].key) - 1);
+                    core_map[core_used].key[sizeof(core_map[core_used].key) - 1] = '\0';
+                    core_map[core_used].count = it->core_count;
+                    core_used++;
+                } else {
+                    core_overflow = 1;
+                }
             }
         }
 
-        if (!found && norm_core[0] != '\0' && core_used < (int) (sizeof(core_map) / sizeof(core_map[0]))) {
-            strncpy(core_map[core_used].key, norm_core, sizeof(core_map[core_used].key) - 1);
+        {
+            char norm_device[64];
+            normalise_json_values(norm_device, sizeof(norm_device), it->device);
 
-            core_map[core_used].key[sizeof(core_map[0].key) - 1] = '\0';
-            core_map[core_used].count = it->core_count;
+            int found = 0;
+            for (int j = 0; j < device_used; j++) {
+                if (strcmp(device_map[j].key, norm_device) == 0) {
+                    device_map[j].count += it->device_count;
+                    found = 1;
+                    break;
+                }
+            }
 
-            core_used++;
-        }
-
-        char norm_device[64];
-        normalise_json_values(norm_device, sizeof(norm_device), it->device);
-
-        found = 0;
-        for (int j = 0; j < device_used; j++) {
-            if (strcmp(device_map[j].key, norm_device) == 0) {
-                device_map[j].count += it->device_count;
-                found = 1;
-                break;
+            if (!found && norm_device[0] != '\0') {
+                if (device_used < DEVICE_MAP_MAX) {
+                    strncpy(device_map[device_used].key, norm_device, sizeof(device_map[device_used].key) - 1);
+                    device_map[device_used].key[sizeof(device_map[device_used].key) - 1] = '\0';
+                    device_map[device_used].count = it->device_count;
+                    device_used++;
+                } else {
+                    device_overflow = 1;
+                }
             }
         }
 
-        if (!found && norm_device[0] != '\0' && device_used < (int) (sizeof(device_map) / sizeof(device_map[0]))) {
-            strncpy(device_map[device_used].key, norm_device, sizeof(device_map[device_used].key) - 1);
+        {
+            char norm_mode[16];
+            normalise_json_values(norm_mode, sizeof(norm_mode), it->mode);
 
-            device_map[device_used].key[sizeof(device_map[0].key) - 1] = '\0';
-            device_map[device_used].count = it->device_count;
+            int found = 0;
+            for (int j = 0; j < mode_used; j++) {
+                if (strcmp(mode_map[j].key, norm_mode) == 0) {
+                    mode_map[j].count += it->mode_count;
+                    found = 1;
+                    break;
+                }
+            }
 
-            device_used++;
-        }
-
-        char norm_mode[16];
-        normalise_json_values(norm_mode, sizeof(norm_mode), it->mode);
-
-        found = 0;
-        for (int j = 0; j < mode_used; j++) {
-            if (strcmp(mode_map[j].key, norm_mode) == 0) {
-                mode_map[j].count += it->mode_count;
-                found = 1;
-                break;
+            if (!found && norm_mode[0] != '\0') {
+                if (mode_used < MODE_MAP_MAX) {
+                    strncpy(mode_map[mode_used].key, norm_mode, sizeof(mode_map[mode_used].key) - 1);
+                    mode_map[mode_used].key[sizeof(mode_map[mode_used].key) - 1] = '\0';
+                    mode_map[mode_used].count = it->mode_count;
+                    mode_used++;
+                } else {
+                    mode_overflow = 1;
+                }
             }
         }
+    }
 
-        if (!found && norm_mode[0] != '\0' && mode_used < (int) (sizeof(mode_map) / sizeof(mode_map[0]))) {
-            strncpy(mode_map[mode_used].key, norm_mode, sizeof(mode_map[mode_used].key) - 1);
-
-            mode_map[mode_used].key[sizeof(mode_map[0].key) - 1] = '\0';
-            mode_map[mode_used].count = it->mode_count;
-
-            mode_used++;
+    {
+        int max = -1;
+        for (int i = 0; i < core_used; i++) {
+            if (core_map[i].count > max) {
+                max = core_map[i].count;
+                strncpy(gs->core, core_map[i].key, sizeof(gs->core) - 1);
+                gs->core[sizeof(gs->core) - 1] = '\0';
+                gs->core_count = core_map[i].count;
+            }
         }
     }
 
-    int max = -1;
-    for (int i = 0; i < core_used; i++) {
-        if (core_map[i].count > max) {
-            max = core_map[i].count;
-            strncpy(gs->core, core_map[i].key, sizeof(gs->core) - 1);
-            gs->core[sizeof(gs->core) - 1] = '\0';
-            gs->core_count = core_map[i].count;
+    {
+        int max = -1;
+        for (int i = 0; i < device_used; i++) {
+            if (device_map[i].count > max) {
+                max = device_map[i].count;
+                strncpy(gs->device, device_map[i].key, sizeof(gs->device) - 1);
+                gs->device[sizeof(gs->device) - 1] = '\0';
+                gs->device_count = device_map[i].count;
+            }
         }
     }
 
-    max = -1;
-    for (int i = 0; i < device_used; i++) {
-        if (device_map[i].count > max) {
-            max = device_map[i].count;
-            strncpy(gs->device, device_map[i].key, sizeof(gs->device) - 1);
-            gs->device[sizeof(gs->device) - 1] = '\0';
-            gs->device_count = device_map[i].count;
+    {
+        int max = -1;
+        for (int i = 0; i < mode_used; i++) {
+            if (mode_map[i].count > max) {
+                max = mode_map[i].count;
+                strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode) - 1);
+                gs->mode[sizeof(gs->mode) - 1] = '\0';
+                gs->mode_count = mode_map[i].count;
+            }
         }
     }
 
-    max = -1;
-    for (int i = 0; i < mode_used; i++) {
-        if (mode_map[i].count > max) {
-            max = mode_map[i].count;
-            strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode) - 1);
-            gs->mode[sizeof(gs->mode) - 1] = '\0';
-            gs->mode_count = mode_map[i].count;
+    {
+        size_t max = 0;
+        int best = -1;
+        for (int i = 0; i < 24; i++) {
+            if (hour_buckets[i] > max) {
+                max = hour_buckets[i];
+                best = i;
+            }
         }
+        gs->active_hour = best;
     }
 
-    max = -1;
-    for (int i = 0; i < 24; i++) {
-        if (hour_buckets[i] > max) {
-            max = hour_buckets[i];
-            gs->active_hour = i;
+    {
+        size_t max = 0;
+        int best = -1;
+        for (int i = 0; i < 7; i++) {
+            if (day_buckets[i] > max) {
+                max = day_buckets[i];
+                best = i;
+            }
         }
+        gs->favourite_day = best;
     }
 
-    max = -1;
-    for (int i = 0; i < 7; i++) {
-        if (day_buckets[i] > max) {
-            max = day_buckets[i];
-            gs->favourite_day = i;
-        }
-    }
+    gs->unique_cores = core_used + (core_overflow ? 1 : 0);
+    gs->unique_devices = device_used + (device_overflow ? 1 : 0);
+    gs->unique_modes = mode_used + (mode_overflow ? 1 : 0);
 
-    if (activity_count > 0) {
-        gs->unique_cores = core_used;
-        gs->unique_devices = device_used;
-        gs->unique_modes = mode_used;
+    gs->average_time = (gs->total_launches > 0) ? (gs->total_time / gs->total_launches) : 0;
 
-        gs->average_time = gs->total_launches > 0 ? gs->total_time / gs->total_launches : 0;
-        gs->global_playstyle = resolve_global_playstyle(gs);
-    }
+    gs->global_playstyle = resolve_global_playstyle(gs);
 }
 
 static void load_activity_items(void) {
@@ -675,14 +734,16 @@ static void load_activity_items(void) {
             struct json launches_json = json_object_get(val, "launches");
 
             if (json_exists(name_json) && json_exists(time_json) && json_exists(launches_json)) {
-                ensure_activity_capacity();
+                if (!ensure_activity_capacity()) break;
                 if (activity_count >= activity_capacity) break;
 
                 activity_item_t *it = &activity_items[activity_count];
+                memset(it, 0, sizeof(*it));
+
                 json_string_copy(name_json, it->name, sizeof(it->name));
 
-                it->total_time = json_int(time_json);
-                it->launch_count = json_int(launches_json);
+                it->total_time = json_size_positive(time_json);
+                it->launch_count = json_size_positive(launches_json);
 
                 struct json last_core_json = json_object_get(val, "last_core");
                 struct json core_launch_json = json_object_get(val, "core_launches");
@@ -699,7 +760,7 @@ static void load_activity_items(void) {
                     json_string_copy(last_core_json, core_key, sizeof(core_key));
 
                     struct json core_count_json = json_object_get(core_launch_json, core_key);
-                    if (json_exists(core_count_json)) it->core_count = json_int(core_count_json);
+                    it->core_count = (int) json_size_positive(core_count_json);
                 }
 
                 struct json last_device_json = json_object_get(val, "last_device");
@@ -717,7 +778,7 @@ static void load_activity_items(void) {
                     json_string_copy(last_device_json, dev_key, sizeof(dev_key));
 
                     struct json dev_count_json = json_object_get(device_launch_json, dev_key);
-                    if (json_exists(dev_count_json)) it->device_count = json_int(dev_count_json);
+                    it->device_count = (int) json_size_positive(dev_count_json);
                 }
 
                 struct json last_mode_json = json_object_get(val, "last_mode");
@@ -735,12 +796,12 @@ static void load_activity_items(void) {
                     json_string_copy(last_mode_json, mode_key, sizeof(mode_key));
 
                     struct json mode_count_json = json_object_get(mode_launch_json, mode_key);
-                    if (json_exists(mode_count_json)) it->mode_count = json_int(mode_count_json);
+                    it->mode_count = (int) json_size_positive(mode_count_json);
                 }
 
-                it->start_time = json_int(json_object_get(val, "start_time"));
-                it->average_time = json_int(json_object_get(val, "avg_time"));
-                it->last_session = json_int(json_object_get(val, "last_session"));
+                it->last_played = json_epoch_or_zero(json_object_get(val, "start_time"));
+                it->average_time = json_size_positive(json_object_get(val, "avg_time"));
+                it->last_session = json_size_positive(json_object_get(val, "last_session"));
 
                 activity_count++;
             }
@@ -750,27 +811,30 @@ static void load_activity_items(void) {
     }
 }
 
-static char *format_total_time(int total_time) {
-    static char time_buffer[MAX_BUFFER_SIZE] = "0m";
+static void format_total_time(char *dst, size_t dst_sz, size_t total_time) {
+    size_t days = total_time / 86400;
+    size_t hours = (total_time % 86400) / 3600;
+    size_t minutes = (total_time % 3600) / 60;
 
-    int days = total_time / 86400;
-    int hours = (total_time % 86400) / 3600;
-    int minutes = (total_time % 3600) / 60;
-
-    if (days > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm",
-                 days, hours, minutes);
-    } else if (hours > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dh %dm",
-                 hours, minutes);
-    } else if (minutes > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dm",
-                 minutes);
+    if (days) {
+        snprintf(dst, dst_sz, "%zud %zuh %zum", days, hours, minutes);
+    } else if (hours) {
+        snprintf(dst, dst_sz, "%zuh %zum", hours, minutes);
+    } else if (minutes) {
+        snprintf(dst, dst_sz, "%zum", minutes);
     } else {
-        snprintf(time_buffer, sizeof(time_buffer), "0m");
+        snprintf(dst, dst_sz, "0m");
     }
+}
 
-    return time_buffer;
+static void format_activity_row(const activity_item_t *it, int mode, char *dst) {
+    if (mode == 0) {
+        char tt[64];
+        format_total_time(tt, sizeof(tt), it->total_time);
+        snprintf(dst, ACT_ROW, "[%s] %s", tt, it->name);
+    } else {
+        snprintf(dst, ACT_ROW, "[%zu] %s", it->launch_count, it->name);
+    }
 }
 
 static void refresh_activity_labels(void) {
@@ -788,26 +852,20 @@ static void refresh_activity_labels(void) {
     lv_obj_clean(ui_pnlContent);
     ui_count = 0;
 
-    if (activity_display_mode == 0) {
-        qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_time);
-    } else {
-        qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_launch);
+    if (activity_display_mode != last_sort_mode) {
+        if (activity_display_mode == 0)
+            qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_time);
+        else
+            qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_launch);
+
+        last_sort_mode = activity_display_mode;
     }
 
     for (size_t i = 0; i < activity_count; ++i) {
         ui_count++;
 
         char label_buffer[MAX_BUFFER_SIZE];
-
-        if (activity_display_mode == 0) {
-            snprintf(label_buffer, sizeof(label_buffer), "[%s] %s",
-                     format_total_time(activity_items[i].total_time),
-                     activity_items[i].name);
-        } else {
-            snprintf(label_buffer, sizeof(label_buffer), "[%d] %s",
-                     activity_items[i].launch_count,
-                     activity_items[i].name);
-        }
+        format_activity_row(&activity_items[i], activity_display_mode, label_buffer);
 
         lv_obj_t *ui_pnlAct = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlAct);
@@ -881,7 +939,7 @@ static void show_detail_view(const activity_item_t *it) {
                 break;
             case DETAIL_LAUNCH:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.LAUNCH);
-                snprintf(detail_value, sizeof(detail_value), "%d", it->launch_count);
+                snprintf(detail_value, sizeof(detail_value), "%zu", it->launch_count);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_launch");
                 break;
             case DETAIL_DEVICE:
@@ -905,23 +963,23 @@ static void show_detail_view(const activity_item_t *it) {
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_mode");
                 break;
             case DETAIL_START:
-                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.START);
-                snprintf(detail_value, sizeof(detail_value), "%s", format_timestamp(it->start_time));
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.PLAYED);
+                format_timestamp(detail_value, sizeof(detail_value), it->last_played);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_start");
                 break;
             case DETAIL_AVERAGE:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.AVERAGE);
-                snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->average_time));
+                format_total_time(detail_value, sizeof(detail_value), it->average_time);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_average");
                 break;
             case DETAIL_TOTAL:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.TOTAL);
-                snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->total_time));
+                format_total_time(detail_value, sizeof(detail_value), it->total_time);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_total");
                 break;
             case DETAIL_LAST:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.LAST);
-                snprintf(detail_value, sizeof(detail_value), "%s", format_total_time(it->last_session));
+                format_total_time(detail_value, sizeof(detail_value), it->last_session);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_last");
                 break;
             case DETAIL_PLAYSTYLE:
@@ -1041,22 +1099,22 @@ static void show_global_view(void) {
                 break;
             case GLOBAL_LAUNCHES:
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.LAUNCH);
-                snprintf(global_value, sizeof(global_value), "%d", gs.total_launches);
+                snprintf(global_value, sizeof(global_value), "%zu", gs.total_launches);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_launch");
                 break;
             case GLOBAL_TOTAL_TIME:
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.TOTAL);
-                snprintf(global_value, sizeof(global_value), "%s", format_total_time(gs.total_time));
+                format_total_time(global_value, sizeof(global_value), gs.total_time);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_total");
                 break;
             case GLOBAL_AVERAGE_TIME:
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.AVERAGE);
-                snprintf(global_value, sizeof(global_value), "%s", format_total_time(gs.average_time));
+                format_total_time(global_value, sizeof(global_value), gs.average_time);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_average");
                 break;
             case GLOBAL_FIRST_GAME:
-                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.FIRST);
-                snprintf(global_value, sizeof(global_value), "%s", gs.first_content);
+                snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.OLDEST);
+                snprintf(global_value, sizeof(global_value), "%s", gs.oldest_content);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_first");
                 break;
             case GLOBAL_LONGEST_SESSION:
@@ -1081,12 +1139,12 @@ static void show_global_view(void) {
                 break;
             case GLOBAL_ACTIVE_TIME:
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.ACTIVE_TIME);
-                snprintf(global_value, sizeof(global_value), "%s", hour_label(gs.active_hour));
+                hour_label(global_value, sizeof(global_value), gs.active_hour);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_active");
                 break;
             case GLOBAL_FAVOURITE_DAY:
                 snprintf(global_label, sizeof(global_label), "%s", lang.MUXACTIVITY.GLOBAL.FAVOURITE_DAY);
-                snprintf(global_value, sizeof(global_value), "%s", weekday_label(gs.favourite_day));
+                weekday_label(global_value, sizeof(global_value), gs.favourite_day);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_day");
                 break;
             default:
@@ -1163,104 +1221,128 @@ static void export_activity_html(void) {
             "<meta name='viewport' content='width=device-width, initial-scale=1'>"
             "<title>MustardOS - Activity Tracker</title>"
 
+            "<link rel='preconnect' href='https://fonts.bunny.net'>"
+            "<link rel='preconnect' href='https://cdn.datatables.net'>"
+
+            "<link rel='stylesheet' href='https://fonts.bunny.net/css?family=noto-sans:400,600,700&display=swap'>"
             "<link rel='stylesheet' href='https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css'>"
 
             "<script src='https://code.jquery.com/jquery-3.7.1.slim.min.js' integrity='sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=' crossorigin='anonymous'></script>"
             "<script src='https://cdn.datatables.net/2.3.5/js/dataTables.min.js'></script>"
 
             "<style>"
-            "body { font-family: sans-serif; background: #1f1f1f; color: #ffffff; padding: 20px }"
-            "h1, h2 { color: #f7d12e }"
-            "table { margin-bottom: 24px }"
-            "th, td { border: 1px solid #444444; padding: 6px }"
-            "th { background: #222222 }"
-            "tr:nth-child(even) { background: #1a1a1a }"
-            "#global { width: 400px }"
-            "#detail { width: 100%% }"
-
+            "body { font-family:'Noto Sans', sans-serif; background:#1f1f1f; color:#ffffff; padding:20px }"
+            "h1, h2 { color:#f7d12e }"
+            "th, td { padding:8px }"
+            "th { background:#222222 }"
+            "tr:nth-child(even) { background:#1a1a1a }"
             ".dt-container { color: #ffffff }"
             ".dt-search input, .dt-length select { background:#111111; color:#ffffff; border:1px solid #444444 }"
             "table.dataTable tbody tr:nth-child(even) { background-color: #1a1a1a }"
             "table.dataTable tbody tr:nth-child(odd) { background-color: #1f1f1f }"
             "table.dataTable tbody tr:hover { background-color: #2c2c2c }"
-
             "</style>"
 
             "</head>"
             "<body>"
     );
 
+    char exported[TIME_BUF];
+    export_timestamp(exported);
+
+    fprintf(f, "<h1>MustardOS - Activity Tracker</h1>");
+    fprintf(f, "<p><strong>Exported:</strong> ");
+    html_escape(f, exported);
+    fprintf(f, "</p>");
+
+    char global_total[64];
+    char global_avg[64];
+    char global_top_time_val[64];
+
+    format_total_time(global_total, sizeof(global_total), gs.total_time);
+    format_total_time(global_avg, sizeof(global_avg), gs.average_time);
+    format_total_time(global_top_time_val, sizeof(global_top_time_val), gs.top_time_value);
+
+    char active_time[32];
+    char fav_day[32];
+
+    hour_label(active_time, sizeof(active_time), gs.active_hour);
+    weekday_label(fav_day, sizeof(fav_day), gs.favourite_day);
+
     char global_core_value[MAX_BUFFER_SIZE];
     char global_device_value[MAX_BUFFER_SIZE];
     char global_mode_value[MAX_BUFFER_SIZE];
 
-    char global_core_tmp[64];
-    snprintf(global_core_tmp, sizeof(global_core_tmp), "%s", gs.core);
+    char tmp_core[64];
+    char tmp_device[64];
+    char tmp_mode[16];
 
-    char global_device_tmp[64];
-    snprintf(global_device_tmp, sizeof(global_device_tmp), "%s", gs.device);
-
-    char global_mode_tmp[16];
-    snprintf(global_mode_tmp, sizeof(global_mode_tmp), "%s", gs.mode);
+    snprintf(tmp_core, sizeof(tmp_core), "%s", gs.core);
+    snprintf(tmp_device, sizeof(tmp_device), "%s", gs.device);
+    snprintf(tmp_mode, sizeof(tmp_mode), "%s", gs.mode);
 
     snprintf(global_core_value, sizeof(global_core_value), "%s",
-             str_replace(str_capital_all(global_core_tmp), "_libretro.so", " (RetroArch)"));
+             str_replace(str_capital_all(tmp_core), "_libretro.so", " (RetroArch)"));
+    snprintf(global_device_value, sizeof(global_device_value), "%s", str_toupper(tmp_device));
+    snprintf(global_mode_value, sizeof(global_mode_value), "%s", str_capital(tmp_mode));
 
-    snprintf(global_device_value, sizeof(global_device_value), "%s",
-             str_toupper(global_device_tmp));
+    fprintf(f, "<h2>Global Summary</h2>");
+    fprintf(f, "<table id='global'><tr><th id='g_metric'>Metric</th><th id='g_value'>Value</th></tr>");
 
-    snprintf(global_mode_value, sizeof(global_mode_value), "%s",
-             str_capital(global_mode_tmp));
+    fprintf(f, "<tr><td>Top Content by Time</td><td>");
+    html_escape(f, gs.top_time);
+    fprintf(f, " (");
+    html_escape(f, global_top_time_val);
+    fprintf(f, ")</td></tr>");
 
-    fprintf(f, "<h1>MustardOS - Activity Tracker</h1>");
-    fprintf(f, "<p><strong>Exported:</strong> %s</p>", export_timestamp());
+    fprintf(f, "<tr><td>Top Content by Launch</td><td>");
+    html_escape(f, gs.top_launch);
+    fprintf(f, " (%zu)</td></tr>", gs.top_launch_value);
 
-    fprintf(f, "<h2>Global Summary</h2><table id='global'><tr><th>Metric</th><th>Value</th></tr>");
+    fprintf(f, "<tr><td>Most Frequent Core</td><td>");
+    html_escape(f, global_core_value);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Top Content by Time</td><td>%s (%s)</td></tr>",
-            gs.top_time, format_total_time(gs.top_time_value));
+    fprintf(f, "<tr><td>Most Used Device</td><td>");
+    html_escape(f, global_device_value);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Top Content by Launch</td><td>%s (%d)</td></tr>",
-            gs.top_launch, gs.top_launch_value);
+    fprintf(f, "<tr><td>Most Used Mode</td><td>");
+    html_escape(f, global_mode_value);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Most Frequent Core</td><td>%s</td></tr>",
-            global_core_value);
+    fprintf(f, "<tr><td>Total Launch Count</td><td>%zu</td></tr>", gs.total_launches);
 
-    fprintf(f, "<tr><td>Most Used Device</td><td>%s</td></tr>",
-            global_device_value);
+    fprintf(f, "<tr><td>Total Play Time</td><td>");
+    html_escape(f, global_total);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Most Used Mode</td><td>%s</td></tr>",
-            global_mode_value);
+    fprintf(f, "<tr><td>Average Play Time</td><td>");
+    html_escape(f, global_avg);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Total Launch Count</td><td>%d</td></tr>",
-            gs.total_launches);
+    fprintf(f, "<tr><td>Oldest Content</td><td>");
+    html_escape(f, gs.oldest_content);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Total Play Time</td><td>%s</td></tr>",
-            format_total_time(gs.total_time));
+    fprintf(f, "<tr><td>Longest Session</td><td>");
+    html_escape(f, gs.longest_session);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Average Play Time</td><td>%s</td></tr>",
-            format_total_time(gs.average_time));
+    fprintf(f, "<tr><td>Overall Play Style</td><td>");
+    html_escape(f, global_playstyle_name(gs.global_playstyle, 1));
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>First Game Played</td><td>%s</td></tr>",
-            gs.first_content);
+    fprintf(f, "<tr><td>Unique Content Played</td><td>%zu</td></tr>", gs.unique_titles);
+    fprintf(f, "<tr><td>Unique Cores Used</td><td>%d</td></tr>", gs.unique_cores);
 
-    fprintf(f, "<tr><td>Longest Session</td><td>%s</td></tr>",
-            gs.longest_session);
+    fprintf(f, "<tr><td>Most Active Time</td><td>");
+    html_escape(f, active_time);
+    fprintf(f, "</td></tr>");
 
-    fprintf(f, "<tr><td>Overall Play Style</td><td>%s</td></tr>",
-            global_playstyle_name(gs.global_playstyle, 1));
-
-    fprintf(f, "<tr><td>Unique Content Played</td><td>%zu</td></tr>",
-            gs.unique_titles);
-
-    fprintf(f, "<tr><td>Unique Cores Used</td><td>%d</td></tr>",
-            gs.unique_cores);
-
-    fprintf(f, "<tr><td>Most Active Time</td><td>%s</td></tr>",
-            hour_label(gs.active_hour));
-
-    fprintf(f, "<tr><td>Favourite Day</td><td>%s</td></tr>",
-            weekday_label(gs.favourite_day));
+    fprintf(f, "<tr><td>Favourite Day</td><td>");
+    html_escape(f, fav_day);
+    fprintf(f, "</td></tr>");
 
     fprintf(f, "</table>");
 
@@ -1280,35 +1362,55 @@ static void export_activity_html(void) {
             "</tr></thead><tbody>"
     );
 
-    char detail_core_value[MAX_BUFFER_SIZE];
-    char detail_device_value[MAX_BUFFER_SIZE];
-    char detail_core_tmp[64];
-    char detail_device_tmp[64];
+    char core_value[MAX_BUFFER_SIZE];
+    char device_value[MAX_BUFFER_SIZE];
+
+    char tt_avg[64];
+    char tt_total[64];
+    char tt_last[64];
+    char ts_start[64];
 
     for (size_t i = 0; i < activity_count; i++) {
         const activity_item_t *it = &activity_items[i];
         local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
 
-        snprintf(detail_core_tmp, sizeof(detail_core_tmp), "%s", it->core);
-        snprintf(detail_core_value, sizeof(detail_core_value), "%s",
-                 str_replace(str_capital_all(detail_core_tmp), "_libretro.so", " (RetroArch)"));
+        snprintf(tmp_core, sizeof(tmp_core), "%s", it->core);
+        snprintf(core_value, sizeof(core_value), "%s",
+                 str_replace(str_capital_all(tmp_core), "_libretro.so", " (RetroArch)"));
 
-        snprintf(detail_device_tmp, sizeof(detail_device_tmp), "%s", it->device);
-        snprintf(detail_device_value, sizeof(detail_device_value), "%s", str_toupper(detail_device_tmp));
+        snprintf(tmp_device, sizeof(tmp_device), "%s", it->device);
+        snprintf(device_value, sizeof(device_value), "%s", str_toupper(tmp_device));
+
+        format_timestamp(ts_start, sizeof(ts_start), it->last_played);
+        format_total_time(tt_avg, sizeof(tt_avg), it->average_time);
+        format_total_time(tt_total, sizeof(tt_total), it->total_time);
+        format_total_time(tt_last, sizeof(tt_last), it->last_session);
 
         fprintf(f, "<tr><td>");
         html_escape(f, it->name);
-        fprintf(f, "</td>");
 
-        fprintf(f, "<td>%s</td>", detail_core_value);
-        fprintf(f, "<td>%s</td>", detail_device_value);
-        fprintf(f, "<td>%d</td>", it->launch_count);
-        fprintf(f, "<td>%s</td>", format_timestamp(it->start_time));
-        fprintf(f, "<td>%s</td>", format_total_time(it->average_time));
-        fprintf(f, "<td>%s</td>", format_total_time(it->total_time));
-        fprintf(f, "<td>%s</td>", format_total_time(it->last_session));
-        fprintf(f, "<td>%s</td>", local_playstyle_name(ps, 1));
-        fprintf(f, "</tr>");
+        fprintf(f, "</td><td>");
+        html_escape(f, core_value);
+
+        fprintf(f, "</td><td>");
+        html_escape(f, device_value);
+
+        fprintf(f, "</td><td>%zu</td><td>", it->launch_count);
+        html_escape(f, ts_start);
+
+        fprintf(f, "</td><td>");
+        html_escape(f, tt_avg);
+
+        fprintf(f, "</td><td>");
+        html_escape(f, tt_total);
+
+        fprintf(f, "</td><td>");
+        html_escape(f, tt_last);
+
+        fprintf(f, "</td><td>");
+        html_escape(f, local_playstyle_name(ps, 1));
+
+        fprintf(f, "</td></tr>");
     }
 
     fprintf(f, "</tbody></table>");
@@ -1326,13 +1428,7 @@ static void export_activity_html(void) {
             "    ]"
             "  });"
             "});"
-            "</script>"
-    );
-
-
-    fprintf(f,
-            "</body>"
-            "</html>"
+            "</script></body></html>"
     );
 
     fclose(f);
@@ -1344,9 +1440,6 @@ static void export_activity_html(void) {
 static void generate_activity_items(void) {
     load_activity_items();
 
-    free(playtime_json_str);
-    playtime_json_str = NULL;
-
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -1354,6 +1447,8 @@ static void generate_activity_items(void) {
 
     in_detail_view = 0;
     refresh_activity_labels();
+
+    first_open = 0;
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -1441,6 +1536,7 @@ static void handle_b(void) {
         in_detail_view = 0;
         refresh_activity_labels();
         nav_moved = 1;
+        first_open = 1;
 
         list_nav_next(overview_item_index);
         return;
@@ -1453,12 +1549,13 @@ static void handle_b(void) {
         in_global_view = 0;
         refresh_activity_labels();
         nav_moved = 1;
+        first_open = 1;
 
         list_nav_next(overview_item_index);
         return;
     }
 
-    free_activity_items(&activity_items, &activity_count);
+    free_activity_items();
 
     close_input();
     mux_input_stop();

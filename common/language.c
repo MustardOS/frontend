@@ -129,7 +129,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.LAUNCH, "Launch Count");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.DEVICE, "Last Device");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.MODE, "Last Mode");
-    SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.START, "Start Time");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.PLAYED, "Last Played");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.AVERAGE, "Average Time");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.TOTAL, "Total Time");
     SPECIFIC_FIELD(lang->MUXACTIVITY.DETAIL.LAST, "Last Session");
@@ -142,7 +142,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.LAUNCH, "Total Launch Count");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.TOTAL, "Total Play Time");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.AVERAGE, "Average Play Time");
-    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.FIRST, "First Game Played");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.OLDEST, "Oldest Session");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.LONGEST, "Longest Session");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.OVERALL, "Overall Play Style");
     SPECIFIC_FIELD(lang->MUXACTIVITY.GLOBAL.UNIQUE_PLAY, "Unique Content Played");

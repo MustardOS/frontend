@@ -115,7 +115,7 @@ struct mux_lang {
             char LAUNCH[MAX_BUFFER_SIZE];
             char DEVICE[MAX_BUFFER_SIZE];
             char MODE[MAX_BUFFER_SIZE];
-            char START[MAX_BUFFER_SIZE];
+            char PLAYED[MAX_BUFFER_SIZE];
             char AVERAGE[MAX_BUFFER_SIZE];
             char TOTAL[MAX_BUFFER_SIZE];
             char LAST[MAX_BUFFER_SIZE];
@@ -130,7 +130,7 @@ struct mux_lang {
             char LAUNCH[MAX_BUFFER_SIZE];
             char TOTAL[MAX_BUFFER_SIZE];
             char AVERAGE[MAX_BUFFER_SIZE];
-            char FIRST[MAX_BUFFER_SIZE];
+            char OLDEST[MAX_BUFFER_SIZE];
             char LONGEST[MAX_BUFFER_SIZE];
             char OVERALL[MAX_BUFFER_SIZE];
             char UNIQUE_PLAY[MAX_BUFFER_SIZE];
