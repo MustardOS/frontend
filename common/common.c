@@ -37,6 +37,7 @@
 #include "device.h"
 #include "kiosk.h"
 #include "input/list_nav.h"
+#include "skip_list.h"
 #include "theme.h"
 #include "mini/mini.h"
 #include "../module/muxshare.h"
@@ -71,6 +72,14 @@ int bgm_volume = 90;
 int current_brightness = 0;
 int current_volume = 0;
 int is_blank = 0;
+char progress_bar_message[MAX_BUFFER_SIZE];
+int progress_bar_value = 0;
+lv_timer_t *timer_update_progress;
+static void (*extraction_finish_cb)(char *result) = NULL;
+typedef struct {
+    char *filename;
+    char *output_path;
+} extraction_args_t;
 
 char *theme_back_compat[] = {
         config.SYSTEM.VERSION,
@@ -2041,16 +2050,77 @@ int resolution_check(const char *theme_path) {
     return 0;
 }
 
+void show_progress_bar(char *message) {
+    progress_bar_value = 0;
+    snprintf(progress_bar_message, sizeof(progress_bar_message), "%s", message);
+    timer_update_progress = lv_timer_create(update_progress_bar, TIMER_REFRESH, NULL);
+}
+
+void update_progress_bar() {
+    static int last_value = -1;
+    if (last_value == progress_bar_value) return;
+    lv_bar_set_value(ui_barProgress, progress_bar_value, LV_ANIM_OFF);
+
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%s: %d%%", progress_bar_message, progress_bar_value);
+    lv_label_set_text(ui_lblProgress, buf);
+    if (lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
+        lv_obj_clear_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_pnlProgress);
+    }
+}
+
+void hide_progress_bar() {
+    if (timer_update_progress) {
+        printf("Deleting progress timer\n");
+        lv_timer_del(timer_update_progress);
+        timer_update_progress = NULL;
+    }
+    printf("hide_progress_bar\n");
+    lv_obj_add_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void *extraction_thread(void *arg) {
+    extraction_args_t *args = (extraction_args_t *) arg;
+
+    extract_zip_to_dir(args->filename, args->output_path);
+    if (extraction_finish_cb) extraction_finish_cb(args->filename);
+
+    hide_progress_bar();
+    
+    free(args->filename);
+    free(args->output_path);
+    free(args);
+    return NULL;
+}
+
+void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result)) {
+    extraction_finish_cb = callback;
+    show_progress_bar(lang.GENERIC.EXTRACTING_ARCHIVE);
+
+    extraction_args_t *args = malloc(sizeof(*args));
+
+    args->filename = strdup(filename);
+    args->output_path = strdup(output);
+
+    pthread_t tid;
+    pthread_create(&tid, NULL, extraction_thread, args);
+    pthread_detach(tid);
+}
+
 int extract_zip_to_dir(const char *filename, const char *output) {
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
 
     if (!mz_zip_reader_init_file(&zip, filename, 0)) {
         printf("Failed to open ZIP archive!\n");
+        hide_progress_bar();
         return 0;
     }
 
-    for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++) {
+    mz_uint zip_file_count = mz_zip_reader_get_num_files(&zip);
+
+    for (mz_uint i = 0; i < zip_file_count; i++) {
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
 
@@ -2064,11 +2134,23 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             continue;
         }
 
+        if (file_exist(dest_file)) {
+            remove(dest_file);
+        }
+        
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
             mz_zip_reader_end(&zip);
             return 0;
+        } else {
+            if (ends_with(dest_file, ".png")) {
+                char img_source[MAX_BUFFER_SIZE];
+                snprintf(img_source, sizeof(img_source), "M:%s", dest_file);
+                lv_img_cache_invalidate_src(img_source);
+            }
         }
+
+        progress_bar_value = (int)(((i + 1) * 100) / zip_file_count);
     }
 
     mz_zip_reader_end(&zip);

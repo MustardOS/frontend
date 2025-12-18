@@ -4,6 +4,7 @@
 #include "../lvgl/lvgl.h"
 #include "mini/mini.h"
 #include "options.h"
+#include <pthread.h>
 
 #define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define BIT(n) (UINT64_C(1) << (n))
@@ -40,6 +41,10 @@ extern char *excluded_included[];
 extern char *allowed_restricted[];
 extern char *hidden_visible[];
 extern char *show_noicon_hide[];
+
+extern char progress_bar_message[MAX_BUFFER_SIZE];
+extern int progress_bar_value;
+extern lv_timer_t *timer_update_progress;
 
 #define SOUND_TOTAL 12
 
@@ -331,7 +336,15 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
 int resolution_check(const char *theme_path);
 
+void show_progress_bar(char *message);
+
+void update_progress_bar();
+
+void hide_progress_bar();
+
 int extract_zip_to_dir(const char *filename, const char *output);
+
+void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result));
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
 

@@ -62,6 +62,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
     GENERIC_FIELD(lang->GENERIC.EXCLUDED, "Excluded");
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
+    GENERIC_FIELD(lang->GENERIC.EXTRACTING_ARCHIVE, "Extracting Archive");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
     GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
     GENERIC_FIELD(lang->GENERIC.HOLD_CONFIRM, "Hold L2 and press X to confirm deletion!");

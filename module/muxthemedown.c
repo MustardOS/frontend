@@ -241,6 +241,21 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void refresh_current_list_item() {
+    update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
+                                                                    : lang.MUXTHEMEDOWN.DOWNLOAD);
+}
+
+static void theme_extraction_finished(char *theme_path) {
+    printf("Extraction finished: %s\n", theme_path);
+    remove(theme_path);
+    block_input = 0;
+    theme_extracting = false;
+    refresh_current_list_item();
+    nav_moved = 1;// force redraw of screen
+}
+
 static void theme_download_finished() {
     char theme_path[MAX_BUFFER_SIZE];
     snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name);
@@ -248,15 +263,9 @@ static void theme_download_finished() {
         char output_path[MAX_BUFFER_SIZE];
         snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH, theme_items[current_item_index].name);
         theme_extracting = true;
-        extract_zip_to_dir(theme_path, output_path);
-        remove(theme_path);
-        sync();
-        theme_extracting = false;
-    }
-
-    update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
-                                                                    : lang.MUXTHEMEDOWN.DOWNLOAD);
+        block_input = 1;
+        extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
+    } 
 }
 
 static void refresh_theme_previews_finished(int result) {
@@ -304,7 +313,7 @@ static void handle_a(void) {
         } else {
             remove_directory_recursive(theme_path);
             sync();
-            theme_download_finished();
+            refresh_current_list_item();
             toast_message(lang.MUXTHEMEDOWN.THEME_REMOVED, SHORT);
         }
     } else {

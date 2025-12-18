@@ -360,16 +360,9 @@ static void save_custom_options(char *next_screen) {
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
-                extract_archive(theme_alt_archive, next_screen);
-            } else {
-                char png_bootlogo[MAX_BUFFER_SIZE];
-                snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/%simage/bootlogo.png", config.THEME.STORAGE_THEME,
-                         mux_dimension);
-                if (!file_exist(png_bootlogo)) {
-                    snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/image/bootlogo.png", config.THEME.STORAGE_THEME);
-                }
-                if (file_exist(png_bootlogo)) update_bootlogo(next_screen);
+                extract_zip_to_dir(theme_alt_archive, config.THEME.STORAGE_THEME);
             }
+            write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
             static char rgb_script[MAX_BUFFER_SIZE];
             snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", config.THEME.STORAGE_THEME,
@@ -465,6 +458,10 @@ static void handle_a(void) {
         set_bgm_volume(lv_dropdown_get_selected(ui_droMusicVolume_custom));
     } else if (element_focused == ui_lblThemeAlternate_custom) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
+        save_custom_options("custom");
+        load_mux("custom");
+        close_input();
+        mux_input_stop();
     } else {
         handle_option_next();
     }

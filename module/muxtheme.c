@@ -212,6 +212,7 @@ static void handle_a(void) {
                      relative_path, items[current_item_index].name);
             write_text_to_file(CONF_CONFIG_PATH "theme/active", "w", CHAR, active_path);
         }
+        write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
     }
 
     load_mux("theme");
