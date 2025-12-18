@@ -105,6 +105,7 @@ struct mux_config {
             int16_t THEME;
             int16_t RETROWAIT;
             int16_t RETROFREE;
+            int16_t RETROCACHE;
             char USBFUNCTION[MAX_BUFFER_SIZE];
             int16_t VERBOSE;
             int16_t RUMBLE;

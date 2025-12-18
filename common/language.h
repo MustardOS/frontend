@@ -1116,6 +1116,7 @@ struct mux_lang {
         char RANDOM[MAX_BUFFER_SIZE];
         char NET_WAIT[MAX_BUFFER_SIZE];
         char RA_FREE[MAX_BUFFER_SIZE];
+        char RA_CACHE[MAX_BUFFER_SIZE];
         char VERBOSE[MAX_BUFFER_SIZE];
         char USER_INIT[MAX_BUFFER_SIZE];
         char DPAD[MAX_BUFFER_SIZE];
@@ -1166,6 +1167,7 @@ struct mux_lang {
             char RANDOM[MAX_BUFFER_SIZE];
             char NET_WAIT[MAX_BUFFER_SIZE];
             char RA_FREE[MAX_BUFFER_SIZE];
+            char RA_CACHE[MAX_BUFFER_SIZE];
             char VERBOSE[MAX_BUFFER_SIZE];
             char USER_INIT[MAX_BUFFER_SIZE];
             char DPAD[MAX_BUFFER_SIZE];
