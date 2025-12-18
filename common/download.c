@@ -1,16 +1,12 @@
+#include "common.h"
 #include "download.h"
 
 bool cancel_download = false;
 bool download_in_progress = false;
 
-static bool showProgressUpdates = false;
-static int last_update = 0;
-static lv_timer_t *timer_update_progress;
-static char download_message[MAX_BUFFER_SIZE];
-
 typedef struct {
-    const char *url;
-    const char *save_path;
+    char *url;
+    char *save_path;
 } download_args_t;
 
 typedef struct {
@@ -19,35 +15,15 @@ typedef struct {
 
 // For writing data to a file
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    return fwrite(ptr, size, nmemb, stream);
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written * size;  // ✅ return BYTES
 }
+
 
 static void (*download_finish_cb)(int) = NULL;
 
 void set_download_callbacks(void (*callback)(int)) {
     download_finish_cb = callback;
-}
-
-static void update_progress() {
-    if (showProgressUpdates) {
-        lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
-        lv_bar_set_value(ui_barDownload, last_update, LV_ANIM_OFF);
-
-        char buf[32];
-        snprintf(buf, sizeof(buf), "%s: %d%%", download_message, last_update);
-        lv_label_set_text(ui_lblDownload, buf);
-        lv_obj_move_foreground(ui_pnlDownload);
-    }
-
-    if (!download_in_progress) {
-        lv_obj_set_style_opa(ui_pnlDownload, 0, MU_OBJ_MAIN_DEFAULT);
-
-        if (timer_update_progress) {
-            printf("Deleting download timer\n");
-            lv_timer_del(timer_update_progress);
-            timer_update_progress = NULL;
-        }
-    }
 }
 
 // Progress callback (called by libcurl)
@@ -60,9 +36,8 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 
     if (dltotal > 0) {
         int percent = (int) ((dlnow * 100) / dltotal);
-        if (last_update != percent) {
-            last_update = percent;
-            printf("Progress: %d\n", percent);
+        if (progress_bar_value != percent) {
+            progress_bar_value = percent;
 
             progress_data_t *data = malloc(sizeof(progress_data_t));
             data->percent = percent;
@@ -74,12 +49,13 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 
 static void download_finished(int result) {
     printf("Download finished with result: %d\n", result);
+    hide_progress_bar();
     download_in_progress = false;
     if (download_finish_cb) download_finish_cb(result);
 }
 
 int download_file(const char *url, const char *output_path) {
-    last_update = 0;
+    progress_bar_value = 0;
     cancel_download = false;
     download_in_progress = true;
 
@@ -116,10 +92,13 @@ int download_file(const char *url, const char *output_path) {
 
     // flush and close file before checking
     fflush(fp);
-    fclose(fp);    
+    fclose(fp);
 
     long response_code = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_off_t cl = 0;
+    int clresponse = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl);
 
     curl_easy_cleanup(curl);
 
@@ -131,7 +110,7 @@ int download_file(const char *url, const char *output_path) {
     }
 
     // Verify HTTP status
-    if (response_code != 200) {
+    if (response_code < 200 || response_code >= 300) {
         fprintf(stderr, "Unexpected HTTP status: %ld\n", response_code);
         remove(output_path);
         download_finished(-4);
@@ -139,8 +118,7 @@ int download_file(const char *url, const char *output_path) {
     }
 
     // Verify file is not empty
-    curl_off_t cl = 0;
-    if (curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl) != CURLE_OK || cl <= 0) {
+    if (clresponse != CURLE_OK || cl <= 0) {
         fprintf(stderr, "No data downloaded\n");
         remove(output_path);
         download_finished(-5);
@@ -156,29 +134,22 @@ static void *download_thread(void *arg) {
     download_args_t *args = (download_args_t *) arg;
 
     download_file(args->url, args->save_path);  // Your existing download function
-
+    
+    free(args->url);
+    free(args->save_path);
     free(args);  // Clean up if dynamically allocated
     return NULL;
 }
 
 void initiate_download(const char *url, const char *output_path, bool showProgress, char *message) {
-    if (showProgressUpdates) {
-        lv_label_set_text(ui_lblDownload, "");
-        lv_bar_set_value(ui_barDownload, last_update, LV_ANIM_OFF);
-        lv_obj_set_style_opa(ui_pnlDownload, 255, MU_OBJ_MAIN_DEFAULT);
-    }
-    
-    snprintf(download_message, sizeof(download_message), "%s", message);
+    if (showProgress) show_progress_bar(message);
 
-    showProgressUpdates = showProgress;
-    download_args_t *args = malloc(sizeof(download_args_t));
+    download_args_t *args = malloc(sizeof(*args));
 
-    args->url = url;
-    args->save_path = output_path;
+    args->url = strdup(url);
+    args->save_path = strdup(output_path);
 
     pthread_t tid;
     pthread_create(&tid, NULL, download_thread, args);
     pthread_detach(tid);
-
-    timer_update_progress = lv_timer_create(update_progress, TIMER_REFRESH, NULL);
 }

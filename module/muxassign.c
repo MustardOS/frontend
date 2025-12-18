@@ -13,7 +13,7 @@ static void show_help(void) {
 }
 
 static void create_system_items(void) {
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HAS_NETWORK) {
         add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
     }
 
@@ -85,7 +85,7 @@ static void create_core_items(const char *target) {
     default_assign[sizeof(default_assign) - 1] = '\0';
     mini_free(global_config);
 
-    if (!strcmp(default_assign, "none")) return;
+    if (strcmp(default_assign, "none") == 0) return;
 
     DIR *ad;
     struct dirent *af;
@@ -308,9 +308,15 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblCoreDownloader) {
-        play_sound(SND_CONFIRM);
-        load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
-        load_mux("coredown");
+        if (is_network_connected()) {
+            play_sound(SND_CONFIRM);
+            load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
+            load_mux("coredown");
+        } else {
+            play_sound(SND_ERROR);
+            toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+            return;
+        }
     } else {
         if (strcasecmp(rom_system, "none") == 0) {
             play_sound(SND_CONFIRM);
@@ -329,7 +335,7 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !strcasecmp(rom_system, "none") || hold_call) return;
+    if (msgbox_active || strcasecmp(rom_system, "none") == 0 || hold_call) return;
 
     handle_core_assignment("Directory Core Assignment Triggered", DIRECTORY);
 
@@ -338,7 +344,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !strcasecmp(rom_system, "none") || at_base(rom_dir, "ROMS") || hold_call) return;
+    if (msgbox_active || strcasecmp(rom_system, "none") == 0 || at_base(rom_dir, "ROMS") || hold_call) return;
 
     handle_core_assignment("Parent Core Assignment Triggered", PARENT);
 
@@ -423,7 +429,9 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     snprintf(explore_dir, sizeof(explore_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
-    init_module("muxassign");
+    const char *m = "muxassign";
+    set_process_name(m);
+    init_module(m);
 
     LOG_INFO(mux_module, "Assign Core explore_dir: \"%s\"", explore_dir)
     LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)
@@ -431,7 +439,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)
 
     if (auto_assign && !file_exist(MUOS_SAA_LOAD)) {
-        if (automatic_assign_core(rom_dir) || !strcmp(rom_system, "none")) {
+        if (automatic_assign_core(rom_dir) || strcmp(rom_system, "none") == 0) {
             close_input();
             return 0;
         }

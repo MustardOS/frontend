@@ -187,7 +187,7 @@ static void handle_a(void) {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        run_exec(exec, exec_count, 0, 1, NULL);
+        run_exec(exec, exec_count, 0, 1, NULL, NULL);
     }
     free(exec);
 
@@ -226,7 +226,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
             {ui_lblNavXGlyph, "",                0},
             {ui_lblNavX,      "",                0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
 #define STORAGE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_storage, UDATA);
@@ -254,7 +254,9 @@ static void ui_refresh_task() {
 }
 
 int muxstorage_main(void) {
-    init_module("muxstorage");
+    const char *m = "muxstorage";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

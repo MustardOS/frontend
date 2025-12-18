@@ -106,7 +106,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.CHECK, 0},
             {ui_lblNavBGlyph, "",                 0},
             {ui_lblNavB,      lang.GENERIC.BACK,  0},
-            {NULL,            NULL,               0}
+            {NULL, NULL,                          0}
     });
 
     if (p_type == PCT_BOOT) lv_label_set_text(ui_lblNavB, lang.MUXLAUNCH.SHUTDOWN);
@@ -118,7 +118,10 @@ int muxpass_main(int auth_type) {
     p_type = auth_type;
     exit_status_muxpass = 0;
 
-    init_module("muxpass");
+    const char *m = "muxpass";
+    set_process_name(m);
+    init_module(m);
+
     load_passcode(&passcode, &device);
 
     if (p_type == PCT_BOOT) {

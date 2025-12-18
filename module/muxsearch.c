@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxsearch.h"
+#include "../common/skip_list.h"
 
 #define UI_COUNT 3
 
@@ -13,8 +14,6 @@ static char E_USB[MAX_BUFFER_SIZE];
 static char search_result[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char lookup_value[MAX_BUFFER_SIZE];
-
-struct json search_folders;
 
 size_t all_item_count = 0;
 content_item *all_items = NULL;
@@ -54,8 +53,8 @@ static void init_navigation_group(void) {
     }
 }
 
-static void image_refresh(char *image_type) {
-    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
+static void image_refresh() {
+    if (config.VISUAL.BOX_ART == 8) return;
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
@@ -82,17 +81,17 @@ static void image_refresh(char *image_type) {
 
     if (strlen(core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 STORAGE_THEME, mux_dimension, image_type);
+                 config.THEME.STORAGE_THEME, mux_dimension, "box");
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     STORAGE_THEME, image_type);
+                     config.THEME.STORAGE_THEME, "box");
         }
     } else {
-        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, image_type,
+        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, "box",
                              image, sizeof(image));
     }
 
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
+    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", "box", image)
 
     if (strcasecmp(box_image_previous_path, image) != 0) {
         char artwork_config_path[MAX_BUFFER_SIZE];
@@ -205,7 +204,7 @@ static void list_nav_move(int steps, int direction) {
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
 
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
-        image_refresh("box");
+        image_refresh();
         set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     } else {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
@@ -243,124 +242,159 @@ static void process_results(const char *json_results) {
         }
     }
 
-    search_folders = json_object_get(root, "folders");
-    if (json_exists(search_folders) && json_type(search_folders) == JSON_OBJECT) {
-        size_t t_all_item_count = 0;
-        content_item *t_all_items = NULL;
+    struct json search_folders = json_object_get(root, "folders");
+    if (!json_exists(search_folders) || json_type(search_folders) != JSON_OBJECT) return;
 
-        struct json folder = json_first(search_folders);
-        while (json_exists(folder)) {
+    size_t t_all_item_count = 0;
+    content_item *t_all_items = NULL;
 
-            char folder_name[MAX_BUFFER_SIZE];
+    struct json key = json_first(search_folders);
+    while (json_exists(key)) {
+        struct json val = json_next(key);
+        if (!json_exists(val)) break;
 
-            if (json_type(folder) == JSON_STRING) {
-                json_string_copy(folder, folder_name, sizeof(folder_name));
-
-                char storage_name_short[MAX_BUFFER_SIZE];
-                char *storage_name = NULL;
-
-                if (str_extract(folder_name, "", "/ROMS/", &storage_name)) {
-                    snprintf(storage_name_short, sizeof(storage_name_short), "%s",
-                             storage_name);
-                    free(storage_name);
-
-                    if (strcasecmp(storage_name_short, device.STORAGE.ROM.MOUNT) == 0) {
-                        snprintf(storage_name_short, sizeof(storage_name_short), "SD1");
-                    } else if (strcasecmp(storage_name_short, device.STORAGE.SDCARD.MOUNT) == 0) {
-                        snprintf(storage_name_short, sizeof(storage_name_short), "SD2");
-                    } else if (strcasecmp(storage_name_short, device.STORAGE.USB.MOUNT) == 0) {
-                        snprintf(storage_name_short, sizeof(storage_name_short), "USB");
-                    }
-                }
-
-                char folder_name_short[MAX_BUFFER_SIZE];
-                char *modified_name = NULL;
-
-                if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
-                    snprintf(folder_name_short, sizeof(folder_name_short), " %s/%s",
-                             storage_name_short, str_replace(modified_name, "/mnt//ROMS/", ""));
-                    free(modified_name);
-                } else {
-                    snprintf(folder_name_short, sizeof(folder_name_short), "%s",
-                             folder_name);
-                }
-
-                if (strcasecmp(folder_name_short, ".") != 0) {
-                    gen_result("folder", folder_name_short, "folder", "");
-                }
-            }
-
-            size_t folder_item_count = 0;
-            content_item *folder_items = NULL;
-
-            struct json content = json_object_get(folder, "content");
-            if (json_exists(content) && json_type(content) == JSON_ARRAY) {
-                for (size_t i = 0; i < json_array_count(content); i++) {
-                    struct json item = json_array_get(content, i);
-
-                    if (json_type(item) == JSON_STRING) {
-                        char content_name[MAX_BUFFER_SIZE];
-                        json_string_copy(item, content_name, sizeof(content_name));
-
-                        char content_path[MAX_BUFFER_SIZE];
-                        json_string_copy(item, content_path, sizeof(content_path));
-
-                        char content_full_path[MAX_BUFFER_SIZE];
-                        if (folder_name[0] != '/') {
-                            snprintf(content_full_path, sizeof(content_full_path), "%s/%s/%s",
-                                     rom_dir, folder_name, content_path);
-                        } else {
-                            snprintf(content_full_path, sizeof(content_full_path), "%s/%s",
-                                     folder_name, content_path);
-                        }
-
-                        adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
-                        add_item(&folder_items, &folder_item_count, content_name, content_name, content_full_path,
-                                 ITEM);
-                    }
-                }
-
-                sort_items(folder_items, folder_item_count);
-
-                for (size_t i = 0; i < folder_item_count; i++) {
-                    if (folder_items[i].content_type == ITEM) {
-                        add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
-                                 folder_items[i].display_name, folder_items[i].extra_data, ITEM);
-                        gen_result("content", strip_ext(folder_items[i].display_name),
-                                   "content", folder_items[i].extra_data);
-                    }
-                }
-
-                free_items(&folder_items, &folder_item_count);
-            }
-
-            folder = json_next(folder);
+        char folder_name[MAX_BUFFER_SIZE];
+        if (json_type(key) == JSON_STRING) {
+            json_string_copy(key, folder_name, sizeof(folder_name));
+        } else {
+            snprintf(folder_name, sizeof(folder_name), "unknown");
         }
 
-        // We are done with the friendly results JSON
-        if (file_exist(FRIENDLY_RESULT)) {
-            remove(FRIENDLY_RESULT);
-        }
+        char storage_name_short[MAX_BUFFER_SIZE] = "";
+        char *storage_name = NULL;
 
-        // Add the three top labels - lookup, local, and global
-        add_item(&all_items, &all_item_count, "", "", "", FOLDER);
-        add_item(&all_items, &all_item_count, "", "", "", FOLDER);
-        add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+        if (str_extract(folder_name, "", "/ROMS/", &storage_name)) {
+            snprintf(storage_name_short, sizeof(storage_name_short), "%s", storage_name);
+            free(storage_name);
 
-        for (size_t i = 0; i < t_all_item_count; i++) {
-            if (t_all_items[i].content_type == ITEM) {
-                content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
-                                                  t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
-                char display_name[MAX_BUFFER_SIZE];
-                snprintf(display_name, sizeof(display_name), "%s",
-                         strip_ext(t_all_items[i].display_name));
-                adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-                new_item->display_name = strdup(display_name);
+            if (strcasecmp(storage_name_short, device.STORAGE.ROM.MOUNT) == 0) {
+                snprintf(storage_name_short, sizeof(storage_name_short), "SD1");
+            } else if (strcasecmp(storage_name_short, device.STORAGE.SDCARD.MOUNT) == 0) {
+                snprintf(storage_name_short, sizeof(storage_name_short), "SD2");
+            } else if (strcasecmp(storage_name_short, device.STORAGE.USB.MOUNT) == 0) {
+                snprintf(storage_name_short, sizeof(storage_name_short), "USB");
+            } else if (strstr(folder_name, "/mnt/union/")) {
+                snprintf(storage_name_short, sizeof(storage_name_short), "UNION");
             }
         }
 
-        free_items(&t_all_items, &t_all_item_count);
+        char folder_name_short[MAX_BUFFER_SIZE] = "";
+        if (strcasecmp(storage_name_short, "UNION") == 0) {
+            char *after_roms = strstr(folder_name, "/ROMS/");
+            if (after_roms) {
+                after_roms += strlen("/ROMS/");
+                snprintf(folder_name_short, sizeof(folder_name_short), "%s", after_roms);
+            } else {
+                snprintf(folder_name_short, sizeof(folder_name_short), "%s", folder_name);
+            }
+        } else {
+            char *modified_name = NULL;
+            if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
+                snprintf(folder_name_short, sizeof(folder_name_short), " %s/%s",
+                         storage_name_short,
+                         str_replace(modified_name, "/mnt//ROMS/", ""));
+                free(modified_name);
+            } else {
+                snprintf(folder_name_short, sizeof(folder_name_short), "%s", folder_name);
+            }
+        }
+
+        if (strcasecmp(folder_name, ".") != 0) {
+            gen_result("folder", folder_name_short, "folder", "");
+        }
+
+        struct json content = json_object_get(val, "content");
+        if (!json_exists(content) || json_type(content) != JSON_ARRAY) {
+            key = json_next(val);
+            continue;
+        }
+
+        size_t folder_item_count = 0;
+        content_item *folder_items = NULL;
+
+        for (size_t i = 0; i < json_array_count(content); i++) {
+            struct json item = json_array_get(content, i);
+            if (json_type(item) != JSON_OBJECT) continue;
+
+            struct json file_json = json_object_get(item, "file");
+            struct json name_json = json_object_get(item, "name");
+            if (!json_exists(file_json) || !json_exists(name_json)) continue;
+
+            char file_name[MAX_BUFFER_SIZE];
+            char display_name[MAX_BUFFER_SIZE];
+            json_string_copy(file_json, file_name, sizeof(file_name));
+            json_string_copy(name_json, display_name, sizeof(display_name));
+
+            char content_full_path[MAX_BUFFER_SIZE];
+            if (folder_name[0] != '/') {
+                snprintf(content_full_path, sizeof(content_full_path), "%s/%s/%s",
+                         rom_dir, folder_name, file_name);
+            } else {
+                snprintf(content_full_path, sizeof(content_full_path), "%s/%s",
+                         folder_name, file_name);
+            }
+
+            adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+            add_item(&folder_items, &folder_item_count, display_name, display_name, content_full_path, ITEM);
+        }
+
+        sort_items(folder_items, folder_item_count);
+
+
+        SkipList skiplist;
+        init_skiplist(&skiplist);
+        for (int i = 0; i < folder_item_count; i++) {
+            char *item_dir = strip_dir(folder_items[i].extra_data);
+            char *item_file = get_last_dir(strdup(folder_items[i].extra_data));
+            if (ends_with(item_file, ".cue")) {
+                process_cue_file(item_dir, item_file, &skiplist);
+            } else if (ends_with(item_file, ".gdi")) {
+                process_gdi_file(item_dir, item_file, &skiplist);
+            } else if (ends_with(item_file, ".m3u")) {
+                process_m3u_file(item_dir, item_file, &skiplist);
+            }
+        }
+
+        for (size_t i = 0; i < folder_item_count; i++) {
+            if (folder_items[i].content_type == ITEM) {
+                if (!in_skiplist(&skiplist, folder_items[i].extra_data)) {
+                    add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
+                             folder_items[i].display_name, folder_items[i].extra_data, ITEM);
+
+                    gen_result("content", folder_items[i].display_name,
+                               "content", folder_items[i].extra_data);
+                }
+            }
+        }
+
+        free_skiplist(&skiplist);
+        free_items(&folder_items, &folder_item_count);
+        key = json_next(val);
     }
+
+    // We are done with the friendly results JSON
+    if (file_exist(FRIENDLY_RESULT)) {
+        remove(FRIENDLY_RESULT);
+    }
+
+    // Add the three top labels - lookup, local, and global
+    add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+    add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+    add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+
+    for (size_t i = 0; i < t_all_item_count; i++) {
+        if (t_all_items[i].content_type == ITEM) {
+            content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
+                                              t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
+            char display_name[MAX_BUFFER_SIZE];
+            snprintf(display_name, sizeof(display_name), "%s",
+                     t_all_items[i].display_name);
+            adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+            new_item->display_name = strdup(display_name);
+        }
+    }
+
+    free_items(&t_all_items, &t_all_item_count);
 }
 
 static void handle_keyboard_OK_press(void) {
@@ -397,14 +431,14 @@ static void handle_keyboard_press(void) {
 }
 
 static void handle_confirm(void) {
-    play_sound(SND_CONFIRM);
-
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblLookup_search) {
+        play_sound(SND_CONFIRM);
+
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -414,24 +448,53 @@ static void handle_confirm(void) {
         lv_obj_move_foreground(ui_pnlEntry_search);
 
         lv_textarea_set_text(ui_txtEntry_search, lv_label_get_text(lv_group_get_focused(ui_group_value)));
-    } else if (element_focused == ui_lblSearchLocal_search || element_focused == ui_lblSearchGlobal_search) {
-        if (strlen(lv_label_get_text(ui_lblLookupValue_search)) <= 2) {
+        return;
+    }
+
+    if (element_focused == ui_lblSearchLocal_search || element_focused == ui_lblSearchGlobal_search) {
+        char *lookup_value = lv_label_get_text(ui_lblLookupValue_search);
+
+        if (strlen(lookup_value) <= 2) {
+            play_sound(SND_ERROR);
+
             toast_message(lang.MUXSEARCH.ERROR, SHORT);
             return;
         }
 
+        play_sound(SND_CONFIRM);
+
         toast_message(lang.MUXSEARCH.SEARCH, FOREVER);
+        refresh_screen(ui_screen);
 
         if (element_focused == ui_lblSearchLocal_search) {
-            const char *args[] = {(OPT_PATH "script/mux/find.sh"),
-                                  str_trim(lv_label_get_text(ui_lblLookupValue_search)), rom_dir,
-                                  NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL);
+            const char *args[] = {(OPT_PATH "script/mux/find.sh"), "--local",
+                                  str_trim(lookup_value), rom_dir, NULL};
+            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
         } else {
-            const char *args[] = {(OPT_PATH "script/mux/find.sh"),
-                                  str_trim(lv_label_get_text(ui_lblLookupValue_search)), SD1, SD2, E_USB,
-                                  NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL);
+            const char *args[6];
+            int idx = 0;
+
+            args[idx++] = OPT_PATH "script/mux/find.sh";
+            args[idx++] = str_trim(lookup_value);
+
+            int mounts = 0;
+            double total_space, free_space, used_space;
+
+            get_storage_info(device.STORAGE.ROM.MOUNT, &total_space, &free_space, &used_space);
+            if (total_space > 0) mounts |= 1;
+
+            get_storage_info(device.STORAGE.SDCARD.MOUNT, &total_space, &free_space, &used_space);
+            if (total_space > 0) mounts |= 2;
+
+            get_storage_info(device.STORAGE.USB.MOUNT, &total_space, &free_space, &used_space);
+            if (total_space > 0) mounts |= 4;
+
+            if (mounts & 1) args[idx++] = SD1;
+            if (mounts & 2) args[idx++] = SD2;
+            if (mounts & 4) args[idx++] = E_USB;
+
+            args[idx] = NULL;
+            run_exec(args, idx, 0, 1, NULL, NULL);
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
@@ -440,21 +503,39 @@ static void handle_confirm(void) {
 
         close_input();
         mux_input_stop();
-    } else {
-        if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
-            write_text_to_file(MUOS_RES_LOAD, "w", CHAR,
-                               str_replace(lv_label_get_text(lv_group_get_focused(ui_group_value)), "/./", "/"));
 
-            load_mux("explore");
+        return;
+    }
 
-            close_input();
-            mux_input_stop();
-        }
+    if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
+        play_sound(SND_CONFIRM);
+
+        const char *selected_raw = lv_label_get_text(lv_group_get_focused(ui_group_value));
+        char *selected_path = str_replace(selected_raw, "/./", "/");
+
+        char *path_union = str_replace(selected_path, device.STORAGE.ROM.MOUNT, "/mnt/union");
+        path_union = str_replace(path_union, device.STORAGE.SDCARD.MOUNT, "/mnt/union");
+        path_union = str_replace(path_union, device.STORAGE.USB.MOUNT, "/mnt/union");
+
+        write_text_to_file(MUOS_RES_LOAD, "w", CHAR, path_union);
+
+        char base_dir[MAX_BUFFER_SIZE];
+        snprintf(base_dir, sizeof(base_dir), "%s", path_union);
+
+        char *last_slash = strrchr(base_dir, '/');
+        if (last_slash) *last_slash = '\0';
+
+        write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
+
+        load_mux("explore");
+
+        close_input();
+        mux_input_stop();
     }
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count < 2 || hold_call) return;
+    if (msgbox_active || ui_count <= 3 || hold_call) return;
 
     uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
@@ -508,6 +589,7 @@ static void handle_x(void) {
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (file_exist(search_result)) remove(search_result);
 
+    play_sound(SND_CONFIRM);
     load_mux("search");
 
     close_input();
@@ -597,7 +679,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
             {ui_lblNavXGlyph, "",                0},
             {ui_lblNavX,      "",                0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
@@ -647,11 +729,15 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxsearch_main(char *dir) {
+    if (!strlen(dir)) dir = "/mnt/union/ROMS";
     snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+
     starter_image = 0;
     got_results = 0;
 
-    init_module("muxsearch");
+    const char *m = "muxsearch";
+    set_process_name(m);
+    init_module(m);
 
     snprintf(search_result, sizeof(search_result), "%s/%s/search.json",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
@@ -680,9 +766,9 @@ int muxsearch_main(char *dir) {
     ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
 
-    snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
-    snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
-    snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
+    snprintf(SD1, sizeof(SD1), "%s/ROMS", device.STORAGE.ROM.MOUNT);
+    snprintf(SD2, sizeof(SD2), "%s/ROMS", device.STORAGE.SDCARD.MOUNT);
+    snprintf(E_USB, sizeof(E_USB), "%s/ROMS", device.STORAGE.USB.MOUNT);
 
     init_elements();
 

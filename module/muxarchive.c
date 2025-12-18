@@ -9,111 +9,74 @@ static void create_archive_items(void) {
             device.STORAGE.ROM.MOUNT,
             device.STORAGE.SDCARD.MOUNT,
             device.STORAGE.USB.MOUNT,
-            STORAGE_THEME
+            config.THEME.STORAGE_THEME
     };
 
-    const char *subdirs[] = {"/muos/update", "/backup", "/archive"};
-    char archive_directories[12][MAX_BUFFER_SIZE];
+    const char *subdirs[] = {"/backup", "/archive"};
+    char archive_directories[8][MAX_BUFFER_SIZE];
 
     for (int i = 0, k = 0; i < 4; ++i) {
-        for (int j = 0; j < 3; ++j, ++k) {
+        for (int j = 0; j < 2; ++j, ++k) {
             snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
         }
     }
 
-    char **file_names = NULL;
-    size_t file_count = 0;
-
-    const char *ext_map[][2] = {
-            {".muxupd", "UPD"},
-            {".muxapp", "APP"},
-            {".muxzip", "ZIP"},
-            {".muxthm", "THM"},
-            {".muxcat", "CAT"},
-            {".muxcfg", "CFG"}
+    const char *mux_archive[] = {
+            ".muxupd", ".muxapp", ".muxzip", ".muxthm", ".muxcat", ".muxcfg"
     };
 
-    for (size_t dir_index = 0; dir_index < A_SIZE(archive_directories); ++dir_index) {
-        DIR *ad = opendir(archive_directories[dir_index]);
-        if (!ad) continue;
+    const char *dirs[8];
+    for (int i = 0; i < 8; ++i) dirs[i] = archive_directories[i];
 
-        struct dirent *af;
-        while ((af = readdir(ad))) {
-            if (af->d_type == DT_REG) {
-                const char *last_dot = strrchr(af->d_name, '.');
-                if (!last_dot) continue;
+    char **files = NULL;
+    size_t file_count = 0;
 
-                const char *prefix = NULL;
-                for (size_t i = 0; i < A_SIZE(ext_map); ++i) {
-                    if (strcasecmp(last_dot, ext_map[i][0]) == 0) {
-                        prefix = ext_map[i][1];
-                        break;
-                    }
-                }
-
-                if (!prefix) continue;
-
-                char base_name[MAX_BUFFER_SIZE];
-                strncpy(base_name, af->d_name, last_dot - af->d_name);
-                base_name[last_dot - af->d_name] = '\0';
-
-                char full_app_name[MAX_BUFFER_SIZE];
-                snprintf(full_app_name, sizeof(full_app_name), "%s/%s", archive_directories[dir_index], af->d_name);
-
-                char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                if (!temp) {
-                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
-                    free(file_names);
-                    closedir(ad);
-                    return;
-                }
-
-                file_names = temp;
-                file_names[file_count] = strdup(full_app_name);
-                if (!file_names[file_count++]) {
-                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
-                    free(file_names);
-                    closedir(ad);
-                    return;
-                }
-            }
-        }
-        closedir(ad);
+    if (scan_directory_list(dirs, mux_archive, &files, A_SIZE(dirs), A_SIZE(mux_archive), &file_count) < 0) {
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        return;
     }
 
-    if (!file_names) return;
-    qsort(file_names, file_count, sizeof(char *), str_compare);
+    if (file_count == 0) {
+        free_array(files, file_count);
+        return;
+    }
+
+    qsort(files, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (size_t i = 0; i < file_count; i++) {
-        char *base_filename = file_names[i];
-        if (!file_names[i]) continue;
+    for (size_t i = 0; i < file_count; ++i) {
+        assert(files[i] != NULL);
+        char *base_filename = files[i];
 
         const char *prefix = NULL;
+        char storage_prefix[MAX_BUFFER_SIZE];
+        const char *ext_type = "UNK";
+
+        const char *dot = strrchr(base_filename, '.');
+        if (dot) {
+            for (size_t e = 0; e < A_SIZE(mux_archive); ++e) {
+                if (strcasecmp(dot, mux_archive[e]) == 0) {
+                    ext_type = mux_archive[e] + 4;
+                    break;
+                }
+            }
+        }
+
+        char ext_upper[8];
+        strncpy(ext_upper, ext_type, sizeof(ext_upper) - 1);
+        ext_upper[sizeof(ext_upper) - 1] = '\0';
+        str_toupper(ext_upper);
+
         for (size_t j = 0; j < A_SIZE(mount_points); ++j) {
             if (strstr(base_filename, mount_points[j])) {
-                static char storage_prefix[MAX_BUFFER_SIZE];
-
-                const char *file_extension = strrchr(base_filename, '.');
-                const char *ext_type = NULL;
-                if (file_extension) {
-                    for (size_t i = 0; i < A_SIZE(ext_map); ++i) {
-                        if (strcasecmp(file_extension, ext_map[i][0]) == 0) {
-                            ext_type = ext_map[i][1];
-                            break;
-                        }
-                    }
-                }
-                if (!ext_type) ext_type = "UNK";
-
                 snprintf(storage_prefix, sizeof(storage_prefix), "[%s-%s]",
-                        j == 0 ? "SD1" :
-                        j == 1 ? "SD2" :
-                        j == 2 ? "USB" : "THM",
-                        ext_type);
+                         j == 0 ? "SD1" :
+                         j == 1 ? "SD2" :
+                         j == 2 ? "USB" : "THM",
+                         ext_upper);
                 prefix = storage_prefix;
                 break;
             }
@@ -121,7 +84,7 @@ static void create_archive_items(void) {
 
         if (!prefix) continue;
 
-        static char archive_name[MAX_BUFFER_SIZE];
+        char archive_name[MAX_BUFFER_SIZE];
         snprintf(archive_name, sizeof(archive_name), "%s",
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
@@ -156,12 +119,11 @@ static void create_archive_items(void) {
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblArchiveItem, ui_lblArchiveItemGlyph, items[i].display_name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblArchiveItem);
-
-        free(base_filename);
     }
 
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-    free(file_names);
+
+    free_array(files, file_count);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -212,6 +174,37 @@ static void handle_a(void) {
     }
 }
 
+static void handle_x(void) {
+    if (msgbox_active || !ui_count) return;
+
+    if (!hold_call) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.HOLD_CONFIRM, SHORT);
+        return;
+    }
+
+    char *archive_item = items[current_item_index].name;
+
+    if (!file_exist(archive_item)) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
+        return;
+    }
+
+    remove(archive_item);
+    sync();
+
+    play_sound(SND_MUOS);
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
+    hold_call = 0;
+    load_mux("archive");
+
+    close_input();
+    mux_input_stop();
+}
+
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -256,8 +249,15 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.EXTRACT, 1},
             {ui_lblNavBGlyph, "",                   0},
             {ui_lblNavB,      lang.GENERIC.BACK,    0},
-            {NULL,            NULL,                 0}
+            {ui_lblNavXGlyph, "",                   0},
+            {ui_lblNavX,      lang.GENERIC.REMOVE,  0},
+            {NULL, NULL,                            0}
     });
+
+    if (!ui_count) {
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 
     overlay_display();
 }
@@ -280,7 +280,9 @@ static void ui_refresh_task() {
 }
 
 int muxarchive_main(void) {
-    init_module("muxarchive");
+    const char *m = "muxarchive";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 
@@ -322,6 +324,7 @@ int muxarchive_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

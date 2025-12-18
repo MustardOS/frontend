@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -13,6 +14,7 @@
 
 #include <linux/limits.h>
 
+#include <sys/inotify.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/sysinfo.h>
@@ -84,6 +86,8 @@ void hold_call_set(void);
 
 void hold_call_release(void);
 
+void run_tweak_script();
+
 void shuffle_index(int current, int *dir, int *target);
 
 void adjust_box_art();
@@ -115,6 +119,8 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json,
 void gen_label(char *module, char *item_glyph, char *item_text);
 
 int launch_flag(int mode, int held);
+
+int muxactivity_main();
 
 int muxapp_main();
 
@@ -173,6 +179,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app);
 int muxpass_main(int auth_type);
 
 int muxpicker_main(char *type, char *ex_dir);
+
+int muxtheme_main(char *ex_dir);
 
 int muxplore_main(int index, char *dir);
 
@@ -317,7 +325,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
         if (current != NAME##_original) {                                    \
             is_modified++;                                                   \
-            write_text_to_file((CONF_KIOSK_PATH FILE), "w", TYPE, current);  \
+            write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current);  \
         }                                                                    \
     } while (0)
 
@@ -326,7 +334,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
         if (current != NAME##_original) {                                             \
             is_modified++;                                                            \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current + OFFSET); \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, current + OFFSET); \
         }                                                                             \
     } while (0)
 
@@ -335,7 +343,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
         if (current != NAME##_original) {                                             \
             is_modified++;                                                            \
-            write_text_to_file((CONF_DEVICE_PATH FILE), "w", TYPE, current + OFFSET); \
+            write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, current + OFFSET); \
         }                                                                             \
     } while (0)
 
@@ -344,7 +352,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
         if (current != NAME##_original) {                                            \
             is_modified++;                                                           \
-            write_text_to_file((CONF_DEVICE_PATH FILE), "w", TYPE, VALUES[current]); \
+            write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, VALUES[current]); \
         }                                                                            \
     } while (0)
 
@@ -353,7 +361,7 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
         if (current != NAME##_original) {                                            \
             is_modified++;                                                           \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, VALUES[current]); \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, VALUES[current]); \
         }                                                                            \
     } while (0)
 
@@ -363,6 +371,6 @@ int muxwebserv_main();
         if (current != NAME##_original) {                                         \
             int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT); \
             is_modified++;                                                        \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", INT, mapped);        \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped);        \
         }                                                                         \
     } while (0)

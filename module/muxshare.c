@@ -50,6 +50,17 @@ void hold_call_release(void) {
     hold_call = 0;
 }
 
+void run_tweak_script() {
+    toast_message(lang.GENERIC.SAVING, FOREVER);
+    refresh_screen(ui_screen);
+
+    const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
+    run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
+
+    refresh_config = 1;
+    refresh_device = 1;
+}
+
 void shuffle_index(int current, int *dir, int *target) {
     do {
         int ran = (int) (random() % (ui_count - 1));
@@ -128,7 +139,7 @@ void overlay_display(void) {
 }
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
-    if (!val || !strlen(val) || strcasecmp(val, "(null)") == 0) {
+    if (!val || strlen(val) == 0 || strcasecmp(val, "(null)") == 0) {
         LOG_INFO(mux_module, "Using Default %s: %s", label, def_val)
         return strdup(def_val);
     }
@@ -218,7 +229,7 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
                       char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
-    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) device.MUX.WIDTH / 2);
+    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) (device.MUX.WIDTH / 2));
     int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
     int16_t column_mode = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE", 0);
     int16_t column_mode_alignment = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE_ALIGNMENT", 2);
@@ -234,7 +245,7 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
     for (int index = 1; index < 6; index++) {
         char section_name[15];
         snprintf(section_name, sizeof(section_name), "image%d", index);
-        char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
+        char *folder_name = str_trim(get_ini_string(artwork_config_ini, section_name, "FOLDER", ""));
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",

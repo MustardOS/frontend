@@ -10,7 +10,7 @@
 void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size) {
     char sys_dir_lower[MAX_BUFFER_SIZE];
     char *raw = get_last_subdir(sys_dir, '/', 4); // rawr XD...
-    if (!strcmp(raw, "")) {
+    if (strcmp(raw, "") == 0) {
         sys_dir_lower[0] = '\0';
     } else {
         snprintf(sys_dir_lower, sizeof(sys_dir_lower), "%s/", raw);

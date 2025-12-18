@@ -55,6 +55,33 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
     return &(*content_items)[*count - 1];
 }
 
+void remove_item(content_item **content_items, size_t *count, size_t index) {
+    if (!content_items || !*content_items || index >= *count) return;
+
+    free((*content_items)[index].name);
+    free((*content_items)[index].display_name);
+    free((*content_items)[index].sort_name);
+    free((*content_items)[index].extra_data);
+    free((*content_items)[index].use_module);
+    free((*content_items)[index].glyph_icon);
+    free((*content_items)[index].grid_image);
+    free((*content_items)[index].grid_image_focused);
+
+    if (index < *count - 1) {
+        memmove(&(*content_items)[index], &(*content_items)[index + 1],
+                ((*count - index - 1) * sizeof(content_item)));
+    }
+
+    (*count)--;
+
+    if (*count == 0) {
+        free(*content_items);
+        *content_items = NULL;
+    } else {
+        *content_items = realloc(*content_items, (*count) * sizeof(content_item));
+    }
+}
+
 int content_item_compare(const void *a, const void *b) {
     content_item *itemA = (content_item *) a;
     content_item *itemB = (content_item *) b;

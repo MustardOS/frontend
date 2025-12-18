@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_1_table[] = {
         {"10yard",    "10-Yard Fight (World, set 1)"},
         {"10yard85",  "10-Yard Fight '85 (US, Taito license)"},
         {"10yardj",   "10-Yard Fight (Japan)"},
@@ -63,11 +58,13 @@ static const LookupName lookup_table[] = {
         {"1on1gov",   "1 on 1 Government (Japan)"},
 };
 
+const size_t lookup_1_count = A_SIZE(lookup_1_table);
+
 const char *lookup_1(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
+    for (size_t i = 0; i < lookup_1_count; i++) {
+        if (strcmp(lookup_1_table[i].name, name) == 0) {
+            return lookup_1_table[i].value;
         }
     }
     return NULL;
@@ -75,10 +72,26 @@ const char *lookup_1(const char *name) {
 
 const char *r_lookup_1(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
+    for (size_t i = 0; i < lookup_1_count; i++) {
+        if (strstr(lookup_1_table[i].value, value)) {
+            return lookup_1_table[i].name;
         }
     }
     return NULL;
+}
+
+void lookup_1_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_1_count; i++) {
+        if (strcasestr(lookup_1_table[i].name, term))
+            emit(lookup_1_table[i].name, lookup_1_table[i].value, udata);
+    }
+}
+
+void r_lookup_1_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_1_count; i++) {
+        if (strcasestr(lookup_1_table[i].value, term))
+            emit(lookup_1_table[i].name, lookup_1_table[i].value, udata);
+    }
 }

@@ -50,7 +50,7 @@ static void save_web_options(void) {
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/web/service.sh"), NULL};
-        run_exec(args, A_SIZE(args), 1, 0, NULL);
+        run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 
         refresh_config = 1;
     }
@@ -113,13 +113,13 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value));
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value));
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_b(void) {
@@ -169,7 +169,7 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
 #define WEBSERV(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_webserv, UDATA);
@@ -192,7 +192,9 @@ static void ui_refresh_task() {
 }
 
 int muxwebserv_main(void) {
-    init_module("muxwebserv");
+    const char *m = "muxwebserv";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

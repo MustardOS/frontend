@@ -156,13 +156,13 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value));
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value));
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_a(void) {
@@ -218,7 +218,7 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
 #define HDMI(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_hdmi, UDATA);
@@ -241,7 +241,9 @@ static void ui_refresh_task() {
 }
 
 int muxhdmi_main(void) {
-    init_module("muxhdmi");
+    const char *m = "muxhdmi";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

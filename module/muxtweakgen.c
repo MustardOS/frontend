@@ -32,11 +32,7 @@ static void init_dropdown_settings(void) {
 #undef TWEAKGEN
 }
 
-static void update_volume_and_brightness() {
-    char buffer[MAX_BUFFER_SIZE];
-    CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
-    CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)
-
+static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
 
     if (!config.SETTINGS.ADVANCED.OVERDRIVE) {
@@ -46,10 +42,6 @@ static void update_volume_and_brightness() {
     } else {
         lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME);
     }
-}
-
-static void restore_tweak_options(void) {
-    update_volume_and_brightness();
 
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
@@ -81,7 +73,7 @@ static void set_setting_value(const char *script_name, int value, int offset) {
         block_input = 1;
 
         const char *args[] = {script_path, value_str, NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
+        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
         block_input = 0;
     }
@@ -113,7 +105,7 @@ static void save_tweak_options(void) {
 
     if (lv_dropdown_get_selected(ui_droColour_tweakgen) != Colour_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/general/colour"), "w", INT,
+        write_text_to_file(CONF_CONFIG_PATH "settings/general/colour", "w", INT,
                            lv_dropdown_get_selected(ui_droColour_tweakgen) - 255);
     }
 
@@ -132,7 +124,7 @@ static void save_tweak_options(void) {
         refresh_screen(ui_screen);
 
         const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
+        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
         refresh_config = 1;
     }
@@ -272,20 +264,42 @@ static void init_navigation_group(void) {
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
-static void check_focus(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblHdmi_tweakgen ||
-        element_focused == ui_lblRtc_tweakgen ||
-        element_focused == ui_lblAdvanced_tweakgen) {
+static void nav_show_a(int show, const char *text) {
+    if (show) {
+        lv_label_set_text(ui_lblNavA, text);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
         lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static void nav_show_lr(int show) {
+    if (show) {
         lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static void check_focus(void) {
+    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+
+    int is_module = (f == ui_lblHdmi_tweakgen || f == ui_lblRtc_tweakgen || f == ui_lblAdvanced_tweakgen);
+    int is_set_opt = (f == ui_lblBrightness_tweakgen || f == ui_lblVolume_tweakgen || f == ui_lblColour_tweakgen);
+
+    if (is_module) {
+        nav_show_a(1, lang.GENERIC.SELECT);
+        nav_show_lr(0);
+    } else if (is_set_opt) {
+        nav_show_a(1, lang.GENERIC.SET);
+        nav_show_lr(1);
+    } else {
+        nav_show_a(0, lang.GENERIC.SELECT);
+        nav_show_lr(1);
     }
 }
 
@@ -320,29 +334,55 @@ static void list_nav_next(int steps) {
 }
 
 static void update_option_values(void) {
-    int curr_brightness = lv_dropdown_get_selected(ui_droBrightness_tweakgen);
-    int curr_volume = lv_dropdown_get_selected(ui_droVolume_tweakgen);
-
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBrightness_tweakgen) {
-        set_setting_value("bright", curr_brightness, 1);
+        toast_message(lang.MUXTWEAKGEN.BRIGHT_SET, SHORT);
+        set_setting_value("bright", lv_dropdown_get_selected(ui_droBrightness_tweakgen), 1);
     } else if (element_focused == ui_lblVolume_tweakgen) {
-        set_setting_value("audio", curr_volume, 0);
+        toast_message(lang.MUXTWEAKGEN.VOLUME_SET, SHORT);
+        set_setting_value("audio", lv_dropdown_get_selected(ui_droVolume_tweakgen), 0);
+    } else if (element_focused == ui_lblColour_tweakgen) {
+        toast_message(lang.MUXTWEAKGEN.TEMP_SET, SHORT);
+        set_setting_value("temp", lv_dropdown_get_selected(ui_droColour_tweakgen), -255);
     }
 }
 
 static void handle_option_prev(void) {
     if (msgbox_active || block_input) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value));
-    update_option_values();
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active || block_input) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value));
-    update_option_values();
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
+}
+
+static int get_multi_count(void) {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    if (element_focused == ui_lblBrightness_tweakgen) {
+        return config.SETTINGS.ADVANCED.INCBRIGHT;
+    } else if (element_focused == ui_lblVolume_tweakgen) {
+        return config.SETTINGS.ADVANCED.INCVOLUME;
+    } else if (element_focused == ui_lblColour_tweakgen) {
+        return 25;
+    }
+
+    return 0;
+}
+
+static void handle_option_prev_multi(void) {
+    if (msgbox_active || block_input) return;
+
+    decrease_option_value(lv_group_get_focused(ui_group_value), get_multi_count());
+}
+
+static void handle_option_next_multi(void) {
+    if (msgbox_active || block_input) return;
+
+    increase_option_value(lv_group_get_focused(ui_group_value), get_multi_count());
 }
 
 static void handle_a(void) {
@@ -358,8 +398,8 @@ static void handle_a(void) {
             {"advanced", "tweakadv", &kiosk.SETTING.ADVANCED}
     };
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
+    struct _lv_obj_t *ef = lv_group_get_focused(ui_group);
+    const char *u_data = lv_obj_get_user_data(ef);
 
     for (size_t i = 0; i < A_SIZE(elements); i++) {
         if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
@@ -380,7 +420,11 @@ static void handle_a(void) {
         }
     }
 
-    handle_option_next();
+    if (ef == ui_lblBrightness_tweakgen || ef == ui_lblVolume_tweakgen || ef == ui_lblColour_tweakgen) {
+        update_option_values();
+    } else {
+        handle_option_next();
+    }
 }
 
 static void handle_b(void) {
@@ -468,7 +512,9 @@ static void ui_refresh_task() {
 }
 
 int muxtweakgen_main(void) {
-    init_module("muxtweakgen");
+    const char *m = "muxtweakgen";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 
@@ -487,7 +533,7 @@ int muxtweakgen_main(void) {
     restore_tweak_options();
     init_dropdown_settings();
 
-    init_timer(ui_refresh_task, update_volume_and_brightness);
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -500,7 +546,9 @@ int muxtweakgen_main(void) {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = handle_option_prev_multi,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_R2] = handle_option_next_multi,
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,

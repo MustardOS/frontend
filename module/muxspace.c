@@ -180,7 +180,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {
             {ui_lblNavBGlyph, "",                0},
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
 #define SPACE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_space, UDATA);
@@ -203,7 +203,9 @@ static void ui_refresh_task() {
 }
 
 int muxspace_main(void) {
-    init_module("muxspace");
+    const char *m = "muxspace";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

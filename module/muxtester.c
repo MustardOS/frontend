@@ -52,7 +52,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
         case MUX_INPUT_PRESS:
             if (glyph[type]) {
                 lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-                if (generate_image_embed(STORAGE_THEME, mux_dimension, mux_module, glyph[type], image_path,
+                if (generate_image_embed(config.THEME.STORAGE_THEME, mux_dimension, mux_module, glyph[type], image_path,
                                          sizeof(image_path), image_embed, sizeof(image_embed)) ||
                     generate_image_embed(INTERNAL_THEME, mux_dimension, mux_module, glyph[type], image_path,
                                          sizeof(image_path), image_embed, sizeof(image_embed))) {
@@ -98,7 +98,9 @@ static void init_elements(void) {
 }
 
 int muxtester_main(void) {
-    init_module("muxtester");
+    const char *m = "muxtester";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(0, 0);
 
@@ -127,7 +129,7 @@ int muxtester_main(void) {
             }
     };
     init_input(&input_opts, false);
-    input_opts.stick_nav = false;
+    input_opts.remap_to_dpad = false;
     mux_input_task(&input_opts);
 
     return 0;

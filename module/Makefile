@@ -34,13 +34,13 @@ LDFLAGS = $(MUXLIB) -L../bin/lib -lui -llookup -lmux \
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
-MODULES = muxapp muxappcon muxarchive muxassign muxbackup muxcollect muxconfig \
-          muxconnect muxcontrol muxcustom muxdanger muxdevice muxdownload \
+MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxcollect \
+          muxconfig muxconnect muxcontrol muxcustom muxdanger muxdevice muxdownload \
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk muxlanguage \
           muxlaunch muxnetadv muxnetinfo muxnetprofile muxnetscan muxnetwork \
           muxoption muxpass muxpicker muxpower muxplore muxrtc muxsearch \
           muxshot muxspace muxsplash muxstorage muxsysinfo muxtag muxtask \
-          muxthemedown muxthemefilter muxtester muxtext muxtimezone \
+          muxtheme muxthemedown muxthemefilter muxtester muxtext muxtimezone \
           muxtweakadv muxtweakgen muxvisual muxwebserv muxshare
 MODULE_DIR = .
 

@@ -163,7 +163,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define CONFIG(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_config, UDATA);
@@ -186,7 +186,9 @@ static void ui_refresh_task() {
 }
 
 int muxconfig_main(void) {
-    init_module("muxconfig");
+    const char *m = "muxconfig";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

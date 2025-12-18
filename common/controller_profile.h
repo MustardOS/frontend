@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include "options.h"
 
 extern struct controller_profile controller;

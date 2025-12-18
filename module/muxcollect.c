@@ -71,13 +71,13 @@ static void image_refresh(char *image_type) {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 STORAGE_THEME, mux_dimension, image_type);
+                 config.THEME.STORAGE_THEME, mux_dimension, image_type);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     STORAGE_THEME, image_type);
+                     config.THEME.STORAGE_THEME, image_type);
         }
     } else {
-        if (strcasecmp(image_type, "box") || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+        if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
             load_image_catalogue(h_core_artwork, h_file_name, "", "default",
                                  mux_dimension, image_type, image, sizeof(image));
         }
@@ -94,8 +94,8 @@ static void image_refresh(char *image_type) {
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
                         image, LV_ALIGN_CENTER,
-                        validate_int16((int16_t)(device.MUX.WIDTH * .9) - 60, "width"),
-                        validate_int16((int16_t)(device.MUX.HEIGHT * .9) - 120, "height"),
+                        validate_int16((int16_t) (device.MUX.WIDTH * .9) - 60, "width"),
+                        validate_int16((int16_t) (device.MUX.HEIGHT * .9) - 120, "height"),
                         0, 0, 0, 0
                 };
                 update_image(ui_imgHelpPreviewImage, image_settings);
@@ -287,23 +287,21 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
 
 static void init_navigation_group_grid(void) {
     grid_mode_enabled = 1;
+
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
+
     load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
-
 
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
         int prev_dir_index = get_folder_item_index_by_name(items, item_count, prev_dir);
         if (prev_dir_index > -1) sys_index = prev_dir_index;
     } else {
-        for (size_t i = 0; i < item_count; i++) {
+        for (int i = 0; i < item_count; i++) {
             if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
-
-            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-                gen_grid_item(i);
-            }
+            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
         }
     }
 }
@@ -368,10 +366,10 @@ static void create_collection_items(void) {
         sort_items(items, item_count);
 
         grid_mode_enabled = !disable_grid_file_exists(sys_dir) && theme.GRID.ENABLED &&
-        (
-            (file_count > 0 && config.VISUAL.GRID_MODE_CONTENT) ||
-            (dir_count > 0 && file_count == 0)
-        );
+                            (
+                                    (file_count > 0 && config.VISUAL.GRID_MODE_CONTENT) ||
+                                    (dir_count > 0 && file_count == 0)
+                            );
         if (!grid_mode_enabled) {
             for (int i = 0; i < dir_count; i++) {
                 gen_label(mux_module, "folder", items[i].display_name);
@@ -418,7 +416,7 @@ static void list_nav_move(int steps, int direction) {
             nav_move(ui_group_glyph, direction);
             nav_move(ui_group_panel, direction);
         }
-        
+
         if (grid_mode_enabled) update_grid(direction);
     }
 
@@ -833,7 +831,7 @@ static void init_elements(void) {
             {ui_lblNavY,         lang.GENERIC.NEW,    0},
             {ui_lblNavMenuGlyph, "",                  0},
             {ui_lblNavMenu,      lang.GENERIC.INFO,   0},
-            {NULL,               NULL,                0}
+            {NULL, NULL,                              0}
     });
 
     overlay_display();
@@ -886,7 +884,9 @@ int muxcollect_main(int add, char *dir, int last_index) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? collection_path : dir);
     access_mode = strcasecmp(collection_path, INFO_CKS_PATH) ? "collection" : "kiosk";
 
-    init_module("muxcollect");
+    const char *m = "muxcollect";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

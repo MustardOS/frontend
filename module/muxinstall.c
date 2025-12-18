@@ -20,7 +20,7 @@ static void show_help() {
 }
 
 static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
-    const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+    const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
     grid_mode_enabled = 1;
 
@@ -415,7 +415,10 @@ static void ui_refresh_task() {
 }
 
 int muxinstall_main(void) {
-    init_module("muxinstall");
+    const char *m = "muxinstall";
+    set_process_name(m);
+    init_module(m);
+
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXINSTALL.TITLE);

@@ -79,11 +79,15 @@ void load_config(struct mux_config *config) {
 
     CFG_STR_FIELD(config->THEME.DOWNLOAD.DATA, CONF_CONFIG_PATH "theme/download/data", "")
     CFG_STR_FIELD(config->THEME.DOWNLOAD.PREVIEW, CONF_CONFIG_PATH "theme/download/preview", "")
+    CFG_STR_FIELD(config->THEME.ACTIVE, CONF_CONFIG_PATH "theme/active", "MustardOS")
     CFG_STR_FIELD(config->THEME.DEFAULT_HASH, CONF_CONFIG_PATH "theme/default", "")
+    snprintf(config->THEME.STORAGE_THEME, MAX_BUFFER_SIZE, RUN_STORAGE_PATH "theme/%s", config->THEME.ACTIVE);
+    snprintf(config->THEME.THEME_CAT_PATH, MAX_BUFFER_SIZE, "%s/catalogue", config->THEME.STORAGE_THEME);
 
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, CONF_CONFIG_PATH "settings/advanced/accelerate", 96)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.REPEAT_DELAY, CONF_CONFIG_PATH "settings/advanced/repeat_delay", 208)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAP, CONF_CONFIG_PATH "settings/advanced/swap", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.STICKNAV, CONF_CONFIG_PATH "settings/advanced/sticknav", 3)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 1)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, CONF_CONFIG_PATH "settings/advanced/font", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OFFSET, CONF_CONFIG_PATH "settings/advanced/offset", 0)
@@ -92,6 +96,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THEME, CONF_CONFIG_PATH "settings/advanced/random_theme", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROWAIT, CONF_CONFIG_PATH "settings/advanced/retrowait", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROFREE, CONF_CONFIG_PATH "settings/advanced/retrofree", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROCACHE, CONF_CONFIG_PATH "settings/advanced/retrocache", 0)
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, CONF_CONFIG_PATH "settings/advanced/usb_function", "none")
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.VERBOSE, CONF_CONFIG_PATH "settings/advanced/verbose", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, CONF_CONFIG_PATH "settings/advanced/rumble", 0)
@@ -106,11 +111,14 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.DISPSUSPEND, CONF_CONFIG_PATH "settings/advanced/disp_suspend", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.INCBRIGHT, CONF_CONFIG_PATH "settings/advanced/incbright", 16)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.INCVOLUME, CONF_CONFIG_PATH "settings/advanced/incvolume", 8)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.MAXGPU, CONF_CONFIG_PATH "settings/advanced/maxgpu", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOREADY, CONF_CONFIG_PATH "settings/advanced/audio_ready", 0)
 
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, CONF_CONFIG_PATH "settings/general/hidden", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, CONF_CONFIG_PATH "settings/general/sound", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.CHIME, CONF_CONFIG_PATH "settings/general/chime", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BGM, CONF_CONFIG_PATH "settings/general/bgm", 0)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.BGMVOL, CONF_CONFIG_PATH "settings/general/bgmvol", 35)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.COLOUR, CONF_CONFIG_PATH "settings/general/colour", 32)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)
@@ -195,8 +203,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, CONF_CONFIG_PATH "visual/backgroundanimation", 0)
     CFG_INT_FIELD(config->VISUAL.LAUNCHSPLASH, CONF_CONFIG_PATH "visual/launchsplash", 0)
     CFG_INT_FIELD(config->VISUAL.BLACKFADE, CONF_CONFIG_PATH "visual/blackfade", 1)
-    CFG_INT_FIELD(config->VISUAL.HIDECOLLECT, CONF_CONFIG_PATH "visual/hidecollect", 0)
-    CFG_INT_FIELD(config->VISUAL.HISTORYICON, CONF_CONFIG_PATH "visual/historyicon", 1)
+    CFG_INT_FIELD(config->VISUAL.CONTENTCOLLECT, CONF_CONFIG_PATH "visual/contentcollect", 0)
+    CFG_INT_FIELD(config->VISUAL.CONTENTHISTORY, CONF_CONFIG_PATH "visual/contenthistory", 0)
 
     CFG_INT_FIELD(config->WEB.SSHD, CONF_CONFIG_PATH "web/sshd", 1)
     CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0)

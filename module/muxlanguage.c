@@ -116,7 +116,7 @@ static void handle_a(void) {
     toast_message(lang.GENERIC.SAVING, FOREVER);
     refresh_screen(ui_screen);
 
-    write_text_to_file((CONF_CONFIG_PATH "settings/general/language"), "w", CHAR,
+    write_text_to_file(CONF_CONFIG_PATH "settings/general/language", "w", CHAR,
                        items[current_item_index].name);
 
     if (config.BOOT.FACTORY_RESET) load_mux("installer");
@@ -147,9 +147,15 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (download_in_progress || msgbox_active || !is_network_connected() || hold_call) return;
-    play_sound(SND_CONFIRM);
-    update_language_data();
+    if (download_in_progress || msgbox_active || hold_call || !device.BOARD.HAS_NETWORK) return;
+
+    if (is_network_connected()) {
+        play_sound(SND_CONFIRM);
+        update_language_data();
+    } else {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+    }
 }
 
 static void handle_help(void) {
@@ -179,14 +185,14 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 1},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HAS_NETWORK) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                       0},
                 {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},
-                {NULL,            NULL,                     0}
+                {NULL, NULL,                                0}
         });
     }
 
@@ -206,7 +212,9 @@ static void ui_refresh_task() {
 }
 
 int muxlanguage_main(void) {
-    init_module("muxlanguage");
+    const char *m = "muxlanguage";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

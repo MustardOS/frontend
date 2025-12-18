@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_n_table[] = {
         {"nagano98",       "Nagano Winter Olympics '98 (GX720 EAA)"},
         {"nam1975",        "NAM-1975"},
         {"namenayo",       "Namennayo (Japan)"},
@@ -288,11 +283,13 @@ static const LookupName lookup_table[] = {
         {"nzeroteamb",     "New Zero Team (V33 SYSTEM TYPE_B hardware, Haoyunlai Trading Company license)"},
 };
 
+const size_t lookup_n_count = A_SIZE(lookup_n_table);
+
 const char *lookup_n(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
+    for (size_t i = 0; i < lookup_n_count; i++) {
+        if (strcmp(lookup_n_table[i].name, name) == 0) {
+            return lookup_n_table[i].value;
         }
     }
     return NULL;
@@ -300,10 +297,26 @@ const char *lookup_n(const char *name) {
 
 const char *r_lookup_n(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
+    for (size_t i = 0; i < lookup_n_count; i++) {
+        if (strstr(lookup_n_table[i].value, value)) {
+            return lookup_n_table[i].name;
         }
     }
     return NULL;
+}
+
+void lookup_n_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_n_count; i++) {
+        if (strcasestr(lookup_n_table[i].name, term))
+            emit(lookup_n_table[i].name, lookup_n_table[i].value, udata);
+    }
+}
+
+void r_lookup_n_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_n_count; i++) {
+        if (strcasestr(lookup_n_table[i].value, term))
+            emit(lookup_n_table[i].name, lookup_n_table[i].value, udata);
+    }
 }

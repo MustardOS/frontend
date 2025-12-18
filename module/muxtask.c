@@ -122,7 +122,7 @@ static void handle_a(void) {
 
         if (exec) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-            run_exec(exec, exec_count, 0, 1, NULL);
+            run_exec(exec, exec_count, 0, 1, NULL, NULL);
         }
         free(exec);
     }
@@ -186,7 +186,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.LAUNCH, 1},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     overlay_display();
@@ -197,6 +197,10 @@ static void ui_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
             lv_obj_set_user_data(element_focused, items[current_item_index].name);
+
+            lv_label_set_text(ui_lblNavA, items[current_item_index].content_type == FOLDER
+                                          ? lang.GENERIC.OPEN
+                                          : lang.GENERIC.LAUNCH);
 
             adjust_wallpaper_element(ui_group, 0, TASK);
         }
@@ -214,7 +218,9 @@ int muxtask_main(char *ex_dir) {
     snprintf(base_dir, sizeof(base_dir), OPT_SHARE_PATH "task/");
     if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
 
-    init_module("muxtask");
+    const char *m = "muxtask";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

@@ -44,7 +44,7 @@ static void save_theme_filter_options(void) {
 
     if (strcmp(lookup_original_value, lv_label_get_text(ui_lblLookupValue_themefilter)) != 0) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "theme/filter/lookup"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "theme/filter/lookup", "w", CHAR,
                            lv_label_get_text(ui_lblLookupValue_themefilter));
     }
 
@@ -138,7 +138,7 @@ static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter)
-        decrease_option_value(lv_group_get_focused(ui_group_value));
+        decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_keyboard_OK_press(void) {
@@ -177,7 +177,7 @@ static void handle_option_next(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter)
-        increase_option_value(lv_group_get_focused(ui_group_value));
+        increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_confirm(void) {
@@ -313,7 +313,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.SAVE,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
     check_focus();
@@ -338,7 +338,9 @@ static void ui_refresh_task() {
 }
 
 int muxthemefilter_main(void) {
-    init_module("muxthemefilter");
+    const char *m = "muxthemefilter";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTHEMEFILTER.TITLE);

@@ -192,7 +192,7 @@ static void init_elements(void) {
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
             {ui_lblNavXGlyph, "",                  1},
             {ui_lblNavX,      lang.GENERIC.REMOVE, 1},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     ui_imgScreenshot = lv_img_create(ui_screen);
@@ -217,7 +217,9 @@ static void ui_refresh_task() {
 int muxshot_main(void) {
     is_fullscreen = 0;
 
-    init_module("muxshot");
+    const char *m = "muxshot";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

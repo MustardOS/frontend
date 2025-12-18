@@ -52,6 +52,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALT},
             {ui_lblAnimation_custom,       lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblMusic_custom,           lang.MUXCUSTOM.HELP.MUSIC},
+            {ui_lblMusicVolume_custom,     lang.MUXCUSTOM.HELP.MUSIC_VOLUME},
             {ui_lblShuffle_custom,         lang.MUXCUSTOM.HELP.SHUFFLE},
             {ui_lblLaunchSwap_custom,      lang.MUXCUSTOM.HELP.LAUNCH_SWAP},
             {ui_lblBlackFade_custom,       lang.MUXCUSTOM.HELP.FADE},
@@ -72,7 +73,7 @@ static int populate_theme_alternates(void) {
     lv_dropdown_clear_options(ui_droThemeAlternate_custom);
 
     char alt_path[MAX_BUFFER_SIZE];
-    snprintf(alt_path, sizeof(alt_path), "%s/alternate", STORAGE_THEME);
+    snprintf(alt_path, sizeof(alt_path), "%s/alternate", config.THEME.STORAGE_THEME);
 
     struct dirent *entry;
     DIR *dir = opendir(alt_path);
@@ -173,6 +174,7 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, custom, Animation, lang.MUXCUSTOM.ANIMATION, "animation", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
+    INIT_OPTION_ITEM(-1, custom, MusicVolume, lang.MUXCUSTOM.MUSIC.VOLUME, "musicvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.FADE, "blackfade", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, LaunchSwap, lang.MUXCUSTOM.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 4);
     INIT_OPTION_ITEM(-1, custom, Shuffle, lang.MUXCUSTOM.SHUFFLE, "shuffle", disabled_enabled, 2);
@@ -185,16 +187,21 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
 
+    char *volume_values = generate_number_string(0, 100, 1, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droMusicVolume_custom, volume_values);
+    free(volume_values);
+
     lv_dropdown_clear_options(ui_droThemeResolution_custom);
     lv_dropdown_add_option(ui_droThemeResolution_custom, lang.MUXCUSTOM.SCREEN, LV_DROPDOWN_POS_LAST);
 
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
-                 STORAGE_THEME, theme_resolutions[i].resolution);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", config.THEME.STORAGE_THEME, 
+                 theme_resolutions[i].resolution);
 
         if (directory_exist(theme_device_folder)) {
-            lv_dropdown_add_option(ui_droThemeResolution_custom, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
+            lv_dropdown_add_option(ui_droThemeResolution_custom,
+                                   theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
         }
     }
 
@@ -222,10 +229,15 @@ static void check_focus(void) {
     if (element_focused == ui_lblCatalogue_custom ||
         element_focused == ui_lblConfig_custom ||
         element_focused == ui_lblTheme_custom) {
+        lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else if (element_focused == ui_lblMusicVolume_custom) {
+        lv_label_set_text(ui_lblNavA, lang.GENERIC.SET);
+        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
         lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -270,18 +282,20 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value));
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value));
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void restore_custom_options(void) {
+    char theme_active_txt_path[MAX_BUFFER_SIZE];
+    snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", config.THEME.STORAGE_THEME);
     snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
-             str_replace(read_line_char_from((STORAGE_THEME "/active.txt"), 1), "\r", ""));
+             str_replace(read_line_char_from(theme_active_txt_path, 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate_custom, theme_alt_original);
     if (option_index > 0) lv_dropdown_set_selected(ui_droThemeAlternate_custom, option_index);
 
@@ -297,15 +311,17 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droGridModeContent_custom, config.VISUAL.GRID_MODE_CONTENT);
     lv_dropdown_set_selected(ui_droFont_custom, config.SETTINGS.ADVANCED.FONT);
     lv_dropdown_set_selected(ui_droMusic_custom, config.SETTINGS.GENERAL.BGM);
+    lv_dropdown_set_selected(ui_droMusicVolume_custom, config.SETTINGS.GENERAL.BGMVOL);
     lv_dropdown_set_selected(ui_droSound_custom, config.SETTINGS.GENERAL.SOUND);
     lv_dropdown_set_selected(ui_droChime_custom, config.SETTINGS.GENERAL.CHIME);
 }
 
-static void save_custom_options(void) {
+static void save_custom_options(char *next_screen) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
     CHECK_AND_SAVE_STD(custom, Music, "settings/general/bgm", INT, 0);
+    CHECK_AND_SAVE_STD(custom, MusicVolume, "settings/general/bgmvol", INT, 0);
     CHECK_AND_SAVE_STD(custom, BlackFade, "visual/blackfade", INT, 0);
     CHECK_AND_SAVE_STD(custom, LaunchSwap, "visual/launch_swap", INT, 0);
     CHECK_AND_SAVE_STD(custom, Shuffle, "visual/shuffle", INT, 0);
@@ -325,7 +341,7 @@ static void save_custom_options(void) {
     if (lv_dropdown_get_selected(ui_droThemeResolution_custom) != ThemeResolution_original) {
         is_modified++;
 
-        write_text_to_file((CONF_CONFIG_PATH "settings/general/theme_resolution"), "w", INT, idx_theme_resolution);
+        write_text_to_file(CONF_CONFIG_PATH "settings/general/theme_resolution", "w", INT, idx_theme_resolution);
         refresh_resolution = 1;
     }
 
@@ -334,37 +350,31 @@ static void save_custom_options(void) {
         lv_dropdown_get_selected_str(ui_droThemeAlternate_custom, theme_alt, sizeof(theme_alt));
 
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
-            write_text_to_file((STORAGE_THEME "/active.txt"), "w", CHAR, theme_alt);
+            char theme_active_txt_path[MAX_BUFFER_SIZE];
+            snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", config.THEME.STORAGE_THEME);
+            write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
-            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt",
-                     STORAGE_THEME, theme_alt);
+            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", config.THEME.STORAGE_THEME,
+                     theme_alt);
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive)
-                extract_archive(theme_alt_archive, "custom");
-            } else {
-                char png_bootlogo[MAX_BUFFER_SIZE];
-                snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/%simage/bootlogo.png",
-                        STORAGE_THEME, mux_dimension);
-                if (!file_exist(png_bootlogo)) {
-                    snprintf(png_bootlogo, sizeof(png_bootlogo), "%s/image/bootlogo.png", STORAGE_THEME);
-                }
-                if (file_exist(png_bootlogo)) update_bootlogo();
+                extract_zip_to_dir(theme_alt_archive, config.THEME.STORAGE_THEME);
             }
+            write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
             static char rgb_script[MAX_BUFFER_SIZE];
-            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh",
-                     STORAGE_THEME, theme_alt);
+            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", config.THEME.STORAGE_THEME,
+                     theme_alt);
             if (file_exist(rgb_script)) {
                 if (device.BOARD.RGB && config.SETTINGS.GENERAL.RGB) {
                     const char *args[] = {rgb_script, NULL};
-                    run_exec(args, A_SIZE(args), 0, 1, NULL);
+                    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
                 }
 
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
-                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh",
-                         STORAGE_THEME);
+                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", config.THEME.STORAGE_THEME);
 
                 create_directories(strip_dir(rgb_script_dest));
                 write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
@@ -380,6 +390,7 @@ static void save_custom_options(void) {
             if (!is_silence_playing) play_silence_bgm();
         } else {
             if (idx_music != Music_original || is_silence_playing) init_fe_bgm(&fe_bgm, idx_music, 1);
+            set_bgm_volume(lv_dropdown_get_selected(ui_droMusicVolume_custom));
         }
     }
 
@@ -390,12 +401,7 @@ static void save_custom_options(void) {
         init_fe_snd(&fe_snd, idx_sound, idx_sound);
     }
 
-    if (is_modified > 0) {
-        refresh_config = 1;
-
-        const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
-    }
+    if (is_modified > 0) run_tweak_script();
 
     if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);
 }
@@ -407,31 +413,24 @@ static void handle_a(void) {
         const char *mux_name;
         const char *launch;
         int16_t *kiosk_flag;
+        const char *load_mux_name;
     } elements[] = {
-            {"theme",     "/theme",            &kiosk.CUSTOM.THEME},
-            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
-            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG}
+            {"theme",     "/theme",            &kiosk.CUSTOM.THEME, "theme"},
+            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, "picker"},
+            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG, "picker"}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     const char *u_data = lv_obj_get_user_data(element_focused);
 
-    save_custom_options();
-
     for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, "alternate") == 0) {
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
-            load_mux("custom");
-
-            close_input();
-            mux_input_stop();
-
-            return;
-        } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
+        if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (is_ksk(*elements[i].kiosk_flag)) {
                 kiosk_denied();
                 return;
             }
+
+            save_custom_options("custom");
 
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].mux_name);
             write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, elements[i].launch);
@@ -445,7 +444,7 @@ static void handle_a(void) {
             lv_task_handler();
             usleep(256);
 
-            load_mux("picker");
+            load_mux(elements[i].load_mux_name);
 
             close_input();
             mux_input_stop();
@@ -454,7 +453,18 @@ static void handle_a(void) {
         }
     }
 
-    handle_option_next();
+    if (element_focused == ui_lblMusicVolume_custom) {
+        toast_message(lang.MUXCUSTOM.MUSIC.SET, SHORT);
+        set_bgm_volume(lv_dropdown_get_selected(ui_droMusicVolume_custom));
+    } else if (element_focused == ui_lblThemeAlternate_custom) {
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
+        save_custom_options("custom");
+        load_mux("custom");
+        close_input();
+        mux_input_stop();
+    } else {
+        handle_option_next();
+    }
 }
 
 static void handle_b(void) {
@@ -468,10 +478,10 @@ static void handle_b(void) {
         return;
     }
 
-    save_custom_options();
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
-
     play_sound(SND_BACK);
+
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
+    save_custom_options("config");
 
     close_input();
     mux_input_stop();
@@ -506,7 +516,7 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL,             NULL,                0}
+            {NULL, NULL,                            0}
     });
 
     check_focus();
@@ -531,7 +541,9 @@ static void ui_refresh_task() {
 }
 
 int muxcustom_main(void) {
-    init_module("muxcustom");
+    const char *m = "muxcustom";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

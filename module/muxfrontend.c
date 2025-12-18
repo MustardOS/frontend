@@ -122,7 +122,7 @@ static void set_previous_module(char *module) {
 }
 
 int set_splash_image_path(char *splash_image_name) {
-    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
     if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
                   theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
          file_exist(splash_image_path)) ||
@@ -196,8 +196,10 @@ static void module_explore(void) {
 void module_content_list(const char *path, const char *max_depth, int is_collection) {
     last_index_check();
 
-    const char *args[] = {"find", path, "-maxdepth", max_depth, "-type", "f", "-size", "0", "!", "-name", ".nogrid", "-delete", NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL);
+    const char *args[] = {"find", path, "-maxdepth", max_depth,
+                          "-type", "f", "-size", "0", "!", "-name", ".nogrid",
+                          "-delete", NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     load_mux("launcher");
 
@@ -240,6 +242,11 @@ static void module_search(void) {
 static void module_picker(void) {
     load_mux("custom");
     muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
+}
+
+static void module_theme(void) {
+    load_mux("custom");
+    muxtheme_main(read_line_char_from(EXPLORE_DIR, 1));
 }
 
 void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *, int)) {
@@ -360,29 +367,30 @@ static void module_start(void) {
 static const ModuleEntry modules[] = {
         // these modules have specific functions and are not
         // straight forward module launching
-        {"reset",       NULL,        NULL,             NULL,                module_reset},
-        {"reboot",      NULL,        NULL,             NULL,                module_reboot},
-        {"shutdown",    NULL,        NULL,             NULL,                module_shutdown},
-        {"assign",      NULL,        NULL,             NULL,                module_assign},
-        {"coredown",    NULL,        NULL,             NULL,                module_download},
-        {"governor",    NULL,        NULL,             NULL,                module_governor},
-        {"control",     NULL,        NULL,             NULL,                module_control},
-        {"tag",         NULL,        NULL,             NULL,                module_tag},
-        {"explore",     NULL,        NULL,             NULL,                module_explore},
-        {"collection",  NULL,        NULL,             NULL,                module_collection},
-        {"history",     NULL,        NULL,             NULL,                module_history},
-        {"search",      NULL,        NULL,             NULL,                module_search},
-        {"picker",      NULL,        NULL,             NULL,                module_picker},
-        {"option",      NULL,        NULL,             NULL,                module_option},
-        {"appcon",      NULL,        NULL,             NULL,                module_appcon},
-        {"app",         NULL,        NULL,             NULL,                module_app},
-        {"task",        NULL,        NULL,             NULL,                module_task},
-        {"config",      NULL,        NULL,             NULL,                module_config},
-        {"tweakadv",    NULL,        NULL,             NULL,                module_tweakadv},
-        {"danger",      NULL,        NULL,             NULL,                module_danger},
-        {"device",      NULL,        NULL,             NULL,                module_device},
-        {"rtc",         NULL,        NULL,             NULL,                module_rtc},
-        {"credits",     NULL,        NULL,             NULL,                module_quit},
+        {"reset",      NULL, NULL, NULL, module_reset},
+        {"reboot",     NULL, NULL, NULL, module_reboot},
+        {"shutdown",   NULL, NULL, NULL, module_shutdown},
+        {"assign",     NULL, NULL, NULL, module_assign},
+        {"coredown",   NULL, NULL, NULL, module_download},
+        {"governor",   NULL, NULL, NULL, module_governor},
+        {"control",    NULL, NULL, NULL, module_control},
+        {"tag",        NULL, NULL, NULL, module_tag},
+        {"explore",    NULL, NULL, NULL, module_explore},
+        {"collection", NULL, NULL, NULL, module_collection},
+        {"history",    NULL, NULL, NULL, module_history},
+        {"search",     NULL, NULL, NULL, module_search},
+        {"picker",     NULL, NULL, NULL, module_picker},
+        {"theme",      NULL, NULL, NULL, module_theme},
+        {"option",     NULL, NULL, NULL, module_option},
+        {"appcon",     NULL, NULL, NULL, module_appcon},
+        {"app",        NULL, NULL, NULL, module_app},
+        {"task",       NULL, NULL, NULL, module_task},
+        {"config",     NULL, NULL, NULL, module_config},
+        {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
+        {"danger",     NULL, NULL, NULL, module_danger},
+        {"device",     NULL, NULL, NULL, module_device},
+        {"rtc",        NULL, NULL, NULL, module_rtc},
+        {"credits",    NULL, NULL, NULL, module_quit},
 
         // the following modules can be loaded directly
         // without any other functionality
@@ -407,6 +415,7 @@ static const ModuleEntry modules[] = {
         {"timezone",    "rtc",       "muxtimezone",    muxtimezone_main,    NULL},
         {"screenshot",  "info",      "muxshot",        muxshot_main,        NULL},
         {"space",       "info",      "muxspace",       muxspace_main,       NULL},
+        {"activity",    "info",      "muxactivity",    muxactivity_main,    NULL},
         {"themedwn",    "picker",    "muxthemedown",   muxthemedown_main,   NULL},
         {"themefilter", "themedwn",  "muxthemefilter", muxthemefilter_main, NULL},
         {"tester",      "info",      "muxtester",      muxtester_main,      NULL},
@@ -416,10 +425,10 @@ static const ModuleEntry modules[] = {
 
         // these are custom entries specifically for the first time installer
         {"installer",   "installer", "muxinstall",     muxinstall_main,     NULL},
-        {"install",     NULL,        NULL,             NULL,                module_install},
+        {"install",    NULL, NULL, NULL, module_install},
 
         // this is required because it is the end of the table!
-        {NULL,          NULL,        NULL,             NULL,                NULL}
+        {NULL,         NULL, NULL, NULL,                                    NULL}
 };
 
 static void reset_alert(void) {
@@ -508,7 +517,7 @@ int main(void) {
 
         char folder[MAX_BUFFER_SIZE];
         snprintf(folder, sizeof(folder), "%s/%dx%d",
-                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME,
+                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME,
                  device.MUX.WIDTH, device.MUX.HEIGHT);
 
         if (refresh_resolution || !directory_exist(folder)) {

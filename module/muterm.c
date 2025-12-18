@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
     const char *bg_path = NULL;
     const char **cmd = NULL;
 
-    if (argc == 2 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) print_help(argv[0]);
+    if (argc == 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)) print_help(argv[0]);
 
     for (int i = 1; i < argc; i++) {
         const char *arg = argv[i];
@@ -347,7 +347,7 @@ int main(int argc, char *argv[]) {
         if (cmd) { // Surely we are running something...?!
             size_t cmd_count = 0;
             while (cmd[cmd_count]) cmd_count++;
-            run_exec(cmd, cmd_count + 1, 0, 1, NULL);
+            run_exec(cmd, cmd_count + 1, 0, 1, NULL, NULL);
             exit(127);
         }
     }

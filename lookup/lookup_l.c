@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_l_table[] = {
         {"labyrunk",    "Labyrinth Runner (World Ver. K)"},
         {"labyrunr",    "Labyrinth Runner (Japan)"},
         {"labyrunrk",   "Labyrinth Runner (World Ver. K)"},
@@ -292,11 +287,13 @@ static const LookupName lookup_table[] = {
         {"lwingsjp",    "Ares no Tsubasa (Japan)"},
 };
 
+const size_t lookup_l_count = A_SIZE(lookup_l_table);
+
 const char *lookup_l(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
+    for (size_t i = 0; i < lookup_l_count; i++) {
+        if (strcmp(lookup_l_table[i].name, name) == 0) {
+            return lookup_l_table[i].value;
         }
     }
     return NULL;
@@ -304,10 +301,26 @@ const char *lookup_l(const char *name) {
 
 const char *r_lookup_l(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
+    for (size_t i = 0; i < lookup_l_count; i++) {
+        if (strstr(lookup_l_table[i].value, value)) {
+            return lookup_l_table[i].name;
         }
     }
     return NULL;
+}
+
+void lookup_l_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_l_count; i++) {
+        if (strcasestr(lookup_l_table[i].name, term))
+            emit(lookup_l_table[i].name, lookup_l_table[i].value, udata);
+    }
+}
+
+void r_lookup_l_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_l_count; i++) {
+        if (strcasestr(lookup_l_table[i].value, term))
+            emit(lookup_l_table[i].name, lookup_l_table[i].value, udata);
+    }
 }

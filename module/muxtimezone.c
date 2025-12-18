@@ -88,10 +88,10 @@ static void handle_a(void) {
     // Because weirdos live in different timezones...
     if (config.BOOT.FACTORY_RESET) {
         const char *args_date[] = {"date", "010100002025", NULL};
-        run_exec(args_date, A_SIZE(args_date), 0, 1, NULL);
+        run_exec(args_date, A_SIZE(args_date), 0, 1, NULL, NULL);
 
         const char *args_hw_clock[] = {"hwclock", "-w", NULL};
-        run_exec(args_hw_clock, A_SIZE(args_hw_clock), 0, 1, NULL);
+        run_exec(args_hw_clock, A_SIZE(args_hw_clock), 0, 1, NULL, NULL);
     }
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
@@ -145,7 +145,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     overlay_display();
@@ -164,7 +164,9 @@ static void ui_refresh_task() {
 }
 
 int muxtimezone_main(void) {
-    init_module("muxtimezone");
+    const char *m = "muxtimezone";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 

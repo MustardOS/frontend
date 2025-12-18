@@ -12,6 +12,8 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 #define UI_DHCP (UI_COUNT - 4)
 #define UI_STATIC UI_COUNT
 
+static int ui_network_locked = 0;
+
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
@@ -75,6 +77,11 @@ static void get_current_ip(void) {
     }
 }
 
+static void net_connect_check() {
+    ui_network_locked = 0;
+    get_current_ip();
+}
+
 static void restore_network_values(void) {
     lv_label_set_text(ui_lblTypeValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.STATIC : lang.MUXNETWORK.DHCP);
     ui_count = config.NETWORK.TYPE ? UI_STATIC : UI_DHCP;
@@ -101,22 +108,23 @@ static void save_network_config(void) {
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) idx_type = 1;
     if (strcasecmp(lv_label_get_text(ui_lblScanValue_network), lang.GENERIC.ENABLED) == 0) idx_scan = 1;
 
-    write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT, idx_type);
-    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, idx_scan);
-    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
+    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT, idx_type);
+    write_text_to_file(CONF_CONFIG_PATH "network/scan", "w", INT, idx_scan);
+    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue_network), PASS_ENCODE) != 0) {
-        write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR, lv_label_get_text(ui_lblPasswordValue_network));
+        write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR,
+                           lv_label_get_text(ui_lblPasswordValue_network));
     }
 
     if (config.NETWORK.TYPE) {
-        write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR,
                            lv_label_get_text(ui_lblAddressValue_network));
-        write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR,
                            lv_label_get_text(ui_lblSubnetValue_network));
-        write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR,
                            lv_label_get_text(ui_lblGatewayValue_network));
-        write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
+        write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR,
                            lv_label_get_text(ui_lblDnsValue_network));
     }
 
@@ -173,10 +181,16 @@ static void list_nav_move(int steps, int direction) {
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblType_network) {
-        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    if (!is_network_connected()) {
+        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+        if (element_focused == ui_lblType_network) {
+            lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        } else {
+            lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
     } else {
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -228,11 +242,11 @@ static void handle_keyboard_press(void) {
 
     if (strcasecmp(is_key, OSK_DONE) == 0) {
         handle_keyboard_OK_press();
-    } else if (!strcmp(is_key, OSK_UPPER)) {
+    } else if (strcmp(is_key, OSK_UPPER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (!strcmp(is_key, OSK_CHAR)) {
+    } else if (strcmp(is_key, OSK_CHAR) == 0) {
         lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (!strcmp(is_key, OSK_LOWER)) {
+    } else if (strcmp(is_key, OSK_LOWER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
         if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -260,7 +274,7 @@ static void toggle_static_panels(int is_static) {
 
 static void toggle_option(lv_obj_t *element, const char *config_path) {
     const char *current = lv_label_get_text(element);
-    int is_enabled = !strcasecmp(current, lang.GENERIC.ENABLED);
+    int is_enabled = strcasecmp(current, lang.GENERIC.ENABLED) == 0;
 
     write_text_to_file(config_path, "w", INT, is_enabled ? 0 : 1);
     lv_label_set_text(element, is_enabled ? lang.GENERIC.DISABLED : lang.GENERIC.ENABLED);
@@ -283,7 +297,7 @@ int handle_navigate(void) {
         if (element_focused == ui_lblScan_network) {
             toggle_option(ui_lblScanValue_network, CONF_CONFIG_PATH "network/scan");
         } else if (element_focused == ui_lblType_network) {
-            int is_static = !strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC);
+            int is_static = strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0;
             lv_label_set_text(ui_lblTypeValue_network, is_static ? lang.MUXNETWORK.DHCP : lang.MUXNETWORK.STATIC);
             ui_count = is_static ? UI_DHCP : UI_STATIC;
             toggle_static_panels(is_static);
@@ -302,7 +316,7 @@ static void handle_confirm(void) {
     if (element_focused == ui_lblConnect_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_CONFIRM);
-            run_exec(net_d_args, A_SIZE(net_d_args), 0, 1, NULL);
+            run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
             can_scan_check(1);
         } else {
             int valid_info = 0;
@@ -310,7 +324,7 @@ static void handle_confirm(void) {
             const char *cv_pass = lv_label_get_text(ui_lblPasswordValue_network);
 
             // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
-            int cv_pass_ok = (!strlen(cv_pass) || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
+            int cv_pass_ok = (strlen(cv_pass) == 0 || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
 
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue_network);
@@ -343,13 +357,12 @@ static void handle_confirm(void) {
                 lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.CONNECT_TRY);
                 lv_task_handler();
 
-                run_exec(pass_args, A_SIZE(pass_args), 0, 1, NULL);
+                ui_network_locked = 1;
+                run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
                 lv_task_handler();
 
-                run_exec(net_c_args, A_SIZE(net_c_args), 0, 1, NULL);
+                run_exec(net_c_args, A_SIZE(net_c_args), 1, 0, NULL, net_connect_check);
                 lv_task_handler();
-
-                get_current_ip();
             } else {
                 play_sound(SND_ERROR);
                 toast_message(lang.MUXNETWORK.CHECK, SHORT);
@@ -395,6 +408,8 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
+    if (ui_network_locked) return;
+
     play_sound(SND_BACK);
 
     toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -408,6 +423,8 @@ static void handle_back(void) {
 }
 
 static void handle_scan(void) {
+    if (ui_network_locked) return;
+
     if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
         play_sound(SND_CONFIRM);
 
@@ -422,10 +439,12 @@ static void handle_scan(void) {
 }
 
 static void handle_profiles(void) {
+    if (ui_network_locked) return;
+
     play_sound(SND_CONFIRM);
 
     save_network_config();
-    run_exec(pass_args, A_SIZE(pass_args), 0, 1, NULL);
+    run_exec(pass_args, A_SIZE(pass_args), 0, 1, NULL, NULL);
 
     load_mux("net_profile");
 
@@ -436,7 +455,7 @@ static void handle_profiles(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? handle_keyboard_press() : handle_confirm();
 }
@@ -452,6 +471,8 @@ static void handle_b(void) {
         return;
     }
 
+    if (ui_network_locked) return;
+
     if (key_show) {
         close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry :
                   key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
@@ -462,13 +483,13 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? key_backspace(ui_txtEntry_network) : handle_scan();
 }
 
 static void handle_y(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? key_swap() : handle_profiles();
 }
@@ -546,7 +567,7 @@ static void init_elements(void) {
             {ui_lblNavX,       lang.MUXNETWORK.SCAN,     0},
             {ui_lblNavYGlyph,  "",                       0},
             {ui_lblNavY,       lang.MUXNETWORK.PROFILES, 0},
-            {NULL,             NULL,                     0}
+            {NULL, NULL,                                 0}
     });
 
     lv_obj_t *connect_items[] = {
@@ -586,7 +607,9 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxnetwork_main(void) {
-    init_module("muxnetwork");
+    const char *m = "muxnetwork";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 
@@ -607,6 +630,7 @@ int muxnetwork_main(void) {
     init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1);
     can_scan_check(0);
 
+    init_timer(exec_watch_task, NULL);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -638,7 +662,7 @@ int muxnetwork_main(void) {
             }
     };
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, 1);
+    init_input(&input_opts, true);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 

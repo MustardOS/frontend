@@ -3,7 +3,7 @@
 
 #define UI_COUNT 10
 
-const char *hostname_original;
+static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -23,11 +23,15 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static const char *get_hostname(void) {
-    const char *result = read_line_char_from("/etc/hostname", 1);
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char *result = read_line_char_from("/etc/hostname", 1);
+    if (!result || result[0] == '\0') {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
 
     static char hostname[64];
     snprintf(hostname, sizeof(hostname), "%s", result);
+    free(result);
 
     return hostname;
 }
@@ -36,11 +40,15 @@ static const char *get_mac_address(void) {
     char path[128];
     snprintf(path, sizeof(path), "/sys/class/net/%s/address", device.NETWORK.INTERFACE);
 
+    if (!file_exist(path)) return lang.GENERIC.UNKNOWN;
+
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "cat %s", path);
 
-    const char *result = get_execute_result(cmd);
-    if (!result || strlen(result) == 0) {
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+
         char *big_mac = (CONF_CONFIG_PATH "network/mac");
         if (file_exist(big_mac)) return read_line_char_from(big_mac, 1);
 
@@ -49,6 +57,7 @@ static const char *get_mac_address(void) {
 
     static char mac[32];
     snprintf(mac, sizeof(mac), "%s", result);
+    free(result);
 
     return mac;
 }
@@ -59,11 +68,15 @@ static const char *get_ip_address(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "ip addr show %s | awk '/inet / {print $2}' | cut -d/ -f1", device.NETWORK.INTERFACE);
 
-    const char *result = get_execute_result(cmd);
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
 
     static char ip[64];
     snprintf(ip, sizeof(ip), "%s", result);
+    free(result);
 
     return ip;
 }
@@ -74,11 +87,15 @@ static const char *get_ssid(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "iw dev %s link | awk -F': ' '/SSID/ {print $2}'", device.NETWORK.INTERFACE);
 
-    const char *result = get_execute_result(cmd);
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
 
     static char ssid[64];
     snprintf(ssid, sizeof(ssid), "%s", result);
+    free(result);
 
     return ssid;
 }
@@ -86,11 +103,18 @@ static const char *get_ssid(void) {
 static const char *get_gateway(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
-    const char *result = get_execute_result("ip route | awk '/default/ {print $3}'");
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "ip route | awk '/default/ {print $3}'");
+
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
 
     static char gw[64];
     snprintf(gw, sizeof(gw), "%s", result);
+    free(result);
 
     return gw;
 }
@@ -98,17 +122,38 @@ static const char *get_gateway(void) {
 static const char *get_dns_servers(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
-    const char *result = get_execute_result("awk '/nameserver/ {print $2}' /etc/resolv.conf | xargs");
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "awk '/nameserver/ {print $2}' /etc/resolv.conf | xargs");
+
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
 
     static char dns[128];
     snprintf(dns, sizeof(dns), "%s", result);
+    free(result);
 
     return dns;
 }
 
 static const char *get_signal_strength(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/signal/ {print $2}'", device.NETWORK.INTERFACE);
+
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
+
+    int dbm = safe_atoi(result);
+    free(result);
+
+    int index = dbm <= -100 ? 0 : (dbm >= 0 ? 100 : -dbm);
 
     // I think these values are correct?
     // https://www.intuitibits.com/2016/03/23/dbm-to-percent-conversion/
@@ -126,14 +171,6 @@ static const char *get_signal_strength(void) {
             100
     };
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/signal/ {print $2}'", device.NETWORK.INTERFACE);
-
-    const char *result = get_execute_result(cmd);
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
-
-    int dbm = safe_atoi(result);
-    int index = dbm <= -100 ? 0 : (dbm >= 0 ? 100 : -dbm);
     int percent = dbm_perc[index];
 
     static char signal[32];
@@ -148,10 +185,14 @@ static const char *get_channel_info(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/freq:/ {print $2}'", device.NETWORK.INTERFACE);
 
-    const char *result = get_execute_result(cmd);
-    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    char *result = get_execute_result(cmd);
+    if (!result || !*result) {
+        free(result);
+        return lang.GENERIC.UNKNOWN;
+    }
 
     int freq = safe_atoi(result);
+    free(result);
 
     static const struct {
         int freq;
@@ -229,7 +270,8 @@ static const char *get_ac_traffic(void) {
 
     static char ac_traffic[64];
     snprintf(ac_traffic, sizeof(ac_traffic), "RX: %.1f MB TX: %.1f MB",
-             rx / 1024.0 / 1024.0, tx / 1024.0 / 1024.0);
+             (double) rx / 1024.0 / 1024.0,
+             (double) tx / 1024.0 / 1024.0);
 
     return ac_traffic;
 }
@@ -252,8 +294,8 @@ static const char *get_tp_traffic(void) {
     if (last_time > 0) {
         double delta = difftime(now, last_time);
         if (delta > 0) {
-            rx_rate = (rx - last_rx) / delta;
-            tx_rate = (tx - last_tx) / delta;
+            rx_rate = (double) (rx - last_rx) / delta;
+            tx_rate = (double) (tx - last_tx) / delta;
         }
     }
 
@@ -270,12 +312,6 @@ static const char *get_tp_traffic(void) {
 }
 
 static void update_network_info() {
-    lv_label_set_text(ui_lblHostnameValue_netinfo, get_hostname());
-    lv_label_set_text(ui_lblMacValue_netinfo, get_mac_address());
-    lv_label_set_text(ui_lblIpValue_netinfo, get_ip_address());
-    lv_label_set_text(ui_lblSsidValue_netinfo, get_ssid());
-    lv_label_set_text(ui_lblGatewayValue_netinfo, get_gateway());
-    lv_label_set_text(ui_lblDnsValue_netinfo, get_dns_servers());
     lv_label_set_text(ui_lblSignalValue_netinfo, get_signal_strength());
     lv_label_set_text(ui_lblChannelValue_netinfo, get_channel_info());
     lv_label_set_text(ui_lblAcTrafficValue_netinfo, get_ac_traffic());
@@ -365,21 +401,32 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void reload_netinfo(void) {
+    load_mux("netinfo");
+    close_input();
+    mux_input_stop();
+}
+
 static void handle_keyboard_OK_press(void) {
     key_show = 0;
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblHostname_netinfo) {
-        hostname_original = lv_label_get_text(ui_lblHostnameValue_netinfo);
-
         const char *new_hostname = lv_textarea_get_text(ui_txtEntry_netinfo);
         if (strlen(new_hostname) < 3) goto clear_osk;
+
+        play_sound(SND_CONFIRM);
+
+        toast_message(lang.MUXNETINFO.SAVE.HOST, FOREVER);
+        refresh_screen(ui_screen);
 
         lv_label_set_text(ui_lblHostnameValue_netinfo, new_hostname);
         write_text_to_file("/etc/hostname", "w", CHAR, new_hostname);
 
         const char *hn_set_args[] = {"hostname", new_hostname, NULL};
-        run_exec(hn_set_args, A_SIZE(hn_set_args), 1, 0, NULL);
+        run_exec(hn_set_args, A_SIZE(hn_set_args), 0, 0, NULL, NULL);
+
+        reload_netinfo();
     }
 
     clear_osk:
@@ -447,8 +494,15 @@ static void handle_a(void) {
             return;
         }
 
+        play_sound(SND_CONFIRM);
+
+        toast_message(lang.MUXNETINFO.SAVE.MAC, FOREVER);
+        refresh_screen(ui_screen);
+
         const char *mac_change_args[] = {OPT_PATH "script/web/macchange.sh", NULL};
-        run_exec(mac_change_args, A_SIZE(mac_change_args), 1, 0, NULL);
+        run_exec(mac_change_args, A_SIZE(mac_change_args), 0, 0, NULL, NULL);
+
+        reload_netinfo();
     }
 }
 
@@ -545,7 +599,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.EDIT, 0},
             {ui_lblNavBGlyph, "",                0},
             {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL,            NULL,              0}
+            {NULL, NULL,                         0}
     });
 
 #define NETINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netinfo, UDATA);
@@ -579,7 +633,9 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxnetinfo_main(void) {
-    init_module("muxnetinfo");
+    const char *m = "muxnetinfo";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

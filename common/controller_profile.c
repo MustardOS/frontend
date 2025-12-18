@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include "common.h"
 #include "options.h"
 #include "controller_profile.h"

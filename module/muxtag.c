@@ -249,7 +249,7 @@ static void init_elements(void) {
             {ui_lblNavX,      lang.GENERIC.DIRECTORY,  1},
             {ui_lblNavYGlyph, "",                      1},
             {ui_lblNavY,      lang.GENERIC.RECURSIVE,  1},
-            {NULL,            NULL,                    0}
+            {NULL, NULL,                               0}
     });
 
     overlay_display();
@@ -272,7 +272,9 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
     snprintf(rom_dir, sizeof(rom_name), "%s", dir);
     snprintf(rom_system, sizeof(rom_name), "%s", sys);
 
-    init_module("muxtag");
+    const char *m = "muxtag";
+    set_process_name(m);
+    init_module(m);
 
     LOG_INFO(mux_module, "Assign Tag ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Tag ROM_DIR: \"%s\"", rom_dir)

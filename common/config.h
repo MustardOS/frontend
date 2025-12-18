@@ -66,6 +66,9 @@ struct mux_config {
     } EXTRA;
 
     struct {
+        char ACTIVE[MAX_BUFFER_SIZE];
+        char STORAGE_THEME[MAX_BUFFER_SIZE];
+        char THEME_CAT_PATH[MAX_BUFFER_SIZE];
         char DEFAULT_HASH[MAX_BUFFER_SIZE];
 
         struct {
@@ -92,6 +95,7 @@ struct mux_config {
             int16_t ACCELERATE;
             int16_t REPEAT_DELAY;
             int16_t SWAP;
+            int16_t STICKNAV;
             int16_t THERMAL;
             int16_t FONT;
             char VOLUME[MAX_BUFFER_SIZE];
@@ -102,6 +106,7 @@ struct mux_config {
             int16_t THEME;
             int16_t RETROWAIT;
             int16_t RETROFREE;
+            int16_t RETROCACHE;
             char USBFUNCTION[MAX_BUFFER_SIZE];
             int16_t VERBOSE;
             int16_t RUMBLE;
@@ -114,12 +119,15 @@ struct mux_config {
             int16_t DISPSUSPEND;
             int16_t INCBRIGHT;
             int16_t INCVOLUME;
+            int16_t MAXGPU;
+            int16_t AUDIOREADY;
         } ADVANCED;
         struct {
             int16_t HIDDEN;
             int16_t SOUND;
             int16_t CHIME;
             int16_t BGM;
+            int16_t BGMVOL;
             char STARTUP[MAX_BUFFER_SIZE];
             int16_t COLOUR;
             int16_t BRIGHTNESS;
@@ -189,8 +197,8 @@ struct mux_config {
         int16_t BACKGROUNDANIMATION;
         int16_t LAUNCHSPLASH;
         int16_t BLACKFADE;
-        int16_t HIDECOLLECT;
-        int16_t HISTORYICON;
+        int16_t CONTENTCOLLECT;
+        int16_t CONTENTHISTORY;
     } VISUAL;
 
     struct {

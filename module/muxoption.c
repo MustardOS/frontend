@@ -67,10 +67,10 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     if (!*value) value = get_dir;
 
     if (!*value) {
-        value = !strcmp(opt_type, "cfg") ? lang.MUXOPTION.NOT_ASSIGNED :
-                !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE :
-                !strcmp(opt_type, "tag") ? lang.MUXOPTION.NOT_ASSIGNED :
-                !strcmp(opt_type, "gov") ? device.CPU.DEFAULT :
+        value = strcmp(opt_type, "cfg") == 0 ? lang.MUXOPTION.NOT_ASSIGNED :
+                strcmp(opt_type, "con") == 0 ? lang.MUXOPTION.NONE :
+                strcmp(opt_type, "tag") == 0 ? lang.MUXOPTION.NOT_ASSIGNED :
+                strcmp(opt_type, "gov") == 0 ? device.CPU.DEFAULT :
                 "System";
     }
 
@@ -142,25 +142,25 @@ static char *get_time_played(void) {
     int hours = (total_time % 86400) / 3600;
     int minutes = (total_time % 3600) / 60;
 
-    if (days > 0)
+    if (days > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm",
                  days, hours, minutes);
-    else if (hours > 0)
+    } else if (hours > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dh %dm",
                  hours, minutes);
-    else if (minutes > 0)
+    } else if (minutes > 0) {
         snprintf(time_buffer, sizeof(time_buffer), "%dm",
                  minutes);
-    else
-        snprintf(time_buffer, sizeof(time_buffer), "%s",
-                 lang.GENERIC.UNKNOWN);
+    } else {
+        snprintf(time_buffer, sizeof(time_buffer), "0m");
+    }
 
     return time_buffer;
 }
 
 static char *get_launch_count(void) {
     struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
+    if (!json_exists(playtime_json)) return "0";
 
     static char launch_count[MAX_BUFFER_SIZE];
     snprintf(launch_count, sizeof(launch_count), "%d",
@@ -319,7 +319,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define OPTION(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
@@ -351,7 +351,9 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
-    init_module("muxoption");
+    const char *m = "muxoption";
+    set_process_name(m);
+    init_module(m);
 
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);

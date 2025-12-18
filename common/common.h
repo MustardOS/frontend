@@ -4,6 +4,7 @@
 #include "../lvgl/lvgl.h"
 #include "mini/mini.h"
 #include "options.h"
+#include <pthread.h>
 
 #define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define BIT(n) (UINT64_C(1) << (n))
@@ -20,10 +21,15 @@ extern int fe_bgm;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_dimension[15];
+extern char **history_items;
+extern int history_item_count;
+extern char **collection_items;
+extern int collection_item_count;
 extern char mux_module[MAX_BUFFER_SIZE];
 extern char current_wall[MAX_BUFFER_SIZE];
 extern int is_silence_playing;
 extern Mix_Music *current_bgm;
+extern int bgm_volume;
 extern int current_brightness;
 extern int current_volume;
 extern int is_blank;
@@ -34,8 +40,15 @@ extern char *disabled_enabled[];
 extern char *excluded_included[];
 extern char *allowed_restricted[];
 extern char *hidden_visible[];
+extern char *show_noicon_hide[];
+
+extern char progress_bar_message[MAX_BUFFER_SIZE];
+extern int progress_bar_value;
+extern lv_timer_t *timer_update_progress;
 
 #define SOUND_TOTAL 12
+
+typedef void (*exec_callback)(int exit_code);
 
 struct ImageSettings {
     char *image_path;
@@ -142,7 +155,7 @@ struct nav_flag {
     int visible;
 };
 
-int file_exist(char *filename);
+int file_exist(const char *filename);
 
 int directory_exist(char *dirname);
 
@@ -150,7 +163,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
 void extract_archive(char *filename, char *screen);
 
-void update_bootlogo();
+void update_bootlogo(char *next_screen);
 
 int str_compare(const void *a, const void *b);
 
@@ -242,9 +255,9 @@ char *get_capacity();
 
 void capacity_task();
 
-void increase_option_value(lv_obj_t *element);
+void increase_option_value(lv_obj_t *element, int count);
 
-void decrease_option_value(lv_obj_t *element);
+void decrease_option_value(lv_obj_t *element, int count);
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app);
 
@@ -321,7 +334,17 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 
 char *get_script_value(const char *filename, const char *key, const char *not_found);
 
-int resolution_check(const char *zip_filename);
+int resolution_check(const char *theme_path);
+
+void show_progress_bar(char *message);
+
+void update_progress_bar();
+
+void hide_progress_bar();
+
+int extract_zip_to_dir(const char *filename, const char *output);
+
+void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result));
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
 
@@ -332,6 +355,8 @@ void free_subdirectories(char **dir_names);
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);
 
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
+
+void set_bgm_volume(int volume);
 
 void play_silence_bgm(void);
 
@@ -367,7 +392,9 @@ int is_carousel_grid_mode();
 
 void kiosk_denied();
 
-void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file);
+void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file, exec_callback cb);
+
+void exec_watch_task();
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line);
 
@@ -427,6 +454,8 @@ char *get_build();
 
 int copy_file(const char *from, const char *to);
 
+int remove_directory_recursive(const char *path);
+
 int load_content(int add_collection, char *sys_dir, char *file_name);
 
 char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name);
@@ -443,3 +472,12 @@ void turbo_time(int toggle, int show_done);
 int bc64(uint64_t n);
 
 char **split_command(const char *cmd, size_t *argc_out);
+
+void free_array(char **array, size_t count);
+
+int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
+                        size_t dir_count, size_t ext_count, size_t *result_count);
+
+void set_process_name(const char *module);
+
+const char *get_process_name(void);

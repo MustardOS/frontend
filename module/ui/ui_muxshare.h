@@ -99,6 +99,7 @@
     CUSTOM(ThemeAlternate,  "alternate")       \
     CUSTOM(Animation,       "animation")       \
     CUSTOM(Music,           "music")           \
+    CUSTOM(MusicVolume,     "musicvolume")     \
     CUSTOM(BlackFade,       "blackfade")       \
     CUSTOM(LaunchSwap,      "launch_swap")     \
     CUSTOM(Shuffle,         "shuffle")         \
@@ -144,6 +145,7 @@
     DEVICE(HasPortmaster, "portmaster")
 
 #define INFO_ELEMENTS              \
+    INFO(Activity,   "activity")   \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \
     INFO(Tester,     "tester")     \
@@ -323,6 +325,7 @@
     TWEAKADV(RepeatDelay, "repeat")      \
     TWEAKADV(Offset,      "offset")      \
     TWEAKADV(Swap,        "swap")        \
+    TWEAKADV(StickNav,    "sticknav")    \
     TWEAKADV(Volume,      "volume")      \
     TWEAKADV(Brightness,  "brightness")  \
     TWEAKADV(Thermal,     "thermal")     \
@@ -331,6 +334,7 @@
     TWEAKADV(Theme,       "theme")       \
     TWEAKADV(RetroWait,   "retrowait")   \
     TWEAKADV(RetroFree,   "retrofree")   \
+    TWEAKADV(RetroCache,  "retrocache")  \
     TWEAKADV(Verbose,     "verbose")     \
     TWEAKADV(Rumble,      "rumble")      \
     TWEAKADV(UserInit,    "userinit")    \
@@ -343,7 +347,9 @@
     TWEAKADV(SecondPart,  "secondpart")  \
     TWEAKADV(UsbPart,     "usbpart")     \
     TWEAKADV(IncBright,   "incbright")   \
-    TWEAKADV(IncVolume,   "invvolume")
+    TWEAKADV(IncVolume,   "invvolume")   \
+    TWEAKADV(MaxGpu,      "maxgpu")      \
+    TWEAKADV(AudioReady,  "audioready")
 
 #define TWEAKGEN_ELEMENTS              \
     TWEAKGEN(Rtc,        "clock")      \
@@ -371,8 +377,8 @@
     VISUAL(MenuCounterFolder,     "counterfolder")         \
     VISUAL(MenuCounterFile,       "counterfile")           \
     VISUAL(Hidden,                "hidden")                \
-    VISUAL(HideCollect,           "hidecollect")           \
-    VISUAL(HistoryIcon,           "historyicon")           \
+    VISUAL(ContentCollect,        "contentcollect")        \
+    VISUAL(ContentHistory,        "contenthistory")        \
     VISUAL(OverlayImage,          "overlayimage")          \
     VISUAL(OverlayTransparency,   "overlaytransparency")
 

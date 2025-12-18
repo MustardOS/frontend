@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_y_table[] = {
         {"yachtmn",   "Yachtsman"},
         {"yamagchi",  "Go Go Mr. Yamaguchi - Yuke Yuke Yamaguchi-kun"},
         {"yamato",    "Yamato (US)"},
@@ -48,11 +43,13 @@ static const LookupName lookup_table[] = {
         {"yuyugogo",  "Yuuyu no Quiz de GO!GO! (Japan)"},
 };
 
+const size_t lookup_y_count = A_SIZE(lookup_y_table);
+
 const char *lookup_y(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
+    for (size_t i = 0; i < lookup_y_count; i++) {
+        if (strcmp(lookup_y_table[i].name, name) == 0) {
+            return lookup_y_table[i].value;
         }
     }
     return NULL;
@@ -60,10 +57,26 @@ const char *lookup_y(const char *name) {
 
 const char *r_lookup_y(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
+    for (size_t i = 0; i < lookup_y_count; i++) {
+        if (strstr(lookup_y_table[i].value, value)) {
+            return lookup_y_table[i].name;
         }
     }
     return NULL;
+}
+
+void lookup_y_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_y_count; i++) {
+        if (strcasestr(lookup_y_table[i].name, term))
+            emit(lookup_y_table[i].name, lookup_y_table[i].value, udata);
+    }
+}
+
+void r_lookup_y_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_y_count; i++) {
+        if (strcasestr(lookup_y_table[i].value, term))
+            emit(lookup_y_table[i].name, lookup_y_table[i].value, udata);
+    }
 }

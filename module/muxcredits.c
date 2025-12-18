@@ -98,7 +98,9 @@ static void handle_b(void) {
 }
 
 int main(void) {
-    init_module("muxcredits");
+    const char *m = "muxcredits";
+    set_process_name(m);
+    init_module(m);
 
     load_device(&device);
     load_config(&config);

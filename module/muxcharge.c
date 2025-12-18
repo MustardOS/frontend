@@ -36,7 +36,7 @@ static void set_brightness(int brightness) {
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
 
     const char *args[] = {(OPT_PATH "script/device/bright.sh"), bright_value, NULL};
-    run_exec(args, A_SIZE(args), 0, 0, NULL);
+    run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
 
     load_config(&config);
 }
@@ -115,7 +115,9 @@ int main(void) {
     load_device(&device);
     load_config(&config);
 
-    init_module("muxcharge");
+    const char *m = "muxcharge";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(0, 0);
     init_display(1);

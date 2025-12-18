@@ -168,24 +168,24 @@ static int save_power_options(void) {
 
     if (lv_dropdown_get_selected(ui_droShutdown_power) != Shutdown_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/shutdown"), "w", INT, idx_shutdown);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/shutdown", "w", INT, idx_shutdown);
     }
 
     if (lv_dropdown_get_selected(ui_droBattery_power) != Battery_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/low_battery"), "w", INT, idx_battery);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/low_battery", "w", INT, idx_battery);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droIdleDisplay_power) > 1 &&
         lv_dropdown_get_selected(ui_droIdleDisplay_power) != IdleDisplay_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/idle_display"), "w", INT, idx_idle_display);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_display", "w", INT, idx_idle_display);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droIdleSleep_power) > 1 &&
         lv_dropdown_get_selected(ui_droIdleSleep_power) != IdleSleep_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/power/idle_sleep"), "w", INT, idx_idle_sleep);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_sleep", "w", INT, idx_idle_sleep);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droIdleMute_power) > 1 &&
@@ -206,15 +206,7 @@ static int save_power_options(void) {
         CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
     }
 
-    if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
-        refresh_screen(ui_screen);
-
-        const char *args[] = {(OPT_PATH "script/mux/tweak.sh"), NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
-
-        refresh_config = 1;
-    }
+    if (is_modified > 0) run_tweak_script();
 
     free_governor_values();
     play_sound(SND_BACK);
@@ -297,13 +289,13 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value));
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value));
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_a(void) {
@@ -381,7 +373,9 @@ static void ui_refresh_task() {
 }
 
 int muxpower_main(void) {
-    init_module("muxpower");
+    const char *m = "muxpower";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
     generate_governor_values();

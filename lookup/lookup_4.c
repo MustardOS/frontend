@@ -2,12 +2,7 @@
 #include "../common/common.h"
 #include "lookup.h"
 
-typedef struct {
-    const char *name;
-    const char *value;
-} LookupName;
-
-static const LookupName lookup_table[] = {
+const LookupName lookup_4_table[] = {
         {"40love",   "Forty-Love"},
         {"40lovebl", "Forty-Love (bootleg)"},
         {"40lovej",  "Forty-Love (Japan)"},
@@ -24,22 +19,38 @@ static const LookupName lookup_table[] = {
         {"4psimasy", "Mahjong 4P Simasyo (Japan)"},
 };
 
+const size_t lookup_4_count = A_SIZE(lookup_4_table);
+
 const char *lookup_4(const char *name) {
     if (!name) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strcmp(lookup_table[i].name, name) == 0) {
-            return lookup_table[i].value;
-        }
+    for (size_t i = 0; i < lookup_4_count; i++) {
+        if (strcmp(lookup_4_table[i].name, name) == 0)
+            return lookup_4_table[i].value;
     }
     return NULL;
 }
 
 const char *r_lookup_4(const char *value) {
     if (!value) return NULL;
-    for (size_t i = 0; i < A_SIZE(lookup_table); i++) {
-        if (strstr(lookup_table[i].value, value)) {
-            return lookup_table[i].name;
-        }
+    for (size_t i = 0; i < lookup_4_count; i++) {
+        if (strstr(lookup_4_table[i].value, value))
+            return lookup_4_table[i].name;
     }
     return NULL;
+}
+
+void lookup_4_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_4_count; i++) {
+        if (strcasestr(lookup_4_table[i].name, term))
+            emit(lookup_4_table[i].name, lookup_4_table[i].value, udata);
+    }
+}
+
+void r_lookup_4_multi(const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (!term) return;
+    for (size_t i = 0; i < lookup_4_count; i++) {
+        if (strcasestr(lookup_4_table[i].value, term))
+            emit(lookup_4_table[i].name, lookup_4_table[i].value, udata);
+    }
 }

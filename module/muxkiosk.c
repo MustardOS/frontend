@@ -249,13 +249,13 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value));
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value));
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_b(void) {
@@ -328,7 +328,9 @@ static void ui_refresh_task() {
 }
 
 int muxkiosk_main(void) {
-    init_module("muxkiosk");
+    const char *m = "muxkiosk";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 0);
 

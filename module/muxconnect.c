@@ -57,23 +57,15 @@ static void save_options(void) {
 
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth_connect);
     if (lv_dropdown_get_selected(ui_droBluetooth_connect) != Bluetooth_original) {
-        write_text_to_file((CONF_CONFIG_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
+        write_text_to_file(CONF_CONFIG_PATH "visual/bluetooth", "w", INT, idx_bluetooth);
     }
 
     if (lv_dropdown_get_selected(ui_droUsbFunction_connect) != UsbFunction_original) {
         is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
+        write_text_to_file(CONF_CONFIG_PATH "settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
     }
 
-    if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
-        refresh_screen(ui_screen);
-
-        const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL);
-
-        refresh_config = 1;
-    }
+    if (is_modified > 0) run_tweak_script();
 }
 
 static void init_navigation_group(void) {
@@ -154,12 +146,14 @@ static void list_nav_next(int steps) {
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
-    decrease_option_value(lv_group_get_focused(ui_group_value));
+
+    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
-    increase_option_value(lv_group_get_focused(ui_group_value));
+
+    increase_option_value(lv_group_get_focused(ui_group_value), 1);
 }
 
 static void handle_a(void) {
@@ -246,7 +240,7 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
 #define CONNECT(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_connect, UDATA);
@@ -269,7 +263,9 @@ static void ui_refresh_task() {
 }
 
 int muxconnect_main(void) {
-    init_module("muxconnect");
+    const char *m = "muxconnect";
+    set_process_name(m);
+    init_module(m);
 
     init_theme(1, 1);
 
