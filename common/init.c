@@ -92,8 +92,8 @@ void init_display(int full_refresh) {
     static lv_disp_draw_buf_t disp_buf;
 
     uint32_t disp_buf_size = device.MUX.WIDTH * device.MUX.HEIGHT;
-    lv_color_t *disp_buf_s1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t *disp_buf_s2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t * disp_buf_s1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t * disp_buf_s2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, disp_buf_s1, disp_buf_s2, disp_buf_size);
     lv_disp_drv_init(&disp_drv);
@@ -150,8 +150,8 @@ void init_input(mux_input_options *opts, int def_combo) {
 
     opts->max_idle_ms = IDLE_MS;
     opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
-    opts->left_stick_nav = true;
-    opts->right_stick_nav = true;
+    opts->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
+    opts->remap_to_dpad = true;
 
     if (def_combo) {
         opts->combo[0] = (mux_input_combo) {

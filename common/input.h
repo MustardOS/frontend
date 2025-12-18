@@ -7,6 +7,15 @@
 extern int key_show;
 extern bool swap_axis;
 
+typedef enum {
+    NAV_NONE = 0,
+    NAV_DPAD = 1 << 0,
+    NAV_LEFT_STICK = 1 << 1,
+    NAV_RIGHT_STICK = 1 << 2,
+} mux_nav_type;
+
+mux_nav_type get_sticknav_mask(int sticknav_setting);
+
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {
     // Gamepad buttons:
@@ -113,8 +122,10 @@ typedef struct {
     bool swap_axis;
 
     // Whether to use the left or right stick for navigation (direction -> D-pad, click -> A button).
-    bool left_stick_nav;
-    bool right_stick_nav;
+    mux_nav_type nav;
+
+    // This is primarily used for the input tester to show true values of the controller
+    bool remap_to_dpad;
 
     // Callback functions for inputs. Fired in sequence: one press, zero or more holds, one release.
     //

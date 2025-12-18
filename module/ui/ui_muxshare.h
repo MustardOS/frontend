@@ -325,6 +325,7 @@
     TWEAKADV(RepeatDelay, "repeat")      \
     TWEAKADV(Offset,      "offset")      \
     TWEAKADV(Swap,        "swap")        \
+    TWEAKADV(StickNav,    "sticknav")    \
     TWEAKADV(Volume,      "volume")      \
     TWEAKADV(Brightness,  "brightness")  \
     TWEAKADV(Thermal,     "thermal")     \

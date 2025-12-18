@@ -1138,6 +1138,16 @@ struct mux_lang {
         } SWAP;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
+            char DPAD[MAX_BUFFER_SIZE];
+            char LS[MAX_BUFFER_SIZE];
+            char RS[MAX_BUFFER_SIZE];
+            char DPAD_LS[MAX_BUFFER_SIZE];
+            char DPAD_RS[MAX_BUFFER_SIZE];
+            char DPAD_LS_RS[MAX_BUFFER_SIZE];
+            char LS_RS[MAX_BUFFER_SIZE];
+        } STICKNAV;
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
             char SILENT[MAX_BUFFER_SIZE];
             char SOFT[MAX_BUFFER_SIZE];
             char LOUD[MAX_BUFFER_SIZE];
@@ -1179,6 +1189,7 @@ struct mux_lang {
             char BRIGHT[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];
             char SWAP[MAX_BUFFER_SIZE];
+            char STICKNAV[MAX_BUFFER_SIZE];
             char DISPSUSPEND[MAX_BUFFER_SIZE];
             char SECONDPART[MAX_BUFFER_SIZE];
             char USBPART[MAX_BUFFER_SIZE];

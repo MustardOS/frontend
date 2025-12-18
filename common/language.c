@@ -972,6 +972,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.TITLE, "Button Swap");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.RETRO, "Retro");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.MODERN, "Modern");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.TITLE, "Menu Navigation");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.DPAD, "DPAD Only");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.LS, "L Stick Only");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.RS, "R Stick Only");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.DPAD_LS, "DPAD + L Stick");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.DPAD_RS, "DPAD + R Stick");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.DPAD_LS_RS, "DPAD + L/R Stick");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.LS_RS, "L/R Stick");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.TITLE, "Volume On Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.SILENT, "Silent");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.SOFT, "Soft");
@@ -1015,6 +1023,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STICKNAV, "Change how you navigate using the DPAD and Analogue Sticks on the device");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DISPSUSPEND, "Toggle the device display suspend function, however some displays will not like this enabled");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SECONDPART, "Change the partition number requested upon secondary storage mount");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USBPART, "Change the partition number requested upon external storage mount");

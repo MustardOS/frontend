@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 28
+#define UI_COUNT 29
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
 TWEAKADV_ELEMENTS
@@ -13,6 +13,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblRepeatDelay_tweakadv, lang.MUXTWEAKADV.HELP.REPEAT_DELAY},
             {ui_lblOffset_tweakadv,      lang.MUXTWEAKADV.HELP.OFFSET},
             {ui_lblSwap_tweakadv,        lang.MUXTWEAKADV.HELP.SWAP},
+            {ui_lblStickNav_tweakadv,    lang.MUXTWEAKADV.HELP.STICKNAV},
             {ui_lblVolume_tweakadv,      lang.MUXTWEAKADV.HELP.VOLUME},
             {ui_lblBrightness_tweakadv,  lang.MUXTWEAKADV.HELP.BRIGHT},
             {ui_lblThermal_tweakadv,     lang.MUXTWEAKADV.HELP.THERMAL},
@@ -60,6 +61,7 @@ static void restore_tweak_options(void) {
                              strcasecmp(config.SETTINGS.ADVANCED.BRIGHTNESS, "high") == 0 ? 3 : 0);
 
     lv_dropdown_set_selected(ui_droSwap_tweakadv, config.SETTINGS.ADVANCED.SWAP);
+    lv_dropdown_set_selected(ui_droStickNav_tweakadv, config.SETTINGS.ADVANCED.STICKNAV);
     lv_dropdown_set_selected(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droThermal_tweakadv, config.SETTINGS.ADVANCED.THERMAL);
     lv_dropdown_set_selected(ui_droPasscode_tweakadv, config.SETTINGS.ADVANCED.LOCK);
@@ -83,7 +85,8 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droAudioReady_tweakadv, config.SETTINGS.ADVANCED.AUDIOREADY);
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
-    map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33, 13);
+    map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33,
+                           13);
     map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, zram_swap_values, 11, 0);
     map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, zram_swap_values, 11, 0);
 }
@@ -92,6 +95,7 @@ static void save_tweak_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(tweakadv, Swap, "settings/advanced/swap", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, StickNav, "settings/advanced/sticknav", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Offset, "settings/advanced/offset", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Thermal, "settings/advanced/thermal", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Passcode, "settings/advanced/lock", INT, 0);
@@ -164,6 +168,16 @@ static void init_navigation_group(void) {
             lang.MUXTWEAKADV.SWAP.MODERN
     };
 
+    char *sticknav_options[] = {
+            lang.MUXTWEAKADV.STICKNAV.DPAD,
+            lang.MUXTWEAKADV.STICKNAV.LS,
+            lang.MUXTWEAKADV.STICKNAV.RS,
+            lang.MUXTWEAKADV.STICKNAV.DPAD_LS,
+            lang.MUXTWEAKADV.STICKNAV.DPAD_RS,
+            lang.MUXTWEAKADV.STICKNAV.DPAD_LS_RS,
+            lang.MUXTWEAKADV.STICKNAV.LS_RS,
+    };
+
     char *volume_options[] = {
             lang.GENERIC.PREVIOUS,
             lang.MUXTWEAKADV.VOLUME.SILENT,
@@ -192,6 +206,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, RepeatDelay, lang.MUXTWEAKADV.REPEAT_DELAY, "repeat", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Offset, lang.MUXTWEAKADV.OFFSET, "offset", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Swap, lang.MUXTWEAKADV.SWAP.TITLE, "swap", swap_options, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, StickNav, lang.MUXTWEAKADV.STICKNAV.TITLE, "sticknav", sticknav_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, Volume, lang.MUXTWEAKADV.VOLUME.TITLE, "volume", volume_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, Brightness, lang.MUXTWEAKADV.BRIGHT.TITLE, "brightness", brightness_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, Thermal, lang.MUXTWEAKADV.THERMAL, "thermal", disabled_enabled, 2);
@@ -261,6 +276,7 @@ static void init_navigation_group(void) {
 
     if (!device.BOARD.HAS_NETWORK) HIDE_OPTION_ITEM(tweakadv, RetroWait);
     if (!device.BOARD.HAS_LID) HIDE_OPTION_ITEM(tweakadv, LidSwitch);
+    if (!device.BOARD.STICK) HIDE_OPTION_ITEM(tweakadv, StickNav);
 
     // Removal of random theme because it is causing a number of issues
     HIDE_OPTION_ITEM(tweakadv, Theme);

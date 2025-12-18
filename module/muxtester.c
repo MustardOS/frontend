@@ -129,8 +129,7 @@ int muxtester_main(void) {
             }
     };
     init_input(&input_opts, false);
-    input_opts.left_stick_nav = false;
-    input_opts.right_stick_nav = false;
+    input_opts.remap_to_dpad = false;
     mux_input_task(&input_opts);
 
     return 0;

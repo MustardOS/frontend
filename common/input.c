@@ -164,6 +164,16 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     int axis;
     bool analog;
 
+    // DPAD disabled in the navigation setting so ignore DPAD entirely!
+    if (!(opts->nav & NAV_DPAD)) {
+        if (event->code == device.INPUT_CODE.DPAD.UP ||
+            event->code == device.INPUT_CODE.DPAD.DOWN ||
+            event->code == device.INPUT_CODE.DPAD.LEFT ||
+            event->code == device.INPUT_CODE.DPAD.RIGHT) {
+            return;
+        }
+    }
+
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
         event->code == device.INPUT_CODE.DPAD.UP) {
         // Axis: D-pad vertical
@@ -229,9 +239,12 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     }
 }
 
-// Processes gamepad button D-pad.  // Some devices like zero28 the DPAD triggers button press events
+// Processes gamepad button DPAD
+// Some devices like zero28 the DPAD triggers button press events
 static void process_dpad_as_buttons(const mux_input_options *opts, const struct input_event *event) {
     int axis, direction;
+
+    if (!(opts->nav & NAV_DPAD)) return;
 
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
         event->code == device.INPUT_CODE.DPAD.UP) {
@@ -343,6 +356,15 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     int axis, axis_max;
 
+    // DPAD disabled in the navigation setting so ignore DPAD entirely!
+    // Still confused as to why this is only up and left... but I'll leave it be!
+    if (!(opts->nav & NAV_DPAD)) {
+        if (js.number == controller.DPAD.UP ||
+            js.number == controller.DPAD.LEFT) {
+            return;
+        }
+    }
+
     if (js.number == controller.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
@@ -407,6 +429,8 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
 // Processes gamepad button D-pad. Some controllers like PS3 the DPAD triggers button press events
 static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js_event js) {
     int axis, direction;
+
+    if (!(opts->nav & NAV_DPAD)) return;
 
     if (js.number == controller.BUTTON.UP) {
         // Axis: D-pad vertical
@@ -505,49 +529,64 @@ static void process_usb_keyboard_arrow_keys(const mux_input_options *opts, struc
     }
 }
 
-// Invokes the relevant handler(s) for a particular input mux_type and action.
-static void dispatch_input(const mux_input_options *opts,
-                           mux_input_type mux_type,
-                           mux_input_action action) {
-    // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
-    // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
-    if (opts->left_stick_nav) {
+static const mux_nav_type nav_map[] = {
+        NAV_DPAD,
+        NAV_LEFT_STICK,
+        NAV_RIGHT_STICK,
+        NAV_DPAD | NAV_LEFT_STICK,
+        NAV_DPAD | NAV_RIGHT_STICK,
+        NAV_DPAD | NAV_LEFT_STICK | NAV_RIGHT_STICK,
+        NAV_LEFT_STICK | NAV_RIGHT_STICK
+};
+
+mux_nav_type get_sticknav_mask(int sticknav_setting) {
+    if (sticknav_setting < 0 || sticknav_setting >= (int) (sizeof(nav_map) / sizeof(nav_map[0]))) return NAV_NONE;
+    return nav_map[sticknav_setting];
+}
+
+static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
+    if (nav & NAV_LEFT_STICK) {
         switch (mux_type) {
             case MUX_INPUT_LS_UP:
-                mux_type = MUX_INPUT_DPAD_UP;
-                break;
+                return MUX_INPUT_DPAD_UP;
             case MUX_INPUT_LS_DOWN:
-                mux_type = MUX_INPUT_DPAD_DOWN;
-                break;
+                return MUX_INPUT_DPAD_DOWN;
             case MUX_INPUT_LS_LEFT:
-                mux_type = MUX_INPUT_DPAD_LEFT;
-                break;
+                return MUX_INPUT_DPAD_LEFT;
             case MUX_INPUT_LS_RIGHT:
-                mux_type = MUX_INPUT_DPAD_RIGHT;
-                break;
+                return MUX_INPUT_DPAD_RIGHT;
+            case MUX_INPUT_L3:
+                return MUX_INPUT_A;
             default:
                 break;
         }
     }
 
-    if (opts->right_stick_nav) {
+    if (nav & NAV_RIGHT_STICK) {
         switch (mux_type) {
             case MUX_INPUT_RS_UP:
-                mux_type = MUX_INPUT_DPAD_UP;
-                break;
+                return MUX_INPUT_DPAD_UP;
             case MUX_INPUT_RS_DOWN:
-                mux_type = MUX_INPUT_DPAD_DOWN;
-                break;
+                return MUX_INPUT_DPAD_DOWN;
             case MUX_INPUT_RS_LEFT:
-                mux_type = MUX_INPUT_DPAD_LEFT;
-                break;
+                return MUX_INPUT_DPAD_LEFT;
             case MUX_INPUT_RS_RIGHT:
-                mux_type = MUX_INPUT_DPAD_RIGHT;
-                break;
+                return MUX_INPUT_DPAD_RIGHT;
+            case MUX_INPUT_R3:
+                return MUX_INPUT_A;
             default:
                 break;
         }
     }
+
+    return mux_type;
+}
+
+// Invokes the relevant handler(s) for a particular input mux_type and action.
+static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, mux_input_action action) {
+    // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
+    // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
+    if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
 
     mux_input_handler handler = NULL;
     switch (action) {
@@ -940,6 +979,10 @@ void mux_input_task(const mux_input_options *opts) {
     mux_input_options keyboard_opts = *opts;
     pthread_create(&keyboard_thread, NULL, keyboard_handler, &keyboard_opts);
 
+    // Detect menu navigation options
+    ((mux_input_options *) opts)->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
+    LOG_DEBUG("input", "Navigation Mask: 0x%x", opts->nav)
+
     // Delay (millis) to wait for input before timing out. This determines the rate at which the
     // hold_handlers and idle_handler are called. To save CPU, we want to wait as long as possible.
     //
@@ -1001,10 +1044,11 @@ void mux_input_task(const mux_input_options *opts) {
 
             if (fd == opts->general_fd) {
                 if (event.type == EV_KEY) {
-                    if (event.code == device.INPUT_CODE.DPAD.UP ||
-                        event.code == device.INPUT_CODE.DPAD.DOWN ||
-                        event.code == device.INPUT_CODE.DPAD.LEFT ||
-                        event.code == device.INPUT_CODE.DPAD.RIGHT) {
+                    if ((opts->nav) &&
+                        (event.code == device.INPUT_CODE.DPAD.UP ||
+                         event.code == device.INPUT_CODE.DPAD.DOWN ||
+                         event.code == device.INPUT_CODE.DPAD.LEFT ||
+                         event.code == device.INPUT_CODE.DPAD.RIGHT)) {
                         process_dpad_as_buttons(opts, &event);
                     } else {
                         process_key(opts, &event);
