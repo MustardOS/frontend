@@ -150,7 +150,8 @@ void init_input(mux_input_options *opts, int def_combo) {
 
     opts->max_idle_ms = IDLE_MS;
     opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
-    opts->stick_nav = true;
+    opts->left_stick_nav = true;
+    opts->right_stick_nav = true;
 
     if (def_combo) {
         opts->combo[0] = (mux_input_combo) {

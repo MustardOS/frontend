@@ -511,7 +511,7 @@ static void dispatch_input(const mux_input_options *opts,
                            mux_input_action action) {
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
-    if (opts->stick_nav) {
+    if (opts->left_stick_nav) {
         switch (mux_type) {
             case MUX_INPUT_LS_UP:
                 mux_type = MUX_INPUT_DPAD_UP;
@@ -523,6 +523,25 @@ static void dispatch_input(const mux_input_options *opts,
                 mux_type = MUX_INPUT_DPAD_LEFT;
                 break;
             case MUX_INPUT_LS_RIGHT:
+                mux_type = MUX_INPUT_DPAD_RIGHT;
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (opts->right_stick_nav) {
+        switch (mux_type) {
+            case MUX_INPUT_RS_UP:
+                mux_type = MUX_INPUT_DPAD_UP;
+                break;
+            case MUX_INPUT_RS_DOWN:
+                mux_type = MUX_INPUT_DPAD_DOWN;
+                break;
+            case MUX_INPUT_RS_LEFT:
+                mux_type = MUX_INPUT_DPAD_LEFT;
+                break;
+            case MUX_INPUT_RS_RIGHT:
                 mux_type = MUX_INPUT_DPAD_RIGHT;
                 break;
             default:

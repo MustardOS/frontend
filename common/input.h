@@ -112,8 +112,9 @@ typedef struct {
     // Whether to swap the up/down and left/right axes on the D-pad and sticks.
     bool swap_axis;
 
-    // Whether use the left stick for navigation (direction -> D-pad, click -> A button).
-    bool stick_nav;
+    // Whether to use the left or right stick for navigation (direction -> D-pad, click -> A button).
+    bool left_stick_nav;
+    bool right_stick_nav;
 
     // Callback functions for inputs. Fired in sequence: one press, zero or more holds, one release.
     //
