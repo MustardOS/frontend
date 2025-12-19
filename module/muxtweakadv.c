@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 29
+#define UI_COUNT 30
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
 TWEAKADV_ELEMENTS
@@ -23,6 +23,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblRetroWait_tweakadv,   lang.MUXTWEAKADV.HELP.NET_WAIT},
             {ui_lblRetroFree_tweakadv,   lang.MUXTWEAKADV.HELP.RA_FREE},
             {ui_lblRetroCache_tweakadv,  lang.MUXTWEAKADV.HELP.RA_CACHE},
+            {ui_lblActivity_tweakadv,    lang.MUXTWEAKADV.HELP.ACTIVITY},
             {ui_lblVerbose_tweakadv,     lang.MUXTWEAKADV.HELP.VERBOSE},
             {ui_lblRumble_tweakadv,      lang.MUXTWEAKADV.HELP.RUMBLE},
             {ui_lblUserInit_tweakadv,    lang.MUXTWEAKADV.HELP.USER_INIT},
@@ -70,6 +71,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droRetroWait_tweakadv, config.SETTINGS.ADVANCED.RETROWAIT);
     lv_dropdown_set_selected(ui_droRetroFree_tweakadv, config.SETTINGS.ADVANCED.RETROFREE);
     lv_dropdown_set_selected(ui_droRetroCache_tweakadv, config.SETTINGS.ADVANCED.RETROCACHE);
+    lv_dropdown_set_selected(ui_droActivity_tweakadv, config.SETTINGS.ADVANCED.ACTIVITY);
     lv_dropdown_set_selected(ui_droVerbose_tweakadv, config.SETTINGS.ADVANCED.VERBOSE);
     lv_dropdown_set_selected(ui_droRumble_tweakadv, config.SETTINGS.ADVANCED.RUMBLE);
     lv_dropdown_set_selected(ui_droUserInit_tweakadv, config.SETTINGS.ADVANCED.USERINIT);
@@ -87,8 +89,8 @@ static void restore_tweak_options(void) {
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
     map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33,
                            13);
-    map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, zram_swap_values, 11, 0);
-    map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, zram_swap_values, 11, 0);
+    map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, swap_values, 11, 0);
+    map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, swap_values, 11, 0);
 }
 
 static void save_tweak_options(void) {
@@ -104,6 +106,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, RetroWait, "settings/advanced/retrowait", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, RetroFree, "settings/advanced/retrofree", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, RetroCache, "settings/advanced/retrocache", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Activity, "settings/advanced/activity", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Verbose, "settings/advanced/verbose", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Rumble, "settings/advanced/rumble", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT, 0);
@@ -151,8 +154,8 @@ static void save_tweak_options(void) {
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
     CHECK_AND_SAVE_MAP(tweakadv, RepeatDelay, "settings/advanced/repeat_delay", repeat_delay_values, 33, 13);
-    CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", zram_swap_values, 11, 0);
-    CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", zram_swap_values, 11, 0);
+    CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", swap_values, 11, 0);
+    CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", swap_values, 11, 0);
 
     if (is_modified > 0) run_tweak_script();
 }
@@ -216,6 +219,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, RetroWait, lang.MUXTWEAKADV.NET_WAIT, "retrowait", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, RetroFree, lang.MUXTWEAKADV.RA_FREE, "retrofree", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, RetroCache, lang.MUXTWEAKADV.RA_CACHE, "retrocache", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, Activity, lang.MUXTWEAKADV.ACTIVITY, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Verbose, lang.MUXTWEAKADV.VERBOSE, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Rumble, lang.MUXTWEAKADV.RUMBLE.TITLE, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, UserInit, lang.MUXTWEAKADV.USER_INIT, "userinit", disabled_enabled, 2);

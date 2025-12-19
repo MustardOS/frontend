@@ -964,6 +964,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.NET_WAIT, "RetroArch Network Wait");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RA_FREE, "RetroArch Config Freedom");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RA_CACHE, "RetroArch Startup Cache");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE, "Verbose Messages");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.USER_INIT, "User Init Scripts");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.DPAD, "DPAD Swap Function");
@@ -1014,6 +1015,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.NET_WAIT, "Toggle a delayed start of RetroArch until a network connection is established");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RA_FREE, "Toggle the forced settings MustardOS places on RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RA_CACHE, "Toggle the startup cache of RetroArch. This will increase boot by ~3s but will start RetroArch a bit faster on first runs");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACTIVITY, "Toggle the content activity tracker");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VERBOSE, "Toggle startup and shutdown verbose messages used for debugging faults");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USER_INIT, "Toggle the functionality of the user initialisation scripts on device startup");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DPAD, "Toggle the functionality of the power button to switch DPAD mode");

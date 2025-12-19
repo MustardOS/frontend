@@ -336,6 +336,7 @@
     TWEAKADV(RetroWait,   "retrowait")   \
     TWEAKADV(RetroFree,   "retrofree")   \
     TWEAKADV(RetroCache,  "retrocache")  \
+    TWEAKADV(Activity,    "activity")    \
     TWEAKADV(Verbose,     "verbose")     \
     TWEAKADV(Rumble,      "rumble")      \
     TWEAKADV(UserInit,    "userinit")    \
