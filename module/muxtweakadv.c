@@ -278,9 +278,6 @@ static void init_navigation_group(void) {
     if (!device.BOARD.HAS_LID) HIDE_OPTION_ITEM(tweakadv, LidSwitch);
     if (!device.BOARD.STICK) HIDE_OPTION_ITEM(tweakadv, StickNav);
 
-    // Removal of random theme because it is causing a number of issues
-    HIDE_OPTION_ITEM(tweakadv, Theme);
-
     // Removal of verbose messages due to changes to muterm not playing ball
     HIDE_OPTION_ITEM(tweakadv, Verbose);
 
