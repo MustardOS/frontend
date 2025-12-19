@@ -105,6 +105,7 @@
     CUSTOM(Shuffle,         "shuffle")         \
     CUSTOM(BoxArtImage,     "boxart")          \
     CUSTOM(BoxArtAlign,     "align")           \
+    CUSTOM(ContentWidth,    "width")           \
     CUSTOM(LaunchSplash,    "splash")          \
     CUSTOM(GridModeContent, "gridmodecontent") \
     CUSTOM(BoxArtHide,      "boxarthide")      \

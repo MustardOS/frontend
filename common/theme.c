@@ -985,7 +985,9 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.CONTENT.PADDING_TOP = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP",
                                                   theme->MISC.CONTENT.PADDING_TOP);
     theme->MISC.CONTENT.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_HEIGHT", theme->MISC.CONTENT.HEIGHT);
-    theme->MISC.CONTENT.WIDTH = get_ini_int(muos_theme, "misc", "CONTENT_WIDTH", theme->MISC.CONTENT.WIDTH);
+    theme->MISC.CONTENT.WIDTH = get_ini_int(muos_theme, "misc", "CONTENT_WIDTH", config.VISUAL.CONTENT_WIDTH
+                                                                                 ? device->SCREEN.WIDTH
+                                                                                 : theme->MISC.CONTENT.WIDTH);
     theme->MISC.ANIMATED_BACKGROUND = get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND",
                                                   theme->MISC.ANIMATED_BACKGROUND);
     theme->MISC.RANDOM_BACKGROUND = get_ini_int(muos_theme, "misc", "RANDOM_BACKGROUND", theme->MISC.RANDOM_BACKGROUND);

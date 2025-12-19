@@ -338,6 +338,7 @@ struct mux_lang {
         char SPLASH[MAX_BUFFER_SIZE];
         char SHUFFLE[MAX_BUFFER_SIZE];
         char CHIME[MAX_BUFFER_SIZE];
+        char CONTENT_WIDTH[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char BEHIND[MAX_BUFFER_SIZE];
@@ -394,6 +395,7 @@ struct mux_lang {
             char BOX_ART[MAX_BUFFER_SIZE];
             char BOX_ALIGN[MAX_BUFFER_SIZE];
             char BOX_HIDE[MAX_BUFFER_SIZE];
+            char CONTENT_WIDTH[MAX_BUFFER_SIZE];
             char FADE[MAX_BUFFER_SIZE];
             char SPLASH[MAX_BUFFER_SIZE];
             char SHUFFLE[MAX_BUFFER_SIZE];

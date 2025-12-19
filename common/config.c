@@ -189,6 +189,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.BOX_ART, CONF_CONFIG_PATH "visual/boxart", 0)
     CFG_INT_FIELD(config->VISUAL.BOX_ART_ALIGN, CONF_CONFIG_PATH "visual/boxartalign", 0)
     CFG_INT_FIELD(config->VISUAL.BOX_ART_HIDE, CONF_CONFIG_PATH "visual/boxarthide", 0)
+    CFG_INT_FIELD(config->VISUAL.CONTENT_WIDTH, CONF_CONFIG_PATH "visual/contentwidth", 0)
     CFG_INT_FIELD(config->VISUAL.NAME, CONF_CONFIG_PATH "visual/name", 0)
     CFG_INT_FIELD(config->VISUAL.DASH, CONF_CONFIG_PATH "visual/dash", 0)
     CFG_INT_FIELD(config->VISUAL.LAUNCH_SWAP, CONF_CONFIG_PATH "visual/launch_swap", 0)

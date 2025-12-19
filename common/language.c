@@ -321,6 +321,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
     SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SHUFFLE, "Content Shuffle");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.CONTENT_WIDTH, "Content Full Width");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.TITLE, "Content Box Art");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.BEHIND, "Behind");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FRONT, "Front");
@@ -366,6 +367,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ART, "Change the display priority of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENT_WIDTH, "Toggle if content highlight uses full width of device screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_HIDE, "Hide system box art images in Content Explorer when theme uses grid mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");

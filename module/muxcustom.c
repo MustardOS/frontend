@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcustom.h"
 
-#define UI_COUNT 19
+#define UI_COUNT 20
 
 #define CUSTOM(NAME, UDATA) static int NAME##_original;
 CUSTOM_ELEMENTS
@@ -58,6 +58,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBlackFade_custom,       lang.MUXCUSTOM.HELP.FADE},
             {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
+            {ui_lblContentWidth_custom,     lang.MUXCUSTOM.HELP.CONTENT_WIDTH},
             {ui_lblLaunchSplash_custom,    lang.MUXCUSTOM.HELP.SPLASH},
             {ui_lblGridModeContent_custom, lang.MUXCUSTOM.HELP.GRID_MODE_CONTENT},
             {ui_lblBoxArtHide_custom,      lang.MUXCUSTOM.HELP.BOX_HIDE},
@@ -180,6 +181,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Shuffle, lang.MUXCUSTOM.SHUFFLE, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
+    INIT_OPTION_ITEM(-1, custom, ContentWidth, lang.MUXCUSTOM.CONTENT_WIDTH, "width", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.SPLASH, "splash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, GridModeContent, lang.MUXCUSTOM.GRID_MODE_CONTENT, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
@@ -302,6 +304,7 @@ static void restore_custom_options(void) {
     restore_theme_resolution();
     lv_dropdown_set_selected(ui_droBoxArtImage_custom, config.VISUAL.BOX_ART);
     lv_dropdown_set_selected(ui_droBoxArtAlign_custom, config.VISUAL.BOX_ART_ALIGN - 1);
+    lv_dropdown_set_selected(ui_droContentWidth_custom, config.VISUAL.CONTENT_WIDTH);
     lv_dropdown_set_selected(ui_droAnimation_custom, config.VISUAL.BACKGROUNDANIMATION);
     lv_dropdown_set_selected(ui_droLaunchSplash_custom, config.VISUAL.LAUNCHSPLASH);
     lv_dropdown_set_selected(ui_droBoxArtHide_custom, config.VISUAL.BOX_ART_HIDE);
@@ -327,6 +330,7 @@ static void save_custom_options(char *next_screen) {
     CHECK_AND_SAVE_STD(custom, Shuffle, "visual/shuffle", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtImage, "visual/boxart", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtAlign, "visual/boxartalign", INT, 1);
+    CHECK_AND_SAVE_STD(custom, ContentWidth, "visual/contentwidth", INT, 0);
     CHECK_AND_SAVE_STD(custom, LaunchSplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(custom, GridModeContent, "visual/gridmodecontent", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtHide, "visual/boxarthide", INT, 0);
