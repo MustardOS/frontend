@@ -1,12 +1,12 @@
-#include "miniz/miniz.h"
-#include "json/json.h"
 #include "common.h"
-#include "common_core.h"
-#include "ra_core.h"
-#include "device.h"
-#include "language.h"
-#include "log.h"
-#include "mini/mini.h"
+#include "retroarch.h"
+#include "external.h"
+#include "../miniz/miniz.h"
+#include "../json/json.h"
+#include "../common.h"
+#include "../device.h"
+#include "../language.h"
+#include "../log.h"
 
 void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size) {
     char sys_dir_lower[MAX_BUFFER_SIZE];

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "mini/mini.h"
+#include <stdbool.h>
+#include "../mini/mini.h"
 
 enum gen_type {
     SINGLE,

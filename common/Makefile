@@ -26,7 +26,7 @@ LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lcurl -lpthread -Wl,--gc-sections -s
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
-SRC_DIRS = . img input json mini miniz
+SRC_DIRS = . img input json mini miniz core
 SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
 OBJS = $(SRCS:.c=.o)
 LIB_DIR = ${shell pwd}/../bin/lib
