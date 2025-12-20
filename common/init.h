@@ -21,13 +21,13 @@ struct bat_task_param {
     lv_obj_t *staCapacity;
 };
 
-void setup_background_process();
+void setup_background_process(void);
 
 void refresh_screen(lv_obj_t *screen);
 
 void safe_quit(int exit_status);
 
-void close_input();
+void close_input(void);
 
 void init_module(const char *module);
 
@@ -35,11 +35,15 @@ void init_display(int full_refresh);
 
 void init_input(mux_input_options *opts, int def_combo);
 
+void dispose_input(void);
+
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
 
-void init_dispose();
+void timer_destroy_all(void);
 
-void init_fonts();
+void timer_suspend_all(void);
+
+void init_fonts(void);
 
 void init_theme(int panel_init, int long_mode);
 

@@ -190,61 +190,96 @@ void init_input(mux_input_options *opts, int def_combo) {
     if (opts->idle_handler == NULL) opts->idle_handler = ui_common_handle_idle;
 }
 
-void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *)) {
-    dt_par.lblDatetime = ui_lblDatetime;
-    bat_par.staCapacity = ui_staCapacity;
-    timer_ui_refresh = lv_timer_create(ui_refresh_task, TIMER_REFRESH, NULL);
-    timer_status = lv_timer_create(status_task, TIMER_STATUS, NULL);
-
-    if (config.VISUAL.CLOCK)
-        timer_datetime = lv_timer_create(datetime_task, TIMER_DATETIME, &dt_par);
-
-    if (config.VISUAL.BATTERY)
-        timer_capacity = lv_timer_create(capacity_task, TIMER_CAPACITY, &bat_par);
-
-    if (device.BOARD.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH)
-        timer_bluetooth = lv_timer_create(bluetooth_task, TIMER_BLUETOOTH, NULL);
-
-    if (device.BOARD.HAS_NETWORK && config.VISUAL.NETWORK)
-        timer_network = lv_timer_create(network_task, TIMER_NETWORK, NULL);
-
-    if (update_system_info) timer_update_system_info = lv_timer_create(update_system_info, TIMER_SYSINFO, NULL);
-    lv_refr_now(NULL);
-}
-
-void init_dispose(void) {
-    if (timer_ui_refresh) {
-        lv_timer_del(timer_ui_refresh);
-        timer_ui_refresh = NULL;
-    }
-    if (timer_datetime) {
-        lv_timer_del(timer_datetime);
-        timer_datetime = NULL;
-    }
-    if (timer_capacity) {
-        lv_timer_del(timer_capacity);
-        timer_capacity = NULL;
-    }
-    if (timer_status) {
-        lv_timer_del(timer_status);
-        timer_status = NULL;
-    }
-    if (timer_bluetooth) {
-        lv_timer_del(timer_bluetooth);
-        timer_bluetooth = NULL;
-    }
-    if (timer_network) {
-        lv_timer_del(timer_network);
-        timer_network = NULL;
-    }
-    if (timer_update_system_info) {
-        lv_timer_del(timer_update_system_info);
-        timer_update_system_info = NULL;
-    }
+void dispose_input() {
     if (indev) {
         lv_indev_delete(indev);
         indev = NULL;
     }
+}
+
+static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t period, void *user_data) {
+    if (*timer == NULL) {
+        *timer = lv_timer_create(cb, period, user_data);
+    } else {
+        lv_timer_set_cb(*timer, cb);
+        lv_timer_set_period(*timer, period);
+        lv_timer_resume(*timer);
+    }
+
+    return *timer;
+}
+
+static void timer_suspend(lv_timer_t **timer) {
+    if (*timer) {
+        lv_timer_pause(*timer);
+    }
+}
+
+static void timer_destroy(lv_timer_t **timer) {
+    if (*timer) {
+        lv_timer_del(*timer);
+        *timer = NULL;
+    }
+}
+
+void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *)) {
+    dt_par.lblDatetime = ui_lblDatetime;
+    bat_par.staCapacity = ui_staCapacity;
+
+    timer_ensure(&timer_ui_refresh, ui_refresh_task, TIMER_REFRESH, NULL);
+    timer_ensure(&timer_status, status_task, TIMER_STATUS, NULL);
+
+    if (config.VISUAL.CLOCK) {
+        timer_ensure(&timer_datetime, datetime_task, TIMER_DATETIME, &dt_par);
+    } else {
+        timer_suspend(&timer_datetime);
+    }
+
+    if (config.VISUAL.BATTERY) {
+        timer_ensure(&timer_capacity, capacity_task, TIMER_CAPACITY, &bat_par);
+    } else {
+        timer_suspend(&timer_capacity);
+    }
+
+    if (device.BOARD.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH) {
+        timer_ensure(&timer_bluetooth, bluetooth_task, TIMER_BLUETOOTH, NULL);
+    } else {
+        timer_suspend(&timer_bluetooth);
+    }
+
+    if (device.BOARD.HAS_NETWORK && config.VISUAL.NETWORK) {
+        timer_ensure(&timer_network, network_task, TIMER_NETWORK, NULL);
+    } else {
+        timer_suspend(&timer_network);
+    }
+
+    if (update_system_info) {
+        timer_ensure(&timer_update_system_info, update_system_info, TIMER_SYSINFO, NULL);
+    } else {
+        timer_suspend(&timer_update_system_info);
+    }
+
+    lv_refr_now(NULL);
+}
+
+void timer_destroy_all(void) {
+    timer_destroy(&timer_ui_refresh);
+    timer_destroy(&timer_datetime);
+    timer_destroy(&timer_capacity);
+    timer_destroy(&timer_status);
+    timer_destroy(&timer_bluetooth);
+    timer_destroy(&timer_network);
+    timer_destroy(&timer_update_system_info);
+}
+
+void timer_suspend_all(void) {
+    timer_suspend(&timer_ui_refresh);
+    timer_suspend(&timer_datetime);
+    timer_suspend(&timer_capacity);
+    timer_suspend(&timer_status);
+    timer_suspend(&timer_bluetooth);
+    timer_suspend(&timer_network);
+    timer_suspend(&timer_update_system_info);
 }
 
 void init_fonts(void) {
@@ -270,7 +305,7 @@ void init_theme(int panel_init, int long_mode) {
     if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
 }
 
-void status_task(void) {
+void status_task() {
     if (progress_onscreen > 0) {
         --progress_onscreen;
     } else {
@@ -284,7 +319,7 @@ void status_task(void) {
     }
 }
 
-void bluetooth_task(void) {
+void bluetooth_task() {
 //    update_bluetooth_status(ui_staBluetooth, &theme);
 //    if (!bluetooth_period_set) {
 //        bluetooth_period_set = 1;
@@ -292,7 +327,7 @@ void bluetooth_task(void) {
 //    }
 }
 
-void network_task(void) {
+void network_task() {
     if (strcasecmp(mux_module, "muxnetwork") == 0) return;
     update_network_status(ui_staNetwork, &theme, 0);
 }

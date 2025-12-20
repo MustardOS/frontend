@@ -57,7 +57,9 @@ static void cleanup_screen(void) {
 
     if (ui_screen_container == NULL) return;
 
-    init_dispose();
+    dispose_input();
+    timer_suspend_all();
+
     lv_disp_load_scr(ui_screen_temp);
 
     if (ui_screen_container && lv_obj_is_valid(ui_screen_container)) {
@@ -88,6 +90,8 @@ static void quit_watchdog(lv_timer_t *t) {
         LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal)
         shutting_down = 1;
 
+        dispose_input();
+        timer_destroy_all();
         cleanup_screen();
         sdl_cleanup();
 
@@ -579,6 +583,8 @@ int main(void) {
         cleanup_screen();
     }
 
+    dispose_input();
+    timer_destroy_all();
     cleanup_screen();
     sdl_cleanup();
 
