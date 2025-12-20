@@ -14,6 +14,7 @@ const struct ra_core_name ra_core_names[] = {
         {"mame2003_plus",             "MAME 2003 Plus"},
         {"mame2003_midway",           "MAME 2003 Midway"},
         {"mame2010",                  "MAME 2010"},
+        {"km_mame2003_xtreme_amped",  "MAME 2003 Xtreme"},
         {"fbneo",                     "FBNeo"},
         {"km_fbneo_xtreme_amped",     "FBNeo Xtreme"},
         {"fbalpha2012",               "FBA 2012"},
@@ -40,6 +41,7 @@ const struct ra_core_name ra_core_names[] = {
         {"bsnes_mercury_performance", "BSNES Mercury"},
         {"chimerasnes",               "ChimeraSNES"},
         {"mednafen_supafaust",        "Beetle Supafaust"},
+        {"mupen64plus_next",          "Mupen64+ Next"},
 
         // Gameboy
         {"gambatte",                  "Gambatte"},
@@ -140,6 +142,9 @@ const struct ra_core_name ra_core_names[] = {
         {"geolith",                   "Geolith"},
         {"mednafen_wswan",            "Beetle WonderSwan"},
         {"mednafen_ngp",              "Beetle NeoPop"},
+        {"mednafen_pce",              "Beetle PCE"},
+        {"mednafen_pce_fast",         "Beetle PCE Fast"},
+        {"mednafen_supergrafx",       "Beetle SuperGrafx"},
         {"same_cdi",                  "SameCD-i"},
         {"easyrpg",                   "EasyRPG"},
         {"onscripter",                "ONScripter"},
