@@ -94,13 +94,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_VAL(tweakgen, Startup, "settings/general/startup", CHAR, startup_options);
     CHECK_AND_SAVE_STD(tweakgen, Rgb, "settings/general/rgb", INT, 0);
 
-    if (device.BOARD.STICK > 0) {
-        HkDpad_original = -1;
-        CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, -1);
-    } else {
-        CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
-    }
-
+    CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
 
     if (lv_dropdown_get_selected(ui_droColour_tweakgen) != Colour_original) {
