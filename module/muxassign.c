@@ -133,23 +133,25 @@ static void create_core_items(const char *target) {
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        char *directory_core = get_content_line(rom_dir, NULL, "cfg", 1);
-        char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
+        const char *directory_core = get_content_line(rom_dir, NULL, "cfg", 1);
+        const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
+        const char *core_name = format_core_name(items[i].extra_data, 1);
 
         char display_name[MAX_BUFFER_SIZE];
         if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, items[i].extra_data) == 0) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", items[i].name, lang.MUXASSIGN.FILE);
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.MUXASSIGN.FILE);
         } else if (strcasecmp(directory_core, items[i].extra_data) == 0) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", items[i].name, lang.MUXASSIGN.DIR);
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.MUXASSIGN.DIR);
         } else {
-            snprintf(display_name, sizeof(display_name), "%s", items[i].name);
+            snprintf(display_name, sizeof(display_name), "%s", core_name);
         }
 
         lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlCore);
 
         lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-        apply_theme_list_item(&theme, ui_lblCoreItem, items[i].name);
+        apply_theme_list_item(&theme, ui_lblCoreItem, display_name);
+        lv_obj_set_user_data(ui_lblCoreItem, strdup(items[i].name));
 
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
         char *glyph = strcasecmp(items[i].name, default_assign) == 0 ? "default" : "core";
@@ -240,8 +242,9 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "%s", log_msg)
     play_sound(SND_CONFIRM);
 
-    char *selected_item = str_tolower(lv_label_get_text(lv_group_get_focused(ui_group)));
-    LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, lv_label_get_text(lv_group_get_focused(ui_group)))
+    char *item_data = lv_obj_get_user_data(lv_group_get_focused(ui_group));
+    char *selected_item = str_tolower(item_data);
+    LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, item_data)
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",

@@ -200,8 +200,8 @@ void load_lang(struct mux_lang *lang) {
 
     // muxassign
     SPECIFIC_FIELD(lang->MUXASSIGN.TITLE, "ASSIGN");
-    SPECIFIC_FIELD(lang->MUXASSIGN.DIR, "Assigned to directory");
-    SPECIFIC_FIELD(lang->MUXASSIGN.FILE, "Assigned to file");
+    SPECIFIC_FIELD(lang->MUXASSIGN.DIR, "Assigned to Directory");
+    SPECIFIC_FIELD(lang->MUXASSIGN.FILE, "Assigned to Content");
     SPECIFIC_FIELD(lang->MUXASSIGN.NONE, "No Cores Found…");
     SPECIFIC_FIELD(lang->MUXASSIGN.HELP, "This is where you can assign a core or external emulator to content");
     SPECIFIC_FIELD(lang->MUXASSIGN.CORE_DOWN, "Core Downloader");
