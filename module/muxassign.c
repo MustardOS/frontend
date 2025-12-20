@@ -330,6 +330,8 @@ static void handle_a(void) {
     remove(MUOS_SYS_LOAD);
     remove(OPTION_SKIP);
 
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
     close_input();
     mux_input_stop();
 }
@@ -455,8 +457,15 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     init_fonts();
 
+    int ass_index = 0;
+
     if (strcasecmp(rom_system, "none") == 0) {
         create_system_items();
+
+        if (file_exist(MUOS_IDX_LOAD)) {
+            ass_index = read_line_int_from(MUOS_IDX_LOAD, 1);
+            remove(MUOS_IDX_LOAD);
+        }
     } else {
         create_core_items(rom_system);
     }
@@ -469,10 +478,14 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         } else {
             LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s")
         }
+
         char title[MAX_BUFFER_SIZE];
         snprintf(title, sizeof(title), "%s - %s", lang.MUXASSIGN.TITLE, get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
-        list_nav_next(0);
+
+        if (ui_count > 0 && ass_index > -1 && ass_index <= ui_count && current_item_index < ui_count) {
+            list_nav_move(ass_index, +1);
+        }
     } else {
         LOG_ERROR(mux_module, "No Cores Detected - Check Directory!")
         lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
