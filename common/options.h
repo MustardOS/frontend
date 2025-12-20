@@ -5,6 +5,11 @@
 
 #define MAX_BUFFER_SIZE 1024
 
+// The rough calculation is as follows if a theme uses
+// a unique font for each individual module and panel...
+// module_count * (screen + content section + header + footer)
+#define FONT_CACHE_MAX  256
+
 #define RTC_MAX_RETRIES 5
 #define RTC_RETRY_DELAY 1
 

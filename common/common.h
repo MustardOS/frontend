@@ -293,9 +293,13 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_c
 
 void unload_image_animation();
 
+void font_cache_clear(void);
+
 void load_font_text(lv_obj_t *screen);
 
 void load_font_section(const char *section, lv_obj_t *element);
+
+int font_context_changed(void);
 
 int is_network_connected();
 

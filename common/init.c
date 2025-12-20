@@ -247,7 +247,11 @@ void init_dispose(void) {
 }
 
 void init_fonts(void) {
+    int font_context = font_context_changed();
+    if (font_context) font_cache_clear();
+
     load_font_text(ui_screen);
+
     load_font_section(FONT_PANEL_FOLDER, ui_pnlContent);
     load_font_section(FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(FONT_FOOTER_FOLDER, ui_pnlFooter);

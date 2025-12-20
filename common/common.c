@@ -75,7 +75,18 @@ int is_blank = 0;
 char progress_bar_message[MAX_BUFFER_SIZE];
 int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
+int font_cache_count = 0;
+char last_font_key[256] = "";
+
 static void (*extraction_finish_cb)(char *result) = NULL;
+
+typedef struct {
+    char path[MAX_BUFFER_SIZE];
+    lv_font_t *font;
+} font_cache_t;
+
+static font_cache_t font_cache[FONT_CACHE_MAX];
+
 typedef struct {
     char *filename;
     char *output_path;
@@ -1528,12 +1539,49 @@ lv_font_t *get_language_font(void) {
     return font;
 }
 
-void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
-    char theme_font_text_fs[MAX_BUFFER_SIZE];
-    snprintf(theme_font_text_fs, sizeof(theme_font_text_fs), "M:%s", filepath);
-    lv_font_t * font = lv_font_load(theme_font_text_fs);
-    font->fallback = get_language_font();
+void font_cache_clear(void) {
+    for (int i = 0; i < font_cache_count; i++) lv_font_free(font_cache[i].font);
+    font_cache_count = 0;
+    LOG_SUCCESS(mux_module, "Font cache has been cleared")
+}
+
+static inline void apply_font(lv_obj_t *element, lv_font_t *font) {
+    if (!element || !font) return;
     lv_obj_set_style_text_font(element, font, MU_OBJ_MAIN_DEFAULT);
+}
+
+static lv_font_t *load_font_from_file(const char *filepath) {
+    char fs_path[MAX_BUFFER_SIZE];
+    snprintf(fs_path, sizeof(fs_path), "M:%s", filepath);
+
+    lv_font_t * font = lv_font_load(fs_path);
+    if (!font) return NULL;
+
+    font->fallback = get_language_font();
+    return font;
+}
+
+static lv_font_t *load_font_cached(const char *path) {
+    for (int i = 0; i < font_cache_count; i++) {
+        if (strcmp(font_cache[i].path, path) == 0) {
+            LOG_SUCCESS(mux_module, "\tUsing font from cache")
+            return font_cache[i].font;
+        }
+    }
+
+    lv_font_t * font = load_font_from_file(path);
+    LOG_SUCCESS(mux_module, "\tUsing font from storage")
+
+    if (!font) return NULL;
+
+    if (font_cache_count < FONT_CACHE_MAX) {
+        strncpy(font_cache[font_cache_count].path, path, MAX_BUFFER_SIZE - 1);
+        font_cache[font_cache_count].path[MAX_BUFFER_SIZE - 1] = '\0';
+        font_cache[font_cache_count].font = font;
+        font_cache_count++;
+    }
+
+    return font;
 }
 
 void load_font_text(lv_obj_t *screen) {
@@ -1568,7 +1616,10 @@ void load_font_text(lv_obj_t *screen) {
                      file_exist(theme_font_text))) {
 
                     LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text)
-                    load_font_text_from_file(theme_font_text, screen);
+
+                    lv_font_t * font = load_font_cached(theme_font_text);
+                    if (font) apply_font(screen, font);
+
                     return;
                 }
             }
@@ -1607,12 +1658,28 @@ void load_font_section(const char *section, lv_obj_t *element) {
                      file_exist(theme_font_section))) {
 
                     LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section)
-                    load_font_text_from_file(theme_font_section, element);
+
+                    lv_font_t * font = load_font_cached(theme_font_section);
+                    if (font) apply_font(element, font);
+
                     return;
                 }
             }
         }
     }
+}
+
+int font_context_changed(void) {
+    char context[MAX_BUFFER_SIZE];
+    snprintf(context, sizeof(context), "%s|%s", config.THEME.ACTIVE, config.SETTINGS.GENERAL.LANGUAGE);
+
+    if (strcmp(context, last_font_key) != 0) {
+        strcpy(last_font_key, context);
+        LOG_INFO(mux_module, "Font context has changed")
+        return 1;
+    }
+
+    return 0;
 }
 
 int is_network_connected(void) {
@@ -2087,7 +2154,7 @@ static void *extraction_thread(void *arg) {
     if (extraction_finish_cb) extraction_finish_cb(args->filename);
 
     hide_progress_bar();
-    
+
     free(args->filename);
     free(args->output_path);
     free(args);
@@ -2137,7 +2204,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         if (file_exist(dest_file)) {
             remove(dest_file);
         }
-        
+
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
             mz_zip_reader_end(&zip);
@@ -2150,7 +2217,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             }
         }
 
-        progress_bar_value = (int)(((i + 1) * 100) / zip_file_count);
+        progress_bar_value = (int) (((i + 1) * 100) / zip_file_count);
     }
 
     mz_zip_reader_end(&zip);
