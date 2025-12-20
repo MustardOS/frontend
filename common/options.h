@@ -130,6 +130,7 @@
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
+#define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
 #define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index

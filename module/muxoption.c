@@ -213,8 +213,6 @@ static void init_navigation_group(void) {
     }
 
     if (strcasecmp(grab_ext(lv_label_get_text(ui_lblCoreValue_option)), "so") != 0) HIDE_VALUE_ITEM(option, Control);
-
-    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -273,12 +271,13 @@ static void handle_a(void) {
             }
 
             play_sound(SND_CONFIRM);
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].glyph_name);
             load_mux(elements[i].mux_name);
 
             break;
         }
     }
+
+    write_text_to_file(MUOS_OPI_LOAD, "w", INT, is_directory ? (current_item_index + 3) : (current_item_index + 4));
 
     close_input();
     mux_input_stop();
@@ -388,6 +387,11 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     init_fonts();
     init_navigation_group();
+
+    if (file_exist(MUOS_OPI_LOAD)) {
+        list_nav_move(read_line_int_from(MUOS_OPI_LOAD, 1), +1);
+        remove(MUOS_OPI_LOAD);
+    }
 
     init_timer(ui_refresh_task, NULL);
 
