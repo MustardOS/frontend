@@ -11,6 +11,7 @@
 #include "init.h"
 #include "input.h"
 #include "common.h"
+#include "font.h"
 #include "log.h"
 #include "ui_common.h"
 #include "language.h"

@@ -31,6 +31,7 @@
 #include "../common/kiosk.h"
 #include "../common/common.h"
 #include "../common/ui_common.h"
+#include "../common/font.h"
 #include "../common/osk.h"
 #include "../common/overlay.h"
 #include "../common/language.h"
