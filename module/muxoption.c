@@ -80,8 +80,15 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     }
 
     char cap_value[MAX_BUFFER_SIZE];
-    snprintf(cap_value, sizeof(cap_value), "%s",
-             value);
+    if (is_core) {
+        if (strcmp(value, lang.MUXOPTION.NOT_ASSIGNED) == 0) {
+            snprintf(cap_value, sizeof(cap_value), "%s", lang.MUXOPTION.NOT_ASSIGNED);
+        } else {
+            snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1));
+        }
+    } else {
+        snprintf(cap_value, sizeof(cap_value), "%s", value);
+    }
 
     apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
 }

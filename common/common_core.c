@@ -2,6 +2,7 @@
 #include "json/json.h"
 #include "common.h"
 #include "common_core.h"
+#include "ra_core.h"
 #include "device.h"
 #include "language.h"
 #include "log.h"
@@ -324,4 +325,61 @@ bool automatic_assign_core(char *rom_dir) {
     }
 
     return auto_assign_good == 1;
+}
+
+#define CORE_BUFFER 256
+
+static const char *format_retroarch_core(const char *ra_core) {
+    static char out[CORE_BUFFER];
+    char tmp[CORE_BUFFER];
+
+    strncpy(tmp, ra_core, sizeof(tmp));
+    tmp[sizeof(tmp) - 1] = 0;
+
+    char *ra_so = strstr(tmp, "_libretro.so");
+    if (ra_so) *ra_so = 0;
+
+    for (int i = 0; ra_core_names[i].core; i++) {
+        if (!strcmp(tmp, ra_core_names[i].core)) {
+            snprintf(out, sizeof(out), "%s", ra_core_names[i].name);
+            return out;
+        }
+    }
+
+    for (ra_so = tmp; *ra_so; ra_so++) if (*ra_so == '_') *ra_so = ' ';
+    tmp[0] = toupper((unsigned char) tmp[0]);
+
+    snprintf(out, sizeof(out), "%s", tmp);
+    return out;
+}
+
+static const char *format_external_core(const char *ext_core) {
+    if (strcmp(ext_core, "external") == 0) return "Portmaster";
+    if (strncmp(ext_core, "ext-", 4) != 0) return NULL;
+
+    const char *key = ext_core + 4;
+
+    for (int i = 0; ext_core_names[i].core; i++) {
+        if (strcmp(key, ext_core_names[i].core) == 0) return ext_core_names[i].name;
+    }
+
+    return NULL;
+}
+
+const char *format_core_name(const char *core, int use_lang) {
+    static char buf[CORE_BUFFER];
+
+    const char *ext = format_external_core(core);
+    if (ext) {
+        snprintf(buf, sizeof(buf), "%s (External)", ext);
+        return buf;
+    }
+
+    const char *ra = format_retroarch_core(core);
+    if (ra) {
+        snprintf(buf, sizeof(buf), "%s (RetroArch)", ra);
+        return buf;
+    }
+
+    return use_lang ? lang.GENERIC.UNKNOWN : "Unknown";
 }

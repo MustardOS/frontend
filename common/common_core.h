@@ -17,3 +17,5 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
                             char *rom, char *gov, char *control, int lookup, enum gen_type method);
 
 bool automatic_assign_core(char *rom_dir);
+
+const char *format_core_name(const char *core, int use_lang);

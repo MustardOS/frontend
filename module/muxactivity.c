@@ -286,11 +286,11 @@ _Static_assert(SEC_30M < SEC_1H, "Minute and hour ordering broken");
 _Static_assert(SEC_2H > SEC_1H, "Hour scale 2H to 1H broken");
 _Static_assert(SEC_100H > SEC_50H, "High end hour thresholds broken");
 _Static_assert(SEC_15M < SEC_20M && SEC_20M < SEC_30M && SEC_30M < SEC_45M && SEC_45M < SEC_90M,
-               "Minute thresholds must be increasing...");
+               "Minute thresholds must be increasing");
 _Static_assert(SEC_1H < SEC_2H && SEC_2H < SEC_3H && SEC_3H < SEC_8H && SEC_8H < SEC_10H &&
                SEC_10H < SEC_15H && SEC_15H < SEC_20H && SEC_20H < SEC_50H &&
                SEC_50H < SEC_80H && SEC_80H < SEC_100H,
-               "Hour thresholds must be increasing...");
+               "Hour thresholds must be increasing");
 
 static local_playstyle_t resolve_local_playstyle(size_t launches, size_t total_time) {
     if (launches <= 0 || total_time <= 0)
@@ -932,8 +932,7 @@ static void show_detail_view(const activity_item_t *it) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", it->core);
-                snprintf(detail_value, sizeof(detail_value), "%s",
-                         str_replace(str_capital_all(core_tmp), "_libretro.so", " (RetroArch)"));
+                snprintf(detail_value, sizeof(detail_value), "%s", format_core_name(core_tmp, 0));
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_core");
                 break;
@@ -1074,8 +1073,7 @@ static void show_global_view(void) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", gs.core);
-                snprintf(global_value, sizeof(global_value), "%s",
-                         str_replace(str_capital_all(core_tmp), "_libretro.so", " (RetroArch)"));
+                snprintf(global_value, sizeof(global_value), "%s", format_core_name(core_tmp, 0));
 
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_core");
                 break;
@@ -1281,8 +1279,7 @@ static void export_activity_html(void) {
     snprintf(tmp_device, sizeof(tmp_device), "%s", gs.device);
     snprintf(tmp_mode, sizeof(tmp_mode), "%s", gs.mode);
 
-    snprintf(global_core_value, sizeof(global_core_value), "%s",
-             str_replace(str_capital_all(tmp_core), "_libretro.so", " (RetroArch)"));
+    snprintf(global_core_value, sizeof(global_core_value), "%s", format_core_name(tmp_core, 0));
     snprintf(global_device_value, sizeof(global_device_value), "%s", str_toupper(tmp_device));
     snprintf(global_mode_value, sizeof(global_mode_value), "%s", str_capital(tmp_mode));
 
@@ -1375,8 +1372,7 @@ static void export_activity_html(void) {
         local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
 
         snprintf(tmp_core, sizeof(tmp_core), "%s", it->core);
-        snprintf(core_value, sizeof(core_value), "%s",
-                 str_replace(str_capital_all(tmp_core), "_libretro.so", " (RetroArch)"));
+        snprintf(core_value, sizeof(core_value), "%s", format_core_name(core_value, 0));
 
         snprintf(tmp_device, sizeof(tmp_device), "%s", it->device);
         snprintf(device_value, sizeof(device_value), "%s", str_toupper(tmp_device));

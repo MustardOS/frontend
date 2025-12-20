@@ -1,0 +1,220 @@
+#include <stdlib.h>
+#include "ra_core.h"
+
+const struct ra_core_name ra_core_names[] = {
+        // With the names, and if you are reading this, try to keep the
+        // human readable names to a minimum... limited space on labels
+
+        // Arcade
+        {"mame",                      "MAME Current"},
+        {"mame078plus",               "MAME .78 Plus"},
+        {"mame0139",                  "MAME .139"},
+        {"mame2000",                  "MAME 2000"},
+        {"mame2003",                  "MAME 2003"},
+        {"mame2003_plus",             "MAME 2003 Plus"},
+        {"mame2003_midway",           "MAME 2003 Midway"},
+        {"mame2010",                  "MAME 2010"},
+        {"fbneo",                     "FBNeo"},
+        {"km_fbneo_xtreme_amped",     "FBNeo Xtreme"},
+        {"fbalpha2012",               "FBA 2012"},
+        {"fbalpha2012_cps1",          "FBA CPS-1"},
+        {"fbalpha2012_cps2",          "FBA CPS-2"},
+        {"fbalpha2012_cps3",          "FBA CPS-3"},
+        {"fbalpha2012_neogeo",        "FBA Neo Geo"},
+
+        // Nontondo!
+        {"nestopia",                  "Nestopia"},
+        {"fceumm",                    "FCEUmm"},
+        {"quicknes",                  "QuickNES"},
+        {"mesen",                     "Mesen"},
+        {"mesen-s",                   "Mesen-S"},
+        {"snes9x",                    "Snes9x"},
+        {"snes9x2002",                "Snes9x 2002"},
+        {"snes9x2005",                "Snes9x 2005"},
+        {"snes9x2005_plus",           "Snes9x 2005+"},
+        {"snes9x2010",                "Snes9x 2010"},
+        {"snes9x_next",               "Snes9x Next"},
+        {"bsnes",                     "BSNES"},
+        {"bsnes2014_performance",     "BSNES 2014"},
+        {"bsnes_cplusplus98",         "BSNES C++98"},
+        {"bsnes_mercury_performance", "BSNES Mercury"},
+        {"chimerasnes",               "ChimeraSNES"},
+        {"mednafen_supafaust",        "Beetle Supafaust"},
+
+        // Gameboy
+        {"gambatte",                  "Gambatte"},
+        {"gearboy",                   "GearBoy"},
+        {"sameboy",                   "SameBoy"},
+        {"mgba",                      "mGBA"},
+        {"mgba_rumble",               "mGBA Rumble"},
+        {"gpsp",                      "GpSP"},
+        {"vbam",                      "VBA M"},
+        {"vba_next",                  "VBA Next"},
+        {"DoubleCherryGB",            "Double Cherry"},
+        {"fixgb",                     "FixGB"},
+        {"tgbdual",                   "TGB Dual"},
+        {"mednafen_gba",              "Beetle GBA"},
+        {"mednafen_vb",               "Beetle VB"},
+
+        // SEGA
+        {"genesis_plus_gx",           "Gen Plus GX"},
+        {"genesis_plus_gx_wide",      "Gen Plus GX Wide"},
+        {"genesis_plus_gx_expanded",  "Gen Plus GX Exp."},
+        {"picodrive",                 "PicoDrive"},
+        {"gearsystem",                "GearSystem"},
+        {"smsplus",                   "SMS Plus GX"},
+        {"yabause",                   "Yabause"},
+        {"yabasanshiro",              "YabaSanshiro"},
+        {"mednafen_saturn",           "Beetle Saturn"},
+        {"flycast",                   "Flycast"},
+        {"flycastvl",                 "Flycast VL"},
+        {"flycast-xtreme",            "Flycast Xtreme"},
+        {"morpheuscast",              "MorpheusCast"},
+
+        // Sony
+        {"duckstation",               "DuckStation"},
+        {"pcsx_rearmed",              "PCSX ReARMed"},
+        {"swanstation",               "SwanStation"},
+        {"ppsspp",                    "PPSSPP"},
+        {"mednafen_psx",              "Beetle PSX"},
+
+        // Atari
+        {"stella",                    "Stella"},
+        {"stella2014",                "Stella 2014"},
+        {"mednafen_lynx",             "Beetle Lynx"},
+        {"handy",                     "Handy"},
+        {"a5200",                     "Atari 5200"},
+        {"atari800",                  "Atari 800"},
+        {"prosystem",                 "ProSystem"},
+        {"virtualjaguar",             "Virtual Jaguar"},
+
+        // Computers
+        {"cap32",                     "Caprice32"},
+        {"crocods",                   "CrocoDS"},
+        {"hatari",                    "Hatari"},
+        {"hatarib",                   "HatariB"},
+        {"bluemsx",                   "blueMSX"},
+        {"fmsx",                      "fMSX"},
+        {"px68k",                     "PX68k"},
+        {"x1",                        "Sharp X1"},
+        {"quasi88",                   "Quasi88"},
+        {"np2kai",                    "Neko II Kai"},
+        {"nekop2",                    "Neko II"},
+        {"vice_x64",                  "VICE x64"},
+        {"vice_x64sc",                "VICE x64SC"},
+        {"vice_xscpu64",              "VICE xSCPU64"},
+        {"vice_x128",                 "VICE x128"},
+        {"vice_xpet",                 "VICE xPET"},
+        {"vice_xvic",                 "VICE xVIC"},
+        {"vice_xcbm2",                "VICE xCBM-II"},
+        {"vice_xcbm5x0",              "VICE xCBM-5x0"},
+        {"puae",                      "PUAE"},
+        {"puae2021",                  "PUAE 2021"},
+        {"uae4arm",                   "UAE4ARM"},
+        {"km_puae_xtreme_amped_2k24", "PUAE Xtreme"},
+
+        // DOS / PC
+        {"dosbox_pure",               "DOSBox Pure"},
+        {"dosbox_svn",                "DOSBox SVN"},
+
+        // Misc
+        {"scummvm",                   "ScummVM"},
+        {"prboom",                    "PrBoom"},
+        {"ecwolf",                    "ECWolf"},
+        {"nxengine",                  "NXEngine"},
+        {"tic80",                     "TIC-80"},
+        {"lutro",                     "Lutro"},
+        {"freeintv",                  "FreeIntv"},
+        {"o2em",                      "O2EM"},
+        {"vecx",                      "VecX"},
+        {"pokemini",                  "PokeMini"},
+        {"opera",                     "Opera"},
+        {"vircon32",                  "Vircon32"},
+        {"uzem",                      "Uzem"},
+        {"potator",                   "Potator"},
+        {"wasm4",                     "WASM-4"},
+        {"fake08",                    "Fake-08"},
+        {"retro8",                    "Retro8"},
+        {"neocd",                     "NeoCD"},
+        {"race",                      "RACE"},
+        {"geolith",                   "Geolith"},
+        {"mednafen_wswan",            "Beetle WonderSwan"},
+        {"mednafen_ngp",              "Beetle NeoPop"},
+        {"same_cdi",                  "SameCD-i"},
+        {"easyrpg",                   "EasyRPG"},
+        {"onscripter",                "ONScripter"},
+        {"onsyuri",                   "ONS Yuri"},
+        {"numero",                    "Numero"},
+        {"lowresnx",                  "LowRes NX"},
+        {"dice",                      "DICE"},
+        {"freechaf",                  "FreeChaF"},
+        {"galaksija",                 "Galaksija"},
+        {"jaxe",                      "JAXE"},
+        {"chailove",                  "ChaiLove"},
+        {"ardens",                    "Ardens"},
+        {"arduous",                   "Arduous"},
+        {"libgametank",               "GameTank"},
+        {"vemulator",                 "VeMUlator"},
+        {"sameduck",                  "SameDuck"},
+        {"tyrquake",                  "TyrQuake"},
+        {"vitaquake2",                "VitaQuake II"},
+
+        {NULL, NULL}
+};
+
+const struct ext_core_name ext_core_names[] = {
+        {"external",                  "Portmaster"},
+
+        // With the exception of above all the following use the
+        // core name without "ext-" as we go past those characters...
+
+        // Media
+        {"ffplay",                    "FFPlay"},
+        {"mpv-livetv",                "MPV LiveTV"},
+        {"mpv-general",               "MPV"},
+
+        // Book Reader
+        {"mreader-landscape",         "mReader Ln."},
+        {"mreader-portrait",          "mReader Pt."},
+
+        // Java J2ME
+        {"freej2me-128",              "J2ME 128x128"},
+        {"freej2me-176",              "J2ME 176x208"},
+        {"freej2me-240",              "J2ME 240x320"},
+        {"freej2me-320",              "J2ME 320x240"},
+        {"freej2me-640",              "J2ME 640x360"},
+
+        // Nontondo
+        {"drastic",                   "DraStic Advanced"},
+        {"drastic-legacy",            "DraStic Legacy"},
+        {"mupen64plus-gliden64",      "Mupen64+ Glide"},
+        {"mupen64plus-gliden64-full", "Mupen64+ Glide - Full"},
+        {"mupen64plus-glidemk2",      "Mupen64+ GlideMK2"},
+        {"mupen64plus-glidemk2-full", "Mupen64+ GlideMK2 - Full"},
+        {"mupen64plus-rice",          "Mupen64+ Rice"},
+        {"mupen64plus-rice-full",     "Mupen64+ Rice - Full"},
+
+        // OpenBOR
+        {"openbor4432",               "OpenBOR v4432"},
+        {"openbor6412",               "OpenBOR v6412"},
+        {"openbor7142",               "OpenBOR v7142"},
+        {"openbor7530",               "OpenBOR v7530"},
+
+        // SEGA
+        {"yabasanshiro-hle",          "YabaSanshiro HLE"},
+        {"yabasanshiro-bios",         "YabaSanshiro BIOS"},
+
+        // PICO-8
+        {"pico8-pixel",               "PICO-8 Pixel"},
+        {"pico8-scale",               "PICO-8 Scaled"},
+
+        // Misc
+        {"scummvm",                   "ScummVM"},
+        {"flycast",                   "Flycast"},
+        {"ppsspp",                    "PPSSPP"},
+        {"amiberry",                  "Amiberry"},
+        {"pyxel",                     "Pyxel"},
+        {"crisp",                     "Crisp Game Lib"},
+
+        {NULL, NULL}
+};
