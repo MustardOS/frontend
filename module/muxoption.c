@@ -66,12 +66,17 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     const char *value = get_file;
     if (!*value) value = get_dir;
 
+    bool is_core = strcmp(opt_type, "core") == 0;
+    bool is_gov = strcmp(opt_type, "governor") == 0;
+    bool is_con = strcmp(opt_type, "control") == 0;
+    bool is_tag = strcmp(opt_type, "tag") == 0;
+
     if (!*value) {
-        value = strcmp(opt_type, "cfg") == 0 ? lang.MUXOPTION.NOT_ASSIGNED :
-                strcmp(opt_type, "con") == 0 ? lang.MUXOPTION.NONE :
-                strcmp(opt_type, "tag") == 0 ? lang.MUXOPTION.NOT_ASSIGNED :
-                strcmp(opt_type, "gov") == 0 ? device.CPU.DEFAULT :
-                "System";
+        value = is_core ? lang.MUXOPTION.NOT_ASSIGNED :
+                is_gov ? device.CPU.DEFAULT :
+                is_con ? lang.MUXOPTION.NONE :
+                is_tag ? lang.MUXOPTION.NOT_ASSIGNED :
+                lang.GENERIC.UNKNOWN;
     }
 
     char cap_value[MAX_BUFFER_SIZE];
@@ -92,7 +97,7 @@ static void add_info_items(void) {
 
     const char *control_file = get_content_line(rom_dir, rom_name, "con", 1);
     const char *control_dir = get_content_line(rom_dir, NULL, "con", 1);
-    add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "con", true);
+    add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "control", true);
 
     if (!is_directory) {
         const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
