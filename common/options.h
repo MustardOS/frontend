@@ -1,6 +1,6 @@
 #pragma once
 
-#define TEST_IMAGE 0
+#define TEST_IMAGE 1
 #define MUX_CALLER "MustardOS FE Spectacular"
 
 // Three is the magic number...

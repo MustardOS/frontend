@@ -58,7 +58,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBlackFade_custom,       lang.MUXCUSTOM.HELP.FADE},
             {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
-            {ui_lblContentWidth_custom,     lang.MUXCUSTOM.HELP.CONTENT_WIDTH},
+            {ui_lblContentWidth_custom,    lang.MUXCUSTOM.HELP.CONTENT_WIDTH},
             {ui_lblLaunchSplash_custom,    lang.MUXCUSTOM.HELP.SPLASH},
             {ui_lblGridModeContent_custom, lang.MUXCUSTOM.HELP.GRID_MODE_CONTENT},
             {ui_lblBoxArtHide_custom,      lang.MUXCUSTOM.HELP.BOX_HIDE},
@@ -198,8 +198,8 @@ static void init_navigation_group(void) {
 
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", config.THEME.STORAGE_THEME, 
-                 theme_resolutions[i].resolution);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
+                 config.THEME.STORAGE_THEME, theme_resolutions[i].resolution);
 
         if (directory_exist(theme_device_folder)) {
             lv_dropdown_add_option(ui_droThemeResolution_custom,
@@ -236,7 +236,7 @@ static void check_focus(void) {
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else if (element_focused == ui_lblMusicVolume_custom) {
+    } else if (element_focused == ui_lblThemeAlternate_custom || element_focused == ui_lblMusicVolume_custom) {
         lv_label_set_text(ui_lblNavA, lang.GENERIC.SET);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -419,9 +419,9 @@ static void handle_a(void) {
         int16_t *kiosk_flag;
         const char *load_mux_name;
     } elements[] = {
-            {"theme",     "/theme",            &kiosk.CUSTOM.THEME, "theme"},
+            {"theme",     "/theme",            &kiosk.CUSTOM.THEME,     "theme"},
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, "picker"},
-            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG, "picker"}
+            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG,  "picker"}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
