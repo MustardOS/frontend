@@ -20,17 +20,16 @@
 #include "device.h"
 #include "theme.h"
 
-__thread uint64_t start_ms = 0;
+static uint64_t start_ms = 0;
 static struct dt_task_param dt_par;
 static struct bat_task_param bat_par;
 static lv_indev_t *indev = NULL;
 static lv_indev_drv_t indev_drv; // must be declared here to prevent LVGL deadlocks
-int current_capacity = -1;
 
-static int joy_general;
-static int joy_power;
-static int joy_volume;
-static int joy_extra;
+static int joy_general = -1;
+static int joy_power = -1;
+static int joy_volume = -1;
+static int joy_extra = -1;
 
 lv_timer_t *timer_ui_refresh;
 lv_timer_t *timer_datetime;
@@ -39,6 +38,16 @@ lv_timer_t *timer_status;
 lv_timer_t *timer_bluetooth;
 lv_timer_t *timer_network;
 lv_timer_t *timer_update_system_info;
+
+static lv_timer_t **const timers[] = {
+        &timer_ui_refresh,
+        &timer_datetime,
+        &timer_capacity,
+        &timer_status,
+        &timer_bluetooth,
+        &timer_network,
+        &timer_update_system_info,
+};
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
@@ -50,19 +59,20 @@ uint32_t mux_tick(void) {
     return (uint32_t) (now_ms - start_ms);
 }
 
-void setup_background_process(void) {
+void detach_parent_process(void) {
     pid_t pid = fork();
 
-    if (pid == -1) {
+    if (pid < 0) {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_FORK)
-        exit(1);
-    } else if (pid > 0) {
-        exit(0);
+        exit(EXIT_FAILURE);
     }
+
+    if (pid > 0) exit(EXIT_SUCCESS);
+    if (setsid() < 0) exit(EXIT_FAILURE);
 }
 
 void refresh_screen(lv_obj_t *screen) {
-    for (int r = 0; r < 3; r++) { /* three is the magic number... */
+    for (int r = 0; r < LVGL_REFRESH_PASS; r++) {
         lv_obj_invalidate(screen);
         lv_refr_now(NULL);
         lv_task_handler();
@@ -73,11 +83,18 @@ void safe_quit(int exit_status) {
     write_text_to_file(SAFE_QUIT, "w", INT, exit_status);
 }
 
+static void close_fd(int *fd) {
+    if (*fd >= 0) {
+        close(*fd);
+        *fd = -1;
+    }
+}
+
 void close_input(void) {
-    close(joy_general);
-    close(joy_power);
-    close(joy_volume);
-    close(joy_extra);
+    close_fd(&joy_general);
+    close_fd(&joy_power);
+    close_fd(&joy_volume);
+    close_fd(&joy_extra);
 }
 
 void init_module(const char *module) {
@@ -200,11 +217,12 @@ void dispose_input() {
 static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t period, void *user_data) {
     if (*timer == NULL) {
         *timer = lv_timer_create(cb, period, user_data);
-    } else {
-        lv_timer_set_cb(*timer, cb);
-        lv_timer_set_period(*timer, period);
-        lv_timer_resume(*timer);
+        return *timer;
     }
+
+    lv_timer_set_cb(*timer, cb);
+    lv_timer_set_period(*timer, period);
+    lv_timer_resume(*timer);
 
     return *timer;
 }
@@ -219,6 +237,20 @@ static void timer_destroy(lv_timer_t **timer) {
     if (*timer) {
         lv_timer_del(*timer);
         *timer = NULL;
+    }
+}
+
+void timer_action(int action) {
+    for (size_t i = 0; i < A_SIZE(timers); ++i) {
+        switch (action) {
+            case 0:
+                timer_suspend(timers[i]);
+                break;
+            case 1:
+                timer_destroy(timers[i]);
+                break;
+            default: LOG_WARN(mux_module, "Timer issue warning - No suspend or destroy!")
+        }
     }
 }
 
@@ -263,23 +295,11 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
 }
 
 void timer_destroy_all(void) {
-    timer_destroy(&timer_ui_refresh);
-    timer_destroy(&timer_datetime);
-    timer_destroy(&timer_capacity);
-    timer_destroy(&timer_status);
-    timer_destroy(&timer_bluetooth);
-    timer_destroy(&timer_network);
-    timer_destroy(&timer_update_system_info);
+    timer_action(1);
 }
 
 void timer_suspend_all(void) {
-    timer_suspend(&timer_ui_refresh);
-    timer_suspend(&timer_datetime);
-    timer_suspend(&timer_capacity);
-    timer_suspend(&timer_status);
-    timer_suspend(&timer_bluetooth);
-    timer_suspend(&timer_network);
-    timer_suspend(&timer_update_system_info);
+    timer_action(0);
 }
 
 void init_fonts(void) {
@@ -305,21 +325,32 @@ void init_theme(int panel_init, int long_mode) {
     if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
 }
 
-void status_task() {
+void status_task(lv_timer_t *timer) {
+    LV_UNUSED(timer);
+
     if (progress_onscreen > 0) {
         --progress_onscreen;
-    } else {
-        lv_obj_t *panels[] = {ui_pnlProgressBrightness, ui_pnlProgressVolume};
-        for (size_t i = 0; i < A_SIZE(panels); ++i) {
-            if (!lv_obj_has_flag(panels[i], LV_OBJ_FLAG_HIDDEN)) {
-                lv_obj_add_flag(panels[i], LV_OBJ_FLAG_HIDDEN);
-            }
-        }
-        if (!msgbox_active) progress_onscreen = -1;
+        return;
     }
+
+    lv_obj_t *panels[] = {
+            ui_pnlProgressBrightness,
+            ui_pnlProgressVolume
+    };
+
+    for (size_t i = 0; i < A_SIZE(panels); ++i) {
+        if (panels[i] && lv_obj_is_valid(panels[i])) {
+            lv_obj_add_flag(panels[i], MU_OBJ_FLAG_HIDE_FLOAT);
+        }
+    }
+
+    if (!msgbox_active) progress_onscreen = -1;
 }
 
-void bluetooth_task() {
+void bluetooth_task(lv_timer_t *timer) {
+    LV_UNUSED(timer);
+
+    // TODO: Yeah one day...
 //    update_bluetooth_status(ui_staBluetooth, &theme);
 //    if (!bluetooth_period_set) {
 //        bluetooth_period_set = 1;
@@ -327,7 +358,11 @@ void bluetooth_task() {
 //    }
 }
 
-void network_task() {
+void network_task(lv_timer_t *timer) {
+    LV_UNUSED(timer);
+
+    if (!ui_staNetwork || !lv_obj_is_valid(ui_staNetwork)) return;
     if (strcasecmp(mux_module, "muxnetwork") == 0) return;
+
     update_network_status(ui_staNetwork, &theme, 0);
 }

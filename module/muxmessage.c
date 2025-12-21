@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     set_process_name(m);
     init_module(m);
 
-    setup_background_process();
+    detach_parent_process();
 
     init_theme(0, 0);
     init_display(1);

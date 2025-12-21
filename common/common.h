@@ -249,11 +249,11 @@ void nav_next(lv_group_t *group, int count);
 
 char *get_datetime();
 
-void datetime_task(lv_timer_t *timer);
-
 char *get_capacity();
 
-void capacity_task();
+void datetime_task(lv_timer_t *timer);
+
+void capacity_task(lv_timer_t *timer);
 
 void increase_option_value(lv_obj_t *element, int count);
 

@@ -3,6 +3,9 @@
 #define TEST_IMAGE 0
 #define MUX_CALLER "MustardOS FE Spectacular"
 
+// Three is the magic number...
+#define LVGL_REFRESH_PASS 3
+
 #define MAX_BUFFER_SIZE 1024
 
 // The rough calculation is as follows if a theme uses

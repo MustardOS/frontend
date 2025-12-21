@@ -875,16 +875,9 @@ char *get_datetime(void) {
     return datetime_str;
 }
 
-void datetime_task(lv_timer_t *timer) {
-    struct dt_task_param *dt_par = timer->user_data;
-    lv_label_set_text(dt_par->lblDatetime, get_datetime());
-}
-
 char *get_capacity(void) {
     static char capacity[MAX_BUFFER_SIZE];
-    const char *prefix = read_line_int_from(device.BATTERY.CHARGER, 1)
-                         ? "capacity_charging_"
-                         : "capacity_";
+    const char *prefix = read_line_int_from(device.BATTERY.CHARGER, 1) ? "capacity_charging_" : "capacity_";
 
     int level = battery_capacity;
     if (level < 0) level = 0;
@@ -897,7 +890,16 @@ char *get_capacity(void) {
     return capacity;
 }
 
-void capacity_task(void) {
+void datetime_task(lv_timer_t *timer) {
+    struct dt_task_param *dt_par = timer->user_data;
+    lv_label_set_text(dt_par->lblDatetime, get_datetime());
+}
+
+void capacity_task(lv_timer_t *timer) {
+    LV_UNUSED(timer);
+
+    if (!ui_staCapacity || !lv_obj_is_valid(ui_staCapacity)) return;
+
     battery_capacity = read_battery_capacity();
     update_battery_capacity(ui_staCapacity, &theme);
 }

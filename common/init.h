@@ -21,7 +21,7 @@ struct bat_task_param {
     lv_obj_t *staCapacity;
 };
 
-void setup_background_process(void);
+void detach_parent_process(void);
 
 void refresh_screen(lv_obj_t *screen);
 
@@ -47,10 +47,10 @@ void init_fonts(void);
 
 void init_theme(int panel_init, int long_mode);
 
-void status_task();
+void status_task(lv_timer_t *timer);
 
-void bluetooth_task();
+void bluetooth_task(lv_timer_t *timer);
 
-void network_task();
+void network_task(lv_timer_t *timer);
 
 void battery_task();
