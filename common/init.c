@@ -49,6 +49,11 @@ static lv_timer_t **const timers[] = {
         &timer_update_system_info,
 };
 
+typedef enum {
+    DISP_RES_SMALL,
+    DISP_RES_HD,
+} disp_res_t;
+
 uint32_t mux_tick(void) {
     struct timespec tv_now;
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
@@ -102,16 +107,51 @@ void init_module(const char *module) {
     load_lang(&lang);
 }
 
-void init_display(int full_refresh) {
+static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, uint32_t size) {
+    LV_UNUSED(drv);
+    memset(buf, 0, size);
+}
+
+static disp_res_t classify_resolution(uint32_t w, uint32_t h) {
+    if (w >= 1280 || h >= 720) return DISP_RES_HD;
+    return DISP_RES_SMALL;
+}
+
+static uint32_t calc_disp_buf_lines(uint32_t width, uint32_t height) {
+    switch (classify_resolution(width, height)) {
+        case DISP_RES_HD:
+            return 96;
+        case DISP_RES_SMALL:
+        default:
+            return 64;
+    }
+}
+
+void init_display() {
     lv_init();
     sdl_init();
 
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
 
-    uint32_t disp_buf_size = device.MUX.WIDTH * device.MUX.HEIGHT;
-    lv_color_t * disp_buf_s1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * disp_buf_s2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    uint32_t buf_lines = calc_disp_buf_lines(device.MUX.WIDTH, device.MUX.HEIGHT);
+    uint32_t disp_buf_size = device.MUX.WIDTH * buf_lines;
+
+    LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", buf_lines, (disp_buf_size * sizeof(lv_color_t)) / 1024)
+
+    static lv_color_t *disp_buf_s1 = NULL;
+    static lv_color_t *disp_buf_s2 = NULL;
+    static uint32_t disp_buf_pixels = 0;
+
+    if (disp_buf_size != disp_buf_pixels) {
+        free(disp_buf_s1);
+        free(disp_buf_s2);
+
+        disp_buf_s1 = malloc(disp_buf_size * sizeof(lv_color_t));
+        disp_buf_s2 = malloc(disp_buf_size * sizeof(lv_color_t));
+
+        disp_buf_pixels = disp_buf_size;
+    }
 
     lv_disp_draw_buf_init(&disp_buf, disp_buf_s1, disp_buf_s2, disp_buf_size);
     lv_disp_drv_init(&disp_drv);
@@ -124,13 +164,13 @@ void init_display(int full_refresh) {
     disp_drv.physical_ver_res = -1;
     disp_drv.offset_x = 0;
     disp_drv.offset_y = 0;
-    disp_drv.full_refresh = full_refresh;
-    disp_drv.direct_mode = full_refresh;
+    disp_drv.full_refresh = 0;
+    disp_drv.direct_mode = 0;
     disp_drv.antialiasing = theme.MISC.ANTIALIASING;
     disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
+    disp_drv.clear_cb = clear_cb;
 
     lv_disp_drv_register(&disp_drv);
-    lv_disp_flush_ready(&disp_drv);
 }
 
 int open_input(const char *path, const char *error_message) {

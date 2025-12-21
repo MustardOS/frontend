@@ -31,7 +31,7 @@ void close_input(void);
 
 void init_module(const char *module);
 
-void init_display(int full_refresh);
+void init_display();
 
 void init_input(mux_input_options *opts, int def_combo);
 

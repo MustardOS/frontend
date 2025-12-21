@@ -30,7 +30,7 @@ void sdl_init(void) {
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_ShowCursor(SDL_DISABLE);
-    
+
     scale_width = device.MUX.WIDTH * device.SCREEN.ZOOM;
     scale_height = device.MUX.HEIGHT * device.SCREEN.ZOOM;
     LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height)
@@ -97,32 +97,23 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     int y2 = LV_CLAMP(0, area->y2, device.MUX.HEIGHT - 1);
 
     // Optimised full-screen flush...
-    if (x1 == 0 && y1 == 0 && x2 == device.MUX.WIDTH - 1 && y2 == device.MUX.HEIGHT - 1) {
-        memcpy(monitor.pixel, color_p, device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
-    } else {
-        for (int y = y1; y <= y2; y++) {
-            memcpy(&monitor.pixel[y * device.MUX.WIDTH + x1], color_p, (x2 - x1 + 1) * sizeof(lv_color_t));
-            color_p += (x2 - x1 + 1);
-        }
-    }
+    int copy_w = x2 - x1 + 1;
+    int src_w = area->x2 - area->x1 + 1;
+    int src_x_ofs = x1 - area->x1;
+    int src_y_ofs = y1 - area->y1;
 
-    SDL_Rect update_rect = {x1, y1, x2 - x1 + 1, y2 - y1 + 1};
-    SDL_UpdateTexture(monitor.texture, &update_rect,
-                      &monitor.pixel[y1 * device.MUX.WIDTH + x1],
-                      device.MUX.WIDTH * sizeof(uint32_t));
+    for (int y = y1; y <= y2; y++) {
+        lv_color_t * src = color_p + (src_y_ofs + (y - y1)) * src_w + src_x_ofs;
+        lv_color_t * dst = (lv_color_t *) &monitor.pixel[y * device.MUX.WIDTH + x1];
+        memcpy(dst, src, copy_w * sizeof(lv_color_t));
+    }
 
     // Flush the buffer only if it's the last frame however I may be reading
     // this wrong because it's always being flushed?! No clue...
     // Maybe somebody will notice this one day and do it better? :D
     if (lv_disp_flush_is_last(disp_drv)) {
-        lv_disp_t *disp = _lv_refr_get_disp_refreshing();
-        if (!disp || disp->driver->full_refresh) SDL_RenderClear(monitor.renderer);
-
-        if (disp && disp->driver->screen_transp) {
-            SDL_SetRenderDrawColor(monitor.renderer, 0xff, 0, 0, 0xff);
-            SDL_Rect r = {0, 0, device.MUX.WIDTH, device.MUX.HEIGHT};
-            SDL_RenderDrawRect(monitor.renderer, &r);
-        }
+        SDL_UpdateTexture(monitor.texture, NULL, monitor.pixel, device.MUX.WIDTH * sizeof(uint32_t));
+        SDL_RenderClear(monitor.renderer);
 
         SDL_Rect dest_rect = {
                 ((device.SCREEN.WIDTH - scale_width) / 2) + underscan,
@@ -131,8 +122,10 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
                 scale_height - (underscan * 2)
         };
 
+        LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h)
+
         // Simplify the rendering if we are not rotating as this saves a few cycles
-        double angle = device.SCREEN.ROTATE <= 3 ? (device.SCREEN.ROTATE * 90.0) : device.SCREEN.ROTATE;
+        double angle = (device.SCREEN.ROTATE <= 3) ? device.SCREEN.ROTATE * 90.0 : device.SCREEN.ROTATE;
         if (angle == 0.0) {
             SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &dest_rect);
         } else {

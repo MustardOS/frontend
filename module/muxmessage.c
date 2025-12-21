@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     detach_parent_process();
 
     init_theme(0, 0);
-    init_display(1);
+    init_display();
 
     init_muxmessage();
     lv_obj_set_user_data(ui_scrMessage, mux_module);

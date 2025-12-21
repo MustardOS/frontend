@@ -106,7 +106,7 @@ int main(void) {
     load_config(&config);
 
     init_theme(0, 0);
-    init_display(0);
+    init_display();
 
     const lv_font_t *header_font = (strcasecmp(device.BOARD.NAME, "tui-brick") == 0)
                                    ? &ui_font_NotoSansBigHD

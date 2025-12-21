@@ -120,7 +120,7 @@ int main(void) {
     init_module(m);
 
     init_theme(0, 0);
-    init_display(1);
+    init_display();
 
     init_muxcharge();
 

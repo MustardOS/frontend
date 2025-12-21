@@ -490,7 +490,7 @@ int main(void) {
     // For future reference we need to initialise the theme before we do the display
     // as we call upon the theme variables for specific settings within display init
     init_theme(0, 0);
-    init_display(0);
+    init_display();
 
     lv_timer_create(quit_watchdog, 100, NULL);
 
