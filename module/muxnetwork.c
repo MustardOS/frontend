@@ -590,6 +590,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
+    if (ui_network_locked) exec_watch_task();
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -630,7 +632,6 @@ int muxnetwork_main(void) {
     init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1);
     can_scan_check(0);
 
-    init_timer(exec_watch_task, NULL);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
