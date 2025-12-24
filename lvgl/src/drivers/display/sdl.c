@@ -122,7 +122,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
                 scale_height - (underscan * 2)
         };
 
-        LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h)
+        // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h)
 
         // Simplify the rendering if we are not rotating as this saves a few cycles
         double angle = (device.SCREEN.ROTATE <= 3) ? device.SCREEN.ROTATE * 90.0 : device.SCREEN.ROTATE;
