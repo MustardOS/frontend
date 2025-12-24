@@ -49,11 +49,6 @@ static lv_timer_t **const timers[] = {
         &timer_update_system_info,
 };
 
-typedef enum {
-    DISP_RES_SMALL,
-    DISP_RES_HD,
-} disp_res_t;
-
 uint32_t mux_tick(void) {
     struct timespec tv_now;
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
@@ -112,21 +107,6 @@ static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, uint32_t size) {
     memset(buf, 0, size);
 }
 
-static disp_res_t classify_resolution(uint32_t w, uint32_t h) {
-    if (w >= 1280 || h >= 720) return DISP_RES_HD;
-    return DISP_RES_SMALL;
-}
-
-static uint32_t calc_disp_buf_lines(uint32_t width, uint32_t height) {
-    switch (classify_resolution(width, height)) {
-        case DISP_RES_HD:
-            return 96;
-        case DISP_RES_SMALL:
-        default:
-            return 64;
-    }
-}
-
 void init_display() {
     lv_init();
     sdl_init();
@@ -134,7 +114,7 @@ void init_display() {
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
 
-    uint32_t buf_lines = calc_disp_buf_lines(device.MUX.WIDTH, device.MUX.HEIGHT);
+    uint32_t buf_lines = device.MUX.HEIGHT / 4;
     uint32_t disp_buf_size = device.MUX.WIDTH * buf_lines;
 
     LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", buf_lines, (disp_buf_size * sizeof(lv_color_t)) / 1024)
