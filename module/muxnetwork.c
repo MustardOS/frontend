@@ -12,8 +12,6 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 #define UI_DHCP (UI_COUNT - 4)
 #define UI_STATIC UI_COUNT
 
-static int ui_network_locked = 0;
-
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
@@ -408,8 +406,6 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
-    if (ui_network_locked) return;
-
     play_sound(SND_BACK);
 
     toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -471,8 +467,6 @@ static void handle_b(void) {
         return;
     }
 
-    if (ui_network_locked) return;
-
     if (key_show) {
         close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry :
                   key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
@@ -495,7 +489,7 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call || ui_network_locked) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
@@ -518,18 +512,26 @@ static void handle_down_hold(void) {
 }
 
 static void handle_left(void) {
+    if (ui_network_locked) return;
+
     key_show ? key_left() : handle_navigate();
 }
 
 static void handle_right(void) {
+    if (ui_network_locked) return;
+
     key_show ? key_right() : handle_navigate();
 }
 
 static void handle_left_hold(void) {
+    if (ui_network_locked) return;
+
     if (key_show) key_left();
 }
 
 static void handle_right_hold(void) {
+    if (ui_network_locked) return;
+
     if (key_show) key_right();
 }
 
