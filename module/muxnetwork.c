@@ -12,6 +12,8 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 #define UI_DHCP (UI_COUNT - 4)
 #define UI_STATIC UI_COUNT
 
+bool ui_network_locked = false;
+
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
@@ -76,7 +78,7 @@ static void get_current_ip(void) {
 }
 
 static void net_connect_check() {
-    ui_network_locked = 0;
+    ui_network_locked = false;
     get_current_ip();
 }
 
@@ -355,7 +357,7 @@ static void handle_confirm(void) {
                 lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.CONNECT_TRY);
                 lv_task_handler();
 
-                ui_network_locked = 1;
+                ui_network_locked = true;
                 run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
                 lv_task_handler();
 

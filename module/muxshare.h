@@ -59,7 +59,6 @@ extern int current_item_index;
 extern int first_open;
 extern int ui_count;
 extern int hold_call;
-extern int ui_network_locked;
 
 extern int theme_down_index;
 
