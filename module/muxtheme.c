@@ -35,9 +35,7 @@ static int version_check(void) {
 }
 
 static void image_refresh(void) {
-    if (items[current_item_index].content_type == FOLDER ||
-        items[current_item_index].content_type == MENU ) {
-
+    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
@@ -45,10 +43,12 @@ static void image_refresh(void) {
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
     char preview_path[PATH_MAX];
-    snprintf(preview_path, sizeof(preview_path), "%s/%s/%s" TEMP_PREVIEW, sys_dir, items[current_item_index].name, mux_dimension);
+    snprintf(preview_path, sizeof(preview_path), "%s/%s/%s" TEMP_PREVIEW,
+             sys_dir, items[current_item_index].name, mux_dimension);
 
     char fallback_path[PATH_MAX];
-    snprintf(fallback_path, sizeof(fallback_path), "%s/%s/640x480/" TEMP_PREVIEW, sys_dir, items[current_item_index].name);
+    snprintf(fallback_path, sizeof(fallback_path), "%s/%s/640x480/" TEMP_PREVIEW,
+             sys_dir, items[current_item_index].name);
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
@@ -66,8 +66,7 @@ static void image_refresh(void) {
 
 static void create_theme_items(void) {
     if (device.BOARD.HAS_NETWORK && strcasecmp(base_dir, sys_dir) == 0 && !is_ksk(kiosk.CUSTOM.THEME_DOWN)) {
-        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWN,
-                 lang.MUXPICKER.THEME_DOWN, "", MENU);
+        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWN, lang.MUXPICKER.THEME_DOWN, "", MENU);
     }
 
     DIR *td;
@@ -181,10 +180,6 @@ static void handle_a(void) {
     } else {
         write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
-        printf("base_dir: %s\n", base_dir);
-        printf("sys_dir: %s\n", sys_dir);
-        printf("items[current_item_index].name: %s\n", items[current_item_index].name);
-
         if (!version_check()) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_VER, SHORT);
@@ -201,6 +196,7 @@ static void handle_a(void) {
         }
 
         refresh_config = 1;
+        refresh_resolution = 1;
 
         if (strcasecmp(base_dir, sys_dir) == 0) {
             write_text_to_file(CONF_CONFIG_PATH "theme/active", "w", CHAR, items[current_item_index].name);
@@ -242,7 +238,7 @@ static void handle_x(void) {
 
     char active_path[PATH_MAX];
     snprintf(active_path, sizeof(active_path), "%s/%s",
-                sys_dir, items[current_item_index].name);    
+             sys_dir, items[current_item_index].name);
     if (strcasecmp(active_path, config.THEME.STORAGE_THEME) == 0) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, MEDIUM);
