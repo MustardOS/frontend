@@ -56,11 +56,11 @@
 #define CHIME_DONE "/tmp/chime_done"
 #define SAFE_QUIT  "/tmp/safe_quit"
 
-#define EXPLORE_DIR "/tmp/explore_dir"
+#define EXPLORE_DIR  "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-#define STORAGE_PATH "/mnt/union/ROMS"
-#define OPTION_SKIP  "/tmp/skip_opt"
+#define UNION_ROM_PATH "/mnt/union/ROMS"
+#define OPTION_SKIP    "/tmp/skip_opt"
 
 #define INTERNAL_THEME   OPT_PATH "share/theme/MustardOS"
 #define INTERNAL_OVERLAY OPT_PATH "share/overlay"

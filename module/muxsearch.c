@@ -729,7 +729,7 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxsearch_main(char *dir) {
-    if (!strlen(dir)) dir = "/mnt/union/ROMS";
+    if (!strlen(dir)) dir = UNION_ROM_PATH;
     snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
     starter_image = 0;

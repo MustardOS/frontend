@@ -58,7 +58,7 @@ static void image_refresh(char *image_type) {
 
     char *content_label = items[current_item_index].name;
 
-    if (strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(STORAGE_PATH)) == 0) {
+    if (strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(UNION_ROM_PATH)) == 0) {
         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
                  INFO_CAT_PATH, image_type, content_label);
     } else {
@@ -225,8 +225,8 @@ static void gen_item(char **file_names, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
     char *sub_path = sys_dir;
 
-    if (strncasecmp(sys_dir, STORAGE_PATH, strlen(STORAGE_PATH)) == 0) {
-        sub_path = sys_dir + strlen(STORAGE_PATH);
+    if (strncasecmp(sys_dir, UNION_ROM_PATH, strlen(UNION_ROM_PATH)) == 0) {
+        sub_path = sys_dir + strlen(UNION_ROM_PATH);
         while (*sub_path == '/') sub_path++;
     }
 
@@ -420,7 +420,7 @@ static void create_content_items(void) {
         }
     }
 
-    update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, STORAGE_PATH);
+    update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, UNION_ROM_PATH);
 
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
@@ -886,7 +886,7 @@ int muxplore_main(int index, char *dir) {
     starter_image = 0;
     splash_valid = 0;
 
-    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? STORAGE_PATH : dir);
+    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? UNION_ROM_PATH : dir);
     sys_index = index;
 
     const char *m = "muxplore";

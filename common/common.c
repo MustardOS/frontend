@@ -3314,7 +3314,7 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
         snprintf(content_loader_data, sizeof(content_loader_data), "%s|%s|%s/|%s|%s",
                  content_name,
                  str_replace(assigned_core, "\n", "|"),
-                 STORAGE_PATH,
+                 UNION_ROM_PATH,
                  system_sub,
                  file_name);
 
@@ -3375,7 +3375,7 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
     char content_core[MAX_BUFFER_SIZE] = {0};
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
-    if (strcasecmp(last_subdir, strip_dir(STORAGE_PATH)) == 0) {
+    if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
         snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/core.cfg");
     } else {
         snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",

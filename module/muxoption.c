@@ -185,7 +185,7 @@ static void init_navigation_group(void) {
     int line_index = 0;
 
     int dir_level = 4;
-    if (strcasecmp(rom_dir, STORAGE_PATH) == 0) dir_level = 3;
+    if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
 
     add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', dir_level), "folder", false);
     add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);

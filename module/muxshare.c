@@ -168,7 +168,7 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
 
         last_subdir = get_last_subdir(sys_dir, '/', 4);
 
-        if (strcasecmp(last_subdir, strip_dir(STORAGE_PATH)) == 0) {
+        if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
             snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
                      ext);
         } else {
