@@ -2,6 +2,9 @@
 
 static char base_dir[PATH_MAX];
 
+static int preview_displayTime = 0;
+static int preview_index = -1;
+
 #define TEMP_PREVIEW "preview.png"
 #define TEMP_VERSION "version.txt"
 #define TEMP_CREDITS "credits.txt"
@@ -40,28 +43,34 @@ static void image_refresh(void) {
         return;
     }
 
-    lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
+    char base_image_path[MAX_BUFFER_SIZE];
+    snprintf(base_image_path, sizeof(base_image_path), "%s/%s", sys_dir, items[current_item_index].name);
 
     char preview_path[PATH_MAX];
-    snprintf(preview_path, sizeof(preview_path), "%s/%s/%s" TEMP_PREVIEW,
-             sys_dir, items[current_item_index].name, mux_dimension);
-
-    char fallback_path[PATH_MAX];
-    snprintf(fallback_path, sizeof(fallback_path), "%s/%s/640x480/" TEMP_PREVIEW,
-             sys_dir, items[current_item_index].name);
-
-    if (!file_exist(preview_path) && !file_exist(fallback_path)) {
-        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-    } else {
-        struct ImageSettings image_settings = {
-                file_exist(preview_path) ? preview_path : fallback_path, 6,
-                validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
-                validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
-                theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
-                theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
-        };
-        update_image(ui_imgBox, image_settings);
+    if (get_theme_preview_path(base_image_path, "preview", preview_path, sizeof(preview_path), preview_index) != 0){
+        preview_index = -1;
     }
+
+    lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
+
+    if (strcasecmp(box_image_previous_path, preview_path) != 0) {
+
+        if (!file_exist(preview_path)) {
+            lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+        } else {
+            struct ImageSettings image_settings = {
+                    preview_path, 6,
+                    validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
+                    validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
+                    theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
+                    theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
+            };
+            update_image(ui_imgBox, image_settings);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", preview_path);
+        }
+    }
+    preview_displayTime = 0;
 }
 
 static void create_theme_items(void) {
@@ -338,12 +347,20 @@ static void init_elements(void) {
 
 static void ui_refresh_task() {
     if (ui_count > 0 && nav_moved) {
+        preview_index = -1;
         image_refresh();
+        preview_displayTime = 0;
 
         adjust_panels();
 
         lv_obj_invalidate(ui_pnlBox);
         nav_moved = 0;
+    }
+    preview_displayTime += TIMER_REFRESH;
+    if (preview_displayTime > THEME_PREVIEW_DELAY) {
+        preview_index ++;
+        image_refresh();
+        preview_displayTime = 0;
     }
 }
 

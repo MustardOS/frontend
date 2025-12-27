@@ -1577,3 +1577,36 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
                                      MU_OBJ_MAIN_FOCUS);
     }
 }
+
+int get_theme_preview_path(char *base_path, char *base_file_name, 
+                           char *image_path, size_t image_path_size, int preview_index) {
+    char preview_suffix[MAX_BUFFER_SIZE];
+    char preview_path[MAX_BUFFER_SIZE];
+    char fallback_path[MAX_BUFFER_SIZE];
+
+    const char *suffixes[2];
+    size_t count = 0;
+
+    if (preview_index >= 0) {
+        snprintf(preview_suffix, sizeof(preview_suffix), ".%d", preview_index);
+        suffixes[count++] = preview_suffix;
+    }
+
+    suffixes[count++] = "";
+
+    for (size_t i = 0; i < count; i++) {
+        snprintf(preview_path, sizeof(preview_path), "%s/%s%s%s.png",
+                base_path, mux_dimension, base_file_name, suffixes[i]);
+
+        snprintf(fallback_path, sizeof(fallback_path), "%s/640x480/%s%s.png",
+                base_path, base_file_name, suffixes[i]);
+
+        if (!file_exist(preview_path) && !file_exist(fallback_path)) {
+            snprintf(image_path, image_path_size, "%s", "");
+        } else {
+            snprintf(image_path, image_path_size, "%s", file_exist(preview_path) ? preview_path : fallback_path);
+            return i;
+        }
+    }
+    return -1;
+}

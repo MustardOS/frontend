@@ -9,7 +9,9 @@ static size_t theme_item_count = 0;
 static char *preview_zip_path = "/tmp/theme_catalogue.muxzip";
 
 static int exit_status = 0;
-static int starter_image = 0;
+
+static int preview_displayTime = 0;
+static int preview_index = -1;
 
 static void show_help(void) {
     char text_path[MAX_BUFFER_SIZE];
@@ -33,58 +35,34 @@ static bool is_downloaded(int index) {
 }
 
 static void image_refresh() {
+    char base_image_path[MAX_BUFFER_SIZE];
+    snprintf(base_image_path, sizeof(base_image_path), "%s/theme/box", INFO_CAT_PATH);
+
+    char preview_path[MAX_BUFFER_SIZE];
+    if (get_theme_preview_path(base_image_path, theme_items[current_item_index].name, preview_path, sizeof(preview_path), preview_index) != 0){
+        preview_index = -1;
+    }
+
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
-    char image[MAX_BUFFER_SIZE];
-    char *core_artwork = "theme";
-    char *image_type = "box";
+    if (strcasecmp(box_image_previous_path, preview_path) != 0) {
 
-    load_image_catalogue(core_artwork, theme_items[current_item_index].name, "", "default", mux_dimension,
-                         image_type,
-                         image, sizeof(image));
-    if (!file_exist(image)) {
-        load_image_catalogue(core_artwork, theme_items[current_item_index].name, "", "default", "640x480/",
-                             image_type,
-                             image, sizeof(image));
-    }
-
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
-
-    if (strcasecmp(image_type, "preview") == 0) {
-        if (strcasecmp(preview_image_previous_path, image) != 0) {
-            if (file_exist(image)) {
-                struct ImageSettings image_settings = {
-                        image, LV_ALIGN_CENTER,
-                        validate_int16((int16_t) (device.MUX.WIDTH * .9) - 60, "width"),
-                        validate_int16((int16_t) (device.MUX.HEIGHT * .9) - 120, "height"),
-                        0, 0, 0, 0
-                };
-                update_image(ui_imgHelpPreviewImage, image_settings);
-                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
-            } else {
-                lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
-                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
-            }
-        }
-    } else {
-        if (strcasecmp(box_image_previous_path, image) != 0) {
-            if (file_exist(image)) {
-                starter_image = 1;
-                struct ImageSettings image_settings = {
-                        image, 6,
-                        validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
-                        validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
-                        theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
-                        theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
-                };
-                update_image(ui_imgBox, image_settings);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-            } else {
-                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
-            }
+        if (!file_exist(preview_path)) {
+            lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+        } else {
+            struct ImageSettings image_settings = {
+                    preview_path, 6,
+                    validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
+                    validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
+                    theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
+                    theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
+            };
+            update_image(ui_imgBox, image_settings);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", preview_path);
         }
     }
+    preview_displayTime = 0;
 }
 
 static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabled, bool language_enabled,
@@ -227,7 +205,6 @@ static void list_nav_move(int steps, int direction) {
     lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
                                                                     : lang.MUXTHEMEDOWN.DOWNLOAD);
 
-    image_refresh();
     nav_moved = 1;
 }
 
@@ -417,8 +394,11 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
-    if (nav_moved) {
-        starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
+    if (ui_count > 0 && nav_moved) {
+        preview_index = -1;
+        image_refresh();
+        preview_displayTime = 0;
+
         adjust_panels();
 
         if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
@@ -430,11 +410,16 @@ static void ui_refresh_task() {
 
         nav_moved = 0;
     }
+    preview_displayTime += TIMER_REFRESH;
+    if (preview_displayTime > THEME_PREVIEW_DELAY) {
+        preview_index ++;
+        image_refresh();
+        preview_displayTime = 0;
+    }
 }
 
 int muxthemedown_main(void) {
     exit_status = 0;
-    starter_image = 0;
     snprintf(theme_data_local_path, sizeof(theme_data_local_path), "%s/%s",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" THEME_DATA);
 
