@@ -462,3 +462,6 @@ void init_item_animation();
 void init_item_style(struct theme_config *theme);
 
 void init_glyph_style(struct theme_config *theme);
+
+int get_theme_preview_path(char *base_path, char *base_file_name, 
+                           char *image_path, size_t image_path_size, int preview_index);
