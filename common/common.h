@@ -446,7 +446,7 @@ int is_partition_mounted(const char *partition);
 
 void get_storage_info(const char *partition, double *total, double *free, double *used);
 
-char *get_version();
+char *get_version(int verify);
 
 char *get_build();
 

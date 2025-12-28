@@ -474,6 +474,7 @@ static void init_audio(void) {
 
 int main(void) {
     install_signal_handlers();
+    verify_check = script_hash_check();
 
     // If parent (frontend.sh) dies, ask the kernel nicely to send us a SIGTERM hopefully
     prctl(PR_SET_PDEATHSIG, SIGTERM);
@@ -485,7 +486,8 @@ int main(void) {
     load_config(&config);
     load_kiosk(&kiosk);
 
-    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(), get_build())
+    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build())
+    if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!")
 
     // For future reference we need to initialise the theme before we do the display
     // as we call upon the theme variables for specific settings within display init

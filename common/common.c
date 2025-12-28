@@ -2957,7 +2957,8 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  config.THEME.STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  config.THEME.STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 &&
+         file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
                   config.THEME.STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
@@ -3164,9 +3165,9 @@ void get_storage_info(const char *partition, double *total, double *free, double
     *used = *total - *free;
 }
 
-char *get_version(void) {
+char *get_version(int verify) {
     static char version[64];
-    snprintf(version, sizeof(version), "%s", str_replace(config.SYSTEM.VERSION, "_", " "));
+    snprintf(version, sizeof(version), "%s%s", str_replace(config.SYSTEM.VERSION, "_", " "), verify ? "*" : "");
     return version;
 }
 

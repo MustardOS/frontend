@@ -38,6 +38,7 @@
 #include "../common/collection.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
+#include "../common/verify.h"
 #include "../common/core/common.h"
 #include "../common/img/nothing.h"
 #include "../common/input/list_nav.h"
@@ -48,6 +49,8 @@
 
 extern size_t item_count;
 extern content_item *items;
+
+extern int verify_check;
 
 extern int refresh_kiosk;
 extern int refresh_config;

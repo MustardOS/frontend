@@ -3,6 +3,8 @@
 size_t item_count = 0;
 content_item *items = NULL;
 
+int verify_check = 0;
+
 int refresh_kiosk = 0;
 int refresh_config = 0;
 int refresh_device = 0;

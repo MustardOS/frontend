@@ -99,6 +99,8 @@ struct mux_lang {
         char THURSDAY[MAX_BUFFER_SIZE];
         char FRIDAY[MAX_BUFFER_SIZE];
         char SATURDAY[MAX_BUFFER_SIZE];
+        char CLEAN[MAX_BUFFER_SIZE];
+        char MODIFIED[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {

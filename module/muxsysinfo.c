@@ -230,7 +230,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_version(verify_check));
     INIT_VALUE_ITEM(-1, sysinfo, Build, lang.MUXSYSINFO.BUILD, "build", get_build());
     INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
     INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
@@ -289,7 +289,13 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblBuild_sysinfo) {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    if (element_focused == ui_lblVersion_sysinfo) {
+        toast_message(verify_check ? lang.GENERIC.MODIFIED : lang.GENERIC.CLEAN, SHORT);
+    }
+
+    if (element_focused == ui_lblBuild_sysinfo) {
         play_sound(SND_MUOS);
 
         switch (tap_count) {
@@ -391,16 +397,16 @@ static void handle_a(void) {
         tap_count++;
     }
 
-    if (lv_group_get_focused(ui_group) == ui_lblMemory_sysinfo) {
+    if (element_focused == ui_lblMemory_sysinfo) {
         write_text_to_file("/proc/sys/vm/drop_caches", "w", INT, 3);
         toast_message(lang.MUXSYSINFO.MEMORY.DROP, MEDIUM);
     }
 
-    if (lv_group_get_focused(ui_group) == ui_lblKernel_sysinfo) {
+    if (element_focused == ui_lblKernel_sysinfo) {
         toast_message(hostname, MEDIUM);
     }
 
-    if (lv_group_get_focused(ui_group) == ui_lblRefresh_sysinfo) {
+    if (element_focused == ui_lblRefresh_sysinfo) {
         toast_message(lang.GENERIC.REFRESH, FOREVER);
 
         refresh_config = 1;
@@ -495,6 +501,8 @@ static void ui_refresh_task() {
 }
 
 int muxsysinfo_main(void) {
+    verify_check = script_hash_check();
+
     const char *m = "muxsysinfo";
     set_process_name(m);
     init_module(m);
