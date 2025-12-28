@@ -314,6 +314,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.GRID_MODE_CONTENT, "Content Grid Mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_DOWN, "Theme Download");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_SCALING, "Theme Scaling");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_RES, "Theme Resolution");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCREEN, "Screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALT, "Alternative Theme");
@@ -354,6 +355,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.HOLD_A, "Hold A");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.LOAD_STATE, "Load State");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.START_FRESH, "Start Fresh");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.NO_SCALE, "None");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.SCALE, "Scale");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.STRETCH, "Stretch");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
@@ -361,6 +365,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_DOWN, "Download themes from the MustardOS website");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the MustardOS frontend launcher");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_RES, "Allows for testing different theme resolutions");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_SCALING, "Controls the type of scaling used when applying Theme Resolution setting");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_ALT, "Switch between different theme alternatives");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FADE, "Toggle the fade to black animation on content launching");

@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcustom.h"
 
-#define UI_COUNT 20
+#define UI_COUNT 21
 
 #define CUSTOM(NAME, UDATA) static int NAME##_original;
 CUSTOM_ELEMENTS
@@ -49,6 +49,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblConfig_custom,          lang.MUXCUSTOM.HELP.CONFIG},
             {ui_lblTheme_custom,           lang.MUXCUSTOM.HELP.THEME},
             {ui_lblThemeResolution_custom, lang.MUXCUSTOM.HELP.THEME_RES},
+            {ui_lblThemeScaling_custom,    lang.MUXCUSTOM.HELP.THEME_SCALING},
             {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALT},
             {ui_lblAnimation_custom,       lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblMusic_custom,           lang.MUXCUSTOM.HELP.MUSIC},
@@ -162,10 +163,17 @@ static void init_navigation_group(void) {
             lang.MUXCUSTOM.LAUNCH_SWAP.START_FRESH
     };
 
+    char *theme_scaling_options[] = {
+            lang.MUXCUSTOM.SCALING.NO_SCALE,
+            lang.MUXCUSTOM.SCALING.SCALE,
+            lang.MUXCUSTOM.SCALING.STRETCH
+    };
+
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RES, "resolution", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, ThemeScaling, lang.MUXCUSTOM.THEME_SCALING, "scaling", theme_scaling_options, 3);
 
     if (populate_theme_alternates() > 0) {
         INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALT, "alternate", NULL, 0);
@@ -317,6 +325,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droMusicVolume_custom, config.SETTINGS.GENERAL.BGMVOL);
     lv_dropdown_set_selected(ui_droSound_custom, config.SETTINGS.GENERAL.SOUND);
     lv_dropdown_set_selected(ui_droChime_custom, config.SETTINGS.GENERAL.CHIME);
+    lv_dropdown_set_selected(ui_droThemeScaling_custom, config.SETTINGS.GENERAL.THEME_SCALING);
 }
 
 static void save_custom_options(char *next_screen) {
@@ -337,6 +346,7 @@ static void save_custom_options(char *next_screen) {
     CHECK_AND_SAVE_STD(custom, Font, "settings/advanced/font", INT, 0);
     CHECK_AND_SAVE_STD(custom, Sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_STD(custom, Chime, "settings/general/chime", INT, 0);
+    CHECK_AND_SAVE_STD(custom, ThemeScaling, "settings/general/theme_scaling", INT, 0);
 
     char theme_resolution[MAX_BUFFER_SIZE];
     lv_dropdown_get_selected_str(ui_droThemeResolution_custom, theme_resolution, sizeof(theme_resolution));
@@ -346,6 +356,10 @@ static void save_custom_options(char *next_screen) {
         is_modified++;
 
         write_text_to_file(CONF_CONFIG_PATH "settings/general/theme_resolution", "w", INT, idx_theme_resolution);
+        refresh_resolution = 1;
+    }
+    
+    if (lv_dropdown_get_selected(ui_droThemeScaling_custom) != ThemeScaling_original) {
         refresh_resolution = 1;
     }
 

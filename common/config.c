@@ -129,6 +129,7 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, CONF_CONFIG_PATH "settings/general/startup", "launcher")
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, CONF_CONFIG_PATH "settings/general/language", "English")
     CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_RESOLUTION, CONF_CONFIG_PATH "settings/general/theme_resolution", 0)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_SCALING, CONF_CONFIG_PATH "settings/general/theme_scaling", 1)
 
     switch (config->SETTINGS.GENERAL.THEME_RESOLUTION) {
         case 1:

@@ -1049,6 +1049,8 @@ void scale_theme(struct mux_device *device) {
             device->MUX.WIDTH = dimensions[i].width;
             device->MUX.HEIGHT = dimensions[i].height;
             device->SCREEN.ZOOM = (float) target_width / dimensions[i].width;
+            device->SCREEN.ZOOM_WIDTH = device->SCREEN.ZOOM;
+            device->SCREEN.ZOOM_HEIGHT = device->SCREEN.ZOOM;
             LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
                      dimensions[i].width, dimensions[i].height, target_width, target_height)
             LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
@@ -1070,6 +1072,8 @@ void scale_theme(struct mux_device *device) {
         float scale_height = (float) target_height / dimensions[i].height;
         device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width
                                                            : scale_height; // Ensure neither dimension exceeds target
+        device->SCREEN.ZOOM_WIDTH = scale_width;
+        device->SCREEN.ZOOM_HEIGHT = scale_height;
         LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
                  dimensions[i].width, dimensions[i].height, target_width, target_height)
         LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
@@ -1098,6 +1102,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
                 // Ensure neither dimension exceeds target
                 device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height;
+                device->SCREEN.ZOOM_WIDTH = scale_width;
+                device->SCREEN.ZOOM_HEIGHT = scale_height;
                 LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
             }
         }
