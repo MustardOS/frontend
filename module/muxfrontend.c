@@ -96,6 +96,13 @@ static void cleanup_screen(void) {
     RESET_PATH(splash_image_previous_path);
 }
 
+static void cleanup_all(void) {
+    dispose_input();
+    timer_destroy_all();
+    cleanup_screen();
+    sdl_cleanup();
+}
+
 static void quit_watchdog(lv_timer_t *t) {
     (void) t;
 
@@ -105,11 +112,7 @@ static void quit_watchdog(lv_timer_t *t) {
         LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal)
         shutting_down = 1;
 
-        dispose_input();
-        timer_destroy_all();
-        cleanup_screen();
-        sdl_cleanup();
-
+        cleanup_all();
         exit(0);
     }
 }
@@ -625,10 +628,6 @@ int main(void) {
         cleanup_screen();
     }
 
-    dispose_input();
-    timer_destroy_all();
-    cleanup_screen();
-    sdl_cleanup();
-
+    cleanup_all();
     return 0;
 }
