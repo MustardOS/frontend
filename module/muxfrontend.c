@@ -7,8 +7,8 @@
 static volatile sig_atomic_t quit_signal = 0;
 static volatile sig_atomic_t shutting_down = 0;
 
-int first_boot = 1;
-
+static int first_boot = 1;
+static int screen_clean = 1;
 static int last_index = 0;
 static int forced_flag = 0;
 static int is_app = 0;
@@ -20,6 +20,18 @@ static char rom_sys[PATH_MAX];
 static char previous_module[MAX_BUFFER_SIZE];
 static char splash_image_path[MAX_BUFFER_SIZE];
 static char alert_image_path[MAX_BUFFER_SIZE];
+
+/*
+ * Sometimes only executed functions (shutdown / reboot / install)
+ * No behaviour change from what is understood...
+ * Just better locality on small-ish CPUs
+ * https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-cold-function-attribute
+ */
+__attribute__((cold)) static void module_shutdown(void);
+
+__attribute__((cold)) static void module_reboot(void);
+
+__attribute__((cold)) static void module_install(void);
 
 typedef struct {
     char *action;
@@ -50,12 +62,15 @@ static void install_signal_handlers(void) {
 }
 
 static void cleanup_screen(void) {
+    if (screen_clean) return;
+    screen_clean = 1;
+
     SAFE_DELETE(toast_timer, lv_timer_del);
     SAFE_DELETE(counter_timer, lv_timer_del);
     SAFE_DELETE(key_entry, lv_obj_del);
     SAFE_DELETE(num_entry, lv_obj_del);
 
-    if (ui_screen_container == NULL) return;
+    if (!ui_screen_container) return;
 
     dispose_input();
     timer_suspend_all();
@@ -99,18 +114,33 @@ static void quit_watchdog(lv_timer_t *t) {
     }
 }
 
-static void process_action(char *action, char *module) {
-    if (!file_exist(action)) return;
+static int process_action(const char *action, const char *module) {
+    if (!file_exist(action)) return 0;
 
-    snprintf(rom_name, sizeof(rom_name), "%s", read_line_char_from(action, 1));
-    snprintf(rom_dir, sizeof(rom_dir), "%s", read_line_char_from(action, 2));
-    snprintf(rom_sys, sizeof(rom_sys), "%s", read_line_char_from(action, 3));
+    char *name = read_line_char_from(action, 1);
+    char *dir = read_line_char_from(action, 2);
+    char *sys = read_line_char_from(action, 3);
+
+    if (!name || !dir || !sys) {
+        remove(action);
+        return 0;
+    }
+
+    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    snprintf(rom_sys, sizeof(rom_sys), "%s", sys);
 
     forced_flag = read_line_int_from(action, 4);
     is_app = read_line_int_from(action, 5);
 
     remove(action);
-    if (!is_app) load_mux(forced_flag ? "option" : module);
+
+    if (!is_app) {
+        screen_clean = 0;
+        load_mux(forced_flag ? "option" : module);
+    }
+
+    return 1;
 }
 
 void last_index_check(void) {
@@ -151,6 +181,8 @@ static int set_alert_image_path(void) {
 }
 
 static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
+    screen_clean = 0;
+
     LOG_DEBUG("muxfrontend", "GOBACK: %s | MODULE: %s", goback, module)
 
     load_mux(goback);
@@ -368,6 +400,16 @@ static void module_start(void) {
     }
 }
 
+static void module_refresh(void) {
+    if (!(refresh_kiosk | refresh_config | refresh_device)) return;
+
+    if (refresh_kiosk) load_kiosk(&kiosk);
+    if (refresh_config) load_config(&config);
+    if (refresh_device) load_device(&device);
+
+    refresh_kiosk = refresh_config = refresh_device = 0;
+}
+
 static const ModuleEntry modules[] = {
         // these modules have specific functions and are not
         // straight forward module launching
@@ -434,6 +476,36 @@ static const ModuleEntry modules[] = {
         // this is required because it is the end of the table!
         {NULL,         NULL, NULL, NULL,                                    NULL}
 };
+
+static int module_dispatch(void) {
+    if (!file_exist(MUOS_ACT_LOAD)) return 0;
+
+    char *action = read_line_char_from(MUOS_ACT_LOAD, 1);
+    if (!action) return 0;
+
+    remove(MUOS_ACT_LOAD);
+
+    for (size_t i = 0; modules[i].action; ++i) {
+        if (strcmp(action, modules[i].action) == 0) {
+            screen_clean = 0;
+
+            if (modules[i].mux_func) {
+                modules[i].mux_func();
+            } else {
+                exec_mux(modules[i].goback, modules[i].module, modules[i].mux_main);
+            }
+
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static void idle_yield(int do_work) {
+    lv_task_handler();
+    if (!do_work) usleep(4096);
+}
 
 static void reset_alert(void) {
     if (config.BOOT.FACTORY_RESET) return;
@@ -516,6 +588,8 @@ int main(void) {
     }
 
     while (1) {
+        int did_work = 0;
+
         if (file_exist(SAFE_QUIT)) {
             LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
             break;
@@ -541,48 +615,27 @@ int main(void) {
         }
 
         // Process application option loader
-        process_action(MUOS_APL_LOAD, "");
+        did_work |= process_action(MUOS_APL_LOAD, "");
 
         // Process content association and governor actions
-        process_action(MUOS_ASS_LOAD, "assign");
-        process_action(MUOS_GOV_LOAD, "governor");
+        did_work |= process_action(MUOS_ASS_LOAD, "assign");
+        did_work |= process_action(MUOS_GOV_LOAD, "governor");
+
+        module_refresh();
 
         if (file_exist(MUOS_ACT_LOAD)) {
-            if (refresh_kiosk) {
-                sync();
-                load_kiosk(&kiosk);
-                refresh_kiosk = 0;
+            did_work |= module_dispatch();
+            if (!did_work) {
+                module_start();
+                did_work = 1;
             }
-
-            if (refresh_config) {
-                sync();
-                load_config(&config);
-                refresh_config = 0;
-            }
-
-            if (refresh_device) {
-                sync();
-                load_device(&device);
-                refresh_device = 0;
-            }
-
-            int go_mux = 0;
-            for (size_t i = 0; modules[i].action != NULL; ++i) {
-                if (strcmp(read_line_char_from(MUOS_ACT_LOAD, 1), modules[i].action) == 0) {
-                    modules[i].mux_func
-                    ? modules[i].mux_func()
-                    : exec_mux(modules[i].goback, modules[i].module, modules[i].mux_main);
-                    go_mux = 1;
-                    break;
-                }
-            }
-
-            if (!go_mux) module_start();
         } else {
             module_start();
+            did_work = 1;
         }
 
         cleanup_screen();
+        idle_yield(did_work);
     }
 
     dispose_input();
