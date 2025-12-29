@@ -96,6 +96,7 @@
     CUSTOM(Config,          "config")          \
     CUSTOM(Theme,           "theme")           \
     CUSTOM(ThemeResolution, "resolution")      \
+    CUSTOM(ThemeScaling,    "scaling")         \
     CUSTOM(ThemeAlternate,  "alternate")       \
     CUSTOM(Animation,       "animation")       \
     CUSTOM(Music,           "music")           \

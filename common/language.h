@@ -332,6 +332,7 @@ struct mux_lang {
         char THEME_DOWN[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
         char THEME_RES[MAX_BUFFER_SIZE];
+        char THEME_SCALING[MAX_BUFFER_SIZE];
         char SCREEN[MAX_BUFFER_SIZE];
         char THEME_ALT[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
@@ -386,11 +387,17 @@ struct mux_lang {
             char START_FRESH[MAX_BUFFER_SIZE];
         } LAUNCH_SWAP;
         struct {
+            char NO_SCALE[MAX_BUFFER_SIZE];
+            char SCALE[MAX_BUFFER_SIZE];
+            char STRETCH[MAX_BUFFER_SIZE];
+        } SCALING;
+        struct {
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char GRID_MODE_CONTENT[MAX_BUFFER_SIZE];
             char THEME_DOWN[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
+            char THEME_SCALING[MAX_BUFFER_SIZE];
             char THEME_RES[MAX_BUFFER_SIZE];
             char THEME_ALT[MAX_BUFFER_SIZE];
             char ANIMATION[MAX_BUFFER_SIZE];

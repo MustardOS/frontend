@@ -31,8 +31,20 @@ void sdl_init(void) {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_ShowCursor(SDL_DISABLE);
 
-    scale_width = device.MUX.WIDTH * device.SCREEN.ZOOM;
-    scale_height = device.MUX.HEIGHT * device.SCREEN.ZOOM;
+    switch (config.SETTINGS.GENERAL.THEME_SCALING) {
+        case 0: //No Scaling
+            scale_width = device.MUX.WIDTH;
+            scale_height = device.MUX.HEIGHT;
+            break;
+        case 2: //Stretch to Screen
+            scale_width = device.MUX.WIDTH * device.SCREEN.ZOOM_WIDTH;
+            scale_height = device.MUX.HEIGHT * device.SCREEN.ZOOM_HEIGHT;
+            break;
+        default: //Scale with letterbox
+            scale_width = device.MUX.WIDTH * device.SCREEN.ZOOM;
+            scale_height = device.MUX.HEIGHT * device.SCREEN.ZOOM;
+            break;
+    }    
     LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height)
 
     underscan = (config.BOOT.DEVICE_MODE && config.SETTINGS.HDMI.SCAN) ? 16 : 0;
