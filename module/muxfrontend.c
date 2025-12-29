@@ -90,10 +90,10 @@ static void cleanup_screen(void) {
     ui_count = 0;
     grid_mode_enabled = 0;
 
-    snprintf(current_wall, sizeof(current_wall), "");
-    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
-    snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "");
-    snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "");
+    RESET_PATH(current_wall);
+    RESET_PATH(box_image_previous_path);
+    RESET_PATH(preview_image_previous_path);
+    RESET_PATH(splash_image_previous_path);
 }
 
 static void quit_watchdog(lv_timer_t *t) {
