@@ -14,18 +14,18 @@ else
     $(error Unsupported Device: $(DEVICE))
 endif
 
-CC = ccache $(CROSS_COMPILE)gcc -O3 -pipe
-
 LVGL_DIR_NAME 	?= .
 LVGL_DIR 		?= .
 
-CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
-	-flto -finline-functions -Wall -Wno-format-zero-length -fPIC
+CC = ccache $(CROSS_COMPILE)gcc
 
-LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
+CFLAGS = $(ARCH) -O3 -pipe -flto=auto \
+         -ffunction-sections -fdata-sections \
+         -finline-functions -fmerge-all-constants \
+         -Wall -Wno-format-zero-length -Wno-unused-function\
+         -fno-stack-protector -fno-ident -fPIC
 
-EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
+LDFLAGS = -shared $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 BUILD_DIR 		= ./build
 BUILD_OBJ_DIR 	= $(BUILD_DIR)/obj
@@ -58,6 +58,6 @@ $(BUILD_OBJ_DIR)/%.o: %.S
 
 $(LIBRARY): $(TARGET)
 	@mkdir -p $(dir $(LIBRARY))
-	$(CC) -shared -o $@ $(TARGET) $(EXTRA)
+	$(CC) -o $@ $(TARGET) $(LDFLAGS)
 	@echo "Built shared library: $@"
 	@rm -rf $(BUILD_DIR)

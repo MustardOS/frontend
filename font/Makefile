@@ -14,15 +14,15 @@ else
     $(error Unsupported Device: $(DEVICE))
 endif
 
-CC = ccache $(CROSS_COMPILE)gcc -O3 -pipe
+CC = ccache $(CROSS_COMPILE)gcc
 
-CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
-	-flto -finline-functions -Wall -Wno-format-zero-length -fPIC
+CFLAGS = $(ARCH) -O3 -pipe -flto=auto \
+         -ffunction-sections -fdata-sections \
+         -finline-functions -fmerge-all-constants \
+         -Wall -Wno-format-zero-length -Wno-unused-function\
+         -fno-stack-protector -fno-ident -fPIC
 
 LDFLAGS = -shared $(CFLAGS) -lpthread -Wl,--gc-sections -s
-
-EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
 SRC_DIRS = .
 SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))

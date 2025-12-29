@@ -14,15 +14,15 @@ else
     $(error Unsupported Device: $(DEVICE))
 endif
 
-CC = ccache $(CROSS_COMPILE)gcc -O3 -pipe
+CC = ccache $(CROSS_COMPILE)gcc
 
-CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
-	-flto -finline-functions -Wall -Wno-format-zero-length -fPIC
+CFLAGS = $(ARCH) -O3 -pipe -flto=auto \
+         -ffunction-sections -fdata-sections \
+         -finline-functions -fmerge-all-constants \
+         -Wall -Wno-format-zero-length -Wno-unused-function\
+         -fno-stack-protector -fno-ident -fPIC
 
-LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
-
-EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
+LDFLAGS = -shared $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 SRC_DIRS = .
 SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
@@ -35,7 +35,7 @@ all: $(LIB_DIR)/$(LIB_FILE)
 $(LIB_DIR)/$(LIB_FILE): $(OBJS)
 	@printf "Linking objects into %s\n" "$@"
 	@mkdir -p $(LIB_DIR)
-	@$(CC) $(OBJS) $(EXTRA) -shared -o $@
+	@$(CC) $(OBJS) $(LDFLAGS) -o $@
 	@find ${shell pwd} -name "*.o" -exec rm -f {} +
 
 %.o: %.c

@@ -27,10 +27,13 @@ DEBUG ?= 0
 VERBOSE = $(if $(filter 2,$(DEBUG)),, @)
 QUIET = $(if $(filter 1,$(DEBUG)),,>/dev/null 2>&1)
 
-CC = ccache $(CROSS_COMPILE)gcc -O3 -pipe
+CC = ccache $(CROSS_COMPILE)gcc
 
-CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
-         -flto -finline-functions -Wall -Wno-format-zero-length
+CFLAGS = $(ARCH) -O3 -pipe -flto=auto \
+         -ffunction-sections -fdata-sections \
+         -finline-functions -fmerge-all-constants \
+         -Wall -Wno-format-zero-length \
+         -fno-stack-protector -fno-ident
 
 MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
          -I./common/img -I./common/input -I./common/json \
@@ -40,9 +43,6 @@ LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lmuxmodule \
           -lnotosans_big -lnotosans_big_hd -lnotosans_medium \
           -lnotosans_sc_medium -lnotosans_tc_medium -lnotosans_jp_medium -lnotosans_kr_medium -lnotosans_ar_medium \
           -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -Wl,--gc-sections -s -Wl,-rpath,'./lib'
-
-EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-         -fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
 .PHONY: all $(MODULES) prebuild clean notify
 
@@ -65,7 +65,7 @@ clean:
 
 %.o: $(MODULE_DIR)/%.c
 	@echo "Compiling $< to $@"
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) -c $< -o $@ $(EXTRA) $(QUIET)
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(QUIET)
 
 $(MODULES):
 	@echo "Building Module: $@"
@@ -77,7 +77,7 @@ $(MODULES):
 	else \
 		UI_OBJ=""; \
 	fi; \
-	$(CC) -D$(DEVICE) $(MODULE_DIR)/$@.c $$UI_OBJ -o $@ $(EXTRA) $(QUIET) || { echo "Error building $@"; exit 1; }; \
+	$(CC) -D$(DEVICE) $(MODULE_DIR)/$@.c $$UI_OBJ -o $@ $(LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }; \
 	mkdir -p $(BIN_DIR); mv $@ $(BIN_DIR) || { echo "Error moving $@ to $(BIN_DIR)"; exit 1; }
 	$(VERBOSE)find ./$(MODULE_DIR) -name "*.o" -exec rm -f {} +
 
