@@ -502,11 +502,6 @@ static int module_dispatch(void) {
     return 0;
 }
 
-static void idle_yield(int do_work) {
-    lv_task_handler();
-    if (!do_work) usleep(4096);
-}
-
 static void reset_alert(void) {
     if (config.BOOT.FACTORY_RESET) return;
 
@@ -588,8 +583,6 @@ int main(void) {
     }
 
     while (1) {
-        int did_work = 0;
-
         if (file_exist(SAFE_QUIT)) {
             LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
             break;
@@ -615,27 +608,21 @@ int main(void) {
         }
 
         // Process application option loader
-        did_work |= process_action(MUOS_APL_LOAD, "");
+        process_action(MUOS_APL_LOAD, "");
 
         // Process content association and governor actions
-        did_work |= process_action(MUOS_ASS_LOAD, "assign");
-        did_work |= process_action(MUOS_GOV_LOAD, "governor");
+        process_action(MUOS_ASS_LOAD, "assign");
+        process_action(MUOS_GOV_LOAD, "governor");
 
         module_refresh();
 
         if (file_exist(MUOS_ACT_LOAD)) {
-            did_work |= module_dispatch();
-            if (!did_work) {
-                module_start();
-                did_work = 1;
-            }
+            if (!module_dispatch()) module_start();
         } else {
             module_start();
-            did_work = 1;
         }
 
         cleanup_screen();
-        idle_yield(did_work);
     }
 
     dispose_input();
