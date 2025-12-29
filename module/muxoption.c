@@ -362,9 +362,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
-    const char *m = "muxoption";
-    set_process_name(m);
-    init_module(m);
+    init_module(__func__);
 
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);

@@ -164,10 +164,7 @@ static void ui_refresh_task() {
 }
 
 int muxtimezone_main(void) {
-    const char *m = "muxtimezone";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTIMEZONE.TITLE);

@@ -104,10 +104,7 @@ static void ui_refresh_task() {
 int muxtext_main(void) {
     if (!file_exist(TEXT_FILE)) return 1;
 
-    const char *m = "muxtext";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, read_line_char_from(TEXT_FILE, 1));

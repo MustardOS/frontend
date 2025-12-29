@@ -118,9 +118,7 @@ int muxpass_main(int auth_type) {
     p_type = auth_type;
     exit_status_muxpass = 0;
 
-    const char *m = "muxpass";
-    set_process_name(m);
-    init_module(m);
+    init_module(__func__);
 
     load_passcode(&passcode, &device);
 

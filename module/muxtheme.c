@@ -371,10 +371,7 @@ int muxtheme_main(char *ex_dir) {
     remove_double_slashes(sys_dir);
     remove_double_slashes(base_dir);
 
-    const char *m = "muxtheme";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.THEME);

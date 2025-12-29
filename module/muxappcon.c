@@ -242,10 +242,7 @@ int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
     snprintf(app_name, sizeof(app_name), "%s", name);
     snprintf(app_dir, sizeof(app_dir), "%s", dir);
 
-    const char *m = "muxappcon";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXAPPCON.TITLE);

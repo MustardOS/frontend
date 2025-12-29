@@ -295,10 +295,7 @@ int muxdownload_main(char *type) {
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" EXTRA_DATA);
     snprintf(data_type, sizeof(data_type), "%s", type);
 
-    const char *m = "muxdownload";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, strcmp(type, "core") == 0

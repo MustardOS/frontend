@@ -589,10 +589,7 @@ int muxhistory_main(int his_index) {
     starter_image = 0;
     splash_valid = 0;
 
-    const char *m = "muxhistory";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, "");

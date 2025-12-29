@@ -92,9 +92,7 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    const char *m = "muxmessage";
-    set_process_name(m);
-    init_module(m);
+    init_module("muxmessage");
 
     detach_parent_process();
 

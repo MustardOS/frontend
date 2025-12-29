@@ -613,10 +613,7 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxnetwork_main(void) {
-    const char *m = "muxnetwork";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETWORK.TITLE);

@@ -115,11 +115,9 @@ int main(void) {
     load_device(&device);
     load_config(&config);
 
-    const char *m = "muxcharge";
-    set_process_name(m);
-    init_module(m);
-
+    init_module("muxcharge");
     init_theme(0, 0);
+
     init_display();
 
     init_muxcharge();

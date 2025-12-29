@@ -98,7 +98,8 @@ void close_input(void) {
 }
 
 void init_module(const char *module) {
-    snprintf(mux_module, sizeof(mux_module), "%s", module);
+    snprintf(mux_module, sizeof(mux_module), "%s", module_from_func(module));
+    set_process_name(mux_module);
     load_lang(&lang);
 }
 

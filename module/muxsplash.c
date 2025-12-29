@@ -1,10 +1,7 @@
 #include "muxshare.h"
 
 int muxsplash_main(char *splash_image, bool apply_recolour) {
-    const char *m = "muxsplash";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(0, 0);
 
     init_ui_common_screen(&theme, &device, &lang, "");

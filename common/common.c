@@ -3644,3 +3644,19 @@ const char *get_process_name(void) {
     module[15] = '\0';
     return module;
 }
+
+const char *module_from_func(const char *func) {
+    static char module[64];
+    const char *suffix = "_main";
+
+    size_t len = strlen(func);
+    size_t slen = strlen(suffix);
+
+    if (len > slen && strcmp(func + len - slen, suffix) == 0) len -= slen;
+    if (len >= sizeof(module)) len = sizeof(module) - 1;
+
+    memcpy(module, func, len);
+    module[len] = '\0';
+
+    return module;
+}

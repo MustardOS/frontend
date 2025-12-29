@@ -360,9 +360,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
 
     is_app = app;
 
-    const char *m = "muxcontrol";
-    set_process_name(m);
-    init_module(m);
+    init_module(__func__);
 
     if (is_app) {
         LOG_INFO(mux_module, "Assign Control APP_NAME: \"%s\"", rom_name)

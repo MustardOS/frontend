@@ -884,10 +884,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? collection_path : dir);
     access_mode = strcasecmp(collection_path, INFO_CKS_PATH) ? "collection" : "kiosk";
 
-    const char *m = "muxcollect";
-    set_process_name(m);
-    init_module(m);
-
+    init_module(__func__);
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, "");
