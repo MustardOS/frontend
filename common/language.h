@@ -1143,6 +1143,7 @@ struct mux_lang {
         char INCVOLUME[MAX_BUFFER_SIZE];
         char MAXGPU[MAX_BUFFER_SIZE];
         char AUDIOREADY[MAX_BUFFER_SIZE];
+        char AUDIOSWAP[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char RETRO[MAX_BUFFER_SIZE];
@@ -1210,6 +1211,7 @@ struct mux_lang {
             char INCVOLUME[MAX_BUFFER_SIZE];
             char MAXGPU[MAX_BUFFER_SIZE];
             char AUDIOREADY[MAX_BUFFER_SIZE];
+            char AUDIOSWAP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
 

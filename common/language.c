@@ -1012,6 +1012,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.INCVOLUME, "Volume Increment");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.MAXGPU, "GPU Performance Mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOREADY, "Audio Subsystem Wait");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOSWAP, "Audio Reverse");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SPEED, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEAT_DELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
@@ -1042,6 +1043,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.INCVOLUME, "Change the level of volume incrementation when adjusting");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.MAXGPU, "Push the onboard GPU to the maximum frequency at all times");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOREADY, "Toggle if the device will wait for the audio subsystem to initialise during boot");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOSWAP, "Toggle the swap of left and right channels of audio");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");

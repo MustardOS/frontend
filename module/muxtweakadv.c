@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 30
+#define UI_COUNT 31
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
 TWEAKADV_ELEMENTS
@@ -39,6 +39,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblIncVolume_tweakadv,   lang.MUXTWEAKADV.HELP.INCVOLUME},
             {ui_lblMaxGpu_tweakadv,      lang.MUXTWEAKADV.HELP.MAXGPU},
             {ui_lblAudioReady_tweakadv,  lang.MUXTWEAKADV.HELP.AUDIOREADY},
+            {ui_lblAudioSwap_tweakadv,   lang.MUXTWEAKADV.HELP.AUDIOSWAP},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -85,6 +86,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droIncVolume_tweakadv, config.SETTINGS.ADVANCED.INCVOLUME - 1);
     lv_dropdown_set_selected(ui_droMaxGpu_tweakadv, config.SETTINGS.ADVANCED.MAXGPU);
     lv_dropdown_set_selected(ui_droAudioReady_tweakadv, config.SETTINGS.ADVANCED.AUDIOREADY);
+    lv_dropdown_set_selected(ui_droAudioSwap_tweakadv, config.SETTINGS.ADVANCED.AUDIOSWAP);
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
     map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33,
@@ -116,6 +118,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, DispSuspend, "settings/advanced/disp_suspend", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, MaxGpu, "settings/advanced/maxgpu", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, AudioReady, "settings/advanced/audio_ready", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, AudioSwap, "settings/advanced/audio_swap", INT, 0);
 
     do {
         int sd2_current = lv_dropdown_get_selected(ui_droSecondPart_tweakadv);
@@ -235,6 +238,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, IncVolume, lang.MUXTWEAKADV.INCVOLUME, "incvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, MaxGpu, lang.MUXTWEAKADV.MAXGPU, "maxgpu", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, AudioReady, lang.MUXTWEAKADV.AUDIOREADY, "audioready", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, AudioSwap, lang.MUXTWEAKADV.AUDIOSWAP, "audioswap", disabled_enabled, 2);
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate_tweakadv, accelerate_values);

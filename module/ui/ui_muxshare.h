@@ -352,7 +352,8 @@
     TWEAKADV(IncBright,   "incbright")   \
     TWEAKADV(IncVolume,   "invvolume")   \
     TWEAKADV(MaxGpu,      "maxgpu")      \
-    TWEAKADV(AudioReady,  "audioready")
+    TWEAKADV(AudioReady,  "audioready")  \
+    TWEAKADV(AudioSwap,   "audioswap")
 
 #define TWEAKGEN_ELEMENTS              \
     TWEAKGEN(Rtc,        "clock")      \

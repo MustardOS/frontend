@@ -122,6 +122,7 @@ struct mux_config {
             int16_t INCVOLUME;
             int16_t MAXGPU;
             int16_t AUDIOREADY;
+            int16_t AUDIOSWAP;
         } ADVANCED;
         struct {
             int16_t HIDDEN;

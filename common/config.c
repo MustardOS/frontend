@@ -114,6 +114,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.INCVOLUME, CONF_CONFIG_PATH "settings/advanced/incvolume", 8)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.MAXGPU, CONF_CONFIG_PATH "settings/advanced/maxgpu", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOREADY, CONF_CONFIG_PATH "settings/advanced/audio_ready", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOSWAP, CONF_CONFIG_PATH "settings/advanced/audio_swap", 0)
 
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, CONF_CONFIG_PATH "settings/general/hidden", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, CONF_CONFIG_PATH "settings/general/sound", 0)
