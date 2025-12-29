@@ -3,7 +3,7 @@ DEVICE := $(strip $(DEVICE))
 ifeq ($(DEVICE), ARM64)          # standard aarch64
     ARCH = -march=armv8-a
 else ifeq ($(DEVICE), ARM64_A53) # currently for h700 and a133p
-    ARCH = -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto
+    ARCH = -mcpu=cortex-a53+crc+crypto -mtune=cortex-a53 -mfix-cortex-a53-835769 -mfix-cortex-a53-843419
 else ifeq ($(DEVICE), ARM32)     # only if you still build armhf for og 35x
     ARCH = -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard
 else ifeq ($(DEVICE), ARM32_A9)  # armhf w/thumb for cortex a9 with neon
