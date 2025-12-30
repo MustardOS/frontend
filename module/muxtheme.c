@@ -40,6 +40,7 @@ static int version_check(void) {
 static void image_refresh(void) {
     if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
         return;
     }
 
