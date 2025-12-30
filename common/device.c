@@ -129,6 +129,8 @@ void load_device(struct mux_device *device) {
 
     DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/zoom")
     if (file_exist(CONF_DEVICE_PATH "screen/s_zoom")) DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/s_zoom")
+    device->SCREEN.ZOOM_WIDTH = device->SCREEN.ZOOM;
+    device->SCREEN.ZOOM_HEIGHT = device->SCREEN.ZOOM;
 
     DEV_INT_FIELD(device->SCREEN.INTERNAL.WIDTH, "screen/internal/width")
     DEV_INT_FIELD(device->SCREEN.INTERNAL.HEIGHT, "screen/internal/height")
