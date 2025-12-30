@@ -112,6 +112,7 @@
     CUSTOM(BoxArtHide,      "boxarthide")      \
     CUSTOM(Font,            "font")            \
     CUSTOM(Sound,           "sound")           \
+    CUSTOM(SoundVolume,     "soundvolume")     \
     CUSTOM(Chime,           "chime")
 
 #define THEMEFILTER_ELEMENTS               \

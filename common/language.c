@@ -346,10 +346,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.TITLE, "Background Music");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.VOLUME, "Background Music Volume");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.SET, "Setting Volume");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.SET, "Setting Background Volume");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.GLOBAL, "Global");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.TITLE, "Navigation Sound");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.VOLUME, "Navigation Sound Volume");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.SET, "Setting Navigation Sound Volume");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.GLOBAL, "Global");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.TITLE, "Content Save State Launch");
@@ -380,6 +382,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC_VOLUME, "The volume of the background music currently playing, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND_VOLUME, "The volume of the navigation sounds, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCH_SWAP, "Switch between pressing A or holding A to launch content save state automatically");

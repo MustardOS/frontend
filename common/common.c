@@ -63,6 +63,7 @@ Mix_Music *current_bgm = NULL;
 char **bgm_files = NULL;
 size_t bgm_file_count = 0;
 int bgm_volume = 90;
+int nav_volume = 90;
 int current_brightness = 0;
 int current_volume = 0;
 int is_blank = 0;
@@ -2161,6 +2162,20 @@ void free_sound_cache(void) {
     }
 }
 
+void set_nav_volume(int volume) {
+    if (volume < 0) volume = 0;
+    if (volume > MIX_MAX_VOLUME) volume = MIX_MAX_VOLUME;
+    if (volume == nav_volume) return;
+
+    nav_volume = volume;
+
+    for (int i = 0; i < SOUND_TOTAL; i++) {
+        if (sound_cache[i].chunk) {
+            Mix_VolumeChunk(sound_cache[i].chunk, nav_volume);
+        }
+    }
+}
+
 void free_bgm(void) {
     if (current_bgm) {
         Mix_HaltMusic();
@@ -2173,6 +2188,7 @@ void set_bgm_volume(int volume) {
     if (current_bgm) {
         if (volume < 0) volume = 0;
         if (volume > MIX_MAX_VOLUME) volume = MIX_MAX_VOLUME;
+        if (volume == bgm_volume) return;
 
         bgm_volume = volume;
         Mix_VolumeMusic(bgm_volume);

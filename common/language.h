@@ -376,6 +376,8 @@ struct mux_lang {
         } MUSIC;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
+            char VOLUME[MAX_BUFFER_SIZE];
+            char SET[MAX_BUFFER_SIZE];
             char GLOBAL[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
         } SOUND;
@@ -413,6 +415,7 @@ struct mux_lang {
             char MUSIC[MAX_BUFFER_SIZE];
             char MUSIC_VOLUME[MAX_BUFFER_SIZE];
             char SOUND[MAX_BUFFER_SIZE];
+            char SOUND_VOLUME[MAX_BUFFER_SIZE];
             char CHIME[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;

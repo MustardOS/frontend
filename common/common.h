@@ -30,6 +30,7 @@ extern char current_wall[MAX_BUFFER_SIZE];
 extern int is_silence_playing;
 extern Mix_Music *current_bgm;
 extern int bgm_volume;
+extern int nav_volume;
 extern int current_brightness;
 extern int current_volume;
 extern int is_blank;
@@ -353,6 +354,8 @@ void free_subdirectories(char **dir_names);
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);
 
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
+
+void set_nav_volume(int volume);
 
 void set_bgm_volume(int volume);
 
