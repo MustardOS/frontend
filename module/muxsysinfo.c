@@ -385,7 +385,10 @@ static void handle_a(void) {
             write_text_to_file(CONF_DEVICE_PATH "screen/s_rotate", "w", CHAR, s_rotate_str);
             write_text_to_file(CONF_DEVICE_PATH "screen/s_zoom", "w", CHAR, s_zoom_str);
 
+            refresh_config = 1;
             refresh_device = 1;
+            refresh_kiosk = 1;
+            refresh_resolution = 1;
 
             load_mux("launcher");
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");
