@@ -138,7 +138,7 @@ const char *get_temperature(void) {
     return buffer;
 }
 
-const char *get_uptime(void) {
+static const char *get_system_uptime(void) {
     static char formatted_uptime[128];
     struct sysinfo info;
 
@@ -214,7 +214,7 @@ const char *get_charger_status(void) {
 }
 
 static void update_system_info() {
-    lv_label_set_text(ui_lblUptimeValue_sysinfo, get_uptime());
+    lv_label_set_text(ui_lblUptimeValue_sysinfo, get_system_uptime());
     lv_label_set_text(ui_lblSpeedValue_sysinfo, get_current_frequency());
     lv_label_set_text(ui_lblGovernorValue_sysinfo, get_scaling_governor());
     lv_label_set_text(ui_lblMemoryValue_sysinfo, get_memory_usage());
@@ -234,7 +234,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Build, lang.MUXSYSINFO.BUILD, "build", get_build());
     INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
     INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
-    INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_uptime());
+    INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_system_uptime());
     INIT_VALUE_ITEM(-1, sysinfo, Cpu, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
     INIT_VALUE_ITEM(-1, sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
     INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOVERNOR, "governor", get_scaling_governor());

@@ -1052,8 +1052,8 @@ void scale_theme(struct mux_device *device) {
             device->SCREEN.ZOOM_WIDTH = device->SCREEN.ZOOM;
             device->SCREEN.ZOOM_HEIGHT = device->SCREEN.ZOOM;
             LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
-                     dimensions[i].width, dimensions[i].height, target_width, target_height)
-            LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
+                     dimensions[i].width, dimensions[i].height, target_width, target_height);
+            LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM);
             return;
         }
     }
@@ -1075,8 +1075,8 @@ void scale_theme(struct mux_device *device) {
         device->SCREEN.ZOOM_WIDTH = scale_width;
         device->SCREEN.ZOOM_HEIGHT = scale_height;
         LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
-                 dimensions[i].width, dimensions[i].height, target_width, target_height)
-        LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
+                 dimensions[i].width, dimensions[i].height, target_width, target_height);
+        LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM);
         return;
     }
 }
@@ -1104,14 +1104,14 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
                 device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height;
                 device->SCREEN.ZOOM_WIDTH = scale_width;
                 device->SCREEN.ZOOM_HEIGHT = scale_height;
-                LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
+                LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM);
             }
         }
 
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", config->THEME.STORAGE_THEME, mux_dimension);
         if (!directory_exist(theme_device_folder)) scale_theme(device);
 
-        LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->MUX.WIDTH, device->MUX.HEIGHT)
+        LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->MUX.WIDTH, device->MUX.HEIGHT);
     }
 
     init_theme_config(theme, device);
@@ -1121,7 +1121,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (theme_compat()) {
         for (size_t i = 0; i < A_SIZE(schemes); i++) {
             if (load_scheme(config->THEME.STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
-                LOG_INFO("muxfrontend", "Loading STORAGE Theme Scheme: %s", scheme)
+                LOG_INFO("muxfrontend", "Loading STORAGE Theme Scheme: %s", scheme);
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
             }
@@ -1137,7 +1137,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (!scheme_loaded) {
         for (size_t i = 0; i < A_SIZE(schemes); i++) {
             if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
-                LOG_INFO("muxfrontend", "Loading INTERNAL Theme Scheme: %s", scheme)
+                LOG_INFO("muxfrontend", "Loading INTERNAL Theme Scheme: %s", scheme);
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
             }

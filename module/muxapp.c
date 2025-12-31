@@ -75,7 +75,7 @@ static void show_help(void) {
 
         char app_help[MAX_BUFFER_SIZE];
         if (file_exist(app_lang_file)) {
-            LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
+            LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file);
 
             mini_t *app_lang = mini_load(app_lang_file);
 
@@ -85,7 +85,7 @@ static void show_help(void) {
 
             mini_free(app_lang);
         } else {
-            LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file)
+            LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file);
             snprintf(app_help, sizeof(app_help), "%s",
                      lang.GENERIC.NO_HELP);
         }
@@ -179,7 +179,7 @@ static void create_app_items(void) {
 
             if (access(launch_script, F_OK) == 0) {
                 if (append_mux_app(&dir_names, &dir_count, entry->d_name) < 0) {
-                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
                     closedir(app_dir);
                     goto clean_up;
                 }
@@ -190,7 +190,7 @@ static void create_app_items(void) {
 
     for (size_t i = 0; i < A_SIZE(app); i++) {
         if (append_mux_app(&dir_names, &dir_count, app[i].name) < 0) {
-            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         }
     }
 
@@ -227,7 +227,7 @@ static void create_app_items(void) {
                      resolved_base, dir_names[i]);
 
             if (file_exist(app_lang_file)) {
-                LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file)
+                LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file);
 
                 mini_t *app_lang = mini_load(app_lang_file);
                 snprintf(full_app_name, sizeof(full_app_name), "%s",
@@ -237,7 +237,7 @@ static void create_app_items(void) {
 
                 mini_free(app_lang);
             } else {
-                LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file)
+                LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file);
                 snprintf(full_app_name, sizeof(full_app_name), "%s", TS(dir_names[i]));
                 char *from_script = get_script_value(app_launcher, "GRID", dir_names[i]);
                 snprintf(grid_app_name, sizeof(grid_app_name), "%s", from_script ? from_script : dir_names[i]);

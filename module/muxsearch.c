@@ -77,7 +77,7 @@ static void image_refresh() {
                  read_line_char_from(core_file, 3));
     }
 
-    LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
+    LOG_INFO(mux_module, "Reading Configuration: %s", core_file);
 
     if (strlen(core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -91,7 +91,7 @@ static void image_refresh() {
                              image, sizeof(image));
     }
 
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", "box", image)
+    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", "box", image);
 
     if (strcasecmp(box_image_previous_path, image) != 0) {
         char artwork_config_path[MAX_BUFFER_SIZE];
@@ -143,7 +143,7 @@ static void gen_result(char *item_glyph, char *item_text, char *item_data, char 
 
     if (strcasecmp(item_data, "content") == 0) {
         if (file_exist(FRIENDLY_RESULT)) {
-            LOG_INFO(mux_module, "Reading Friendly Name Set: %s", FRIENDLY_RESULT)
+            LOG_INFO(mux_module, "Reading Friendly Name Set: %s", FRIENDLY_RESULT);
 
             int fn_valid = 0;
             struct json fn_json;
@@ -224,7 +224,7 @@ static void list_nav_next(int steps) {
 
 static void process_results(const char *json_results) {
     if (!json_valid(json_results)) {
-        LOG_ERROR(mux_module, "Invalid JSON Format")
+        LOG_ERROR(mux_module, "Invalid JSON Format");
         return;
     }
 
@@ -747,7 +747,7 @@ int muxsearch_main(char *dir) {
         if (json_content) {
             got_results = 1;
         } else {
-            LOG_ERROR(mux_module, "Error reading search results")
+            LOG_ERROR(mux_module, "Error reading search results");
         }
     }
 

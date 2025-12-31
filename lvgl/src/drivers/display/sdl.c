@@ -36,28 +36,28 @@ static inline int scale_pixels(int px, float zoom) {
 }
 
 static void update_render_state(void) {
-    LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height)
+    LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height);
 
     switch (config.SETTINGS.GENERAL.THEME_SCALING) {
         case 0: // No Scaling
             scale_width = device.MUX.WIDTH;
             scale_height = device.MUX.HEIGHT;
-            LOG_INFO("video", "Scaling: Disabled")
+            LOG_INFO("video", "Scaling: Disabled");
             break;
         case 2: // Stretch to Screen
             scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM_WIDTH);
             scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM_HEIGHT);
-            LOG_INFO("video", "Scaling: Stretch")
+            LOG_INFO("video", "Scaling: Stretch");
             break;
         default: // Scale with letterbox
             scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM);
             scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM);
-            LOG_INFO("video", "Scaling: Scale")
+            LOG_INFO("video", "Scaling: Scale");
             break;
     }
 
     underscan = (config.BOOT.DEVICE_MODE && config.SETTINGS.HDMI.SCAN) ? 16 : 0;
-    LOG_INFO("video", "Device Underscan: %d", underscan)
+    LOG_INFO("video", "Device Underscan: %d", underscan);
 
     monitor.dest_rect = (SDL_Rect) {
             ((device.SCREEN.WIDTH - scale_width) / 2) + underscan,
@@ -101,7 +101,7 @@ void sdl_init(void) {
     }
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError())
+        LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -112,7 +112,7 @@ void sdl_init(void) {
                                       device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
                                       SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!monitor.window) {
-        LOG_ERROR("video", "Window Creation Failed: %s", SDL_GetError())
+        LOG_ERROR("video", "Window Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -122,7 +122,7 @@ void sdl_init(void) {
     );
 
     if (!monitor.renderer) {
-        LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError())
+        LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -131,7 +131,7 @@ void sdl_init(void) {
                                         device.MUX.WIDTH, device.MUX.HEIGHT);
 
     if (!monitor.texture) {
-        LOG_ERROR("video", "Texture Creation Failed: %s", SDL_GetError())
+        LOG_ERROR("video", "Texture Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -145,7 +145,7 @@ void sdl_init(void) {
     }
 
     monitor.refresh = true;
-    LOG_INFO("video", "SDL Video Initialised Successfully")
+    LOG_INFO("video", "SDL Video Initialised Successfully");
 
     int out_w = 0, out_h = 0;
     SDL_RendererInfo info;
@@ -217,7 +217,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     if (lv_disp_flush_is_last(disp_drv)) {
         if (monitor.needs_clear) SDL_RenderClear(monitor.renderer);
 
-        // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h)
+        // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
 
         // Simplify the rendering if we are not rotating as this saves a few cycles
         if (monitor.angle == 0.0) {

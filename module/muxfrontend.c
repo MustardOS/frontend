@@ -109,7 +109,7 @@ static void quit_watchdog(lv_timer_t *t) {
     if (shutting_down) return;
 
     if (file_exist(SAFE_QUIT) || quit_signal) {
-        LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal)
+        LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal);
         shutting_down = 1;
 
         cleanup_all();
@@ -186,7 +186,7 @@ static int set_alert_image_path(void) {
 static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
     screen_clean = 0;
 
-    LOG_DEBUG("muxfrontend", "GOBACK: %s | MODULE: %s", goback, module)
+    LOG_DEBUG("muxfrontend", "GOBACK: %s | MODULE: %s", goback, module);
 
     load_mux(goback);
     func_to_exec();
@@ -556,8 +556,8 @@ int main(void) {
     load_config(&config);
     load_kiosk(&kiosk);
 
-    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build())
-    if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!")
+    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build());
+    if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
 
     // For future reference we need to initialise the theme before we do the display
     // as we call upon the theme variables for specific settings within display init
@@ -587,12 +587,12 @@ int main(void) {
 
     while (1) {
         if (file_exist(SAFE_QUIT)) {
-            LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
+            LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!");
             break;
         }
 
         if (refresh_resolution) {
-            LOG_DEBUG("muxfrontend", "Resolution or Theme Refreshed... exiting!")
+            LOG_DEBUG("muxfrontend", "Resolution or Theme Refreshed... exiting!");
 
             shutting_down = 1;
             safe_quit(0);

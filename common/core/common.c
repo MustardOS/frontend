@@ -31,7 +31,7 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
                  read_line_char_from(core_file, CONTENT_CATALOGUE));
     }
 
-    LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
+    LOG_INFO(mux_module, "Reading Configuration: %s", core_file);
 }
 
 char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
@@ -45,7 +45,7 @@ void write_core_file(char *def_core, char *path, char *core, char *sys, char *ca
                      char *rom_name, char *rom_mount, char *rom_base, char *rom_full) {
     FILE *f = fopen(path, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
@@ -53,10 +53,10 @@ void write_core_file(char *def_core, char *path, char *core, char *sys, char *ca
         fprintf(f, "%s\n%s\n%s\n%s\n%d\n%s\n%s\n%s\n%s",
                 rom_name, core, sys, cat, lookup, def_core, rom_mount, rom_base, rom_full);
         LOG_INFO(mux_module, "Assign Content (Single): %s|%s|%s|%s|%d|%s|%s|%s|%s",
-                 rom_name, core, sys, cat, lookup, def_core, rom_mount, rom_base, rom_full)
+                 rom_name, core, sys, cat, lookup, def_core, rom_mount, rom_base, rom_full);
     } else {
         fprintf(f, "%s\n%s\n%s\n%d\n%s", core, sys, cat, lookup, def_core);
-        LOG_INFO(mux_module, "Assign Content: %s|%s|%s|%d|%s", core, sys, cat, lookup, def_core)
+        LOG_INFO(mux_module, "Assign Content: %s|%s|%s|%d|%s", core, sys, cat, lookup, def_core);
     }
 
     fclose(f);
@@ -65,16 +65,16 @@ void write_core_file(char *def_core, char *path, char *core, char *sys, char *ca
 void write_gov_file(char *path, char *gov, char *rom_name) {
     FILE *f = fopen(path, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
     if (rom_name) {
         fprintf(f, "%s", gov);
-        LOG_INFO(mux_module, "Assign Governor (Single): %s", gov)
+        LOG_INFO(mux_module, "Assign Governor (Single): %s", gov);
     } else {
         fprintf(f, "%s", gov);
-        LOG_INFO(mux_module, "Assign Governor: %s", gov)
+        LOG_INFO(mux_module, "Assign Governor: %s", gov);
     }
 
     fclose(f);
@@ -83,16 +83,16 @@ void write_gov_file(char *path, char *gov, char *rom_name) {
 void write_control_file(char *path, char *control, char *rom_name) {
     FILE *f = fopen(path, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
     if (rom_name) {
         fprintf(f, "%s", control);
-        LOG_INFO(mux_module, "Assign Control (Single): %s", control)
+        LOG_INFO(mux_module, "Assign Control (Single): %s", control);
     } else {
         fprintf(f, "%s", control);
-        LOG_INFO(mux_module, "Assign Control: %s", control)
+        LOG_INFO(mux_module, "Assign Control: %s", control);
     }
 
     fclose(f);
@@ -217,7 +217,7 @@ bool automatic_assign_core(char *rom_dir) {
     remove_double_slashes(core_file);
 
     if (file_exist(core_file)) return true;
-    LOG_INFO(mux_module, "Automatic Assign Core Initiated")
+    LOG_INFO(mux_module, "Automatic Assign Core Initiated");
     int auto_assign_good = 0;
 
     char assign_file[MAX_BUFFER_SIZE];
@@ -237,20 +237,20 @@ bool automatic_assign_core(char *rom_dir) {
             char ass_config[MAX_BUFFER_SIZE];
             json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-            LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config)
+            LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config);
 
             char assigned_core_global[MAX_BUFFER_SIZE];
             snprintf(assigned_core_global, sizeof(assigned_core_global), STORE_LOC_ASIN "/%s/global.ini",
                      ass_config);
 
-            LOG_INFO(mux_module, "\tObtaining System Global INI: %s", assigned_core_global)
+            LOG_INFO(mux_module, "\tObtaining System Global INI: %s", assigned_core_global);
 
             mini_t *global_ini = mini_load(assigned_core_global);
 
             static char def_core[MAX_BUFFER_SIZE];
             strcpy(def_core, get_ini_string(global_ini, "global", "default", "none"));
 
-            LOG_INFO(mux_module, "\tDefault Core: %s", def_core)
+            LOG_INFO(mux_module, "\tDefault Core: %s", def_core);
 
             if (strcmp(def_core, "none") != 0) {
                 char default_core[MAX_BUFFER_SIZE];
@@ -263,7 +263,7 @@ bool automatic_assign_core(char *rom_dir) {
                 strcpy(auto_core, get_ini_string(core_ini, def_core, "core", "none"));
 
                 if (strcmp(auto_core, "none") != 0) {
-                    LOG_INFO(mux_module, "\tAssigned Core To: %s", auto_core)
+                    LOG_INFO(mux_module, "\tAssigned Core To: %s", auto_core);
 
                     static char core_catalogue[MAX_BUFFER_SIZE];
                     static char core_governor[MAX_BUFFER_SIZE];
@@ -273,51 +273,51 @@ bool automatic_assign_core(char *rom_dir) {
                     char *use_local_catalogue = get_ini_string(core_ini, def_core, "catalogue", "none");
                     if (strcmp(use_local_catalogue, "none") != 0) {
                         strcpy(core_catalogue, use_local_catalogue);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Catalogue: %s", core_catalogue)
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Catalogue: %s", core_catalogue);
                     } else {
                         strcpy(core_catalogue, get_ini_string(global_ini, "global", "catalogue", "none"));
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue)
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue);
                     }
 
                     char *use_local_governor = get_ini_string(core_ini, def_core, "governor", "none");
                     if (strcmp(use_local_governor, "none") != 0) {
                         strcpy(core_governor, use_local_governor);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor)
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
                     } else {
                         strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor)
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
                     }
 
                     char *use_local_control = get_ini_string(core_ini, def_core, "control", "none");
                     if (strcmp(use_local_control, "none") != 0) {
                         strcpy(core_control, use_local_control);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control)
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
                     } else {
                         strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_control)
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_control);
                     }
 
                     int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
                     if (use_local_lookup) {
                         core_lookup = use_local_lookup;
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Lookup: %d", core_lookup)
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Lookup: %d", core_lookup);
                     } else {
                         core_lookup = get_ini_int(global_ini, "global", "lookup", 0);
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup)
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup);
                     }
 
                     create_core_assignment(def_core, rom_dir, auto_core, ass_config, core_catalogue,
                                            "", core_governor, core_control, core_lookup, DIRECTORY);
 
                     auto_assign_good = 1;
-                    LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful")
+                    LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful");
                 } else {
-                    LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", auto_core)
+                    LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", auto_core);
                 }
 
                 mini_free(core_ini);
             } else {
-                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", def_core)
+                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", def_core);
             }
 
             mini_free(global_ini);

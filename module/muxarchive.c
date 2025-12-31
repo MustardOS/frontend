@@ -32,7 +32,7 @@ static void create_archive_items(void) {
     size_t file_count = 0;
 
     if (scan_directory_list(dirs, mux_archive, &files, A_SIZE(dirs), A_SIZE(mux_archive), &file_count) < 0) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         return;
     }
 

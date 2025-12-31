@@ -87,7 +87,7 @@ static void image_refresh(char *image_type) {
         }
     }
 
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
+    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
 
     if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
@@ -154,7 +154,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
@@ -236,14 +236,14 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
             if (lookup_content && json_valid(lookup_content)) {
                 fn_valid = 1;
                 fn_json = json_parse(read_all_char_from(custom_lookup));
-                LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup)
+                LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup);
             } else {
-                LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup)
+                LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup);
             }
 
             free(lookup_content);
         } else {
-            LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup)
+            LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup);
         }
 
         if (fn_valid) {
@@ -328,14 +328,14 @@ static void create_collection_items(void) {
             if (file_content && json_valid(file_content)) {
                 fn_valid = 1;
                 fn_json = json_parse(strdup(file_content));
-                LOG_SUCCESS(mux_module, "Using Friendly Folder: %s", folder_name_file)
+                LOG_SUCCESS(mux_module, "Using Friendly Folder: %s", folder_name_file);
             } else {
-                LOG_WARN(mux_module, "Invalid Friendly Folder: %s", folder_name_file)
+                LOG_WARN(mux_module, "Invalid Friendly Folder: %s", folder_name_file);
             }
 
             free(file_content);
         } else {
-            LOG_WARN(mux_module, "Friendly Folder does not exist: %s", folder_name_file)
+            LOG_WARN(mux_module, "Friendly Folder does not exist: %s", folder_name_file);
         }
     }
 

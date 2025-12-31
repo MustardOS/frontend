@@ -21,10 +21,10 @@ static bool is_downloaded(int index) {
 
 static void create_content_items(void) {
     if (!file_exist(data_local_path)) {
-        LOG_WARN(mux_module, "%s Data Not Found At: %s", data_type, data_local_path)
+        LOG_WARN(mux_module, "%s Data Not Found At: %s", data_type, data_local_path);
         return;
     } else {
-        LOG_SUCCESS(mux_module, "Found %s Data At: %s", data_type, data_local_path)
+        LOG_SUCCESS(mux_module, "Found %s Data At: %s", data_type, data_local_path);
     }
 
     char *json_str = read_all_char_from(data_local_path);

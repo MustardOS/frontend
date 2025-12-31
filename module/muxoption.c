@@ -121,10 +121,10 @@ static struct json get_playtime_json(void) {
     snprintf(playtime_data, sizeof(playtime_data), INFO_ACT_PATH "/" PLAYTIME_DATA);
 
     if (!file_exist(playtime_data)) {
-        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data)
+        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data);
         return (struct json) {0};
     } else {
-        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data)
+        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data);
     }
 
     char *json_str = read_all_char_from(playtime_data);
@@ -367,7 +367,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
         remove(MUOS_SYS_LOAD);
-        LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
+        LOG_INFO(mux_module, "Skipping Options Module - Not Required...");
         close_input();
         return 0;
     }

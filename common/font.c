@@ -67,7 +67,7 @@ lv_font_t *get_language_font(void) {
 void font_cache_clear(void) {
     for (int i = 0; i < font_cache_count; i++) lv_font_free(font_cache[i].font);
     font_cache_count = 0;
-    LOG_SUCCESS(mux_module, "Font cache has been cleared")
+    LOG_SUCCESS(mux_module, "Font cache has been cleared");
 }
 
 static inline void apply_font(lv_obj_t *element, lv_font_t *font) {
@@ -89,13 +89,13 @@ static lv_font_t *load_font_from_file(const char *filepath) {
 static lv_font_t *load_font_cached(const char *path) {
     for (int i = 0; i < font_cache_count; i++) {
         if (strcmp(font_cache[i].path, path) == 0) {
-            LOG_SUCCESS(mux_module, "\tUsing font from cache")
+            LOG_SUCCESS(mux_module, "\tUsing font from cache");
             return font_cache[i].font;
         }
     }
 
     lv_font_t * font = load_font_from_file(path);
-    LOG_SUCCESS(mux_module, "\tUsing font from storage")
+    LOG_SUCCESS(mux_module, "\tUsing font from storage");
 
     if (!font) return NULL;
 
@@ -140,7 +140,7 @@ void load_font_text(lv_obj_t *screen) {
                               "%s/%sfont/default.bin", theme_location, dimensions[i]) >= 0 &&
                      file_exist(theme_font_text))) {
 
-                    LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text)
+                    LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text);
 
                     lv_font_t * font = load_font_cached(theme_font_text);
                     if (font) apply_font(screen, font);
@@ -151,7 +151,7 @@ void load_font_text(lv_obj_t *screen) {
         }
     }
 
-    LOG_INFO(mux_module, "Loading Default Language Font")
+    LOG_INFO(mux_module, "Loading Default Language Font");
     lv_obj_set_style_text_font(screen, language_font, MU_OBJ_MAIN_DEFAULT);
 }
 
@@ -182,7 +182,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
                               "%s/%sfont/%s/default.bin", theme_location, dimensions[i], section) >= 0 &&
                      file_exist(theme_font_section))) {
 
-                    LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section)
+                    LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section);
 
                     lv_font_t * font = load_font_cached(theme_font_section);
                     if (font) apply_font(element, font);
@@ -200,7 +200,7 @@ int font_context_changed(void) {
 
     if (strcmp(context, last_font_key) != 0) {
         strcpy(last_font_key, context);
-        LOG_INFO(mux_module, "Font context has changed")
+        LOG_INFO(mux_module, "Font context has changed");
         return 1;
     }
 

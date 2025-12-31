@@ -16,9 +16,8 @@ typedef struct {
 // For writing data to a file
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
-    return written * size;  // ✅ return BYTES
+    return written * size;
 }
-
 
 static void (*download_finish_cb)(int) = NULL;
 

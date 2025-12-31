@@ -59,7 +59,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
     struct dirent *entry;
     DIR *dir = opendir(INPUT_PATH);
     if (!dir) {
-        LOG_WARN("input", "Failed to open input directory: '%s'", INPUT_PATH)
+        LOG_WARN("input", "Failed to open input directory: '%s'", INPUT_PATH);
         return 0;
     }
 
@@ -72,7 +72,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
             snprintf(device_path, sizeof(device_path), "%s%s", INPUT_PATH, entry->d_name);
             int fd = open(device_path, O_RDONLY | O_NONBLOCK);
             if (fd != -1) {
-                LOG_INFO("input", "Listening on keyboard: %s (fd: %d)", entry->d_name, fd)
+                LOG_INFO("input", "Listening on keyboard: %s (fd: %d)", entry->d_name, fd);
                 fds[count++] = fd;
             }
         }
@@ -724,7 +724,7 @@ char *get_unique_controller_id(int usb_fd) {
 
     // Get joystick name
     if (ioctl(usb_fd, JSIOCGNAME(sizeof(name)), name) < 0) {
-        LOG_ERROR("input", "Error reading joystick name")
+        LOG_ERROR("input", "Error reading joystick name");
         strncpy(name, "Unknown", sizeof(name));
     }
 
@@ -745,7 +745,7 @@ char *get_unique_controller_id(int usb_fd) {
         }
         fclose(vendor_file);
     } else {
-        LOG_ERROR("input", "Failed to read vendor ID")
+        LOG_ERROR("input", "Failed to read vendor ID");
     }
 
     FILE *product_file = fopen("/sys/class/input/js1/device/id/product", "r");
@@ -755,7 +755,7 @@ char *get_unique_controller_id(int usb_fd) {
         }
         fclose(product_file);
     } else {
-        LOG_ERROR("input", "Failed to read product ID")
+        LOG_ERROR("input", "Failed to read product ID");
     }
 
     snprintf(controller_id, sizeof(controller_id), "%s_V%s_P%s", name, vendor, product);
@@ -774,13 +774,13 @@ void *keyboard_handler(void *arg) {
     int num_fds = find_keyboard_devices(keyboard_mouse_fds, max_devices);
 
     if (num_fds == 0) {
-        LOG_ERROR("input", "No keyboard devices found!")
+        LOG_ERROR("input", "No keyboard devices found!");
         return NULL;
     }
 
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        LOG_ERROR("input", "Failed to create epoll instance (kbd)")
+        LOG_ERROR("input", "Failed to create epoll instance (kbd)");
         for (int i = 0; i < num_fds; i++) close(keyboard_mouse_fds[i]);
         return NULL;
     }
@@ -793,19 +793,19 @@ void *keyboard_handler(void *arg) {
         event.events = EPOLLIN;
         event.data.fd = keyboard_mouse_fds[i];
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, keyboard_mouse_fds[i], &event) == -1) {
-            LOG_ERROR("input", "Failed to add keyboard device to epoll")
+            LOG_ERROR("input", "Failed to add keyboard device to epoll");
             close(keyboard_mouse_fds[i]);
         }
     }
 
-    LOG_INFO("input", "Listening for keyboard events...")
+    LOG_INFO("input", "Listening for keyboard events...");
 
     while (!stop_flag) {
         int event_count = epoll_wait(epoll_fd, events, max_events, 100);
         if (event_count == -1) {
             if (errno == EINTR) continue;
             if (errno == EBADF || errno == EINVAL) break;
-            LOG_ERROR("input", "epoll_wait (kbd) error: %s", strerror(errno))
+            LOG_ERROR("input", "epoll_wait (kbd) error: %s", strerror(errno));
             continue;
         }
 
@@ -815,7 +815,7 @@ void *keyboard_handler(void *arg) {
                 ssize_t r = read(events[i].data.fd, &ev, sizeof(struct input_event));
                 if (r < 0) {
                     if (errno == EINTR || errno == EAGAIN) continue;
-                    LOG_DEBUG("input", "kbd read error: %s", strerror(errno))
+                    LOG_DEBUG("input", "kbd read error: %s", strerror(errno));
                     continue;
                 }
                 if ((size_t) r < sizeof(struct input_event)) continue;
@@ -839,7 +839,7 @@ void *keyboard_handler(void *arg) {
     for (int i = 0; i < num_fds; i++) close(keyboard_mouse_fds[i]);
 
     close(epoll_fd);
-    LOG_DEBUG("input", "Exiting keyboard thread")
+    LOG_DEBUG("input", "Exiting keyboard thread");
 
     return NULL;
 }
@@ -849,7 +849,7 @@ void *joystick_handler(void *arg) {
 
     int usb_fd = open("/dev/input/js1", O_RDONLY);
     if (usb_fd == -1) {
-        LOG_WARN("input", "Failed to open USB controller")
+        LOG_WARN("input", "Failed to open USB controller");
         return NULL;
     }
 
@@ -863,7 +863,7 @@ void *joystick_handler(void *arg) {
 
         if (ret == -1) {
             if (errno == EINTR) continue;
-            LOG_ERROR("input", "poll() error on joystick: %s", strerror(errno))
+            LOG_ERROR("input", "poll() error on joystick: %s", strerror(errno));
             break;
         } else if (ret == 0) {
             continue;
@@ -872,12 +872,12 @@ void *joystick_handler(void *arg) {
         ssize_t bytes = read(usb_fd, &js, sizeof(struct js_event));
         if (bytes != (ssize_t) sizeof(struct js_event)) {
             if (bytes < 0 && (errno == EINTR || errno == EAGAIN)) continue;
-            LOG_ERROR("input", "Error reading joystick event")
+            LOG_ERROR("input", "Error reading joystick event");
             break;
         }
 
         if (js.type & JS_EVENT_INIT) continue;
-        LOG_INFO("input", "Joystick Event: type=%u number=%u value=%d", js.type, js.number, js.value)
+        LOG_INFO("input", "Joystick Event: type=%u number=%u value=%d", js.type, js.number, js.value);
 
         if (js.type & JS_EVENT_BUTTON) {
             if (js.number == controller.BUTTON.UP || js.number == controller.BUTTON.DOWN ||
@@ -892,7 +892,7 @@ void *joystick_handler(void *arg) {
     }
 
     close(usb_fd);
-    LOG_DEBUG("input", "Exiting joystick thread")
+    LOG_DEBUG("input", "Exiting joystick thread");
 
     return NULL;
 }
@@ -924,7 +924,7 @@ void mux_input_task(const mux_input_options *opts) {
 
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        LOG_ERROR("input", "epoll create error")
+        LOG_ERROR("input", "epoll create error");
         return;
     }
 
@@ -937,10 +937,10 @@ void mux_input_task(const mux_input_options *opts) {
         wev.events = EPOLLIN;
         wev.data.fd = wake_pipe[0];
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, wake_pipe[0], &wev) == -1) {
-            LOG_WARN("input", "Failed to add wake pipe to epoll")
+            LOG_WARN("input", "Failed to add wake pipe to epoll");
         }
     } else {
-        LOG_WARN("input", "Failed to create wake pipe; shutdown may be slower")
+        LOG_WARN("input", "Failed to create wake pipe; shutdown may be slower");
     }
 
     struct epoll_event epoll_event_arr[device.BOARD.EVENT];
@@ -950,25 +950,25 @@ void mux_input_task(const mux_input_options *opts) {
     ev.events = EPOLLIN;
     ev.data.fd = opts->general_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->general_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - general_fd")
+        LOG_ERROR("input", "epoll control error - general_fd");
         goto out_close_epoll;
     }
 
     ev.data.fd = opts->power_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->power_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - power_fd")
+        LOG_ERROR("input", "epoll control error - power_fd");
         goto out_close_epoll;
     }
 
     ev.data.fd = opts->volume_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->volume_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - volume_fd")
+        LOG_ERROR("input", "epoll control error - volume_fd");
         goto out_close_epoll;
     }
 
     ev.data.fd = opts->extra_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->extra_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - extra_fd")
+        LOG_ERROR("input", "epoll control error - extra_fd");
         goto out_close_epoll;
     }
 
@@ -981,7 +981,7 @@ void mux_input_task(const mux_input_options *opts) {
 
     // Detect menu navigation options
     ((mux_input_options *) opts)->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
-    LOG_DEBUG("input", "Navigation Mask: 0x%x", opts->nav)
+    LOG_DEBUG("input", "Navigation Mask: 0x%x", opts->nav);
 
     // Delay (millis) to wait for input before timing out. This determines the rate at which the
     // hold_handlers and idle_handler are called. To save CPU, we want to wait as long as possible.
@@ -1013,11 +1013,11 @@ void mux_input_task(const mux_input_options *opts) {
             if (e == EINTR) continue; // interrupted by signal
 
             if (e == EBADF || e == EINVAL) {
-                LOG_DEBUG("input", "epoll_wait exiting: %s", strerror(e))
+                LOG_DEBUG("input", "epoll_wait exiting: %s", strerror(e));
                 break;
             }
 
-            LOG_ERROR("input", "epoll_wait error: %s", strerror(e))
+            LOG_ERROR("input", "epoll_wait error: %s", strerror(e));
             continue;
         }
 
@@ -1036,7 +1036,7 @@ void mux_input_task(const mux_input_options *opts) {
 
             if (r < 0) {
                 if (errno == EINTR || errno == EAGAIN) continue;
-                LOG_DEBUG("input", "epoll event read error on fd %d: %s", fd, strerror(errno))
+                LOG_DEBUG("input", "epoll event read error on fd %d: %s", fd, strerror(errno));
                 continue;
             }
 

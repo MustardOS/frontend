@@ -1269,7 +1269,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
              load_static_image(ui_screen, ui_group, wall_type));
 
     if (strlen(static_image) > 0) {
-        LOG_INFO(mux_module, "Loading Static Image: %s", static_image)
+        LOG_INFO(mux_module, "Loading Static Image: %s", static_image);
 
         switch (theme.MISC.STATIC_ALIGNMENT) {
             case 0: // Bottom + Front
@@ -1359,7 +1359,7 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, MU_OBJ_MAIN_DEFAULT);
 
     if (theme->GRID.COLUMN_WIDTH == 0 && theme->GRID.ROW_HEIGHT == 0) {
-        LOG_INFO(mux_module, "Setting Grid Size to: content")
+        LOG_INFO(mux_module, "Setting Grid Size to: content");
 
         lv_obj_set_height(ui_pnlGrid, LV_SIZE_CONTENT);
         lv_obj_set_width(ui_pnlGrid, LV_SIZE_CONTENT);

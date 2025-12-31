@@ -42,12 +42,12 @@ static void set_brightness(int brightness) {
 }
 
 static void handle_start(void) {
-    LOG_SUCCESS(mux_module, "Start Button Pressed")
+    LOG_SUCCESS(mux_module, "Start Button Pressed");
 
     if (is_blank) {
         int bright_value = read_line_int_from(CHARGER_BRIGHT, 1);
 
-        LOG_INFO(mux_module, "Setting Brightness To: %d", bright_value)
+        LOG_INFO(mux_module, "Setting Brightness To: %d", bright_value);
         set_brightness(bright_value);
 
         if (file_exist(MUX_BLANK)) remove(MUX_BLANK);
@@ -88,7 +88,7 @@ static void battery_task_charge() {
     if (blank_check()) return;
 
     if (blank_timeout < 0) {
-        LOG_INFO(mux_module, "Setting Brightness To: %d", 0)
+        LOG_INFO(mux_module, "Setting Brightness To: %d", 0);
 
         set_brightness(0);
         is_blank = 1;
@@ -99,8 +99,8 @@ static void battery_task_charge() {
     int bat_cap = read_battery_capacity();
     char *bat_vol = read_battery_voltage();
 
-    LOG_INFO(mux_module, "Capacity: %d%%", bat_cap)
-    LOG_INFO(mux_module, "Voltage: %s", bat_vol)
+    LOG_INFO(mux_module, "Capacity: %d%%", bat_cap);
+    LOG_INFO(mux_module, "Voltage: %s", bat_vol);
 
     snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.MUXCHARGE.CAPACITY, bat_cap);
     snprintf(voltage_info, sizeof(voltage_info), "%s: %s", lang.MUXCHARGE.VOLTAGE, bat_vol);
@@ -122,7 +122,7 @@ int main(void) {
 
     init_muxcharge();
 
-    LOG_INFO(mux_module, "Current Brightness: %d", config.SETTINGS.GENERAL.BRIGHTNESS)
+    LOG_INFO(mux_module, "Current Brightness: %d", config.SETTINGS.GENERAL.BRIGHTNESS);
     write_text_to_file(CHARGER_BRIGHT, "w", INT, config.SETTINGS.GENERAL.BRIGHTNESS);
     set_brightness(config.SETTINGS.GENERAL.BRIGHTNESS);
 
@@ -143,7 +143,7 @@ int main(void) {
     overlay_image = lv_img_create(ui_scrCharge_charge);
     load_overlay_image(ui_scrCharge_charge, overlay_image);
 
-    LOG_INFO(mux_module, "Charging Statistics Y Position: %d", theme.CHARGER.Y_POS)
+    LOG_INFO(mux_module, "Charging Statistics Y Position: %d", theme.CHARGER.Y_POS);
     lv_obj_set_y(ui_pnlCharge_charge, theme.CHARGER.Y_POS);
 
     check_for_cable();

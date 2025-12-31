@@ -193,7 +193,7 @@ static void run_command(const combo_config *c) {
     if (c->is_normal_mode) normal_ok = (config.BOOT.FACTORY_RESET == 0);
 
     if (!handheld_ok || !normal_ok) {
-        if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name)
+        if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
         return;
     }
 
@@ -211,7 +211,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
     uint32_t idle_ms = global_tick - timer->tick;
 
     if (idle_ms >= timeout_ms && !timer->idle) {
-        if (verbose) LOG_INFO("input", "Device is now IDLE")
+        if (verbose) LOG_INFO("input", "Device is now IDLE");
         if (timer->idle_name) printf("%s\n", timer->idle_name);
 
         if (!running_governor) {
@@ -225,7 +225,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
         write_text_to_file(IDLE_STATE, "w", INT, 1);
         timer->idle = true;
     } else if (idle_ms < timeout_ms && timer->idle) {
-        if (verbose) LOG_INFO("input", "Device is now ACTIVE")
+        if (verbose) LOG_INFO("input", "Device is now ACTIVE");
         if (timer->active_name) printf("%s\n", timer->active_name);
 
         if (running_governor && previous_governor) {
@@ -366,7 +366,7 @@ static void parse_inputs_array(struct json array, combo_config *c) {
     for (struct json input = json_first(array); json_exists(input); input = json_next(input)) {
         int type = parse_type(input);
         if (type == MUX_INPUT_COUNT) {
-            LOG_ERROR("input", "JSON Error: Invalid input name")
+            LOG_ERROR("input", "JSON Error: Invalid input name");
             exit(1);
         }
         c->type_mask |= SAFE_BIT(type);
@@ -378,13 +378,13 @@ static void parse_sequence_array(struct json array, combo_config *c) {
 
     for (struct json input = json_first(array); json_exists(input); input = json_next(input)) {
         if (count >= MAX_SEQUENCE) {
-            LOG_ERROR("input", "Input sequence '%s' too long (max %d", c->name, MAX_SEQUENCE)
+            LOG_ERROR("input", "Input sequence '%s' too long (max %d", c->name, MAX_SEQUENCE);
             exit(1);
         }
 
         int type = parse_type(input);
         if (type == MUX_INPUT_COUNT) {
-            LOG_ERROR("input", "JSON Error: Invalid input name in sequence")
+            LOG_ERROR("input", "JSON Error: Invalid input name in sequence");
             exit(1);
         }
 
@@ -437,25 +437,25 @@ static void print_combo_config(const combo_config *c) {
         }
     }
 
-    LOG_INFO("input", "\t%s = %s", c->name, inputs)
+    LOG_INFO("input", "\t%s = %s", c->name, inputs);
     if (c->is_sequence) LOG_INFO("input", "\thandle = sequence (%d)%s",
-                                 c->sequence_length, c->max_interval ? " (timed)" : "")
+                                 c->sequence_length, c->max_interval ? " (timed)" : "");
 
     if (c->handle_hold) {
-        LOG_INFO("input", "\thandle = hold")
+        LOG_INFO("input", "\thandle = hold");
     } else if (c->handle_double_press) {
-        LOG_INFO("input", "\thandle = double press")
+        LOG_INFO("input", "\thandle = double press");
     } else if (c->handle_double_hold) {
-        LOG_INFO("input", "\thandle = double hold")
+        LOG_INFO("input", "\thandle = double hold");
     }
 
-    if (c->exec_cmd) LOG_INFO("input", "\texec = '%s'", c->exec_cmd)
+    if (c->exec_cmd) LOG_INFO("input", "\texec = '%s'", c->exec_cmd);
 }
 
 static void parse_combos_file(const char *filename) {
     char *json_str = read_all_char_from(filename);
     if (!json_str) {
-        LOG_ERROR("input", "Cannot read %s", filename)
+        LOG_ERROR("input", "Cannot read %s", filename);
         return;
     }
 
@@ -463,7 +463,7 @@ static void parse_combos_file(const char *filename) {
     root = json_ensure(root);
 
     if (!json_exists(root) || json_type(root) != JSON_OBJECT) {
-        LOG_ERROR("input", "JSON Error: %s is not a valid JSON file", filename)
+        LOG_ERROR("input", "JSON Error: %s is not a valid JSON file", filename);
         free(json_str);
         return;
     }
@@ -480,7 +480,7 @@ static void parse_combos_file(const char *filename) {
         }
 
         if (!match) {
-            if (verbose) LOG_INFO("input", "Skipping File: '%s' not listed as compatible board", device.BOARD.NAME)
+            if (verbose) LOG_INFO("input", "Skipping File: '%s' not listed as compatible board", device.BOARD.NAME);
             free(json_str);
             return;
         }
@@ -498,7 +498,7 @@ static void parse_combos_file(const char *filename) {
         }
 
         if (combo_count == MUX_INPUT_COMBO_COUNT) {
-            LOG_ERROR("input", "Maximum combo count of %d exceeded", MUX_INPUT_COMBO_COUNT)
+            LOG_ERROR("input", "Maximum combo count of %d exceeded", MUX_INPUT_COMBO_COUNT);
             break;
         }
 
@@ -507,14 +507,14 @@ static void parse_combos_file(const char *filename) {
         json_string_copy(key, name, len);
 
         if (combo_name_exists(name)) {
-            if (verbose) LOG_WARN("input", "Duplicate combo name '%s'", name)
+            if (verbose) LOG_WARN("input", "Duplicate combo name '%s'", name);
             free(name);
             key = json_next(value);
             continue;
         }
 
         if (json_type(value) != JSON_OBJECT) {
-            if (verbose) LOG_WARN("input", "%s: '%s' value must be object", filename, name)
+            if (verbose) LOG_WARN("input", "%s: '%s' value must be object", filename, name);
             free(name);
             key = json_next(value);
             continue;
@@ -548,7 +548,7 @@ static void parse_combos_file(const char *filename) {
         }
 
         if (!json_exists(inputs)) {
-            if (verbose) LOG_WARN("input", "'%s' missing inputs array", c->name)
+            if (verbose) LOG_WARN("input", "'%s' missing inputs array", c->name);
             key = json_next(value);
             continue;
         }
@@ -581,7 +581,7 @@ static void load_hotkeys() {
         char path[PATH_MAX];
         snprintf(path, sizeof(path), "%s/%s", STORAGE_HOTKEY, ent->d_name);
 
-        if (verbose) LOG_INFO("input", "Parsing Hotkey File: %s", path)
+        if (verbose) LOG_INFO("input", "Parsing Hotkey File: %s", path);
         parse_combos_file(path);
 
         for (int i = last_combo_index; i < combo_count; ++i) {
@@ -620,33 +620,33 @@ int main(int argc, char *argv[]) {
 
     boot_governor = read_all_char_from(device.CPU.GOVERNOR);
     if (!boot_governor) {
-        LOG_WARN("input", "Could not read initial CPU governor")
+        LOG_WARN("input", "Could not read initial CPU governor");
         boot_governor = strdup("ondemand");
     } else {
-        LOG_INFO("input", "Initial CPU governor: %s", boot_governor)
+        LOG_INFO("input", "Initial CPU governor: %s", boot_governor);
     }
 
     input_opts.general_fd = open(device.INPUT_EVENT.JOY_GENERAL, O_RDONLY);
     if (input_opts.general_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_GENERAL)
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_GENERAL);
         return 1;
     }
 
     input_opts.power_fd = open(device.INPUT_EVENT.JOY_POWER, O_RDONLY);
     if (input_opts.power_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_POWER)
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_POWER);
         return 1;
     }
 
     input_opts.volume_fd = open(device.INPUT_EVENT.JOY_VOLUME, O_RDONLY);
     if (input_opts.volume_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_VOLUME)
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_VOLUME);
         return 1;
     }
 
     input_opts.extra_fd = open(device.INPUT_EVENT.JOY_EXTRA, O_RDONLY);
     if (input_opts.extra_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_EXTRA)
+        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_EXTRA);
         return 1;
     }
 
@@ -688,8 +688,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (verbose) {
-        LOG_INFO("input", "====================================")
-        LOG_INFO("input", "Final Sorted Combo Order")
+        LOG_INFO("input", "====================================");
+        LOG_INFO("input", "Final Sorted Combo Order");
         for (int i = 0; i < combo_count; ++i) {
             char buf[MAX_BUFFER_SIZE] = {0};
             int first = 1;
@@ -703,9 +703,9 @@ int main(int argc, char *argv[]) {
 
             LOG_INFO("input", "\t%2d: %-14s\tmask=%016llx [%s]",
                      i, combo[i].name,
-                     (unsigned long long) input_opts.combo[i].type_mask, buf)
+                     (unsigned long long) input_opts.combo[i].type_mask, buf);
         }
-        LOG_INFO("input", "====================================")
+        LOG_INFO("input", "====================================");
     }
 
     // Flush triggered combo names to stdout immediately.
@@ -714,7 +714,7 @@ int main(int argc, char *argv[]) {
     idle_display.tick = idle_sleep.tick = global_tick;
 
     // Process input and respond to combos indefinitely.
-    LOG_INFO("input", "Hotkey daemon ready! Monitoring input events...")
+    LOG_INFO("input", "Hotkey daemon ready! Monitoring input events...");
     mux_input_task(&input_opts);
 
     cleanup(0);

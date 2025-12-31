@@ -153,7 +153,7 @@ static void image_refresh() {
         }
     }
 
-    LOG_INFO(mux_module, "Loading 'box' Artwork: %s", image)
+    LOG_INFO(mux_module, "Loading 'box' Artwork: %s", image);
 
     if (strcasecmp(box_image_previous_path, image) != 0) {
         char artwork_config_path[MAX_BUFFER_SIZE];

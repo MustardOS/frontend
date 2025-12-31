@@ -68,7 +68,7 @@ void detach_parent_process(void) {
     pid_t pid = fork();
 
     if (pid < 0) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_FORK)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_FORK);
         exit(EXIT_FAILURE);
     }
 
@@ -149,7 +149,7 @@ void init_display() {
     uint32_t buf_lines = device.MUX.HEIGHT / 4;
     uint32_t disp_buf_size = device.MUX.WIDTH * buf_lines;
 
-    LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", buf_lines, (disp_buf_size * sizeof(lv_color_t)) / 1024)
+    LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", buf_lines, (disp_buf_size * sizeof(lv_color_t)) / 1024);
 
     static lv_color_t *disp_buf_s1 = NULL;
     static lv_color_t *disp_buf_s2 = NULL;
@@ -302,7 +302,7 @@ void timer_action(int action) {
             case 1:
                 timer_destroy(timers[i]);
                 break;
-            default: LOG_WARN(mux_module, "Timer issue warning - No suspend or destroy!")
+            default: LOG_WARN(mux_module, "Timer issue warning - No suspend or destroy!");
         }
     }
 }

@@ -83,10 +83,10 @@ static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabl
 
 static void create_content_items(void) {
     if (!file_exist(theme_data_local_path)) {
-        LOG_WARN(mux_module, "Theme Data Not Found At: %s", theme_data_local_path)
+        LOG_WARN(mux_module, "Theme Data Not Found At: %s", theme_data_local_path);
         return;
     } else {
-        LOG_SUCCESS(mux_module, "Found Theme Data At: %s", theme_data_local_path)
+        LOG_SUCCESS(mux_module, "Found Theme Data At: %s", theme_data_local_path);
     }
 
     char *json_str = read_all_char_from(theme_data_local_path);

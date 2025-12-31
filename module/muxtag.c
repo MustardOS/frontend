@@ -13,11 +13,11 @@ static void write_tag_file(char *path, char *tag, char *log) {
 
     FILE *file = fopen(path, "w");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
-    LOG_INFO(mux_module, "%s: %s", log, tag)
+    LOG_INFO(mux_module, "%s: %s", log, tag);
 
     fprintf(file, "%s", tag);
     fclose(file);
@@ -164,7 +164,7 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    LOG_INFO(mux_module, "Single Tag Assignment Triggered")
+    LOG_INFO(mux_module, "Single Tag Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -195,7 +195,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    LOG_INFO(mux_module, "Directory Tag Assignment Triggered")
+    LOG_INFO(mux_module, "Directory Tag Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -208,7 +208,7 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    LOG_INFO(mux_module, "Parent Tag Assignment Triggered")
+    LOG_INFO(mux_module, "Parent Tag Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -274,9 +274,9 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     init_module(__func__);
 
-    LOG_INFO(mux_module, "Assign Tag ROM_NAME: \"%s\"", rom_name)
-    LOG_INFO(mux_module, "Assign Tag ROM_DIR: \"%s\"", rom_dir)
-    LOG_INFO(mux_module, "Assign Tag ROM_SYS: \"%s\"", rom_system)
+    LOG_INFO(mux_module, "Assign Tag ROM_NAME: \"%s\"", rom_name);
+    LOG_INFO(mux_module, "Assign Tag ROM_DIR: \"%s\"", rom_dir);
+    LOG_INFO(mux_module, "Assign Tag ROM_SYS: \"%s\"", rom_system);
 
     init_theme(1, 0);
 
@@ -296,10 +296,10 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
     generate_available_tags();
 
     if (ui_count > 0) {
-        LOG_SUCCESS(mux_module, "%d Tag%s Detected", ui_count, ui_count == 1 ? "" : "s")
+        LOG_SUCCESS(mux_module, "%d Tag%s Detected", ui_count, ui_count == 1 ? "" : "s");
         list_nav_next(0);
     } else {
-        LOG_ERROR(mux_module, "No Tags Detected!")
+        LOG_ERROR(mux_module, "No Tags Detected!");
         lv_label_set_text(ui_lblScreenMessage, lang.MUXTAG.NONE);
     }
 

@@ -14,11 +14,11 @@ static void show_help(void) {
 static void write_control_file(char *path, const char *control, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
-    LOG_INFO(mux_module, "%s: %s", log, control)
+    LOG_INFO(mux_module, "%s: %s", log, control);
 
     fprintf(file, "%s", control);
     fclose(file);
@@ -231,7 +231,7 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call || is_directory) return;
 
-    LOG_INFO(mux_module, "Single Control Assignment Triggered")
+    LOG_INFO(mux_module, "Single Control Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -266,7 +266,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || is_app || hold_call) return;
 
-    LOG_INFO(mux_module, "Directory Control Assignment Triggered")
+    LOG_INFO(mux_module, "Directory Control Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -279,7 +279,7 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || is_app || at_base(rom_dir, "ROMS") || hold_call) return;
 
-    LOG_INFO(mux_module, "Parent Control Assignment Triggered")
+    LOG_INFO(mux_module, "Parent Control Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -363,16 +363,16 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
     init_module(__func__);
 
     if (is_app) {
-        LOG_INFO(mux_module, "Assign Control APP_NAME: \"%s\"", rom_name)
-        LOG_INFO(mux_module, "Assign Control APP_DIR: \"%s\"", rom_dir)
+        LOG_INFO(mux_module, "Assign Control APP_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Control APP_DIR: \"%s\"", rom_dir);
     } else {
-        LOG_INFO(mux_module, "Assign Control ROM_NAME: \"%s\"", rom_name)
-        LOG_INFO(mux_module, "Assign Control ROM_DIR: \"%s\"", rom_dir)
-        LOG_INFO(mux_module, "Assign Control ROM_SYS: \"%s\"", rom_system)
+        LOG_INFO(mux_module, "Assign Control ROM_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Control ROM_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign Control ROM_SYS: \"%s\"", rom_system);
     }
 
     if (auto_assign && !file_exist(MUOS_SAG_LOAD) && !is_app) {
-        LOG_INFO(mux_module, "Automatic Assign Control Initiated")
+        LOG_INFO(mux_module, "Automatic Assign Control Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.con",
@@ -401,13 +401,13 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config)
+                LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
 
                 char assigned_global[MAX_BUFFER_SIZE];
                 snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini",
                          ass_config);
 
-                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global)
+                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
 
                 mini_t *global_ini = mini_load(assigned_global);
 
@@ -428,18 +428,18 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                     char *use_local_control = get_ini_string(local_ini, def_sys, "control", "none");
                     if (strcmp(use_local_control, "none") != 0) {
                         strcpy(core_control, use_local_control);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control)
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
                     } else {
                         strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control)
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control);
                     }
 
                     mini_free(local_ini);
 
                     create_control_assignment(core_control, rom_name, DIRECTORY_NO_WIPE);
-                    LOG_SUCCESS(mux_module, "\tControl Assignment Successful")
+                    LOG_SUCCESS(mux_module, "\tControl Assignment Successful");
                 } else {
-                    LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system")
+                    LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
                     create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
                 }
 
@@ -448,7 +448,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                 close_input();
                 return 0;
             } else {
-                LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system")
+                LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
                 create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
 
                 close_input();
@@ -485,7 +485,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config)
+                LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config);
                 snprintf(rom_system, sizeof(rom_system), "%s", strip_ext(ass_config));
             }
         }
@@ -499,10 +499,10 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
     init_elements();
 
     if (ui_count > 0) {
-        LOG_SUCCESS(mux_module, "%d Control%s Detected", ui_count, ui_count == 1 ? "" : "s")
+        LOG_SUCCESS(mux_module, "%d Control%s Detected", ui_count, ui_count == 1 ? "" : "s");
         list_nav_next(0);
     } else {
-        LOG_ERROR(mux_module, "No Controls Detected!")
+        LOG_ERROR(mux_module, "No Controls Detected!");
         lv_label_set_text(ui_lblScreenMessage, lang.MUXCONTROL.NONE);
     }
 

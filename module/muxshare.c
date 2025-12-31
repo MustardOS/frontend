@@ -142,11 +142,11 @@ void overlay_display(void) {
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
     if (!val || strlen(val) == 0 || strcasecmp(val, "(null)") == 0) {
-        LOG_INFO(mux_module, "Using Default %s: %s", label, def_val)
+        LOG_INFO(mux_module, "Using Default %s: %s", label, def_val);
         return strdup(def_val);
     }
 
-    LOG_INFO(mux_module, "Assigned %s: %s", label, val)
+    LOG_INFO(mux_module, "Assigned %s: %s", label, val);
     return val;
 }
 
@@ -159,12 +159,12 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
         if (is_app) {
             snprintf(path, sizeof(path), "%s/mux_option.%s", sys_dir, ext);
 
-            LOG_SUCCESS(mux_module, "Loading Application %s: %s", label, path)
+            LOG_SUCCESS(mux_module, "Loading Application %s: %s", label, path);
 
             char *txt = read_all_char_from(path);
             if (txt) return txt;
 
-            LOG_ERROR(mux_module, "Failed to read application %s", label)
+            LOG_ERROR(mux_module, "Failed to read application %s", label);
             return NULL;
         }
 
@@ -178,12 +178,12 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
                      last_subdir, strip_ext(items[current_item_index].name), ext);
 
             if (file_exist(path) && !force) {
-                LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path)
+                LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
 
                 char *txt = read_all_char_from(path);
                 if (txt) return txt;
 
-                LOG_ERROR(mux_module, "Failed to read individual %s", label)
+                LOG_ERROR(mux_module, "Failed to read individual %s", label);
             }
 
             snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
@@ -193,7 +193,7 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
         snprintf(path, sizeof(path), "%s.%s", strip_ext(pointer), ext);
 
         if (file_exist(path)) {
-            LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path)
+            LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
             return read_all_char_from(path);
         }
 
@@ -205,17 +205,17 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
     }
 
     if (file_exist(path) && !force) {
-        LOG_SUCCESS(mux_module, "Loading Global %s: %s", label, path)
+        LOG_SUCCESS(mux_module, "Loading Global %s: %s", label, path);
 
         char *txt = read_all_char_from(path);
         if (txt) return txt;
 
-        LOG_ERROR(mux_module, "Failed to read global %s", label)
+        LOG_ERROR(mux_module, "Failed to read global %s", label);
     }
 
     if (run_quit) mux_input_stop();
 
-    LOG_INFO(mux_module, "No %s detected", label)
+    LOG_INFO(mux_module, "No %s detected", label);
     return NULL;
 }
 
@@ -281,7 +281,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
 
     DIR *dir = opendir(full_path);
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;
     }
 

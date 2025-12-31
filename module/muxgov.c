@@ -14,11 +14,11 @@ static void show_help(void) {
 static void write_gov_file(char *path, const char *gov, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
-    LOG_INFO(mux_module, "%s: %s", log, gov)
+    LOG_INFO(mux_module, "%s: %s", log, gov);
 
     fprintf(file, "%s", gov);
     fclose(file);
@@ -211,7 +211,7 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call || is_directory) return;
 
-    LOG_INFO(mux_module, "Single Governor Assignment Triggered")
+    LOG_INFO(mux_module, "Single Governor Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -246,7 +246,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || is_app || hold_call) return;
 
-    LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
+    LOG_INFO(mux_module, "Directory Governor Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -259,7 +259,7 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || is_app || at_base(rom_dir, "ROMS") || hold_call) return;
 
-    LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
+    LOG_INFO(mux_module, "Parent Governor Assignment Triggered");
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
@@ -342,16 +342,16 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     init_module(__func__);
 
     if (is_app) {
-        LOG_INFO(mux_module, "Assign Governor APP_NAME: \"%s\"", rom_name)
-        LOG_INFO(mux_module, "Assign Governor APP_DIR: \"%s\"", rom_dir)
+        LOG_INFO(mux_module, "Assign Governor APP_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Governor APP_DIR: \"%s\"", rom_dir);
     } else {
-        LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
-        LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
-        LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)
+        LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system);
     }
 
     if (auto_assign && !file_exist(MUOS_SAG_LOAD) && !is_app) {
-        LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
+        LOG_INFO(mux_module, "Automatic Assign Governor Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.gov",
@@ -380,13 +380,13 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config)
+                LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
 
                 char assigned_global[MAX_BUFFER_SIZE];
                 snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini",
                          ass_config);
 
-                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global)
+                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
 
                 mini_t *global_ini = mini_load(assigned_global);
 
@@ -407,19 +407,18 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                     char *use_local_governor = get_ini_string(local_ini, def_sys, "governor", "none");
                     if (strcmp(use_local_governor, "none") != 0) {
                         strcpy(core_governor, use_local_governor);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor)
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
                     } else {
                         strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor)
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
                     }
 
                     mini_free(local_ini);
 
                     create_gov_assignment(core_governor, rom_name, DIRECTORY_NO_WIPE);
-                    LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful")
+                    LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful");
                 } else {
-                    LOG_INFO(mux_module, "\tAssigned Governor To Default: %s",
-                             device.CPU.DEFAULT)
+                    LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.CPU.DEFAULT);
                     create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
                 }
 
@@ -428,7 +427,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 close_input();
                 return 0;
             } else {
-                LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.CPU.DEFAULT)
+                LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.CPU.DEFAULT);
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
 
                 close_input();
@@ -465,7 +464,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config)
+                LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config);
                 snprintf(rom_system, sizeof(rom_system), "%s", strip_ext(ass_config));
             }
         }
@@ -479,10 +478,10 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     init_elements();
 
     if (ui_count > 0) {
-        LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s")
+        LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s");
         list_nav_next(0);
     } else {
-        LOG_ERROR(mux_module, "No Governors Detected!")
+        LOG_ERROR(mux_module, "No Governors Detected!");
         lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);
     }
 

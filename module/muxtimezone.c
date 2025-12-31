@@ -82,7 +82,7 @@ static void handle_a(void) {
 
     unlink(LOCAL_TIME);
     if (symlink(zone_group, LOCAL_TIME) != 0) {
-        LOG_ERROR(mux_module, "Failed to timezone symlink")
+        LOG_ERROR(mux_module, "Failed to timezone symlink");
     }
 
     // Because weirdos live in different timezones...

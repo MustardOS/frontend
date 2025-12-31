@@ -239,12 +239,12 @@ static void handle_b(void) {
 }
 
 static void handle_core_assignment(const char *log_msg, int assignment_mode) {
-    LOG_INFO(mux_module, "%s", log_msg)
+    LOG_INFO(mux_module, "%s", log_msg);
     play_sound(SND_CONFIRM);
 
     char *item_data = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     char *selected_item = str_tolower(item_data);
-    LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, item_data)
+    LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, item_data);
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
@@ -254,13 +254,13 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     snprintf(global_core, sizeof(global_core), "%s/global.ini",
              assign_dir);
     mini_t *global_ini = mini_load(global_core);
-    LOG_INFO(mux_module, "Global Core Path: %s", global_core)
+    LOG_INFO(mux_module, "Global Core Path: %s", global_core);
 
     char local_core[FILENAME_MAX];
     snprintf(local_core, sizeof(local_core), "%s/%s.ini",
              assign_dir, selected_item);
     mini_t *local_ini = mini_load(local_core);
-    LOG_INFO(mux_module, "Local Core Path: %s", local_core)
+    LOG_INFO(mux_module, "Local Core Path: %s", local_core);
 
     static char core_catalogue[MAX_BUFFER_SIZE];
     char *use_local_catalogue = get_ini_string(local_ini, selected_item, "catalogue", "none");
@@ -269,7 +269,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     } else {
         strcpy(core_catalogue, get_ini_string(global_ini, "global", "catalogue", "none"));
     }
-    LOG_INFO(mux_module, "Content Core Catalogue: %s", core_catalogue)
+    LOG_INFO(mux_module, "Content Core Catalogue: %s", core_catalogue);
 
     static char core_governor[MAX_BUFFER_SIZE];
     char *use_local_governor = get_ini_string(local_ini, selected_item, "governor", "none");
@@ -278,7 +278,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     } else {
         strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
     }
-    LOG_INFO(mux_module, "Content Core Governor: %s", core_governor)
+    LOG_INFO(mux_module, "Content Core Governor: %s", core_governor);
 
     static char core_control[MAX_BUFFER_SIZE];
     char *use_local_control = get_ini_string(local_ini, selected_item, "control", "none");
@@ -287,16 +287,16 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     } else {
         strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
     }
-    LOG_INFO(mux_module, "Content Core Control: %s", core_control)
+    LOG_INFO(mux_module, "Content Core Control: %s", core_control);
 
     static int core_lookup;
     int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
     core_lookup = use_local_lookup ? use_local_lookup : get_ini_int(global_ini, "global", "lookup", 0);
-    LOG_INFO(mux_module, "Content Core Lookup: %d", core_lookup)
+    LOG_INFO(mux_module, "Content Core Lookup: %d", core_lookup);
 
     static char core_launch[MAX_BUFFER_SIZE];
     strcpy(core_launch, get_ini_string(local_ini, selected_item, "core", "none"));
-    LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch)
+    LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch);
 
     create_core_assignment(selected_item, rom_dir, core_launch, rom_system, core_catalogue,
                            rom_name, core_governor, core_control, core_lookup, assignment_mode);
@@ -436,10 +436,10 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
     init_module(__func__);
 
-    LOG_INFO(mux_module, "Assign Core explore_dir: \"%s\"", explore_dir)
-    LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)
-    LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir)
-    LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)
+    LOG_INFO(mux_module, "Assign Core explore_dir: \"%s\"", explore_dir);
+    LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name);
+    LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir);
+    LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system);
 
     if (auto_assign && !file_exist(MUOS_SAA_LOAD)) {
         if (automatic_assign_core(rom_dir) || strcmp(rom_system, "none") == 0) {
@@ -475,9 +475,9 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
     if (ui_count > 0) {
         if (strcasecmp(rom_system, "none") == 0) {
-            LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s")
+            LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s");
         } else {
-            LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s")
+            LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s");
         }
 
         char title[MAX_BUFFER_SIZE];
@@ -488,7 +488,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
             list_nav_move(ass_index, +1);
         }
     } else {
-        LOG_ERROR(mux_module, "No Cores Detected - Check Directory!")
+        LOG_ERROR(mux_module, "No Cores Detected - Check Directory!");
         lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
     }
 

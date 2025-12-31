@@ -24,18 +24,18 @@ int clear_framebuffer(void) {
 
     fb_fd = open(device.SCREEN.DEVICE, O_RDWR);
     if (fb_fd < 0) {
-        LOG_ERROR(module, "Error opening framebuffer device")
+        LOG_ERROR(module, "Error opening framebuffer device");
         return -1;
     }
 
     if (ioctl(fb_fd, FBIOGET_FSCREENINFO, &f_info) < 0) {
-        LOG_ERROR(module, "Error retrieving fixed screen info")
+        LOG_ERROR(module, "Error retrieving fixed screen info");
         close(fb_fd);
         return -1;
     }
 
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &v_info) < 0) {
-        LOG_ERROR(module, "Error retrieving variable screen info")
+        LOG_ERROR(module, "Error retrieving variable screen info");
         close(fb_fd);
         return -1;
     }
@@ -43,7 +43,7 @@ int clear_framebuffer(void) {
     size_t fb_size = f_info.line_length * v_info.yres;
     void *fb_mem = mmap(0, fb_size, PROT_READ | PROT_WRITE, MAP_SHARED, fb_fd, 0);
     if (fb_mem == MAP_FAILED) {
-        LOG_ERROR(module, "Error mapping framebuffer memory")
+        LOG_ERROR(module, "Error mapping framebuffer memory");
         close(fb_fd);
         return -1;
     }
@@ -53,7 +53,7 @@ int clear_framebuffer(void) {
 
     close(fb_fd);
 
-    if (verbose) LOG_SUCCESS(module, "Framebuffer cleared successfully")
+    if (verbose) LOG_SUCCESS(module, "Framebuffer cleared successfully");
 
     return 0;
 }
@@ -63,14 +63,14 @@ void print_available_modes(void) {
 
     FILE *modes_file = fopen(sys_modes, "r");
     if (!modes_file) {
-        LOG_ERROR(module, "Unable to read available modes from sysfs")
+        LOG_ERROR(module, "Unable to read available modes from sysfs");
         return;
     }
 
-    LOG_INFO(module, "Available Modes:")
+    LOG_INFO(module, "Available Modes:");
 
     char mode[64];
-    while (fgets(mode, sizeof(mode), modes_file)) LOG_INFO(module, "  %s", mode)
+    while (fgets(mode, sizeof(mode), modes_file)) LOG_INFO(module, "  %s", mode);
 
     fclose(modes_file);
 }
@@ -80,21 +80,21 @@ void show_current_mode(void) {
     int fb_fd = open(device.SCREEN.DEVICE, O_RDONLY);
 
     if (fb_fd < 0) {
-        LOG_ERROR(module, "Error opening framebuffer device")
+        LOG_ERROR(module, "Error opening framebuffer device");
         return;
     }
 
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &v_info) < 0) {
-        LOG_ERROR(module, "Error retrieving variable screen info")
+        LOG_ERROR(module, "Error retrieving variable screen info");
         close(fb_fd);
         return;
     }
 
     LOG_INFO(module, "Current Mode: %dx%d (%dx%d virtual), %dbpp",
              v_info.xres, v_info.yres, v_info.xres_virtual,
-             v_info.yres_virtual, v_info.bits_per_pixel)
+             v_info.yres_virtual, v_info.bits_per_pixel);
 
-    LOG_INFO(module, "Timing: hsync=%d, vsync=%d, rotate=%d", v_info.hsync_len, v_info.vsync_len, v_info.rotate)
+    LOG_INFO(module, "Timing: hsync=%d, vsync=%d, rotate=%d", v_info.hsync_len, v_info.vsync_len, v_info.rotate);
 
     close(fb_fd);
 }
@@ -105,17 +105,17 @@ int set_framebuffer(int width, int height, int depth, int hsync_len, int vsync_l
 
     fb_fd = open(device.SCREEN.DEVICE, O_RDWR);
     if (fb_fd < 0) {
-        LOG_ERROR(module, "Error opening framebuffer device")
+        LOG_ERROR(module, "Error opening framebuffer device");
         return -1;
     }
 
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &v_info) < 0) {
-        LOG_ERROR(module, "Error retrieving variable screen info")
+        LOG_ERROR(module, "Error retrieving variable screen info");
         close(fb_fd);
         return -1;
     }
 
-    if (verbose) LOG_INFO(module, "Current resolution: %dx%d, %dbpp", v_info.xres, v_info.yres, v_info.bits_per_pixel)
+    if (verbose) LOG_INFO(module, "Current resolution: %dx%d, %dbpp", v_info.xres, v_info.yres, v_info.bits_per_pixel);
 
     if (ignore_dh < 1) ignore_dh = 1;
     if (ignore_dh > 4) ignore_dh = 4;
@@ -137,20 +137,20 @@ int set_framebuffer(int width, int height, int depth, int hsync_len, int vsync_l
     if (rotation >= 0) v_info.rotate = rotation;
 
     if (ioctl(fb_fd, FBIOPUT_VSCREENINFO, &v_info) < 0) {
-        LOG_ERROR(module, "Error setting variable screen info")
+        LOG_ERROR(module, "Error setting variable screen info");
         close(fb_fd);
         return -1;
     }
 
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &verify) == 0) {
         if (verify.xres != v_info.xres || verify.yres != v_info.yres) {
-            LOG_WARN(module, "Hardware adjusted the mode: got %dx%d instead", verify.xres, verify.yres)
+            LOG_WARN(module, "Hardware adjusted the mode: got %dx%d instead", verify.xres, verify.yres);
         }
     }
 
     if (verbose) {
-        LOG_INFO(module, "Updated resolution: %dx%d, %dbpp", v_info.xres, v_info.yres, v_info.bits_per_pixel)
-        LOG_INFO(module, "Timing: hsync=%d, vsync=%d, rotate=%d", v_info.hsync_len, v_info.vsync_len, v_info.rotate)
+        LOG_INFO(module, "Updated resolution: %dx%d, %dbpp", v_info.xres, v_info.yres, v_info.bits_per_pixel);
+        LOG_INFO(module, "Timing: hsync=%d, vsync=%d, rotate=%d", v_info.hsync_len, v_info.vsync_len, v_info.rotate);
     }
 
     close(fb_fd);
@@ -259,16 +259,16 @@ int main(int argc, char *argv[]) {
 
     if (clear_screen) {
         if (clear_framebuffer() < 0) {
-            LOG_ERROR(module, "Failed to clear the framebuffer")
+            LOG_ERROR(module, "Failed to clear the framebuffer");
             return 1;
         }
     }
 
     if (width > 0 || height > 0 || depth > 0 || hsync_len > 0 || vsync_len > 0 || rotation >= 0) {
         if (set_framebuffer(width, height, depth, hsync_len, vsync_len, ignore_dh, rotation) == 0) {
-            if (verbose) LOG_SUCCESS(module, "Framebuffer updated successfully")
+            if (verbose) LOG_SUCCESS(module, "Framebuffer updated successfully");
         } else {
-            LOG_ERROR(module, "Failed to update framebuffer configuration")
+            LOG_ERROR(module, "Failed to update framebuffer configuration");
             return 1;
         }
     }

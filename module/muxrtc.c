@@ -65,18 +65,18 @@ static void restore_clock_settings(void) {
 
     if (now == (time_t) -1) {
         is_error = true;
-        LOG_ERROR(mux_module, "Failed to get current time")
+        LOG_ERROR(mux_module, "Failed to get current time");
     } else {
         tm_now = localtime(&now);
     }
 
     if (!is_error && !tm_now) {
         is_error = true;
-        LOG_ERROR(mux_module, "Failed to convert time to local time")
+        LOG_ERROR(mux_module, "Failed to convert time to local time");
     }
 
     if (is_error) {
-        LOG_WARN(mux_module, "Using default date and time")
+        LOG_WARN(mux_module, "Using default date and time");
         rtc.year = 2025;
         rtc.month = 1;
         rtc.day = 1;
@@ -97,7 +97,7 @@ static void restore_clock_settings(void) {
     lv_label_set_text_fmt(ui_lblMinuteValue_rtc, "%02d", rtc.minute);
 
     if (config.CLOCK.NOTATION < 0 || config.CLOCK.NOTATION > 1) {
-        LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format")
+        LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format");
         rtc.notation = TIME_24H;
     } else {
         rtc.notation = config.CLOCK.NOTATION;
@@ -121,7 +121,7 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
     while (rtc_retry_attempt < RTC_MAX_RETRIES) {
         time_t time_seconds = mktime(&t);
         if (time_seconds == (time_t) -1) {
-            LOG_ERROR(mux_module, "Invalid time retrieved")
+            LOG_ERROR(mux_module, "Invalid time retrieved");
             break;
         }
 
@@ -135,20 +135,20 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
             LOG_SUCCESS(mux_module, "Time successfully set to: %04d-%02d-%02d %02d:%02d:00 (DST %s) (%sH)",
                         year, month, day, hour, minute,
                         tm_check && tm_check->tm_isdst > 0 ? "YES" : "NO",
-                        notation ? "12" : "24")
+                        notation ? "12" : "24");
 
             confirm_rtc_config();
             refresh_config = 1;
 
             return;
         } else {
-            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_RUN_COMMAND)
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_RUN_COMMAND);
             rtc_retry_attempt++;
             sleep(RTC_RETRY_DELAY);
         }
     }
 
-    LOG_ERROR(mux_module, "Attempt to set system date failed")
+    LOG_ERROR(mux_module, "Attempt to set system date failed");
     refresh_config = 1;
 }
 

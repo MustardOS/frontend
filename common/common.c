@@ -551,13 +551,13 @@ char *get_execute_result(const char *command) {
 int read_battery_capacity(void) {
     FILE *file = fopen(device.BATTERY.CAPACITY, "r");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY);
         return 0;
     }
 
     char buf[32];
     if (!fgets(buf, sizeof(buf), file)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY);
         fclose(file);
         return 0;
     }
@@ -571,7 +571,7 @@ int read_battery_capacity(void) {
     int trailing_garbage = (*end_ptr != '\0' && *end_ptr != '\n');
 
     if (invalid_input || trailing_garbage) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY);
         return 0;
     }
 
@@ -584,13 +584,13 @@ int read_battery_capacity(void) {
 char *read_battery_voltage(void) {
     FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE);
         return "0.00 V";
     }
 
     char buf[32];
     if (!fgets(buf, sizeof(buf), file)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE);
         fclose(file);
         return "0.00 V";
     }
@@ -600,13 +600,13 @@ char *read_battery_voltage(void) {
     char *end_ptr;
     long raw_voltage = strtol(buf, &end_ptr, 10);
     if (end_ptr == buf) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE);
         return "0.00 V";
     }
 
     char *form_voltage = malloc(10);
     if (!form_voltage) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         return "0.00 V";
     }
 
@@ -635,7 +635,7 @@ char *read_all_char_from(const char *filename) {
             text[bytesRead] = '\0';
         }
     } else {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
     }
 
     fclose(file);
@@ -650,13 +650,13 @@ char *read_line_char_from(const char *filename, size_t line_number) {
 
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename);
         return "";
     }
 
     char *line = (char *) malloc(MAX_BUFFER_SIZE);
     if (!line) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
         return "";
     }
@@ -797,7 +797,7 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
         return;
     }
 
@@ -933,7 +933,7 @@ void decrease_option_value(lv_obj_t *element, int count) {
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {
     FILE *file = fopen(loader, "w");
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, loader)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, loader);
         return;
     }
 
@@ -944,7 +944,7 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 void load_mux(const char *value) {
     FILE *file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, MUOS_ACT_LOAD)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, MUOS_ACT_LOAD);
         return;
     }
 
@@ -959,7 +959,7 @@ void play_sound(int sound) {
     if (cs->chunk) {
         Mix_PlayChannel(-1, cs->chunk, 0);
     } else {
-        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound])
+        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound]);
     }
 }
 
@@ -1007,7 +1007,7 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
         closedir(dir);
     } else {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
     }
 }
 
@@ -1034,7 +1034,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
         }
         closedir(dir);
     } else {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
     }
 }
 
@@ -1415,7 +1415,7 @@ void build_image_array(char *base_image_path) {
     size_t base_len = strlen(base_image_path) - 6;
 
     if (base_len >= PATH_MAX) {
-        LOG_ERROR("image", "Base path exceeds maximum allowed length: %s", base_image_path)
+        LOG_ERROR("image", "Base path exceeds maximum allowed length: %s", base_image_path);
         return;
     }
 
@@ -1433,7 +1433,7 @@ void build_image_array(char *base_image_path) {
             size_t needed_size = snprintf(NULL, 0, "%s.%d.png", base_path, index) + 1;
             char *path_embed = malloc(needed_size);
             if (!path_embed) {
-                LOG_ERROR("image", "Failed to allocate memory for image: %s.%d.png", base_path, index)
+                LOG_ERROR("image", "Failed to allocate memory for image: %s.%d.png", base_path, index);
                 break;
             }
 
@@ -1441,7 +1441,7 @@ void build_image_array(char *base_image_path) {
 
             char **img_temp = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
             if (!img_temp) {
-                LOG_ERROR("image", "Failed to reallocate image path array")
+                LOG_ERROR("image", "Failed to reallocate image path array");
                 free(path_embed);
                 break;
             }
@@ -1544,7 +1544,7 @@ void load_skip_patterns(void) {
 
     FILE *file = fopen(skip_ini, "r");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, skip_ini)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, skip_ini);
         return;
     }
 
@@ -2021,7 +2021,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         }
 
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
-            LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file)
+            LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file);
             mz_zip_reader_end(&zip);
             return 0;
         } else {
@@ -2044,19 +2044,19 @@ int extract_file_from_zip(const char *zip_path, const char *filename, const char
     memset(&zip, 0, sizeof(zip));
 
     if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
-        LOG_ERROR(mux_module, "Could not open archive '%s' - Corrupt?", zip_path)
+        LOG_ERROR(mux_module, "Could not open archive '%s' - Corrupt?", zip_path);
         return 0;
     }
 
     int file_index = mz_zip_reader_locate_file(&zip, filename, NULL, 0);
     if (file_index == -1) {
-        LOG_ERROR(mux_module, "File '%s' not found in archive", filename)
+        LOG_ERROR(mux_module, "File '%s' not found in archive", filename);
         mz_zip_reader_end(&zip);
         return 0;
     }
 
     if (!mz_zip_reader_extract_to_file(&zip, file_index, output, 0)) {
-        LOG_ERROR(mux_module, "File '%s' could not be extracted", filename)
+        LOG_ERROR(mux_module, "File '%s' could not be extracted", filename);
         mz_zip_reader_end(&zip);
         return 0;
     }
@@ -2088,7 +2088,7 @@ void collect_subdirectories(const char *base_dir, char ***list, size_t *size, si
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
@@ -2237,7 +2237,7 @@ void play_silence_bgm(void) {
     snprintf(silence_path, sizeof(silence_path), "%s", BGM_SILENCE);
 
     if (!file_exist(silence_path)) {
-        LOG_INFO("audio", "No 'silence.ogg' file found")
+        LOG_INFO("audio", "No 'silence.ogg' file found");
         return;
     }
 
@@ -2245,30 +2245,30 @@ void play_silence_bgm(void) {
     if (current_bgm) {
         Mix_PlayMusic(current_bgm, -1);
         is_silence_playing = 1;
-        LOG_SUCCESS("audio", "Silence BGM playback started")
+        LOG_SUCCESS("audio", "Silence BGM playback started");
     } else {
-        LOG_ERROR("audio", "Failed to load 'silence.ogg': %s", Mix_GetError())
+        LOG_ERROR("audio", "Failed to load 'silence.ogg': %s", Mix_GetError());
     }
 }
 
 int init_audio_backend(void) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        LOG_ERROR("audio", "SDL Init Failed")
+        LOG_ERROR("audio", "SDL Init Failed");
         return 0;
     }
 
     int flags = MIX_INIT_OGG;
     int inited = Mix_Init(flags);
     if ((inited & flags) != flags) {
-        LOG_ERROR("audio", "Missing SDL_mixer support for OGG")
+        LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
     }
 
     if (Mix_OpenAudio(44100, AUDIO_F32LSB, 2, 2048) < 0) {
-        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError())
+        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());
         return 0;
     }
 
-    LOG_SUCCESS("audio", "SDL Init Success")
+    LOG_SUCCESS("audio", "SDL Init Success");
 
 /*
     printf("Audio Decode Support: ");
@@ -2296,7 +2296,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
 
     DIR *dir = opendir(base_path);
     if (!dir) {
-        LOG_INFO("audio", "Sound directory not found: %s", base_path)
+        LOG_INFO("audio", "Sound directory not found: %s", base_path);
         return;
     }
 
@@ -2312,7 +2312,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     }
 
     *fe_snd = 1;
-    LOG_SUCCESS("audio", "FE Sound Started")
+    LOG_SUCCESS("audio", "FE Sound Started");
 }
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
@@ -2333,14 +2333,14 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
     DIR *dir = opendir(base_path);
     if (!dir) {
-        LOG_INFO("audio", "Music directory not found: %s", base_path)
+        LOG_INFO("audio", "Music directory not found: %s", base_path);
         return;
     }
 
     size_t capacity = 8;
     bgm_files = malloc(capacity * sizeof(char *));
     if (!bgm_files) {
-        LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         closedir(dir);
         return;
     }
@@ -2356,7 +2356,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
                 char **bgm_temp = realloc(bgm_files, capacity * sizeof(char *));
 
                 if (!bgm_temp) {
-                    LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                    LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
                     closedir(dir);
                     return;
                 }
@@ -2369,7 +2369,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
             bgm_files[bgm_file_count] = strdup(full_path);
             if (!bgm_files[bgm_file_count]) {
-                LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
                 continue;
             }
 
@@ -2383,9 +2383,9 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         Mix_HookMusicFinished(play_random_bgm);
         play_random_bgm();
         *fe_bgm = 1;
-        LOG_SUCCESS("audio", "FE Music playback started")
+        LOG_SUCCESS("audio", "FE Music playback started");
     } else {
-        LOG_INFO("audio", "No OGG music files found")
+        LOG_INFO("audio", "No OGG music files found");
         play_silence_bgm();
     }
 }
@@ -2819,7 +2819,7 @@ struct screen_dimension get_device_dimensions(void) {
         dims.HEIGHT = device.SCREEN.INTERNAL.HEIGHT;
     }
 
-    LOG_INFO(mux_module, "Screen Output Dimensions: %dx%d", dims.WIDTH, dims.HEIGHT)
+    LOG_INFO(mux_module, "Screen Output Dimensions: %dx%d", dims.WIDTH, dims.HEIGHT);
     return dims;
 }
 
@@ -2835,7 +2835,7 @@ void set_nav_flags(struct nav_flag *nav_flags, size_t count) {
 
 int16_t validate_int16(int value, const char *field) {
     if (value < INT16_MIN || value > INT16_MAX) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_INT16_LENGTH)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_INT16_LENGTH);
         return (value < INT16_MIN) ? INT16_MIN : INT16_MAX;
     }
     return (int16_t)
@@ -2853,7 +2853,7 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     DIR *dir = opendir(base_path);
 
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;
     }
 
@@ -2890,7 +2890,7 @@ void populate_items(const char *base_path, char ***items, int *item_count) {
     DIR *dir = opendir(base_path);
 
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
@@ -2900,7 +2900,7 @@ void populate_items(const char *base_path, char ***items, int *item_count) {
 
         struct stat st;
         if (stat(full_path, &st) == -1) {
-            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_STAT)
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_STAT);
             continue;
         }
 
@@ -3056,9 +3056,9 @@ int theme_compat(void) {
         for (int i = 0; theme_back_compat[i] != NULL; i++) {
             if (str_startswith(theme_back_compat[i], theme_version)) return 1;
         }
-        LOG_WARN(mux_module, "Incompatible Theme Detected: %s", theme_version)
+        LOG_WARN(mux_module, "Incompatible Theme Detected: %s", theme_version);
     } else {
-        LOG_WARN(mux_module, "Missing Theme Version File or Version Content")
+        LOG_WARN(mux_module, "Missing Theme Version File or Version Content");
     }
 
     return 0;
@@ -3076,13 +3076,13 @@ int volume_to_percent(int val) {
 char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename)
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename);
         return NULL;
     }
 
     char **list = malloc(MAX_BUFFER_SIZE * sizeof(char *));
     if (!list) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
         return NULL;
     }
@@ -3125,7 +3125,7 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     fclose(file);
 
     if (failed) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         for (int i = 0; i < *count; i++) free(list[i]);
         free(list);
 
@@ -3324,7 +3324,7 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
     snprintf(content_loader_file, sizeof(content_loader_file), INFO_COR_PATH "/%s/%s.cfg",
              system_sub,
              content_name);
-    LOG_INFO(mux_module, "Configuration File: %s", content_loader_file)
+    LOG_INFO(mux_module, "Configuration File: %s", content_loader_file);
 
     if (!file_exist(content_loader_file)) {
         char content_loader_data[MAX_BUFFER_SIZE];
@@ -3336,7 +3336,7 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
                  file_name);
 
         write_text_to_file(content_loader_file, "w", CHAR, str_replace(content_loader_data, "|", "\n"));
-        LOG_INFO(mux_module, "Configuration Data: %s", content_loader_data)
+        LOG_INFO(mux_module, "Configuration Data: %s", content_loader_data);
     }
 
     if (file_exist(content_loader_file)) {
@@ -3347,12 +3347,12 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
         snprintf(cache_file, sizeof(cache_file), INFO_COR_PATH "/%s/%s.cfg",
                  system_sub, content_name);
 
-        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
+        LOG_INFO(mux_module, "Using Configuration: %s", cache_file);
 
         if (add_collection) {
             add_to_collection(file_name, cache_file, sys_dir);
         } else {
-            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
+            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core);
 
             char *assigned_gov = specify_asset(load_content_governor(sys_dir, NULL, 0, 1, 0),
                                                device.CPU.DEFAULT, "Governor");
@@ -3380,7 +3380,7 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(content_loader_file));
         }
 
-        LOG_SUCCESS(mux_module, "Content Loaded Successfully")
+        LOG_SUCCESS(mux_module, "Content Loaded Successfully");
 
         return 1;
     }
@@ -3399,34 +3399,34 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
                  last_subdir, strip_ext(file_name));
 
         if (file_exist(content_core) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
+            LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core);
 
             char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
                                     CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
 
             if (core) return core;
 
-            LOG_ERROR(mux_module, "Failed to build individual core")
+            LOG_ERROR(mux_module, "Failed to build individual core");
         }
 
         snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/core.cfg", last_subdir);
     }
 
     if (file_exist(content_core) && !force) {
-        LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core)
+        LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core);
 
         char *core = build_core(content_core, GLOBAL_CORE, GLOBAL_SYSTEM,
                                 GLOBAL_CATALOGUE, GLOBAL_LOOKUP, GLOBAL_ASSIGN);
 
         if (core) return core;
 
-        LOG_ERROR(mux_module, "Failed to build global core")
+        LOG_ERROR(mux_module, "Failed to build global core");
     }
 
     load_assign(MUOS_ASS_LOAD, file_name, sys_dir, "none", force, 0);
     if (run_quit) mux_input_stop();
 
-    LOG_INFO(mux_module, "No core detected")
+    LOG_INFO(mux_module, "No core detected");
     return NULL;
 }
 
@@ -3444,7 +3444,7 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system
 
     char *b_core = malloc(required_size);
     if (!b_core) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         return NULL;
     }
 
@@ -3476,17 +3476,17 @@ int set_scaling_governor(const char *governor, int show_done) {
 
     FILE *fp = fopen(device.CPU.GOVERNOR, "w");
     if (!fp) {
-        LOG_ERROR(mux_module, "Failed to open %s: %s", device.CPU.GOVERNOR, strerror(errno))
+        LOG_ERROR(mux_module, "Failed to open %s: %s", device.CPU.GOVERNOR, strerror(errno));
         return -1;
     }
 
     if (fprintf(fp, "%s", governor) < 0) {
-        LOG_ERROR(mux_module, "Failed to write '%s' to %s: %s", governor, device.CPU.GOVERNOR, strerror(errno))
+        LOG_ERROR(mux_module, "Failed to write '%s' to %s: %s", governor, device.CPU.GOVERNOR, strerror(errno));
         fclose(fp);
         return -1;
     }
 
-    if (show_done) LOG_SUCCESS(mux_module, "Governor switched to '%s' successfully", governor)
+    if (show_done) LOG_SUCCESS(mux_module, "Governor switched to '%s' successfully", governor);
 
     fclose(fp);
     return 0;
@@ -3610,7 +3610,7 @@ int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
                 char **tmp = realloc(list, new_capacity * sizeof(char *));
 
                 if (!tmp) {
-                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
+                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
                     free_array(list, count);
                     closedir(dir);
                     return -1;
@@ -3627,7 +3627,7 @@ int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
 
             list[count] = strdup(full);
             if (!list[count]) {
-                LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING)
+                LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING);
                 free_array(list, count);
                 closedir(dir);
                 return -1;
