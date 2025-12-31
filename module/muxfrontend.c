@@ -591,12 +591,7 @@ int main(void) {
             break;
         }
 
-        char folder[MAX_BUFFER_SIZE];
-        snprintf(folder, sizeof(folder), "%s/%dx%d",
-                 config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME,
-                 device.MUX.WIDTH, device.MUX.HEIGHT);
-
-        if (refresh_resolution || !directory_exist(folder)) {
+        if (refresh_resolution) {
             LOG_DEBUG("muxfrontend", "Resolution or Theme Refreshed... exiting!")
 
             shutting_down = 1;
