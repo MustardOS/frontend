@@ -18,7 +18,8 @@
 
 #define THEME_PREVIEW_DELAY 1000
 
-#define IDLE_MS 16 /* ~60 FPS */
+#define IDLE_MS 16 // ~60 FPS
+#define IDLE_FZ (6 * 60 * 60 * 1000U) // Freeze for 6 hours!
 
 #define MU_OBJ_FLAG_HIDE_FLOAT (LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)
 #define MU_OBJ_MAIN_DEFAULT    (LV_PART_MAIN | LV_STATE_DEFAULT)
@@ -36,6 +37,7 @@
 #define TIMER_CAPACITY  1024
 #define TIMER_STATUS    1024
 #define TIMER_SYSINFO   1024
+#define TIMER_IDLE      256
 #define TIMER_REFRESH   IDLE_MS
 
 #define TIME_STRING    "%Y-%m-%d %H:%M"
@@ -46,6 +48,8 @@
 
 #define OPT_PATH "/opt/muos/"
 #define RUN_PATH "/run/muos/"
+
+#define IDLE_STATE RUN_PATH "idle_state"
 
 #define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"

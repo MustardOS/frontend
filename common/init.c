@@ -25,6 +25,9 @@ static struct dt_task_param dt_par;
 static struct bat_task_param bat_par;
 static lv_indev_t *indev = NULL;
 static lv_indev_drv_t indev_drv; // must be declared here to prevent LVGL deadlocks
+static lv_timer_t *mux_refresh_timer = NULL;
+
+static int last_idle = -1;
 
 static int joy_general = -1;
 static int joy_power = -1;
@@ -35,6 +38,7 @@ lv_timer_t *timer_ui_refresh;
 lv_timer_t *timer_datetime;
 lv_timer_t *timer_capacity;
 lv_timer_t *timer_status;
+lv_timer_t *timer_idle;
 lv_timer_t *timer_bluetooth;
 lv_timer_t *timer_network;
 lv_timer_t *timer_update_system_info;
@@ -44,19 +48,20 @@ static lv_timer_t **const timers[] = {
         &timer_datetime,
         &timer_capacity,
         &timer_status,
+        &timer_idle,
         &timer_bluetooth,
         &timer_network,
         &timer_update_system_info,
 };
 
-uint32_t mux_tick(void) {
+uint64_t mux_tick(void) {
     struct timespec tv_now;
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
 
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     if (!start_ms) start_ms = now_ms;
 
-    return (uint32_t) (now_ms - start_ms);
+    return (uint64_t) (now_ms - start_ms);
 }
 
 void detach_parent_process(void) {
@@ -71,12 +76,38 @@ void detach_parent_process(void) {
     if (setsid() < 0) exit(EXIT_FAILURE);
 }
 
-void refresh_screen(lv_obj_t *screen) {
-    for (int r = 0; r < LVGL_REFRESH_PASS; r++) {
-        lv_obj_invalidate(screen);
-        lv_refr_now(NULL);
-        lv_task_handler();
+void mux_set_refresh_timer(lv_timer_t *timer) {
+    mux_refresh_timer = timer;
+}
+
+lv_timer_t *mux_get_refresh_timer(void) {
+    return mux_refresh_timer;
+}
+
+static void mux_idle_poll(lv_timer_t *timer) {
+    LV_UNUSED(timer);
+
+    int idle = read_line_int_from(IDLE_STATE, 1);
+    if (idle < 0 || idle == last_idle) return;
+
+    lv_timer_t *display_timer = mux_get_refresh_timer();
+
+    if (idle) {
+        lv_timer_set_period(display_timer, IDLE_FZ);
+        lv_timer_pause(display_timer);
+    } else {
+        lv_timer_resume(display_timer);
+        lv_timer_set_period(display_timer, IDLE_MS);
+        lv_timer_ready(display_timer);
     }
+
+    last_idle = idle;
+}
+
+void refresh_screen(lv_obj_t *screen) {
+    lv_obj_invalidate(screen);
+    lv_refr_now(NULL);
+    lv_task_handler();
 }
 
 void safe_quit(int exit_status) {
@@ -151,7 +182,8 @@ void init_display() {
     disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     disp_drv.clear_cb = clear_cb;
 
-    lv_disp_drv_register(&disp_drv);
+    lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
+    mux_set_refresh_timer(disp->refr_timer);
 }
 
 int open_input(const char *path, const char *error_message) {
@@ -281,6 +313,7 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
 
     timer_ensure(&timer_ui_refresh, ui_refresh_task, TIMER_REFRESH, NULL);
     timer_ensure(&timer_status, status_task, TIMER_STATUS, NULL);
+    timer_ensure(&timer_idle, mux_idle_poll, TIMER_IDLE, NULL);
 
     if (config.VISUAL.CLOCK) {
         timer_ensure(&timer_datetime, datetime_task, TIMER_DATETIME, &dt_par);
@@ -360,8 +393,11 @@ void status_task(lv_timer_t *timer) {
     };
 
     for (size_t i = 0; i < A_SIZE(panels); ++i) {
-        if (panels[i] && lv_obj_is_valid(panels[i])) {
-            lv_obj_add_flag(panels[i], MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_t *obj = panels[i];
+        if (obj && lv_obj_is_valid(obj)) {
+            if (!lv_obj_has_flag(obj, MU_OBJ_FLAG_HIDE_FLOAT)) {
+                lv_obj_add_flag(obj, MU_OBJ_FLAG_HIDE_FLOAT);
+            }
         }
     }
 

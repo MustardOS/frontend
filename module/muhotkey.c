@@ -222,6 +222,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
         if (!previous_governor) previous_governor = read_all_char_from(device.CPU.GOVERNOR);
         set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
 
+        write_text_to_file(IDLE_STATE, "w", INT, 1);
         timer->idle = true;
     } else if (idle_ms < timeout_ms && timer->idle) {
         if (verbose) LOG_INFO("input", "Device is now ACTIVE")
@@ -235,6 +236,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
             previous_governor = NULL;
         }
 
+        write_text_to_file(IDLE_STATE, "w", INT, 0);
         timer->idle = false;
         timer->tick = global_tick;
     }

@@ -24,7 +24,7 @@
    FUNCTION PROTOTYPES
  *=======================*/
 
-extern uint32_t mux_tick(void);
+extern uint64_t mux_tick(void);
 
 /*====================
    COLOR SETTINGS
@@ -43,7 +43,7 @@ extern uint32_t mux_tick(void);
 
 /* Adjust color mix functions rounding. GPUs might calculate color mix (blending) differently.
  * 0: round down, 64: round up from x.75, 128: round up from half, 192: round up from x.25, 254: round up */
-#define LV_COLOR_MIX_ROUND_OFS 192
+#define LV_COLOR_MIX_ROUND_OFS 0
 
 /*Images pixels with this color will not be drawn if they are chroma keyed)*/
 #define LV_COLOR_CHROMA_KEY lv_color_hex(0x00ff00)
@@ -75,7 +75,7 @@ extern uint32_t mux_tick(void);
 
 /*Number of the intermediate memory buffer used during rendering and other internal processing mechanisms.
  *You will see an error log message if there wasn't enough buffers. */
-#define LV_MEM_BUF_MAX_NUM 128
+#define LV_MEM_BUF_MAX_NUM 32
 
 /*Use the standard `memcpy` and `memset` instead of LVGL's own functions. (Might or might not be faster).*/
 #define LV_MEMCPY_MEMSET_STD 1
@@ -148,7 +148,7 @@ extern uint32_t mux_tick(void);
  *With complex image decoders (e.g. PNG or JPG) caching can save the continuous open/decode of images.
  *However the opened images might consume additional RAM.
  *0: to disable caching*/
-#define LV_IMG_CACHE_DEF_SIZE   64
+#define LV_IMG_CACHE_DEF_SIZE   16
 
 /*Number of stops allowed per gradient. Increase this to allow more stops.
  *This adds (sizeof(lv_color_t) + 1) bytes per additional stop*/
@@ -169,13 +169,13 @@ extern uint32_t mux_tick(void);
 /*Add support for error diffusion dithering.
  *Error diffusion dithering gets a much better visual result, but implies more CPU consumption and memory when drawing.
  *The increase in memory consumption is (24 bits * object's width)*/
-#define LV_DITHER_ERROR_DIFFUSION   1
+#define LV_DITHER_ERROR_DIFFUSION   0
 #endif
 
 /*Maximum buffer size to allocate for rotation.
  *Only used if software rotation is enabled in the display driver.*/
 //#define LV_DISP_ROT_MAX_BUF (10*1024)
-#define LV_DISP_ROT_MAX_BUF (640*1024U)
+#define LV_DISP_ROT_MAX_BUF 0
 
 /*-------------
  * GPU
@@ -398,7 +398,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FONT_COMPRESSED 1
 
 /*Enable subpixel rendering*/
-#define LV_USE_FONT_SUBPX 1
+#define LV_USE_FONT_SUBPX 0
 #if LV_USE_FONT_SUBPX
 /*Set the pixel order of the display. Physical order of RGB channels. Doesn't matter with "normal" fonts.*/
 #define LV_FONT_SUBPX_BGR 0  /*0: RGB; 1:BGR order*/
