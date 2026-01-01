@@ -103,8 +103,8 @@ static void cleanup_all(void) {
     sdl_cleanup();
 }
 
-static void quit_watchdog(lv_timer_t *t) {
-    (void) t;
+static void quit_watchdog(lv_timer_t *timer) {
+    LV_UNUSED(timer);
 
     if (shutting_down) return;
 
@@ -216,7 +216,8 @@ static void module_install(void) {
     module_exit("install", false);
 }
 
-static void module_quit(void) {
+static void module_credits(void) {
+    load_mux("credits");
     safe_quit(0);
 }
 
@@ -439,7 +440,7 @@ static const ModuleEntry modules[] = {
         {"danger",     NULL, NULL, NULL, module_danger},
         {"device",     NULL, NULL, NULL, module_device},
         {"rtc",        NULL, NULL, NULL, module_rtc},
-        {"credits",    NULL, NULL, NULL, module_quit},
+        {"credits",    NULL, NULL, NULL, module_credits},
 
         // the following modules can be loaded directly
         // without any other functionality
