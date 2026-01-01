@@ -465,6 +465,7 @@ static const ModuleEntry modules[] = {
         {"timezone",    "rtc",       "muxtimezone",    muxtimezone_main,    NULL},
         {"screenshot",  "info",      "muxshot",        muxshot_main,        NULL},
         {"space",       "info",      "muxspace",       muxspace_main,       NULL},
+        {"news",        "info",      "muxnews",        muxnews_main,        NULL},
         {"activity",    "info",      "muxactivity",    muxactivity_main,    NULL},
         {"themedwn",    "picker",    "muxthemedown",   muxthemedown_main,   NULL},
         {"themefilter", "themedwn",  "muxthemefilter", muxthemefilter_main, NULL},

@@ -1,12 +1,13 @@
 #include "muxshare.h"
 #include "ui/ui_muxinfo.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 8
 
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
+            {ui_lblNews_info,       lang.MUXINFO.HELP.NEWS},
             {ui_lblActivity_info,   lang.MUXINFO.HELP.ACTIVITY},
             {ui_lblScreenshot_info, lang.MUXINFO.HELP.SCREENSHOT},
             {ui_lblSpace_info,      lang.MUXINFO.HELP.SPACE},
@@ -24,6 +25,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+    INIT_STATIC_ITEM(-1, info, News, lang.MUXINFO.NEWS, "news", 0);
     INIT_STATIC_ITEM(-1, info, Activity, lang.MUXINFO.ACTIVITY, "activity", 0);
     INIT_STATIC_ITEM(-1, info, Screenshot, lang.MUXINFO.SCREENSHOT, "screenshot", 0);
     INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space", 0);
@@ -42,7 +44,10 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    if (!device.BOARD.HAS_NETWORK) HIDE_STATIC_ITEM(info, NetInfo);
+    if (!device.BOARD.HAS_NETWORK) {
+        HIDE_STATIC_ITEM(info, News);
+        HIDE_STATIC_ITEM(info, NetInfo);
+    }
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
@@ -82,9 +87,14 @@ static void handle_a(void) {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    play_sound(SND_CONFIRM);
-
-    if (element_focused == ui_lblActivity_info) {
+    if (element_focused == ui_lblNews_info) {
+        if (is_network_connected()) {
+            load_mux("news");
+        } else {
+            play_sound(SND_ERROR);
+            toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+        }
+    } else if (element_focused == ui_lblActivity_info) {
         load_mux("activity");
     } else if (element_focused == ui_lblScreenshot_info) {
         load_mux("screenshot");
@@ -99,6 +109,8 @@ static void handle_a(void) {
     } else if (element_focused == ui_lblCredit_info) {
         load_mux("credits");
     }
+
+    play_sound(SND_CONFIRM);
 
     close_input();
     mux_input_stop();

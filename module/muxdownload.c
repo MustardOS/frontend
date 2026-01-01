@@ -260,13 +260,13 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                       1},
-            {ui_lblNavA,      lang.GENERIC.DOWNLOAD,    1},
-            {ui_lblNavBGlyph, "",                       0},
-            {ui_lblNavB,      lang.GENERIC.BACK,        0},
-            {ui_lblNavXGlyph, "",                       0},
-            {ui_lblNavX,      lang.MUXDOWNLOAD.REFRESH, 0},
-            {NULL, NULL,                                0}
+            {ui_lblNavAGlyph, "",                    1},
+            {ui_lblNavA,      lang.GENERIC.DOWNLOAD, 1},
+            {ui_lblNavBGlyph, "",                    0},
+            {ui_lblNavB,      lang.GENERIC.BACK,     0},
+            {ui_lblNavXGlyph, "",                    0},
+            {ui_lblNavX,      lang.GENERIC.REFRESH,  0},
+            {NULL, NULL,                             0}
     });
 
     overlay_display();

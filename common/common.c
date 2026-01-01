@@ -833,7 +833,7 @@ void create_directories(const char *path) {
     if (mkdir(path_copy, 0777) == -1) free(path_copy);
 }
 
-void show_info_box(char *title, char *content, int is_content) {
+void show_info_box(const char *title, const char *content, int is_content) {
     if (msgbox_active == 0) {
         lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
 

@@ -178,6 +178,8 @@ int muxnetscan_main();
 
 int muxnetwork_main();
 
+int muxnews_main();
+
 int muxoption_main(int nothing, char *name, char *dir, char *sys, int app);
 
 int muxpass_main(int auth_type);

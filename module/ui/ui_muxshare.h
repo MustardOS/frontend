@@ -148,6 +148,7 @@
     DEVICE(HasPortmaster, "portmaster")
 
 #define INFO_ELEMENTS              \
+    INFO(News,       "news")       \
     INFO(Activity,   "activity")   \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \
@@ -321,7 +322,7 @@
     SYSINFO(Capacity, "capacity") \
     SYSINFO(Voltage,  "voltage")  \
     SYSINFO(Charger,  "charger")  \
-    SYSINFO(Refresh,  "refresh")
+    SYSINFO(Reload,   "reload")
 
 #define TWEAKADV_ELEMENTS                \
     TWEAKADV(Accelerate,  "accelerate")  \

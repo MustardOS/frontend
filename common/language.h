@@ -69,9 +69,11 @@ struct mux_lang {
         char ONLINE[MAX_BUFFER_SIZE];
         char OPEN[MAX_BUFFER_SIZE];
         char PREVIOUS[MAX_BUFFER_SIZE];
+        char READ[MAX_BUFFER_SIZE];
         char REBOOTING[MAX_BUFFER_SIZE];
         char RECURSIVE[MAX_BUFFER_SIZE];
         char REFRESH[MAX_BUFFER_SIZE];
+        char REFRESH_RUN[MAX_BUFFER_SIZE];
         char REMOVE[MAX_BUFFER_SIZE];
         char REMOVE_FAIL[MAX_BUFFER_SIZE];
         char RESCAN[MAX_BUFFER_SIZE];
@@ -479,7 +481,6 @@ struct mux_lang {
     struct {
         char ERROR_GET_DATA[MAX_BUFFER_SIZE];
         char ARCHIVE_REMOVED[MAX_BUFFER_SIZE];
-        char REFRESH[MAX_BUFFER_SIZE];
         struct {
             char ARCHIVE[MAX_BUFFER_SIZE];
             char DATA[MAX_BUFFER_SIZE];
@@ -542,6 +543,7 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char NEWS[MAX_BUFFER_SIZE];
         char SYSINFO[MAX_BUFFER_SIZE];
         char NETINFO[MAX_BUFFER_SIZE];
         char ACTIVITY[MAX_BUFFER_SIZE];
@@ -550,6 +552,7 @@ struct mux_lang {
         char INPUT[MAX_BUFFER_SIZE];
         char CREDIT[MAX_BUFFER_SIZE];
         struct {
+            char NEWS[MAX_BUFFER_SIZE];
             char SYSINFO[MAX_BUFFER_SIZE];
             char NETINFO[MAX_BUFFER_SIZE];
             char ACTIVITY[MAX_BUFFER_SIZE];
@@ -679,7 +682,6 @@ struct mux_lang {
         char NONE[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
-        char REFRESH[MAX_BUFFER_SIZE];
         char DOWNLOADING[MAX_BUFFER_SIZE];
         char ERROR_GET_DATA[MAX_BUFFER_SIZE];
     } MUXLANGUAGE;
@@ -830,6 +832,35 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char DOWNLOAD[MAX_BUFFER_SIZE];
+        char ERROR[MAX_BUFFER_SIZE];
+        char GENERAL[MAX_BUFFER_SIZE];
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char CONTENT[MAX_BUFFER_SIZE];
+                char REGION[MAX_BUFFER_SIZE];
+                char SYSTEM[MAX_BUFFER_SIZE];
+                char YEAR[MAX_BUFFER_SIZE];
+            } CURRENT;
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char CONTENT[MAX_BUFFER_SIZE];
+                char SYSTEM[MAX_BUFFER_SIZE];
+                char WINNER[MAX_BUFFER_SIZE];
+                char SCORE[MAX_BUFFER_SIZE];
+            } LAST;
+        } GOTM;
+        struct {
+            char GENERAL[MAX_BUFFER_SIZE];
+            char GOTM[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXNEWS;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char SEARCH[MAX_BUFFER_SIZE];
         char NAME[MAX_BUFFER_SIZE];
         char TIME[MAX_BUFFER_SIZE];
@@ -876,8 +907,6 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char REFRESH[MAX_BUFFER_SIZE];
-        char REFRESH_RUN[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         struct {
             char NO_FOLDER[MAX_BUFFER_SIZE];
@@ -1030,7 +1059,8 @@ struct mux_lang {
         char CAPACITY[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
         char CHARGER[MAX_BUFFER_SIZE];
-        char REFRESH[MAX_BUFFER_SIZE];
+        char RELOAD[MAX_BUFFER_SIZE];
+        char RELOAD_RUN[MAX_BUFFER_SIZE];
         struct {
             char INFO[MAX_BUFFER_SIZE];
             char SPEED[MAX_BUFFER_SIZE];
@@ -1048,7 +1078,7 @@ struct mux_lang {
             char CAPACITY[MAX_BUFFER_SIZE];
             char VOLTAGE[MAX_BUFFER_SIZE];
             char CHARGER[MAX_BUFFER_SIZE];
-            char REFRESH[MAX_BUFFER_SIZE];
+            char RELOAD[MAX_BUFFER_SIZE];
             struct {
                 char INFO[MAX_BUFFER_SIZE];
                 char SPEED[MAX_BUFFER_SIZE];
@@ -1077,8 +1107,6 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char REFRESH[MAX_BUFFER_SIZE];
-        char REFRESH_RUN[MAX_BUFFER_SIZE];
         char THEME_REMOVED[MAX_BUFFER_SIZE];
         char THEME_EXTRACTING[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];

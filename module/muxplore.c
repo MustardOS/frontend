@@ -707,7 +707,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    toast_message(lang.MUXPLORE.REFRESH_RUN, FOREVER);
+    toast_message(lang.GENERIC.REFRESH_RUN, FOREVER);
     lv_obj_move_foreground(ui_pnlMessage);
 
     // Refresh and add a small delay to actually display the message!
@@ -831,17 +831,17 @@ static void init_elements(void) {
     lv_obj_clear_flag(ui_lblPreviewHeaderGlyph, LV_OBJ_FLAG_HIDDEN);
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph,    "",                    1},
-            {ui_lblNavA,         lang.GENERIC.OPEN,     1},
-            {ui_lblNavBGlyph,    "",                    0},
-            {ui_lblNavB,         lang.GENERIC.BACK,     0},
-            {ui_lblNavXGlyph,    "",                    0},
-            {ui_lblNavX,         lang.MUXPLORE.REFRESH, 0},
-            {ui_lblNavYGlyph,    "",                    1},
-            {ui_lblNavY,         lang.GENERIC.COLLECT,  1},
-            {ui_lblNavMenuGlyph, "",                    1},
-            {ui_lblNavMenu,      lang.GENERIC.INFO,     1},
-            {NULL, NULL,                                0}
+            {ui_lblNavAGlyph,    "",                   1},
+            {ui_lblNavA,         lang.GENERIC.OPEN,    1},
+            {ui_lblNavBGlyph,    "",                   0},
+            {ui_lblNavB,         lang.GENERIC.BACK,    0},
+            {ui_lblNavXGlyph,    "",                   0},
+            {ui_lblNavX,         lang.GENERIC.REFRESH, 0},
+            {ui_lblNavYGlyph,    "",                   1},
+            {ui_lblNavY,         lang.GENERIC.COLLECT, 1},
+            {ui_lblNavMenuGlyph, "",                   1},
+            {ui_lblNavMenu,      lang.GENERIC.INFO,    1},
+            {NULL, NULL,                               0}
     });
 
     overlay_display();

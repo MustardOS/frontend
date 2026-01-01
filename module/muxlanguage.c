@@ -190,9 +190,9 @@ static void init_elements(void) {
 
     if (device.BOARD.HAS_NETWORK) {
         setup_nav((struct nav_bar[]) {
-                {ui_lblNavXGlyph, "",                       0},
-                {ui_lblNavX,      lang.MUXLANGUAGE.REFRESH, 0},
-                {NULL, NULL,                                0}
+                {ui_lblNavXGlyph, "",                   0},
+                {ui_lblNavX,      lang.GENERIC.REFRESH, 0},
+                {NULL, NULL,                            0}
         });
     }
 

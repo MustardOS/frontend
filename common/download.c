@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "common.h"
 #include "download.h"
 
@@ -48,12 +49,15 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 
 static void download_finished(int result) {
     printf("Download finished with result: %d\n", result);
+
     if (result == 0) {
         progress_bar_value = 100;
-        usleep(500000);  // 0.5 seconds
+        usleep(500000); // 0.5 seconds
     }
+
     hide_progress_bar();
     download_in_progress = false;
+
     if (download_finish_cb) download_finish_cb(result);
 }
 
@@ -101,7 +105,7 @@ int download_file(const char *url, const char *output_path) {
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 
     curl_off_t cl = 0;
-    int clresponse = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl);
+    int cl_response = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl);
 
     curl_easy_cleanup(curl);
 
@@ -121,7 +125,7 @@ int download_file(const char *url, const char *output_path) {
     }
 
     // Verify file is not empty
-    if (clresponse != CURLE_OK || cl <= 0) {
+    if (cl_response != CURLE_OK || cl <= 0) {
         fprintf(stderr, "No data downloaded\n");
         remove(output_path);
         download_finished(-5);
@@ -136,11 +140,12 @@ int download_file(const char *url, const char *output_path) {
 static void *download_thread(void *arg) {
     download_args_t *args = (download_args_t *) arg;
 
-    download_file(args->url, args->save_path);  // Your existing download function
-    
+    download_file(args->url, args->save_path);
+
     free(args->url);
     free(args->save_path);
-    free(args);  // Clean up if dynamically allocated
+    free(args);
+
     return NULL;
 }
 

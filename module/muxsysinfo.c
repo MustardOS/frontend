@@ -21,7 +21,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblCapacity_sysinfo, lang.MUXSYSINFO.HELP.CAPACITY},
             {ui_lblVoltage_sysinfo,  lang.MUXSYSINFO.HELP.VOLTAGE},
             {ui_lblCharger_sysinfo,  lang.MUXSYSINFO.HELP.CHARGER},
-            {ui_lblRefresh_sysinfo,  lang.MUXSYSINFO.HELP.REFRESH},
+            {ui_lblReload_sysinfo,   lang.MUXSYSINFO.HELP.RELOAD},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -243,7 +243,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
     INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", read_battery_voltage());
     INIT_VALUE_ITEM(-1, sysinfo, Charger, lang.MUXSYSINFO.CHARGER, "charger", get_charger_status());
-    INIT_VALUE_ITEM(-1, sysinfo, Refresh, lang.MUXSYSINFO.REFRESH, "refresh", "");
+    INIT_VALUE_ITEM(-1, sysinfo, Reload, lang.MUXSYSINFO.RELOAD, "reload", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -409,8 +409,8 @@ static void handle_a(void) {
         toast_message(hostname, MEDIUM);
     }
 
-    if (element_focused == ui_lblRefresh_sysinfo) {
-        toast_message(lang.GENERIC.REFRESH, FOREVER);
+    if (element_focused == ui_lblReload_sysinfo) {
+        toast_message(lang.MUXSYSINFO.RELOAD_RUN, FOREVER);
 
         refresh_config = 1;
         refresh_device = 1;

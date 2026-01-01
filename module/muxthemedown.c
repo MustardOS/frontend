@@ -39,7 +39,8 @@ static void image_refresh() {
     snprintf(base_image_path, sizeof(base_image_path), "%s/theme/box", INFO_CAT_PATH);
 
     char preview_path[MAX_BUFFER_SIZE];
-    if (get_theme_preview_path(base_image_path, theme_items[current_item_index].name, preview_path, sizeof(preview_path), preview_index) != 0){
+    if (get_theme_preview_path(base_image_path, theme_items[current_item_index].name, preview_path,
+                               sizeof(preview_path), preview_index) != 0) {
         preview_index = -1;
     }
 
@@ -238,11 +239,12 @@ static void theme_download_finished() {
     snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name);
     if (file_exist(theme_path)) {
         char output_path[MAX_BUFFER_SIZE];
-        snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH, theme_items[current_item_index].name);
+        snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH,
+                 theme_items[current_item_index].name);
         theme_extracting = true;
         block_input = 1;
         extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
-    } 
+    }
 }
 
 static void refresh_theme_previews_finished(int result) {
@@ -295,7 +297,8 @@ static void handle_a(void) {
         }
     } else {
         set_download_callbacks(theme_download_finished);
-        snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name);
+        snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
+                 theme_items[current_item_index].name);
         initiate_download(theme_items[current_item_index].url, theme_path, true,
                           lang.MUXTHEMEDOWN.DOWN.THEME);
     }
@@ -322,7 +325,8 @@ static void handle_b(void) {
     if (download_in_progress) {
         cancel_download = true;
         char theme_path[MAX_BUFFER_SIZE];
-        snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name);
+        snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
+                 theme_items[current_item_index].name);
         if (file_exist(theme_path)) {
             remove(theme_path);
         }
@@ -384,7 +388,7 @@ static void init_elements(void) {
             {ui_lblNavBGlyph, "",                         0},
             {ui_lblNavB,      lang.GENERIC.BACK,          0},
             {ui_lblNavXGlyph, "",                         0},
-            {ui_lblNavX,      lang.MUXTHEMEDOWN.REFRESH,  0},
+            {ui_lblNavX,      lang.GENERIC.REFRESH,       0},
             {ui_lblNavYGlyph, "",                         0},
             {ui_lblNavY,      lang.GENERIC.FILTER,        0},
             {NULL, NULL,                                  0}
@@ -412,7 +416,7 @@ static void ui_refresh_task() {
     }
     preview_displayTime += TIMER_REFRESH;
     if (preview_displayTime > THEME_PREVIEW_DELAY) {
-        preview_index ++;
+        preview_index++;
         image_refresh();
         preview_displayTime = 0;
     }

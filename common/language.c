@@ -85,9 +85,11 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.ONLINE, "Online");
     GENERIC_FIELD(lang->GENERIC.OPEN, "Open");
     GENERIC_FIELD(lang->GENERIC.PREVIOUS, "Previous");
+    GENERIC_FIELD(lang->GENERIC.READ, "Read");
     GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting…");
     GENERIC_FIELD(lang->GENERIC.RECURSIVE, "Recursive");
-    GENERIC_FIELD(lang->GENERIC.REFRESH, "Refreshing…");
+    GENERIC_FIELD(lang->GENERIC.REFRESH, "Refresh");
+    GENERIC_FIELD(lang->GENERIC.REFRESH_RUN, "Refreshing…");
     GENERIC_FIELD(lang->GENERIC.REMOVE, "Remove");
     GENERIC_FIELD(lang->GENERIC.REMOVE_FAIL, "Failed to remove item…");
     GENERIC_FIELD(lang->GENERIC.RESCAN, "Rescan");
@@ -442,7 +444,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDOWNLOAD.TITLE.APP, "APP DOWNLOADER");
     SPECIFIC_FIELD(lang->MUXDOWNLOAD.DOWN.ARCHIVE, "Downloading Archive");
     SPECIFIC_FIELD(lang->MUXDOWNLOAD.DOWN.DATA, "Downloading Data");
-    SPECIFIC_FIELD(lang->MUXDOWNLOAD.REFRESH, "Refresh");
     SPECIFIC_FIELD(lang->MUXDOWNLOAD.ARCHIVE_REMOVED, "Archive Removed");
     SPECIFIC_FIELD(lang->MUXDOWNLOAD.ERROR_GET_DATA, "Error Retrieving Data");
 
@@ -481,6 +482,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxinfo
     SPECIFIC_FIELD(lang->MUXINFO.TITLE, "INFORMATION");
+    SPECIFIC_FIELD(lang->MUXINFO.NEWS, "Community News");
     SPECIFIC_FIELD(lang->MUXINFO.SYSINFO, "System Details");
     SPECIFIC_FIELD(lang->MUXINFO.NETINFO, "Network Details");
     SPECIFIC_FIELD(lang->MUXINFO.ACTIVITY, "Activity Tracker");
@@ -488,6 +490,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
     SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters and Credits");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.NEWS, "Read various community news and other live information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSINFO, "Access version information and system details");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NETINFO, "Access network information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.ACTIVITY, "View all tracked play time data");
@@ -599,7 +602,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLANGUAGE.NONE, "No Languages Found…");
     SPECIFIC_FIELD(lang->MUXLANGUAGE.SAVE, "Saving Language");
     SPECIFIC_FIELD(lang->MUXLANGUAGE.HELP, "Select your preferred language");
-    SPECIFIC_FIELD(lang->MUXLANGUAGE.REFRESH, "Refresh");
     SPECIFIC_FIELD(lang->MUXLANGUAGE.DOWNLOADING, "Downloading Language Updates");
     SPECIFIC_FIELD(lang->MUXLANGUAGE.ERROR_GET_DATA, "Error Retrieving Language Data");
 
@@ -725,6 +727,26 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.DNS, "Enter the device DNS address here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.CONNECT, "Connect to the network using options entered above");
 
+    // muxnews
+    SPECIFIC_FIELD(lang->MUXNEWS.TITLE, "COMMUNITY NEWS");
+    SPECIFIC_FIELD(lang->MUXNEWS.NONE, "No News Found…");
+    SPECIFIC_FIELD(lang->MUXNEWS.DOWNLOAD, "Downloading Community News…");
+    SPECIFIC_FIELD(lang->MUXNEWS.ERROR, "Error Obtaining Community News");
+    SPECIFIC_FIELD(lang->MUXNEWS.GENERAL, "General Information");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.TITLE, "Game of the Month");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.TITLE, "Current Month");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.CONTENT, "Title");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.REGION, "Region");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.SYSTEM, "System");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.YEAR, "Year");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.TITLE, "Last Month");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.CONTENT, "Title");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.SYSTEM, "System");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.WINNER, "Winner");
+    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.SCORE, "Score");
+    SPECIFIC_FIELD(lang->MUXNEWS.HELP.GENERAL, "Up to date information with general MustardOS news");
+    SPECIFIC_FIELD(lang->MUXNEWS.HELP.GOTM, "Current and past information about Game of the Month");
+
     // muxoption
     SPECIFIC_FIELD(lang->MUXOPTION.TITLE, "CONTENT OPTION");
     SPECIFIC_FIELD(lang->MUXOPTION.SEARCH, "Search");
@@ -766,8 +788,6 @@ void load_lang(struct mux_lang *lang) {
 
     // muxplore
     SPECIFIC_FIELD(lang->MUXPLORE.TITLE, "EXPLORE");
-    SPECIFIC_FIELD(lang->MUXPLORE.REFRESH, "Refresh");
-    SPECIFIC_FIELD(lang->MUXPLORE.REFRESH_RUN, "Refreshing…");
     SPECIFIC_FIELD(lang->MUXPLORE.NONE, "No Content Found…");
     SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_FOLDER, "Folders cannot be added to collections");
     SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_CORE, "Content is not associated with system or core");
@@ -893,7 +913,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.CAPACITY, "Battery Capacity");
     SPECIFIC_FIELD(lang->MUXSYSINFO.VOLTAGE, "Battery Voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CHARGER, "Charger");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.REFRESH, "Refresh Frontend");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.RELOAD, "Reload Frontend");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.RELOAD_RUN, "Reloading Frontend…");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.INFO, "CPU Information");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.SPEED, "CPU Speed");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.GOVERNOR, "CPU Governor");
@@ -907,7 +928,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CAPACITY, "The current detected battery capacity");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VOLTAGE, "The current detected battery voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CHARGER, "Detection of the charger cable");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.REFRESH, "Refresh the current frontend configuration values if changed elsewhere");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.RELOAD, "Reload the current frontend configuration values if changed elsewhere");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.INFO, "The detected CPU type of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.SPEED, "The current CPU frequency of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.GOVERNOR, "The current running governor of the device");
@@ -929,8 +950,6 @@ void load_lang(struct mux_lang *lang) {
 
     // muxthemedown
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.TITLE, "THEME DOWNLOAD");
-    SPECIFIC_FIELD(lang->MUXTHEMEDOWN.REFRESH, "Refresh");
-    SPECIFIC_FIELD(lang->MUXTHEMEDOWN.REFRESH_RUN, "Refreshing…");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.THEME_REMOVED, "Theme Removed");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.THEME_EXTRACTING, "Theme Extraction In Process");
     SPECIFIC_FIELD(lang->MUXTHEMEDOWN.NONE, "No Content Found…");
