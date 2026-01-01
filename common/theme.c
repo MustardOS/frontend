@@ -1009,7 +1009,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 }
 
 int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size) {
-    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+    char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
     char active_path[MAX_BUFFER_SIZE];
     snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_location);

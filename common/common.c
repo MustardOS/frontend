@@ -2290,7 +2290,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
     if (snd_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+        const char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/sound", theme_location);
     }
 
@@ -2327,7 +2327,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
     if (bgm_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+        const char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/music", theme_location);
     }
 

@@ -20,7 +20,7 @@ static void show_help() {
 }
 
 static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
-    const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+    const char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 
     grid_mode_enabled = 1;
 

@@ -48,6 +48,10 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 
 static void download_finished(int result) {
     printf("Download finished with result: %d\n", result);
+    if (result == 0) {
+        progress_bar_value = 100;
+        usleep(500000);  // 0.5 seconds
+    }
     hide_progress_bar();
     download_in_progress = false;
     if (download_finish_cb) download_finish_cb(result);
