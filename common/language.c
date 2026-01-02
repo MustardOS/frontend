@@ -732,20 +732,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNEWS.NONE, "No News Found…");
     SPECIFIC_FIELD(lang->MUXNEWS.DOWNLOAD, "Downloading Community News…");
     SPECIFIC_FIELD(lang->MUXNEWS.ERROR, "Error Obtaining Community News");
-    SPECIFIC_FIELD(lang->MUXNEWS.GENERAL, "General Information");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.TITLE, "Game of the Month");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.TITLE, "Current Month");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.CONTENT, "Title");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.REGION, "Region");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.SYSTEM, "System");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.CURRENT.YEAR, "Year");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.TITLE, "Last Month");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.CONTENT, "Title");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.SYSTEM, "System");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.WINNER, "Winner");
-    SPECIFIC_FIELD(lang->MUXNEWS.GOTM.LAST.SCORE, "Score");
-    SPECIFIC_FIELD(lang->MUXNEWS.HELP.GENERAL, "Up to date information with general MustardOS news");
-    SPECIFIC_FIELD(lang->MUXNEWS.HELP.GOTM, "Current and past information about Game of the Month");
+    SPECIFIC_FIELD(lang->MUXNEWS.OPEN, "Downloading Post…");
 
     // muxoption
     SPECIFIC_FIELD(lang->MUXOPTION.TITLE, "CONTENT OPTION");

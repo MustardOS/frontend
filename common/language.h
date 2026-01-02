@@ -835,28 +835,7 @@ struct mux_lang {
         char NONE[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
         char ERROR[MAX_BUFFER_SIZE];
-        char GENERAL[MAX_BUFFER_SIZE];
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            struct {
-                char TITLE[MAX_BUFFER_SIZE];
-                char CONTENT[MAX_BUFFER_SIZE];
-                char REGION[MAX_BUFFER_SIZE];
-                char SYSTEM[MAX_BUFFER_SIZE];
-                char YEAR[MAX_BUFFER_SIZE];
-            } CURRENT;
-            struct {
-                char TITLE[MAX_BUFFER_SIZE];
-                char CONTENT[MAX_BUFFER_SIZE];
-                char SYSTEM[MAX_BUFFER_SIZE];
-                char WINNER[MAX_BUFFER_SIZE];
-                char SCORE[MAX_BUFFER_SIZE];
-            } LAST;
-        } GOTM;
-        struct {
-            char GENERAL[MAX_BUFFER_SIZE];
-            char GOTM[MAX_BUFFER_SIZE];
-        } HELP;
+        char OPEN[MAX_BUFFER_SIZE];
     } MUXNEWS;
 
     struct {
