@@ -125,6 +125,37 @@ static void show_help(void) {
     show_info_box(lang.MUXACTIVITY.TITLE, lang.MUXACTIVITY.HELP, 0);
 }
 
+static void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value, lv_obj_t *glyph) {
+    lv_obj_update_layout(panel);
+
+    lv_coord_t panel_width = lv_obj_get_width(panel);
+    if (panel_width <= 0) return;
+
+    const char *label_text = lv_label_get_text(label);
+    if (!label_text) return;
+
+    const lv_font_t *font = lv_obj_get_style_text_font(label, LV_PART_MAIN);
+    lv_coord_t letter_space = lv_obj_get_style_text_letter_space(label, LV_PART_MAIN);
+    lv_coord_t line_space = lv_obj_get_style_text_line_space(label, LV_PART_MAIN);
+
+    lv_point_t text_width;
+    lv_txt_get_size(&text_width, label_text, font, letter_space, line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+    lv_coord_t label_text_width = text_width.x;
+
+    lv_coord_t glyph_width = glyph ? lv_obj_get_width(glyph) : 0;
+
+    // Okay 64 leaves a good gap for both long static and long animated
+    lv_coord_t available = panel_width - label_text_width - glyph_width - 64;
+
+    lv_obj_set_width(value, available);
+}
+
+static void update_label_scroll() {
+    if (lv_group_get_focused(ui_group_value)) {
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group_value));
+    }
+}
+
 static void image_refresh() {
     if (in_detail_view || in_global_view || config.VISUAL.BOX_ART == 8) return;
 
@@ -1071,11 +1102,15 @@ static void show_detail_view(const activity_item_t *it) {
         lv_group_add_obj(ui_group_glyph, ui_lblActItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlAct);
 
+        adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue, ui_lblActItemGlyph);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItemValue);
+
         apply_size_to_content(&theme, ui_pnlContent, ui_lblActItem, ui_lblActItemGlyph, detail_label);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
     }
 
     lv_obj_update_layout(ui_pnlContent);
+    update_label_scroll();
 }
 
 static void show_global_view(void) {
@@ -1227,11 +1262,15 @@ static void show_global_view(void) {
         lv_group_add_obj(ui_group_glyph, ui_lblActItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlAct);
 
+        adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue, ui_lblActItemGlyph);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItemValue);
+
         apply_size_to_content(&theme, ui_pnlContent, ui_lblActItem, ui_lblActItemGlyph, global_label);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
     }
 
     lv_obj_update_layout(ui_pnlContent);
+    update_label_scroll();
 }
 
 static void html_escape(FILE *f, const char *s) {
@@ -1517,6 +1556,10 @@ static void list_nav_move(int steps, int direction) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
+        if (lv_group_get_focused(ui_group_value)) {
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group_value));
+        }
+
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         } else {
@@ -1532,6 +1575,7 @@ static void list_nav_move(int steps, int direction) {
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     set_label_long_mode(&theme, lv_group_get_focused(ui_group));
 
+    update_label_scroll();
     image_refresh();
     nav_moved = 1;
 }
