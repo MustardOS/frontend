@@ -1670,6 +1670,8 @@ static void handle_b(void) {
 
     free_activity_items();
 
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "activity");
+
     close_input();
     mux_input_stop();
 }

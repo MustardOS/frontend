@@ -142,6 +142,7 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "screenshot");
 
     close_input();
     mux_input_stop();
