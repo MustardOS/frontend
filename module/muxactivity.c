@@ -959,10 +959,15 @@ static void refresh_activity_labels(void) {
     ui_count = 0;
 
     if (activity_display_mode != last_sort_mode) {
-        if (activity_display_mode == 0)
+        if (first_open) {
             qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_time);
-        else
-            qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_launch);
+        } else {
+            if (activity_display_mode == 0) {
+                qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_time);
+            } else {
+                qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_launch);
+            }
+        }
 
         last_sort_mode = activity_display_mode;
     }
@@ -1700,6 +1705,7 @@ static void handle_y(void) {
     overview_item_index = current_item_index;
 
     refresh_activity_labels();
+    image_refresh();
     nav_moved = 1;
 }
 
