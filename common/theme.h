@@ -428,6 +428,20 @@ struct theme_config {
         char FOREGROUND[MAX_BUFFER_SIZE];
         char BACKGROUND[MAX_BUFFER_SIZE];
     } TERMINAL;
+
+    struct {
+        int16_t TEXTURE_BLEND_MODE;
+        int16_t DRAW_BLEND_MODE;
+        struct {
+            float OFFSET_X;
+            float OFFSET_Y;
+        } RENDER;
+        struct {
+            int16_t R;
+            int16_t G;
+            int16_t B;
+        } SOLID;
+    } SDL;
 };
 
 int load_scheme(const char *theme_base, const char *mux_dimension, const char *file_name, char *scheme, size_t scheme_size);

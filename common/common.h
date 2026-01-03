@@ -231,6 +231,8 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, u
 
 int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
 
+float get_ini_float(mini_t *ini_config, const char *section, const char *key, float default_value);
+
 char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value);
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...);

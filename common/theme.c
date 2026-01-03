@@ -414,6 +414,14 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.BACKGROUND, "000000", MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
+
+    theme->SDL.TEXTURE_BLEND_MODE = 1;
+    theme->SDL.DRAW_BLEND_MODE = 0;
+    theme->SDL.RENDER.OFFSET_X = 0.0f;
+    theme->SDL.RENDER.OFFSET_Y = 0.0f;
+    theme->SDL.SOLID.R = 0;
+    theme->SDL.SOLID.G = 0;
+    theme->SDL.SOLID.B = 0;
 }
 
 void load_theme_from_scheme(const char *scheme, struct theme_config *theme, struct mux_device *device) {
@@ -607,8 +615,10 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.BACKGROUND = get_ini_hex(muos_theme, "grid", "BACKGROUND", theme->GRID.BACKGROUND);
     theme->GRID.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "BACKGROUND_ALPHA", theme->GRID.BACKGROUND_ALPHA);
     theme->GRID.ALIGNMENT = get_ini_int(muos_theme, "grid", "ALIGNMENT", theme->GRID.ALIGNMENT);
-    theme->GRID.ALIGNMENT_X_OFFSET = get_ini_int(muos_theme, "grid", "ALIGNMENT_X_OFFSET", theme->GRID.ALIGNMENT_X_OFFSET);
-    theme->GRID.ALIGNMENT_Y_OFFSET = get_ini_int(muos_theme, "grid", "ALIGNMENT_Y_OFFSET", theme->GRID.ALIGNMENT_Y_OFFSET);
+    theme->GRID.ALIGNMENT_X_OFFSET = get_ini_int(muos_theme, "grid", "ALIGNMENT_X_OFFSET",
+                                                 theme->GRID.ALIGNMENT_X_OFFSET);
+    theme->GRID.ALIGNMENT_Y_OFFSET = get_ini_int(muos_theme, "grid", "ALIGNMENT_Y_OFFSET",
+                                                 theme->GRID.ALIGNMENT_Y_OFFSET);
     theme->GRID.LOCATION_X = get_ini_int(muos_theme, "grid", "LOCATION_X", theme->GRID.LOCATION_X);
     theme->GRID.LOCATION_Y = get_ini_int(muos_theme, "grid", "LOCATION_Y", theme->GRID.LOCATION_Y);
     theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", theme->GRID.COLUMN_COUNT);
@@ -640,25 +650,30 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
                                                                   "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA",
                                                                   theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA);
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid",
-                                                                     "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR",
-                                                                     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR);
+                                                                           "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR",
+                                                                           theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR);
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid",
-                                                                     "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START",
-                                                                     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START);
+                                                                           "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START",
+                                                                           theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START);
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid",
-                                                                    "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP",
-                                                                    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP);
+                                                                          "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP",
+                                                                          theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP);
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid",
-                                                                         "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION",
-                                                                         theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION);
-    theme->GRID.CURRENT_ITEM_LABEL.SHADOW = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW", theme->GRID.CURRENT_ITEM_LABEL.SHADOW);
-    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_WIDTH", theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH);
-    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_X_OFFSET",
-                                                   theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET);
-    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_Y_OFFSET",
-                                                   theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET);
-    theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_LABEL_LONG_MODE",
-                                                      theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
+                                                                               "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION",
+                                                                               theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW",
+                                                        theme->GRID.CURRENT_ITEM_LABEL.SHADOW);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_WIDTH",
+                                                              theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET = get_ini_int(muos_theme, "grid",
+                                                                 "CURRENT_ITEM_LABEL_SHADOW_X_OFFSET",
+                                                                 theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET);
+    theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "grid",
+                                                                 "CURRENT_ITEM_LABEL_SHADOW_Y_OFFSET",
+                                                                 theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET);
+    theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE = get_ini_int(muos_theme, "grid",
+                                                                 "CURRENT_ITEM_LABEL_LABEL_LONG_MODE",
+                                                                 theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
     theme->GRID.CURRENT_ITEM_LABEL.TEXT = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT",
                                                       theme->GRID.CURRENT_ITEM_LABEL.TEXT);
     theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA",
@@ -1005,6 +1020,14 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
             get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND), MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
 
+    theme->SDL.TEXTURE_BLEND_MODE = get_ini_int(muos_theme, "sdl", "TEXTURE_BLEND_MODE", theme->SDL.TEXTURE_BLEND_MODE);
+    theme->SDL.DRAW_BLEND_MODE = get_ini_int(muos_theme, "sdl", "DRAW_BLEND_MODE", theme->SDL.DRAW_BLEND_MODE);
+    theme->SDL.RENDER.OFFSET_X = get_ini_float(muos_theme, "sdl", "RENDER_OFFSET_X", theme->SDL.RENDER.OFFSET_X);
+    theme->SDL.RENDER.OFFSET_Y = get_ini_float(muos_theme, "sdl", "RENDER_OFFSET_Y", theme->SDL.RENDER.OFFSET_Y);
+    theme->SDL.SOLID.R = get_ini_int(muos_theme, "sdl", "SOLID_R", theme->SDL.SOLID.R);
+    theme->SDL.SOLID.G = get_ini_int(muos_theme, "sdl", "SOLID_G", theme->SDL.SOLID.G);
+    theme->SDL.SOLID.B = get_ini_int(muos_theme, "sdl", "SOLID_B", theme->SDL.SOLID.B);
+
     mini_free(muos_theme);
 }
 
@@ -1040,7 +1063,8 @@ void scale_theme(struct mux_device *device) {
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (size_t i = 0; i < A_SIZE(dimensions); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config.THEME.STORAGE_THEME, dimensions[i].width,
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config.THEME.STORAGE_THEME,
+                 dimensions[i].width,
                  dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
 
@@ -1060,7 +1084,8 @@ void scale_theme(struct mux_device *device) {
 
     for (size_t i = 0; i < A_SIZE(dimensions); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config.THEME.STORAGE_THEME, dimensions[i].width,
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", config.THEME.STORAGE_THEME,
+                 dimensions[i].width,
                  dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
 
@@ -1584,7 +1609,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
     }
 }
 
-int get_theme_preview_path(char *base_path, char *base_file_name, 
+int get_theme_preview_path(char *base_path, char *base_file_name,
                            char *image_path, size_t image_path_size, int preview_index) {
     char preview_suffix[MAX_BUFFER_SIZE];
     char preview_path[MAX_BUFFER_SIZE];
@@ -1602,10 +1627,10 @@ int get_theme_preview_path(char *base_path, char *base_file_name,
 
     for (size_t i = 0; i < count; i++) {
         snprintf(preview_path, sizeof(preview_path), "%s/%s%s%s.png",
-                base_path, mux_dimension, base_file_name, suffixes[i]);
+                 base_path, mux_dimension, base_file_name, suffixes[i]);
 
         snprintf(fallback_path, sizeof(fallback_path), "%s/640x480/%s%s.png",
-                base_path, base_file_name, suffixes[i]);
+                 base_path, base_file_name, suffixes[i]);
 
         if (!file_exist(preview_path) && !file_exist(fallback_path)) {
             snprintf(image_path, image_path_size, "%s", "");

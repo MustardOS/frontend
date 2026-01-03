@@ -783,6 +783,21 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
     return result;
 }
 
+float get_ini_float(mini_t *ini_config, const char *section, const char *key, float default_value) {
+    const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
+
+    float result;
+    if (strcmp(meta, "NOT FOUND") == 0) {
+        result = default_value;
+    } else {
+        char *end = NULL;
+        result = strtof(meta, &end);
+        if (end == meta || *end != '\0') result = default_value;
+    }
+
+    return result;
+}
+
 char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value) {
     static char meta[MAX_BUFFER_SIZE];
     const char *result = mini_get_string(ini_config, section, key, default_value);

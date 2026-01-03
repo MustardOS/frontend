@@ -8,6 +8,7 @@
 #include "../../../../common/common.h"
 #include "../../../../common/device.h"
 #include "../../../../common/config.h"
+#include "../../../../common/theme.h"
 #include "sdl.h"
 
 typedef struct {
@@ -40,8 +41,8 @@ int scale_width, scale_height, underscan;
 int hdmi_in_use = 0;
 
 static void update_blend_mode(void) {
-    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
+    SDL_SetTextureBlendMode(monitor.texture, theme.SDL.TEXTURE_BLEND_MODE);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, theme.SDL.DRAW_BLEND_MODE);
 
     monitor.force_clear = true;
 }
@@ -60,7 +61,7 @@ static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
     return tex;
 }
 
-static void reload_background(const char *theme) {
+static void reload_background(const char *active_theme) {
     char back_image[MAX_BUFFER_SIZE];
     char *theme_base = (config.BOOT.FACTORY_RESET || !theme_compat()) ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
     snprintf(back_image, sizeof(back_image), "%s/%simage/background.png", theme_base, mux_dimension);
@@ -77,16 +78,16 @@ static void reload_background(const char *theme) {
             // back to a solid black colour, otherwise we'll get some lovely
             // overlap graphic glitches!
             monitor.background_solid = true;
-            monitor.background_colour = (SDL_Color) {0, 0, 0, 255};
+            monitor.background_colour = (SDL_Color) {theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255};
             monitor.theme_name[0] = '\0';
 
             // The good news is that a failure to find an image fails gracefully!
-            LOG_INFO("video", "No 'background.png' found for theme '%s'", theme);
+            LOG_INFO("video", "No 'background.png' found for theme '%s'", active_theme);
             return;
         }
     }
 
-    if (monitor.background_image && strcmp(theme, monitor.theme_name) == 0) return;
+    if (monitor.background_image && strcmp(active_theme, monitor.theme_name) == 0) return;
 
     if (monitor.background_image) {
         SDL_DestroyTexture(monitor.background_image);
@@ -100,7 +101,7 @@ static void reload_background(const char *theme) {
         return;
     }
 
-    strncpy(monitor.theme_name, theme, sizeof(monitor.theme_name) - 1);
+    strncpy(monitor.theme_name, active_theme, sizeof(monitor.theme_name) - 1);
     monitor.theme_name[sizeof(monitor.theme_name) - 1] = '\0';
 
     LOG_INFO("video", "Loaded theme background: %s", back_image);
@@ -118,6 +119,10 @@ void check_theme_change(void) {
 
 static inline int scale_pixels(int px, float zoom) {
     return (int) ((float) px * zoom + 0.5f);
+}
+
+static inline int pct_offset(int screen, int render, float percent) {
+    return ((screen - render) / 2) + (int) ((percent / 100.0f) * (float) screen);
 }
 
 static void update_render_state(void) {
@@ -145,8 +150,9 @@ static void update_render_state(void) {
     LOG_INFO("video", "Device Underscan: %d", underscan);
 
     monitor.dest_rect = (SDL_Rect) {
-            ((device.SCREEN.WIDTH - scale_width) / 2) + underscan,
-            ((device.SCREEN.HEIGHT - scale_height) / 2) + underscan,
+            pct_offset(device.SCREEN.WIDTH, scale_width, theme.SDL.RENDER.OFFSET_X) + underscan,
+            pct_offset(device.SCREEN.HEIGHT, scale_height, theme.SDL.RENDER.OFFSET_Y) + underscan,
+
             scale_width - (underscan * 2),
             scale_height - (underscan * 2)
     };
