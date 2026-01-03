@@ -40,7 +40,9 @@ int scale_width, scale_height, underscan;
 int hdmi_in_use = 0;
 
 static void update_blend_mode(void) {
-    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_ADD);
+    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
+
     monitor.force_clear = true;
 }
 
