@@ -80,7 +80,6 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->THEME.DOWNLOAD.DATA, CONF_CONFIG_PATH "theme/download/data", "")
     CFG_STR_FIELD(config->THEME.DOWNLOAD.PREVIEW, CONF_CONFIG_PATH "theme/download/preview", "")
     CFG_STR_FIELD(config->THEME.ACTIVE, CONF_CONFIG_PATH "theme/active", "MustardOS")
-    CFG_STR_FIELD(config->THEME.DEFAULT_HASH, CONF_CONFIG_PATH "theme/default", "")
     snprintf(config->THEME.STORAGE_THEME, MAX_BUFFER_SIZE, RUN_STORAGE_PATH "theme/%s", config->THEME.ACTIVE);
     snprintf(config->THEME.THEME_CAT_PATH, MAX_BUFFER_SIZE, "%s/catalogue", config->THEME.STORAGE_THEME);
 
