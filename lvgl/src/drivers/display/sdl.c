@@ -25,9 +25,12 @@ typedef struct {
 
     // Track if we should clear
     bool needs_clear;
+    bool force_clear;
 
     // Background image support
-    SDL_Texture *background;
+    bool background_solid;
+    SDL_Texture *background_image;
+    SDL_Color background_colour;
     char theme_name[256];
 } monitor_t;
 
@@ -35,6 +38,11 @@ static monitor_t monitor;
 
 int scale_width, scale_height, underscan;
 int hdmi_in_use = 0;
+
+static void update_blend_mode(void) {
+    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_ADD);
+    monitor.force_clear = true;
+}
 
 static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
     SDL_Surface *surf = IMG_Load(path);
@@ -53,20 +61,22 @@ static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
 static void reload_background(const char *theme) {
     char back_image[MAX_BUFFER_SIZE];
     char *theme_base = (config.BOOT.FACTORY_RESET || !theme_compat()) ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
-
     snprintf(back_image, sizeof(back_image), "%s/%simage/background.png", theme_base, mux_dimension);
 
     if (!file_exist(back_image)) {
         snprintf(back_image, sizeof(back_image), "%s/image/background.png", theme_base);
         if (!file_exist(back_image)) {
-            // Nothing found so we'll just go back to black!
-            // Maybe this could be updated to have solid colour
-            // support via a theme or something?
-            if (monitor.background) {
-                SDL_DestroyTexture(monitor.background);
-                monitor.background = NULL;
-                monitor.theme_name[0] = '\0';
+            if (monitor.background_image) {
+                SDL_DestroyTexture(monitor.background_image);
+                monitor.background_image = NULL;
             }
+
+            // If the theme background opacity is set to 0 we'll just revert
+            // back to a solid black colour, otherwise we'll get some lovely
+            // overlap graphic glitches!
+            monitor.background_solid = true;
+            monitor.background_colour = (SDL_Color) {0, 0, 0, 255};
+            monitor.theme_name[0] = '\0';
 
             // The good news is that a failure to find an image fails gracefully!
             LOG_INFO("video", "No 'background.png' found for theme '%s'", theme);
@@ -74,16 +84,16 @@ static void reload_background(const char *theme) {
         }
     }
 
-    if (monitor.background && strcmp(theme, monitor.theme_name) == 0) return;
+    if (monitor.background_image && strcmp(theme, monitor.theme_name) == 0) return;
 
-    if (monitor.background) {
-        SDL_DestroyTexture(monitor.background);
-        monitor.background = NULL;
+    if (monitor.background_image) {
+        SDL_DestroyTexture(monitor.background_image);
+        monitor.background_image = NULL;
     }
 
-    monitor.background = load_png(monitor.renderer, back_image);
+    monitor.background_image = load_png(monitor.renderer, back_image);
 
-    if (!monitor.background) {
+    if (!monitor.background_image) {
         monitor.theme_name[0] = '\0';
         return;
     }
@@ -212,7 +222,7 @@ void sdl_init(void) {
         exit(EXIT_FAILURE);
     }
 
-    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_ADD);
+    update_blend_mode();
 
     void *pixels = NULL;
     int pitch = 0;
@@ -239,7 +249,7 @@ void sdl_cleanup(void) {
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
     if (monitor.window) SDL_DestroyWindow(monitor.window);
-    if (monitor.background) SDL_DestroyTexture(monitor.background);
+    if (monitor.background_image) SDL_DestroyTexture(monitor.background_image);
 
     IMG_Quit();
     SDL_Quit();
@@ -298,11 +308,18 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     SDL_UnlockTexture(monitor.texture);
 
     if (lv_disp_flush_is_last(disp_drv)) {
-        if (monitor.needs_clear) {
-            if (monitor.background) {
+        if (monitor.needs_clear || monitor.force_clear) {
+            if (monitor.background_image) {
                 SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
-                SDL_RenderCopy(monitor.renderer, monitor.background, NULL, &full);
+                SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
             } else {
+                SDL_SetRenderDrawColor(
+                        monitor.renderer,
+                        monitor.background_colour.r,
+                        monitor.background_colour.g,
+                        monitor.background_colour.b,
+                        255
+                );
                 SDL_RenderClear(monitor.renderer);
             }
         }
