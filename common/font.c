@@ -118,25 +118,25 @@ void load_font_text(lv_obj_t *screen) {
         char theme_font_text[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+        char *theme_base = get_theme_base();
 
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_text, sizeof(theme_font_text),
-                            "%s/%sfont/%s/%s.bin", theme_location, dimensions[i],
+                            "%s/%sfont/%s/%s.bin", theme_base, dimensions[i],
                             config.SETTINGS.GENERAL.LANGUAGE, mux_module) >= 0 &&
                     file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                            "%s/%sfont/%s/default.bin", theme_location, dimensions[i],
+                            "%s/%sfont/%s/default.bin", theme_base, dimensions[i],
                             config.SETTINGS.GENERAL.LANGUAGE) >= 0 &&
                     file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text),
-                            "%s/%sfont/%s.bin", theme_location, dimensions[i], mux_module) >= 0 &&
+                            "%s/%sfont/%s.bin", theme_base, dimensions[i], mux_module) >= 0 &&
                     file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                            "%s/%sfont/default.bin", theme_location, dimensions[i]) >= 0 &&
+                            "%s/%sfont/default.bin", theme_base, dimensions[i]) >= 0 &&
                     file_exist(theme_font_text))) {
 
                 LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text);
@@ -158,25 +158,25 @@ void load_font_section(const char *section, lv_obj_t *element) {
         char theme_font_section[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+        char *theme_base = get_theme_base();
 
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_section, sizeof(theme_font_section),
-                            "%s/%sfont/%s/%s/%s.bin", theme_location, dimensions[i],
+                            "%s/%sfont/%s/%s/%s.bin", theme_base, dimensions[i],
                             config.SETTINGS.GENERAL.LANGUAGE, section, mux_module) >= 0 &&
                     file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                            "%s/%sfont/%s/%s/default.bin", theme_location, dimensions[i],
+                            "%s/%sfont/%s/%s/default.bin", theme_base, dimensions[i],
                             config.SETTINGS.GENERAL.LANGUAGE, section) >= 0 &&
                     file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                            "%s/%sfont/%s/%s.bin", theme_location, dimensions[i], section, mux_module) >= 0 &&
+                            "%s/%sfont/%s/%s.bin", theme_base, dimensions[i], section, mux_module) >= 0 &&
                     file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                            "%s/%sfont/%s/default.bin", theme_location, dimensions[i], section) >= 0 &&
+                            "%s/%sfont/%s/default.bin", theme_base, dimensions[i], section) >= 0 &&
                     file_exist(theme_font_section))) {
 
                 LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section);

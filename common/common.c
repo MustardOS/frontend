@@ -1137,12 +1137,12 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size) {
     if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
 
-    char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+    char *theme_base = get_theme_base();
     if (snprintf(image, image_size, "%s/%simage/splash.png",
-                 theme_location, mux_dimension) >= 0 && file_exist(image))
+                 theme_base, mux_dimension) >= 0 && file_exist(image))
         return;
 
-    snprintf(image, image_size, "%s/image/splash.png", theme_location);
+    snprintf(image, image_size, "%s/image/splash.png", theme_base);
 }
 
 bool is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
@@ -2306,11 +2306,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
 
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
-    if (snd_type == 2) {
-        const char *theme_location =
-                config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
-        snprintf(base_path, sizeof(base_path), "%s/sound", theme_location);
-    }
+    if (snd_type == 2) snprintf(base_path, sizeof(base_path), "%s/sound", get_theme_base());
 
     DIR *dir = opendir(base_path);
     if (!dir) {
@@ -2344,11 +2340,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
-    if (bgm_type == 2) {
-        const char *theme_location =
-                config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
-        snprintf(base_path, sizeof(base_path), "%s/music", theme_location);
-    }
+    if (bgm_type == 2) snprintf(base_path, sizeof(base_path), "%s/music", get_theme_base());
 
     DIR *dir = opendir(base_path);
     if (!dir) {
@@ -3066,9 +3058,9 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 }
 
 int theme_compat(void) {
-    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
     char theme_version_file[MAX_BUFFER_SIZE];
-    snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", theme_location);
+    snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt",
+             config.BOOT.FACTORY_RESET ? INTERNAL_THEME : config.THEME.STORAGE_THEME);
 
     if (file_exist(theme_version_file)) {
         char *theme_version = read_line_char_from(theme_version_file, 1);
@@ -3694,4 +3686,8 @@ const char *module_from_func(const char *func) {
     module[len] = '\0';
 
     return module;
+}
+
+char *get_theme_base() {
+    return config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 }

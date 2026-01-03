@@ -1032,12 +1032,12 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 }
 
 int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size) {
-    char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+    char *theme_base = get_theme_base();
 
     char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_location);
+    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
     if (file_exist(active_path)) {
-        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_location,
+        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_base,
                  str_replace(read_line_char_from(active_path, 1), "\r", ""));
         return file_exist(alt_scheme_path);
     }

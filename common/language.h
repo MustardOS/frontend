@@ -897,6 +897,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char LOW_BATTERY[MAX_BUFFER_SIZE];
+        char SCREENSAVER[MAX_BUFFER_SIZE];
         struct {
             char ERROR[MAX_BUFFER_SIZE];
             char DISPLAY[MAX_BUFFER_SIZE];
@@ -941,6 +942,7 @@ struct mux_lang {
             } GOV;
             char LOW_BATTERY[MAX_BUFFER_SIZE];
             char SLEEP_FUNCTION[MAX_BUFFER_SIZE];
+            char SCREENSAVER[MAX_BUFFER_SIZE];
         } HELP;
     } MUXPOWER;
 

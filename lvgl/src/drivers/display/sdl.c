@@ -10,6 +10,7 @@
 #include "../../../../common/config.h"
 #include "../../../../common/theme.h"
 #include "sdl.h"
+#include "dvd.h"
 
 typedef struct {
     // Just the default base stuff we need
@@ -62,8 +63,9 @@ static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
 }
 
 static void reload_background(const char *active_theme) {
+    char *theme_base = get_theme_base();
+
     char back_image[MAX_BUFFER_SIZE];
-    char *theme_base = (config.BOOT.FACTORY_RESET || !theme_compat()) ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
     snprintf(back_image, sizeof(back_image), "%s/%simage/background.png", theme_base, mux_dimension);
 
     if (!file_exist(back_image)) {
@@ -107,12 +109,29 @@ static void reload_background(const char *active_theme) {
     LOG_INFO("video", "Loaded theme background: %s", back_image);
 }
 
+static void reload_screensaver() {
+    dvd_shutdown();
+    char *theme_base = get_theme_base();
+
+    char saver_image[MAX_BUFFER_SIZE];
+    snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dimension);
+
+    if (!file_exist(saver_image)) {
+        snprintf(saver_image, sizeof(saver_image), "%s/image/screensaver.png", theme_base);
+        if (!file_exist(saver_image)) snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
+    }
+
+    dvd_init(monitor.renderer, saver_image, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+}
+
 void check_theme_change(void) {
     const char *theme = config.THEME.ACTIVE;
     if (strncmp(theme, monitor.theme_name, sizeof(monitor.theme_name)) != 0) {
         LOG_DEBUG("video", "Theme change detected: %s -> %s", monitor.theme_name, theme);
 
         reload_background(theme);
+        reload_screensaver();
+
         monitor.refresh = true;
     }
 }
@@ -251,9 +270,12 @@ void sdl_init(void) {
     LOG_INFO("video", "SDL Renderer: %s (%dx%d)", info.name, out_w, out_h);
 
     reload_background(config.THEME.ACTIVE);
+    reload_screensaver();
 }
 
 void sdl_cleanup(void) {
+    dvd_shutdown();
+
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
     if (monitor.window) SDL_DestroyWindow(monitor.window);
@@ -315,35 +337,72 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 
     SDL_UnlockTexture(monitor.texture);
 
-    if (lv_disp_flush_is_last(disp_drv)) {
-        if (monitor.needs_clear || monitor.force_clear) {
-            if (monitor.background_image) {
-                SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
-                SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
+    if (!lv_disp_flush_is_last(disp_drv)) {
+        lv_disp_flush_ready(disp_drv);
+        return;
+    }
+
+    if (config.SETTINGS.POWER.SCREENSAVER) dvd_update();
+
+    // LVGL does not redraw at a steady pace when idle, so
+    // the screensaver must become the "driver" while active...
+    // I'm sure there are repercussions with this whole section
+    // but we'll see what happens in the future!
+    if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) {
+        lv_disp_flush_ready(disp_drv);
+
+        const uint32_t frame_ms = IDLE_MS;
+        uint32_t next = SDL_GetTicks();
+
+        while (1) {
+            dvd_update();
+
+            if (!dvd_active()) break;
+
+            SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+            SDL_RenderClear(monitor.renderer);
+
+            dvd_render(monitor.renderer);
+            SDL_RenderPresent(monitor.renderer);
+
+            next += frame_ms;
+            uint32_t now = SDL_GetTicks();
+
+            if ((int32_t) (next - now) > 0) {
+                SDL_Delay(next - now);
             } else {
-                SDL_SetRenderDrawColor(
-                        monitor.renderer,
-                        monitor.background_colour.r,
-                        monitor.background_colour.g,
-                        monitor.background_colour.b,
-                        255
-                );
-                SDL_RenderClear(monitor.renderer);
+                next = now;
             }
         }
 
-        // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
+        monitor.force_clear = true;
+        monitor.refresh = true;
 
-        // Simplify the rendering if we are not rotating as this saves a few cycles
-        if (monitor.angle == 0.0) {
-            SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
-        } else {
-            SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect,
-                             monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE);
-        }
-
-        SDL_RenderPresent(monitor.renderer);
+        return;
     }
 
+    if (monitor.needs_clear || monitor.force_clear) {
+        if (monitor.background_image) {
+            SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+            SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
+        } else {
+            SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+            SDL_RenderClear(monitor.renderer);
+        }
+
+        monitor.force_clear = false;
+    }
+
+    // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
+
+    // Simplify the rendering if we are not rotating as this saves a few cycles
+    if (monitor.angle == 0.0) {
+        SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
+    } else {
+        SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect,
+                         monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE);
+    }
+
+    SDL_RenderPresent(monitor.renderer);
     lv_disp_flush_ready(disp_drv);
 }

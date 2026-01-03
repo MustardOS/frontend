@@ -269,7 +269,8 @@
     POWER(IdleDisplay, "idle_display") \
     POWER(IdleMute,    "idle_mute")    \
     POWER(GovIdle,     "gov_idle")     \
-    POWER(GovDefault,  "gov_default")
+    POWER(GovDefault,  "gov_default")  \
+    POWER(Screensaver, "screensaver")
 
 #define RTC_ELEMENTS          \
     RTC(Timezone, "timezone") \

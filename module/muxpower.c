@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxpower.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 8
 
 #define POWER(NAME, UDATA) static int NAME##_original;
 POWER_ELEMENTS
@@ -30,6 +30,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblIdleMute_power,    lang.MUXPOWER.HELP.IDLE.MUTE},
             {ui_lblGovIdle_power,     lang.MUXPOWER.HELP.GOV.IDLE},
             {ui_lblGovDefault_power,  lang.MUXPOWER.HELP.GOV.DEFAULT},
+            {ui_lblScreensaver_power, lang.MUXPOWER.HELP.SCREENSAVER},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -125,6 +126,7 @@ static void restore_power_options(void) {
 
     lv_dropdown_set_selected(ui_droGovIdle_power, find_governor(config.SETTINGS.POWER.GOV.IDLE));
     lv_dropdown_set_selected(ui_droGovDefault_power, find_governor(config.SETTINGS.POWER.GOV.DEFAULT));
+    lv_dropdown_set_selected(ui_droScreensaver_power, config.SETTINGS.POWER.SCREENSAVER);
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
@@ -206,6 +208,12 @@ static int save_power_options(void) {
         CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
     }
 
+    if (lv_dropdown_get_option_cnt(ui_droScreensaver_power) > 1 &&
+        lv_dropdown_get_selected(ui_droScreensaver_power) != Screensaver_original) {
+        is_modified++;
+        CHECK_AND_SAVE_STD(power, Screensaver, "settings/power/screensaver", INT, 0);
+    }
+
     if (is_modified > 0) run_tweak_script();
 
     free_governor_values();
@@ -240,6 +248,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, IdleMute, lang.MUXPOWER.IDLE.MUTE, "idle_mute", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, power, GovIdle, lang.MUXPOWER.GOV.IDLE, "gov_idle", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(-1, power, GovDefault, lang.MUXPOWER.GOV.DEFAULT, "gov_fe", gov_values_disp, (int) gov_count);
+    INIT_OPTION_ITEM(-1, power, Screensaver, lang.MUXPOWER.SCREENSAVER, "screensaver", disabled_enabled, 2);
 
     char *battery_string = generate_number_string(5, 50, 5, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_string);

@@ -181,6 +181,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.POWER.IDLE.MUTE, CONF_CONFIG_PATH "settings/power/idle_mute", 1)
     CFG_STR_FIELD(config->SETTINGS.POWER.GOV.DEFAULT, CONF_DEVICE_PATH "cpu/default", "ondemand")
     CFG_STR_FIELD(config->SETTINGS.POWER.GOV.IDLE, CONF_CONFIG_PATH "settings/power/gov_idle", "powersave")
+    CFG_INT_FIELD(config->SETTINGS.POWER.SCREENSAVER, CONF_CONFIG_PATH "settings/power/screensaver", 0)
 
     CFG_INT_FIELD(config->VISUAL.BATTERY, CONF_CONFIG_PATH "visual/battery", 1)
     CFG_INT_FIELD(config->VISUAL.NETWORK, CONF_CONFIG_PATH "visual/network", 0)

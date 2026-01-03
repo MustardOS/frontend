@@ -90,15 +90,18 @@ static void mux_idle_poll(lv_timer_t *timer) {
     int idle = read_line_int_from(IDLE_STATE, 1);
     if (idle < 0 || idle == last_idle) return;
 
-    lv_timer_t *display_timer = mux_get_refresh_timer();
+    // Screensaver is disabled so we'll just pause the frontend
+    if (!config.SETTINGS.POWER.SCREENSAVER) {
+        lv_timer_t *display_timer = mux_get_refresh_timer();
 
-    if (idle) {
-        lv_timer_set_period(display_timer, IDLE_FZ);
-        lv_timer_pause(display_timer);
-    } else {
-        lv_timer_resume(display_timer);
-        lv_timer_set_period(display_timer, IDLE_MS);
-        lv_timer_ready(display_timer);
+        if (idle) {
+            lv_timer_set_period(display_timer, IDLE_FZ);
+            lv_timer_pause(display_timer);
+        } else {
+            lv_timer_resume(display_timer);
+            lv_timer_set_period(display_timer, IDLE_MS);
+            lv_timer_ready(display_timer);
+        }
     }
 
     last_idle = idle;
@@ -302,7 +305,8 @@ void timer_action(int action) {
             case 1:
                 timer_destroy(timers[i]);
                 break;
-            default: LOG_WARN(mux_module, "Timer issue warning - No suspend or destroy!");
+            default:
+                LOG_WARN(mux_module, "Timer issue warning - No suspend or destroy!");
         }
     }
 }

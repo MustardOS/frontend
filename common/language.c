@@ -783,6 +783,7 @@ void load_lang(struct mux_lang *lang) {
     // muxpower
     SPECIFIC_FIELD(lang->MUXPOWER.TITLE, "POWER SETTINGS");
     SPECIFIC_FIELD(lang->MUXPOWER.LOW_BATTERY, "Low Battery Indicator");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER, "Frontend Screensaver");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.ERROR, "Idle Display must be less than Idle Sleep");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.DISPLAY, "Idle Input Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.SLEEP, "Idle Input Sleep Timeout");
@@ -816,6 +817,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOV.DEFAULT, "Configure the default frontend and device power governor");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY, "Configure when the red LED will display based on the current capacity percentage");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION, "Configure how the power button functions on short press");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SCREENSAVER, "Toggle the frontend screensaver on Idle Display Timeout activation");
 
     // muxrtc
     SPECIFIC_FIELD(lang->MUXRTC.TITLE, "DATE AND TIME");

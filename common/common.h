@@ -486,3 +486,5 @@ void set_process_name(const char *module);
 const char *get_process_name(void);
 
 const char *module_from_func(const char *func);
+
+char *get_theme_base();
