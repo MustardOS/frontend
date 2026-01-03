@@ -142,10 +142,8 @@ static void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t 
     lv_txt_get_size(&text_width, label_text, font, letter_space, line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
     lv_coord_t label_text_width = text_width.x;
 
-    lv_coord_t glyph_width = glyph ? lv_obj_get_width(glyph) : 0;
-
     // Okay 64 leaves a good gap for both long static and long animated
-    lv_coord_t available = panel_width - label_text_width - glyph_width - 64;
+    lv_coord_t available = panel_width - label_text_width - theme.FONT.LIST_PAD_LEFT - 64;
 
     lv_obj_set_width(value, available);
 }
@@ -1110,7 +1108,6 @@ static void show_detail_view(const activity_item_t *it) {
         adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue, ui_lblActItemGlyph);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItemValue);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblActItem, ui_lblActItemGlyph, detail_label);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
     }
 
@@ -1270,7 +1267,6 @@ static void show_global_view(void) {
         adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue, ui_lblActItemGlyph);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItemValue);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblActItem, ui_lblActItemGlyph, global_label);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
     }
 
