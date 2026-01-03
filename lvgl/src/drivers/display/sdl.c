@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "../../../../common/log.h"
 #include "../../../../common/options.h"
 #include "../../../../common/common.h"
@@ -24,12 +25,84 @@ typedef struct {
 
     // Track if we should clear
     bool needs_clear;
+
+    // Background image support
+    SDL_Texture *background;
+    char theme_name[256];
 } monitor_t;
 
 static monitor_t monitor;
 
 int scale_width, scale_height, underscan;
 int hdmi_in_use = 0;
+
+static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
+    SDL_Surface *surf = IMG_Load(path);
+    if (!surf) {
+        LOG_ERROR("video", "PNG loading failure: %s", IMG_GetError());
+        return NULL;
+    }
+
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_FreeSurface(surf);
+
+    if (!tex) LOG_ERROR("video", "Texture creation failure: %s", SDL_GetError());
+    return tex;
+}
+
+static void reload_background(const char *theme) {
+    char back_image[MAX_BUFFER_SIZE];
+    char *theme_base = (config.BOOT.FACTORY_RESET || !theme_compat()) ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+
+    snprintf(back_image, sizeof(back_image), "%s/%simage/background.png", theme_base, mux_dimension);
+
+    if (!file_exist(back_image)) {
+        snprintf(back_image, sizeof(back_image), "%s/image/background.png", theme_base);
+        if (!file_exist(back_image)) {
+            // Nothing found so we'll just go back to black!
+            // Maybe this could be updated to have solid colour
+            // support via a theme or something?
+            if (monitor.background) {
+                SDL_DestroyTexture(monitor.background);
+                monitor.background = NULL;
+                monitor.theme_name[0] = '\0';
+            }
+
+            // The good news is that a failure to find an image fails gracefully!
+            LOG_INFO("video", "No 'background.png' found for theme '%s'", theme);
+            return;
+        }
+    }
+
+    if (monitor.background && strcmp(theme, monitor.theme_name) == 0) return;
+
+    if (monitor.background) {
+        SDL_DestroyTexture(monitor.background);
+        monitor.background = NULL;
+    }
+
+    monitor.background = load_png(monitor.renderer, back_image);
+
+    if (!monitor.background) {
+        monitor.theme_name[0] = '\0';
+        return;
+    }
+
+    strncpy(monitor.theme_name, theme, sizeof(monitor.theme_name) - 1);
+    monitor.theme_name[sizeof(monitor.theme_name) - 1] = '\0';
+
+    LOG_INFO("video", "Loaded theme background: %s", back_image);
+}
+
+void check_theme_change(void) {
+    const char *theme = config.THEME.ACTIVE;
+    if (strncmp(theme, monitor.theme_name, sizeof(monitor.theme_name)) != 0) {
+        LOG_DEBUG("video", "Theme change detected: %s -> %s", monitor.theme_name, theme);
+
+        reload_background(theme);
+        monitor.refresh = true;
+    }
+}
 
 static inline int scale_pixels(int px, float zoom) {
     return (int) ((float) px * zoom + 0.5f);
@@ -105,6 +178,10 @@ void sdl_init(void) {
         exit(EXIT_FAILURE);
     }
 
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        LOG_ERROR("video", "PNG Init Failed: %s", IMG_GetError());
+    }
+
     SDL_ShowCursor(SDL_DISABLE);
     update_render_state();
 
@@ -135,12 +212,14 @@ void sdl_init(void) {
         exit(EXIT_FAILURE);
     }
 
-    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_NONE);
+    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_ADD);
 
     void *pixels = NULL;
     int pitch = 0;
     if (SDL_LockTexture(monitor.texture, NULL, &pixels, &pitch) == 0) {
-        memset(pixels, 0, (size_t) pitch * (size_t) device.MUX.HEIGHT);
+        uint32_t * px = pixels;
+        size_t pt = (pitch / 4) * device.MUX.HEIGHT;
+        for (size_t i = 0; i < pt; i++) px[i] = 0x00000000;
         SDL_UnlockTexture(monitor.texture);
     }
 
@@ -152,13 +231,17 @@ void sdl_init(void) {
     SDL_GetRendererInfo(monitor.renderer, &info);
     SDL_GetRendererOutputSize(monitor.renderer, &out_w, &out_h);
     LOG_INFO("video", "SDL Renderer: %s (%dx%d)", info.name, out_w, out_h);
+
+    reload_background(config.THEME.ACTIVE);
 }
 
 void sdl_cleanup(void) {
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
     if (monitor.window) SDL_DestroyWindow(monitor.window);
+    if (monitor.background) SDL_DestroyTexture(monitor.background);
 
+    IMG_Quit();
     SDL_Quit();
 }
 
@@ -215,7 +298,14 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     SDL_UnlockTexture(monitor.texture);
 
     if (lv_disp_flush_is_last(disp_drv)) {
-        if (monitor.needs_clear) SDL_RenderClear(monitor.renderer);
+        if (monitor.needs_clear) {
+            if (monitor.background) {
+                SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+                SDL_RenderCopy(monitor.renderer, monitor.background, NULL, &full);
+            } else {
+                SDL_RenderClear(monitor.renderer);
+            }
+        }
 
         // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
 

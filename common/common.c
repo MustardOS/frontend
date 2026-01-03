@@ -1122,10 +1122,12 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size) {
     if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
 
-    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
-    if (snprintf(image, image_size, "%s/%simage/splash.png", theme, mux_dimension) >= 0 && file_exist(image)) return;
+    char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+    if (snprintf(image, image_size, "%s/%simage/splash.png",
+                 theme_location, mux_dimension) >= 0 && file_exist(image))
+        return;
 
-    snprintf(image, image_size, "%s/image/splash.png", theme);
+    snprintf(image, image_size, "%s/image/splash.png", theme_location);
 }
 
 bool is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
@@ -2290,7 +2292,8 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
     if (snd_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+        const char *theme_location =
+                config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/sound", theme_location);
     }
 
@@ -2327,7 +2330,8 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
     if (bgm_type == 2) {
-        const char *theme_location = config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
+        const char *theme_location =
+                config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
         snprintf(base_path, sizeof(base_path), "%s/music", theme_location);
     }
 

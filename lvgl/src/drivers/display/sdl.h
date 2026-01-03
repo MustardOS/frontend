@@ -3,6 +3,8 @@
 #include "../../../../lvgl/lvgl.h"
 #include "../../../lv_drv_conf.h"
 
+void check_theme_change(void);
+
 void sdl_init(void);
 
 void sdl_cleanup(void);
