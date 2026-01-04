@@ -155,53 +155,38 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
     char path[MAX_BUFFER_SIZE];
     const char *last_subdir = NULL;
 
-    if (pointer == NULL) {
-        if (is_app) {
-            snprintf(path, sizeof(path), "%s/mux_option.%s", sys_dir, ext);
+    if (is_app) {
+        snprintf(path, sizeof(path), "%s/mux_option.%s", sys_dir, ext);
 
-            LOG_SUCCESS(mux_module, "Loading Application %s: %s", label, path);
+        LOG_SUCCESS(mux_module, "Loading Application %s: %s", label, path);
+
+        char *txt = read_all_char_from(path);
+        if (txt) return txt;
+
+        LOG_ERROR(mux_module, "Failed to read application %s", label);
+        return NULL;
+    }
+
+    last_subdir = get_last_subdir(sys_dir, '/', 4);
+
+    if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
+        snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
+                    ext);
+    } else {
+        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
+                    last_subdir, pointer == NULL ? strip_ext(items[current_item_index].name) : pointer, ext);
+
+        if (file_exist(path) && !force) {
+            LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
 
             char *txt = read_all_char_from(path);
             if (txt) return txt;
 
-            LOG_ERROR(mux_module, "Failed to read application %s", label);
-            return NULL;
+            LOG_ERROR(mux_module, "Failed to read individual %s", label);
         }
 
-        last_subdir = get_last_subdir(sys_dir, '/', 4);
-
-        if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
-            snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
-                     ext);
-        } else {
-            snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
-                     last_subdir, strip_ext(items[current_item_index].name), ext);
-
-            if (file_exist(path) && !force) {
-                LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
-
-                char *txt = read_all_char_from(path);
-                if (txt) return txt;
-
-                LOG_ERROR(mux_module, "Failed to read individual %s", label);
-            }
-
-            snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
-                     last_subdir, ext);
-        }
-    } else {
-        snprintf(path, sizeof(path), "%s.%s", strip_ext(pointer), ext);
-
-        if (file_exist(path)) {
-            LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
-            return read_all_char_from(path);
-        }
-
-        const char *replaced = str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), "");
         snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
-                 replaced, ext);
-        snprintf(path, sizeof(path), "%s",
-                 str_replace(path, "//", "/"));
+                    last_subdir, ext);
     }
 
     if (file_exist(path) && !force) {

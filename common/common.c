@@ -3365,10 +3365,10 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
         } else {
             LOG_INFO(mux_module, "Assigned Core: %s", assigned_core);
 
-            char *assigned_gov = specify_asset(load_content_governor(sys_dir, NULL, 0, 1, 0),
+            char *assigned_gov = specify_asset(load_content_governor(sys_dir, content_name, 0, 1, 0),
                                                device.CPU.DEFAULT, "Governor");
 
-            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, NULL, 0, 1, 0),
+            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, content_name, 0, 1, 0),
                                                "system", "Control Scheme");
 
             char full_file_path[MAX_BUFFER_SIZE];
