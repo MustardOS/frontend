@@ -6,7 +6,7 @@ CFLAGS = $(BASE_CFLAGS) \
          -I../common/mini -I../common/miniz
 
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
-          -L../bin/lib -lui -llookup -lmux \
+          -L../bin/lib -lui -llookup -lmuxcom \
           -lnotosans_big -lnotosans_big_hd \
           -lnotosans_medium -lnotosans_sc_medium -lnotosans_tc_medium \
           -lnotosans_jp_medium -lnotosans_kr_medium -lnotosans_ar_medium
@@ -29,7 +29,7 @@ SRCS := $(foreach mod,$(MODULES), \
 
 OBJS = $(SRCS:.c=.o)
 LIB_DIR = ${shell pwd}/../bin/lib
-LIB_FILE = libmuxmodule.so
+LIB_FILE = libmuxmod.so
 
 all: $(LIB_DIR)/$(LIB_FILE)
 

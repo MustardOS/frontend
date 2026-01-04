@@ -9,7 +9,7 @@ SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
 OBJS = $(SRCS:.c=.o)
 
 LIB_DIR = ${shell pwd}/../bin/lib
-LIB_FILE = libmux.so
+LIB_FILE = libmuxcom.so
 
 all: $(LIB_DIR)/$(LIB_FILE)
 
