@@ -1,6 +1,8 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <limits.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL.h>
@@ -8,9 +10,7 @@
 #include <GLES2/gl2.h>
 #include "../common/options.h"
 #include "../common/log.h"
-
-#define OVERLAY_NOP "/run/muos/overlay.disable"
-#define BATTERY_NOP "/run/muos/overlay.battery"
+#include "mustage.h"
 
 static void (*real_SDL_RenderPresent)(SDL_Renderer *);
 
@@ -31,6 +31,7 @@ static GLuint gl_tex;
 static GLint gl_a_pos;
 static GLint gl_a_uv;
 static GLint gl_u_tex;
+static GLint gl_u_alpha;
 
 static int gl_ready;
 static int gl_attempted;
@@ -44,12 +45,16 @@ static int vtx_batt_valid = 0;
 
 static SDL_Window *gl_window;
 
-static char overlay_path[512];
 static char dimension[32];
-static int overlay_enabled;
+
+static char overlay_path[512];
+static int overlay_anchor_cached = -1;
+static int overlay_scale_cached = -1;
 
 static char battery_overlay_path[512];
 static int battery_last_enabled = -1;
+static int battery_anchor_cached = -1;
+static int battery_scale_cached = -1;
 
 static SDL_Texture *battery_sdl_tex;
 static int battery_sdl_ready;
@@ -63,19 +68,86 @@ static int battery_gl_attempted;
 static int battery_gl_w;
 static int battery_gl_h;
 
+static struct overlay_go_cache ovl_go_cache = {
+        .mtime = 0,
+        .valid = 0
+};
+
+static const struct overlay_resolver SDL_RESOLVER = {
+        .render_type = TYPE_SDL,
+        .get_dimension = get_dimension,
+};
+
+static const struct overlay_resolver GL_RESOLVER = {
+        .render_type = TYPE_GL,
+        .get_dimension = get_dimension,
+};
+
+static struct anchor_cache overlay_anchor_cache = {
+        .path  = OVERLAY_ANCHOR,
+        .mtime = 0,
+        .value = ANCHOR_TOP_LEFT
+};
+
+static struct anchor_cache battery_anchor_cache = {
+        .path  = BATTERY_ANCHOR,
+        .mtime = 0,
+        .value = ANCHOR_TOP_LEFT
+};
+
+static struct alpha_cache overlay_alpha_cache = {
+        .path  = OVERLAY_ALPHA,
+        .mtime = 0,
+        .value = 1.0f
+};
+
+static struct alpha_cache battery_alpha_cache = {
+        .path  = BATTERY_ALPHA,
+        .mtime = 0,
+        .value = 1.0f
+};
+
+static struct scale_cache overlay_scale_cache = {
+        .path  = OVERLAY_SCALE,
+        .mtime = 0,
+        .value = SCALE_ORIGINAL
+};
+
+static struct scale_cache battery_scale_cache = {
+        .path  = BATTERY_SCALE,
+        .mtime = 0,
+        .value = SCALE_ORIGINAL
+};
+
 static const char *vs_src = "attribute vec2 a_pos;"
                             "attribute vec2 a_uv;"
                             "varying vec2 v_uv;"
-                            "void main(){ gl_Position = vec4(a_pos,0.0,1.0); v_uv = a_uv; }";
+                            "void main(){"
+                            "    gl_Position = vec4(a_pos,0.0,1.0);"
+                            "    v_uv = a_uv;"
+                            "}";
 
 static const char *fs_src = "precision mediump float;"
                             "uniform sampler2D u_tex;"
+                            "uniform float u_alpha;"
                             "varying vec2 v_uv;"
-                            "void main(){ gl_FragColor = texture2D(u_tex, v_uv); }";
+                            "void main(){"
+                            "    vec4 c = texture2D(u_tex, v_uv);"
+                            "    gl_FragColor = vec4(c.rgb, c.a * u_alpha);"
+                            "}";
 
-__attribute__((constructor))
-static void overlay_detect(void) {
-    overlay_enabled = (access(OVERLAY_NOP, F_OK) != 0);
+int safe_atoi(const char *str) {
+    if (str == NULL) return 0;
+
+    errno = 0;
+    char *str_ptr;
+    long val = strtol(str, &str_ptr, 10);
+
+    if (str_ptr == str) return 0;
+    if (*str_ptr != '\0') return 0;
+    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || (val > INT_MAX || val < INT_MIN)) return 0;
+
+    return (int) val;
 }
 
 static inline int file_exist(const char *filename) {
@@ -96,20 +168,28 @@ static void resolve_symbols(void) {
     if (!real_SDL_GL_SwapWindow) LOG_ERROR("stage", "dlsym SDL_GL_SwapWindow failed");
 }
 
+static struct flag_cache battery_enable_cache = {
+        .path  = BATTERY_DETECT,
+        .mtime = 0,
+        .value = 0
+};
+
 static inline int battery_overlay_enabled(void) {
-    return access(BATTERY_NOP, F_OK) == 0;
+    struct stat st;
+
+    if (stat(battery_enable_cache.path, &st) != 0) {
+        battery_enable_cache.mtime = 0;
+        battery_enable_cache.value = 0;
+        return 0;
+    }
+
+    if (st.st_mtime == battery_enable_cache.mtime) return battery_enable_cache.value;
+
+    battery_enable_cache.mtime = st.st_mtime;
+    battery_enable_cache.value = 1;
+
+    return 1;
 }
-
-enum render_type {
-    TYPE_SDL = 1,
-    TYPE_GL = 2
-};
-
-struct overlay_resolver {
-    int render_type;
-
-    void (*get_dimension)(enum render_type type, void *ctx, char *out, size_t out_sz);
-};
 
 static int read_line_from_file(const char *filename, size_t line_number, char *out, size_t out_size) {
     FILE *f = fopen(filename, "r");
@@ -136,15 +216,282 @@ static int read_line_from_file(const char *filename, size_t line_number, char *o
     return 0;
 }
 
-static int load_image_static(const char *file, const char *dim, char *image_path) {
+static inline int clamp_scale(int v) {
+    return (v >= 0 && v <= 2) ? v : SCALE_ORIGINAL;
+}
+
+static int get_scale_cached(struct scale_cache *cache) {
+    struct stat st;
+
+    if (stat(cache->path, &st) != 0) {
+        cache->mtime = 0;
+        cache->value = SCALE_ORIGINAL;
+        return cache->value;
+    }
+
+    if (st.st_mtime == cache->mtime) return cache->value;
+
+    cache->mtime = st.st_mtime;
+
+    char buf[8];
+    if (!read_line_from_file(cache->path, 1, buf, sizeof(buf))) {
+        cache->value = SCALE_ORIGINAL;
+        return cache->value;
+    }
+
+    cache->value = clamp_scale(safe_atoi(buf));
+    return cache->value;
+}
+
+static inline int clamp_anchor(int v) {
+    return (v >= 0 && v <= 8) ? v : ANCHOR_TOP_LEFT;
+}
+
+static int get_anchor_cached(struct anchor_cache *cache) {
+    struct stat st;
+
+    if (stat(cache->path, &st) != 0) {
+        cache->mtime = 0;
+        cache->value = ANCHOR_TOP_LEFT;
+        return cache->value;
+    }
+
+    if (st.st_mtime == cache->mtime) return cache->value;
+    cache->mtime = st.st_mtime;
+
+    char buf[8];
+    if (!read_line_from_file(cache->path, 1, buf, sizeof(buf))) {
+        cache->value = ANCHOR_TOP_LEFT;
+        return cache->value;
+    }
+
+    cache->value = clamp_anchor(safe_atoi(buf));
+    return cache->value;
+}
+
+static void set_sdl_render(SDL_Renderer *renderer, int tex_w, int tex_h, int anchor, int scale, SDL_Rect *out) {
+    int fb_w, fb_h;
+    SDL_GetRendererOutputSize(renderer, &fb_w, &fb_h);
+
+    int draw_w = tex_w;
+    int draw_h = tex_h;
+
+    if (scale == SCALE_FIT) {
+        float sx = (float) fb_w / (float) tex_w;
+        float sy = (float) fb_h / (float) tex_h;
+
+        float s = (sx < sy) ? sx : sy;
+
+        draw_w = (int) lroundf((float) tex_w * s);
+        draw_h = (int) lroundf((float) tex_h * s);
+    } else if (scale == SCALE_STRETCH) {
+        draw_w = fb_w;
+        draw_h = fb_h;
+    }
+
+    if (draw_w < 1) draw_w = 1;
+    if (draw_h < 1) draw_h = 1;
+
+    int x = 0;
+    int y = 0;
+
+    switch (anchor) {
+        case ANCHOR_TOP_MIDDLE:
+            x = (fb_w - draw_w) / 2;
+            break;
+        case ANCHOR_TOP_RIGHT:
+            x = fb_w - draw_w;
+            break;
+        case ANCHOR_CENTRE_LEFT:
+            y = (fb_h - draw_h) / 2;
+            break;
+        case ANCHOR_CENTRE_MIDDLE:
+            x = (fb_w - draw_w) / 2;
+            y = (fb_h - draw_h) / 2;
+            break;
+        case ANCHOR_CENTRE_RIGHT:
+            x = fb_w - draw_w;
+            y = (fb_h - draw_h) / 2;
+            break;
+        case ANCHOR_BOTTOM_LEFT:
+            y = fb_h - draw_h;
+            break;
+        case ANCHOR_BOTTOM_MIDDLE:
+            x = (fb_w - draw_w) / 2;
+            y = fb_h - draw_h;
+            break;
+        case ANCHOR_BOTTOM_RIGHT:
+            x = fb_w - draw_w;
+            y = fb_h - draw_h;
+            break;
+        default:
+            break;
+    }
+
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    out->x = x;
+    out->y = y;
+    out->w = draw_w;
+    out->h = draw_h;
+}
+
+static void set_gl_render(GLfloat *out, int tex_w, int tex_h, int fb_w, int fb_h, int anchor, int scale) {
+    float draw_w = (float) tex_w;
+    float draw_h = (float) tex_h;
+
+    if (scale == SCALE_FIT) {
+        float sx = (float) fb_w / draw_w;
+        float sy = (float) fb_h / draw_h;
+
+        float s = (sx < sy) ? sx : sy;
+
+        draw_w *= s;
+        draw_h *= s;
+    } else if (scale == SCALE_STRETCH) {
+        draw_w = (float) fb_w;
+        draw_h = (float) fb_h;
+    }
+
+    if (draw_w < 1) draw_w = 1;
+    if (draw_h < 1) draw_h = 1;
+
+    float w_ndc = (draw_w / (float) fb_w) * 2.0f;
+    float h_ndc = (draw_h / (float) fb_h) * 2.0f;
+
+    float x0;
+    float x1;
+    float y0;
+    float y1;
+
+    switch (anchor) {
+        case ANCHOR_TOP_MIDDLE:
+            x0 = -w_ndc * 0.5f;
+            x1 = w_ndc * 0.5f;
+            y0 = 1.0f;
+            y1 = y0 - h_ndc;
+            break;
+        case ANCHOR_TOP_RIGHT:
+            x1 = 1.0f;
+            x0 = x1 - w_ndc;
+            y0 = 1.0f;
+            y1 = y0 - h_ndc;
+            break;
+        case ANCHOR_CENTRE_LEFT:
+            x0 = -1.0f;
+            x1 = x0 + w_ndc;
+            y0 = h_ndc * 0.5f;
+            y1 = -h_ndc * 0.5f;
+            break;
+        case ANCHOR_CENTRE_MIDDLE:
+            x0 = -w_ndc * 0.5f;
+            x1 = w_ndc * 0.5f;
+            y0 = h_ndc * 0.5f;
+            y1 = -h_ndc * 0.5f;
+            break;
+        case ANCHOR_CENTRE_RIGHT:
+            x1 = 1.0f;
+            x0 = x1 - w_ndc;
+            y0 = h_ndc * 0.5f;
+            y1 = -h_ndc * 0.5f;
+            break;
+        case ANCHOR_BOTTOM_LEFT:
+            x0 = -1.0f;
+            x1 = x0 + w_ndc;
+            y1 = -1.0f;
+            y0 = y1 + h_ndc;
+            break;
+        case ANCHOR_BOTTOM_MIDDLE:
+            x0 = -w_ndc * 0.5f;
+            x1 = w_ndc * 0.5f;
+            y1 = -1.0f;
+            y0 = y1 + h_ndc;
+            break;
+        case ANCHOR_BOTTOM_RIGHT:
+            x1 = 1.0f;
+            x0 = x1 - w_ndc;
+            y1 = -1.0f;
+            y0 = y1 + h_ndc;
+            break;
+        default:
+            x0 = -1.0f;
+            x1 = x0 + w_ndc;
+            y0 = 1.0f;
+            y1 = y0 - h_ndc;
+            break;
+    }
+
+    out[0] = x0;
+    out[1] = y0;
+    out[2] = 0.0f;
+    out[3] = 0.0f;
+    out[4] = x0;
+    out[5] = y1;
+    out[6] = 0.0f;
+    out[7] = 1.0f;
+    out[8] = x1;
+    out[9] = y0;
+    out[10] = 1.0f;
+    out[11] = 0.0f;
+    out[12] = x1;
+    out[13] = y1;
+    out[14] = 1.0f;
+    out[15] = 1.0f;
+}
+
+static float clamp_alpha(int v) {
+    if (v < 0) return 0.0f;
+    if (v > 255) return 1.0f;
+    return (float) v / 255.0f;
+}
+
+static float get_alpha_cached(struct alpha_cache *cache) {
+    struct stat st;
+
+    if (stat(cache->path, &st) != 0) {
+        cache->mtime = 0;
+        cache->value = 1.0f;
+        return cache->value;
+    }
+
+    if (st.st_mtime == cache->mtime) return cache->value;
+
+    cache->mtime = st.st_mtime;
+
+    char buf[8];
+    if (!read_line_from_file(cache->path, 1, buf, sizeof(buf))) {
+        cache->value = 1.0f;
+        return cache->value;
+    }
+
+    cache->value = clamp_alpha(safe_atoi(buf));
+    return cache->value;
+}
+
+static const char *get_active_theme_cached(void) {
+    static char theme[256];
+    static time_t mtime = 0;
+
+    struct stat st;
+
+    if (stat("/opt/muos/config/theme/active", &st) != 0) return NULL;
+    if (theme[0] && st.st_mtime == mtime) return theme;
+    if (!read_line_from_file("/opt/muos/config/theme/active", 1, theme, sizeof(theme))) return NULL;
+
+    mtime = st.st_mtime;
+    return theme;
+}
+
+static int load_image_static(const char *file, const char *dim, char *img) {
     enum static_kind {
         ST_THEME, ST_MEDIA
     };
 
-    static char active_theme[256];
     static char theme_path[MAX_BUFFER_SIZE];
 
-    if (read_line_from_file("/opt/muos/config/theme/active", 1, active_theme, sizeof(active_theme))) {
+    const char *active_theme = get_active_theme_cached();
+    if (active_theme) {
         snprintf(theme_path, sizeof(theme_path), "%stheme/%s", RUN_STORAGE_PATH, active_theme);
     } else {
         theme_path[0] = '\0';
@@ -157,8 +504,8 @@ static int load_image_static(const char *file, const char *dim, char *image_path
         enum static_kind kind;
         const char *base;
         const char *dir;
-        const char *dimension;
-        const char *content;
+        const char *dim;
+        const char *file;
     } order[] = {
             {ST_THEME, theme_path, "image/", dim,      file},
             {ST_THEME, theme_path, "image/", dim,      ""},
@@ -173,28 +520,28 @@ static int load_image_static(const char *file, const char *dim, char *image_path
 
     for (size_t i = 0; i < sizeof(order) / sizeof(order[0]); i++) {
         if (order[i].kind == ST_THEME && !have_theme) continue;
-        if (!order[i].content || order[i].content[0] == '\0') continue;
+        if (!order[i].file || order[i].file[0] == '\0') continue;
 
-        int n = snprintf(image_path, 512, "%s/%s%s%s.png",
-                         order[i].base, order[i].dir, order[i].dimension, order[i].content);
+        int n = snprintf(img, 512, "%s/%s%s%s.png",
+                         order[i].base, order[i].dir, order[i].dim, order[i].file);
 
-//        LOG_DEBUG("stage", "Trying battery overlay at: %s", image_path);
+        LOG_DEBUG("stage", "Trying battery overlay at: %s", img);
 
-        if (n > 0 && (size_t) n < 512 && file_exist(image_path)) return 1;
+        if (n > 0 && (size_t) n < 512 && file_exist(img)) return 1;
     }
 
     return 0;
 }
 
-static int load_image_catalogue(const char *name, const char *file, const char *dim, char *image_path) {
+static int load_image_catalogue(const char *core, const char *sys, const char *file, const char *dim, char *img) {
     enum catalogue_kind {
         CAT_THEME, CAT_INFO
     };
 
-    static char active_theme[256];
     static char theme_cat_path[MAX_BUFFER_SIZE];
 
-    if (read_line_from_file("/opt/muos/config/theme/active", 1, active_theme, sizeof(active_theme))) {
+    const char *active_theme = get_active_theme_cached();
+    if (active_theme) {
         snprintf(theme_cat_path, sizeof(theme_cat_path), "%stheme/%s", RUN_STORAGE_PATH, active_theme);
     } else {
         theme_cat_path[0] = '\0';
@@ -206,17 +553,21 @@ static int load_image_catalogue(const char *name, const char *file, const char *
     struct {
         enum catalogue_kind kind;
         const char *base;
-        const char *dimension;
-        const char *content;
+        const char *dim;
+        const char *file;
     } order[] = {
             {CAT_THEME, theme_cat_path,  dim, file},
+            {CAT_THEME, theme_cat_path,  dim, core},
             {CAT_THEME, theme_cat_path,  dim, ""},
             {CAT_THEME, theme_cat_path,  "",  file},
+            {CAT_THEME, theme_cat_path,  "",  core},
             {CAT_THEME, theme_cat_path,  "",  ""},
 
             {CAT_INFO,  global_cat_path, dim, file},
+            {CAT_INFO,  global_cat_path, dim, core},
             {CAT_INFO,  global_cat_path, dim, ""},
             {CAT_INFO,  global_cat_path, "",  file},
+            {CAT_INFO,  global_cat_path, "",  core},
             {CAT_INFO,  global_cat_path, "",  ""},
 
             {CAT_THEME, theme_cat_path,  dim, ""},
@@ -234,20 +585,41 @@ static int load_image_catalogue(const char *name, const char *file, const char *
 
     for (size_t i = 0; i < sizeof(order) / sizeof(order[0]); i++) {
         if (order[i].kind == CAT_THEME && !have_theme) continue;
-        if (!order[i].content || order[i].content[0] == '\0') continue;
+        if (!order[i].file || order[i].file[0] == '\0') continue;
 
-        int n = snprintf(image_path, 512, "%s/%s/overlay/%s%s.png",
-                         order[i].base, name, order[i].dimension, order[i].content);
+        int n = snprintf(img, 512, "%s/%s/overlay/%s%s.png",
+                         order[i].base, sys, order[i].dim, order[i].file);
 
-//        LOG_DEBUG("stage", "Trying image overlay at: %s", image_path);
+        LOG_DEBUG("stage", "Trying image overlay at: %s", img);
 
-        if (n > 0 && (size_t) n < 512 && file_exist(image_path)) return 1;
+        if (n > 0 && (size_t) n < 512 && file_exist(img)) return 1;
     }
 
     return 0;
 }
 
-static void get_dimension(enum render_type type, void *ctx, char *out, size_t out_sz) {
+static int read_overlay_go_cached(struct overlay_go_cache *c) {
+    struct stat st;
+
+    if (stat("/tmp/ovl_go", &st) != 0) {
+        c->valid = 0;
+        return 0;
+    }
+
+    if (c->valid && st.st_mtime == c->mtime) return 1;
+
+    c->mtime = st.st_mtime;
+    c->valid = 0;
+
+    if (!read_line_from_file("/tmp/ovl_go", 1, c->content, sizeof(c->content))) return 0;
+    if (!read_line_from_file("/tmp/ovl_go", 2, c->system, sizeof(c->system))) return 0;
+    if (!read_line_from_file("/tmp/ovl_go", 3, c->core, sizeof(c->core))) return 0;
+
+    c->valid = 1;
+    return 1;
+}
+
+void get_dimension(enum render_type type, void *ctx, char *out, size_t out_sz) {
     int w = 0;
     int h = 0;
 
@@ -288,8 +660,16 @@ static inline void battery_overlay_update(void) {
         battery_gl_tex = 0;
     }
 
+    battery_anchor_cache.mtime = 0;
+    battery_alpha_cache.mtime = 0;
+    battery_scale_cache.mtime = 0;
+
+    battery_anchor_cached = -1;
+    battery_scale_cached = -1;
+
     battery_sdl_ready = 0;
     battery_gl_ready = 0;
+
     vtx_batt_valid = 0;
     battery_overlay_path[0] = '\0';
 }
@@ -382,34 +762,20 @@ static void gl_battery_overlay_init(void) {
 }
 
 static int load_overlay_common(const struct overlay_resolver *res, void *ctx, char *out) {
-    static char content[512];
-    static char core[256];
-
     res->get_dimension(res->render_type, ctx, dimension, sizeof(dimension));
 
-    char *overlay_loader = "/tmp/ovl_go";
+    if (!read_overlay_go_cached(&ovl_go_cache)) return 0;
 
-    if (!read_line_from_file(overlay_loader, 1, content, sizeof(content))) return 0;
-    if (!read_line_from_file(overlay_loader, 2, core, sizeof(core))) return 0;
-
-    if (load_image_catalogue(core, content, dimension, out)) {
+    if (load_image_catalogue(ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension, out)) {
         LOG_INFO("stage", "Overlay loaded: %s", out);
         return 1;
     }
 
-    LOG_WARN("stage", "Overlay not found (core=%s, content=%s, dim=%s)", core, content, dimension);
+    LOG_WARN("stage", "Overlay not found (core=%s, system=%s, content=%s, dim=%s)",
+             ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension);
+
     return 0;
 }
-
-static const struct overlay_resolver SDL_RESOLVER = {
-        .render_type = TYPE_SDL,
-        .get_dimension = get_dimension,
-};
-
-static const struct overlay_resolver GL_RESOLVER = {
-        .render_type = TYPE_GL,
-        .get_dimension = get_dimension,
-};
 
 static void sdl_overlay_init(SDL_Renderer *renderer) {
     if (sdl_ready) return;
@@ -449,20 +815,33 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
 
     battery_overlay_update();
 
-    if (overlay_enabled) {
-        sdl_overlay_init(renderer);
+    float overlay_alpha = get_alpha_cached(&overlay_alpha_cache);
+    float battery_alpha = get_alpha_cached(&battery_alpha_cache);
 
-        if (sdl_tex) {
-            SDL_Rect dst = {0, 0, sdl_tex_w, sdl_tex_h};
-            SDL_RenderCopy(renderer, sdl_tex, NULL, &dst);
-        }
+    sdl_overlay_init(renderer);
 
-        sdl_battery_overlay_init(renderer);
+    if (sdl_tex) {
+        int overlay_anchor = get_anchor_cached(&overlay_anchor_cache);
+        int overlay_scale = get_scale_cached(&overlay_scale_cache);
 
-        if (battery_sdl_tex) {
-            SDL_Rect dst = {0, 0, battery_sdl_w, battery_sdl_h};
-            SDL_RenderCopy(renderer, battery_sdl_tex, NULL, &dst);
-        }
+        SDL_Rect overlay_dst;
+        set_sdl_render(renderer, sdl_tex_w, sdl_tex_h, overlay_anchor, overlay_scale, &overlay_dst);
+
+        SDL_SetTextureAlphaMod(sdl_tex, (Uint8) (overlay_alpha * 255.0f));
+        SDL_RenderCopy(renderer, sdl_tex, NULL, &overlay_dst);
+    }
+
+    sdl_battery_overlay_init(renderer);
+
+    if (battery_sdl_tex) {
+        int battery_anchor = get_anchor_cached(&battery_anchor_cache);
+        int battery_scale = get_scale_cached(&battery_scale_cache);
+
+        SDL_Rect battery_dst;
+        set_sdl_render(renderer, battery_sdl_w, battery_sdl_h, battery_anchor, battery_scale, &battery_dst);
+
+        SDL_SetTextureAlphaMod(battery_sdl_tex, (Uint8) (battery_alpha * 255.0f));
+        SDL_RenderCopy(renderer, battery_sdl_tex, NULL, &battery_dst);
     }
 
     real_SDL_RenderPresent(renderer);
@@ -507,32 +886,6 @@ static GLuint gl_link_checked(GLuint vs, GLuint fs) {
     return p;
 }
 
-
-static void build_vtx(GLfloat *out, int tex_w, int tex_h, int fb_w, int fb_h) {
-    const float x0 = -1.0f;
-    const float y0 = 1.0f;
-
-    const float x1 = ((float) tex_w / (float) fb_w) * 2.0f - 1.0f;
-    const float y1 = 1.0f - ((float) tex_h / (float) fb_h) * 2.0f;
-
-    out[0] = x0;
-    out[1] = y0;
-    out[2] = 0.0f;
-    out[3] = 0.0f;
-    out[4] = x0;
-    out[5] = y1;
-    out[6] = 0.0f;
-    out[7] = 1.0f;
-    out[8] = x1;
-    out[9] = y0;
-    out[10] = 1.0f;
-    out[11] = 0.0f;
-    out[12] = x1;
-    out[13] = y1;
-    out[14] = 1.0f;
-    out[15] = 1.0f;
-}
-
 static void gl_overlay_init(void) {
     if (!gl_window) return;
 
@@ -562,6 +915,9 @@ static void gl_overlay_init(void) {
     gl_a_pos = glGetAttribLocation(gl_prog, "a_pos");
     gl_a_uv = glGetAttribLocation(gl_prog, "a_uv");
     gl_u_tex = glGetUniformLocation(gl_prog, "u_tex");
+    gl_u_alpha = glGetUniformLocation(gl_prog, "u_alpha");
+
+    if (gl_u_alpha < 0) LOG_WARN("stage", "Alpha transparency not found in image...");
 
     SDL_Surface *raw = IMG_Load(overlay_path);
     if (!raw) {
@@ -644,15 +1000,42 @@ static void gl_draw(int fb_w, int fb_h) {
         return;
     }
 
+    float overlay_alpha = get_alpha_cached(&overlay_alpha_cache);
+    float battery_alpha = get_alpha_cached(&battery_alpha_cache);
+
+    int overlay_anchor = get_anchor_cached(&overlay_anchor_cache);
+    if (overlay_anchor != overlay_anchor_cached) {
+        overlay_anchor_cached = overlay_anchor;
+        vtx_main_valid = 0;
+    }
+
+    int battery_anchor = get_anchor_cached(&battery_anchor_cache);
+    if (battery_anchor != battery_anchor_cached) {
+        battery_anchor_cached = battery_anchor;
+        vtx_batt_valid = 0;
+    }
+
+    int overlay_scale = get_scale_cached(&overlay_scale_cache);
+    if (overlay_scale != overlay_scale_cached) {
+        overlay_scale_cached = overlay_scale;
+        vtx_main_valid = 0;
+    }
+
+    int battery_scale = get_scale_cached(&battery_scale_cache);
+    if (battery_scale != battery_scale_cached) {
+        battery_scale_cached = battery_scale;
+        vtx_batt_valid = 0;
+    }
+
     gl_battery_overlay_init();
 
     if (!vtx_main_valid) {
-        build_vtx(vtx_main, gl_tex_w, gl_tex_h, fb_w, fb_h);
+        set_gl_render(vtx_main, gl_tex_w, gl_tex_h, fb_w, fb_h, overlay_anchor, overlay_scale);
         vtx_main_valid = 1;
     }
 
     if (battery_gl_ready && !vtx_batt_valid) {
-        build_vtx(vtx_batt, battery_gl_w, battery_gl_h, fb_w, fb_h);
+        set_gl_render(vtx_batt, battery_gl_w, battery_gl_h, fb_w, fb_h, battery_anchor, battery_scale);
         vtx_batt_valid = 1;
     }
 
@@ -674,12 +1057,14 @@ static void gl_draw(int fb_w, int fb_h) {
     glEnableVertexAttribArray(gl_a_pos);
     glEnableVertexAttribArray(gl_a_uv);
 
+    if (gl_u_alpha >= 0) glUniform1f(gl_u_alpha, overlay_alpha);
     glBindTexture(GL_TEXTURE_2D, gl_tex);
     glVertexAttribPointer(gl_a_pos, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), vtx_main);
     glVertexAttribPointer(gl_a_uv, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), vtx_main + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     if (battery_gl_ready) {
+        if (gl_u_alpha >= 0) glUniform1f(gl_u_alpha, battery_alpha);
         glBindTexture(GL_TEXTURE_2D, battery_gl_tex);
         glVertexAttribPointer(gl_a_pos, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), vtx_batt);
         glVertexAttribPointer(gl_a_uv, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), vtx_batt + 2);
@@ -699,28 +1084,26 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
 
     battery_overlay_update();
 
-    if (overlay_enabled) {
-        static int fb_init = 0;
+    static int fb_init = 0;
 
-        if (!fb_init) {
-            SDL_GL_GetDrawableSize(window, &fb_cached_w, &fb_cached_h);
-            fb_init = 1;
-        } else {
-            int nw, nh;
-            SDL_GL_GetDrawableSize(window, &nw, &nh);
-            if (nw != fb_cached_w || nh != fb_cached_h) {
-                fb_cached_w = nw;
-                fb_cached_h = nh;
-                vtx_main_valid = 0;
-                vtx_batt_valid = 0;
-            }
+    if (!fb_init) {
+        SDL_GL_GetDrawableSize(window, &fb_cached_w, &fb_cached_h);
+        fb_init = 1;
+    } else {
+        int nw, nh;
+        SDL_GL_GetDrawableSize(window, &nw, &nh);
+        if (nw != fb_cached_w || nh != fb_cached_h) {
+            fb_cached_w = nw;
+            fb_cached_h = nh;
+            vtx_main_valid = 0;
+            vtx_batt_valid = 0;
         }
-
-        int dw = fb_cached_w;
-        int dh = fb_cached_h;
-
-        gl_draw(dw, dh);
     }
+
+    int dw = fb_cached_w;
+    int dh = fb_cached_h;
+
+    gl_draw(dw, dh);
 
     real_SDL_GL_SwapWindow(window);
 }
