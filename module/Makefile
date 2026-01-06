@@ -15,10 +15,10 @@ MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxcollect
           muxconfig muxconnect muxcontrol muxcustom muxdanger muxdevice muxdownload \
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk muxlanguage \
           muxlaunch muxnetadv muxnetinfo muxnetprofile muxnetscan muxnetwork \
-          muxnews muxoption muxpass muxpicker muxpower muxplore muxrtc muxsearch \
-          muxshot muxspace muxsplash muxstorage muxsysinfo muxtag muxtask \
-          muxtheme muxthemedown muxthemefilter muxtester muxtext muxtimezone \
-          muxtweakadv muxtweakgen muxvisual muxwebserv muxshare
+          muxnews muxoption muxoverlay muxpass muxpicker muxpower muxplore muxrtc \
+          muxsearch muxshot muxspace muxsplash muxstorage muxsysinfo muxtag \
+          muxtask muxtheme muxthemedown muxthemefilter muxtester muxtext \
+          muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv muxshare
 
 MODULE_DIR = .
 

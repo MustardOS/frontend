@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxconfig.h"
 
-#define UI_COUNT 8
+#define UI_COUNT 9
 
 static void list_nav_move(int steps, int direction);
 
@@ -11,6 +11,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblConnect_config,   lang.MUXCONFIG.HELP.CONNECTIVITY},
             {ui_lblCustom_config,    lang.MUXCONFIG.HELP.CUSTOM},
             {ui_lblInterface_config, lang.MUXCONFIG.HELP.VISUAL},
+            {ui_lblOverlay_config,   lang.MUXCONFIG.HELP.OVERLAY},
             {ui_lblLanguage_config,  lang.MUXCONFIG.HELP.LANGUAGE},
             {ui_lblPower_config,     lang.MUXCONFIG.HELP.POWER},
             {ui_lblStorage_config,   lang.MUXCONFIG.HELP.STORAGE},
@@ -29,6 +30,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECTIVITY, "connect", 0);
     INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom", 0);
     INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.VISUAL, "interface", 0);
+    INIT_STATIC_ITEM(-1, config, Overlay, lang.MUXCONFIG.OVERLAY, "overlay", 0);
     INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language", 0);
     INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power", 0);
     INIT_STATIC_ITEM(-1, config, Storage, lang.MUXCONFIG.STORAGE, "storage", 0);
@@ -91,6 +93,7 @@ static void handle_a(void) {
             {"connect",   "connect",  &kiosk.CONFIG.CONNECTIVITY},
             {"custom",    "custom",   &kiosk.CONFIG.CUSTOMISATION},
             {"interface", "visual",   &kiosk.SETTING.VISUAL},
+            {"overlay",   "overlay",  &kiosk.SETTING.OVERLAY},
             {"language",  "language", &kiosk.CONFIG.LANGUAGE},
             {"power",     "power",    &kiosk.SETTING.POWER},
             {"storage",   "storage",  &kiosk.CONFIG.STORAGE},

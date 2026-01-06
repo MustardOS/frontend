@@ -161,6 +161,16 @@ struct mux_config {
             int16_t RETRY;
         } NETWORK;
         struct {
+            int16_t GENERAL_ENABLE;
+            int16_t GENERAL_ALPHA;
+            int16_t GENERAL_ANCHOR;
+            int16_t GENERAL_SCALE;
+            int16_t BATTERY_ENABLE;
+            int16_t BATTERY_ALPHA;
+            int16_t BATTERY_ANCHOR;
+            int16_t BATTERY_SCALE;
+        } OVERLAY;
+        struct {
             int16_t LOW_BATTERY;
             int16_t SHUTDOWN;
             int16_t SCREENSAVER;

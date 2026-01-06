@@ -69,6 +69,7 @@ struct mux_kiosk {
         int16_t HDMI;
         int16_t POWER;
         int16_t VISUAL;
+        int16_t OVERLAY;
     } SETTING;
 };
 

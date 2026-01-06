@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 40
+#define UI_COUNT 41
 
 #define KIOSK(NAME, UDATA) static int NAME##_original;
 KIOSK_ELEMENTS
@@ -49,6 +49,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblHdmi_kiosk,       lang.MUXKIOSK.HELP.HDMI},
             {ui_lblPower_kiosk,      lang.MUXKIOSK.HELP.POWER},
             {ui_lblVisual_kiosk,     lang.MUXKIOSK.HELP.VISUAL},
+            {ui_lblOverlay_kiosk,     lang.MUXKIOSK.HELP.OVERLAY},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -101,6 +102,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droHdmi_kiosk, kiosk.SETTING.HDMI);
     lv_dropdown_set_selected(ui_droPower_kiosk, kiosk.SETTING.POWER);
     lv_dropdown_set_selected(ui_droVisual_kiosk, kiosk.SETTING.VISUAL);
+    lv_dropdown_set_selected(ui_droOverlay_kiosk, kiosk.SETTING.OVERLAY);
 }
 
 static void save_kiosk_options(void) {
@@ -146,6 +148,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Hdmi, "setting/hdmi", INT);
     CHECK_AND_SAVE_KSK(kiosk, Power, "setting/power", INT);
     CHECK_AND_SAVE_KSK(kiosk, Visual, "setting/visual", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Overlay, "setting/overlay", INT);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -204,6 +207,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Hdmi, lang.MUXKIOSK.HDMI, "hdmi", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Power, lang.MUXKIOSK.POWER, "power", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Overlay, lang.MUXKIOSK.OVERLAY, "overlay", allowed_restricted, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

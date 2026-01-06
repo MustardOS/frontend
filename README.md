@@ -1,4 +1,4 @@
-# muOS Frontend
+# MustardOS Frontend
 
 This is where all the magic of the user interface of MustardOS (muOS) comes to life:
 
@@ -8,11 +8,14 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `font`: Common binary compiled fonts with individual language support
 * `lookup`: Friendly name lookup table mainly for arcade content
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
+* `module`: Frontend menu system modules
+* `stage`: Hardware overlay staging system
 
 ### Independent
 
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
+* `mulookup`: Content Name Lookup
 * `muterm`: Custom Terminal Emulator
 * `muxcharge`: Charging Information Screen
 * `muxcredits`: Supporter Credits Screen
@@ -22,6 +25,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 
 ### Modules
 
+* `muxactivity`: Activity Tracker Information
 * `muxapp`: Application List
 * `muxappcon`: Application Control Manager
 * `muxarchive`: Archive Manager
@@ -43,11 +47,14 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxkiosk`: Kiosk Mode Management
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
+* `muxnetadv`: Advanced Settings for Network
 * `muxnetinfo`: Network Information
 * `muxnetprofile`: Network Profile Manager
 * `muxnetscan`: Network SSID Scanner
 * `muxnetwork`: Network Configuration
+* `muxnews`: Community News
 * `muxoption`: Content Explorer Options
+* `muxoverlay`: Hardware Overlay Settings
 * `muxpass`: Passcode Screen
 * `muxpicker`: Customisation Package Selector
 * `muxplore`: Content Explorer

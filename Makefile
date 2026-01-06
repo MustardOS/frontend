@@ -21,16 +21,9 @@ LDLIBS = -L$(LIB_DIR) -lui -llookup -lmuxcom -lmuxmod \
 
 LDFLAGS = $(COMMON_LIBS) $(BIN_LDFLAGS) $(LIB_LDFLAGS)
 
-STAGE_SRC = module/mustage.c
-STAGE_OBJ = module/mustage.o
-STAGE_SO = $(LIB_DIR)/libmustage.so
+.PHONY: all $(MODULES) prebuild clean notify info
 
-STAGE_CFLAGS = $(BASE_CFLAGS) -fPIC
-STAGE_LDFLAGS = -shared -ldl -lSDL2 -lSDL2_image -lGLESv2
-
-.PHONY: all $(STAGE_SO) $(MODULES) prebuild clean notify info
-
-all: info $(STAGE_SO) prebuild $(MODULES) clean notify
+all: info prebuild $(MODULES) clean notify
 
 info:
 	@echo "======== muOS Frontend Builder ========"
@@ -39,15 +32,12 @@ info:
 	@echo "Dependencies: $(DEPENDENCIES)"
 
 prebuild:
+	@echo "Building Stage Overlay: libmustage.so"
+	$(VERBOSE)$(MAKE) -C stage DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 	$(VERBOSE)for DEP in $(DEPENDENCIES); do \
 		echo "Building Dependency: $$DEP"; \
-		$(MAKE) -C $$DEP DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || { echo "Error building dependency $$DEP"; exit 1; }; \
+		$(MAKE) -C $$DEP DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1; \
 	done
-
-$(STAGE_SO): $(STAGE_SRC)
-	@echo "Building Stage Overlay: libmustage.so"
-	$(VERBOSE)mkdir -p $(LIB_DIR)
-	$(VERBOSE)$(CC) $(STAGE_CFLAGS) $(INCLUDES) $< -o $@ $(STAGE_LDFLAGS) $(QUIET) || { echo "Error building libmustage.so"; exit 1; }
 
 clean:
 	$(VERBOSE)rm -rf .build_count

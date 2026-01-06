@@ -280,6 +280,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
+    SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Overlay Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
@@ -288,8 +289,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and MustardOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language\n\nTranslations supported by Weblate");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.BACKUP, "Back up your content to a restorable archive for your device or others");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.OVERLAY, "Settings to change the hardware overlays of content and the frontend");
 
     // muxconnect
     SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
@@ -549,6 +552,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HDMI, "HDMI Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.VISUAL, "Interface Options");
+    SPECIFIC_FIELD(lang->MUXKIOSK.OVERLAY, "Overlay Options");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.MAIN, "Collection Viewing");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.ADD_CONTENT, "Collection Adding Content");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.NEW_DIR, "Collection Folder Creation");
@@ -589,6 +593,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HDMI, "Allow modifying HDMI display settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.POWER, "Permit power options such as shutdown or sleep");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.VISUAL, "Allow changes to interface visuals");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.OVERLAY, "Allow changes to hardware overlays");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.MAIN, "Enable viewing of content collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.ADD_CONTENT, "Permit adding content to collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.NEW_DIR, "Allow creation of new collection folders");
@@ -754,6 +759,37 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
+
+    // muxoverlay
+    SPECIFIC_FIELD(lang->MUXOVERLAY.TITLE, "OVERLAYS");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.TOP.LEFT, "Top Left");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.TOP.MIDDLE, "Top Middle");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.TOP.RIGHT, "Top Right");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.CENTRE.LEFT, "Centre Left");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.CENTRE.MIDDLE, "Centre Middle");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.CENTRE.RIGHT, "Centre Right");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.BOTTOM.LEFT, "Bottom Left");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.BOTTOM.MIDDLE, "Bottom Middle");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.BOTTOM.RIGHT, "Bottom Right");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.ORIGINAL, "None");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.FIT, "Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.STRETCH, "Stretch");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ENABLE, "Content Overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ALPHA, "Content Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ANCHOR, "Content Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.SCALE, "Content Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ENABLE, "Low Battery Overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ALPHA, "Low Battery Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ANCHOR, "Low Battery Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.SCALE, "Low Battery Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ENABLE, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ALPHA, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ANCHOR, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.SCALE, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ENABLE, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ALPHA, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ANCHOR, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.SCALE, "");
 
     // muxpass
     SPECIFIC_FIELD(lang->MUXPASS.TITLE, "PASSCODE");

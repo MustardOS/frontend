@@ -107,9 +107,9 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
 
 char *specify_asset(char *val, const char *def_val, const char *label);
 
-char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit, int is_app);
+char *load_content_governor(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);
 
-char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit, int is_app);
+char *load_content_control_scheme(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);
 
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
@@ -181,6 +181,8 @@ int muxnetwork_main();
 int muxnews_main();
 
 int muxoption_main(int nothing, char *name, char *dir, char *sys, int app);
+
+int muxoverlay_main();
 
 int muxpass_main(int auth_type);
 

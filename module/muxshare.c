@@ -150,7 +150,7 @@ char *specify_asset(char *val, const char *def_val, const char *label) {
     return val;
 }
 
-static char *load_content_asset(char *sys_dir, char *pointer, int force, int run_quit,
+static char *load_content_asset(char *sys_dir, const char *pointer, int force, int run_quit,
                                 const char *ext, const char *label, int is_app) {
     char path[MAX_BUFFER_SIZE];
     const char *last_subdir = NULL;
@@ -204,11 +204,11 @@ static char *load_content_asset(char *sys_dir, char *pointer, int force, int run
     return NULL;
 }
 
-char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit, int is_app) {
+char *load_content_governor(char *sys_dir, const char *pointer, int force, int run_quit, int is_app) {
     return load_content_asset(sys_dir, pointer, force, run_quit, "gov", "Governor", is_app);
 }
 
-char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit, int is_app) {
+char *load_content_control_scheme(char *sys_dir, const char *pointer, int force, int run_quit, int is_app) {
     return load_content_asset(sys_dir, pointer, force, run_quit, "con", "Control Scheme", is_app);
 }
 

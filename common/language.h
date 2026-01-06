@@ -290,6 +290,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char POWER[MAX_BUFFER_SIZE];
         char VISUAL[MAX_BUFFER_SIZE];
+        char OVERLAY[MAX_BUFFER_SIZE];
         char BACKUP[MAX_BUFFER_SIZE];
         struct {
             char CONNECTIVITY[MAX_BUFFER_SIZE];
@@ -299,6 +300,7 @@ struct mux_lang {
             char STORAGE[MAX_BUFFER_SIZE];
             char POWER[MAX_BUFFER_SIZE];
             char VISUAL[MAX_BUFFER_SIZE];
+            char OVERLAY[MAX_BUFFER_SIZE];
             char BACKUP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONFIG;
@@ -618,6 +620,7 @@ struct mux_lang {
         char HDMI[MAX_BUFFER_SIZE];
         char POWER[MAX_BUFFER_SIZE];
         char VISUAL[MAX_BUFFER_SIZE];
+        char OVERLAY[MAX_BUFFER_SIZE];
         struct {
             char MAIN[MAX_BUFFER_SIZE];
             char ADD_CONTENT[MAX_BUFFER_SIZE];
@@ -663,6 +666,7 @@ struct mux_lang {
             char HDMI[MAX_BUFFER_SIZE];
             char POWER[MAX_BUFFER_SIZE];
             char VISUAL[MAX_BUFFER_SIZE];
+            char OVERLAY[MAX_BUFFER_SIZE];
             struct {
                 char MAIN[MAX_BUFFER_SIZE];
                 char ADD_CONTENT[MAX_BUFFER_SIZE];
@@ -861,6 +865,58 @@ struct mux_lang {
             char SEARCH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXOPTION;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        struct {
+            struct {
+                char LEFT[MAX_BUFFER_SIZE];
+                char MIDDLE[MAX_BUFFER_SIZE];
+                char RIGHT[MAX_BUFFER_SIZE];
+            } TOP;
+            struct {
+                char LEFT[MAX_BUFFER_SIZE];
+                char MIDDLE[MAX_BUFFER_SIZE];
+                char RIGHT[MAX_BUFFER_SIZE];
+            } CENTRE;
+            struct {
+                char LEFT[MAX_BUFFER_SIZE];
+                char MIDDLE[MAX_BUFFER_SIZE];
+                char RIGHT[MAX_BUFFER_SIZE];
+            } BOTTOM;
+        } ANCHOR;
+        struct {
+            char ORIGINAL[MAX_BUFFER_SIZE];
+            char FIT[MAX_BUFFER_SIZE];
+            char STRETCH[MAX_BUFFER_SIZE];
+        } SCALE;
+        struct {
+            char ENABLE[MAX_BUFFER_SIZE];
+            char ALPHA[MAX_BUFFER_SIZE];
+            char ANCHOR[MAX_BUFFER_SIZE];
+            char SCALE[MAX_BUFFER_SIZE];
+        } GENERAL;
+        struct {
+            char ENABLE[MAX_BUFFER_SIZE];
+            char ALPHA[MAX_BUFFER_SIZE];
+            char ANCHOR[MAX_BUFFER_SIZE];
+            char SCALE[MAX_BUFFER_SIZE];
+        } BATTERY;
+        struct {
+            struct {
+                char ENABLE[MAX_BUFFER_SIZE];
+                char ALPHA[MAX_BUFFER_SIZE];
+                char ANCHOR[MAX_BUFFER_SIZE];
+                char SCALE[MAX_BUFFER_SIZE];
+            } GENERAL;
+            struct {
+                char ENABLE[MAX_BUFFER_SIZE];
+                char ALPHA[MAX_BUFFER_SIZE];
+                char ANCHOR[MAX_BUFFER_SIZE];
+                char SCALE[MAX_BUFFER_SIZE];
+            } BATTERY;
+        } HELP;
+    } MUXOVERLAY;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

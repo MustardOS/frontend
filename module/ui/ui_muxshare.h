@@ -86,6 +86,7 @@
     CONFIG(Connect,   "connect")   \
     CONFIG(Custom,    "custom")    \
     CONFIG(Interface, "interface") \
+    CONFIG(Overlay,   "overlay")   \
     CONFIG(Language,  "language")  \
     CONFIG(Power,     "power")     \
     CONFIG(Storage,   "storage")   \
@@ -211,7 +212,8 @@
     KIOSK(General,    "general")    \
     KIOSK(Hdmi,       "hdmi")       \
     KIOSK(Power,      "power")      \
-    KIOSK(Visual,     "visual")
+    KIOSK(Visual,     "visual")     \
+    KIOSK(Overlay,    "overlay")
 
 #define LAUNCH_ELEMENTS              \
     LAUNCH(Explore,    "explore")    \
@@ -261,6 +263,16 @@
     OPTION(Governor, "governor") \
     OPTION(Control,  "control")  \
     OPTION(Tag,      "tag")
+
+#define OVERLAY_ELEMENTS             \
+    OVERLAY(GenEnable, "gen_enable") \
+    OVERLAY(GenAlpha,  "gen_alpha")  \
+    OVERLAY(GenAnchor, "gen_anchor") \
+    OVERLAY(GenScale,  "gen_scale")  \
+    OVERLAY(BatEnable, "bat_enable") \
+    OVERLAY(BatAlpha,  "bat_alpha")  \
+    OVERLAY(BatAnchor, "bat_anchor") \
+    OVERLAY(BatScale,  "bat_scale")
 
 #define POWER_ELEMENTS \
     POWER(Shutdown,    "shutdown")     \

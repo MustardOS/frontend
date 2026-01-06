@@ -448,6 +448,7 @@ static const ModuleEntry modules[] = {
         {"info",        "launcher",  "muxinfo",        muxinfo_main,        NULL},
         {"archive",     "app",       "muxarchive",     muxarchive_main,     NULL},
         {"tweakgen",    "config",    "muxtweakgen",    muxtweakgen_main,    NULL},
+        {"overlay",     "config",    "muxoverlay",     muxoverlay_main,     NULL},
         {"connect",     "config",    "muxconnect",     muxconnect_main,     NULL},
         {"custom",      "config",    "muxcustom",      muxcustom_main,      NULL},
         {"language",    "config",    "muxlanguage",    muxlanguage_main,    NULL},
