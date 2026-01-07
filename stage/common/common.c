@@ -10,12 +10,23 @@
 SDL_Window *render_window;
 
 char dimension[32];
-char overlay_path[512];
+char overlay_path[PATH_MAX];
+
+int disable_hw_overlay = -1;
 
 struct overlay_go_cache ovl_go_cache = {
         .mtime = 0,
         .valid = 0
 };
+
+int is_overlay_disabled(void) {
+    if (disable_hw_overlay < 0) {
+        const char *v = getenv("DISABLE_HW_OVERLAY");
+        disable_hw_overlay = (v && (v[0] == '1' || v[0] == 'y' || v[0] == 'Y'));
+    }
+
+    return disable_hw_overlay;
+}
 
 float safe_atof(const char *str) {
     if (str == NULL) return 0.0f;
@@ -58,10 +69,36 @@ static int directory_exist(const char *dirname) {
     return dirname && stat(dirname, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
-static int read_float(const char *path, float *out) {
+uint64_t now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (uint64_t) ts.tv_sec * 1000ULL + (uint64_t) ts.tv_nsec / 1000000ULL;
+}
+
+int read_percent(const char *path, int *out) {
     char buf[32];
+    char *end;
+    long v;
+
+    if (!read_line_from_file(path, 1, buf, sizeof(buf))) return 0;
+
+    v = strtol(buf, &end, 10);
+    if (end == buf) return 0;
+
+    if (v < 0) v = 0;
+    if (v > 100) v = 100;
+
+    *out = (int) v;
+    return 1;
+}
+
+int read_float(const char *path, float *out) {
+    char buf[32];
+
     if (!read_line_from_file(path, 1, buf, sizeof(buf))) return 0;
     *out = strtof(buf, NULL);
+
     return 1;
 }
 
@@ -125,7 +162,7 @@ static const char *get_active_theme(void) {
 }
 
 int load_stage_image(const char *type, const char *core, const char *sys,
-                       const char *file, const char *dim, char *img_path) {
+                     const char *file, const char *dim, char *img_path) {
     enum img_loc {
         IMG_INFO,
         IMG_THEME,
@@ -155,7 +192,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
     } base_path[] = {
             {IMG_INFO,  CATALOGUE_PATH, sys},
             {IMG_THEME, theme_path,     ""},
-            {IMG_MEDIA, INTERNAL_PATH,  ""}
+            {IMG_MEDIA, INTERNAL_SHARE, ""}
     };
 
     const char *dims[] = {dim, ""};
@@ -174,7 +211,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
                                      base_path[b].base, base_path[b].sys, type, dims[d], files[f]
                     );
 
-                    LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                    // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
                     if (n > 0 && (size_t) n < sizeof(overlay_path) && file_exist(img_path)) return 1;
 
                     continue;
@@ -197,7 +234,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
                         );
                     }
 
-                    LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                    // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
                     if (n > 0 && (size_t) n < sizeof(overlay_path) && file_exist(img_path)) return 1;
                 }
             }
@@ -232,7 +269,7 @@ int load_overlay_common(const struct overlay_resolver *res, void *ctx, char *ove
     if (!read_overlay_loader(&ovl_go_cache)) return 0;
 
     if (load_stage_image("content", ovl_go_cache.core, ovl_go_cache.system,
-                           ovl_go_cache.content, dimension, overlay_path)) {
+                         ovl_go_cache.content, dimension, overlay_path)) {
         LOG_SUCCESS("stage", "Overlay loaded: %s", overlay_path);
         return 1;
     }

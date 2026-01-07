@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <GLES2/gl2.h>
 #include <sys/stat.h>
+#include <linux/limits.h>
 #include "../../common/log.h"
 #include "../common/common.h"
 #include "../common/alpha.h"
@@ -9,7 +10,7 @@
 #include "../common/scale.h"
 #include "battery.h"
 
-char battery_overlay_path[512];
+char battery_overlay_path[PATH_MAX];
 int battery_last_enabled = -1;
 
 int battery_anchor_cached = -1;

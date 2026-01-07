@@ -7,10 +7,13 @@
 #include "../common/anchor.h"
 #include "../common/scale.h"
 #include "../overlay/battery.h"
+#include "../overlay/bright.h"
+#include "../overlay/volume.h"
 #include "../hook.h"
 #include "sdl.h"
 
 static SDL_Texture *sdl_tex;
+
 static int sdl_ready;
 static int sdl_attempted;
 static int sdl_tex_w;
@@ -43,6 +46,10 @@ static void set_sdl_render(SDL_Renderer *renderer, int tex_w, int tex_h, int anc
     int y = 0;
 
     switch (anchor) {
+        case ANCHOR_TOP_LEFT:
+            x = 0;
+            y = 0;
+            break;
         case ANCHOR_TOP_MIDDLE:
             x = (fb_w - draw_w) / 2;
             break;
@@ -72,6 +79,8 @@ static void set_sdl_render(SDL_Renderer *renderer, int tex_w, int tex_h, int anc
             y = fb_h - draw_h;
             break;
         default:
+            x = (fb_w - draw_w) / 2;
+            y = (fb_h - draw_h) / 2;
             break;
     }
 
@@ -108,7 +117,6 @@ static void sdl_overlay_init(SDL_Renderer *renderer) {
         LOG_ERROR("stage", "SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
         SDL_FreeSurface(surface);
         return;
-        return;
     }
 
     SDL_SetTextureBlendMode(sdl_tex, SDL_BLENDMODE_BLEND);
@@ -119,39 +127,86 @@ static void sdl_overlay_init(SDL_Renderer *renderer) {
 }
 
 void SDL_RenderPresent(SDL_Renderer *renderer) {
+    if (is_overlay_disabled()) {
+        if (real_SDL_RenderPresent) real_SDL_RenderPresent(renderer);
+        return;
+    }
+
     if (!real_SDL_RenderPresent) return;
 
-    battery_overlay_update();
+    bright_overlay_init();
+    volume_overlay_init();
 
-    float overlay_alpha = get_alpha_cached(&overlay_alpha_cache);
-    float battery_alpha = get_alpha_cached(&battery_alpha_cache);
+    battery_overlay_update();
+    bright_overlay_update();
+    volume_overlay_update();
 
     sdl_overlay_init(renderer);
 
     if (sdl_tex) {
+        float overlay_alpha = get_alpha_cached(&overlay_alpha_cache);
         int overlay_anchor = get_anchor_cached(&overlay_anchor_cache);
-        int overlay_scale  = get_scale_cached(&overlay_scale_cache);
+        int overlay_scale = get_scale_cached(&overlay_scale_cache);
 
         SDL_Rect overlay_dst;
         set_sdl_render(renderer, sdl_tex_w, sdl_tex_h, overlay_anchor, overlay_scale, &overlay_dst);
 
         SDL_SetTextureColorMod(sdl_tex, 255, 255, 255);
-        SDL_SetTextureAlphaMod(sdl_tex, (Uint8)(overlay_alpha * 255.0f));
+        SDL_SetTextureAlphaMod(sdl_tex, (Uint8) (overlay_alpha * 255.0f));
         SDL_RenderCopy(renderer, sdl_tex, NULL, &overlay_dst);
     }
 
     sdl_battery_overlay_init(renderer);
 
     if (battery_sdl_tex) {
+        float battery_alpha = get_alpha_cached(&battery_alpha_cache);
         int battery_anchor = get_anchor_cached(&battery_anchor_cache);
-        int battery_scale  = get_scale_cached(&battery_scale_cache);
+        int battery_scale = get_scale_cached(&battery_scale_cache);
 
         SDL_Rect battery_dst;
         set_sdl_render(renderer, battery_sdl_w, battery_sdl_h, battery_anchor, battery_scale, &battery_dst);
 
         SDL_SetTextureColorMod(battery_sdl_tex, 255, 255, 255);
-        SDL_SetTextureAlphaMod(battery_sdl_tex, (Uint8)(battery_alpha * 255.0f));
+        SDL_SetTextureAlphaMod(battery_sdl_tex, (Uint8) (battery_alpha * 255.0f));
         SDL_RenderCopy(renderer, battery_sdl_tex, NULL, &battery_dst);
+    }
+
+    if (bright_is_visible()) {
+        sdl_bright_overlay_init(renderer);
+
+        int step = bright_last_step;
+        if (step >= 0 && step < INDICATOR_STEPS && bright_sdl_tex[step]) {
+            float bright_alpha = get_alpha_cached(&bright_alpha_cache);
+            int bright_anchor = get_anchor_cached(&bright_anchor_cache);
+            int bright_scale = get_scale_cached(&bright_scale_cache);
+
+            SDL_Rect dst;
+            set_sdl_render(renderer, bright_sdl_w[step], bright_sdl_h[step], bright_anchor, bright_scale, &dst);
+
+            SDL_SetTextureColorMod(bright_sdl_tex[step], 255, 255, 255);
+            SDL_SetTextureAlphaMod(bright_sdl_tex[step], (Uint8) (bright_alpha * 255.0f));
+
+            SDL_RenderCopy(renderer, bright_sdl_tex[step], NULL, &dst);
+        }
+    }
+
+    if (volume_is_visible()) {
+        sdl_volume_overlay_init(renderer);
+
+        int step = volume_last_step;
+        if (step >= 0 && step < INDICATOR_STEPS && volume_sdl_tex[step]) {
+            float volume_alpha = get_alpha_cached(&volume_alpha_cache);
+            int volume_anchor = get_anchor_cached(&volume_anchor_cache);
+            int volume_scale = get_scale_cached(&volume_scale_cache);
+
+            SDL_Rect dst;
+            set_sdl_render(renderer, volume_sdl_w[step], volume_sdl_h[step], volume_anchor, volume_scale, &dst);
+
+            SDL_SetTextureColorMod(volume_sdl_tex[step], 255, 255, 255);
+            SDL_SetTextureAlphaMod(volume_sdl_tex[step], (Uint8) (volume_alpha * 255.0f));
+
+            SDL_RenderCopy(renderer, volume_sdl_tex[step], NULL, &dst);
+        }
     }
 
     real_SDL_RenderPresent(renderer);

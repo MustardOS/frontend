@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <GLES2/gl2.h>
+#include <linux/limits.h>
 #include "../common/common.h"
 
 #define BATTERY_IMAGE  "battery"
@@ -11,7 +12,7 @@
 #define BATTERY_ANCHOR OVERLAY_CONFIG "bat_anchor"
 #define BATTERY_SCALE OVERLAY_CONFIG "bat_scale"
 
-extern char battery_overlay_path[512];
+extern char battery_overlay_path[PATH_MAX];
 extern int battery_last_enabled;
 
 extern int battery_anchor_cached;

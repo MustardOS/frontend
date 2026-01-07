@@ -8,6 +8,8 @@
 #include "../common/anchor.h"
 #include "../common/scale.h"
 #include "../overlay/battery.h"
+#include "../overlay/bright.h"
+#include "../overlay/volume.h"
 #include "../hook.h"
 #include "gles.h"
 
@@ -83,6 +85,12 @@ static void build_quad_ndc(gl_vtx_t out[4], int tex_w, int tex_h, int fb_w, int 
     float x0, x1, y0, y1;
 
     switch (anchor) {
+        case ANCHOR_TOP_LEFT:
+            x0 = -1.0f;
+            x1 = x0 + w_ndc;
+            y0 = 1.0f;
+            y1 = y0 - h_ndc;
+            break;
         case ANCHOR_TOP_MIDDLE:
             x0 = -w_ndc * 0.5f;
             x1 = w_ndc * 0.5f;
@@ -132,10 +140,10 @@ static void build_quad_ndc(gl_vtx_t out[4], int tex_w, int tex_h, int fb_w, int 
             y0 = y1 + h_ndc;
             break;
         default:
-            x0 = -1.0f;
-            x1 = x0 + w_ndc;
-            y0 = 1.0f;
-            y1 = y0 - h_ndc;
+            x0 = -w_ndc * 0.5f;
+            x1 = w_ndc * 0.5f;
+            y0 = h_ndc * 0.5f;
+            y1 = -h_ndc * 0.5f;
             break;
     }
 
@@ -269,13 +277,31 @@ static void on_context_changed(void) {
 
     battery_gles_attempted = 0;
     battery_gles_ready = 0;
-
     if (battery_gles_tex) {
         glDeleteTextures(1, &battery_gles_tex);
         battery_gles_tex = 0;
     }
-
     vtx_battery_valid = 0;
+
+    bright_preload_gles_done = 0;
+    bright_disabled_gles = 0;
+    for (int i = 0; i < INDICATOR_STEPS; i++) {
+        if (bright_gles_tex[i]) {
+            glDeleteTextures(1, &bright_gles_tex[i]);
+            bright_gles_tex[i] = 0;
+        }
+    }
+    vtx_bright_valid = 0;
+
+    volume_preload_gles_done = 0;
+    volume_disabled_gles = 0;
+    for (int i = 0; i < INDICATOR_STEPS; i++) {
+        if (volume_gles_tex[i]) {
+            glDeleteTextures(1, &volume_gles_tex[i]);
+            volume_gles_tex[i] = 0;
+        }
+    }
+    vtx_volume_valid = 0;
 }
 
 static void ensure_context(SDL_Window *window) {
@@ -339,12 +365,7 @@ static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGBA,
-            rgba->w, rgba->h,
-            0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels
-    );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
 
     *out_tex = t;
 }
@@ -439,6 +460,30 @@ static void update_geometry_caches(void) {
         battery_scale_cached = battery_scale;
         vtx_battery_valid = 0;
     }
+
+    int bright_anchor = get_anchor_cached(&bright_anchor_cache);
+    if (bright_anchor != bright_anchor_cached) {
+        bright_anchor_cached = bright_anchor;
+        vtx_bright_valid = 0;
+    }
+
+    int bright_scale = get_scale_cached(&bright_scale_cache);
+    if (bright_scale != bright_scale_cached) {
+        bright_scale_cached = bright_scale;
+        vtx_bright_valid = 0;
+    }
+
+    int volume_anchor = get_anchor_cached(&volume_anchor_cache);
+    if (volume_anchor != volume_anchor_cached) {
+        volume_anchor_cached = volume_anchor;
+        vtx_volume_valid = 0;
+    }
+
+    int volume_scale = get_scale_cached(&volume_scale_cache);
+    if (volume_scale != volume_scale_cached) {
+        volume_scale_cached = volume_scale;
+        vtx_volume_valid = 0;
+    }
 }
 
 static void stage_draw(int fb_w, int fb_h) {
@@ -446,6 +491,7 @@ static void stage_draw(int fb_w, int fb_h) {
 
     // TODO: For future reference add all independent overlay layers here
     gl_battery_overlay_init();
+    gl_bright_overlay_init();
 
     // Keep the general overlay separate!
     ensure_overlay_tex(render_window);
@@ -462,6 +508,24 @@ static void stage_draw(int fb_w, int fb_h) {
         build_quad_ndc(vtx_battery, battery_gles_w, battery_gles_h, fb_w, fb_h,
                        battery_anchor_cached, battery_scale_cached);
         vtx_battery_valid = 1;
+    }
+
+    if (bright_is_visible()) {
+        int step = bright_last_step;
+        if (step >= 0 && step < INDICATOR_STEPS && bright_gles_tex[step] && !vtx_bright_valid) {
+            build_quad_ndc(vtx_bright, bright_gles_w[step], bright_gles_h[step],
+                           fb_w, fb_h, bright_anchor_cached, bright_scale_cached);
+            vtx_bright_valid = 1;
+        }
+    }
+
+    if (volume_is_visible()) {
+        int step = volume_last_step;
+        if (step >= 0 && step < INDICATOR_STEPS && volume_gles_tex[step] && !vtx_volume_valid) {
+            build_quad_ndc(vtx_volume, volume_gles_w[step], volume_gles_h[step],
+                           fb_w, fb_h, volume_anchor_cached, volume_scale_cached);
+            vtx_volume_valid = 1;
+        }
     }
 
     gles_state_t st;
@@ -486,10 +550,33 @@ static void stage_draw(int fb_w, int fb_h) {
         draw_quad(battery_gles_tex, vtx_battery, get_alpha_cached(&battery_alpha_cache));
     }
 
+    if (bright_is_visible()) {
+        gl_bright_overlay_init();
+
+        int step = bright_last_step;
+        if (step >= 0 && step < INDICATOR_STEPS && bright_gles_tex[step] && vtx_bright_valid) {
+            draw_quad(bright_gles_tex[step], vtx_bright, get_alpha_cached(&bright_alpha_cache));
+        }
+    }
+
+    if (volume_is_visible()) {
+        gl_volume_overlay_init();
+
+        int step = volume_last_step;
+        if (step >= 0 && step < INDICATOR_STEPS && volume_gles_tex[step] && vtx_volume_valid) {
+            draw_quad(volume_gles_tex[step], vtx_volume, get_alpha_cached(&volume_alpha_cache));
+        }
+    }
+
     restore_gles_state(&st);
 }
 
 void SDL_GL_SwapWindow(SDL_Window *window) {
+    if (is_overlay_disabled()) {
+        if (real_SDL_GL_SwapWindow) real_SDL_GL_SwapWindow(window);
+        return;
+    }
+
     if (!real_SDL_GL_SwapWindow) return;
 
     render_window = window;
@@ -499,8 +586,11 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     // Like the audio and brightness when we get around to doing it
     // Update battery overlay status
     battery_overlay_update();
+    bright_overlay_update();
+    volume_overlay_update();
 
-    int nw = 0, nh = 0;
+    int nw = 0;
+    int nh = 0;
     SDL_GL_GetDrawableSize(window, &nw, &nh);
 
     if (nw != fb_cached_w || nh != fb_cached_h) {
