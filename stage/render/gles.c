@@ -491,7 +491,6 @@ static void stage_draw(int fb_w, int fb_h) {
 
     // TODO: For future reference add all independent overlay layers here
     gl_battery_overlay_init();
-    gl_bright_overlay_init();
 
     // Keep the general overlay separate!
     ensure_overlay_tex(render_window);
