@@ -162,17 +162,29 @@ static const char *get_active_theme(void) {
     return theme;
 }
 
+static void remove_double_slashes(char *str) {
+    char *new_str = str;
+    char prev = 0;
+
+    while (*str) {
+        if (*str != '/' || prev != '/') *new_str++ = *str;
+        prev = *str++;
+    }
+
+    *new_str = '\0';
+}
+
+static void strip_libretro(char *str) {
+    char *new_str = strstr(str, "_libretro.so");
+    if (new_str) *new_str = '\0';
+}
+
 int load_stage_image(const char *type, const char *core, const char *sys,
                      const char *file, const char *dim, char *img_path) {
     enum img_loc {
         IMG_INFO,
         IMG_THEME,
         IMG_MEDIA
-    };
-
-    enum overlay_layout {
-        OVL_PLAIN, // overlay/<type>/...
-        OVL_SYSTEM // overlay/<sys>/<type>/...
     };
 
     static int have_theme;
@@ -186,58 +198,80 @@ int load_stage_image(const char *type, const char *core, const char *sys,
         have_theme = 0;
     }
 
-    const struct {
-        enum img_loc loc;
-        const char *base;
-        const char *sys;
-    } base_path[] = {
-            {IMG_INFO,  CATALOGUE_PATH, sys},
-            {IMG_THEME, theme_path,     ""},
-            {IMG_MEDIA, INTERNAL_SHARE, ""}
-    };
-
+    const char *files[] = {file, core, "default", NULL};
     const char *dims[] = {dim, ""};
-    const char *files[] = {file, core, "default", ""};
 
-    for (size_t b = 0; b < A_SIZE(base_path); b++) {
-        if (base_path[b].loc == IMG_THEME && !have_theme) continue;
+    char file_strip[MAX_BUFFER_SIZE];
 
+    // Catalogue system
+    for (size_t d = 0; d < A_SIZE(dims); d++) {
+        for (size_t f = 0; files[f]; f++) {
+            strlcpy(file_strip, files[f], sizeof(file_strip));
+            strip_libretro(file_strip);
+
+            int n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s%s.png",
+                             CATALOGUE_PATH, sys, type, dims[d], file_strip);
+
+            if (n > 0 && (size_t) n < sizeof(overlay_path)) {
+                remove_double_slashes(img_path);
+                LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                if (file_exist(img_path)) return 1;
+            }
+        }
+    }
+
+    // Active theme path
+    if (have_theme) {
         for (size_t d = 0; d < A_SIZE(dims); d++) {
-            for (size_t f = 0; f < A_SIZE(files); f++) {
-                if (!files[f] || files[f][0] == '\0') continue;
+            const char *theme_prefix = dims[d][0] ? dims[d] : "";
 
-                // Catalogue paths do not vary by layout
-                if (base_path[b].sys[0]) {
-                    int n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s%s.png",
-                                     base_path[b].base, base_path[b].sys, type, dims[d], files[f]
-                    );
+            for (int use_system = 1; use_system >= 0; use_system--) {
+                if (use_system && (!sys || !sys[0])) continue;
 
-                    // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
-                    if (n > 0 && (size_t) n < sizeof(overlay_path) && file_exist(img_path)) return 1;
-
-                    continue;
-                }
-
-                // Theme and Internal paths
-                for (enum overlay_layout l = OVL_PLAIN; l <= OVL_SYSTEM; l++) {
-                    if (l == OVL_SYSTEM && (!sys || sys[0] == '\0')) continue;
+                for (size_t f = 0; files[f]; f++) {
+                    strlcpy(file_strip, files[f], sizeof(file_strip));
+                    strip_libretro(file_strip);
 
                     int n;
-                    if (l == OVL_SYSTEM) {
-                        // Theme and Internal Path with system folder
-                        n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s/%s%s.png",
-                                     base_path[b].base, sys, type, dims[d], files[f]
-                        );
+                    if (use_system) {
+                        n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s/%s.png",
+                                     theme_path, theme_prefix, sys, type, file_strip);
                     } else {
-                        // Plain overlay, everything else!
-                        n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s%s.png",
-                                     base_path[b].base, type, dims[d], files[f]
-                        );
+                        n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s.png",
+                                     theme_path, theme_prefix, type, file_strip);
                     }
 
-                    // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
-                    if (n > 0 && (size_t) n < sizeof(overlay_path) && file_exist(img_path)) return 1;
+                    if (n > 0 && (size_t) n < sizeof(overlay_path)) {
+                        remove_double_slashes(img_path);
+                        LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                        if (file_exist(img_path)) return 1;
+                    }
                 }
+            }
+        }
+    }
+
+    // Internal share overlay
+    for (int use_system = 1; use_system >= 0; use_system--) {
+        if (use_system && (!sys || !sys[0])) continue;
+
+        for (size_t f = 0; files[f]; f++) {
+            strlcpy(file_strip, files[f], sizeof(file_strip));
+            strip_libretro(file_strip);
+
+            int n;
+            if (use_system) {
+                n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s/%s.png",
+                             INTERNAL_SHARE, sys, type, file_strip);
+            } else {
+                n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s.png",
+                             INTERNAL_SHARE, type, file_strip);
+            }
+
+            if (n > 0 && (size_t) n < sizeof(overlay_path)) {
+                remove_double_slashes(img_path);
+                LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                if (file_exist(img_path)) return 1;
             }
         }
     }
