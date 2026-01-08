@@ -21,6 +21,7 @@ int volume_primed = 0;
 int volume_visible = 0;
 int volume_last_step = -1;
 int volume_last_pct = -1;
+int volume_device_max = 0;
 uint64_t volume_last_change_ms = 0;
 
 int volume_anchor_cached = -1;
@@ -215,26 +216,32 @@ void volume_overlay_init(void) {
 
     memset(&volume_stat_last, 0, sizeof(volume_stat_last));
     volume_init = 1;
-}
 
-void volume_overlay_update(void) {
-    struct stat sb;
-    if (stat(VOLUME_PATH, &sb) != 0) return;
-
-    int pct;
-    if (!read_percent(VOLUME_PATH, &pct)) return;
-
-    if (pct < 0) {
-        volume_stat_last = sb;
+    static char volume_max[8];
+    if (!read_line_from_file(INTERNAL_DEVICE "audio/max", 1, volume_max, sizeof(volume_max))) {
+        volume_device_max = 0;
         return;
     }
 
+    volume_device_max = safe_atoi(volume_max);
+}
+
+void volume_overlay_update(void) {
+    if (!volume_init) volume_overlay_init();
+    if (volume_device_max <= 0) return;
+
+    struct stat sv;
+    if (stat(VOLUME_PATH, &sv) != 0) return;
+
+    int volume_pct;
+    if (!read_percent(VOLUME_PATH, volume_device_max, &volume_pct)) return;
+
     if (!volume_primed) {
         volume_primed = 1;
-        volume_last_pct = pct;
-        volume_stat_last = sb;
+        volume_last_pct = volume_pct;
+        volume_stat_last = sv;
 
-        int step = pct / 10;
+        int step = volume_pct / 10;
         if (step < 0) step = 0;
         if (step > 9) step = 9;
         volume_last_step = step;
@@ -242,18 +249,18 @@ void volume_overlay_update(void) {
         return;
     }
 
-    if (sb.st_mtime == volume_stat_last.st_mtime && pct == volume_last_pct) return;
+    if (sv.st_mtime == volume_stat_last.st_mtime && volume_pct == volume_last_pct) return;
 
-    volume_last_pct = pct;
-    volume_stat_last = sb;
+    volume_last_pct = volume_pct;
+    volume_stat_last = sv;
 
-    int step = pct / 10;
+    int step = volume_pct / 10;
     if (step < 0) step = 0;
     if (step > 9) step = 9;
 
     volume_last_step = step;
 
-    if (pct == 0) {
+    if (volume_pct == 0) {
         volume_visible = 0;
         return;
     }

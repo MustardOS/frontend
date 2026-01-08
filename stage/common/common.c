@@ -76,20 +76,21 @@ uint64_t now_ms(void) {
     return (uint64_t) ts.tv_sec * 1000ULL + (uint64_t) ts.tv_nsec / 1000000ULL;
 }
 
-int read_percent(const char *path, int *out) {
+int read_percent(const char *path, int max, int *out) {
     char buf[32];
     char *end;
-    long v;
+    long raw;
 
+    if (max <= 0) return 0;
     if (!read_line_from_file(path, 1, buf, sizeof(buf))) return 0;
 
-    v = strtol(buf, &end, 10);
+    raw = strtol(buf, &end, 10);
     if (end == buf) return 0;
 
-    if (v < 0) v = 0;
-    if (v > 100) v = 100;
+    if (raw < 0) raw = 0;
+    if (raw > max) raw = max;
 
-    *out = (int) v;
+    *out = (int) ((raw * 100L) / max);
     return 1;
 }
 

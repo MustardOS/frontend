@@ -15,6 +15,7 @@
 #define INTERNAL_SHARE  "/opt/muos/share" // Do NOT put a trailing slash here!
 #define INTERNAL_STORE  "/run/muos/storage/"
 #define INTERNAL_CONFIG "/opt/muos/config/"
+#define INTERNAL_DEVICE "/opt/muos/device/config/"
 
 #define CATALOGUE_PATH INTERNAL_STORE "info/catalogue"
 #define THEME_PATH     INTERNAL_STORE "theme/%s"
@@ -75,7 +76,7 @@ int safe_atoi(const char *str);
 
 uint64_t now_ms(void);
 
-int read_percent(const char *path, int *out);
+int read_percent(const char *path, int max_pct, int *out);
 
 int read_float(const char *path, float *out);
 

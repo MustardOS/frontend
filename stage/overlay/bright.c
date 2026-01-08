@@ -21,6 +21,7 @@ int bright_primed = 0;
 int bright_visible = 0;
 int bright_last_step = -1;
 int bright_last_pct = -1;
+int bright_device_max = 0;
 uint64_t bright_last_change_ms = 0;
 
 int bright_anchor_cached = -1;
@@ -79,7 +80,7 @@ static int ensure_bright_path(enum render_method type, void *ctx, int step) {
     if (load_stage_image("bright", ovl_go_cache.core, ovl_go_cache.system, name, dimension, bright_overlay_path))
         return 1;
 
-    LOG_WARN("stage", "Volume " OVERLAY_NOP,
+    LOG_WARN("stage", "Brightness " OVERLAY_NOP,
              ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension, step);
     return 0;
 }
@@ -215,26 +216,32 @@ void bright_overlay_init(void) {
 
     memset(&bright_stat_last, 0, sizeof(bright_stat_last));
     bright_init = 1;
-}
 
-void bright_overlay_update(void) {
-    struct stat sb;
-    if (stat(BRIGHT_PATH, &sb) != 0) return;
-
-    int pct;
-    if (!read_percent(BRIGHT_PATH, &pct)) return;
-
-    if (pct < 0) {
-        bright_stat_last = sb;
+    static char bright_max[8];
+    if (!read_line_from_file(INTERNAL_DEVICE "screen/bright", 1, bright_max, sizeof(bright_max))) {
+        bright_device_max = 0;
         return;
     }
 
+    bright_device_max = safe_atoi(bright_max);
+}
+
+void bright_overlay_update(void) {
+    if (!bright_init) bright_overlay_init();
+    if (bright_device_max <= 0) return;
+
+    struct stat sb;
+    if (stat(BRIGHT_PATH, &sb) != 0) return;
+
+    int bright_pct;
+    if (!read_percent(BRIGHT_PATH, bright_device_max, &bright_pct)) return;
+
     if (!bright_primed) {
         bright_primed = 1;
-        bright_last_pct = pct;
+        bright_last_pct = bright_pct;
         bright_stat_last = sb;
 
-        int step = pct / 10;
+        int step = bright_pct / 10;
         if (step < 0) step = 0;
         if (step > 9) step = 9;
         bright_last_step = step;
@@ -242,18 +249,18 @@ void bright_overlay_update(void) {
         return;
     }
 
-    if (sb.st_mtime == bright_stat_last.st_mtime && pct == bright_last_pct) return;
+    if (sb.st_mtime == bright_stat_last.st_mtime && bright_pct == bright_last_pct) return;
 
-    bright_last_pct = pct;
+    bright_last_pct = bright_pct;
     bright_stat_last = sb;
 
-    int step = pct / 10;
+    int step = bright_pct / 10;
     if (step < 0) step = 0;
     if (step > 9) step = 9;
 
     bright_last_step = step;
 
-    if (pct == 0) {
+    if (bright_pct == 0) {
         bright_visible = 0;
         return;
     }
