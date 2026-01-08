@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxoverlay.h"
 
-#define UI_COUNT 8
+#define UI_COUNT 14
 
 #define OVERLAY(NAME, UDATA) static int NAME##_original;
 OVERLAY_ELEMENTS
@@ -16,7 +16,13 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBatEnable_overlay, lang.MUXOVERLAY.HELP.BATTERY.ENABLE},
             {ui_lblBatAlpha_overlay,  lang.MUXOVERLAY.HELP.BATTERY.ALPHA},
             {ui_lblBatAnchor_overlay, lang.MUXOVERLAY.HELP.BATTERY.ANCHOR},
-            {ui_lblBatScale_overlay,  lang.MUXOVERLAY.HELP.BATTERY.SCALE}
+            {ui_lblBatScale_overlay,  lang.MUXOVERLAY.HELP.BATTERY.SCALE},
+            {ui_lblVolAlpha_overlay,  lang.MUXOVERLAY.HELP.VOLUME.ALPHA},
+            {ui_lblVolAnchor_overlay, lang.MUXOVERLAY.HELP.VOLUME.ANCHOR},
+            {ui_lblVolScale_overlay,  lang.MUXOVERLAY.HELP.VOLUME.SCALE},
+            {ui_lblBriAlpha_overlay,  lang.MUXOVERLAY.HELP.BRIGHT.ALPHA},
+            {ui_lblBriAnchor_overlay, lang.MUXOVERLAY.HELP.BRIGHT.ANCHOR},
+            {ui_lblBriScale_overlay,  lang.MUXOVERLAY.HELP.BRIGHT.SCALE}
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -37,6 +43,12 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droBatAlpha_overlay, config.SETTINGS.OVERLAY.BATTERY_ALPHA);
     lv_dropdown_set_selected(ui_droBatAnchor_overlay, config.SETTINGS.OVERLAY.BATTERY_ANCHOR);
     lv_dropdown_set_selected(ui_droBatScale_overlay, config.SETTINGS.OVERLAY.BATTERY_SCALE);
+    lv_dropdown_set_selected(ui_droVolAlpha_overlay, config.SETTINGS.OVERLAY.VOLUME_ALPHA);
+    lv_dropdown_set_selected(ui_droVolAnchor_overlay, config.SETTINGS.OVERLAY.VOLUME_ANCHOR);
+    lv_dropdown_set_selected(ui_droVolScale_overlay, config.SETTINGS.OVERLAY.VOLUME_SCALE);
+    lv_dropdown_set_selected(ui_droBriAlpha_overlay, config.SETTINGS.OVERLAY.BRIGHT_ALPHA);
+    lv_dropdown_set_selected(ui_droBriAnchor_overlay, config.SETTINGS.OVERLAY.BRIGHT_ANCHOR);
+    lv_dropdown_set_selected(ui_droBriScale_overlay, config.SETTINGS.OVERLAY.BRIGHT_SCALE);
 }
 
 static void save_tweak_options(void) {
@@ -50,6 +62,12 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(overlay, BatAlpha, "settings/overlay/bat_alpha", INT, 0);
     CHECK_AND_SAVE_STD(overlay, BatAnchor, "settings/overlay/bat_anchor", INT, 0);
     CHECK_AND_SAVE_STD(overlay, BatScale, "settings/overlay/bat_scale", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, VolAlpha, "settings/overlay/vol_alpha", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, VolAnchor, "settings/overlay/vol_anchor", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, VolScale, "settings/overlay/vol_scale", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, BriAlpha, "settings/overlay/bri_alpha", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, BriAnchor, "settings/overlay/bri_anchor", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, BriScale, "settings/overlay/bri_scale", INT, 0);
 
     if (is_modified > 0) run_tweak_script();
 }
@@ -86,10 +104,18 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, overlay, BatAlpha, lang.MUXOVERLAY.BATTERY.ALPHA, "bat_alpha", NULL, 0);
     INIT_OPTION_ITEM(-1, overlay, BatAnchor, lang.MUXOVERLAY.BATTERY.ANCHOR, "bat_anchor", anchor_options, 9);
     INIT_OPTION_ITEM(-1, overlay, BatScale, lang.MUXOVERLAY.BATTERY.SCALE, "bat_scale", scale_options, 3);
+    INIT_OPTION_ITEM(-1, overlay, VolAlpha, lang.MUXOVERLAY.VOLUME.ALPHA, "vol_alpha", NULL, 0);
+    INIT_OPTION_ITEM(-1, overlay, VolAnchor, lang.MUXOVERLAY.VOLUME.ANCHOR, "vol_anchor", anchor_options, 9);
+    INIT_OPTION_ITEM(-1, overlay, VolScale, lang.MUXOVERLAY.VOLUME.SCALE, "vol_scale", scale_options, 3);
+    INIT_OPTION_ITEM(-1, overlay, BriAlpha, lang.MUXOVERLAY.BRIGHT.ALPHA, "bri_alpha", NULL, 0);
+    INIT_OPTION_ITEM(-1, overlay, BriAnchor, lang.MUXOVERLAY.BRIGHT.ANCHOR, "bri_anchor", anchor_options, 9);
+    INIT_OPTION_ITEM(-1, overlay, BriScale, lang.MUXOVERLAY.BRIGHT.SCALE, "bri_scale", scale_options, 3);
 
     char *alpha_values = generate_number_string(0, 255, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droGenAlpha_overlay, alpha_values);
     apply_theme_list_drop_down(&theme, ui_droBatAlpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_droVolAlpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_droBriAlpha_overlay, alpha_values);
     free(alpha_values);
 
     ui_group = lv_group_create();

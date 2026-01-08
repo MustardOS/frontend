@@ -903,6 +903,16 @@ struct mux_lang {
             char SCALE[MAX_BUFFER_SIZE];
         } BATTERY;
         struct {
+            char ALPHA[MAX_BUFFER_SIZE];
+            char ANCHOR[MAX_BUFFER_SIZE];
+            char SCALE[MAX_BUFFER_SIZE];
+        } VOLUME;
+        struct {
+            char ALPHA[MAX_BUFFER_SIZE];
+            char ANCHOR[MAX_BUFFER_SIZE];
+            char SCALE[MAX_BUFFER_SIZE];
+        } BRIGHT;
+        struct {
             struct {
                 char ENABLE[MAX_BUFFER_SIZE];
                 char ALPHA[MAX_BUFFER_SIZE];
@@ -915,6 +925,16 @@ struct mux_lang {
                 char ANCHOR[MAX_BUFFER_SIZE];
                 char SCALE[MAX_BUFFER_SIZE];
             } BATTERY;
+            struct {
+                char ALPHA[MAX_BUFFER_SIZE];
+                char ANCHOR[MAX_BUFFER_SIZE];
+                char SCALE[MAX_BUFFER_SIZE];
+            } VOLUME;
+            struct {
+                char ALPHA[MAX_BUFFER_SIZE];
+                char ANCHOR[MAX_BUFFER_SIZE];
+                char SCALE[MAX_BUFFER_SIZE];
+            } BRIGHT;
         } HELP;
     } MUXOVERLAY;
 

@@ -169,6 +169,12 @@ struct mux_config {
             int16_t BATTERY_ALPHA;
             int16_t BATTERY_ANCHOR;
             int16_t BATTERY_SCALE;
+            int16_t VOLUME_ALPHA;
+            int16_t VOLUME_ANCHOR;
+            int16_t VOLUME_SCALE;
+            int16_t BRIGHT_ALPHA;
+            int16_t BRIGHT_ANCHOR;
+            int16_t BRIGHT_SCALE;
         } OVERLAY;
         struct {
             int16_t LOW_BATTERY;

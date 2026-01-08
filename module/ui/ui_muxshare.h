@@ -272,7 +272,13 @@
     OVERLAY(BatEnable, "bat_enable") \
     OVERLAY(BatAlpha,  "bat_alpha")  \
     OVERLAY(BatAnchor, "bat_anchor") \
-    OVERLAY(BatScale,  "bat_scale")
+    OVERLAY(BatScale,  "bat_scale")  \
+    OVERLAY(VolAlpha,  "vol_alpha")  \
+    OVERLAY(VolAnchor, "vol_anchor") \
+    OVERLAY(VolScale,  "vol_scale")  \
+    OVERLAY(BriAlpha,  "bri_alpha")  \
+    OVERLAY(BriAnchor, "bri_anchor") \
+    OVERLAY(BriScale,  "bri_scale")
 
 #define POWER_ELEMENTS \
     POWER(Shutdown,    "shutdown")     \
