@@ -32,8 +32,8 @@ static int overlay_tex_h = 0;
 static int overlay_tex_attempted = 0;
 static int overlay_tex_ready = 0;
 
-static gl_vtx_t vtx_main[4];
-static int vtx_main_valid = 0;
+static gl_vtx_t vtx_overlay[4];
+static int vtx_overlay_valid = 0;
 
 static SDL_GLContext last_ctx = NULL;
 
@@ -268,7 +268,7 @@ static void destroy_overlay_tex(void) {
     overlay_tex_ready = 0;
     overlay_tex_attempted = 0;
 
-    vtx_main_valid = 0;
+    vtx_overlay_valid = 0;
 }
 
 static void on_context_changed(void) {
@@ -317,8 +317,7 @@ static void ensure_context(SDL_Window *window) {
 }
 
 static void ensure_program(void) {
-    if (prog_ready) return;
-    if (prog_attempted) return;
+    if (prog_ready || prog_attempted) return;
     prog_attempted = 1;
 
     GLuint vs = compile_shader(GL_VERTEX_SHADER, vs_src);
@@ -371,13 +370,10 @@ static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
 }
 
 static void ensure_overlay_tex(SDL_Window *window) {
-    if (overlay_tex_ready) return;
-    if (overlay_tex_attempted) return;
+    if (overlay_tex_ready || overlay_tex_attempted) return;
     overlay_tex_attempted = 1;
 
-    if (!window) return;
-
-    if (!load_overlay_common(&GLES_RESOLVER, window, overlay_path)) return;
+    if (!window || !load_overlay_common(&GLES_RESOLVER, window, overlay_path)) return;
 
     SDL_Surface *raw = IMG_Load(overlay_path);
     if (!raw) {
@@ -408,7 +404,7 @@ static void ensure_overlay_tex(SDL_Window *window) {
     SDL_FreeSurface(rgba);
 
     overlay_tex_ready = 1;
-    vtx_main_valid = 0;
+    vtx_overlay_valid = 0;
 }
 
 static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
@@ -436,54 +432,27 @@ static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     glDisableVertexAttribArray((GLuint) gles_a_uv);
 }
 
+#define UPDATE_GEOM_CACHE(LAYER, TYPE)                           \
+    do {                                                         \
+        int gc = get_##TYPE##_cached(&(LAYER##_##TYPE##_cache)); \
+        if (gc != LAYER##_##TYPE##_cached) {                     \
+            LAYER##_##TYPE##_cached = gc;                        \
+            vtx_##LAYER##_valid = 0;                             \
+        }                                                        \
+    } while (0)
+
 static void update_geometry_caches(void) {
-    int overlay_anchor = get_anchor_cached(&overlay_anchor_cache);
-    if (overlay_anchor != overlay_anchor_cached) {
-        overlay_anchor_cached = overlay_anchor;
-        vtx_main_valid = 0;
-    }
+    UPDATE_GEOM_CACHE(overlay, anchor);
+    UPDATE_GEOM_CACHE(overlay, scale);
 
-    int overlay_scale = get_scale_cached(&overlay_scale_cache);
-    if (overlay_scale != overlay_scale_cached) {
-        overlay_scale_cached = overlay_scale;
-        vtx_main_valid = 0;
-    }
+    UPDATE_GEOM_CACHE(battery, anchor);
+    UPDATE_GEOM_CACHE(battery, scale);
 
-    int battery_anchor = get_anchor_cached(&battery_anchor_cache);
-    if (battery_anchor != battery_anchor_cached) {
-        battery_anchor_cached = battery_anchor;
-        vtx_battery_valid = 0;
-    }
+    UPDATE_GEOM_CACHE(bright, anchor);
+    UPDATE_GEOM_CACHE(bright, scale);
 
-    int battery_scale = get_scale_cached(&battery_scale_cache);
-    if (battery_scale != battery_scale_cached) {
-        battery_scale_cached = battery_scale;
-        vtx_battery_valid = 0;
-    }
-
-    int bright_anchor = get_anchor_cached(&bright_anchor_cache);
-    if (bright_anchor != bright_anchor_cached) {
-        bright_anchor_cached = bright_anchor;
-        vtx_bright_valid = 0;
-    }
-
-    int bright_scale = get_scale_cached(&bright_scale_cache);
-    if (bright_scale != bright_scale_cached) {
-        bright_scale_cached = bright_scale;
-        vtx_bright_valid = 0;
-    }
-
-    int volume_anchor = get_anchor_cached(&volume_anchor_cache);
-    if (volume_anchor != volume_anchor_cached) {
-        volume_anchor_cached = volume_anchor;
-        vtx_volume_valid = 0;
-    }
-
-    int volume_scale = get_scale_cached(&volume_scale_cache);
-    if (volume_scale != volume_scale_cached) {
-        volume_scale_cached = volume_scale;
-        vtx_volume_valid = 0;
-    }
+    UPDATE_GEOM_CACHE(volume, anchor);
+    UPDATE_GEOM_CACHE(volume, scale);
 }
 
 static void stage_draw(int fb_w, int fb_h) {
@@ -497,10 +466,10 @@ static void stage_draw(int fb_w, int fb_h) {
 
     update_geometry_caches();
 
-    if (overlay_tex_ready && !vtx_main_valid) {
-        build_quad_ndc(vtx_main, overlay_tex_w, overlay_tex_h, fb_w, fb_h,
+    if (overlay_tex_ready && !vtx_overlay_valid) {
+        build_quad_ndc(vtx_overlay, overlay_tex_w, overlay_tex_h, fb_w, fb_h,
                        overlay_anchor_cached, overlay_scale_cached);
-        vtx_main_valid = 1;
+        vtx_overlay_valid = 1;
     }
 
     if (battery_gles_ready && !vtx_battery_valid) {
@@ -539,9 +508,9 @@ static void stage_draw(int fb_w, int fb_h) {
 
     glViewport(0, 0, fb_w, fb_h);
 
-    // Draw main overlay if present
-    if (overlay_tex_ready && vtx_main_valid) {
-        draw_quad(overlay_tex, vtx_main, get_alpha_cached(&overlay_alpha_cache));
+    // Draw base overlay if present
+    if (overlay_tex_ready && vtx_overlay_valid) {
+        draw_quad(overlay_tex, vtx_overlay, get_alpha_cached(&overlay_alpha_cache));
     }
 
     // Draw battery overlay if activated
@@ -595,8 +564,10 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     if (nw != fb_cached_w || nh != fb_cached_h) {
         fb_cached_w = nw;
         fb_cached_h = nh;
-        vtx_main_valid = 0;
+        vtx_overlay_valid = 0;
         vtx_battery_valid = 0;
+        vtx_bright_valid = 0;
+        vtx_volume_valid = 0;
     }
 
     if (fb_cached_w > 0 && fb_cached_h > 0) stage_draw(fb_cached_w, fb_cached_h);

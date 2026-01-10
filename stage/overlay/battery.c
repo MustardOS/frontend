@@ -121,7 +121,7 @@ static int resolve_battery_overlay(enum render_method type, void *ctx) {
     }
 
     if (load_stage_image("battery", ovl_go_cache.core, ovl_go_cache.system,
-                           BATTERY_IMAGE, dimension, battery_overlay_path)) {
+                         BATTERY_IMAGE, dimension, battery_overlay_path)) {
         LOG_SUCCESS("stage", "Battery overlay loaded: %s", battery_overlay_path);
         return 1;
     }
@@ -135,8 +135,7 @@ void sdl_battery_overlay_init(SDL_Renderer *renderer) {
     if (battery_sdl_ready || battery_sdl_attempted) return;
     battery_sdl_attempted = 1;
 
-    if (!battery_overlay_enabled()) return;
-    if (!resolve_battery_overlay(RENDER_SDL, renderer))return;
+    if (!battery_overlay_enabled() || !resolve_battery_overlay(RENDER_SDL, renderer)) return;
 
     SDL_Surface *surface = IMG_Load(battery_overlay_path);
     if (!surface) {
@@ -164,8 +163,7 @@ void gl_battery_overlay_init(void) {
     if (battery_gles_ready || battery_gles_attempted) return;
     battery_gles_attempted = 1;
 
-    if (!battery_overlay_enabled()) return;
-    if (!resolve_battery_overlay(RENDER_GLES, render_window)) return;
+    if (!battery_overlay_enabled() || !resolve_battery_overlay(RENDER_GLES, render_window)) return;
 
     SDL_Surface *raw = IMG_Load(battery_overlay_path);
     if (!raw) {

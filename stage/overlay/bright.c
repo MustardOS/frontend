@@ -136,8 +136,7 @@ static void disable_gles(void) {
 }
 
 static void preload_bright_textures_sdl(SDL_Renderer *renderer) {
-    if (bright_preload_sdl_done || bright_disabled_sdl) return;
-    if (!renderer) return;
+    if (bright_preload_sdl_done || bright_disabled_sdl || !renderer) return;
 
     for (int i = 0; i < INDICATOR_STEPS; i++) {
         if (!ensure_bright_path(RENDER_SDL, renderer, i)) {
@@ -171,8 +170,7 @@ static void preload_bright_textures_sdl(SDL_Renderer *renderer) {
 }
 
 static void preload_bright_textures_gles(void) {
-    if (bright_preload_gles_done || bright_disabled_gles) return;
-    if (!render_window) return;
+    if (bright_preload_gles_done || bright_disabled_gles || !render_window) return;
 
     for (int i = 0; i < INDICATOR_STEPS; i++) {
         if (!ensure_bright_path(RENDER_GLES, render_window, i)) {

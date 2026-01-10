@@ -94,6 +94,13 @@ int read_percent(const char *path, int max, int *out) {
     return 1;
 }
 
+float clamp_float(float v, float low, float high) {
+    if (v < low) return low;
+    if (v > high) return high;
+
+    return v;
+}
+
 int read_float(const char *path, float *out) {
     char buf[32];
 

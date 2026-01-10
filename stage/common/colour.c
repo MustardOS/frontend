@@ -9,25 +9,6 @@ static struct {
     int loaded;
 } colour_cache;
 
-static float clamp_float(float v, float low, float high) {
-    if (v < low) return low;
-    if (v > high) return high;
-
-    return v;
-}
-
-static int read_float(const char *path, float *out) {
-    char buf[32];
-
-    if (!read_line_from_file(path, 1, buf, sizeof(buf))) {
-        LOG_DEBUG("stage", "Colour config missing: %s", path);
-        return 0;
-    }
-
-    *out = safe_atof(buf);
-    return 1;
-}
-
 // TODO: This system is just complete lag... leaving here for future reference!
 // It also only works for GL content, SDL can only do so much without shaders
 // Just don't forget to add 'common/colour.c' to the Makefile

@@ -78,6 +78,8 @@ uint64_t now_ms(void);
 
 int read_percent(const char *path, int max_pct, int *out);
 
+float clamp_float(float v, float low, float high);
+
 int read_float(const char *path, float *out);
 
 int read_line_from_file(const char *filename, size_t line_number, char *out, size_t out_size);
