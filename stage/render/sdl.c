@@ -1,26 +1,14 @@
-#include <stdio.h>
+#include <unistd.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include "../../common/log.h"
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/scale.h"
+#include "../overlay/base.h"
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
 #include "../hook.h"
-#include "sdl.h"
-
-static SDL_Texture *sdl_tex;
-
-static int sdl_ready;
-static int sdl_tex_w;
-static int sdl_tex_h;
-
-static int sdl_overlay_resolved = 0;
-static char sdl_overlay_path_last[PATH_MAX];
-static uint64_t sdl_overlay_last_check_ms = 0;
 
 static void set_sdl_render(SDL_Renderer *renderer, int tex_w, int tex_h, int anchor, int scale, SDL_Rect *out) {
     int fb_w, fb_h;
@@ -96,57 +84,6 @@ static void set_sdl_render(SDL_Renderer *renderer, int tex_w, int tex_h, int anc
     out->h = draw_h;
 }
 
-static void sdl_overlay_init(SDL_Renderer *renderer) {
-    if (!renderer) return;
-
-    char wanted_overlay[PATH_MAX];
-    wanted_overlay[0] = '\0';
-
-    if (!sdl_overlay_resolved) {
-        if (!load_overlay_common(&SDL_RESOLVER, renderer, wanted_overlay)) return;
-        sdl_overlay_resolved = 1;
-    } else {
-        strlcpy(wanted_overlay, sdl_overlay_path_last, sizeof(wanted_overlay));
-    }
-
-    if (!wanted_overlay[0]) return;
-    if (sdl_ready && strcmp(sdl_overlay_path_last, wanted_overlay) == 0) return;
-
-    uint64_t now = now_ms();
-    if (now - sdl_overlay_last_check_ms < 200) return;
-    sdl_overlay_last_check_ms = now;
-
-    SDL_Surface *surface = IMG_Load(wanted_overlay);
-    if (!surface) {
-        LOG_ERROR("stage", "SDL Image load failed: %s", IMG_GetError());
-        return;
-    }
-
-    SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
-
-    SDL_Texture *new_tex = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    if (!new_tex) {
-        LOG_ERROR("stage", "SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
-        return;
-    }
-
-    int w, h;
-
-    SDL_SetTextureBlendMode(new_tex, SDL_BLENDMODE_BLEND);
-    SDL_QueryTexture(new_tex, NULL, NULL, &w, &h);
-
-    if (sdl_tex) SDL_DestroyTexture(sdl_tex);
-
-    sdl_tex = new_tex;
-    sdl_tex_w = w;
-    sdl_tex_h = h;
-    sdl_ready = 1;
-
-    strlcpy(sdl_overlay_path_last, wanted_overlay, sizeof(sdl_overlay_path_last));
-}
-
 static void draw_sdl_overlay(SDL_Renderer *renderer, SDL_Texture *tex, int tex_w, int tex_h,
                              float alpha, int anchor, int scale) {
     if (!renderer || !tex) return;
@@ -169,7 +106,7 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
 
     static SDL_Renderer *last_renderer;
     if (renderer != last_renderer) {
-        sdl_ready = 0;
+        base_sdl_ready = 0;
         sdl_overlay_resolved = 0;
         sdl_overlay_path_last[0] = '\0';
         last_renderer = renderer;
@@ -182,14 +119,15 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     bright_overlay_update();
     volume_overlay_update();
 
-    sdl_overlay_init(renderer);
-
-    if (sdl_tex) {
-        draw_sdl_overlay(renderer, sdl_tex, sdl_tex_w, sdl_tex_h,
-                         get_alpha_cached(&overlay_alpha_cache),
-                         get_anchor_cached(&overlay_anchor_cache),
-                         get_scale_cached(&overlay_scale_cache)
-        );
+    if (!base_overlay_disabled()) {
+        sdl_base_overlay_init(renderer);
+        if (base_sdl_tex) {
+            draw_sdl_overlay(renderer, base_sdl_tex, base_sdl_w, base_sdl_h,
+                             get_alpha_cached(&overlay_alpha_cache),
+                             get_anchor_cached(&overlay_anchor_cache),
+                             get_scale_cached(&overlay_scale_cache)
+            );
+        }
     }
 
     // We place the battery overlay init here because we immediately

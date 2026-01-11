@@ -135,26 +135,6 @@ int read_line_from_file(const char *filename, size_t line_number, char *out, siz
     return 0;
 }
 
-static int read_overlay_loader(struct overlay_go_cache *cache) {
-    struct stat st;
-
-    if (stat(OVERLAY_LOADER, &st) != 0) {
-        cache->valid = 0;
-        return 0;
-    }
-
-    if (cache->valid && st.st_mtime == cache->mtime) return 1;
-    cache->mtime = st.st_mtime;
-    cache->valid = 0;
-
-    if (!read_line_from_file(OVERLAY_LOADER, 1, cache->content, sizeof(cache->content))) return 0;
-    if (!read_line_from_file(OVERLAY_LOADER, 2, cache->system, sizeof(cache->system))) return 0;
-    if (!read_line_from_file(OVERLAY_LOADER, 3, cache->core, sizeof(cache->core))) return 0;
-
-    cache->valid = 1;
-    return 1;
-}
-
 static const char *get_active_theme(void) {
     static char theme[256];
     static time_t mtime = 0;
@@ -304,19 +284,4 @@ void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz)
     }
 
     snprintf(out, out_sz, "%dx%d/", w, h);
-}
-
-int load_overlay_common(const struct overlay_resolver *res, void *ctx, char *overlay_path) {
-    res->get_dimension(res->render_method, ctx, dimension, sizeof(dimension));
-    if (!read_overlay_loader(&ovl_go_cache)) return 0;
-
-    if (load_stage_image("content", ovl_go_cache.core, ovl_go_cache.system,
-                         ovl_go_cache.content, dimension, overlay_path)) {
-        LOG_SUCCESS("stage", "Overlay loaded: %s", overlay_path);
-        return 1;
-    }
-
-    LOG_WARN("stage", "Overlay not found (core=%s, system=%s, content=%s, dim=%s)",
-             ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension);
-    return 0;
 }

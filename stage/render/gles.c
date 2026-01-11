@@ -1,17 +1,16 @@
 #include <dlfcn.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <GLES2/gl2.h>
 #include "../../common/log.h"
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/scale.h"
+#include "../overlay/base.h"
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
 #include "../hook.h"
-#include "gles.h"
 
 static int fb_cached_w = 0;
 static int fb_cached_h = 0;
@@ -26,16 +25,19 @@ static GLint gles_u_alpha = -1;
 static int prog_attempted = 0;
 static int prog_ready = 0;
 
-static GLuint overlay_tex = 0;
-static int overlay_tex_w = 0;
-static int overlay_tex_h = 0;
-static int overlay_tex_attempted = 0;
-static int overlay_tex_ready = 0;
-
-static gl_vtx_t vtx_overlay[4];
-static int vtx_overlay_valid = 0;
-
 static SDL_GLContext last_ctx = NULL;
+
+typedef struct {
+    GLint program;
+    GLint active_tex;
+    GLint tex_binding;
+    GLint viewport[4];
+
+    GLboolean blend;
+    GLint blend_src_rgb;
+    GLint blend_dst_rgb;
+    GLint blend_eq_rgb;
+} gles_state_t;
 
 static const char *vs_src =
         "attribute vec2 a_pos;"
@@ -205,18 +207,6 @@ static GLuint link_program(GLuint vs, GLuint fs) {
     return p;
 }
 
-typedef struct {
-    GLint program;
-    GLint active_tex;
-    GLint tex_binding;
-    GLint viewport[4];
-
-    GLboolean blend;
-    GLint blend_src_rgb;
-    GLint blend_dst_rgb;
-    GLint blend_eq_rgb;
-} gles_state_t;
-
 static void save_gles_state(gles_state_t *st) {
     glGetIntegerv(GL_CURRENT_PROGRAM, &st->program);
     glGetIntegerv(GL_ACTIVE_TEXTURE, &st->active_tex);
@@ -257,22 +247,8 @@ static void destroy_overlay(void) {
     prog_attempted = 0;
 }
 
-static void destroy_overlay_tex(void) {
-    if (overlay_tex) {
-        glDeleteTextures(1, &overlay_tex);
-        overlay_tex = 0;
-    }
-
-    overlay_tex_w = 0;
-    overlay_tex_h = 0;
-    overlay_tex_ready = 0;
-    overlay_tex_attempted = 0;
-
-    vtx_overlay_valid = 0;
-}
-
 static void on_context_changed(void) {
-    destroy_overlay_tex();
+    destroy_base_gles();
     destroy_overlay();
 
     battery_gles_attempted = 0;
@@ -352,61 +328,6 @@ static void ensure_program(void) {
     prog_ready = 1;
 }
 
-static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
-    GLuint t = 0;
-
-    glGenTextures(1, &t);
-    glBindTexture(GL_TEXTURE_2D, t);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-
-    *out_tex = t;
-}
-
-static void ensure_overlay_tex(SDL_Window *window) {
-    if (overlay_tex_ready || overlay_tex_attempted) return;
-    overlay_tex_attempted = 1;
-
-    if (!window || !load_overlay_common(&GLES_RESOLVER, window, overlay_path)) return;
-
-    SDL_Surface *raw = IMG_Load(overlay_path);
-    if (!raw) {
-        LOG_ERROR("stage", "GL overlay image load failed: %s", IMG_GetError());
-        return;
-    }
-
-    SDL_Surface *rgba = raw;
-    if (raw->format->format != SDL_PIXELFORMAT_RGBA32) {
-        rgba = SDL_ConvertSurfaceFormat(raw, SDL_PIXELFORMAT_RGBA32, 0);
-        SDL_FreeSurface(raw);
-        raw = NULL;
-        if (!rgba) {
-            LOG_ERROR("stage", "SDL_ConvertSurfaceFormat failed: %s", SDL_GetError());
-            return;
-        }
-    }
-
-    overlay_tex_w = rgba->w;
-    overlay_tex_h = rgba->h;
-
-    upload_texture_rgba(rgba, &overlay_tex);
-    if (!overlay_tex) {
-        SDL_FreeSurface(rgba);
-        return;
-    }
-
-    SDL_FreeSurface(rgba);
-
-    overlay_tex_ready = 1;
-    vtx_overlay_valid = 0;
-}
-
 static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     if (!prog_ready) return;
     if (!tex) return;
@@ -442,8 +363,8 @@ static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     } while (0)
 
 static void update_geometry_caches(void) {
-    UPDATE_GEOM_CACHE(overlay, anchor);
-    UPDATE_GEOM_CACHE(overlay, scale);
+    UPDATE_GEOM_CACHE(base, anchor);
+    UPDATE_GEOM_CACHE(base, scale);
 
     UPDATE_GEOM_CACHE(battery, anchor);
     UPDATE_GEOM_CACHE(battery, scale);
@@ -462,14 +383,15 @@ static void stage_draw(int fb_w, int fb_h) {
     gl_battery_overlay_init();
 
     // Keep the general overlay separate!
-    ensure_overlay_tex(render_window);
+    const int base_off = base_overlay_disabled();
+    if (!base_off) gl_base_overlay_init(render_window);
 
     update_geometry_caches();
 
-    if (overlay_tex_ready && !vtx_overlay_valid) {
-        build_quad_ndc(vtx_overlay, overlay_tex_w, overlay_tex_h, fb_w, fb_h,
-                       overlay_anchor_cached, overlay_scale_cached);
-        vtx_overlay_valid = 1;
+    if (!base_off && base_gles_ready && !vtx_base_valid) {
+        build_quad_ndc(vtx_base, base_gles_w, base_gles_h, fb_w, fb_h,
+                       base_anchor_cached, base_scale_cached);
+        vtx_base_valid = 1;
     }
 
     if (battery_gles_ready && !vtx_battery_valid) {
@@ -508,9 +430,9 @@ static void stage_draw(int fb_w, int fb_h) {
 
     glViewport(0, 0, fb_w, fb_h);
 
-    // Draw base overlay if present
-    if (overlay_tex_ready && vtx_overlay_valid) {
-        draw_quad(overlay_tex, vtx_overlay, get_alpha_cached(&overlay_alpha_cache));
+    // Draw base overlay if present (and not disabled)
+    if (!base_off && base_gles_ready && vtx_base_valid) {
+        draw_quad(base_gles_tex, vtx_base, get_alpha_cached(&overlay_alpha_cache));
     }
 
     // Draw battery overlay if activated
@@ -550,9 +472,6 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     render_window = window;
     ensure_context(window);
 
-    // TODO: For future reference add the layer refresh states here
-    // Like the audio and brightness when we get around to doing it
-    // Update battery overlay status
     battery_overlay_update();
     bright_overlay_update();
     volume_overlay_update();
@@ -564,7 +483,7 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     if (nw != fb_cached_w || nh != fb_cached_h) {
         fb_cached_w = nw;
         fb_cached_h = nh;
-        vtx_overlay_valid = 0;
+        vtx_base_valid = 0;
         vtx_battery_valid = 0;
         vtx_bright_valid = 0;
         vtx_volume_valid = 0;

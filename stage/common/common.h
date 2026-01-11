@@ -88,5 +88,3 @@ int load_stage_image(const char *type, const char *core, const char *sys,
                      const char *file, const char *dim, char *img_path);
 
 void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz);
-
-int load_overlay_common(const struct overlay_resolver *res, void *ctx, char *overlay_path);

@@ -53,7 +53,7 @@ struct alpha_cache volume_alpha_cache = {
 struct anchor_cache volume_anchor_cache = {
         .path  = VOLUME_ANCHOR,
         .mtime = 0,
-        .value = ANCHOR_BOTTOM_MIDDLE
+        .value = ANCHOR_TOP_RIGHT
 };
 
 struct scale_cache volume_scale_cache = {

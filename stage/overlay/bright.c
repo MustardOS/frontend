@@ -53,7 +53,7 @@ struct alpha_cache bright_alpha_cache = {
 struct anchor_cache bright_anchor_cache = {
         .path  = BRIGHT_ANCHOR,
         .mtime = 0,
-        .value = ANCHOR_BOTTOM_MIDDLE
+        .value = ANCHOR_TOP_RIGHT
 };
 
 struct scale_cache bright_scale_cache = {
