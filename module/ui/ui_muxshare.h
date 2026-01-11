@@ -265,11 +265,9 @@
     OPTION(Tag,      "tag")
 
 #define OVERLAY_ELEMENTS             \
-    OVERLAY(GenEnable, "gen_enable") \
     OVERLAY(GenAlpha,  "gen_alpha")  \
     OVERLAY(GenAnchor, "gen_anchor") \
     OVERLAY(GenScale,  "gen_scale")  \
-    OVERLAY(BatEnable, "bat_enable") \
     OVERLAY(BatAlpha,  "bat_alpha")  \
     OVERLAY(BatAnchor, "bat_anchor") \
     OVERLAY(BatScale,  "bat_scale")  \

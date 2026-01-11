@@ -37,6 +37,8 @@ static void init_dropdown_settings(void) {
 #define VISUAL(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
     VISUAL_ELEMENTS
 #undef VISUAL
+
+    OverlayTransparency_original = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 100);
 }
 
 static void restore_visual_options(void) {
@@ -55,9 +57,8 @@ static void restore_visual_options(void) {
     lv_dropdown_set_selected(ui_droHidden_visual, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droContentCollect_visual, config.VISUAL.CONTENTCOLLECT);
     lv_dropdown_set_selected(ui_droContentHistory_visual, config.VISUAL.CONTENTHISTORY);
-    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count)
-                                                        ? 0 : config.VISUAL.OVERLAY_IMAGE);
-    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, config.VISUAL.OVERLAY_TRANSPARENCY);
+    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
+    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAY_TRANSPARENCY, 0, 100));
 }
 
 static void save_visual_options(void) {
@@ -79,7 +80,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
-    CHECK_AND_SAVE_STD(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0);
+    CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 100);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -121,9 +122,9 @@ static void init_navigation_group(void) {
 
     overlay_count = load_overlay_set(ui_droOverlayImage_visual);
 
-    char *transparency_string = generate_number_string(0, 255, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droOverlayTransparency_visual, transparency_string);
-    free(transparency_string);
+    char *pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
+    apply_theme_list_drop_down(&theme, ui_droOverlayTransparency_visual, pct_values);
+    free(pct_values);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

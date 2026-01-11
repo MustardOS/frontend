@@ -30,18 +30,19 @@ static void init_dropdown_settings(void) {
 #define TWEAKGEN(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
+
+    Brightness_original = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen),
+                                     2, device.SCREEN.BRIGHT);
+    Volume_original = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen),
+                                 0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100);
 }
 
 static void restore_tweak_options(void) {
-    lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
+    lv_dropdown_set_selected(ui_droBrightness_tweakgen,
+                             int_to_pct(config.SETTINGS.GENERAL.BRIGHTNESS, 2, device.SCREEN.BRIGHT));
 
-    if (!config.SETTINGS.ADVANCED.OVERDRIVE) {
-        lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME > 100
-                                                        ? config.SETTINGS.GENERAL.VOLUME / 2
-                                                        : config.SETTINGS.GENERAL.VOLUME);
-    } else {
-        lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME);
-    }
+    lv_dropdown_set_selected(ui_droVolume_tweakgen, int_to_pct(config.SETTINGS.GENERAL.VOLUME, 0,
+                                                               config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100));
 
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
@@ -103,14 +104,18 @@ static void save_tweak_options(void) {
                            lv_dropdown_get_selected(ui_droColour_tweakgen) - 255);
     }
 
-    if (lv_dropdown_get_selected(ui_droBrightness_tweakgen) != Brightness_original) {
+    int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen),
+                                2, device.SCREEN.BRIGHT);
+    if (bright_mod != Brightness_original) {
         is_modified++;
-        set_setting_value("bright.sh", lv_dropdown_get_selected(ui_droBrightness_tweakgen), 1);
+        set_setting_value("bright.sh", bright_mod, 0);
     }
 
-    if (lv_dropdown_get_selected(ui_droVolume_tweakgen) != Volume_original) {
+    int volume_mod = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen),
+                                0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100);
+    if (volume_mod != Volume_original) {
         is_modified++;
-        set_setting_value("audio.sh", lv_dropdown_get_selected(ui_droVolume_tweakgen), 0);
+        set_setting_value("audio.sh", volume_mod, 0);
     }
 
     if (is_modified > 0) run_tweak_script();
@@ -211,16 +216,15 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, hk_combo_count);
-
     INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
 
-    char *brightness_values = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droBrightness_tweakgen, brightness_values);
-    free(brightness_values);
+    char *bright_pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
+    apply_theme_list_drop_down(&theme, ui_droBrightness_tweakgen, bright_pct_values);
+    free(bright_pct_values);
 
-    char *volume_values = generate_number_string(device.AUDIO.MIN, device.AUDIO.MAX, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droVolume_tweakgen, volume_values);
-    free(volume_values);
+    char *volume_pct_values = generate_number_string(0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100, 1, NULL, "%", NULL, 1);
+    apply_theme_list_drop_down(&theme, ui_droVolume_tweakgen, volume_pct_values);
+    free(volume_pct_values);
 
     char *colour_values = generate_number_string(-255, 255, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droColour_tweakgen, colour_values);
@@ -323,10 +327,12 @@ static void update_option_values(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBrightness_tweakgen) {
         toast_message(lang.MUXTWEAKGEN.BRIGHT_SET, SHORT);
-        set_setting_value("bright", lv_dropdown_get_selected(ui_droBrightness_tweakgen), 1);
+        set_setting_value("bright", pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen),
+                                               2, device.SCREEN.BRIGHT), 0);
     } else if (element_focused == ui_lblVolume_tweakgen) {
         toast_message(lang.MUXTWEAKGEN.VOLUME_SET, SHORT);
-        set_setting_value("audio", lv_dropdown_get_selected(ui_droVolume_tweakgen), 0);
+        set_setting_value("audio", pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen),
+                                              0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100), 0);
     } else if (element_focused == ui_lblColour_tweakgen) {
         toast_message(lang.MUXTWEAKGEN.TEMP_SET, SHORT);
         set_setting_value("temp", lv_dropdown_get_selected(ui_droColour_tweakgen), -255);

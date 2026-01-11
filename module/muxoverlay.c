@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxoverlay.h"
 
-#define UI_COUNT 14
+#define UI_COUNT 12
 
 #define OVERLAY(NAME, UDATA) static int NAME##_original;
 OVERLAY_ELEMENTS
@@ -9,17 +9,18 @@ OVERLAY_ELEMENTS
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblGenEnable_overlay, lang.MUXOVERLAY.HELP.GENERAL.ENABLE},
             {ui_lblGenAlpha_overlay,  lang.MUXOVERLAY.HELP.GENERAL.ALPHA},
             {ui_lblGenAnchor_overlay, lang.MUXOVERLAY.HELP.GENERAL.ANCHOR},
             {ui_lblGenScale_overlay,  lang.MUXOVERLAY.HELP.GENERAL.SCALE},
-            {ui_lblBatEnable_overlay, lang.MUXOVERLAY.HELP.BATTERY.ENABLE},
+
             {ui_lblBatAlpha_overlay,  lang.MUXOVERLAY.HELP.BATTERY.ALPHA},
             {ui_lblBatAnchor_overlay, lang.MUXOVERLAY.HELP.BATTERY.ANCHOR},
             {ui_lblBatScale_overlay,  lang.MUXOVERLAY.HELP.BATTERY.SCALE},
+
             {ui_lblVolAlpha_overlay,  lang.MUXOVERLAY.HELP.VOLUME.ALPHA},
             {ui_lblVolAnchor_overlay, lang.MUXOVERLAY.HELP.VOLUME.ANCHOR},
             {ui_lblVolScale_overlay,  lang.MUXOVERLAY.HELP.VOLUME.SCALE},
+
             {ui_lblBriAlpha_overlay,  lang.MUXOVERLAY.HELP.BRIGHT.ALPHA},
             {ui_lblBriAnchor_overlay, lang.MUXOVERLAY.HELP.BRIGHT.ANCHOR},
             {ui_lblBriScale_overlay,  lang.MUXOVERLAY.HELP.BRIGHT.SCALE}
@@ -32,21 +33,27 @@ static void init_dropdown_settings(void) {
 #define OVERLAY(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_overlay);
     OVERLAY_ELEMENTS
 #undef OVERLAY
+
+    GenAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droGenAlpha_overlay), 0, 255);
+    BatAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droBatAlpha_overlay), 0, 255);
+    VolAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droVolAlpha_overlay), 0, 255);
+    BriAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droBriAlpha_overlay), 0, 255);
 }
 
 static void restore_tweak_options(void) {
-    lv_dropdown_set_selected(ui_droGenEnable_overlay, config.SETTINGS.OVERLAY.GENERAL_ENABLE);
-    lv_dropdown_set_selected(ui_droGenAlpha_overlay, config.SETTINGS.OVERLAY.GENERAL_ALPHA);
+    lv_dropdown_set_selected(ui_droGenAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.GENERAL_ALPHA, 0, 255));
     lv_dropdown_set_selected(ui_droGenAnchor_overlay, config.SETTINGS.OVERLAY.GENERAL_ANCHOR);
     lv_dropdown_set_selected(ui_droGenScale_overlay, config.SETTINGS.OVERLAY.GENERAL_SCALE);
-    lv_dropdown_set_selected(ui_droBatEnable_overlay, config.SETTINGS.OVERLAY.BATTERY_ENABLE);
-    lv_dropdown_set_selected(ui_droBatAlpha_overlay, config.SETTINGS.OVERLAY.BATTERY_ALPHA);
+
+    lv_dropdown_set_selected(ui_droBatAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.BATTERY_ALPHA, 0, 255));
     lv_dropdown_set_selected(ui_droBatAnchor_overlay, config.SETTINGS.OVERLAY.BATTERY_ANCHOR);
     lv_dropdown_set_selected(ui_droBatScale_overlay, config.SETTINGS.OVERLAY.BATTERY_SCALE);
-    lv_dropdown_set_selected(ui_droVolAlpha_overlay, config.SETTINGS.OVERLAY.VOLUME_ALPHA);
+
+    lv_dropdown_set_selected(ui_droVolAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.VOLUME_ALPHA, 0, 255));
     lv_dropdown_set_selected(ui_droVolAnchor_overlay, config.SETTINGS.OVERLAY.VOLUME_ANCHOR);
     lv_dropdown_set_selected(ui_droVolScale_overlay, config.SETTINGS.OVERLAY.VOLUME_SCALE);
-    lv_dropdown_set_selected(ui_droBriAlpha_overlay, config.SETTINGS.OVERLAY.BRIGHT_ALPHA);
+
+    lv_dropdown_set_selected(ui_droBriAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.BRIGHT_ALPHA, 0, 255));
     lv_dropdown_set_selected(ui_droBriAnchor_overlay, config.SETTINGS.OVERLAY.BRIGHT_ANCHOR);
     lv_dropdown_set_selected(ui_droBriScale_overlay, config.SETTINGS.OVERLAY.BRIGHT_SCALE);
 }
@@ -54,18 +61,19 @@ static void restore_tweak_options(void) {
 static void save_tweak_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(overlay, GenEnable, "settings/overlay/gen_enable", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, GenAlpha, "settings/overlay/gen_alpha", INT, 0);
+    CHECK_AND_SAVE_PCT(overlay, GenAlpha, "settings/overlay/gen_alpha", INT, 0, 255);
     CHECK_AND_SAVE_STD(overlay, GenAnchor, "settings/overlay/gen_anchor", INT, 0);
     CHECK_AND_SAVE_STD(overlay, GenScale, "settings/overlay/gen_scale", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, BatEnable, "settings/overlay/bat_enable", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, BatAlpha, "settings/overlay/bat_alpha", INT, 0);
+
+    CHECK_AND_SAVE_PCT(overlay, BatAlpha, "settings/overlay/bat_alpha", INT, 0, 255);
     CHECK_AND_SAVE_STD(overlay, BatAnchor, "settings/overlay/bat_anchor", INT, 0);
     CHECK_AND_SAVE_STD(overlay, BatScale, "settings/overlay/bat_scale", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, VolAlpha, "settings/overlay/vol_alpha", INT, 0);
+
+    CHECK_AND_SAVE_PCT(overlay, VolAlpha, "settings/overlay/vol_alpha", INT, 0, 255);
     CHECK_AND_SAVE_STD(overlay, VolAnchor, "settings/overlay/vol_anchor", INT, 0);
     CHECK_AND_SAVE_STD(overlay, VolScale, "settings/overlay/vol_scale", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, BriAlpha, "settings/overlay/bri_alpha", INT, 0);
+
+    CHECK_AND_SAVE_PCT(overlay, BriAlpha, "settings/overlay/bri_alpha", INT, 0, 255);
     CHECK_AND_SAVE_STD(overlay, BriAnchor, "settings/overlay/bri_anchor", INT, 0);
     CHECK_AND_SAVE_STD(overlay, BriScale, "settings/overlay/bri_scale", INT, 0);
 
@@ -96,22 +104,23 @@ static void init_navigation_group(void) {
             lang.MUXOVERLAY.SCALE.STRETCH
     };
 
-    INIT_OPTION_ITEM(-1, overlay, GenEnable, lang.MUXOVERLAY.GENERAL.ENABLE, "gen_enable", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, overlay, GenAlpha, lang.MUXOVERLAY.GENERAL.ALPHA, "gen_alpha", NULL, 0);
     INIT_OPTION_ITEM(-1, overlay, GenAnchor, lang.MUXOVERLAY.GENERAL.ANCHOR, "gen_anchor", anchor_options, 9);
     INIT_OPTION_ITEM(-1, overlay, GenScale, lang.MUXOVERLAY.GENERAL.SCALE, "gen_scale", scale_options, 3);
-    INIT_OPTION_ITEM(-1, overlay, BatEnable, lang.MUXOVERLAY.BATTERY.ENABLE, "bat_enable", disabled_enabled, 2);
+
     INIT_OPTION_ITEM(-1, overlay, BatAlpha, lang.MUXOVERLAY.BATTERY.ALPHA, "bat_alpha", NULL, 0);
     INIT_OPTION_ITEM(-1, overlay, BatAnchor, lang.MUXOVERLAY.BATTERY.ANCHOR, "bat_anchor", anchor_options, 9);
     INIT_OPTION_ITEM(-1, overlay, BatScale, lang.MUXOVERLAY.BATTERY.SCALE, "bat_scale", scale_options, 3);
+
     INIT_OPTION_ITEM(-1, overlay, VolAlpha, lang.MUXOVERLAY.VOLUME.ALPHA, "vol_alpha", NULL, 0);
     INIT_OPTION_ITEM(-1, overlay, VolAnchor, lang.MUXOVERLAY.VOLUME.ANCHOR, "vol_anchor", anchor_options, 9);
     INIT_OPTION_ITEM(-1, overlay, VolScale, lang.MUXOVERLAY.VOLUME.SCALE, "vol_scale", scale_options, 3);
+
     INIT_OPTION_ITEM(-1, overlay, BriAlpha, lang.MUXOVERLAY.BRIGHT.ALPHA, "bri_alpha", NULL, 0);
     INIT_OPTION_ITEM(-1, overlay, BriAnchor, lang.MUXOVERLAY.BRIGHT.ANCHOR, "bri_anchor", anchor_options, 9);
     INIT_OPTION_ITEM(-1, overlay, BriScale, lang.MUXOVERLAY.BRIGHT.SCALE, "bri_scale", scale_options, 3);
 
-    char *alpha_values = generate_number_string(0, 255, 1, NULL, NULL, NULL, 0);
+    char *alpha_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droGenAlpha_overlay, alpha_values);
     apply_theme_list_drop_down(&theme, ui_droBatAlpha_overlay, alpha_values);
     apply_theme_list_drop_down(&theme, ui_droVolAlpha_overlay, alpha_values);

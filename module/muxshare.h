@@ -333,49 +333,49 @@ int muxwebserv_main();
         ui_count--;                                                            \
     } while (0)
 
-#define CHECK_AND_SAVE_KSK(MODULE, NAME, FILE, TYPE)                         \
-    do {                                                                     \
-        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
-        if (current != NAME##_original) {                                    \
-            is_modified++;                                                   \
-            write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current);  \
-        }                                                                    \
+#define CHECK_AND_SAVE_KSK(MODULE, NAME, FILE, TYPE)                      \
+    do {                                                                  \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);  \
+        if (current != NAME##_original) {                                 \
+            is_modified++;                                                \
+            write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current); \
+        }                                                                 \
     } while (0)
 
-#define CHECK_AND_SAVE_STD(MODULE, NAME, FILE, TYPE, OFFSET)                          \
-    do {                                                                              \
-        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
-        if (current != NAME##_original) {                                             \
-            is_modified++;                                                            \
+#define CHECK_AND_SAVE_STD(MODULE, NAME, FILE, TYPE, OFFSET)                        \
+    do {                                                                            \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);            \
+        if (current != NAME##_original) {                                           \
+            is_modified++;                                                          \
             write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, current + OFFSET); \
-        }                                                                             \
+        }                                                                           \
     } while (0)
 
-#define CHECK_AND_SAVE_DEV(MODULE, NAME, FILE, TYPE, OFFSET)                          \
-    do {                                                                              \
-        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
-        if (current != NAME##_original) {                                             \
-            is_modified++;                                                            \
+#define CHECK_AND_SAVE_DEV(MODULE, NAME, FILE, TYPE, OFFSET)                        \
+    do {                                                                            \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);            \
+        if (current != NAME##_original) {                                           \
+            is_modified++;                                                          \
             write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, current + OFFSET); \
-        }                                                                             \
+        }                                                                           \
     } while (0)
 
-#define CHECK_AND_SAVE_DEV_VAL(MODULE, NAME, FILE, TYPE, VALUES)                     \
-    do {                                                                             \
-        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
-        if (current != NAME##_original) {                                            \
-            is_modified++;                                                           \
+#define CHECK_AND_SAVE_DEV_VAL(MODULE, NAME, FILE, TYPE, VALUES)                   \
+    do {                                                                           \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);           \
+        if (current != NAME##_original) {                                          \
+            is_modified++;                                                         \
             write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, VALUES[current]); \
-        }                                                                            \
+        }                                                                          \
     } while (0)
 
-#define CHECK_AND_SAVE_VAL(MODULE, NAME, FILE, TYPE, VALUES)                         \
-    do {                                                                             \
-        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
-        if (current != NAME##_original) {                                            \
-            is_modified++;                                                           \
+#define CHECK_AND_SAVE_VAL(MODULE, NAME, FILE, TYPE, VALUES)                       \
+    do {                                                                           \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);           \
+        if (current != NAME##_original) {                                          \
+            is_modified++;                                                         \
             write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, VALUES[current]); \
-        }                                                                            \
+        }                                                                          \
     } while (0)
 
 #define CHECK_AND_SAVE_MAP(MODULE, NAME, FILE, VALUES, COUNT, DEFAULT)            \
@@ -384,6 +384,17 @@ int muxwebserv_main();
         if (current != NAME##_original) {                                         \
             int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT); \
             is_modified++;                                                        \
-            write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped);        \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped);          \
         }                                                                         \
+    } while (0)
+
+#define CHECK_AND_SAVE_PCT(MODULE, NAME, FILE, TYPE, VAL_MIN, VAL_MAX)   \
+    do {                                                                 \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE); \
+        int value = ((VAL_MIN) == (VAL_MAX)) ? (VAL_MIN)                 \
+                    : pct_to_int(current, VAL_MIN, VAL_MAX);             \
+        if (value != NAME##_original) {                                \
+            is_modified++;                                               \
+            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, value); \
+        }                                                                \
     } while (0)
