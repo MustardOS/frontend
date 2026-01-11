@@ -1044,7 +1044,7 @@ static void show_detail_view(const activity_item_t *it) {
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_device");
                 break;
             case DETAIL_MODE:
-                if (!device.BOARD.HAS_HDMI) break;
+                if (!device.BOARD.HAS_HDMI) continue;
 
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.MUXACTIVITY.DETAIL.MODE);
 
