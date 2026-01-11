@@ -174,11 +174,9 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.NETWORK.WAIT, CONF_CONFIG_PATH "settings/network/wait_timer", 5)
     CFG_INT_FIELD(config->SETTINGS.NETWORK.RETRY, CONF_CONFIG_PATH "settings/network/compat_retry", 1)
 
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_ENABLE, CONF_CONFIG_PATH "settings/overlay/gen_enable", 1)
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_ALPHA, CONF_CONFIG_PATH "settings/overlay/gen_alpha", 255)
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_ANCHOR, CONF_CONFIG_PATH "settings/overlay/gen_anchor", 4)
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_SCALE, CONF_CONFIG_PATH "settings/overlay/gen_scale", 0)
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_ENABLE, CONF_CONFIG_PATH "settings/overlay/bat_enable", 1)
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_ALPHA, CONF_CONFIG_PATH "settings/overlay/bat_alpha", 255)
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_ANCHOR, CONF_CONFIG_PATH "settings/overlay/bat_anchor", 0)
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_SCALE, CONF_CONFIG_PATH "settings/overlay/bat_scale", 0)
