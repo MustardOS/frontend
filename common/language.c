@@ -280,7 +280,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
-    SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Overlay Options");
+    SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Content Overlay Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
@@ -292,7 +292,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.BACKUP, "Back up your content to a restorable archive for your device or others");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.OVERLAY, "Settings to change the hardware overlays of content and the frontend");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.OVERLAY, "Settings to change the hardware overlays of content");
 
     // muxconnect
     SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
@@ -761,7 +761,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 
     // muxoverlay
-    SPECIFIC_FIELD(lang->MUXOVERLAY.TITLE, "OVERLAYS");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.TITLE, "OVERLAY OPTIONS");
     SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.TOP.LEFT, "Top Left");
     SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.TOP.MIDDLE, "Top Middle");
     SPECIFIC_FIELD(lang->MUXOVERLAY.ANCHOR.TOP.RIGHT, "Top Right");
@@ -774,11 +774,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.ORIGINAL, "None");
     SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.FIT, "Scale");
     SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.STRETCH, "Stretch");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ENABLE, "Content Overlay");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ALPHA, "Content Transparency");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ANCHOR, "Content Position");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.SCALE, "Content Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ENABLE, "Low Battery Overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ALPHA, "Content Base Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ANCHOR, "Content Base Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.SCALE, "Content Base Scale");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ALPHA, "Low Battery Transparency");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ANCHOR, "Low Battery Position");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.SCALE, "Low Battery Scale");
@@ -788,11 +786,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.ALPHA, "Brightness Transparency");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.ANCHOR, "Brightness Position");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.SCALE, "Brightness Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ENABLE, "");
     SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ALPHA, "");
     SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ANCHOR, "");
     SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.SCALE, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ENABLE, "");
     SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ALPHA, "");
     SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ANCHOR, "");
     SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.SCALE, "");
@@ -1157,8 +1153,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HIDDEN, "Show Hidden Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.CONTENTCOLLECT, "Collection In Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.CONTENTHISTORY, "History In Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.IMAGE, "Overlay Image");
-    SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.TRANSPARENCY, "Overlay Transparency");
+    SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.IMAGE, "Frontend Overlay Image");
+    SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.TRANSPARENCY, "Frontend Overlay Transparency");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.THEME, "Theme Provided");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.CHECKERBOARD.T1, "Checkerboard (1px)");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.CHECKERBOARD.T4, "Checkerboard (4px)");

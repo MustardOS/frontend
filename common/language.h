@@ -891,13 +891,11 @@ struct mux_lang {
             char STRETCH[MAX_BUFFER_SIZE];
         } SCALE;
         struct {
-            char ENABLE[MAX_BUFFER_SIZE];
             char ALPHA[MAX_BUFFER_SIZE];
             char ANCHOR[MAX_BUFFER_SIZE];
             char SCALE[MAX_BUFFER_SIZE];
         } GENERAL;
         struct {
-            char ENABLE[MAX_BUFFER_SIZE];
             char ALPHA[MAX_BUFFER_SIZE];
             char ANCHOR[MAX_BUFFER_SIZE];
             char SCALE[MAX_BUFFER_SIZE];
@@ -914,13 +912,11 @@ struct mux_lang {
         } BRIGHT;
         struct {
             struct {
-                char ENABLE[MAX_BUFFER_SIZE];
                 char ALPHA[MAX_BUFFER_SIZE];
                 char ANCHOR[MAX_BUFFER_SIZE];
                 char SCALE[MAX_BUFFER_SIZE];
             } GENERAL;
             struct {
-                char ENABLE[MAX_BUFFER_SIZE];
                 char ALPHA[MAX_BUFFER_SIZE];
                 char ANCHOR[MAX_BUFFER_SIZE];
                 char SCALE[MAX_BUFFER_SIZE];
