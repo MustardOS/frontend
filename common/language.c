@@ -122,7 +122,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");
-    SPECIFIC_FIELD(lang->MUXACTIVITY.HELP, "");
+    SPECIFIC_FIELD(lang->MUXACTIVITY.HELP, "Tracks what you play, how often, and for how long. View detailed stats per game, overall play habits, and export your activity data to a HTML file");
     SPECIFIC_FIELD(lang->MUXACTIVITY.NONE, "Nothing Played Yet…");
     SPECIFIC_FIELD(lang->MUXACTIVITY.INFO, "Info");
     SPECIFIC_FIELD(lang->MUXACTIVITY.LAUNCH, "Launch Count");
@@ -786,18 +786,18 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.ALPHA, "Brightness Transparency");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.ANCHOR, "Brightness Position");
     SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.SCALE, "Brightness Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ALPHA, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ANCHOR, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.SCALE, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ALPHA, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ANCHOR, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.SCALE, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.ALPHA, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.ANCHOR, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.SCALE, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.ALPHA, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.ANCHOR, "");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.SCALE, "");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ALPHA, "Controls the transparency of the base content overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ANCHOR, "Sets the screen position where the base content overlay is anchored");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.SCALE, "Controls how the base content overlay is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ALPHA, "Controls the transparency of the low battery indicator overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ANCHOR, "Sets the screen position where the low battery indicator is displayed");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.SCALE, "Controls how the low battery indicator is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.ALPHA, "Controls the transparency of the volume indicator overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.ANCHOR, "Sets the screen position where the volume indicator is displayed");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.SCALE, "Controls how the volume indicator is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.ALPHA, "Controls the transparency of the brightness indicator overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.ANCHOR, "Sets the screen position where the brightness indicator is displayed");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.SCALE, "Controls how the brightness indicator is scaled on the screen");
 
     // muxpass
     SPECIFIC_FIELD(lang->MUXPASS.TITLE, "PASSCODE");
