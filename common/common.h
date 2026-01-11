@@ -296,8 +296,6 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_c
 
 void unload_image_animation();
 
-
-
 int is_network_connected();
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
@@ -488,3 +486,7 @@ const char *get_process_name(void);
 const char *module_from_func(const char *func);
 
 char *get_theme_base();
+
+int pct_to_int(int pct, int min, int max);
+
+int int_to_pct(int num, int min, int max);

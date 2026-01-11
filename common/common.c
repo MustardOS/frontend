@@ -3691,3 +3691,33 @@ const char *module_from_func(const char *func) {
 char *get_theme_base() {
     return config.BOOT.FACTORY_RESET || !theme_compat() ? INTERNAL_THEME : config.THEME.STORAGE_THEME;
 }
+
+static void fix_range(int *min, int *max) {
+    if (*min > *max) {
+        int tmp = *min;
+        *min = *max;
+        *max = tmp;
+    }
+}
+
+static int clamp_range(int value, int min, int max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
+int pct_to_int(int pct, int min, int max) {
+    fix_range(&min, &max);
+    pct = clamp_range(pct, 0, 100);
+
+    const int range = max - min;
+    return min + (pct * range + 50) / 100;
+}
+
+int int_to_pct(int num, int min, int max) {
+    fix_range(&min, &max);
+    num = clamp_range(num, min, max);
+
+    const int range = max - min;
+    return ((num - min) * 100 + range / 2) / range;
+}
