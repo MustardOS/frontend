@@ -5,7 +5,6 @@
 #include <linux/limits.h>
 #include "../common/common.h"
 
-#define BATTERY_IMAGE  "battery"
 #define BATTERY_DETECT "/run/muos/overlay.battery"
 
 #define BATTERY_ALPHA OVERLAY_CONFIG "bat_alpha"
@@ -13,22 +12,23 @@
 #define BATTERY_SCALE OVERLAY_CONFIG "bat_scale"
 
 extern char battery_overlay_path[PATH_MAX];
-extern int battery_last_enabled;
+
+extern int battery_last_step;
 
 extern int battery_anchor_cached;
 extern int battery_scale_cached;
 
-extern SDL_Texture *battery_sdl_tex;
-extern int battery_sdl_ready;
-extern int battery_sdl_attempted;
-extern int battery_sdl_w;
-extern int battery_sdl_h;
+extern SDL_Texture *battery_sdl_tex[INDICATOR_STEPS];
+extern int battery_sdl_w[INDICATOR_STEPS];
+extern int battery_sdl_h[INDICATOR_STEPS];
+extern int battery_preload_sdl_done;
+extern int battery_disabled_sdl;
 
-extern GLuint battery_gles_tex;
-extern int battery_gles_ready;
-extern int battery_gles_attempted;
-extern int battery_gles_w;
-extern int battery_gles_h;
+extern GLuint battery_gles_tex[INDICATOR_STEPS];
+extern int battery_gles_w[INDICATOR_STEPS];
+extern int battery_gles_h[INDICATOR_STEPS];
+extern int battery_preload_gles_done;
+extern int battery_disabled_gles;
 
 extern gl_vtx_t vtx_battery[4];
 extern int vtx_battery_valid;

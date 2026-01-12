@@ -122,7 +122,8 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     if (!base_overlay_disabled()) {
         sdl_base_overlay_init(renderer);
         if (base_sdl_tex) {
-            draw_sdl_overlay(renderer, base_sdl_tex, base_sdl_w, base_sdl_h,
+            draw_sdl_overlay(renderer, base_sdl_tex,
+                             base_sdl_w, base_sdl_h,
                              get_alpha_cached(&overlay_alpha_cache),
                              get_anchor_cached(&overlay_anchor_cache),
                              get_scale_cached(&overlay_scale_cache)
@@ -133,8 +134,10 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     // We place the battery overlay init here because we immediately
     // want to show the low battery indicator when content starts!
     sdl_battery_overlay_init(renderer);
-    if (battery_sdl_tex) {
-        draw_sdl_overlay(renderer, battery_sdl_tex, battery_sdl_w, battery_sdl_h,
+    int battery_step = battery_last_step;
+    if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_sdl_tex[battery_step]) {
+        draw_sdl_overlay(renderer, battery_sdl_tex[battery_step],
+                         battery_sdl_w[battery_step], battery_sdl_h[battery_step],
                          get_alpha_cached(&battery_alpha_cache),
                          get_anchor_cached(&battery_anchor_cache),
                          get_scale_cached(&battery_scale_cache)
@@ -145,7 +148,8 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
         sdl_bright_overlay_init(renderer);
         int step = bright_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && bright_sdl_tex[step]) {
-            draw_sdl_overlay(renderer, bright_sdl_tex[step], bright_sdl_w[step], bright_sdl_h[step],
+            draw_sdl_overlay(renderer, bright_sdl_tex[step],
+                             bright_sdl_w[step], bright_sdl_h[step],
                              get_alpha_cached(&bright_alpha_cache),
                              get_anchor_cached(&bright_anchor_cache),
                              get_scale_cached(&bright_scale_cache)
@@ -157,7 +161,8 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
         sdl_volume_overlay_init(renderer);
         int step = volume_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && volume_sdl_tex[step]) {
-            draw_sdl_overlay(renderer, volume_sdl_tex[step], volume_sdl_w[step], volume_sdl_h[step],
+            draw_sdl_overlay(renderer, volume_sdl_tex[step],
+                             volume_sdl_w[step], volume_sdl_h[step],
                              get_alpha_cached(&volume_alpha_cache),
                              get_anchor_cached(&volume_anchor_cache),
                              get_scale_cached(&volume_scale_cache)

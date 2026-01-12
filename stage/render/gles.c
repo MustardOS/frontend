@@ -251,11 +251,13 @@ static void on_context_changed(void) {
     destroy_base_gles();
     destroy_overlay();
 
-    battery_gles_attempted = 0;
-    battery_gles_ready = 0;
-    if (battery_gles_tex) {
-        glDeleteTextures(1, &battery_gles_tex);
-        battery_gles_tex = 0;
+    battery_preload_gles_done = 0;
+    battery_disabled_gles = 0;
+    for (int i = 0; i < INDICATOR_STEPS; i++) {
+        if (battery_gles_tex[i]) {
+            glDeleteTextures(1, &battery_gles_tex[i]);
+            battery_gles_tex[i] = 0;
+        }
     }
     vtx_battery_valid = 0;
 
@@ -394,8 +396,9 @@ static void stage_draw(int fb_w, int fb_h) {
         vtx_base_valid = 1;
     }
 
-    if (battery_gles_ready && !vtx_battery_valid) {
-        build_quad_ndc(vtx_battery, battery_gles_w, battery_gles_h, fb_w, fb_h,
+    int battery_step = battery_last_step;
+    if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_gles_tex[battery_step] && !vtx_battery_valid) {
+        build_quad_ndc(vtx_battery, battery_gles_w[battery_step], battery_gles_h[battery_step], fb_w, fb_h,
                        battery_anchor_cached, battery_scale_cached);
         vtx_battery_valid = 1;
     }
@@ -436,8 +439,8 @@ static void stage_draw(int fb_w, int fb_h) {
     }
 
     // Draw battery overlay if activated
-    if (battery_gles_ready && vtx_battery_valid) {
-        draw_quad(battery_gles_tex, vtx_battery, get_alpha_cached(&battery_alpha_cache));
+    if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_gles_tex[battery_step] && vtx_battery_valid) {
+        draw_quad(battery_gles_tex[battery_step], vtx_battery, get_alpha_cached(&battery_alpha_cache));
     }
 
     if (bright_is_visible()) {
