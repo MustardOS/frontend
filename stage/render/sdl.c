@@ -109,6 +109,7 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
         base_sdl_ready = 0;
         sdl_overlay_resolved = 0;
         sdl_overlay_path_last[0] = '\0';
+        base_nop_last = -1;
         last_renderer = renderer;
     }
 
@@ -119,7 +120,21 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     bright_overlay_update();
     volume_overlay_update();
 
-    if (!base_overlay_disabled()) {
+    const int base_disabled = (access(BASE_OVERLAY_NOP, F_OK) == 0);
+    if (base_disabled != base_nop_last) {
+        if (base_disabled) {
+            if (base_sdl_tex) {
+                SDL_DestroyTexture(base_sdl_tex);
+                base_sdl_tex = NULL;
+            }
+            base_sdl_ready = 0;
+            sdl_overlay_resolved = 0;
+            sdl_overlay_path_last[0] = '\0';
+        }
+        base_nop_last = base_disabled;
+    }
+
+    if (!base_disabled) {
         sdl_base_overlay_init(renderer);
         if (base_sdl_tex) {
             draw_sdl_overlay(renderer, base_sdl_tex,

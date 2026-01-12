@@ -33,6 +33,7 @@ uint64_t sdl_overlay_last_check_ms = 0;
 
 uint64_t base_nop_last_check_ms = 0;
 int base_nop_cached = 0;
+int base_nop_last = -1;
 
 struct alpha_cache base_alpha_cache = {
         .path  = BASE_ALPHA,

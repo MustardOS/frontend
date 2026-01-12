@@ -1,4 +1,5 @@
 #include <dlfcn.h>
+#include <unistd.h>
 #include <SDL2/SDL.h>
 #include <GLES2/gl2.h>
 #include "../../common/log.h"
@@ -251,6 +252,9 @@ static void on_context_changed(void) {
     destroy_base_gles();
     destroy_overlay();
 
+    base_nop_last = -1;
+    vtx_base_valid = 0;
+
     battery_preload_gles_done = 0;
     battery_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -384,13 +388,20 @@ static void stage_draw(int fb_w, int fb_h) {
     // TODO: For future reference add all independent overlay layers here
     gl_battery_overlay_init();
 
-    // Keep the general overlay separate!
-    const int base_off = base_overlay_disabled();
-    if (!base_off) gl_base_overlay_init(render_window);
+    const int base_disabled = (access(BASE_OVERLAY_NOP, F_OK) == 0);
+    if (base_disabled != base_nop_last) {
+        if (base_disabled) destroy_base_gles();
+
+        vtx_base_valid = 0;
+        base_nop_last = base_disabled;
+    }
+
+    // Only init base when truly enabled...
+    if (!base_disabled) gl_base_overlay_init(render_window);
 
     update_geometry_caches();
 
-    if (!base_off && base_gles_ready && !vtx_base_valid) {
+    if (!base_disabled && base_gles_ready && !vtx_base_valid) {
         build_quad_ndc(vtx_base, base_gles_w, base_gles_h, fb_w, fb_h,
                        base_anchor_cached, base_scale_cached);
         vtx_base_valid = 1;
@@ -434,7 +445,7 @@ static void stage_draw(int fb_w, int fb_h) {
     glViewport(0, 0, fb_w, fb_h);
 
     // Draw base overlay if present (and not disabled)
-    if (!base_off && base_gles_ready && vtx_base_valid) {
+    if (!base_disabled && base_gles_ready && vtx_base_valid) {
         draw_quad(base_gles_tex, vtx_base, get_alpha_cached(&overlay_alpha_cache));
     }
 

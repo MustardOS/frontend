@@ -34,6 +34,7 @@ extern uint64_t sdl_overlay_last_check_ms;
 
 extern uint64_t base_nop_last_check_ms;
 extern int base_nop_cached;
+extern int base_nop_last;
 
 extern struct flag_cache base_enable_cache;
 extern struct alpha_cache base_alpha_cache;
