@@ -404,7 +404,7 @@ static void save_custom_options() {
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
                 snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", config.THEME.STORAGE_THEME);
 
-                create_directories(strip_dir(rgb_script_dest));
+                create_directories(strip_dir(rgb_script_dest), 0);
                 write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
             }
         }

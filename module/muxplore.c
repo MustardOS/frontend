@@ -232,7 +232,7 @@ static void gen_item(char **file_names, int file_count) {
 
     snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
              sub_path);
-    create_directories(init_meta_dir);
+    create_directories(init_meta_dir, 0);
 
     const char *last_dir = str_tolower(get_last_dir(sub_path));
     if (strlen(last_dir) < 1) last_dir = str_tolower(sub_path);

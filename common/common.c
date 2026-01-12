@@ -737,6 +737,20 @@ unsigned long long read_all_long_from(const char *filename) {
     return value;
 }
 
+void cfg_write_def_int(const char *path, int value) {
+    if (file_exist(path)) return;
+
+    create_directories(path, 1);
+    write_text_to_file(path, "w", INT, value);
+}
+
+void cfg_write_def_char(const char *path, const char *value) {
+    if (file_exist(path)) return;
+
+    create_directories(path, 1);
+    write_text_to_file(path, "w", CHAR, value);
+}
+
 const char *get_random_hex(void) {
     static int seeded = 0;
     if (!seeded) {
@@ -831,21 +845,30 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     fclose(file);
 }
 
-void create_directories(const char *path) {
+void create_directories(const char *path, int parent_only) {
     struct stat st;
+    char tmp_path[MAX_BUFFER_SIZE];
 
-    if (stat(path, &st) == 0) return;
+    if (!path || !*path) return;
 
-    char *path_copy = strdup(path);
-    char *slash = strrchr(path_copy, '/');
-    if (slash != NULL) {
+    snprintf(tmp_path, sizeof(tmp_path), "%s", path);
+    if (parent_only) {
+        char *slash = strrchr(tmp_path, '/');
+        if (!slash) return;
         *slash = '\0';
-        create_directories(path_copy);
-        *slash = '/';
-        // recursive bullshit
     }
 
-    if (mkdir(path_copy, 0777) == -1) free(path_copy);
+    if (stat(tmp_path, &st) == 0 && S_ISDIR(st.st_mode)) return;
+
+    // recursive bullshit
+    char *slash = strrchr(tmp_path, '/');
+    if (slash) {
+        *slash = '\0';
+        create_directories(tmp_path, 0);
+        *slash = '/';
+    }
+
+    mkdir(tmp_path, 0777);
 }
 
 void show_info_box(const char *title, const char *content, int is_content) {
@@ -2029,7 +2052,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         snprintf(dest_file, sizeof(dest_file), "%s/%s", output, filename);
 
         if (file_stat.m_is_directory) {
-            create_directories(dest_file);
+            create_directories(dest_file, 0);
             continue;
         }
 

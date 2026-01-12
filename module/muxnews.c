@@ -328,7 +328,7 @@ static void load_topic_finished(int result) {
 }
 
 static void refresh_index(void) {
-    create_directories(NEWS_CACHE_DIR);
+    create_directories(NEWS_CACHE_DIR, 0);
 
     snprintf(cache_path, sizeof(cache_path), "%s", NEWS_INDEX_PATH);
     if (file_exist(cache_path)) remove(cache_path);
@@ -338,7 +338,7 @@ static void refresh_index(void) {
 }
 
 static void refresh_topic(int topic_id) {
-    create_directories(NEWS_CACHE_DIR);
+    create_directories(NEWS_CACHE_DIR, 0);
 
     snprintf(cache_path, sizeof(cache_path), NEWS_TOPIC_PATH_FMT, topic_id);
     if (file_exist(cache_path)) remove(cache_path);

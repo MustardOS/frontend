@@ -200,7 +200,7 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         if (stripped_name && stripped_name[0] == '\0') stripped_name = strip_ext(file_name);
 
         snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/", sub_path);
-        create_directories(init_meta_dir);
+        create_directories(init_meta_dir, 0);
 
         char custom_lookup[MAX_BUFFER_SIZE];
         snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dirs[i]);

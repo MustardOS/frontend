@@ -55,7 +55,7 @@ static void assign_control_parent(char *core_dir, const char *control) {
         char control_path[MAX_BUFFER_SIZE];
         snprintf(control_path, sizeof(control_path), "%s%s/core.con", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(control_path));
+        create_directories(strip_dir(control_path), 0);
         write_control_file(control_path, control, "Assign Control (Recursive)");
     }
 
@@ -74,7 +74,7 @@ static void create_control_assignment(const char *control, char *rom, enum gen_t
     }
 
     remove_double_slashes(core_dir);
-    create_directories(core_dir);
+    create_directories(core_dir, 0);
 
     switch (method) {
         case SINGLE:

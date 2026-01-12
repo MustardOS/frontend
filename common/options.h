@@ -176,15 +176,17 @@
 #define FONT_HEADER_FOLDER "header"
 #define FONT_FOOTER_FOLDER "footer"
 
-#define CFG_INT_FIELD(FIELD, PATH, DEFAULT)                       \
-    snprintf(buffer, sizeof(buffer), "%s", PATH);                 \
-    FIELD = (int)({                                               \
-        char *ep;                                                 \
-        long value = strtol(read_all_char_from(buffer), &ep, 10); \
-        *ep ? DEFAULT : value;                                    \
-    });
+#define CFG_INT_FIELD(FIELD, PATH, DEFAULT)           \
+    do {                                              \
+        snprintf(buffer, sizeof(buffer), "%s", PATH); \
+        cfg_write_def_int(buffer, DEFAULT);           \
+        FIELD = read_line_int_from(buffer, 1);        \
+    } while(0)
 
-#define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                     \
-    snprintf(buffer, sizeof(buffer), "%s", PATH);                               \
-    strncpy(FIELD, read_all_char_from(buffer) ?: DEFAULT, MAX_BUFFER_SIZE - 1); \
-    FIELD[MAX_BUFFER_SIZE - 1] = '\0';
+#define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                  \
+    do {                                                                     \
+        snprintf(buffer, sizeof(buffer), "%s", PATH);                        \
+        cfg_write_def_char(buffer, DEFAULT);                                 \
+        strncpy(FIELD, read_line_char_from(buffer, 1), MAX_BUFFER_SIZE - 1); \
+        FIELD[MAX_BUFFER_SIZE - 1] = '\0';                                   \
+    } while(0)

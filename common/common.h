@@ -225,6 +225,10 @@ int read_line_int_from(const char *filename, size_t line_number);
 
 unsigned long long read_all_long_from(const char *filename);
 
+void cfg_write_def_int(const char *path, int value);
+
+void cfg_write_def_char(const char *path, const char *value);
+
 const char *get_random_hex();
 
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value);
@@ -237,7 +241,7 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
-void create_directories(const char *path);
+void create_directories(const char *path, int parent_only);
 
 void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,
                       char *header_text, char *content_text);

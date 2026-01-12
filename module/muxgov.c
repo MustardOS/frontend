@@ -55,7 +55,7 @@ static void assign_gov_parent(char *core_dir, const char *gov) {
         char gov_path[MAX_BUFFER_SIZE];
         snprintf(gov_path, sizeof(gov_path), "%s%s/core.gov", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(gov_path));
+        create_directories(strip_dir(gov_path), 0);
         write_gov_file(gov_path, gov, "Assign Governor (Recursive)");
     }
 
@@ -74,7 +74,7 @@ static void create_gov_assignment(const char *gov, char *rom, enum gen_type meth
     }
 
     remove_double_slashes(core_dir);
-    create_directories(core_dir);
+    create_directories(core_dir, 0);
 
     switch (method) {
         case SINGLE:

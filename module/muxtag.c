@@ -56,7 +56,7 @@ static void assign_tag_parent(char *core_dir, char *tag) {
         char tag_path[MAX_BUFFER_SIZE];
         snprintf(tag_path, sizeof(tag_path), "%s%s/core.tag", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(tag_path));
+        create_directories(strip_dir(tag_path), 0);
         write_tag_file(tag_path, tag, "Assign Tag (Recursive)");
     }
 
@@ -69,7 +69,7 @@ static void create_tag_assignment(char *tag, char *rom, enum gen_type method) {
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_dir);
 
-    create_directories(core_dir);
+    create_directories(core_dir, 0);
 
     switch (method) {
         case SINGLE:

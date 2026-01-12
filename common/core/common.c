@@ -161,7 +161,7 @@ void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *cor
         char subdir_path[MAX_BUFFER_SIZE];
         snprintf(subdir_path, sizeof(subdir_path), "%s/%s", core_dir, subdirs[i]);
 
-        create_directories(subdir_path);
+        create_directories(subdir_path, 0);
 
         char subdir_core[MAX_BUFFER_SIZE];
         snprintf(subdir_core, sizeof(subdir_core), "%s/%s/core.cfg", core_dir, subdirs[i]);
@@ -186,7 +186,7 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_dir);
 
-    create_directories(core_dir);
+    create_directories(core_dir, 0);
 
     switch (method) {
         case SINGLE:
