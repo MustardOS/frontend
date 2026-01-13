@@ -795,15 +795,21 @@ static void handle_menu(void) {
 static void handle_random_select(void) {
     if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE) return;
 
-    int dir, target;
+    int dir = +1;
+    int target = current_item_index;
+
     shuffle_index(current_item_index, &dir, &target);
+    if (target < 0 || target >= ui_count || target == current_item_index) return;
 
     if (grid_mode_enabled) {
         current_item_index = target;
         update_grid_items(1);
         list_nav_next(0);
     } else {
-        list_nav_move(target, dir);
+        int steps = target - current_item_index;
+        if (steps < 0) steps = -steps;
+
+        list_nav_move(steps, dir);
     }
 }
 

@@ -23,6 +23,7 @@ int ui_count = 0;
 int hold_call = 0;
 
 int theme_down_index = 0;
+int last_shuffle = -1;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
@@ -64,12 +65,27 @@ void run_tweak_script() {
 }
 
 void shuffle_index(int current, int *dir, int *target) {
-    do {
-        int ran = (int) (random() % (ui_count - 1));
-        *target = (ran >= current) ? ran + 1 : ran;
-    } while (*target == 0);
+    // We'll check this here again, better to be safe than sorry!
+    if (ui_count < 2) {
+        *target = current;
+        *dir = +1;
+        return;
+    }
 
-    *dir = (*target > current) ? +1 : -1;
+    int t;
+    for (int i = 0; i < 4; i++) {
+        // Pick a random index, at least 3 times, excluding the current one
+        // Probably wasteful but it no longer deadlocks!
+        int ran = (int) (random() % (long) (ui_count - 1));
+        t = (ran >= current) ? ran + 1 : ran;
+
+        // Avoid immediately repeating the last shuffled item if possible...
+        if (t != last_shuffle) break;
+    }
+
+    last_shuffle = t;
+    *target = t;
+    *dir = (t > current) ? +1 : -1;
 }
 
 void adjust_box_art(void) {
@@ -171,10 +187,10 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
 
     if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
         snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
-                    ext);
+                 ext);
     } else {
         snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
-                    last_subdir, pointer == NULL ? strip_ext(items[current_item_index].name) : pointer, ext);
+                 last_subdir, pointer == NULL ? strip_ext(items[current_item_index].name) : pointer, ext);
 
         if (file_exist(path) && !force) {
             LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
@@ -186,7 +202,7 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
         }
 
         snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
-                    last_subdir, ext);
+                 last_subdir, ext);
     }
 
     if (file_exist(path) && !force) {
