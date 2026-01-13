@@ -10,9 +10,6 @@ POWER_ELEMENTS
 #define SHUTDOWN_COUNT 12
 static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600};
 
-#define BATTERY_COUNT 11
-static const int battery_values[] = {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
-
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
 
@@ -40,6 +37,8 @@ static void init_dropdown_settings(void) {
 #define POWER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_power);
     POWER_ELEMENTS
 #undef POWER
+
+    Battery_original = pct_to_int(lv_dropdown_get_selected(ui_droBattery_power), 0, 100);
 }
 
 static void generate_governor_values(void) {
@@ -120,10 +119,9 @@ static void restore_power_options(void) {
     int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
 
     map_drop_down_to_index(ui_droShutdown_power, config.SETTINGS.POWER.SHUTDOWN, shutdown_values, SHUTDOWN_COUNT, 0);
-    map_drop_down_to_index(ui_droBattery_power, config.SETTINGS.POWER.LOW_BATTERY, battery_values, BATTERY_COUNT, 5);
 
+    lv_dropdown_set_selected(ui_droBattery_power, int_to_pct(config.SETTINGS.POWER.LOW_BATTERY, 0, 100));
     lv_dropdown_set_selected(ui_droIdleMute_power, config.SETTINGS.POWER.IDLE.MUTE);
-
     lv_dropdown_set_selected(ui_droGovIdle_power, find_governor(config.SETTINGS.POWER.GOV.IDLE));
     lv_dropdown_set_selected(ui_droGovDefault_power, find_governor(config.SETTINGS.POWER.GOV.DEFAULT));
     lv_dropdown_set_selected(ui_droScreensaver_power, config.SETTINGS.POWER.SCREENSAVER);
@@ -165,14 +163,13 @@ static int save_power_options(void) {
 
     int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown_power),
                                               shutdown_values, SHUTDOWN_COUNT, -2);
-    int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery_power),
-                                             battery_values, BATTERY_COUNT, 25);
 
     if (lv_dropdown_get_selected(ui_droShutdown_power) != Shutdown_original) {
         is_modified++;
         write_text_to_file(CONF_CONFIG_PATH "settings/power/shutdown", "w", INT, idx_shutdown);
     }
 
+    int idx_battery = pct_to_int(lv_dropdown_get_selected(ui_droBattery_power), 0, 100);
     if (lv_dropdown_get_selected(ui_droBattery_power) != Battery_original) {
         is_modified++;
         write_text_to_file(CONF_CONFIG_PATH "settings/power/low_battery", "w", INT, idx_battery);
@@ -250,9 +247,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, GovDefault, lang.MUXPOWER.GOV.DEFAULT, "gov_fe", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(-1, power, Screensaver, lang.MUXPOWER.SCREENSAVER, "screensaver", disabled_enabled, 2);
 
-    char *battery_string = generate_number_string(5, 50, 5, lang.GENERIC.DISABLED, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_string);
-    free(battery_string);
+    char *battery_pct = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
+    apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_pct);
+    free(battery_pct);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
