@@ -5,6 +5,7 @@
 #include <linux/limits.h>
 #include "../../common/log.h"
 #include "../common/common.h"
+#include "../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/scale.h"
@@ -31,22 +32,24 @@ int sdl_overlay_resolved = 0;
 char sdl_overlay_path_last[PATH_MAX];
 uint64_t sdl_overlay_last_check_ms = 0;
 
-uint64_t base_nop_last_check_ms = 0;
-int base_nop_cached = 0;
+int base_overlay_disabled_cached = 0;
 int base_nop_last = -1;
 
+__attribute__((used))
 struct alpha_cache base_alpha_cache = {
         .path  = BASE_ALPHA,
         .mtime = 0,
         .value = 1.0f
 };
 
+__attribute__((used))
 struct anchor_cache base_anchor_cache = {
         .path  = BASE_ANCHOR,
         .mtime = 0,
         .value = ANCHOR_CENTRE_MIDDLE
 };
 
+__attribute__((used))
 struct scale_cache base_scale_cache = {
         .path  = BASE_SCALE,
         .mtime = 0,
@@ -63,13 +66,13 @@ const struct overlay_resolver SDL_RESOLVER = {
         .get_dimension = get_dimension,
 };
 
-int base_overlay_disabled(void) {
-    uint64_t now = now_ms();
-    if (now - base_nop_last_check_ms < 200) return base_nop_cached;
-    base_nop_last_check_ms = now;
+void base_inotify_check(void) {
+    if (ino_proc) return;
 
-    base_nop_cached = (access(BASE_OVERLAY_NOP, F_OK) == 0);
-    return base_nop_cached;
+    ino_proc = inotify_create();
+    if (!ino_proc) return;
+
+    inotify_track(ino_proc, "/run/muos", "overlay.disable", &base_overlay_disabled_cached);
 }
 
 void destroy_base_gles(void) {

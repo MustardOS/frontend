@@ -32,10 +32,10 @@ extern int sdl_overlay_resolved;
 extern char sdl_overlay_path_last[PATH_MAX];
 extern uint64_t sdl_overlay_last_check_ms;
 
-extern uint64_t base_nop_last_check_ms;
-extern int base_nop_cached;
+extern int base_overlay_disabled_cached;
 extern int base_nop_last;
 
+// The following structs are used, but attributes can't be used here apparently!
 extern struct flag_cache base_enable_cache;
 extern struct alpha_cache base_alpha_cache;
 extern struct anchor_cache base_anchor_cache;
@@ -44,7 +44,7 @@ extern struct scale_cache base_scale_cache;
 extern const struct overlay_resolver GLES_RESOLVER;
 extern const struct overlay_resolver SDL_RESOLVER;
 
-int base_overlay_disabled(void);
+void base_inotify_check(void);
 
 void destroy_base_gles(void);
 

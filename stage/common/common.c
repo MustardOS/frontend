@@ -28,24 +28,6 @@ int is_overlay_disabled(void) {
     return disable_hw_overlay;
 }
 
-float safe_atof(const char *str) {
-    if (str == NULL) return 0.0f;
-
-    errno = 0;
-    char *str_ptr;
-    double val = strtod(str, &str_ptr);
-
-    if (str_ptr == str) return 0.0f;
-    if (*str_ptr != '\0') return 0.0f;
-
-    if (errno == ERANGE || !isfinite(val)) return 0.0f;
-
-    if (val > FLT_MAX) return FLT_MAX;
-    if (val < -FLT_MAX) return -FLT_MAX;
-
-    return (float) val;
-}
-
 int safe_atoi(const char *str) {
     if (str == NULL) return 0;
 

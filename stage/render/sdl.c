@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <SDL2/SDL.h>
 #include "../common/common.h"
+#include "../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/scale.h"
@@ -104,6 +105,9 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
 
     if (!real_SDL_RenderPresent) return;
 
+    base_inotify_check();
+    if (ino_proc) inotify_check(ino_proc);
+
     static SDL_Renderer *last_renderer;
     if (renderer != last_renderer) {
         base_sdl_ready = 0;
@@ -120,7 +124,7 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     bright_overlay_update();
     volume_overlay_update();
 
-    const int base_disabled = (access(BASE_OVERLAY_NOP, F_OK) == 0);
+    const int base_disabled = ino_proc ? base_overlay_disabled_cached : (access(BASE_OVERLAY_NOP, F_OK) == 0);
     if (base_disabled != base_nop_last) {
         if (base_disabled) {
             if (base_sdl_tex) {

@@ -15,6 +15,8 @@
 #define INTERNAL_SHARE  "/opt/muos/share" // Do NOT put a trailing slash here!
 #define INTERNAL_STORE  "/run/muos/storage/"
 #define INTERNAL_CONFIG "/opt/muos/config/"
+
+// This too is used in several files but is complaining "is never used"...
 #define INTERNAL_DEVICE "/opt/muos/device/config/"
 
 #define CATALOGUE_PATH INTERNAL_STORE "info/catalogue"
@@ -69,8 +71,6 @@ struct overlay_resolver {
 extern struct overlay_go_cache ovl_go_cache;
 
 int is_overlay_disabled(void);
-
-float safe_atof(const char *str);
 
 int safe_atoi(const char *str);
 

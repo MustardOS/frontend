@@ -1,9 +1,9 @@
-#include <dlfcn.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
 #include <GLES2/gl2.h>
 #include "../../common/log.h"
 #include "../common/common.h"
+#include "../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/scale.h"
@@ -388,7 +388,7 @@ static void stage_draw(int fb_w, int fb_h) {
     // TODO: For future reference add all independent overlay layers here
     gl_battery_overlay_init();
 
-    const int base_disabled = (access(BASE_OVERLAY_NOP, F_OK) == 0);
+    const int base_disabled = ino_proc ? base_overlay_disabled_cached : (access(BASE_OVERLAY_NOP, F_OK) == 0);
     if (base_disabled != base_nop_last) {
         if (base_disabled) destroy_base_gles();
 
@@ -482,6 +482,9 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     }
 
     if (!real_SDL_GL_SwapWindow) return;
+
+    base_inotify_check();
+    if (ino_proc) inotify_check(ino_proc);
 
     render_window = window;
     ensure_context(window);
