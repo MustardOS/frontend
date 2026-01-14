@@ -227,7 +227,6 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0);
     CFG_INT_FIELD(config->WEB.TTYD, CONF_CONFIG_PATH "web/ttyd", 0);
     CFG_INT_FIELD(config->WEB.SYNCTHING, CONF_CONFIG_PATH "web/syncthing", 0);
-    CFG_INT_FIELD(config->WEB.NTP, CONF_CONFIG_PATH "web/ntp", 1);
     CFG_INT_FIELD(config->WEB.TAILSCALED, CONF_CONFIG_PATH "web/tailscaled", 0);
 
     CFG_INT_FIELD(config->DANGER.VMSWAP, CONF_CONFIG_PATH "danger/vmswap", 8);

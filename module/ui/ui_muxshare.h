@@ -410,5 +410,4 @@
     WEBSERV(SftpGo,     "sftpgo")     \
     WEBSERV(Ttyd,       "ttyd")       \
     WEBSERV(Syncthing,  "syncthing")  \
-    WEBSERV(Ntp,        "ntp")        \
     WEBSERV(Tailscaled, "tailscaled")

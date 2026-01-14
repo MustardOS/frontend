@@ -1411,14 +1411,12 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char NTP[MAX_BUFFER_SIZE];
         char TERMINAL[MAX_BUFFER_SIZE];
         char SYNCTHING[MAX_BUFFER_SIZE];
         char SHELL[MAX_BUFFER_SIZE];
         char SFTP[MAX_BUFFER_SIZE];
         char TAILSCALE[MAX_BUFFER_SIZE];
         struct {
-            char NTP[MAX_BUFFER_SIZE];
             char TERMINAL[MAX_BUFFER_SIZE];
             char SYNCTHING[MAX_BUFFER_SIZE];
             char SHELL[MAX_BUFFER_SIZE];

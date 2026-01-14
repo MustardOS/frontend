@@ -1189,13 +1189,11 @@ void load_lang(struct mux_lang *lang) {
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.NTP, "Network Time Sync");
     SPECIFIC_FIELD(lang->MUXWEBSERV.TERMINAL, "Virtual Terminal");
     SPECIFIC_FIELD(lang->MUXWEBSERV.SYNCTHING, "Syncthing");
     SPECIFIC_FIELD(lang->MUXWEBSERV.SHELL, "Secure Shell");
     SPECIFIC_FIELD(lang->MUXWEBSERV.SFTP, "SFTP + Filebrowser");
     SPECIFIC_FIELD(lang->MUXWEBSERV.TAILSCALE, "Tailscale");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.NTP, "Toggle network time protocol for active network connections");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TERMINAL, "Toggle virtual terminal - WebUI can be found on port 8080");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SYNCTHING, "Toggle Syncthing - WebUI can be found on port 7070");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SHELL, "Toggle SSH support - Access via port 22");
