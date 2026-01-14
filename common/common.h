@@ -209,7 +209,7 @@ char *strip_ext(char *text);
 
 char *grab_ext(char *text);
 
-char *get_execute_result(const char *command);
+char *get_execute_result(const char *command, int line);
 
 int read_battery_capacity();
 

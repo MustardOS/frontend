@@ -266,6 +266,31 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHARGE.START, "Press START button to continue booting…");
     SPECIFIC_FIELD(lang->MUXCHARGE.VOLTAGE, "Voltage");
 
+    // muxchrony
+    SPECIFIC_FIELD(lang->MUXCHRONY.TITLE, "TIME SYNC DETAILS");
+    SPECIFIC_FIELD(lang->MUXCHRONY.REFERENCE, "Reference");
+    SPECIFIC_FIELD(lang->MUXCHRONY.STRATUM, "Stratum");
+    SPECIFIC_FIELD(lang->MUXCHRONY.REFTIME, "Reference Time");
+    SPECIFIC_FIELD(lang->MUXCHRONY.SYSTEM, "System Offset");
+    SPECIFIC_FIELD(lang->MUXCHRONY.LASTOFFSET, "Last Offset");
+    SPECIFIC_FIELD(lang->MUXCHRONY.RMSOFFSET, "RMS Offset");
+    SPECIFIC_FIELD(lang->MUXCHRONY.FREQUENCY, "Frequency");
+    SPECIFIC_FIELD(lang->MUXCHRONY.ROOTDELAY, "Root Delay");
+    SPECIFIC_FIELD(lang->MUXCHRONY.ROOTDISP, "Root Dispersion");
+    SPECIFIC_FIELD(lang->MUXCHRONY.UPDATEINT, "Update Interval");
+    SPECIFIC_FIELD(lang->MUXCHRONY.LEAP, "Leap Status");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.REFERENCE, "The upstream time source currently selected by chrony");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.STRATUM, "The distance from the reference clock (lower is better)");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.REFTIME, "The last time a valid update was received from the reference");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.SYSTEMTIME, "The offset between system time and network time");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.LASTOFFSET, "The offset measured during the last update");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.RMSOFFSET, "The long term average of the time offset");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.FREQUENCY, "Estimated clock frequency error");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.ROOTDELAY, "Total network delay to the reference clock");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.ROOTDISP, "Estimated maximum error relative to the reference");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.UPDATEINT, "Interval between time updates");
+    SPECIFIC_FIELD(lang->MUXCHRONY.HELP.LEAP, "Current synchronisation status of the system clock");
+
     // muxcollect
     SPECIFIC_FIELD(lang->MUXCOLLECT.TITLE, "COLLECTION");
     SPECIFIC_FIELD(lang->MUXCOLLECT.NONE, "Nothing Saved Yet…");
@@ -492,6 +517,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
     SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
     SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
+    SPECIFIC_FIELD(lang->MUXINFO.CHRONY, "Time Sync Details");
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters and Credits");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NEWS, "Read various community news and other live information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSINFO, "Access version information and system details");
@@ -500,6 +526,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.CHRONY, "View the current details of the device time synchronisation via Chrony service tracking");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current MustardOS supporters and extra credits");
 
     // muxinstall

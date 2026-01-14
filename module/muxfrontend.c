@@ -473,6 +473,7 @@ static const ModuleEntry modules[] = {
         {"tester",      "info",      "muxtester",      muxtester_main,      NULL},
         {"sysinfo",     "info",      "muxsysinfo",     muxsysinfo_main,     NULL},
         {"netinfo",     "info",      "muxnetinfo",     muxnetinfo_main,     NULL},
+        {"chrony",      "info",      "muxchrony",      muxchrony_main,      NULL},
         {"text",        "info",      "muxtext",        muxtext_main,        NULL},
 
         // these are custom entries specifically for the first time installer

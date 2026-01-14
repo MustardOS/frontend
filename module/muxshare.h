@@ -136,6 +136,8 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app);
 
 int muxbackup_main();
 
+int muxchrony_main();
+
 int muxcollect_main(int add, char *dir, int last_index);
 
 int muxconfig_main();

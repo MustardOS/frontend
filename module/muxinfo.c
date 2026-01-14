@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxinfo.h"
 
-#define UI_COUNT 8
+#define UI_COUNT 9
 
 static void list_nav_move(int steps, int direction);
 
@@ -14,6 +14,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTester_info,     lang.MUXINFO.HELP.INPUT},
             {ui_lblSysInfo_info,    lang.MUXINFO.HELP.SYSINFO},
             {ui_lblNetInfo_info,    lang.MUXINFO.HELP.NETINFO},
+            {ui_lblChrony_info,     lang.MUXINFO.HELP.CHRONY},
             {ui_lblCredit_info,     lang.MUXINFO.HELP.CREDIT},
     };
 
@@ -32,6 +33,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.INPUT, "tester", 0);
     INIT_STATIC_ITEM(-1, info, SysInfo, lang.MUXINFO.SYSINFO, "sysinfo", 0);
     INIT_STATIC_ITEM(-1, info, NetInfo, lang.MUXINFO.NETINFO, "netinfo", 0);
+    INIT_STATIC_ITEM(-1, info, Chrony, lang.MUXINFO.CHRONY, "chrony", 0);
     INIT_STATIC_ITEM(-1, info, Credit, lang.MUXINFO.CREDIT, "credit", 0);
 
     ui_group = lv_group_create();
@@ -106,6 +108,8 @@ static void handle_a(void) {
         load_mux("sysinfo");
     } else if (element_focused == ui_lblNetInfo_info) {
         load_mux("netinfo");
+    } else if (element_focused == ui_lblChrony_info) {
+        load_mux("chrony");
     } else if (element_focused == ui_lblCredit_info) {
         load_mux("credits");
     }

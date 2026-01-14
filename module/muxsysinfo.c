@@ -34,12 +34,12 @@ const char *get_cpu_model(void) {
     static char cpu_cores[6];
 
     snprintf(cmd, sizeof(cmd), "lscpu | grep 'Model name:' | awk -F: '{print $2}'");
-    char *model_result = get_execute_result(cmd);
+    char *model_result = get_execute_result(cmd, 0);
     snprintf(cpu_model, sizeof(cpu_model), "%s", model_result ? model_result : "");
     free(model_result);
 
     snprintf(cmd, sizeof(cmd), "lscpu | grep '^CPU(s):' | awk '{print $2}'");
-    char *core_result = get_execute_result(cmd);
+    char *core_result = get_execute_result(cmd, 0);
     snprintf(cpu_cores, sizeof(cpu_cores), "%s", core_result ? core_result : "");
     free(core_result);
 
@@ -101,7 +101,7 @@ const char *get_memory_usage(void) {
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "free -m | awk '/^Mem:/ {printf \"%%.2f MB / %%.2f MB\", $3, $2}'");
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || result[0] == '\0') {
         free(result);
         return lang.GENERIC.UNKNOWN;

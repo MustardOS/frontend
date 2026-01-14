@@ -74,6 +74,19 @@
     BACKUP(Merge,      "merge")       \
     BACKUP(Start,      "start")
 
+#define CHRONY_ELEMENTS             \
+    CHRONY(Reference,  "reference") \
+    CHRONY(Stratum,    "stratum")   \
+    CHRONY(RefTime,    "reftime")   \
+    CHRONY(SystemTime, "system")    \
+    CHRONY(LastOffset, "last")      \
+    CHRONY(RmsOffset,  "rms")       \
+    CHRONY(Frequency,  "freq")      \
+    CHRONY(RootDelay,  "delay")     \
+    CHRONY(RootDisp,   "disp")      \
+    CHRONY(UpdateInt,  "update")    \
+    CHRONY(Leap,       "leap")
+
 #define CONNECT_ELEMENTS                \
     CONNECT(Network,     "network")     \
     CONNECT(NetAdv,      "netadv")      \
@@ -156,6 +169,7 @@
     INFO(Tester,     "tester")     \
     INFO(SysInfo,    "sysinfo")    \
     INFO(NetInfo,    "netinfo")    \
+    INFO(Chrony,     "chrony")     \
     INFO(Credit,     "credit")
 
 #define HDMI_ELEMENTS              \

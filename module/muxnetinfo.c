@@ -45,7 +45,7 @@ static const char *get_mac_address(void) {
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "cat %s", path);
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
 
@@ -68,7 +68,7 @@ static const char *get_ip_address(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "ip addr show %s | awk '/inet / {print $2}' | cut -d/ -f1", device.NETWORK.INTERFACE);
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
         return lang.GENERIC.UNKNOWN;
@@ -87,7 +87,7 @@ static const char *get_ssid(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "iw dev %s link | awk -F': ' '/SSID/ {print $2}'", device.NETWORK.INTERFACE);
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
         return lang.GENERIC.UNKNOWN;
@@ -106,7 +106,7 @@ static const char *get_gateway(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "ip route | awk '/default/ {print $3}'");
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
         return lang.GENERIC.UNKNOWN;
@@ -125,7 +125,7 @@ static const char *get_dns_servers(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "awk '/nameserver/ {print $2}' /etc/resolv.conf | xargs");
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
         return lang.GENERIC.UNKNOWN;
@@ -144,7 +144,7 @@ static const char *get_signal_strength(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/signal/ {print $2}'", device.NETWORK.INTERFACE);
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
         return lang.GENERIC.UNKNOWN;
@@ -185,7 +185,7 @@ static const char *get_channel_info(void) {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/freq:/ {print $2}'", device.NETWORK.INTERFACE);
 
-    char *result = get_execute_result(cmd);
+    char *result = get_execute_result(cmd, 0);
     if (!result || !*result) {
         free(result);
         return lang.GENERIC.UNKNOWN;

@@ -526,26 +526,53 @@ char *grab_ext(char *text) {
     return strdup("");
 }
 
-char *get_execute_result(const char *command) {
+// Just so nobody is confused in the future...
+// line < 0  returns entire output
+// line == 0 returns first line
+// line == 1 returns second line
+char *get_execute_result(const char *command, int line) {
     FILE *fp = popen(command, "r");
     if (!fp) {
         fprintf(stderr, "Failed to run: %s\n", command);
         return NULL;
     }
 
-    char result[MAX_BUFFER_SIZE];
+    char buffer[MAX_BUFFER_SIZE];
+    size_t total = 0;
+    char *result = NULL;
 
-    if (!fgets(result, sizeof(result), fp)) {
-        pclose(fp);
-        return NULL;
+    int current_line = 0;
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        if (line >= 0) {
+            if (current_line == line) {
+                char *nl = strchr(buffer, '\n');
+                if (nl) *nl = '\0';
+                pclose(fp);
+                return strdup(buffer);
+            }
+            current_line++;
+            continue;
+        }
+
+        size_t len = strlen(buffer);
+        char *tmp = realloc(result, total + len + 1);
+        if (!tmp) {
+            free(result);
+            pclose(fp);
+            return NULL;
+        }
+
+        result = tmp;
+        memcpy(result + total, buffer, len);
+
+        total += len;
+        result[total] = '\0';
     }
 
     pclose(fp);
 
-    char *newline = strchr(result, '\n');
-    if (newline) *newline = '\0';
-
-    return strdup(result);
+    if (line >= 0) return NULL;
+    return result;
 }
 
 int read_battery_capacity(void) {

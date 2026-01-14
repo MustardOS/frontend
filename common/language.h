@@ -273,6 +273,34 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char REFERENCE[MAX_BUFFER_SIZE];
+        char STRATUM[MAX_BUFFER_SIZE];
+        char REFTIME[MAX_BUFFER_SIZE];
+        char SYSTEM[MAX_BUFFER_SIZE];
+        char LASTOFFSET[MAX_BUFFER_SIZE];
+        char RMSOFFSET[MAX_BUFFER_SIZE];
+        char FREQUENCY[MAX_BUFFER_SIZE];
+        char ROOTDELAY[MAX_BUFFER_SIZE];
+        char ROOTDISP[MAX_BUFFER_SIZE];
+        char UPDATEINT[MAX_BUFFER_SIZE];
+        char LEAP[MAX_BUFFER_SIZE];
+        struct {
+            char REFERENCE[MAX_BUFFER_SIZE];
+            char STRATUM[MAX_BUFFER_SIZE];
+            char REFTIME[MAX_BUFFER_SIZE];
+            char SYSTEMTIME[MAX_BUFFER_SIZE];
+            char LASTOFFSET[MAX_BUFFER_SIZE];
+            char RMSOFFSET[MAX_BUFFER_SIZE];
+            char FREQUENCY[MAX_BUFFER_SIZE];
+            char ROOTDELAY[MAX_BUFFER_SIZE];
+            char ROOTDISP[MAX_BUFFER_SIZE];
+            char UPDATEINT[MAX_BUFFER_SIZE];
+            char LEAP[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXCHRONY;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         struct {
             char REMOVE_FILE[MAX_BUFFER_SIZE];
@@ -552,6 +580,7 @@ struct mux_lang {
         char SCREENSHOT[MAX_BUFFER_SIZE];
         char SPACE[MAX_BUFFER_SIZE];
         char INPUT[MAX_BUFFER_SIZE];
+        char CHRONY[MAX_BUFFER_SIZE];
         char CREDIT[MAX_BUFFER_SIZE];
         struct {
             char NEWS[MAX_BUFFER_SIZE];
@@ -561,6 +590,7 @@ struct mux_lang {
             char SCREENSHOT[MAX_BUFFER_SIZE];
             char SPACE[MAX_BUFFER_SIZE];
             char INPUT[MAX_BUFFER_SIZE];
+            char CHRONY[MAX_BUFFER_SIZE];
             char CREDIT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXINFO;
