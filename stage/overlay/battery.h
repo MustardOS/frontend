@@ -11,6 +11,14 @@
 #define BATTERY_ANCHOR OVERLAY_CONFIG "bat_anchor"
 #define BATTERY_SCALE OVERLAY_CONFIG "bat_scale"
 
+#define BATTERY_OFFSET INTERNAL_CONFIG "settings/advanced/offset"
+
+struct offset_cache {
+    const char *path;
+    time_t mtime;
+    int value;
+};
+
 extern char battery_overlay_path[PATH_MAX];
 
 extern int battery_last_step;
@@ -33,6 +41,7 @@ extern int battery_disabled_gles;
 extern gl_vtx_t vtx_battery[4];
 extern int vtx_battery_valid;
 
+extern struct offset_cache battery_offset_cache;
 extern struct flag_cache battery_enable_cache;
 extern struct alpha_cache battery_alpha_cache;
 extern struct anchor_cache battery_anchor_cache;
