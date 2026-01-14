@@ -575,7 +575,7 @@ int read_battery_capacity(void) {
         return 0;
     }
 
-    capacity += (config.SETTINGS.ADVANCED.OFFSET - 50);
+    capacity += (config.SETTINGS.ADVANCED.OFFSET);
     if (capacity > 100) capacity = 100;
     if (capacity < 0) capacity = 0;
     return (int) capacity;
@@ -3070,7 +3070,6 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
         int nav_adjust = 0;
 
         if (strcmp(mux_module, "muxtweakgen") == 0) nav_adjust += (!device.BOARD.HAS_HDMI) ? 1 : 0;
-
         nav_next_return = text_hit - nav_adjust;
     }
 

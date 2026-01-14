@@ -23,3 +23,5 @@ extern const int accelerate_values[];
 extern const int repeat_delay_values[];
 
 extern const int swap_values[];
+
+extern const int battery_offset_values[];

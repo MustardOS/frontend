@@ -64,7 +64,6 @@ static void restore_tweak_options(void) {
 
     lv_dropdown_set_selected(ui_droSwap_tweakadv, config.SETTINGS.ADVANCED.SWAP);
     lv_dropdown_set_selected(ui_droStickNav_tweakadv, config.SETTINGS.ADVANCED.STICKNAV);
-    lv_dropdown_set_selected(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droThermal_tweakadv, config.SETTINGS.ADVANCED.THERMAL);
     lv_dropdown_set_selected(ui_droPasscode_tweakadv, config.SETTINGS.ADVANCED.LOCK);
     lv_dropdown_set_selected(ui_droLed_tweakadv, config.SETTINGS.ADVANCED.LED);
@@ -88,9 +87,9 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droAudioReady_tweakadv, config.SETTINGS.ADVANCED.AUDIOREADY);
     lv_dropdown_set_selected(ui_droAudioSwap_tweakadv, config.SETTINGS.ADVANCED.AUDIOSWAP);
 
+    map_drop_down_to_index(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET, battery_offset_values, 101, 50);
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
-    map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33,
-                           13);
+    map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEAT_DELAY, repeat_delay_values, 33, 13);
     map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, swap_values, 11, 0);
     map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, swap_values, 11, 0);
 }
@@ -100,7 +99,6 @@ static void save_tweak_options(void) {
 
     CHECK_AND_SAVE_STD(tweakadv, Swap, "settings/advanced/swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, StickNav, "settings/advanced/sticknav", INT, 0);
-    CHECK_AND_SAVE_STD(tweakadv, Offset, "settings/advanced/offset", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Thermal, "settings/advanced/thermal", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Passcode, "settings/advanced/lock", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Led, "settings/advanced/led", INT, 0);
@@ -156,6 +154,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_VAL(tweakadv, Brightness, "settings/advanced/brightness", CHAR, brightness_values);
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
+    CHECK_AND_SAVE_MAP(tweakadv, Offset, "settings/advanced/offset", battery_offset_values, 101, 50);
     CHECK_AND_SAVE_MAP(tweakadv, RepeatDelay, "settings/advanced/repeat_delay", repeat_delay_values, 33, 13);
     CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", swap_values, 11, 0);
     CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", swap_values, 11, 0);

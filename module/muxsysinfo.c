@@ -172,7 +172,7 @@ const char *get_battery_cap(void) {
     static char battery_cap[32];
     snprintf(battery_cap, sizeof(battery_cap), "%d%% (Offset: %d)",
              read_battery_capacity(),
-             config.SETTINGS.ADVANCED.OFFSET - 50);
+             config.SETTINGS.ADVANCED.OFFSET);
     return battery_cap;
 }
 
@@ -391,7 +391,7 @@ static void handle_a(void) {
             refresh_resolution = 1;
 
             load_mux("launcher");
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");
+            if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
 
             close_input();
             mux_input_stop();
