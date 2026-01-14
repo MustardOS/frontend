@@ -465,7 +465,7 @@ static void handle_a(void) {
                 return;
             }
 
-            save_custom_options("custom");
+            save_custom_options();
 
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].mux_name);
             write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, elements[i].launch);
@@ -496,7 +496,7 @@ static void handle_a(void) {
         set_nav_volume(pct_to_int(lv_dropdown_get_selected(ui_droSoundVolume_custom), 0, 100));
     } else if (element_focused == ui_lblThemeAlternate_custom) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
-        save_custom_options("custom");
+        save_custom_options();
         load_mux("custom");
         close_input();
         mux_input_stop();
@@ -519,7 +519,7 @@ static void handle_b(void) {
     play_sound(SND_BACK);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
-    save_custom_options("config");
+    save_custom_options();
 
     close_input();
     mux_input_stop();
