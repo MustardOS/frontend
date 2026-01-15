@@ -957,12 +957,15 @@ char *get_capacity(void) {
 }
 
 void datetime_task(lv_timer_t *timer) {
+    if (screensaver_active()) return;
+
     struct dt_task_param *dt_par = timer->user_data;
     lv_label_set_text(dt_par->lblDatetime, get_datetime());
 }
 
 void capacity_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
+    if (screensaver_active()) return;
 
     if (!ui_staCapacity || !lv_obj_is_valid(ui_staCapacity)) return;
 

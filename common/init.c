@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include "../lvgl/lvgl.h"
 #include "../lvgl/src/drivers/display/sdl.h"
+#include "../lvgl/src/drivers/display/dvd.h"
 #include "../lvgl/src/drivers/input/evdev.h"
 #include "init.h"
 #include "input.h"
@@ -64,6 +65,11 @@ uint64_t mux_tick(void) {
     return (uint64_t) (now_ms - start_ms);
 }
 
+int screensaver_active(void) {
+    if (!config.SETTINGS.POWER.SCREENSAVER) return 0;
+    return dvd_active();
+}
+
 void detach_parent_process(void) {
     pid_t pid = fork();
 
@@ -90,16 +96,26 @@ static void mux_idle_poll(lv_timer_t *timer) {
     int idle = read_line_int_from(IDLE_STATE, 1);
     if (idle < 0 || idle == last_idle) return;
 
+    lv_timer_t *display_timer = mux_get_refresh_timer();
+
     // Screensaver is disabled so we'll just pause the frontend
     if (!config.SETTINGS.POWER.SCREENSAVER) {
-        lv_timer_t *display_timer = mux_get_refresh_timer();
-
         if (idle) {
             lv_timer_set_period(display_timer, IDLE_FZ);
             lv_timer_pause(display_timer);
         } else {
             lv_timer_resume(display_timer);
             lv_timer_set_period(display_timer, IDLE_MS);
+            lv_timer_ready(display_timer);
+        }
+    } else {
+        if (idle) {
+            timer_suspend_all();
+            lv_timer_resume(display_timer);
+            lv_timer_set_period(display_timer, IDLE_MS);
+            lv_timer_ready(display_timer);
+        } else {
+            timer_resume_all();
             lv_timer_ready(display_timer);
         }
     }
@@ -289,6 +305,12 @@ static void timer_suspend(lv_timer_t **timer) {
     }
 }
 
+static void timer_resume(lv_timer_t **timer) {
+    if (*timer) {
+        lv_timer_resume(*timer);
+    }
+}
+
 static void timer_destroy(lv_timer_t **timer) {
     if (*timer) {
         lv_timer_del(*timer);
@@ -298,15 +320,21 @@ static void timer_destroy(lv_timer_t **timer) {
 
 void timer_action(int action) {
     for (size_t i = 0; i < A_SIZE(timers); ++i) {
+        lv_timer_t **t = timers[i];
+        if (t == &timer_idle && action == 0) continue;
+
         switch (action) {
             case 0:
-                timer_suspend(timers[i]);
+                timer_suspend(t);
                 break;
             case 1:
-                timer_destroy(timers[i]);
+                timer_resume(t);
+                break;
+            case 2:
+                timer_destroy(t);
                 break;
             default:
-                LOG_WARN(mux_module, "Timer issue warning - No suspend or destroy!");
+                LOG_WARN(mux_module, "Timer issue warning - No suspend, resume, or destroy!");
         }
     }
 }
@@ -352,12 +380,16 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     lv_refr_now(NULL);
 }
 
-void timer_destroy_all(void) {
+void timer_suspend_all(void) {
+    timer_action(0);
+}
+
+void timer_resume_all(void) {
     timer_action(1);
 }
 
-void timer_suspend_all(void) {
-    timer_action(0);
+void timer_destroy_all(void) {
+    timer_action(2);
 }
 
 void init_fonts(void) {
@@ -385,6 +417,7 @@ void init_theme(int panel_init, int long_mode) {
 
 void status_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
+    if (screensaver_active()) return;
 
     if (progress_onscreen > 0) {
         --progress_onscreen;
@@ -410,8 +443,9 @@ void status_task(lv_timer_t *timer) {
 
 void bluetooth_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
+    if (screensaver_active()) return;
 
-    // TODO: Yeah one day...
+//    TODO: Yeah one day...
 //    update_bluetooth_status(ui_staBluetooth, &theme);
 //    if (!bluetooth_period_set) {
 //        bluetooth_period_set = 1;
@@ -421,6 +455,7 @@ void bluetooth_task(lv_timer_t *timer) {
 
 void network_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
+    if (screensaver_active()) return;
 
     if (!ui_staNetwork || !lv_obj_is_valid(ui_staNetwork)) return;
     if (strcasecmp(mux_module, "muxnetwork") == 0) return;
