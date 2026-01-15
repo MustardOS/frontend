@@ -136,6 +136,10 @@ static char *boot_governor = NULL;
 static char *running_governor = NULL;
 static char *previous_governor = NULL;
 
+static int in_idle_state(void) {
+    return read_line_int_from(IDLE_STATE, 1) == 1;
+}
+
 static void cleanup(int signo) {
     (void) signo;
 
@@ -244,6 +248,12 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
 
 static void handle_input(mux_input_type type, mux_input_action action) {
     global_tick = mux_input_tick();
+
+    // Ignore the stupid TrimUI switch while device is in idle state.
+    // Spent the last fucking hour trying to debug and it was this
+    // stupid little cunt interrupting the idle timer...
+    if (type == MUX_INPUT_SWITCH && in_idle_state()) return;
+
     if (verbose) printf("[%s %s]\n", input_name[type], action_name[action]);
 
     if (action == MUX_INPUT_PRESS) {
@@ -438,8 +448,9 @@ static void print_combo_config(const combo_config *c) {
     }
 
     LOG_INFO("input", "\t%s = %s", c->name, inputs);
-    if (c->is_sequence) LOG_INFO("input", "\thandle = sequence (%d)%s",
-                                 c->sequence_length, c->max_interval ? " (timed)" : "");
+    if (c->is_sequence)
+        LOG_INFO("input", "\thandle = sequence (%d)%s",
+                 c->sequence_length, c->max_interval ? " (timed)" : "");
 
     if (c->handle_hold) {
         LOG_INFO("input", "\thandle = hold");
