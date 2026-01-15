@@ -21,8 +21,6 @@ struct bat_task_param {
     lv_obj_t *staCapacity;
 };
 
-int screensaver_active(void);
-
 void detach_parent_process(void);
 
 void refresh_screen(lv_obj_t *screen);

@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include "../lvgl/lvgl.h"
 #include "../lvgl/src/drivers/display/sdl.h"
-#include "../lvgl/src/drivers/display/dvd.h"
 #include "../lvgl/src/drivers/input/evdev.h"
 #include "init.h"
 #include "input.h"
@@ -65,11 +64,6 @@ uint64_t mux_tick(void) {
     return (uint64_t) (now_ms - start_ms);
 }
 
-int screensaver_active(void) {
-    if (!config.SETTINGS.POWER.SCREENSAVER) return 0;
-    return dvd_active();
-}
-
 void detach_parent_process(void) {
     pid_t pid = fork();
 
@@ -96,26 +90,16 @@ static void mux_idle_poll(lv_timer_t *timer) {
     int idle = read_line_int_from(IDLE_STATE, 1);
     if (idle < 0 || idle == last_idle) return;
 
-    lv_timer_t *display_timer = mux_get_refresh_timer();
-
     // Screensaver is disabled so we'll just pause the frontend
     if (!config.SETTINGS.POWER.SCREENSAVER) {
+        lv_timer_t *display_timer = mux_get_refresh_timer();
+
         if (idle) {
             lv_timer_set_period(display_timer, IDLE_FZ);
             lv_timer_pause(display_timer);
         } else {
             lv_timer_resume(display_timer);
             lv_timer_set_period(display_timer, IDLE_MS);
-            lv_timer_ready(display_timer);
-        }
-    } else {
-        if (idle) {
-            timer_suspend_all();
-            lv_timer_resume(display_timer);
-            lv_timer_set_period(display_timer, IDLE_MS);
-            lv_timer_ready(display_timer);
-        } else {
-            timer_resume_all();
             lv_timer_ready(display_timer);
         }
     }
@@ -300,15 +284,11 @@ static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t p
 }
 
 static void timer_suspend(lv_timer_t **timer) {
-    if (*timer) {
-        lv_timer_pause(*timer);
-    }
+    if (*timer) lv_timer_pause(*timer);
 }
 
 static void timer_resume(lv_timer_t **timer) {
-    if (*timer) {
-        lv_timer_resume(*timer);
-    }
+    if (*timer) lv_timer_resume(*timer);
 }
 
 static void timer_destroy(lv_timer_t **timer) {
@@ -321,8 +301,6 @@ static void timer_destroy(lv_timer_t **timer) {
 void timer_action(int action) {
     for (size_t i = 0; i < A_SIZE(timers); ++i) {
         lv_timer_t **t = timers[i];
-        if (t == &timer_idle && action == 0) continue;
-
         switch (action) {
             case 0:
                 timer_suspend(t);
@@ -417,7 +395,6 @@ void init_theme(int panel_init, int long_mode) {
 
 void status_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
-    if (screensaver_active()) return;
 
     if (progress_onscreen > 0) {
         --progress_onscreen;
@@ -443,7 +420,6 @@ void status_task(lv_timer_t *timer) {
 
 void bluetooth_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
-    if (screensaver_active()) return;
 
 //    TODO: Yeah one day...
 //    update_bluetooth_status(ui_staBluetooth, &theme);
@@ -455,7 +431,6 @@ void bluetooth_task(lv_timer_t *timer) {
 
 void network_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
-    if (screensaver_active()) return;
 
     if (!ui_staNetwork || !lv_obj_is_valid(ui_staNetwork)) return;
     if (strcasecmp(mux_module, "muxnetwork") == 0) return;
