@@ -238,51 +238,46 @@ const char *wizards[] = {
         ".cebion", "irilivibi", "vagueparade", "shengy.", "siliconexarch", "shauninman",
         "johnnyonflame", "snowram", "habbening", "trngaje", "skorpy", "stanley_00",
         "ajmandourah", "bcat24", "xanxic", "midwan", "arkun_", "mikhailzrick",
-        "retrogfx_", "aeverdyn", "kitfox618", "spycat88",
+        "retrogfx_", "aeverdyn", "kitfox618", "spycat88", "sundownersport",
         NULL
 };
 
 const char *hero_one[] = {
         "romus85", "x_tremis", "lmarcomiranda", "timecarp", "intelliaim", "kentonftw",
-        "bazkart", "msx6011", "joeysretrohandhelds", "btreecat", "teggydave", "zazouboy",
-        "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "zaka1w3", "superzu",
-        "nico_linber_36894", "nico_linber", "pr0j3kt2501", "rosemelody254", "bigbossman0816", "meowman_",
-        "kaeltis", "reitw", "raouldook.", "paletochen", "benjaminbercy", "snesfan1",
-        "suribii", "tobitaibuta", "asiaclonk", "jimmycrackedcorn_4711", "opinion_panda", "hueykablooey",
+        "bazkart", "msx6011", "btreecat", "teggydave", "zazouboy", "robbiet480",
+        "luzfcb", "brohsnbluffs", "zaka1w3", "superzu", "nico_linber_36894", "pr0j3kt2501",
+        "rosemelody254", "bigbossman0816", "meowman_", "kaeltis", "raouldook.", "paletochen",
+        "benjaminbercy", "snesfan1", "asiaclonk", "jimmycrackedcorn_4711", "hueykablooey", "mrwhistles",
         NULL
 };
 
 const char *hero_two[] = {
-        "mrwhistles", "losermatic", "ivar2028", ".dririan", "spivvmeister", "sol6_vi",
-        "n3vurmynd", "qpla", "supremedialects", "amos_06286", "techagent", "meanagar",
-        "roundpi", "turner74.", "chiefwally_73445", "bigfoothenders", "scy0n", "luckyphil",
-        "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith", "lilaclobotomies",
-        "mxdamp", "ownedmumbles", "kernelkritic", "verctexius", "misfitsorbet", "izzythefool",
-        "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.", "kalamer.", "kularose",
+        "losermatic", "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla",
+        "amos_06286", "techagent", "meanagar", "roundpi", "chiefwally_73445", "scy0n",
+        "luckyphil", "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith",
+        "mxdamp", "ownedmumbles", "exe0237", "kernelkritic", "verctexius", "misfitsorbet",
+        "izzythefool", "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.", "kularose",
         NULL
 };
 
 const char *knight_one[] = {
-        "allanc5963", "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc",
-        "_maxwellsdemon", "status.quo.exile", "phyrex", "delored", "kiko_lake", "arkholt",
-        "julas8799", ".starship9", "fibroidjames", "allepac", "pakwan8234", "heyitscap.",
-        "drisc", "clempurp9868", "aj15", "retrogamecorps", "biffout", "rbndr_", "sanelessone",
-        ".retrogamingmonkey",
+        "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc", "_maxwellsdemon",
+        "status.quo.exile", "phyrex", "kiko_lake", "arkholt", "julas8799", "fibroidjames",
+        "allepac", "pakwan8234", "drisc", "clempurp9868", "aj15", "retrogamecorps",
+        "rbndr_", "sanelessone",
         NULL
 };
 
 const char *knight_two[] = {
-        "billynaing", "gasqbduv", "nuke_67641", "misjbaksel", "zauberpony", "dreadpirates",
-        "frickinfrogs", "smittywerbenjaegermanjensen9250", "wizardfights", "_wizdude", "stin87",
-        "blkxltng", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891", "yomama78",
-        "admiralthrawn_1", "penpen2crayon", "jupyter.", "lander95", ".manny.", "bburbank",
-        "crownlessk", "johnunsc", "obitomatheus",
+        "billynaing", "nuke_67641", "zauberpony", "frickinfrogs", "smittywerbenjaegermanjensen9250", "wizardfights",
+        "_wizdude", "stin87", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891",
+        "yomama78", "admiralthrawn_1", "penpen2crayon", "jupyter.", "bburbank", "crownlessk",
+        "johnunsc", "obitomatheus",
         NULL
 };
 
 const char *contributors[] = {
-        "antikk", "bitter_bizarro", "corey", "duncanyoyo1", "gleepglop1000", "imcokeman",
-        "joyrider3774", "snowram", "sundownersport", "xonglebongle",
+        "antikk", "bitter_bizarro", "escal8tor", "imcokeman", "nesreka", "xonglebongle",
         NULL
 };
 
