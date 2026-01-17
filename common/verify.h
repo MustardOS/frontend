@@ -22,7 +22,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/device/speaker.sh",    "130850078a50de32"},
         {"/opt/muos/script/device/start.sh",      "e061482300906794"},
         {"/opt/muos/script/device/temp.sh",       "b61b147d5ff8eaee"},
-        {"/opt/muos/script/init/S00chrony",       "4b1d9a63bd1c34bd"},
+        {"/opt/muos/script/init/S00chrony",       "4c2754cae0a7a1ec"},
         {"/opt/muos/script/init/S01entropy",      "5acb82bb7a3c898b"},
         {"/opt/muos/script/init/S10udev",         "e986b7776e750484"},
         {"/opt/muos/script/init/S30dbus",         "95938d3d87b3f71f"},
