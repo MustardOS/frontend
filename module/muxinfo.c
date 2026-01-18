@@ -95,6 +95,7 @@ static void handle_a(void) {
         } else {
             play_sound(SND_ERROR);
             toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+            return;
         }
     } else if (element_focused == ui_lblActivity_info) {
         load_mux("activity");
