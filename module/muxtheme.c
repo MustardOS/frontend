@@ -173,7 +173,7 @@ static void handle_a(void) {
     play_sound(SND_CONFIRM);
 
     if (items[current_item_index].content_type == MENU) {
-        if (is_network_connected()) {
+        if (file_exist(VALID_TIME) && is_network_connected()) {
             load_mux("themedwn");
             close_input();
             mux_input_stop();
