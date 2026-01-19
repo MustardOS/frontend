@@ -51,6 +51,9 @@ static void init_navigation_group(void) {
         HIDE_STATIC_ITEM(info, NetInfo);
     }
 
+    // Hide until further notice or future development
+    HIDE_STATIC_ITEM(info, Chrony);
+
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
@@ -90,7 +93,7 @@ static void handle_a(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblNews_info) {
-        if (file_exist(VALID_TIME) && is_network_connected()) {
+        if (is_network_connected()) {
             load_mux("news");
         } else {
             play_sound(SND_ERROR);
@@ -110,13 +113,7 @@ static void handle_a(void) {
     } else if (element_focused == ui_lblNetInfo_info) {
         load_mux("netinfo");
     } else if (element_focused == ui_lblChrony_info) {
-        if (file_exist(VALID_TIME)) {
-            load_mux("chrony");
-        } else {
-            play_sound(SND_ERROR);
-            toast_message(lang.GENERIC.INVALID_TIME, MEDIUM);
-            return;
-        }
+        load_mux("chrony");
     } else if (element_focused == ui_lblCredit_info) {
         load_mux("credits");
     }

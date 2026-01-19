@@ -311,7 +311,7 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblCoreDownloader) {
-        if (file_exist(VALID_TIME) && is_network_connected()) {
+        if (is_network_connected()) {
             play_sound(SND_CONFIRM);
             load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
             load_mux("coredown");

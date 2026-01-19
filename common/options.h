@@ -53,7 +53,6 @@
 
 #define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"
-#define VALID_TIME RUN_PATH "time.valid"
 
 #define OSK_UPPER "ABC"
 #define OSK_LOWER "abc"
