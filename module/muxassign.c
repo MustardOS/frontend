@@ -37,9 +37,7 @@ static void create_system_items(void) {
     closedir(ad);
     sort_items(items, item_count);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
@@ -126,9 +124,7 @@ static void create_core_items(const char *target) {
     closedir(ad);
     sort_items(items, item_count);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
@@ -172,26 +168,7 @@ static void create_core_items(const char *target) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    nav_moved = 1;
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -364,19 +341,8 @@ static void handle_help(void) {
     show_help();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     struct nav_bar nav_items[7];
@@ -411,18 +377,6 @@ static void init_elements(void) {
     }
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
@@ -492,7 +446,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
     }
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

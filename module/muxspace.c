@@ -96,37 +96,12 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, space, External, lang.MUXSPACE.EXTERNAL, "external", "");
     INIT_VALUE_ITEM(-1, space, System, lang.MUXSPACE.SYSTEM, "system", "");
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
+    gen_step_movement(steps, direction, false, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -162,19 +137,8 @@ static void handle_menu(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -188,18 +152,6 @@ static void init_elements(void) {
 #undef SPACE
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxspace_main(void) {
@@ -222,7 +174,7 @@ int muxspace_main(void) {
 
     update_storage_info();
 
-    init_timer(ui_refresh_task, update_storage_info);
+    init_timer(ui_gen_refresh_task, update_storage_info);
     list_nav_next(0);
 
     mux_input_options input_opts = {

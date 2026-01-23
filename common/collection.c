@@ -106,27 +106,13 @@ int time_compare_for_history(const void *a, const void *b) {
     snprintf(mod_file_b, sizeof(mod_file_b), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(itemB->name));
 
-    if (access(mod_file_a, F_OK) != 0) {
-        printf("Error: %s does not exist\n", mod_file_a);
-        return 0;
-    }
-
-    if (access(mod_file_b, F_OK) != 0) {
-        printf("Error: %s does not exist\n", mod_file_b);
-        return 0;
-    }
+    if (access(mod_file_a, F_OK) != 0) return 0;
+    if (access(mod_file_b, F_OK) != 0) return 0;
 
     struct stat stat_a, stat_b;
 
-    if (stat(mod_file_a, &stat_a) != 0) {
-        printf("Error getting file information for %s\n", mod_file_a);
-        return 0;
-    }
-
-    if (stat(mod_file_b, &stat_b) != 0) {
-        printf("Error getting file information for %s\n", mod_file_b);
-        return 0;
-    }
+    if (stat(mod_file_a, &stat_a) != 0) return 0;
+    if (stat(mod_file_b, &stat_b) != 0) return 0;
 
     struct timespec time_a = stat_a.st_mtim;
     struct timespec time_b = stat_b.st_mtim;
@@ -184,10 +170,9 @@ void free_items(content_item **content_items, size_t *count) {
     *count = 0; // Set the count to 0
 }
 
-
 void print_items(content_item *content_items, size_t count) {
     for (size_t i = 0; i < count; i++) {
-        char message[1024];
+        char message[MAX_BUFFER_SIZE];
         snprintf(message, sizeof(message),
                  "\nItem %zu\n\tfile_name=%s\n\tdisplay_name=%s\n\tsort_name=%s\n\tcontent_type=%d\n",
                  i, content_items[i].name, content_items[i].display_name, content_items[i].sort_name,

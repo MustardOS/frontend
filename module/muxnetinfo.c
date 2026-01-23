@@ -335,17 +335,8 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, netinfo, AcTraffic, lang.MUXNETINFO.ACTRAFFIC, "actraffic", get_ac_traffic());
     INIT_VALUE_ITEM(-1, netinfo, TpTraffic, lang.MUXNETINFO.TPTRAFFIC, "tptraffic", get_tp_traffic());
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     if (!is_network_connected()) {
         HIDE_VALUE_ITEM(netinfo, Ip);
@@ -359,38 +350,22 @@ static void init_navigation_group(void) {
     }
 }
 
-static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
-
+static void check_focus() {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblHostname_netinfo || element_focused == ui_lblMac_netinfo) {
-        lv_label_set_text(ui_lblNavA, element_focused == ui_lblHostname_netinfo ?
-                                      lang.GENERIC.EDIT : lang.GENERIC.CHANGE);
-
+        lv_label_set_text(ui_lblNavA, element_focused == ui_lblHostname_netinfo ? lang.GENERIC.EDIT : lang.GENERIC.CHANGE);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
         lv_label_set_text(ui_lblNavA, "");
-
         lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+}
+
+static void list_nav_move(int steps, int direction) {
+    gen_step_movement(steps, direction, false, 0);
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -418,7 +393,6 @@ static void handle_keyboard_OK_press(void) {
         play_sound(SND_CONFIRM);
 
         toast_message(lang.MUXNETINFO.SAVE.HOST, FOREVER);
-        refresh_screen(ui_screen);
 
         lv_label_set_text(ui_lblHostnameValue_netinfo, new_hostname);
         write_text_to_file("/etc/hostname", "w", CHAR, new_hostname);
@@ -497,7 +471,6 @@ static void handle_a(void) {
         play_sound(SND_CONFIRM);
 
         toast_message(lang.MUXNETINFO.SAVE.MAC, FOREVER);
-        refresh_screen(ui_screen);
 
         const char *mac_change_args[] = {OPT_PATH "script/web/macchange.sh", NULL};
         run_exec(mac_change_args, A_SIZE(mac_change_args), 0, 0, NULL, NULL);
@@ -579,19 +552,8 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -607,18 +569,6 @@ static void init_elements(void) {
 #undef NETINFO
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 static void on_key_event(struct input_event ev) {
@@ -650,7 +600,7 @@ int muxnetinfo_main(void) {
 
     init_osk(ui_pnlEntry_netinfo, ui_txtEntry_netinfo, false);
 
-    init_timer(ui_refresh_task, update_network_info);
+    init_timer(ui_gen_refresh_task, update_network_info);
     list_nav_next(0);
 
     mux_input_options input_opts = {

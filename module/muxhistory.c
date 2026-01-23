@@ -49,10 +49,10 @@ static void image_refresh(char *image_type) {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 config.THEME.STORAGE_THEME, mux_dimension, image_type);
+                 theme_base, mux_dimension, image_type);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     config.THEME.STORAGE_THEME, image_type);
+                     theme_base, image_type);
         }
     } else {
         if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
@@ -273,8 +273,8 @@ static void init_navigation_group_grid(void) {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
-    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+    load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
+    load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
 
     if (is_carousel_grid_mode()) {
@@ -613,9 +613,7 @@ int muxhistory_main(int his_index) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     create_history_items();
     init_elements();

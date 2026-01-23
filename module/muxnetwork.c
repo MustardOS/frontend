@@ -147,40 +147,13 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, network, Dns, lang.MUXNETWORK.DNS, "dns", "");
     INIT_VALUE_ITEM(-1, network, Connect, lang.MUXNETWORK.CONNECT, "connect", "");
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
-static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
-
+static void check_focus() {
     if (!is_network_connected()) {
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
@@ -195,6 +168,11 @@ static void list_nav_move(int steps, int direction) {
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+}
+
+static void list_nav_move(int steps, int direction) {
+    gen_step_movement(steps, direction, false, 0);
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -411,7 +389,6 @@ static void handle_back(void) {
     play_sound(SND_BACK);
 
     toast_message(lang.GENERIC.SAVING, FOREVER);
-    refresh_screen(ui_screen);
 
     save_network_config();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");

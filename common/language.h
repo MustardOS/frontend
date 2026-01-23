@@ -69,6 +69,7 @@ struct mux_lang {
         char OFFLINE[MAX_BUFFER_SIZE];
         char ONLINE[MAX_BUFFER_SIZE];
         char OPEN[MAX_BUFFER_SIZE];
+        char OPTION[MAX_BUFFER_SIZE];
         char PREVIOUS[MAX_BUFFER_SIZE];
         char READ[MAX_BUFFER_SIZE];
         char REBOOTING[MAX_BUFFER_SIZE];

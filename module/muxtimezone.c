@@ -5,9 +5,7 @@ static void show_help(void) {
 }
 
 static void create_timezone_items(void) {
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     for (size_t i = 0; timezone_location[i] != NULL; i++) {
         const char *base_key = timezone_location[i];
@@ -39,26 +37,7 @@ static void create_timezone_items(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    nav_moved = 1;
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -74,7 +53,6 @@ static void handle_a(void) {
 
     play_sound(SND_CONFIRM);
     toast_message(lang.MUXTIMEZONE.SAVE, FOREVER);
-    refresh_screen(ui_screen);
 
     char zone_group[MAX_BUFFER_SIZE];
     snprintf(zone_group, sizeof(zone_group), "/usr/share/zoneinfo/%s",
@@ -87,7 +65,7 @@ static void handle_a(void) {
 
     // Because weirdos live in different timezones...
     if (config.BOOT.FACTORY_RESET) {
-        const char *args_date[] = {"date", "010100002025", NULL};
+        const char *args_date[] = {"date", "010100002026", NULL};
         run_exec(args_date, A_SIZE(args_date), 0, 1, NULL, NULL);
 
         const char *args_hw_clock[] = {"hwclock", "-w", NULL};
@@ -125,19 +103,8 @@ static void handle_menu(void) {
     show_help();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -149,18 +116,6 @@ static void init_elements(void) {
     });
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxtimezone_main(void) {
@@ -180,7 +135,7 @@ int muxtimezone_main(void) {
 
     if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
     list_nav_next(0);
 
     mux_input_options input_opts = {

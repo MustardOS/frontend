@@ -63,8 +63,6 @@ static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
 }
 
 static void reload_background(const char *active_theme) {
-    char *theme_base = get_theme_base();
-
     char back_image[MAX_BUFFER_SIZE];
     snprintf(back_image, sizeof(back_image), "%s/%simage/background.png", theme_base, mux_dimension);
 
@@ -111,7 +109,6 @@ static void reload_background(const char *active_theme) {
 
 static void reload_screensaver() {
     dvd_shutdown();
-    char *theme_base = get_theme_base();
 
     char saver_image[MAX_BUFFER_SIZE];
     snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dimension);

@@ -52,11 +52,8 @@ static void handle_input(mux_input_type type, mux_input_action action) {
         case MUX_INPUT_PRESS:
             if (glyph[type]) {
                 lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-                if (generate_image_embed(config.THEME.STORAGE_THEME, mux_dimension, mux_module, glyph[type], image_path,
-                                         sizeof(image_path), image_embed, sizeof(image_embed)) ||
-                    generate_image_embed(INTERNAL_THEME, mux_dimension, mux_module, glyph[type], image_path,
-                                         sizeof(image_path), image_embed, sizeof(image_embed))) {
-                }
+                generate_image_embed(mux_dimension, mux_module, glyph[type], image_path,
+                                     sizeof(image_path), image_embed, sizeof(image_embed));
                 if (file_exist(image_path)) {
                     lv_img_set_src(ui_imgButton, image_embed);
                 } else {

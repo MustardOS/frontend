@@ -166,40 +166,13 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, rtc, Minute, lang.MUXRTC.MINUTE, "minute", "");
     INIT_VALUE_ITEM(-1, rtc, Notation, lang.MUXRTC.NOTATION, "notation", "");
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
-static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
-
+static void check_focus() {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblTimezone_rtc) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -214,6 +187,11 @@ static void list_nav_move(int steps, int direction) {
     }
 }
 
+static void list_nav_move(int steps, int direction) {
+    gen_step_movement(steps, direction, false, 0);
+    check_focus();
+}
+
 static void list_nav_prev(int steps) {
     list_nav_move(steps, -1);
 }
@@ -223,54 +201,43 @@ static void list_nav_next(int steps) {
 }
 
 static void validate_notation(void) {
-    if (rtc.notation < 0)
-        rtc.notation = 1;
-    if (rtc.notation > 1)
-        rtc.notation = 0;
+    if (rtc.notation < 0) rtc.notation = 1;
+    if (rtc.notation > 1) rtc.notation = 0;
 }
 
 static void validate_minute(void) {
-    if (rtc.minute < 0)
-        rtc.minute = MINUTES_IN_HOUR - 1;
-    if (rtc.minute >= MINUTES_IN_HOUR)
-        rtc.minute = 0;
+    if (rtc.minute < 0) rtc.minute = MINUTES_IN_HOUR - 1;
+    if (rtc.minute >= MINUTES_IN_HOUR) rtc.minute = 0;
 
     validate_notation();
 }
 
 static void validate_hour(void) {
-    if (rtc.hour < 0)
-        rtc.hour = HOURS_IN_DAY - 1;
-    if (rtc.hour >= HOURS_IN_DAY)
-        rtc.hour = 0;
+    if (rtc.hour < 0) rtc.hour = HOURS_IN_DAY - 1;
+    if (rtc.hour >= HOURS_IN_DAY) rtc.hour = 0;
 
     validate_minute();
 }
 
 static void validate_day(void) {
     int max_days = days_in_month(rtc.year, rtc.month);
-    if (rtc.day < 1)
-        rtc.day = max_days;
-    if (rtc.day > max_days)
-        rtc.day = 1;
+
+    if (rtc.day < 1) rtc.day = max_days;
+    if (rtc.day > max_days) rtc.day = 1;
 
     validate_hour();
 }
 
 static void validate_month(void) {
-    if (rtc.month < 1)
-        rtc.month = MONTHS_IN_YEAR;
-    if (rtc.month > MONTHS_IN_YEAR)
-        rtc.month = 1;
+    if (rtc.month < 1) rtc.month = MONTHS_IN_YEAR;
+    if (rtc.month > MONTHS_IN_YEAR) rtc.month = 1;
 
     validate_day();
 }
 
 static void validate_year(void) {
-    if (rtc.year < MIN_YEAR)
-        rtc.year = MIN_YEAR;
-    if (rtc.year > MAX_YEAR)
-        rtc.year = MAX_YEAR;
+    if (rtc.year < MIN_YEAR) rtc.year = MIN_YEAR;
+    if (rtc.year > MAX_YEAR) rtc.year = MAX_YEAR;
 
     validate_month();
 }
@@ -340,7 +307,6 @@ static void adjust_option(int direction) {
 
 static void save_and_exit(char *message) {
     toast_message(message, FOREVER);
-    refresh_screen(ui_screen);
 
     // Validate the final RTC state before saving
     validate_year();
@@ -402,19 +368,8 @@ static void handle_menu(void) {
     show_help();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -432,18 +387,6 @@ static void init_elements(void) {
 #undef RTC
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxrtc_main(void) {
@@ -467,7 +410,7 @@ int muxrtc_main(void) {
     init_navigation_group();
     restore_clock_settings();
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

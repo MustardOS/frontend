@@ -100,8 +100,8 @@ static void init_navigation_group_grid(void) {
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
 
-    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+    load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
+    load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
     for (int i = 0; i < item_count; i++) {
         if (!is_carousel_grid_mode()) {
@@ -197,9 +197,7 @@ static void create_app_items(void) {
     if (!dir_names) return;
     qsort(dir_names, dir_count, sizeof(char *), str_compare);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     for (size_t i = 0; i < dir_count; i++) {
         if (!dir_names[i]) continue;
@@ -300,6 +298,19 @@ static void create_app_items(void) {
     }
 }
 
+static void check_focus(void) {
+    char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+    mux_apps *mux_app = get_mux_app(item_name);
+
+    if (mux_app) {
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
 static void list_nav_move(int steps, int direction) {
     if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
@@ -331,6 +342,7 @@ static void list_nav_move(int steps, int direction) {
     lv_label_set_text(ui_lblGridCurrentItem, TS(items[current_item_index].name));
 
     nav_moved = 1;
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -366,7 +378,6 @@ static void handle_a(void) {
 
         if (!skip_toast) {
             toast_message(lang.MUXAPP.LOAD_APP, FOREVER);
-            refresh_screen(ui_screen);
 
             char *assigned_gov = specify_asset(
                     load_content_governor(items[current_item_index].extra_data, NULL, 0, 1, 1),
@@ -413,7 +424,7 @@ static void handle_menu(void) {
     show_help();
 }
 
-static void handle_select(void) {
+static void handle_x(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
     char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
@@ -433,19 +444,8 @@ static void handle_select(void) {
     mux_input_stop();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -453,9 +453,12 @@ static void init_elements(void) {
             {ui_lblNavA,      lang.GENERIC.LAUNCH, 1},
             {ui_lblNavBGlyph, "",                  0},
             {ui_lblNavB,      lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph, "",                  0},
+            {ui_lblNavX,      lang.GENERIC.OPTION, 0},
             {NULL, NULL,                           0}
     });
 
+    check_focus();
     overlay_display();
 }
 
@@ -468,7 +471,7 @@ static void ui_refresh_task() {
 
             adjust_wallpaper_element(ui_group, 0, APPLICATION);
         }
-        adjust_panels();
+        adjust_gen_panel();
 
         lv_obj_move_foreground(overlay_image);
 
@@ -515,7 +518,7 @@ int muxapp_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_SELECT] = handle_select,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

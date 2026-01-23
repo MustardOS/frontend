@@ -52,9 +52,7 @@ static void create_screenshot_items(void) {
 
     sort_items(items, item_count);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
@@ -72,8 +70,7 @@ static void create_screenshot_items(void) {
         lv_group_add_obj(ui_group_glyph, ui_lblScreenshotItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlScreenshot);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblScreenshotItem, ui_lblScreenshotItemGlyph,
-                              items[i].display_name);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblScreenshotItem, ui_lblScreenshotItemGlyph, items[i].display_name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblScreenshotItem);
     }
 
@@ -81,27 +78,7 @@ static void create_screenshot_items(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    image_refresh();
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    nav_moved = 1;
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -148,20 +125,35 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_remove(void) {
-    if (msgbox_active || is_fullscreen || !ui_count || hold_call) return;
+static void handle_x(void) {
+    if (msgbox_active || is_fullscreen || !ui_count) return;
+
+    if (!hold_call) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.HOLD_CONFIRM, SHORT);
+        return;
+    }
 
     char screenshot_file[PATH_MAX];
     snprintf(screenshot_file, sizeof(screenshot_file), "%s/%s.png",
              STORAGE_SHOTS, lv_label_get_text(lv_group_get_focused(ui_group)));
 
-    if (file_exist(screenshot_file)) {
-        remove(screenshot_file);
-        load_mux("screenshot");
-
-        close_input();
-        mux_input_stop();
+    if (!file_exist(screenshot_file)) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
+        return;
     }
+
+    remove(screenshot_file);
+    sync();
+
+    play_sound(SND_MUOS);
+
+    hold_call = 0;
+    load_mux("screenshot");
+
+    close_input();
+    mux_input_stop();
 }
 
 static void handle_help(void) {
@@ -171,19 +163,8 @@ static void handle_help(void) {
     show_help();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -207,8 +188,7 @@ static void init_elements(void) {
 static void ui_refresh_task() {
     if (ui_count > 0 && nav_moved) {
         image_refresh();
-
-        adjust_panels();
+        adjust_gen_panel();
 
         lv_obj_invalidate(ui_pnlBox);
         nav_moved = 0;
@@ -256,7 +236,7 @@ int muxshot_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_remove,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

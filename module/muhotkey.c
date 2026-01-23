@@ -136,8 +136,8 @@ static char *boot_governor = NULL;
 static char *running_governor = NULL;
 static char *previous_governor = NULL;
 
-static int in_idle_state(void) {
-    return read_line_int_from(IDLE_STATE, 1) == 1;
+static inline int in_idle_state(void) {
+    return idle_state_exists;
 }
 
 static void cleanup(int signo) {
@@ -240,7 +240,8 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
             previous_governor = NULL;
         }
 
-        write_text_to_file(IDLE_STATE, "w", INT, 0);
+        if (file_exist(IDLE_STATE)) remove(IDLE_STATE);
+
         timer->idle = false;
         timer->tick = global_tick;
     }

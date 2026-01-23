@@ -40,17 +40,8 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, search, SearchLocal, lang.MUXSEARCH.LOCAL, "local", "");
     INIT_VALUE_ITEM(-1, search, SearchGlobal, lang.MUXSEARCH.GLOBAL, "global", "");
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 }
 
 static void image_refresh() {
@@ -81,10 +72,10 @@ static void image_refresh() {
 
     if (strlen(core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 config.THEME.STORAGE_THEME, mux_dimension, "box");
+                 theme_base, mux_dimension, "box");
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     config.THEME.STORAGE_THEME, "box");
+                     theme_base, "box");
         }
     } else {
         load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, "box",
@@ -462,9 +453,7 @@ static void handle_confirm(void) {
         }
 
         play_sound(SND_CONFIRM);
-
         toast_message(lang.MUXSEARCH.SEARCH, FOREVER);
-        refresh_screen(ui_screen);
 
         if (element_focused == ui_lblSearchLocal_search) {
             const char *args[] = {(OPT_PATH "script/mux/find.sh"), "--local",

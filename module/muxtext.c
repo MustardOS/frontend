@@ -61,19 +61,8 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -87,18 +76,6 @@ static void init_elements(void) {
     lv_obj_set_user_data(ui_txtDocument_text, "document");
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxtext_main(void) {
@@ -117,7 +94,7 @@ int muxtext_main(void) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     lv_textarea_set_text(ui_txtDocument_text, read_all_char_from(read_line_char_from(TEXT_FILE, 2)));
     handle_x();

@@ -21,6 +21,10 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
+static int visible_network_opt(void) {
+    return device.BOARD.HAS_NETWORK;
+}
+
 static void init_dropdown_settings(void) {
 #define CONNECT(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_connect);
     CONNECT_ELEMENTS
@@ -86,20 +90,10 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, connect, Bluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, UsbFunction, lang.MUXCONNECT.USB, "usbfunction", usb_functions, 3);
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, true);
 
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-        apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
-    }
-
-    if (!device.BOARD.HAS_NETWORK) {
+    if (!visible_network_opt()) {
         HIDE_OPTION_ITEM(connect, Network);
         HIDE_OPTION_ITEM(connect, NetAdv);
         HIDE_OPTION_ITEM(connect, Services);
@@ -113,27 +107,7 @@ static void init_navigation_group(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-
-    nav_moved = 1;
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -147,49 +121,71 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
+    move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value), 1);
+    move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    struct {
-        const char *glyph_name;
+    static int16_t KIOSK_PASS = 0;
+
+    typedef enum {
+        MENU_GENERAL = 0,
+        MENU_OPTION,
+    } menu_action;
+
+    typedef int (*visible_fn)(void);
+
+    typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
-    } elements[] = {
-            {"network", "network", &kiosk.CONFIG.NETWORK},
-            {"netadv",  "netadv",  &kiosk.CONFIG.NET_SETTINGS},
-            {"service", "webserv", &kiosk.CONFIG.WEB_SERVICES}
+        menu_action action;
+        visible_fn visible;
+    } menu_entry;
+
+    static const menu_entry entries[UI_COUNT] = {
+            {"network", &kiosk.CONFIG.NETWORK,      MENU_GENERAL, visible_network_opt},
+            {"netadv",  &kiosk.CONFIG.NET_SETTINGS, MENU_GENERAL, visible_network_opt},
+            {"webserv", &kiosk.CONFIG.WEB_SERVICES, MENU_GENERAL, visible_network_opt},
+            {NULL,      &KIOSK_PASS,                MENU_OPTION, NULL}, // USB Function
     };
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
+    const menu_entry *visible_entries[UI_COUNT];
+    size_t visible_count = 0;
 
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
+    for (size_t i = 0; i < A_SIZE(entries); i++) {
+        if (entries[i].visible && !entries[i].visible()) continue;
+        visible_entries[visible_count++] = &entries[i];
+    }
+
+    if ((unsigned) current_item_index >= visible_count) return;
+    const menu_entry *entry = visible_entries[current_item_index];
+
+    switch (entry->action) {
+        case MENU_GENERAL:
+            if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();
                 return;
             }
 
             play_sound(SND_CONFIRM);
-            load_mux(elements[i].mux_name);
+            load_mux(entry->mux_name);
 
             close_input();
             mux_input_stop();
-
             break;
-        }
+        case MENU_OPTION:
+            handle_option_next();
+            break;
+        default:
+            return;
     }
-
-    handle_option_next();
 }
 
 static void handle_b(void) {
@@ -220,19 +216,8 @@ static void handle_menu(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -248,18 +233,6 @@ static void init_elements(void) {
 #undef CONNECT
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxconnect_main(void) {
@@ -281,7 +254,7 @@ int muxconnect_main(void) {
     restore_options();
     init_dropdown_settings();
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

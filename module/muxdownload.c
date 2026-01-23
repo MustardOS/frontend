@@ -308,9 +308,7 @@ int muxdownload_main(char *type) {
     init_fonts();
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     create_content_items();
     ui_count = (int) item_count;

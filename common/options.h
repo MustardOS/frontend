@@ -3,9 +3,6 @@
 #define TEST_IMAGE 1
 #define MUX_CALLER "MustardOS FE Spectacular"
 
-// Three is the magic number...
-#define LVGL_REFRESH_PASS 3
-
 #define MAX_BUFFER_SIZE 1024
 
 // The rough calculation is as follows if a theme uses
@@ -19,7 +16,7 @@
 #define THEME_PREVIEW_DELAY 1000
 
 #define IDLE_MS 16 // ~60 FPS
-#define IDLE_FZ (6 * 60 * 60 * 1000U) // Freeze for 6 hours!
+#define IDLE_FZ (12 * 60 * 60 * 1000U) // Freeze for 12 hours!
 
 #define MU_OBJ_FLAG_HIDE_FLOAT (LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)
 #define MU_OBJ_MAIN_DEFAULT    (LV_PART_MAIN | LV_STATE_DEFAULT)
@@ -34,10 +31,10 @@
 #define TIMER_BLUETOOTH 4096
 #define TIMER_NETWORK   4096
 #define TIMER_BATTERY   4096
-#define TIMER_CAPACITY  1024
+#define TIMER_CAPACITY  8192
 #define TIMER_STATUS    1024
-#define TIMER_SYSINFO   1024
-#define TIMER_IDLE      256
+#define TIMER_SYSINFO   2048
+#define TIMER_IDLE      512
 #define TIMER_REFRESH   IDLE_MS
 
 #define TIME_STRING    "%Y-%m-%d %H:%M"
@@ -95,7 +92,6 @@
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COR_PATH OPT_SHARE_PATH   "info/core"
-#define INFO_CFG_PATH OPT_SHARE_PATH   "info/config"
 #define INFO_CNT_PATH OPT_SHARE_PATH   "info/controller"
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_CKS_PATH RUN_STORAGE_PATH "info/collection/kiosk"
@@ -107,7 +103,6 @@
 #define MUOS_ARCH_PATH "ARCHIVE"
 #define MUOS_BASE_PATH "MUOS"
 #define MUOS_APPS_PATH MUOS_BASE_PATH "/application"
-#define MUOS_TASK_PATH MUOS_BASE_PATH "/task"
 #define MUOS_INFO_PATH MUOS_BASE_PATH "/info"
 
 #define STORE_LOC_APPS MUOS_BASE_PATH "/application"
@@ -127,19 +122,15 @@
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_MUSI MUOS_BASE_PATH "/music"
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
-#define STORE_LOC_CONF OPT_SHARE_PATH "info/config"
-#define STORE_LOC_CORE OPT_SHARE_PATH "info/core"
-#define STORE_LOC_GCDB OPT_SHARE_PATH "info/gamecontrollerdb"
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
-#define STORE_LOC_PLAY MUOS_INFO_PATH "/track"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
-#define MUOS_ASS_FROM "/tmp/ass_from" // Core/System Assignment Loader return to module
+#define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
@@ -158,23 +149,19 @@
 #define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 
 #define MUX_BOOT_AUTH   "/tmp/mux_boot_auth"
-
-#define BRIGHT_PERC "/tmp/current_brightness_percent"
-#define VOLUME_PERC "/tmp/current_volume_percent"
-
 #define MUX_BLANK       "/tmp/mux_blank"
-#define PLAYTIME_DATA   "playtime_data.json"
+#define MUX_DO_REFRESH  "/tmp/hdmi_do_refresh"
 #define FRIENDLY_RESULT "/tmp/f_result.json"
 #define MANUAL_RA_LOAD  "/tmp/ra_no_load"
+#define PLAYTIME_DATA   "playtime_data.json"
 #define APP_LAUNCHER    "mux_launch.sh"
 #define APP_LANGUAGE    "mux_lang.ini"
-
-#define THEME_DATA   "theme_data.json"
-#define EXTRA_DATA   "extra_data.json"
-
-#define FONT_PANEL_FOLDER  "panel"
-#define FONT_HEADER_FOLDER "header"
-#define FONT_FOOTER_FOLDER "footer"
+#define THEME_DATA      "theme_data.json"
+#define EXTRA_DATA      "extra_data.json"
+#define LANG_ARCHIVE    "lang.muxzip"
+#define FONT_PANEL_DIR  "panel"
+#define FONT_HEADER_DIR "header"
+#define FONT_FOOTER_DIR "footer"
 
 #define CFG_INT_FIELD(FIELD, PATH, DEFAULT)           \
     do {                                              \

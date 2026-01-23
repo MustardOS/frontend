@@ -1,12 +1,14 @@
 #include "muxshare.h"
 #include "ui/ui_muxoption.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 10
 
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
-static bool is_directory = false;
+
+static int is_directory = 0;
+static int is_retroarch_core = 1;
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -188,7 +190,7 @@ static void init_navigation_group(void) {
     if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
 
     add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', dir_level), "folder", false);
-    add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
+    if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
     if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
     if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
     add_static_item(line_index, "", "", "", true);
@@ -200,40 +202,18 @@ static void init_navigation_group(void) {
     if (!is_directory) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
     add_info_items();
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-    ui_group_value = lv_group_create();
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
+    const char *core_label = lv_label_get_text(ui_lblCoreValue_option);
+    if (core_label && !strcasestr(core_label, "RetroArch")) {
+        is_retroarch_core = 0;
+        HIDE_VALUE_ITEM(option, Control);
     }
-
-    if (strcasecmp(grab_ext(lv_label_get_text(ui_lblCoreValue_option)), "so") != 0) HIDE_VALUE_ITEM(option, Control);
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-        nav_move(ui_group_value, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT - 4, theme.MUX.ITEM.PANEL,
-                           ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
+    gen_step_movement(steps, direction, false, -4);
 }
 
 static void list_nav_prev(int steps) {
@@ -247,37 +227,56 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    struct {
-        const char *glyph_name;
-        const char *mux_name;
-        int16_t *kiosk_flag;
-    } elements[] = {
-            {"search",   "search",   &kiosk.CONTENT.SEARCH},
-            {"core",     "assign",   &kiosk.CONTENT.CORE},
-            {"governor", "governor", &kiosk.CONTENT.GOVERNOR},
-            {"control",  "control",  &kiosk.CONTENT.CONTROL},
-            {"tag",      "tag",      &kiosk.CONTENT.TAG}
+    typedef enum {
+        MENU_NONE = 0,
+        MENU_SEARCH,
+        MENU_CORE,
+        MENU_GOVERNOR,
+        MENU_CONTROL,
+        MENU_TAG,
+    } menu_action;
+
+    enum {
+        MENU_DIR = 1 << 0,
+        MENU_RA_CORE = 1 << 1,
+        MENU_DEFAULT = 1 << 2,
     };
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
-    if (strcasecmp(u_data, "info_item") == 0) return;
+    typedef struct {
+        const char *mux_name;
+        int16_t *kiosk_flag;
+        menu_action action;
+        uint8_t type;
+    } menu_entry;
 
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
+    // We don't count the unselectable entries here even though we have a place
+    // for them within the construct of the following entries. There are three
+    // different types of menu entries which are pretty self explanatory.
+    static const menu_entry entries[UI_COUNT] = {
+            {"search",   &kiosk.CONTENT.SEARCH,   MENU_SEARCH,   MENU_DIR | MENU_RA_CORE | MENU_DEFAULT},
+            {"assign",   &kiosk.CONTENT.CORE,     MENU_CORE,     MENU_DIR | MENU_RA_CORE | MENU_DEFAULT},
+            {"governor", &kiosk.CONTENT.GOVERNOR, MENU_GOVERNOR, MENU_DIR | MENU_RA_CORE | MENU_DEFAULT},
+            {"control",  &kiosk.CONTENT.CONTROL,  MENU_CONTROL,  MENU_DIR | MENU_RA_CORE},
+            {"tag",      &kiosk.CONTENT.TAG,      MENU_TAG,      MENU_RA_CORE | MENU_DEFAULT},
+    };
 
-            play_sound(SND_CONFIRM);
-            load_mux(elements[i].mux_name);
+    uint8_t mode = is_directory ? MENU_DIR : is_retroarch_core ? MENU_RA_CORE : MENU_DEFAULT;
 
-            break;
-        }
+    if ((unsigned) current_item_index >= UI_COUNT) return;
+    const menu_entry *entry = &entries[current_item_index];
+
+    // We check to make sure nothing runs if something somehow becomes selectable!
+    if (!(entry->type & mode) || entry->action == MENU_NONE) return;
+
+    if (is_ksk(*entry->kiosk_flag)) {
+        kiosk_denied();
+        return;
     }
 
-    write_text_to_file(MUOS_OPI_LOAD, "w", INT, is_directory ? (current_item_index + 3) : (current_item_index + 4));
+    play_sound(SND_CONFIRM);
+    load_mux(entry->mux_name);
+
+    write_text_to_file(MUOS_OPI_LOAD, "w", INT, is_directory ? (current_item_index + 4) : (current_item_index + 5));
 
     close_input();
     mux_input_stop();
@@ -310,19 +309,8 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -338,18 +326,6 @@ static void init_elements(void) {
 #undef OPTION
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
@@ -391,7 +367,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
         remove(MUOS_OPI_LOAD);
     }
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

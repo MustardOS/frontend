@@ -86,42 +86,16 @@ static void init_navigation_group(void) {
 
     add_info_items();
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-    ui_group_value = lv_group_create();
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-    }
-
-    if (strcasecmp(app_name, "RetroArch") != 0) HIDE_VALUE_ITEM(appcon, Control);
+    if (strcasecmp(get_last_dir(app_dir), "RetroArch") != 0) HIDE_VALUE_ITEM(appcon, Control);
 
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-        nav_move(ui_group_value, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT - 1, theme.MUX.ITEM.PANEL,
-                           ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
+    gen_step_movement(steps, direction, false, -1);
 }
 
 static void list_nav_prev(int steps) {
@@ -135,33 +109,28 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    struct {
-        const char *glyph_name;
+    typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
-    } elements[] = {
-            {"governor", "governor", &kiosk.CONTENT.GOVERNOR},
-            {"control",  "control",  &kiosk.CONTENT.CONTROL},
+    } menu_entry;
+
+    static const menu_entry entries[UI_COUNT] = {
+            {"governor", &kiosk.CONTENT.GOVERNOR},
+            {"control",  &kiosk.CONTENT.CONTROL},
     };
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
-    if (strcasecmp(u_data, "info_item") == 0) return;
+    if ((unsigned) current_item_index >= UI_COUNT) return;
+    const menu_entry *entry = &entries[current_item_index];
 
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            play_sound(SND_CONFIRM);
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].glyph_name);
-            load_mux(elements[i].mux_name);
-
-            break;
-        }
+    if (is_ksk(*entry->kiosk_flag)) {
+        kiosk_denied();
+        return;
     }
+
+    play_sound(SND_CONFIRM);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
+
+    load_mux(entry->mux_name);
 
     close_input();
     mux_input_stop();
@@ -194,19 +163,8 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -222,18 +180,6 @@ static void init_elements(void) {
 #undef APPCON
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
@@ -257,7 +203,7 @@ int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
     init_fonts();
     init_navigation_group();
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

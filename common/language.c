@@ -85,6 +85,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.OFFLINE, "Offline");
     GENERIC_FIELD(lang->GENERIC.ONLINE, "Online");
     GENERIC_FIELD(lang->GENERIC.OPEN, "Open");
+    GENERIC_FIELD(lang->GENERIC.OPTION, "Options");
     GENERIC_FIELD(lang->GENERIC.PREVIOUS, "Previous");
     GENERIC_FIELD(lang->GENERIC.READ, "Read");
     GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting…");

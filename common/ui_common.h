@@ -44,10 +44,7 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha,
                              int16_t add_hide_flag);
 
-int load_header_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_name,
-                      char *image_path, size_t image_size);
-
-int generate_image_embed(const char *base_path, const char *dimension, const char *glyph_folder, const char *glyph_name,
+int generate_image_embed(const char *dimension, const char *glyph_folder, const char *glyph_name,
                          char *image_path, size_t path_size, char *image_embed, size_t embed_size);
 
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);

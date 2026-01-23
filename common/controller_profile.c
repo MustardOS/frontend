@@ -2,10 +2,11 @@
 #include "common.h"
 #include "options.h"
 #include "controller_profile.h"
+#include "log.h"
 #include "mini/mini.h"
 
 void create_controller_profile(char *controller_profile_path) {
-    printf("file missing: %s\n", controller_profile_path);
+    LOG_WARN(mux_module, "Controller profile missing: %s", controller_profile_path);
     FILE *file = fopen(controller_profile_path, "w");
 
     if (file == NULL) {
@@ -60,7 +61,7 @@ void load_controller_profile(struct controller_profile *controller, char *contro
     snprintf(controller_profile_path, sizeof(controller_profile_path), INFO_CNT_PATH "/%s.ini",
              controller_name);
 
-    printf("Loading Controller Profile: %s\n", controller_profile_path);
+    LOG_SUCCESS(mux_module, "Loading Controller Profile: %s", controller_profile_path);
 
     if (!file_exist(controller_profile_path)) {
         create_controller_profile(controller_profile_path);

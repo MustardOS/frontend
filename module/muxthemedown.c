@@ -202,9 +202,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
-                                                                    : lang.MUXTHEMEDOWN.DOWNLOAD);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE : lang.MUXTHEMEDOWN.DOWNLOAD);
 
     nav_moved = 1;
 }
@@ -226,7 +224,7 @@ static void refresh_current_list_item() {
 }
 
 static void theme_extraction_finished(char *theme_path) {
-    printf("Extraction finished: %s\n", theme_path);
+    LOG_INFO(mux_module, "Extraction Finished: %s", theme_path);
     remove(theme_path);
     block_input = 0;
     theme_extracting = false;
@@ -287,7 +285,7 @@ static void handle_a(void) {
     snprintf(theme_path, sizeof(theme_path), "%stheme/%s",
              RUN_STORAGE_PATH, theme_items[current_item_index].name);
     if (directory_exist(theme_path)) {
-        if (strcasecmp(theme_path, config.THEME.STORAGE_THEME) == 0) {
+        if (strcasecmp(theme_path, theme_base) == 0) {
             toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, SHORT);
         } else {
             remove_directory_recursive(theme_path);
@@ -426,6 +424,7 @@ int muxthemedown_main(void) {
     exit_status = 0;
     snprintf(theme_data_local_path, sizeof(theme_data_local_path), "%s/%s",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" THEME_DATA);
+    create_directories(theme_data_local_path, 1);
 
     init_module(__func__);
     init_theme(1, 1);
@@ -440,9 +439,7 @@ int muxthemedown_main(void) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     create_content_items();
     ui_count = (int) theme_item_count;

@@ -1,32 +1,80 @@
 #include "muxshare.h"
 
+static int mount_points_init = 0;
+static const char *mount_points[4];
+
+const char *subdirs[] = {
+        "/backup", "/archive"
+};
+
+const char *mount_labels[] = {
+        "SD1", "SD2", "USB", "THM"
+};
+
+const char *mux_archive[] = {
+        ".muxupd", ".muxapp", ".muxzip",
+        ".muxthm", ".muxcat", ".muxcfg"
+};
+
+const char *del_marked[] = {
+        LANG_ARCHIVE
+};
+
 static void show_help(void) {
     show_info_box(lang.MUXARCHIVE.TITLE, lang.MUXARCHIVE.HELP, 0);
 }
 
+static void init_mount_points(void) {
+    if (mount_points_init) return;
+    mount_points_init = 1;
+
+    mount_points[0] = device.STORAGE.ROM.MOUNT;
+    mount_points[1] = device.STORAGE.SDCARD.MOUNT;
+    mount_points[2] = device.STORAGE.USB.MOUNT;
+    mount_points[3] = theme_base;
+}
+
+static size_t purge_marked(char **files, size_t file_count) {
+    for (size_t i = 0; i < file_count; ++i) {
+        const char *file = files[i];
+        if (!file) continue;
+
+        const char *marked = strrchr(file, '/');
+        marked = marked ? marked + 1 : file;
+
+        for (size_t d = 0; d < A_SIZE(del_marked); ++d) {
+            const char *mark = del_marked[d];
+            if (!mark || !*mark) continue;
+
+            if (strcmp(marked, mark) == 0) {
+                LOG_INFO(mux_module, "Removing marked archive: %s", file);
+                (void) remove(file);
+                files[i] = NULL;
+                break;
+            }
+        }
+    }
+
+    size_t new_count = 0;
+    for (size_t r = 0; r < file_count; ++r) {
+        if (files[r]) files[new_count++] = files[r];
+    }
+
+    return new_count;
+}
+
 static void create_archive_items(void) {
-    const char *mount_points[] = {
-            device.STORAGE.ROM.MOUNT,
-            device.STORAGE.SDCARD.MOUNT,
-            device.STORAGE.USB.MOUNT,
-            config.THEME.STORAGE_THEME
-    };
+    init_mount_points();
+    char archive_directories[A_SIZE(mount_points) * A_SIZE(subdirs)][MAX_BUFFER_SIZE];
 
-    const char *subdirs[] = {"/backup", "/archive"};
-    char archive_directories[8][MAX_BUFFER_SIZE];
-
-    for (int i = 0, k = 0; i < 4; ++i) {
-        for (int j = 0; j < 2; ++j, ++k) {
+    for (size_t i = 0, k = 0; i < A_SIZE(mount_points); ++i) {
+        for (size_t j = 0; j < A_SIZE(subdirs); ++j, ++k) {
             snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
         }
     }
 
-    const char *mux_archive[] = {
-            ".muxupd", ".muxapp", ".muxzip", ".muxthm", ".muxcat", ".muxcfg"
-    };
-
-    const char *dirs[8];
-    for (int i = 0; i < 8; ++i) dirs[i] = archive_directories[i];
+    const char *dirs[A_SIZE(mount_points) * A_SIZE(subdirs)];
+    for (size_t i = 0; i < (A_SIZE(dirs)); ++i) dirs[i] = archive_directories[i];
 
     char **files = NULL;
     size_t file_count = 0;
@@ -41,11 +89,16 @@ static void create_archive_items(void) {
         return;
     }
 
+    file_count = purge_marked(files, file_count);
+
+    if (file_count == 0) {
+        free_array(files, 0);
+        return;
+    }
+
     qsort(files, file_count, sizeof(char *), str_compare);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     for (size_t i = 0; i < file_count; ++i) {
         assert(files[i] != NULL);
@@ -65,18 +118,15 @@ static void create_archive_items(void) {
             }
         }
 
-        char ext_upper[8];
+        char ext_upper[16];
         strncpy(ext_upper, ext_type, sizeof(ext_upper) - 1);
         ext_upper[sizeof(ext_upper) - 1] = '\0';
         str_toupper(ext_upper);
 
         for (size_t j = 0; j < A_SIZE(mount_points); ++j) {
+            if (!mount_points[j]) continue;
             if (strstr(base_filename, mount_points[j])) {
-                snprintf(storage_prefix, sizeof(storage_prefix), "[%s-%s]",
-                         j == 0 ? "SD1" :
-                         j == 1 ? "SD2" :
-                         j == 2 ? "USB" : "THM",
-                         ext_upper);
+                snprintf(storage_prefix, sizeof(storage_prefix), "[%s-%s]", mount_labels[j], ext_upper);
                 prefix = storage_prefix;
                 break;
             }
@@ -127,26 +177,7 @@ static void create_archive_items(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    nav_moved = 1;
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -229,19 +260,8 @@ static void handle_menu(void) {
     show_help();
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -270,7 +290,7 @@ static void ui_refresh_task() {
 
             adjust_wallpaper_element(ui_group, 0, ARCHIVE);
         }
-        adjust_panels();
+        adjust_gen_panel();
 
         lv_obj_move_foreground(overlay_image);
 

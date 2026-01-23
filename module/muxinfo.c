@@ -21,6 +21,14 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
+static int visible_network_opt(void) {
+    return device.BOARD.HAS_NETWORK;
+}
+
+static int visible_chrony_opt(void) {
+    return 0;
+}
+
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -36,47 +44,22 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, Chrony, lang.MUXINFO.CHRONY, "chrony", 0);
     INIT_STATIC_ITEM(-1, info, Credit, lang.MUXINFO.CREDIT, "credit", 0);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
+    add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, false);
 
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
-
-    if (!device.BOARD.HAS_NETWORK) {
+    if (!visible_network_opt()) {
         HIDE_STATIC_ITEM(info, News);
         HIDE_STATIC_ITEM(info, NetInfo);
     }
 
     // Hide until further notice or future development
-    HIDE_STATIC_ITEM(info, Chrony);
+    if (!visible_chrony_opt()) HIDE_STATIC_ITEM(info, Chrony);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    nav_moved = 1;
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -90,38 +73,66 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    typedef enum {
+        MENU_GENERAL = 0,
+        MENU_NEWS,
+    } menu_action;
 
-    if (element_focused == ui_lblNews_info) {
-        if (is_network_connected()) {
-            load_mux("news");
-        } else {
-            play_sound(SND_ERROR);
-            toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
-            return;
-        }
-    } else if (element_focused == ui_lblActivity_info) {
-        load_mux("activity");
-    } else if (element_focused == ui_lblScreenshot_info) {
-        load_mux("screenshot");
-    } else if (element_focused == ui_lblSpace_info) {
-        load_mux("space");
-    } else if (element_focused == ui_lblTester_info) {
-        load_mux("tester");
-    } else if (element_focused == ui_lblSysInfo_info) {
-        load_mux("sysinfo");
-    } else if (element_focused == ui_lblNetInfo_info) {
-        load_mux("netinfo");
-    } else if (element_focused == ui_lblChrony_info) {
-        load_mux("chrony");
-    } else if (element_focused == ui_lblCredit_info) {
-        load_mux("credits");
+    typedef int (*visible_fn)(void);
+
+    typedef struct {
+        const char *mux_name;
+        menu_action action;
+        visible_fn visible;
+    } menu_entry;
+
+    static const menu_entry entries[UI_COUNT] = {
+            {"news",       MENU_NEWS,    visible_network_opt},
+            {"activity",   MENU_GENERAL, NULL},
+            {"screenshot", MENU_GENERAL, NULL},
+            {"space",      MENU_GENERAL, NULL},
+            {"tester",     MENU_GENERAL, NULL},
+            {"sysinfo",    MENU_GENERAL, NULL},
+            {"netinfo",    MENU_GENERAL, visible_network_opt},
+            {"chrony",     MENU_GENERAL, visible_chrony_opt},
+            {"credits",    MENU_GENERAL, NULL},
+    };
+
+    const menu_entry *visible_entries[UI_COUNT];
+    size_t visible_count = 0;
+
+    for (size_t i = 0; i < A_SIZE(entries); i++) {
+        if (entries[i].visible && !entries[i].visible()) continue;
+        visible_entries[visible_count++] = &entries[i];
     }
 
-    play_sound(SND_CONFIRM);
+    if ((unsigned) current_item_index >= visible_count) return;
+    const menu_entry *entry = visible_entries[current_item_index];
 
-    close_input();
-    mux_input_stop();
+    switch (entry->action) {
+        case MENU_GENERAL:
+            play_sound(SND_CONFIRM);
+            load_mux(entry->mux_name);
+
+            close_input();
+            mux_input_stop();
+            break;
+        case MENU_NEWS:
+            if (is_network_connected()) {
+                play_sound(SND_CONFIRM);
+                load_mux(entry->mux_name);
+
+                close_input();
+                mux_input_stop();
+            } else {
+                play_sound(SND_ERROR);
+                toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+                return;
+            }
+            break;
+        default:
+            return;
+    }
 }
 
 static void handle_b(void) {
@@ -149,19 +160,8 @@ static void handle_menu(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -177,18 +177,6 @@ static void init_elements(void) {
 #undef INFO
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxinfo_main(void) {
@@ -207,7 +195,7 @@ int muxinfo_main(void) {
     init_fonts();
     init_navigation_group();
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

@@ -10,6 +10,7 @@
 #include "../lvgl/src/drivers/input/evdev.h"
 #include "init.h"
 #include "input.h"
+#include "inotify.h"
 #include "common.h"
 #include "font.h"
 #include "log.h"
@@ -62,6 +63,16 @@ uint64_t mux_tick(void) {
     if (!start_ms) start_ms = now_ms;
 
     return (uint64_t) (now_ms - start_ms);
+}
+
+void inotify_init(void) {
+    ino_proc = inotify_create();
+    if (!ino_proc) return;
+
+    inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists);
+    inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists);
+    inotify_track(ino_proc, "/run/muos", "do_refresh", &do_refresh_exists);
+    inotify_track(ino_proc, "/run/muos", "blank", &blank_exists);
 }
 
 void detach_parent_process(void) {
@@ -187,6 +198,8 @@ void init_display() {
 
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
     mux_set_refresh_timer(disp->refr_timer);
+
+    inotify_init();
 }
 
 int open_input(const char *path, const char *error_message) {
@@ -376,13 +389,14 @@ void init_fonts(void) {
 
     load_font_text(ui_screen);
 
-    load_font_section(FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(FONT_PANEL_DIR, ui_pnlContent);
+    load_font_section(FONT_HEADER_DIR, ui_pnlHeader);
+    load_font_section(FONT_FOOTER_DIR, ui_pnlFooter);
 }
 
 void init_theme(int panel_init, int long_mode) {
     load_theme(&theme, &config, &device);
+    theme_base = get_theme_base();
 
     if (panel_init) {
         init_panel_style(&theme);

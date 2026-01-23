@@ -2,6 +2,7 @@
 #include <sys/prctl.h>
 
 #include "muxshare.h"
+#include "../common/inotify.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
 static volatile sig_atomic_t quit_signal = 0;
@@ -107,10 +108,12 @@ static void quit_watchdog(lv_timer_t *timer) {
     LV_UNUSED(timer);
 
     if (shutting_down) return;
+    inotify_check(ino_proc);
 
-    if (file_exist(SAFE_QUIT) || quit_signal) {
+    if (safe_quit_exists || quit_signal) {
         LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal);
         shutting_down = 1;
+        safe_quit_exists = 0;
 
         cleanup_all();
         exit(0);
@@ -159,16 +162,15 @@ static void set_previous_module(char *module) {
 }
 
 int set_splash_image_path(char *splash_image_name) {
-    const char *theme = theme_compat() ? config.THEME.STORAGE_THEME : INTERNAL_THEME;
     if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
-                  theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
+                  theme_base, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
          file_exist(splash_image_path)) ||
         (snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s.png",
-                  theme, mux_dimension, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
+                  theme_base, mux_dimension, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
         (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s/%s.png",
-                  theme, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
+                  theme_base, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
         (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s.png",
-                  theme, splash_image_name) >= 0 && file_exist(splash_image_path)))
+                  theme_base, splash_image_name) >= 0 && file_exist(splash_image_path)))
         return 1;
 
     return 0;

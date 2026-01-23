@@ -11,6 +11,8 @@ static void list_nav_move(int steps, int direction);
 
 static char theme_alt_original[MAX_BUFFER_SIZE];
 
+static int alt_theme_count = 0;
+
 struct theme_resolution {
     char *resolution;
     int value;
@@ -54,9 +56,9 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblAnimation_custom,       lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblMusic_custom,           lang.MUXCUSTOM.HELP.MUSIC},
             {ui_lblMusicVolume_custom,     lang.MUXCUSTOM.HELP.MUSIC_VOLUME},
-            {ui_lblShuffle_custom,         lang.MUXCUSTOM.HELP.SHUFFLE},
-            {ui_lblLaunchSwap_custom,      lang.MUXCUSTOM.HELP.LAUNCH_SWAP},
             {ui_lblBlackFade_custom,       lang.MUXCUSTOM.HELP.FADE},
+            {ui_lblLaunchSwap_custom,      lang.MUXCUSTOM.HELP.LAUNCH_SWAP},
+            {ui_lblShuffle_custom,         lang.MUXCUSTOM.HELP.SHUFFLE},
             {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
             {ui_lblContentWidth_custom,    lang.MUXCUSTOM.HELP.CONTENT_WIDTH},
@@ -72,11 +74,19 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static int populate_theme_alternates(void) {
+static int visible_theme_alternate(void) {
+    return alt_theme_count > 0 && !lv_obj_has_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_animation(void) {
+    return !lv_obj_has_flag(ui_pnlAnimation_custom, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void populate_theme_alternates(void) {
     lv_dropdown_clear_options(ui_droThemeAlternate_custom);
 
     char alt_path[MAX_BUFFER_SIZE];
-    snprintf(alt_path, sizeof(alt_path), "%s/alternate", config.THEME.STORAGE_THEME);
+    snprintf(alt_path, sizeof(alt_path), "%s/alternate", theme_base);
 
     struct dirent *entry;
     DIR *dir = opendir(alt_path);
@@ -105,7 +115,7 @@ static int populate_theme_alternates(void) {
         free_items(&items, &item_count);
     }
 
-    return lv_dropdown_get_option_cnt(ui_droThemeAlternate_custom);
+    alt_theme_count = lv_dropdown_get_option_cnt(ui_droThemeAlternate_custom);
 }
 
 static void init_dropdown_settings(void) {
@@ -179,7 +189,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RES, "resolution", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeScaling, lang.MUXCUSTOM.THEME_SCALING, "scaling", theme_scaling_options, 3);
 
-    if (populate_theme_alternates() > 0) {
+    if (alt_theme_count > 0) {
         INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALT, "alternate", NULL, 0);
     } else {
         lv_obj_add_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
@@ -213,7 +223,7 @@ static void init_navigation_group(void) {
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
-                 config.THEME.STORAGE_THEME, theme_resolutions[i].resolution);
+                 theme_base, theme_resolutions[i].resolution);
 
         if (directory_exist(theme_device_folder)) {
             lv_dropdown_add_option(ui_droThemeResolution_custom,
@@ -221,18 +231,8 @@ static void init_navigation_group(void) {
         }
     }
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-        apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, true);
 
     // Temporary removal of elements
     HIDE_OPTION_ITEM(custom, Animation);
@@ -265,28 +265,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    nav_moved = 1;
-
-    check_focus();
+    gen_step_movement(steps, direction, true, 0);
 }
 
 static void list_nav_prev(int steps) {
@@ -300,18 +279,18 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
+    move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value), 1);
+    move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
 static void restore_custom_options(void) {
     char theme_active_txt_path[MAX_BUFFER_SIZE];
-    snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", config.THEME.STORAGE_THEME);
+    snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
     snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
              str_replace(read_line_char_from(theme_active_txt_path, 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate_custom, theme_alt_original);
@@ -379,22 +358,21 @@ static void save_custom_options() {
 
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
             char theme_active_txt_path[MAX_BUFFER_SIZE];
-            snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", config.THEME.STORAGE_THEME);
+            snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
             write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
-            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", config.THEME.STORAGE_THEME,
+            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", theme_base,
                      theme_alt);
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive);
-                extract_zip_to_dir(theme_alt_archive, config.THEME.STORAGE_THEME);
+                extract_zip_to_dir(theme_alt_archive, theme_base);
             }
             write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
             static char rgb_script[MAX_BUFFER_SIZE];
-            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", config.THEME.STORAGE_THEME,
-                     theme_alt);
+            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", theme_base, theme_alt);
             if (file_exist(rgb_script)) {
                 if (device.BOARD.RGB && config.SETTINGS.GENERAL.RGB) {
                     const char *args[] = {rgb_script, NULL};
@@ -402,7 +380,7 @@ static void save_custom_options() {
                 }
 
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
-                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", config.THEME.STORAGE_THEME);
+                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", theme_base);
 
                 create_directories(strip_dir(rgb_script_dest), 0);
                 write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
@@ -444,64 +422,107 @@ static void save_custom_options() {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    struct {
+    static int16_t KIOSK_PASS = 0;
+
+    typedef enum {
+        MENU_OPTION = 0,
+        MENU_THEME,
+        MENU_CATALOGUE,
+        MENU_CONFIG,
+        MENU_MUSIC_VOLUME,
+        MENU_SOUND_VOLUME,
+        MENU_THEME_ALTERNATE,
+    } menu_action;
+
+    typedef int (*visible_fn)(void);
+
+    typedef struct {
         const char *mux_name;
-        const char *launch;
+        const char *launch_path;
         int16_t *kiosk_flag;
-        const char *load_mux_name;
-    } elements[] = {
-            {"theme",     "/theme",            &kiosk.CUSTOM.THEME,     "theme"},
-            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, "picker"},
-            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG,  "picker"}
+        menu_action action;
+        visible_fn visible;
+    } menu_entry;
+
+    static const menu_entry entries[UI_COUNT] = {
+            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, MENU_CATALOGUE,    NULL},
+            {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG,  MENU_CONFIG,       NULL},
+            {"theme",     "/theme",            &kiosk.CUSTOM.THEME,     MENU_THEME,        NULL},
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Resolution
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Scaling
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_THEME_ALTERNATE, visible_theme_alternate},
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,          visible_animation},
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Background Music
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_MUSIC_VOLUME, NULL},
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Black Fade Animation
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Save State Launch
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Shuffle
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art Alignment
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Full Width
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Launch Splash
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Grid Mode
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Hide Grid Mode Box Art
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Interface Font Type
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Navigation Sound
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_SOUND_VOLUME, NULL},
+            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Startup Chime
     };
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
+    const menu_entry *visible_entries[UI_COUNT];
+    size_t visible_count = 0;
 
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].mux_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
+    for (size_t i = 0; i < A_SIZE(entries); i++) {
+        if (entries[i].visible && !entries[i].visible()) continue;
+        visible_entries[visible_count++] = &entries[i];
+    }
+
+    if ((unsigned) current_item_index >= visible_count) return;
+    const menu_entry *entry = visible_entries[current_item_index];
+
+    switch (entry->action) {
+        case MENU_CATALOGUE:
+        case MENU_CONFIG:
+        case MENU_THEME:
+            if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();
                 return;
             }
 
             save_custom_options();
 
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].mux_name);
-            write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, elements[i].launch);
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
+            write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, entry->launch_path);
 
             play_sound(SND_CONFIRM);
-
             toast_message(lang.GENERIC.LOADING, FOREVER);
-            lv_obj_move_foreground(ui_pnlMessage);
 
-            // Refresh and add a small delay to actually display the message!
-            lv_task_handler();
-            usleep(256);
-
-            load_mux(elements[i].load_mux_name);
+            load_mux(entry->action == MENU_THEME ? "theme" : "picker");
 
             close_input();
             mux_input_stop();
-
             break;
-        }
-    }
+        case MENU_MUSIC_VOLUME:
+            toast_message(lang.MUXCUSTOM.MUSIC.SET, SHORT);
+            set_bgm_volume(pct_to_int(lv_dropdown_get_selected(ui_droMusicVolume_custom), 0, 100));
+            break;
+        case MENU_SOUND_VOLUME:
+            toast_message(lang.MUXCUSTOM.SOUND.SET, SHORT);
+            set_nav_volume(pct_to_int(lv_dropdown_get_selected(ui_droSoundVolume_custom), 0, 100));
+            break;
+        case MENU_THEME_ALTERNATE:
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
+            save_custom_options();
+            load_mux("custom");
 
-    if (element_focused == ui_lblMusicVolume_custom) {
-        toast_message(lang.MUXCUSTOM.MUSIC.SET, SHORT);
-        set_bgm_volume(pct_to_int(lv_dropdown_get_selected(ui_droMusicVolume_custom), 0, 100));
-    } else if (element_focused == ui_lblSoundVolume_custom) {
-        toast_message(lang.MUXCUSTOM.SOUND.SET, SHORT);
-        set_nav_volume(pct_to_int(lv_dropdown_get_selected(ui_droSoundVolume_custom), 0, 100));
-    } else if (element_focused == ui_lblThemeAlternate_custom) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
-        save_custom_options();
-        load_mux("custom");
-        close_input();
-        mux_input_stop();
-    } else {
-        handle_option_next();
+            close_input();
+            mux_input_stop();
+            break;
+        case MENU_OPTION:
+            handle_option_next();
+            break;
+        default:
+            return;
     }
 }
 
@@ -532,19 +553,8 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -566,18 +576,6 @@ static void init_elements(void) {
     overlay_display();
 }
 
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
-}
-
 int muxcustom_main(void) {
     init_module(__func__);
     init_theme(1, 1);
@@ -592,12 +590,14 @@ int muxcustom_main(void) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
+
+    populate_theme_alternates();
     init_navigation_group();
 
     restore_custom_options();
     init_dropdown_settings();
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

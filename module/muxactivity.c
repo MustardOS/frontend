@@ -125,7 +125,7 @@ static void show_help(void) {
     show_info_box(lang.MUXACTIVITY.TITLE, lang.MUXACTIVITY.HELP, 0);
 }
 
-static void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value, lv_obj_t *glyph) {
+static void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value) {
     lv_obj_update_layout(panel);
 
     lv_coord_t panel_width = lv_obj_get_width(panel);
@@ -170,10 +170,10 @@ static void image_refresh() {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_box.png",
-                 config.THEME.STORAGE_THEME, mux_dimension);
+                 theme_base, mux_dimension);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_box.png",
-                     config.THEME.STORAGE_THEME);
+                     theme_base);
         }
     } else {
         if (!grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
@@ -1105,7 +1105,7 @@ static void show_detail_view(const activity_item_t *it) {
         lv_group_add_obj(ui_group_glyph, ui_lblActItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlAct);
 
-        adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue, ui_lblActItemGlyph);
+        adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItemValue);
 
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
@@ -1264,7 +1264,7 @@ static void show_global_view(void) {
         lv_group_add_obj(ui_group_glyph, ui_lblActItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlAct);
 
-        adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue, ui_lblActItemGlyph);
+        adjust_label_value_width(ui_pnlAct, ui_lblActItem, ui_lblActItemValue);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItemValue);
 
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblActItem);
@@ -1297,10 +1297,10 @@ static void html_escape(FILE *f, const char *s) {
 }
 
 static void export_activity_html(void) {
-    char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), INFO_ACT_PATH "/activity_report.html");
+    char html_export[MAX_BUFFER_SIZE];
+    snprintf(html_export, sizeof(html_export), "%s/activity_report.html", device.STORAGE.ROM.MOUNT);
 
-    FILE *f = fopen(path, "w");
+    FILE *f = fopen(html_export, "w");
     if (!f) {
         toast_message("Error exporting statistics", MEDIUM);
         refresh_screen(ui_screen);
@@ -1536,11 +1536,7 @@ static void generate_activity_items(void) {
     turbo_time(1, 1);
 
     load_activity_items();
-
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     in_detail_view = 0;
     refresh_activity_labels();

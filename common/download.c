@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "common.h"
 #include "download.h"
+#include "log.h"
 
 bool cancel_download = false;
 bool download_in_progress = false;
@@ -14,7 +15,6 @@ typedef struct {
     int percent;
 } progress_data_t;
 
-// For writing data to a file
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written * size;
@@ -26,11 +26,10 @@ void set_download_callbacks(void (*callback)(int)) {
     download_finish_cb = callback;
 }
 
-// Progress callback (called by libcurl)
 static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
                              curl_off_t ultotal, curl_off_t ulnow) {
     if (cancel_download) {
-        printf("Cancelling download\n");
+        LOG_INFO(mux_module, "Cancelling download");
         return 1;
     }
 
@@ -48,7 +47,7 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 }
 
 static void download_finished(int result) {
-    printf("Download finished with result: %d\n", result);
+    LOG_INFO(mux_module, "Download finished with result: %d", result);
 
     if (result == 0) {
         progress_bar_value = 100;
@@ -97,7 +96,7 @@ int download_file(const char *url, const char *output_path) {
 
     res = curl_easy_perform(curl);
 
-    // flush and close file before checking
+    // Flush and close file before checking
     fflush(fp);
     fclose(fp);
 
@@ -132,7 +131,7 @@ int download_file(const char *url, const char *output_path) {
         return -5;
     }
 
-    printf("Download Finished (%.0ld bytes)\n", cl);
+    LOG_SUCCESS(mux_module, "Download finished (%.0ld bytes)", cl);
     download_finished(0);
     return 0;
 }

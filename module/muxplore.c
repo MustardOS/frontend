@@ -68,10 +68,10 @@ static void image_refresh(char *image_type) {
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                     config.THEME.STORAGE_THEME, mux_dimension, image_type);
+                     theme_base, mux_dimension, image_type);
             if (!file_exist(image)) {
                 snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         config.THEME.STORAGE_THEME, image_type);
+                         theme_base, image_type);
             }
         } else {
             if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
@@ -371,8 +371,8 @@ static void init_navigation_group_grid(void) {
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
 
-    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+    load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
+    load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
@@ -651,15 +651,7 @@ static void process_load(int from_start) {
     }
 
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
-
-    if (load_message) {
-        toast_message(lang.GENERIC.LOADING, FOREVER);
-        lv_obj_move_foreground(ui_pnlMessage);
-
-        // Refresh and add a small delay to actually display the message!
-        lv_task_handler();
-        usleep(256);
-    }
+    if (load_message) toast_message(lang.GENERIC.LOADING, FOREVER);
 
     load_end:
     load_mux("explore");
@@ -707,18 +699,27 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    toast_message(lang.GENERIC.REFRESH_RUN, FOREVER);
-    lv_obj_move_foreground(ui_pnlMessage);
+    play_sound(SND_CONFIRM);
 
-    // Refresh and add a small delay to actually display the message!
-    lv_task_handler();
-    usleep(256);
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-    const char *args[] = {(OPT_PATH "script/mount/union.sh"), "restart", NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+    if (is_ksk(kiosk.CONTENT.OPTION)) {
+        if (!is_ksk(kiosk.CONTENT.SEARCH)) {
+            load_mux("search");
 
-    write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
-    load_mux("explore");
+            close_input();
+            mux_input_stop();
+        }
+        return;
+    }
+
+    write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+
+    load_content_core(1, 0, sys_dir, items[current_item_index].name);
+    load_content_governor(sys_dir, NULL, 1, 0, 0);
+
+    load_mux("option");
 
     close_input();
     mux_input_stop();
@@ -757,27 +758,13 @@ static void handle_start(void) {
 static void handle_select(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
-    play_sound(SND_CONFIRM);
+    toast_message(lang.GENERIC.REFRESH_RUN, FOREVER);
 
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+    const char *args[] = {(OPT_PATH "script/mount/union.sh"), "restart", NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
-    if (is_ksk(kiosk.CONTENT.OPTION)) {
-        if (!is_ksk(kiosk.CONTENT.SEARCH)) {
-            load_mux("search");
-
-            close_input();
-            mux_input_stop();
-        }
-        return;
-    }
-
-    write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
-    write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
-
-    load_content_core(1, 0, sys_dir, items[current_item_index].name);
-    load_content_governor(sys_dir, NULL, 1, 0, 0);
-
-    load_mux("option");
+    write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
+    load_mux("explore");
 
     close_input();
     mux_input_stop();
@@ -842,7 +829,7 @@ static void init_elements(void) {
             {ui_lblNavBGlyph,    "",                   0},
             {ui_lblNavB,         lang.GENERIC.BACK,    0},
             {ui_lblNavXGlyph,    "",                   0},
-            {ui_lblNavX,         lang.GENERIC.REFRESH, 0},
+            {ui_lblNavX,         lang.GENERIC.OPTION,  0},
             {ui_lblNavYGlyph,    "",                   1},
             {ui_lblNavY,         lang.GENERIC.COLLECT, 1},
             {ui_lblNavMenuGlyph, "",                   1},
@@ -919,9 +906,7 @@ int muxplore_main(int index, char *dir) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 

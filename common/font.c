@@ -89,13 +89,13 @@ static lv_font_t *load_font_from_file(const char *filepath) {
 static lv_font_t *load_font_cached(const char *path) {
     for (int i = 0; i < font_cache_count; i++) {
         if (strcmp(font_cache[i].path, path) == 0) {
-            LOG_SUCCESS(mux_module, "\tUsing font from cache");
+            // LOG_SUCCESS(mux_module, "\tUsing font from cache");
             return font_cache[i].font;
         }
     }
 
     lv_font_t * font = load_font_from_file(path);
-    LOG_SUCCESS(mux_module, "\tUsing font from storage");
+    // LOG_SUCCESS(mux_module, "\tUsing font from storage");
 
     if (!font) return NULL;
 
@@ -118,8 +118,6 @@ void load_font_text(lv_obj_t *screen) {
         char theme_font_text[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_base = get_theme_base();
-
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_text, sizeof(theme_font_text),
                             "%s/%sfont/%s/%s.bin", theme_base, dimensions[i],
@@ -158,8 +156,6 @@ void load_font_section(const char *section, lv_obj_t *element) {
         char theme_font_section[MAX_BUFFER_SIZE];
 
         char *dimensions[15] = {mux_dimension, ""};
-        char *theme_base = get_theme_base();
-
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_section, sizeof(theme_font_section),
                             "%s/%sfont/%s/%s/%s.bin", theme_base, dimensions[i],

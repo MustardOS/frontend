@@ -124,6 +124,16 @@ void gen_label(char *module, char *item_glyph, char *item_text);
 
 int launch_flag(int mode, int held);
 
+void reset_ui_groups(void);
+
+void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_obj_t **panels, int long_dot);
+
+void adjust_gen_panel(void);
+
+void ui_gen_refresh_task();
+
+void gen_step_movement(int steps, int direction, int long_dot, int count_offset);
+
 int muxactivity_main();
 
 int muxapp_main();

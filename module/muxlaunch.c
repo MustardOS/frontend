@@ -29,8 +29,8 @@ static void init_navigation_group_grid(char *item_labels[], char *item_grid_labe
     init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, UI_COUNT);
 
-    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+    load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
+    load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
     char prev_dir[MAX_BUFFER_SIZE];
     snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
@@ -40,14 +40,14 @@ static void init_navigation_group_grid(char *item_labels[], char *item_grid_labe
         if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
 
         char grid_img[MAX_BUFFER_SIZE];
-        load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
+        load_element_image_specifics(mux_dimension, mux_module, "grid", glyph_names[i],
                                      "default", "png", grid_img, sizeof(grid_img));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
 
         char grid_img_foc[MAX_BUFFER_SIZE];
-        load_element_image_specifics(config.THEME.STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
+        load_element_image_specifics(mux_dimension, mux_module, "grid", glyph_name_focused,
                                      "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
 
         content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);
@@ -100,9 +100,7 @@ static void init_navigation_group(void) {
                            "reboot",
                            "shutdown"};
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     if (theme.GRID.ENABLED) {
         init_navigation_group_grid(item_labels, item_labels_short, glyph_names);
@@ -116,12 +114,7 @@ static void init_navigation_group(void) {
         INIT_STATIC_ITEM(-1, launch, Reboot, item_labels[6], glyph_names[6], 0);
         INIT_STATIC_ITEM(-1, launch, Shutdown, item_labels[7], glyph_names[7], 0);
 
-        for (unsigned int i = 0; i < ui_count; i++) {
-            lv_group_add_obj(ui_group, ui_objects[i]);
-            lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-            lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-        }
-
+        add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, false);
         list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
     }
 }
@@ -169,46 +162,53 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     static int16_t KIOSK_PASS = 0;
-    struct {
-        const char *glyph_name;
+
+    typedef enum {
+        MENU_GENERAL = 0,
+        MENU_REBOOT,
+        MENU_SHUTDOWN,
+    } menu_action;
+
+    typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
-    } elements[] = {
-            {"explore",    "explore",    &kiosk.LAUNCH.EXPLORE},
-            {"collection", "collection", &kiosk.LAUNCH.COLLECTION},
-            {"history",    "history",    &kiosk.LAUNCH.HISTORY},
-            {"apps",       "app",        &kiosk.LAUNCH.APPLICATION},
-            {"info",       "info",       &kiosk.LAUNCH.INFORMATION},
-            {"config",     "config",     &kiosk.LAUNCH.CONFIGURATION},
-            {"reboot",     "reboot",     &KIOSK_PASS},
-            {"shutdown",   "shutdown",   &KIOSK_PASS}
+        menu_action menu_action;
+    } menu_entry;
+
+    static const menu_entry entries[UI_COUNT] = {
+            {"explore",    &kiosk.LAUNCH.EXPLORE,       MENU_GENERAL},
+            {"collection", &kiosk.LAUNCH.COLLECTION,    MENU_GENERAL},
+            {"history",    &kiosk.LAUNCH.HISTORY,       MENU_GENERAL},
+            {"app",        &kiosk.LAUNCH.APPLICATION,   MENU_GENERAL},
+            {"info",       &kiosk.LAUNCH.INFORMATION,   MENU_GENERAL},
+            {"config",     &kiosk.LAUNCH.CONFIGURATION, MENU_GENERAL},
+            {"reboot",     &KIOSK_PASS,                 MENU_REBOOT},
+            {"shutdown",   &KIOSK_PASS,                 MENU_SHUTDOWN},
     };
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(element_focused);
+    if ((unsigned) current_item_index >= UI_COUNT) return;
+    const menu_entry *entry = &entries[current_item_index];
 
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            if (strcmp(elements[i].mux_name, "reboot") != 0 &&
-                strcmp(elements[i].mux_name, "shutdown") != 0) {
-                play_sound(SND_CONFIRM);
-            } else {
-                toast_message(strcmp(elements[i].mux_name, "reboot") == 0 ? lang.GENERIC.REBOOTING
-                                                                          : lang.GENERIC.SHUTTING_DOWN,
-                              FOREVER);
-                refresh_screen(ui_screen);
-            }
-
-            load_mux(elements[i].mux_name);
-
-            break;
-        }
+    if (is_ksk(*entry->kiosk_flag)) {
+        kiosk_denied();
+        return;
     }
+
+    switch (entry->menu_action) {
+        case MENU_GENERAL:
+            play_sound(SND_CONFIRM);
+            break;
+        case MENU_REBOOT:
+            toast_message(lang.GENERIC.REBOOTING, FOREVER);
+            break;
+        case MENU_SHUTDOWN:
+            toast_message(lang.GENERIC.SHUTTING_DOWN, FOREVER);
+            break;
+        default:
+            return;
+    }
+
+    load_mux(entry->mux_name);
 
     close_input();
     mux_input_stop();
@@ -423,19 +423,8 @@ static void launch_kiosk(void) {
     }
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -449,18 +438,6 @@ static void init_elements(void) {
 #undef LAUNCH
 
     overlay_display();
-}
-
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
 }
 
 int muxlaunch_main(void) {
@@ -479,7 +456,7 @@ int muxlaunch_main(void) {
 
     adjust_wallpaper_element(ui_group, 0, GENERAL);
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     if (file_exist(MUOS_SYS_LOAD)) remove(MUOS_SYS_LOAD);
 

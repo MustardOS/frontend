@@ -7,6 +7,8 @@
 TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
+static int audio_overdrive = 100;
+
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
@@ -26,23 +28,22 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
+static void init_audio_limits(void) {
+    audio_overdrive = config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100;
+}
+
 static void init_dropdown_settings(void) {
 #define TWEAKGEN(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
-    Brightness_original = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen),
-                                     2, device.SCREEN.BRIGHT);
-    Volume_original = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen),
-                                 0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100);
+    Brightness_original = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
+    Volume_original = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
 }
 
 static void restore_tweak_options(void) {
-    lv_dropdown_set_selected(ui_droBrightness_tweakgen,
-                             int_to_pct(config.SETTINGS.GENERAL.BRIGHTNESS, 2, device.SCREEN.BRIGHT));
-
-    lv_dropdown_set_selected(ui_droVolume_tweakgen, int_to_pct(config.SETTINGS.GENERAL.VOLUME, 0,
-                                                               config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100));
+    lv_dropdown_set_selected(ui_droBrightness_tweakgen, int_to_pct(config.SETTINGS.GENERAL.BRIGHTNESS, 2, device.SCREEN.BRIGHT));
+    lv_dropdown_set_selected(ui_droVolume_tweakgen, int_to_pct(config.SETTINGS.GENERAL.VOLUME, 0, audio_overdrive));
 
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
@@ -78,6 +79,8 @@ static void set_setting_value(const char *script_name, int value, int offset) {
 
         block_input = 0;
     }
+
+    refresh_config = 1;
 }
 
 static void save_tweak_options(void) {
@@ -98,25 +101,14 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
 
-    if (lv_dropdown_get_selected(ui_droColour_tweakgen) != Colour_original) {
-        is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/general/colour", "w", INT,
-                           lv_dropdown_get_selected(ui_droColour_tweakgen) - 255);
-    }
+    int temp_mod = lv_dropdown_get_selected(ui_droColour_tweakgen);
+    if (temp_mod != Colour_original) set_setting_value("temp", temp_mod, -255);
 
-    int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen),
-                                2, device.SCREEN.BRIGHT);
-    if (bright_mod != Brightness_original) {
-        is_modified++;
-        set_setting_value("bright.sh", bright_mod, 0);
-    }
+    int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
+    if (bright_mod != Brightness_original) set_setting_value("bright", bright_mod, 0);
 
-    int volume_mod = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen),
-                                0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100);
-    if (volume_mod != Volume_original) {
-        is_modified++;
-        set_setting_value("audio.sh", volume_mod, 0);
-    }
+    int volume_mod = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
+    if (volume_mod != Volume_original) set_setting_value("audio", volume_mod, 0);
 
     if (is_modified > 0) run_tweak_script();
 }
@@ -139,7 +131,10 @@ static char **load_combos(const char *filename, int *count) {
         char *open_bracket = strchr(combo, '[');
         char *close_bracket = strrchr(combo, ']');
 
-        if (!open_bracket || !close_bracket || open_bracket >= close_bracket) continue;
+        if (!open_bracket || !close_bracket || open_bracket >= close_bracket) {
+            hk_lines[i] = NULL;
+            continue;
+        }
 
         *close_bracket = '\0';
         char *scan_pos = open_bracket + 1;
@@ -222,7 +217,7 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droBrightness_tweakgen, bright_pct_values);
     free(bright_pct_values);
 
-    char *volume_pct_values = generate_number_string(0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100, 1, NULL, "%", NULL, 1);
+    char *volume_pct_values = generate_number_string(0, audio_overdrive, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droVolume_tweakgen, volume_pct_values);
     free(volume_pct_values);
 
@@ -230,17 +225,8 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droColour_tweakgen, colour_values);
     free(colour_values);
 
-    ui_group = lv_group_create();
-    ui_group_value = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-    }
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     if (!device.BOARD.HAS_HDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
     if (!device.BOARD.RGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
@@ -294,24 +280,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
-
-    for (int step = 0; step < steps; ++step) {
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
-
-        nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
-
+    gen_step_movement(steps, direction, false, 0);
     check_focus();
 }
 
@@ -323,32 +292,39 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+#define HANDLE_TWEAK_OPT(TYPE, TOAST, VALUE, SCRIPT, OFFSET) \
+    do {                                                     \
+        if (element_focused == ui_lbl##TYPE##_tweakgen) {    \
+            int v = (VALUE);                                 \
+            if (v != TYPE##_original) {                      \
+                toast_message(TOAST, SHORT);                 \
+                set_setting_value(SCRIPT, v, (OFFSET));      \
+            }                                                \
+            return;                                          \
+        }                                                    \
+    } while (0)
+
 static void update_option_values(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblBrightness_tweakgen) {
-        toast_message(lang.MUXTWEAKGEN.BRIGHT_SET, SHORT);
-        set_setting_value("bright", pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen),
-                                               2, device.SCREEN.BRIGHT), 0);
-    } else if (element_focused == ui_lblVolume_tweakgen) {
-        toast_message(lang.MUXTWEAKGEN.VOLUME_SET, SHORT);
-        set_setting_value("audio", pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen),
-                                              0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100), 0);
-    } else if (element_focused == ui_lblColour_tweakgen) {
-        toast_message(lang.MUXTWEAKGEN.TEMP_SET, SHORT);
-        set_setting_value("temp", lv_dropdown_get_selected(ui_droColour_tweakgen), -255);
-    }
+
+    HANDLE_TWEAK_OPT(Brightness, lang.MUXTWEAKGEN.BRIGHT_SET,
+                     pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT), "bright", 0);
+    HANDLE_TWEAK_OPT(Volume, lang.MUXTWEAKGEN.VOLUME_SET,
+                     pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive), "volume", 0);
+    HANDLE_TWEAK_OPT(Colour, lang.MUXTWEAKGEN.TEMP_SET,
+                     lv_dropdown_get_selected(ui_droColour_tweakgen), "temp", -255);
 }
 
 static void handle_option_prev(void) {
     if (msgbox_active || block_input) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value), 1);
+    move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active || block_input) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value), 1);
+    move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
 static int get_multi_count(void) {
@@ -368,54 +344,74 @@ static int get_multi_count(void) {
 static void handle_option_prev_multi(void) {
     if (msgbox_active || block_input) return;
 
-    decrease_option_value(lv_group_get_focused(ui_group_value), get_multi_count());
+    move_option(lv_group_get_focused(ui_group_value), -get_multi_count());
 }
 
 static void handle_option_next_multi(void) {
     if (msgbox_active || block_input) return;
 
-    increase_option_value(lv_group_get_focused(ui_group_value), get_multi_count());
+    move_option(lv_group_get_focused(ui_group_value), +get_multi_count());
 }
 
 static void handle_a(void) {
     if (msgbox_active || block_input || hold_call) return;
 
-    struct {
-        const char *glyph_name;
+    static int16_t KIOSK_PASS = 0;
+
+    typedef enum {
+        MENU_TOGGLE = 0,
+        MENU_OPTION,
+        MENU_CLOCK,
+        MENU_HDMI,
+        MENU_ADVANCED,
+    } menu_action;
+
+    typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
-    } elements[] = {
-            {"clock",    "rtc",      &kiosk.DATETIME.CLOCK},
-            {"hdmi",     "hdmi",     &kiosk.SETTING.HDMI},
-            {"advanced", "tweakadv", &kiosk.SETTING.ADVANCED}
+        menu_action action;
+    } menu_entry;
+
+    static const menu_entry entries[UI_COUNT] = {
+            {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK},
+            {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI},
+            {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED},
+            {NULL,       &KIOSK_PASS,             MENU_OPTION}, // Brightness
+            {NULL,       &KIOSK_PASS,             MENU_OPTION}, // Volume
+            {NULL,       &KIOSK_PASS,             MENU_OPTION}, // Colour Temp
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // RGB Lights
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // Hotkey DPAD
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // Hotkey Screenshot
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // Startup Mode
     };
 
-    struct _lv_obj_t *ef = lv_group_get_focused(ui_group);
-    const char *u_data = lv_obj_get_user_data(ef);
+    if ((unsigned) current_item_index >= UI_COUNT) return;
+    const menu_entry *entry = &entries[current_item_index];
 
-    for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (is_ksk(*elements[i].kiosk_flag)) {
+    switch (entry->action) {
+        case MENU_CLOCK:
+        case MENU_HDMI:
+        case MENU_ADVANCED:
+            if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();
                 return;
             }
 
             play_sound(SND_CONFIRM);
-
             save_tweak_options();
-            load_mux(elements[i].mux_name);
+            load_mux(entry->mux_name);
 
             close_input();
             mux_input_stop();
-
             break;
-        }
-    }
-
-    if (ef == ui_lblBrightness_tweakgen || ef == ui_lblVolume_tweakgen || ef == ui_lblColour_tweakgen) {
-        update_option_values();
-    } else {
-        handle_option_next();
+        case MENU_OPTION:
+            update_option_values();
+            break;
+        case MENU_TOGGLE:
+            handle_option_next();
+            break;
+        default:
+            return;
     }
 }
 
@@ -457,19 +453,8 @@ static void launch_danger(void) {
     }
 }
 
-static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
-}
-
 static void init_elements(void) {
-    adjust_panels();
+    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
@@ -491,18 +476,6 @@ static void init_elements(void) {
     overlay_display();
 }
 
-static void ui_refresh_task() {
-    if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panels();
-
-        lv_obj_move_foreground(overlay_image);
-
-        lv_obj_invalidate(ui_pnlContent);
-        nav_moved = 0;
-    }
-}
-
 int muxtweakgen_main(void) {
     init_module(__func__);
     init_theme(1, 0);
@@ -521,8 +494,9 @@ int muxtweakgen_main(void) {
 
     restore_tweak_options();
     init_dropdown_settings();
+    init_audio_limits();
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

@@ -71,10 +71,10 @@ static void image_refresh(char *image_type) {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 config.THEME.STORAGE_THEME, mux_dimension, image_type);
+                 theme_base, mux_dimension, image_type);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     config.THEME.STORAGE_THEME, image_type);
+                     theme_base, image_type);
         }
     } else {
         if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
@@ -291,8 +291,8 @@ static void init_navigation_group_grid(void) {
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
 
-    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+    load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
+    load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
@@ -604,15 +604,7 @@ static void process_load(int from_start) {
     }
 
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
-
-    if (load_message) {
-        toast_message(lang.GENERIC.LOADING, FOREVER);
-        lv_obj_move_foreground(ui_pnlMessage);
-
-        // Refresh and add a small delay to actually display the message!
-        lv_task_handler();
-        usleep(256);
-    }
+    if (load_message) toast_message(lang.GENERIC.LOADING, FOREVER);
 
     load_end:
     if (file_exist(ADD_MODE_DONE)) {
@@ -908,9 +900,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    reset_ui_groups();
 
     snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 

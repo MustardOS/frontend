@@ -22,7 +22,7 @@ static void init_navigation_group(void) {
     ui_objects[4] = ui_rolComboFive;
     ui_objects[5] = ui_rolComboSix;
 
-    ui_group = lv_group_create();
+    reset_ui_groups();
 
     for (unsigned int i = 0; i < A_SIZE(ui_objects); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);

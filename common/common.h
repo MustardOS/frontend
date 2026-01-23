@@ -35,6 +35,12 @@ extern int current_brightness;
 extern int current_volume;
 extern int is_blank;
 
+extern int idle_state_exists;
+extern int safe_quit_exists;
+extern int do_refresh_exists;
+extern int blank_exists;
+
+extern const char *theme_base;
 extern char *theme_back_compat[];
 
 extern char *disabled_enabled[];
@@ -162,9 +168,9 @@ int directory_exist(char *dirname);
 
 const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
-void extract_archive(char *filename, char *screen);
+void extract_archive(const char *filename, const char *screen);
 
-void update_bootlogo(char *next_screen);
+void update_bootlogo(const char *next_screen);
 
 int str_compare(const void *a, const void *b);
 
@@ -262,9 +268,7 @@ void datetime_task(lv_timer_t *timer);
 
 void capacity_task(lv_timer_t *timer);
 
-void increase_option_value(lv_obj_t *element, int count);
-
-void decrease_option_value(lv_obj_t *element, int count);
+void move_option(lv_obj_t *element, int count);
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app);
 
@@ -287,11 +291,11 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size);
 
-int load_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
-                         const char *image_type, const char *image_extension, char *image_path, size_t path_size);
+int load_image_specifics(const char *mux_dimension, const char *program, const char *image_type,
+                         const char *image_extension, char *image_path, size_t path_size);
 
-int load_element_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
-                                 const char *image_type, const char *element, const char *element_fallback,
+int load_element_image_specifics(const char *mux_dimension, const char *program, const char *image_type,
+                                 const char *element, const char *element_fallback,
                                  const char *image_extension, char *image_path, size_t path_size);
 
 void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
@@ -441,7 +445,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);
 
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size);
 
-int theme_compat();
+const char *get_theme_base(void);
 
 int brightness_to_percent(int val);
 
@@ -488,8 +492,6 @@ void set_process_name(const char *module);
 const char *get_process_name(void);
 
 const char *module_from_func(const char *func);
-
-char *get_theme_base();
 
 int pct_to_int(int pct, int min, int max);
 

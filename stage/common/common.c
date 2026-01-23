@@ -183,7 +183,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
 
             if (n > 0 && (size_t) n < sizeof(overlay_path)) {
                 remove_double_slashes(img_path);
-                LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
                 if (file_exist(img_path)) return 1;
             }
         }
@@ -212,7 +212,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
 
                     if (n > 0 && (size_t) n < sizeof(overlay_path)) {
                         remove_double_slashes(img_path);
-                        LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                        // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
                         if (file_exist(img_path)) return 1;
                     }
                 }
@@ -239,7 +239,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
 
             if (n > 0 && (size_t) n < sizeof(overlay_path)) {
                 remove_double_slashes(img_path);
-                LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
+                // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
                 if (file_exist(img_path)) return 1;
             }
         }

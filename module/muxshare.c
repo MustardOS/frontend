@@ -55,7 +55,6 @@ void hold_call_release(void) {
 
 void run_tweak_script() {
     toast_message(lang.GENERIC.SAVING, FOREVER);
-    refresh_screen(ui_screen);
 
     const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
     run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
@@ -387,4 +386,75 @@ int launch_flag(int mode, int held) {
     };
     if ((unsigned) mode > 3) mode = 0;
     return LAUNCH[mode][held ? 0 : 1];
+}
+
+void reset_ui_groups(void) {
+    ui_group = lv_group_create();
+    ui_group_value = lv_group_create();
+    ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
+}
+
+void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_obj_t **panels, int long_dot) {
+    for (unsigned int i = 0; i < ui_count; i++) {
+        lv_obj_t *opt = options ? options[i] : NULL;
+        lv_obj_t *val = values ? values[i] : NULL;
+        lv_obj_t *ico = glyphs ? glyphs[i] : NULL;
+        lv_obj_t *pnl = panels ? panels[i] : NULL;
+
+        if (opt) lv_group_add_obj(ui_group, opt);
+        if (val) lv_group_add_obj(ui_group_value, val);
+        if (ico) lv_group_add_obj(ui_group_glyph, ico);
+        if (pnl) lv_group_add_obj(ui_group_panel, pnl);
+
+        if (long_dot && pnl && opt) apply_text_long_dot(&theme, pnl, opt);
+    }
+}
+
+void adjust_gen_panel(void) {
+    adjust_panel_priority((lv_obj_t *[]) {
+            ui_pnlFooter,
+            ui_pnlHeader,
+            ui_pnlHelp,
+            ui_pnlProgressBrightness,
+            ui_pnlProgressVolume,
+            NULL
+    });
+}
+
+void ui_gen_refresh_task() {
+    if (nav_moved) {
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
+        adjust_gen_panel();
+
+        lv_obj_move_foreground(overlay_image);
+        lv_obj_invalidate(ui_pnlContent);
+
+        nav_moved = 0;
+    }
+}
+
+void gen_step_movement(int steps, int direction, int long_dot, int count_offset) {
+    if (!ui_count) return;
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+
+    for (int step = 0; step < steps; ++step) {
+        if (long_dot) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_value, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
+    }
+
+    update_scroll_position(theme.MUX.ITEM.COUNT + count_offset, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    if (long_dot) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+
+    nav_moved = 1;
 }
