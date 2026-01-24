@@ -273,7 +273,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHRONY.REFERENCE, "Reference");
     SPECIFIC_FIELD(lang->MUXCHRONY.STRATUM, "Stratum");
     SPECIFIC_FIELD(lang->MUXCHRONY.REFTIME, "Reference Time");
-    SPECIFIC_FIELD(lang->MUXCHRONY.SYSTEM, "System Offset");
+    SPECIFIC_FIELD(lang->MUXCHRONY.SYSTEMTIME, "System Offset");
     SPECIFIC_FIELD(lang->MUXCHRONY.LASTOFFSET, "Last Offset");
     SPECIFIC_FIELD(lang->MUXCHRONY.RMSOFFSET, "RMS Offset");
     SPECIFIC_FIELD(lang->MUXCHRONY.FREQUENCY, "Frequency");
@@ -302,37 +302,37 @@ void load_lang(struct mux_lang *lang) {
 
     // muxconfig
     SPECIFIC_FIELD(lang->MUXCONFIG.TITLE, "CONFIGURATION");
-    SPECIFIC_FIELD(lang->MUXCONFIG.CONNECTIVITY, "Connectivity");
+    SPECIFIC_FIELD(lang->MUXCONFIG.CONNECT, "Connectivity");
     SPECIFIC_FIELD(lang->MUXCONFIG.CUSTOM, "Customisation");
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
-    SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
+    SPECIFIC_FIELD(lang->MUXCONFIG.INTERFACE, "Interface Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Content Overlay Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "Connect your device via Wi-Fi, enable web services, or enable USB functions");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECT, "Connect your device via Wi-Fi, enable web services, or enable USB functions");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your MustardOS setup with user created packages");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and MustardOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language\n\nTranslations supported by Weblate");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.BACKUP, "Back up your content to a restorable archive for your device or others");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.INTERFACE, "Settings to change the visual aspects of the frontend");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.OVERLAY, "Settings to change the hardware overlays of content");
 
     // muxconnect
     SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
     SPECIFIC_FIELD(lang->MUXCONNECT.BLUETOOTH, "Bluetooth");
-    SPECIFIC_FIELD(lang->MUXCONNECT.USB, "USB Function");
-    SPECIFIC_FIELD(lang->MUXCONNECT.WEB, "Web Services");
-    SPECIFIC_FIELD(lang->MUXCONNECT.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.USBFUNCTION, "USB Function");
+    SPECIFIC_FIELD(lang->MUXCONNECT.SERVICES, "Web Services");
+    SPECIFIC_FIELD(lang->MUXCONNECT.NETWORK, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXCONNECT.NETADV, "Network Settings");
     SPECIFIC_FIELD(lang->MUXCONNECT.ADB, "Android Debug Bridge");
     SPECIFIC_FIELD(lang->MUXCONNECT.MTP, "Media Transfer Protocol");
-    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
-    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USB, "Toggle between ADB and MTP USB functionality");
-    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.SERVICES, "Toggle a range of configurable services you can access via an active network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USBFUNCTION, "Toggle between ADB and MTP USB functionality");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETWORK, "Connect to a Wi-Fi network manually or via a saved profile");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETADV, "Adjust network connectivity settings");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
 
@@ -345,18 +345,17 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.GRID_MODE_CONTENT, "Content Grid Mode");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_DOWN, "Theme Download");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.GRIDMODECONTENT, "Content Grid Mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_SCALING, "Theme Scaling");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_RES, "Theme Resolution");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEMESCALING, "Theme Scaling");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEMERESOLUTION, "Theme Resolution");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCREEN, "Screen");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALT, "Alternative Theme");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.SPLASH, "Content Launch Splash");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEMEALTERNATE, "Alternative Theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCHSPLASH, "Content Launch Splash");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BLACKFADE, "Black Fade Animation");
     SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SHUFFLE, "Content Shuffle");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.CONTENT_WIDTH, "Content Full Width");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.CONTENTWIDTH, "Content Full Width");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.TITLE, "Content Box Art");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.BEHIND, "Behind");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FRONT, "Front");
@@ -397,36 +396,35 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.GRID_MODE_CONTENT, "Allow grid mode for content");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_DOWN, "Download themes from the MustardOS website");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.GRIDMODECONTENT, "Allow grid mode for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the MustardOS frontend launcher");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_RES, "Allows for testing different theme resolutions");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_SCALING, "Controls the type of scaling used when applying Theme Resolution setting");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_ALT, "Switch between different theme alternatives");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FADE, "Toggle the fade to black animation on content launching");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMERESOLUTION, "Allows for testing different theme resolutions");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMESCALING, "Controls the type of scaling used when applying Theme Resolution setting");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMEALTERNATE, "Switch between different theme alternatives");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSPLASH, "Toggle the splash image on content launching");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BLACKFADE, "Toggle the fade to black animation on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ART, "Change the display priority of the content images");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENT_WIDTH, "Toggle if content highlight uses full width of device screen");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_HIDE, "Hide system box art images in Content Explorer when theme uses grid mode");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTIMAGE, "Change the display priority of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTALIGN, "Change the screen alignment of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENTWIDTH, "Toggle if content highlight uses full width of device screen");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTHIDE, "Hide system box art images in Content Explorer when theme uses grid mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC_VOLUME, "The volume of the background music currently playing, press A to set current value");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSICVOLUME, "The volume of the background music currently playing, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND_VOLUME, "The volume of the navigation sounds, press A to set current value");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUNDVOLUME, "The volume of the navigation sounds, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCH_SWAP, "Switch between pressing A or holding A to launch content save state automatically");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSWAP, "Switch between pressing A or holding A to launch content save state automatically");
 
     // muxdanger
     SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGER SETTINGS");
     SPECIFIC_FIELD(lang->MUXDANGER.VMSWAP, "Swap Tendency");
     SPECIFIC_FIELD(lang->MUXDANGER.DIRTYRATIO, "Write Back Threshold");
     SPECIFIC_FIELD(lang->MUXDANGER.DIRTYBACK, "Background Write Back");
-    SPECIFIC_FIELD(lang->MUXDANGER.CACHE, "Cache Reclamation");
+    SPECIFIC_FIELD(lang->MUXDANGER.CACHEPRESSURE, "Cache Reclamation");
     SPECIFIC_FIELD(lang->MUXDANGER.NOMERGE, "I/O Merge Policy");
-    SPECIFIC_FIELD(lang->MUXDANGER.REQUESTS, "Queue Depth");
+    SPECIFIC_FIELD(lang->MUXDANGER.NRREQUESTS, "Queue Depth");
     SPECIFIC_FIELD(lang->MUXDANGER.READAHEAD, "Read Ahead Size");
     SPECIFIC_FIELD(lang->MUXDANGER.PAGECLUSTER, "Swap Read-Ahead");
     SPECIFIC_FIELD(lang->MUXDANGER.TIMESLICE, "Realtime Timeslice");
@@ -439,9 +437,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.VMSWAP, "Controls how aggressively the system swaps memory to disk\n\nLower values keep processes in RAM longer");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYRATIO, "Percentage of RAM allowed to hold unwritten (dirty) data before forcing a write to disk");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYBACK, "Background write back starts when dirty data exceeds this percentage of RAM\n\nLower values help reduce latency");
-    SPECIFIC_FIELD(lang->MUXDANGER.HELP.CACHE, "Higher values reclaim cached file data more aggressively\n\nLower values improve performance for repeated file access");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.CACHEPRESSURE, "Higher values reclaim cached file data more aggressively\n\nLower values improve performance for repeated file access");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.NOMERGE, "Controls how kernel merges I/O requests\n\nDisabling merges may benefit specific flash storage performance");
-    SPECIFIC_FIELD(lang->MUXDANGER.HELP.REQUESTS, "Sets the maximum number of queued I/O requests per device\n\nHigher values increase throughput but use more RAM");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.NRREQUESTS, "Sets the maximum number of queued I/O requests per device\n\nHigher values increase throughput but use more RAM");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.READAHEAD, "Amount of data preloaded in memory before it's requested\n\nLarger values improve sequential read performance");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.PAGECLUSTER, "Number of pages read ahead when swapping\n\nLower values = less latency, higher = more efficient bulk reads");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.TIMESLICE, "How long real-time tasks run before switching\n\nLower values favour responsiveness, higher values favour throughput");
@@ -454,20 +452,20 @@ void load_lang(struct mux_lang *lang) {
 
     // muxdevice
     SPECIFIC_FIELD(lang->MUXDEVICE.TITLE, "DEVICE SETTINGS");
-    SPECIFIC_FIELD(lang->MUXDEVICE.BLUETOOTH, "Bluetooth Integration");
-    SPECIFIC_FIELD(lang->MUXDEVICE.RGB, "RGB LED Integration");
-    SPECIFIC_FIELD(lang->MUXDEVICE.DEBUGFS, "Kernel Level DebugFS");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HDMI, "HDMI Integration");
-    SPECIFIC_FIELD(lang->MUXDEVICE.LID, "Lid Switch Integration");
-    SPECIFIC_FIELD(lang->MUXDEVICE.NETWORK, "Network Integration");
-    SPECIFIC_FIELD(lang->MUXDEVICE.PORTMASTER, "Portmaster Support");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.BLUETOOTH, "Toggles Bluetooth integration on device");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.RGB, "Toggles RGB LED integration on device");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.DEBUGFS, "Toggles kernel level DebugFS mount on startup\n\nBest to leave this enabled unless otherwise advised!");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HDMI, "Toggles HDMI integration on device");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.LID, "Toggles hall switch (lid) support on device\n\nDo not enable this on non-lid devices!");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.NETWORK, "Toggles Network integration on device");
-    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.PORTMASTER, "Toggles internal Portmaster support on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASBLUETOOTH, "Bluetooth Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASRGB, "RGB LED Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASDEBUGFS, "Kernel Level DebugFS");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASHDMI, "HDMI Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASLID, "Lid Switch Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASNETWORK, "Network Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HASPORTMASTER, "Portmaster Support");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASBLUETOOTH, "Toggles Bluetooth integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASRGB, "Toggles RGB LED integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASDEBUGFS, "Toggles kernel level DebugFS mount on startup\n\nBest to leave this enabled unless otherwise advised!");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASHDMI, "Toggles HDMI integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASLID, "Toggles hall switch (lid) support on device\n\nDo not enable this on non-lid devices!");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASNETWORK, "Toggles Network integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HASPORTMASTER, "Toggles internal Portmaster support on device");
 
     // muxdownload
     SPECIFIC_FIELD(lang->MUXDOWNLOAD.TITLE.CORE, "CORE DOWNLOADER");
@@ -496,12 +494,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.TITLE, "Scan Scaling");
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.OVER, "Over");
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.UNDER, "Under");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO_OUTPUT, "Switch between device speaker or external monitor audio via HDMI connection");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO, "Switch between device speaker or external monitor audio via HDMI connection");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.RESOLUTION, "Select the resolution for HDMI output, such as 720p or 1080p");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.SCAN_SCALE, "Switch between overscan or underscan to fit the display screen");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.DEPTH, "Set the color depth, such as 8-bit or 10-bit");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.RANGE, "Set the color range of RGB colour space");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.SPACE, "Set the color space, such as RGB or YUV");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.SCAN, "Switch between overscan or underscan to fit the display screen");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.DEPTH, "Set the color depth, such as 8-bit or 10-bit");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.RANGE, "Set the color range of RGB colour space");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.SPACE, "Set the color space, such as RGB or YUV");
 
     // muxhistory
     SPECIFIC_FIELD(lang->MUXHISTORY.TITLE, "HISTORY");
@@ -518,7 +516,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
     SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
-    SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
+    SPECIFIC_FIELD(lang->MUXINFO.TESTER, "Input Tester");
     SPECIFIC_FIELD(lang->MUXINFO.CHRONY, "Time Sync Details");
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters and Credits");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NEWS, "Read various community news and other live information");
@@ -527,21 +525,21 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.HELP.ACTIVITY, "View all tracked play time data");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
-    SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.TESTER, "Test the controls of the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.CHRONY, "View the current details of the device time synchronisation via Chrony service tracking");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current MustardOS supporters and extra credits");
 
     // muxinstall
     SPECIFIC_FIELD(lang->MUXINSTALL.TITLE, "INSTALLER");
-    SPECIFIC_FIELD(lang->MUXINSTALL.DATETIME, "Date and Time");
+    SPECIFIC_FIELD(lang->MUXINSTALL.RTC, "Date and Time");
     SPECIFIC_FIELD(lang->MUXINSTALL.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXINSTALL.INSTALL, "Install");
     SPECIFIC_FIELD(lang->MUXINSTALL.SHUTDOWN, "Shutdown");
-    SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.DATETIME, "Clock");
+    SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.RTC, "Clock");
     SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.INSTALL, "Install");
     SPECIFIC_FIELD(lang->MUXINSTALL.SHORT.SHUTDOWN, "Shutdown");
-    SPECIFIC_FIELD(lang->MUXINSTALL.HELP.DATETIME, "Change your current date, time, and timezone");
+    SPECIFIC_FIELD(lang->MUXINSTALL.HELP.RTC, "Change your current date, time, and timezone");
     SPECIFIC_FIELD(lang->MUXINSTALL.HELP.LANGUAGE, "Select your preferred language\n\nTranslations supported by Weblate");
     SPECIFIC_FIELD(lang->MUXINSTALL.HELP.INSTALL, "Prepare and install MustardOS");
     SPECIFIC_FIELD(lang->MUXINSTALL.HELP.SHUTDOWN, "Shut down your device safely");
@@ -569,7 +567,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.CATALOGUE, "Custom Catalogue");
     SPECIFIC_FIELD(lang->MUXKIOSK.RACONFIG, "Custom RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.THEME, "Custom Themes");
-    SPECIFIC_FIELD(lang->MUXKIOSK.THEME_DOWN, "Theme Download");
+    SPECIFIC_FIELD(lang->MUXKIOSK.THEMEDOWN, "Theme Download");
     SPECIFIC_FIELD(lang->MUXKIOSK.CLOCK, "Date and Time");
     SPECIFIC_FIELD(lang->MUXKIOSK.TIMEZONE, "Timezone");
     SPECIFIC_FIELD(lang->MUXKIOSK.APPS, "Applications");
@@ -610,7 +608,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CATALOGUE, "Allow access to install content catalogues");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RACONFIG, "Allow access to use custom RetroArch configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEME, "Permit changing system themes");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEME_DOWN, "Permit downloading of themes");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEMEDOWN, "Permit downloading of themes");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CLOCK, "Allow changing the system clock");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.TIMEZONE, "Permit adjusting the timezone");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.APPS, "Enable access to applications");
@@ -623,13 +621,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.POWER, "Permit power options such as shutdown or sleep");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.VISUAL, "Allow changes to interface visuals");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.OVERLAY, "Allow changes to hardware overlays");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.MAIN, "Enable viewing of content collections");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.ADD_CONTENT, "Permit adding content to collections");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.NEW_DIR, "Allow creation of new collection folders");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.REMOVE, "Permit deletion of collections");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.ACCESS, "Restrict to specific 'kiosk' directory within collections");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HISTORY.MAIN, "Enable access to recently used content");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HISTORY.REMOVE, "Allow clearing items from history");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTMOD, "Enable viewing of content collections");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTADD, "Permit adding content to collections");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTNEW, "Allow creation of new collection folders");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTREM, "Permit deletion of collections");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTACC, "Restrict to specific 'kiosk' directory within collections");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HISTORYMOD, "Enable access to recently used content");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HISTORYREM, "Allow clearing items from history");
 
     // muxlanguage
     SPECIFIC_FIELD(lang->MUXLANGUAGE.TITLE, "LANGUAGE");
@@ -641,7 +639,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxlaunch
     SPECIFIC_FIELD(lang->MUXLAUNCH.TITLE, "MAIN MENU");
-    SPECIFIC_FIELD(lang->MUXLAUNCH.APP, "Applications");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.APPS, "Applications");
     SPECIFIC_FIELD(lang->MUXLAUNCH.CONFIG, "Configuration");
     SPECIFIC_FIELD(lang->MUXLAUNCH.INFO, "Information");
     SPECIFIC_FIELD(lang->MUXLAUNCH.COLLECTION, "Collection");
@@ -659,7 +657,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.REBOOT, "Reboot");
     SPECIFIC_FIELD(lang->MUXLAUNCH.KIOSK.ERROR, "Kiosk configuration not found");
     SPECIFIC_FIELD(lang->MUXLAUNCH.KIOSK.PROCESS, "Processing kiosk configuration");
-    SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.APP, "Various applications can be found and launched here");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.APPS, "Various applications can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.CONFIG, "Various configurations can be changed here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.INFO, "Various information can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.COLLECTION, "Content added to collections can be found and launched here");
@@ -737,27 +735,27 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.DHCP, "DHCP");
     SPECIFIC_FIELD(lang->MUXNETWORK.STATIC, "Static");
     SPECIFIC_FIELD(lang->MUXNETWORK.SCAN, "Scan");
-    SPECIFIC_FIELD(lang->MUXNETWORK.CIDR, "Subnet CIDR");
+    SPECIFIC_FIELD(lang->MUXNETWORK.SUBNET, "Subnet CIDR");
     SPECIFIC_FIELD(lang->MUXNETWORK.PROFILES, "Profiles");
     SPECIFIC_FIELD(lang->MUXNETWORK.CONNECT_TRY, "Trying to Connect…");
     SPECIFIC_FIELD(lang->MUXNETWORK.PASSWORD, "Password");
     SPECIFIC_FIELD(lang->MUXNETWORK.NO_PASSWORD, "No Password Detected…");
     SPECIFIC_FIELD(lang->MUXNETWORK.DNS, "DNS Server");
-    SPECIFIC_FIELD(lang->MUXNETWORK.IP, "Device IP");
+    SPECIFIC_FIELD(lang->MUXNETWORK.ADDRESS, "Device IP");
     SPECIFIC_FIELD(lang->MUXNETWORK.ENCRYPT_PASSWORD, "Encrypting Password…");
     SPECIFIC_FIELD(lang->MUXNETWORK.GATEWAY, "Gateway IP");
     SPECIFIC_FIELD(lang->MUXNETWORK.HIDDEN, "Hidden Network");
-    SPECIFIC_FIELD(lang->MUXNETWORK.SSID, "Identifier");
+    SPECIFIC_FIELD(lang->MUXNETWORK.IDENTIFIER, "Identifier");
     SPECIFIC_FIELD(lang->MUXNETWORK.DISABLED, "Network Disabled");
     SPECIFIC_FIELD(lang->MUXNETWORK.TYPE, "Network Type");
     SPECIFIC_FIELD(lang->MUXNETWORK.CHECK, "Please check network settings");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.TYPE, "Toggle between DHCP and Static network types");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.HIDDEN, "Toggle whether or not to try and connect to a hidden SSID broadcast");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.PASSWORD, "Enter the network password here (optional)");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.SSID, "Enter the network identifier (SSID) here");
+    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.IDENTIFIER, "Enter the network identifier (SSID) here");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.GATEWAY, "Enter the network gateway address here (Static only)");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.CIDR, "Enter the device Subnet (CIDR) number here (Static only)");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.IP, "Enter the device IP address here (Static only)");
+    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.SUBNET, "Enter the device Subnet (CIDR) number here (Static only)");
+    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.ADDRESS, "Enter the device IP address here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.DNS, "Enter the device DNS address here (Static only)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.CONNECT, "Connect to the network using options entered above");
 
@@ -803,30 +801,30 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.ORIGINAL, "None");
     SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.FIT, "Scale");
     SPECIFIC_FIELD(lang->MUXOVERLAY.SCALE.STRETCH, "Stretch");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ALPHA, "Content Base Transparency");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.ANCHOR, "Content Base Position");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.GENERAL.SCALE, "Content Base Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ALPHA, "Low Battery Transparency");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.ANCHOR, "Low Battery Position");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BATTERY.SCALE, "Low Battery Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.VOLUME.ALPHA, "Volume Transparency");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.VOLUME.ANCHOR, "Volume Position");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.VOLUME.SCALE, "Volume Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.ALPHA, "Brightness Transparency");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.ANCHOR, "Brightness Position");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.BRIGHT.SCALE, "Brightness Scale");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ALPHA, "Controls the transparency of the base content overlay");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.ANCHOR, "Sets the screen position where the base content overlay is anchored");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENERAL.SCALE, "Controls how the base content overlay is scaled on the screen");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ALPHA, "Controls the transparency of the low battery indicator overlay");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.ANCHOR, "Sets the screen position where the low battery indicator is displayed");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATTERY.SCALE, "Controls how the low battery indicator is scaled on the screen");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.ALPHA, "Controls the transparency of the volume indicator overlay");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.ANCHOR, "Sets the screen position where the volume indicator is displayed");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLUME.SCALE, "Controls how the volume indicator is scaled on the screen");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.ALPHA, "Controls the transparency of the brightness indicator overlay");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.ANCHOR, "Sets the screen position where the brightness indicator is displayed");
-    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIGHT.SCALE, "Controls how the brightness indicator is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENALPHA, "Content Base Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENANCHOR, "Content Base Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.GENSCALE, "Content Base Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATALPHA, "Low Battery Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATANCHOR, "Low Battery Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BATSCALE, "Low Battery Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.VOLALPHA, "Volume Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.VOLANCHOR, "Volume Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.VOLSCALE, "Volume Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BRIALPHA, "Brightness Transparency");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BRIANCHOR, "Brightness Position");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.BRISCALE, "Brightness Scale");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENALPHA, "Controls the transparency of the base content overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENANCHOR, "Sets the screen position where the base content overlay is anchored");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.GENSCALE, "Controls how the base content overlay is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATALPHA, "Controls the transparency of the low battery indicator overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATANCHOR, "Sets the screen position where the low battery indicator is displayed");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BATSCALE, "Controls how the low battery indicator is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLALPHA, "Controls the transparency of the volume indicator overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLANCHOR, "Sets the screen position where the volume indicator is displayed");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.VOLSCALE, "Controls how the volume indicator is scaled on the screen");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIALPHA, "Controls the transparency of the brightness indicator overlay");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRIANCHOR, "Sets the screen position where the brightness indicator is displayed");
+    SPECIFIC_FIELD(lang->MUXOVERLAY.HELP.BRISCALE, "Controls how the brightness indicator is scaled on the screen");
 
     // muxpass
     SPECIFIC_FIELD(lang->MUXPASS.TITLE, "PASSCODE");
@@ -883,13 +881,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60m, "Sleep 60m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.GOV.IDLE, "Idle Governor");
     SPECIFIC_FIELD(lang->MUXPOWER.GOV.DEFAULT, "Default Governor");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.SLEEP, "Configure the time the device will sleep when no input is detected");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.DISPLAY, "Configure the time the screen will dim when no input is detected");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.MUTE, "Toggle if the audio is muted when display is dimmed");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOV.IDLE, "Configure the frontend and device power governor on idle input");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOV.DEFAULT, "Configure the default frontend and device power governor");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY, "Configure when the red LED will display based on the current capacity percentage");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION, "Configure how the power button functions on short press");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLESLEEP, "Configure the time the device will sleep when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLEDISPLAY, "Configure the time the screen will dim when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLEMUTE, "Toggle if the audio is muted when display is dimmed");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOVIDLE, "Configure the frontend and device power governor on idle input");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOVDEFAULT, "Configure the default frontend and device power governor");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.BATTERY, "Configure when the red LED will display based on the current capacity percentage");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SHUTDOWN, "Configure how the power button functions on short press");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SCREENSAVER, "Toggle the frontend screensaver on Idle Display Timeout activation");
 
     // muxrtc
@@ -912,8 +910,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSEARCH.LOOKUP, "Lookup");
     SPECIFIC_FIELD(lang->MUXSEARCH.SEARCH, "Searching…");
     SPECIFIC_FIELD(lang->MUXSEARCH.ERROR, "Lookup has to be 3 characters or more!");
-    SPECIFIC_FIELD(lang->MUXSEARCH.HELP.GLOBAL, "Search all current active storage devices");
-    SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOCAL, "Search within the current selected folder and folders within");
+    SPECIFIC_FIELD(lang->MUXSEARCH.HELP.SEARCHGLOBAL, "Search all current active storage devices");
+    SPECIFIC_FIELD(lang->MUXSEARCH.HELP.SEARCHLOCAL, "Search within the current selected folder and folders within");
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOOKUP, "Enter in the name of the content you are looking for");
 
     // muxshot
@@ -991,9 +989,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VOLTAGE, "The current detected battery voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CHARGER, "Detection of the charger cable");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.RELOAD, "Reload the current frontend configuration values if changed elsewhere");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.INFO, "The detected CPU type of the device");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.SPEED, "The current CPU frequency of the device");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.GOVERNOR, "The current running governor of the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU, "The detected CPU type of the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.SPEED, "The current CPU frequency of the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.GOVERNOR, "The current running governor of the device");
 
     // muxtag
     SPECIFIC_FIELD(lang->MUXTAG.TITLE, "TAG");
@@ -1024,14 +1022,14 @@ void load_lang(struct mux_lang *lang) {
 
     // muxthemefilter
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.TITLE, "THEME FILTER");
-    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.COMPATIBILITY, "Theme Compatibility");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.ALLTHEMES, "Theme Compatibility");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.COMPAT.DEVICE, "Device");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.COMPAT.ALL, "All");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.GRID, "Grid");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HDMI, "HDMI");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.LOOKUP, "Lookup");
-    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.COMPATIBILITY, "Filter to themes for this device or all themes. All themes can work on any device but if the theme does not implement your devices resolution it will be letterboxed.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.ALLTHEMES, "Filter to themes for this device or all themes. All themes can work on any device but if the theme does not implement your devices resolution it will be letterboxed.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.GRID, "Filter to themes that support displaying content folders in a tile layout");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.HDMI, "Filter to themes that support HDMI resolution 1280x720. Themes will still work on HDMI without support for 1280x720 but content will be letterboxed.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let MustardOS handle translating text. Themes that use static images for the main menu will be filtered out.");
@@ -1045,20 +1043,20 @@ void load_lang(struct mux_lang *lang) {
 
     // muxtweakadv
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TITLE, "ADVANCED SETTINGS");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.SPEED, "Menu Acceleration");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.REPEAT_DELAY, "Menu Repeat Delay");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.ACCELERATE, "Menu Acceleration");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.REPEATDELAY, "Menu Repeat Delay");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.THERMAL, "Thermal Zone Control");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.OFFSET, "Battery Offset");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.LOCK, "Passcode Lock");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.PASSCODE, "Passcode Lock");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LED, "LED During Play");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.RANDOM, "Random Theme on Boot");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.NET_WAIT, "RetroArch Network Wait");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.RA_FREE, "RetroArch Config Freedom");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.RA_CACHE, "RetroArch Startup Cache");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.RANDOMTHEME, "Random Theme on Boot");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.RETROWAIT, "RetroArch Network Wait");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.RETROFREE, "RetroArch Config Freedom");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.RETROCACHE, "RetroArch Startup Cache");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE, "Verbose Messages");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.USER_INIT, "User Init Scripts");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.DPAD, "DPAD Swap Function");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.USERINIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.DPADSWAP, "DPAD Swap Function");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.OVERDRIVE, "Audio Overdrive");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAPFILE, "System Swapfile");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.ZRAMFILE, "System ZRam");
@@ -1078,10 +1076,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.SILENT, "Silent");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.SOFT, "Soft");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.LOUD, "Loud");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.TITLE, "Brightness On Boot");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.LOW, "Low");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.MEDIUM, "Medium");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.HIGH, "High");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHTNESS.TITLE, "Brightness On Boot");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHTNESS.LOW, "Low");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHTNESS.MEDIUM, "Medium");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHTNESS.HIGH, "High");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.TITLE, "Device Rumble");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.ST, "Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.SH, "Shutdown");
@@ -1097,26 +1095,26 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.MAXGPU, "GPU Performance Mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOREADY, "Audio Subsystem Wait");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOSWAP, "Audio Reverse");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SPEED, "Adjust the rate of speed when holding navigation keys down");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEAT_DELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACCELERATE, "Adjust the rate of speed when holding navigation keys down");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEATDELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK, "Toggle the passcode lock - More information can be found on the MustardOS website");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.PASSCODE, "Toggle the passcode lock - More information can be found on the MustardOS website");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LED, "Toggle the power LED during content launch");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOM, "Change the default theme used for the next device launch");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.NET_WAIT, "Toggle a delayed start of RetroArch until a network connection is established");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RA_FREE, "Toggle the forced settings MustardOS places on RetroArch configurations");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RA_CACHE, "Toggle the startup cache of RetroArch. This will increase boot by ~3s but will start RetroArch a bit faster on first runs");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOMTHEME, "Change the default theme used for the next device launch");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RETROWAIT, "Toggle a delayed start of RetroArch until a network connection is established");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RETROFREE, "Toggle the forced settings MustardOS places on RetroArch configurations");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RETROCACHE, "Toggle the startup cache of RetroArch. This will increase boot by ~3s but will start RetroArch a bit faster on first runs");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACTIVITY, "Toggle the content activity tracker");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VERBOSE, "Toggle startup and shutdown verbose messages used for debugging faults");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USER_INIT, "Toggle the functionality of the user initialisation scripts on device startup");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DPAD, "Toggle the functionality of the power button to switch DPAD mode");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USERINIT, "Toggle the functionality of the user initialisation scripts on device startup");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DPADSWAP, "Toggle the functionality of the power button to switch DPAD mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OVERDRIVE, "Toggle the audio overdrive moving it from 100% to 200%");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAPFILE, "Adjust the system swapfile if required by certain content");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ZRAMFILE, "Adjust the system zram if required by certain content");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LIDSWITCH, "Toggle the lid switch functionality for the device");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RUMBLE, "Toggle vibration for device startup, sleep, and shutdown");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHTNESS, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STICKNAV, "Change how you navigate using the DPAD and Analogue Sticks on the device");
@@ -1131,11 +1129,11 @@ void load_lang(struct mux_lang *lang) {
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.DATETIME, "Date and Time");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP, "Colour Temperature");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP_SET, "Setting Colour Temperature");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT, "Brightness");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT_SET, "Setting Brightness");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.RTC, "Date and Time");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.COLOUR, "Colour Temperature");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.COLOUR_SET, "Setting Colour Temperature");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHTNESS, "Brightness");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHTNESS_SET, "Setting Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.VOLUME, "Volume");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.VOLUME_SET, "Setting Volume");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
@@ -1150,9 +1148,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.DATETIME, "Change your current date, time, and timezone");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.TEMP, "Change the colour temperature of the display if the device supports it");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHT, "Change the brightness of the device to a specific level");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.RTC, "Change your current date, time, and timezone");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.COLOUR, "Change the colour temperature of the display if the device supports it");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHTNESS, "Change the brightness of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.VOLUME, "Change the volume of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED, "Settings that should only be changed by those who know what they are doing!");
@@ -1167,13 +1165,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
     SPECIFIC_FIELD(lang->MUXVISUAL.CLOCK, "Clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.DASH, "Content Dash Replacement");
-    SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLY, "Friendly Folder Names");
-    SPECIFIC_FIELD(lang->MUXVISUAL.REFORMAT, "Display Title Reformatting");
-    SPECIFIC_FIELD(lang->MUXVISUAL.ROOT, "Title Include Root Drive");
-    SPECIFIC_FIELD(lang->MUXVISUAL.COUNT, "Folder Item Count");
-    SPECIFIC_FIELD(lang->MUXVISUAL.EMPTY, "Empty Folders");
-    SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FOLDER, "Menu Counter Folder");
-    SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FILE, "Menu Counter File");
+    SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLYFOLDER, "Friendly Folder Names");
+    SPECIFIC_FIELD(lang->MUXVISUAL.THETITLEFORMAT, "Display Title Reformatting");
+    SPECIFIC_FIELD(lang->MUXVISUAL.TITLEINCLUDEROOTDRIVE, "Title Include Root Drive");
+    SPECIFIC_FIELD(lang->MUXVISUAL.FOLDERITEMCOUNT, "Folder Item Count");
+    SPECIFIC_FIELD(lang->MUXVISUAL.DISPLAYEMPTYFOLDER, "Empty Folders");
+    SPECIFIC_FIELD(lang->MUXVISUAL.MENUCOUNTERFOLDER, "Menu Counter Folder");
+    SPECIFIC_FIELD(lang->MUXVISUAL.MENUCOUNTERFILE, "Menu Counter File");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.TITLE, "Content Name Scheme");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.FULL, "Full Name");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQ, "Remove [ ]");
@@ -1201,16 +1199,16 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAY_IMAGE, "Switch between different overlay styles for the frontend only");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAY_TRANSPARENCY, "Changes the transparency of the overlay image for the frontend only");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAYIMAGE, "Switch between different overlay styles for the frontend only");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAYTRANSPARENCY, "Changes the transparency of the overlay image for the frontend only");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DASH, "Replaces the dash (-) with a colon (:) for content labels");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLY, "Replaces the label of shortened content folders to more appropriately named labels");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.REFORMAT, "Rearranges the label of content to move the 'The' label to the front - For example, 'Batman and Robin, The' to 'The Batman and Robin'");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ROOT, "Changes the top title label in Explore Content to show current storage device along with folder name");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT, "Toggle the visibility of the item count within folders in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.EMPTY, "Toggle the visibility of empty folders in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FOLDER, "Toggle the visibility of currently selected folder along with total in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE, "Toggle the visibility of currently selected file along with total in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLYFOLDER, "Replaces the label of shortened content folders to more appropriately named labels");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.THETITLEFORMAT, "Rearranges the label of content to move the 'The' label to the front - For example, 'Batman and Robin, The' to 'The Batman and Robin'");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.TITLEINCLUDEROOTDRIVE, "Changes the top title label in Explore Content to show current storage device along with folder name");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FOLDERITEMCOUNT, "Toggle the visibility of the item count within folders in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DISPLAYEMPTYFOLDER, "Toggle the visibility of empty folders in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.MENUCOUNTERFOLDER, "Toggle the visibility of currently selected folder along with total in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.MENUCOUNTERFILE, "Toggle the visibility of currently selected file along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME, "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CONTENTCOLLECT, "Toggle the collection visibility withing Explore Content");
@@ -1218,16 +1216,16 @@ void load_lang(struct mux_lang *lang) {
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.TERMINAL, "Virtual Terminal");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.TTYD, "Virtual Terminal");
     SPECIFIC_FIELD(lang->MUXWEBSERV.SYNCTHING, "Syncthing");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.SHELL, "Secure Shell");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.SFTP, "SFTP + Filebrowser");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.TAILSCALE, "Tailscale");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TERMINAL, "Toggle virtual terminal - WebUI can be found on port 8080");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.SSHD, "Secure Shell");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.SFTPGO, "SFTP + Filebrowser");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.TAILSCALED, "Tailscale");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TTYD, "Toggle virtual terminal - WebUI can be found on port 8080");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SYNCTHING, "Toggle Syncthing - WebUI can be found on port 7070");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SHELL, "Toggle SSH support - Access via port 22");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SFTP, "Toggle SFTP support - WebUI can be found on port 9090");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TAILSCALE, "Toggle Tailscale - Need to login via SSH first to configure it");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SSHD, "Toggle SSH support - Access via port 22");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SFTPGO, "Toggle SFTP support - WebUI can be found on port 9090");
+    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TAILSCALED, "Toggle Tailscale - Need to login via SSH first to configure it");
 
 #undef SYSTEM_FIELD
 #undef GENERIC_FIELD

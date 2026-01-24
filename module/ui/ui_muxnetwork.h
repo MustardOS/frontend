@@ -6,7 +6,7 @@
 
 void init_muxnetwork(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme);
 
-#define NETWORK(NAME, UDATA)                      \
+#define NETWORK(NAME, ENUM, UDATA)                \
     extern lv_obj_t *ui_pnl##NAME##_network;      \
     extern lv_obj_t *ui_lbl##NAME##_network;      \
     extern lv_obj_t *ui_ico##NAME##_network;      \

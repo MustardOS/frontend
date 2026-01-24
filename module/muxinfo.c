@@ -5,24 +5,18 @@
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblNews_info,       lang.MUXINFO.HELP.NEWS},
-            {ui_lblActivity_info,   lang.MUXINFO.HELP.ACTIVITY},
-            {ui_lblScreenshot_info, lang.MUXINFO.HELP.SCREENSHOT},
-            {ui_lblSpace_info,      lang.MUXINFO.HELP.SPACE},
-            {ui_lblTester_info,     lang.MUXINFO.HELP.INPUT},
-            {ui_lblSysInfo_info,    lang.MUXINFO.HELP.SYSINFO},
-            {ui_lblNetInfo_info,    lang.MUXINFO.HELP.NETINFO},
-            {ui_lblChrony_info,     lang.MUXINFO.HELP.CHRONY},
-            {ui_lblCredit_info,     lang.MUXINFO.HELP.CREDIT},
+#define INFO(NAME, ENUM, UDATA) { ui_lbl##NAME##_info, lang.MUXINFO.HELP.ENUM },
+            INFO_ELEMENTS
+#undef INFO
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static int visible_network_opt(void) {
-    return device.BOARD.HAS_NETWORK;
+    return device.BOARD.HASNETWORK;
 }
 
 static int visible_chrony_opt(void) {
@@ -38,7 +32,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, Activity, lang.MUXINFO.ACTIVITY, "activity", 0);
     INIT_STATIC_ITEM(-1, info, Screenshot, lang.MUXINFO.SCREENSHOT, "screenshot", 0);
     INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space", 0);
-    INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.INPUT, "tester", 0);
+    INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.TESTER, "tester", 0);
     INIT_STATIC_ITEM(-1, info, SysInfo, lang.MUXINFO.SYSINFO, "sysinfo", 0);
     INIT_STATIC_ITEM(-1, info, NetInfo, lang.MUXINFO.NETINFO, "netinfo", 0);
     INIT_STATIC_ITEM(-1, info, Chrony, lang.MUXINFO.CHRONY, "chrony", 0);
@@ -157,7 +151,7 @@ static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -172,7 +166,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-#define INFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_info, UDATA);
+#define INFO(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_info, UDATA);
     INFO_ELEMENTS
 #undef INFO
 

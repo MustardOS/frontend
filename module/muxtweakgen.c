@@ -3,7 +3,7 @@
 
 #define UI_COUNT 10
 
-#define TWEAKGEN(NAME, UDATA) static int NAME##_original;
+#define TWEAKGEN(NAME, ENUM, UDATA) static int NAME##_original;
 TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
@@ -11,21 +11,14 @@ static int audio_overdrive = 100;
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblRtc_tweakgen,        lang.MUXTWEAKGEN.HELP.DATETIME},
-            {ui_lblHdmi_tweakgen,       lang.MUXTWEAKGEN.HELP.HDMI},
-            {ui_lblAdvanced_tweakgen,   lang.MUXTWEAKGEN.HELP.ADVANCED},
-            {ui_lblBrightness_tweakgen, lang.MUXTWEAKGEN.HELP.BRIGHT},
-            {ui_lblVolume_tweakgen,     lang.MUXTWEAKGEN.HELP.VOLUME},
-            {ui_lblColour_tweakgen,     lang.MUXTWEAKGEN.HELP.TEMP},
-            {ui_lblRgb_tweakgen,        lang.MUXTWEAKGEN.HELP.RGB},
-            {ui_lblHkDpad_tweakgen,     lang.MUXTWEAKGEN.HELP.HKDPAD},
-            {ui_lblHkShot_tweakgen,     lang.MUXTWEAKGEN.HELP.HKSHOT},
-            {ui_lblStartup_tweakgen,    lang.MUXTWEAKGEN.HELP.STARTUP},
+#define TWEAKGEN(NAME, ENUM, UDATA) { ui_lbl##NAME##_tweakgen, lang.MUXTWEAKGEN.HELP.ENUM },
+            TWEAKGEN_ELEMENTS
+#undef TWEAKGEN
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_audio_limits(void) {
@@ -33,7 +26,7 @@ static void init_audio_limits(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define TWEAKGEN(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
+#define TWEAKGEN(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
@@ -48,7 +41,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
 
-    if (device.BOARD.STICK > 0) {
+    if (device.BOARD.HASSTICK > 0) {
         lv_dropdown_set_selected(ui_droHkDpad_tweakgen, 0);
     } else {
         lv_dropdown_set_selected(ui_droHkDpad_tweakgen, config.SETTINGS.GENERAL.HKDPAD);
@@ -202,12 +195,12 @@ static void init_navigation_group(void) {
 
     if (combo_path) hk_combos = load_combos(combo_path, &hk_combo_count);
 
-    INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.RTC, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHT, "brightness", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHTNESS, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.COLOUR, "colour", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, hk_combo_count);
@@ -228,9 +221,9 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    if (!device.BOARD.HAS_HDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
-    if (!device.BOARD.RGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
-    if (device.BOARD.STICK > 0) HIDE_OPTION_ITEM(tweakgen, HkDpad);
+    if (!device.BOARD.HASHDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
+    if (!device.BOARD.HASRGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
+    if (device.BOARD.HASSTICK > 0) HIDE_OPTION_ITEM(tweakgen, HkDpad);
 
     if (!hk_combo_count) {
         HIDE_OPTION_ITEM(tweakgen, HkDpad);
@@ -307,11 +300,11 @@ static void list_nav_next(int steps) {
 static void update_option_values(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    HANDLE_TWEAK_OPT(Brightness, lang.MUXTWEAKGEN.BRIGHT_SET,
+    HANDLE_TWEAK_OPT(Brightness, lang.MUXTWEAKGEN.BRIGHTNESS_SET,
                      pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT), "bright", 0);
     HANDLE_TWEAK_OPT(Volume, lang.MUXTWEAKGEN.VOLUME_SET,
                      pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive), "volume", 0);
-    HANDLE_TWEAK_OPT(Colour, lang.MUXTWEAKGEN.TEMP_SET,
+    HANDLE_TWEAK_OPT(Colour, lang.MUXTWEAKGEN.COLOUR_SET,
                      lv_dropdown_get_selected(ui_droColour_tweakgen), "temp", -255);
 }
 
@@ -439,7 +432,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || block_input || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void launch_danger(void) {
@@ -469,7 +462,7 @@ static void init_elements(void) {
 
     check_focus();
 
-#define TWEAKGEN(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_tweakgen, UDATA);
+#define TWEAKGEN(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_tweakgen, UDATA);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 

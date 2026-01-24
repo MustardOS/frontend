@@ -5,7 +5,7 @@
 
 void init_muxpower(lv_obj_t *ui_pnlContent);
 
-#define POWER(NAME, UDATA)                 \
+#define POWER(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_power; \
     extern lv_obj_t *ui_lbl##NAME##_power; \
     extern lv_obj_t *ui_ico##NAME##_power; \

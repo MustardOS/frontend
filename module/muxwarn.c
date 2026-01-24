@@ -10,9 +10,7 @@ int main(void) {
     init_theme(0, 0);
     init_display();
 
-    const lv_font_t *header_font = (strcasecmp(device.BOARD.NAME, "tui-brick") == 0)
-                                   ? &ui_font_NotoSansBigHD
-                                   : &ui_font_NotoSansBig;
+    const lv_font_t *header_font = (strcasecmp(device.BOARD.NAME, "tui-brick") == 0) ? &ui_font_NotoSansBigHD : &ui_font_NotoSansBig;
 
     lv_obj_t *ui_scrWarn = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrWarn, LV_OBJ_FLAG_SCROLLABLE);

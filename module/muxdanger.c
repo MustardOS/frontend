@@ -3,34 +3,22 @@
 
 #define UI_COUNT 15
 
-#define DANGER(NAME, UDATA) static int NAME##_original;
+#define DANGER(NAME, ENUM, UDATA) static int NAME##_original;
 DANGER_ELEMENTS
 #undef DANGER
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblVmSwap_danger,        lang.MUXDANGER.HELP.VMSWAP},
-            {ui_lblDirtyRatio_danger,    lang.MUXDANGER.HELP.DIRTYRATIO},
-            {ui_lblDirtyBack_danger,     lang.MUXDANGER.HELP.DIRTYBACK},
-            {ui_lblCachePressure_danger, lang.MUXDANGER.HELP.CACHE},
-            {ui_lblNoMerge_danger,       lang.MUXDANGER.HELP.NOMERGE},
-            {ui_lblNrRequests_danger,    lang.MUXDANGER.HELP.REQUESTS},
-            {ui_lblReadAhead_danger,     lang.MUXDANGER.HELP.READAHEAD},
-            {ui_lblPageCluster_danger,   lang.MUXDANGER.HELP.PAGECLUSTER},
-            {ui_lblTimeSlice_danger,     lang.MUXDANGER.HELP.TIMESLICE},
-            {ui_lblIoStats_danger,       lang.MUXDANGER.HELP.IOSTATS},
-            {ui_lblIdleFlush_danger,     lang.MUXDANGER.HELP.IDLEFLUSH},
-            {ui_lblChildFirst_danger,    lang.MUXDANGER.HELP.CHILDFIRST},
-            {ui_lblTuneScale_danger,     lang.MUXDANGER.HELP.TUNESCALE},
-            {ui_lblCardMode_danger,      lang.MUXDANGER.HELP.CARDMODE},
-            {ui_lblState_danger,         lang.MUXDANGER.HELP.STATE},
+#define DANGER(NAME, ENUM, UDATA) { ui_lbl##NAME##_danger, lang.MUXDANGER.HELP.ENUM },
+            DANGER_ELEMENTS
+#undef DANGER
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define DANGER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_danger);
+#define DANGER(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_danger);
     DANGER_ELEMENTS
 #undef DANGER
 }
@@ -97,9 +85,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, danger, VmSwap, lang.MUXDANGER.VMSWAP, "vmswap", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, DirtyRatio, lang.MUXDANGER.DIRTYRATIO, "dirty-ratio", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, DirtyBack, lang.MUXDANGER.DIRTYBACK, "dirty-back", NULL, 0);
-    INIT_OPTION_ITEM(-1, danger, CachePressure, lang.MUXDANGER.CACHE, "cache", NULL, 0);
+    INIT_OPTION_ITEM(-1, danger, CachePressure, lang.MUXDANGER.CACHEPRESSURE, "cache", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, NoMerge, lang.MUXDANGER.NOMERGE, "merge", NULL, 0);
-    INIT_OPTION_ITEM(-1, danger, NrRequests, lang.MUXDANGER.REQUESTS, "requests", NULL, 0);
+    INIT_OPTION_ITEM(-1, danger, NrRequests, lang.MUXDANGER.NRREQUESTS, "requests", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, ReadAhead, lang.MUXDANGER.READAHEAD, "readahead", read_ahead_options, 9);
     INIT_OPTION_ITEM(-1, danger, PageCluster, lang.MUXDANGER.PAGECLUSTER, "cluster", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, TimeSlice, lang.MUXDANGER.TIMESLICE, "timeslice", time_slice_values, 11);
@@ -187,7 +175,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -202,7 +190,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define DANGER(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_danger, UDATA);
+#define DANGER(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_danger, UDATA);
     DANGER_ELEMENTS
 #undef DANGER
 

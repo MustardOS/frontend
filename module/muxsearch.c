@@ -20,14 +20,14 @@ content_item *all_items = NULL;
 
 static lv_obj_t *ui_viewport_objects[7];
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblLookup_search,       lang.MUXSEARCH.HELP.LOOKUP},
-            {ui_lblSearchLocal_search,  lang.MUXSEARCH.HELP.LOCAL},
-            {ui_lblSearchGlobal_search, lang.MUXSEARCH.HELP.GLOBAL},
+#define SEARCH(NAME, ENUM, UDATA) { ui_lbl##NAME##_search, lang.MUXSEARCH.HELP.ENUM },
+            SEARCH_ELEMENTS
+#undef SEARCH
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_navigation_group(void) {
@@ -598,7 +598,7 @@ static void handle_help(void) {
 
     if (all_items[current_item_index].content_type != ITEM) {
         play_sound(SND_INFO_OPEN);
-        show_help(lv_group_get_focused(ui_group));
+        show_help();
     }
 }
 
@@ -688,7 +688,7 @@ static void init_elements(void) {
         lv_obj_clear_flag(nav_hide[i], MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
-#define SEARCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_search, UDATA);
+#define SEARCH(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_search, UDATA);
     SEARCH_ELEMENTS
 #undef SEARCH
 

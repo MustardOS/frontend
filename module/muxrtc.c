@@ -382,7 +382,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define RTC(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);
+#define RTC(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);
     RTC_ELEMENTS
 #undef RTC
 

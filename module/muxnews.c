@@ -377,7 +377,7 @@ static void handle_a(void) {
         return;
     }
 
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HASNETWORK && is_network_connected()) {
         play_sound(SND_CONFIRM);
         toast_message(lang.MUXNEWS.OPEN, MEDIUM);
         refresh_topic(requested_topic_id);
@@ -408,7 +408,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (download_in_progress || msgbox_active || hold_call) return;
 
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) {
+    if (device.BOARD.HASNETWORK && is_network_connected()) {
         play_sound(SND_CONFIRM);
 
         delete_files_of_type(NEWS_CACHE_DIR, ".ini", NULL, 0);
@@ -438,7 +438,7 @@ static void init_elements(void) {
             {NULL, NULL,                         0}
     });
 
-    if (device.BOARD.HAS_NETWORK) {
+    if (device.BOARD.HASNETWORK) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                   0},
                 {ui_lblNavX,      lang.GENERIC.REFRESH, 0},
@@ -519,7 +519,7 @@ int muxnews_main(void) {
         }
     }
 
-    if (device.BOARD.HAS_NETWORK && is_network_connected()) refresh_index();
+    if (device.BOARD.HASNETWORK && is_network_connected()) refresh_index();
 
     init_timer(ui_refresh_task, NULL);
 

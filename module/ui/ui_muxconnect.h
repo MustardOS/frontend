@@ -5,7 +5,7 @@
 
 void init_muxconnect(lv_obj_t *ui_pnlContent);
 
-#define CONNECT(NAME, UDATA)                 \
+#define CONNECT(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_connect; \
     extern lv_obj_t *ui_lbl##NAME##_connect; \
     extern lv_obj_t *ui_ico##NAME##_connect; \

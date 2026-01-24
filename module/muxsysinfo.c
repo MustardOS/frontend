@@ -6,25 +6,14 @@
 static char hostname[32];
 static int tap_count = 0;
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblVersion_sysinfo,  lang.MUXSYSINFO.HELP.VERSION},
-            {ui_lblBuild_sysinfo,    lang.MUXSYSINFO.HELP.BUILD},
-            {ui_lblDevice_sysinfo,   lang.MUXSYSINFO.HELP.DEVICE},
-            {ui_lblKernel_sysinfo,   lang.MUXSYSINFO.HELP.KERNEL},
-            {ui_lblUptime_sysinfo,   lang.MUXSYSINFO.HELP.UPTIME},
-            {ui_lblCpu_sysinfo,      lang.MUXSYSINFO.HELP.CPU.INFO},
-            {ui_lblSpeed_sysinfo,    lang.MUXSYSINFO.HELP.CPU.SPEED},
-            {ui_lblGovernor_sysinfo, lang.MUXSYSINFO.HELP.CPU.GOVERNOR},
-            {ui_lblMemory_sysinfo,   lang.MUXSYSINFO.HELP.MEMORY},
-            {ui_lblTemp_sysinfo,     lang.MUXSYSINFO.HELP.TEMP},
-            {ui_lblCapacity_sysinfo, lang.MUXSYSINFO.HELP.CAPACITY},
-            {ui_lblVoltage_sysinfo,  lang.MUXSYSINFO.HELP.VOLTAGE},
-            {ui_lblCharger_sysinfo,  lang.MUXSYSINFO.HELP.CHARGER},
-            {ui_lblReload_sysinfo,   lang.MUXSYSINFO.HELP.RELOAD},
+#define SYSINFO(NAME, ENUM, UDATA) { ui_lbl##NAME##_sysinfo, lang.MUXSYSINFO.HELP.ENUM },
+            SYSINFO_ELEMENTS
+#undef SYSINFO
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 const char *get_cpu_model(void) {
@@ -424,7 +413,7 @@ static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void launch_device(void) {
@@ -448,7 +437,7 @@ static void init_elements(void) {
             {NULL, NULL,                         0}
     });
 
-#define SYSINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_sysinfo, UDATA);
+#define SYSINFO(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_sysinfo, UDATA);
     SYSINFO_ELEMENTS
 #undef SYSINFO
 

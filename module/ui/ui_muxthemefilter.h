@@ -6,7 +6,7 @@
 
 void init_muxthemefilter(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme);
 
-#define THEMEFILTER(NAME, UDATA)                 \
+#define THEMEFILTER(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_themefilter; \
     extern lv_obj_t *ui_lbl##NAME##_themefilter; \
     extern lv_obj_t *ui_ico##NAME##_themefilter; \

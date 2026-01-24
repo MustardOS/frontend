@@ -328,7 +328,7 @@ static void module_appcon(void) {
 static void module_app(void) {
     int auth = 0; // no more fights about 's' vs 'z'...
 
-    if (config.SETTINGS.ADVANCED.LOCK) {
+    if (config.SETTINGS.ADVANCED.PASSCODE) {
         load_mux("launcher");
 
         if (muxpass_main(PCT_LAUNCH) == 1) {
@@ -365,7 +365,7 @@ static void module_task(void) {
 }
 
 static void module_config(void) {
-    if (config.SETTINGS.ADVANCED.LOCK && strcmp(previous_module, "muxtweakgen") != 0) {
+    if (config.SETTINGS.ADVANCED.PASSCODE && strcmp(previous_module, "muxtweakgen") != 0) {
         load_mux("launcher");
 
         if (muxpass_main(PCT_CONFIG) == 1) {
@@ -537,7 +537,7 @@ static void init_audio(void) {
 
             if (!file_exist(CHIME_DONE) &&
                 config.SETTINGS.GENERAL.CHIME &&
-                !config.SETTINGS.ADVANCED.LOCK)
+                !config.SETTINGS.ADVANCED.PASSCODE)
                 play_sound(SND_STARTUP);
 
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
@@ -575,7 +575,7 @@ int main(void) {
     reset_alert();
     init_audio();
 
-    if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_BOOT_AUTH)) {
+    if (config.SETTINGS.ADVANCED.PASSCODE && !file_exist(MUX_BOOT_AUTH)) {
         int result = 0;
 
         while (result != 1) {

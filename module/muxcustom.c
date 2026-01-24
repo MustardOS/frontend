@@ -3,7 +3,7 @@
 
 #define UI_COUNT 22
 
-#define CUSTOM(NAME, UDATA) static int NAME##_original;
+#define CUSTOM(NAME, ENUM, UDATA) static int NAME##_original;
 CUSTOM_ELEMENTS
 #undef CUSTOM
 
@@ -45,33 +45,14 @@ static void restore_theme_resolution(void) {
     }
 }
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblCatalogue_custom,       lang.MUXCUSTOM.HELP.CATALOGUE},
-            {ui_lblConfig_custom,          lang.MUXCUSTOM.HELP.CONFIG},
-            {ui_lblTheme_custom,           lang.MUXCUSTOM.HELP.THEME},
-            {ui_lblThemeResolution_custom, lang.MUXCUSTOM.HELP.THEME_RES},
-            {ui_lblThemeScaling_custom,    lang.MUXCUSTOM.HELP.THEME_SCALING},
-            {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALT},
-            {ui_lblAnimation_custom,       lang.MUXCUSTOM.HELP.ANIMATION},
-            {ui_lblMusic_custom,           lang.MUXCUSTOM.HELP.MUSIC},
-            {ui_lblMusicVolume_custom,     lang.MUXCUSTOM.HELP.MUSIC_VOLUME},
-            {ui_lblBlackFade_custom,       lang.MUXCUSTOM.HELP.FADE},
-            {ui_lblLaunchSwap_custom,      lang.MUXCUSTOM.HELP.LAUNCH_SWAP},
-            {ui_lblShuffle_custom,         lang.MUXCUSTOM.HELP.SHUFFLE},
-            {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
-            {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
-            {ui_lblContentWidth_custom,    lang.MUXCUSTOM.HELP.CONTENT_WIDTH},
-            {ui_lblLaunchSplash_custom,    lang.MUXCUSTOM.HELP.SPLASH},
-            {ui_lblGridModeContent_custom, lang.MUXCUSTOM.HELP.GRID_MODE_CONTENT},
-            {ui_lblBoxArtHide_custom,      lang.MUXCUSTOM.HELP.BOX_HIDE},
-            {ui_lblFont_custom,            lang.MUXCUSTOM.HELP.FONT},
-            {ui_lblSound_custom,           lang.MUXCUSTOM.HELP.SOUND},
-            {ui_lblSoundVolume_custom,     lang.MUXCUSTOM.HELP.SOUND_VOLUME},
-            {ui_lblChime_custom,           lang.MUXCUSTOM.HELP.CHIME},
+#define CUSTOM(NAME, ENUM, UDATA) { ui_lbl##NAME##_custom, lang.MUXCUSTOM.HELP.ENUM },
+            CUSTOM_ELEMENTS
+#undef CUSTOM
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static int visible_theme_alternate(void) {
@@ -119,7 +100,7 @@ static void populate_theme_alternates(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define CUSTOM(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_custom);
+#define CUSTOM(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_custom);
     CUSTOM_ELEMENTS
 #undef CUSTOM
 
@@ -186,11 +167,11 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RES, "resolution", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, ThemeScaling, lang.MUXCUSTOM.THEME_SCALING, "scaling", theme_scaling_options, 3);
+    INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEMERESOLUTION, "resolution", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, ThemeScaling, lang.MUXCUSTOM.THEMESCALING, "scaling", theme_scaling_options, 3);
 
     if (alt_theme_count > 0) {
-        INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALT, "alternate", NULL, 0);
+        INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEMEALTERNATE, "alternate", NULL, 0);
     } else {
         lv_obj_add_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
     }
@@ -198,14 +179,14 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Animation, lang.MUXCUSTOM.ANIMATION, "animation", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, MusicVolume, lang.MUXCUSTOM.MUSIC.VOLUME, "musicvolume", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.FADE, "blackfade", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.BLACKFADE, "blackfade", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, LaunchSwap, lang.MUXCUSTOM.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 4);
     INIT_OPTION_ITEM(-1, custom, Shuffle, lang.MUXCUSTOM.SHUFFLE, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
-    INIT_OPTION_ITEM(-1, custom, ContentWidth, lang.MUXCUSTOM.CONTENT_WIDTH, "width", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.SPLASH, "splash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, GridModeContent, lang.MUXCUSTOM.GRID_MODE_CONTENT, "gridmodecontent", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, ContentWidth, lang.MUXCUSTOM.CONTENTWIDTH, "width", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.LAUNCHSPLASH, "splash", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, GridModeContent, lang.MUXCUSTOM.GRIDMODECONTENT, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", font_options, 2);
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
@@ -374,7 +355,7 @@ static void save_custom_options() {
             static char rgb_script[MAX_BUFFER_SIZE];
             snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", theme_base, theme_alt);
             if (file_exist(rgb_script)) {
-                if (device.BOARD.RGB && config.SETTINGS.GENERAL.RGB) {
+                if (device.BOARD.HASRGB && config.SETTINGS.GENERAL.RGB) {
                     const char *args[] = {rgb_script, NULL};
                     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
                 }
@@ -550,7 +531,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -569,7 +550,7 @@ static void init_elements(void) {
 
     check_focus();
 
-#define CUSTOM(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_custom, UDATA);
+#define CUSTOM(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_custom, UDATA);
     CUSTOM_ELEMENTS
 #undef CUSTOM
 

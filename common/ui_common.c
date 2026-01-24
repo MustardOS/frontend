@@ -1178,7 +1178,7 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
         const char *status;
     } status_style;
 
-    if (force_glyph == 1 || (force_glyph == 0 && device.BOARD.HAS_NETWORK && is_network_connected())) {
+    if (force_glyph == 1 || (force_glyph == 0 && device.BOARD.HASNETWORK && is_network_connected())) {
         status_style.color = lv_color_hex(theme->STATUS.NETWORK.ACTIVE);
         status_style.alpha = theme->STATUS.NETWORK.ACTIVE_ALPHA;
         status_style.status = "active";

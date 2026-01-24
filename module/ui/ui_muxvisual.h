@@ -5,7 +5,7 @@
 
 void init_muxvisual(lv_obj_t *ui_pnlContent);
 
-#define VISUAL(NAME, UDATA)                 \
+#define VISUAL(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_visual; \
     extern lv_obj_t *ui_lbl##NAME##_visual; \
     extern lv_obj_t *ui_ico##NAME##_visual; \

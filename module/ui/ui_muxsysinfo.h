@@ -5,7 +5,7 @@
 
 void init_muxsysinfo(lv_obj_t *ui_pnlContent);
 
-#define SYSINFO(NAME, UDATA)                      \
+#define SYSINFO(NAME, ENUM, UDATA)                \
     extern lv_obj_t *ui_pnl##NAME##_sysinfo;      \
     extern lv_obj_t *ui_lbl##NAME##_sysinfo;      \
     extern lv_obj_t *ui_ico##NAME##_sysinfo;      \

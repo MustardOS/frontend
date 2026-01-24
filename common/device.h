@@ -7,18 +7,18 @@ extern struct mux_device device;
 struct mux_device {
     struct {
         char NAME[MAX_BUFFER_SIZE];
-        int16_t HAS_NETWORK;
-        int16_t HAS_BLUETOOTH;
-        int16_t HAS_PORTMASTER;
-        int16_t HAS_LID;
-        int16_t HAS_HDMI;
-        int16_t EVENT;
-        int16_t DEBUGFS;
+        int16_t HASNETWORK;
+        int16_t HASBLUETOOTH;
+        int16_t HASPORTMASTER;
+        int16_t HASLID;
+        int16_t HASHDMI;
+        int16_t HASEVENT;
+        int16_t HASDEBUGFS;
+        int16_t HASRGB;
+        int16_t HASSTICK;
+        char LED[MAX_BUFFER_SIZE];
         char RTC_CLOCK[MAX_BUFFER_SIZE];
         char RTC_WAKE[MAX_BUFFER_SIZE];
-        char LED[MAX_BUFFER_SIZE];
-        int16_t RGB;
-        int16_t STICK;
     } BOARD;
 
     struct {

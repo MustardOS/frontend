@@ -4,93 +4,38 @@
 #define UI_COUNT 23
 #define STORAGE_COUNT (UI_COUNT - 3)
 
-#define BACKUP(NAME, UDATA) static int NAME##_original;
+#define BACKUP(NAME, ENUM, UDATA) static int NAME##_original;
 BACKUP_ELEMENTS
 #undef BACKUP
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblApps_backup,       lang.MUXBACKUP.HELP.APPS},
-            {ui_lblBios_backup,       lang.MUXBACKUP.HELP.BIOS},
-            {ui_lblCatalogue_backup,  lang.MUXBACKUP.HELP.CATALOGUE},
-            {ui_lblCheats_backup,     lang.MUXBACKUP.HELP.CHEATS},
-            {ui_lblCollection_backup, lang.MUXBACKUP.HELP.COLLECTION},
-            {ui_lblConfig_backup,     lang.MUXBACKUP.HELP.CONFIG},
-            {ui_lblHistory_backup,    lang.MUXBACKUP.HELP.HISTORY},
-            {ui_lblInit_backup,       lang.MUXBACKUP.HELP.INIT},
-            {ui_lblMusic_backup,      lang.MUXBACKUP.HELP.MUSIC},
-            {ui_lblName_backup,       lang.MUXBACKUP.HELP.NAME},
-            {ui_lblNetwork_backup,    lang.MUXBACKUP.HELP.NETWORK},
-            {ui_lblOverlays_backup,   lang.MUXBACKUP.HELP.OVERLAYS},
-            {ui_lblOverride_backup,   lang.MUXBACKUP.HELP.OVERRIDE},
-            {ui_lblPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE},
-            {ui_lblSave_backup,       lang.MUXBACKUP.HELP.SAVE},
-            {ui_lblScreenshot_backup, lang.MUXBACKUP.HELP.SCREENSHOT},
-            {ui_lblShaders_backup,    lang.MUXBACKUP.HELP.SHADERS},
-            {ui_lblSyncthing_backup,  lang.MUXBACKUP.HELP.SYNCTHING},
-            {ui_lblTheme_backup,      lang.MUXBACKUP.HELP.THEME},
-            {ui_lblTrack_backup,      lang.MUXBACKUP.HELP.TRACK},
-            {ui_lblTarget_backup,     lang.MUXBACKUP.HELP.TARGET},
-            {ui_lblMerge_backup,      lang.MUXBACKUP.HELP.MERGE},
-            {ui_lblStart_backup,      lang.MUXBACKUP.HELP.START},
+#define BACKUP(NAME, ENUM, UDATA) { ui_lbl##NAME##_backup, lang.MUXBACKUP.HELP.ENUM },
+            BACKUP_ELEMENTS
+#undef BACKUP
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define BACKUP(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_backup);
+#define BACKUP(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_backup);
     BACKUP_ELEMENTS
 #undef BACKUP
 }
 
 static void set_all_options(int value) {
-    lv_dropdown_set_selected(ui_droApps_backup, value);
-    lv_dropdown_set_selected(ui_droBios_backup, value);
-    lv_dropdown_set_selected(ui_droCatalogue_backup, value);
-    lv_dropdown_set_selected(ui_droCheats_backup, value);
-    lv_dropdown_set_selected(ui_droCollection_backup, value);
-    lv_dropdown_set_selected(ui_droConfig_backup, value);
-    lv_dropdown_set_selected(ui_droHistory_backup, value);
-    lv_dropdown_set_selected(ui_droInit_backup, value);
-    lv_dropdown_set_selected(ui_droMusic_backup, value);
-    lv_dropdown_set_selected(ui_droName_backup, value);
-    lv_dropdown_set_selected(ui_droNetwork_backup, value);
-    lv_dropdown_set_selected(ui_droOverlays_backup, value);
-    lv_dropdown_set_selected(ui_droOverride_backup, value);
-    lv_dropdown_set_selected(ui_droPackage_backup, value);
-    lv_dropdown_set_selected(ui_droSave_backup, value);
-    lv_dropdown_set_selected(ui_droScreenshot_backup, value);
-    lv_dropdown_set_selected(ui_droShaders_backup, value);
-    lv_dropdown_set_selected(ui_droSyncthing_backup, value);
-    lv_dropdown_set_selected(ui_droTheme_backup, value);
-    lv_dropdown_set_selected(ui_droTrack_backup, value);
+#define BACKUP(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_backup, value);
+    BACKUP_ELEMENTS
+#undef BACKUP
 }
 
 static void restore_backup_options(void) {
-    lv_dropdown_set_selected(ui_droApps_backup, config.BACKUP.APPS);
-    lv_dropdown_set_selected(ui_droBios_backup, config.BACKUP.BIOS);
-    lv_dropdown_set_selected(ui_droCatalogue_backup, config.BACKUP.CATALOGUE);
-    lv_dropdown_set_selected(ui_droCheats_backup, config.BACKUP.CHEATS);
-    lv_dropdown_set_selected(ui_droCollection_backup, config.BACKUP.COLLECTION);
-    lv_dropdown_set_selected(ui_droConfig_backup, config.BACKUP.CONFIG);
-    lv_dropdown_set_selected(ui_droHistory_backup, config.BACKUP.HISTORY);
-    lv_dropdown_set_selected(ui_droInit_backup, config.BACKUP.INIT);
-    lv_dropdown_set_selected(ui_droMerge_backup, config.BACKUP.MERGE);
-    lv_dropdown_set_selected(ui_droMusic_backup, config.BACKUP.MUSIC);
-    lv_dropdown_set_selected(ui_droName_backup, config.BACKUP.NAME);
-    lv_dropdown_set_selected(ui_droNetwork_backup, config.BACKUP.NETWORK);
-    lv_dropdown_set_selected(ui_droOverlays_backup, config.BACKUP.OVERLAYS);
-    lv_dropdown_set_selected(ui_droOverride_backup, config.BACKUP.OVERRIDE);
-    lv_dropdown_set_selected(ui_droPackage_backup, config.BACKUP.PACKAGE);
-    lv_dropdown_set_selected(ui_droSave_backup, config.BACKUP.SAVE);
-    lv_dropdown_set_selected(ui_droScreenshot_backup, config.BACKUP.SCREENSHOT);
-    lv_dropdown_set_selected(ui_droShaders_backup, config.BACKUP.SHADERS);
-    lv_dropdown_set_selected(ui_droSyncthing_backup, config.BACKUP.SYNCTHING);
-    lv_dropdown_set_selected(ui_droTheme_backup, config.BACKUP.THEME);
-    lv_dropdown_set_selected(ui_droTrack_backup, config.BACKUP.TRACK);
+#define BACKUP(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_backup, config.BACKUP.ENUM);
+    BACKUP_ELEMENTS
+#undef BACKUP
 
     lv_dropdown_set_selected(ui_droTarget_backup, lv_dropdown_get_option_cnt(ui_droTarget_backup) - 1);
 }
@@ -98,27 +43,9 @@ static void restore_backup_options(void) {
 static void save_backup_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(backup, Apps, "backup/application", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Bios, "backup/bios", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Catalogue, "backup/catalogue", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Cheats, "backup/cheats", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Collection, "backup/collection", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Config, "backup/config", INT, 0);
-    CHECK_AND_SAVE_STD(backup, History, "backup/history", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Init, "backup/init", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Merge, "backup/merge", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Music, "backup/music", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Name, "backup/name", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Network, "backup/network", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Overlays, "backup/overlays", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Override, "backup/override", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Package, "backup/package", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Save, "backup/save", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Screenshot, "backup/screenshot", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Shaders, "backup/shaders", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Syncthing, "backup/syncthing", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Theme, "backup/theme", INT, 0);
-    CHECK_AND_SAVE_STD(backup, Track, "backup/track", INT, 0);
+#define BACKUP(NAME, ENUM, UDATA) CHECK_AND_SAVE_STD(backup, NAME, "backup/"UDATA, INT, 0);
+    BACKUP_ELEMENTS
+#undef BACKUP
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -317,7 +244,7 @@ static void handle_help(void) {
 
     if (progress_onscreen == -1) {
         play_sound(SND_CONFIRM);
-        show_help(lv_group_get_focused(ui_group));
+        show_help();
     }
 }
 
@@ -337,7 +264,7 @@ static void init_elements(void) {
             {NULL, NULL,                                0}
     });
 
-#define BACKUP(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_backup, UDATA);
+#define BACKUP(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_backup, UDATA);
     BACKUP_ELEMENTS
 #undef BACKUP
 

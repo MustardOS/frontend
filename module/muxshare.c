@@ -309,8 +309,8 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
 }
 
 void update_file_counter(lv_obj_t *counter, int file_count) {
-    if ((ui_count > 0 && !file_count && config.VISUAL.COUNTERFOLDER) ||
-        (file_count > 0 && config.VISUAL.COUNTERFILE)) {
+    if ((ui_count > 0 && !file_count && config.VISUAL.MENUCOUNTERFOLDER) ||
+        (file_count > 0 && config.VISUAL.MENUCOUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
         snprintf(counter_text, sizeof(counter_text), "%d%s%d",
                  current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);

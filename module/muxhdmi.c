@@ -3,38 +3,34 @@
 
 #define UI_COUNT 6
 
-#define HDMI(NAME, UDATA) static int NAME##_original;
+#define HDMI(NAME, ENUM, UDATA) static int NAME##_original;
 HDMI_ELEMENTS
 #undef HDMI
 
 int hdmi_index[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblResolution_hdmi, lang.MUXHDMI.HELP.RESOLUTION},
-            {ui_lblSpace_hdmi,      lang.MUXHDMI.HELP.COLOUR.SPACE},
-            {ui_lblDepth_hdmi,      lang.MUXHDMI.HELP.COLOUR.DEPTH},
-            {ui_lblRange_hdmi,      lang.MUXHDMI.HELP.COLOUR.RANGE},
-            {ui_lblScan_hdmi,       lang.MUXHDMI.HELP.SCAN_SCALE},
-            {ui_lblAudio_hdmi,      lang.MUXHDMI.HELP.AUDIO_OUTPUT}
+#define HDMI(NAME, ENUM, UDATA) { ui_lbl##NAME##_hdmi, lang.MUXHDMI.HELP.ENUM },
+            HDMI_ELEMENTS
+#undef HDMI
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define HDMI(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_hdmi);
+#define HDMI(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_hdmi);
     HDMI_ELEMENTS
 #undef HDMI
 }
 
 static void restore_hdmi_options(void) {
+#define HDMI(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_hdmi, config.SETTINGS.HDMI.ENUM);
+    HDMI_ELEMENTS
+#undef HDMI
+
     map_drop_down_to_index(ui_droResolution_hdmi, config.SETTINGS.HDMI.RESOLUTION, hdmi_index, 11, 0);
-    lv_dropdown_set_selected(ui_droSpace_hdmi, config.SETTINGS.HDMI.SPACE);
-    lv_dropdown_set_selected(ui_droDepth_hdmi, config.SETTINGS.HDMI.DEPTH);
-    lv_dropdown_set_selected(ui_droRange_hdmi, config.SETTINGS.HDMI.RANGE);
-    lv_dropdown_set_selected(ui_droScan_hdmi, config.SETTINGS.HDMI.SCAN);
-    lv_dropdown_set_selected(ui_droAudio_hdmi, config.SETTINGS.HDMI.AUDIO);
 }
 
 static void save_hdmi_options(void) {
@@ -169,7 +165,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -184,7 +180,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define HDMI(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_hdmi, UDATA);
+#define HDMI(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_hdmi, UDATA);
     HDMI_ELEMENTS
 #undef HDMI
 

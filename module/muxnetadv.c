@@ -3,36 +3,30 @@
 
 #define UI_COUNT 7
 
-#define NETADV(NAME, UDATA) static int NAME##_original;
+#define NETADV(NAME, ENUM, UDATA) static int NAME##_original;
 NETADV_ELEMENTS
 #undef NETADV
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblMonitor_netadv,   lang.MUXNETADV.HELP.MONITOR},
-            {ui_lblBoot_netadv,      lang.MUXNETADV.HELP.BOOT},
-            {ui_lblWake_netadv,      lang.MUXNETADV.HELP.WAKE},
-            {ui_lblCompat_netadv,    lang.MUXNETADV.HELP.COMPAT},
-            {ui_lblAsyncLoad_netadv, lang.MUXNETADV.HELP.ASYNCLOAD},
-            {ui_lblWait_netadv,      lang.MUXNETADV.HELP.WAIT},
-            {ui_lblRetry_netadv,     lang.MUXNETADV.HELP.RETRY},
+#define NETADV(NAME, ENUM, UDATA) { ui_lbl##NAME##_netadv, lang.MUXNETADV.HELP.ENUM },
+            NETADV_ELEMENTS
+#undef NETADV
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define NETADV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_netadv);
+#define NETADV(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_netadv);
     NETADV_ELEMENTS
 #undef NETADV
 }
 
 static void restore_netadv_options(void) {
-    lv_dropdown_set_selected(ui_droMonitor_netadv, config.SETTINGS.NETWORK.MONITOR);
-    lv_dropdown_set_selected(ui_droBoot_netadv, config.SETTINGS.NETWORK.BOOT);
-    lv_dropdown_set_selected(ui_droWake_netadv, config.SETTINGS.NETWORK.WAKE);
-    lv_dropdown_set_selected(ui_droCompat_netadv, config.SETTINGS.NETWORK.COMPAT);
-    lv_dropdown_set_selected(ui_droAsyncLoad_netadv, config.SETTINGS.NETWORK.ASYNCLOAD);
+#define NETADV(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_netadv, config.SETTINGS.NETWORK.ENUM);
+    NETADV_ELEMENTS
+#undef NETADV
 
     map_drop_down_to_index(ui_droWait_netadv, config.SETTINGS.NETWORK.WAIT, wait_retry_int, 9, 0);
     map_drop_down_to_index(ui_droRetry_netadv, config.SETTINGS.NETWORK.RETRY, wait_retry_int, 9, 0);
@@ -132,7 +126,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -147,7 +141,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define NETADV(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netadv, UDATA);
+#define NETADV(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netadv, UDATA);
     NETADV_ELEMENTS
 #undef NETADV
 

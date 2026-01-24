@@ -20,8 +20,7 @@ void init_muxcollect(lv_obj_t *ui_screen, struct theme_config *theme) {
     lv_obj_set_style_text_align(ui_lblCounter_collect, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter_collect, theme->COUNTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
-                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.BORDER_COLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblCounter_collect, theme->COUNTER.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_lblCounter_collect, theme->COUNTER.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblCounter_collect, theme->COUNTER.PADDING_AROUND, MU_OBJ_MAIN_DEFAULT);

@@ -2,7 +2,7 @@
 #include "ui_muxnetwork.h"
 #include "../../common/device.h"
 
-#define NETWORK(NAME, UDATA)               \
+#define NETWORK(NAME, ENUM, UDATA)         \
     lv_obj_t *ui_pnl##NAME##_network;      \
     lv_obj_t *ui_lbl##NAME##_network;      \
     lv_obj_t *ui_ico##NAME##_network;      \
@@ -15,7 +15,7 @@ lv_obj_t *ui_pnlEntry_network;
 lv_obj_t *ui_txtEntry_network;
 
 void init_muxnetwork(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-#define NETWORK(NAME, UDATA) CREATE_VALUE_ITEM(network, NAME);
+#define NETWORK(NAME, ENUM, UDATA) CREATE_VALUE_ITEM(network, NAME);
     NETWORK_ELEMENTS
 #undef NETWORK
 

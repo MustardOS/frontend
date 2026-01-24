@@ -5,7 +5,7 @@
 
 void init_muxlaunch(lv_obj_t *ui_pnlContent);
 
-#define LAUNCH(NAME, UDATA)                 \
+#define LAUNCH(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_launch; \
     extern lv_obj_t *ui_lbl##NAME##_launch; \
     extern lv_obj_t *ui_ico##NAME##_launch;

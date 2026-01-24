@@ -125,7 +125,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (download_in_progress || msgbox_active || hold_call || !device.BOARD.HAS_NETWORK) return;
+    if (download_in_progress || msgbox_active || hold_call || !device.BOARD.HASNETWORK) return;
 
     if (is_network_connected()) {
         play_sound(SND_CONFIRM);
@@ -155,7 +155,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-    if (device.BOARD.HAS_NETWORK) {
+    if (device.BOARD.HASNETWORK) {
         setup_nav((struct nav_bar[]) {
                 {ui_lblNavXGlyph, "",                   0},
                 {ui_lblNavX,      lang.GENERIC.REFRESH, 0},

@@ -5,20 +5,14 @@
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblGeneral_config,   lang.MUXCONFIG.HELP.GENERAL},
-            {ui_lblConnect_config,   lang.MUXCONFIG.HELP.CONNECTIVITY},
-            {ui_lblCustom_config,    lang.MUXCONFIG.HELP.CUSTOM},
-            {ui_lblInterface_config, lang.MUXCONFIG.HELP.VISUAL},
-            {ui_lblOverlay_config,   lang.MUXCONFIG.HELP.OVERLAY},
-            {ui_lblLanguage_config,  lang.MUXCONFIG.HELP.LANGUAGE},
-            {ui_lblPower_config,     lang.MUXCONFIG.HELP.POWER},
-            {ui_lblStorage_config,   lang.MUXCONFIG.HELP.STORAGE},
-            {ui_lblBackup_config,    lang.MUXCONFIG.HELP.BACKUP},
+#define CONFIG(NAME, ENUM, UDATA) { ui_lbl##NAME##_config, lang.MUXCONFIG.HELP.ENUM },
+            CONFIG_ELEMENTS
+#undef CONFIG
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static int storage_available(void) {
@@ -31,9 +25,9 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
     INIT_STATIC_ITEM(-1, config, General, lang.MUXCONFIG.GENERAL, "general", 0);
-    INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECTIVITY, "connect", 0);
+    INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECT, "connect", 0);
     INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom", 0);
-    INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.VISUAL, "interface", 0);
+    INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.INTERFACE, "interface", 0);
     INIT_STATIC_ITEM(-1, config, Overlay, lang.MUXCONFIG.OVERLAY, "overlay", 0);
     INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language", 0);
     INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power", 0);
@@ -128,7 +122,7 @@ static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -143,7 +137,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-#define CONFIG(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_config, UDATA);
+#define CONFIG(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_config, UDATA);
     CONFIG_ELEMENTS
 #undef CONFIG
 

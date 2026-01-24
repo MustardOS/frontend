@@ -5,7 +5,7 @@
 
 void init_muxnetadv(lv_obj_t *ui_pnlContent);
 
-#define NETADV(NAME, UDATA)                 \
+#define NETADV(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_netadv; \
     extern lv_obj_t *ui_lbl##NAME##_netadv; \
     extern lv_obj_t *ui_ico##NAME##_netadv; \

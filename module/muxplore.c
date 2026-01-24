@@ -170,7 +170,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
         if (entry->d_type == DT_DIR) {
             if (!should_skip(entry->d_name, 1)) {
                 if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                    if (config.VISUAL.FOLDEREMPTY || get_directory_item_count(base_dir, entry->d_name, 1) != 0) {
+                    if (config.VISUAL.DISPLAYEMPTYFOLDER || get_directory_item_count(base_dir, entry->d_name, 1) != 0) {
                         char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
                         snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
@@ -615,7 +615,7 @@ static void process_load(int from_start) {
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
         if (load_content(0, sys_dir, items[current_item_index].name)) {
-            if (config.SETTINGS.ADVANCED.LOCK) {
+            if (config.SETTINGS.ADVANCED.PASSCODE) {
                 int result = 0;
 
                 while (result != 1) {

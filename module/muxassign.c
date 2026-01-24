@@ -13,7 +13,7 @@ static void show_help(void) {
 }
 
 static void create_system_items(void) {
-    if (device.BOARD.HAS_NETWORK) {
+    if (device.BOARD.HASNETWORK) {
         add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
     }
 

@@ -5,7 +5,7 @@
 
 void init_muxchrony(lv_obj_t *ui_pnlContent);
 
-#define CHRONY(NAME, UDATA)                     \
+#define CHRONY(NAME, ENUM, UDATA)                \
     extern lv_obj_t *ui_pnl##NAME##_chrony;      \
     extern lv_obj_t *ui_lbl##NAME##_chrony;      \
     extern lv_obj_t *ui_ico##NAME##_chrony;      \

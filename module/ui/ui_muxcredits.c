@@ -146,9 +146,9 @@ static void container(lv_obj_t *lbl, const lv_font_t *font, lv_color_t col, int 
     MU_FOCUS(lbl, text_opa, LV_OPA_COVER);
 }
 
-static lv_obj_t *title(lv_obj_t *parent, const char *text, const lv_font_t *font,
-                       lv_color_t col, int pad_top, int pad_bottom, int y) {
+static lv_obj_t *title(lv_obj_t *parent, const char *text, const lv_font_t *font, lv_color_t col, int pad_top, int pad_bottom, int y) {
     lv_obj_t *lbl = lv_label_create(parent);
+
     container(lbl, font, col, pad_top, pad_bottom, y);
     lv_label_set_text(lbl, text);
 

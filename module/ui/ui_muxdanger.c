@@ -1,7 +1,7 @@
 #include "ui_muxshare.h"
 #include "ui_muxdanger.h"
 
-#define DANGER(NAME, UDATA)          \
+#define DANGER(NAME, ENUM, UDATA)    \
     lv_obj_t *ui_pnl##NAME##_danger; \
     lv_obj_t *ui_lbl##NAME##_danger; \
     lv_obj_t *ui_ico##NAME##_danger; \
@@ -11,7 +11,7 @@ DANGER_ELEMENTS
 #undef DANGER
 
 void init_muxdanger(lv_obj_t *ui_pnlContent) {
-#define DANGER(NAME, UDATA) CREATE_OPTION_ITEM(danger, NAME);
+#define DANGER(NAME, ENUM, UDATA) CREATE_OPTION_ITEM(danger, NAME);
     DANGER_ELEMENTS
 #undef DANGER
 }

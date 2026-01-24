@@ -29,6 +29,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->BACKUP.SYNCTHING, CONF_CONFIG_PATH "backup/syncthing", 1);
     CFG_INT_FIELD(config->BACKUP.THEME, CONF_CONFIG_PATH "backup/theme", 1);
     CFG_INT_FIELD(config->BACKUP.TRACK, CONF_CONFIG_PATH "backup/track", 1);
+    CFG_INT_FIELD(config->BACKUP.START, CONF_CONFIG_PATH "backup/start", 0);
+    CFG_INT_FIELD(config->BACKUP.TARGET, CONF_CONFIG_PATH "backup/target", 0);
 
     CFG_INT_FIELD(config->BOOT.FACTORY_RESET, CONF_CONFIG_PATH "boot/factory_reset", 0);
     CFG_INT_FIELD(config->BOOT.DEVICE_MODE, CONF_CONFIG_PATH "boot/device_mode", 0);
@@ -40,18 +42,18 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->NETWORK.INTERFACE, CONF_CONFIG_PATH "network/interface", "wlan0");
     CFG_STR_FIELD(config->NETWORK.SSID, CONF_CONFIG_PATH "network/ssid", "");
     CFG_STR_FIELD(config->NETWORK.PASS, CONF_CONFIG_PATH "network/pass", "");
-    CFG_INT_FIELD(config->NETWORK.SCAN, CONF_CONFIG_PATH "network/scan", 0);
+    CFG_INT_FIELD(config->NETWORK.HIDDEN, CONF_CONFIG_PATH "network/hidden", 0);
     CFG_STR_FIELD(config->NETWORK.ADDRESS, CONF_CONFIG_PATH "network/address", "192.168.0.123");
     CFG_STR_FIELD(config->NETWORK.GATEWAY, CONF_CONFIG_PATH "network/gateway", "192.168.0.1");
     CFG_STR_FIELD(config->NETWORK.SUBNET, CONF_CONFIG_PATH "network/subnet", "24");
     CFG_STR_FIELD(config->NETWORK.DNS, CONF_CONFIG_PATH "network/dns", "1.1.1.1");
 
-    CFG_INT_FIELD(config->THEME.FILTER.ALL_THEMES, CONF_CONFIG_PATH "theme/filter/allthemes", 0);
+    CFG_INT_FIELD(config->THEME.FILTER.ALLTHEMES, CONF_CONFIG_PATH "theme/filter/allthemes", 0);
     CFG_INT_FIELD(config->THEME.FILTER.GRID, CONF_CONFIG_PATH "theme/filter/grid", 0);
     CFG_INT_FIELD(config->THEME.FILTER.HDMI, CONF_CONFIG_PATH "theme/filter/hdmi", 0);
     CFG_INT_FIELD(config->THEME.FILTER.LANGUAGE, CONF_CONFIG_PATH "theme/filter/language", 0);
     CFG_STR_FIELD(config->THEME.FILTER.LOOKUP, CONF_CONFIG_PATH "theme/filter/lookup", "");
-    if (!config->THEME.FILTER.ALL_THEMES) {
+    if (!config->THEME.FILTER.ALLTHEMES) {
         int width = read_line_int_from((CONF_DEVICE_PATH "mux/width"), 1);
         int height = read_line_int_from((CONF_DEVICE_PATH "mux/height"), 1);
         if (width == 640 && height == 480) {
@@ -83,24 +85,24 @@ void load_config(struct mux_config *config) {
     snprintf(config->THEME.THEME_CAT_PATH, MAX_BUFFER_SIZE, "%s/catalogue", config->THEME.STORAGE_THEME);
 
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, CONF_CONFIG_PATH "settings/advanced/accelerate", 96);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.REPEAT_DELAY, CONF_CONFIG_PATH "settings/advanced/repeat_delay", 208);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.REPEATDELAY, CONF_CONFIG_PATH "settings/advanced/repeat_delay", 208);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAP, CONF_CONFIG_PATH "settings/advanced/swap", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.STICKNAV, CONF_CONFIG_PATH "settings/advanced/sticknav", 3);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 1);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, CONF_CONFIG_PATH "settings/advanced/font", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OFFSET, CONF_CONFIG_PATH "settings/advanced/offset", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.LOCK, CONF_CONFIG_PATH "settings/advanced/lock", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.PASSCODE, CONF_CONFIG_PATH "settings/advanced/passcode", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.LED, CONF_CONFIG_PATH "settings/advanced/led", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.THEME, CONF_CONFIG_PATH "settings/advanced/random_theme", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RANDOMTHEME, CONF_CONFIG_PATH "settings/advanced/random_theme", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROWAIT, CONF_CONFIG_PATH "settings/advanced/retrowait", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROFREE, CONF_CONFIG_PATH "settings/advanced/retrofree", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROCACHE, CONF_CONFIG_PATH "settings/advanced/retrocache", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACTIVITY, CONF_CONFIG_PATH "settings/advanced/activity", 1);
-    CFG_STR_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, CONF_CONFIG_PATH "settings/advanced/usb_function", "none");
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, CONF_CONFIG_PATH "settings/advanced/usb_function", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.VERBOSE, CONF_CONFIG_PATH "settings/advanced/verbose", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, CONF_CONFIG_PATH "settings/advanced/rumble", 0);
-    CFG_STR_FIELD(config->SETTINGS.ADVANCED.VOLUME, CONF_CONFIG_PATH "settings/advanced/volume", "previous");
-    CFG_STR_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, CONF_CONFIG_PATH "settings/advanced/brightness", "previous");
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.VOLUME, CONF_CONFIG_PATH "settings/advanced/volume", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, CONF_CONFIG_PATH "settings/advanced/brightness", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.USERINIT, CONF_CONFIG_PATH "settings/advanced/user_init", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.DPADSWAP, CONF_CONFIG_PATH "settings/advanced/dpad_swap", 1);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OVERDRIVE, CONF_CONFIG_PATH "settings/advanced/overdrive", 0);
@@ -113,8 +115,9 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.MAXGPU, CONF_CONFIG_PATH "settings/advanced/maxgpu", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOREADY, CONF_CONFIG_PATH "settings/advanced/audio_ready", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOSWAP, CONF_CONFIG_PATH "settings/advanced/audio_swap", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.USBPART, CONF_CONFIG_PATH "settings/advanced/part_external", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.SECONDPART, CONF_CONFIG_PATH "settings/advanced/part_secondary", 0);
 
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, CONF_CONFIG_PATH "settings/general/hidden", 0);
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, CONF_CONFIG_PATH "settings/general/sound", 0);
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUNDVOL, CONF_CONFIG_PATH "settings/general/soundvol", 100);
     CFG_INT_FIELD(config->SETTINGS.GENERAL.CHIME, CONF_CONFIG_PATH "settings/general/chime", 0);
@@ -173,18 +176,18 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.NETWORK.WAIT, CONF_CONFIG_PATH "settings/network/wait_timer", 5);
     CFG_INT_FIELD(config->SETTINGS.NETWORK.RETRY, CONF_CONFIG_PATH "settings/network/compat_retry", 1);
 
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_ALPHA, CONF_CONFIG_PATH "settings/overlay/gen_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_ANCHOR, CONF_CONFIG_PATH "settings/overlay/gen_anchor", 4);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENERAL_SCALE, CONF_CONFIG_PATH "settings/overlay/gen_scale", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_ALPHA, CONF_CONFIG_PATH "settings/overlay/bat_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_ANCHOR, CONF_CONFIG_PATH "settings/overlay/bat_anchor", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATTERY_SCALE, CONF_CONFIG_PATH "settings/overlay/bat_scale", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLUME_ALPHA, CONF_CONFIG_PATH "settings/overlay/vol_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLUME_ANCHOR, CONF_CONFIG_PATH "settings/overlay/vol_anchor", 2);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLUME_SCALE, CONF_CONFIG_PATH "settings/overlay/vol_scale", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIGHT_ALPHA, CONF_CONFIG_PATH "settings/overlay/bri_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIGHT_ANCHOR, CONF_CONFIG_PATH "settings/overlay/bri_anchor", 2);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIGHT_SCALE, CONF_CONFIG_PATH "settings/overlay/bri_scale", 0);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENALPHA, CONF_CONFIG_PATH "settings/overlay/gen_alpha", 255);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENANCHOR, CONF_CONFIG_PATH "settings/overlay/gen_anchor", 4);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENSCALE, CONF_CONFIG_PATH "settings/overlay/gen_scale", 0);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATALPHA, CONF_CONFIG_PATH "settings/overlay/bat_alpha", 255);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATANCHOR, CONF_CONFIG_PATH "settings/overlay/bat_anchor", 0);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATSCALE, CONF_CONFIG_PATH "settings/overlay/bat_scale", 0);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLALPHA, CONF_CONFIG_PATH "settings/overlay/vol_alpha", 255);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLANCHOR, CONF_CONFIG_PATH "settings/overlay/vol_anchor", 2);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLSCALE, CONF_CONFIG_PATH "settings/overlay/vol_scale", 0);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIALPHA, CONF_CONFIG_PATH "settings/overlay/bri_alpha", 255);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIANCHOR, CONF_CONFIG_PATH "settings/overlay/bri_anchor", 2);
+    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRISCALE, CONF_CONFIG_PATH "settings/overlay/bri_scale", 0);
 
     CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, CONF_CONFIG_PATH "settings/power/low_battery", 0);
     CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, CONF_CONFIG_PATH "settings/power/shutdown", 0);
@@ -199,8 +202,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.NETWORK, CONF_CONFIG_PATH "visual/network", 0);
     CFG_INT_FIELD(config->VISUAL.BLUETOOTH, CONF_CONFIG_PATH "visual/bluetooth", 0);
     CFG_INT_FIELD(config->VISUAL.CLOCK, CONF_CONFIG_PATH "visual/clock", 1);
-    CFG_INT_FIELD(config->VISUAL.OVERLAY_IMAGE, CONF_CONFIG_PATH "visual/overlayimage", 1);
-    CFG_INT_FIELD(config->VISUAL.OVERLAY_TRANSPARENCY, CONF_CONFIG_PATH "visual/overlaytransparency", 85);
+    CFG_INT_FIELD(config->VISUAL.OVERLAYIMAGE, CONF_CONFIG_PATH "visual/overlayimage", 1);
+    CFG_INT_FIELD(config->VISUAL.OVERLAYTRANSPARENCY, CONF_CONFIG_PATH "visual/overlaytransparency", 85);
     CFG_INT_FIELD(config->VISUAL.GRID_MODE_CONTENT, CONF_CONFIG_PATH "visual/gridmodecontent", 0);
     CFG_INT_FIELD(config->VISUAL.BOX_ART, CONF_CONFIG_PATH "visual/boxart", 0);
     CFG_INT_FIELD(config->VISUAL.BOX_ART_ALIGN, CONF_CONFIG_PATH "visual/boxartalign", 0);
@@ -209,14 +212,15 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.NAME, CONF_CONFIG_PATH "visual/name", 0);
     CFG_INT_FIELD(config->VISUAL.DASH, CONF_CONFIG_PATH "visual/dash", 0);
     CFG_INT_FIELD(config->VISUAL.LAUNCH_SWAP, CONF_CONFIG_PATH "visual/launch_swap", 0);
+    CFG_INT_FIELD(config->VISUAL.HIDDEN, CONF_CONFIG_PATH "visual/hidden", 0);
     CFG_INT_FIELD(config->VISUAL.SHUFFLE, CONF_CONFIG_PATH "visual/shuffle", 1);
     CFG_INT_FIELD(config->VISUAL.FRIENDLYFOLDER, CONF_CONFIG_PATH "visual/friendlyfolder", 1);
     CFG_INT_FIELD(config->VISUAL.THETITLEFORMAT, CONF_CONFIG_PATH "visual/thetitleformat", 0);
     CFG_INT_FIELD(config->VISUAL.TITLEINCLUDEROOTDRIVE, CONF_CONFIG_PATH "visual/titleincluderootdrive", 0);
     CFG_INT_FIELD(config->VISUAL.FOLDERITEMCOUNT, CONF_CONFIG_PATH "visual/folderitemcount", 0);
-    CFG_INT_FIELD(config->VISUAL.FOLDEREMPTY, CONF_CONFIG_PATH "visual/folderempty", 0);
-    CFG_INT_FIELD(config->VISUAL.COUNTERFOLDER, CONF_CONFIG_PATH "visual/counterfolder", 1);
-    CFG_INT_FIELD(config->VISUAL.COUNTERFILE, CONF_CONFIG_PATH "visual/counterfile", 1);
+    CFG_INT_FIELD(config->VISUAL.DISPLAYEMPTYFOLDER, CONF_CONFIG_PATH "visual/folderempty", 0);
+    CFG_INT_FIELD(config->VISUAL.MENUCOUNTERFOLDER, CONF_CONFIG_PATH "visual/counterfolder", 1);
+    CFG_INT_FIELD(config->VISUAL.MENUCOUNTERFILE, CONF_CONFIG_PATH "visual/counterfile", 1);
     CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, CONF_CONFIG_PATH "visual/backgroundanimation", 0);
     CFG_INT_FIELD(config->VISUAL.LAUNCHSPLASH, CONF_CONFIG_PATH "visual/launchsplash", 0);
     CFG_INT_FIELD(config->VISUAL.BLACKFADE, CONF_CONFIG_PATH "visual/blackfade", 1);

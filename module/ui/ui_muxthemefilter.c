@@ -2,7 +2,7 @@
 #include "ui_muxthemefilter.h"
 #include "../../common/device.h"
 
-#define THEMEFILTER(NAME, UDATA)          \
+#define THEMEFILTER(NAME, ENUM, UDATA)    \
     lv_obj_t *ui_pnl##NAME##_themefilter; \
     lv_obj_t *ui_lbl##NAME##_themefilter; \
     lv_obj_t *ui_ico##NAME##_themefilter; \
@@ -19,7 +19,7 @@ lv_obj_t *ui_pnlEntry_themefilter;
 lv_obj_t *ui_txtEntry_themefilter;
 
 void init_muxthemefilter(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-#define THEMEFILTER(NAME, UDATA) CREATE_OPTION_ITEM(themefilter, NAME);
+#define THEMEFILTER(NAME, ENUM, UDATA) CREATE_OPTION_ITEM(themefilter, NAME);
     THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 

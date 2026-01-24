@@ -1406,7 +1406,7 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
-    switch (config.VISUAL.OVERLAY_IMAGE) {
+    switch (config.VISUAL.OVERLAYIMAGE) {
         case 0:
             return;
         case 1:
@@ -1421,10 +1421,10 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
             break;
         default:
             snprintf(static_image_path, sizeof(static_image_path), "%s/%s%d.png",
-                     INTERNAL_OVERLAY, mux_dimension, config.VISUAL.OVERLAY_IMAGE);
+                     INTERNAL_OVERLAY, mux_dimension, config.VISUAL.OVERLAYIMAGE);
             if (!file_exist(static_image_path)) {
                 snprintf(static_image_path, sizeof(static_image_path), "%s/standard/%d.png",
-                         INTERNAL_OVERLAY, config.VISUAL.OVERLAY_IMAGE);
+                         INTERNAL_OVERLAY, config.VISUAL.OVERLAYIMAGE);
             }
             int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
             if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
@@ -1433,7 +1433,7 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
 
     if (file_exist(static_image_path)) {
         lv_img_set_src(overlay_image, static_image_embed);
-        lv_obj_set_style_img_opa(overlay_image, config.VISUAL.OVERLAY_TRANSPARENCY, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_opa(overlay_image, config.VISUAL.OVERLAYTRANSPARENCY, MU_OBJ_MAIN_DEFAULT);
         lv_obj_move_foreground(overlay_image);
     }
 }
@@ -3094,7 +3094,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
         *nav_moved = 1;
         int nav_adjust = 0;
 
-        if (strcmp(mux_module, "muxtweakgen") == 0) nav_adjust += (!device.BOARD.HAS_HDMI) ? 1 : 0;
+        if (strcmp(mux_module, "muxtweakgen") == 0) nav_adjust += (!device.BOARD.HASHDMI) ? 1 : 0;
         nav_next_return = text_hit - nav_adjust;
     }
 

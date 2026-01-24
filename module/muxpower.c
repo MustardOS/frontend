@@ -3,7 +3,7 @@
 
 #define UI_COUNT 8
 
-#define POWER(NAME, UDATA) static int NAME##_original;
+#define POWER(NAME, ENUM, UDATA) static int NAME##_original;
 POWER_ELEMENTS
 #undef POWER
 
@@ -18,23 +18,18 @@ char **gov_values_disp = NULL;
 
 size_t gov_count = 0;
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblShutdown_power,    lang.MUXPOWER.HELP.SLEEP_FUNCTION},
-            {ui_lblBattery_power,     lang.MUXPOWER.HELP.LOW_BATTERY},
-            {ui_lblIdleDisplay_power, lang.MUXPOWER.HELP.IDLE.DISPLAY},
-            {ui_lblIdleSleep_power,   lang.MUXPOWER.HELP.IDLE.SLEEP},
-            {ui_lblIdleMute_power,    lang.MUXPOWER.HELP.IDLE.MUTE},
-            {ui_lblGovIdle_power,     lang.MUXPOWER.HELP.GOV.IDLE},
-            {ui_lblGovDefault_power,  lang.MUXPOWER.HELP.GOV.DEFAULT},
-            {ui_lblScreensaver_power, lang.MUXPOWER.HELP.SCREENSAVER},
+#define POWER(NAME, ENUM, UDATA) { ui_lbl##NAME##_power, lang.MUXPOWER.HELP.ENUM },
+            POWER_ELEMENTS
+#undef POWER
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define POWER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_power);
+#define POWER(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_power);
     POWER_ELEMENTS
 #undef POWER
 
@@ -308,7 +303,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -323,7 +318,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define POWER(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_power, UDATA);
+#define POWER(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_power, UDATA);
     POWER_ELEMENTS
 #undef POWER
 

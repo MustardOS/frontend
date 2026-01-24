@@ -30,7 +30,7 @@ void init_muxcharge(void) {
     apply_gradient_to_ui_screen(ui_scrCharge_charge, &theme, &device);
 
     lv_obj_clear_flag(ui_scrCharge_charge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
-                                           LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
+LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_set_scrollbar_mode(ui_scrCharge_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_color(ui_scrCharge_charge, lv_color_hex(theme.SYSTEM.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrCharge_charge, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
@@ -78,8 +78,7 @@ void init_muxcharge(void) {
     lv_obj_clear_flag(ui_lblCapacity_charge,
                       LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                      LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                      LV_OBJ_FLAG_SCROLL_CHAIN);
+                      LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_lblCapacity_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblCapacity_charge, LV_DIR_LEFT);
     lv_obj_set_style_text_color(ui_lblCapacity_charge, lv_color_hex(theme.CHARGER.TEXT), MU_OBJ_MAIN_DEFAULT);
@@ -96,8 +95,7 @@ void init_muxcharge(void) {
     lv_obj_clear_flag(ui_lblVoltage_charge,
                       LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                      LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                      LV_OBJ_FLAG_SCROLL_CHAIN);
+                      LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_lblVoltage_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblVoltage_charge, LV_DIR_LEFT);
     lv_obj_set_style_text_color(ui_lblVoltage_charge, lv_color_hex(theme.CHARGER.TEXT), MU_OBJ_MAIN_DEFAULT);
@@ -114,8 +112,7 @@ void init_muxcharge(void) {
     lv_obj_clear_flag(ui_lblBoot_charge,
                       LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                      LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                      LV_OBJ_FLAG_SCROLL_CHAIN);
+                      LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_lblBoot_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblBoot_charge, LV_DIR_LEFT);
     lv_obj_set_style_text_color(ui_lblBoot_charge, lv_color_hex(theme.CHARGER.TEXT), MU_OBJ_MAIN_DEFAULT);

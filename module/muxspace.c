@@ -11,8 +11,8 @@ struct mount {
     const char *partition;
 };
 
-static void show_help(lv_obj_t *element_focused) {
-    show_info_box(TS(lv_label_get_text(element_focused)), lang.MUXSPACE.HELP, 0);
+static void show_help() {
+    show_info_box(lang.MUXSPACE.TITLE, lang.MUXSPACE.HELP, 0);
 }
 
 static void init_space_bars(void) {
@@ -134,7 +134,7 @@ static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -147,7 +147,7 @@ static void init_elements(void) {
             {NULL, NULL,                         0}
     });
 
-#define SPACE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_space, UDATA);
+#define SPACE(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_space, UDATA);
     SPACE_ELEMENTS
 #undef SPACE
 

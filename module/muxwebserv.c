@@ -3,34 +3,30 @@
 
 #define UI_COUNT 5
 
-#define WEBSERV(NAME, UDATA) static int NAME##_original;
+#define WEBSERV(NAME, ENUM, UDATA) static int NAME##_original;
 WEBSERV_ELEMENTS
 #undef WEBSERV
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblSshd_webserv,       lang.MUXWEBSERV.HELP.SHELL},
-            {ui_lblSftpGo_webserv,     lang.MUXWEBSERV.HELP.SFTP},
-            {ui_lblTtyd_webserv,       lang.MUXWEBSERV.HELP.TERMINAL},
-            {ui_lblSyncthing_webserv,  lang.MUXWEBSERV.HELP.SYNCTHING},
-            {ui_lblTailscaled_webserv, lang.MUXWEBSERV.HELP.TAILSCALE},
+#define WEBSERV(NAME, ENUM, UDATA) { ui_lbl##NAME##_webserv, lang.MUXWEBSERV.HELP.ENUM },
+            WEBSERV_ELEMENTS
+#undef WEBSERV
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define WEBSERV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_webserv);
+#define WEBSERV(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_webserv);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 }
 
 static void restore_web_options(void) {
-    lv_dropdown_set_selected(ui_droSshd_webserv, config.WEB.SSHD);
-    lv_dropdown_set_selected(ui_droSftpGo_webserv, config.WEB.SFTPGO);
-    lv_dropdown_set_selected(ui_droTtyd_webserv, config.WEB.TTYD);
-    lv_dropdown_set_selected(ui_droSyncthing_webserv, config.WEB.SYNCTHING);
-    lv_dropdown_set_selected(ui_droTailscaled_webserv, config.WEB.TAILSCALED);
+#define WEBSERV(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_webserv, config.WEB.ENUM);
+    WEBSERV_ELEMENTS
+#undef WEBSERV
 }
 
 static void save_web_options(void) {
@@ -58,11 +54,11 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_OPTION_ITEM(-1, webserv, Sshd, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, SftpGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, Ttyd, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Sshd, lang.MUXWEBSERV.SSHD, "sshd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, SftpGo, lang.MUXWEBSERV.SFTPGO, "sftpgo", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Ttyd, lang.MUXWEBSERV.TTYD, "ttyd", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALED, "tailscaled", disabled_enabled, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
@@ -116,7 +112,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -131,7 +127,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define WEBSERV(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_webserv, UDATA);
+#define WEBSERV(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_webserv, UDATA);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 

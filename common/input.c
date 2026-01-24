@@ -643,7 +643,7 @@ static void handle_inputs(const mux_input_options *opts) {
                 dispatch_input(opts, i, MUX_INPUT_PRESS);
 
                 // Initial repeat delay
-                hold_delay[i] = config.SETTINGS.ADVANCED.REPEAT_DELAY;
+                hold_delay[i] = config.SETTINGS.ADVANCED.REPEATDELAY;
                 hold_tick[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
                 // Pressed & held: Invoke "hold" handler.
@@ -704,7 +704,7 @@ static void handle_combos(const mux_input_options *opts) {
                 dispatch_combo(opts, i, MUX_INPUT_PRESS);
 
                 // Initial repeat delay
-                hold_delay = config.SETTINGS.ADVANCED.REPEAT_DELAY;
+                hold_delay = config.SETTINGS.ADVANCED.REPEATDELAY;
                 hold_tick = tick;
                 active_combo = i;
 
@@ -943,7 +943,7 @@ void mux_input_task(const mux_input_options *opts) {
         LOG_WARN("input", "Failed to create wake pipe; shutdown may be slower");
     }
 
-    struct epoll_event epoll_event_arr[device.BOARD.EVENT];
+    struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
     struct epoll_event ev;
     memset(&ev, 0, sizeof(ev));
 
@@ -1005,7 +1005,7 @@ void mux_input_task(const mux_input_options *opts) {
     if (is_switch_held(opts->general_fd)) pressed = (pressed | BIT(MUX_INPUT_SWITCH));
 
     while (!stop_flag) {
-        int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.EVENT, held ? timeout_hold : timeout);
+        int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.HASEVENT, held ? timeout_hold : timeout);
 
         if (num_events == -1) {
             int e = errno;

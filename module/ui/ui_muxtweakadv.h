@@ -5,7 +5,7 @@
 
 void init_muxtweakadv(lv_obj_t *ui_pnlContent);
 
-#define TWEAKADV(NAME, UDATA)                 \
+#define TWEAKADV(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_tweakadv; \
     extern lv_obj_t *ui_lbl##NAME##_tweakadv; \
     extern lv_obj_t *ui_ico##NAME##_tweakadv; \

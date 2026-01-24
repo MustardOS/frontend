@@ -3,38 +3,24 @@
 
 #define UI_COUNT 17
 
-#define VISUAL(NAME, UDATA) static int NAME##_original;
+#define VISUAL(NAME, ENUM, UDATA) static int NAME##_original;
 VISUAL_ELEMENTS
 #undef VISUAL
 
 static int overlay_count;
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblBattery_visual,               lang.MUXVISUAL.HELP.BATTERY},
-            {ui_lblClock_visual,                 lang.MUXVISUAL.HELP.CLOCK},
-            {ui_lblNetwork_visual,               lang.MUXVISUAL.HELP.NETWORK},
-            {ui_lblName_visual,                  lang.MUXVISUAL.HELP.NAME},
-            {ui_lblDash_visual,                  lang.MUXVISUAL.HELP.DASH},
-            {ui_lblFriendlyFolder_visual,        lang.MUXVISUAL.HELP.FRIENDLY},
-            {ui_lblTheTitleFormat_visual,        lang.MUXVISUAL.HELP.REFORMAT},
-            {ui_lblTitleIncludeRootDrive_visual, lang.MUXVISUAL.HELP.ROOT},
-            {ui_lblFolderItemCount_visual,       lang.MUXVISUAL.HELP.COUNT},
-            {ui_lblDisplayEmptyFolder_visual,    lang.MUXVISUAL.HELP.EMPTY},
-            {ui_lblMenuCounterFolder_visual,     lang.MUXVISUAL.HELP.COUNT_FOLDER},
-            {ui_lblMenuCounterFile_visual,       lang.MUXVISUAL.HELP.COUNT_FILE},
-            {ui_lblHidden_visual,                lang.MUXVISUAL.HELP.HIDDEN},
-            {ui_lblContentCollect_visual,        lang.MUXVISUAL.HELP.CONTENTCOLLECT},
-            {ui_lblContentHistory_visual,        lang.MUXVISUAL.HELP.CONTENTHISTORY},
-            {ui_lblOverlayImage_visual,          lang.MUXVISUAL.HELP.OVERLAY_IMAGE},
-            {ui_lblOverlayTransparency_visual,   lang.MUXVISUAL.HELP.OVERLAY_TRANSPARENCY},
+#define VISUAL(NAME, ENUM, UDATA) { ui_lbl##NAME##_visual, lang.MUXVISUAL.HELP.ENUM },
+            VISUAL_ELEMENTS
+#undef VISUAL
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define VISUAL(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
+#define VISUAL(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
     VISUAL_ELEMENTS
 #undef VISUAL
 
@@ -42,23 +28,12 @@ static void init_dropdown_settings(void) {
 }
 
 static void restore_visual_options(void) {
-    lv_dropdown_set_selected(ui_droBattery_visual, config.VISUAL.BATTERY);
-    lv_dropdown_set_selected(ui_droClock_visual, config.VISUAL.CLOCK);
-    lv_dropdown_set_selected(ui_droNetwork_visual, config.VISUAL.NETWORK);
-    lv_dropdown_set_selected(ui_droName_visual, config.VISUAL.NAME);
-    lv_dropdown_set_selected(ui_droDash_visual, config.VISUAL.DASH);
-    lv_dropdown_set_selected(ui_droFriendlyFolder_visual, config.VISUAL.FRIENDLYFOLDER);
-    lv_dropdown_set_selected(ui_droTheTitleFormat_visual, config.VISUAL.THETITLEFORMAT);
-    lv_dropdown_set_selected(ui_droTitleIncludeRootDrive_visual, config.VISUAL.TITLEINCLUDEROOTDRIVE);
-    lv_dropdown_set_selected(ui_droFolderItemCount_visual, config.VISUAL.FOLDERITEMCOUNT);
-    lv_dropdown_set_selected(ui_droDisplayEmptyFolder_visual, config.VISUAL.FOLDEREMPTY);
-    lv_dropdown_set_selected(ui_droMenuCounterFolder_visual, config.VISUAL.COUNTERFOLDER);
-    lv_dropdown_set_selected(ui_droMenuCounterFile_visual, config.VISUAL.COUNTERFILE);
-    lv_dropdown_set_selected(ui_droHidden_visual, config.SETTINGS.GENERAL.HIDDEN);
-    lv_dropdown_set_selected(ui_droContentCollect_visual, config.VISUAL.CONTENTCOLLECT);
-    lv_dropdown_set_selected(ui_droContentHistory_visual, config.VISUAL.CONTENTHISTORY);
-    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
-    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAY_TRANSPARENCY, 0, 100));
+#define VISUAL(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_visual, config.VISUAL.ENUM);
+    VISUAL_ELEMENTS
+#undef VISUAL
+
+    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAYIMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAYIMAGE);
+    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAYTRANSPARENCY, 0, 100));
 }
 
 static void save_visual_options(void) {
@@ -76,7 +51,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, DisplayEmptyFolder, "visual/folderempty", INT, 0);
     CHECK_AND_SAVE_STD(visual, MenuCounterFolder, "visual/counterfolder", INT, 0);
     CHECK_AND_SAVE_STD(visual, MenuCounterFile, "visual/counterfile", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Hidden, "settings/general/hidden", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Hidden, "visual/hidden", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
@@ -106,13 +81,13 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLY, "friendlyfolder", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.REFORMAT, "thetitleformat", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, TitleIncludeRootDrive, lang.MUXVISUAL.ROOT, "titleincluderootdrive", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, FolderItemCount, lang.MUXVISUAL.COUNT, "folderitemcount", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, DisplayEmptyFolder, lang.MUXVISUAL.EMPTY, "folderempty", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, MenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, "counterfolder", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, MenuCounterFile, lang.MUXVISUAL.COUNT_FILE, "counterfile", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLYFOLDER, "friendlyfolder", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.THETITLEFORMAT, "thetitleformat", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, TitleIncludeRootDrive, lang.MUXVISUAL.TITLEINCLUDEROOTDRIVE, "titleincluderootdrive", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, FolderItemCount, lang.MUXVISUAL.FOLDERITEMCOUNT, "folderitemcount", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, DisplayEmptyFolder, lang.MUXVISUAL.DISPLAYEMPTYFOLDER, "folderempty", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, MenuCounterFolder, lang.MUXVISUAL.MENUCOUNTERFOLDER, "counterfolder", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, MenuCounterFile, lang.MUXVISUAL.MENUCOUNTERFILE, "counterfile", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", show_noicon_hide, 3);
     INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", show_noicon_hide, 3);
@@ -128,7 +103,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    if (!device.BOARD.HAS_NETWORK) HIDE_OPTION_ITEM(visual, Network);
+    if (!device.BOARD.HASNETWORK) HIDE_OPTION_ITEM(visual, Network);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -178,7 +153,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -193,7 +168,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define VISUAL(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_visual, UDATA);
+#define VISUAL(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_visual, UDATA);
     VISUAL_ELEMENTS
 #undef VISUAL
 

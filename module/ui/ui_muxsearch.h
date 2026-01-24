@@ -6,7 +6,7 @@
 
 void init_muxsearch(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme);
 
-#define SEARCH(NAME, UDATA)                      \
+#define SEARCH(NAME, ENUM, UDATA)                \
     extern lv_obj_t *ui_pnl##NAME##_search;      \
     extern lv_obj_t *ui_lbl##NAME##_search;      \
     extern lv_obj_t *ui_ico##NAME##_search;      \

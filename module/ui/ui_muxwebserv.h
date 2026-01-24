@@ -5,7 +5,7 @@
 
 void init_muxwebserv(lv_obj_t *ui_pnlContent);
 
-#define WEBSERV(NAME, UDATA)                 \
+#define WEBSERV(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_webserv; \
     extern lv_obj_t *ui_lbl##NAME##_webserv; \
     extern lv_obj_t *ui_ico##NAME##_webserv; \

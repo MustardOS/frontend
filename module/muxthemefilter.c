@@ -5,33 +5,30 @@
 
 static char lookup_original_value[MAX_BUFFER_SIZE];
 
-#define THEMEFILTER(NAME, UDATA) static int NAME##_original;
+#define THEMEFILTER(NAME, ENUM, UDATA) static int NAME##_original;
 THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblAllThemes_themefilter, lang.MUXTHEMEFILTER.HELP.COMPATIBILITY},
-            {ui_lblGrid_themefilter,      lang.MUXTHEMEFILTER.HELP.GRID},
-            {ui_lblHdmi_themefilter,      lang.MUXTHEMEFILTER.HELP.HDMI},
-            {ui_lblLanguage_themefilter,  lang.MUXTHEMEFILTER.HELP.LANGUAGE},
-            {ui_lblLookup_themefilter,    lang.MUXTHEMEFILTER.HELP.LOOKUP},
+#define THEMEFILTER(NAME, ENUM, UDATA) { ui_lbl##NAME##_themefilter, lang.MUXTHEMEFILTER.HELP.ENUM },
+            THEMEFILTER_ELEMENTS
+#undef THEMEFILTER
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define THEMEFILTER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_themefilter);
+#define THEMEFILTER(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_themefilter);
     THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 }
 
 static void restore_theme_filter_options(void) {
-    lv_dropdown_set_selected(ui_droAllThemes_themefilter, config.THEME.FILTER.ALL_THEMES);
-    lv_dropdown_set_selected(ui_droGrid_themefilter, config.THEME.FILTER.GRID);
-    lv_dropdown_set_selected(ui_droHdmi_themefilter, config.THEME.FILTER.HDMI);
-    lv_dropdown_set_selected(ui_droLanguage_themefilter, config.THEME.FILTER.LANGUAGE);
+#define THEMEFILTER(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_themefilter, config.THEME.FILTER.ENUM);
+    THEMEFILTER_ELEMENTS
+#undef THEMEFILTER
 }
 
 static void save_theme_filter_options(void) {
@@ -66,7 +63,7 @@ static void init_navigation_group(void) {
             lang.MUXTHEMEFILTER.COMPAT.ALL,
     };
 
-    INIT_OPTION_ITEM(-1, themefilter, AllThemes, lang.MUXTHEMEFILTER.COMPATIBILITY, "theme", theme_compat_opt, 2);
+    INIT_OPTION_ITEM(-1, themefilter, AllThemes, lang.MUXTHEMEFILTER.ALLTHEMES, "theme", theme_compat_opt, 2);
     INIT_OPTION_ITEM(-1, themefilter, Grid, lang.MUXTHEMEFILTER.GRID, "grid", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, themefilter, Hdmi, lang.MUXTHEMEFILTER.HDMI, "hdmi", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, themefilter, Language, lang.MUXTHEMEFILTER.LANGUAGE, "language", disabled_enabled, 2);
@@ -221,7 +218,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void handle_up(void) {
@@ -280,7 +277,7 @@ static void init_elements(void) {
 
     check_focus();
 
-#define THEMEFILTER(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_themefilter, UDATA);
+#define THEMEFILTER(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_themefilter, UDATA);
     THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 

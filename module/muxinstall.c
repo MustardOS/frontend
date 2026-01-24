@@ -6,17 +6,13 @@
 static void list_nav_move(int steps, int direction);
 
 static void show_help() {
-    struct {
-        char *title;
-        char *content;
-    } help_messages[] = {
-            {lang.MUXINSTALL.DATETIME, lang.MUXINSTALL.HELP.DATETIME},
-            {lang.MUXINSTALL.LANGUAGE, lang.MUXINSTALL.HELP.LANGUAGE},
-            {lang.MUXINSTALL.SHUTDOWN, lang.MUXINSTALL.HELP.SHUTDOWN},
-            {lang.MUXINSTALL.INSTALL,  lang.MUXINSTALL.HELP.INSTALL},
+    struct help_msg help_messages[] = {
+#define INSTALL(NAME, ENUM, UDATA) { ui_lbl##NAME##_install, lang.MUXINSTALL.HELP.ENUM },
+            INSTALL_ELEMENTS
+#undef INSTALL
     };
 
-    show_info_box(help_messages[current_item_index].title, help_messages[current_item_index].content, 0);
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
@@ -36,15 +32,13 @@ static void init_navigation_group_grid(char *item_labels[], char *item_grid_labe
         if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
 
         char grid_img[MAX_BUFFER_SIZE];
-        load_element_image_specifics(mux_dimension, mux_module, "grid", glyph_names[i],
-                                     "default", "png", grid_img, sizeof(grid_img));
+        load_element_image_specifics(mux_dimension, mux_module, "grid", glyph_names[i], "default", "png", grid_img, sizeof(grid_img));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
 
         char grid_img_foc[MAX_BUFFER_SIZE];
-        load_element_image_specifics(mux_dimension, mux_module, "grid", glyph_name_focused,
-                                     "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
+        load_element_image_specifics(mux_dimension, mux_module, "grid", glyph_name_focused, "default_focused", "png", grid_img_foc, sizeof(grid_img_foc));
 
         content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);
 
@@ -69,20 +63,26 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *item_labels[] = {lang.MUXINSTALL.DATETIME,
-                           lang.MUXINSTALL.LANGUAGE,
-                           lang.MUXINSTALL.SHUTDOWN,
-                           lang.MUXINSTALL.INSTALL};
+    char *item_labels[] = {
+            lang.MUXINSTALL.RTC,
+            lang.MUXINSTALL.LANGUAGE,
+            lang.MUXINSTALL.SHUTDOWN,
+            lang.MUXINSTALL.INSTALL
+    };
 
-    char *item_labels_short[] = {lang.MUXINSTALL.SHORT.DATETIME,
-                                 lang.MUXINSTALL.SHORT.LANGUAGE,
-                                 lang.MUXINSTALL.SHORT.SHUTDOWN,
-                                 lang.MUXINSTALL.SHORT.INSTALL};
+    char *item_labels_short[] = {
+            lang.MUXINSTALL.SHORT.RTC,
+            lang.MUXINSTALL.SHORT.LANGUAGE,
+            lang.MUXINSTALL.SHORT.SHUTDOWN,
+            lang.MUXINSTALL.SHORT.INSTALL
+    };
 
-    char *glyph_names[] = {"clock",
-                           "language",
-                           "shutdown",
-                           "install"};
+    char *glyph_names[] = {
+            "clock",
+            "language",
+            "shutdown",
+            "install"
+    };
 
     reset_ui_groups();
 
@@ -196,11 +196,9 @@ static void handle_up(void) {
 
     // Grid mode.  Wrap on Row.
     if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && !get_grid_column_index(current_item_index)) {
-        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ?
-                      grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
+        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ? grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
         // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 &&
-               (!current_item_index || current_item_index == 4)) {
+    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && (!current_item_index || current_item_index == 4)) {
         list_nav_next(3);
         // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
     } else if (theme.MISC.NAVIGATION_TYPE == 5 && !current_item_index) {
@@ -217,12 +215,10 @@ static void handle_down(void) {
     if (msgbox_active) return;
 
     // Grid Navigation.  Wrap on Row.
-    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 &&
-        get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1) {
+    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1) {
         list_nav_prev(get_grid_row_item_count(current_item_index) - 1);
         // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 &&
-               (current_item_index == 3 || current_item_index == 7)) {
+    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && (current_item_index == 3 || current_item_index == 7)) {
         list_nav_prev(3);
         // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
     } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 2) {
@@ -374,7 +370,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-#define INSTALL(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_install, UDATA);
+#define INSTALL(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_install, UDATA);
     INSTALL_ELEMENTS
 #undef INSTALL
 

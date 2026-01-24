@@ -1,7 +1,7 @@
 #include "ui_muxshare.h"
 #include "ui_muxoption.h"
 
-#define OPTION(NAME, UDATA)          \
+#define OPTION(NAME, ENUM, UDATA)    \
     lv_obj_t *ui_pnl##NAME##_option; \
     lv_obj_t *ui_lbl##NAME##_option; \
     lv_obj_t *ui_ico##NAME##_option; \
@@ -11,7 +11,7 @@ OPTION_ELEMENTS
 #undef OPTION
 
 void init_muxoption(lv_obj_t *ui_pnlContent) {
-#define OPTION(NAME, UDATA) CREATE_VALUE_ITEM(option, NAME);
+#define OPTION(NAME, ENUM, UDATA) CREATE_VALUE_ITEM(option, NAME);
     OPTION_ELEMENTS
 #undef OPTION
 

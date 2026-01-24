@@ -3,60 +3,22 @@
 
 #define UI_COUNT 41
 
-#define KIOSK(NAME, UDATA) static int NAME##_original;
+#define KIOSK(NAME, ENUM, UDATA) static int NAME##_original;
 KIOSK_ELEMENTS
 #undef KIOSK
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblEnable_kiosk,     lang.MUXKIOSK.HELP.ENABLE},
-            {ui_lblMessage_kiosk,    lang.MUXKIOSK.HELP.MESSAGE},
-            {ui_lblArchive_kiosk,    lang.MUXKIOSK.HELP.ARCHIVE},
-            {ui_lblTask_kiosk,       lang.MUXKIOSK.HELP.TASK},
-            {ui_lblCustom_kiosk,     lang.MUXKIOSK.HELP.CUSTOM},
-            {ui_lblLanguage_kiosk,   lang.MUXKIOSK.HELP.LANGUAGE},
-            {ui_lblNetwork_kiosk,    lang.MUXKIOSK.HELP.NETWORK},
-            {ui_lblStorage_kiosk,    lang.MUXKIOSK.HELP.STORAGE},
-            {ui_lblBackup_kiosk,     lang.MUXKIOSK.HELP.BACKUP},
-            {ui_lblNetAdv_kiosk,     lang.MUXKIOSK.HELP.NETADV},
-            {ui_lblWebServ_kiosk,    lang.MUXKIOSK.HELP.WEBSERV},
-            {ui_lblCore_kiosk,       lang.MUXKIOSK.HELP.CORE},
-            {ui_lblGovernor_kiosk,   lang.MUXKIOSK.HELP.GOVERNOR},
-            {ui_lblControl_kiosk,    lang.MUXKIOSK.HELP.CONTROL},
-            {ui_lblOption_kiosk,     lang.MUXKIOSK.HELP.OPTION},
-            {ui_lblRetroArch_kiosk,  lang.MUXKIOSK.HELP.RETROARCH},
-            {ui_lblSearch_kiosk,     lang.MUXKIOSK.HELP.SEARCH},
-            {ui_lblTag_kiosk,        lang.MUXKIOSK.HELP.TAG},
-            {ui_lblCatalogue_kiosk,  lang.MUXKIOSK.HELP.CATALOGUE},
-            {ui_lblRAConfig_kiosk,   lang.MUXKIOSK.HELP.RACONFIG},
-            {ui_lblTheme_kiosk,      lang.MUXKIOSK.HELP.THEME},
-            {ui_lblThemeDown_kiosk,  lang.MUXKIOSK.HELP.THEME_DOWN},
-            {ui_lblClock_kiosk,      lang.MUXKIOSK.HELP.CLOCK},
-            {ui_lblTimezone_kiosk,   lang.MUXKIOSK.HELP.TIMEZONE},
-            {ui_lblApps_kiosk,       lang.MUXKIOSK.HELP.APPS},
-            {ui_lblConfig_kiosk,     lang.MUXKIOSK.HELP.CONFIG},
-            {ui_lblExplore_kiosk,    lang.MUXKIOSK.HELP.EXPLORE},
-            {ui_lblCollectMod_kiosk, lang.MUXKIOSK.HELP.COLLECTION.MAIN},
-            {ui_lblCollectAdd_kiosk, lang.MUXKIOSK.HELP.COLLECTION.ADD_CONTENT},
-            {ui_lblCollectNew_kiosk, lang.MUXKIOSK.HELP.COLLECTION.NEW_DIR},
-            {ui_lblCollectRem_kiosk, lang.MUXKIOSK.HELP.COLLECTION.REMOVE},
-            {ui_lblCollectAcc_kiosk, lang.MUXKIOSK.HELP.COLLECTION.ACCESS},
-            {ui_lblHistoryMod_kiosk, lang.MUXKIOSK.HELP.HISTORY.MAIN},
-            {ui_lblHistoryRem_kiosk, lang.MUXKIOSK.HELP.HISTORY.REMOVE},
-            {ui_lblInfo_kiosk,       lang.MUXKIOSK.HELP.INFO},
-            {ui_lblAdvanced_kiosk,   lang.MUXKIOSK.HELP.ADVANCED},
-            {ui_lblGeneral_kiosk,    lang.MUXKIOSK.HELP.GENERAL},
-            {ui_lblHdmi_kiosk,       lang.MUXKIOSK.HELP.HDMI},
-            {ui_lblPower_kiosk,      lang.MUXKIOSK.HELP.POWER},
-            {ui_lblVisual_kiosk,     lang.MUXKIOSK.HELP.VISUAL},
-            {ui_lblOverlay_kiosk,     lang.MUXKIOSK.HELP.OVERLAY},
+#define KIOSK(NAME, ENUM, UDATA) { ui_lbl##NAME##_kiosk, lang.MUXKIOSK.HELP.ENUM },
+            KIOSK_ELEMENTS
+#undef KIOSK
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define KIOSK(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_kiosk);
+#define KIOSK(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_kiosk);
     KIOSK_ELEMENTS
 #undef KIOSK
 }
@@ -187,7 +149,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Theme, lang.MUXKIOSK.THEME, "theme", allowed_restricted, 2);
-    INIT_OPTION_ITEM(-1, kiosk, ThemeDown, lang.MUXKIOSK.THEME_DOWN, "theme_down", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, ThemeDown, lang.MUXKIOSK.THEMEDOWN, "theme_down", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Clock, lang.MUXKIOSK.CLOCK, "clock", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Timezone, lang.MUXKIOSK.TIMEZONE, "timezone", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Apps, lang.MUXKIOSK.APPS, "apps", allowed_restricted, 2);
@@ -260,7 +222,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -275,7 +237,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define KIOSK(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_kiosk, UDATA);
+#define KIOSK(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_kiosk, UDATA);
     KIOSK_ELEMENTS
 #undef KIOSK
 

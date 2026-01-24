@@ -5,7 +5,7 @@
 
 void init_muxdanger(lv_obj_t *ui_pnlContent);
 
-#define DANGER(NAME, UDATA)                 \
+#define DANGER(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_danger; \
     extern lv_obj_t *ui_lbl##NAME##_danger; \
     extern lv_obj_t *ui_ico##NAME##_danger; \

@@ -5,7 +5,7 @@
 
 void init_muxkiosk(lv_obj_t *ui_pnlContent);
 
-#define KIOSK(NAME, UDATA)                 \
+#define KIOSK(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_kiosk; \
     extern lv_obj_t *ui_lbl##NAME##_kiosk; \
     extern lv_obj_t *ui_ico##NAME##_kiosk; \

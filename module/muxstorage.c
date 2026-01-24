@@ -12,26 +12,14 @@ struct storage storage_path[UI_COUNT];
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblApps_storage,       lang.MUXSTORAGE.HELP.APPS},
-            {ui_lblBios_storage,       lang.MUXSTORAGE.HELP.BIOS},
-            {ui_lblCatalogue_storage,  lang.MUXSTORAGE.HELP.CATALOGUE},
-            {ui_lblCollection_storage, lang.MUXSTORAGE.HELP.COLLECTION},
-            {ui_lblHistory_storage,    lang.MUXSTORAGE.HELP.HISTORY},
-            {ui_lblInit_storage,       lang.MUXSTORAGE.HELP.INIT},
-            {ui_lblMusic_storage,      lang.MUXSTORAGE.HELP.MUSIC},
-            {ui_lblName_storage,       lang.MUXSTORAGE.HELP.NAME},
-            {ui_lblNetwork_storage,    lang.MUXSTORAGE.HELP.NETWORK},
-            {ui_lblPackage_storage,    lang.MUXSTORAGE.HELP.PACKAGE},
-            {ui_lblSave_storage,       lang.MUXSTORAGE.HELP.SAVE},
-            {ui_lblScreenshot_storage, lang.MUXSTORAGE.HELP.SCREENSHOT},
-            {ui_lblSyncthing_storage,  lang.MUXSTORAGE.HELP.SYNCTHING},
-            {ui_lblTheme_storage,      lang.MUXSTORAGE.HELP.THEME},
-            {ui_lblTrack_storage,      lang.MUXSTORAGE.HELP.TRACK},
+#define STORAGE(NAME, ENUM, UDATA) { ui_lbl##NAME##_storage, lang.MUXSTORAGE.HELP.ENUM },
+            STORAGE_ELEMENTS
+#undef STORAGE
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static inline void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
@@ -178,7 +166,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -193,7 +181,7 @@ static void init_elements(void) {
             {NULL, NULL,                         0}
     });
 
-#define STORAGE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_storage, UDATA);
+#define STORAGE(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_storage, UDATA);
     STORAGE_ELEMENTS
 #undef STORAGE
 

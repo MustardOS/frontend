@@ -15,13 +15,14 @@ static int group_index = 0;
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblGovernor_appcon, lang.MUXAPPCON.HELP.GOVERNOR},
-            {ui_lblControl_appcon,  lang.MUXAPPCON.HELP.CONTROL},
+#define APPCON(NAME, ENUM, UDATA) { ui_lbl##NAME##_appcon, lang.MUXAPPCON.HELP.ENUM },
+            APPCON_ELEMENTS
+#undef APPCON
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void add_static_item(int index, const char *item_label, const char *item_value,
@@ -160,7 +161,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -175,7 +176,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-#define APPCON(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_appcon, UDATA);
+#define APPCON(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_appcon, UDATA);
     APPCON_ELEMENTS
 #undef APPCON
 

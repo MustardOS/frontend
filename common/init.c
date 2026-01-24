@@ -350,13 +350,13 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
         timer_suspend(&timer_capacity);
     }
 
-    if (device.BOARD.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH) {
+    if (device.BOARD.HASBLUETOOTH && config.VISUAL.BLUETOOTH) {
         timer_ensure(&timer_bluetooth, bluetooth_task, TIMER_BLUETOOTH, NULL);
     } else {
         timer_suspend(&timer_bluetooth);
     }
 
-    if (device.BOARD.HAS_NETWORK && config.VISUAL.NETWORK) {
+    if (device.BOARD.HASNETWORK && config.VISUAL.NETWORK) {
         timer_ensure(&timer_network, network_task, TIMER_NETWORK, NULL);
     } else {
         timer_suspend(&timer_network);

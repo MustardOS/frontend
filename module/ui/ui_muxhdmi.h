@@ -5,7 +5,7 @@
 
 void init_muxhdmi(lv_obj_t *ui_pnlContent);
 
-#define HDMI(NAME, UDATA)                 \
+#define HDMI(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_hdmi; \
     extern lv_obj_t *ui_lbl##NAME##_hdmi; \
     extern lv_obj_t *ui_ico##NAME##_hdmi; \

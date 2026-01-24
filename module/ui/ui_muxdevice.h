@@ -5,7 +5,7 @@
 
 void init_muxdevice(lv_obj_t *ui_pnlContent);
 
-#define DEVICE(NAME, UDATA)                 \
+#define DEVICE(NAME, ENUM, UDATA)           \
     extern lv_obj_t *ui_pnl##NAME##_device; \
     extern lv_obj_t *ui_lbl##NAME##_device; \
     extern lv_obj_t *ui_ico##NAME##_device; \

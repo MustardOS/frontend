@@ -5,7 +5,7 @@
 
 void init_muxrtc(lv_obj_t *ui_pnlContent);
 
-#define RTC(NAME, UDATA)                      \
+#define RTC(NAME, ENUM, UDATA)                \
     extern lv_obj_t *ui_pnl##NAME##_rtc;      \
     extern lv_obj_t *ui_lbl##NAME##_rtc;      \
     extern lv_obj_t *ui_ico##NAME##_rtc;      \

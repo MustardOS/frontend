@@ -5,21 +5,14 @@
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblHostname_netinfo,  lang.MUXNETINFO.HELP.HOSTNAME},
-            {ui_lblMac_netinfo,       lang.MUXNETINFO.HELP.MAC},
-            {ui_lblIp_netinfo,        lang.MUXNETINFO.HELP.IP},
-            {ui_lblSsid_netinfo,      lang.MUXNETINFO.HELP.SSID},
-            {ui_lblGateway_netinfo,   lang.MUXNETINFO.HELP.GATEWAY},
-            {ui_lblDns_netinfo,       lang.MUXNETINFO.HELP.DNS},
-            {ui_lblSignal_netinfo,    lang.MUXNETINFO.HELP.SIGNAL},
-            {ui_lblChannel_netinfo,   lang.MUXNETINFO.HELP.CHANNEL},
-            {ui_lblAcTraffic_netinfo, lang.MUXNETINFO.HELP.ACTRAFFIC},
-            {ui_lblTpTraffic_netinfo, lang.MUXNETINFO.HELP.TPTRAFFIC},
+#define NETINFO(NAME, ENUM, UDATA) { ui_lbl##NAME##_netinfo, lang.MUXNETINFO.HELP.ENUM },
+            NETINFO_ELEMENTS
+#undef NETINFO
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static const char *get_hostname(void) {
@@ -509,7 +502,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void handle_up(void) {
@@ -564,7 +557,7 @@ static void init_elements(void) {
             {NULL, NULL,                         0}
     });
 
-#define NETINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netinfo, UDATA);
+#define NETINFO(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netinfo, UDATA);
     NETINFO_ELEMENTS
 #undef NETINFO
 

@@ -76,7 +76,7 @@ static void image_refresh(void) {
 }
 
 static void create_theme_items(void) {
-    if (device.BOARD.HAS_NETWORK && strcasecmp(base_dir, sys_dir) == 0 && !is_ksk(kiosk.CUSTOM.THEME_DOWN)) {
+    if (device.BOARD.HASNETWORK && strcasecmp(base_dir, sys_dir) == 0 && !is_ksk(kiosk.CUSTOM.THEME_DOWN)) {
         add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWN, lang.MUXPICKER.THEME_DOWN, "", MENU);
     }
 

@@ -413,7 +413,7 @@ static void process_load(int from_start) {
     char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
 
     if (load_content(0, item_dir, item_file_name)) {
-        if (config.SETTINGS.ADVANCED.LOCK) {
+        if (config.SETTINGS.ADVANCED.PASSCODE) {
             int result = 0;
 
             while (result != 1) {

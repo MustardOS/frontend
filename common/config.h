@@ -37,6 +37,8 @@ struct mux_config {
         int16_t SYNCTHING;
         int16_t THEME;
         int16_t TRACK;
+        int16_t START;
+        int16_t TARGET;
     } BACKUP;
 
     struct {
@@ -49,7 +51,7 @@ struct mux_config {
         int16_t TYPE;
         char SSID[MAX_BUFFER_SIZE];
         char PASS[MAX_BUFFER_SIZE];
-        int16_t SCAN;
+        int16_t HIDDEN;
         char ADDRESS[MAX_BUFFER_SIZE];
         char GATEWAY[MAX_BUFFER_SIZE];
         char SUBNET[MAX_BUFFER_SIZE];
@@ -71,7 +73,7 @@ struct mux_config {
         char THEME_CAT_PATH[MAX_BUFFER_SIZE];
 
         struct {
-            int16_t ALL_THEMES;
+            int16_t ALLTHEMES;
             int16_t RESOLUTION_640x480;
             int16_t RESOLUTION_720x480;
             int16_t RESOLUTION_720x720;
@@ -92,22 +94,22 @@ struct mux_config {
     struct {
         struct {
             int16_t ACCELERATE;
-            int16_t REPEAT_DELAY;
+            int16_t REPEATDELAY;
             int16_t SWAP;
             int16_t STICKNAV;
             int16_t THERMAL;
             int16_t FONT;
-            char VOLUME[MAX_BUFFER_SIZE];
-            char BRIGHTNESS[MAX_BUFFER_SIZE];
+            int16_t VOLUME;
+            int16_t BRIGHTNESS;
             int16_t OFFSET;
-            int16_t LOCK;
+            int16_t PASSCODE;
             int16_t LED;
-            int16_t THEME;
+            int16_t RANDOMTHEME;
             int16_t RETROWAIT;
             int16_t RETROFREE;
             int16_t RETROCACHE;
             int16_t ACTIVITY;
-            char USBFUNCTION[MAX_BUFFER_SIZE];
+            int16_t USBFUNCTION;
             int16_t VERBOSE;
             int16_t RUMBLE;
             int16_t USERINIT;
@@ -122,6 +124,8 @@ struct mux_config {
             int16_t MAXGPU;
             int16_t AUDIOREADY;
             int16_t AUDIOSWAP;
+            int16_t SECONDPART;
+            int16_t USBPART;
         } ADVANCED;
         struct {
             int16_t HIDDEN;
@@ -161,18 +165,18 @@ struct mux_config {
             int16_t RETRY;
         } NETWORK;
         struct {
-            int16_t GENERAL_ALPHA;
-            int16_t GENERAL_ANCHOR;
-            int16_t GENERAL_SCALE;
-            int16_t BATTERY_ALPHA;
-            int16_t BATTERY_ANCHOR;
-            int16_t BATTERY_SCALE;
-            int16_t VOLUME_ALPHA;
-            int16_t VOLUME_ANCHOR;
-            int16_t VOLUME_SCALE;
-            int16_t BRIGHT_ALPHA;
-            int16_t BRIGHT_ANCHOR;
-            int16_t BRIGHT_SCALE;
+            int16_t GENALPHA;
+            int16_t GENANCHOR;
+            int16_t GENSCALE;
+            int16_t BATALPHA;
+            int16_t BATANCHOR;
+            int16_t BATSCALE;
+            int16_t VOLALPHA;
+            int16_t VOLANCHOR;
+            int16_t VOLSCALE;
+            int16_t BRIALPHA;
+            int16_t BRIANCHOR;
+            int16_t BRISCALE;
         } OVERLAY;
         struct {
             int16_t LOW_BATTERY;
@@ -195,8 +199,8 @@ struct mux_config {
         int16_t NETWORK;
         int16_t BLUETOOTH;
         int16_t CLOCK;
-        int16_t OVERLAY_IMAGE;
-        int16_t OVERLAY_TRANSPARENCY;
+        int16_t OVERLAYIMAGE;
+        int16_t OVERLAYTRANSPARENCY;
         int16_t GRID_MODE_CONTENT;
         int16_t BOX_ART;
         int16_t BOX_ART_ALIGN;
@@ -206,13 +210,14 @@ struct mux_config {
         int16_t DASH;
         int16_t LAUNCH_SWAP;
         int16_t SHUFFLE;
+        int16_t HIDDEN;
         int16_t FRIENDLYFOLDER;
         int16_t THETITLEFORMAT;
         int16_t TITLEINCLUDEROOTDRIVE;
         int16_t FOLDERITEMCOUNT;
-        int16_t FOLDEREMPTY;
-        int16_t COUNTERFOLDER;
-        int16_t COUNTERFILE;
+        int16_t DISPLAYEMPTYFOLDER;
+        int16_t MENUCOUNTERFOLDER;
+        int16_t MENUCOUNTERFILE;
         int16_t BACKGROUNDANIMATION;
         int16_t LAUNCHSPLASH;
         int16_t BLACKFADE;

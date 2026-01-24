@@ -7,22 +7,14 @@
 static char chrony_raw[CHRONY_BUFFER];
 static time_t chrony_last = 0;
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblReference_chrony,  lang.MUXCHRONY.HELP.REFERENCE},
-            {ui_lblStratum_chrony,    lang.MUXCHRONY.HELP.STRATUM},
-            {ui_lblRefTime_chrony,    lang.MUXCHRONY.HELP.REFTIME},
-            {ui_lblSystemTime_chrony, lang.MUXCHRONY.HELP.SYSTEMTIME},
-            {ui_lblLastOffset_chrony, lang.MUXCHRONY.HELP.LASTOFFSET},
-            {ui_lblRmsOffset_chrony,  lang.MUXCHRONY.HELP.RMSOFFSET},
-            {ui_lblFrequency_chrony,  lang.MUXCHRONY.HELP.FREQUENCY},
-            {ui_lblRootDelay_chrony,  lang.MUXCHRONY.HELP.ROOTDELAY},
-            {ui_lblRootDisp_chrony,   lang.MUXCHRONY.HELP.ROOTDISP},
-            {ui_lblUpdateInt_chrony,  lang.MUXCHRONY.HELP.UPDATEINT},
-            {ui_lblLeap_chrony,       lang.MUXCHRONY.HELP.LEAP},
+#define CHRONY(NAME, ENUM, UDATA) { ui_lbl##NAME##_chrony, lang.MUXCHRONY.HELP.ENUM },
+            CHRONY_ELEMENTS
+#undef CHRONY
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void chrony_normalise(char *output) {
@@ -103,7 +95,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, chrony, Reference, lang.MUXCHRONY.REFERENCE, "reference", chrony_field("Reference ID"));
     INIT_VALUE_ITEM(-1, chrony, Stratum, lang.MUXCHRONY.STRATUM, "stratum", chrony_field("Stratum"));
     INIT_VALUE_ITEM(-1, chrony, RefTime, lang.MUXCHRONY.REFTIME, "reftime", chrony_field("Ref time"));
-    INIT_VALUE_ITEM(-1, chrony, SystemTime, lang.MUXCHRONY.SYSTEM, "system", chrony_field("System time"));
+    INIT_VALUE_ITEM(-1, chrony, SystemTime, lang.MUXCHRONY.SYSTEMTIME, "system", chrony_field("System time"));
     INIT_VALUE_ITEM(-1, chrony, LastOffset, lang.MUXCHRONY.LASTOFFSET, "last", chrony_field("Last offset"));
     INIT_VALUE_ITEM(-1, chrony, RmsOffset, lang.MUXCHRONY.RMSOFFSET, "rms", chrony_field("RMS offset"));
     INIT_VALUE_ITEM(-1, chrony, Frequency, lang.MUXCHRONY.FREQUENCY, "freq", chrony_field("Frequency"));
@@ -159,7 +151,7 @@ static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -174,7 +166,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define CHRONY(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_chrony, UDATA);
+#define CHRONY(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_chrony, UDATA);
     CHRONY_ELEMENTS
 #undef CHRONY
 

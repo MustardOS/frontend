@@ -1,7 +1,7 @@
 #include "ui_muxshare.h"
 #include "ui_muxtweakadv.h"
 
-#define TWEAKADV(NAME, UDATA)          \
+#define TWEAKADV(NAME, ENUM, UDATA)    \
     lv_obj_t *ui_pnl##NAME##_tweakadv; \
     lv_obj_t *ui_lbl##NAME##_tweakadv; \
     lv_obj_t *ui_ico##NAME##_tweakadv; \
@@ -11,7 +11,7 @@ TWEAKADV_ELEMENTS
 #undef TWEAKADV
 
 void init_muxtweakadv(lv_obj_t *ui_pnlContent) {
-#define TWEAKADV(NAME, UDATA) CREATE_OPTION_ITEM(tweakadv, NAME);
+#define TWEAKADV(NAME, ENUM, UDATA) CREATE_OPTION_ITEM(tweakadv, NAME);
     TWEAKADV_ELEMENTS
 #undef TWEAKADV
 }

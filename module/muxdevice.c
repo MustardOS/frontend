@@ -3,38 +3,30 @@
 
 #define UI_COUNT 7
 
-#define DEVICE(NAME, UDATA) static int NAME##_original;
+#define DEVICE(NAME, ENUM, UDATA) static int NAME##_original;
 DEVICE_ELEMENTS
 #undef DEVICE
 
-static void show_help(lv_obj_t *element_focused) {
+static void show_help() {
     struct help_msg help_messages[] = {
-            {ui_lblHasBluetooth_device,  lang.MUXDEVICE.HELP.BLUETOOTH},
-            {ui_lblHasRgb_device,        lang.MUXDEVICE.HELP.RGB},
-            {ui_lblHasDebugFs_device,    lang.MUXDEVICE.HELP.DEBUGFS},
-            {ui_lblHasHdmi_device,       lang.MUXDEVICE.HELP.HDMI},
-            {ui_lblHasLid_device,        lang.MUXDEVICE.HELP.LID},
-            {ui_lblHasNetwork_device,    lang.MUXDEVICE.HELP.NETWORK},
-            {ui_lblHasPortmaster_device, lang.MUXDEVICE.HELP.PORTMASTER}
+#define DEVICE(NAME, ENUM, UDATA) { ui_lbl##NAME##_device, lang.MUXDEVICE.HELP.ENUM },
+            DEVICE_ELEMENTS
+#undef DEVICE
     };
 
-    gen_help(element_focused, help_messages, A_SIZE(help_messages));
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings(void) {
-#define DEVICE(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_device);
+#define DEVICE(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_device);
     DEVICE_ELEMENTS
 #undef DEVICE
 }
 
 static void restore_device_options(void) {
-    lv_dropdown_set_selected(ui_droHasBluetooth_device, device.BOARD.HAS_BLUETOOTH);
-    lv_dropdown_set_selected(ui_droHasRgb_device, device.BOARD.RGB);
-    lv_dropdown_set_selected(ui_droHasDebugFs_device, device.BOARD.DEBUGFS);
-    lv_dropdown_set_selected(ui_droHasHdmi_device, device.BOARD.HAS_HDMI);
-    lv_dropdown_set_selected(ui_droHasLid_device, device.BOARD.HAS_LID);
-    lv_dropdown_set_selected(ui_droHasNetwork_device, device.BOARD.HAS_NETWORK);
-    lv_dropdown_set_selected(ui_droHasPortmaster_device, device.BOARD.HAS_PORTMASTER);
+#define DEVICE(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_device, device.BOARD.ENUM);
+    DEVICE_ELEMENTS
+#undef DEVICE
 }
 
 static void save_device_options(void) {
@@ -60,13 +52,13 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_OPTION_ITEM(-1, device, HasBluetooth, lang.MUXDEVICE.BLUETOOTH, "bluetooth", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, device, HasRgb, lang.MUXDEVICE.RGB, "rgb", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, device, HasDebugFs, lang.MUXDEVICE.DEBUGFS, "debugfs", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, device, HasHdmi, lang.MUXDEVICE.HDMI, "hdmi", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, device, HasLid, lang.MUXDEVICE.LID, "lid", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, device, HasNetwork, lang.MUXDEVICE.NETWORK, "network", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, device, HasPortmaster, lang.MUXDEVICE.PORTMASTER, "portmaster", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasBluetooth, lang.MUXDEVICE.HASBLUETOOTH, "bluetooth", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasRgb, lang.MUXDEVICE.HASRGB, "rgb", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasDebugFs, lang.MUXDEVICE.HASDEBUGFS, "debugfs", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasHdmi, lang.MUXDEVICE.HASHDMI, "hdmi", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasLid, lang.MUXDEVICE.HASLID, "lid", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasNetwork, lang.MUXDEVICE.HASNETWORK, "network", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, device, HasPortmaster, lang.MUXDEVICE.HASPORTMASTER, "portmaster", disabled_enabled, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
@@ -124,7 +116,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
-    show_help(lv_group_get_focused(ui_group));
+    show_help();
 }
 
 static void init_elements(void) {
@@ -139,7 +131,7 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define DEVICE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_device, UDATA);
+#define DEVICE(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_device, UDATA);
     DEVICE_ELEMENTS
 #undef DEVICE
 

@@ -6,21 +6,13 @@
 static void list_nav_move(int steps, int direction);
 
 static void show_help() {
-    struct {
-        char *title;
-        char *content;
-    } help_messages[] = {
-            {lang.MUXLAUNCH.EXPLORE,    lang.MUXLAUNCH.HELP.EXPLORE},
-            {lang.MUXLAUNCH.COLLECTION, lang.MUXLAUNCH.HELP.COLLECTION},
-            {lang.MUXLAUNCH.HISTORY,    lang.MUXLAUNCH.HELP.HISTORY},
-            {lang.MUXLAUNCH.APP,        lang.MUXLAUNCH.HELP.APP},
-            {lang.MUXLAUNCH.INFO,       lang.MUXLAUNCH.HELP.INFO},
-            {lang.MUXLAUNCH.CONFIG,     lang.MUXLAUNCH.HELP.CONFIG},
-            {lang.MUXLAUNCH.REBOOT,     lang.MUXLAUNCH.HELP.REBOOT},
-            {lang.MUXLAUNCH.SHUTDOWN,   lang.MUXLAUNCH.HELP.SHUTDOWN},
+    struct help_msg help_messages[] = {
+#define LAUNCH(NAME, ENUM, UDATA) { ui_lbl##NAME##_launch, lang.MUXLAUNCH.HELP.ENUM },
+            LAUNCH_ELEMENTS
+#undef LAUNCH
     };
 
-    show_info_box(help_messages[current_item_index].title, help_messages[current_item_index].content, 0);
+    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
 static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
@@ -76,7 +68,7 @@ static void init_navigation_group(void) {
     char *item_labels[] = {lang.MUXLAUNCH.EXPLORE,
                            lang.MUXLAUNCH.COLLECTION,
                            lang.MUXLAUNCH.HISTORY,
-                           lang.MUXLAUNCH.APP,
+                           lang.MUXLAUNCH.APPS,
                            lang.MUXLAUNCH.INFO,
                            lang.MUXLAUNCH.CONFIG,
                            lang.MUXLAUNCH.REBOOT,
@@ -433,7 +425,7 @@ static void init_elements(void) {
             {NULL, NULL,                           0}
     });
 
-#define LAUNCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_launch, UDATA);
+#define LAUNCH(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_launch, UDATA);
     LAUNCH_ELEMENTS
 #undef LAUNCH
 
