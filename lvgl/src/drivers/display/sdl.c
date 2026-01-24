@@ -142,8 +142,6 @@ static inline int pct_offset(int screen, int render, float percent) {
 }
 
 static void update_render_state(void) {
-    LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height);
-
     switch (config.SETTINGS.GENERAL.THEME_SCALING) {
         case 0: // No Scaling
             scale_width = device.MUX.WIDTH;
@@ -161,6 +159,8 @@ static void update_render_state(void) {
             LOG_INFO("video", "Scaling: Scale");
             break;
     }
+
+    LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height);
 
     underscan = (config.BOOT.DEVICE_MODE && config.SETTINGS.HDMI.SCAN) ? 16 : 0;
     LOG_INFO("video", "Device Underscan: %d", underscan);

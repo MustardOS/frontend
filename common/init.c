@@ -395,8 +395,8 @@ void init_fonts(void) {
 }
 
 void init_theme(int panel_init, int long_mode) {
-    load_theme(&theme, &config, &device);
     theme_base = get_theme_base();
+    load_theme(&theme, &config, &device);
 
     if (panel_init) {
         init_panel_style(&theme);
