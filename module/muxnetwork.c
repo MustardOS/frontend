@@ -561,7 +561,7 @@ static void ui_refresh_task() {
     if (ui_network_locked) exec_watch_task();
 
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
         adjust_panels();
 
         lv_obj_move_foreground(overlay_image);
@@ -587,7 +587,7 @@ int muxnetwork_main(void) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_navigation_group();

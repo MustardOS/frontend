@@ -89,7 +89,7 @@ static void create_tag_assignment(char *tag, char *rom, enum gen_type method) {
 
 static void generate_available_tags(void) {
     int tag_count;
-    char **tags = str_parse_file(INFO_NAM_PATH "/tag.txt", &tag_count, LINES);
+    char **tags = str_parse_file(INFO_NAM_PATH "/tag.txt", &tag_count, PARSE_LINES);
     if (!tags) return;
 
     for (int i = 0; i < tag_count; ++i) add_item(&items, &item_count, tags[i], tags[i], "", ITEM);
@@ -242,7 +242,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
     init_fonts();
 
     char title[MAX_BUFFER_SIZE];

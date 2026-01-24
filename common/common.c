@@ -815,18 +815,35 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, u
     return result;
 }
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value) {
+uint16_t get_ini_uint(mini_t *ini_config, const char *section, const char *key, uint16_t default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
-    int16_t result;
+    if (strcmp(meta, "NOT FOUND") == 0) return default_value;
+
+    char *end = NULL;
+    unsigned long result = strtoul(meta, &end, 10);
+
+    if (end == meta || *end != '\0' || result > UINT16_MAX) return default_value;
+    return (uint16_t) result;
+}
+
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int default_value) {
+    const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
+    long result;
+
     if (strcmp(meta, "NOT FOUND") == 0) {
         result = default_value;
     } else {
-        result = (int16_t)
-                strtol(meta, NULL, 10);
+        char *end = NULL;
+        result = strtol(meta, &end, 10);
+
+        if (end == meta || *end != '\0') result = default_value;
     }
 
-    return result;
+    if (result > INT16_MAX) return INT16_MAX;
+    if (result < INT16_MIN) return INT16_MIN;
+
+    return (int16_t) result;
 }
 
 float get_ini_float(mini_t *ini_config, const char *section, const char *key, float default_value) {
@@ -1259,7 +1276,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
         switch (wall_type) {
-            case APPLICATION:
+            case WALL_APPLICATION:
                 if (load_image_catalogue("Application", element, "", "default", mux_dimension, "wall",
                                          wall_image_path, sizeof(wall_image_path))) {
                     int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1267,7 +1284,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                     return wall_image_embed;
                 }
                 break;
-            case ARCHIVE:
+            case WALL_ARCHIVE:
                 if (load_image_catalogue("Archive", element, "", "default", mux_dimension, "wall",
                                          wall_image_path, sizeof(wall_image_path))) {
                     int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1275,7 +1292,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                     return wall_image_embed;
                 }
                 break;
-            case TASK:
+            case WALL_TASK:
                 if (load_image_catalogue("Task", element, "", "default", mux_dimension, "wall",
                                          wall_image_path, sizeof(wall_image_path))) {
                     int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1283,7 +1300,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                     return wall_image_embed;
                 }
                 break;
-            case GENERAL:
+            case WALL_GENERAL:
             default:
                 break;
         }
@@ -1352,7 +1369,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
     if (lv_group_get_obj_count(ui_group) > 0) {
         const char *element = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         switch (wall_type) {
-            case APPLICATION:
+            case WALL_APPLICATION:
                 if (grid_mode_enabled && config.VISUAL.BOX_ART_HIDE) {
                     return "";
                 }
@@ -1364,7 +1381,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                     return static_image_embed;
                 }
                 break;
-            case ARCHIVE:
+            case WALL_ARCHIVE:
                 if (load_image_catalogue("Archive", element, "", "default", mux_dimension, "box",
                                          static_image_path, sizeof(static_image_path))) {
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
@@ -1373,7 +1390,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                     return static_image_embed;
                 }
                 break;
-            case TASK:
+            case WALL_TASK:
                 if (load_image_catalogue("Task", element, "", "default", mux_dimension, "box",
                                          static_image_path, sizeof(static_image_path))) {
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
@@ -1382,7 +1399,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                     return static_image_embed;
                 }
                 break;
-            case GENERAL:
+            case WALL_GENERAL:
             default:
                 if (load_element_image_specifics(mux_dimension, program, "static",
                                                  strcmp(program, "muxlaunch") == 0 ? element : "default",
@@ -1570,16 +1587,16 @@ int is_network_connected(void) {
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     switch (visual) {
-        case CLOCK:
+        case VIS_CLOCK:
             if (!config.VISUAL.CLOCK) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
-        case BLUETOOTH:
+        case VIS_BLUETOOTH:
             if (!config.VISUAL.BLUETOOTH) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
-        case NETWORK:
+        case VIS_NETWORK:
             if (!config.VISUAL.NETWORK) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
-        case BATTERY:
+        case VIS_BATTERY:
             if (!config.VISUAL.BATTERY) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
     }
@@ -3164,7 +3181,7 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     char line[MAX_BUFFER_SIZE];
     int failed = 0;
 
-    if (mode == TOKENS) {
+    if (mode == PARSE_TOKENS) {
         if (fgets(line, sizeof(line), file)) {
             char *token = strtok(line, " \t\r\n");
             while (token && *count < MAX_BUFFER_SIZE) {

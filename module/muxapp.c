@@ -469,7 +469,7 @@ static void ui_refresh_task() {
             char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
             lv_obj_set_user_data(element_focused, item_name);
 
-            adjust_wallpaper_element(ui_group, 0, APPLICATION);
+            adjust_wallpaper_element(ui_group, 0, WALL_APPLICATION);
         }
         adjust_gen_panel();
 
@@ -502,7 +502,7 @@ int muxapp_main(void) {
 
     char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
     lv_obj_set_user_data(lv_group_get_focused(ui_group), item_name);
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, APPLICATION);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_APPLICATION);
 
     if (ui_count > 0) {
         if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) list_nav_move(ain_index, +1);

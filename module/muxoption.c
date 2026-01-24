@@ -355,7 +355,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_navigation_group();

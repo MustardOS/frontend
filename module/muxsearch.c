@@ -697,7 +697,7 @@ static void init_elements(void) {
 
 static void ui_refresh_task() {
     if (nav_moved) {
-        starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
+        starter_image = adjust_wallpaper_element(ui_group, starter_image, WALL_GENERAL);
         adjust_panels();
         lv_obj_move_foreground(overlay_image);
 
@@ -762,7 +762,7 @@ int muxsearch_main(char *dir) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_navigation_group();

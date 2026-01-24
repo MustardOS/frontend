@@ -133,10 +133,10 @@ void header_and_footer_setup(void) {
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_obj_add_flag(ui_lblPreviewHeaderGlyph, LV_OBJ_FLAG_HIDDEN);
 
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
+    process_visual_element(VIS_CLOCK, ui_lblDatetime);
+    process_visual_element(VIS_BLUETOOTH, ui_staBluetooth);
+    process_visual_element(VIS_NETWORK, ui_staNetwork);
+    process_visual_element(VIS_BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, "");
 }
@@ -424,7 +424,7 @@ void adjust_gen_panel(void) {
 
 void ui_gen_refresh_task() {
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
         adjust_gen_panel();
 
         lv_obj_move_foreground(overlay_image);

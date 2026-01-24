@@ -108,7 +108,7 @@ static void save_tweak_options(void) {
 
 static char **load_combos(const char *filename, int *count) {
     int line_count = 0;
-    char **combos = str_parse_file(filename, &line_count, LINES);
+    char **combos = str_parse_file(filename, &line_count, PARSE_LINES);
     if (!combos || line_count == 0) return NULL;
 
     char **hk_lines = calloc(line_count, sizeof(char *));
@@ -480,7 +480,7 @@ int muxtweakgen_main(void) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_navigation_group();

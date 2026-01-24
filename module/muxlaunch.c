@@ -446,7 +446,7 @@ int muxlaunch_main(void) {
     init_fonts();
     init_navigation_group();
 
-    adjust_wallpaper_element(ui_group, 0, GENERAL);
+    adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
 
     init_timer(ui_gen_refresh_task, NULL);
 

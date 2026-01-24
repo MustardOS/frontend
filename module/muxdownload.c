@@ -274,7 +274,7 @@ static void init_elements(void) {
 
 static void ui_refresh_task() {
     if (nav_moved) {
-        starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
+        starter_image = adjust_wallpaper_element(ui_group, starter_image, WALL_GENERAL);
         adjust_panels();
 
         if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
@@ -306,7 +306,7 @@ int muxdownload_main(char *type) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     init_fonts();
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     reset_ui_groups();
 

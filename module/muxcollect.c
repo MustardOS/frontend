@@ -831,7 +831,7 @@ static void init_elements(void) {
 
 static void ui_refresh_task() {
     if (nav_moved) {
-        starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
+        starter_image = adjust_wallpaper_element(ui_group, starter_image, WALL_GENERAL);
         adjust_panels();
 
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
@@ -898,7 +898,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     init_fonts();
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     reset_ui_groups();
 

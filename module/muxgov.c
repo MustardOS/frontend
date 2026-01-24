@@ -97,7 +97,7 @@ static void create_gov_assignment(const char *gov, char *rom, enum gen_type meth
 
 static void generate_available_governors(const char *default_governor) {
     int governor_count;
-    char **governors = str_parse_file(device.CPU.AVAILABLE, &governor_count, TOKENS);
+    char **governors = str_parse_file(device.CPU.AVAILABLE, &governor_count, PARSE_TOKENS);
     if (!governors) return;
 
     for (int i = 0; i < governor_count; ++i) add_item(&items, &item_count, governors[i], governors[i], "", ITEM);
@@ -399,7 +399,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
     init_fonts();
 
     if (strcasecmp(rom_system, "none") == 0 && !is_app) {

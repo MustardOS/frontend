@@ -38,7 +38,7 @@ static void init_dropdown_settings(void) {
 
 static void generate_governor_values(void) {
     int count = 0;
-    char **list = str_parse_file(device.CPU.AVAILABLE, &count, TOKENS);
+    char **list = str_parse_file(device.CPU.AVAILABLE, &count, PARSE_TOKENS);
 
     if (gov_values_lower) {
         for (size_t i = 0; i < gov_count; i++) free(gov_values_lower[i]);
@@ -338,7 +338,7 @@ int muxpower_main(void) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_navigation_group();

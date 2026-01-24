@@ -182,7 +182,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->GRID.CURRENT_ITEM_LABEL.WIDTH = (int16_t) (device->MUX.WIDTH * .8);
     theme->GRID.CURRENT_ITEM_LABEL.HEIGHT = 0;
     theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X = 0;
-    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = -(theme->FOOTER.HEIGHT * 2);
+    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = (int16_t) -(theme->FOOTER.HEIGHT * 2);
     theme->GRID.CURRENT_ITEM_LABEL.RADIUS = 10;
     theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH = 5;
     theme->GRID.CURRENT_ITEM_LABEL.BORDER = 0xF7E318;
@@ -399,9 +399,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.CONTENT.ALIGNMENT = 0;
     theme->MISC.CONTENT.PADDING_LEFT = 0;
     theme->MISC.CONTENT.PADDING_TOP = 0;
-    int default_content_height = device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4;
-    theme->MISC.CONTENT.HEIGHT = default_content_height;
+
+    theme->MISC.CONTENT.HEIGHT = (int16_t) (device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4);
     theme->MISC.CONTENT.WIDTH = device->MUX.WIDTH;
+
     theme->MISC.ANIMATED_BACKGROUND = 0;
     theme->MISC.RANDOM_BACKGROUND = 0;
     theme->MISC.IMAGE_OVERLAY = 0;
@@ -517,15 +518,15 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->FOOTER.HEIGHT = get_ini_int(muos_theme, "footer", "FOOTER_HEIGHT", theme->FOOTER.HEIGHT);
     theme->FOOTER.BACKGROUND = get_ini_hex(muos_theme, "footer", "FOOTER_BACKGROUND", theme->FOOTER.BACKGROUND);
-    theme->FOOTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_BACKGROUND_ALPHA",
-                                                 theme->FOOTER.BACKGROUND_ALPHA);
+    theme->FOOTER.BACKGROUND_ALPHA = get_ini_uint(muos_theme, "footer", "FOOTER_BACKGROUND_ALPHA",
+                                                  theme->FOOTER.BACKGROUND_ALPHA);
     theme->FOOTER.TEXT = get_ini_hex(muos_theme, "footer", "FOOTER_TEXT", theme->FOOTER.TEXT);
     theme->FOOTER.TEXT_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_TEXT_ALPHA", theme->FOOTER.TEXT_ALPHA);
 
     theme->HEADER.HEIGHT = get_ini_int(muos_theme, "header", "HEADER_HEIGHT", theme->HEADER.HEIGHT);
     theme->HEADER.BACKGROUND = get_ini_hex(muos_theme, "header", "HEADER_BACKGROUND", theme->HEADER.BACKGROUND);
-    theme->HEADER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "header", "HEADER_BACKGROUND_ALPHA",
-                                                 theme->HEADER.BACKGROUND_ALPHA);
+    theme->HEADER.BACKGROUND_ALPHA = get_ini_uint(muos_theme, "header", "HEADER_BACKGROUND_ALPHA",
+                                                  theme->HEADER.BACKGROUND_ALPHA);
     theme->HEADER.TEXT = get_ini_hex(muos_theme, "header", "HEADER_TEXT", theme->HEADER.TEXT);
     theme->HEADER.TEXT_ALPHA = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALPHA", theme->HEADER.TEXT_ALPHA);
     theme->HEADER.TEXT_ALIGN = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALIGN", theme->HEADER.TEXT_ALIGN);
@@ -541,8 +542,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->HELP.TITLE = get_ini_hex(muos_theme, "help", "HELP_TITLE", theme->HELP.TITLE);
     theme->HELP.RADIUS = get_ini_int(muos_theme, "help", "HELP_RADIUS", theme->HELP.RADIUS);
 
-    theme->NAV.ALIGNMENT = get_ini_int(muos_theme, "navigation", "ALIGNMENT", theme->NAV.ALIGNMENT);
-    theme->NAV.SPACING = get_ini_int(muos_theme, "navigation", "SPACING", theme->NAV.SPACING);
+    theme->NAV.ALIGNMENT = get_ini_uint(muos_theme, "navigation", "ALIGNMENT", theme->NAV.ALIGNMENT);
+    theme->NAV.SPACING = get_ini_uint(muos_theme, "navigation", "SPACING", theme->NAV.SPACING);
 
     theme->NAV.LR.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_LR_GLYPH", theme->NAV.LR.GLYPH);
     theme->NAV.LR.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_LR_GLYPH_ALPHA",
@@ -964,7 +965,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->ROLL.BORDER_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_BORDER_ALPHA", theme->ROLL.BORDER_ALPHA);
     theme->ROLL.BORDER_RADIUS = get_ini_int(muos_theme, "roll", "ROLL_BORDER_RADIUS", theme->ROLL.BORDER_RADIUS);
 
-    theme->COUNTER.ALIGNMENT = get_ini_int(muos_theme, "counter", "COUNTER_ALIGNMENT", theme->COUNTER.ALIGNMENT);
+    theme->COUNTER.ALIGNMENT = get_ini_uint(muos_theme, "counter", "COUNTER_ALIGNMENT", theme->COUNTER.ALIGNMENT);
     theme->COUNTER.PADDING_AROUND = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_AROUND",
                                                 theme->COUNTER.PADDING_AROUND);
     theme->COUNTER.PADDING_SIDE = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_SIDE",
@@ -1000,9 +1001,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.CONTENT.PADDING_TOP = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP",
                                                   theme->MISC.CONTENT.PADDING_TOP);
     theme->MISC.CONTENT.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_HEIGHT", theme->MISC.CONTENT.HEIGHT);
-    theme->MISC.CONTENT.WIDTH = get_ini_int(muos_theme, "misc", "CONTENT_WIDTH", config.VISUAL.CONTENT_WIDTH
-                                                                                 ? device->SCREEN.WIDTH
-                                                                                 : theme->MISC.CONTENT.WIDTH);
+    theme->MISC.CONTENT.WIDTH = get_ini_int(muos_theme, "misc", "CONTENT_WIDTH", config.VISUAL.CONTENT_WIDTH ?
+                                                                                 device->SCREEN.WIDTH : theme->MISC.CONTENT.WIDTH);
     theme->MISC.ANIMATED_BACKGROUND = get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND",
                                                   theme->MISC.ANIMATED_BACKGROUND);
     theme->MISC.RANDOM_BACKGROUND = get_ini_int(muos_theme, "misc", "RANDOM_BACKGROUND", theme->MISC.RANDOM_BACKGROUND);
@@ -1070,7 +1070,7 @@ void scale_theme(struct mux_device *device) {
         if (target_width * dimensions[i].height == target_height * dimensions[i].width) {
             device->MUX.WIDTH = dimensions[i].width;
             device->MUX.HEIGHT = dimensions[i].height;
-            device->SCREEN.ZOOM = (float) target_width / dimensions[i].width;
+            device->SCREEN.ZOOM = (float) target_width / (float) dimensions[i].width;
             device->SCREEN.ZOOM_WIDTH = device->SCREEN.ZOOM;
             device->SCREEN.ZOOM_HEIGHT = device->SCREEN.ZOOM;
             LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
@@ -1091,8 +1091,8 @@ void scale_theme(struct mux_device *device) {
         device->MUX.HEIGHT = dimensions[i].height;
 
         // Calculate scale factor to ensure it fits within target dimensions
-        float scale_width = (float) target_width / dimensions[i].width;
-        float scale_height = (float) target_height / dimensions[i].height;
+        float scale_width = (float) target_width / (float) dimensions[i].width;
+        float scale_height = (float) target_height / (float) dimensions[i].height;
         device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width
                                                            : scale_height; // Ensure neither dimension exceeds target
         device->SCREEN.ZOOM_WIDTH = scale_width;
@@ -1120,8 +1120,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
                 device->MUX.HEIGHT = config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT;
                 snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 
-                float scale_width = (float) device->SCREEN.WIDTH / device->MUX.WIDTH;
-                float scale_height = (float) device->SCREEN.HEIGHT / device->MUX.HEIGHT;
+                float scale_width = (float) device->SCREEN.WIDTH / (float) device->MUX.WIDTH;
+                float scale_height = (float) device->SCREEN.HEIGHT / (float) device->MUX.HEIGHT;
 
                 // Ensure neither dimension exceeds target
                 device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height;
@@ -1621,7 +1621,7 @@ int get_theme_preview_path(char *base_path, char *base_file_name,
 
     suffixes[count++] = "";
 
-    for (size_t i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         snprintf(preview_path, sizeof(preview_path), "%s/%s%s%s.png",
                  base_path, mux_dimension, base_file_name, suffixes[i]);
 

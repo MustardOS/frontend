@@ -116,29 +116,48 @@ enum cache_type {
 };
 
 enum parse_mode {
-    LINES, TOKENS
+    PARSE_LINES,
+    PARSE_TOKENS
 };
 
 enum wall_type {
-    APPLICATION, ARCHIVE, GENERAL, TASK
+    WALL_APPLICATION,
+    WALL_ARCHIVE,
+    WALL_GENERAL,
+    WALL_TASK
 };
 
 enum count_type {
-    FILES_ONLY, DIRECTORIES_ONLY, BOTH
+    COUNT_FILES,
+    COUNT_DIRS,
+    COUNT_BOTH
 };
 
 enum visual_type {
-    CLOCK, BLUETOOTH, NETWORK, BATTERY
+    VIS_CLOCK,
+    VIS_BLUETOOTH,
+    VIS_NETWORK,
+    VIS_BATTERY
 };
 
 enum time_type {
-    TIME_12H, TIME_24H
+    TIME_12H,
+    TIME_24H
 };
 
 enum sound_type {
-    SND_CONFIRM, SND_BACK, SND_KEYPRESS, SND_NAVIGATE,
-    SND_ERROR, SND_MUOS, SND_REBOOT, SND_SHUTDOWN,
-    SND_STARTUP, SND_INFO_OPEN, SND_INFO_CLOSE, SND_OPTION
+    SND_CONFIRM,
+    SND_BACK,
+    SND_KEYPRESS,
+    SND_NAVIGATE,
+    SND_ERROR,
+    SND_MUOS,
+    SND_REBOOT,
+    SND_SHUTDOWN,
+    SND_STARTUP,
+    SND_INFO_OPEN,
+    SND_INFO_CLOSE,
+    SND_OPTION
 };
 
 typedef struct {
@@ -148,7 +167,8 @@ typedef struct {
 extern CachedSound sound_cache[SOUND_TOTAL];
 
 enum write_file_type {
-    CHAR, INT
+    CHAR,
+    INT
 };
 
 struct pattern {
@@ -239,7 +259,9 @@ const char *get_random_hex();
 
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value);
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
+uint16_t get_ini_uint(mini_t *ini_config, const char *section, const char *key, uint16_t default_value);
+
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int default_value);
 
 float get_ini_float(mini_t *ini_config, const char *section, const char *key, float default_value);
 
@@ -248,9 +270,6 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
 void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
 void create_directories(const char *path, int parent_only);
-
-void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,
-                      char *header_text, char *content_text);
 
 void show_info_box(const char *title, const char *content, int is_content);
 

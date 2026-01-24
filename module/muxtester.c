@@ -105,7 +105,7 @@ int muxtester_main(void) {
     lv_label_set_text(ui_lblScreenMessage, lang.MUXTESTER.ANY);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
 

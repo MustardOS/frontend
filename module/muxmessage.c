@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
         lv_img_set_src(ui_imgWall, strdup(lv_wall));
     } else {
-        load_wallpaper(ui_scrMessage, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+        load_wallpaper(ui_scrMessage, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
     }
 
     load_font_text(ui_scrMessage);

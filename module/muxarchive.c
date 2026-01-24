@@ -288,7 +288,7 @@ static void ui_refresh_task() {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
             lv_obj_set_user_data(element_focused, get_last_subdir(strip_ext(items[current_item_index].name), '/', 4));
 
-            adjust_wallpaper_element(ui_group, 0, ARCHIVE);
+            adjust_wallpaper_element(ui_group, 0, WALL_ARCHIVE);
         }
         adjust_gen_panel();
 
@@ -307,7 +307,7 @@ int muxarchive_main(void) {
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, ARCHIVE);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_ARCHIVE);
 
     init_fonts();
     create_archive_items();
