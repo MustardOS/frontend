@@ -1143,11 +1143,12 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     for (size_t i = 0; i < A_SIZE(schemes); i++) {
         if (load_scheme(theme_base, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
-            LOG_INFO("muxfrontend", "Loading STORAGE Theme Scheme: %s", scheme);
             scheme_loaded = 1;
             load_theme_from_scheme(scheme, theme, device);
+            LOG_INFO("muxfrontend", "Loading Theme Scheme: %s", scheme);
         }
     }
+
     if (scheme_loaded) {
         char alternate_scheme_path[MAX_BUFFER_SIZE];
         if (get_alt_scheme_path(alternate_scheme_path, sizeof(alternate_scheme_path))) {
@@ -1155,45 +1156,27 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         }
     }
 
-    if (!scheme_loaded) {
-        for (size_t i = 0; i < A_SIZE(schemes); i++) {
-            if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
-                LOG_INFO("muxfrontend", "Loading INTERNAL Theme Scheme: %s", scheme);
-                scheme_loaded = 1;
-                load_theme_from_scheme(scheme, theme, device);
-            }
-        }
-        if (scheme_loaded) {
-            char alternate_scheme_path[MAX_BUFFER_SIZE];
-            if (get_alt_scheme_path(alternate_scheme_path, sizeof(alternate_scheme_path))) {
-                load_theme_from_scheme(alternate_scheme_path, theme, device);
-            }
-        }
-    }
-
     char scheme_override[MAX_BUFFER_SIZE];
-    snprintf(scheme_override, sizeof(scheme_override), RUN_STORAGE_PATH "theme/override/%s.ini",
-             mux_module);
-    if (file_exist(scheme_override)) {
-        load_theme_from_scheme(scheme_override, theme, device);
-    }
+    snprintf(scheme_override, sizeof(scheme_override), RUN_STORAGE_PATH "theme/override/%s.ini", mux_module);
+    if (file_exist(scheme_override)) load_theme_from_scheme(scheme_override, theme, device);
 
     theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
     if (theme->MISC.CONTENT.WIDTH == 0) theme->MISC.CONTENT.WIDTH = device->MUX.WIDTH;
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
     if (theme->MUX.ITEM.HEIGHT > 0) {
-        theme->MUX.ITEM.PANEL = theme->MUX.ITEM.HEIGHT + 2;
-        theme->MUX.ITEM.COUNT = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.PANEL;
+        theme->MUX.ITEM.PANEL = (int16_t) (theme->MUX.ITEM.HEIGHT + 2);
+        theme->MUX.ITEM.COUNT = (int16_t) (theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.PANEL);
     } else {
-        theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT;
-        theme->MUX.ITEM.HEIGHT = theme->MUX.ITEM.PANEL - 2;
+        theme->MUX.ITEM.PANEL = (int16_t) (theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT);
+        theme->MUX.ITEM.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL - 2);
     }
-    // Adjusts height if user picks a height that is not evenly divisible by item count.
-    // Prevents seeing a few pixels of the next game.
-    theme->MISC.CONTENT.HEIGHT = theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT;
 
-    //Disable Animations
+    // Adjusts height if user picks a height that is not evenly divisible by item count.
+    // Prevents seeing a few pixels of the next item.
+    theme->MISC.CONTENT.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT);
+
+    // Disable animations
     theme->MISC.ANIMATED_BACKGROUND = 0;
 }
 
