@@ -53,9 +53,13 @@ extern char progress_bar_message[MAX_BUFFER_SIZE];
 extern int progress_bar_value;
 extern lv_timer_t *timer_update_progress;
 
-#define SOUND_TOTAL 12
-
 typedef void (*exec_callback)(int exit_code);
+
+// Just fuck my shit up with enums everywhere!
+enum common_field {
+    THEME_COMPAT = 6,
+    SOUND_TOTAL = 12
+};
 
 struct ImageSettings {
     char *image_path;
@@ -181,6 +185,8 @@ struct nav_flag {
     lv_obj_t *element;
     int visible;
 };
+
+void common_var_init(void);
 
 int file_exist(const char *filename);
 

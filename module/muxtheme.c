@@ -312,7 +312,6 @@ static void handle_help(void) {
 static void init_elements(void) {
     lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
 
-    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {

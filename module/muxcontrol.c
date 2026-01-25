@@ -276,7 +276,6 @@ static void handle_help(void) {
 }
 
 static void init_elements(void) {
-    adjust_gen_panel();
     header_and_footer_setup();
 
     struct nav_bar nav_items[9];

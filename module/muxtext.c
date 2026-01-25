@@ -62,7 +62,6 @@ static void handle_b(void) {
 }
 
 static void init_elements(void) {
-    adjust_gen_panel();
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
