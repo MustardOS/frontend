@@ -25,6 +25,10 @@ static void init_audio_limits(void) {
     audio_overdrive = config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100;
 }
 
+static int visible_hdmi(void) {
+    return !lv_obj_has_flag(ui_pnlHdmi_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
 static void init_dropdown_settings(void) {
 #define TWEAKGEN(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
@@ -359,27 +363,38 @@ static void handle_a(void) {
         MENU_ADVANCED,
     } menu_action;
 
+    typedef int (*visible_fn)(void);
+
     typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
         menu_action action;
+        visible_fn visible;
     } menu_entry;
 
     static const menu_entry entries[UI_COUNT] = {
-            {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK},
-            {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI},
-            {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED},
-            {NULL,       &KIOSK_PASS,             MENU_OPTION}, // Brightness
-            {NULL,       &KIOSK_PASS,             MENU_OPTION}, // Volume
-            {NULL,       &KIOSK_PASS,             MENU_OPTION}, // Colour Temp
-            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // RGB Lights
-            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // Hotkey DPAD
-            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // Hotkey Screenshot
-            {NULL,       &KIOSK_PASS,             MENU_TOGGLE}, // Startup Mode
+            {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK,    NULL},
+            {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI, visible_hdmi},
+            {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
+            {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
+            {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume
+            {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Colour Temp
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // RGB Lights
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey DPAD
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey Screenshot
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Startup Mode
     };
 
-    if ((unsigned) current_item_index >= UI_COUNT) return;
-    const menu_entry *entry = &entries[current_item_index];
+    const menu_entry *visible_entries[UI_COUNT];
+    size_t visible_count = 0;
+
+    for (size_t i = 0; i < A_SIZE(entries); i++) {
+        if (entries[i].visible && !entries[i].visible()) continue;
+        visible_entries[visible_count++] = &entries[i];
+    }
+
+    if ((unsigned) current_item_index >= visible_count) return;
+    const menu_entry *entry = visible_entries[current_item_index];
 
     switch (entry->action) {
         case MENU_CLOCK:
