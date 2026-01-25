@@ -469,6 +469,8 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
+    if (ui_network_locked) return;
+
     play_sound(SND_BACK);
 
     toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -519,7 +521,7 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (hold_call) return;
+    if (hold_call || ui_network_locked) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
