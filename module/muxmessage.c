@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxmessage.h"
+#include "../common/inotify.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
 #define FINISH_FILE   "/tmp/msg_finish"
@@ -8,7 +9,30 @@
 char **messages = NULL;
 int message_count = 0;
 
-char *parse_newline(const char *input) {
+static void split_dir_base(const char *path, char *dir, char *base) {
+    const char *slash = strrchr(path, '/');
+
+    size_t ds = 1024;
+    size_t bs = ds;
+
+    if (!slash) {
+        snprintf(dir, ds, ".");
+        snprintf(base, bs, "%s", path);
+        return;
+    }
+
+    size_t dl = (size_t) (slash - path);
+
+    if (dl == 0) dl = 1;
+    if (dl >= ds) dl = ds - 1;
+
+    memcpy(dir, path, dl);
+    dir[dl] = '\0';
+
+    snprintf(base, bs, "%s", slash + 1);
+}
+
+static char *parse_newline(const char *input) {
     static char buffer[MAX_BUFFER_SIZE];
     size_t j = 0;
 
@@ -25,7 +49,7 @@ char *parse_newline(const char *input) {
     return buffer;
 }
 
-void load_messages(const char *filename) {
+static void load_messages(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         fprintf(stderr, "Could not open message file: %s\n", filename);
@@ -106,9 +130,7 @@ int main(int argc, char *argv[]) {
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dimension, mux_module);
 
-        if (!file_exist(init_wall)) {
-            snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
-        }
+        if (!file_exist(init_wall)) snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
 
         char lv_wall[MAX_BUFFER_SIZE];
         snprintf(lv_wall, sizeof(lv_wall), "M:%s", init_wall);
@@ -131,50 +153,48 @@ int main(int argc, char *argv[]) {
     free(ext);
 
     if (live_file) {
-        int fd = inotify_init();
-        if (fd < 0) {
-            perror("inotify_init");
+        inotify_status *proc = inotify_create();
+
+        if (!proc) {
+            perror("inotify_create");
             exit(1);
         }
 
-        int wd = inotify_add_watch(fd, live_file, IN_MODIFY | IN_DELETE_SELF | IN_MOVE_SELF);
-        if (wd < 0) {
-            perror("inotify_add_watch");
+        char dir[MAX_BUFFER_SIZE], base[MAX_BUFFER_SIZE];
+        split_dir_base(live_file, dir, base);
+
+        int live_exists = 0;
+        unsigned live_changed = 0;
+
+        if (inotify_track(proc, dir, base, &live_exists, &live_changed) < 0) {
+            perror("inotify_track");
             exit(1);
         }
 
-        while (file_exist(live_file)) {
-            union {
-                char raw[4096];
-                struct inotify_event align;
-            } buf;
+        unsigned last_time = 0;
+        int last_exists = live_exists;
 
-            ssize_t len = read(fd, buf.raw, sizeof(buf.raw));
-            if (len < 0) {
-                perror("read");
+        while (!file_exist(FINISH_FILE)) {
+            inotify_check(proc);
+
+            if (last_exists && !live_exists) {
+                LOG_INFO(mux_module, "Live file removed... exiting!");
                 break;
             }
 
-            const struct inotify_event *ev;
-            for (char *p = buf.raw; p < buf.raw + len;) {
-                ev = (const struct inotify_event *) p;
+            last_exists = live_exists;
 
-                if (ev->mask & IN_MODIFY) {
-                    lv_label_set_text_fmt(ui_lblMessage, "%s",
-                                          parse_newline(read_line_char_from(live_file, 1))
-                    );
+            if (live_exists && live_changed != last_time) {
+                last_time = live_changed;
 
-                    if (file_exist(PROGRESS_FILE)) {
-                        lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
-                    }
+                char *line = read_line_char_from(live_file, 1);
+                if (line && *line) lv_label_set_text_fmt(ui_lblMessage, "%s", parse_newline(line));
+                if (file_exist(PROGRESS_FILE)) lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 
-                    refresh_screen(ui_scrMessage);
-                }
-
-                if (ev->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) goto done;
-
-                p += sizeof(struct inotify_event) + ev->len;
+                refresh_screen(ui_scrMessage);
             }
+
+            usleep(25 * 1000);
         }
     } else if (is_message_file && delay > 0) {
         load_messages(default_message);
@@ -184,9 +204,7 @@ int main(int argc, char *argv[]) {
             int index = (int) (1 + (random() % (message_count - 1)));
             lv_label_set_text_fmt(ui_lblMessage, "%s\n\n%s", messages[0], messages[index]);
 
-            if (file_exist(PROGRESS_FILE)) {
-                lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
-            }
+            if (file_exist(PROGRESS_FILE)) lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 
             refresh_screen(ui_scrMessage);
             sleep(delay);
@@ -201,7 +219,6 @@ int main(int argc, char *argv[]) {
         refresh_screen(ui_scrMessage);
     }
 
-    done:
     sdl_cleanup();
     return 0;
 }
