@@ -16,6 +16,10 @@ void init_muxnetadv(lv_obj_t *ui_pnlContent) {
 #undef NETADV
 }
 
-const int wait_retry_int[] = {
+int wait_retry_int[] = {
         1, 3, 5, 7, 10, 15, 20, 25, 30
+};
+
+char *wait_retry_str[] = {
+        "1", "3", "5", "7", "10", "15", "20", "25", "30"
 };

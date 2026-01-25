@@ -239,8 +239,9 @@
     NETADV(Wake,      WAKE,      "wake")      \
     NETADV(Compat,    COMPAT,    "compat")    \
     NETADV(AsyncLoad, ASYNCLOAD, "asyncload") \
+    NETADV(ConRetry,  CONRETRY,  "conretry")  \
     NETADV(Wait,      WAIT,      "wait")      \
-    NETADV(Retry,     RETRY,     "retry")
+    NETADV(ModRetry,  MODRETRY,  "modretry")
 
 #define NETINFO_ELEMENTS                       \
     NETINFO(Hostname,  HOSTNAME,  "hostname")  \

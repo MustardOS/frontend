@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetadv.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 8
 
 #define NETADV(NAME, ENUM, UDATA) static int NAME##_original;
 NETADV_ELEMENTS
@@ -28,8 +28,9 @@ static void restore_netadv_options(void) {
     NETADV_ELEMENTS
 #undef NETADV
 
+    map_drop_down_to_index(ui_droConRetry_netadv, config.SETTINGS.NETWORK.CONRETRY, wait_retry_int, 9, 0);
     map_drop_down_to_index(ui_droWait_netadv, config.SETTINGS.NETWORK.WAIT, wait_retry_int, 9, 0);
-    map_drop_down_to_index(ui_droRetry_netadv, config.SETTINGS.NETWORK.RETRY, wait_retry_int, 9, 0);
+    map_drop_down_to_index(ui_droModRetry_netadv, config.SETTINGS.NETWORK.MODRETRY, wait_retry_int, 9, 0);
 }
 
 static void save_netadv_options(void) {
@@ -40,9 +41,10 @@ static void save_netadv_options(void) {
     CHECK_AND_SAVE_STD(netadv, Wake, "settings/network/wake", INT, 0);
     CHECK_AND_SAVE_STD(netadv, Compat, "settings/network/compat", INT, 0);
     CHECK_AND_SAVE_STD(netadv, AsyncLoad, "settings/network/async_load", INT, 0);
+    CHECK_AND_SAVE_MAP(netadv, ConRetry, "settings/network/con_retry", wait_retry_int, 9, 0);
 
     CHECK_AND_SAVE_MAP(netadv, Wait, "settings/network/wait_timer", wait_retry_int, 9, 0);
-    CHECK_AND_SAVE_MAP(netadv, Retry, "settings/network/compat_retry", wait_retry_int, 9, 0);
+    CHECK_AND_SAVE_MAP(netadv, ModRetry, "settings/network/mod_retry", wait_retry_int, 9, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -56,17 +58,14 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *wait_retry_str[] = {
-            "1", "3", "5", "7", "10", "15", "20", "25", "30"
-    };
-
     INIT_OPTION_ITEM(-1, netadv, Monitor, lang.MUXNETADV.MONITOR, "monitor", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, Boot, lang.MUXNETADV.BOOT, "boot", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, Wake, lang.MUXNETADV.WAKE, "wake", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, Compat, lang.MUXNETADV.COMPAT, "compat", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, AsyncLoad, lang.MUXNETADV.ASYNCLOAD, "asyncload", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, ConRetry, lang.MUXNETADV.CONRETRY, "conretry", wait_retry_str, 9);
     INIT_OPTION_ITEM(-1, netadv, Wait, lang.MUXNETADV.WAIT, "wait", wait_retry_str, 9);
-    INIT_OPTION_ITEM(-1, netadv, Retry, lang.MUXNETADV.RETRY, "retry", wait_retry_str, 9);
+    INIT_OPTION_ITEM(-1, netadv, ModRetry, lang.MUXNETADV.MODRETRY, "modretry", wait_retry_str, 9);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);

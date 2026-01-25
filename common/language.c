@@ -673,15 +673,17 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETADV.WAKE, "Start Network on Wake");
     SPECIFIC_FIELD(lang->MUXNETADV.COMPAT, "Module Compatibility");
     SPECIFIC_FIELD(lang->MUXNETADV.ASYNCLOAD, "Module Async Load");
+    SPECIFIC_FIELD(lang->MUXNETADV.CONRETRY, "Connection Retry");
     SPECIFIC_FIELD(lang->MUXNETADV.WAIT, "Module Wait Timer");
-    SPECIFIC_FIELD(lang->MUXNETADV.RETRY, "Module Retry");
+    SPECIFIC_FIELD(lang->MUXNETADV.MODRETRY, "Module Retry");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.MONITOR, "Enables periodic connectivity checks and triggers reconnection if network loss is detected");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.BOOT, "Enables network connection to be established automatically at boot");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAKE, "Enables network connection to be re-established automatically upon suspend wake");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.COMPAT, "Enable device compatibility with network module loading via the Linux kernel\n\nIncreases boot times moderately");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.ASYNCLOAD, "Enable the background handling of compatibility handling\n\nProvides faster boot times with compatibility enabled, disable this only if all else has failed");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.CONRETRY, "Adjusts how many retries the network connection script goes through before giving up");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAIT, "Adjusts the maximum amount of time waiting for the network interface to appear.\n\nWARNING:\nIf you enable Module Compatibility, it is not advisable to increase this setting as it will increase boot times!");
-    SPECIFIC_FIELD(lang->MUXNETADV.HELP.RETRY, "Adjusts the maximum amount of attempts at loading the network module with Module Compatibility enabled. Increase this setting if you are still unable to connect to wifi.\n\nIncreasing this setting may increase boot times importantly.");
+    SPECIFIC_FIELD(lang->MUXNETADV.HELP.MODRETRY, "Adjusts the maximum amount of attempts at loading the network module with Module Compatibility enabled. Increase this setting if you are still unable to connect to wifi.\n\nIncreasing this setting may increase boot times importantly.");
 
     // muxnetinfo
     SPECIFIC_FIELD(lang->MUXNETINFO.TITLE, "NETWORK DETAILS");
@@ -749,6 +751,16 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.DISABLED, "Network Disabled");
     SPECIFIC_FIELD(lang->MUXNETWORK.TYPE, "Network Type");
     SPECIFIC_FIELD(lang->MUXNETWORK.CHECK, "Please check network settings");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.ASSOCIATING, "Associating");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.AUTHENTICATING, "Authenticating");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.WAITING_IP, "Getting IP");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.VALIDATING, "Validating");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.INVALID_PASSWORD, "Invalid Password");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.AP_NOT_FOUND, "Network Not Found");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.AUTH_TIMEOUT, "Auth Timeout");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.DHCP_FAILED, "DHCP Failure");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.LINK_TIMEOUT, "Link Timeout");
+    SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.WPA_START_FAILED, "AP Connect Error");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.TYPE, "Toggle between DHCP and Static network types");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.HIDDEN, "Toggle whether or not to try and connect to a hidden SSID broadcast");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.PASSWORD, "Enter the network password here (optional)");

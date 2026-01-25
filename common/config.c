@@ -173,8 +173,9 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.NETWORK.WAKE, CONF_CONFIG_PATH "settings/network/wake", 1);
     CFG_INT_FIELD(config->SETTINGS.NETWORK.COMPAT, CONF_CONFIG_PATH "settings/network/compat", 0);
     CFG_INT_FIELD(config->SETTINGS.NETWORK.ASYNCLOAD, CONF_CONFIG_PATH "settings/network/async_load", 1);
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.CONRETRY, CONF_CONFIG_PATH "settings/network/con_retry", 1);
     CFG_INT_FIELD(config->SETTINGS.NETWORK.WAIT, CONF_CONFIG_PATH "settings/network/wait_timer", 5);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.RETRY, CONF_CONFIG_PATH "settings/network/compat_retry", 1);
+    CFG_INT_FIELD(config->SETTINGS.NETWORK.MODRETRY, CONF_CONFIG_PATH "settings/network/mod_retry", 1);
 
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENALPHA, CONF_CONFIG_PATH "settings/overlay/gen_alpha", 255);
     CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENANCHOR, CONF_CONFIG_PATH "settings/overlay/gen_anchor", 4);

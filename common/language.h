@@ -757,16 +757,18 @@ struct mux_lang {
         char WAKE[MAX_BUFFER_SIZE];
         char COMPAT[MAX_BUFFER_SIZE];
         char ASYNCLOAD[MAX_BUFFER_SIZE];
+        char CONRETRY[MAX_BUFFER_SIZE];
         char WAIT[MAX_BUFFER_SIZE];
-        char RETRY[MAX_BUFFER_SIZE];
+        char MODRETRY[MAX_BUFFER_SIZE];
         struct {
             char MONITOR[MAX_BUFFER_SIZE];
             char BOOT[MAX_BUFFER_SIZE];
             char WAKE[MAX_BUFFER_SIZE];
             char COMPAT[MAX_BUFFER_SIZE];
             char ASYNCLOAD[MAX_BUFFER_SIZE];
+            char CONRETRY[MAX_BUFFER_SIZE];
             char WAIT[MAX_BUFFER_SIZE];
-            char RETRY[MAX_BUFFER_SIZE];
+            char MODRETRY[MAX_BUFFER_SIZE];
         } HELP;
     } MUXNETADV;
 
@@ -845,6 +847,18 @@ struct mux_lang {
         char DISABLED[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
         char CHECK[MAX_BUFFER_SIZE];
+        struct {
+            char ASSOCIATING[MAX_BUFFER_SIZE];
+            char AUTHENTICATING[MAX_BUFFER_SIZE];
+            char WAITING_IP[MAX_BUFFER_SIZE];
+            char VALIDATING[MAX_BUFFER_SIZE];
+            char INVALID_PASSWORD[MAX_BUFFER_SIZE];
+            char AP_NOT_FOUND[MAX_BUFFER_SIZE];
+            char AUTH_TIMEOUT[MAX_BUFFER_SIZE];
+            char DHCP_FAILED[MAX_BUFFER_SIZE];
+            char LINK_TIMEOUT[MAX_BUFFER_SIZE];
+            char WPA_START_FAILED[MAX_BUFFER_SIZE];
+        } STATUS;
         struct {
             char TYPE[MAX_BUFFER_SIZE];
             char HIDDEN[MAX_BUFFER_SIZE];

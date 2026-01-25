@@ -14,4 +14,6 @@ void init_muxnetadv(lv_obj_t *ui_pnlContent);
 NETADV_ELEMENTS
 #undef NETADV
 
-extern const int wait_retry_int[];
+extern int wait_retry_int[];
+
+extern char *wait_retry_str[];

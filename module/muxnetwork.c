@@ -11,10 +11,47 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 
 #define UI_DHCP (UI_COUNT - 4)
 #define UI_STATIC UI_COUNT
+#define NET_STATUS_FILE "/run/muos/network.status"
 
 bool ui_network_locked = false;
+static char last_status[64] = "";
 
 static void list_nav_move(int steps, int direction);
+
+enum connect_status {
+    STATUS_ASSOCIATING,
+    STATUS_AUTHENTICATING,
+    STATUS_WAITING_IP,
+    STATUS_VALIDATING,
+    STATUS_CONNECTED,
+    STATUS_FAILED,
+
+    // These are worse! Try not to get these...
+    STATUS_INVALID_PASSWORD,
+    STATUS_AP_NOT_FOUND,
+    STATUS_AUTH_TIMEOUT,
+    STATUS_DHCP_FAILED,
+    STATUS_LINK_TIMEOUT,
+    STATUS_WPA_START_FAILED
+};
+
+static const struct {
+    const char *status;
+    int label_id;
+} net_status[] = {
+        {"ASSOCIATING",      STATUS_ASSOCIATING},
+        {"AUTHENTICATING",   STATUS_AUTHENTICATING},
+        {"WAITING_IP",       STATUS_WAITING_IP},
+        {"VALIDATING",       STATUS_VALIDATING},
+        {"CONNECTED",        STATUS_CONNECTED},
+        {"FAILED",           STATUS_FAILED},
+        {"INVALID_PASSWORD", STATUS_INVALID_PASSWORD},
+        {"AP_NOT_FOUND",     STATUS_AP_NOT_FOUND},
+        {"AUTH_TIMEOUT",     STATUS_AUTH_TIMEOUT},
+        {"DHCP_FAILED",      STATUS_DHCP_FAILED},
+        {"LINK_TIMEOUT",     STATUS_LINK_TIMEOUT},
+        {"WPA_START_FAILED", STATUS_WPA_START_FAILED},
+};
 
 static void show_help() {
     struct help_msg help_messages[] = {
@@ -24,6 +61,64 @@ static void show_help() {
     };
 
     gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+}
+
+static const char *net_status_label(int id) {
+    switch (id) {
+        case STATUS_ASSOCIATING:
+            return lang.MUXNETWORK.STATUS.ASSOCIATING;
+        case STATUS_AUTHENTICATING:
+            return lang.MUXNETWORK.STATUS.AUTHENTICATING;
+        case STATUS_WAITING_IP:
+            return lang.MUXNETWORK.STATUS.WAITING_IP;
+        case STATUS_VALIDATING:
+            return lang.MUXNETWORK.STATUS.VALIDATING;
+        case STATUS_CONNECTED:
+            return lang.MUXNETWORK.CONNECTED;
+        case STATUS_FAILED:
+            return lang.MUXNETWORK.NOT_CONNECTED;
+        case STATUS_INVALID_PASSWORD:
+            return lang.MUXNETWORK.STATUS.INVALID_PASSWORD;
+        case STATUS_AP_NOT_FOUND:
+            return lang.MUXNETWORK.STATUS.AP_NOT_FOUND;
+        case STATUS_AUTH_TIMEOUT:
+            return lang.MUXNETWORK.STATUS.AUTH_TIMEOUT;
+        case STATUS_DHCP_FAILED:
+            return lang.MUXNETWORK.STATUS.DHCP_FAILED;
+        case STATUS_LINK_TIMEOUT:
+            return lang.MUXNETWORK.STATUS.LINK_TIMEOUT;
+        case STATUS_WPA_START_FAILED:
+            return lang.MUXNETWORK.STATUS.WPA_START_FAILED;
+        default:
+            return lang.GENERIC.UNKNOWN;
+    }
+}
+
+static void update_network_label(void) {
+    if (!ui_network_locked) return;
+
+    if (!file_exist(NET_STATUS_FILE)) {
+        lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.CONNECT_TRY);
+        return;
+    }
+
+    char *status = read_line_char_from(NET_STATUS_FILE, 1);
+    if (!status || !*status || strcmp(status, last_status) == 0) {
+        free(status);
+        return;
+    }
+
+    strncpy(last_status, status, sizeof(last_status) - 1);
+    last_status[sizeof(last_status) - 1] = '\0';
+
+    for (size_t i = 0; i < A_SIZE(net_status); i++) {
+        if (strcmp(status, net_status[i].status) == 0) {
+            lv_label_set_text(ui_lblConnectValue_network, net_status_label(net_status[i].label_id));
+            break;
+        }
+    }
+
+    free(status);
 }
 
 static void can_scan_check(int forced_disconnect) {
@@ -326,6 +421,7 @@ static void handle_confirm(void) {
                 run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
                 lv_task_handler();
 
+                last_status[0] = '\0';
                 run_exec(net_c_args, A_SIZE(net_c_args), 1, 0, NULL, net_connect_check);
                 lv_task_handler();
             } else {
@@ -558,7 +654,10 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
-    if (ui_network_locked) exec_watch_task();
+    if (ui_network_locked) {
+        exec_watch_task();
+        update_network_label();
+    }
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);

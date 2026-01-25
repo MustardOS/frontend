@@ -161,8 +161,9 @@ struct mux_config {
             int16_t WAKE;
             int16_t COMPAT;
             int16_t ASYNCLOAD;
+            int16_t CONRETRY;
             int16_t WAIT;
-            int16_t RETRY;
+            int16_t MODRETRY;
         } NETWORK;
         struct {
             int16_t GENALPHA;
