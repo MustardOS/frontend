@@ -1692,6 +1692,8 @@ int should_skip(const char *name, int is_dir) {
 }
 
 void display_testing_message(lv_obj_t *screen) {
+    if (!TEST_IMAGE) return;
+
     struct screen_dimension dims = get_device_dimensions();
     int spec = 48;
 

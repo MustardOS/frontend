@@ -17,9 +17,7 @@ int muxsplash_main(char *splash_image, bool apply_recolour) {
         lv_obj_set_style_img_recolor_opa(ui_imgWall, theme.IMAGE_LIST.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
     }
 
-#if TEST_IMAGE
     display_testing_message(ui_screen);
-#endif
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);

@@ -144,9 +144,7 @@ void header_and_footer_setup(void) {
 }
 
 void overlay_display(void) {
-#if TEST_IMAGE
     display_testing_message(ui_screen);
-#endif
 
     if (kiosk.ENABLE) {
         kiosk_image = lv_img_create(ui_screen);
