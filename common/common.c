@@ -74,7 +74,15 @@ int blank_exists = 0;
 char progress_bar_message[MAX_BUFFER_SIZE];
 int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
+
 const char *theme_base;
+char *theme_back_compat[THEME_COMPAT];
+
+char *disabled_enabled[2];
+char *excluded_included[2];
+char *allowed_restricted[2];
+char *hidden_visible[2];
+char *toggle_icon_visible[3];
 
 static void (*extraction_finish_cb)(char *result) = NULL;
 
@@ -83,47 +91,38 @@ typedef struct {
     char *output_path;
 } extraction_args_t;
 
-char *theme_back_compat[] = {
-        config.SYSTEM.VERSION,
-        "2508.3_GOLDEN_GOOSE",
-        "2508.2_SILLY_GOOSE",
-        "2508.1_CANADA_GOOSE",
-        "2508.0_GOOSE",
-        "2502.0_PIXIE",
-        NULL
-};
-
-char *disabled_enabled[] = {
-        lang.GENERIC.DISABLED,
-        lang.GENERIC.ENABLED
-};
-
-char *excluded_included[] = {
-        lang.GENERIC.EXCLUDED,
-        lang.GENERIC.INCLUDED
-};
-
-char *allowed_restricted[] = {
-        lang.GENERIC.ALLOWED,
-        lang.GENERIC.RESTRICTED
-};
-
-char *hidden_visible[] = {
-        lang.GENERIC.HIDDEN,
-        lang.GENERIC.VISIBLE
-};
-
-char *show_noicon_hide[] = {
-        lang.GENERIC.VISIBLE,
-        lang.GENERIC.NOGLYPH,
-        lang.GENERIC.HIDDEN,
-};
-
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",
         "error", "muos", "reboot", "shutdown",
         "startup", "info_open", "info_close", "option"
 };
+
+void compat_theme_init(void) {
+    theme_back_compat[0] = config.SYSTEM.VERSION;
+    theme_back_compat[1] = "2508.4_LOOSE_GOOSE";
+    theme_back_compat[2] = "2508.3_GOLDEN_GOOSE";
+    theme_back_compat[3] = "2508.2_SILLY_GOOSE";
+    theme_back_compat[4] = "2508.1_CANADA_GOOSE";
+    theme_back_compat[5] = "2508.0_GOOSE";
+}
+
+void common_var_init(void) {
+    disabled_enabled[0] = lang.GENERIC.DISABLED;
+    disabled_enabled[1] = lang.GENERIC.ENABLED;
+
+    excluded_included[0] = lang.GENERIC.EXCLUDED;
+    excluded_included[1] = lang.GENERIC.INCLUDED;
+
+    allowed_restricted[0] = lang.GENERIC.ALLOWED;
+    allowed_restricted[1] = lang.GENERIC.RESTRICTED;
+
+    hidden_visible[0] = lang.GENERIC.HIDDEN;
+    hidden_visible[1] = lang.GENERIC.VISIBLE;
+
+    toggle_icon_visible[0] = lang.GENERIC.VISIBLE;
+    toggle_icon_visible[1] = lang.GENERIC.NOGLYPH;
+    toggle_icon_visible[2] = lang.GENERIC.HIDDEN;
+}
 
 int file_exist(const char *filename) {
     return access(filename, F_OK) == 0;
@@ -3124,6 +3123,8 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 }
 
 const char *get_theme_base(void) {
+    compat_theme_init();
+
     static char storage_theme[MAX_BUFFER_SIZE];
     char theme_version_file[MAX_BUFFER_SIZE];
 
@@ -3144,8 +3145,10 @@ const char *get_theme_base(void) {
         char *theme_version = read_line_char_from(theme_version_file, 1);
         if (!theme_version || !*theme_version) continue;
 
-        for (int i = 0; theme_back_compat[i]; i++) {
-            if (str_startswith(theme_back_compat[i], theme_version)) return paths[p];
+        for (size_t i = 0; i < THEME_COMPAT; i++) {
+            const char *compat = theme_back_compat[i];
+            if (!compat) continue;
+            if (str_startswith(compat, theme_version)) return paths[p];
         }
 
         LOG_WARN(mux_module, "Incompatible Theme Detected (%s): %s", paths[p], theme_version);

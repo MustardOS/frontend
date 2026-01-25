@@ -47,7 +47,7 @@ extern char *disabled_enabled[];
 extern char *excluded_included[];
 extern char *allowed_restricted[];
 extern char *hidden_visible[];
-extern char *show_noicon_hide[];
+extern char *toggle_icon_visible[];
 
 extern char progress_bar_message[MAX_BUFFER_SIZE];
 extern int progress_bar_value;

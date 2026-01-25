@@ -89,8 +89,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, MenuCounterFolder, lang.MUXVISUAL.MENUCOUNTERFOLDER, "counterfolder", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, MenuCounterFile, lang.MUXVISUAL.MENUCOUNTERFILE, "counterfile", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", show_noicon_hide, 3);
-    INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", show_noicon_hide, 3);
+    INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
 

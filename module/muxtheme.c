@@ -10,6 +10,8 @@ static int no_theme_archives = 0;
 #define TEMP_VERSION "version.txt"
 #define TEMP_CREDITS "credits.txt"
 
+char *theme_version_compat = "";
+
 static void show_help(void) {
     if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) return;
 
@@ -27,12 +29,19 @@ static void show_help(void) {
 }
 
 static int version_check(void) {
-    char version_path[MAX_BUFFER_SIZE];
-    snprintf(version_path, sizeof(version_path), "%s/%s/" TEMP_VERSION, sys_dir, items[current_item_index].name);
+    char theme_version_file[MAX_BUFFER_SIZE];
+    snprintf(theme_version_file, sizeof(theme_version_file), "%s/%s/" TEMP_VERSION, sys_dir, items[current_item_index].name);
+    if (!file_exist(theme_version_file)) return 0;
 
-    const char *theme_version = read_line_char_from(version_path, 1);
-    for (int i = 0; theme_back_compat[i] != NULL; i++) {
-        if (str_startswith(theme_back_compat[i], theme_version)) return 1;
+    char *theme_version = read_line_char_from(theme_version_file, 1);
+    if (!theme_version || !*theme_version) return 0;
+
+    theme_version_compat = theme_version;
+
+    for (size_t i = 0; i < THEME_COMPAT; i++) {
+        const char *compat = theme_back_compat[i];
+        if (!compat) continue;
+        if (str_startswith(compat, theme_version)) return 1;
     }
 
     return 0;
@@ -187,8 +196,11 @@ static void handle_a(void) {
         write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
         if (!version_check()) {
+            char invalid_ver[MAX_BUFFER_SIZE];
+            snprintf(invalid_ver, sizeof(invalid_ver), "%s (%s)", lang.MUXPICKER.INVALID_VER, theme_version_compat);
+
             play_sound(SND_ERROR);
-            toast_message(lang.MUXPICKER.INVALID_VER, SHORT);
+            toast_message(invalid_ver, SHORT);
             return;
         }
 
