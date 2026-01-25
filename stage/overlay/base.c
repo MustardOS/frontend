@@ -72,7 +72,7 @@ void base_inotify_check(void) {
     ino_proc = inotify_create();
     if (!ino_proc) return;
 
-    inotify_track(ino_proc, "/run/muos", "overlay.disable", &base_overlay_disabled_cached);
+    inotify_track(ino_proc, "/run/muos", "overlay.disable", &base_overlay_disabled_cached, 0);
 }
 
 void destroy_base_gles(void) {

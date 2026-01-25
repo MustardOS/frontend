@@ -15,6 +15,7 @@ typedef struct {
     char *dir;
     char *name;
     int *exists_out;
+    unsigned *changes_out;
 } tracked_t;
 
 struct inotify_proc {
@@ -58,15 +59,14 @@ inotify_status *inotify_create(void) {
 
 static int ensure_dir_watch(inotify_status *proc, const char *dir, int *wd_out) {
     for (size_t i = 0; i < proc->count; i++) {
-        if (proc->tracked[i].dir &&
-            strcmp(proc->tracked[i].dir, dir) == 0) {
+        if (proc->tracked[i].dir && strcmp(proc->tracked[i].dir, dir) == 0) {
             *wd_out = proc->tracked[i].wd;
             return 0;
         }
     }
 
-    // Track all the things!
-    uint32_t mask = IN_CREATE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM | IN_DELETE_SELF | IN_MOVE_SELF;
+    uint32_t mask = IN_CREATE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM |
+                    IN_DELETE_SELF | IN_MOVE_SELF | IN_CLOSE_WRITE | IN_MODIFY;
 
     int wd = inotify_add_watch(proc->fd, dir, mask);
     if (wd < 0) return -1;
@@ -75,7 +75,7 @@ static int ensure_dir_watch(inotify_status *proc, const char *dir, int *wd_out) 
     return 0;
 }
 
-int inotify_track(inotify_status *proc, const char *dir, const char *name, int *exists_out) {
+int inotify_track(inotify_status *proc, const char *dir, const char *name, int *exists_out, unsigned *changes_out) {
     if (!proc || !dir || !name || !exists_out) return -1;
     if (proc->count >= INOTIFY_MAX_TRACKED) return -1;
     if (strchr(name, '/')) return -1;
@@ -89,10 +89,13 @@ int inotify_track(inotify_status *proc, const char *dir, const char *name, int *
     t->dir = strdup(dir);
     t->name = strdup(name);
     t->exists_out = exists_out;
+    t->changes_out = changes_out;
 
     if (!t->dir || !t->name) return -1;
 
     *exists_out = file_exists_joined(dir, name);
+    if (t->changes_out) *t->changes_out = 1;
+
     return 0;
 }
 
@@ -116,9 +119,14 @@ void inotify_check(inotify_status *proc) {
             if (ev->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
                 for (size_t i = 0; i < proc->count; i++) {
                     if (proc->tracked[i].wd == ev->wd) {
-                        *proc->tracked[i].exists_out = file_exists_joined(proc->tracked[i].dir, proc->tracked[i].name);
+                        tracked_t *t = &proc->tracked[i];
+                        *t->exists_out = file_exists_joined(t->dir, t->name);
+                        if (t->changes_out) (*t->changes_out)++;
                     }
                 }
+
+                off += sizeof(struct inotify_event) + ev->len;
+                continue;
             }
 
             if (ev->len && ev->name[0]) {
@@ -130,10 +138,15 @@ void inotify_check(inotify_status *proc) {
 
                     if (ev->mask & (IN_CREATE | IN_MOVED_TO)) {
                         *t->exists_out = 1;
+                        if (t->changes_out) (*t->changes_out)++;
                     } else if (ev->mask & (IN_DELETE | IN_MOVED_FROM)) {
                         *t->exists_out = 0;
+                        if (t->changes_out) (*t->changes_out)++;
+                    } else if (ev->mask & (IN_CLOSE_WRITE | IN_MODIFY)) {
+                        if (t->changes_out) (*t->changes_out)++;
                     } else {
                         *t->exists_out = file_exists_joined(t->dir, t->name);
+                        if (t->changes_out) (*t->changes_out)++;
                     }
                 }
             }

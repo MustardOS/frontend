@@ -69,10 +69,10 @@ void inotify_init(void) {
     ino_proc = inotify_create();
     if (!ino_proc) return;
 
-    inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists);
-    inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists);
-    inotify_track(ino_proc, "/run/muos", "do_refresh", &do_refresh_exists);
-    inotify_track(ino_proc, "/run/muos", "blank", &blank_exists);
+    inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "do_refresh", &do_refresh_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "blank", &blank_exists, 0);
 }
 
 void detach_parent_process(void) {
