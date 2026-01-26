@@ -243,20 +243,20 @@ const char *wizards[] = {
 };
 
 const char *hero_one[] = {
-        "romus85", "x_tremis", "lmarcomiranda", "timecarp", "intelliaim", "kentonftw",
-        "bazkart", "msx6011", "btreecat", "teggydave", "zazouboy", "robbiet480",
-        "luzfcb", "brohsnbluffs", "zaka1w3", "superzu", "nico_linber_36894", "pr0j3kt2501",
-        "rosemelody254", "bigbossman0816", "meowman_", "kaeltis", "raouldook.", "paletochen",
-        "benjaminbercy", "snesfan1", "asiaclonk", "jimmycrackedcorn_4711", "hueykablooey", "mrwhistles",
+        "x_tremis", "lmarcomiranda", "timecarp", "intelliaim", "kentonftw", "bazkart",
+        "msx6011", "btreecat", "teggydave", "zazouboy", "robbiet480", "luzfcb",
+        "brohsnbluffs", "zaka1w3", "superzu", "nico_linber_36894", "pr0j3kt2501", "rosemelody254",
+        "bigbossman0816", "meowman_", "kaeltis", "raouldook.", "paletochen", "benjaminbercy",
+        "snesfan1", "asiaclonk", "jimmycrackedcorn_4711", "hueykablooey", "mrwhistles", "losermatic",
         NULL
 };
 
 const char *hero_two[] = {
-        "losermatic", "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla",
-        "amos_06286", "techagent", "meanagar", "roundpi", "chiefwally_73445", "scy0n",
-        "luckyphil", "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith",
-        "mxdamp", "ownedmumbles", "exe0237", "kernelkritic", "verctexius", "misfitsorbet",
-        "izzythefool", "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.", "kularose",
+        "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla", "amos_06286",
+        "techagent", "meanagar", "roundpi", "chiefwally_73445", "scy0n", "luckyphil",
+        "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith", "mxdamp",
+        "ownedmumbles", "exe0237", "kernelkritic", "verctexius", "misfitsorbet", "izzythefool",
+        "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.", "kularose", ".rayman30",
         NULL
 };
 
@@ -277,8 +277,8 @@ const char *knight_two[] = {
 };
 
 const char *contributors[] = {
-        "antikk", "bitter_bizarro", "escal8tor", "imcokeman", "nesreka", "xonglebongle",
-        NULL
+        "antikk", "bitter_bizarro", "escal8tor", "fashberg", "imcokeman", "nesreka",
+        "xonglebongle", NULL
 };
 
 void init_muxcredits(const lv_font_t *header_font) {
