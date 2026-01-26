@@ -129,6 +129,7 @@
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
+#define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme

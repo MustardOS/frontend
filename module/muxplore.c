@@ -702,7 +702,7 @@ static void handle_x(void) {
 
     play_sound(SND_CONFIRM);
 
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+    write_text_to_file(MUOS_CIX_LOAD, "w", INT, current_item_index);
 
     if (is_ksk(kiosk.CONTENT.OPTION)) {
         if (!is_ksk(kiosk.CONTENT.SEARCH)) {

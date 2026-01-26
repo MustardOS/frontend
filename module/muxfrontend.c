@@ -151,10 +151,14 @@ static int process_action(const char *action, const char *module) {
 
 void last_index_check(void) {
     last_index = 0;
-    if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
-        last_index = safe_atoi(read_line_char_from(MUOS_IDX_LOAD, 1));
-        remove(MUOS_IDX_LOAD);
-    }
+
+    if (file_exist(ADD_MODE_WORK)) return;
+
+    const char *index_path = file_exist(MUOS_CIX_LOAD) ? MUOS_CIX_LOAD : file_exist(MUOS_IDX_LOAD) ? MUOS_IDX_LOAD : NULL;
+    if (!index_path) return;
+
+    last_index = safe_atoi(read_line_char_from(index_path, 1));
+    remove(index_path);
 }
 
 static void set_previous_module(char *module) {
@@ -177,12 +181,10 @@ int set_splash_image_path(char *splash_image_name) {
 }
 
 static int set_alert_image_path(void) {
-    if ((snprintf(alert_image_path, sizeof(alert_image_path),
-                  OPT_PATH "share/media/alert-%s.png", device.SCREEN.HEIGHT < 720 ? "small" : "big") >= 0 &&
-         file_exist(alert_image_path)))
-        return 1;
+    snprintf(alert_image_path, sizeof(alert_image_path), OPT_PATH "share/media/alert_%s.png",
+             device.SCREEN.HEIGHT < 720 ? "small" : "big");
 
-    return 0;
+    return file_exist(alert_image_path);
 }
 
 static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
