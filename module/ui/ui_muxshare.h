@@ -266,12 +266,13 @@
     NETWORK(Dns,        DNS,        "dns")        \
     NETWORK(Connect,    CONNECT,    "connect")
 
-#define OPTION_ELEMENTS                    \
-    OPTION(Search,   SEARCH,   "search")   \
-    OPTION(Core,     CORE,     "core")     \
-    OPTION(Governor, GOVERNOR, "governor") \
-    OPTION(Control,  CONTROL,  "control")  \
-    OPTION(Tag,      TAG,      "tag")
+#define OPTION_ELEMENTS                       \
+    OPTION(Search,    SEARCH,    "search")    \
+    OPTION(Core,      CORE,      "core")      \
+    OPTION(Governor,  GOVERNOR,  "governor")  \
+    OPTION(Control,   CONTROL,   "control")   \
+    OPTION(RetroArch, RETROARCH, "retroarch") \
+    OPTION(Tag,       TAG,       "tag")
 
 #define OVERLAY_ELEMENTS                        \
     OVERLAY(GenAlpha,  GENALPHA,  "gen_alpha")  \

@@ -893,6 +893,7 @@ struct mux_lang {
         char GOVERNOR[MAX_BUFFER_SIZE];
         char CONTROL[MAX_BUFFER_SIZE];
         char TAG[MAX_BUFFER_SIZE];
+        char RETROARCH[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
@@ -900,6 +901,7 @@ struct mux_lang {
             char GOVERNOR[MAX_BUFFER_SIZE];
             char CONTROL[MAX_BUFFER_SIZE];
             char TAG[MAX_BUFFER_SIZE];
+            char RETROARCH[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXOPTION;
@@ -1035,6 +1037,11 @@ struct mux_lang {
             char SCREENSAVER[MAX_BUFFER_SIZE];
         } HELP;
     } MUXPOWER;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+    } MUXRAOPT;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

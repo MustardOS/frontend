@@ -139,10 +139,12 @@
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
 #define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index
+#define MUOS_RAC_LOAD "/tmp/rac_go" // RetroArch Configuration
 #define MUOS_RES_LOAD "/tmp/res_go" // Full Path of ROM Content Search
 #define MUOS_ROM_LOAD "/tmp/rom_go" // ROM Content for Launching
 #define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assign Core Flag
 #define MUOS_SAG_LOAD "/tmp/sag_go" // Auto Assign Governor Flag
+#define MUOS_SAR_LOAD "/tmp/sar_go" // Auto Assign RetroArch Config Flag
 #define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index

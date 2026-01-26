@@ -3454,6 +3454,9 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
             char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, content_name, 0, 1, 0),
                                                "system", "Control Scheme");
 
+            char *assigned_rac = specify_asset(load_content_retroarch(sys_dir, content_name, 0, 1, 0),
+                                               "false", "RetroArch Config");
+
             char full_file_path[MAX_BUFFER_SIZE];
             snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s",
                      read_line_char_from(cache_file, CONTENT_MOUNT),
@@ -3471,6 +3474,8 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
 
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
+            write_text_to_file(MUOS_RAC_LOAD, "w", CHAR, assigned_rac);
+
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(content_loader_file));
         }
 

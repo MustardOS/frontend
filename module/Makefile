@@ -15,8 +15,8 @@ MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxchrony 
           muxcollect muxconfig muxconnect muxcontrol muxcustom muxdanger muxdevice \
           muxdownload muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk muxlanguage \
           muxlaunch muxnetadv muxnetinfo muxnetprofile muxnetscan muxnetwork \
-          muxnews muxoption muxoverlay muxpass muxpicker muxpower muxplore muxrtc \
-          muxsearch muxshot muxspace muxsplash muxstorage muxsysinfo muxtag \
+          muxnews muxoption muxoverlay muxpass muxpicker muxplore muxpower muxraopt \
+          muxrtc muxsearch muxshot muxspace muxsplash muxstorage muxsysinfo muxtag \
           muxtask muxtheme muxthemedown muxthemefilter muxtester muxtext \
           muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv muxshare
 

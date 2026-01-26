@@ -561,7 +561,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.GOVERNOR, "Content Governor");
     SPECIFIC_FIELD(lang->MUXKIOSK.CONTROL, "Content Control Scheme");
     SPECIFIC_FIELD(lang->MUXKIOSK.OPTION, "Content Options");
-    SPECIFIC_FIELD(lang->MUXKIOSK.RETROARCH, "RetroArch Kiosk");
+    SPECIFIC_FIELD(lang->MUXKIOSK.RETROARCH, "RetroArch Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.SEARCH, "Content Search");
     SPECIFIC_FIELD(lang->MUXKIOSK.TAG, "Content Tag");
     SPECIFIC_FIELD(lang->MUXKIOSK.CATALOGUE, "Custom Catalogue");
@@ -790,12 +790,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Core");
     SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
     SPECIFIC_FIELD(lang->MUXOPTION.CONTROL, "Control Scheme");
+    SPECIFIC_FIELD(lang->MUXOPTION.RETROARCH, "Threaded Video");
     SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Glyph Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CORE, "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.GOVERNOR, "Set the CPU governor for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.RETROARCH, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 
@@ -901,6 +903,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.BATTERY, "Configure when the red LED will display based on the current capacity percentage");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SHUTDOWN, "Configure how the power button functions on short press");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SCREENSAVER, "Toggle the frontend screensaver on Idle Display Timeout activation");
+
+    // muxraopt
+    SPECIFIC_FIELD(lang->MUXRAOPT.TITLE, "THREADED VIDEO");
+    SPECIFIC_FIELD(lang->MUXRAOPT.HELP, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
 
     // muxrtc
     SPECIFIC_FIELD(lang->MUXRTC.TITLE, "DATE AND TIME");

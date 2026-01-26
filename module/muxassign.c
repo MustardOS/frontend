@@ -266,6 +266,15 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     }
     LOG_INFO(mux_module, "Content Core Control: %s", core_control);
 
+    static char core_retroarch[MAX_BUFFER_SIZE];
+    char *use_local_retroarch = get_ini_string(local_ini, selected_item, "retroarch", "false");
+    if (strcmp(use_local_retroarch, "false") != 0) {
+        strcpy(core_retroarch, use_local_retroarch);
+    } else {
+        strcpy(core_retroarch, get_ini_string(global_ini, "global", "retroarch", "false"));
+    }
+    LOG_INFO(mux_module, "Content Core RetroArch Config: %s", core_retroarch);
+
     static int core_lookup;
     int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
     core_lookup = use_local_lookup ? use_local_lookup : get_ini_int(global_ini, "global", "lookup", 0);
@@ -275,8 +284,8 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     strcpy(core_launch, get_ini_string(local_ini, selected_item, "core", "none"));
     LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch);
 
-    create_core_assignment(selected_item, rom_dir, core_launch, rom_system, core_catalogue,
-                           rom_name, core_governor, core_control, core_lookup, assignment_mode);
+    create_core_assignment(selected_item, rom_dir, core_launch, rom_system, core_catalogue, rom_name,
+                           core_governor, core_control, core_retroarch, core_lookup, assignment_mode);
 
     mini_free(global_ini);
     mini_free(local_ini);

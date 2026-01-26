@@ -227,6 +227,10 @@ char *load_content_control_scheme(char *sys_dir, const char *pointer, int force,
     return load_content_asset(sys_dir, pointer, force, run_quit, "con", "Control Scheme", is_app);
 }
 
+char *load_content_retroarch(char *sys_dir, const char *pointer, int force, int run_quit, int is_app) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "rac", "RetroArch Config", is_app);
+}
+
 void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
                       char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);

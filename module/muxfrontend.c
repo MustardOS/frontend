@@ -230,6 +230,7 @@ static void module_explore(void) {
     muxassign_main(1, rom_name, explore_dir, "none", 0);
     muxgov_main(1, rom_name, explore_dir, "none", 0);
     muxcontrol_main(1, rom_name, explore_dir, "none", 0);
+    muxraopt_main(1, rom_name, explore_dir, "none", 0);
 
     load_mux("launcher");
     if (muxplore_main(last_index, explore_dir) == 1) safe_quit(0);
@@ -311,6 +312,10 @@ static void module_governor(void) {
 
 static void module_control(void) {
     module_run("option", muxcontrol_main);
+}
+
+static void module_retroarch(void) {
+    module_run("option", muxraopt_main);
 }
 
 static void module_tag(void) {
@@ -426,6 +431,7 @@ static const ModuleEntry modules[] = {
         {"coredown",   NULL, NULL, NULL, module_download},
         {"governor",   NULL, NULL, NULL, module_governor},
         {"control",    NULL, NULL, NULL, module_control},
+        {"retroarch",  NULL, NULL, NULL, module_retroarch},
         {"tag",        NULL, NULL, NULL, module_tag},
         {"explore",    NULL, NULL, NULL, module_explore},
         {"collection", NULL, NULL, NULL, module_collection},

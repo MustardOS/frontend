@@ -29,6 +29,18 @@ static void show_help() {
     gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
 }
 
+static int visible_control(void) {
+    return !lv_obj_has_flag(ui_pnlControl_option, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_retroarch(void) {
+    return !lv_obj_has_flag(ui_pnlRetroArch_option, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_tag(void) {
+    return !lv_obj_has_flag(ui_pnlTag_option, LV_OBJ_FLAG_HIDDEN);
+}
+
 static void add_static_item(int index, const char *item_label, const char *item_value,
                             const char *glyph_name, bool add_bottom_border) {
     lv_obj_t *ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
@@ -66,25 +78,33 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     const char *value = get_file;
     if (!*value) value = get_dir;
 
-    bool is_core = strcmp(opt_type, "core") == 0;
+    bool is_cfg = strcmp(opt_type, "core") == 0;
     bool is_gov = strcmp(opt_type, "governor") == 0;
     bool is_con = strcmp(opt_type, "control") == 0;
     bool is_tag = strcmp(opt_type, "tag") == 0;
+    bool is_rac = strcmp(opt_type, "retroarch") == 0;
 
     if (!*value) {
-        value = is_core ? lang.MUXOPTION.NOT_ASSIGNED :
+        value = is_cfg ? lang.MUXOPTION.NOT_ASSIGNED :
                 is_gov ? device.CPU.DEFAULT :
                 is_con ? lang.MUXOPTION.NONE :
                 is_tag ? lang.MUXOPTION.NOT_ASSIGNED :
+                is_rac ? lang.GENERIC.DISABLED :
                 lang.GENERIC.UNKNOWN;
     }
 
     char cap_value[MAX_BUFFER_SIZE];
-    if (is_core) {
+    if (is_cfg) {
         if (strcmp(value, lang.MUXOPTION.NOT_ASSIGNED) == 0) {
             snprintf(cap_value, sizeof(cap_value), "%s", lang.MUXOPTION.NOT_ASSIGNED);
         } else {
             snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1));
+        }
+    } else if (is_rac) {
+        if (strcmp(value, "false") == 0) {
+            snprintf(cap_value, sizeof(cap_value), "%s", lang.GENERIC.DISABLED);
+        } else {
+            snprintf(cap_value, sizeof(cap_value), "%s", lang.GENERIC.ENABLED);
         }
     } else {
         snprintf(cap_value, sizeof(cap_value), "%s", value);
@@ -105,6 +125,10 @@ static void add_info_items(void) {
     const char *control_file = get_content_line(rom_dir, rom_name, "con", 1);
     const char *control_dir = get_content_line(rom_dir, NULL, "con", 1);
     add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "control", true);
+
+    const char *rac_file = get_content_line(rom_dir, rom_name, "rac", 1);
+    const char *rac_dir = get_content_line(rom_dir, NULL, "rac", 1);
+    add_info_item_type(ui_lblRetroArchValue_option, rac_file, rac_dir, "retroarch", true);
 
     if (!is_directory) {
         const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
@@ -197,6 +221,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
     INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
     INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
+    INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
     if (!is_directory) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
     add_info_items();
 
@@ -207,6 +232,7 @@ static void init_navigation_group(void) {
     if (core_label && !strcasestr(core_label, "RetroArch")) {
         is_retroarch_core = 0;
         HIDE_VALUE_ITEM(option, Control);
+        HIDE_VALUE_ITEM(option, RetroArch);
     }
 }
 
@@ -225,46 +251,33 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    typedef enum {
-        MENU_NONE = 0,
-        MENU_SEARCH,
-        MENU_CORE,
-        MENU_GOVERNOR,
-        MENU_CONTROL,
-        MENU_TAG,
-    } menu_action;
-
-    enum {
-        MENU_DIR = 1 << 0,
-        MENU_RA_CORE = 1 << 1,
-        MENU_DEFAULT = 1 << 2,
-    };
+    typedef int (*visible_fn)(void);
 
     typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
-        menu_action action;
-        uint8_t type;
+        visible_fn visible;
     } menu_entry;
 
-    // We don't count the unselectable entries here even though we have a place
-    // for them within the construct of the following entries. There are three
-    // different types of menu entries which are pretty self explanatory.
     static const menu_entry entries[UI_COUNT] = {
-            {"search",   &kiosk.CONTENT.SEARCH,   MENU_SEARCH,   MENU_DIR | MENU_RA_CORE | MENU_DEFAULT},
-            {"assign",   &kiosk.CONTENT.CORE,     MENU_CORE,     MENU_DIR | MENU_RA_CORE | MENU_DEFAULT},
-            {"governor", &kiosk.CONTENT.GOVERNOR, MENU_GOVERNOR, MENU_DIR | MENU_RA_CORE | MENU_DEFAULT},
-            {"control",  &kiosk.CONTENT.CONTROL,  MENU_CONTROL,  MENU_DIR | MENU_RA_CORE},
-            {"tag",      &kiosk.CONTENT.TAG,      MENU_TAG,      MENU_RA_CORE | MENU_DEFAULT},
+            {"search",    &kiosk.CONTENT.SEARCH,   NULL},
+            {"assign",    &kiosk.CONTENT.CORE,     NULL},
+            {"governor",  &kiosk.CONTENT.GOVERNOR, NULL},
+            {"control",   &kiosk.CONTENT.CONTROL,   visible_control},
+            {"retroarch", &kiosk.CONTENT.RETROARCH, visible_retroarch},
+            {"tag",       &kiosk.CONTENT.TAG,       visible_tag},
     };
 
-    uint8_t mode = is_directory ? MENU_DIR : is_retroarch_core ? MENU_RA_CORE : MENU_DEFAULT;
+    const menu_entry *visible_entries[UI_COUNT];
+    size_t visible_count = 0;
 
-    if ((unsigned) current_item_index >= UI_COUNT) return;
-    const menu_entry *entry = &entries[current_item_index];
+    for (size_t i = 0; i < A_SIZE(entries); i++) {
+        if (entries[i].visible && !entries[i].visible()) continue;
+        visible_entries[visible_count++] = &entries[i];
+    }
 
-    // We check to make sure nothing runs if something somehow becomes selectable!
-    if (!(entry->type & mode) || entry->action == MENU_NONE) return;
+    if ((unsigned) current_item_index >= visible_count) return;
+    const menu_entry *entry = visible_entries[current_item_index];
 
     if (is_ksk(*entry->kiosk_flag)) {
         kiosk_denied();
@@ -274,7 +287,7 @@ static void handle_a(void) {
     play_sound(SND_CONFIRM);
     load_mux(entry->mux_name);
 
-    write_text_to_file(MUOS_OPI_LOAD, "w", INT, is_directory ? (current_item_index + 4) : (current_item_index + 5));
+    write_text_to_file(MUOS_OPI_LOAD, "w", INT, current_item_index);
 
     close_input();
     mux_input_stop();

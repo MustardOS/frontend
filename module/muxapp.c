@@ -387,8 +387,13 @@ static void handle_a(void) {
                     load_content_control_scheme(items[current_item_index].extra_data, NULL, 0, 1, 1),
                     "system", "Control Scheme");
 
+            char *assigned_rac = specify_asset(
+                    load_content_retroarch(items[current_item_index].extra_data, NULL, 0, 1, 1),
+                    "false", "RetroArch Config");
+
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
+            write_text_to_file(MUOS_RAC_LOAD, "w", CHAR, assigned_rac);
         }
 
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, skip_toast ? item_name : items[current_item_index].extra_data);
