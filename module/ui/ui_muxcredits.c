@@ -2,22 +2,221 @@
 #include "../../common/common.h"
 #include "../../common/config.h"
 
-#define SONG_TRACK "Final Frontier"
-#define SONG_ARTIST "Nimn One"
-
-#define COL_BG_HEX         0xA5B2B5
-#define COL_FOCUS_HEX      0xF8E008
-#define COL_TITLE_YELLOW   0xF7E318
-#define COL_TEXT_AMBER     0xDDA200
-#define COL_CONTRIB_HEX    0x87C97C
-#define COL_CMD_HEX        0xFF0000
-#define COL_ENF_HEX        0xFF4500
-#define COL_WIZ_HEX        0xED6900
-#define COL_HERO_HEX       0xFFDD22
-#define COL_KNIGHT_HEX     0xED6900
-
 #define MU_STYLE(o, prop, val) lv_obj_set_style_##prop((o), (val), MU_OBJ_MAIN_DEFAULT)
 #define MU_FOCUS(o, prop, val) lv_obj_set_style_##prop((o), (val), MU_OBJ_MAIN_FOCUS)
+
+#define SONG_TITLE   "Supporter Music"
+#define SONG_TRACK   "Final Frontier"
+#define SONG_ARTIST  "Nimn One"
+#define SONG_STRING  "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\n"
+#define SONG_REBOOT  "Your device will now reboot..."
+#define SONG_BLESSED "Have a blessed day..."
+
+#define COL_BG_HEX       0xA5B2B5
+#define COL_FOCUS_HEX    0xF8E008
+#define COL_TITLE_YELLOW 0xF7E318
+#define COL_TEXT_AMBER   0xDDA200
+#define COL_CON_HEX      0x87C97C
+#define COL_CMD_HEX      0xFF0000
+#define COL_ENF_HEX      0xFF4500
+#define COL_WIZ_HEX      0xED6900
+#define COL_HERO_HEX     0xFFDD22
+#define COL_KNIGHT_HEX   0xED6900
+
+#define NM_CON    "%s\nContributors"
+#define NM_CMD    "Commanders"
+#define NM_ENF    "\n\nEnforcers"
+#define NM_WIZ    "Wizards"
+#define NM_HERO   "Heroes"
+#define NM_KNIGHT "Knights"
+
+#define LANG_MESSAGE  "\nThe people listed throughout have been amazing supporters and contributors to MustardOS and shaping its future.\n\nFrom the bottom of my heart, thank you for your time, ideas, testing, and support. I appreciate you all more than a simple \"thank you\" could express!"
+#define LANG_SPECIAL  "Special Thanks"
+#define LANG_EVERYONE "A heartfelt thanks to artificers, druids, porters, theme creators, and translators for your contributions to MustardOS. Your dedication has enriched this project, and I am truly grateful for all your contributions and testing!"
+#define LANG_SUPPORT  "My One True Supporter"
+#define LANG_BONGLE   "To my wonderful wife, Mrs. Bongle. Whose amazing support, guidance, and patience has been my light throughout this entire adventure. You mean everything to me and I love you more than words could ever express!"
+#define LANG_THANKS   "Thank you for choosing MustardOS"
+#define LANG_DONATE   "You can support us by donating or subscribing which helps the development of this project.\n\nThis project is done as a hobby!"
+#define LANG_QRCODE   "Scan the below QR Code to take you to the Ko-fi page!"
+
+static const char *commanders[] = {
+        "xonglebongle",
+        "antikk",
+        "corey",
+        "bitter_bizarro",
+        NULL
+};
+
+static const char *enforcers[] = {
+        "acmeplus",
+        "bgelmini",
+        "ilfordhp5",
+        "duncanyoyo1",
+        "illumini_85",
+        "delibirb77",
+        NULL
+};
+
+static const char *wizards[] = {
+        "xquader",
+        "ee1000",
+        "kloptops",
+        "thegammasqueeze",
+        ".tokyovigilante",
+        "joyrider3774",
+        ".cebion",
+        "irilivibi",
+        "vagueparade",
+        "shengy.",
+        "siliconexarch",
+        "shauninman",
+        "johnnyonflame",
+        "snowram",
+        "habbening",
+        "trngaje",
+        "skorpy",
+        "stanley_00",
+        "ajmandourah",
+        "bcat24",
+        "xanxic",
+        "midwan",
+        "arkun_",
+        "mikhailzrick",
+        "retrogfx_",
+        "aeverdyn",
+        "kitfox618",
+        "spycat88",
+        "sundownersport",
+        NULL
+};
+
+static const char *hero_one[] = {
+        "romus85",
+        "x_tremis",
+        "lmarcomiranda",
+        "timecarp",
+        "intelliaim",
+        "kentonftw",
+        "bazkart",
+        "msx6011",
+        "btreecat",
+        "teggydave",
+        "zazouboy",
+        "robbiet480",
+        "luzfcb",
+        "brohsnbluffs",
+        "zaka1w3",
+        "superzu",
+        "nico_linber_36894",
+        "pr0j3kt2501",
+        "rosemelody254",
+        "bigbossman0816",
+        "meowman_",
+        "kaeltis",
+        "raouldook.",
+        "paletochen",
+        "benjaminbercy",
+        "snesfan1",
+        "asiaclonk",
+        "jimmycrackedcorn_4711",
+        "hueykablooey",
+        "mrwhistles",
+        "losermatic",
+        NULL
+};
+
+static const char *hero_two[] = {
+        "ivar2028",
+        ".dririan",
+        "spivvmeister",
+        "sol6_vi",
+        "qpla",
+        "amos_06286",
+        "techagent",
+        "meanagar",
+        "roundpi",
+        "chiefwally_73445",
+        "scy0n",
+        "luckyphil",
+        "nahck",
+        "mach5682",
+        "foamygames",
+        "xraygoggles",
+        "hybrid_sith",
+        "mxdamp",
+        "ownedmumbles",
+        "exe0237",
+        "kernelkritic",
+        "verctexius",
+        "misfitsorbet",
+        "izzythefool",
+        "bigolpeewee",
+        ".zerohalo",
+        "milkworlds",
+        "amildinconvenience.",
+        "kularose",
+        ".rayman30",
+        NULL
+};
+
+static const char *knight_one[] = {
+        "notflacko",
+        "jdanteq_18123",
+        "skyarcher",
+        "hai6266",
+        "galloc",
+        "_maxwellsdemon",
+        "status.quo.exile",
+        "phyrex",
+        "kiko_lake",
+        "arkholt",
+        "julas8799",
+        "fibroidjames",
+        "allepac",
+        "pakwan8234",
+        "drisc",
+        "clempurp9868",
+        "aj15",
+        "retrogamecorps",
+        "rbndr_",
+        "sanelessone",
+        NULL
+};
+
+static const char *knight_two[] = {
+        "billynaing",
+        "nuke_67641",
+        "zauberpony",
+        "frickinfrogs",
+        "smittywerbenjaegermanjensen9250", // Award for longest user name goes to...
+        "wizardfights",
+        "_wizdude",
+        "stin87",
+        "surge_84306",
+        "phlurblepoot",
+        "mrcee1503",
+        "splendid88_98891",
+        "yomama78",
+        "admiralthrawn_1",
+        "penpen2crayon",
+        "jupyter.",
+        "bburbank",
+        "crownlessk",
+        "johnunsc",
+        "obitomatheus",
+        NULL
+};
+
+static const char *contributors[] = {
+        "antikk",
+        "bitter_bizarro",
+        "escal8tor",
+        "fashberg",
+        "imcokeman",
+        "nesreka",
+        "xonglebongle",
+        NULL
+};
 
 lv_obj_t *ui_scrCredits;
 
@@ -223,64 +422,6 @@ typedef struct {
     uint32_t color_hex;
 } crew_sec_t;
 
-const char *commanders[] = {
-        "xonglebongle", "antikk", "corey", "bitter_bizarro",
-        NULL
-};
-
-const char *enforcers[] = {
-        "acmeplus", "bgelmini", "ilfordhp5", "duncanyoyo1", "illumini_85", "delibirb77",
-        NULL
-};
-
-const char *wizards[] = {
-        "xquader", "ee1000", "kloptops", "thegammasqueeze", ".tokyovigilante", "joyrider3774",
-        ".cebion", "irilivibi", "vagueparade", "shengy.", "siliconexarch", "shauninman",
-        "johnnyonflame", "snowram", "habbening", "trngaje", "skorpy", "stanley_00",
-        "ajmandourah", "bcat24", "xanxic", "midwan", "arkun_", "mikhailzrick",
-        "retrogfx_", "aeverdyn", "kitfox618", "spycat88", "sundownersport",
-        NULL
-};
-
-const char *hero_one[] = {
-        "x_tremis", "lmarcomiranda", "timecarp", "intelliaim", "kentonftw", "bazkart",
-        "msx6011", "btreecat", "teggydave", "zazouboy", "robbiet480", "luzfcb",
-        "brohsnbluffs", "zaka1w3", "superzu", "nico_linber_36894", "pr0j3kt2501", "rosemelody254",
-        "bigbossman0816", "meowman_", "kaeltis", "raouldook.", "paletochen", "benjaminbercy",
-        "snesfan1", "asiaclonk", "jimmycrackedcorn_4711", "hueykablooey", "mrwhistles", "losermatic",
-        NULL
-};
-
-const char *hero_two[] = {
-        "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla", "amos_06286",
-        "techagent", "meanagar", "roundpi", "chiefwally_73445", "scy0n", "luckyphil",
-        "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith", "mxdamp",
-        "ownedmumbles", "exe0237", "kernelkritic", "verctexius", "misfitsorbet", "izzythefool",
-        "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.", "kularose", ".rayman30",
-        NULL
-};
-
-const char *knight_one[] = {
-        "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc", "_maxwellsdemon",
-        "status.quo.exile", "phyrex", "kiko_lake", "arkholt", "julas8799", "fibroidjames",
-        "allepac", "pakwan8234", "drisc", "clempurp9868", "aj15", "retrogamecorps",
-        "rbndr_", "sanelessone",
-        NULL
-};
-
-const char *knight_two[] = {
-        "billynaing", "nuke_67641", "zauberpony", "frickinfrogs", "smittywerbenjaegermanjensen9250", "wizardfights",
-        "_wizdude", "stin87", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891",
-        "yomama78", "admiralthrawn_1", "penpen2crayon", "jupyter.", "bburbank", "crownlessk",
-        "johnunsc", "obitomatheus",
-        NULL
-};
-
-const char *contributors[] = {
-        "antikk", "bitter_bizarro", "escal8tor", "fashberg", "imcokeman", "nesreka",
-        "xonglebongle", NULL
-};
-
 void init_muxcredits(const lv_font_t *header_font) {
     ui_scrCredits = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrCredits, LV_OBJ_FLAG_SCROLLABLE);
@@ -299,37 +440,29 @@ void init_muxcredits(const lv_font_t *header_font) {
 
     ui_conStart = section(ui_conCredits, false);
 
-    ui_lblStartTitle = title(
-            ui_conStart, "Thank you for choosing MustardOS",
-            header_font, lv_color_hex(COL_TITLE_YELLOW), 0, 0, 0);
-
-    ui_lblStartMessage = content(
-            ui_conStart,
-            "\nThe people listed throughout have been amazing supporters and contributors to MustardOS "
-            "and shaping its future.\n\nFrom the bottom of my heart, thank you for your time, ideas, "
-            "testing, and support. I appreciate you all more than a simple \"thank you\" could express!",
-            lv_color_hex(COL_TEXT_AMBER), 90, 0);
+    ui_lblStartTitle = title(ui_conStart, LANG_THANKS, header_font, lv_color_hex(COL_TITLE_YELLOW), 0, 0, 0);
+    ui_lblStartMessage = content(ui_conStart, LANG_MESSAGE, lv_color_hex(COL_TEXT_AMBER), 90, 0);
 
     ui_conOfficial = section(ui_conCredits, true);
 
     ui_lblCommanderTitle = lv_label_create(ui_conOfficial);
     container(ui_lblCommanderTitle, header_font, lv_color_hex(COL_CMD_HEX), 0, 0, 0);
 
-    lv_label_set_text(ui_lblCommanderTitle, "Commanders");
+    lv_label_set_text(ui_lblCommanderTitle, NM_CMD);
     name(ui_conOfficial, commanders, lv_color_hex(COL_CMD_HEX));
 
     ui_lblEnforcerTitle = lv_label_create(ui_conOfficial);
     container(ui_lblEnforcerTitle, header_font, lv_color_hex(COL_ENF_HEX), 0, 0, 0);
 
-    lv_label_set_text(ui_lblEnforcerTitle, "\n\nEnforcers");
+    lv_label_set_text(ui_lblEnforcerTitle, NM_ENF);
     name(ui_conOfficial, enforcers, lv_color_hex(COL_ENF_HEX));
 
     static const crew_sec_t SECTIONS_AFTER_OFFICIAL[] = {
-            {"Wizards", wizards,    COL_WIZ_HEX},
-            {"Heroes",  hero_one,   COL_HERO_HEX},
-            {"Heroes",  hero_two,   COL_HERO_HEX},
-            {"Knights", knight_one, COL_KNIGHT_HEX},
-            {"Knights", knight_two, COL_KNIGHT_HEX},
+            {NM_WIZ,    wizards,    COL_WIZ_HEX},
+            {NM_HERO,   hero_one,   COL_HERO_HEX},
+            {NM_HERO,   hero_two,   COL_HERO_HEX},
+            {NM_KNIGHT, knight_one, COL_KNIGHT_HEX},
+            {NM_KNIGHT, knight_two, COL_KNIGHT_HEX},
     };
 
     for (size_t i = 0; i < (sizeof SECTIONS_AFTER_OFFICIAL / sizeof SECTIONS_AFTER_OFFICIAL[0]); ++i) {
@@ -354,7 +487,7 @@ void init_muxcredits(const lv_font_t *header_font) {
         } else if (i == 3) {
             ui_conKnightOne = con;
             ui_lblKnightTitleOne = ttl;
-        } else if (i == 4) {
+        } else {
             ui_conKnightTwo = con;
             ui_lblKnightTitleTwo = ttl;
         }
@@ -363,48 +496,24 @@ void init_muxcredits(const lv_font_t *header_font) {
     ui_conContrib = section(ui_conCredits, true);
     ui_lblContribTitle = lv_label_create(ui_conContrib);
 
-    container(ui_lblContribTitle, header_font, lv_color_hex(COL_CONTRIB_HEX), 0, 0, 0);
+    container(ui_lblContribTitle, header_font, lv_color_hex(COL_CON_HEX), 0, 0, 0);
 
-    lv_label_set_text_fmt(ui_lblContribTitle, "%s\nContributors", str_replace(config.SYSTEM.VERSION, "_", " "));
-    name(ui_conContrib, contributors, lv_color_hex(COL_CONTRIB_HEX));
+    lv_label_set_text_fmt(ui_lblContribTitle, NM_CON, str_replace(config.SYSTEM.VERSION, "_", " "));
+    name(ui_conContrib, contributors, lv_color_hex(COL_CON_HEX));
 
     ui_conSpecial = section(ui_conCredits, false);
 
-    ui_lblSpecialTitle = title(ui_conSpecial, "Special Thanks",
-                               header_font, lv_color_hex(COL_CONTRIB_HEX), 0, 10, 0);
+    ui_lblSpecialTitle = title(ui_conSpecial, LANG_SPECIAL, header_font, lv_color_hex(COL_CON_HEX), 0, 10, 0);
+    ui_lblSpecialMid = content(ui_conSpecial, LANG_EVERYONE, lv_color_hex(COL_CON_HEX), 100, 20);
 
-    ui_lblSpecialMid = content(
-            ui_conSpecial,
-            "A heartfelt thanks to artificers, druids, porters, theme creators, and translators "
-            "for your contributions to MustardOS. Your dedication has enriched this project, and I am "
-            "truly grateful for all your contributions and testing!",
-            lv_color_hex(COL_CONTRIB_HEX), 100, 20);
-
-    ui_lblBongleTitle = title(ui_conSpecial, "My One True Supporter",
-                              header_font, lv_color_hex(COL_CONTRIB_HEX), 20, 10, 0);
-
-    ui_lblBongleMid = content(
-            ui_conSpecial,
-            "To my wonderful wife, Mrs. Bongle. Whose amazing support, guidance, and patience has been my "
-            "light throughout this entire adventure. You mean everything to me and I love you more than "
-            "words could ever express!",
-            lv_color_hex(COL_CONTRIB_HEX), 100, 20);
+    ui_lblBongleTitle = title(ui_conSpecial, LANG_SUPPORT, header_font, lv_color_hex(COL_CON_HEX), 20, 10, 0);
+    ui_lblBongleMid = content(ui_conSpecial, LANG_BONGLE, lv_color_hex(COL_CON_HEX), 100, 20);
 
     ui_conKofi = section(ui_conCredits, false);
 
-    ui_lblKofiTitle = title(ui_conKofi, "Thank you for choosing MustardOS",
-                            header_font, lv_color_hex(COL_TITLE_YELLOW), 0, 0, 0);
-
-    ui_lblKofiMessageOne = content(
-            ui_conKofi,
-            "You can support us by donating or subscribing which helps the "
-            "development of this project.\n\nThis project is done as a hobby!",
-            lv_color_hex(COL_TEXT_AMBER), 100, 0);
-
-    ui_lblKofiMessageTwo = content(
-            ui_conKofi,
-            "Scan the below QR Code to take you to the Ko-fi page!",
-            lv_color_hex(COL_TEXT_AMBER), 100, 0);
+    ui_lblKofiTitle = title(ui_conKofi, LANG_THANKS, header_font, lv_color_hex(COL_TITLE_YELLOW), 0, 0, 0);
+    ui_lblKofiMessageOne = content(ui_conKofi, LANG_DONATE, lv_color_hex(COL_TEXT_AMBER), 100, 0);
+    ui_lblKofiMessageTwo = content(ui_conKofi, LANG_QRCODE, lv_color_hex(COL_TEXT_AMBER), 100, 0);
 
     ui_imgKofi = lv_img_create(ui_conKofi);
 
@@ -418,14 +527,10 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_clear_flag(ui_imgKofi, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_conMusic = section(ui_conCredits, false);
-    ui_lblMusicTitle = title(ui_conMusic, "Supporter Music",
-                             header_font, lv_color_hex(COL_TITLE_YELLOW), 0, 0, 20);
+    ui_lblMusicTitle = title(ui_conMusic, SONG_TITLE, header_font, lv_color_hex(COL_TITLE_YELLOW), 0, 0, 20);
 
-    ui_lblMusicMessage = content(
-            ui_conMusic, config.BOOT.FACTORY_RESET
-                         ? "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\nYour device will now reboot..."
-                         : "\nTrack - " SONG_TRACK "\nArtist - " SONG_ARTIST "\n\n\nHave a blessed day...",
-            lv_color_hex(COL_TEXT_AMBER), 100, 30);
+    const char *song_msg = config.BOOT.FACTORY_RESET ? SONG_STRING SONG_REBOOT : SONG_STRING SONG_BLESSED;
+    ui_lblMusicMessage = content(ui_conMusic, song_msg, lv_color_hex(COL_TEXT_AMBER), 100, 30);
 
     lv_disp_load_scr(ui_scrCredits);
 }
