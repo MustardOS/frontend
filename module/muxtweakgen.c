@@ -98,8 +98,8 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
 
-    int temp_mod = lv_dropdown_get_selected(ui_droColour_tweakgen);
-    if (temp_mod != Colour_original) set_setting_value("temp", temp_mod, -255);
+    int colour_mod = lv_dropdown_get_selected(ui_droColour_tweakgen);
+    if (colour_mod != Colour_original) set_setting_value("colour", colour_mod, -255);
 
     int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
     if (bright_mod != Brightness_original) set_setting_value("bright", bright_mod, 0);
@@ -307,9 +307,9 @@ static void update_option_values(void) {
     HANDLE_TWEAK_OPT(Brightness, lang.MUXTWEAKGEN.BRIGHTNESS_SET,
                      pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT), "bright", 0);
     HANDLE_TWEAK_OPT(Volume, lang.MUXTWEAKGEN.VOLUME_SET,
-                     pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive), "volume", 0);
+                     pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive), "audio", 0);
     HANDLE_TWEAK_OPT(Colour, lang.MUXTWEAKGEN.COLOUR_SET,
-                     lv_dropdown_get_selected(ui_droColour_tweakgen), "temp", -255);
+                     lv_dropdown_get_selected(ui_droColour_tweakgen), "colour", -255);
 }
 
 static void handle_option_prev(void) {
