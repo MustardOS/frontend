@@ -4,7 +4,76 @@ static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
+static char *get_selected_filter(void) {
+    lv_obj_t *focused = lv_group_get_focused(ui_group);
+    if (!focused) return NULL;
+
+    const char *text = lv_label_get_text(focused);
+    if (!text) return NULL;
+
+    return str_tolower(str_trim(str_replace(text, " ", "_")));
+}
+
+static char *read_filter_info(const char *filter_store) {
+    if (!filter_store || !*filter_store) return NULL;
+
+    // We aren't using the INI parsing here since it gets cranky
+    // the matrix is not valid "values" or something like that
+    char ini_path[PATH_MAX];
+    snprintf(ini_path, sizeof(ini_path), "%s/%s.ini", STORAGE_FILTER, filter_store);
+    remove_double_slashes(ini_path);
+
+    FILE *f = fopen(ini_path, "r");
+    if (!f) return NULL;
+
+    char line[MAX_BUFFER_SIZE];
+    int in_profile = 0;
+
+    while (fgets(line, sizeof(line), f)) {
+        char *s = str_trim(line);
+        if (!s || !*s) continue;
+        if (*s == '#' || *s == ';') continue;
+
+        if (*s == '[') {
+            in_profile = (strncasecmp(s, "[profile]", 9) == 0);
+            continue;
+        }
+
+        if (!in_profile) continue;
+
+        if (strncasecmp(s, "info", 4) == 0) {
+            char *eq = strchr(s, '=');
+            if (!eq) continue;
+
+            char *val = str_trim(eq + 1);
+            if (!val || !*val) break;
+
+            char *out = strdup(val);
+            fclose(f);
+            return out;
+        }
+    }
+
+    fclose(f);
+    return NULL;
+}
+
 static void show_help(void) {
+    if (!ui_count) {
+        show_info_box(lang.MUXCOLFILTER.TITLE, lang.MUXCOLFILTER.HELP, 0);
+        return;
+    }
+
+    char *selected = get_selected_filter();
+    char *info = read_filter_info(selected);
+
+    if (info && *info) {
+        show_info_box(lang.MUXCOLFILTER.TITLE, info, 0);
+        free(info);
+        return;
+    }
+
+    if (info) free(info);
     show_info_box(lang.MUXCOLFILTER.TITLE, lang.MUXCOLFILTER.HELP, 0);
 }
 
@@ -166,7 +235,7 @@ static void handle_a(void) {
     LOG_INFO(mux_module, "Single Colour Filter Assignment Triggered");
     play_sound(SND_CONFIRM);
 
-    char *selected = str_tolower(str_trim(str_replace(lv_label_get_text(lv_group_get_focused(ui_group)), " ", "_")));
+    char *selected = get_selected_filter();
     create_filter_assignment(selected, rom_name, SINGLE);
 
     close_input();
@@ -197,7 +266,7 @@ static void handle_x(void) {
     LOG_INFO(mux_module, "Directory Colour Filter Assignment Triggered");
     play_sound(SND_CONFIRM);
 
-    char *selected = str_tolower(str_trim(str_replace(lv_label_get_text(lv_group_get_focused(ui_group)), " ", "_")));
+    char *selected = get_selected_filter();
     create_filter_assignment(selected, rom_name, DIRECTORY);
 
     close_input();
@@ -210,7 +279,7 @@ static void handle_y(void) {
     LOG_INFO(mux_module, "Parent Colour Filter Assignment Triggered");
     play_sound(SND_CONFIRM);
 
-    char *selected = str_tolower(str_trim(str_replace(lv_label_get_text(lv_group_get_focused(ui_group)), " ", "_")));
+    char *selected = get_selected_filter();
     create_filter_assignment(selected, rom_name, PARENT);
 
     close_input();
