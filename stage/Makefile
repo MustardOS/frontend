@@ -10,7 +10,7 @@ LDFLAGS := -shared -Wl,--strip-all -ldl -lSDL2 -lSDL2_image -lGLESv2
 INCLUDES := -I. -I./common -I./overlay -I./render -I../common
 
 SRC := hook.c common/common.c ../common/inotify.c \
-	common/alpha.c common/anchor.c common/rotate.c common/scale.c common/stretch.c \
+	common/alpha.c common/anchor.c common/colour.c common/rotate.c common/scale.c common/stretch.c \
 	overlay/base.c overlay/battery.c overlay/bright.c overlay/volume.c \
 	render/sdl.c render/gles.c
 

@@ -6,6 +6,7 @@
 #include "../../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
+#include "../common/colour.h"
 #include "../common/rotate.h"
 #include "../common/scale.h"
 #include "../common/stretch.h"
@@ -24,6 +25,16 @@ static GLint gles_a_pos = -1;
 static GLint gles_a_uv = -1;
 static GLint gles_u_tex = -1;
 static GLint gles_u_alpha = -1;
+
+static GLuint gles_prog_content = 0;
+static GLint gles_u_brightness = -1;
+static GLint gles_u_contrast = -1;
+static GLint gles_u_saturation = -1;
+static GLint gles_u_hue = -1;
+static GLint gles_u_gamma = -1;
+
+static GLint gles_content_a_pos = -1;
+static GLint gles_content_a_uv = -1;
 
 static int prog_attempted = 0;
 static int prog_ready = 0;
@@ -50,18 +61,53 @@ static const char *vs_src =
         "attribute vec2 a_pos;"
         "attribute vec2 a_uv;"
         "varying vec2 v_uv;"
+
         "void main(){"
         "    gl_Position = vec4(a_pos, 0.0, 1.0);"
         "    v_uv = a_uv;"
         "}";
 
-static const char *fs_src =
+static const char *fs_overlay_src =
         "precision mediump float;"
         "uniform sampler2D u_tex;"
         "uniform float u_alpha;"
         "varying vec2 v_uv;"
+
         "void main(){"
         "    gl_FragColor = texture2D(u_tex, v_uv) * vec4(1.0, 1.0, 1.0, u_alpha);"
+        "}";
+
+static const char *fs_content_src =
+        "precision mediump float;"
+        "uniform sampler2D u_tex;"
+        "uniform float u_brightness;"
+        "uniform float u_contrast;"
+        "uniform float u_saturation;"
+        "uniform float u_hue;"
+        "uniform float u_gamma;"
+        "varying vec2 v_uv;"
+
+        "vec3 apply_colour(vec3 c) {"
+        "    c += u_brightness;"
+        "    c = (c - 0.5) * u_contrast + 0.5;"
+        "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
+        "    c = mix(vec3(l), c, u_saturation);"
+        "    float cosH = cos(u_hue);"
+        "    float sinH = sin(u_hue);"
+        "    mat3 hueMat = mat3("
+        "        0.299 + 0.701*cosH + 0.168*sinH, 0.587 - 0.587*cosH + 0.330*sinH, 0.114 - 0.114*cosH - 0.497*sinH,"
+        "        0.299 - 0.299*cosH - 0.328*sinH, 0.587 + 0.413*cosH + 0.035*sinH, 0.114 - 0.114*cosH + 0.292*sinH,"
+        "        0.299 - 0.300*cosH + 1.250*sinH, 0.587 - 0.588*cosH - 1.050*sinH, 0.114 + 0.886*cosH - 0.203*sinH"
+        "    );"
+        "    c = clamp(hueMat * c, 0.0, 1.0);"
+        "    c = pow(c, vec3(1.0 / u_gamma));"
+        "    return c;"
+        "}"
+
+        "void main(){"
+        "    vec4 t = texture2D(u_tex, v_uv);"
+        "    vec3 rgb = apply_colour(t.rgb);"
+        "    gl_FragColor = vec4(rgb, t.a);"
         "}";
 
 static void destroy_content(void) {
@@ -313,8 +359,10 @@ static GLuint compile_shader(GLenum type, const char *src) {
     if (ok != GL_TRUE) {
         char log_buffer[512];
         GLsizei n = 0;
+
         glGetShaderInfoLog(sh, (GLsizei) sizeof(log_buffer), &n, log_buffer);
         LOG_ERROR("stage", "GL shader compile failed: %.*s", (int) n, log_buffer);
+
         glDeleteShader(sh);
         return 0;
     }
@@ -330,16 +378,57 @@ static GLuint link_program(GLuint vs, GLuint fs) {
 
     GLint ok = GL_FALSE;
     glGetProgramiv(p, GL_LINK_STATUS, &ok);
+
     if (ok != GL_TRUE) {
         char log_buffer[512];
         GLsizei n = 0;
+
         glGetProgramInfoLog(p, (GLsizei) sizeof(log_buffer), &n, log_buffer);
         LOG_ERROR("stage", "GL program link failed: %.*s", (int) n, log_buffer);
+
         glDeleteProgram(p);
         return 0;
     }
 
     return p;
+}
+
+static void ensure_content_program(void) {
+    if (gles_prog_content) return;
+
+    GLuint vs = compile_shader(GL_VERTEX_SHADER, vs_src);
+    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fs_content_src);
+
+    if (!vs || !fs) {
+        if (vs) glDeleteShader(vs);
+        if (fs) glDeleteShader(fs);
+
+        return;
+    }
+
+    gles_prog_content = link_program(vs, fs);
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    if (!gles_prog_content) return;
+
+    gles_content_a_pos = glGetAttribLocation(gles_prog_content, "a_pos");
+    gles_content_a_uv = glGetAttribLocation(gles_prog_content, "a_uv");
+
+    if (gles_content_a_pos < 0 || gles_content_a_uv < 0) {
+        glDeleteProgram(gles_prog_content);
+        gles_prog_content = 0;
+
+        return;
+    }
+
+    gles_u_tex = glGetUniformLocation(gles_prog_content, "u_tex");
+    gles_u_brightness = glGetUniformLocation(gles_prog_content, "u_brightness");
+    gles_u_contrast = glGetUniformLocation(gles_prog_content, "u_contrast");
+    gles_u_saturation = glGetUniformLocation(gles_prog_content, "u_saturation");
+    gles_u_hue = glGetUniformLocation(gles_prog_content, "u_hue");
+    gles_u_gamma = glGetUniformLocation(gles_prog_content, "u_gamma");
 }
 
 static void save_gles_state(gles_state_t *st) {
@@ -383,6 +472,9 @@ static void destroy_overlay(void) {
 }
 
 static void on_context_changed(void) {
+    colour_reset();
+    colour_get();
+
     destroy_content();
     destroy_base_gles();
     destroy_overlay();
@@ -442,7 +534,7 @@ static void ensure_program(void) {
     prog_attempted = 1;
 
     GLuint vs = compile_shader(GL_VERTEX_SHADER, vs_src);
-    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fs_src);
+    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fs_overlay_src);
 
     if (!vs || !fs) {
         if (vs) glDeleteShader(vs);
@@ -473,6 +565,27 @@ static void ensure_program(void) {
     prog_ready = 1;
 }
 
+static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
+    if (!gles_prog_content || !tex) return;
+
+    glUseProgram(gles_prog_content);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glUniform1i(gles_u_tex, 0);
+
+    glEnableVertexAttribArray((GLuint) gles_content_a_pos);
+    glEnableVertexAttribArray((GLuint) gles_content_a_uv);
+
+    glVertexAttribPointer((GLuint) gles_content_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), &vtx[0].x);
+    glVertexAttribPointer((GLuint) gles_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), &vtx[0].u);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glDisableVertexAttribArray((GLuint) gles_content_a_pos);
+    glDisableVertexAttribArray((GLuint) gles_content_a_uv);
+}
+
 static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     if (!prog_ready) return;
     if (!tex) return;
@@ -499,19 +612,30 @@ static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
 }
 
 static void draw_rotated_content(int fb_w, int fb_h, int rot) {
-    if (rot == ROTATE_0) return;
-
     ensure_content_tex(fb_w, fb_h);
+    ensure_content_program();
 
-    if (!content_tex) return;
+    if (!content_tex || !gles_prog_content) return;
 
     glBindTexture(GL_TEXTURE_2D, content_tex);
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
 
+    glUseProgram(gles_prog_content);
+
+    const struct colour_state *col = colour_get();
+    glUniform1f(gles_u_brightness, col->brightness);
+    glUniform1f(gles_u_contrast, col->contrast);
+    glUniform1f(gles_u_saturation, col->saturation);
+    glUniform1f(gles_u_hue, col->hue);
+    glUniform1f(gles_u_gamma, col->gamma);
+
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     gl_vtx_t vtx[4];
     build_fullscreen_quad(vtx, rot);
 
-    draw_quad(content_tex, vtx, 1.0f);
+    draw_quad_content(content_tex, vtx);
 }
 
 #define UPDATE_GEOM_CACHE(LAYER, TYPE)                           \
@@ -608,8 +732,11 @@ static void stage_draw(int fb_w, int fb_h) {
 
     glViewport(0, 0, fb_w, fb_h);
 
+    const struct colour_state *col = colour_get();
+    const int need_colour = col->brightness != 0.0f || col->contrast != 1.0f || col->saturation != 1.0f || col->hue != 0.0f || col->gamma != 1.0f;
+
     const int rot = rotate_read_cached();
-    if (rot != ROTATE_0) {
+    if (rot != ROTATE_0 || need_colour) {
         glDisable(GL_BLEND);
         draw_rotated_content(fb_w, fb_h, rot);
     }
