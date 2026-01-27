@@ -1437,10 +1437,10 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
             break;
         default:
             snprintf(static_image_path, sizeof(static_image_path), "%s/%s%d.png",
-                     INTERNAL_OVERLAY, mux_dimension, config.VISUAL.OVERLAYIMAGE);
+                     STORAGE_OVERLAY, mux_dimension, config.VISUAL.OVERLAYIMAGE);
             if (!file_exist(static_image_path)) {
                 snprintf(static_image_path, sizeof(static_image_path), "%s/standard/%d.png",
-                         INTERNAL_OVERLAY, config.VISUAL.OVERLAYIMAGE);
+                         STORAGE_OVERLAY, config.VISUAL.OVERLAYIMAGE);
             }
             int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
             if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;

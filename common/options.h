@@ -65,9 +65,7 @@
 #define UNION_ROM_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP    "/tmp/skip_opt"
 
-#define INTERNAL_THEME   OPT_PATH "share/theme/MustardOS"
-#define INTERNAL_OVERLAY OPT_PATH "share/overlay"
-
+#define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
 #define BGM_SILENCE    OPT_PATH "share/media/silence.ogg"
 
@@ -84,24 +82,29 @@
 #define RUN_STORAGE_PATH RUN_PATH "storage/"
 #define OPT_SHARE_PATH   OPT_PATH "share/"
 
-#define STORAGE_HOTKEY OPT_SHARE_PATH   "hotkey"
-#define STORAGE_SHOTS  RUN_STORAGE_PATH "screenshot"
-#define STORAGE_MUSIC  RUN_STORAGE_PATH "music"
-#define STORAGE_SOUND  OPT_SHARE_PATH   "media/sound"
-#define STORAGE_LANG   OPT_SHARE_PATH   "language"
+#define STORAGE_SHOTS   RUN_STORAGE_PATH "screenshot"
+#define STORAGE_MUSIC   RUN_STORAGE_PATH "music"
 
-#define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
+#define STORAGE_HOTKEY  OPT_SHARE_PATH "hotkey"
+#define STORAGE_SOUND   OPT_SHARE_PATH "media/sound"
+#define STORAGE_LANG    OPT_SHARE_PATH "language"
+#define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
+#define STORAGE_FILTER  OPT_SHARE_PATH "filter"
+
 #define INFO_COR_PATH OPT_SHARE_PATH   "info/core"
 #define INFO_CNT_PATH OPT_SHARE_PATH   "info/controller"
+#define INFO_GCD_PATH OPT_SHARE_PATH   "info/gamecontrollerdb"
+
+#define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_CKS_PATH RUN_STORAGE_PATH "info/collection/kiosk"
-#define INFO_GCD_PATH OPT_SHARE_PATH   "info/gamecontrollerdb"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
 
 #define MUOS_ARCH_PATH "ARCHIVE"
 #define MUOS_BASE_PATH "MUOS"
+
 #define MUOS_APPS_PATH MUOS_BASE_PATH "/application"
 #define MUOS_INFO_PATH MUOS_BASE_PATH "/info"
 

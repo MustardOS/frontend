@@ -324,6 +324,10 @@ static void module_tag(void) {
     module_run("option", muxtag_main);
 }
 
+static void module_filter(void) {
+    module_run("option", muxcolfilter_main);
+}
+
 static void module_option(void) {
     module_run("explore", muxoption_main);
 }
@@ -435,6 +439,7 @@ static const ModuleEntry modules[] = {
         {"control",    NULL, NULL, NULL, module_control},
         {"retroarch",  NULL, NULL, NULL, module_retroarch},
         {"tag",        NULL, NULL, NULL, module_tag},
+        {"filter",     NULL, NULL, NULL, module_filter},
         {"explore",    NULL, NULL, NULL, module_explore},
         {"collection", NULL, NULL, NULL, module_collection},
         {"history",    NULL, NULL, NULL, module_history},

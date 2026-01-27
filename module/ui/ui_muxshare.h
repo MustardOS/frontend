@@ -199,6 +199,7 @@
     KIOSK(RetroArch,  RETROARCH,  "retroarch")  \
     KIOSK(Search,     SEARCH,     "search")     \
     KIOSK(Tag,        TAG,        "tag")        \
+    KIOSK(ColFilter,  COLFILTER,  "colfilter")  \
     KIOSK(Catalogue,  CATALOGUE,  "catalogue")  \
     KIOSK(RAConfig,   RACONFIG,   "raconfig")   \
     KIOSK(Theme,      THEME,      "theme")      \
@@ -272,6 +273,7 @@
     OPTION(Governor,  GOVERNOR,  "governor")  \
     OPTION(Control,   CONTROL,   "control")   \
     OPTION(RetroArch, RETROARCH, "retroarch") \
+    OPTION(ColFilter, COLFILTER, "colfilter") \
     OPTION(Tag,       TAG,       "tag")
 
 #define OVERLAY_ELEMENTS                        \

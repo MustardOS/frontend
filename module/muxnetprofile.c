@@ -144,16 +144,8 @@ static void list_nav_next(int steps) {
 }
 
 static void create_profile_items(void) {
-    char profile_path[MAX_BUFFER_SIZE];
-    snprintf(profile_path, sizeof(profile_path), RUN_STORAGE_PATH "network");
-
-    const char *dirs[] = {
-            profile_path
-    };
-
-    const char *exts[] = {
-            ".ini"
-    };
+    const char *dirs[] = {RUN_STORAGE_PATH "network"};
+    const char *exts[] = {".ini"};
 
     char **files = NULL;
     size_t file_count = 0;
@@ -169,7 +161,6 @@ static void create_profile_items(void) {
     }
 
     qsort(files, file_count, sizeof(char *), str_compare);
-
     reset_ui_groups();
 
     for (size_t i = 0; i < file_count; ++i) {
@@ -185,17 +176,14 @@ static void create_profile_items(void) {
                  strip_ext(profile_name));
 
         ui_count++;
-
         add_item(&items, &item_count, profile_store, profile_store, "", ITEM);
 
         lv_obj_t *ui_pnlProfile = lv_obj_create(ui_pnlContent);
-        if (!ui_pnlProfile) continue;
-
         apply_theme_list_panel(ui_pnlProfile);
         lv_obj_set_user_data(ui_pnlProfile, strdup(profile_store));
 
         lv_obj_t *ui_lblProfileItem = lv_label_create(ui_pnlProfile);
-        if (ui_lblProfileItem) apply_theme_list_item(&theme, ui_lblProfileItem, profile_store);
+        apply_theme_list_item(&theme, ui_lblProfileItem, profile_store);
 
         lv_obj_t *ui_lblProfileItemGlyph = lv_img_create(ui_pnlProfile);
         apply_theme_list_glyph(&theme, ui_lblProfileItemGlyph, mux_module, "profile");
@@ -209,19 +197,7 @@ static void create_profile_items(void) {
     }
 
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-
     free_array(files, file_count);
-
-    if (ui_count > 0) {
-        if (!is_network_connected()) {
-            lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        }
-
-        lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        list_nav_move(0, +1);
-    }
 }
 
 static void handle_a(void) {
@@ -312,13 +288,23 @@ int muxnetprofile_main(void) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
-
     init_fonts();
 
     create_profile_items();
     init_elements();
 
-    if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
+    if (ui_count > 0) {
+        if (!is_network_connected()) {
+            lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
+
+        lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        list_nav_move(0, +1);
+    } else {
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
+    }
 
     init_timer(ui_gen_refresh_task, NULL);
 

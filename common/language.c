@@ -293,6 +293,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHRONY.HELP.UPDATEINT, "Interval between time updates");
     SPECIFIC_FIELD(lang->MUXCHRONY.HELP.LEAP, "Current synchronisation status of the system clock");
 
+    // muxcolfilter
+    SPECIFIC_FIELD(lang->MUXCOLFILTER.TITLE, "COLOUR FILTER");
+    SPECIFIC_FIELD(lang->MUXCOLFILTER.HELP, "Change the colour filter of your current selected content");
+    SPECIFIC_FIELD(lang->MUXCOLFILTER.NONE, "No Colour Filters Found…");
+
     // muxcollect
     SPECIFIC_FIELD(lang->MUXCOLLECT.TITLE, "COLLECTION");
     SPECIFIC_FIELD(lang->MUXCOLLECT.NONE, "Nothing Saved Yet…");
@@ -564,6 +569,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.RETROARCH, "RetroArch Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.SEARCH, "Content Search");
     SPECIFIC_FIELD(lang->MUXKIOSK.TAG, "Content Tag");
+    SPECIFIC_FIELD(lang->MUXKIOSK.COLFILTER, "Colour Filter");
     SPECIFIC_FIELD(lang->MUXKIOSK.CATALOGUE, "Custom Catalogue");
     SPECIFIC_FIELD(lang->MUXKIOSK.RACONFIG, "Custom RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.THEME, "Custom Themes");
@@ -605,6 +611,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RETROARCH, "Enable or restrict RetroArch settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.SEARCH, "Allow searching for content");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.TAG, "Permit tagging and metadata changes");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLFILTER, "Permit changes to content colour filter");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CATALOGUE, "Allow access to install content catalogues");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RACONFIG, "Allow access to use custom RetroArch configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEME, "Permit changing system themes");
@@ -791,13 +798,15 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
     SPECIFIC_FIELD(lang->MUXOPTION.CONTROL, "Control Scheme");
     SPECIFIC_FIELD(lang->MUXOPTION.RETROARCH, "Threaded Video");
-    SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Glyph Tag");
+    SPECIFIC_FIELD(lang->MUXOPTION.COLFILTER, "Colour Filter");
+    SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Content Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CORE, "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.GOVERNOR, "Set the CPU governor for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.RETROARCH, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.COLFILTER, "Select a colour filter that will change the display output of the running content. May not work with everything!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 

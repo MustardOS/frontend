@@ -290,7 +290,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     is_directory = directory_exist(rom_dir) && !app;
     if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_system, sizeof(rom_name), "%s", sys);
+    snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
     is_app = app;
 

@@ -8,7 +8,6 @@ static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
 
 static int is_directory = 0;
-static int is_retroarch_core = 1;
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -82,6 +81,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     bool is_gov = strcmp(opt_type, "governor") == 0;
     bool is_con = strcmp(opt_type, "control") == 0;
     bool is_tag = strcmp(opt_type, "tag") == 0;
+    bool is_flt = strcmp(opt_type, "filter") == 0;
     bool is_rac = strcmp(opt_type, "retroarch") == 0;
 
     if (!*value) {
@@ -89,6 +89,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
                 is_gov ? device.CPU.DEFAULT :
                 is_con ? lang.MUXOPTION.NONE :
                 is_tag ? lang.MUXOPTION.NOT_ASSIGNED :
+                is_flt ? lang.MUXOPTION.NONE :
                 is_rac ? lang.GENERIC.DISABLED :
                 lang.GENERIC.UNKNOWN;
     }
@@ -106,6 +107,8 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
         } else {
             snprintf(cap_value, sizeof(cap_value), "%s", lang.GENERIC.ENABLED);
         }
+    } else if (is_flt) {
+        snprintf(cap_value, sizeof(cap_value), "%s", str_replace(value, "_", " "));
     } else {
         snprintf(cap_value, sizeof(cap_value), "%s", value);
     }
@@ -129,6 +132,10 @@ static void add_info_items(void) {
     const char *rac_file = get_content_line(rom_dir, rom_name, "rac", 1);
     const char *rac_dir = get_content_line(rom_dir, NULL, "rac", 1);
     add_info_item_type(ui_lblRetroArchValue_option, rac_file, rac_dir, "retroarch", true);
+
+    const char *flt_file = get_content_line(rom_dir, rom_name, "flt", 1);
+    const char *flt_dir = get_content_line(rom_dir, NULL, "flt", 1);
+    add_info_item_type(ui_lblColFilterValue_option, flt_file, flt_dir, "filter", true);
 
     if (!is_directory) {
         const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
@@ -222,6 +229,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
     INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
     INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
+    INIT_VALUE_ITEM(-1, option, ColFilter, lang.MUXOPTION.COLFILTER, "colfilter", "");
     if (!is_directory) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
     add_info_items();
 
@@ -230,7 +238,6 @@ static void init_navigation_group(void) {
 
     const char *core_label = lv_label_get_text(ui_lblCoreValue_option);
     if (core_label && !strcasestr(core_label, "RetroArch")) {
-        is_retroarch_core = 0;
         HIDE_VALUE_ITEM(option, Control);
         HIDE_VALUE_ITEM(option, RetroArch);
     }
@@ -260,11 +267,12 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[UI_COUNT] = {
-            {"search",    &kiosk.CONTENT.SEARCH,   NULL},
-            {"assign",    &kiosk.CONTENT.CORE,     NULL},
-            {"governor",  &kiosk.CONTENT.GOVERNOR, NULL},
+            {"search",    &kiosk.CONTENT.SEARCH,    NULL},
+            {"assign",    &kiosk.CONTENT.CORE,      NULL},
+            {"governor",  &kiosk.CONTENT.GOVERNOR,  NULL},
             {"control",   &kiosk.CONTENT.CONTROL,   visible_control},
             {"retroarch", &kiosk.CONTENT.RETROARCH, visible_retroarch},
+            {"filter",    &kiosk.CONTENT.COLFILTER, NULL},
             {"tag",       &kiosk.CONTENT.TAG,       visible_tag},
     };
 
