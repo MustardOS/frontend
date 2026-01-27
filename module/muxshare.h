@@ -113,6 +113,8 @@ char *load_content_control_scheme(char *sys_dir, const char *pointer, int force,
 
 char *load_content_retroarch(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);
 
+char *load_content_filter(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);
+
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
 void update_file_counter(lv_obj_t *counter, int file_count);
