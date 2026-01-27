@@ -9,6 +9,7 @@
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
+#include "../common/rotate.h"
 #include "../common/scale.h"
 #include "battery.h"
 
@@ -23,6 +24,7 @@ int battery_last_step = -1;
 
 int battery_anchor_cached = -1;
 int battery_scale_cached = -1;
+int battery_rotate_cached = ROTATE_0;
 
 SDL_Texture *battery_sdl_tex[INDICATOR_STEPS];
 int battery_sdl_w[INDICATOR_STEPS];

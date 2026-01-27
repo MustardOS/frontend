@@ -6,7 +6,9 @@
 #include "../../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
+#include "../common/rotate.h"
 #include "../common/scale.h"
+#include "../common/stretch.h"
 #include "../overlay/base.h"
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
@@ -27,6 +29,10 @@ static int prog_attempted = 0;
 static int prog_ready = 0;
 
 static SDL_GLContext last_ctx = NULL;
+
+static GLuint content_tex = 0;
+static int content_tex_w = 0;
+static int content_tex_h = 0;
 
 typedef struct {
     GLint program;
@@ -58,9 +64,157 @@ static const char *fs_src =
         "    gl_FragColor = texture2D(u_tex, v_uv) * vec4(1.0, 1.0, 1.0, u_alpha);"
         "}";
 
+static void destroy_content(void) {
+    if (content_tex) {
+        glDeleteTextures(1, &content_tex);
+        content_tex = 0;
+    }
+
+    content_tex_w = 0;
+    content_tex_h = 0;
+}
+
+static void ensure_content_tex(int w, int h) {
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+
+    if (content_tex && w == content_tex_w && h == content_tex_h) return;
+
+    destroy_content();
+
+    glGenTextures(1, &content_tex);
+    glBindTexture(GL_TEXTURE_2D, content_tex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    content_tex_w = w;
+    content_tex_h = h;
+}
+
+static void rotate_uv(gl_vtx_t out[4], int rot) {
+    float u0 = 0.0f, v0 = 0.0f;
+    float u1 = 0.0f, v1 = 1.0f;
+    float u2 = 1.0f, v2 = 0.0f;
+    float u3 = 1.0f, v3 = 1.0f;
+
+    if (rot == ROTATE_90) {
+        out[0].u = u1;
+        out[0].v = v1;
+        out[1].u = u3;
+        out[1].v = v3;
+        out[2].u = u0;
+        out[2].v = v0;
+        out[3].u = u2;
+        out[3].v = v2;
+        return;
+    }
+
+    if (rot == ROTATE_180) {
+        out[0].u = u3;
+        out[0].v = v3;
+        out[1].u = u2;
+        out[1].v = v2;
+        out[2].u = u1;
+        out[2].v = v1;
+        out[3].u = u0;
+        out[3].v = v0;
+        return;
+    }
+
+    if (rot == ROTATE_270) {
+        out[0].u = u2;
+        out[0].v = v2;
+        out[1].u = u0;
+        out[1].v = v0;
+        out[2].u = u3;
+        out[2].v = v3;
+        out[3].u = u1;
+        out[3].v = v1;
+        return;
+    }
+
+    out[0].u = u0;
+    out[0].v = v0;
+    out[1].u = u1;
+    out[1].v = v1;
+    out[2].u = u2;
+    out[2].v = v2;
+    out[3].u = u3;
+    out[3].v = v3;
+}
+
+static void build_fullscreen_quad(gl_vtx_t out[4], int rot) {
+    out[0].x = -1.0f;
+    out[0].y = 1.0f;
+    out[1].x = -1.0f;
+    out[1].y = -1.0f;
+    out[2].x = 1.0f;
+    out[2].y = 1.0f;
+    out[3].x = 1.0f;
+    out[3].y = -1.0f;
+
+    switch (rot) {
+        case ROTATE_90:
+            out[0].u = 0.0f;
+            out[0].v = 0.0f;
+            out[1].u = 1.0f;
+            out[1].v = 0.0f;
+            out[2].u = 0.0f;
+            out[2].v = 1.0f;
+            out[3].u = 1.0f;
+            out[3].v = 1.0f;
+            break;
+
+        case ROTATE_180:
+            out[0].u = 1.0f;
+            out[0].v = 0.0f;
+            out[1].u = 1.0f;
+            out[1].v = 1.0f;
+            out[2].u = 0.0f;
+            out[2].v = 0.0f;
+            out[3].u = 0.0f;
+            out[3].v = 1.0f;
+            break;
+
+        case ROTATE_270:
+            out[0].u = 1.0f;
+            out[0].v = 1.0f;
+            out[1].u = 0.0f;
+            out[1].v = 1.0f;
+            out[2].u = 1.0f;
+            out[2].v = 0.0f;
+            out[3].u = 0.0f;
+            out[3].v = 0.0f;
+            break;
+
+        default: // ROTATE_0
+            out[0].u = 0.0f;
+            out[0].v = 1.0f;
+            out[1].u = 0.0f;
+            out[1].v = 0.0f;
+            out[2].u = 1.0f;
+            out[2].v = 1.0f;
+            out[3].u = 1.0f;
+            out[3].v = 0.0f;
+            break;
+    }
+}
+
 static void build_quad_ndc(gl_vtx_t out[4], int tex_w, int tex_h, int fb_w, int fb_h, int anchor, int scale) {
-    float draw_w = (float) tex_w;
-    float draw_h = (float) tex_h;
+    const int rot = rotate_read_cached();
+
+    int draw_w_i = tex_w;
+    int draw_h_i = tex_h;
+
+    stretch_draw_size(tex_w, tex_h, fb_w, fb_h, scale, rot, &draw_w_i, &draw_h_i);
+
+    float draw_w = (float) draw_w_i;
+    float draw_h = (float) draw_h_i;
 
     if (draw_w < 1.0f) draw_w = 1.0f;
     if (draw_h < 1.0f) draw_h = 1.0f;
@@ -68,26 +222,12 @@ static void build_quad_ndc(gl_vtx_t out[4], int tex_w, int tex_h, int fb_w, int 
     if (fb_w < 1) fb_w = 1;
     if (fb_h < 1) fb_h = 1;
 
-    if (scale == SCALE_FIT) {
-        const float sx = (float) fb_w / draw_w;
-        const float sy = (float) fb_h / draw_h;
-        const float s = (sx < sy) ? sx : sy;
-        draw_w *= s;
-        draw_h *= s;
-    } else if (scale == SCALE_STRETCH) {
-        draw_w = (float) fb_w;
-        draw_h = (float) fb_h;
-    }
-
-    if (draw_w < 1.0f) draw_w = 1.0f;
-    if (draw_h < 1.0f) draw_h = 1.0f;
-
     const float w_ndc = (draw_w * (2.0f / (float) fb_w));
     const float h_ndc = (draw_h * (2.0f / (float) fb_h));
 
     float x0, x1, y0, y1;
 
-    switch (anchor) {
+    switch (get_anchor_rotate(anchor, rot)) {
         case ANCHOR_TOP_LEFT:
             x0 = -1.0f;
             x1 = x0 + w_ndc;
@@ -152,20 +292,14 @@ static void build_quad_ndc(gl_vtx_t out[4], int tex_w, int tex_h, int fb_w, int 
 
     out[0].x = x0;
     out[0].y = y0;
-    out[0].u = 0.0f;
-    out[0].v = 0.0f;
     out[1].x = x0;
     out[1].y = y1;
-    out[1].u = 0.0f;
-    out[1].v = 1.0f;
     out[2].x = x1;
     out[2].y = y0;
-    out[2].u = 1.0f;
-    out[2].v = 0.0f;
     out[3].x = x1;
     out[3].y = y1;
-    out[3].u = 1.0f;
-    out[3].v = 1.0f;
+
+    rotate_uv(out, rot);
 }
 
 static GLuint compile_shader(GLenum type, const char *src) {
@@ -249,12 +383,15 @@ static void destroy_overlay(void) {
 }
 
 static void on_context_changed(void) {
+    destroy_content();
     destroy_base_gles();
     destroy_overlay();
 
+    base_rotate_cached = ROTATE_0;
     base_nop_last = -1;
     vtx_base_valid = 0;
 
+    battery_rotate_cached = ROTATE_0;
     battery_preload_gles_done = 0;
     battery_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -265,6 +402,7 @@ static void on_context_changed(void) {
     }
     vtx_battery_valid = 0;
 
+    bright_rotate_cached = ROTATE_0;
     bright_preload_gles_done = 0;
     bright_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -275,6 +413,7 @@ static void on_context_changed(void) {
     }
     vtx_bright_valid = 0;
 
+    volume_rotate_cached = ROTATE_0;
     volume_preload_gles_done = 0;
     volume_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -359,6 +498,22 @@ static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     glDisableVertexAttribArray((GLuint) gles_a_uv);
 }
 
+static void draw_rotated_content(int fb_w, int fb_h, int rot) {
+    if (rot == ROTATE_0) return;
+
+    ensure_content_tex(fb_w, fb_h);
+
+    if (!content_tex) return;
+
+    glBindTexture(GL_TEXTURE_2D, content_tex);
+    glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
+
+    gl_vtx_t vtx[4];
+    build_fullscreen_quad(vtx, rot);
+
+    draw_quad(content_tex, vtx, 1.0f);
+}
+
 #define UPDATE_GEOM_CACHE(LAYER, TYPE)                           \
     do {                                                         \
         int gc = get_##TYPE##_cached(&(LAYER##_##TYPE##_cache)); \
@@ -368,18 +523,31 @@ static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
         }                                                        \
     } while (0)
 
+#define UPDATE_ROT_CACHE(LAYER)           \
+    do {                                  \
+        int r = rotate_read_cached();     \
+        if (r != LAYER##_rotate_cached) { \
+            LAYER##_rotate_cached = r;    \
+            vtx_##LAYER##_valid = 0;      \
+        }                                 \
+    } while (0)
+
 static void update_geometry_caches(void) {
     UPDATE_GEOM_CACHE(base, anchor);
     UPDATE_GEOM_CACHE(base, scale);
+    UPDATE_ROT_CACHE(base);
 
     UPDATE_GEOM_CACHE(battery, anchor);
     UPDATE_GEOM_CACHE(battery, scale);
+    UPDATE_ROT_CACHE(battery);
 
     UPDATE_GEOM_CACHE(bright, anchor);
     UPDATE_GEOM_CACHE(bright, scale);
+    UPDATE_ROT_CACHE(bright);
 
     UPDATE_GEOM_CACHE(volume, anchor);
     UPDATE_GEOM_CACHE(volume, scale);
+    UPDATE_ROT_CACHE(volume);
 }
 
 static void stage_draw(int fb_w, int fb_h) {
@@ -438,11 +606,17 @@ static void stage_draw(int fb_w, int fb_h) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
 
+    glViewport(0, 0, fb_w, fb_h);
+
+    const int rot = rotate_read_cached();
+    if (rot != ROTATE_0) {
+        glDisable(GL_BLEND);
+        draw_rotated_content(fb_w, fb_h, rot);
+    }
+
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glViewport(0, 0, fb_w, fb_h);
 
     // Draw base overlay if present (and not disabled)
     if (!base_disabled && base_gles_ready && vtx_base_valid) {
@@ -497,9 +671,23 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     int nh = 0;
     SDL_GL_GetDrawableSize(window, &nw, &nh);
 
+    static int last_rot = ROTATE_0;
+    const int r = rotate_read_cached();
+
+    int invalidate = 0;
+
+    if (r != last_rot) {
+        last_rot = r;
+        invalidate = 1;
+    }
+
     if (nw != fb_cached_w || nh != fb_cached_h) {
         fb_cached_w = nw;
         fb_cached_h = nh;
+        invalidate = 1;
+    }
+
+    if (invalidate) {
         vtx_base_valid = 0;
         vtx_battery_valid = 0;
         vtx_bright_valid = 0;

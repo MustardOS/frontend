@@ -23,6 +23,7 @@ extern uint64_t bright_last_change_ms;
 
 extern int bright_anchor_cached;
 extern int bright_scale_cached;
+extern int bright_rotate_cached;
 
 extern SDL_Texture *bright_sdl_tex[INDICATOR_STEPS];
 extern int bright_sdl_w[INDICATOR_STEPS];

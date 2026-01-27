@@ -27,3 +27,5 @@ enum overlay_anchor {
 };
 
 int get_anchor_cached(struct anchor_cache *cache);
+
+int get_anchor_rotate(int anchor, int rot);

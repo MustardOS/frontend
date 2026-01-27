@@ -8,11 +8,13 @@
 #include "../../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
+#include "../common/rotate.h"
 #include "../common/scale.h"
 #include "base.h"
 
 int base_anchor_cached = -1;
 int base_scale_cached = -1;
+int base_rotate_cached = ROTATE_0;
 
 SDL_Texture *base_sdl_tex;
 int base_sdl_ready;
@@ -138,6 +140,8 @@ static int resolve_base_overlay(const struct overlay_resolver *res, void *ctx, c
 
     LOG_WARN("stage", "Overlay not found (core=%s, system=%s, content=%s, dim=%s)",
              ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension);
+
+    base_overlay_disabled_cached = 1;
     return 0;
 }
 

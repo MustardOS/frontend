@@ -11,7 +11,9 @@
 #define INDICATOR_STEPS   10
 #define INDICATOR_SHOW_MS 1024
 
-#define OVERLAY_LOADER  "/tmp/ovl_go"
+#define OVERLAY_LOADER "/tmp/ovl_go"
+#define OVERLAY_RUNNER "/run/muos/overlay."
+
 #define INTERNAL_SHARE  "/opt/muos/share" // Do NOT put a trailing slash here!
 #define INTERNAL_STORE  "/run/muos/storage/"
 #define INTERNAL_CONFIG "/opt/muos/config/"

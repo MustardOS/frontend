@@ -23,6 +23,7 @@ extern uint64_t volume_last_change_ms;
 
 extern int volume_anchor_cached;
 extern int volume_scale_cached;
+extern int volume_rotate_cached;
 
 extern SDL_Texture *volume_sdl_tex[INDICATOR_STEPS];
 extern int volume_sdl_w[INDICATOR_STEPS];

@@ -10,6 +10,7 @@
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
+#include "../common/rotate.h"
 #include "../common/scale.h"
 #include "volume.h"
 
@@ -26,6 +27,7 @@ uint64_t volume_last_change_ms = 0;
 
 int volume_anchor_cached = -1;
 int volume_scale_cached = -1;
+int volume_rotate_cached = ROTATE_0;
 
 SDL_Texture *volume_sdl_tex[INDICATOR_STEPS];
 int volume_sdl_w[INDICATOR_STEPS];

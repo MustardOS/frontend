@@ -5,7 +5,7 @@
 #include <linux/limits.h>
 #include "../common/common.h"
 
-#define BASE_OVERLAY_NOP "/run/muos/overlay.disable"
+#define BASE_OVERLAY_NOP OVERLAY_RUNNER "disable"
 
 #define BASE_ALPHA OVERLAY_CONFIG "gen_alpha"
 #define BASE_ANCHOR OVERLAY_CONFIG "gen_anchor"
@@ -13,6 +13,7 @@
 
 extern int base_anchor_cached;
 extern int base_scale_cached;
+extern int base_rotate_cached;
 
 extern SDL_Texture *base_sdl_tex;
 extern int base_sdl_ready;

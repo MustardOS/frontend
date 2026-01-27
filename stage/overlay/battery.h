@@ -5,7 +5,7 @@
 #include <linux/limits.h>
 #include "../common/common.h"
 
-#define BATTERY_DETECT "/run/muos/overlay.battery"
+#define BATTERY_DETECT OVERLAY_RUNNER "battery"
 
 #define BATTERY_ALPHA OVERLAY_CONFIG "bat_alpha"
 #define BATTERY_ANCHOR OVERLAY_CONFIG "bat_anchor"
@@ -25,6 +25,7 @@ extern int battery_last_step;
 
 extern int battery_anchor_cached;
 extern int battery_scale_cached;
+extern int battery_rotate_cached;
 
 extern SDL_Texture *battery_sdl_tex[INDICATOR_STEPS];
 extern int battery_sdl_w[INDICATOR_STEPS];
