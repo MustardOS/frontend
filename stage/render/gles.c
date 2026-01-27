@@ -7,6 +7,7 @@
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/colour.h"
+#include "../common/filter.h"
 #include "../common/rotate.h"
 #include "../common/scale.h"
 #include "../common/stretch.h"
@@ -32,6 +33,9 @@ static GLint gles_u_contrast = -1;
 static GLint gles_u_saturation = -1;
 static GLint gles_u_hue = -1;
 static GLint gles_u_gamma = -1;
+
+static GLint gles_u_filter = -1;
+static GLint gles_u_filter_enabled = -1;
 
 static GLint gles_content_a_pos = -1;
 static GLint gles_content_a_uv = -1;
@@ -85,6 +89,8 @@ static const char *fs_content_src =
         "uniform float u_saturation;"
         "uniform float u_hue;"
         "uniform float u_gamma;"
+        "uniform mat3 u_filter;"
+        "uniform int u_filter_enabled;"
         "varying vec2 v_uv;"
 
         "vec3 apply_colour(vec3 c) {"
@@ -100,6 +106,7 @@ static const char *fs_content_src =
         "        0.299 - 0.300*cosH + 1.250*sinH, 0.587 - 0.588*cosH - 1.050*sinH, 0.114 + 0.886*cosH - 0.203*sinH"
         "    );"
         "    c = clamp(hueMat * c, 0.0, 1.0);"
+        "    if (u_filter_enabled != 0) { c = clamp(u_filter * c, 0.0, 1.0); }"
         "    c = pow(c, vec3(1.0 / u_gamma));"
         "    return c;"
         "}"
@@ -424,6 +431,8 @@ static void ensure_content_program(void) {
     }
 
     gles_u_tex = glGetUniformLocation(gles_prog_content, "u_tex");
+    gles_u_filter = glGetUniformLocation(gles_prog_content, "u_filter");
+    gles_u_filter_enabled = glGetUniformLocation(gles_prog_content, "u_filter_enabled");
     gles_u_brightness = glGetUniformLocation(gles_prog_content, "u_brightness");
     gles_u_contrast = glGetUniformLocation(gles_prog_content, "u_contrast");
     gles_u_saturation = glGetUniformLocation(gles_prog_content, "u_saturation");
@@ -472,8 +481,11 @@ static void destroy_overlay(void) {
 }
 
 static void on_context_changed(void) {
-    colour_reset();
-    colour_get();
+    colour_adjust_reset();
+    colour_adjust_get();
+
+    colour_filter_reset();
+    colour_filter_get();
 
     destroy_content();
     destroy_base_gles();
@@ -622,12 +634,16 @@ static void draw_rotated_content(int fb_w, int fb_h, int rot) {
 
     glUseProgram(gles_prog_content);
 
-    const struct colour_state *col = colour_get();
-    glUniform1f(gles_u_brightness, col->brightness);
-    glUniform1f(gles_u_contrast, col->contrast);
-    glUniform1f(gles_u_saturation, col->saturation);
-    glUniform1f(gles_u_hue, col->hue);
-    glUniform1f(gles_u_gamma, col->gamma);
+    const struct colour_state *adjust = colour_adjust_get();
+    glUniform1f(gles_u_brightness, adjust->brightness);
+    glUniform1f(gles_u_contrast, adjust->contrast);
+    glUniform1f(gles_u_saturation, adjust->saturation);
+    glUniform1f(gles_u_hue, adjust->hue);
+    glUniform1f(gles_u_gamma, adjust->gamma);
+
+    const colour_filter_matrix_t *filter = colour_filter_get();
+    if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, filter->enabled);
+    if (filter->enabled && gles_u_filter >= 0) glUniformMatrix3fv(gles_u_filter, 1, GL_FALSE, filter->matrix);
 
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -732,8 +748,15 @@ static void stage_draw(int fb_w, int fb_h) {
 
     glViewport(0, 0, fb_w, fb_h);
 
-    const struct colour_state *col = colour_get();
-    const int need_colour = col->brightness != 0.0f || col->contrast != 1.0f || col->saturation != 1.0f || col->hue != 0.0f || col->gamma != 1.0f;
+    const colour_filter_matrix_t *filter = colour_filter_get();
+    const struct colour_state *adjust = colour_adjust_get();
+    const int need_colour =
+            adjust->brightness != 0.0f ||
+            adjust->contrast != 1.0f ||
+            adjust->saturation != 1.0f ||
+            adjust->hue != 0.0f ||
+            adjust->gamma != 1.0f ||
+            filter->enabled;
 
     const int rot = rotate_read_cached();
     if (rot != ROTATE_0 || need_colour) {

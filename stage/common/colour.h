@@ -10,6 +10,6 @@ struct colour_state {
     float gamma;      //  0.5 ..  2.0 (default 1.0)
 };
 
-const struct colour_state *colour_get(void);
+const struct colour_state *colour_adjust_get(void);
 
-void colour_reset(void);
+void colour_adjust_reset(void);

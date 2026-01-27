@@ -9,7 +9,7 @@ static struct {
     int loaded;
 } colour_cache;
 
-const struct colour_state *colour_get(void) {
+const struct colour_state *colour_adjust_get(void) {
     if (colour_cache.loaded) return &colour_cache.value;
 
     struct colour_state colour = {
@@ -53,6 +53,6 @@ const struct colour_state *colour_get(void) {
     return &colour_cache.value;
 }
 
-void colour_reset(void) {
+void colour_adjust_reset(void) {
     colour_cache.loaded = 0;
 }
