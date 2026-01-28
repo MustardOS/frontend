@@ -1024,7 +1024,7 @@ void ui_common_handle_idle(void) {
         lv_obj_invalidate(ui_pnlFooter);
         lv_obj_invalidate(ui_screen);
 
-        refresh_screen(ui_screen);
+        refresh_screen(ui_screen, 3);
     }
 
     if (!blank_exists && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > LV_OPA_TRANSP) {
@@ -1236,7 +1236,7 @@ void toast_message(const char *msg, uint32_t delay) {
 
     if (delay == FOREVER) {
         lv_obj_move_foreground(ui_pnlMessage);
-        refresh_screen(ui_screen);
+        refresh_screen(ui_screen, 3);
         usleep(256);
     }
 }

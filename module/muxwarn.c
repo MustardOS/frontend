@@ -68,7 +68,7 @@ int main(void) {
     int progress = 0;
 
     while (1) {
-        refresh_screen(ui_scrWarn);
+        refresh_screen(ui_scrWarn, 1);
         sleep(1);
 
         if (progress > 100) break;

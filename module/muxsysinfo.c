@@ -388,7 +388,7 @@ static void handle_a(void) {
         mux_input_stop();
     }
 
-    refresh_screen(ui_screen);
+    refresh_screen(ui_screen, 1);
 }
 
 static void handle_b(void) {

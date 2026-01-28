@@ -149,7 +149,7 @@ static int save_power_options(void) {
         play_sound(SND_ERROR);
 
         toast_message(lang.MUXPOWER.IDLE.ERROR, LONG);
-        refresh_screen(ui_screen);
+        refresh_screen(ui_screen, 1);
 
         return 0;
     }

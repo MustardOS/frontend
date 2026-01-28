@@ -118,10 +118,12 @@ static void mux_idle_poll(lv_timer_t *timer) {
     last_idle = idle;
 }
 
-void refresh_screen(lv_obj_t *screen) {
-    lv_obj_invalidate(screen);
-    lv_refr_now(NULL);
-    lv_task_handler();
+void refresh_screen(lv_obj_t *screen, int flush) {
+    for (int i = 0, n = (flush > 0) ? flush : 1; i < n; i++) {
+        lv_obj_invalidate(screen);
+        lv_refr_now(NULL);
+        lv_task_handler();
+    }
 }
 
 void safe_quit(int exit_status) {

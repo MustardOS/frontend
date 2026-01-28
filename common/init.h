@@ -23,7 +23,7 @@ struct bat_task_param {
 
 void detach_parent_process(void);
 
-void refresh_screen(lv_obj_t *screen);
+void refresh_screen(lv_obj_t *screen, int flush);
 
 void safe_quit(int exit_status);
 

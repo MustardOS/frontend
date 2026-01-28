@@ -166,16 +166,37 @@ static void set_previous_module(char *module) {
 }
 
 int set_splash_image_path(char *splash_image_name) {
-    if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
-                  theme_base, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
-         file_exist(splash_image_path)) ||
-        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s.png",
-                  theme_base, mux_dimension, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
-        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s/%s.png",
-                  theme_base, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
-        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s.png",
-                  theme_base, splash_image_name) >= 0 && file_exist(splash_image_path)))
-        return 1;
+    const char *paths[] = {
+            "%s/%simage/%s/%s.png",
+            "%s/%simage/%s.png",
+            "%s/image/%s/%s.png",
+            "%s/image/%s.png"
+    };
+
+    const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
+
+    for (size_t i = 0; i < A_SIZE(paths); ++i) {
+        int written;
+
+        switch (i) {
+            case 0:
+                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dimension, curr_lang, splash_image_name);
+                break;
+            case 1:
+                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dimension, splash_image_name);
+                break;
+            case 2:
+                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, curr_lang, splash_image_name);
+                break;
+            case 3:
+            default:
+                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, splash_image_name);
+                break;
+        }
+
+        if (written < 0 || (size_t) written >= sizeof(splash_image_path)) continue;
+        if (file_exist(splash_image_path)) return 1;
+    }
 
     return 0;
 }

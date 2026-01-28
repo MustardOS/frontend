@@ -158,7 +158,7 @@ int muxpass_main(int auth_type) {
     init_navigation_group();
 
     init_timer(NULL, NULL);
-    refresh_screen(ui_screen);
+    refresh_screen(ui_screen, 1);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

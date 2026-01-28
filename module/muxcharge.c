@@ -68,7 +68,7 @@ static void handle_start(void) {
 }
 
 static void handle_idle(void) {
-    refresh_screen(ui_scrCharge_charge);
+    refresh_screen(ui_scrCharge_charge, 1);
 
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
@@ -149,7 +149,7 @@ int main(void) {
 
     lv_timer_create(battery_task_charge, TIMER_BATTERY, NULL);
 
-    refresh_screen(ui_scrCharge_charge);
+    refresh_screen(ui_scrCharge_charge, 1);
 
     mux_input_options input_opts = {
             .press_handler = {[MUX_INPUT_START] = handle_start},

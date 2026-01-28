@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     load_overlay_image(ui_scrMessage, overlay_image);
 
     lv_obj_set_style_bg_opa(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
-    refresh_screen(ui_scrMessage);
+    refresh_screen(ui_scrMessage, 1);
 
     char *ext = grab_ext((char *) default_message);
     if (strcasecmp(ext, "txt") == 0 && file_exist((char *) default_message)) is_message_file = 1;
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
                 if (line && *line) lv_label_set_text_fmt(ui_lblMessage, "%s", parse_newline(line));
                 if (file_exist(PROGRESS_FILE)) lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 
-                refresh_screen(ui_scrMessage);
+                refresh_screen(ui_scrMessage, 1);
             }
 
             usleep(25 * 1000);
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
 
             if (file_exist(PROGRESS_FILE)) lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 
-            refresh_screen(ui_scrMessage);
+            refresh_screen(ui_scrMessage, 1);
             sleep(delay);
         }
 
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
         lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
         lv_label_set_text(ui_lblMessage, parse_newline(default_message));
 
-        refresh_screen(ui_scrMessage);
+        refresh_screen(ui_scrMessage, 1);
     }
 
     sdl_cleanup();

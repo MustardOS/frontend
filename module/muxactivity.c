@@ -1303,7 +1303,7 @@ static void export_activity_html(void) {
     FILE *f = fopen(html_export, "w");
     if (!f) {
         toast_message("Error exporting statistics", MEDIUM);
-        refresh_screen(ui_screen);
+        refresh_screen(ui_screen, 1);
         return;
     }
 
@@ -1529,7 +1529,7 @@ static void export_activity_html(void) {
     fclose(f);
 
     toast_message("Activity statistics exported", MEDIUM);
-    refresh_screen(ui_screen);
+    refresh_screen(ui_screen, 1);
 }
 
 static void generate_activity_items(void) {

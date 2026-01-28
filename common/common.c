@@ -2760,7 +2760,7 @@ void kiosk_denied(void) {
     if (is_ksk(kiosk.MESSAGE)) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.KIOSK_DISABLE, MEDIUM);
-        refresh_screen(ui_screen);
+        refresh_screen(ui_screen, 1);
     }
 }
 

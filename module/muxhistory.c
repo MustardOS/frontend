@@ -662,7 +662,7 @@ int muxhistory_main(int his_index) {
     if (file_exist(ADD_MODE_DONE)) {
         if (strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE") == 0) {
             toast_message(lang.GENERIC.ADD_COLLECT, SHORT);
-            refresh_screen(ui_screen);
+            refresh_screen(ui_screen, 1);
         }
         remove(ADD_MODE_DONE);
     }
