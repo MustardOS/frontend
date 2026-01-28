@@ -87,11 +87,20 @@
     CHRONY(UpdateInt,  UPDATEINT,  "update")    \
     CHRONY(Leap,       LEAP,       "leap")
 
+#define COLADJUST_ELEMENTS                             \
+    COLADJUST(Temperature, TEMPERATURE, "temperature") \
+    COLADJUST(Brightness,  BRIGHTNESS,  "brightness")  \
+    COLADJUST(Contrast,    CONTRAST,    "contrast")    \
+    COLADJUST(Saturation,  SATURATION,  "saturation")  \
+    COLADJUST(HueShift,    HUESHIFT,    "hueshift")    \
+    COLADJUST(Gamma,       GAMMA,       "gamma")
+
 #define CONFIG_ELEMENTS                       \
     CONFIG(General,   GENERAL,   "general")   \
     CONFIG(Connect,   CONNECT,   "connect")   \
     CONFIG(Custom,    CUSTOM,    "custom")    \
     CONFIG(Interface, INTERFACE, "interface") \
+    CONFIG(Colour,    COLOUR,    "colour")    \
     CONFIG(Overlay,   OVERLAY,   "overlay")   \
     CONFIG(Language,  LANGUAGE,  "language")  \
     CONFIG(Power,     POWER,     "power")     \
@@ -398,7 +407,6 @@
     TWEAKGEN(Advanced,   ADVANCED,   "advanced")   \
     TWEAKGEN(Brightness, BRIGHTNESS, "brightness") \
     TWEAKGEN(Volume,     VOLUME,     "volume")     \
-    TWEAKGEN(Colour,     COLOUR,     "colour")     \
     TWEAKGEN(Rgb,        RGB,        "rgb")        \
     TWEAKGEN(HkDpad,     HKDPAD,     "hkdpad")     \
     TWEAKGEN(HkShot,     HKSHOT,     "hkshot")     \

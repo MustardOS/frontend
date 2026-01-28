@@ -127,6 +127,7 @@ void setup_nav(struct nav_bar *nav_items) {
 }
 
 void header_and_footer_setup(void) {
+    hold_call_release();
     adjust_gen_panel();
 
     lv_obj_set_style_bg_opa(ui_pnlHeader, theme.HEADER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);

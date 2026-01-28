@@ -152,6 +152,8 @@ int muxbackup_main();
 
 int muxchrony_main();
 
+int muxcoladjust_main();
+
 int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app);
 
 int muxcollect_main(int add, char *dir, int last_index);

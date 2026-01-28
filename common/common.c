@@ -3809,3 +3809,22 @@ int int_to_pct(int num, int min, int max) {
     const int range = max - min;
     return ((num - min) * 100 + range / 2) / range;
 }
+
+void set_setting_value(const char *script_name, int value, int offset) {
+    char script_path[MAX_BUFFER_SIZE];
+    snprintf(script_path, sizeof(script_path), OPT_PATH "script/device/%s.sh", script_name);
+
+    char value_str[8];
+    snprintf(value_str, sizeof(value_str), "%d", value + offset);
+
+    if (!block_input) {
+        block_input = 1;
+
+        const char *args[] = {script_path, value_str, NULL};
+        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+        block_input = 0;
+    }
+
+    refresh_config = 1;
+}

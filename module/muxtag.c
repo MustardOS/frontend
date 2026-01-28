@@ -235,7 +235,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, "");
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXTAG.TITLE);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -243,10 +243,6 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
     init_fonts();
-
-    char title[MAX_BUFFER_SIZE];
-    snprintf(title, sizeof(title), "%s - %s", lang.MUXTAG.TITLE, get_last_dir(rom_dir));
-    lv_label_set_text(ui_lblTitle, title);
 
     generate_available_tags();
 

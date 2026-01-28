@@ -55,4 +55,5 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->SETTING.POWER, CONF_KIOSK_PATH "setting/power", 0);
     CFG_INT_FIELD(kiosk->SETTING.VISUAL, CONF_KIOSK_PATH "setting/visual", 0);
     CFG_INT_FIELD(kiosk->SETTING.OVERLAY, CONF_KIOSK_PATH "setting/overlay", 0);
+    CFG_INT_FIELD(kiosk->SETTING.COLOUR, CONF_KIOSK_PATH "setting/colour", 0);
 }

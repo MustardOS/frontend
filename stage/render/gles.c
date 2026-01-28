@@ -31,7 +31,7 @@ static GLuint gles_prog_content = 0;
 static GLint gles_u_brightness = -1;
 static GLint gles_u_contrast = -1;
 static GLint gles_u_saturation = -1;
-static GLint gles_u_hue = -1;
+static GLint gles_u_hueshift = -1;
 static GLint gles_u_gamma = -1;
 
 static GLint gles_u_filter = -1;
@@ -87,7 +87,7 @@ static const char *fs_content_src =
         "uniform float u_brightness;"
         "uniform float u_contrast;"
         "uniform float u_saturation;"
-        "uniform float u_hue;"
+        "uniform float u_hueshift;"
         "uniform float u_gamma;"
         "uniform mat3 u_filter;"
         "uniform int u_filter_enabled;"
@@ -98,8 +98,8 @@ static const char *fs_content_src =
         "    c = (c - 0.5) * u_contrast + 0.5;"
         "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
         "    c = mix(vec3(l), c, u_saturation);"
-        "    float cosH = cos(u_hue);"
-        "    float sinH = sin(u_hue);"
+        "    float cosH = cos(u_hueshift);"
+        "    float sinH = sin(u_hueshift);"
         "    mat3 hueMat = mat3("
         "        0.299 + 0.701*cosH + 0.168*sinH, 0.587 - 0.587*cosH + 0.330*sinH, 0.114 - 0.114*cosH - 0.497*sinH,"
         "        0.299 - 0.299*cosH - 0.328*sinH, 0.587 + 0.413*cosH + 0.035*sinH, 0.114 - 0.114*cosH + 0.292*sinH,"
@@ -436,7 +436,7 @@ static void ensure_content_program(void) {
     gles_u_brightness = glGetUniformLocation(gles_prog_content, "u_brightness");
     gles_u_contrast = glGetUniformLocation(gles_prog_content, "u_contrast");
     gles_u_saturation = glGetUniformLocation(gles_prog_content, "u_saturation");
-    gles_u_hue = glGetUniformLocation(gles_prog_content, "u_hue");
+    gles_u_hueshift = glGetUniformLocation(gles_prog_content, "u_hueshift");
     gles_u_gamma = glGetUniformLocation(gles_prog_content, "u_gamma");
 }
 
@@ -638,7 +638,7 @@ static void draw_rotated_content(int fb_w, int fb_h, int rot) {
     glUniform1f(gles_u_brightness, adjust->brightness);
     glUniform1f(gles_u_contrast, adjust->contrast);
     glUniform1f(gles_u_saturation, adjust->saturation);
-    glUniform1f(gles_u_hue, adjust->hue);
+    glUniform1f(gles_u_hueshift, adjust->hueshift);
     glUniform1f(gles_u_gamma, adjust->gamma);
 
     const colour_filter_matrix_t *filter = colour_filter_get();
@@ -754,7 +754,7 @@ static void stage_draw(int fb_w, int fb_h) {
             adjust->brightness != 0.0f ||
             adjust->contrast != 1.0f ||
             adjust->saturation != 1.0f ||
-            adjust->hue != 0.0f ||
+            adjust->hueshift != 0.0f ||
             adjust->gamma != 1.0f ||
             filter->enabled;
 

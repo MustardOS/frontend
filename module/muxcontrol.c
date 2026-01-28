@@ -414,7 +414,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, "");
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXCONTROL.TITLE);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -445,10 +445,6 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
             }
         }
     }
-
-    char title[MAX_BUFFER_SIZE];
-    snprintf(title, sizeof(title), "%s - %s", lang.MUXCONTROL.TITLE, get_last_dir(dir));
-    lv_label_set_text(ui_lblTitle, title);
 
     create_control_items(rom_system);
     init_elements();

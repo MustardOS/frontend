@@ -324,7 +324,7 @@ int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, "");
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXCOLFILTER.TITLE);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -334,10 +334,6 @@ int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     generate_available_filters();
     init_elements();
-
-    char title[MAX_BUFFER_SIZE];
-    snprintf(title, sizeof(title), "%s - %s", lang.MUXCOLFILTER.TITLE, get_last_dir(rom_dir));
-    lv_label_set_text(ui_lblTitle, title);
 
     if (ui_count > 0) {
         LOG_SUCCESS(mux_module, "%d Colour Filter%s Detected", ui_count, ui_count == 1 ? "" : "s");

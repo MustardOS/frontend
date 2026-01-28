@@ -49,7 +49,8 @@ struct mux_lang {
         char EXTRACTING_ARCHIVE[MAX_BUFFER_SIZE];
         char FILTER[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
-        char HOLD_CONFIRM[MAX_BUFFER_SIZE];
+        char HOLD_DELETE[MAX_BUFFER_SIZE];
+        char HOLD_RESET[MAX_BUFFER_SIZE];
         char INCLUDED[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
@@ -79,6 +80,7 @@ struct mux_lang {
         char REMOVE[MAX_BUFFER_SIZE];
         char REMOVE_FAIL[MAX_BUFFER_SIZE];
         char RESCAN[MAX_BUFFER_SIZE];
+        char RESET[MAX_BUFFER_SIZE];
         char RESTORE[MAX_BUFFER_SIZE];
         char RESTRICTED[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
@@ -303,6 +305,24 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char TEMPERATURE[MAX_BUFFER_SIZE];
+        char BRIGHTNESS[MAX_BUFFER_SIZE];
+        char CONTRAST[MAX_BUFFER_SIZE];
+        char SATURATION[MAX_BUFFER_SIZE];
+        char HUESHIFT[MAX_BUFFER_SIZE];
+        char GAMMA[MAX_BUFFER_SIZE];
+        struct {
+            char TEMPERATURE[MAX_BUFFER_SIZE];
+            char BRIGHTNESS[MAX_BUFFER_SIZE];
+            char CONTRAST[MAX_BUFFER_SIZE];
+            char SATURATION[MAX_BUFFER_SIZE];
+            char HUESHIFT[MAX_BUFFER_SIZE];
+            char GAMMA[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXCOLADJUST;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
     } MUXCOLFILTER;
@@ -326,6 +346,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char POWER[MAX_BUFFER_SIZE];
         char INTERFACE[MAX_BUFFER_SIZE];
+        char COLOUR[MAX_BUFFER_SIZE];
         char OVERLAY[MAX_BUFFER_SIZE];
         char BACKUP[MAX_BUFFER_SIZE];
         struct {
@@ -336,6 +357,7 @@ struct mux_lang {
             char STORAGE[MAX_BUFFER_SIZE];
             char POWER[MAX_BUFFER_SIZE];
             char INTERFACE[MAX_BUFFER_SIZE];
+            char COLOUR[MAX_BUFFER_SIZE];
             char OVERLAY[MAX_BUFFER_SIZE];
             char BACKUP[MAX_BUFFER_SIZE];
         } HELP;
@@ -1335,8 +1357,6 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char RTC[MAX_BUFFER_SIZE];
-        char COLOUR[MAX_BUFFER_SIZE];
-        char COLOUR_SET[MAX_BUFFER_SIZE];
         char BRIGHTNESS[MAX_BUFFER_SIZE];
         char BRIGHTNESS_SET[MAX_BUFFER_SIZE];
         char VOLUME[MAX_BUFFER_SIZE];
@@ -1359,7 +1379,6 @@ struct mux_lang {
             char TITLE[MAX_BUFFER_SIZE];
             char RTC[MAX_BUFFER_SIZE];
             char STARTUP[MAX_BUFFER_SIZE];
-            char COLOUR[MAX_BUFFER_SIZE];
             char BRIGHTNESS[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];

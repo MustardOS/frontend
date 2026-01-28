@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxconfig.h"
 
-#define UI_COUNT 9
+#define UI_COUNT 10
 
 static void list_nav_move(int steps, int direction);
 
@@ -28,6 +28,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECT, "connect", 0);
     INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom", 0);
     INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.INTERFACE, "interface", 0);
+    INIT_STATIC_ITEM(-1, config, Colour, lang.MUXCONFIG.COLOUR, "colour", 0);
     INIT_STATIC_ITEM(-1, config, Overlay, lang.MUXCONFIG.OVERLAY, "overlay", 0);
     INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language", 0);
     INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power", 0);
@@ -70,6 +71,7 @@ static void handle_a(void) {
             {"connect",  &kiosk.CONFIG.CONNECTIVITY,  NULL},
             {"custom",   &kiosk.CONFIG.CUSTOMISATION, NULL},
             {"visual",   &kiosk.SETTING.VISUAL,       NULL},
+            {"colour",   &kiosk.SETTING.COLOUR,       NULL},
             {"overlay",  &kiosk.SETTING.OVERLAY,      NULL},
             {"language", &kiosk.CONFIG.LANGUAGE,      NULL},
             {"power",    &kiosk.SETTING.POWER,        NULL},

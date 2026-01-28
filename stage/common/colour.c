@@ -30,7 +30,7 @@ const struct colour_state *colour_adjust_get(void) {
             .brightness = 0.0f,
             .contrast   = 1.0f,
             .saturation = 1.0f,
-            .hue        = 0.0f,
+            .hueshift   = 0.0f,
             .gamma      = 1.0f
     };
 
@@ -51,9 +51,9 @@ const struct colour_state *colour_adjust_get(void) {
         LOG_SUCCESS("stage", "Colour Saturation: %.3f", colour.saturation);
     }
 
-    if (read_colour_value("hue", &raw)) {
-        colour.hue = clamp_float(raw, -180.0f, 180.0f) * (float) M_PI / 180.0f;
-        LOG_SUCCESS("stage", "Colour Hue: %.3f rad", colour.hue);
+    if (read_colour_value("hueshift", &raw)) {
+        colour.hueshift = clamp_float(raw, -180.0f, 180.0f) * (float) M_PI / 180.0f;
+        LOG_SUCCESS("stage", "Colour Hue Shift: %.3f rad", colour.hueshift);
     }
 
     if (read_colour_value("gamma", &raw)) {

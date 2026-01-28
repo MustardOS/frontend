@@ -5,18 +5,18 @@
 #include <unistd.h>
 #include <time.h>
 
-#define RED    "\x1b[38;5;196m"
-#define GREEN  "\x1b[38;5;46m"
-#define BLUE   "\x1b[38;5;33m"
-#define YELLOW "\x1b[38;5;226m"
-#define ORANGE "\x1b[38;5;202m"
-#define RESET  "\x1b[0m"
+#define COL_RED    "\x1b[38;5;196m"
+#define COL_GREEN  "\x1b[38;5;46m"
+#define COL_BLUE   "\x1b[38;5;33m"
+#define COL_YELLOW "\x1b[38;5;226m"
+#define COL_ORANGE "\x1b[38;5;202m"
+#define COL_RESET  "\x1b[0m"
 
-#define INFO_SYMBOL    BLUE   "*" RESET
-#define WARN_SYMBOL    YELLOW "!" RESET
-#define ERROR_SYMBOL   RED    "-" RESET
-#define SUCCESS_SYMBOL GREEN  "+" RESET
-#define DEBUG_SYMBOL   ORANGE "?" RESET
+#define INFO_SYMBOL    COL_BLUE   "*" COL_RESET
+#define WARN_SYMBOL    COL_YELLOW "!" COL_RESET
+#define ERROR_SYMBOL   COL_RED    "-" COL_RESET
+#define SUCCESS_SYMBOL COL_GREEN  "+" COL_RESET
+#define DEBUG_SYMBOL   COL_ORANGE "?" COL_RESET
 
 #define LOG(level, symbol, mux_module, msg, ...) {         \
     struct timespec ts;                                    \

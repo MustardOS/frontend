@@ -58,7 +58,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(overlay, BriAnchor, "settings/overlay/bri_anchor", INT, 0);
     CHECK_AND_SAVE_STD(overlay, BriScale, "settings/overlay/bri_scale", INT, 0);
 
-    if (is_modified > 0) run_tweak_script();
+    if (is_modified > 0) refresh_config = 1;
 }
 
 static void init_navigation_group(void) {
@@ -162,6 +162,25 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_x(void) {
+    if (msgbox_active) return;
+
+    if (!hold_call) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.HOLD_RESET, SHORT);
+        return;
+    }
+
+    remove_directory_recursive(CONF_CONFIG_PATH "settings/overlay");
+    refresh_config = 1;
+
+    play_sound(SND_MUOS);
+    load_mux("overlay");
+
+    close_input();
+    mux_input_stop();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
@@ -177,6 +196,8 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph,  "",                  0},
+            {ui_lblNavX,       lang.GENERIC.RESET,  0},
             {NULL, NULL,                            0}
     });
 
@@ -214,6 +235,7 @@ int muxoverlay_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_MENU_SHORT] = handle_help,

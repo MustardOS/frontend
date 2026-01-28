@@ -31,6 +31,9 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
 * `muxbackup`: Device Backup Menu
+* `muxchrony`: System Clock Information
+* `muxcoladjust`: Content Colour Adjustment Menu
+* `muxcoladjust`: Content Colour Filter Menu
 * `muxcollect`: Content Collection Manager
 * `muxconfig`: Configuration Menu
 * `muxconnect`: Connectivity Menu
@@ -54,7 +57,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxnetwork`: Network Configuration
 * `muxnews`: Community News
 * `muxoption`: Content Explorer Options
-* `muxoverlay`: Hardware Overlay Settings
+* `muxoverlay`: Content Overlay Settings
 * `muxpass`: Passcode Screen
 * `muxpicker`: Customisation Package Selector
 * `muxplore`: Content Explorer

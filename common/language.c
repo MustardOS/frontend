@@ -65,7 +65,8 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.EXTRACTING_ARCHIVE, "Extracting Archive");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
     GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
-    GENERIC_FIELD(lang->GENERIC.HOLD_CONFIRM, "Hold L2 and press X to confirm deletion!");
+    GENERIC_FIELD(lang->GENERIC.HOLD_DELETE, "Hold L2 and press X to confirm deletion!");
+    GENERIC_FIELD(lang->GENERIC.HOLD_RESET, "Hold L2 and press X to confirm reset!");
     GENERIC_FIELD(lang->GENERIC.INCLUDED, "Included");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
@@ -95,6 +96,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.REMOVE, "Remove");
     GENERIC_FIELD(lang->GENERIC.REMOVE_FAIL, "Failed to remove item…");
     GENERIC_FIELD(lang->GENERIC.RESCAN, "Rescan");
+    GENERIC_FIELD(lang->GENERIC.RESET, "Reset");
     GENERIC_FIELD(lang->GENERIC.RESTORE, "Restore");
     GENERIC_FIELD(lang->GENERIC.RESTRICTED, "Restricted");
     GENERIC_FIELD(lang->GENERIC.SAVE, "Save");
@@ -293,6 +295,21 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHRONY.HELP.UPDATEINT, "Interval between time updates");
     SPECIFIC_FIELD(lang->MUXCHRONY.HELP.LEAP, "Current synchronisation status of the system clock");
 
+    // muxcoladjust
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.TITLE, "COLOUR OPTIONS");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.TEMPERATURE, "Temperature");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.BRIGHTNESS, "Brightness");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.CONTRAST, "Contrast");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.SATURATION, "Saturation");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HUESHIFT, "Hue Shift");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.GAMMA, "Gamma");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.TEMPERATURE, "");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.BRIGHTNESS, "");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.CONTRAST, "");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.SATURATION, "");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.HUESHIFT, "");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.GAMMA, "");
+
     // muxcolfilter
     SPECIFIC_FIELD(lang->MUXCOLFILTER.TITLE, "COLOUR FILTER");
     SPECIFIC_FIELD(lang->MUXCOLFILTER.HELP, "Change the colour filter of your current selected content");
@@ -312,7 +329,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.INTERFACE, "Interface Options");
-    SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Content Overlay Options");
+    SPECIFIC_FIELD(lang->MUXCONFIG.COLOUR, "Colour Options");
+    SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Overlay Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
@@ -324,6 +342,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.BACKUP, "Back up your content to a restorable archive for your device or others");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.INTERFACE, "Settings to change the visual aspects of the frontend");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.COLOUR, "Settings to change the colour settings of content");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.OVERLAY, "Settings to change the hardware overlays of content");
 
     // muxconnect
@@ -1157,8 +1176,6 @@ void load_lang(struct mux_lang *lang) {
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.RTC, "Date and Time");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.COLOUR, "Colour Temperature");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.COLOUR_SET, "Setting Colour Temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHTNESS, "Device Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHTNESS_SET, "Setting Device Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.VOLUME, "Device Volume");
@@ -1176,7 +1193,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.RTC, "Change your current date, time, and timezone");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.COLOUR, "Change the colour temperature of the display if the device supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHTNESS, "Change the brightness of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.VOLUME, "Change the volume of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");

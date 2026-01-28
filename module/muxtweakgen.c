@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakgen.h"
 
-#define UI_COUNT 10
+#define UI_COUNT 9
 
 #define TWEAKGEN(NAME, ENUM, UDATA) static int NAME##_original;
 TWEAKGEN_ELEMENTS
@@ -41,16 +41,8 @@ static void init_dropdown_settings(void) {
 static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, int_to_pct(config.SETTINGS.GENERAL.BRIGHTNESS, 2, device.SCREEN.BRIGHT));
     lv_dropdown_set_selected(ui_droVolume_tweakgen, int_to_pct(config.SETTINGS.GENERAL.VOLUME, 0, audio_overdrive));
-
-    lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
-
-    if (device.BOARD.HASSTICK > 0) {
-        lv_dropdown_set_selected(ui_droHkDpad_tweakgen, 0);
-    } else {
-        lv_dropdown_set_selected(ui_droHkDpad_tweakgen, config.SETTINGS.GENERAL.HKDPAD);
-    }
-
+    lv_dropdown_set_selected(ui_droHkDpad_tweakgen, device.BOARD.HASSTICK > 0 ? 0 : config.SETTINGS.GENERAL.HKDPAD);
     lv_dropdown_set_selected(ui_droHkShot_tweakgen, config.SETTINGS.GENERAL.HKSHOT);
 
     lv_dropdown_set_selected(ui_droStartup_tweakgen,
@@ -59,25 +51,6 @@ static void restore_tweak_options(void) {
                              strcasecmp(config.SETTINGS.GENERAL.STARTUP, "history") == 0 ? 3 :
                              strcasecmp(config.SETTINGS.GENERAL.STARTUP, "last") == 0 ? 4 :
                              strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") == 0 ? 5 : 0);
-}
-
-static void set_setting_value(const char *script_name, int value, int offset) {
-    char script_path[MAX_BUFFER_SIZE];
-    snprintf(script_path, sizeof(script_path), OPT_PATH "script/device/%s.sh", script_name);
-
-    char value_str[8];
-    snprintf(value_str, sizeof(value_str), "%d", value + offset);
-
-    if (!block_input) {
-        block_input = 1;
-
-        const char *args[] = {script_path, value_str, NULL};
-        run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-        block_input = 0;
-    }
-
-    refresh_config = 1;
 }
 
 static void save_tweak_options(void) {
@@ -97,9 +70,6 @@ static void save_tweak_options(void) {
 
     CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
-
-    int colour_mod = lv_dropdown_get_selected(ui_droColour_tweakgen);
-    if (colour_mod != Colour_original) set_setting_value("colour", colour_mod, -255);
 
     int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
     if (bright_mod != Brightness_original) set_setting_value("bright", bright_mod, 0);
@@ -204,7 +174,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHTNESS, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.COLOUR, "colour", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, hk_combo_count);
@@ -217,10 +186,6 @@ static void init_navigation_group(void) {
     char *volume_pct_values = generate_number_string(0, audio_overdrive, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droVolume_tweakgen, volume_pct_values);
     free(volume_pct_values);
-
-    char *colour_values = generate_number_string(-255, 255, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droColour_tweakgen, colour_values);
-    free(colour_values);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
@@ -262,7 +227,7 @@ static void check_focus(void) {
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
 
     int is_module = (f == ui_lblHdmi_tweakgen || f == ui_lblRtc_tweakgen || f == ui_lblAdvanced_tweakgen);
-    int is_set_opt = (f == ui_lblBrightness_tweakgen || f == ui_lblVolume_tweakgen || f == ui_lblColour_tweakgen);
+    int is_set_opt = (f == ui_lblBrightness_tweakgen || f == ui_lblVolume_tweakgen);
 
     if (is_module) {
         nav_show_a(1, lang.GENERIC.SELECT);
@@ -308,8 +273,6 @@ static void update_option_values(void) {
                      pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT), "bright", 0);
     HANDLE_TWEAK_OPT(Volume, lang.MUXTWEAKGEN.VOLUME_SET,
                      pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive), "audio", 0);
-    HANDLE_TWEAK_OPT(Colour, lang.MUXTWEAKGEN.COLOUR_SET,
-                     lv_dropdown_get_selected(ui_droColour_tweakgen), "colour", -255);
 }
 
 static void handle_option_prev(void) {
@@ -331,8 +294,6 @@ static int get_multi_count(void) {
         return config.SETTINGS.ADVANCED.INCBRIGHT;
     } else if (element_focused == ui_lblVolume_tweakgen) {
         return config.SETTINGS.ADVANCED.INCVOLUME;
-    } else if (element_focused == ui_lblColour_tweakgen) {
-        return 25;
     }
 
     return 0;
@@ -378,7 +339,6 @@ static void handle_a(void) {
             {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume
-            {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Colour Temp
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // RGB Lights
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey DPAD
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey Screenshot
@@ -435,7 +395,6 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
-
     save_tweak_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");

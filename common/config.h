@@ -128,6 +128,14 @@ struct mux_config {
             int16_t USBPART;
         } ADVANCED;
         struct {
+            int16_t TEMPERATURE;
+            int16_t BRIGHTNESS;
+            int16_t CONTRAST;
+            int16_t SATURATION;
+            int16_t HUESHIFT;
+            int16_t GAMMA;
+        } COLOUR;
+        struct {
             int16_t HIDDEN;
             int16_t SOUND;
             int16_t SOUNDVOL;
@@ -135,7 +143,6 @@ struct mux_config {
             int16_t BGM;
             int16_t BGMVOL;
             char STARTUP[MAX_BUFFER_SIZE];
-            int16_t COLOUR;
             int16_t BRIGHTNESS;
             int16_t VOLUME;
             int16_t RGB;
