@@ -678,6 +678,7 @@ struct mux_lang {
         char POWER[MAX_BUFFER_SIZE];
         char VISUAL[MAX_BUFFER_SIZE];
         char OVERLAY[MAX_BUFFER_SIZE];
+        char COLOUR[MAX_BUFFER_SIZE];
         struct {
             char MAIN[MAX_BUFFER_SIZE];
             char ADD_CONTENT[MAX_BUFFER_SIZE];
@@ -725,6 +726,7 @@ struct mux_lang {
             char POWER[MAX_BUFFER_SIZE];
             char VISUAL[MAX_BUFFER_SIZE];
             char OVERLAY[MAX_BUFFER_SIZE];
+            char COLOUR[MAX_BUFFER_SIZE];
             char COLLECTMOD[MAX_BUFFER_SIZE];
             char COLLECTADD[MAX_BUFFER_SIZE];
             char COLLECTNEW[MAX_BUFFER_SIZE];

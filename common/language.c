@@ -605,6 +605,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXKIOSK.OVERLAY, "Overlay Options");
+    SPECIFIC_FIELD(lang->MUXKIOSK.COLOUR, "Colour Options");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.MAIN, "Collection Viewing");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.ADD_CONTENT, "Collection Adding Content");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.NEW_DIR, "Collection Folder Creation");
@@ -646,7 +647,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HDMI, "Allow modifying HDMI display settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.POWER, "Permit power options such as shutdown or sleep");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.VISUAL, "Allow changes to interface visuals");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.OVERLAY, "Allow changes to hardware overlays");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.OVERLAY, "Allow changes to content overlays");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLOUR, "Allow changes to content colour adjustments");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTMOD, "Enable viewing of content collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTADD, "Permit adding content to collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTNEW, "Allow creation of new collection folders");

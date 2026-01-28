@@ -231,7 +231,8 @@
     KIOSK(Hdmi,       HDMI,       "hdmi")       \
     KIOSK(Power,      POWER,      "power")      \
     KIOSK(Visual,     VISUAL,     "visual")     \
-    KIOSK(Overlay,    OVERLAY,    "overlay")
+    KIOSK(Overlay,    OVERLAY,    "overlay")    \
+    KIOSK(Colour,     COLOUR,     "colour")
 
 #define LAUNCH_ELEMENTS                          \
     LAUNCH(Explore,    EXPLORE,    "explore")    \

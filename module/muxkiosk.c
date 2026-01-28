@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 42
+#define UI_COUNT 43
 
 #define KIOSK(NAME, ENUM, UDATA) static int NAME##_original;
 KIOSK_ELEMENTS
@@ -66,6 +66,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droPower_kiosk, kiosk.SETTING.POWER);
     lv_dropdown_set_selected(ui_droVisual_kiosk, kiosk.SETTING.VISUAL);
     lv_dropdown_set_selected(ui_droOverlay_kiosk, kiosk.SETTING.OVERLAY);
+    lv_dropdown_set_selected(ui_droColour_kiosk, kiosk.SETTING.COLOUR);
 }
 
 static void save_kiosk_options(void) {
@@ -113,6 +114,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Power, "setting/power", INT);
     CHECK_AND_SAVE_KSK(kiosk, Visual, "setting/visual", INT);
     CHECK_AND_SAVE_KSK(kiosk, Overlay, "setting/overlay", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Colour, "setting/colour", INT);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -172,6 +174,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Power, lang.MUXKIOSK.POWER, "power", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Overlay, lang.MUXKIOSK.OVERLAY, "overlay", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Colour, lang.MUXKIOSK.OVERLAY, "colour", allowed_restricted, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
