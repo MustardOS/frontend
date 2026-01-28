@@ -303,12 +303,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCOLADJUST.SATURATION, "Saturation");
     SPECIFIC_FIELD(lang->MUXCOLADJUST.HUESHIFT, "Hue Shift");
     SPECIFIC_FIELD(lang->MUXCOLADJUST.GAMMA, "Gamma");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.TEMPERATURE, "");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.BRIGHTNESS, "");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.CONTRAST, "");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.SATURATION, "");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.HUESHIFT, "");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.GAMMA, "");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.TEMPERATURE, "Adjusts the overall warmth or coolness of the display by shifting colour balance");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.BRIGHTNESS, "Controls the overall lightness or darkness of content");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.CONTRAST, "Adjusts the difference between light and dark areas of content");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.SATURATION, "Controls the intensity and richness of colours");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.HUESHIFT, "Rotates colours around the colour wheel without changing brightness");
+    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.GAMMA, "Adjusts midtone brightness without affecting pure black or white");
 
     // muxcolfilter
     SPECIFIC_FIELD(lang->MUXCOLFILTER.TITLE, "COLOUR FILTER");
