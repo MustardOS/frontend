@@ -678,7 +678,13 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode || hold_call) return;
+    if (msgbox_active || !ui_count || add_mode) return;
+
+    if (!hold_call) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.HOLD_DELETE, SHORT);
+        return;
+    }
 
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {

@@ -487,7 +487,13 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || is_ksk(kiosk.CONTENT.HISTORY) || hold_call) return;
+    if (msgbox_active || !ui_count || is_ksk(kiosk.CONTENT.HISTORY)) return;
+
+    if (!hold_call) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.HOLD_DELETE, SHORT);
+        return;
+    }
 
     play_sound(SND_CONFIRM);
     remove_from_history();
