@@ -350,7 +350,9 @@ int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     }
 
     init_theme(1, 0);
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXRAOPT.TITLE);
+
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 

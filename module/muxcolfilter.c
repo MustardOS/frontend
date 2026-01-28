@@ -3,6 +3,9 @@
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
+static bool is_directory = false;
+
+static int is_app = 0;
 
 static char *get_selected_filter(void) {
     lv_obj_t *focused = lv_group_get_focused(ui_group);
@@ -230,7 +233,7 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || hold_call || is_directory) return;
 
     LOG_INFO(mux_module, "Single Colour Filter Assignment Triggered");
     play_sound(SND_CONFIRM);
@@ -296,31 +299,53 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                      1},
-            {ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1},
-            {ui_lblNavBGlyph, "",                      0},
-            {ui_lblNavB,      lang.GENERIC.BACK,       0},
-            {ui_lblNavXGlyph, "",                      1},
-            {ui_lblNavX,      lang.GENERIC.DIRECTORY,  1},
-            {ui_lblNavYGlyph, "",                      1},
-            {ui_lblNavY,      lang.GENERIC.RECURSIVE,  1},
-            {NULL, NULL,                               0}
-    });
+    struct nav_bar nav_items[9];
+    int i = 0;
+
+    if (!is_directory) {
+        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+    }
+
+    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+
+    if (!is_app) {
+        nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
+
+        if (!at_base(rom_dir, "ROMS")) {
+            nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
+        }
+    }
+
+    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};  // Null-terminate
+
+    setup_nav(nav_items);
 
     overlay_display();
 }
 
 int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app) {
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+    is_directory = directory_exist(rom_dir) && !app;
+    if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
+
+    is_app = app;
 
     init_module(__func__);
 
-    LOG_INFO(mux_module, "Assign Colour Filter ROM_NAME: \"%s\"", rom_name);
-    LOG_INFO(mux_module, "Assign Colour Filter ROM_DIR: \"%s\"", rom_dir);
-    LOG_INFO(mux_module, "Assign Colour Filter ROM_SYS: \"%s\"", rom_system);
+    if (is_app) {
+        LOG_INFO(mux_module, "Assign RetroArch Config APP_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign RetroArch Config APP_DIR: \"%s\"", rom_dir);
+    } else {
+        LOG_INFO(mux_module, "Assign RetroArch Config ROM_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign RetroArch Config ROM_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign RetroArch Config ROM_SYS: \"%s\"", rom_system);
+    }
 
     init_theme(1, 0);
 
