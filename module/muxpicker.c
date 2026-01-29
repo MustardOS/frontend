@@ -179,7 +179,7 @@ static void handle_x(void) {
     sync();
 
     play_sound(SND_MUOS);
-    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
 
     hold_call = 0;
     load_mux("picker");
