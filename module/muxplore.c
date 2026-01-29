@@ -229,12 +229,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
 
 static void remove_match_items(const char *filter_name, int mode, char ***filter_list, int *filter_count,
                                void (*pop_func)(void), content_item **items, size_t *item_count, const char *sys_dir) {
-    if (mode == 2) {
-        free((void *) *filter_list);
-        *filter_list = NULL;
-        *filter_count = 0;
-    }
-
+    free_item_list(filter_list, filter_count);
     pop_func();
 
     if (mode != 2 || !*filter_list || *filter_count == 0) return;
@@ -247,7 +242,7 @@ static void remove_match_items(const char *filter_name, int mode, char ***filter
             if (strcasecmp(item_path, (*filter_list)[c]) == 0) {
                 LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
                 remove_item(items, item_count, i);
-                continue;
+                i--;
             }
         }
     }

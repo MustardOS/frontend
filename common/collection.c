@@ -194,6 +194,21 @@ void free_items(content_item **content_items, size_t *count) {
     *count = 0; // Set the count to 0
 }
 
+void free_item_list(char ***list, int *count) {
+    if (!list || !*list) {
+        if (count) *count = 0;
+        return;
+    }
+
+    if (count) {
+        for (int i = 0; i < *count; i++) free((*list)[i]);
+        *count = 0;
+    }
+
+    free(*list);
+    *list = NULL;
+}
+
 void print_items(content_item *content_items, size_t count) {
     for (size_t i = 0; i < count; i++) {
         char message[MAX_BUFFER_SIZE];
