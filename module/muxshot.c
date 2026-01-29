@@ -144,8 +144,8 @@ static void handle_x(void) {
         return;
     }
 
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
     remove(screenshot_file);
-    sync();
 
     play_sound(SND_MUOS);
 
@@ -211,6 +211,12 @@ int muxshot_main(void) {
     create_screenshot_items();
     init_elements();
 
+    int sys_index = 0;
+    if (file_exist(MUOS_IDX_LOAD)) {
+        sys_index = read_line_int_from(MUOS_IDX_LOAD, 1);
+        remove(MUOS_IDX_LOAD);
+    }
+
     int nav_hidden = 0;
     if (ui_count > 0) {
         nav_hidden = 1;
@@ -226,9 +232,9 @@ int muxshot_main(void) {
     };
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
-    init_timer(ui_refresh_task, NULL);
+    if (ui_count > 0 && sys_index <= ui_count && current_item_index < ui_count) list_nav_move(sys_index, +1);
 
-    list_nav_next(0);
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
