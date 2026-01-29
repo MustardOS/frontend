@@ -16,6 +16,38 @@ static int splash_valid = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
+static void assign_item_buckets(void) {
+    for (size_t i = 0; i < item_count; i++) {
+        content_item *it = &items[i];
+        it->sort_bucket = BUCKET_NORMAL;
+        it->group_tag[0] = '\0';
+
+        if (config.VISUAL.PINNEDCOLLECT && is_in_list(collection_items, collection_item_count, sys_dir, it->name)) {
+            it->sort_bucket = BUCKET_COLLECT;
+            continue;
+        }
+
+        if (config.VISUAL.GROUPTAGS > 0 && it->use_module && strcasecmp(it->use_module, "muxtag") == 0) {
+            it->sort_bucket = BUCKET_TAGGED;
+
+            if (config.VISUAL.GROUPTAGS == 1) {
+                char c = toupper((unsigned char) it->display_name[0]);
+                it->group_tag[0] = isalnum(c) ? c : '#';
+                it->group_tag[1] = '\0';
+                continue;
+            } else if (config.VISUAL.GROUPTAGS == 2) {
+                snprintf(it->group_tag, sizeof(it->group_tag), "%s", it->glyph_icon);
+                continue;
+            }
+        }
+
+        if (config.VISUAL.DROPHISTORY && is_in_list(history_items, history_item_count, sys_dir, it->name)) {
+            it->sort_bucket = BUCKET_HISTORY;
+            continue;
+        }
+    }
+}
+
 static char *load_content_description(void) {
     char content_desc[MAX_BUFFER_SIZE];
 
@@ -352,6 +384,9 @@ static void gen_item(char **file_names, int file_count) {
             items[i].use_module = strdup(mux_module);
         }
     }
+
+    assign_item_buckets();
+    qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 
     if (grid_mode_enabled) return;
 

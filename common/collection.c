@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -26,6 +24,17 @@ void reformat_display_name(char *display_name) {
 
         memcpy(display_name, "The ", 4);
     }
+}
+
+int is_in_list(char **list, int count, const char *sys_dir, const char *name) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/%s", sys_dir, name);
+
+    for (int i = 0; i < count; i++) {
+        if (strcasecmp(path, list[i]) == 0) return 1;
+    }
+
+    return 0;
 }
 
 content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
@@ -80,6 +89,21 @@ void remove_item(content_item **content_items, size_t *count, size_t index) {
     } else {
         *content_items = realloc(*content_items, (*count) * sizeof(content_item));
     }
+}
+
+int bucket_item_compare(const void *a, const void *b) {
+    const content_item *itemA = (content_item *) a;
+    const content_item *itemB = (content_item *) b;
+
+    if (itemA->sort_bucket != itemB->sort_bucket)
+        return itemA->sort_bucket - itemB->sort_bucket;
+
+    if (itemA->group_tag[0] || itemB->group_tag[0]) {
+        int g = strcasecmp(itemA->group_tag, itemB->group_tag);
+        if (g != 0) return g;
+    }
+
+    return strcasecmp(itemA->display_name, itemB->display_name);
 }
 
 int content_item_compare(const void *a, const void *b) {
@@ -152,7 +176,7 @@ content_item get_item_by_index(content_item *content_items, size_t index) {
 }
 
 int get_folder_item_index_by_name(content_item *content_items, size_t count, const char *name) {
-    for (size_t i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         if (content_items[i].content_type == FOLDER && strcasecmp(content_items[i].name, name) == 0) return i;
     }
     return -1;

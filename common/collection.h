@@ -8,6 +8,13 @@ typedef enum {
     ITEM
 } content_type;
 
+typedef enum {
+    BUCKET_COLLECT = 0,
+    BUCKET_TAGGED  = 1,
+    BUCKET_NORMAL  = 2,
+    BUCKET_HISTORY = 3
+} item_sort_bucket;
+
 typedef struct {
     char *name;
     char *display_name;
@@ -19,12 +26,18 @@ typedef struct {
     char *grid_image;
     char *grid_image_focused;
     char *use_module;
+    int sort_bucket;
+    char group_tag[64];
 } content_item;
+
+int is_in_list(char **list, int count, const char *sys_dir, const char *name);
 
 content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
                        const char *extra_data, content_type content_type);
 
 void remove_item(content_item **content_items, size_t *count, size_t index);
+
+int bucket_item_compare(const void *a, const void *b);
 
 int item_exists(content_item *content_items, size_t count, const char *name);
 

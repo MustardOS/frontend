@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxvisual.h"
 
-#define UI_COUNT 17
+#define UI_COUNT 20
 
 #define VISUAL(NAME, ENUM, UDATA) static int NAME##_original;
 VISUAL_ELEMENTS
@@ -54,6 +54,9 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, Hidden, "visual/hidden", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
+    CHECK_AND_SAVE_STD(visual, GroupTags, "visual/grouptags", INT, 0);
+    CHECK_AND_SAVE_STD(visual, PinnedCollect, "visual/pinnedcollect", INT, 0);
+    CHECK_AND_SAVE_STD(visual, DropHistory, "visual/drophistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
     CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 100);
 
@@ -76,6 +79,12 @@ static void init_navigation_group(void) {
             lang.MUXVISUAL.NAME.REM_SQPA
     };
 
+    char *tag_group[] = {
+            lang.GENERIC.DISABLED,
+            lang.MUXVISUAL.GROUPTAGS.ALPHA,
+            lang.MUXVISUAL.GROUPTAGS.TAG
+    };
+
     INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
@@ -91,6 +100,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(-1, visual, GroupTags, lang.MUXVISUAL.GROUPTAGS.TITLE, "grouptags", tag_group, 3);
+    INIT_OPTION_ITEM(-1, visual, PinnedCollect, lang.MUXVISUAL.PINNEDCOLLECT, "pinnedcollect", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, DropHistory, lang.MUXVISUAL.DROPHISTORY, "drophistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
 

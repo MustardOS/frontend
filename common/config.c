@@ -233,6 +233,9 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.BLACKFADE, CONF_CONFIG_PATH "visual/blackfade", 1);
     CFG_INT_FIELD(config->VISUAL.CONTENTCOLLECT, CONF_CONFIG_PATH "visual/contentcollect", 0);
     CFG_INT_FIELD(config->VISUAL.CONTENTHISTORY, CONF_CONFIG_PATH "visual/contenthistory", 0);
+    CFG_INT_FIELD(config->VISUAL.GROUPTAGS, CONF_CONFIG_PATH "visual/grouptags", 0);
+    CFG_INT_FIELD(config->VISUAL.PINNEDCOLLECT, CONF_CONFIG_PATH "visual/pinnedcollect", 0);
+    CFG_INT_FIELD(config->VISUAL.DROPHISTORY, CONF_CONFIG_PATH "visual/drophistory", 0);
 
     CFG_INT_FIELD(config->WEB.SSHD, CONF_CONFIG_PATH "web/sshd", 0);
     CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0);

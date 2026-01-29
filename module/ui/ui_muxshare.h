@@ -429,6 +429,9 @@
     VISUAL(Hidden,                HIDDEN,                "hidden")                \
     VISUAL(ContentCollect,        CONTENTCOLLECT,        "contentcollect")        \
     VISUAL(ContentHistory,        CONTENTHISTORY,        "contenthistory")        \
+    VISUAL(GroupTags,             GROUPTAGS,             "grouptags")             \
+    VISUAL(PinnedCollect,         PINNEDCOLLECT,         "pinnedcollect")         \
+    VISUAL(DropHistory,           DROPHISTORY,           "drophistory")           \
     VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
     VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")
 
