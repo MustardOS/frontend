@@ -316,23 +316,6 @@ static void create_history_items(void) {
     turbo_time(0, 1);
 }
 
-static void remove_from_history(void) {
-    char history_file[MAX_BUFFER_SIZE];
-    snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
-             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
-
-    if (file_exist(history_file)) {
-        remove(history_file);
-        load_mux("history");
-
-        close_input();
-        mux_input_stop();
-    } else {
-        play_sound(SND_ERROR);
-        toast_message(lang.MUXHISTORY.ERROR.REMOVE, SHORT);
-    }
-}
-
 static void list_nav_move(int steps, int direction) {
     if (!ui_count) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
@@ -495,8 +478,24 @@ static void handle_x(void) {
         return;
     }
 
-    play_sound(SND_CONFIRM);
-    remove_from_history();
+    char history_file[MAX_BUFFER_SIZE];
+    snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
+             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
+
+    if (file_exist(history_file)) {
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+
+        play_sound(SND_MUOS);
+        remove(history_file);
+
+        load_mux("history");
+
+        close_input();
+        mux_input_stop();
+    } else {
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXHISTORY.ERROR.REMOVE, SHORT);
+    }
 }
 
 static void handle_y(void) {

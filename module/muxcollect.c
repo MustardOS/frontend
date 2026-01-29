@@ -692,18 +692,36 @@ static void handle_x(void) {
             toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
             return;
         } else {
-            char empty_dir[MAX_BUFFER_SIZE];
-            snprintf(empty_dir, sizeof(empty_dir), "%s/%s",
+            char collection_dir[MAX_BUFFER_SIZE];
+            snprintf(collection_dir, sizeof(collection_dir), "%s/%s",
                      sys_dir, items[current_item_index].name);
 
-            remove(empty_dir);
+            if (directory_exist(collection_dir)) {
+                write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+
+                play_sound(SND_MUOS);
+                remove(collection_dir);
+            } else {
+                play_sound(SND_ERROR);
+                toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
+                return;
+            }
         }
     } else {
         char collection_file[MAX_BUFFER_SIZE];
         snprintf(collection_file, sizeof(collection_file), "%s/%s.cfg",
                  sys_dir, strip_ext(items[current_item_index].name));
 
-        remove(collection_file);
+        if (file_exist(collection_file)) {
+            write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+
+            play_sound(SND_MUOS);
+            remove(collection_file);
+        } else {
+            play_sound(SND_ERROR);
+            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_FILE, SHORT);
+            return;
+        }
     }
 
     load_mux("collection");

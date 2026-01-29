@@ -3828,3 +3828,10 @@ void set_setting_value(const char *script_name, int value, int offset) {
 
     refresh_config = 1;
 }
+
+int get_index_on_delete(int current_index, int post_delete_count) {
+    if (post_delete_count <= 0) return 0;
+
+    int max_index = post_delete_count - 1;
+    return current_index > max_index ? max_index : current_index;
+}
