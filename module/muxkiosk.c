@@ -177,7 +177,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Power, lang.MUXKIOSK.POWER, "power", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Overlay, lang.MUXKIOSK.OVERLAY, "overlay", allowed_restricted, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Colour, lang.MUXKIOSK.OVERLAY, "colour", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Colour, lang.MUXKIOSK.COLOUR, "colour", allowed_restricted, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
