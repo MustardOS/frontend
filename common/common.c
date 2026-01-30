@@ -3109,10 +3109,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     int nav_next_return = 0;
     if (text_hit > 0) {
         *nav_moved = 1;
-        int nav_adjust = 0;
-
-        if (strcmp(mux_module, "muxtweakgen") == 0) nav_adjust += (!device.BOARD.HASHDMI) ? 1 : 0;
-        nav_next_return = text_hit - nav_adjust;
+        nav_next_return = text_hit;
     }
 
     free(prev);
