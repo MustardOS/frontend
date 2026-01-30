@@ -136,7 +136,6 @@ struct mux_config {
             int16_t GAMMA;
         } COLOUR;
         struct {
-            int16_t HIDDEN;
             int16_t SOUND;
             int16_t SOUNDVOL;
             int16_t CHIME;
