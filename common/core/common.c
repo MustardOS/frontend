@@ -423,25 +423,6 @@ const char *format_core_name(const char *core, int use_lang) {
     return use_lang ? lang.GENERIC.UNKNOWN : "Unknown";
 }
 
-static const char *get_ra_core_name(const char *core) {
-    static char core_id[MAX_BUFFER_SIZE];
-
-    if (!core || !*core) return NULL;
-
-    snprintf(core_id, sizeof(core_id), "%s", core);
-
-    char *so = strstr(core_id, "_libretro.so");
-    if (so) *so = '\0';
-
-    for (int i = 0; ra_core_names[i].core; i++) {
-        if (strcmp(core_id, ra_core_names[i].core) == 0) {
-            return ra_core_names[i].name;
-        }
-    }
-
-    return NULL;
-}
-
 static const char *get_ra_config_dir(const char *core) {
     static char core_id[MAX_BUFFER_SIZE];
 
@@ -490,8 +471,7 @@ int remove_directory_config(const char *dir, const char *core) {
 int remove_core_config(const char *core) {
     toast_message(lang.MUXOPTION.REMCORE, MEDIUM);
 
-    const char *core_name = get_ra_core_name(core);
-    if (!core_name || !*core_name) return 0;
+    const char *core_name = get_ra_config_dir(core);
 
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, core_name);
