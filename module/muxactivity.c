@@ -957,14 +957,10 @@ static void refresh_activity_labels(void) {
     ui_count = 0;
 
     if (activity_display_mode != last_sort_mode) {
-        if (first_open) {
+        if (activity_display_mode == 0) {
             qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_time);
         } else {
-            if (activity_display_mode == 0) {
-                qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_time);
-            } else {
-                qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_launch);
-            }
+            qsort(activity_items, activity_count, sizeof(activity_items[0]), cmp_activity_launch);
         }
 
         last_sort_mode = activity_display_mode;
@@ -1534,6 +1530,8 @@ static void export_activity_html(void) {
 
 static void generate_activity_items(void) {
     turbo_time(1, 1);
+
+    last_sort_mode = -1;
 
     load_activity_items();
     reset_ui_groups();
