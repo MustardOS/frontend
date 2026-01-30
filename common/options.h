@@ -131,16 +131,18 @@
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
+#define MUOS_AIX_LOAD "/tmp/aix_go" // Core/System Assignment Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
-#define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
-#define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
+#define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
+#define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_FLT_LOAD "/tmp/flt_go" // Colour Filter Name
-#define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
+#define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
@@ -154,7 +156,6 @@
 #define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
-#define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 
 #define MUX_BOOT_AUTH   "/tmp/mux_boot_auth"
 #define MUX_BLANK       "/tmp/mux_blank"

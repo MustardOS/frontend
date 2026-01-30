@@ -319,7 +319,7 @@ static void handle_a(void) {
     remove(MUOS_SYS_LOAD);
     remove(OPTION_SKIP);
 
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+    write_text_to_file(MUOS_AIX_LOAD, "w", INT, current_item_index);
 
     close_input();
     mux_input_stop();
@@ -425,9 +425,9 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     if (strcasecmp(rom_system, "none") == 0) {
         create_system_items();
 
-        if (file_exist(MUOS_IDX_LOAD)) {
-            ass_index = read_line_int_from(MUOS_IDX_LOAD, 1);
-            remove(MUOS_IDX_LOAD);
+        if (file_exist(MUOS_AIX_LOAD)) {
+            ass_index = read_line_int_from(MUOS_AIX_LOAD, 1);
+            remove(MUOS_AIX_LOAD);
         }
     } else {
         create_core_items(rom_system);
