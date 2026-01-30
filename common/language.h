@@ -49,7 +49,7 @@ struct mux_lang {
         char EXTRACTING_ARCHIVE[MAX_BUFFER_SIZE];
         char FILTER[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
-        char HOLD_DELETE[MAX_BUFFER_SIZE];
+        char HOLD_REMOVE[MAX_BUFFER_SIZE];
         char HOLD_RESET[MAX_BUFFER_SIZE];
         char INCLUDED[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
@@ -663,6 +663,7 @@ struct mux_lang {
         char SEARCH[MAX_BUFFER_SIZE];
         char TAG[MAX_BUFFER_SIZE];
         char COLFILTER[MAX_BUFFER_SIZE];
+        char REMCONFIG[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char RACONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
@@ -711,6 +712,7 @@ struct mux_lang {
             char SEARCH[MAX_BUFFER_SIZE];
             char TAG[MAX_BUFFER_SIZE];
             char COLFILTER[MAX_BUFFER_SIZE];
+            char REMCONFIG[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RACONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
@@ -928,6 +930,10 @@ struct mux_lang {
         char TAG[MAX_BUFFER_SIZE];
         char RETROARCH[MAX_BUFFER_SIZE];
         char COLFILTER[MAX_BUFFER_SIZE];
+        char REMCONFIG[MAX_BUFFER_SIZE];
+        char REMINDIVIDUAL[MAX_BUFFER_SIZE];
+        char REMDIRECTORY[MAX_BUFFER_SIZE];
+        char REMCORE[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
@@ -937,6 +943,7 @@ struct mux_lang {
             char TAG[MAX_BUFFER_SIZE];
             char RETROARCH[MAX_BUFFER_SIZE];
             char COLFILTER[MAX_BUFFER_SIZE];
+            char REMCONFIG[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXOPTION;

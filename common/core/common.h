@@ -20,3 +20,9 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
 bool automatic_assign_core(char *rom_dir);
 
 const char *format_core_name(const char *core, int use_lang);
+
+int remove_individual_config(const char *name, const char *core);
+
+int remove_directory_config(const char *dir, const char *core);
+
+int remove_core_config(const char *core);

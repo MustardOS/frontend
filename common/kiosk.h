@@ -32,6 +32,7 @@ struct mux_kiosk {
         int16_t OPTION;
         int16_t RETROARCH;
         int16_t COLFILTER;
+        int16_t REMCONFIG;
         int16_t SEARCH;
         int16_t HISTORY;
     } CONTENT;

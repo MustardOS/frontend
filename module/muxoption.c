@@ -1,13 +1,15 @@
 #include "muxshare.h"
 #include "ui/ui_muxoption.h"
 
-#define UI_COUNT 10
+#define UI_COUNT 13
 
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
 
 static int is_directory = 0;
+static char *curr_dir = "";
+static char *core_file = "";
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -15,6 +17,7 @@ static lv_obj_t *ui_objects_glyph[UI_COUNT];
 static lv_obj_t *ui_objects_value[UI_COUNT];
 
 static int group_index = 0;
+static int rem_config = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -34,6 +37,10 @@ static int visible_control(void) {
 
 static int visible_retroarch(void) {
     return !lv_obj_has_flag(ui_pnlRetroArch_option, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_remconfig(void) {
+    return !lv_obj_has_flag(ui_pnlRemConfig_option, LV_OBJ_FLAG_HIDDEN);
 }
 
 static int visible_tag(void) {
@@ -117,7 +124,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
 }
 
 static void add_info_items(void) {
-    const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
+    core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
     const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
     add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
 
@@ -217,31 +224,59 @@ static void init_navigation_group(void) {
 
     int dir_level = 4;
     if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
+    curr_dir = get_last_subdir(rom_dir, '/', dir_level);
 
-    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', dir_level), "folder", false);
+    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, curr_dir, "folder", false);
     if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
     if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
     if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
     add_static_item(line_index, "", "", "", true);
+
+    char *rem_config_opt = is_directory ? lang.MUXOPTION.DIRECTORY : lang.MUXOPTION.INDIVIDUAL;
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
     INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
     INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
     INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
     INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
+    INIT_VALUE_ITEM(-1, option, RemConfig, lang.MUXOPTION.REMCONFIG, "remconfig", rem_config_opt);
     INIT_VALUE_ITEM(-1, option, ColFilter, lang.MUXOPTION.COLFILTER, "colfilter", "");
     if (!is_directory) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
+
     add_info_items();
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     const char *core_label = lv_label_get_text(ui_lblCoreValue_option);
-    if (core_label && !strcasestr(core_label, "RetroArch")) HIDE_VALUE_ITEM(option, RetroArch);
+    if (core_label && !strcasestr(core_label, "RetroArch")) {
+        HIDE_VALUE_ITEM(option, RetroArch);
+        HIDE_VALUE_ITEM(option, RemConfig);
+    }
+}
+
+static void check_focus(void) {
+    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+    if (f == ui_lblRemConfig_option) {
+        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 }
 
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, -4);
+    gen_step_movement(steps, direction, false, is_directory ? -1 : -4);
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -252,8 +287,46 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static char *change_config_opt(int steps) {
+    int max_opt = is_directory ? 1 : 2;
+    rem_config += steps;
+
+    if (rem_config > max_opt) rem_config = 0;
+    if (rem_config < 0) rem_config = max_opt;
+
+    char *remove_options_dir[] = {
+            lang.MUXOPTION.DIRECTORY,
+            lang.MUXOPTION.CORE
+    };
+
+    char *remove_options_all[] = {
+            lang.MUXOPTION.INDIVIDUAL,
+            lang.MUXOPTION.DIRECTORY,
+            lang.MUXOPTION.CORE
+    };
+
+    return is_directory ? remove_options_dir[rem_config] : remove_options_all[rem_config];
+}
+
+static void handle_option_prev(void) {
+    if (msgbox_active || hold_call) return;
+
+    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+    if (f == ui_lblRemConfig_option) lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(-1));
+}
+
+static void handle_option_next(void) {
+    if (msgbox_active || hold_call) return;
+
+    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+    if (f == ui_lblRemConfig_option) lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(+1));
+}
+
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
+
+    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+    if (f == ui_lblRemConfig_option) return;
 
     typedef int (*visible_fn)(void);
 
@@ -269,6 +342,7 @@ static void handle_a(void) {
             {"governor",  &kiosk.CONTENT.GOVERNOR,  NULL},
             {"control",   &kiosk.CONTENT.CONTROL,   visible_control},
             {"retroarch", &kiosk.CONTENT.RETROARCH, visible_retroarch},
+            {"remconfig", &kiosk.CONTENT.REMCONFIG, visible_remconfig},
             {"filter",    &kiosk.CONTENT.COLFILTER, NULL},
             {"tag",       &kiosk.CONTENT.TAG,       visible_tag},
     };
@@ -318,6 +392,43 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_x(void) {
+    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+    if (f == ui_lblRemConfig_option) {
+        if (!hold_call) {
+            play_sound(SND_ERROR);
+            toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
+            return;
+        }
+
+        play_sound(SND_MUOS);
+
+        switch (rem_config) {
+            case 0:
+                if (is_directory) {
+                    remove_directory_config(curr_dir, core_file);
+                } else {
+                    remove_individual_config(strip_ext(rom_name), core_file);
+                }
+                break;
+            case 1:
+                if (is_directory) {
+                    remove_core_config(core_file);
+                } else {
+                    remove_directory_config(curr_dir, core_file);
+                }
+                break;
+            case 2:
+                remove_core_config(core_file);
+                break;
+            default:
+                break;
+        }
+
+        return;
+    }
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
@@ -329,12 +440,18 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  0},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {NULL, NULL,                           0}
+            {ui_lblNavLRGlyph, "",                  0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
+            {ui_lblNavAGlyph,  "",                  0},
+            {ui_lblNavA,       lang.GENERIC.SELECT, 0},
+            {ui_lblNavBGlyph,  "",                  0},
+            {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph,  "",                  0},
+            {ui_lblNavX,       lang.GENERIC.REMOVE, 0},
+            {NULL, NULL,                            0}
     });
+
+    check_focus();
 
 #define OPTION(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
     OPTION_ELEMENTS
@@ -389,6 +506,9 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
@@ -399,6 +519,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
                     [MUX_INPUT_L2] = hold_call_release,
             },
             .hold_handler = {
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

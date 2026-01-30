@@ -4,6 +4,7 @@
 #include "../miniz/miniz.h"
 #include "../json/json.h"
 #include "../common.h"
+#include "../ui_common.h"
 #include "../device.h"
 #include "../language.h"
 #include "../log.h"
@@ -420,4 +421,84 @@ const char *format_core_name(const char *core, int use_lang) {
     }
 
     return use_lang ? lang.GENERIC.UNKNOWN : "Unknown";
+}
+
+static const char *get_ra_core_name(const char *core) {
+    static char core_id[MAX_BUFFER_SIZE];
+
+    if (!core || !*core) return NULL;
+
+    snprintf(core_id, sizeof(core_id), "%s", core);
+
+    char *so = strstr(core_id, "_libretro.so");
+    if (so) *so = '\0';
+
+    for (int i = 0; ra_core_names[i].core; i++) {
+        if (strcmp(core_id, ra_core_names[i].core) == 0) {
+            return ra_core_names[i].name;
+        }
+    }
+
+    return NULL;
+}
+
+static const char *get_ra_config_dir(const char *core) {
+    static char core_id[MAX_BUFFER_SIZE];
+
+    if (!core || !*core) return core;
+
+    snprintf(core_id, sizeof(core_id), "%s", core);
+
+    char *so = strstr(core_id, "_libretro.so");
+    if (so) *so = '\0';
+
+    for (int i = 0; ra_core_names[i].core; i++) {
+        if (strcmp(core_id, ra_core_names[i].core) == 0) {
+            return ra_core_names[i].config ? ra_core_names[i].config : core_id;
+        }
+    }
+
+    return core_id;
+}
+
+int remove_individual_config(const char *name, const char *core) {
+    toast_message(lang.MUXOPTION.REMINDIVIDUAL, MEDIUM);
+
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, get_ra_config_dir(core));
+    remove_double_slashes(path);
+
+    LOG_INFO(mux_module, "Removing Individual Configs: %s", path);
+    delete_files_of_name(path, name);
+
+    return 1;
+}
+
+int remove_directory_config(const char *dir, const char *core) {
+    toast_message(lang.MUXOPTION.REMDIRECTORY, MEDIUM);
+
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, get_ra_config_dir(core));
+    remove_double_slashes(path);
+
+    LOG_INFO(mux_module, "Removing Directory Configs: %s", path);
+    delete_files_of_name(path, dir);
+
+    return 1;
+}
+
+int remove_core_config(const char *core) {
+    toast_message(lang.MUXOPTION.REMCORE, MEDIUM);
+
+    const char *core_name = get_ra_core_name(core);
+    if (!core_name || !*core_name) return 0;
+
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, core_name);
+    remove_double_slashes(path);
+
+    LOG_INFO(mux_module, "Removing Core Configs: %s", path);
+    delete_files_of_name(path, core_name);
+
+    return 1;
 }

@@ -209,6 +209,7 @@
     KIOSK(Search,     SEARCH,     "search")     \
     KIOSK(Tag,        TAG,        "tag")        \
     KIOSK(ColFilter,  COLFILTER,  "colfilter")  \
+    KIOSK(RemConfig,  REMCONFIG,  "remconfig")  \
     KIOSK(Catalogue,  CATALOGUE,  "catalogue")  \
     KIOSK(RAConfig,   RACONFIG,   "raconfig")   \
     KIOSK(Theme,      THEME,      "theme")      \
@@ -283,6 +284,7 @@
     OPTION(Governor,  GOVERNOR,  "governor")  \
     OPTION(Control,   CONTROL,   "control")   \
     OPTION(RetroArch, RETROARCH, "retroarch") \
+    OPTION(RemConfig, REMCONFIG, "remconfig") \
     OPTION(ColFilter, COLFILTER, "colfilter") \
     OPTION(Tag,       TAG,       "tag")
 

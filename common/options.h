@@ -92,9 +92,10 @@
 #define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
 #define STORAGE_FILTER  OPT_SHARE_PATH "filter"
 
-#define INFO_COR_PATH OPT_SHARE_PATH   "info/core"
-#define INFO_CNT_PATH OPT_SHARE_PATH   "info/controller"
-#define INFO_GCD_PATH OPT_SHARE_PATH   "info/gamecontrollerdb"
+#define INFO_CFG_PATH OPT_SHARE_PATH "info/config"
+#define INFO_COR_PATH OPT_SHARE_PATH "info/core"
+#define INFO_CNT_PATH OPT_SHARE_PATH "info/controller"
+#define INFO_GCD_PATH OPT_SHARE_PATH "info/gamecontrollerdb"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"

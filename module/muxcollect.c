@@ -695,7 +695,7 @@ static void handle_x(void) {
 
     if (!hold_call) {
         play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.HOLD_DELETE, SHORT);
+        toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
         return;
     }
 

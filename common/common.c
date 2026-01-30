@@ -1090,30 +1090,46 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 }
 
 void delete_files_of_name(const char *dir_path, const char *filename) {
-    struct dirent *entry;
     DIR *dir = opendir(dir_path);
+    if (!dir) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_DIR_OPEN, dir_path);
+        return;
+    }
 
-    if (dir != NULL) {
-        while ((entry = readdir(dir)) != NULL) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+    struct dirent *entry;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.' && (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0'))) continue;
+
+        char full_path[PATH_MAX];
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
+
+        if (entry->d_type == DT_DIR || entry->d_type == DT_UNKNOWN) {
+            struct stat st;
+            if (stat(full_path, &st) == 0 && S_ISDIR(st.st_mode)) {
+                delete_files_of_name(full_path, filename);
                 continue;
             }
+        }
 
-            char full_path[PATH_MAX];
-            snprintf(full_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
+        if (entry->d_type != DT_REG && entry->d_type != DT_UNKNOWN) continue;
 
-            if (entry->d_type == DT_DIR) {
-                delete_files_of_name(full_path, filename);
-            } else if (entry->d_type == DT_REG && strcmp(entry->d_name, filename) == 0) {
-                if (remove(full_path) != 0) {
-                    perror(lang.SYSTEM.FAIL_DELETE_FILE);
-                }
+        char base[NAME_MAX + 1];
+        snprintf(base, sizeof(base), "%s", entry->d_name);
+
+        char *dot = strrchr(base, '.');
+        if (!dot) continue;
+
+        *dot = '\0';
+
+        if (strcmp(base, filename) == 0) {
+            if (remove(full_path) != 0) {
+                perror(lang.SYSTEM.FAIL_DELETE_FILE);
             }
         }
-        closedir(dir);
-    } else {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
     }
+
+    closedir(dir);
 }
 
 int load_element_image_specifics(const char *mux_dimension, const char *program, const char *image_type,

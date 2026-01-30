@@ -26,6 +26,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->CONTENT.OPTION, CONF_KIOSK_PATH "content/option", 0);
     CFG_INT_FIELD(kiosk->CONTENT.RETROARCH, CONF_KIOSK_PATH "content/retroarch", 0);
     CFG_INT_FIELD(kiosk->CONTENT.COLFILTER, CONF_KIOSK_PATH "content/colfilter", 0);
+    CFG_INT_FIELD(kiosk->CONTENT.REMCONFIG, CONF_KIOSK_PATH "content/remconfig", 0);
     CFG_INT_FIELD(kiosk->CONTENT.SEARCH, CONF_KIOSK_PATH "content/search", 0);
     CFG_INT_FIELD(kiosk->CONTENT.HISTORY, CONF_KIOSK_PATH "content/history", 0);
 

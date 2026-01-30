@@ -65,7 +65,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.EXTRACTING_ARCHIVE, "Extracting Archive");
     GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
     GENERIC_FIELD(lang->GENERIC.HIDDEN, "Hidden");
-    GENERIC_FIELD(lang->GENERIC.HOLD_DELETE, "Hold L2 and press X to confirm deletion!");
+    GENERIC_FIELD(lang->GENERIC.HOLD_REMOVE, "Hold L2 and press X to confirm removal!");
     GENERIC_FIELD(lang->GENERIC.HOLD_RESET, "Hold L2 and press X to confirm reset!");
     GENERIC_FIELD(lang->GENERIC.INCLUDED, "Included");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
@@ -590,6 +590,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.SEARCH, "Content Search");
     SPECIFIC_FIELD(lang->MUXKIOSK.TAG, "Content Tag");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLFILTER, "Colour Filter");
+    SPECIFIC_FIELD(lang->MUXKIOSK.REMCONFIG, "Remove Config");
     SPECIFIC_FIELD(lang->MUXKIOSK.CATALOGUE, "Custom Catalogue");
     SPECIFIC_FIELD(lang->MUXKIOSK.RACONFIG, "Custom RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.THEME, "Custom Themes");
@@ -822,6 +823,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.RETROARCH, "Threaded Video");
     SPECIFIC_FIELD(lang->MUXOPTION.COLFILTER, "Colour Filter");
     SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Content Tag");
+    SPECIFIC_FIELD(lang->MUXOPTION.REMCONFIG, "Remove Config");
+    SPECIFIC_FIELD(lang->MUXOPTION.REMINDIVIDUAL, "Removing Individual Config…");
+    SPECIFIC_FIELD(lang->MUXOPTION.REMDIRECTORY, "Removing Directory Config…");
+    SPECIFIC_FIELD(lang->MUXOPTION.REMCORE, "Removing Core Config…");
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CORE, "Set the system core or external emulator for the selected content or directory");
