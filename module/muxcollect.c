@@ -538,8 +538,6 @@ static void process_load(int from_start) {
         return;
     }
 
-    play_sound(SND_CONFIRM);
-
     int load_message = 0;
 
     if (add_mode && !ui_count) {
@@ -548,6 +546,7 @@ static void process_load(int from_start) {
     }
 
     if (items[current_item_index].content_type == FOLDER) {
+        play_sound(SND_CONFIRM);
         load_message = 1;
 
         char n_dir[MAX_BUFFER_SIZE];
@@ -557,6 +556,7 @@ static void process_load(int from_start) {
         write_text_to_file(COLLECTION_DIR, "w", CHAR, n_dir);
     } else {
         if (add_mode) {
+            play_sound(SND_CONFIRM);
             add_collection_item();
             goto load_end;
         } else {
@@ -564,6 +564,19 @@ static void process_load(int from_start) {
 
             char *item_dir = strip_dir(items[current_item_index].extra_data);
             char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
+
+            char item_launch[MAX_BUFFER_SIZE];
+            snprintf(item_launch, sizeof(item_launch), "%s/%s", item_dir, item_file_name);
+
+            if (!file_exist(item_launch)) {
+                play_sound(SND_ERROR);
+                toast_message(lang.GENERIC.NO_LOAD, LONG);
+
+                LOG_ERROR(mux_module, "Could not launch content: %s", item_launch);
+                return;
+            }
+
+            play_sound(SND_CONFIRM);
 
             if (load_content(0, item_dir, item_file_name)) {
                 if (config.SETTINGS.ADVANCED.PASSCODE) {

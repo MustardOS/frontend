@@ -67,6 +67,7 @@ struct mux_lang {
         char NOT_CONNECTED[MAX_BUFFER_SIZE];
         char NO_HELP[MAX_BUFFER_SIZE];
         char NO_INFO[MAX_BUFFER_SIZE];
+        char NO_LOAD[MAX_BUFFER_SIZE];
         char OFFLINE[MAX_BUFFER_SIZE];
         char ONLINE[MAX_BUFFER_SIZE];
         char OPEN[MAX_BUFFER_SIZE];

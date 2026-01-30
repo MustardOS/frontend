@@ -83,6 +83,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.NOT_CONNECTED, "Not Connected");
     GENERIC_FIELD(lang->GENERIC.NO_HELP, "No Help Information Found");
     GENERIC_FIELD(lang->GENERIC.NO_INFO, "No Information Found");
+    GENERIC_FIELD(lang->GENERIC.NO_LOAD, "Cannot find original launch content…");
     GENERIC_FIELD(lang->GENERIC.OFFLINE, "Offline");
     GENERIC_FIELD(lang->GENERIC.ONLINE, "Online");
     GENERIC_FIELD(lang->GENERIC.OPEN, "Open");
