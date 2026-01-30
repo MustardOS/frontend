@@ -237,10 +237,7 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     const char *core_label = lv_label_get_text(ui_lblCoreValue_option);
-    if (core_label && !strcasestr(core_label, "RetroArch")) {
-        HIDE_VALUE_ITEM(option, Control);
-        HIDE_VALUE_ITEM(option, RetroArch);
-    }
+    if (core_label && !strcasestr(core_label, "RetroArch")) HIDE_VALUE_ITEM(option, RetroArch);
 }
 
 static void list_nav_move(int steps, int direction) {
