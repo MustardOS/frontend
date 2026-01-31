@@ -691,7 +691,7 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode) return;
+    if (msgbox_active || !ui_count || add_mode || is_ksk(kiosk.COLLECT.REMOVE)) return;
 
     if (!hold_call) {
         play_sound(SND_ERROR);

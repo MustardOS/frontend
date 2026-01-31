@@ -42,7 +42,7 @@ char splash_image_previous_path[MAX_BUFFER_SIZE];
 char sys_dir[MAX_BUFFER_SIZE];
 
 int is_ksk(int k) {
-    return kiosk.ENABLE && k;
+    return kiosk.ENABLE ? k : 0;
 }
 
 void hold_call_set(void) {
