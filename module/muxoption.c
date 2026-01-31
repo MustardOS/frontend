@@ -312,14 +312,20 @@ static void handle_option_prev(void) {
     if (msgbox_active || hold_call) return;
 
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(-1));
+    if (f == ui_lblRemConfig_option) {
+        play_sound(SND_OPTION);
+        lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(-1));
+    }
 }
 
 static void handle_option_next(void) {
     if (msgbox_active || hold_call) return;
 
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(+1));
+    if (f == ui_lblRemConfig_option) {
+        play_sound(SND_OPTION);
+        lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(+1));
+    }
 }
 
 static void handle_a(void) {
