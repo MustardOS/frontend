@@ -442,27 +442,27 @@ static const char *get_ra_config_dir(const char *core) {
     return core_id;
 }
 
-int remove_individual_config(const char *name, const char *core) {
-    toast_message(lang.MUXOPTION.REMINDIVIDUAL, MEDIUM);
+int remove_content_config(const char *name, const char *core) {
+    toast_message(lang.MUXOPTION.REMCONTENT, MEDIUM);
 
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, get_ra_config_dir(core));
     remove_double_slashes(path);
 
-    LOG_INFO(mux_module, "Removing Individual Configs: %s", path);
+    LOG_INFO(mux_module, "Removing Content Configs: %s/%s.*", path, name);
     delete_files_of_name(path, name);
 
     return 1;
 }
 
-int remove_directory_config(const char *dir, const char *core) {
-    toast_message(lang.MUXOPTION.REMDIRECTORY, MEDIUM);
+int remove_dir_config(const char *dir, const char *core) {
+    toast_message(lang.MUXOPTION.REMDIR, MEDIUM);
 
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, get_ra_config_dir(core));
     remove_double_slashes(path);
 
-    LOG_INFO(mux_module, "Removing Directory Configs: %s", path);
+    LOG_INFO(mux_module, "Removing Directory Configs: %s/%s.*", path, dir);
     delete_files_of_name(path, dir);
 
     return 1;
@@ -477,7 +477,7 @@ int remove_core_config(const char *core) {
     snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, core_name);
     remove_double_slashes(path);
 
-    LOG_INFO(mux_module, "Removing Core Configs: %s", path);
+    LOG_INFO(mux_module, "Removing Core Configs: %s/%s.*", path, core_name);
     delete_files_of_name(path, core_name);
 
     return 1;

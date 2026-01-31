@@ -39,6 +39,7 @@ struct mux_lang {
         char CLEAR[MAX_BUFFER_SIZE];
         char CLOSE[MAX_BUFFER_SIZE];
         char COLLECT[MAX_BUFFER_SIZE];
+        char CONTENT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
@@ -52,7 +53,6 @@ struct mux_lang {
         char HOLD_REMOVE[MAX_BUFFER_SIZE];
         char HOLD_RESET[MAX_BUFFER_SIZE];
         char INCLUDED[MAX_BUFFER_SIZE];
-        char INDIVIDUAL[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
         char INSTALL[MAX_BUFFER_SIZE];
         char KIOSK_DISABLE[MAX_BUFFER_SIZE];
@@ -922,8 +922,6 @@ struct mux_lang {
         char TIME[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char CURRENT[MAX_BUFFER_SIZE];
-        char DIRECTORY[MAX_BUFFER_SIZE];
-        char INDIVIDUAL[MAX_BUFFER_SIZE];
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
         char CONTROL[MAX_BUFFER_SIZE];
@@ -931,8 +929,8 @@ struct mux_lang {
         char RETROARCH[MAX_BUFFER_SIZE];
         char COLFILTER[MAX_BUFFER_SIZE];
         char REMCONFIG[MAX_BUFFER_SIZE];
-        char REMINDIVIDUAL[MAX_BUFFER_SIZE];
-        char REMDIRECTORY[MAX_BUFFER_SIZE];
+        char REMCONTENT[MAX_BUFFER_SIZE];
+        char REMDIR[MAX_BUFFER_SIZE];
         char REMCORE[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];

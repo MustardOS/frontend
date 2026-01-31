@@ -4,7 +4,7 @@ static char rom_name[PATH_MAX];
 static char explore_dir[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
-static bool is_directory = false;
+static bool is_dir = false;
 
 static lv_obj_t *ui_lblCoreDownloader;
 
@@ -311,7 +311,7 @@ static void handle_a(void) {
             play_sound(SND_CONFIRM);
             load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
         } else {
-            if (is_directory) return;
+            if (is_dir) return;
             handle_core_assignment("Single Core Assignment Triggered", SINGLE);
         }
     }
@@ -355,7 +355,7 @@ static void init_elements(void) {
 
     struct nav_bar nav_items[7];
     int i = 0;
-    if (!is_directory) {
+    if (!is_dir) {
         nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
         nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.SELECT, 1};
     }
@@ -367,9 +367,9 @@ static void init_elements(void) {
     if (strcasecmp(rom_system, "none") != 0) {
         i = 0;
 
-        if (!is_directory) {
+        if (!is_dir) {
             nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.CONTENT, 1};
         }
         nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
         nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
@@ -389,8 +389,8 @@ static void init_elements(void) {
 
 int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
-    is_directory = directory_exist(rom_dir);
-    if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    is_dir = dir_exist(rom_dir);
+    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(explore_dir, sizeof(explore_dir), "%s", dir);

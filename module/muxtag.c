@@ -209,7 +209,7 @@ static void init_elements(void) {
 
     setup_nav((struct nav_bar[]) {
             {ui_lblNavAGlyph, "",                      1},
-            {ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1},
+            {ui_lblNavA,      lang.GENERIC.CONTENT, 1},
             {ui_lblNavBGlyph, "",                      0},
             {ui_lblNavB,      lang.GENERIC.BACK,       0},
             {ui_lblNavXGlyph, "",                      1},

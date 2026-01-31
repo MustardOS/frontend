@@ -1064,7 +1064,7 @@ void scale_theme(struct mux_device *device) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", theme_base,
                  dimensions[i].width,
                  dimensions[i].height);
-        if (!directory_exist(theme_device_folder)) continue;
+        if (!dir_exist(theme_device_folder)) continue;
 
         // Compare aspect ratios
         if (target_width * dimensions[i].height == target_height * dimensions[i].width) {
@@ -1085,7 +1085,7 @@ void scale_theme(struct mux_device *device) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", theme_base,
                  dimensions[i].width,
                  dimensions[i].height);
-        if (!directory_exist(theme_device_folder)) continue;
+        if (!dir_exist(theme_device_folder)) continue;
 
         device->MUX.WIDTH = dimensions[i].width;
         device->MUX.HEIGHT = dimensions[i].height;
@@ -1115,7 +1115,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         if (config->SETTINGS.GENERAL.THEME_RESOLUTION > 0) {
             snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", theme_base,
                      config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH, config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT);
-            if (directory_exist(theme_device_folder)) {
+            if (dir_exist(theme_device_folder)) {
                 device->MUX.WIDTH = config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH;
                 device->MUX.HEIGHT = config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT;
                 snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
@@ -1132,7 +1132,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         }
 
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", theme_base, mux_dimension);
-        if (!directory_exist(theme_device_folder)) scale_theme(device);
+        if (!dir_exist(theme_device_folder)) scale_theme(device);
 
         LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->MUX.WIDTH, device->MUX.HEIGHT);
     }

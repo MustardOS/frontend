@@ -52,7 +52,7 @@ static void update_storage_info(void) {
 
     for (int i = 0; i < sp; i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
-        if (directory_exist(dir)) {
+        if (dir_exist(dir)) {
             lv_label_set_text(storage_path[i].ui_label, "SD2");
             on_sd2 = 1;
         } else {

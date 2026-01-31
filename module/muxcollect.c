@@ -339,7 +339,7 @@ static void create_collection_items(void) {
         }
     }
 
-    const char *col_path = (is_ksk(kiosk.COLLECT.ACCESS) && directory_exist(INFO_CKS_PATH))
+    const char *col_path = (is_ksk(kiosk.COLLECT.ACCESS) && dir_exist(INFO_CKS_PATH))
                            ? INFO_CKS_PATH : INFO_COL_PATH;
     update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, col_path);
 
@@ -709,7 +709,7 @@ static void handle_x(void) {
             snprintf(collection_dir, sizeof(collection_dir), "%s/%s",
                      sys_dir, items[current_item_index].name);
 
-            if (directory_exist(collection_dir)) {
+            if (dir_exist(collection_dir)) {
                 write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
 
                 play_sound(SND_MUOS);
@@ -908,7 +908,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     starter_image = 0;
     splash_valid = 0;
 
-    const char *collection_path = (is_ksk(kiosk.COLLECT.ACCESS) && directory_exist(INFO_CKS_PATH))
+    const char *collection_path = (is_ksk(kiosk.COLLECT.ACCESS) && dir_exist(INFO_CKS_PATH))
                                   ? INFO_CKS_PATH
                                   : INFO_COL_PATH;
 

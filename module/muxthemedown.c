@@ -31,7 +31,7 @@ static bool is_downloaded(int index) {
     char theme_path[MAX_BUFFER_SIZE];
     snprintf(theme_path, sizeof(theme_path), "%stheme/%s",
              RUN_STORAGE_PATH, theme_items[index].name);
-    return (directory_exist(theme_path));
+    return (dir_exist(theme_path));
 }
 
 static void image_refresh() {
@@ -284,7 +284,7 @@ static void handle_a(void) {
     char theme_path[MAX_BUFFER_SIZE];
     snprintf(theme_path, sizeof(theme_path), "%stheme/%s",
              RUN_STORAGE_PATH, theme_items[current_item_index].name);
-    if (directory_exist(theme_path)) {
+    if (dir_exist(theme_path)) {
         if (strcasecmp(theme_path, theme_base) == 0) {
             toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, SHORT);
         } else {

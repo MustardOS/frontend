@@ -21,8 +21,8 @@ bool automatic_assign_core(char *rom_dir);
 
 const char *format_core_name(const char *core, int use_lang);
 
-int remove_individual_config(const char *name, const char *core);
+int remove_content_config(const char *name, const char *core);
 
-int remove_directory_config(const char *dir, const char *core);
+int remove_dir_config(const char *dir, const char *core);
 
 int remove_core_config(const char *core);

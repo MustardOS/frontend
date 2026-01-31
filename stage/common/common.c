@@ -46,7 +46,7 @@ static int file_exist(const char *filename) {
     return access(filename, F_OK) == 0;
 }
 
-static int directory_exist(const char *dirname) {
+static int dir_exist(const char *dirname) {
     struct stat st;
     return dirname && stat(dirname, &st) == 0 && S_ISDIR(st.st_mode);
 }
@@ -162,7 +162,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
     const char *active_theme = get_active_theme();
     if (active_theme) {
         snprintf(theme_path, sizeof(theme_path), THEME_PATH, active_theme);
-        have_theme = directory_exist(theme_path);
+        have_theme = dir_exist(theme_path);
     } else {
         have_theme = 0;
     }

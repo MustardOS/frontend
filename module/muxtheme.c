@@ -265,7 +265,7 @@ static void handle_x(void) {
         return;
     }
 
-    if (!directory_exist(active_path)) {
+    if (!dir_exist(active_path)) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
         return;

@@ -190,7 +190,7 @@ void common_var_init(void);
 
 int file_exist(const char *filename);
 
-int directory_exist(char *dirname);
+int dir_exist(char *dirname);
 
 const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 

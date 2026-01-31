@@ -55,6 +55,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.CLEAR, "Clear");
     GENERIC_FIELD(lang->GENERIC.CLOSE, "Close");
     GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
+    GENERIC_FIELD(lang->GENERIC.CONTENT, "Content");
     GENERIC_FIELD(lang->GENERIC.DIRECTORY, "Directory");
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.DOWNLOAD, "Download");
@@ -68,7 +69,6 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.HOLD_REMOVE, "Hold L2 and press X to confirm removal!");
     GENERIC_FIELD(lang->GENERIC.HOLD_RESET, "Hold L2 and press X to confirm reset!");
     GENERIC_FIELD(lang->GENERIC.INCLUDED, "Included");
-    GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
     GENERIC_FIELD(lang->GENERIC.INSTALL, "Install");
     GENERIC_FIELD(lang->GENERIC.KIOSK_DISABLE, "This is disabled in kiosk mode!");
@@ -815,8 +815,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.TIME, "Time Played");
     SPECIFIC_FIELD(lang->MUXOPTION.LAUNCH, "Times Launched");
     SPECIFIC_FIELD(lang->MUXOPTION.CURRENT, "Current");
-    SPECIFIC_FIELD(lang->MUXOPTION.DIRECTORY, "Directory");
-    SPECIFIC_FIELD(lang->MUXOPTION.INDIVIDUAL, "Individual");
     SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Core");
     SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
     SPECIFIC_FIELD(lang->MUXOPTION.CONTROL, "Control Scheme");
@@ -824,8 +822,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.COLFILTER, "Colour Filter");
     SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Content Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.REMCONFIG, "Remove Config");
-    SPECIFIC_FIELD(lang->MUXOPTION.REMINDIVIDUAL, "Removing Individual Config…");
-    SPECIFIC_FIELD(lang->MUXOPTION.REMDIRECTORY, "Removing Directory Config…");
+    SPECIFIC_FIELD(lang->MUXOPTION.REMCONTENT, "Removing Content Config…");
+    SPECIFIC_FIELD(lang->MUXOPTION.REMDIR, "Removing Directory Config…");
     SPECIFIC_FIELD(lang->MUXOPTION.REMCORE, "Removing Core Config…");
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
@@ -835,6 +833,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.RETROARCH, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.COLFILTER, "Select a colour filter that will change the display output of the running content. May not work with everything!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.REMCONFIG, "Remove specific RetroArch configuration, just in case something goes horribly wrong");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 
     // muxoverlay

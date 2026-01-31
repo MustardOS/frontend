@@ -128,7 +128,7 @@ int file_exist(const char *filename) {
     return access(filename, F_OK) == 0;
 }
 
-int directory_exist(char *dirname) {
+int dir_exist(char *dirname) {
     struct stat stats;
     return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
 }
@@ -1242,7 +1242,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
     const char *path_format = "%s/%s/%s/%s%s.png";
     const bool skip_theme_catalogue =
-            !directory_exist(config.THEME.THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
+            !dir_exist(config.THEME.THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
 
     struct {
         enum catalogue_kind kind;
@@ -2020,7 +2020,7 @@ int resolution_check(const char *theme_path) {
     for (size_t j = 0; j < A_SIZE(resolutions); j++) {
         char theme_resolution_path[MAX_BUFFER_SIZE];
         snprintf(theme_resolution_path, sizeof(theme_resolution_path), "%s/%s", theme_path, resolutions[j]);
-        if (directory_exist(theme_resolution_path)) {
+        if (dir_exist(theme_resolution_path)) {
             LOG_SUCCESS(mux_module, "Found supported resolution: %s", resolutions[j]);
             return 1;
         }
@@ -3515,14 +3515,14 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
                  last_subdir, strip_ext(file_name));
 
         if (file_exist(content_core) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core);
+            LOG_SUCCESS(mux_module, "Loading Content Core: %s", content_core);
 
             char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
                                     CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
 
             if (core) return core;
 
-            LOG_ERROR(mux_module, "Failed to build individual core");
+            LOG_ERROR(mux_module, "Failed to build Content Core: %s", content_core);
         }
 
         snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/core.cfg", last_subdir);
@@ -3536,7 +3536,7 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
 
         if (core) return core;
 
-        LOG_ERROR(mux_module, "Failed to build global core");
+        LOG_ERROR(mux_module, "Failed to build Global Core: %s", content_core);
     }
 
     load_assign(MUOS_ASS_LOAD, file_name, sys_dir, "none", force, 0);

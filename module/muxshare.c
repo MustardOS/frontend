@@ -179,7 +179,7 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
         char *txt = read_all_char_from(path);
         if (txt) return txt;
 
-        LOG_ERROR(mux_module, "Failed to read application %s", label);
+        LOG_ERROR(mux_module, "Failed to Read Application %s", label);
         return NULL;
     }
 
@@ -193,12 +193,12 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
                  last_subdir, pointer == NULL ? strip_ext(items[current_item_index].name) : pointer, ext);
 
         if (file_exist(path) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path);
+            LOG_SUCCESS(mux_module, "Loading Content Asset %s: %s", label, path);
 
             char *txt = read_all_char_from(path);
             if (txt) return txt;
 
-            LOG_ERROR(mux_module, "Failed to read individual %s", label);
+            LOG_ERROR(mux_module, "Failed to read Content Asset: %s", label);
         }
 
         snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
@@ -211,7 +211,7 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
         char *txt = read_all_char_from(path);
         if (txt) return txt;
 
-        LOG_ERROR(mux_module, "Failed to read global %s", label);
+        LOG_ERROR(mux_module, "Failed to Read Global %s", label);
     }
 
     if (run_quit) mux_input_stop();

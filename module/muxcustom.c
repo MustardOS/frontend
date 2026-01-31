@@ -206,7 +206,7 @@ static void init_navigation_group(void) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
                  theme_base, theme_resolutions[i].resolution);
 
-        if (directory_exist(theme_device_folder)) {
+        if (dir_exist(theme_device_folder)) {
             lv_dropdown_add_option(ui_droThemeResolution_custom,
                                    theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
         }

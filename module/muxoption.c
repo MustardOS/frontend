@@ -7,7 +7,7 @@ static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
 
-static int is_directory = 0;
+static int is_dir = 0;
 static char *curr_dir = "";
 static char *core_file = "";
 
@@ -144,7 +144,7 @@ static void add_info_items(void) {
     const char *flt_dir = get_content_line(rom_dir, NULL, "flt", 1);
     add_info_item_type(ui_lblColFilterValue_option, flt_file, flt_dir, "filter", true);
 
-    if (!is_directory) {
+    if (!is_dir) {
         const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
         const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
         add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
@@ -226,13 +226,13 @@ static void init_navigation_group(void) {
     if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
     curr_dir = get_last_subdir(rom_dir, '/', dir_level);
 
-    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, curr_dir, "folder", false);
-    if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
-    if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
-    if (!is_directory) add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
+    add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
+    if (!is_dir) add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
+    if (!is_dir) add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
+    if (!is_dir) add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
     add_static_item(line_index, "", "", "", true);
 
-    char *rem_config_opt = is_directory ? lang.MUXOPTION.DIRECTORY : lang.MUXOPTION.INDIVIDUAL;
+    char *rem_config_opt = is_dir ? lang.GENERIC.DIRECTORY : lang.GENERIC.CONTENT;
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
     INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
@@ -241,7 +241,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
     INIT_VALUE_ITEM(-1, option, RemConfig, lang.MUXOPTION.REMCONFIG, "remconfig", rem_config_opt);
     INIT_VALUE_ITEM(-1, option, ColFilter, lang.MUXOPTION.COLFILTER, "colfilter", "");
-    if (!is_directory) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
+    if (!is_dir) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
 
     add_info_items();
 
@@ -275,7 +275,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, is_directory ? -1 : -4);
+    gen_step_movement(steps, direction, false, is_dir ? -1 : -4);
     check_focus();
 }
 
@@ -288,24 +288,24 @@ static void list_nav_next(int steps) {
 }
 
 static char *change_config_opt(int steps) {
-    int max_opt = is_directory ? 1 : 2;
+    int max_opt = is_dir ? 1 : 2;
     rem_config += steps;
 
     if (rem_config > max_opt) rem_config = 0;
     if (rem_config < 0) rem_config = max_opt;
 
     char *remove_options_dir[] = {
-            lang.MUXOPTION.DIRECTORY,
+            lang.GENERIC.DIRECTORY,
             lang.MUXOPTION.CORE
     };
 
     char *remove_options_all[] = {
-            lang.MUXOPTION.INDIVIDUAL,
-            lang.MUXOPTION.DIRECTORY,
+            lang.GENERIC.CONTENT,
+            lang.GENERIC.DIRECTORY,
             lang.MUXOPTION.CORE
     };
 
-    return is_directory ? remove_options_dir[rem_config] : remove_options_all[rem_config];
+    return is_dir ? remove_options_dir[rem_config] : remove_options_all[rem_config];
 }
 
 static void handle_option_prev(void) {
@@ -405,17 +405,17 @@ static void handle_x(void) {
 
         switch (rem_config) {
             case 0:
-                if (is_directory) {
-                    remove_directory_config(curr_dir, core_file);
+                if (is_dir) {
+                    remove_dir_config(curr_dir, core_file);
                 } else {
-                    remove_individual_config(strip_ext(rom_name), core_file);
+                    remove_content_config(strip_ext(rom_name), core_file);
                 }
                 break;
             case 1:
-                if (is_directory) {
+                if (is_dir) {
                     remove_core_config(core_file);
                 } else {
-                    remove_directory_config(curr_dir, core_file);
+                    remove_dir_config(curr_dir, core_file);
                 }
                 break;
             case 2:
@@ -464,8 +464,9 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     group_index = 0;
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
-    is_directory = directory_exist(rom_dir);
-    if (!is_directory) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    is_dir = dir_exist(rom_dir);
+
+    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
