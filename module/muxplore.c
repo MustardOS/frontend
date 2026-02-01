@@ -382,12 +382,6 @@ static void gen_item(char **file_names, int file_count) {
 
     assign_item_buckets();
     qsort(items, item_count, sizeof(content_item), bucket_item_compare);
-
-    if (grid_mode_enabled) return;
-
-    for (size_t i = 0; i < item_count && i < theme.MUX.ITEM.COUNT; i++) {
-        gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
-    }
 }
 
 static void init_navigation_group_grid(void) {
@@ -518,13 +512,70 @@ static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, in
 }
 
 static void update_list_items(int start_index) {
-    for (int index = 0; index < theme.MUX.ITEM.COUNT; ++index) {
+    int max = (int) item_count - start_index;
+    if (max <= 0) return;
+
+    int count = theme.MUX.ITEM.COUNT;
+    if (count > max) count = max;
+
+    for (int index = 0; index < count; ++index) {
         lv_obj_t *panel_item = lv_obj_get_child(ui_pnlContent, index);
         update_list_item(lv_obj_get_child(panel_item, 0), lv_obj_get_child(panel_item, 1), start_index + index);
     }
 }
 
-static int visible_focus_index(void) {
+static inline void focus_group(int index) {
+    if (index < 0 || index >= theme.MUX.ITEM.COUNT) return;
+    lv_obj_t *panel = lv_obj_get_child(ui_pnlContent, index);
+
+    if (!panel) return;
+
+    lv_group_focus_obj(panel);
+    lv_group_focus_obj(lv_obj_get_child(panel, 0));
+    lv_group_focus_obj(lv_obj_get_child(panel, 1));
+}
+
+static void focus_initial(void) {
+    if (grid_mode_enabled) {
+        image_refresh("box");
+        nav_moved = 1;
+        return;
+    }
+
+    int count = theme.MUX.ITEM.COUNT;
+
+    if (item_count <= (size_t) count) {
+        focus_group(current_item_index);
+        image_refresh("box");
+        nav_moved = 1;
+        return;
+    }
+
+    int before = (count - count % 2) / 2;
+    int after = (count - 1) / 2;
+
+    int start_index;
+    if (current_item_index < before) {
+        start_index = 0;
+    } else if (current_item_index >= (int) item_count - after) {
+        start_index = (int) item_count - count;
+    } else {
+        start_index = current_item_index - before;
+    }
+
+    update_list_items(start_index);
+
+    int new_item_index = current_item_index - start_index;
+    if (new_item_index < 0) new_item_index = 0;
+    if (new_item_index >= count) new_item_index = count - 1;
+
+    focus_group(new_item_index);
+
+    image_refresh("box");
+    nav_moved = 1;
+}
+
+static int focus_index(void) {
     int before = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
     int after = (theme.MUX.ITEM.COUNT - 1) / 2;
 
@@ -537,18 +588,43 @@ static int visible_focus_index(void) {
     return before;
 }
 
+static inline void move_index(int direction) {
+    if (direction < 0) {
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+    } else {
+        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+    }
+}
+
 static void list_nav_move(int steps, int direction) {
     if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+
+    if (!first_open) play_sound(SND_NAVIGATE);
+    first_open = 0;
+
+    const int visible_count = theme.MUX.ITEM.COUNT;
+    const int static_list = !grid_mode_enabled && item_count <= visible_count;
+    const int multi_list = !grid_mode_enabled && item_count > visible_count;
+
+    const int items_before = (visible_count - visible_count % 2) / 2;
+    const int items_after = (visible_count - 1) / 2;
+
+    if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+
+    if (static_list) {
+        move_index(direction);
+        focus_group(current_item_index);
+
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+        lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
+
+        image_refresh("box");
+        nav_moved = 1;
+        return;
+    }
 
     for (int step = 0; step < steps; ++step) {
-        if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-
-        if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        }
+        move_index(direction);
 
         if (!is_carousel_grid_mode()) {
             nav_move(ui_group, direction);
@@ -556,49 +632,31 @@ static void list_nav_move(int steps, int direction) {
             nav_move(ui_group_panel, direction);
         }
 
-        if (!grid_mode_enabled && item_count > theme.MUX.ITEM.COUNT) {
-            int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
-            int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
-
+        if (multi_list) {
             if (direction < 0) {
                 if (current_item_index == item_count - 1) {
-                    update_list_items((int) item_count - theme.MUX.ITEM.COUNT);
-                } else if (current_item_index >= items_before_selected &&
-                           current_item_index < item_count - items_after_selected - 1) {
+                    update_list_items((int) item_count - visible_count);
+                } else if (current_item_index >= items_before && current_item_index < item_count - items_after - 1) {
+                    lv_obj_t *last = lv_obj_get_child(ui_pnlContent, visible_count - 1);
+                    lv_obj_move_to_index(last, 0);
 
-                    // Get the last child
-                    lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent, theme.MUX.ITEM.COUNT - 1);
-                    lv_obj_move_to_index(last_item, 0);
-
-                    update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
-                                     current_item_index - items_before_selected);
+                    update_list_item(lv_obj_get_child(last, 0), lv_obj_get_child(last, 1), current_item_index - items_before);
                 }
             } else {
                 if (current_item_index == 0) {
                     update_list_items(0);
-                } else if (current_item_index > items_before_selected &&
-                           current_item_index < item_count - items_after_selected) {
-                    lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
-                    lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
-                    update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
-                                     current_item_index + items_after_selected);
+                } else if (current_item_index > items_before && current_item_index < item_count - items_after) {
+                    lv_obj_t *first = lv_obj_get_child(ui_pnlContent, 0);
+                    lv_obj_move_to_index(first, visible_count - 1);
+
+                    update_list_item(lv_obj_get_child(first, 0), lv_obj_get_child(first, 1), current_item_index + items_after);
                 }
             }
         } else if (grid_mode_enabled) {
             update_grid(direction);
         }
 
-        if (!grid_mode_enabled) {
-            int focus = visible_focus_index();
-
-            lv_obj_t *panel = lv_obj_get_child(ui_pnlContent, focus);
-            lv_obj_t *label = lv_obj_get_child(panel, 0);
-            lv_obj_t *glyph = lv_obj_get_child(panel, 1);
-
-            lv_group_focus_obj(panel);
-            lv_group_focus_obj(label);
-            lv_group_focus_obj(glyph);
-        }
+        if (!grid_mode_enabled) focus_group(focus_index());
     }
 
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
@@ -976,13 +1034,12 @@ int muxplore_main(int index, char *dir) {
     int collect_vis = 0;
     if (ui_count > 0) {
         nav_vis = 1;
-        if (sys_index > -1 && sys_index <= ui_count &&
-            current_item_index < ui_count) {
-            list_nav_next(sys_index);
-        } else {
-            image_refresh("box");
-        }
-        nav_moved = 1;
+
+        if (sys_index >= 0 && sys_index < ui_count) current_item_index = sys_index;
+        else current_item_index = 0;
+
+        focus_initial();
+
         collect_vis = items[current_item_index].content_type == ITEM ? 1 : 0;
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPLORE.NONE);
