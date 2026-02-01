@@ -434,6 +434,7 @@
     VISUAL(GroupTags,             GROUPTAGS,             "grouptags")             \
     VISUAL(PinnedCollect,         PINNEDCOLLECT,         "pinnedcollect")         \
     VISUAL(DropHistory,           DROPHISTORY,           "drophistory")           \
+    VISUAL(MixedContent,          MIXEDCONTENT,          "mixedcontent")          \
     VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
     VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")
 

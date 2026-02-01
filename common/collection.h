@@ -9,10 +9,10 @@ typedef enum {
 } content_type;
 
 typedef enum {
-    BUCKET_COLLECT = 0,
-    BUCKET_TAGGED = 1,
-    BUCKET_NORMAL = 2,
-    BUCKET_HISTORY = 3
+    BUCKET_COLLECT,
+    BUCKET_TAGGED,
+    BUCKET_NORMAL,
+    BUCKET_HISTORY
 } item_sort_bucket;
 
 typedef struct {

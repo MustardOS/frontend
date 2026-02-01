@@ -1413,6 +1413,7 @@ struct mux_lang {
         char HIDDEN[MAX_BUFFER_SIZE];
         char CONTENTCOLLECT[MAX_BUFFER_SIZE];
         char CONTENTHISTORY[MAX_BUFFER_SIZE];
+        char MIXEDCONTENT[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char ALPHA[MAX_BUFFER_SIZE];
@@ -1474,6 +1475,7 @@ struct mux_lang {
             char GROUPTAGS[MAX_BUFFER_SIZE];
             char PINNEDCOLLECT[MAX_BUFFER_SIZE];
             char DROPHISTORY[MAX_BUFFER_SIZE];
+            char MIXEDCONTENT[MAX_BUFFER_SIZE];
             char OVERLAYIMAGE[MAX_BUFFER_SIZE];
             char OVERLAYTRANSPARENCY[MAX_BUFFER_SIZE];
         } HELP;

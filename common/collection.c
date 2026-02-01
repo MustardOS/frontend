@@ -100,8 +100,7 @@ int bucket_item_compare(const void *a, const void *b) {
     if (itemA->sort_bucket != itemB->sort_bucket)
         return itemA->sort_bucket - itemB->sort_bucket;
 
-    // Place folders ALWAYS before regular files...
-    if (itemA->content_type != itemB->content_type)
+    if (!config.VISUAL.MIXEDCONTENT && itemA->content_type != itemB->content_type)
         return (itemA->content_type == FOLDER) ? -1 : 1;
 
     if (itemA->group_tag[0] || itemB->group_tag[0]) {

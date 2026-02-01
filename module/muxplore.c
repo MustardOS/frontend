@@ -385,13 +385,8 @@ static void gen_item(char **file_names, int file_count) {
 
     if (grid_mode_enabled) return;
 
-    if (dir_count < theme.MUX.ITEM.COUNT) {
-        for (size_t i = 0; i < item_count; i++) {
-            if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
-            if (items[i].content_type == ITEM) {
-                gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
-            }
-        }
+    for (size_t i = 0; i < item_count && i < theme.MUX.ITEM.COUNT; i++) {
+        gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
     }
 }
 

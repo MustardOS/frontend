@@ -1232,6 +1232,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.CONTENTHISTORY, "History In Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.PINNEDCOLLECT, "Pin Collection to Top");
     SPECIFIC_FIELD(lang->MUXVISUAL.DROPHISTORY, "Lower History Priority");
+    SPECIFIC_FIELD(lang->MUXVISUAL.MIXEDCONTENT, "Mixed Folder Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.GROUPTAGS.TITLE, "Group Tagged Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.GROUPTAGS.ALPHA, "Alpha Group");
     SPECIFIC_FIELD(lang->MUXVISUAL.GROUPTAGS.TAG, "Tag Group");
@@ -1268,9 +1269,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CONTENTCOLLECT, "Toggle the collection visibility withing Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CONTENTHISTORY, "Toggle the history visibility within Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.GROUPTAGS, "Changes how tagged content is grouped and ordered in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.GROUPTAGS, "Changes how tagged content is grouped and ordered in Explore Content. If enabled all grouped tags will have a higher priority than folders and regular content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.PINNEDCOLLECT, "Toggle collected content being pinned to the top of the list in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DROPHISTORY, "Toggle previously played content being lowered to the bottom of the list in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.MIXEDCONTENT, "If enabled folders within content explorer will be mixed in with other content alphabetically");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");

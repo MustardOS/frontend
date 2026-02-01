@@ -233,6 +233,7 @@ struct mux_config {
         int16_t GROUPTAGS;
         int16_t PINNEDCOLLECT;
         int16_t DROPHISTORY;
+        int16_t MIXEDCONTENT;
     } VISUAL;
 
     struct {
