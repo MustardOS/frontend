@@ -227,6 +227,16 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
+static int get_index_from_name(const char *name) {
+    if (!name || !*name) return -1;
+
+    for (size_t i = 0; i < item_count; i++) {
+        if (strcasecmp(items[i].name, name) == 0) return (int) i;
+    }
+
+    return -1;
+}
+
 static void remove_match_items(const char *filter_name, int mode, char ***filter_list, int *filter_count,
                                void (*pop_func)(void), content_item **items, size_t *item_count, const char *sys_dir) {
     free_item_list(filter_list, filter_count);
@@ -469,10 +479,19 @@ static void create_content_items(void) {
     assign_item_buckets();
     qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 
-    for (size_t i = 0; i < item_count; i++) {
-        if (strcasecmp(items[i].name, prev_dir) == 0) {
-            sys_index = (int) i;
-            break;
+    if (file_exist(MUOS_HST_LOAD)) {
+        char *last_name = read_all_char_from(MUOS_HST_LOAD);
+        if (last_name) {
+            int idx = get_index_from_name(last_name);
+            if (idx >= 0) sys_index = idx;
+            free(last_name);
+        }
+    } else {
+        for (size_t i = 0; i < item_count; i++) {
+            if (strcasecmp(items[i].name, prev_dir) == 0) {
+                sys_index = (int) i;
+                break;
+            }
         }
     }
 
@@ -786,6 +805,8 @@ static void process_load(int from_start) {
             load_mux("assign");
         }
     }
+
+    if (config.VISUAL.DROPHISTORY) write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);
 
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
     if (load_message) toast_message(lang.GENERIC.LOADING, FOREVER);

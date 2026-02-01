@@ -143,6 +143,7 @@
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_FLT_LOAD "/tmp/flt_go" // Colour Filter Name
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
+#define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
