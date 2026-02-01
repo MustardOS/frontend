@@ -535,10 +535,50 @@ static inline void focus_group(int index) {
     lv_group_focus_obj(lv_obj_get_child(panel, 1));
 }
 
+static void focus_grid_index(int index) {
+    if (index < 0 || index >= (int) item_count) return;
+    current_item_index = index;
+
+    if (is_carousel_grid_mode()) {
+        update_grid_items(0);
+        update_grid_items(1);
+    } else {
+        update_grid_items(0);
+
+        // This is such a bullshit workaround...
+        uint32_t grid_item_count = lv_obj_get_child_cnt(ui_pnlGrid);
+        for (int i = 0; i < grid_item_count; i++) {
+            lv_obj_t *panel = lv_obj_get_child(ui_pnlGrid, i);
+            if (!panel) continue;
+
+            int panel_map = IFU(lv_obj_get_user_data(panel));
+            if (panel_map == current_item_index) {
+                lv_group_focus_obj(panel);
+                lv_obj_invalidate(panel);
+                break;
+            }
+        }
+    }
+
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
+
+    image_refresh("box");
+    nav_moved = 1;
+}
+
+static int focus_list_index(void) {
+    int before = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
+    int after = (theme.MUX.ITEM.COUNT - 1) / 2;
+
+    if (current_item_index < before) return current_item_index;
+    if (current_item_index >= item_count - after) return (int) (theme.MUX.ITEM.COUNT - (item_count - current_item_index));
+
+    return before;
+}
+
 static void focus_initial(void) {
     if (grid_mode_enabled) {
-        image_refresh("box");
-        nav_moved = 1;
+        focus_grid_index(current_item_index);
         return;
     }
 
@@ -573,19 +613,6 @@ static void focus_initial(void) {
 
     image_refresh("box");
     nav_moved = 1;
-}
-
-static int focus_index(void) {
-    int before = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
-    int after = (theme.MUX.ITEM.COUNT - 1) / 2;
-
-    if (current_item_index < before)
-        return current_item_index;
-
-    if (current_item_index >= item_count - after)
-        return (int) (theme.MUX.ITEM.COUNT - (item_count - current_item_index));
-
-    return before;
 }
 
 static inline void move_index(int direction) {
@@ -656,7 +683,7 @@ static void list_nav_move(int steps, int direction) {
             update_grid(direction);
         }
 
-        if (!grid_mode_enabled) focus_group(focus_index());
+        if (!grid_mode_enabled) focus_group(focus_list_index());
     }
 
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));

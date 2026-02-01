@@ -2648,21 +2648,42 @@ void update_grid_items(int direction) {
             int index = (int) raw_index;
 
             lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, i);
+            if (!panel_item) continue;
+
             update_grid_item(panel_item, index);
         }
+        return;
+    }
+
+    int cols = theme.GRID.COLUMN_COUNT;
+    int rows = theme.GRID.ROW_COUNT;
+    int total_visible = cols * rows;
+    if (total_visible <= 0) return;
+
+    int row = get_grid_row_index(current_item_index);
+
+    int max_start_row = ((int) item_count - 1) / cols - rows + 1;
+    if (max_start_row < 0) max_start_row = 0;
+
+    int start_row_index;
+    if (direction == 0) {
+        start_row_index = row - rows / 2;
+    } else if (direction < 0) {
+        start_row_index = row;
     } else {
-        int row_index = get_grid_row_index(current_item_index);
-        int start_row_index = (direction < 0) ? row_index : row_index - theme.GRID.ROW_COUNT + 1;
+        start_row_index = row - rows + 1;
+    }
 
-        if (start_row_index < 0) start_row_index = 0;
+    if (start_row_index < 0) start_row_index = 0;
+    if (start_row_index > max_start_row) start_row_index = max_start_row;
 
-        int start_index = start_row_index * theme.GRID.COLUMN_COUNT;
-        int total_items = theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT;
+    int start_index = start_row_index * cols;
 
-        for (int index = 0; index < total_items; ++index) {
-            lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
-            update_grid_item(panel_item, start_index + index);
-        }
+    for (int index = 0; index < total_visible; index++) {
+        lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
+        if (!panel_item) continue;
+
+        update_grid_item(panel_item, start_index + index);
     }
 }
 
