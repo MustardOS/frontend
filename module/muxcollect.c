@@ -146,8 +146,7 @@ static void image_refresh(char *image_type) {
     }
 }
 
-static void add_directory_and_file_names(const char *base_dir, char ***dir_names,
-                                         char ***file_names, char ***last_dirs) {
+static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
     file_count = 0;
     dir_count = 0;
     struct dirent *entry;
@@ -193,9 +192,6 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
                 free(path_line);
             } else dir_name = strdup("");
 
-            *last_dirs = realloc(*last_dirs, (file_count + 1) * sizeof(char *));
-            (*last_dirs)[file_count] = dir_name;
-
             file_count++;
         }
     }
@@ -203,10 +199,10 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
-static void gen_item(int file_count, char **file_names, char **last_dirs) {
+static void gen_item(int file_count, char **file_names) {
     char init_meta_dir[MAX_BUFFER_SIZE];
+
     for (int i = 0; i < file_count; i++) {
-        int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
 
         char collection_file[MAX_BUFFER_SIZE];
@@ -223,55 +219,11 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/", sub_path);
         create_directories(init_meta_dir, 0);
 
-        char custom_lookup[MAX_BUFFER_SIZE];
-        snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dirs[i]);
-        if (!file_exist(custom_lookup)) snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/global.json");
-
-        int fn_valid = 0;
-        struct json fn_json;
-
-        if (file_exist(custom_lookup)) {
-            char *lookup_content = read_all_char_from(custom_lookup);
-
-            if (lookup_content && json_valid(lookup_content)) {
-                fn_valid = 1;
-                fn_json = json_parse(read_all_char_from(custom_lookup));
-                LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup);
-            } else {
-                LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup);
-            }
-
-            free(lookup_content);
-        } else {
-            LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup);
-        }
-
-        if (fn_valid) {
-            struct json custom_lookup_json = json_object_get(fn_json, str_tolower(stripped_name));
-            if (json_exists(custom_lookup_json)) {
-                json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
-                has_custom_name = 1;
-            }
-        }
-
-        int lookup_line = CONTENT_LOOKUP;
-        char name_lookup[MAX_BUFFER_SIZE];
-        snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
-
-        if (!file_exist(name_lookup)) {
-            snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
-            lookup_line = GLOBAL_LOOKUP;
-        }
-
-        if (!has_custom_name) {
-            const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
-            snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
-        }
-
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
-        adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+        resolve_friendly_name(file_path, stripped_name, fn_name);
+        add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
 
         ui_count++;
+        free(file_names[i]);
     }
 
     sort_items(items, item_count);
@@ -309,9 +261,8 @@ static void init_navigation_group_grid(void) {
 static void create_collection_items(void) {
     char **dir_names = NULL;
     char **file_names = NULL;
-    char **last_dirs = NULL;
 
-    add_directory_and_file_names(sys_dir, &dir_names, &file_names, &last_dirs);
+    add_directory_and_file_names(sys_dir, &dir_names, &file_names);
 
     int fn_valid = 0;
     struct json fn_json = {0};
@@ -339,8 +290,7 @@ static void create_collection_items(void) {
         }
     }
 
-    const char *col_path = (is_ksk(kiosk.COLLECT.ACCESS) && dir_exist(INFO_CKS_PATH))
-                           ? INFO_CKS_PATH : INFO_COL_PATH;
+    const char *col_path = (is_ksk(kiosk.COLLECT.ACCESS) && dir_exist(INFO_CKS_PATH)) ? INFO_CKS_PATH : INFO_COL_PATH;
     update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, col_path);
 
     if (dir_count > 0 || file_count > 0) {
@@ -377,12 +327,9 @@ static void create_collection_items(void) {
             }
         }
 
-        gen_item(file_count, file_names, last_dirs);
+        gen_item(file_count, file_names);
 
-        if (grid_mode_enabled) {
-            init_navigation_group_grid();
-        }
-
+        if (grid_mode_enabled) init_navigation_group_grid();
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 
         free(file_names);

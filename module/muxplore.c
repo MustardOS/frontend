@@ -271,32 +271,6 @@ static void gen_item(char **file_names, int file_count) {
              sub_path);
     create_directories(init_meta_dir, 0);
 
-    const char *last_dir = str_tolower(get_last_dir(sub_path));
-    if (strlen(last_dir) < 1) last_dir = str_tolower(sub_path);
-
-    char custom_lookup[MAX_BUFFER_SIZE];
-    snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dir);
-    if (!file_exist(custom_lookup)) snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/global.json");
-
-    int fn_valid = 0;
-    struct json fn_json;
-
-    if (file_exist(custom_lookup)) {
-        char *lookup_content = read_all_char_from(custom_lookup);
-
-        if (lookup_content && json_valid(lookup_content)) {
-            fn_valid = 1;
-            fn_json = json_parse(read_all_char_from(custom_lookup));
-            LOG_SUCCESS(mux_module, "Using Friendly Name: %s", custom_lookup);
-        } else {
-            LOG_WARN(mux_module, "Invalid Friendly Name: %s", custom_lookup);
-        }
-
-        free(lookup_content);
-    } else {
-        LOG_WARN(mux_module, "Friendly Name does not exist: %s", custom_lookup);
-    }
-
     SkipList skiplist;
     init_skiplist(&skiplist);
     for (int i = 0; i < file_count; i++) {
@@ -313,37 +287,14 @@ static void gen_item(char **file_names, int file_count) {
         char full_path[MAX_BUFFER_SIZE];
         snprintf(full_path, sizeof(full_path), "%s/%s", sys_dir, file_names[i]);
         if (!in_skiplist(&skiplist, full_path)) {
-            int has_custom_name = 0;
             char fn_name[MAX_BUFFER_SIZE];
             char *stripped_name = strip_ext(file_names[i]);
 
-            if (fn_valid) {
-                struct json custom_lookup_json = json_object_get(fn_json, str_tolower(stripped_name));
-                if (json_exists(custom_lookup_json)) {
-                    json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
-                    has_custom_name = 1;
-                }
-            }
-
-            int lookup_line = CONTENT_LOOKUP;
-            char name_lookup[MAX_BUFFER_SIZE];
-            snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
-
-            if (!file_exist(name_lookup)) {
-                snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
-                lookup_line = GLOBAL_LOOKUP;
-            }
-
-            if (!has_custom_name) {
-                const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
-                snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
-            }
-
-            content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
-            adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-
-            free(file_names[i]);
+            resolve_friendly_name(sys_dir, stripped_name, fn_name);
+            add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
         }
+
+        free(file_names[i]);
     }
 
     free_skiplist(&skiplist);
