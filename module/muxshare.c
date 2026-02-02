@@ -467,3 +467,39 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset)
 
     nav_moved = 1;
 }
+
+void resolve_friendly_name(char *dir, char *raw_name, char *out) {
+    char stripped[MAX_BUFFER_SIZE];
+    char lookup_path[MAX_BUFFER_SIZE];
+    char lowered[MAX_BUFFER_SIZE];
+
+    snprintf(stripped, sizeof(stripped), "%s", raw_name);
+    char *no_ext = strip_ext(stripped);
+
+    snprintf(lowered, sizeof(lowered), "%s", str_tolower(no_ext));
+    int has_custom = 0;
+
+    snprintf(lookup_path, sizeof(lookup_path), INFO_NAM_PATH "/%s.json", strip_dir(dir));
+    if (!file_exist(lookup_path)) snprintf(lookup_path, sizeof(lookup_path), INFO_NAM_PATH "/global.json");
+
+    if (file_exist(lookup_path)) {
+        char *json_str = read_all_char_from(lookup_path);
+        if (json_str && json_valid(json_str)) {
+            struct json root = json_parse(json_str);
+            struct json j = json_object_get(root, lowered);
+            if (json_exists(j)) {
+                json_string_copy(j, out, MAX_BUFFER_SIZE);
+                has_custom = 1;
+            }
+        }
+
+        free(json_str);
+    }
+
+    if (!has_custom) {
+        const char *lk = lookup(no_ext);
+        snprintf(out, MAX_BUFFER_SIZE, "%s", lk ? lk : no_ext);
+    }
+
+    adjust_visual_label(out, config.VISUAL.NAME, config.VISUAL.DASH);
+}

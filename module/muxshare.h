@@ -138,6 +138,8 @@ void ui_gen_refresh_task();
 
 void gen_step_movement(int steps, int direction, int long_dot, int count_offset);
 
+void resolve_friendly_name(char *dir, char *raw_name, char *out);
+
 int muxactivity_main();
 
 int muxapp_main();
