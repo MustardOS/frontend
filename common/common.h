@@ -223,6 +223,8 @@ char *str_capital(char *text);
 
 char *str_capital_all(char *text);
 
+char *str_rem_first_char(char *text, int count);
+
 char *str_rem_last_char(char *text, int count);
 
 char *str_tolower(char *text);

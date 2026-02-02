@@ -203,7 +203,7 @@ int muxtask_main(char *ex_dir) {
     char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
         for (size_t i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].name, e_name_line) == 0) {
+            if (strcasecmp(items[i].name, str_rem_first_char(e_name_line, 1)) == 0) {
                 tin_index = (int) i;
                 remove(EXPLORE_NAME);
                 break;

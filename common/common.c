@@ -443,6 +443,19 @@ char *str_capital_all(char *text) {
     return text;
 }
 
+char *str_rem_first_char(char *text, int count) {
+    static char buffer[PATH_MAX];
+    size_t len = strlen(text);
+
+    if (count <= 0) return text;
+    if (count >= (int)len) return "";
+
+    strncpy(buffer, text + count, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    return buffer;
+}
+
 char *str_rem_last_char(char *text, int count) {
     static char buffer[PATH_MAX];
     size_t len = strlen(text);
