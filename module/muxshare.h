@@ -140,6 +140,10 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset)
 
 void resolve_friendly_name(char *dir, char *raw_name, char *out);
 
+void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value);
+
+void update_label_scroll();
+
 int muxactivity_main();
 
 int muxapp_main();

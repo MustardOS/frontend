@@ -125,35 +125,6 @@ static void show_help(void) {
     show_info_box(lang.MUXACTIVITY.TITLE, lang.MUXACTIVITY.HELP, 0);
 }
 
-static void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value) {
-    lv_obj_update_layout(panel);
-
-    lv_coord_t panel_width = lv_obj_get_width(panel);
-    if (panel_width <= 0) return;
-
-    const char *label_text = lv_label_get_text(label);
-    if (!label_text) return;
-
-    const lv_font_t *font = lv_obj_get_style_text_font(label, LV_PART_MAIN);
-    lv_coord_t letter_space = lv_obj_get_style_text_letter_space(label, LV_PART_MAIN);
-    lv_coord_t line_space = lv_obj_get_style_text_line_space(label, LV_PART_MAIN);
-
-    lv_point_t text_width;
-    lv_txt_get_size(&text_width, label_text, font, letter_space, line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
-    lv_coord_t label_text_width = text_width.x;
-
-    // Okay 64 leaves a good gap for both long static and long animated
-    lv_coord_t available = panel_width - label_text_width - theme.FONT.LIST_PAD_LEFT - 64;
-
-    lv_obj_set_width(value, available);
-}
-
-static void update_label_scroll() {
-    if (lv_group_get_focused(ui_group_value)) {
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group_value));
-    }
-}
-
 static void image_refresh() {
     if (in_detail_view || in_global_view || config.VISUAL.BOX_ART == 8) return;
 
