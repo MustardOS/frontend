@@ -76,6 +76,9 @@ static void add_static_item(int index, const char *item_label, const char *item_
         group_index++;
     }
 
+    adjust_label_value_width(ui_pnlContent, ui_lblInfoItem, ui_lblInfoItemValue);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblInfoItemValue);
+
     lv_obj_move_to_index(ui_pnlInfoItem, index);
 }
 
@@ -227,9 +230,16 @@ static void init_navigation_group(void) {
     curr_dir = get_last_subdir(rom_dir, '/', dir_level);
 
     add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
-    if (!is_dir) add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
-    if (!is_dir) add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
-    if (!is_dir) add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
+
+    if (!is_dir) {
+        char friendly_name[MAX_BUFFER_SIZE];
+        resolve_friendly_name(rom_dir, rom_name, friendly_name);
+
+        add_static_item(line_index++, lang.MUXOPTION.NAME, friendly_name, "rom", false);
+        add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
+        add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
+    }
+
     add_static_item(line_index, "", "", "", true);
 
     char *rem_config_opt = is_dir ? lang.GENERIC.DIRECTORY : lang.GENERIC.CONTENT;
