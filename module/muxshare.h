@@ -36,6 +36,7 @@
 #include "../common/overlay.h"
 #include "../common/language.h"
 #include "../common/collection.h"
+#include "../common/collection_tag.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
 #include "../common/verify.h"
@@ -49,6 +50,9 @@
 
 extern size_t item_count;
 extern content_item *items;
+
+extern size_t tag_item_count;
+extern tag_item *tag_items;
 
 extern int verify_check;
 

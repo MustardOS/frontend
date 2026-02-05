@@ -202,22 +202,9 @@ struct mux_config {
     } SETTINGS;
 
     struct {
-        int16_t ABANDONED;
-        int16_t ALTERNATE;
-        int16_t BACKLOG;
-        int16_t COLLECTION;
-        int16_t COMPLECTED;
-        int16_t COMPLETED;
-        int16_t CURSED;
-        int16_t EXPERIMENTAL;
-        int16_t HISTORY;
-        int16_t HOMEBREW;
-        int16_t INPROGRESS;
         int16_t DEFAULT;
-        int16_t PATCHED;
-        int16_t REPLAY;
-        int16_t ROMHACK;
-        int16_t TRANSLATED;
+        int16_t COLLECTION;
+        int16_t HISTORY;
     } SORT;
 
     struct {

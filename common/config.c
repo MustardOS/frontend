@@ -205,22 +205,9 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.POWER.GOV.IDLE, CONF_CONFIG_PATH "settings/power/gov_idle", "powersave");
     CFG_INT_FIELD(config->SETTINGS.POWER.SCREENSAVER, CONF_CONFIG_PATH "settings/power/screensaver", 0);
 
-    CFG_INT_FIELD(config->SORT.ABANDONED, CONF_CONFIG_PATH "sort/abandoned", 0);
-    CFG_INT_FIELD(config->SORT.ALTERNATE, CONF_CONFIG_PATH "sort/alternate", 0);
-    CFG_INT_FIELD(config->SORT.BACKLOG, CONF_CONFIG_PATH "sort/backlog", 0);
-    CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);
-    CFG_INT_FIELD(config->SORT.COMPLECTED, CONF_CONFIG_PATH "sort/complected", 0);
-    CFG_INT_FIELD(config->SORT.COMPLETED, CONF_CONFIG_PATH "sort/completed", 0);
-    CFG_INT_FIELD(config->SORT.CURSED, CONF_CONFIG_PATH "sort/cursed", 0);
-    CFG_INT_FIELD(config->SORT.EXPERIMENTAL, CONF_CONFIG_PATH "sort/experimental", 0);
-    CFG_INT_FIELD(config->SORT.HISTORY, CONF_CONFIG_PATH "sort/history", 0);
-    CFG_INT_FIELD(config->SORT.HOMEBREW, CONF_CONFIG_PATH "sort/homebrew", 0);
-    CFG_INT_FIELD(config->SORT.INPROGRESS, CONF_CONFIG_PATH "sort/inprogress", 0);
     CFG_INT_FIELD(config->SORT.DEFAULT, CONF_CONFIG_PATH "sort/default", 0);
-    CFG_INT_FIELD(config->SORT.PATCHED, CONF_CONFIG_PATH "sort/patched", 0);
-    CFG_INT_FIELD(config->SORT.REPLAY, CONF_CONFIG_PATH "sort/replay", 0);
-    CFG_INT_FIELD(config->SORT.ROMHACK, CONF_CONFIG_PATH "sort/romhack", 0);
-    CFG_INT_FIELD(config->SORT.TRANSLATED, CONF_CONFIG_PATH "sort/translated", 0);
+    CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);
+    CFG_INT_FIELD(config->SORT.HISTORY, CONF_CONFIG_PATH "sort/history", 0);
 
     CFG_INT_FIELD(config->VISUAL.BATTERY, CONF_CONFIG_PATH "visual/battery", 1);
     CFG_INT_FIELD(config->VISUAL.NETWORK, CONF_CONFIG_PATH "visual/network", 0);

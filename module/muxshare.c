@@ -3,6 +3,9 @@
 size_t item_count = 0;
 content_item *items = NULL;
 
+size_t tag_item_count = 0;
+tag_item *tag_items = NULL;
+
 int verify_check = 0;
 
 int refresh_kiosk = 0;

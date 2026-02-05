@@ -993,19 +993,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSORT.HELP.DEFAULT, "Set Content Explorer sorting level for Default items (100 top of list 1 bottom of list)");
     SPECIFIC_FIELD(lang->MUXSORT.HELP.COLLECTION, "Set Content Explorer sorting level for Collection items (100 top of list 1 bottom of list)");
     SPECIFIC_FIELD(lang->MUXSORT.HELP.HISTORY, "Set Content Explorer sorting level for History items (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.ABANDONED, "Set Content Explorer sorting level for items tagged as Abandoned (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.ALTERNATE, "Set Content Explorer sorting level for items tagged as Alternate (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.BACKLOG, "Set Content Explorer sorting level for items tagged as Backlog (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.COMPLECTED, "Set Content Explorer sorting level for items tagged as Complected (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.COMPLETED, "Set Content Explorer sorting level for items tagged as Completed (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.CURSED, "Set Content Explorer sorting level for items tagged as Cursed (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.EXPERIMENTAL, "Set Content Explorer sorting level for items tagged as Experimental (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.HOMEBREW, "Set Content Explorer sorting level for items tagged as Homebrew (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.INPROGRESS, "Set Content Explorer sorting level for items tagged as Inprogress (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.PATCHED, "Set Content Explorer sorting level for items tagged as Patched (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.REPLAY, "Set Content Explorer sorting level for items tagged as Replay (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.ROMHACK, "Set Content Explorer sorting level for items tagged as Romhack (100 top of list 1 bottom of list)");
-    SPECIFIC_FIELD(lang->MUXSORT.HELP.TRANSLATED, "Set Content Explorer sorting level for items tagged as Translated (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.TAG, "Set Content Explorer sorting level for items tagged as %s (100 top of list 1 bottom of list)");
     
     // muxspace
     SPECIFIC_FIELD(lang->MUXSPACE.TITLE, "STORAGE SPACE");

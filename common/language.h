@@ -1419,19 +1419,7 @@ struct mux_lang {
             char DEFAULT[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
-            char ABANDONED[MAX_BUFFER_SIZE];
-            char ALTERNATE[MAX_BUFFER_SIZE];
-            char BACKLOG[MAX_BUFFER_SIZE];
-            char COMPLECTED[MAX_BUFFER_SIZE];
-            char COMPLETED[MAX_BUFFER_SIZE];
-            char CURSED[MAX_BUFFER_SIZE];
-            char EXPERIMENTAL[MAX_BUFFER_SIZE];
-            char HOMEBREW[MAX_BUFFER_SIZE];
-            char INPROGRESS[MAX_BUFFER_SIZE];
-            char PATCHED[MAX_BUFFER_SIZE];
-            char REPLAY[MAX_BUFFER_SIZE];
-            char ROMHACK[MAX_BUFFER_SIZE];
-            char TRANSLATED[MAX_BUFFER_SIZE];
+            char TAG[MAX_BUFFER_SIZE];
         } HELP;
     } MUXSORT;
 

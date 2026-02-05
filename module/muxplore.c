@@ -33,10 +33,7 @@ static void assign_item_buckets(void) {
         }
 
         if (it->use_module && strcasecmp(it->use_module, "muxtag") == 0) {
-            int tag_sort_bucket = -1;
-            char sorting_config_path[MAX_BUFFER_SIZE];
-            snprintf(sorting_config_path, sizeof(sorting_config_path), SORTING_CONFIG_PATH "%s", it->glyph_icon);
-            if (file_exist(sorting_config_path)) tag_sort_bucket = read_line_int_from(sorting_config_path, 1);
+            int tag_sort_bucket = get_tag_sort_bucket(tag_items, tag_item_count, it->glyph_icon);
             if (tag_sort_bucket > sort_special) sort_special = tag_sort_bucket;
         }
 
@@ -336,9 +333,6 @@ static void gen_item(char **file_names, int file_count) {
             items[i].use_module = strdup(mux_module);
         }
     }
-
-    assign_item_buckets();
-    qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 }
 
 static void init_navigation_group_grid(void) {
@@ -1016,6 +1010,7 @@ int muxplore_main(int index, char *dir) {
     snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 
     load_skip_patterns();
+    load_tag_items(&tag_items, &tag_item_count);
     create_content_items();
     ui_count = (int) item_count;
     init_elements();
@@ -1111,6 +1106,7 @@ int muxplore_main(int index, char *dir) {
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);
+    free_tag_items(&tag_items, &tag_item_count);
 
     return exit_status;
 }

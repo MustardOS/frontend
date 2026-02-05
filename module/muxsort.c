@@ -1,53 +1,62 @@
 #include "muxshare.h"
-#include "ui/ui_muxsort.h"
 
-#define UI_COUNT 16
+static int default_original;
+static int collection_original;
+static int history_original;
 
-#define SORT(NAME, ENUM, UDATA) static int NAME##_original;
-SORT_ELEMENTS
-#undef SORT
+static lv_obj_t **ui_objects_value = NULL;
 
 static void show_help() {
-    struct help_msg help_messages[] = {
-#define SORT(NAME, ENUM, UDATA) { ui_lbl##NAME##_sort, lang.MUXSORT.HELP.ENUM },
-            SORT_ELEMENTS
-#undef SORT
-    };
+    char *title = TS(lv_label_get_text(lv_group_get_focused(ui_group)));
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    if (current_item_index == 0) {
+        show_info_box(title, lang.MUXSORT.HELP.DEFAULT, 0);
+    } else if (current_item_index == 1) {
+        show_info_box(title, lang.MUXSORT.HELP.COLLECTION, 0);
+    } else if (current_item_index == 2) {
+        show_info_box(title, lang.MUXSORT.HELP.HISTORY, 0);
+    } else {
+        char help_message[MAX_BUFFER_SIZE];
+        snprintf(help_message, sizeof(help_message), lang.MUXSORT.HELP.TAG, title);
+        show_info_box(title, help_message, 0);
+    }
 }
 
 static void init_dropdown_settings(void) {
-#define SORT(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_sort);
-    SORT_ELEMENTS
-#undef SORT
+    default_original = lv_dropdown_get_selected(ui_objects_value[0]);
+    collection_original = lv_dropdown_get_selected(ui_objects_value[1]);
+    history_original = lv_dropdown_get_selected(ui_objects_value[2]);
 }
 
 static void restore_sort_options(void) {
-#define SORT(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_sort, config.SORT.ENUM);
-    SORT_ELEMENTS
-#undef SORT
+    lv_dropdown_set_selected(ui_objects_value[0], config.SORT.DEFAULT);
+    lv_dropdown_set_selected(ui_objects_value[1], config.SORT.COLLECTION);
+    lv_dropdown_set_selected(ui_objects_value[2], config.SORT.HISTORY);
+    for (size_t i = 0; i < tag_item_count; i++) {
+        lv_dropdown_set_selected(ui_objects_value[3 + i], tag_items[i].sort_bucket);
+    }    
+}
+
+static int save_sort_option(lv_obj_t *ui_droItem, int originalValue, char *file) {
+    int current = lv_dropdown_get_selected(ui_droItem);
+    if (current != originalValue) {
+        char config_path[MAX_BUFFER_SIZE];
+        snprintf(config_path, sizeof(config_path), SORTING_CONFIG_PATH "%s", file);
+        write_text_to_file(config_path, "w", INT, current);
+        return 1;
+    }
+    return 0;
 }
 
 static void save_sort_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(sort, Default, "sort/default", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Collection, "sort/collection", INT, 0);
-    CHECK_AND_SAVE_STD(sort, History, "sort/history", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Abandoned, "sort/abandoned", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Alternate, "sort/alternate", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Backlog, "sort/backlog", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Complected, "sort/complected", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Completed, "sort/completed", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Cursed, "sort/cursed", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Experimental, "sort/experimental", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Homebrew, "sort/homebrew", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Inprogress, "sort/inprogress", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Patched, "sort/patched", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Replay, "sort/replay", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Romhack, "sort/romhack", INT, 0);
-    CHECK_AND_SAVE_STD(sort, Translated, "sort/translated", INT, 0);
+    is_modified += save_sort_option(ui_objects_value[0], default_original, "default");
+    is_modified += save_sort_option(ui_objects_value[1], collection_original, "collection");
+    is_modified += save_sort_option(ui_objects_value[2], history_original, "history");
+    for (size_t i = 0; i < tag_item_count; i++) {
+        is_modified += save_sort_option(ui_objects_value[3 + i], tag_items[i].sort_bucket, tag_items[i].glyph);
+    }
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -55,50 +64,37 @@ static void save_sort_options(void) {
     }
 }
 
-static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+static void add_tag_item(int index, char *label, char *glyph, char *options) {
+    lv_obj_t *ui_pnlItem = lv_obj_create(ui_pnlContent);
+    lv_obj_t *ui_lblItem = lv_label_create(ui_pnlItem);
+    lv_obj_t *ui_lblItemGlyph = lv_img_create(ui_pnlItem);
+    lv_obj_t *ui_droItem = lv_dropdown_create(ui_pnlItem);
+    
+    apply_theme_list_panel(ui_pnlItem);
+    apply_theme_list_item(&theme, ui_lblItem, label);
+    apply_theme_list_glyph(&theme, ui_lblItemGlyph, mux_module, glyph);
+    apply_theme_list_drop_down(&theme, ui_droItem, options);
 
-    INIT_OPTION_ITEM(-1, sort, Default, lang.MUXSORT.DEFAULT, "default", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Collection, lang.MUXSORT.COLLECTION, "collection", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, History, lang.MUXSORT.HISTORY, "history", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Abandoned, lang.MUXSORT.ABANDONED, "abandoned", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Alternate, lang.MUXSORT.ALTERNATE, "alternate", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Backlog, lang.MUXSORT.BACKLOG, "backlog", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Complected, lang.MUXSORT.COMPLECTED, "complected", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Completed, lang.MUXSORT.COMPLETED, "completed", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Cursed, lang.MUXSORT.CURSED, "cursed", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Experimental, lang.MUXSORT.EXPERIMENTAL, "experimental", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Homebrew, lang.MUXSORT.HOMEBREW, "homebrew", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Inprogress, lang.MUXSORT.INPROGRESS, "inprogress", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Patched, lang.MUXSORT.PATCHED, "patched", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Replay, lang.MUXSORT.REPLAY, "replay", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Romhack, lang.MUXSORT.ROMHACK, "romhack", NULL, 0);
-    INIT_OPTION_ITEM(-1, sort, Translated, lang.MUXSORT.TRANSLATED, "translated", NULL, 0);
+    lv_group_add_obj(ui_group, ui_lblItem);
+    lv_group_add_obj(ui_group_value, ui_droItem);
+    lv_group_add_obj(ui_group_glyph, ui_lblItemGlyph);
+    lv_group_add_obj(ui_group_panel, ui_pnlItem);    
+    ui_objects_value[index] = ui_droItem;
+}
+
+static void init_navigation_group(void) {
+    reset_ui_groups();
+    ui_count = 3 + tag_item_count;
+    ui_objects_value = malloc(ui_count * sizeof(lv_obj_t *));
 
     char *increment_values = generate_number_string(0, 100, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droDefault_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droCollection_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droHistory_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droAbandoned_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droAlternate_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droBacklog_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droComplected_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droCompleted_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droCursed_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droExperimental_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droHomebrew_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droInprogress_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droPatched_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droReplay_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droRomhack_sort, increment_values);
-    apply_theme_list_drop_down(&theme, ui_droTranslated_sort, increment_values);
+    add_tag_item(0, lang.MUXSORT.DEFAULT, "default", increment_values);
+    add_tag_item(1, lang.MUXSORT.COLLECTION, "collection", increment_values);
+    add_tag_item(2, lang.MUXSORT.HISTORY, "history", increment_values);
+    for (size_t i = 0; i < tag_item_count; i++) {
+        add_tag_item(i + 3, tag_items[i].name, tag_items[i].glyph, increment_values);
+    }
     free(increment_values);
-
-    reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -162,10 +158,6 @@ static void init_elements(void) {
             {NULL, NULL,                            0}
     });
 
-#define SORT(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_sort, UDATA);
-    SORT_ELEMENTS
-#undef SORT
-
     overlay_display();
 }
 
@@ -174,7 +166,6 @@ int muxsort_main(void) {
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSORT.TITLE);
-    init_muxsort(ui_pnlContent);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -183,6 +174,8 @@ int muxsort_main(void) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
+    load_tag_items(&tag_items, &tag_item_count);
+    sort_tag_items(tag_items, tag_item_count);
     init_navigation_group();
 
     restore_sort_options();
@@ -220,6 +213,11 @@ int muxsort_main(void) {
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
+    
+    free_tag_items(&tag_items, &tag_item_count);
+
+    free(ui_objects_value);
+    ui_objects_value = NULL;
 
     return 0;
 }
