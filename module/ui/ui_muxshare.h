@@ -415,7 +415,26 @@
     TWEAKGEN(HkShot,     HKSHOT,     "hkshot")     \
     TWEAKGEN(Startup,    STARTUP,    "startup")
 
+#define SORT_ELEMENTS                                     \
+    SORT(Default,       DEFAULT,        "default")         \
+    SORT(Collection,    COLLECTION,     "collection")     \
+    SORT(History,       HISTORY,        "history")        \
+    SORT(Abandoned,     ABANDONED,      "abandoned")      \
+    SORT(Alternate,     ALTERNATE,      "alternate")      \
+    SORT(Backlog,       BACKLOG,        "backlog")        \
+    SORT(Complected,    COMPLECTED,     "complected")     \
+    SORT(Completed,     COMPLETED,      "completed")      \
+    SORT(Cursed,        CURSED,         "battery")        \
+    SORT(Experimental,  EXPERIMENTAL,   "experimental")   \
+    SORT(Homebrew,      HOMEBREW,       "homebrew")       \
+    SORT(Inprogress,    INPROGRESS,     "inprogress")     \
+    SORT(Patched,       PATCHED,        "patched")        \
+    SORT(Replay,        REPLAY,         "replay")         \
+    SORT(Romhack,       ROMHACK,        "romhack")        \
+    SORT(Translated,    TRANSLATED,     "translated")
+
 #define VISUAL_ELEMENTS                                                           \
+    VISUAL(Sort,                  SORT,                  "sort")                  \
     VISUAL(Battery,               BATTERY,               "battery")               \
     VISUAL(Clock,                 CLOCK,                 "clock")                 \
     VISUAL(Network,               NETWORK,               "network")               \
@@ -431,9 +450,6 @@
     VISUAL(Hidden,                HIDDEN,                "hidden")                \
     VISUAL(ContentCollect,        CONTENTCOLLECT,        "contentcollect")        \
     VISUAL(ContentHistory,        CONTENTHISTORY,        "contenthistory")        \
-    VISUAL(GroupTags,             GROUPTAGS,             "grouptags")             \
-    VISUAL(PinnedCollect,         PINNEDCOLLECT,         "pinnedcollect")         \
-    VISUAL(DropHistory,           DROPHISTORY,           "drophistory")           \
     VISUAL(MixedContent,          MIXEDCONTENT,          "mixedcontent")          \
     VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
     VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")

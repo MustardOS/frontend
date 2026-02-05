@@ -228,6 +228,8 @@ int muxsearch_main(char *dir);
 
 int muxshot_main();
 
+int muxsort_main();
+
 int muxspace_main();
 
 int muxsplash_main(char *splash_image, bool apply_recolour);

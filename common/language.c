@@ -972,6 +972,41 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSHOT.HELP, "View your current screenshots");
     SPECIFIC_FIELD(lang->MUXSHOT.NONE, "No Screenshots Found");
 
+    // muxsort
+    SPECIFIC_FIELD(lang->MUXSORT.TITLE, "SORTING PRIORITY");
+    SPECIFIC_FIELD(lang->MUXSORT.DEFAULT, "Default");
+    SPECIFIC_FIELD(lang->MUXSORT.COLLECTION, "Collection");
+    SPECIFIC_FIELD(lang->MUXSORT.HISTORY, "History");
+    SPECIFIC_FIELD(lang->MUXSORT.ABANDONED, "Abandoned");
+    SPECIFIC_FIELD(lang->MUXSORT.ALTERNATE, "Alternate");
+    SPECIFIC_FIELD(lang->MUXSORT.BACKLOG, "Backlog");
+    SPECIFIC_FIELD(lang->MUXSORT.COMPLECTED, "Complected");
+    SPECIFIC_FIELD(lang->MUXSORT.COMPLETED, "Completed");
+    SPECIFIC_FIELD(lang->MUXSORT.CURSED, "Cursed");
+    SPECIFIC_FIELD(lang->MUXSORT.EXPERIMENTAL, "Experimental");
+    SPECIFIC_FIELD(lang->MUXSORT.HOMEBREW, "Homebrew");
+    SPECIFIC_FIELD(lang->MUXSORT.INPROGRESS, "Inprogress");
+    SPECIFIC_FIELD(lang->MUXSORT.PATCHED, "Patched");
+    SPECIFIC_FIELD(lang->MUXSORT.REPLAY, "Replay");
+    SPECIFIC_FIELD(lang->MUXSORT.ROMHACK, "Romhack");
+    SPECIFIC_FIELD(lang->MUXSORT.TRANSLATED, "Translated");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.DEFAULT, "Set Content Explorer sorting level for Default items (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.COLLECTION, "Set Content Explorer sorting level for Collection items (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.HISTORY, "Set Content Explorer sorting level for History items (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.ABANDONED, "Set Content Explorer sorting level for items tagged as Abandoned (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.ALTERNATE, "Set Content Explorer sorting level for items tagged as Alternate (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.BACKLOG, "Set Content Explorer sorting level for items tagged as Backlog (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.COMPLECTED, "Set Content Explorer sorting level for items tagged as Complected (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.COMPLETED, "Set Content Explorer sorting level for items tagged as Completed (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.CURSED, "Set Content Explorer sorting level for items tagged as Cursed (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.EXPERIMENTAL, "Set Content Explorer sorting level for items tagged as Experimental (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.HOMEBREW, "Set Content Explorer sorting level for items tagged as Homebrew (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.INPROGRESS, "Set Content Explorer sorting level for items tagged as Inprogress (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.PATCHED, "Set Content Explorer sorting level for items tagged as Patched (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.REPLAY, "Set Content Explorer sorting level for items tagged as Replay (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.ROMHACK, "Set Content Explorer sorting level for items tagged as Romhack (100 top of list 1 bottom of list)");
+    SPECIFIC_FIELD(lang->MUXSORT.HELP.TRANSLATED, "Set Content Explorer sorting level for items tagged as Translated (100 top of list 1 bottom of list)");
+    
     // muxspace
     SPECIFIC_FIELD(lang->MUXSPACE.TITLE, "STORAGE SPACE");
     SPECIFIC_FIELD(lang->MUXSPACE.HELP, "View the current used space of the mounted storage devices");
@@ -1210,6 +1245,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
 
     // muxvisual
+    SPECIFIC_FIELD(lang->MUXVISUAL.SORT, "Sorting Priority");
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
     SPECIFIC_FIELD(lang->MUXVISUAL.BATTERY, "Battery");
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
@@ -1252,6 +1288,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.VERTICAL.T1, "Vertical Lines (1px)");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.VERTICAL.T2, "Vertical Lines (2px)");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.VERTICAL.T4, "Vertical Lines (4px)");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.SORT, "Set sorting priority levels for content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");

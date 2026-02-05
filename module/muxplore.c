@@ -19,32 +19,28 @@ static char current_content_label[MAX_BUFFER_SIZE];
 static void assign_item_buckets(void) {
     for (size_t i = 0; i < item_count; i++) {
         content_item *it = &items[i];
-        it->sort_bucket = BUCKET_NORMAL;
+        it->sort_bucket = config.SORT.DEFAULT;
         it->group_tag[0] = '\0';
 
-        if (config.VISUAL.PINNEDCOLLECT && is_in_list(collection_items, collection_item_count, sys_dir, it->name)) {
-            it->sort_bucket = BUCKET_COLLECT;
-            continue;
+        int sort_special = -1;
+
+        if (config.SORT.COLLECTION != config.SORT.DEFAULT && is_in_list(collection_items, collection_item_count, sys_dir, it->name)) {
+            sort_special = config.SORT.COLLECTION;
         }
 
-        if (config.VISUAL.GROUPTAGS > 0 && it->use_module && strcasecmp(it->use_module, "muxtag") == 0) {
-            it->sort_bucket = BUCKET_TAGGED;
-
-            if (config.VISUAL.GROUPTAGS == 1) {
-                char c = toupper((unsigned char) it->display_name[0]);
-                it->group_tag[0] = isalnum(c) ? c : '#';
-                it->group_tag[1] = '\0';
-                continue;
-            } else if (config.VISUAL.GROUPTAGS == 2) {
-                snprintf(it->group_tag, sizeof(it->group_tag), "%s", it->glyph_icon);
-                continue;
-            }
+        if (config.SORT.HISTORY != config.SORT.DEFAULT && is_in_list(history_items, history_item_count, sys_dir, it->name)) {
+            if (config.SORT.HISTORY > sort_special) sort_special = config.SORT.HISTORY;
         }
 
-        if (config.VISUAL.DROPHISTORY && is_in_list(history_items, history_item_count, sys_dir, it->name)) {
-            it->sort_bucket = BUCKET_HISTORY;
-            continue;
+        if (it->use_module && strcasecmp(it->use_module, "muxtag") == 0) {
+            int tag_sort_bucket = -1;
+            char sorting_config_path[MAX_BUFFER_SIZE];
+            snprintf(sorting_config_path, sizeof(sorting_config_path), SORTING_CONFIG_PATH "%s", it->glyph_icon);
+            if (file_exist(sorting_config_path)) tag_sort_bucket = read_line_int_from(sorting_config_path, 1);
+            if (tag_sort_bucket > sort_special) sort_special = tag_sort_bucket;
         }
+
+        if (sort_special > -1) it->sort_bucket = sort_special;
     }
 }
 
