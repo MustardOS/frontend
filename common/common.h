@@ -50,7 +50,7 @@ extern char *hidden_visible[];
 extern char *toggle_icon_visible[];
 
 extern char progress_bar_message[MAX_BUFFER_SIZE];
-extern int progress_bar_value;
+extern volatile int progress_bar_value;
 extern lv_timer_t *timer_update_progress;
 
 typedef void (*exec_callback)(int exit_code);

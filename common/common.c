@@ -72,7 +72,7 @@ int safe_quit_exists = 0;
 int do_refresh_exists = 0;
 int blank_exists = 0;
 char progress_bar_message[MAX_BUFFER_SIZE];
-int progress_bar_value = 0;
+volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
 const char *theme_base;

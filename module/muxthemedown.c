@@ -13,6 +13,9 @@ static int exit_status = 0;
 static int preview_displayTime = 0;
 static int preview_index = -1;
 
+static int schedule_theme_update = 0;
+static int pending_download_switch = 0;
+
 static void show_help(void) {
     char text_path[MAX_BUFFER_SIZE];
     snprintf(text_path, sizeof(text_path), "%s/theme/text/%s.txt", INFO_CAT_PATH, theme_items[current_item_index].name);
@@ -35,6 +38,8 @@ static bool is_downloaded(int index) {
 }
 
 static void image_refresh() {
+    if (!theme_items || theme_item_count == 0 || current_item_index < 0) return;
+
     char base_image_path[MAX_BUFFER_SIZE];
     snprintf(base_image_path, sizeof(base_image_path), "%s/theme/box", INFO_CAT_PATH);
 
@@ -178,11 +183,9 @@ static void list_nav_move(int steps, int direction) {
                 } else {
                     if (current_item_index >= items_before_selected &&
                         current_item_index < theme_item_count - items_after_selected - 1) {
-                        lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent,
-                                                               theme.MUX.ITEM.COUNT - 1); // Get the last child
+                        lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent, theme.MUX.ITEM.COUNT - 1); // Get the last child
                         lv_obj_move_to_index(last_item, 0);
-                        update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
-                                         current_item_index - items_before_selected);
+                        update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1), current_item_index - items_before_selected);
                     }
                 }
             } else {
@@ -219,17 +222,18 @@ static void list_nav_next(int steps) {
 
 static void refresh_current_list_item() {
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE
-                                                                    : lang.MUXTHEMEDOWN.DOWNLOAD);
+    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE : lang.MUXTHEMEDOWN.DOWNLOAD);
 }
 
 static void theme_extraction_finished(char *theme_path) {
     LOG_INFO(mux_module, "Extraction Finished: %s", theme_path);
-    remove(theme_path);
+    if (file_exist(theme_path)) remove(theme_path);
+
     block_input = 0;
     theme_extracting = false;
     refresh_current_list_item();
-    nav_moved = 1;// force redraw of screen
+
+    nav_moved = 1; // Force redraw of screen
 }
 
 static void theme_download_finished() {
@@ -248,9 +252,7 @@ static void theme_download_finished() {
 static void refresh_theme_previews_finished(int result) {
     if (result == 0) {
         extract_archive(preview_zip_path, "themedwn");
-        load_mux("themedwn");
-        close_input();
-        mux_input_stop();
+        pending_download_switch = 1;
     } else {
         play_sound(SND_ERROR);
         toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, FOREVER);
@@ -396,6 +398,22 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
+    if (pending_download_switch) {
+        pending_download_switch = 0;
+
+        close_input();
+        mux_input_stop();
+
+        load_mux("themedwn");
+        return;
+    }
+
+    if (schedule_theme_update) {
+        schedule_theme_update = 0;
+        update_theme_data();
+        return;
+    }
+
     if (ui_count > 0 && nav_moved) {
         preview_index = -1;
         image_refresh();
@@ -412,10 +430,13 @@ static void ui_refresh_task() {
 
         nav_moved = 0;
     }
+
     preview_displayTime += TIMER_REFRESH;
     if (preview_displayTime > THEME_PREVIEW_DELAY) {
-        preview_index++;
-        image_refresh();
+        if (theme_items && theme_item_count > 0) {
+            preview_index++;
+            image_refresh();
+        }
         preview_displayTime = 0;
     }
 }
@@ -467,7 +488,10 @@ int muxthemedown_main(void) {
 
     init_timer(ui_refresh_task, NULL);
 
-    if (!file_exist(theme_data_local_path)) update_theme_data();
+    if (!file_exist(theme_data_local_path)) {
+        nav_moved = 1;
+        schedule_theme_update = 1;
+    }
 
     mux_input_options input_opts = {
             .swap_axis = theme.MISC.NAVIGATION_TYPE == 1,

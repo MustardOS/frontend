@@ -12,8 +12,9 @@ typedef struct {
 } download_args_t;
 
 typedef struct {
-    int percent;
-} progress_data_t;
+    int result;
+    void (*cb)(int);
+} download_finish_ctx_t;
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
@@ -35,29 +36,49 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 
     if (dltotal > 0) {
         int percent = (int) ((dlnow * 100) / dltotal);
-        if (progress_bar_value != percent) {
-            progress_bar_value = percent;
-
-            progress_data_t *data = malloc(sizeof(progress_data_t));
-            data->percent = percent;
-        }
+        if (progress_bar_value != percent) progress_bar_value = percent;
     }
 
     return 0;
 }
 
-static void download_finished(int result) {
-    LOG_INFO(mux_module, "Download finished with result: %d", result);
+static void download_finish_async(void *p) {
+    download_finish_ctx_t *ctx = (download_finish_ctx_t *) p;
 
-    if (result == 0) {
-        progress_bar_value = 100;
-        usleep(500000); // 0.5 seconds
-    }
+    if (ctx->result == 0) progress_bar_value = 100;
 
     hide_progress_bar();
     download_in_progress = false;
+    cancel_download = false;
 
-    if (download_finish_cb) download_finish_cb(result);
+    if (ctx->cb) ctx->cb(ctx->result);
+
+    free(ctx);
+}
+
+static void download_finished(int result) {
+    LOG_INFO(mux_module, "Download finished with result: %d", result);
+
+    void (*cb)(int) = download_finish_cb;
+
+    download_finish_cb = NULL;
+    download_finish_ctx_t *ctx = malloc(sizeof(*ctx));
+
+    if (!ctx) {
+        hide_progress_bar();
+
+        download_in_progress = false;
+        cancel_download = false;
+
+        if (cb) cb(result);
+
+        return;
+    }
+
+    ctx->result = result;
+    ctx->cb = cb;
+
+    lv_async_call(download_finish_async, ctx);
 }
 
 int download_file(const char *url, const char *output_path) {
