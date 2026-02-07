@@ -98,15 +98,10 @@ int bucket_item_compare(const void *a, const void *b) {
     const content_item *itemB = (content_item *) b;
 
     if (itemA->sort_bucket != itemB->sort_bucket)
-        return itemA->sort_bucket - itemB->sort_bucket;
+        return itemB->sort_bucket - itemA->sort_bucket;
 
     if (!config.VISUAL.MIXEDCONTENT && itemA->content_type != itemB->content_type)
         return (itemA->content_type == FOLDER) ? -1 : 1;
-
-    if (itemA->group_tag[0] || itemB->group_tag[0]) {
-        int g = strcasecmp(itemA->group_tag, itemB->group_tag);
-        if (g != 0) return g;
-    }
 
     return strcasecmp(itemA->display_name, itemB->display_name);
 }

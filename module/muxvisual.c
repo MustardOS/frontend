@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxvisual.h"
 
-#define UI_COUNT 21
+#define UI_COUNT 19
 
 #define VISUAL(NAME, ENUM, UDATA) static int NAME##_original;
 VISUAL_ELEMENTS
@@ -54,9 +54,6 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, Hidden, "visual/hidden", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
-    CHECK_AND_SAVE_STD(visual, GroupTags, "visual/grouptags", INT, 0);
-    CHECK_AND_SAVE_STD(visual, PinnedCollect, "visual/pinnedcollect", INT, 0);
-    CHECK_AND_SAVE_STD(visual, DropHistory, "visual/drophistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
     CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 100);
@@ -80,12 +77,7 @@ static void init_navigation_group(void) {
             lang.MUXVISUAL.NAME.REM_SQPA
     };
 
-    char *tag_group[] = {
-            lang.GENERIC.DISABLED,
-            lang.MUXVISUAL.GROUPTAGS.ALPHA,
-            lang.MUXVISUAL.GROUPTAGS.TAG
-    };
-
+    INIT_OPTION_ITEM(-1, visual, Sort, lang.MUXVISUAL.SORT, "sort", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
@@ -101,9 +93,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", toggle_icon_visible, 3);
-    INIT_OPTION_ITEM(-1, visual, GroupTags, lang.MUXVISUAL.GROUPTAGS.TITLE, "grouptags", tag_group, 3);
-    INIT_OPTION_ITEM(-1, visual, PinnedCollect, lang.MUXVISUAL.PINNEDCOLLECT, "pinnedcollect", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, DropHistory, lang.MUXVISUAL.DROPHISTORY, "drophistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, MixedContent, lang.MUXVISUAL.MIXEDCONTENT, "mixedcontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
@@ -142,6 +131,21 @@ static void handle_option_next(void) {
     if (msgbox_active) return;
 
     move_option(lv_group_get_focused(ui_group_value), +1);
+}
+
+static void handle_a(void) {
+    if (msgbox_active) return;
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblSort_visual) {
+        save_visual_options();
+        load_mux("sort");
+
+        close_input();
+        mux_input_stop();
+    } else {
+        handle_option_next();
+    }
 }
 
 static void handle_b(void) {
@@ -213,7 +217,7 @@ int muxvisual_main(void) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_option_next,
+                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,

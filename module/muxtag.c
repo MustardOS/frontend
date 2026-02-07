@@ -223,7 +223,7 @@ static void init_elements(void) {
 }
 
 int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
-    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_name, sizeof(rom_name), "%s", get_file_name(name));
     snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 

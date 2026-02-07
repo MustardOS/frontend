@@ -202,6 +202,13 @@ struct mux_config {
     } SETTINGS;
 
     struct {
+        int16_t DEFAULT;
+        int16_t COLLECTION;
+        int16_t HISTORY;
+    } SORT;
+
+    struct {
+        int16_t SORT;
         int16_t BATTERY;
         int16_t NETWORK;
         int16_t BLUETOOTH;

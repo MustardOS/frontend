@@ -66,6 +66,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxsearch`: Content Search
 * `muxshare`: Shared Frontend Variables
 * `muxshot`: Screenshot Viewer
+* `muxsort`: Sorting Settings
 * `muxspace`: Disk Usage Information
 * `muxsplash`: Simple PNG Based Splash Screen
 * `muxstorage`: Storage Migrate/Sync Information

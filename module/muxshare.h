@@ -36,6 +36,7 @@
 #include "../common/overlay.h"
 #include "../common/language.h"
 #include "../common/collection.h"
+#include "../common/collection_tag.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
 #include "../common/verify.h"
@@ -49,6 +50,9 @@
 
 extern size_t item_count;
 extern content_item *items;
+
+extern size_t tag_item_count;
+extern tag_item *tag_items;
 
 extern int verify_check;
 
@@ -120,6 +124,8 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
 void update_file_counter(lv_obj_t *counter, int file_count);
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json);
+
+int folder_has_launch_file(char *base_dir, char *dir_name);
 
 void update_title(char *folder_path, int fn_valid, struct json fn_json,
                   const char *label, const char *module_path);
@@ -227,6 +233,8 @@ int muxrtc_main();
 int muxsearch_main(char *dir);
 
 int muxshot_main();
+
+int muxsort_main();
 
 int muxspace_main();
 

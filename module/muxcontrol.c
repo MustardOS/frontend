@@ -310,7 +310,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
-    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_name, sizeof(rom_name), "%s", get_file_name(name));
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
     is_app = app;

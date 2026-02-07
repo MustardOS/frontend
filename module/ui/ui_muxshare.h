@@ -416,6 +416,7 @@
     TWEAKGEN(Startup,    STARTUP,    "startup")
 
 #define VISUAL_ELEMENTS                                                           \
+    VISUAL(Sort,                  SORT,                  "sort")                  \
     VISUAL(Battery,               BATTERY,               "battery")               \
     VISUAL(Clock,                 CLOCK,                 "clock")                 \
     VISUAL(Network,               NETWORK,               "network")               \
@@ -431,9 +432,6 @@
     VISUAL(Hidden,                HIDDEN,                "hidden")                \
     VISUAL(ContentCollect,        CONTENTCOLLECT,        "contentcollect")        \
     VISUAL(ContentHistory,        CONTENTHISTORY,        "contenthistory")        \
-    VISUAL(GroupTags,             GROUPTAGS,             "grouptags")             \
-    VISUAL(PinnedCollect,         PINNEDCOLLECT,         "pinnedcollect")         \
-    VISUAL(DropHistory,           DROPHISTORY,           "drophistory")           \
     VISUAL(MixedContent,          MIXEDCONTENT,          "mixedcontent")          \
     VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
     VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")

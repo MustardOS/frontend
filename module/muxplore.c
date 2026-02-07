@@ -19,40 +19,33 @@ static char current_content_label[MAX_BUFFER_SIZE];
 static void assign_item_buckets(void) {
     for (size_t i = 0; i < item_count; i++) {
         content_item *it = &items[i];
-        it->sort_bucket = BUCKET_NORMAL;
+        it->sort_bucket = config.SORT.DEFAULT;
         it->group_tag[0] = '\0';
 
-        if (config.VISUAL.PINNEDCOLLECT && is_in_list(collection_items, collection_item_count, sys_dir, it->name)) {
-            it->sort_bucket = BUCKET_COLLECT;
-            continue;
+        int sort_special = -1;
+
+        if (config.SORT.COLLECTION != config.SORT.DEFAULT && is_in_list(collection_items, collection_item_count, sys_dir, it->name)) {
+            sort_special = config.SORT.COLLECTION;
         }
 
-        if (config.VISUAL.GROUPTAGS > 0 && it->use_module && strcasecmp(it->use_module, "muxtag") == 0) {
-            it->sort_bucket = BUCKET_TAGGED;
-
-            if (config.VISUAL.GROUPTAGS == 1) {
-                char c = toupper((unsigned char) it->display_name[0]);
-                it->group_tag[0] = isalnum(c) ? c : '#';
-                it->group_tag[1] = '\0';
-                continue;
-            } else if (config.VISUAL.GROUPTAGS == 2) {
-                snprintf(it->group_tag, sizeof(it->group_tag), "%s", it->glyph_icon);
-                continue;
-            }
+        if (config.SORT.HISTORY != config.SORT.DEFAULT && is_in_list(history_items, history_item_count, sys_dir, it->name)) {
+            if (config.SORT.HISTORY > sort_special) sort_special = config.SORT.HISTORY;
         }
 
-        if (config.VISUAL.DROPHISTORY && is_in_list(history_items, history_item_count, sys_dir, it->name)) {
-            it->sort_bucket = BUCKET_HISTORY;
-            continue;
+        if (it->use_module && strcasecmp(it->use_module, "muxtag") == 0) {
+            int tag_sort_bucket = get_tag_sort_bucket(tag_items, tag_item_count, it->glyph_icon);
+            if (tag_sort_bucket > sort_special) sort_special = tag_sort_bucket;
         }
+
+        if (sort_special > -1) it->sort_bucket = sort_special;
     }
 }
 
 static char *load_content_description(void) {
     char content_desc[MAX_BUFFER_SIZE];
 
-    char *content_label = items[current_item_index].name;
-    char *desc_name = strip_ext(items[current_item_index].name);
+    char *content_label = get_file_name(items[current_item_index].name);
+    char *desc_name = strip_ext(get_file_name(items[current_item_index].name));
 
     char core_desc[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
@@ -88,14 +81,14 @@ static void image_refresh(char *image_type) {
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];
 
-    char *content_label = items[current_item_index].name;
+    char *content_label = get_file_name(items[current_item_index].name);
+    char *file_name = get_file_name(items[current_item_index].name);
+    char *file_name_no_ext = strip_ext(file_name);
 
     if (strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(UNION_ROM_PATH)) == 0) {
         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
                  INFO_CAT_PATH, image_type, content_label);
     } else {
-        char *file_name = strip_ext(items[current_item_index].name);
-
         get_catalogue_name(sys_dir, content_label, core_artwork, sizeof(core_artwork));
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
@@ -108,11 +101,11 @@ static void image_refresh(char *image_type) {
         } else {
             if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
                 if (items[current_item_index].content_type == FOLDER) {
-                    char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
-                    load_image_catalogue("Folder", file_name, catalogue_name, "default",
+                    char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, file_name);
+                    load_image_catalogue("Folder", file_name_no_ext, catalogue_name, "default",
                                          mux_dimension, image_type, image, sizeof(image));
                 } else {
-                    load_image_catalogue(core_artwork, file_name, "", "default", mux_dimension,
+                    load_image_catalogue(core_artwork, file_name_no_ext, "", "default", mux_dimension,
                                          image_type, image, sizeof(image));
                 }
             }
@@ -157,8 +150,7 @@ static void image_refresh(char *image_type) {
         if (strcasecmp(box_image_previous_path, image) != 0) {
             char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Folder" : core_artwork;
             char *content_name =
-                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-                            items[current_item_index].name);
+                    items[current_item_index].content_type == FOLDER ? file_name : file_name_no_ext;
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
                      INFO_CAT_PATH, catalogue_folder);
@@ -291,7 +283,7 @@ static void gen_item(char **file_names, int file_count) {
             char *stripped_name = strip_ext(file_names[i]);
 
             resolve_friendly_name(sys_dir, stripped_name, fn_name);
-            add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
+            add_item(&items, &item_count, file_names[i], fn_name, full_path, ITEM);
         }
 
         free(file_names[i]);
@@ -340,9 +332,6 @@ static void gen_item(char **file_names, int file_count) {
             items[i].use_module = strdup(mux_module);
         }
     }
-
-    assign_item_buckets();
-    qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 }
 
 static void init_navigation_group_grid(void) {
@@ -403,13 +392,14 @@ static void create_content_items(void) {
     update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, UNION_ROM_PATH);
 
     for (int i = 0; i < dir_count; i++) {
+        if (folder_has_launch_file(sys_dir, dir_names[i])) continue;
         char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
 
         char rom_dir[MAX_BUFFER_SIZE];
         snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, dir_names[i]);
         automatic_assign_core(rom_dir);
 
-        content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
+        content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, rom_dir, FOLDER);
 
         new_item->glyph_icon = "folder";
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
@@ -719,7 +709,7 @@ static void process_load(int from_start) {
     } else {
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-        if (load_content(0, sys_dir, items[current_item_index].name)) {
+        if (load_content(0, items[current_item_index].extra_data)) {
             if (config.SETTINGS.ADVANCED.PASSCODE) {
                 int result = 0;
 
@@ -825,7 +815,7 @@ static void handle_x(void) {
     write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
-    load_content_core(1, 0, sys_dir, items[current_item_index].name);
+    load_content_core(1, 0, items[current_item_index].extra_data);
     load_content_governor(sys_dir, NULL, 1, 0, 0);
 
     load_mux("option");
@@ -844,7 +834,7 @@ static void handle_y(void) {
         if (is_ksk(kiosk.LAUNCH.COLLECTION) || is_ksk(kiosk.COLLECT.ADD_CON)) return;
 
         write_text_to_file(ADD_MODE_FROM, "w", CHAR, "explore");
-        if (!load_content(1, sys_dir, items[current_item_index].name)) {
+        if (!load_content(1, items[current_item_index].extra_data)) {
             remove(ADD_MODE_FROM);
             play_sound(SND_ERROR);
             toast_message(lang.MUXPLORE.ERROR.NO_CORE, SHORT);
@@ -1020,6 +1010,7 @@ int muxplore_main(int index, char *dir) {
     snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 
     load_skip_patterns();
+    load_tag_items(&tag_items, &tag_item_count);
     create_content_items();
     ui_count = (int) item_count;
     init_elements();
@@ -1115,6 +1106,7 @@ int muxplore_main(int index, char *dir) {
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);
+    free_tag_items(&tag_items, &tag_item_count);
 
     return exit_status;
 }

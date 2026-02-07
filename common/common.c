@@ -517,6 +517,32 @@ char *get_last_dir(char *text) {
     return "";
 }
 
+char *get_file_name(char *text) {
+    char *last_slash = strrchr(text, '/');
+
+    if (last_slash != NULL) return last_slash + 1;
+
+    return text;
+}
+
+char *get_content_path(char *path) {
+    char *directory_path = strip_dir(path);
+    if (dir_exist(path)) return directory_path;
+    if (!ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) return directory_path;    
+    char *directory_name = get_last_dir(directory_path);
+    char *path_no_ext = strip_ext(get_file_name(path));
+
+    return strcasecmp(directory_name, path_no_ext) == 0 ? strip_dir(directory_path) : directory_path;
+}
+
+char *get_content_name(char *path) {
+    char *directory_path = get_content_path(path);
+    char *sub_path = strdup(path);
+    sub_path = path + strlen(directory_path);
+    while (*sub_path == '/') sub_path++;
+    return sub_path;
+}
+
 char *strip_dir(char *text) {
     char *result = strdup(text);
     char *last_slash = strrchr(result, '/');
@@ -3454,16 +3480,20 @@ int remove_directory_recursive(const char *path) {
     return 0;
 }
 
-int load_content(int add_collection, char *sys_dir, char *file_name) {
-    char *assigned_core = load_content_core(0, !add_collection, sys_dir, file_name);
+int load_content(int add_collection, char *file_path) {
+    char *assigned_core = load_content_core(0, !add_collection, file_path);
     if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
 
+    char *content_path = get_content_path(file_path);
+    char *file_name = get_file_name(file_path);
     const char *content_name = strip_ext(file_name);
-    const char *system_sub = get_last_subdir(sys_dir, '/', 4);
+    char *item_dir = strip_dir(file_path);
+    const char *cfg_sub = get_last_subdir(content_path, '/', 4);
+    const char *system_sub = get_last_subdir(item_dir, '/', 4);
 
     char content_loader_file[MAX_BUFFER_SIZE];
     snprintf(content_loader_file, sizeof(content_loader_file), INFO_COR_PATH "/%s/%s.cfg",
-             system_sub,
+             cfg_sub,
              content_name);
     LOG_INFO(mux_module, "Configuration File: %s", content_loader_file);
 
@@ -3486,25 +3516,25 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
 
         char cache_file[MAX_BUFFER_SIZE];
         snprintf(cache_file, sizeof(cache_file), INFO_COR_PATH "/%s/%s.cfg",
-                 system_sub, content_name);
+                 cfg_sub, content_name);
 
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file);
 
         if (add_collection) {
-            add_to_collection(file_name, cache_file, sys_dir);
+            add_to_collection(file_name, cache_file, content_path);
         } else {
             LOG_INFO(mux_module, "Assigned Core: %s", assigned_core);
 
-            char *assigned_gov = specify_asset(load_content_governor(sys_dir, content_name, 0, 1, 0),
+            char *assigned_gov = specify_asset(load_content_governor(content_path, content_name, 0, 1, 0),
                                                device.CPU.DEFAULT, "Governor");
 
-            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, content_name, 0, 1, 0),
+            char *assigned_con = specify_asset(load_content_control_scheme(content_path, content_name, 0, 1, 0),
                                                "system", "Control Scheme");
 
-            char *assigned_rac = specify_asset(load_content_retroarch(sys_dir, content_name, 0, 1, 0),
+            char *assigned_rac = specify_asset(load_content_retroarch(content_path, content_name, 0, 1, 0),
                                                "false", "RetroArch Config");
 
-            char *assigned_flt = specify_asset(load_content_filter(sys_dir, content_name, 0, 1, 0),
+            char *assigned_flt = specify_asset(load_content_filter(content_path, content_name, 0, 1, 0),
                                                "none", "Colour Filter");
 
             char full_file_path[MAX_BUFFER_SIZE];
@@ -3538,7 +3568,10 @@ int load_content(int add_collection, char *sys_dir, char *file_name) {
     return 0;
 }
 
-char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name) {
+char *load_content_core(int force, int run_quit, char *file_path) {
+    char *sys_dir = get_content_path(file_path);
+    char *file_name = get_file_name(file_path);
+    char *content_name = (dir_exist(file_path)) ? get_last_dir(file_path) : get_content_name(file_path);
     char content_core[MAX_BUFFER_SIZE] = {0};
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
@@ -3573,7 +3606,7 @@ char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name)
         LOG_ERROR(mux_module, "Failed to build Global Core: %s", content_core);
     }
 
-    load_assign(MUOS_ASS_LOAD, file_name, sys_dir, "none", force, 0);
+    load_assign(MUOS_ASS_LOAD, content_name, sys_dir, "none", force, 0);
     if (run_quit) mux_input_stop();
 
     LOG_INFO(mux_module, "No core detected");

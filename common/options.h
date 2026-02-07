@@ -79,6 +79,7 @@
 #define CONF_DEVICE_PATH OPT_PATH "device/config/"
 #define CONF_CONFIG_PATH OPT_PATH "config/"
 #define CONF_KIOSK_PATH  OPT_PATH "kiosk/"
+#define SORTING_CONFIG_PATH CONF_CONFIG_PATH "sort/"
 
 #define RUN_STORAGE_PATH RUN_PATH "storage/"
 #define OPT_SHARE_PATH   OPT_PATH "share/"
