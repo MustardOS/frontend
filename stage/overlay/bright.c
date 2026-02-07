@@ -64,26 +64,18 @@ struct scale_cache bright_scale_cache = {
         .value = SCALE_ORIGINAL
 };
 
-static int ensure_bright_path(enum render_method type, void *ctx, int step) {
-    if (!ctx) return 0;
+static int ensure_bright_path(const char *dim, int step) {
+    if (step < 0) step = 0;
+    if (step >= INDICATOR_STEPS) step = INDICATOR_STEPS - 1;
 
-    switch (type) {
-        case RENDER_SDL:
-            get_dimension(RENDER_SDL, ctx, dimension, sizeof(dimension));
-            break;
-        case RENDER_GLES:
-            get_dimension(RENDER_GLES, ctx, dimension, sizeof(dimension));
-            break;
-    }
+    bright_overlay_path[0] = '\0';
 
     char name[64];
     snprintf(name, sizeof(name), "bright_%d", step);
 
-    if (load_stage_image("bright", ovl_go_cache.core, ovl_go_cache.system, name, dimension, bright_overlay_path))
-        return 1;
+    if (load_stage_image("bright", ovl_go_cache.core, ovl_go_cache.system, name, dim, bright_overlay_path)) return 1;
 
-    LOG_WARN("stage", "Brightness " OVERLAY_NOP,
-             ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension, step);
+    LOG_WARN("stage", "Brightness " OVERLAY_NOP, ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dim, step);
     return 0;
 }
 
@@ -140,8 +132,15 @@ static void disable_gles(void) {
 static void preload_bright_textures_sdl(SDL_Renderer *renderer) {
     if (bright_preload_sdl_done || bright_disabled_sdl || !renderer) return;
 
+    char dim[32];
+    get_dimension(RENDER_SDL, renderer, dim, sizeof(dim));
+    if (!dim[0]) {
+        disable_sdl();
+        return;
+    }
+
     for (int i = 0; i < INDICATOR_STEPS; i++) {
-        if (!ensure_bright_path(RENDER_SDL, renderer, i)) {
+        if (!ensure_bright_path(dim, i)) {
             disable_sdl();
             return;
         }
@@ -174,8 +173,15 @@ static void preload_bright_textures_sdl(SDL_Renderer *renderer) {
 static void preload_bright_textures_gles(void) {
     if (bright_preload_gles_done || bright_disabled_gles || !render_window) return;
 
+    char dim[32];
+    get_dimension(RENDER_GLES, render_window, dim, sizeof(dim));
+    if (!dim[0]) {
+        disable_gles();
+        return;
+    }
+
     for (int i = 0; i < INDICATOR_STEPS; i++) {
-        if (!ensure_bright_path(RENDER_GLES, render_window, i)) {
+        if (!ensure_bright_path(dim, i)) {
             disable_gles();
             return;
         }
