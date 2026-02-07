@@ -45,7 +45,7 @@ static char *load_content_description(void) {
     char content_desc[MAX_BUFFER_SIZE];
 
     char *content_label = get_file_name(items[current_item_index].name);
-    char *desc_name = strip_ext(items[current_item_index].name);
+    char *desc_name = strip_ext(get_file_name(items[current_item_index].name));
 
     char core_desc[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
