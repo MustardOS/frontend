@@ -586,8 +586,7 @@ static inline void move_index(int direction) {
 static void list_nav_move(int steps, int direction) {
     if (!ui_count) return;
 
-    if (!first_open) play_sound(SND_NAVIGATE);
-    first_open = 0;
+    play_sound(SND_NAVIGATE);
 
     const int visible_count = theme.MUX.ITEM.COUNT;
     const int static_list = !grid_mode_enabled && item_count <= visible_count;
@@ -1029,6 +1028,7 @@ int muxplore_main(int index, char *dir) {
         else current_item_index = 0;
 
         focus_initial();
+        first_open = 0;
 
         collect_vis = items[current_item_index].content_type == ITEM ? 1 : 0;
     } else {
