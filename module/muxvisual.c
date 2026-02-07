@@ -138,6 +138,8 @@ static void handle_a(void) {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblSort_visual) {
+        play_sound(SND_CONFIRM);
+
         save_visual_options();
         load_mux("sort");
 
