@@ -148,16 +148,12 @@ static void strip_libretro(char *str) {
     if (new_str) *new_str = '\0';
 }
 
-int load_stage_image(const char *type, const char *core, const char *sys,
-                     const char *file, const char *dim, char *img_path) {
-    enum img_loc {
-        IMG_INFO,
-        IMG_THEME,
-        IMG_MEDIA
-    };
-
+int load_stage_image(const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path) {
     static int have_theme;
     static char theme_path[MAX_BUFFER_SIZE];
+
+    if (!type || !type[0] || !img_path) return 0;
+    if (!sys) sys = "";
 
     const char *active_theme = get_active_theme();
     if (active_theme) {
@@ -168,7 +164,9 @@ int load_stage_image(const char *type, const char *core, const char *sys,
     }
 
     const char *files[] = {file, core, "default", NULL};
-    const char *dims[] = {dim, ""};
+
+    const char *dim_safe = (dim && dim[0]) ? dim : "";
+    const char *dims[] = {dim_safe, ""};
 
     char file_strip[MAX_BUFFER_SIZE];
 
@@ -195,7 +193,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
             const char *theme_prefix = dims[d][0] ? dims[d] : "";
 
             for (int use_system = 1; use_system >= 0; use_system--) {
-                if (use_system && (!sys || !sys[0])) continue;
+                if (use_system && !sys[0]) continue;
 
                 for (size_t f = 0; files[f]; f++) {
                     strlcpy(file_strip, files[f], sizeof(file_strip));
@@ -222,7 +220,7 @@ int load_stage_image(const char *type, const char *core, const char *sys,
 
     // Internal share overlay
     for (int use_system = 1; use_system >= 0; use_system--) {
-        if (use_system && (!sys || !sys[0])) continue;
+        if (use_system && !sys[0]) continue;
 
         for (size_t f = 0; files[f]; f++) {
             strlcpy(file_strip, files[f], sizeof(file_strip));
@@ -252,18 +250,24 @@ void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz)
     int w = 0;
     int h = 0;
 
+    if (!out || out_sz == 0) return;
+
     switch (type) {
         case RENDER_SDL: {
             SDL_Renderer *r = ctx;
-            SDL_GetRendererOutputSize(r, &w, &h);
+            if (r) SDL_GetRendererOutputSize(r, &w, &h);
             break;
         }
         case RENDER_GLES: {
             SDL_Window *win = ctx;
-            SDL_GL_GetDrawableSize(win, &w, &h);
+            if (win) SDL_GL_GetDrawableSize(win, &w, &h);
             break;
         }
     }
 
-    snprintf(out, out_sz, "%dx%d/", w, h);
+    if (w > 0 && h > 0) {
+        snprintf(out, out_sz, "%dx%d/", w, h);
+    } else {
+        out[0] = '\0';
+    }
 }
