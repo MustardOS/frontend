@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "img/nothing.h"
+#include "input/list_nav.h"
 #include "common.h"
 #include "init.h"
 #include "inotify.h"
@@ -9,6 +10,7 @@
 #include "input.h"
 #include "theme.h"
 #include "device.h"
+#include "collection.h"
 #include "ui_common.h"
 #include "log.h"
 
@@ -1594,17 +1596,23 @@ void scroll_help_content(int direction, bool page_down) {
     }
 }
 
-void gen_help(lv_obj_t *element_focused, struct help_msg *help_messages, int num_messages) {
-    char *message = lang.GENERIC.NO_HELP;
-
-    for (int i = 0; i < num_messages; i++) {
-        if (element_focused == help_messages[i].element) {
-            message = help_messages[i].message;
-            break;
-        }
+void gen_help(int index, int max_items, const struct help_msg *help_messages, lv_group_t *group, content_item *items) {
+    if ((unsigned) index >= (unsigned) max_items) {
+        show_info_box(lang.GENERIC.UNKNOWN, lang.GENERIC.NO_HELP, 0);
+        return;
     }
 
-    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
+    const char *msg = help_messages[index].message;
+    if (!msg || strlen(msg) <= 1) msg = lang.GENERIC.NO_HELP;
 
-    show_info_box(TS(lv_label_get_text(element_focused)), message, 0);
+    const char *title;
+
+    if (grid_mode_enabled) {
+        title = items && items[index].name ? items[index].name : lang.GENERIC.UNKNOWN;
+    } else {
+        lv_obj_t *focused = lv_group_get_focused(group);
+        title = focused ? TS(lv_label_get_text(focused)) : lang.GENERIC.UNKNOWN;
+    }
+
+    show_info_box(title, msg, 0);
 }

@@ -20,14 +20,14 @@ content_item *all_items = NULL;
 
 static lv_obj_t *ui_viewport_objects[7];
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define SEARCH(NAME, ENUM, UDATA) { ui_lbl##NAME##_search, lang.MUXSEARCH.HELP.ENUM },
+#define SEARCH(NAME, ENUM, UDATA) { lang.MUXSEARCH.HELP.ENUM },
             SEARCH_ELEMENTS
 #undef SEARCH
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void init_navigation_group(void) {

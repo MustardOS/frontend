@@ -18,14 +18,14 @@ char **gov_values_disp = NULL;
 
 size_t gov_count = 0;
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define POWER(NAME, ENUM, UDATA) { ui_lbl##NAME##_power, lang.MUXPOWER.HELP.ENUM },
+#define POWER(NAME, ENUM, UDATA) { lang.MUXPOWER.HELP.ENUM },
             POWER_ELEMENTS
 #undef POWER
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

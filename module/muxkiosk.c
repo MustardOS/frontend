@@ -7,14 +7,14 @@
 KIOSK_ELEMENTS
 #undef KIOSK
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define KIOSK(NAME, ENUM, UDATA) { ui_lbl##NAME##_kiosk, lang.MUXKIOSK.HELP.ENUM },
+#define KIOSK(NAME, ENUM, UDATA) { lang.MUXKIOSK.HELP.ENUM },
             KIOSK_ELEMENTS
 #undef KIOSK
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

@@ -5,14 +5,14 @@
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define NETINFO(NAME, ENUM, UDATA) { ui_lbl##NAME##_netinfo, lang.MUXNETINFO.HELP.ENUM },
+#define NETINFO(NAME, ENUM, UDATA) { lang.MUXNETINFO.HELP.ENUM },
             NETINFO_ELEMENTS
 #undef NETINFO
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static const char *get_hostname(void) {

@@ -9,14 +9,14 @@ static char lookup_original_value[MAX_BUFFER_SIZE];
 THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define THEMEFILTER(NAME, ENUM, UDATA) { ui_lbl##NAME##_themefilter, lang.MUXTHEMEFILTER.HELP.ENUM },
+#define THEMEFILTER(NAME, ENUM, UDATA) { lang.MUXTHEMEFILTER.HELP.ENUM },
             THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

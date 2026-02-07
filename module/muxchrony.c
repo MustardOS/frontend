@@ -7,14 +7,14 @@
 static char chrony_raw[CHRONY_BUFFER];
 static time_t chrony_last = 0;
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define CHRONY(NAME, ENUM, UDATA) { ui_lbl##NAME##_chrony, lang.MUXCHRONY.HELP.ENUM },
+#define CHRONY(NAME, ENUM, UDATA) { lang.MUXCHRONY.HELP.ENUM },
             CHRONY_ELEMENTS
 #undef CHRONY
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void chrony_normalise(char *output) {

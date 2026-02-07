@@ -1,5 +1,7 @@
 #pragma once
 
+#include "collection.h"
+
 extern lv_timer_t *toast_timer;
 extern lv_timer_t *counter_timer;
 
@@ -9,7 +11,6 @@ struct mux_lang;
 struct footer_glyph;
 
 struct help_msg {
-    lv_obj_t *element;
     char *message;
 };
 
@@ -74,7 +75,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
 void scroll_help_content(int direction, bool page_down);
 
-void gen_help(lv_obj_t *element_focused, struct help_msg *help_messages, int num_messages);
+void gen_help(int index, int max_items, const struct help_msg *help_messages, lv_group_t *group, content_item *items);
 
 extern lv_obj_t *ui_screen_container;
 extern lv_obj_t *ui_screen_temp;

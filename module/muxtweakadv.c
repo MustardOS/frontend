@@ -7,14 +7,14 @@
 TWEAKADV_ELEMENTS
 #undef TWEAKADV
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define TWEAKADV(NAME, ENUM, UDATA) { ui_lbl##NAME##_tweakadv, lang.MUXTWEAKADV.HELP.ENUM },
+#define TWEAKADV(NAME, ENUM, UDATA) { lang.MUXTWEAKADV.HELP.ENUM },
             TWEAKADV_ELEMENTS
 #undef TWEAKADV
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

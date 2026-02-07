@@ -11,7 +11,7 @@ struct mount {
     const char *partition;
 };
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXSPACE.TITLE, lang.MUXSPACE.HELP, 0);
 }
 

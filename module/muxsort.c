@@ -6,7 +6,7 @@ static int history_original;
 
 static lv_obj_t **ui_objects_value = NULL;
 
-static void show_help() {
+static void show_help(void) {
     char *title = TS(lv_label_get_text(lv_group_get_focused(ui_group)));
 
     if (current_item_index == 0) {

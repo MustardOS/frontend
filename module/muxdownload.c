@@ -8,7 +8,6 @@ static int exit_status = 0;
 static int starter_image = 0;
 
 static void show_help(void) {
-    if (!ui_count) return;
     show_info_box(items[current_item_index].name, items[current_item_index].help, 0);
 }
 
@@ -240,6 +239,13 @@ static void handle_x(void) {
     update_extra_data();
 }
 
+static void handle_help(void) {
+    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
+
+    play_sound(SND_INFO_OPEN);
+    show_help();
+}
+
 static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
@@ -350,7 +356,7 @@ int muxdownload_main(char *type) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_MENU_SHORT] = show_help,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,

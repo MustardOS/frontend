@@ -53,14 +53,14 @@ static const struct {
         {"WPA_START_FAILED", STATUS_WPA_START_FAILED},
 };
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define NETWORK(NAME, ENUM, UDATA) { ui_lbl##NAME##_network, lang.MUXNETWORK.HELP.ENUM },
+#define NETWORK(NAME, ENUM, UDATA) { lang.MUXNETWORK.HELP.ENUM },
             NETWORK_ELEMENTS
 #undef NETWORK
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static const char *net_status_label(int id) {

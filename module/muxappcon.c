@@ -15,14 +15,14 @@ static int group_index = 0;
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help() {
+static void show_help(void) {
     struct help_msg help_messages[] = {
-#define APPCON(NAME, ENUM, UDATA) { ui_lbl##NAME##_appcon, lang.MUXAPPCON.HELP.ENUM },
+#define APPCON(NAME, ENUM, UDATA) { lang.MUXAPPCON.HELP.ENUM },
             APPCON_ELEMENTS
 #undef APPCON
     };
 
-    gen_help(lv_group_get_focused(ui_group), help_messages, A_SIZE(help_messages));
+    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
 }
 
 static void add_static_item(int index, const char *item_label, const char *item_value,
