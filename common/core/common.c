@@ -119,7 +119,7 @@ void write_rac_file(char *path, char *rac, const char *rom_name) {
 
 void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *core, char *sys, char *cat, char *rom, char *gov, char *con, char *rac, int lookup) {
     char base_path[MAX_BUFFER_SIZE];
-    char *rom_no_ext = strip_ext(rom);
+    char *rom_no_ext = strip_ext(get_file_name(rom));
 
     snprintf(base_path, sizeof(base_path), "%s/%s", core_dir, rom_no_ext);
 
@@ -136,10 +136,13 @@ void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *cor
     char *paths[] = {cfg_path, gov_path, con_path, rac_path};
     for (size_t i = 0; i < A_SIZE(paths); ++i) if (file_exist(paths[i])) remove(paths[i]);
 
-    char *last_sub = get_last_subdir(rom_dir, '/', 4);
-    char *base_dir = (last_sub[0] == '\0') ? rom_dir : str_replace(rom_dir, last_sub, "");
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom);
+    char *item_dir = strip_dir(file_path);
+    char *last_sub = get_last_subdir(item_dir, '/', 4);
+    char *base_dir = (last_sub[0] == '\0') ? item_dir : str_replace(item_dir, last_sub, "");
 
-    write_cfg_file(def_core, cfg_path, core, str_trim(sys), cat, lookup, rom_no_ext, base_dir, last_sub, rom);
+    write_cfg_file(def_core, cfg_path, core, str_trim(sys), cat, lookup, rom_no_ext, base_dir, last_sub, get_file_name(rom));
     write_gov_file(gov_path, gov, rom_no_ext);
     write_con_file(con_path, con, rom_no_ext);
     write_rac_file(rac_path, rac, rom_no_ext);

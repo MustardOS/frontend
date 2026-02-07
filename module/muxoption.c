@@ -127,29 +127,34 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
 }
 
 static void add_info_items(void) {
-    core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
-    const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
+    const char *sys_dir = get_content_path(file_path);
+    const char *file_name = get_file_name(file_path);
+
+    core_file = get_content_line(sys_dir, file_name, "cfg", 2);
+    const char *core_dir = get_content_line(sys_dir, NULL, "cfg", 1);
     add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
 
-    const char *gov_file = get_content_line(rom_dir, rom_name, "gov", 1);
-    const char *gov_dir = get_content_line(rom_dir, NULL, "gov", 1);
+    const char *gov_file = get_content_line(sys_dir, file_name, "gov", 1);
+    const char *gov_dir = get_content_line(sys_dir, NULL, "gov", 1);
     add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
 
-    const char *control_file = get_content_line(rom_dir, rom_name, "con", 1);
-    const char *control_dir = get_content_line(rom_dir, NULL, "con", 1);
+    const char *control_file = get_content_line(sys_dir, file_name, "con", 1);
+    const char *control_dir = get_content_line(sys_dir, NULL, "con", 1);
     add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "control", true);
 
-    const char *rac_file = get_content_line(rom_dir, rom_name, "rac", 1);
-    const char *rac_dir = get_content_line(rom_dir, NULL, "rac", 1);
+    const char *rac_file = get_content_line(sys_dir, file_name, "rac", 1);
+    const char *rac_dir = get_content_line(sys_dir, NULL, "rac", 1);
     add_info_item_type(ui_lblRetroArchValue_option, rac_file, rac_dir, "retroarch", true);
 
-    const char *flt_file = get_content_line(rom_dir, rom_name, "flt", 1);
-    const char *flt_dir = get_content_line(rom_dir, NULL, "flt", 1);
+    const char *flt_file = get_content_line(sys_dir, file_name, "flt", 1);
+    const char *flt_dir = get_content_line(sys_dir, NULL, "flt", 1);
     add_info_item_type(ui_lblColFilterValue_option, flt_file, flt_dir, "filter", true);
 
     if (!is_dir) {
-        const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
-        const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
+        const char *tag_file = get_content_line(sys_dir, file_name, "tag", 1);
+        const char *tag_dir = get_content_line(sys_dir, NULL, "tag", 1);
         add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
     }
 }
@@ -227,13 +232,17 @@ static void init_navigation_group(void) {
 
     int dir_level = 4;
     if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
-    curr_dir = get_last_subdir(rom_dir, '/', dir_level);
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
+    const char *sys_dir = get_content_path(file_path);
+    const char *file_name = get_file_name(file_path);
+    curr_dir = get_last_subdir(strip_dir(file_path), '/', dir_level);
 
     add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
 
     if (!is_dir) {
         char friendly_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(rom_dir, rom_name, friendly_name);
+        resolve_friendly_name(sys_dir, file_name, friendly_name);
 
         add_static_item(line_index++, lang.MUXOPTION.NAME, friendly_name, "rom", false);
         add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);

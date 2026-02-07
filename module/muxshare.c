@@ -343,6 +343,27 @@ char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_j
     return friendly_folder_name;
 }
 
+int folder_has_launch_file_with_extension(char *base_dir, char *dir_name, char *ext) {
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s/%s.%s", base_dir, dir_name, dir_name, ext);
+    if (file_exist(file_path)) {
+        char item_name[MAX_BUFFER_SIZE];
+        snprintf(item_name, sizeof(item_name), "%s/%s.%s", dir_name, dir_name, ext);        
+        char fn_name[MAX_BUFFER_SIZE];
+        resolve_friendly_name(base_dir, item_name, fn_name);
+        add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
+        return 1;
+    }
+    return 0;
+}
+
+int folder_has_launch_file(char *base_dir, char *dir_name) {
+    if (folder_has_launch_file_with_extension(base_dir, dir_name, "m3u")) return 1;
+    if (folder_has_launch_file_with_extension(base_dir, dir_name, "cue")) return 1;
+    if (folder_has_launch_file_with_extension(base_dir, dir_name, "gdi")) return 1;
+    return 0;
+}
+
 void update_title(char *folder_path, int fn_valid, struct json fn_json,
                   const char *label, const char *module_path) {
     char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
@@ -476,7 +497,7 @@ void resolve_friendly_name(char *dir, char *raw_name, char *out) {
     char lookup_path[MAX_BUFFER_SIZE];
     char lowered[MAX_BUFFER_SIZE];
 
-    snprintf(stripped, sizeof(stripped), "%s", raw_name);
+    snprintf(stripped, sizeof(stripped), "%s", get_file_name(raw_name));
     char *no_ext = strip_ext(stripped);
 
     snprintf(lowered, sizeof(lowered), "%s", str_tolower(no_ext));

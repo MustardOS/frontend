@@ -235,6 +235,12 @@ char *get_last_subdir(char *text, char separator, int n);
 
 char *get_last_dir(char *text);
 
+char *get_file_name(char *text);
+
+char *get_content_path(char *path);
+
+char *get_content_name(char *path);
+
 void remove_double_slashes(char *str);
 
 char *strip_dir(char *text);
@@ -492,9 +498,9 @@ int copy_file(const char *from, const char *to);
 
 int remove_directory_recursive(const char *path);
 
-int load_content(int add_collection, char *sys_dir, char *file_name);
+int load_content(int add_collection, char *file_path);
 
-char *load_content_core(int force, int run_quit, char *sys_dir, char *file_name);
+char *load_content_core(int force, int run_quit, char *file_path);
 
 char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system,
                  int line_catalogue, int line_lookup, int line_launch);

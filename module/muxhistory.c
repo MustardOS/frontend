@@ -13,7 +13,7 @@ static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
 static char *load_content_description(void) {
-    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_dir = get_content_path(items[current_item_index].extra_data);
     char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
 
     char core_desc[MAX_BUFFER_SIZE];
@@ -36,7 +36,7 @@ static char *load_content_description(void) {
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
-    char *item_dir = strip_dir(items[current_item_index].extra_data);
+    char *item_dir = get_content_path(items[current_item_index].extra_data);
     char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
 
     char h_core_artwork[MAX_BUFFER_SIZE];
@@ -339,23 +339,17 @@ static void process_load(int from_start) {
         return;
     }
 
-    char *item_dir = strip_dir(items[current_item_index].extra_data);
-    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
-
-    char item_launch[MAX_BUFFER_SIZE];
-    snprintf(item_launch, sizeof(item_launch), "%s/%s", item_dir, item_file_name);
-
-    if (!file_exist(item_launch)) {
+    if (!file_exist(items[current_item_index].extra_data)) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.NO_LOAD, LONG);
 
-        LOG_ERROR(mux_module, "Could not launch content: %s", item_launch);
+        LOG_ERROR(mux_module, "Could not launch content: %s", items[current_item_index].extra_data);
         return;
     }
 
     play_sound(SND_CONFIRM);
 
-    if (load_content(0, item_dir, item_file_name)) {
+    if (load_content(0, items[current_item_index].extra_data)) {
         if (config.SETTINGS.ADVANCED.PASSCODE) {
             int result = 0;
 
@@ -463,10 +457,8 @@ static void handle_y(void) {
 
     play_sound(SND_CONFIRM);
 
-    char *item_dir = strip_dir(items[current_item_index].extra_data);
-    char *item_file_name = get_last_dir(strdup(items[current_item_index].extra_data));
     write_text_to_file(ADD_MODE_FROM, "w", CHAR, "history");
-    if (!load_content(1, item_dir, item_file_name)) {
+    if (!load_content(1, items[current_item_index].extra_data)) {
         remove(ADD_MODE_FROM);
         play_sound(SND_ERROR);
         toast_message(lang.MUXPLORE.ERROR.NO_CORE, SHORT);
