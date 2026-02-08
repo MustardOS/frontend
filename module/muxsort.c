@@ -28,13 +28,23 @@ static void init_dropdown_settings(void) {
     history_original = lv_dropdown_get_selected(ui_objects_value[2]);
 }
 
+static void restore_clamped_value(lv_obj_t *value, int selected) {
+    if (!value) return;
+
+    int max = (int) lv_dropdown_get_option_cnt(value) - 1;
+    if (max < 0) max = 0;
+
+    lv_dropdown_set_selected(value, selected > max ? max : selected);
+}
+
 static void restore_sort_options(void) {
-    lv_dropdown_set_selected(ui_objects_value[0], config.SORT.DEFAULT);
-    lv_dropdown_set_selected(ui_objects_value[1], config.SORT.COLLECTION);
-    lv_dropdown_set_selected(ui_objects_value[2], config.SORT.HISTORY);
+    restore_clamped_value(ui_objects_value[0], config.SORT.DEFAULT);
+    restore_clamped_value(ui_objects_value[1], config.SORT.COLLECTION);
+    restore_clamped_value(ui_objects_value[2], config.SORT.HISTORY);
+
     for (size_t i = 0; i < tag_item_count; i++) {
-        lv_dropdown_set_selected(ui_objects_value[3 + i], tag_items[i].sort_bucket);
-    }    
+        restore_clamped_value(ui_objects_value[3 + i], tag_items[i].sort_bucket);
+    }
 }
 
 static int save_sort_option(lv_obj_t *ui_droItem, int originalValue, char *file) {
@@ -54,6 +64,7 @@ static void save_sort_options(void) {
     is_modified += save_sort_option(ui_objects_value[0], default_original, "default");
     is_modified += save_sort_option(ui_objects_value[1], collection_original, "collection");
     is_modified += save_sort_option(ui_objects_value[2], history_original, "history");
+
     for (size_t i = 0; i < tag_item_count; i++) {
         is_modified += save_sort_option(ui_objects_value[3 + i], tag_items[i].sort_bucket, tag_items[i].glyph);
     }
@@ -69,7 +80,7 @@ static void add_tag_item(int index, char *label, char *glyph, char *options) {
     lv_obj_t *ui_lblItem = lv_label_create(ui_pnlItem);
     lv_obj_t *ui_lblItemGlyph = lv_img_create(ui_pnlItem);
     lv_obj_t *ui_droItem = lv_dropdown_create(ui_pnlItem);
-    
+
     apply_theme_list_panel(ui_pnlItem);
     apply_theme_list_item(&theme, ui_lblItem, label);
     apply_theme_list_glyph(&theme, ui_lblItemGlyph, mux_module, glyph);
@@ -78,22 +89,27 @@ static void add_tag_item(int index, char *label, char *glyph, char *options) {
     lv_group_add_obj(ui_group, ui_lblItem);
     lv_group_add_obj(ui_group_value, ui_droItem);
     lv_group_add_obj(ui_group_glyph, ui_lblItemGlyph);
-    lv_group_add_obj(ui_group_panel, ui_pnlItem);    
+    lv_group_add_obj(ui_group_panel, ui_pnlItem);
+
     ui_objects_value[index] = ui_droItem;
 }
 
 static void init_navigation_group(void) {
     reset_ui_groups();
-    ui_count = 3 + tag_item_count;
+
+    ui_count = (int) (3 + tag_item_count);
     ui_objects_value = malloc(ui_count * sizeof(lv_obj_t *));
 
-    char *increment_values = generate_number_string(0, 100, 1, NULL, NULL, NULL, 0);
+    char *increment_values = generate_number_string(0, ui_count, 1, NULL, NULL, NULL, 0);
+
     add_tag_item(0, lang.MUXSORT.DEFAULT, "default", increment_values);
     add_tag_item(1, lang.MUXSORT.COLLECTION, "collection", increment_values);
     add_tag_item(2, lang.MUXSORT.HISTORY, "history", increment_values);
+
     for (size_t i = 0; i < tag_item_count; i++) {
-        add_tag_item(i + 3, tag_items[i].name, tag_items[i].glyph, increment_values);
+        add_tag_item((int) (i + 3), tag_items[i].name, tag_items[i].glyph, increment_values);
     }
+
     free(increment_values);
 }
 
@@ -131,8 +147,8 @@ static void handle_b(void) {
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
-    play_sound(SND_BACK);
 
+    play_sound(SND_BACK);
     save_sort_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
@@ -213,7 +229,7 @@ int muxsort_main(void) {
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
-    
+
     free_tag_items(&tag_items, &tag_item_count);
 
     free(ui_objects_value);
