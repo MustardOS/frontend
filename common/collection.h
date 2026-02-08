@@ -40,7 +40,9 @@ void sort_items_time(content_item *content_items, size_t count);
 
 content_item get_item_by_index(content_item *items, size_t index);
 
-int get_folder_item_index_by_name(content_item *content_items, size_t count, const char *name);
+int get_item_index_by_name(content_item *content_items, size_t count, const char *name, content_type type);
+
+int get_item_index_by_extra_data(content_item *content_items, size_t count, const char *extra_data);
 
 void free_items(content_item **content_items, size_t *count);
 
