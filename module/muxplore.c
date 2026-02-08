@@ -420,21 +420,13 @@ static void create_content_items(void) {
     assign_item_buckets();
     qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 
-    if (file_exist(MUOS_HST_LOAD)) {
-        char *last_name = read_all_char_from(MUOS_HST_LOAD);
-        if (last_name) {
-            int idx = get_index_from_name(last_name);
-            if (idx >= 0) sys_index = idx;
-            free(last_name);
-        }
-    } else {
-        for (size_t i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].name, prev_dir) == 0) {
-                sys_index = (int) i;
-                break;
-            }
+    for (size_t i = 0; i < item_count; i++) {
+        if (strcasecmp(items[i].name, prev_dir) == 0) {
+            sys_index = (int) i;
+            break;
         }
     }
+
 
     grid_mode_enabled = !disable_grid_file_exists(item_curr_dir) && theme.GRID.ENABLED && (
             (file_count > 0 && config.VISUAL.GRID_MODE_CONTENT) ||
@@ -745,8 +737,6 @@ static void process_load(int from_start) {
             load_mux("assign");
         }
     }
-
-    if (config.VISUAL.DROPHISTORY) write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);
 
     if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
     if (load_message) toast_message(lang.GENERIC.LOADING, FOREVER);

@@ -237,9 +237,6 @@ struct mux_config {
         int16_t BLACKFADE;
         int16_t CONTENTCOLLECT;
         int16_t CONTENTHISTORY;
-        int16_t GROUPTAGS;
-        int16_t PINNEDCOLLECT;
-        int16_t DROPHISTORY;
         int16_t MIXEDCONTENT;
     } VISUAL;
 
