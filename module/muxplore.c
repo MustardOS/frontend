@@ -420,13 +420,37 @@ static void create_content_items(void) {
     assign_item_buckets();
     qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 
-    for (size_t i = 0; i < item_count; i++) {
-        if (strcasecmp(items[i].name, prev_dir) == 0) {
-            sys_index = (int) i;
-            break;
+    if (file_exist(MUOS_HST_LOAD)) {
+        char *last_name = read_all_char_from(MUOS_HST_LOAD);
+        remove(MUOS_HST_LOAD);
+
+        if (last_name) {
+            int idx = get_index_from_name(last_name);
+            if (idx >= 0) {
+                int bucket = items[idx].sort_bucket;
+
+                int first = idx;
+                int last = idx;
+
+                while (first > 0 && items[first - 1].sort_bucket == bucket) first--;
+                while (last + 1 < (int) item_count && items[last + 1].sort_bucket == bucket) last++;
+
+                if (idx < first) idx = first;
+                else if (idx > last) idx = last;
+
+                sys_index = idx;
+            }
+
+            free(last_name);
+        }
+    } else {
+        for (size_t i = 0; i < item_count; i++) {
+            if (strcasecmp(items[i].name, prev_dir) == 0) {
+                sys_index = (int) i;
+                break;
+            }
         }
     }
-
 
     grid_mode_enabled = !disable_grid_file_exists(item_curr_dir) && theme.GRID.ENABLED && (
             (file_count > 0 && config.VISUAL.GRID_MODE_CONTENT) ||
@@ -720,6 +744,7 @@ static void process_load(int from_start) {
                             if (file_exist(MUOS_GOV_LOAD)) remove(MUOS_GOV_LOAD);
                             if (file_exist(MUOS_RAC_LOAD)) remove(MUOS_RAC_LOAD);
                             if (file_exist(MUOS_FLT_LOAD)) remove(MUOS_FLT_LOAD);
+                            if (file_exist(MUOS_HST_LOAD)) remove(MUOS_HST_LOAD);
 
                             write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
@@ -727,6 +752,7 @@ static void process_load(int from_start) {
                     }
                 }
             } else {
+                write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);
                 show_splash();
                 config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
                 exit_status = 1;

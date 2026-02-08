@@ -8,13 +8,6 @@ typedef enum {
     ITEM
 } content_type;
 
-typedef enum {
-    BUCKET_COLLECT,
-    BUCKET_TAGGED,
-    BUCKET_NORMAL,
-    BUCKET_HISTORY
-} item_sort_bucket;
-
 typedef struct {
     char *name;
     char *display_name;
