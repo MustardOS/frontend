@@ -393,7 +393,7 @@ int muxtheme_main(char *ex_dir) {
 
     char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
-        int index = get_folder_item_index_by_name(items, item_count, e_name_line);
+        int index = get_item_index_by_name(items, item_count, e_name_line, FOLDER);
         if (index > -1) sys_index = index;
         remove(EXPLORE_NAME);
     }

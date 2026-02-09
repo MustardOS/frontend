@@ -97,11 +97,11 @@ int bucket_item_compare(const void *a, const void *b) {
     const content_item *itemA = (content_item *) a;
     const content_item *itemB = (content_item *) b;
 
-    if (itemA->sort_bucket != itemB->sort_bucket)
-        return itemB->sort_bucket - itemA->sort_bucket;
-
     if (!config.VISUAL.MIXEDCONTENT && itemA->content_type != itemB->content_type)
         return (itemA->content_type == FOLDER) ? -1 : 1;
+
+    if (itemA->sort_bucket != itemB->sort_bucket)
+        return itemB->sort_bucket - itemA->sort_bucket;
 
     return strcasecmp(itemA->display_name, itemB->display_name);
 }
@@ -175,9 +175,16 @@ content_item get_item_by_index(content_item *content_items, size_t index) {
     return content_items[index];
 }
 
-int get_folder_item_index_by_name(content_item *content_items, size_t count, const char *name) {
+int get_item_index_by_name(content_item *content_items, size_t count, const char *name, content_type type) {
     for (int i = 0; i < count; i++) {
-        if (content_items[i].content_type == FOLDER && strcasecmp(content_items[i].name, name) == 0) return i;
+        if (content_items[i].content_type == type && strcasecmp(content_items[i].name, name) == 0) return i;
+    }
+    return -1;
+}
+
+int get_item_index_by_extra_data(content_item *content_items, size_t count, const char *extra_data) {
+    for (int i = 0; i < count; i++) {
+        if (strcasecmp(content_items[i].extra_data, extra_data) == 0) return i;
     }
     return -1;
 }
