@@ -219,16 +219,6 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
-static int get_index_from_name(const char *name) {
-    if (!name || !*name) return -1;
-
-    for (size_t i = 0; i < item_count; i++) {
-        if (strcasecmp(items[i].name, name) == 0) return (int) i;
-    }
-
-    return -1;
-}
-
 static void remove_match_items(const char *filter_name, int mode, char ***filter_list, int *filter_count,
                                void (*pop_func)(void), content_item **items, size_t *item_count, const char *sys_dir) {
     free_item_list(filter_list, filter_count);
@@ -345,11 +335,11 @@ static void init_navigation_group_grid(void) {
 
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
-        int prev_dir_index = get_folder_item_index_by_name(items, item_count, prev_dir);
+        int prev_dir_index = get_item_index_by_extra_data(items, item_count, prev_dir);
         if (prev_dir_index > -1) sys_index = prev_dir_index;
     } else {
         for (int i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
+            if (strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = (int) i;
             if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
         }
     }
@@ -425,27 +415,14 @@ static void create_content_items(void) {
         remove(MUOS_HST_LOAD);
 
         if (last_name) {
-            int idx = get_index_from_name(last_name);
-            if (idx >= 0) {
-                int bucket = items[idx].sort_bucket;
-
-                int first = idx;
-                int last = idx;
-
-                while (first > 0 && items[first - 1].sort_bucket == bucket) first--;
-                while (last + 1 < (int) item_count && items[last + 1].sort_bucket == bucket) last++;
-
-                if (idx < first) idx = first;
-                else if (idx > last) idx = last;
-
-                sys_index = idx;
-            }
+            int idx = get_item_index_by_name(items, item_count, last_name, ITEM);
+            if (idx >= 0) sys_index = idx;
 
             free(last_name);
         }
     } else {
         for (size_t i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].name, prev_dir) == 0) {
+            if (strcasecmp(items[i].extra_data, prev_dir) == 0) {
                 sys_index = (int) i;
                 break;
             }
@@ -829,6 +806,7 @@ static void handle_x(void) {
 
     write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);
 
     load_content_core(1, 0, items[current_item_index].extra_data);
     load_content_governor(sys_dir, NULL, 1, 0, 0);
@@ -1030,10 +1008,7 @@ int muxplore_main(int index, char *dir) {
     ui_count = (int) item_count;
     init_elements();
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
-    if (strcasecmp(read_all_char_from(MUOS_PDI_LOAD), "ROMS") == 0) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
-    }
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
 
     int nav_vis = 0;
     int collect_vis = 0;

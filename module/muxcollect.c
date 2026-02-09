@@ -248,11 +248,11 @@ static void init_navigation_group_grid(void) {
 
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
-        int prev_dir_index = get_folder_item_index_by_name(items, item_count, prev_dir);
+        int prev_dir_index = get_item_index_by_extra_data(items, item_count, prev_dir);
         if (prev_dir_index > -1) sys_index = prev_dir_index;
     } else {
         for (int i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = (int) i;
+            if (strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = (int) i;
             if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
         }
     }
@@ -298,7 +298,10 @@ static void create_collection_items(void) {
             for (int i = 0; i < dir_count; i++) {
                 char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
 
-                content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
+                char collection_dir[MAX_BUFFER_SIZE];
+                snprintf(collection_dir, sizeof(collection_dir), "%s/%s", sys_dir, dir_names[i]);
+
+                content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, collection_dir, FOLDER);
                 adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
                 if (config.VISUAL.FOLDERITEMCOUNT) {
@@ -323,7 +326,7 @@ static void create_collection_items(void) {
         if (!grid_mode_enabled) {
             for (int i = 0; i < dir_count; i++) {
                 gen_label(mux_module, "folder", items[i].display_name);
-                if (strcasecmp(items[i].name, prev_dir) == 0) sys_index = i;
+                if (strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = i;
             }
         }
 
@@ -889,10 +892,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     ui_count = (int) item_count;
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
-    if (strcasecmp(read_all_char_from(MUOS_PDI_LOAD), "ROMS") == 0) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
-    }
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
 
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count &&
