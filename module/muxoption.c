@@ -235,7 +235,7 @@ static void init_navigation_group(void) {
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
     const char *sys_dir = get_content_path(file_path);
-    const char *file_name = get_file_name(file_path);
+    const char *file_name = strip_ext(get_file_name(file_path));
     curr_dir = get_last_subdir(strip_dir(file_path), '/', dir_level);
 
     add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
