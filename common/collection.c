@@ -103,7 +103,8 @@ int bucket_item_compare(const void *a, const void *b) {
     if (itemA->sort_bucket != itemB->sort_bucket)
         return itemB->sort_bucket - itemA->sort_bucket;
 
-    return strcasecmp(itemA->display_name, itemB->display_name);
+    // Use strverscmp for natural sorting on sort_name
+    return strverscmp(str_tolower(itemA->sort_name), str_tolower(itemB->sort_name));
 }
 
 int content_item_compare(const void *a, const void *b) {

@@ -523,8 +523,6 @@ void resolve_friendly_name(char *dir, char *raw_name, char *out) {
         const char *lk = lookup(stripped);
         snprintf(out, MAX_BUFFER_SIZE, "%s", lk ? lk : stripped);
     }
-
-    adjust_visual_label(out, config.VISUAL.NAME, config.VISUAL.DASH);
 }
 
 void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value) {
