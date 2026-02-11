@@ -61,6 +61,8 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
         reformat_display_name((*content_items)[*count].display_name);
     }
 
+    adjust_visual_label((*content_items)[*count].display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
     (*count)++;
 
     return &(*content_items)[*count - 1];

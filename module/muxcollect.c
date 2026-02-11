@@ -220,9 +220,7 @@ static void gen_item(int file_count, char **file_names) {
         create_directories(init_meta_dir, 0);
 
         resolve_friendly_name(file_path, stripped_name, fn_name);
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
-        //update display name after creating item to allow custom sorting
-        adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+        add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
 
         ui_count++;
         free(file_names[i]);

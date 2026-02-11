@@ -273,9 +273,7 @@ static void gen_item(char **file_names, int file_count) {
             char *stripped_name = strip_ext(file_names[i]);
 
             resolve_friendly_name(sys_dir, stripped_name, fn_name);
-            content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, full_path, ITEM);
-            //update display name after creating item to allow custom sorting
-            adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+            add_item(&items, &item_count, file_names[i], fn_name, full_path, ITEM);
         }
 
         free(file_names[i]);

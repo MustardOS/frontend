@@ -375,13 +375,8 @@ static void process_results(const char *json_results) {
 
     for (size_t i = 0; i < t_all_item_count; i++) {
         if (t_all_items[i].content_type == ITEM) {
-            content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
-                                              t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
-            char display_name[MAX_BUFFER_SIZE];
-            snprintf(display_name, sizeof(display_name), "%s",
-                     t_all_items[i].display_name);
-            adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-            new_item->display_name = strdup(display_name);
+            add_item(&all_items, &all_item_count, t_all_items[i].name,
+                     t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
         }
     }
 
@@ -499,7 +494,7 @@ static void handle_confirm(void) {
     if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
         play_sound(SND_CONFIRM);
 
-        const char *selected_raw = lv_label_get_text(lv_group_get_focused(ui_group_value));
+        const char *selected_raw = all_items[current_item_index].extra_data;
         char *selected_path = str_replace(selected_raw, "/./", "/");
 
         char *path_union = str_replace(selected_path, device.STORAGE.ROM.MOUNT, "/mnt/union");
@@ -515,6 +510,8 @@ static void handle_confirm(void) {
         if (last_slash) *last_slash = '\0';
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
+         char *item_file = get_last_dir(path_union);
+        write_text_to_file(MUOS_HST_LOAD, "w", CHAR, item_file);
 
         load_mux("explore");
 

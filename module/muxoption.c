@@ -243,6 +243,7 @@ static void init_navigation_group(void) {
     if (!is_dir) {
         char friendly_name[MAX_BUFFER_SIZE];
         resolve_friendly_name(sys_dir, file_name, friendly_name);
+        adjust_visual_label(friendly_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         add_static_item(line_index++, lang.MUXOPTION.NAME, friendly_name, "rom", false);
         add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
