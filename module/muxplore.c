@@ -591,7 +591,9 @@ static void list_nav_move(int steps, int direction) {
     if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
     if (static_list) {
-        move_index(direction);
+        for (int step = 0; step < steps; ++step) {
+            move_index(direction);
+        }
         focus_group(current_item_index);
 
         set_label_long_mode(&theme, lv_group_get_focused(ui_group));
