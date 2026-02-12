@@ -61,6 +61,8 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
         reformat_display_name((*content_items)[*count].display_name);
     }
 
+    adjust_visual_label((*content_items)[*count].display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
     (*count)++;
 
     return &(*content_items)[*count - 1];
@@ -103,7 +105,8 @@ int bucket_item_compare(const void *a, const void *b) {
     if (itemA->sort_bucket != itemB->sort_bucket)
         return itemB->sort_bucket - itemA->sort_bucket;
 
-    return strcasecmp(itemA->display_name, itemB->display_name);
+    // Use strverscmp for natural sorting on sort_name
+    return strverscmp(str_tolower(itemA->sort_name), str_tolower(itemB->sort_name));
 }
 
 int content_item_compare(const void *a, const void *b) {

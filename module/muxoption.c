@@ -235,7 +235,7 @@ static void init_navigation_group(void) {
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
     const char *sys_dir = get_content_path(file_path);
-    const char *file_name = get_file_name(file_path);
+    const char *file_name = strip_ext(get_file_name(file_path));
     curr_dir = get_last_subdir(strip_dir(file_path), '/', dir_level);
 
     add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
@@ -243,6 +243,7 @@ static void init_navigation_group(void) {
     if (!is_dir) {
         char friendly_name[MAX_BUFFER_SIZE];
         resolve_friendly_name(sys_dir, file_name, friendly_name);
+        adjust_visual_label(friendly_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         add_static_item(line_index++, lang.MUXOPTION.NAME, friendly_name, "rom", false);
         add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);

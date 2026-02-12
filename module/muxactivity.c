@@ -38,6 +38,7 @@ typedef enum {
 
 typedef struct {
     char name[256]; // To be fair exFAT is max 255 :D
+    char file_name[256]; // To be fair exFAT is max 255 :D
     char dir[512];
 
     char core[64];
@@ -129,7 +130,7 @@ static void image_refresh() {
     if (in_detail_view || in_global_view || config.VISUAL.BOX_ART == 8) return;
 
     char *item_dir = strip_dir(activity_items[current_item_index].dir);
-    char *item_file_name = strdup(activity_items[current_item_index].name);
+    char *item_file_name = strdup(activity_items[current_item_index].file_name);
 
     char h_core_artwork[MAX_BUFFER_SIZE];
     get_catalogue_name(item_dir, item_file_name, h_core_artwork, sizeof(h_core_artwork));
@@ -817,7 +818,9 @@ static void load_activity_items(void) {
 
                 char raw_name[MAX_BUFFER_SIZE];
                 json_string_copy(name_json, raw_name, sizeof(raw_name));
+                snprintf(it->file_name, sizeof(it->file_name), "%s", raw_name);
                 resolve_friendly_name(it->dir, raw_name, it->name);
+                adjust_visual_label(it->name, config.VISUAL.NAME, config.VISUAL.DASH);
 
                 it->total_time = json_size_positive(time_json);
                 it->launch_count = json_size_positive(launches_json);
