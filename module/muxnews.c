@@ -22,11 +22,12 @@ static size_t topic_id_count;
 static int pending_rebuild;
 static int pending_show_topic;
 static int pending_error;
+static int pending_show_post;
+static char *pending_index_json;
 
+static int requested_post_id;
 static int requested_topic_id;
 static char requested_topic_title[256];
-
-static char *pending_index_json;
 
 static char cache_path[MAX_BUFFER_SIZE];
 static char text_buffer[NEWS_TEXT_BUF];
@@ -102,6 +103,15 @@ static void render_gotm(mini_t *ini) {
     );
 
     show_info_box("GAME OF THE MONTH", text_buffer, 1);
+}
+
+static void load_post_finished(int result) {
+    if (result != 0) {
+        pending_error = 1;
+        return;
+    }
+
+    pending_show_post = 1;
 }
 
 static void free_topics(void) {
@@ -202,9 +212,20 @@ static void parse_index_json(const char *json_data) {
             json_type(post_tags) == JSON_ARRAY &&
             json_array_count(post_tags) > 0) {
             struct json t0 = json_array_get(post_tags, 0);
-            json_string_copy(t0, tag_buf, sizeof(tag_buf));
+            if (json_type(t0) == JSON_OBJECT) {
+                struct json slug = json_object_get(t0, "slug");
+                if (json_exists(slug) && json_type(slug) == JSON_STRING) {
+                    json_string_copy(slug, tag_buf, sizeof(tag_buf));
+                } else {
+                    strcpy(tag_buf, "news");
+                }
+            } else if (json_type(t0) == JSON_STRING) {
+                json_string_copy(t0, tag_buf, sizeof(tag_buf));
+            } else {
+                strcpy(tag_buf, "news");
+            }
         } else {
-            snprintf(tag_buf, sizeof(tag_buf), "news");
+            strcpy(tag_buf, "news");
         }
 
         snprintf(key_buf, sizeof(key_buf), "topic_%d", id);
@@ -292,9 +313,12 @@ static void load_topic_from_cache(int topic_id, char *title) {
         return;
     }
 
+    requested_post_id = pid;
+
     char url[MAX_BUFFER_SIZE];
     snprintf(url, sizeof(url), NEWS_POST_URL_FMT, pid);
 
+    set_download_callbacks(load_post_finished);
     initiate_download(url, post_path, false, lang.MUXNEWS.DOWNLOAD);
 }
 
@@ -479,6 +503,20 @@ static void ui_refresh_task() {
         snprintf(cache_path, sizeof(cache_path), NEWS_TOPIC_PATH_FMT, requested_topic_id);
         if (file_exist(cache_path)) {
             load_topic_from_cache(requested_topic_id, requested_topic_title);
+        } else {
+            play_sound(SND_ERROR);
+            toast_message(lang.MUXNEWS.ERROR, MEDIUM);
+        }
+    }
+
+    if (pending_show_post) {
+        pending_show_post = 0;
+
+        char post_path[MAX_BUFFER_SIZE];
+        snprintf(post_path, sizeof(post_path), NEWS_POST_PATH_FMT, requested_post_id);
+
+        if (file_exist(post_path)) {
+            load_post_from_cache(requested_post_id, requested_topic_title);
         } else {
             play_sound(SND_ERROR);
             toast_message(lang.MUXNEWS.ERROR, MEDIUM);
