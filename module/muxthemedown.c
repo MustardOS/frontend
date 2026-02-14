@@ -16,6 +16,9 @@ static int preview_index = -1;
 static int schedule_theme_update = 0;
 static int pending_download_switch = 0;
 
+static int theme_extract_done = 0;
+static char theme_extract_zip_done[PATH_MAX];
+
 static void show_help(void) {
     char text_path[MAX_BUFFER_SIZE];
     snprintf(text_path, sizeof(text_path), "%s/theme/text/%s.txt", INFO_CAT_PATH, theme_items[current_item_index].name);
@@ -227,13 +230,14 @@ static void refresh_current_list_item() {
 
 static void theme_extraction_finished(char *theme_path) {
     LOG_INFO(mux_module, "Extraction Finished: %s", theme_path);
-    if (file_exist(theme_path)) remove(theme_path);
 
-    block_input = 0;
-    theme_extracting = false;
-    refresh_current_list_item();
+    if (theme_path && *theme_path) {
+        snprintf(theme_extract_zip_done, sizeof(theme_extract_zip_done), "%s", theme_path);
+    } else {
+        theme_extract_zip_done[0] = '\0';
+    }
 
-    nav_moved = 1; // Force redraw of screen
+    theme_extract_done = 1;
 }
 
 static void theme_download_finished() {
@@ -398,6 +402,25 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
+    if (theme_extract_done) {
+        theme_extract_done = 0;
+
+        if (theme_extract_zip_done[0] && file_exist(theme_extract_zip_done)) {
+            remove(theme_extract_zip_done);
+        }
+
+        block_input = 0;
+        theme_extracting = false;
+
+        msgbox_active = 0;
+        progress_onscreen = 0;
+
+        if (msgbox_element) lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+
+        refresh_current_list_item();
+        nav_moved = 1; // Force redraw of screen
+    }
+
     if (pending_download_switch) {
         pending_download_switch = 0;
 
