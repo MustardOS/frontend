@@ -11,12 +11,12 @@ THEMEFILTER_ELEMENTS
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define THEMEFILTER(NAME, ENUM, UDATA) { lang.MUXTHEMEFILTER.HELP.ENUM },
+#define THEMEFILTER(NAME, ENUM, UDATA) { UDATA, lang.MUXTHEMEFILTER.HELP.ENUM },
             THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

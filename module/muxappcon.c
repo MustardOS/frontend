@@ -17,12 +17,12 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define APPCON(NAME, ENUM, UDATA) { lang.MUXAPPCON.HELP.ENUM },
+#define APPCON(NAME, ENUM, UDATA) { UDATA, lang.MUXAPPCON.HELP.ENUM },
             APPCON_ELEMENTS
 #undef APPCON
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void add_static_item(int index, const char *item_label, const char *item_value,

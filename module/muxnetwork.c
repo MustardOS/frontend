@@ -55,12 +55,12 @@ static const struct {
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define NETWORK(NAME, ENUM, UDATA) { lang.MUXNETWORK.HELP.ENUM },
+#define NETWORK(NAME, ENUM, UDATA) { UDATA, lang.MUXNETWORK.HELP.ENUM },
             NETWORK_ELEMENTS
 #undef NETWORK
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static const char *net_status_label(int id) {

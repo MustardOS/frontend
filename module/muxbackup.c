@@ -12,12 +12,12 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define BACKUP(NAME, ENUM, UDATA) { lang.MUXBACKUP.HELP.ENUM },
+#define BACKUP(NAME, ENUM, UDATA) { UDATA, lang.MUXBACKUP.HELP.ENUM },
             BACKUP_ELEMENTS
 #undef BACKUP
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

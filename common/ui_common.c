@@ -1596,23 +1596,38 @@ void scroll_help_content(int direction, bool page_down) {
     }
 }
 
-void gen_help(int index, int max_items, const struct help_msg *help_messages, lv_group_t *group, content_item *items) {
-    if ((unsigned) index >= (unsigned) max_items) {
-        show_info_box(lang.GENERIC.UNKNOWN, lang.GENERIC.NO_HELP, 0);
-        return;
+const char *help_lookup_message(const struct help_msg *map, size_t count, const char *key) {
+    if (!map || !count || !key || !*key) return lang.GENERIC.NO_HELP;
+
+    for (size_t i = 0; i < count; i++) {
+        if (map[i].key && strcmp(map[i].key, key) == 0) {
+            const char *msg = map[i].message;
+            if (msg && strlen(msg) > 1) return msg;
+            break;
+        }
     }
 
-    const char *msg = help_messages[index].message;
-    if (!msg || strlen(msg) <= 1) msg = lang.GENERIC.NO_HELP;
+    return lang.GENERIC.NO_HELP;
+}
 
-    const char *title;
+void gen_help(int current_index, const struct help_msg *help_messages, size_t msg_count, lv_group_t *group, content_item *items) {
+    const char *title = lang.GENERIC.UNKNOWN;
+    const char *key = NULL;
 
     if (grid_mode_enabled) {
-        title = items && items[index].name ? items[index].name : lang.GENERIC.UNKNOWN;
+        if (items && current_index >= 0) {
+            title = items[current_index].name ? items[current_index].name : lang.GENERIC.UNKNOWN;
+            key = items[current_index].glyph_icon;
+        }
     } else {
-        lv_obj_t *focused = lv_group_get_focused(group);
-        title = focused ? TS(lv_label_get_text(focused)) : lang.GENERIC.UNKNOWN;
+        lv_obj_t *focused = group ? lv_group_get_focused(group) : NULL;
+
+        if (focused) {
+            title = TS(lv_label_get_text(focused));
+            key = (const char *) lv_obj_get_user_data(focused);
+        }
     }
 
+    const char *msg = help_lookup_message(help_messages, msg_count, key);
     show_info_box(title, msg, 0);
 }

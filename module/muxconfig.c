@@ -7,12 +7,12 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define CONFIG(NAME, ENUM, UDATA) { lang.MUXCONFIG.HELP.ENUM },
+#define CONFIG(NAME, ENUM, UDATA) { UDATA, lang.MUXCONFIG.HELP.ENUM },
             CONFIG_ELEMENTS
 #undef CONFIG
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static int storage_available(void) {

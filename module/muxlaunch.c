@@ -7,12 +7,12 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define LAUNCH(NAME, ENUM, UDATA) { lang.MUXLAUNCH.HELP.ENUM },
+#define LAUNCH(NAME, ENUM, UDATA) { UDATA, lang.MUXLAUNCH.HELP.ENUM },
             LAUNCH_ELEMENTS
 #undef LAUNCH
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {

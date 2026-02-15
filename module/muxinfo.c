@@ -7,12 +7,12 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define INFO(NAME, ENUM, UDATA) { lang.MUXINFO.HELP.ENUM },
+#define INFO(NAME, ENUM, UDATA) { UDATA, lang.MUXINFO.HELP.ENUM },
             INFO_ELEMENTS
 #undef INFO
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static int visible_network_opt(void) {

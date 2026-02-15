@@ -11,6 +11,7 @@ struct mux_lang;
 struct footer_glyph;
 
 struct help_msg {
+    char *key;
     char *message;
 };
 
@@ -75,7 +76,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
 void scroll_help_content(int direction, bool page_down);
 
-void gen_help(int index, int max_items, const struct help_msg *help_messages, lv_group_t *group, content_item *items);
+void gen_help(int current_index, const struct help_msg *help_messages, size_t msg_count, lv_group_t *group, content_item *items);
 
 extern lv_obj_t *ui_screen_container;
 extern lv_obj_t *ui_screen_temp;

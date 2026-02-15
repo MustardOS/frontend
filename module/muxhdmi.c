@@ -11,12 +11,12 @@ int hdmi_index[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define HDMI(NAME, ENUM, UDATA) { lang.MUXHDMI.HELP.ENUM },
+#define HDMI(NAME, ENUM, UDATA) { UDATA, lang.MUXHDMI.HELP.ENUM },
             HDMI_ELEMENTS
 #undef HDMI
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void init_dropdown_settings(void) {

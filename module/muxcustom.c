@@ -47,12 +47,12 @@ static void restore_theme_resolution(void) {
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
-#define CUSTOM(NAME, ENUM, UDATA) { lang.MUXCUSTOM.HELP.ENUM },
+#define CUSTOM(NAME, ENUM, UDATA) { UDATA, lang.MUXCUSTOM.HELP.ENUM },
             CUSTOM_ELEMENTS
 #undef CUSTOM
     };
 
-    gen_help(current_item_index, UI_COUNT, help_messages, ui_group, items);
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static int visible_theme_alternate(void) {
