@@ -1118,20 +1118,35 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     return ui_lblNavText;
 }
 
-int load_glyph(const char *mux_dimension, const char *glyph_folder,
-               const char *glyph_name, char *image_path, size_t image_size) {
-    return (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png", theme_base, mux_dimension, glyph_folder, glyph_name) >= 0 && file_exist(image_path)) ||
-           (snprintf(image_path, image_size, "%s/glyph/%s/%s.png", theme_base, glyph_folder, glyph_name) >= 0 && file_exist(image_path));
+int load_glyph_icon(const char *mux_dimension, const char *glyph_folder,
+                    const char *glyph_name, char *image_path, size_t image_size) {
+    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png",
+                 theme_base, mux_dimension, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
+        return 1;
+
+    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png",
+                 theme_base, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
+        return 1;
+
+    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png",
+                 INTERNAL_THEME, mux_dimension, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
+        return 1;
+
+    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png",
+                 INTERNAL_THEME, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
+        return 1;
+
+    return 0;
 }
 
 int generate_image_embed(const char *dimension, const char *glyph_folder, const char *glyph_name,
                          char *image_path, size_t path_size, char *image_embed, size_t embed_size) {
-    if (load_glyph(dimension, glyph_folder, glyph_name, image_path, path_size)) {
-        int written = snprintf(image_embed, embed_size, "M:%s", image_path);
-        if (written < 0 || (size_t) written >= embed_size) return 0;
-        return 1;
-    }
-    return 0;
+    if (!load_glyph_icon(dimension, glyph_folder, glyph_name, image_path, path_size)) return 0;
+
+    int written = snprintf(image_embed, embed_size, "M:%s", image_path);
+    if (written < 0 || (size_t) written >= embed_size) return 0;
+
+    return 1;
 }
 
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name) {
