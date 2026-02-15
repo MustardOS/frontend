@@ -225,6 +225,7 @@ struct mux_lang {
         char CHEATS[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
+        char CONTENT[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char INIT[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];;
@@ -249,6 +250,7 @@ struct mux_lang {
             char CHEATS[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
+            char CONTENT[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char INIT[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];;

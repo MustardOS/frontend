@@ -107,7 +107,7 @@ static void assign_filter_directory(char *core_dir, char *filter, int purge) {
     if (purge) delete_files_of_type(core_dir, ".flt", NULL, 0);
 
     char filter_path[MAX_BUFFER_SIZE];
-    snprintf(filter_path, sizeof(filter_path), INFO_COR_PATH "/%s/core.flt",
+    snprintf(filter_path, sizeof(filter_path), INFO_CON_PATH "/%s/core.flt",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(filter_path);
 
@@ -137,7 +137,7 @@ static void assign_filter_parent(char *core_dir, char *filter) {
 
 static void create_filter_assignment(char *filter, char *rom, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s/",
+    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_dir);
 

@@ -37,7 +37,7 @@ static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     if (purge) delete_files_of_type(core_dir, ".gov", NULL, 0);
 
     char gov_path[MAX_BUFFER_SIZE];
-    snprintf(gov_path, sizeof(gov_path), INFO_COR_PATH "/%s/core.gov",
+    snprintf(gov_path, sizeof(gov_path), INFO_CON_PATH "/%s/core.gov",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(gov_path);
 
@@ -69,7 +69,7 @@ static void create_gov_assignment(const char *gov, char *rom, enum gen_type meth
         snprintf(core_dir, sizeof(core_dir), "%s/",
                  rom_dir);
     } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s/",
+        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
                  get_last_subdir(rom_dir, '/', 4));
     }
 
@@ -309,7 +309,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         LOG_INFO(mux_module, "Automatic Assign Governor Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.gov",
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.gov",
                  get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 

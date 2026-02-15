@@ -22,6 +22,7 @@ struct mux_config {
         int16_t CHEATS;
         int16_t COLLECTION;
         int16_t CONFIG;
+        int16_t CONTENT;
         int16_t HISTORY;
         int16_t INIT;
         int16_t MERGE;

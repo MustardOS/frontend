@@ -53,6 +53,7 @@
     BACKUP(Track,      TRACK,      "track")       \
     BACKUP(Apps,       APPS,       "application") \
     BACKUP(Music,      MUSIC,      "music")       \
+    BACKUP(Content,    CONTENT,    "content")     \
     BACKUP(Collection, COLLECTION, "collection")  \
     BACKUP(Override,   OVERRIDE,   "override")    \
     BACKUP(Package,    PACKAGE,    "package")     \

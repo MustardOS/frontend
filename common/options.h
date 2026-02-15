@@ -94,7 +94,7 @@
 #define STORAGE_FILTER  OPT_SHARE_PATH "filter"
 
 #define INFO_CFG_PATH OPT_SHARE_PATH "info/config"
-#define INFO_COR_PATH OPT_SHARE_PATH "info/core"
+#define INFO_CON_PATH OPT_SHARE_PATH "info/content"
 #define INFO_CNT_PATH OPT_SHARE_PATH "info/controller"
 #define INFO_GCD_PATH OPT_SHARE_PATH "info/gamecontrollerdb"
 

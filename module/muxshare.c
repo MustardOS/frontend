@@ -189,10 +189,10 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
     last_subdir = get_last_subdir(sys_dir, '/', 4);
 
     if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
-        snprintf(path, sizeof(path), INFO_COR_PATH "/core.%s",
+        snprintf(path, sizeof(path), INFO_CON_PATH "/core.%s",
                  ext);
     } else {
-        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/%s.%s",
                  last_subdir, pointer == NULL ? strip_ext(items[current_item_index].name) : pointer, ext);
 
         if (file_exist(path) && !force) {
@@ -204,7 +204,7 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
             LOG_ERROR(mux_module, "Failed to read Content Asset: %s", label);
         }
 
-        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/core.%s",
                  last_subdir, ext);
     }
 

@@ -249,7 +249,7 @@ static void gen_item(char **file_names, int file_count) {
         while (*sub_path == '/') sub_path++;
     }
 
-    snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/",
+    snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/",
              sub_path);
     create_directories(init_meta_dir, 0);
 
@@ -309,7 +309,7 @@ static void gen_item(char **file_names, int file_count) {
 
         const char *basename = strip_ext(items[i].name);
 
-        snprintf(content_tag, sizeof(content_tag), INFO_COR_PATH "/%s/%s.tag",
+        snprintf(content_tag, sizeof(content_tag), INFO_CON_PATH "/%s/%s.tag",
                  last_subdir, basename);
 
         if (file_exist(content_tag)) {

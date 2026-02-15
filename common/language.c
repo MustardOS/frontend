@@ -223,6 +223,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.CHEATS, "RetroArch Cheats");
     SPECIFIC_FIELD(lang->MUXBACKUP.COLLECTION, "Content Collection");
     SPECIFIC_FIELD(lang->MUXBACKUP.CONFIG, "RetroArch Configs");
+    SPECIFIC_FIELD(lang->MUXBACKUP.CONTENT, "Content Assignment");
     SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXBACKUP.INIT, "User Init Scripts");
     SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
@@ -247,6 +248,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CHEATS, "Location of the RetroArch cheats");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.COLLECTION, "Location of content collection");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CONFIG, "Location of RetroArch configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CONTENT, "Location of assigned content information");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.HISTORY, "Location of history");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.INIT, "Location of User Initialisation scripts");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUSIC, "Location of background music");

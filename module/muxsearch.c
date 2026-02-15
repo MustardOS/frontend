@@ -55,11 +55,11 @@ static void image_refresh() {
     char *last_dir = get_last_dir(strip_ext(all_items[current_item_index].extra_data));
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s.cfg",
+    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s.cfg",
              str_replace(file_name, last_dir, ""));
 
     if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%score.cfg",
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%score.cfg",
                  str_replace(file_name, last_dir, ""));
         snprintf(core_artwork, sizeof(core_artwork), "%s",
                  read_line_char_from(core_file, 2));

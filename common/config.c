@@ -14,6 +14,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->BACKUP.CHEATS, CONF_CONFIG_PATH "backup/cheats", 1);
     CFG_INT_FIELD(config->BACKUP.COLLECTION, CONF_CONFIG_PATH "backup/collection", 1);
     CFG_INT_FIELD(config->BACKUP.CONFIG, CONF_CONFIG_PATH "backup/config", 1);
+    CFG_INT_FIELD(config->BACKUP.CONTENT, CONF_CONFIG_PATH "backup/content", 1);
     CFG_INT_FIELD(config->BACKUP.HISTORY, CONF_CONFIG_PATH "backup/history", 1);
     CFG_INT_FIELD(config->BACKUP.INIT, CONF_CONFIG_PATH "backup/init", 1);
     CFG_INT_FIELD(config->BACKUP.MERGE, CONF_CONFIG_PATH "backup/merge", 1);

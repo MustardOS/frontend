@@ -2939,10 +2939,10 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line) {
     char *subdir = get_last_subdir(dir, '/', 4);
 
     if (name == NULL) {
-        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/core.%s",
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/core.%s",
                  subdir, ext);
     } else {
-        snprintf(path, sizeof(path), INFO_COR_PATH "/%s/%s.%s",
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/%s.%s",
                  subdir, strip_ext(name), ext);
     }
 
@@ -3492,7 +3492,7 @@ int load_content(int add_collection, char *file_path) {
     const char *system_sub = get_last_subdir(item_dir, '/', 4);
 
     char content_loader_file[MAX_BUFFER_SIZE];
-    snprintf(content_loader_file, sizeof(content_loader_file), INFO_COR_PATH "/%s/%s.cfg",
+    snprintf(content_loader_file, sizeof(content_loader_file), INFO_CON_PATH "/%s/%s.cfg",
              cfg_sub,
              content_name);
     LOG_INFO(mux_module, "Configuration File: %s", content_loader_file);
@@ -3515,7 +3515,7 @@ int load_content(int add_collection, char *file_path) {
         char content[MAX_BUFFER_SIZE];
 
         char cache_file[MAX_BUFFER_SIZE];
-        snprintf(cache_file, sizeof(cache_file), INFO_COR_PATH "/%s/%s.cfg",
+        snprintf(cache_file, sizeof(cache_file), INFO_CON_PATH "/%s/%s.cfg",
                  cfg_sub, content_name);
 
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file);
@@ -3576,9 +3576,9 @@ char *load_content_core(int force, int run_quit, char *file_path) {
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
     if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
-        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/core.cfg");
+        snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/core.cfg");
     } else {
-        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/%s.cfg",
+        snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/%s/%s.cfg",
                  last_subdir, strip_ext(file_name));
 
         if (file_exist(content_core) && !force) {
@@ -3592,7 +3592,7 @@ char *load_content_core(int force, int run_quit, char *file_path) {
             LOG_ERROR(mux_module, "Failed to build Content Core: %s", content_core);
         }
 
-        snprintf(content_core, sizeof(content_core), INFO_COR_PATH "/%s/core.cfg", last_subdir);
+        snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/%s/core.cfg", last_subdir);
     }
 
     if (file_exist(content_core) && !force) {

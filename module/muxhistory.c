@@ -195,7 +195,7 @@ static void gen_item(int file_count, char **file_names) {
 
         if (stripped_name && stripped_name[0] == '\0') stripped_name = strip_ext(file_name);
 
-        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_COR_PATH "/%s/", sub_path);
+        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
         create_directories(init_meta_dir, 0);
 
         resolve_friendly_name(file_path, stripped_name, fn_name);

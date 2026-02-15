@@ -37,7 +37,7 @@ static void assign_control_directory(char *core_dir, const char *control, int pu
     if (purge) delete_files_of_type(core_dir, ".con", NULL, 0);
 
     char control_path[MAX_BUFFER_SIZE];
-    snprintf(control_path, sizeof(control_path), INFO_COR_PATH "/%s/core.con",
+    snprintf(control_path, sizeof(control_path), INFO_CON_PATH "/%s/core.con",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(control_path);
 
@@ -69,7 +69,7 @@ static void create_control_assignment(const char *control, char *rom, enum gen_t
         snprintf(core_dir, sizeof(core_dir), "%s/",
                  rom_dir);
     } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s/",
+        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
                  get_last_subdir(rom_dir, '/', 4));
     }
 
@@ -330,7 +330,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
         LOG_INFO(mux_module, "Automatic Assign Control Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.con",
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.con",
                  get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 

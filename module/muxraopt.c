@@ -37,7 +37,7 @@ static void assign_rac_directory(char *core_dir, const char *rac, int purge) {
     if (purge) delete_files_of_type(core_dir, ".rac", NULL, 0);
 
     char rac_path[MAX_BUFFER_SIZE];
-    snprintf(rac_path, sizeof(rac_path), INFO_COR_PATH "/%s/core.rac",
+    snprintf(rac_path, sizeof(rac_path), INFO_CON_PATH "/%s/core.rac",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(rac_path);
 
@@ -69,7 +69,7 @@ static void create_rac_assignment(const char *rac, char *rom, enum gen_type meth
         snprintf(core_dir, sizeof(core_dir), "%s/",
                  rom_dir);
     } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s/",
+        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
                  get_last_subdir(rom_dir, '/', 4));
     }
 
@@ -267,7 +267,7 @@ int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         LOG_INFO(mux_module, "Automatic Assign RetroArch Config Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.rac",
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.rac",
                  get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 

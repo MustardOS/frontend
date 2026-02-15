@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 23
+#define UI_COUNT 24
 #define STORAGE_COUNT (UI_COUNT - 3)
 
 #define BACKUP(NAME, ENUM, UDATA) static int NAME##_original;
@@ -62,6 +62,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, Track, lang.MUXBACKUP.TRACK, "track", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, Apps, lang.MUXBACKUP.APPS, "application", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, Music, lang.MUXBACKUP.MUSIC, "music", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, Content, lang.MUXBACKUP.CONTENT, "content", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, Override, lang.MUXBACKUP.OVERRIDE, "override", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, Package, lang.MUXBACKUP.PACKAGE, "package", excluded_included, 2);

@@ -19,11 +19,11 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
     }
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s%s.cfg",
+    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s%s.cfg",
              sys_dir_lower, strip_ext(content_label));
 
     if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%score.cfg",
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%score.cfg",
                  sys_dir_lower);
         snprintf(catalogue_name, catalogue_name_size, "%s",
                  read_line_char_from(core_file, GLOBAL_CATALOGUE));
@@ -213,7 +213,7 @@ void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *cor
 void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys, char *cat, char *rom,
                             char *gov, char *con, char *rac, int lookup, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_COR_PATH "/%s",
+    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s",
              get_last_subdir(rom_dir, '/', 4));
 
     remove_double_slashes(core_dir);
@@ -243,7 +243,7 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
 
 bool automatic_assign_core(char *rom_dir) {
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), INFO_COR_PATH "/%s/core.cfg",
+    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.cfg",
              get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_file);
 
