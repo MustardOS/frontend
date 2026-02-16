@@ -8,8 +8,8 @@ struct int_script_hash {
 int script_hash_check(void);
 
 static const struct int_script_hash int_scripts[] = {
-        {"/opt/muos/script/device/audio.sh",      "03da9790827f31c4"},
-        {"/opt/muos/script/device/bright.sh",     "77b74b582f52299f"},
+        {"/opt/muos/script/device/audio.sh",      "d36d8ea9bb4cabd1"},
+        {"/opt/muos/script/device/bright.sh",     "5d204a7bb3dd0f53"},
         {"/opt/muos/script/device/charge.sh",     "ca071db54eb613fe"},
         {"/opt/muos/script/device/colour.sh",     "607ab00f9a2ebe34"},
         {"/opt/muos/script/device/control.sh",    "e16550ee16727884"},

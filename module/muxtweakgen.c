@@ -7,6 +7,7 @@
 TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
+static int hdmi_in_use = 0;
 static int audio_overdrive = 100;
 
 static void list_nav_move(int steps, int direction);
@@ -35,7 +36,7 @@ static void init_dropdown_settings(void) {
 #undef TWEAKGEN
 
     Brightness_original = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
-    Volume_original = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
+    if (!hdmi_in_use) Volume_original = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
 }
 
 static void restore_tweak_options(void) {
@@ -74,8 +75,10 @@ static void save_tweak_options(void) {
     int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
     if (bright_mod != Brightness_original) set_setting_value("bright", bright_mod, 0);
 
-    int volume_mod = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
-    if (volume_mod != Volume_original) set_setting_value("audio", volume_mod, 0);
+    if (!hdmi_in_use) {
+        int volume_mod = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
+        if (volume_mod != Volume_original) set_setting_value("audio", volume_mod, 0);
+    }
 
     if (is_modified > 0) run_tweak_script();
 }
@@ -198,6 +201,8 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(tweakgen, HkDpad);
         HIDE_OPTION_ITEM(tweakgen, HkShot);
     }
+
+    if (hdmi_in_use) HIDE_OPTION_ITEM(tweakgen, Volume);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
@@ -445,6 +450,8 @@ static void init_elements(void) {
 int muxtweakgen_main(void) {
     init_module(__func__);
     init_theme(1, 0);
+
+    hdmi_in_use = file_exist("/tmp/hdmi_in_use");
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKGEN.TITLE);
     init_muxtweakgen(ui_pnlContent);
