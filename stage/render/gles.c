@@ -24,8 +24,10 @@ static GLuint gles_prog = 0;
 
 static GLint gles_a_pos = -1;
 static GLint gles_a_uv = -1;
-static GLint gles_u_tex = -1;
 static GLint gles_u_alpha = -1;
+
+static GLint gles_u_tex_overlay = -1;
+static GLint gles_u_tex_content = -1;
 
 static GLuint gles_prog_content = 0;
 static GLint gles_u_brightness = -1;
@@ -49,6 +51,10 @@ static GLuint content_tex = 0;
 static int content_tex_w = 0;
 static int content_tex_h = 0;
 
+static GLint content_tex_internal = GL_RGBA;
+static GLenum content_tex_format = GL_RGBA;
+static int content_copy_supported = 1;
+
 typedef struct {
     GLint program;
     GLint active_tex;
@@ -59,6 +65,10 @@ typedef struct {
     GLint blend_src_rgb;
     GLint blend_dst_rgb;
     GLint blend_eq_rgb;
+
+    GLint framebuffer;
+    GLboolean scissor_test;
+    GLboolean depth_test;
 } gles_state_t;
 
 static const char *vs_src =
@@ -143,7 +153,15 @@ static void ensure_content_tex(int w, int h) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, content_tex_internal, w, h, 0, content_tex_format, GL_UNSIGNED_BYTE, NULL);
+
+    if (glGetError() != GL_NO_ERROR) {
+        glDeleteTextures(1, &content_tex);
+        content_tex = 0;
+        content_tex_w = 0;
+        content_tex_h = 0;
+        return;
+    }
 
     content_tex_w = w;
     content_tex_h = h;
@@ -430,7 +448,7 @@ static void ensure_content_program(void) {
         return;
     }
 
-    gles_u_tex = glGetUniformLocation(gles_prog_content, "u_tex");
+    gles_u_tex_content = glGetUniformLocation(gles_prog_content, "u_tex");
     gles_u_filter = glGetUniformLocation(gles_prog_content, "u_filter");
     gles_u_filter_enabled = glGetUniformLocation(gles_prog_content, "u_filter_enabled");
     gles_u_brightness = glGetUniformLocation(gles_prog_content, "u_brightness");
@@ -450,9 +468,18 @@ static void save_gles_state(gles_state_t *st) {
     glGetIntegerv(GL_BLEND_SRC_RGB, &st->blend_src_rgb);
     glGetIntegerv(GL_BLEND_DST_RGB, &st->blend_dst_rgb);
     glGetIntegerv(GL_BLEND_EQUATION_RGB, &st->blend_eq_rgb);
+
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &st->framebuffer);
+    st->scissor_test = glIsEnabled(GL_SCISSOR_TEST);
+    st->depth_test = glIsEnabled(GL_DEPTH_TEST);
 }
 
 static void restore_gles_state(const gles_state_t *st) {
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) st->framebuffer);
+
+    if (st->depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+    if (st->scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
+
     if (st->blend) glEnable(GL_BLEND);
     else glDisable(GL_BLEND);
 
@@ -473,14 +500,19 @@ static void destroy_overlay(void) {
 
     gles_a_pos = -1;
     gles_a_uv = -1;
-    gles_u_tex = -1;
     gles_u_alpha = -1;
+
+    gles_u_tex_overlay = -1;
+    gles_u_tex_content = -1;
 
     prog_ready = 0;
     prog_attempted = 0;
 }
 
 static void on_context_changed(void) {
+    content_tex_format = GL_RGBA;
+    content_copy_supported = 1;
+
     colour_adjust_reset();
     colour_adjust_get();
 
@@ -563,11 +595,12 @@ static void ensure_program(void) {
 
     gles_a_pos = glGetAttribLocation(gles_prog, "a_pos");
     gles_a_uv = glGetAttribLocation(gles_prog, "a_uv");
-    gles_u_tex = glGetUniformLocation(gles_prog, "u_tex");
+
+    gles_u_tex_overlay = glGetUniformLocation(gles_prog, "u_tex");
     gles_u_alpha = glGetUniformLocation(gles_prog, "u_alpha");
 
-    if (gles_a_pos < 0 || gles_a_uv < 0 || gles_u_tex < 0) {
-        LOG_ERROR("stage", "GL locations missing (pos=%d uv=%d tex=%d)", gles_a_pos, gles_a_uv, gles_u_tex);
+    if (gles_a_pos < 0 || gles_a_uv < 0 || gles_u_tex_overlay < 0) {
+        LOG_ERROR("stage", "gles locations missing (pos=%d uv=%d tex=%d)", gles_a_pos, gles_a_uv, gles_u_tex_overlay);
         destroy_overlay();
         return;
     }
@@ -584,7 +617,8 @@ static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glUniform1i(gles_u_tex, 0);
+
+    if (gles_u_tex_content >= 0) glUniform1i(gles_u_tex_content, 0);
 
     glEnableVertexAttribArray((GLuint) gles_content_a_pos);
     glEnableVertexAttribArray((GLuint) gles_content_a_uv);
@@ -598,18 +632,16 @@ static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
     glDisableVertexAttribArray((GLuint) gles_content_a_uv);
 }
 
-static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
-    if (!prog_ready) return;
-    if (!tex) return;
+static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
+    if (!prog_ready || !tex) return;
 
     glUseProgram(gles_prog);
 
     glActiveTexture(GL_TEXTURE0);
-    glUniform1i(gles_u_tex, 0);
-
-    if (gles_u_alpha >= 0) glUniform1f(gles_u_alpha, alpha);
-
     glBindTexture(GL_TEXTURE_2D, tex);
+
+    if (gles_u_tex_overlay >= 0) glUniform1i(gles_u_tex_overlay, 0);
+    if (gles_u_alpha >= 0) glUniform1f(gles_u_alpha, alpha);
 
     glEnableVertexAttribArray((GLuint) gles_a_pos);
     glEnableVertexAttribArray((GLuint) gles_a_uv);
@@ -623,26 +655,68 @@ static void draw_quad(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     glDisableVertexAttribArray((GLuint) gles_a_uv);
 }
 
-static void draw_rotated_content(int fb_w, int fb_h, int rot) {
-    ensure_content_tex(fb_w, fb_h);
-    ensure_content_program();
+static int draw_rotated_content(int fb_w, int fb_h, int rot) {
+    if (!content_copy_supported) return 0;
 
-    if (!content_tex || !gles_prog_content) return;
+    ensure_content_program();
+    if (!gles_prog_content) return 0;
+
+    ensure_content_tex(fb_w, fb_h);
+    if (!content_tex) return 0;
+
+    GLint prev_fbo = 0;
+
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindTexture(GL_TEXTURE_2D, content_tex);
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
 
+    GLenum err = glGetError();
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) prev_fbo);
+
+    if (err != GL_NO_ERROR) {
+        if (content_tex_format == GL_RGBA) {
+            content_tex_internal = GL_RGB;
+            content_tex_format = GL_RGB;
+
+            destroy_content();
+            ensure_content_tex(fb_w, fb_h);
+
+            if (!content_tex) {
+                content_copy_supported = 0;
+                return 0;
+            }
+
+            glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            glBindTexture(GL_TEXTURE_2D, content_tex);
+            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
+
+            err = glGetError();
+            glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) prev_fbo);
+        }
+    }
+
+    if (err != GL_NO_ERROR) {
+        content_copy_supported = 0;
+        return 0;
+    }
+
     glUseProgram(gles_prog_content);
 
     const struct colour_state *adjust = colour_adjust_get();
-    glUniform1f(gles_u_brightness, adjust->brightness);
-    glUniform1f(gles_u_contrast, adjust->contrast);
-    glUniform1f(gles_u_saturation, adjust->saturation);
-    glUniform1f(gles_u_hueshift, adjust->hueshift);
-    glUniform1f(gles_u_gamma, adjust->gamma);
+
+    if (gles_u_brightness >= 0) glUniform1f(gles_u_brightness, adjust->brightness);
+    if (gles_u_contrast >= 0) glUniform1f(gles_u_contrast, adjust->contrast);
+    if (gles_u_saturation >= 0) glUniform1f(gles_u_saturation, adjust->saturation);
+    if (gles_u_hueshift >= 0) glUniform1f(gles_u_hueshift, adjust->hueshift);
+    if (gles_u_gamma >= 0) glUniform1f(gles_u_gamma, adjust->gamma);
 
     const colour_filter_matrix_t *filter = colour_filter_get();
-    if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, filter->enabled);
+
+    if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, filter->enabled ? 1 : 0);
     if (filter->enabled && gles_u_filter >= 0) glUniformMatrix3fv(gles_u_filter, 1, GL_FALSE, filter->matrix);
 
     glClearColor(0, 0, 0, 1);
@@ -652,6 +726,7 @@ static void draw_rotated_content(int fb_w, int fb_h, int rot) {
     build_fullscreen_quad(vtx, rot);
 
     draw_quad_content(content_tex, vtx);
+    return 1;
 }
 
 #define UPDATE_GEOM_CACHE(LAYER, TYPE)                           \
@@ -743,25 +818,16 @@ static void stage_draw(int fb_w, int fb_h) {
     gles_state_t st;
     save_gles_state(&st);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
 
     glViewport(0, 0, fb_w, fb_h);
 
-    const colour_filter_matrix_t *filter = colour_filter_get();
-    const struct colour_state *adjust = colour_adjust_get();
-    const int need_colour =
-            adjust->brightness != 0.0f ||
-            adjust->contrast != 1.0f ||
-            adjust->saturation != 1.0f ||
-            adjust->hueshift != 0.0f ||
-            adjust->gamma != 1.0f ||
-            filter->enabled;
-
-    const int rot = rotate_read_cached();
-    if (rot != ROTATE_0 || need_colour) {
+    if (content_copy_supported) {
         glDisable(GL_BLEND);
-        draw_rotated_content(fb_w, fb_h, rot);
+        (void) draw_rotated_content(fb_w, fb_h, rotate_read_cached());
     }
 
     glEnable(GL_BLEND);
@@ -770,12 +836,12 @@ static void stage_draw(int fb_w, int fb_h) {
 
     // Draw base overlay if present (and not disabled)
     if (!base_disabled && base_gles_ready && vtx_base_valid) {
-        draw_quad(base_gles_tex, vtx_base, get_alpha_cached(&overlay_alpha_cache));
+        draw_quad_overlay(base_gles_tex, vtx_base, get_alpha_cached(&overlay_alpha_cache));
     }
 
     // Draw battery overlay if activated
     if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_gles_tex[battery_step] && vtx_battery_valid) {
-        draw_quad(battery_gles_tex[battery_step], vtx_battery, get_alpha_cached(&battery_alpha_cache));
+        draw_quad_overlay(battery_gles_tex[battery_step], vtx_battery, get_alpha_cached(&battery_alpha_cache));
     }
 
     if (bright_is_visible()) {
@@ -783,7 +849,7 @@ static void stage_draw(int fb_w, int fb_h) {
 
         int step = bright_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && bright_gles_tex[step] && vtx_bright_valid) {
-            draw_quad(bright_gles_tex[step], vtx_bright, get_alpha_cached(&bright_alpha_cache));
+            draw_quad_overlay(bright_gles_tex[step], vtx_bright, get_alpha_cached(&bright_alpha_cache));
         }
     }
 
@@ -792,7 +858,7 @@ static void stage_draw(int fb_w, int fb_h) {
 
         int step = volume_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && volume_gles_tex[step] && vtx_volume_valid) {
-            draw_quad(volume_gles_tex[step], vtx_volume, get_alpha_cached(&volume_alpha_cache));
+            draw_quad_overlay(volume_gles_tex[step], vtx_volume, get_alpha_cached(&volume_alpha_cache));
         }
     }
 
