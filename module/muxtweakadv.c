@@ -45,6 +45,8 @@ static void save_tweak_options(void) {
 
     CHECK_AND_SAVE_STD(tweakadv, Swap, "settings/advanced/swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, StickNav, "settings/advanced/sticknav", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Volume, "settings/advanced/volume", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Brightness, "settings/advanced/brightness", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Thermal, "settings/advanced/thermal", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Passcode, "settings/advanced/passcode", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Led, "settings/advanced/led", INT, 0);
@@ -95,9 +97,6 @@ static void save_tweak_options(void) {
             write_text_to_file(CONF_CONFIG_PATH "settings/advanced/incvolume", "w", INT, volume_current + 1);
         }
     } while (0);
-
-    CHECK_AND_SAVE_VAL(tweakadv, Volume, "settings/advanced/volume", CHAR, volume_values);
-    CHECK_AND_SAVE_VAL(tweakadv, Brightness, "settings/advanced/brightness", CHAR, brightness_values);
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
     CHECK_AND_SAVE_MAP(tweakadv, Offset, "settings/advanced/offset", battery_offset_values, 101, 50);

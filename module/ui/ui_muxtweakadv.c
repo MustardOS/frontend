@@ -16,14 +16,6 @@ void init_muxtweakadv(lv_obj_t *ui_pnlContent) {
 #undef TWEAKADV
 }
 
-const char *volume_values[] = {
-        "previous", "silent", "soft", "loud"
-};
-
-const char *brightness_values[] = {
-        "previous", "low", "medium", "high"
-};
-
 const int accelerate_values[] = {
         32767, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256
 };

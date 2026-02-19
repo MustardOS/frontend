@@ -14,10 +14,6 @@ void init_muxtweakadv(lv_obj_t *ui_pnlContent);
 TWEAKADV_ELEMENTS
 #undef TWEAKADV
 
-extern const char *volume_values[];
-
-extern const char *brightness_values[];
-
 extern const int accelerate_values[];
 
 extern const int repeat_delay_values[];
