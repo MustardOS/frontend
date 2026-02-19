@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/log.h"
@@ -138,6 +139,16 @@ static char *previous_governor = NULL;
 
 static inline int in_idle_state(void) {
     return idle_state_exists;
+}
+
+static void del_old_proc(int signo) {
+    (void) signo;
+
+    for (;;) {
+        int status;
+        pid_t pid = waitpid(-1, &status, WNOHANG);
+        if (pid <= 0) break;
+    }
 }
 
 static void cleanup(int signo) {
@@ -619,12 +630,23 @@ static void usage(FILE *file) {
     );
 }
 
+static void cleanup_atexit(void) {
+    cleanup(0);
+}
+
 int main(int argc, char *argv[]) {
-    atexit((void (*)(void)) cleanup);
+    atexit(cleanup_atexit);
 
     struct sigaction sa = {.sa_handler = cleanup};
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+
+    // Reap old processes to prevent zombies
+    struct sigaction old_proc = {0};
+    old_proc.sa_handler = del_old_proc;
+    sigemptyset(&old_proc.sa_mask);
+    old_proc.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    sigaction(SIGCHLD, &old_proc, NULL);
 
     // Read config and open input devices.
     load_device(&device);
