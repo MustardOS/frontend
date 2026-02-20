@@ -129,7 +129,9 @@ static void show_help(void) {
 static void image_refresh() {
     if (in_detail_view || in_global_view || config.VISUAL.BOX_ART == 8) return;
 
-    char *item_dir = strip_dir(activity_items[current_item_index].dir);
+    char full_path[MAX_BUFFER_SIZE];
+    snprintf(full_path, sizeof(full_path), "%s%s", activity_items[current_item_index].dir, activity_items[current_item_index].file_name);
+    char *item_dir = get_content_path(full_path);
     char *item_file_name = strdup(activity_items[current_item_index].file_name);
 
     char h_core_artwork[MAX_BUFFER_SIZE];
@@ -804,6 +806,8 @@ static void load_activity_items(void) {
 
                 char full_path[512];
                 json_string_copy(key, full_path, sizeof(full_path));
+                char *item_file_name = get_file_name(strdup(full_path));
+                snprintf(it->file_name, sizeof(it->file_name), "%s", item_file_name);
 
                 it->dir[0] = '\0';
 
@@ -818,7 +822,6 @@ static void load_activity_items(void) {
 
                 char raw_name[MAX_BUFFER_SIZE];
                 json_string_copy(name_json, raw_name, sizeof(raw_name));
-                snprintf(it->file_name, sizeof(it->file_name), "%s", raw_name);
                 resolve_friendly_name(it->dir, raw_name, it->name);
                 adjust_visual_label(it->name, config.VISUAL.NAME, config.VISUAL.DASH);
 
