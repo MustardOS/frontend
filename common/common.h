@@ -57,7 +57,7 @@ typedef void (*exec_callback)(int exit_code);
 
 // Just fuck my shit up with enums everywhere!
 enum common_field {
-    THEME_COMPAT = 6,
+    THEME_COMPAT = 7,
     SOUND_TOTAL = 12
 };
 
