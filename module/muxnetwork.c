@@ -12,9 +12,14 @@ const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect",
 #define UI_DHCP (UI_COUNT - 4)
 #define UI_STATIC UI_COUNT
 #define NET_STATUS_FILE "/run/muos/network.status"
+#define IP_OCTET 64
 
+bool connecting_phase = false;
 bool ui_network_locked = false;
-static char last_status[64] = "";
+
+static char last_status[IP_OCTET] = "";
+static char address_file[MAX_BUFFER_SIZE];
+static unsigned connect_grace_ticks = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -35,24 +40,6 @@ enum connect_status {
     STATUS_WPA_START_FAILED
 };
 
-static const struct {
-    const char *status;
-    int label_id;
-} net_status[] = {
-        {"ASSOCIATING",      STATUS_ASSOCIATING},
-        {"AUTHENTICATING",   STATUS_AUTHENTICATING},
-        {"WAITING_IP",       STATUS_WAITING_IP},
-        {"VALIDATING",       STATUS_VALIDATING},
-        {"CONNECTED",        STATUS_CONNECTED},
-        {"FAILED",           STATUS_FAILED},
-        {"INVALID_PASSWORD", STATUS_INVALID_PASSWORD},
-        {"AP_NOT_FOUND",     STATUS_AP_NOT_FOUND},
-        {"AUTH_TIMEOUT",     STATUS_AUTH_TIMEOUT},
-        {"DHCP_FAILED",      STATUS_DHCP_FAILED},
-        {"LINK_TIMEOUT",     STATUS_LINK_TIMEOUT},
-        {"WPA_START_FAILED", STATUS_WPA_START_FAILED},
-};
-
 static void show_help(void) {
     struct help_msg help_messages[] = {
 #define NETWORK(NAME, ENUM, UDATA) { UDATA, lang.MUXNETWORK.HELP.ENUM },
@@ -61,6 +48,40 @@ static void show_help(void) {
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
+}
+
+static inline void set_connect_value(const char *value) {
+    if (!ui_lblConnectValue_network || !value) return;
+
+    const char *curr = lv_label_get_text(ui_lblConnectValue_network);
+    if (!curr || strcmp(curr, value) != 0) lv_label_set_text(ui_lblConnectValue_network, value);
+}
+
+static inline void nav_scan_hide(int hide) {
+    if (hide) {
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static int read_ip(char *buf) {
+    FILE *f = fopen(address_file, "r");
+    if (!f) return 0;
+
+    if (!fgets(buf, IP_OCTET, f)) {
+        fclose(f);
+        return 0;
+    }
+
+    fclose(f);
+
+    char *p = buf;
+    while (*p && *p != '\n' && *p != '\r') p++;
+    *p = '\0';
+    return 1;
 }
 
 static const char *net_status_label(int id) {
@@ -73,8 +94,6 @@ static const char *net_status_label(int id) {
             return lang.MUXNETWORK.STATUS.WAITING_IP;
         case STATUS_VALIDATING:
             return lang.MUXNETWORK.STATUS.VALIDATING;
-        case STATUS_CONNECTED:
-            return lang.MUXNETWORK.CONNECTED;
         case STATUS_FAILED:
             return lang.MUXNETWORK.NOT_CONNECTED;
         case STATUS_INVALID_PASSWORD:
@@ -94,80 +113,123 @@ static const char *net_status_label(int id) {
     }
 }
 
-static void update_network_label(void) {
-    if (!ui_network_locked) return;
+static int resolve_status_id(const char *s) {
+    if (!strcmp(s, "ASSOCIATING")) return STATUS_ASSOCIATING;
+    if (!strcmp(s, "AUTHENTICATING")) return STATUS_AUTHENTICATING;
+    if (!strcmp(s, "WAITING_IP")) return STATUS_WAITING_IP;
+    if (!strcmp(s, "VALIDATING")) return STATUS_VALIDATING;
+    if (!strcmp(s, "CONNECTED")) return STATUS_CONNECTED;
+    if (!strcmp(s, "FAILED")) return STATUS_FAILED;
+    if (!strcmp(s, "INVALID_PASSWORD")) return STATUS_INVALID_PASSWORD;
+    if (!strcmp(s, "AP_NOT_FOUND")) return STATUS_AP_NOT_FOUND;
+    if (!strcmp(s, "AUTH_TIMEOUT")) return STATUS_AUTH_TIMEOUT;
+    if (!strcmp(s, "DHCP_FAILED")) return STATUS_DHCP_FAILED;
+    if (!strcmp(s, "LINK_TIMEOUT")) return STATUS_LINK_TIMEOUT;
+    if (!strcmp(s, "WPA_START_FAILED")) return STATUS_WPA_START_FAILED;
 
-    if (!file_exist(NET_STATUS_FILE)) {
-        lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.CONNECT_TRY);
-        return;
-    }
-
-    char *status = read_line_char_from(NET_STATUS_FILE, 1);
-    if (!status || !*status || strcmp(status, last_status) == 0) {
-        free(status);
-        return;
-    }
-
-    strncpy(last_status, status, sizeof(last_status) - 1);
-    last_status[sizeof(last_status) - 1] = '\0';
-
-    for (size_t i = 0; i < A_SIZE(net_status); i++) {
-        if (strcmp(status, net_status[i].status) == 0) {
-            lv_label_set_text(ui_lblConnectValue_network, net_status_label(net_status[i].label_id));
-            break;
-        }
-    }
-
-    free(status);
+    return -1;
 }
 
 static void can_scan_check(int forced_disconnect) {
+    if (ui_network_locked && connecting_phase) {
+        lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
+        nav_scan_hide(1);
+        update_network_status(ui_staNetwork, &theme, 0);
+        return;
+    }
+
     if (!forced_disconnect && is_network_connected()) {
         lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
-
-        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-
+        nav_scan_hide(1);
         update_network_status(ui_staNetwork, &theme, 0);
         return;
     }
 
     lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.CONNECT);
+    nav_scan_hide(0);
 
-    lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-
-    lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.NOT_CONNECTED);
-
+    set_connect_value(lang.MUXNETWORK.NOT_CONNECTED);
     update_network_status(ui_staNetwork, &theme, 2);
 }
 
 static void get_current_ip(void) {
-    char address_file[MAX_BUFFER_SIZE];
-    snprintf(address_file, sizeof(address_file),
-             CONF_CONFIG_PATH "/network/address");
+    char ip[IP_OCTET];
 
-    char *curr_ip = read_all_char_from(address_file);
-
-    if (strlen(curr_ip) > 1) {
-        if (strcasecmp(curr_ip, "0.0.0.0") == 0) {
-            can_scan_check(1);
-        } else {
-            lv_label_set_text(ui_lblConnectValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.CONNECTED : curr_ip);
-            lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
-
-            lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-
-            update_network_status(ui_staNetwork, &theme, 1);
+    if (!read_ip(ip)) {
+        if (ui_network_locked && connecting_phase) {
+            set_connect_value(lang.MUXNETWORK.CONNECT_TRY);
+            return;
         }
-    } else {
+
         can_scan_check(1);
+        return;
+    }
+
+    if (!*ip || !strcasecmp(ip, "0.0.0.0")) {
+        if (ui_network_locked && connecting_phase) {
+            set_connect_value(lang.MUXNETWORK.CONNECT_TRY);
+            return;
+        }
+
+        can_scan_check(1);
+        return;
+    }
+
+    connecting_phase = false;
+
+    set_connect_value(config.NETWORK.TYPE ? lang.MUXNETWORK.CONNECTED : ip);
+    lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
+
+    nav_scan_hide(1);
+    update_network_status(ui_staNetwork, &theme, 1);
+}
+
+static void update_network_label(void) {
+    if (!ui_network_locked) return;
+
+    char *status = read_line_char_from(NET_STATUS_FILE, 1);
+    if (!status || !*status) {
+        if (connecting_phase && connect_grace_ticks < 20) {
+            connect_grace_ticks++;
+            set_connect_value(lang.MUXNETWORK.CONNECT_TRY);
+            return;
+        }
+
+        get_current_ip();
+        return;
+    }
+
+    char *p = status;
+    while (*p && *p != '\n' && *p != '\r') p++;
+    *p = '\0';
+
+    if (strcmp(status, last_status) != 0) {
+        strncpy(last_status, status, sizeof(last_status) - 1);
+        last_status[sizeof(last_status) - 1] = '\0';
+
+        int id = resolve_status_id(status);
+
+        if (id == STATUS_CONNECTED) {
+            connecting_phase = false;
+            connect_grace_ticks = 0;
+            get_current_ip();
+            return;
+        }
+
+        if (id == STATUS_FAILED || id >= STATUS_INVALID_PASSWORD) {
+            connecting_phase = false;
+            connect_grace_ticks = 0;
+        }
+
+        if (id >= 0) set_connect_value(net_status_label(id));
     }
 }
 
 static void net_connect_check() {
     ui_network_locked = false;
+    connecting_phase = false;
+    connect_grace_ticks = 0;
+    last_status[0] = '\0';
     get_current_ip();
 }
 
@@ -183,7 +245,7 @@ static void restore_network_values(void) {
     lv_label_set_text(ui_lblGatewayValue_network, config.NETWORK.GATEWAY);
     lv_label_set_text(ui_lblDnsValue_network, config.NETWORK.DNS);
 
-    if (strlen(config.NETWORK.PASS) >= 64) lv_label_set_text(ui_lblPasswordValue_network, PASS_ENCODE);
+    if (strlen(config.NETWORK.PASS) >= IP_OCTET) lv_label_set_text(ui_lblPasswordValue_network, PASS_ENCODE);
 
     get_current_ip();
 }
@@ -376,6 +438,7 @@ static void handle_confirm(void) {
     if (element_focused == ui_lblConnect_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_CONFIRM);
+            write_text_to_file(address_file, "w", CHAR, "");
             run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
             can_scan_check(1);
         } else {
@@ -414,8 +477,11 @@ static void handle_confirm(void) {
                 }
 
                 lv_label_set_text(ui_lblPasswordValue_network, PASS_ENCODE);
-                lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.CONNECT_TRY);
+                set_connect_value(lang.MUXNETWORK.CONNECT_TRY);
                 lv_task_handler();
+
+                connecting_phase = true;
+                connect_grace_ticks = 0;
 
                 ui_network_locked = true;
                 run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
@@ -684,6 +750,8 @@ int muxnetwork_main(void) {
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
     init_muxnetwork(ui_screen, ui_pnlContent, &theme);
     init_elements();
+
+    snprintf(address_file, sizeof(address_file), CONF_CONFIG_PATH "/network/address");
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
