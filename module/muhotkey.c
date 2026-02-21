@@ -231,7 +231,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
 
         if (!running_governor) {
             running_governor = read_all_char_from(device.CPU.GOVERNOR);
-            if (running_governor) write_text_to_file("/tmp/wake_cpu_gov", "w", CHAR, running_governor);
+            if (running_governor) write_text_to_file(WAKE_CPU_GOV, "w", CHAR, running_governor);
         }
 
         if (!previous_governor) previous_governor = read_all_char_from(device.CPU.GOVERNOR);
