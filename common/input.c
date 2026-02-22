@@ -22,6 +22,8 @@
 #include "log.h"
 
 #define INPUT_PATH "/dev/input/by-id/"
+#define EXIT_GRACE_MS 250
+#define RELEASE_STABLE_MS 50
 
 key_event_callback event_handler = NULL;
 
@@ -46,6 +48,9 @@ static uint64_t pressed = 0;
 
 // Bitmask of input mux_types that were active during the previous iteration of the event loop.
 static uint64_t held = 0;
+
+// Suppress any input during screensaver runs
+static volatile sig_atomic_t input_suppressed = 0;
 
 static inline void set_stop_flag(void) {
     stop_flag = 1;
@@ -84,6 +89,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
 
 // Processes gamepad buttons.
 static void process_key(const mux_input_options *opts, const struct input_event *event) {
+    if (input_suppressed) return;
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.A &&
@@ -143,6 +149,7 @@ static void process_key(const mux_input_options *opts, const struct input_event 
 
 // Processes volume buttons.
 static void process_volume(const mux_input_options *opts, const struct input_event *event) {
+    if (input_suppressed) return;
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_UP &&
@@ -160,7 +167,9 @@ static void process_volume(const mux_input_options *opts, const struct input_eve
 
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
+    if (input_suppressed) return;
     mux_input_type mux_type;
+
     int axis;
     bool analog;
 
@@ -242,6 +251,7 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
 // Processes gamepad button DPAD
 // Some devices like zero28 the DPAD triggers button press events
 static void process_dpad_as_buttons(const mux_input_options *opts, const struct input_event *event) {
+    if (input_suppressed) return;
     int axis, direction;
 
     if (!(opts->nav & NAV_DPAD)) return;
@@ -284,6 +294,8 @@ static void process_dpad_as_buttons(const mux_input_options *opts, const struct 
 
 // Process system buttons.
 static void process_sys(const mux_input_options *opts, const struct input_event *event) {
+    if (input_suppressed) return;
+
     if (event->type == device.INPUT_TYPE.BUTTON.POWER_SHORT && event->code == device.INPUT_CODE.BUTTON.POWER_SHORT) {
         switch (event->value) {
             case 1:
@@ -304,6 +316,7 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 
 // Process switch that is currently on the trim-ui devices
 static void process_sw(const mux_input_options *opts, const struct input_event *event) {
+    if (input_suppressed) return;
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.SWITCH && event->code == device.INPUT_CODE.BUTTON.SWITCH) {
@@ -317,6 +330,7 @@ static void process_sw(const mux_input_options *opts, const struct input_event *
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
 static void process_usb_key(const mux_input_options *opts, struct js_event js) {
+    if (input_suppressed) return;
     mux_input_type mux_type;
 
     if (js.number == controller.BUTTON.A) {
@@ -354,6 +368,7 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
+    if (input_suppressed) return;
     int axis, axis_max;
 
     // DPAD disabled in the navigation setting so ignore DPAD entirely!
@@ -428,6 +443,7 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
 
 // Processes gamepad button D-pad. Some controllers like PS3 the DPAD triggers button press events
 static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js_event js) {
+    if (input_suppressed) return;
     int axis, direction;
 
     if (!(opts->nav & NAV_DPAD)) return;
@@ -465,6 +481,7 @@ static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js
 }
 
 static void process_usb_keyboard_keys(const mux_input_options *opts, struct input_event event) {
+    if (input_suppressed) return;
     mux_input_type mux_type;
 
     if (event.code == KEY_ENTER || event.code == KEY_A) {
@@ -495,6 +512,7 @@ static void process_usb_keyboard_keys(const mux_input_options *opts, struct inpu
 }
 
 static void process_usb_keyboard_arrow_keys(const mux_input_options *opts, struct input_event event) {
+    if (input_suppressed) return;
     int axis, direction;
 
     if (event.code == KEY_UP) {
@@ -584,13 +602,6 @@ static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_typ
 
 // Invokes the relevant handler(s) for a particular input mux_type and action.
 static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, mux_input_action action) {
-    // Reset idle immediately so next input works normally
-    if (screensaver_active()) {
-        if (opts->idle_handler) opts->idle_handler();
-        last_idle = -1;
-        return;
-    }
-
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
@@ -617,12 +628,6 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
 
 // Invokes the relevant handler(s) for a particular input combo number and action.
 static void dispatch_combo(const mux_input_options *opts, int num, mux_input_action action) {
-    if (screensaver_active()) {
-        if (opts->idle_handler) opts->idle_handler();
-        last_idle = -1;
-        return;
-    }
-
     mux_input_handler handler = NULL;
     switch (action) {
         case MUX_INPUT_PRESS:
@@ -945,45 +950,26 @@ void mux_input_task(const mux_input_options *opts) {
     if (pipe(wake_pipe) == 0) {
         // non-blocking read end
         fcntl(wake_pipe[0], F_SETFL, O_NONBLOCK);
-        struct epoll_event wev;
-        memset(&wev, 0, sizeof(wev));
+        struct epoll_event wev = {0};
         wev.events = EPOLLIN;
         wev.data.fd = wake_pipe[0];
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, wake_pipe[0], &wev) == -1) {
-            LOG_WARN("input", "Failed to add wake pipe to epoll");
-        }
-    } else {
-        LOG_WARN("input", "Failed to create wake pipe; shutdown may be slower");
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, wake_pipe[0], &wev);
     }
 
-    struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
-    struct epoll_event ev;
-    memset(&ev, 0, sizeof(ev));
-
+    struct epoll_event ev = {0};
     ev.events = EPOLLIN;
+
     ev.data.fd = opts->general_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->general_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - general_fd");
-        goto out_close_epoll;
-    }
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->general_fd, &ev);
 
     ev.data.fd = opts->power_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->power_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - power_fd");
-        goto out_close_epoll;
-    }
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->power_fd, &ev);
 
     ev.data.fd = opts->volume_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->volume_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - volume_fd");
-        goto out_close_epoll;
-    }
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->volume_fd, &ev);
 
     ev.data.fd = opts->extra_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->extra_fd, &ev) == -1) {
-        LOG_ERROR("input", "epoll control error - extra_fd");
-        goto out_close_epoll;
-    }
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->extra_fd, &ev);
 
     // Launch USB joystick & keyboard threads
     mux_input_options joystick_opts = *opts;
@@ -1011,27 +997,38 @@ void mux_input_task(const mux_input_options *opts) {
         timeout = opts->max_idle_ms;
         timeout_hold = MIN(opts->max_idle_ms, config.SETTINGS.ADVANCED.ACCELERATE);
     } else {
-        timeout = -1; // infinite (woken by wake_pipe)
+        timeout = -1;
         timeout_hold = config.SETTINGS.ADVANCED.ACCELERATE;
     }
 
-    if (is_switch_held(opts->general_fd)) pressed = (pressed | BIT(MUX_INPUT_SWITCH));
+    if (is_switch_held(opts->general_fd))
+        pressed |= BIT(MUX_INPUT_SWITCH);
+
+    struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
+
+    static int prev_screensaver = 0;
+    static int input_block_active = 0;
+    static uint32_t input_block_until = 0;
+
+    static int wait_release = 0;
+    static uint32_t release_stable_until = 0;
 
     while (!stop_flag) {
+        int now_screensaver = screensaver_active();
+
+        if (!prev_screensaver && now_screensaver) {
+            input_suppressed = 1;
+            pressed = 0;
+            held = 0;
+        }
+
+        if (now_screensaver) input_suppressed = 1;
+
         int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.HASEVENT, held ? timeout_hold : timeout);
 
         if (num_events == -1) {
-            int e = errno;
-
-            if (e == EINTR) continue; // interrupted by signal
-
-            if (e == EBADF || e == EINVAL) {
-                LOG_DEBUG("input", "epoll_wait exiting: %s", strerror(e));
-                break;
-            }
-
-            LOG_ERROR("input", "epoll_wait error: %s", strerror(e));
-            continue;
+            if (errno == EINTR) continue; // interrupted by signal
+            break;
         }
 
         for (int i = 0; i < num_events; ++i) {
@@ -1080,31 +1077,81 @@ void mux_input_task(const mux_input_options *opts) {
             }
         }
 
+        now_screensaver = screensaver_active();
+
+        if (prev_screensaver && !now_screensaver) {
+            input_suppressed = 1;
+            input_block_active = 1;
+            input_block_until = mux_tick() + EXIT_GRACE_MS;
+
+            wait_release = 1;
+            release_stable_until = 0;
+
+            pressed = 0;
+            held = 0;
+        }
+
+        prev_screensaver = now_screensaver;
+        if (now_screensaver) {
+            pressed = 0;
+            held = 0;
+
+            if (opts->idle_handler) opts->idle_handler();
+            last_idle = -1;
+
+            continue;
+        }
+
         // Identify and invoke handlers for inputs whose state changed.
+        if (input_block_active) {
+            if ((int32_t) (mux_tick() - input_block_until) < 0) {
+                pressed = 0;
+                held = 0;
+
+                if (opts->idle_handler) opts->idle_handler();
+                continue;
+            }
+
+            input_block_active = 0;
+        }
+
+        if (wait_release) {
+            uint32_t now = mux_tick();
+
+            if (pressed == 0) {
+                if (!release_stable_until)
+                    release_stable_until = now + RELEASE_STABLE_MS;
+                else if ((int32_t) (now - release_stable_until) >= 0) {
+                    wait_release = 0;
+                    input_suppressed = 0;
+                    pressed = 0;
+                    held = 0;
+                }
+            } else {
+                release_stable_until = 0;
+                pressed = 0;
+                held = 0;
+            }
+
+            if (wait_release) {
+                if (opts->idle_handler) opts->idle_handler();
+                continue;
+            }
+        }
+
         tick = mux_tick();
         handle_inputs(opts);
         handle_combos(opts);
 
         // Invoke "idle" handler to run extra logic every iteration of the event loop.
-        if (opts->idle_handler) {
-            opts->idle_handler();
-        }
+        if (opts->idle_handler) opts->idle_handler();
 
         // Inputs pressed at the end of one iteration are held at the start of the next.
         held = pressed;
     }
 
-    out_close_epoll:
-
-    if (wake_pipe[0] != -1) {
-        close(wake_pipe[0]);
-        wake_pipe[0] = -1;
-    }
-
-    if (wake_pipe[1] != -1) {
-        close(wake_pipe[1]);
-        wake_pipe[1] = -1;
-    }
+    if (wake_pipe[0] != -1) close(wake_pipe[0]);
+    if (wake_pipe[1] != -1) close(wake_pipe[1]);
 
     close(epoll_fd);
 }
