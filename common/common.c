@@ -449,7 +449,7 @@ char *str_rem_first_char(char *text, int count) {
     size_t len = strlen(text);
 
     if (count <= 0) return text;
-    if (count >= (int)len) return "";
+    if (count >= (int) len) return "";
 
     strncpy(buffer, text + count, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';
@@ -529,7 +529,7 @@ char *get_file_name(char *text) {
 char *get_content_path(char *path) {
     char *directory_path = strip_dir(path);
     if (dir_exist(path)) return directory_path;
-    if (!ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) return directory_path;    
+    if (!ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) return directory_path;
     char *directory_name = get_last_dir(directory_path);
     char *path_no_ext = strip_ext(get_file_name(path));
 
@@ -2315,11 +2315,12 @@ void set_nav_volume(int volume) {
 }
 
 void free_bgm(void) {
-    if (current_bgm) {
-        Mix_HaltMusic();
-        Mix_FreeMusic(current_bgm);
-        current_bgm = NULL;
-    }
+    if (!current_bgm) return;
+
+    Mix_HaltMusic();
+    Mix_FreeMusic(current_bgm);
+
+    current_bgm = NULL;
 }
 
 void set_bgm_volume(int volume) {
@@ -2371,22 +2372,7 @@ void play_silence_bgm(void) {
     free_bgm();
     is_silence_playing = 0;
 
-    char silence_path[MAX_BUFFER_SIZE];
-    snprintf(silence_path, sizeof(silence_path), "%s", BGM_SILENCE);
-
-    if (!file_exist(silence_path)) {
-        LOG_INFO("audio", "No 'silence.ogg' file found");
-        return;
-    }
-
-    current_bgm = Mix_LoadMUS(silence_path);
-    if (current_bgm) {
-        Mix_PlayMusic(current_bgm, -1);
-        is_silence_playing = 1;
-        LOG_SUCCESS("audio", "Silence BGM playback started");
-    } else {
-        LOG_ERROR("audio", "Failed to load 'silence.ogg': %s", Mix_GetError());
-    }
+    LOG_INFO("audio", "BGM idle (silent playback)");
 }
 
 int init_audio_backend(void) {
@@ -2451,16 +2437,18 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
 }
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
-    if (!bgm_type && !re_init) {
-        play_silence_bgm();
-        return;
-    }
-
     free_bgm();
     *fe_bgm = 0;
 
+    if (!bgm_type && !re_init) {
+        is_silence_playing = 0;
+        LOG_INFO("audio", "BGM disabled");
+        return;
+    }
+
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
+
     if (bgm_type == 2) snprintf(base_path, sizeof(base_path), "%s/music", theme_base);
 
     DIR *dir = opendir(base_path);
@@ -2484,7 +2472,8 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         size_t len = strlen(entry->d_name);
         if (len > 4 && strcmp(entry->d_name + len - 4, ".ogg") == 0) {
             if (bgm_file_count >= capacity) {
-                capacity *= 2;
+                capacity <<= 1;
+
                 char **bgm_temp = realloc(bgm_files, capacity * sizeof(char *));
 
                 if (!bgm_temp) {
@@ -2517,8 +2506,8 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         *fe_bgm = 1;
         LOG_SUCCESS("audio", "FE Music playback started");
     } else {
+        is_silence_playing = 0;
         LOG_INFO("audio", "No OGG music files found");
-        play_silence_bgm();
     }
 }
 
