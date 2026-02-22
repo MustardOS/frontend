@@ -59,6 +59,8 @@ typedef struct {
     GLint program;
     GLint active_tex;
     GLint tex_binding;
+
+    GLint framebuffer;
     GLint viewport[4];
 
     GLboolean blend;
@@ -66,10 +68,35 @@ typedef struct {
     GLint blend_dst_rgb;
     GLint blend_eq_rgb;
 
-    GLint framebuffer;
     GLboolean scissor_test;
+    GLint scissor_box[4];
+
     GLboolean depth_test;
 } gles_state_t;
+
+static inline int content_pass_needed(int rot) {
+    const struct colour_state *a = colour_adjust_get();
+    const colour_filter_matrix_t *f = colour_filter_get();
+
+    if (rot == ROTATE_0 &&
+        a->brightness == 0.0f &&
+        a->contrast == 1.0f &&
+        a->saturation == 1.0f &&
+        a->hueshift == 0.0f &&
+        a->gamma == 1.0f &&
+        !f->enabled) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static struct {
+    float brightness, contrast, saturation, hueshift, gamma;
+    int filter_enabled;
+    float filter[9];
+    int valid;
+} content_uniform_cache;
 
 static const char *vs_src =
         "attribute vec2 a_pos;"
@@ -462,6 +489,8 @@ static void save_gles_state(gles_state_t *st) {
     glGetIntegerv(GL_CURRENT_PROGRAM, &st->program);
     glGetIntegerv(GL_ACTIVE_TEXTURE, &st->active_tex);
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &st->tex_binding);
+
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &st->framebuffer);
     glGetIntegerv(GL_VIEWPORT, st->viewport);
 
     st->blend = glIsEnabled(GL_BLEND);
@@ -469,19 +498,27 @@ static void save_gles_state(gles_state_t *st) {
     glGetIntegerv(GL_BLEND_DST_RGB, &st->blend_dst_rgb);
     glGetIntegerv(GL_BLEND_EQUATION_RGB, &st->blend_eq_rgb);
 
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &st->framebuffer);
     st->scissor_test = glIsEnabled(GL_SCISSOR_TEST);
+    glGetIntegerv(GL_SCISSOR_BOX, st->scissor_box);
+
     st->depth_test = glIsEnabled(GL_DEPTH_TEST);
 }
 
 static void restore_gles_state(const gles_state_t *st) {
     glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) st->framebuffer);
 
+    glViewport(st->viewport[0], st->viewport[1], st->viewport[2], st->viewport[3]);
+
     if (st->depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
     if (st->scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
 
-    if (st->blend) glEnable(GL_BLEND);
-    else glDisable(GL_BLEND);
+    glScissor(st->scissor_box[0], st->scissor_box[1], st->scissor_box[2], st->scissor_box[3]);
+
+    if (st->blend) {
+        glEnable(GL_BLEND);
+    } else {
+        glDisable(GL_BLEND);
+    }
 
     glBlendEquation(st->blend_eq_rgb);
     glBlendFunc(st->blend_src_rgb, st->blend_dst_rgb);
@@ -489,7 +526,6 @@ static void restore_gles_state(const gles_state_t *st) {
     glUseProgram(st->program);
     glActiveTexture(st->active_tex);
     glBindTexture(GL_TEXTURE_2D, (GLuint) st->tex_binding);
-    glViewport(st->viewport[0], st->viewport[1], st->viewport[2], st->viewport[3]);
 }
 
 static void destroy_overlay(void) {
@@ -657,6 +693,7 @@ static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
 
 static int draw_rotated_content(int fb_w, int fb_h, int rot) {
     if (!content_copy_supported) return 0;
+    if (!content_pass_needed(rot)) return 0;
 
     ensure_content_program();
     if (!gles_prog_content) return 0;
@@ -664,42 +701,12 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
     ensure_content_tex(fb_w, fb_h);
     if (!content_tex) return 0;
 
-    GLint prev_fbo = 0;
-
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindTexture(GL_TEXTURE_2D, content_tex);
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
 
-    GLenum err = glGetError();
-    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) prev_fbo);
-
-    if (err != GL_NO_ERROR) {
-        if (content_tex_format == GL_RGBA) {
-            content_tex_internal = GL_RGB;
-            content_tex_format = GL_RGB;
-
-            destroy_content();
-            ensure_content_tex(fb_w, fb_h);
-
-            if (!content_tex) {
-                content_copy_supported = 0;
-                return 0;
-            }
-
-            glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            glBindTexture(GL_TEXTURE_2D, content_tex);
-            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
-
-            err = glGetError();
-            glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) prev_fbo);
-        }
-    }
-
-    if (err != GL_NO_ERROR) {
+    if (glGetError() != GL_NO_ERROR) {
         content_copy_supported = 0;
         return 0;
     }
@@ -707,20 +714,48 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
     glUseProgram(gles_prog_content);
 
     const struct colour_state *adjust = colour_adjust_get();
-
-    if (gles_u_brightness >= 0) glUniform1f(gles_u_brightness, adjust->brightness);
-    if (gles_u_contrast >= 0) glUniform1f(gles_u_contrast, adjust->contrast);
-    if (gles_u_saturation >= 0) glUniform1f(gles_u_saturation, adjust->saturation);
-    if (gles_u_hueshift >= 0) glUniform1f(gles_u_hueshift, adjust->hueshift);
-    if (gles_u_gamma >= 0) glUniform1f(gles_u_gamma, adjust->gamma);
-
     const colour_filter_matrix_t *filter = colour_filter_get();
 
-    if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, filter->enabled ? 1 : 0);
-    if (filter->enabled && gles_u_filter >= 0) glUniformMatrix3fv(gles_u_filter, 1, GL_FALSE, filter->matrix);
+    if (!content_uniform_cache.valid || content_uniform_cache.brightness != adjust->brightness) {
+        if (gles_u_brightness >= 0) glUniform1f(gles_u_brightness, adjust->brightness);
+        content_uniform_cache.brightness = adjust->brightness;
+    }
 
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    if (!content_uniform_cache.valid || content_uniform_cache.contrast != adjust->contrast) {
+        if (gles_u_contrast >= 0) glUniform1f(gles_u_contrast, adjust->contrast);
+        content_uniform_cache.contrast = adjust->contrast;
+    }
+
+    if (!content_uniform_cache.valid || content_uniform_cache.saturation != adjust->saturation) {
+        if (gles_u_saturation >= 0) glUniform1f(gles_u_saturation, adjust->saturation);
+        content_uniform_cache.saturation = adjust->saturation;
+    }
+
+    if (!content_uniform_cache.valid || content_uniform_cache.hueshift != adjust->hueshift) {
+        if (gles_u_hueshift >= 0) glUniform1f(gles_u_hueshift, adjust->hueshift);
+        content_uniform_cache.hueshift = adjust->hueshift;
+    }
+
+    if (!content_uniform_cache.valid || content_uniform_cache.gamma != adjust->gamma) {
+        if (gles_u_gamma >= 0) glUniform1f(gles_u_gamma, adjust->gamma);
+        content_uniform_cache.gamma = adjust->gamma;
+    }
+
+    if (!content_uniform_cache.valid || content_uniform_cache.filter_enabled != (filter->enabled ? 1 : 0)) {
+        if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, filter->enabled ? 1 : 0);
+        content_uniform_cache.filter_enabled = filter->enabled ? 1 : 0;
+    }
+
+    if (filter->enabled && gles_u_filter >= 0) {
+        if (!content_uniform_cache.valid ||
+            memcmp(content_uniform_cache.filter, filter->matrix, sizeof(float) * 9) != 0) {
+            glUniformMatrix3fv(gles_u_filter, 1, GL_FALSE, filter->matrix);
+            memcpy(content_uniform_cache.filter, filter->matrix, sizeof(float) * 9);
+        }
+    }
+
+    content_uniform_cache.valid = 1;
+    glViewport(0, 0, fb_w, fb_h);
 
     gl_vtx_t vtx[4];
     build_fullscreen_quad(vtx, rot);
@@ -821,14 +856,18 @@ static void stage_draw(int fb_w, int fb_h) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glDisable(GL_DEPTH_TEST);
+
+    // Ensure we preserve the aspect ration and blending methods
+    const int rot = rotate_read_cached();
+    if (content_copy_supported && content_pass_needed(rot)) {
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_BLEND);
+        (void) draw_rotated_content(fb_w, fb_h, rot);
+    }
+
     glDisable(GL_SCISSOR_TEST);
 
     glViewport(0, 0, fb_w, fb_h);
-
-    if (content_copy_supported) {
-        glDisable(GL_BLEND);
-        (void) draw_rotated_content(fb_w, fb_h, rotate_read_cached());
-    }
 
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
