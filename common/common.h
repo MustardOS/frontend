@@ -18,6 +18,7 @@ extern lv_obj_t *msgbox_element;
 extern int battery_capacity;
 extern int fe_snd;
 extern int fe_bgm;
+extern int last_idle;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_dimension[15];
@@ -533,3 +534,5 @@ int int_to_pct(int num, int min, int max);
 void set_setting_value(const char *script_name, int value, int offset);
 
 int get_index_on_delete(int current_index, int post_delete_count);
+
+int screensaver_active(void);

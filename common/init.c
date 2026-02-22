@@ -28,8 +28,6 @@ static lv_indev_t *indev = NULL;
 static lv_indev_drv_t indev_drv; // must be declared here to prevent LVGL deadlocks
 static lv_timer_t *mux_refresh_timer = NULL;
 
-static int last_idle = -1;
-
 static int joy_general = -1;
 static int joy_power = -1;
 static int joy_volume = -1;

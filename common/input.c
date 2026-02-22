@@ -584,6 +584,13 @@ static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_typ
 
 // Invokes the relevant handler(s) for a particular input mux_type and action.
 static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, mux_input_action action) {
+    // Reset idle immediately so next input works normally
+    if (screensaver_active()) {
+        if (opts->idle_handler) opts->idle_handler();
+        last_idle = -1;
+        return;
+    }
+
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
@@ -610,6 +617,12 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
 
 // Invokes the relevant handler(s) for a particular input combo number and action.
 static void dispatch_combo(const mux_input_options *opts, int num, mux_input_action action) {
+    if (screensaver_active()) {
+        if (opts->idle_handler) opts->idle_handler();
+        last_idle = -1;
+        return;
+    }
+
     mux_input_handler handler = NULL;
     switch (action) {
         case MUX_INPUT_PRESS:
