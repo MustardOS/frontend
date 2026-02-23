@@ -22,8 +22,8 @@
 #include "log.h"
 
 #define INPUT_PATH "/dev/input/by-id/"
-#define EXIT_GRACE_MS 250
-#define RELEASE_STABLE_MS 50
+#define EXIT_GRACE_MS 256
+#define RELEASE_STABLE_MS 64
 
 key_event_callback event_handler = NULL;
 
@@ -44,10 +44,10 @@ static int wake_pipe[2] = {-1, -1};
 static uint32_t tick = 0;
 
 // Bitmask of input mux_types that are currently active.
-static uint64_t pressed = 0;
+static volatile uint64_t pressed = 0;
 
 // Bitmask of input mux_types that were active during the previous iteration of the event loop.
-static uint64_t held = 0;
+static volatile uint64_t held = 0;
 
 // Suppress any input during screensaver runs
 static volatile sig_atomic_t input_suppressed = 0;
@@ -649,6 +649,7 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
 }
 
 static void handle_inputs(const mux_input_options *opts) {
+    if (input_suppressed) return;
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay[MUX_INPUT_COUNT] = {};
     // Tick (millis) of last press or hold.
@@ -679,6 +680,7 @@ static void handle_inputs(const mux_input_options *opts) {
 }
 
 static void handle_combos(const mux_input_options *opts) {
+    if (input_suppressed) return;
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay = 0;
     // Tick (millis) of last press or hold.
@@ -1006,18 +1008,19 @@ void mux_input_task(const mux_input_options *opts) {
 
     struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
 
-    static int prev_screensaver = 0;
-    static int input_block_active = 0;
-    static uint32_t input_block_until = 0;
+    int prev_screensaver = 0;
+    int input_block_active = 0;
+    uint32_t input_block_until = 0;
 
-    static int wait_release = 0;
-    static uint32_t release_stable_until = 0;
+    int wait_release = 0;
+    uint32_t release_stable_until = 0;
 
     while (!stop_flag) {
         int now_screensaver = screensaver_active();
 
         if (!prev_screensaver && now_screensaver) {
             input_suppressed = 1;
+            wait_release = 0;
             pressed = 0;
             held = 0;
         }
@@ -1051,6 +1054,12 @@ void mux_input_task(const mux_input_options *opts) {
             }
 
             if ((size_t) r < sizeof(event)) continue;
+
+            if (input_suppressed) {
+                struct input_event drain[32];
+                while (read(fd, drain, sizeof(drain)) == sizeof(drain)) {}
+                continue;
+            }
 
             if (fd == opts->general_fd) {
                 if (event.type == EV_KEY) {
@@ -1119,13 +1128,13 @@ void mux_input_task(const mux_input_options *opts) {
             uint32_t now = mux_tick();
 
             if (pressed == 0) {
-                if (!release_stable_until)
+                if (!release_stable_until) {
                     release_stable_until = now + RELEASE_STABLE_MS;
-                else if ((int32_t) (now - release_stable_until) >= 0) {
+                } else if ((int32_t) (now - release_stable_until) >= 0) {
                     wait_release = 0;
-                    input_suppressed = 0;
                     pressed = 0;
                     held = 0;
+                    continue;
                 }
             } else {
                 release_stable_until = 0;
@@ -1133,11 +1142,12 @@ void mux_input_task(const mux_input_options *opts) {
                 held = 0;
             }
 
-            if (wait_release) {
-                if (opts->idle_handler) opts->idle_handler();
-                continue;
-            }
+            if (opts->idle_handler) opts->idle_handler();
+            continue;
         }
+
+        // Reset input suppression!
+        if (input_suppressed) input_suppressed = 0;
 
         tick = mux_tick();
         handle_inputs(opts);
