@@ -151,14 +151,14 @@ static void create_archive_items(void) {
         snprintf(item_glyph, sizeof(item_glyph), "%s", is_installed ? "installed" : "archive");
 
         ui_count++;
-
-        add_item(&items, &item_count, base_filename, strip_ext(archive_store), item_glyph, ITEM);
+        char *display_name = strip_ext(archive_store);
+        add_item(&items, &item_count, base_filename, display_name, item_glyph, ITEM);
 
         lv_obj_t *ui_pnlArchive = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlArchive);
 
         lv_obj_t *ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
-        apply_theme_list_item(&theme, ui_lblArchiveItem, strip_ext(archive_store));
+        apply_theme_list_item(&theme, ui_lblArchiveItem, display_name);
 
         lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, items[i].extra_data);
@@ -167,7 +167,7 @@ static void create_archive_items(void) {
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlArchive);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblArchiveItem, ui_lblArchiveItemGlyph, items[i].display_name);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblArchiveItem, ui_lblArchiveItemGlyph, display_name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblArchiveItem);
     }
 
