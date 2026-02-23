@@ -157,7 +157,7 @@ static void create_core_items(const char *target) {
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlCore);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, items[i].name);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, display_name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem);
     }
 
