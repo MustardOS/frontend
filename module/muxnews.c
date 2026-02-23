@@ -151,7 +151,7 @@ static void create_news_entries(void) {
         lv_group_add_obj(ui_group_glyph, glyph);
         lv_group_add_obj(ui_group_panel, pnl);
 
-        apply_size_to_content(&theme, ui_pnlContent, lbl, glyph, items[i].name);
+        apply_size_to_content(&theme, ui_pnlContent, lbl, glyph, items[i].display_name);
         apply_text_long_dot(&theme, ui_pnlContent, lbl);
     }
 
