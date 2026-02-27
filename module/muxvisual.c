@@ -24,7 +24,7 @@ static void init_dropdown_settings(void) {
     VISUAL_ELEMENTS
 #undef VISUAL
 
-    OverlayTransparency_original = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 100);
+    OverlayTransparency_original = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
 }
 
 static void restore_visual_options(void) {
@@ -33,7 +33,7 @@ static void restore_visual_options(void) {
 #undef VISUAL
 
     lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAYIMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAYIMAGE);
-    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAYTRANSPARENCY, 0, 100));
+    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAYTRANSPARENCY, 0, 255));
 }
 
 static void save_visual_options(void) {
@@ -56,7 +56,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
-    CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 100);
+    CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 255);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
