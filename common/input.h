@@ -162,6 +162,10 @@ typedef struct {
     mux_input_handler idle_handler;
 } mux_input_options;
 
+void mux_input_flush_all(void);
+
+void mux_input_resume(void);
+
 // Starts the main input event loop, which runs until terminated by calling mux_input_stop.
 void mux_input_task(const mux_input_options *opts);
 

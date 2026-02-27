@@ -7,6 +7,7 @@
 #include "../../../../common/options.h"
 #include "../../../../common/common.h"
 #include "../../../../common/device.h"
+#include "../../../../common/input.h"
 #include "../../../../common/config.h"
 #include "../../../../common/theme.h"
 #include "sdl.h"
@@ -207,10 +208,13 @@ void sdl_init(void) {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
         LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
+    SDL_GameControllerEventState(SDL_ENABLE);
+    SDL_JoystickEventState(SDL_ENABLE);
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         LOG_ERROR("video", "PNG Init Failed: %s", IMG_GetError());
@@ -282,6 +286,52 @@ void sdl_cleanup(void) {
     SDL_Quit();
 }
 
+void run_dvd_screensaver_loop(void) {
+    mux_input_flush_all();
+
+    SDL_Event ev;
+    const uint32_t frame_ms = IDLE_MS;
+    uint32_t next = SDL_GetTicks();
+
+    while (dvd_active()) {
+        uint32_t now = SDL_GetTicks();
+        int timeout = (int) (next > now ? next - now : 0);
+
+        if (SDL_WaitEventTimeout(&ev, timeout)) {
+            do {
+                switch (ev.type) {
+                    case SDL_KEYDOWN:
+                    case SDL_CONTROLLERBUTTONDOWN:
+                    case SDL_JOYBUTTONDOWN:
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_QUIT:
+                        dvd_stop();
+                        break;
+                    default:
+                        break;
+                }
+            } while (SDL_PollEvent(&ev));
+        }
+
+        // The following looks really stupid but it works!
+        if (!dvd_active()) break;
+        dvd_update();
+        if (!dvd_active()) break;
+
+        SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+        SDL_RenderClear(monitor.renderer);
+        dvd_render(monitor.renderer);
+        SDL_RenderPresent(monitor.renderer);
+
+        next += frame_ms;
+    }
+
+    monitor.force_clear = true;
+    monitor.refresh = true;
+
+    mux_input_resume();
+}
+
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
     if (!monitor.texture || area->x2 < 0 || area->y2 < 0 ||
         area->x1 >= device.MUX.WIDTH || area->y1 >= device.MUX.HEIGHT) {
@@ -339,44 +389,11 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
         return;
     }
 
+    // Update our screensaver function, and if we update successfully
+    // then we mark it as active and run the loop with a complete
+    // separate input logic scheme that does not interrupt the muX frontend!
     if (config.SETTINGS.POWER.SCREENSAVER) dvd_update();
-
-    // LVGL does not redraw at a steady pace when idle, so
-    // the screensaver must become the "driver" while active...
-    // I'm sure there are repercussions with this whole section
-    // but we'll see what happens in the future!
-    if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) {
-        lv_disp_flush_ready(disp_drv);
-
-        const uint32_t frame_ms = IDLE_MS;
-        uint32_t next = SDL_GetTicks();
-
-        while (1) {
-            dvd_update();
-
-            if (!dvd_active()) break;
-
-            SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
-            SDL_RenderClear(monitor.renderer);
-
-            dvd_render(monitor.renderer);
-            SDL_RenderPresent(monitor.renderer);
-
-            next += frame_ms;
-            uint32_t now = SDL_GetTicks();
-
-            if ((int32_t) (next - now) > 0) {
-                SDL_Delay(next - now);
-            } else {
-                next = now;
-            }
-        }
-
-        monitor.force_clear = true;
-        monitor.refresh = true;
-
-        return;
-    }
+    if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) run_dvd_screensaver_loop();
 
     if (monitor.needs_clear || monitor.force_clear) {
         if (monitor.background_image) {

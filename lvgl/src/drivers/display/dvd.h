@@ -11,4 +11,6 @@ void dvd_render(SDL_Renderer *renderer);
 
 int dvd_active(void);
 
+void dvd_stop(void);
+
 void dvd_shutdown(void);

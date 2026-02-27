@@ -3906,8 +3906,3 @@ int get_index_on_delete(int current_index, int post_delete_count) {
     int max_index = post_delete_count - 1;
     return current_index > max_index ? max_index : current_index;
 }
-
-int screensaver_active(void) {
-    if (!config.SETTINGS.POWER.SCREENSAVER) return 0;
-    return last_idle > 0;
-}

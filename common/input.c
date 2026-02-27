@@ -22,8 +22,7 @@
 #include "log.h"
 
 #define INPUT_PATH "/dev/input/by-id/"
-#define EXIT_GRACE_MS 256
-#define RELEASE_STABLE_MS 64
+#define INPUT_COOLDOWN 256
 
 key_event_callback event_handler = NULL;
 
@@ -50,14 +49,37 @@ static volatile uint64_t pressed = 0;
 static volatile uint64_t held = 0;
 
 // Suppress any input during screensaver runs
-static volatile sig_atomic_t input_suppressed = 0;
+static volatile uint32_t suppress_until_tick = 0;
 
-static inline void set_stop_flag(void) {
-    stop_flag = 1;
+static inline bool input_is_suppressed(void) {
+    return mux_tick() < suppress_until_tick;
+}
+
+void ep_wait_wake(void) {
     if (wake_pipe[1] != -1) {
         unsigned char b = 1;
         (void) write(wake_pipe[1], &b, 1); // wake epoll_wait
     }
+}
+
+void mux_input_flush_all(void) {
+    pressed = 0;
+    held = 0;
+
+    suppress_until_tick = UINT32_MAX;
+    ep_wait_wake();
+}
+
+void mux_input_resume(void) {
+    pressed = 0;
+    held = 0;
+
+    suppress_until_tick = mux_tick() + INPUT_COOLDOWN;
+}
+
+static inline void set_stop_flag(void) {
+    stop_flag = 1;
+    ep_wait_wake();
 }
 
 int find_keyboard_devices(int *fds, int max_fds) {
@@ -89,7 +111,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
 
 // Processes gamepad buttons.
 static void process_key(const mux_input_options *opts, const struct input_event *event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.A &&
@@ -149,7 +171,7 @@ static void process_key(const mux_input_options *opts, const struct input_event 
 
 // Processes volume buttons.
 static void process_volume(const mux_input_options *opts, const struct input_event *event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_UP &&
@@ -167,7 +189,7 @@ static void process_volume(const mux_input_options *opts, const struct input_eve
 
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     mux_input_type mux_type;
 
     int axis;
@@ -251,7 +273,7 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
 // Processes gamepad button DPAD
 // Some devices like zero28 the DPAD triggers button press events
 static void process_dpad_as_buttons(const mux_input_options *opts, const struct input_event *event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     int axis, direction;
 
     if (!(opts->nav & NAV_DPAD)) return;
@@ -294,7 +316,7 @@ static void process_dpad_as_buttons(const mux_input_options *opts, const struct 
 
 // Process system buttons.
 static void process_sys(const mux_input_options *opts, const struct input_event *event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
 
     if (event->type == device.INPUT_TYPE.BUTTON.POWER_SHORT && event->code == device.INPUT_CODE.BUTTON.POWER_SHORT) {
         switch (event->value) {
@@ -316,7 +338,7 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 
 // Process switch that is currently on the trim-ui devices
 static void process_sw(const mux_input_options *opts, const struct input_event *event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.SWITCH && event->code == device.INPUT_CODE.BUTTON.SWITCH) {
@@ -330,7 +352,7 @@ static void process_sw(const mux_input_options *opts, const struct input_event *
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
 static void process_usb_key(const mux_input_options *opts, struct js_event js) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     mux_input_type mux_type;
 
     if (js.number == controller.BUTTON.A) {
@@ -368,7 +390,7 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     int axis, axis_max;
 
     // DPAD disabled in the navigation setting so ignore DPAD entirely!
@@ -443,7 +465,7 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
 
 // Processes gamepad button D-pad. Some controllers like PS3 the DPAD triggers button press events
 static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js_event js) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     int axis, direction;
 
     if (!(opts->nav & NAV_DPAD)) return;
@@ -481,7 +503,7 @@ static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js
 }
 
 static void process_usb_keyboard_keys(const mux_input_options *opts, struct input_event event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     mux_input_type mux_type;
 
     if (event.code == KEY_ENTER || event.code == KEY_A) {
@@ -512,7 +534,7 @@ static void process_usb_keyboard_keys(const mux_input_options *opts, struct inpu
 }
 
 static void process_usb_keyboard_arrow_keys(const mux_input_options *opts, struct input_event event) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     int axis, direction;
 
     if (event.code == KEY_UP) {
@@ -649,7 +671,7 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
 }
 
 static void handle_inputs(const mux_input_options *opts) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay[MUX_INPUT_COUNT] = {};
     // Tick (millis) of last press or hold.
@@ -680,7 +702,7 @@ static void handle_inputs(const mux_input_options *opts) {
 }
 
 static void handle_combos(const mux_input_options *opts) {
-    if (input_suppressed) return;
+    if (input_is_suppressed()) return;
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay = 0;
     // Tick (millis) of last press or hold.
@@ -1003,30 +1025,10 @@ void mux_input_task(const mux_input_options *opts) {
         timeout_hold = config.SETTINGS.ADVANCED.ACCELERATE;
     }
 
-    if (is_switch_held(opts->general_fd))
-        pressed |= BIT(MUX_INPUT_SWITCH);
-
+    if (is_switch_held(opts->general_fd)) pressed |= BIT(MUX_INPUT_SWITCH);
     struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
 
-    int prev_screensaver = 0;
-    int input_block_active = 0;
-    uint32_t input_block_until = 0;
-
-    int wait_release = 0;
-    uint32_t release_stable_until = 0;
-
     while (!stop_flag) {
-        int now_screensaver = screensaver_active();
-
-        if (!prev_screensaver && now_screensaver) {
-            input_suppressed = 1;
-            wait_release = 0;
-            pressed = 0;
-            held = 0;
-        }
-
-        if (now_screensaver) input_suppressed = 1;
-
         int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.HASEVENT, held ? timeout_hold : timeout);
 
         if (num_events == -1) {
@@ -1040,8 +1042,7 @@ void mux_input_task(const mux_input_options *opts) {
             if (fd == wake_pipe[0]) {
                 char buf[64];
                 while (read(wake_pipe[0], buf, sizeof buf) > 0) {}
-                set_stop_flag();
-                break;
+                continue;
             }
 
             struct input_event event;
@@ -1054,12 +1055,6 @@ void mux_input_task(const mux_input_options *opts) {
             }
 
             if ((size_t) r < sizeof(event)) continue;
-
-            if (input_suppressed) {
-                struct input_event drain[32];
-                while (read(fd, drain, sizeof(drain)) == sizeof(drain)) {}
-                continue;
-            }
 
             if (fd == opts->general_fd) {
                 if (event.type == EV_KEY) {
@@ -1086,68 +1081,13 @@ void mux_input_task(const mux_input_options *opts) {
             }
         }
 
-        now_screensaver = screensaver_active();
-
-        if (prev_screensaver && !now_screensaver) {
-            input_suppressed = 1;
-            input_block_active = 1;
-            input_block_until = mux_tick() + EXIT_GRACE_MS;
-
-            wait_release = 1;
-            release_stable_until = 0;
-
-            pressed = 0;
-            held = 0;
-        }
-
-        prev_screensaver = now_screensaver;
-        if (now_screensaver) {
+        if (input_is_suppressed()) {
             pressed = 0;
             held = 0;
 
             if (opts->idle_handler) opts->idle_handler();
-            last_idle = -1;
-
             continue;
         }
-
-        // Identify and invoke handlers for inputs whose state changed.
-        if (input_block_active) {
-            if ((int32_t) (mux_tick() - input_block_until) < 0) {
-                pressed = 0;
-                held = 0;
-
-                if (opts->idle_handler) opts->idle_handler();
-                continue;
-            }
-
-            input_block_active = 0;
-        }
-
-        if (wait_release) {
-            uint32_t now = mux_tick();
-
-            if (pressed == 0) {
-                if (!release_stable_until) {
-                    release_stable_until = now + RELEASE_STABLE_MS;
-                } else if ((int32_t) (now - release_stable_until) >= 0) {
-                    wait_release = 0;
-                    pressed = 0;
-                    held = 0;
-                    continue;
-                }
-            } else {
-                release_stable_until = 0;
-                pressed = 0;
-                held = 0;
-            }
-
-            if (opts->idle_handler) opts->idle_handler();
-            continue;
-        }
-
-        // Reset input suppression!
-        if (input_suppressed) input_suppressed = 0;
 
         tick = mux_tick();
         handle_inputs(opts);
