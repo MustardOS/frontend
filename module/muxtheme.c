@@ -171,6 +171,11 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void save_active_theme(char *path) {
+    write_text_to_file(CONF_CONFIG_PATH "theme/active", "w", CHAR, path);
+    if (strcmp(config.THEME.ACTIVE, path) != 0) run_tweak_script();
+}
+
 static void handle_a(void) {
     if (msgbox_active || !ui_count || hold_call) return;
 
@@ -217,14 +222,14 @@ static void handle_a(void) {
         refresh_resolution = 1;
 
         if (strcasecmp(base_dir, sys_dir) == 0) {
-            write_text_to_file(CONF_CONFIG_PATH "theme/active", "w", CHAR, items[current_item_index].name);
+            save_active_theme(items[current_item_index].name);
         } else {
             char *relative_path = sys_dir + strlen(base_dir);
             if (*relative_path == '/') relative_path++;
             char active_path[PATH_MAX];
             snprintf(active_path, sizeof(active_path), "%s/%s",
                      relative_path, items[current_item_index].name);
-            write_text_to_file(CONF_CONFIG_PATH "theme/active", "w", CHAR, active_path);
+            save_active_theme(active_path);
         }
 
         write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
