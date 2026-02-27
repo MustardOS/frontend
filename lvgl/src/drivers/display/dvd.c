@@ -10,7 +10,9 @@
 
 #define FRAME_SHF 16
 #define FRAME_ONE (1 << FRAME_SHF)
-#define DVD_SPEED 120
+
+#define DVD_SPEED_PATH "/opt/muos/config/settings/power/screensaver"
+#define DVD_SPEED_DEFAULT 90
 
 typedef struct {
     SDL_Texture *tex;
@@ -30,9 +32,17 @@ typedef struct {
     uint32_t last_tick;
     uint32_t last_idle_poll;
     int was_idle_active;
+
+    int dvd_speed;
+    int32_t speed_fp_per_ms;
 } dvd_state_t;
 
 static dvd_state_t dvd = {0};
+
+static int read_dvd_speed(void) {
+    if (!file_exist(DVD_SPEED_PATH)) return DVD_SPEED_DEFAULT;
+    return read_line_int_from(DVD_SPEED_PATH, 1);
+}
 
 static void dvd_launch(void) {
     static int seeded = 0;
@@ -85,10 +95,12 @@ int dvd_init(SDL_Renderer *renderer, const char *png_path, int screen_w, int scr
     dvd.last_tick = SDL_GetTicks();
     dvd.last_idle_poll = 0;
 
-    dvd.idle_active = false;
     dvd.was_idle_active = false;
 
-    LOG_INFO("saver", "Screensaver initialised (%dx%d)", dvd.rect.w, dvd.rect.h);
+    dvd.dvd_speed = read_dvd_speed();
+    dvd.speed_fp_per_ms = (int32_t) ((dvd.dvd_speed * FRAME_ONE) / 1000);
+
+    LOG_INFO("saver", "Screensaver Initialised (%dx%d), speed=%d", dvd.rect.w, dvd.rect.h, dvd.dvd_speed);
     return true;
 }
 
@@ -129,6 +141,14 @@ void dvd_update(void) {
         dvd.last_idle_poll = now;
 
         if (dvd.idle_active && !dvd.was_idle_active) {
+            int new_speed = read_dvd_speed();
+            if (new_speed != dvd.dvd_speed) {
+                dvd.dvd_speed = new_speed;
+                dvd.speed_fp_per_ms = (int32_t) ((dvd.dvd_speed * FRAME_ONE) / 1000);
+
+                LOG_INFO("saver", "DVD Speed Refreshed: %d", dvd.dvd_speed);
+            }
+
             int max_x = dvd.screen_w - dvd.rect.w;
             int max_y = dvd.screen_h - dvd.rect.h;
 
@@ -153,8 +173,8 @@ void dvd_update(void) {
 
     dvd.last_tick = now;
 
-    static const int32_t speed_fp_per_ms = (int32_t) ((DVD_SPEED * FRAME_ONE) / 1000);
-    int32_t step = speed_fp_per_ms * (int32_t) elapsed;
+    if (dvd.speed_fp_per_ms == 0) return;
+    int32_t step = dvd.speed_fp_per_ms * (int32_t) elapsed;
 
     dvd.fx += dvd.vx * step;
     dvd.fy += dvd.vy * step;
@@ -204,5 +224,5 @@ void dvd_shutdown(void) {
     }
 
     dvd.enabled = false;
-    LOG_INFO("saver", "Screensaver shutdown");
+    LOG_INFO("saver", "Screensaver Shutdown");
 }

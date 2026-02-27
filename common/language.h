@@ -1035,7 +1035,14 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char LOW_BATTERY[MAX_BUFFER_SIZE];
-        char SCREENSAVER[MAX_BUFFER_SIZE];
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char s30[MAX_BUFFER_SIZE];
+            char s60[MAX_BUFFER_SIZE];
+            char s90[MAX_BUFFER_SIZE];
+            char s120[MAX_BUFFER_SIZE];
+            char s240[MAX_BUFFER_SIZE];
+        } SCREENSAVER;
         struct {
             char ERROR[MAX_BUFFER_SIZE];
             char DISPLAY[MAX_BUFFER_SIZE];

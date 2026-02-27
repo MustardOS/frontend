@@ -13,6 +13,32 @@ static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900,
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
 
+#define SCREENSAVER_COUNT 5
+enum screensaver_speed {
+    SCREENSAVER_DISABLED = 0,
+    SCREENSAVER_CRAWL = 30,
+    SCREENSAVER_CRUISE = 90,
+    SCREENSAVER_FAST = 150,
+    SCREENSAVER_TURBO = 300,
+    SCREENSAVER_LUDICROUS = 600
+};
+
+static const int screensaver_values[SCREENSAVER_COUNT] = {
+        SCREENSAVER_DISABLED,
+        SCREENSAVER_CRAWL,
+        SCREENSAVER_CRUISE,
+        SCREENSAVER_FAST,
+        SCREENSAVER_TURBO
+};
+
+static const char *screensaver_timer[SCREENSAVER_COUNT] = {
+        lang.GENERIC.DISABLED,
+        lang.MUXPOWER.SCREENSAVER.s30,
+        lang.MUXPOWER.SCREENSAVER.s60,
+        lang.MUXPOWER.SCREENSAVER.s90,
+        lang.MUXPOWER.SCREENSAVER.s120
+};
+
 char **gov_values_lower = NULL;
 char **gov_values_disp = NULL;
 
@@ -119,7 +145,14 @@ static void restore_power_options(void) {
     lv_dropdown_set_selected(ui_droIdleMute_power, config.SETTINGS.POWER.IDLE.MUTE);
     lv_dropdown_set_selected(ui_droGovIdle_power, find_governor(config.SETTINGS.POWER.GOV.IDLE));
     lv_dropdown_set_selected(ui_droGovDefault_power, find_governor(config.SETTINGS.POWER.GOV.DEFAULT));
-    lv_dropdown_set_selected(ui_droScreensaver_power, config.SETTINGS.POWER.SCREENSAVER);
+
+    if (config.SETTINGS.POWER.SCREENSAVER == SCREENSAVER_LUDICROUS) {
+        const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droScreensaver_power); // heh...
+        if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.s240, LV_DROPDOWN_POS_LAST);
+        lv_dropdown_set_selected(ui_droScreensaver_power, SCREENSAVER_COUNT);
+    } else {
+        map_drop_down_to_index(ui_droScreensaver_power, config.SETTINGS.POWER.SCREENSAVER, screensaver_values, SCREENSAVER_COUNT, 0);
+    }
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
@@ -200,10 +233,16 @@ static int save_power_options(void) {
         CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
     }
 
-    if (lv_dropdown_get_option_cnt(ui_droScreensaver_power) > 1 &&
-        lv_dropdown_get_selected(ui_droScreensaver_power) != Screensaver_original) {
+    if (lv_dropdown_get_option_cnt(ui_droScreensaver_power) > 1 && lv_dropdown_get_selected(ui_droScreensaver_power) != Screensaver_original) {
+        int ss_value;
+        if (lv_dropdown_get_selected(ui_droScreensaver_power) == SCREENSAVER_COUNT) {
+            ss_value = SCREENSAVER_LUDICROUS;
+        } else {
+            ss_value = map_drop_down_to_value(lv_dropdown_get_selected(ui_droScreensaver_power), screensaver_values, SCREENSAVER_COUNT, SCREENSAVER_DISABLED);
+        }
+
         is_modified++;
-        CHECK_AND_SAVE_STD(power, Screensaver, "settings/power/screensaver", INT, 0);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/screensaver", "w", INT, ss_value);
     }
 
     if (is_modified > 0) run_tweak_script();
@@ -240,7 +279,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, IdleMute, lang.MUXPOWER.IDLE.MUTE, "idle_mute", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, power, GovIdle, lang.MUXPOWER.GOV.IDLE, "gov_idle", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(-1, power, GovDefault, lang.MUXPOWER.GOV.DEFAULT, "gov_fe", gov_values_disp, (int) gov_count);
-    INIT_OPTION_ITEM(-1, power, Screensaver, lang.MUXPOWER.SCREENSAVER, "screensaver", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, power, Screensaver, lang.MUXPOWER.SCREENSAVER.TITLE, "screensaver", (char **) screensaver_timer, SCREENSAVER_COUNT);
 
     char *battery_pct = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_pct);
@@ -299,6 +338,29 @@ static void handle_b(void) {
     }
 }
 
+static void set_screensaver(void) {
+    const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droScreensaver_power);
+    if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.s240, LV_DROPDOWN_POS_LAST);
+
+    lv_dropdown_set_selected(ui_droScreensaver_power, SCREENSAVER_COUNT);
+    play_sound(SND_MUOS);
+
+    toast_message(
+            "\x54\x68\x65\x79\x27\x76\x65"
+            "\x20\x67\x6F\x6E\x65\x20\x70"
+            "\x6C\x61\x69\x64\x2E\x2E\x2E",
+            SHORT
+    );
+
+    refresh_screen(ui_screen, 1);
+}
+
+static void handle_x(void) {
+    if (msgbox_active || hold_call) return;
+
+    if (lv_group_get_focused(ui_group_value) == ui_droScreensaver_power) set_screensaver();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
@@ -353,6 +415,7 @@ int muxpower_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
