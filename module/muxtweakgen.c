@@ -202,7 +202,10 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(tweakgen, HkShot);
     }
 
-    if (hdmi_in_use) HIDE_OPTION_ITEM(tweakgen, Volume);
+    if (hdmi_in_use) {
+        HIDE_OPTION_ITEM(tweakgen, Brightness);
+        HIDE_OPTION_ITEM(tweakgen, Volume);
+    }
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
