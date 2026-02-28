@@ -33,10 +33,10 @@ static const int screensaver_values[SCREENSAVER_COUNT] = {
 
 static const char *screensaver_timer[SCREENSAVER_COUNT] = {
         lang.GENERIC.DISABLED,
-        lang.MUXPOWER.SCREENSAVER.s30,
-        lang.MUXPOWER.SCREENSAVER.s60,
-        lang.MUXPOWER.SCREENSAVER.s90,
-        lang.MUXPOWER.SCREENSAVER.s120
+        lang.MUXPOWER.SCREENSAVER.CRAWL,
+        lang.MUXPOWER.SCREENSAVER.CRUISE,
+        lang.MUXPOWER.SCREENSAVER.FAST,
+        lang.MUXPOWER.SCREENSAVER.TURBO
 };
 
 char **gov_values_lower = NULL;
@@ -148,7 +148,7 @@ static void restore_power_options(void) {
 
     if (config.SETTINGS.POWER.SCREENSAVER == SCREENSAVER_LUDICROUS) {
         const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droScreensaver_power); // heh...
-        if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.s240, LV_DROPDOWN_POS_LAST);
+        if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.LUDICROUS, LV_DROPDOWN_POS_LAST);
         lv_dropdown_set_selected(ui_droScreensaver_power, SCREENSAVER_COUNT);
     } else {
         map_drop_down_to_index(ui_droScreensaver_power, config.SETTINGS.POWER.SCREENSAVER, screensaver_values, SCREENSAVER_COUNT, 0);

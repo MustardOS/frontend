@@ -906,11 +906,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.TITLE, "POWER SETTINGS");
     SPECIFIC_FIELD(lang->MUXPOWER.LOW_BATTERY, "Low Battery Indicator");
     SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TITLE, "Frontend Screensaver");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.s30, "Crawl");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.s60, "Cruise");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.s90, "Fast");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.s120, "Turbo");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.s240, "Ludicrous");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.CRAWL, "Crawl");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.CRUISE, "Cruise");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.FAST, "Fast");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TURBO, "Turbo");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.LUDICROUS, "Ludicrous");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.ERROR, "Idle Display must be less than Idle Sleep");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.DISPLAY, "Idle Input Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.SLEEP, "Idle Input Sleep Timeout");
@@ -1001,7 +1001,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSORT.HELP.COLLECTION, "Set Content Explorer sorting level for Collection items (100 top of list 1 bottom of list)");
     SPECIFIC_FIELD(lang->MUXSORT.HELP.HISTORY, "Set Content Explorer sorting level for History items (100 top of list 1 bottom of list)");
     SPECIFIC_FIELD(lang->MUXSORT.HELP.TAG, "Set Content Explorer sorting level for items tagged as %s (100 top of list 1 bottom of list)");
-    
+
     // muxspace
     SPECIFIC_FIELD(lang->MUXSPACE.TITLE, "STORAGE SPACE");
     SPECIFIC_FIELD(lang->MUXSPACE.HELP, "View the current used space of the mounted storage devices");
