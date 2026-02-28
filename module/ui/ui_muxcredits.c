@@ -180,6 +180,7 @@ static const char *knight_one[] = {
         "retrogamecorps",
         "rbndr_",
         "sanelessone",
+        "hanswurstsenior",
         NULL
 };
 
@@ -208,13 +209,7 @@ static const char *knight_two[] = {
 };
 
 static const char *contributors[] = {
-        "antikk",
         "bitter_bizarro",
-        "duncanyoyo1",
-        "escal8tor",
-        "fashberg",
-        "imcokeman",
-        "nesreka",
         "xonglebongle",
         NULL
 };
