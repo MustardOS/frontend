@@ -340,7 +340,7 @@ static void handle_b(void) {
 
 static void set_screensaver(void) {
     const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droScreensaver_power);
-    if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.s240, LV_DROPDOWN_POS_LAST);
+    if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.LUDICROUS, LV_DROPDOWN_POS_LAST);
 
     lv_dropdown_set_selected(ui_droScreensaver_power, SCREENSAVER_COUNT);
     play_sound(SND_MUOS);
