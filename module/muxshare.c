@@ -56,8 +56,8 @@ void hold_call_release(void) {
     hold_call = 0;
 }
 
-void run_tweak_script() {
-    toast_message(lang.GENERIC.SAVING, FOREVER);
+void run_tweak_script(char *message) {
+    toast_message(message, FOREVER);
 
     const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
     run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);

@@ -104,7 +104,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", swap_values, 11, 0);
     CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", swap_values, 11, 0);
 
-    if (is_modified > 0) run_tweak_script();
+    if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 }
 
 static void init_navigation_group(void) {

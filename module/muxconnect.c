@@ -40,7 +40,7 @@ static void save_options(void) {
     CHECK_AND_SAVE_STD(connect, UsbFunction, "settings/advanced/usb_function", INT, 0);
     CHECK_AND_SAVE_STD(connect, Bluetooth, "visual/bluetooth", INT, 0);
 
-    if (is_modified > 0) run_tweak_script();
+    if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 }
 
 static void init_navigation_group(void) {

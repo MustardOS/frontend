@@ -245,7 +245,7 @@ static int save_power_options(void) {
         write_text_to_file(CONF_CONFIG_PATH "settings/power/screensaver", "w", INT, ss_value);
     }
 
-    if (is_modified > 0) run_tweak_script();
+    if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 
     free_governor_values();
     play_sound(SND_BACK);

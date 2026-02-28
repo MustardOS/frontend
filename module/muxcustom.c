@@ -396,7 +396,7 @@ static void save_custom_options() {
         set_nav_volume(lv_dropdown_get_selected(ui_droSoundVolume_custom));
     }
 
-    if (is_modified > 0) run_tweak_script();
+    if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 
     if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);
 }

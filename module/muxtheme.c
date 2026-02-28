@@ -173,7 +173,7 @@ static void list_nav_next(int steps) {
 
 static void save_active_theme(char *path) {
     write_text_to_file(CONF_CONFIG_PATH "theme/active", "w", CHAR, path);
-    if (strcmp(config.THEME.ACTIVE, path) != 0) run_tweak_script();
+    if (strcmp(config.THEME.ACTIVE, path) != 0) run_tweak_script(lang.GENERIC.LOADING);
 }
 
 static void handle_a(void) {

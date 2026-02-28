@@ -80,7 +80,7 @@ static void save_tweak_options(void) {
         if (volume_mod != Volume_original) set_setting_value("audio", volume_mod, 0);
     }
 
-    if (is_modified > 0) run_tweak_script();
+    if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 }
 
 static char **load_combos(const char *filename, int *count) {
