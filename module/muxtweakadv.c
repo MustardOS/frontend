@@ -196,13 +196,10 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droOffset_tweakadv, offset_values);
     free(offset_values);
 
-    char *swapfile_values = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droSwapfile_tweakadv, swapfile_values);
-    free(swapfile_values);
-
-    char *zramfile_values = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droZramfile_tweakadv, zramfile_values);
-    free(zramfile_values);
+    char *swap_values = generate_number_string(128, 1024, 128, lang.GENERIC.DISABLED, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droSwapfile_tweakadv, swap_values);
+    apply_theme_list_drop_down(&theme, ui_droZramfile_tweakadv, swap_values);
+    free(swap_values);
 
     char *partition_values = generate_number_string(1, 128, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droSecondPart_tweakadv, partition_values);
