@@ -26,7 +26,7 @@ const int repeat_delay_values[] = {
 };
 
 const int swap_values[] = {
-        0, 64, 128, 192, 256, 320, 384, 448, 512, 1024, 2048
+        0, 128, 256, 384, 512, 640, 768, 896, 1024
 };
 
 const int battery_offset_values[] = { // ugh!
