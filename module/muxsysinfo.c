@@ -20,7 +20,7 @@ static void show_help(void) {
 }
 
 static int read_file_trim(const char *path, char *out) {
-    if (!path || !out) return -1;
+    if (!out) return -1;
 
     FILE *fp = fopen(path, "r");
     if (!fp) return -1;
@@ -36,18 +36,22 @@ static int read_file_trim(const char *path, char *out) {
     while (*start && isspace((unsigned char) *start)) start++;
 
     char *end = start + strlen(start);
-    while (end > start && isspace((unsigned char) *(end - 1))) --end;
-    *end = '\0';
+    while (end > start && isspace((unsigned char) end[-1])) end--;
 
-    if (start != out) memmove(out, start, end - start + 1);
+    size_t len = (size_t) (end - start);
+    if (start != out) memmove(out, start, len);
+    out[len] = '\0';
 
-    return (out[0] != '\0') ? 0 : -1;
+    return (len > 0) ? 0 : -1;
 }
 
 static int read_ll_from_file(const char *path, unsigned long long *val) {
+    if (!path) return -1;
+
     char buffer[UI_BUFFER];
 
     if (read_file_trim(path, buffer) != 0) return -1;
+    if (buffer[0] == '-') return -1;
 
     errno = 0;
     char *end = NULL;
@@ -123,7 +127,7 @@ const char *get_current_frequency(void) {
     unsigned long long khz = 0;
 
     for (size_t i = 0; i < A_SIZE(paths); i++) {
-        if (read_ll_from_file(paths[i], &khz) == 0) break;
+        if (read_ll_from_file(paths[i], &khz) == 0 && khz > 0) break;
     }
 
     if (khz == 0) {
@@ -131,7 +135,10 @@ const char *get_current_frequency(void) {
         return buffer;
     }
 
-    snprintf(buffer, sizeof(buffer), "%.2f MHz", (double) khz / 1000.0);
+    unsigned long long mhz_whole = khz / 1000ULL;
+    unsigned long long mhz_frac = (khz % 1000ULL) / 10ULL;
+
+    snprintf(buffer, sizeof(buffer), "%llu.%02llu MHz", mhz_whole, mhz_frac);
     return buffer;
 }
 
@@ -162,17 +169,19 @@ const char *get_memory_usage(void) {
         if (!total_kb && strncmp(line, "MemTotal:", 9) == 0) {
             char *value = line + 9;
             while (*value && (*value < '0' || *value > '9')) value++;
-
-            errno = 0;
-            unsigned long long mem = strtoull(value, NULL, 10);
-            if (errno == 0) total_kb = mem;
+            if (*value) {
+                errno = 0;
+                unsigned long long mem = strtoull(value, NULL, 10);
+                if (errno == 0) total_kb = mem;
+            }
         } else if (!avail_kb && strncmp(line, "MemAvailable:", 13) == 0) {
             char *value = line + 13;
             while (*value && (*value < '0' || *value > '9')) value++;
-
-            errno = 0;
-            unsigned long long mem = strtoull(value, NULL, 10);
-            if (errno == 0) avail_kb = mem;
+            if (*value) {
+                errno = 0;
+                unsigned long long mem = strtoull(value, NULL, 10);
+                if (errno == 0) avail_kb = mem;
+            }
         }
 
         if (total_kb && avail_kb) break;
@@ -186,12 +195,15 @@ const char *get_memory_usage(void) {
     }
 
     unsigned long long used_kb = (total_kb > avail_kb) ? (total_kb - avail_kb) : 0ULL;
-    unsigned long long used_mb = (used_kb * 100ULL) / 1024ULL;
-    unsigned long long total_mb = (total_kb * 100ULL) / 1024ULL;
+
+    unsigned long long used_whole = used_kb / 1024ULL;
+    unsigned long long used_frac = ((used_kb % 1024ULL) * 100ULL) / 1024ULL;
+
+    unsigned long long total_whole = total_kb / 1024ULL;
+    unsigned long long total_frac = ((total_kb % 1024ULL) * 100ULL) / 1024ULL;
 
     snprintf(buffer, sizeof(buffer), "%llu.%02llu MB / %llu.%02llu MB",
-             used_mb / 100ULL, used_mb % 100ULL,
-             total_mb / 100ULL, total_mb % 100ULL);
+             used_whole, used_frac, total_whole, total_frac);
 
     return buffer;
 }
@@ -204,10 +216,15 @@ const char *get_swap_usage(void) {
         return buffer;
     }
 
-    const unsigned long long unit = sysinfo_cache.mem_unit;
+    const unsigned long long unit = (unsigned long long) sysinfo_cache.mem_unit;
+    if (unit == 0) {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        return buffer;
+    }
+
     const unsigned long long total = (unsigned long long) sysinfo_cache.totalswap * unit;
     const unsigned long long free = (unsigned long long) sysinfo_cache.freeswap * unit;
-    const unsigned long long used = (total > free) ? (total - free) : 0;
+    const unsigned long long used = (total > free) ? (total - free) : 0ULL;
 
     snprintf(buffer, sizeof(buffer), "%.2f MB / %.2f MB",
              (double) used / 1048576.0, (double) total / 1048576.0);
@@ -223,41 +240,44 @@ const char *get_temperature(void) {
             "/sys/class/thermal/thermal_zone1/temp",
     };
 
-    unsigned long long milli_c = 0;
-
+    unsigned long long mc = 0;
     for (size_t i = 0; i < A_SIZE(paths); i++) {
-        if (read_ll_from_file(paths[i], &milli_c) == 0) break;
+        if (read_ll_from_file(paths[i], &mc) == 0 && mc > 0) break;
     }
 
-    if (milli_c == 0) {
+    if (mc == 0) {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
         return buffer;
     }
 
-    snprintf(buffer, sizeof(buffer), "%.2f°C", (double) milli_c / 1000.0);
+    unsigned long long c_whole = mc / 1000ULL;
+    unsigned long long c_frac = (mc % 1000ULL) / 10ULL;
+
+    snprintf(buffer, sizeof(buffer), "%llu.%02llu\u00B0C", c_whole, c_frac);
     return buffer;
 }
 
 static const char *get_system_uptime(void) {
     static char buffer[UI_BUFFER];
 
-    long total_minutes = sysinfo_cache.uptime / 60;
-    long days = total_minutes / (24 * 60);
-    long hours = (total_minutes % (24 * 60)) / 60;
-    long minutes = total_minutes % 60;
+    unsigned long long total_minutes = (unsigned long long) sysinfo_cache.uptime / 60ULL;
+
+    unsigned long long days = total_minutes / (24ULL * 60ULL);
+    unsigned long long hours = (total_minutes % (24ULL * 60ULL)) / 60ULL;
+    unsigned long long minutes = total_minutes % 60ULL;
 
     if (days > 0) {
-        snprintf(buffer, sizeof(buffer), "%ld %s%s %ld %s%s %ld %s%s",
-                 days, lang.MUXRTC.DAY, (days == 1) ? "" : "s",
-                 hours, lang.MUXRTC.HOUR, (hours == 1) ? "" : "s",
-                 minutes, lang.MUXRTC.MINUTE, (minutes == 1) ? "" : "s");
+        snprintf(buffer, sizeof(buffer), "%llu %s%s %llu %s%s %llu %s%s",
+                 days, lang.MUXRTC.DAY, (days == 1ULL) ? "" : "s",
+                 hours, lang.MUXRTC.HOUR, (hours == 1ULL) ? "" : "s",
+                 minutes, lang.MUXRTC.MINUTE, (minutes == 1ULL) ? "" : "s");
     } else if (hours > 0) {
-        snprintf(buffer, sizeof(buffer), "%ld %s%s %ld %s%s",
-                 hours, lang.MUXRTC.HOUR, (hours == 1) ? "" : "s",
-                 minutes, lang.MUXRTC.MINUTE, (minutes == 1) ? "" : "s");
+        snprintf(buffer, sizeof(buffer), "%llu %s%s %llu %s%s",
+                 hours, lang.MUXRTC.HOUR, (hours == 1ULL) ? "" : "s",
+                 minutes, lang.MUXRTC.MINUTE, (minutes == 1ULL) ? "" : "s");
     } else {
-        snprintf(buffer, sizeof(buffer), "%ld %s%s",
-                 minutes, lang.MUXRTC.MINUTE, (minutes == 1) ? "" : "s");
+        snprintf(buffer, sizeof(buffer), "%llu %s%s",
+                 minutes, lang.MUXRTC.MINUTE, (minutes == 1ULL) ? "" : "s");
     }
 
     return buffer;
@@ -315,7 +335,18 @@ const char *get_charger_status(void) {
 }
 
 static void update_system_info() {
-    sysinfo(&sysinfo_cache);
+    if (sysinfo(&sysinfo_cache) != 0) {
+        lv_label_set_text(ui_lblUptimeValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblSpeedValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblGovernorValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblMemoryValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblSwapValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblTempValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblCapacityValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblVoltageValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblChargerValue_sysinfo, lang.GENERIC.UNKNOWN);
+        return;
+    }
 
     lv_label_set_text(ui_lblUptimeValue_sysinfo, get_system_uptime());
     lv_label_set_text(ui_lblSpeedValue_sysinfo, get_current_frequency());
@@ -373,94 +404,25 @@ static void handle_a(void) {
 
     if (element_focused == ui_lblVersion_sysinfo) {
         toast_message(verify_check ? lang.GENERIC.MODIFIED : lang.GENERIC.CLEAN, SHORT);
+        refresh_screen(ui_screen, 1);
+        return;
     }
 
     if (element_focused == ui_lblBuild_sysinfo) {
         play_sound(SND_MUOS);
 
-        switch (tap_count) {
-            case 5:
-                toast_message(
-                        "\x57\x68\x61\x74\x20"
-                        "\x64\x6F\x20\x79\x6F"
-                        "\x75\x20\x77\x61\x6E"
-                        "\x74\x3F",
-                        SHORT
-                );
-                break;
-            case 10:
-                toast_message(
-                        "\x59\x6F\x75\x20\x73"
-                        "\x75\x72\x65\x20\x61"
-                        "\x72\x65\x20\x70\x65"
-                        "\x72\x73\x69\x73\x74"
-                        "\x65\x6E\x74\x21",
-                        SHORT
-                );
-                break;
-            case 20:
-                toast_message(
-                        "\x57\x68\x61\x74\x20"
-                        "\x61\x72\x65\x20\x79"
-                        "\x6F\x75\x20\x65\x78"
-                        "\x70\x65\x63\x74\x69"
-                        "\x6E\x67\x3F",
-                        SHORT
-                );
-                break;
-            case 30:
-                toast_message(
-                        "\x4F\x6B\x61\x79\x20"
-                        "\x6C\x69\x73\x74\x65"
-                        "\x6E\x20\x68\x65\x72"
-                        "\x65\x20\x79\x6F\x75"
-                        "\x2E\x2E\x2E",
-                        SHORT
-                );
-                break;
-            case 40:
-                toast_message(
-                        "\x54\x68\x69\x73\x20"
-                        "\x69\x73\x20\x79\x6F"
-                        "\x75\x72\x20\x6C\x61"
-                        "\x73\x74\x20\x77\x61"
-                        "\x72\x6E\x69\x6E\x67"
-                        "\x21",
-                        SHORT
-                );
-                break;
-            case 50:
-                toast_message(
-                        "\x4F\x6B\x61\x79\x20"
-                        "\x77\x65\x6C\x6C\x20"
-                        "\x79\x6F\x75\x20\x61"
-                        "\x73\x6B\x65\x64\x20"
-                        "\x66\x6F\x72\x20\x69"
-                        "\x74",
-                        SHORT
-                );
-                break;
-            default:
-                toast_message(
-                        "\x54\x68\x61\x6E\x6B"
-                        "\x20\x79\x6F\x75\x20"
-                        "\x66\x6F\x72\x20\x75"
-                        "\x73\x69\x6E\x67\x20"
-                        "\x6D\x75\x4F\x53\x21",
-                        SHORT
-                );
-                break;
-        }
-
-        if (tap_count > 50) {
+        if (++tap_count > 50) {
             tap_count = 0;
-            srandom(time(NULL));
+            srandom((unsigned) time(NULL));
 
             char s_rotate_str[8], s_zoom_str[8];
-            snprintf(s_rotate_str, sizeof(s_rotate_str), "%d",
-                     (int) (random() % 181) + 35);
-            snprintf(s_zoom_str, sizeof(s_zoom_str), "%.2f",
-                     (float) ((float[]) {0.45f, 0.50f, 0.55f, 0.60f, 0.65f, 0.70f, 0.75f})[random() % 7]);
+
+            int rot = (int) (random() % 181) + 35;
+            snprintf(s_rotate_str, sizeof(s_rotate_str), "%d", rot);
+
+            static const float zooms[] = {0.45f, 0.50f, 0.55f, 0.60f, 0.65f, 0.70f, 0.75f};
+            float z = zooms[(size_t) (random() % (long) A_SIZE(zooms))];
+            snprintf(s_zoom_str, sizeof(s_zoom_str), "%.2f", z);
 
             write_text_to_file(CONF_DEVICE_PATH "screen/s_rotate", "w", CHAR, s_rotate_str);
             write_text_to_file(CONF_DEVICE_PATH "screen/s_zoom", "w", CHAR, s_zoom_str);
@@ -475,18 +437,48 @@ static void handle_a(void) {
 
             close_input();
             mux_input_stop();
+            return;
         }
 
-        tap_count++;
+        switch (tap_count) {
+            case 5:
+                toast_message("\x57\x68\x61\x74\x20\x64\x6F\x20\x79\x6F\x75\x20\x77\x61\x6E\x74\x3F", SHORT);
+                break;
+            case 10:
+                toast_message("\x59\x6F\x75\x20\x73\x75\x72\x65\x20\x61\x72\x65\x20\x70\x65\x72\x73\x69\x73\x74\x65\x6E\x74\x21", SHORT);
+                break;
+            case 20:
+                toast_message("\x57\x68\x61\x74\x20\x61\x72\x65\x20\x79\x6F\x75\x20\x65\x78\x70\x65\x63\x74\x69\x6E\x67\x3F", SHORT);
+                break;
+            case 30:
+                toast_message("\x4F\x6B\x61\x79\x20\x6C\x69\x73\x74\x65\x6E\x20\x68\x65\x72\x65\x20\x79\x6F\x75\x2E\x2E\x2E", SHORT);
+                break;
+            case 40:
+                toast_message("\x54\x68\x69\x73\x20\x69\x73\x20\x79\x6F\x75\x72\x20\x6C\x61\x73\x74\x20\x77\x61\x72\x6E\x69\x6E\x67\x21", SHORT);
+                break;
+            case 50:
+                toast_message("\x4F\x6B\x61\x79\x20\x77\x65\x6C\x6C\x20\x79\x6F\x75\x20\x61\x73\x6B\x65\x64\x20\x66\x6F\x72\x20\x69\x74", SHORT);
+                break;
+            default:
+                toast_message("\x54\x68\x61\x6E\x6B\x20\x79\x6F\x75\x20\x66\x6F\x72\x20\x75\x73\x69\x6E\x67\x20\x6D\x75\x4F\x53\x21", SHORT);
+                break;
+        }
+
+        refresh_screen(ui_screen, 1);
+        return;
     }
 
     if (element_focused == ui_lblMemory_sysinfo) {
         write_text_to_file("/proc/sys/vm/drop_caches", "w", INT, 3);
         toast_message(lang.MUXSYSINFO.MEMORY.DROP, MEDIUM);
+        refresh_screen(ui_screen, 1);
+        return;
     }
 
     if (element_focused == ui_lblKernel_sysinfo) {
         toast_message(hostname, MEDIUM);
+        refresh_screen(ui_screen, 1);
+        return;
     }
 
     if (element_focused == ui_lblReload_sysinfo) {
@@ -502,6 +494,7 @@ static void handle_a(void) {
 
         close_input();
         mux_input_stop();
+        return;
     }
 
     refresh_screen(ui_screen, 1);
