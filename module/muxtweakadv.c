@@ -226,7 +226,6 @@ static void init_navigation_group(void) {
 
     // Hide specific items for the TrimUI devices
     if (str_startswith(device.BOARD.NAME, "tui")) {
-        HIDE_OPTION_ITEM(tweakadv, Zramfile);
         HIDE_OPTION_ITEM(tweakadv, MaxGpu);
     }
 }
