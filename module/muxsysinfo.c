@@ -148,13 +148,50 @@ const char *get_scaling_governor(void) {
 const char *get_memory_usage(void) {
     static char buffer[UI_BUFFER];
 
-    const unsigned long long unit = sysinfo_cache.mem_unit;
-    const unsigned long long total = (unsigned long long) sysinfo_cache.totalram * unit;
-    const unsigned long long free = (unsigned long long) sysinfo_cache.freeram * unit;
-    const unsigned long long used = (total > free) ? (total - free) : 0;
+    FILE *fp = fopen("/proc/meminfo", "r");
+    if (!fp) {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        return buffer;
+    }
 
-    snprintf(buffer, sizeof(buffer), "%.2f MB / %.2f MB",
-             (double) used / 1048576.0, (double) total / 1048576.0);
+    unsigned long long total_kb = 0;
+    unsigned long long avail_kb = 0;
+
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        if (!total_kb && strncmp(line, "MemTotal:", 9) == 0) {
+            char *value = line + 9;
+            while (*value && (*value < '0' || *value > '9')) value++;
+
+            errno = 0;
+            unsigned long long mem = strtoull(value, NULL, 10);
+            if (errno == 0) total_kb = mem;
+        } else if (!avail_kb && strncmp(line, "MemAvailable:", 13) == 0) {
+            char *value = line + 13;
+            while (*value && (*value < '0' || *value > '9')) value++;
+
+            errno = 0;
+            unsigned long long mem = strtoull(value, NULL, 10);
+            if (errno == 0) avail_kb = mem;
+        }
+
+        if (total_kb && avail_kb) break;
+    }
+
+    fclose(fp);
+
+    if (!total_kb) {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        return buffer;
+    }
+
+    unsigned long long used_kb = (total_kb > avail_kb) ? (total_kb - avail_kb) : 0ULL;
+    unsigned long long used_mb = (used_kb * 100ULL) / 1024ULL;
+    unsigned long long total_mb = (total_kb * 100ULL) / 1024ULL;
+
+    snprintf(buffer, sizeof(buffer), "%llu.%02llu MB / %llu.%02llu MB",
+             used_mb / 100ULL, used_mb % 100ULL,
+             total_mb / 100ULL, total_mb % 100ULL);
 
     return buffer;
 }
