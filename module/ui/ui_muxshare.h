@@ -360,6 +360,7 @@
     SYSINFO(Speed,    SPEED,    "speed")    \
     SYSINFO(Governor, GOVERNOR, "governor") \
     SYSINFO(Memory,   MEMORY,   "memory")   \
+    SYSINFO(Swap,     SWAP,     "swap")     \
     SYSINFO(Temp,     TEMP,     "temp")     \
     SYSINFO(Capacity, CAPACITY, "capacity") \
     SYSINFO(Voltage,  VOLTAGE,  "voltage")  \

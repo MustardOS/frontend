@@ -1052,6 +1052,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.UPTIME, "System Uptime");
     SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY.INFO, "System Memory");
     SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY.DROP, "Memory Cache Dropped");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.SWAP, "Swap Memory");
     SPECIFIC_FIELD(lang->MUXSYSINFO.TEMP, "Temperature");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CAPACITY, "Battery Capacity");
     SPECIFIC_FIELD(lang->MUXSYSINFO.VOLTAGE, "Battery Voltage");
@@ -1066,7 +1067,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.DEVICE, "The current device type detected and configured");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.KERNEL, "The current Linux kernel");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.UPTIME, "The current running time of the system");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.MEMORY, "The current, and total, memory usage of the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.MEMORY, "The current, and total, device memory usage of the device");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.SWAP, "The current, and total, swap memory usage of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.TEMP, "The current detected temperature of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CAPACITY, "The current detected battery capacity");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VOLTAGE, "The current detected battery voltage");

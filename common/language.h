@@ -1182,6 +1182,7 @@ struct mux_lang {
             char INFO[MAX_BUFFER_SIZE];
             char DROP[MAX_BUFFER_SIZE];
         } MEMORY;
+        char SWAP[MAX_BUFFER_SIZE];
         char TEMP[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
@@ -1200,6 +1201,7 @@ struct mux_lang {
             char KERNEL[MAX_BUFFER_SIZE];
             char UPTIME[MAX_BUFFER_SIZE];
             char MEMORY[MAX_BUFFER_SIZE];
+            char SWAP[MAX_BUFFER_SIZE];
             char TEMP[MAX_BUFFER_SIZE];
             char SERVICE[MAX_BUFFER_SIZE];
             char CAPACITY[MAX_BUFFER_SIZE];
