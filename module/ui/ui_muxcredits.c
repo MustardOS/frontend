@@ -210,6 +210,7 @@ static const char *knight_two[] = {
 
 static const char *contributors[] = {
         "bitter_bizarro",
+        "bmdhacks",
         "xonglebongle",
         NULL
 };
