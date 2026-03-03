@@ -32,6 +32,7 @@ pthread_t keyboard_thread;
 struct controller_profile controller;
 
 bool swap_axis = false;
+bool g350_mode = false;
 
 // Cross-thread quit flag (set during shutdown)
 static volatile sig_atomic_t stop_flag = 0;
@@ -53,6 +54,56 @@ static volatile uint32_t suppress_until_tick = 0;
 
 static inline bool input_is_suppressed(void) {
     return mux_tick() < suppress_until_tick;
+}
+
+static inline bool board_is_g350(void) {
+    int is_g350 = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
+    if (is_g350) {
+        write_text_to_file("/opt/muos/g350", "w", CHAR, "yes");
+        LOG_DEBUG("input", "Using G350 Control Scheme");
+    } else {
+        write_text_to_file("/opt/muos/g350", "w", CHAR, "no");
+    }
+
+    return is_g350;
+}
+
+static inline mux_input_type g350_remap_type(mux_input_type t) {
+    switch (t) {
+        case MUX_INPUT_LS_UP:
+            return MUX_INPUT_LS_DOWN;
+        case MUX_INPUT_LS_DOWN:
+            return MUX_INPUT_LS_UP;
+        case MUX_INPUT_LS_LEFT:
+            return MUX_INPUT_LS_RIGHT;
+        case MUX_INPUT_LS_RIGHT:
+            return MUX_INPUT_LS_LEFT;
+        case MUX_INPUT_RS_UP:
+            return MUX_INPUT_RS_UP;
+        case MUX_INPUT_RS_DOWN:
+            return MUX_INPUT_RS_DOWN;
+        case MUX_INPUT_RS_LEFT:
+            return MUX_INPUT_RS_RIGHT;
+        case MUX_INPUT_RS_RIGHT:
+            return MUX_INPUT_RS_LEFT;
+        default:
+            return t;
+    }
+}
+
+static inline void apply_dir_pair(mux_input_type neg, mux_input_type pos, int direction) {
+    if (g350_mode) {
+        neg = g350_remap_type(neg);
+        pos = g350_remap_type(pos);
+    }
+
+    if (direction < 0) {
+        pressed = ((pressed | BIT(neg)) & ~BIT(pos));
+    } else if (direction > 0) {
+        pressed = ((pressed | BIT(pos)) & ~BIT(neg));
+    } else {
+        pressed &= ~(BIT(neg) | BIT(pos));
+    }
 }
 
 void ep_wait_wake(void) {
@@ -171,7 +222,9 @@ static void process_key(const mux_input_options *opts, const struct input_event 
 
 // Processes volume buttons.
 static void process_volume(const mux_input_options *opts, const struct input_event *event) {
+    (void) opts;
     if (input_is_suppressed()) return;
+
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_UP &&
@@ -190,10 +243,11 @@ static void process_volume(const mux_input_options *opts, const struct input_eve
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
     if (input_is_suppressed()) return;
-    mux_input_type mux_type;
 
-    int axis;
-    bool analog;
+    mux_input_type neg = 0;
+    mux_input_type pos = 0;
+
+    bool analog = false;
 
     // DPAD disabled in the navigation setting so ignore DPAD entirely!
     if (!(opts->nav & NAV_DPAD)) {
@@ -208,66 +262,119 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
         event->code == device.INPUT_CODE.DPAD.UP) {
         // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_DPAD_UP;
+            pos = MUX_INPUT_DPAD_DOWN;
+        } else {
+            neg = MUX_INPUT_DPAD_LEFT;
+            pos = MUX_INPUT_DPAD_RIGHT;
+        }
         analog = false;
     } else if (event->type == device.INPUT_TYPE.DPAD.LEFT &&
                event->code == device.INPUT_CODE.DPAD.LEFT) {
         // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_DPAD_LEFT;
+            pos = MUX_INPUT_DPAD_RIGHT;
+        } else {
+            neg = MUX_INPUT_DPAD_UP;
+            pos = MUX_INPUT_DPAD_DOWN;
+        }
         analog = false;
     } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.UP &&
                event->code == device.INPUT_CODE.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_LS_UP;
+            pos = MUX_INPUT_LS_DOWN;
+        } else {
+            neg = MUX_INPUT_LS_LEFT;
+            pos = MUX_INPUT_LS_RIGHT;
+        }
         analog = true;
     } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.LEFT &&
                event->code == device.INPUT_CODE.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_LS_LEFT;
+            pos = MUX_INPUT_LS_RIGHT;
+        } else {
+            neg = MUX_INPUT_LS_UP;
+            pos = MUX_INPUT_LS_DOWN;
+        }
         analog = true;
     } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.UP &&
                event->code == device.INPUT_CODE.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_RS_UP;
+            pos = MUX_INPUT_RS_DOWN;
+        } else {
+            neg = MUX_INPUT_RS_LEFT;
+            pos = MUX_INPUT_RS_RIGHT;
+        }
         analog = true;
     } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.LEFT &&
                event->code == device.INPUT_CODE.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_RS_LEFT;
+            pos = MUX_INPUT_RS_RIGHT;
+        } else {
+            neg = MUX_INPUT_RS_UP;
+            pos = MUX_INPUT_RS_DOWN;
+        }
         analog = true;
     } else if (event->type == device.INPUT_TYPE.BUTTON.L2 &&
                event->code == device.INPUT_CODE.BUTTON.L2) {
         // TRIM-UI DEVICE: left shoulder
-        mux_type = MUX_INPUT_L2;
+        mux_input_type mux_type = MUX_INPUT_L2;
         pressed = (event->value == 255) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
         return;
     } else if (event->type == device.INPUT_TYPE.BUTTON.R2 &&
                event->code == device.INPUT_CODE.BUTTON.R2) {
         // TRIM-UI DEVICE: right shoulder
-        mux_type = MUX_INPUT_R2;
+        mux_input_type mux_type = MUX_INPUT_R2;
         pressed = (event->value == 255) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
         return;
     } else {
         return;
     }
 
+    int direction = 0;
+
     // Sometimes, hardware issues prevent sticks from reaching the full range of the analog axis.
     // (This is especially common with cheap Hall-effect sticks.)
     //
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
-    if ((analog && event->value <= -device.INPUT_EVENT.AXIS + device.INPUT_EVENT.AXIS / 5) ||
-        (!analog && event->value == -1)) {
-        // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if ((analog && event->value >= device.INPUT_EVENT.AXIS - device.INPUT_EVENT.AXIS / 5) ||
-               (!analog && event->value == 1)) {
-        // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+
+    if (analog) {
+        const int thr = device.INPUT_EVENT.AXIS / 5;
+        if (event->value <= -device.INPUT_EVENT.AXIS + thr) {
+            // Direction: up/left
+            direction = -1;
+        } else if (event->value >= device.INPUT_EVENT.AXIS - thr) {
+            // Direction: down/right
+            direction = 1;
+        } else {
+            // Direction: center
+            direction = 0;
+        }
     } else {
-        // Direction: center
-        pressed &= ~(BIT(axis) | BIT(axis + 1));
+        if (event->value == -1) {
+            // Direction: up/left
+            direction = -1;
+        } else if (event->value == 1) {
+            // Direction: down/right
+            direction = 1;
+        } else {
+            // Direction: center
+            direction = 0;
+        }
     }
+
+    apply_dir_pair(neg, pos, direction);
 }
 
 // Processes gamepad button DPAD
@@ -316,6 +423,7 @@ static void process_dpad_as_buttons(const mux_input_options *opts, const struct 
 
 // Process system buttons.
 static void process_sys(const mux_input_options *opts, const struct input_event *event) {
+    (void) opts;
     if (input_is_suppressed()) return;
 
     if (event->type == device.INPUT_TYPE.BUTTON.POWER_SHORT && event->code == device.INPUT_CODE.BUTTON.POWER_SHORT) {
@@ -338,7 +446,9 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 
 // Process switch that is currently on the trim-ui devices
 static void process_sw(const mux_input_options *opts, const struct input_event *event) {
+    (void) opts;
     if (input_is_suppressed()) return;
+
     mux_input_type mux_type;
 
     if (event->type == device.INPUT_TYPE.BUTTON.SWITCH && event->code == device.INPUT_CODE.BUTTON.SWITCH) {
@@ -391,7 +501,11 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     if (input_is_suppressed()) return;
-    int axis, axis_max;
+
+    mux_input_type neg = 0;
+    mux_input_type pos = 0;
+
+    int axis_max = 0;
 
     // DPAD disabled in the navigation setting so ignore DPAD entirely!
     // Still confused as to why this is only up and left... but I'll leave it be!
@@ -404,27 +518,63 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
 
     if (js.number == controller.DPAD.UP) {
         // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_DPAD_UP;
+            pos = MUX_INPUT_DPAD_DOWN;
+        } else {
+            neg = MUX_INPUT_DPAD_LEFT;
+            pos = MUX_INPUT_DPAD_RIGHT;
+        }
         axis_max = controller.DPAD.AXIS;
     } else if (js.number == controller.DPAD.LEFT) {
         // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_DPAD_LEFT;
+            pos = MUX_INPUT_DPAD_RIGHT;
+        } else {
+            neg = MUX_INPUT_DPAD_UP;
+            pos = MUX_INPUT_DPAD_DOWN;
+        }
         axis_max = controller.DPAD.AXIS;
     } else if (js.number == controller.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_LS_UP;
+            pos = MUX_INPUT_LS_DOWN;
+        } else {
+            neg = MUX_INPUT_LS_LEFT;
+            pos = MUX_INPUT_LS_RIGHT;
+        }
         axis_max = controller.ANALOG.LEFT.AXIS;
     } else if (js.number == controller.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_LS_LEFT;
+            pos = MUX_INPUT_LS_RIGHT;
+        } else {
+            neg = MUX_INPUT_LS_UP;
+            pos = MUX_INPUT_LS_DOWN;
+        }
         axis_max = controller.ANALOG.LEFT.AXIS;
     } else if (js.number == controller.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_RS_UP;
+            pos = MUX_INPUT_RS_DOWN;
+        } else {
+            neg = MUX_INPUT_RS_LEFT;
+            pos = MUX_INPUT_RS_RIGHT;
+        }
         axis_max = controller.ANALOG.RIGHT.AXIS;
     } else if (js.number == controller.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        if (!opts->swap_axis || key_show) {
+            neg = MUX_INPUT_RS_LEFT;
+            pos = MUX_INPUT_RS_RIGHT;
+        } else {
+            neg = MUX_INPUT_RS_UP;
+            pos = MUX_INPUT_RS_DOWN;
+        }
         axis_max = controller.ANALOG.RIGHT.AXIS;
     } else if (js.number == controller.TRIGGER.L2) {
         int threshold = (controller.TRIGGER.AXIS * 80) / 100;
@@ -451,16 +601,21 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     //
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
-    if (js.value <= -axis_max + axis_max / 5) {
+    const int thr = axis_max / 5;
+    int direction = 0;
+
+    if (js.value <= -axis_max + thr) {
         // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if (js.value >= axis_max - axis_max / 5) {
+        direction = -1;
+    } else if (js.value >= axis_max - thr) {
         // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        direction = 1;
     } else {
         // Direction: center
-        pressed &= ~(BIT(axis) | BIT(axis + 1));
+        direction = 0;
     }
+
+    apply_dir_pair(neg, pos, direction);
 }
 
 // Processes gamepad button D-pad. Some controllers like PS3 the DPAD triggers button press events
@@ -947,6 +1102,7 @@ static void init_defaults(void) {
     stop_flag = 0;
     pressed = 0;
     held = 0;
+    g350_mode = board_is_g350();
 }
 
 bool is_switch_held(int fd) {
