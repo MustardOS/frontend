@@ -58,12 +58,7 @@ static inline bool input_is_suppressed(void) {
 
 static inline bool board_is_g350(void) {
     int is_g350 = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
-    if (is_g350) {
-        write_text_to_file("/opt/muos/g350", "w", CHAR, "yes");
-        LOG_DEBUG("input", "Using G350 Control Scheme");
-    } else {
-        write_text_to_file("/opt/muos/g350", "w", CHAR, "no");
-    }
+    if (is_g350) LOG_DEBUG("input", "Using G350 Control Scheme");
 
     return is_g350;
 }
