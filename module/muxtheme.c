@@ -211,7 +211,7 @@ static void handle_a(void) {
 
         char theme_path[MAX_BUFFER_SIZE];
         snprintf(theme_path, sizeof(theme_path), "%s/%s",
-                 sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)));
+                 sys_dir, items[current_item_index].name);
         if (!resolution_check(theme_path)) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_RES, SHORT);
