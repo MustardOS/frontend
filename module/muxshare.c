@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/skip_list.h"
 
 size_t item_count = 0;
 content_item *items = NULL;
@@ -357,7 +358,29 @@ int folder_has_launch_file_with_extension(char *base_dir, char *dir_name, char *
     return 0;
 }
 
+int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
+    if (strchr(dir_name, '.') == NULL) {
+        return 0;
+    }
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s/%s", base_dir, dir_name, dir_name);
+    if (ends_with(dir_name, ".scummvm") && !file_exist(file_path)) {
+        write_text_to_file(file_path, "w", CHAR, "");
+    }
+    if (file_exist(file_path)) {
+        char item_name[MAX_BUFFER_SIZE];
+        snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, dir_name);        
+        char fn_name[MAX_BUFFER_SIZE];
+        resolve_friendly_name(base_dir, strip_ext(dir_name), fn_name);
+        add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
+        return 1;
+    }
+    return 0;
+}
+
 int folder_has_launch_file(char *base_dir, char *dir_name) {
+    if (folder_has_matching_launch_file(base_dir, dir_name)) return 1;
+    if (folder_has_launch_file_with_extension(base_dir, dir_name, "scummvm")) return 1;
     if (folder_has_launch_file_with_extension(base_dir, dir_name, "m3u")) return 1;
     if (folder_has_launch_file_with_extension(base_dir, dir_name, "cue")) return 1;
     if (folder_has_launch_file_with_extension(base_dir, dir_name, "gdi")) return 1;

@@ -530,8 +530,15 @@ char *get_file_name(char *text) {
 char *get_content_path(char *path) {
     char *directory_path = strip_dir(path);
     if (dir_exist(path)) return directory_path;
-    if (!ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) return directory_path;
+    
     char *directory_name = get_last_dir(directory_path);
+    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0) {
+        return strip_dir(directory_path);
+    }
+
+    if (!ends_with(path, ".scummvm") && !ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) {
+        return directory_path;
+    }
     char *path_no_ext = strip_ext(get_file_name(path));
 
     return strcasecmp(directory_name, path_no_ext) == 0 ? strip_dir(directory_path) : directory_path;
