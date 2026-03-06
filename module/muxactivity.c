@@ -921,6 +921,9 @@ static void format_activity_row(const activity_item_t *it, int mode, char *dst) 
 }
 
 static void refresh_activity_labels(void) {
+    snprintf(mux_module, sizeof(mux_module), "%s", "muxactivity");
+    init_theme(1, 0);
+
     lv_group_remove_all_objs(ui_group);
     lv_group_remove_all_objs(ui_group_value);
     lv_group_remove_all_objs(ui_group_glyph);
@@ -961,6 +964,9 @@ static void refresh_activity_labels(void) {
 
 static void show_detail_view(const activity_item_t *it) {
     lv_obj_clean(ui_pnlContent);
+
+    snprintf(mux_module, sizeof(mux_module), "%s", "muxactdetail");
+    init_theme(1, 0);
 
     ui_count = 0;
     current_item_index = 0;
@@ -1092,6 +1098,9 @@ static void show_detail_view(const activity_item_t *it) {
 
 static void show_global_view(void) {
     lv_obj_clean(ui_pnlContent);
+
+    snprintf(mux_module, sizeof(mux_module), "%s", "muxactglobal");
+    init_theme(1, 0);
 
     ui_count = 0;
     current_item_index = 0;
