@@ -159,6 +159,7 @@ int muxtimezone_main(void) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);

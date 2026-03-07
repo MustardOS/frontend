@@ -181,6 +181,7 @@ int muxpass_main(int auth_type) {
                     [MUX_INPUT_L2] = hold_call_set,
             }
     };
+
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

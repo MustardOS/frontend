@@ -658,6 +658,7 @@ int muxhistory_main(int his_index) {
                     [MUX_INPUT_R2] = handle_random_select,
             }
     };
+
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);

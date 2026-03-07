@@ -804,6 +804,7 @@ int muxsearch_main(char *dir) {
                     [MUX_INPUT_R2] = handle_random_select,
             }
     };
+
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);

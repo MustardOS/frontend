@@ -120,6 +120,7 @@ int muxtext_main(void) {
             },
 
     };
+
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

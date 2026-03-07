@@ -623,6 +623,7 @@ int muxnetinfo_main(void) {
                     [MUX_INPUT_R1] = handle_r1,
             }
     };
+
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);

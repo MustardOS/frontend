@@ -333,6 +333,7 @@ int muxthemefilter_main(void) {
                     [MUX_INPUT_R1] = handle_r1,
             }
     };
+
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);

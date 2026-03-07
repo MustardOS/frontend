@@ -155,6 +155,7 @@ int main(void) {
             .press_handler = {[MUX_INPUT_START] = handle_start},
             .idle_handler = handle_idle
     };
+
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
