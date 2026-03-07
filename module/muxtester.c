@@ -2,70 +2,89 @@
 
 lv_obj_t *ui_imgButton;
 
+static int menu_icon_active = 0;
+
+static const char *glyph[MUX_INPUT_COUNT] = {
+        // Gamepad buttons:
+        [MUX_INPUT_A] = "btn_a",
+        [MUX_INPUT_B] = "btn_b",
+        [MUX_INPUT_C] = "btn_c",
+        [MUX_INPUT_X] = "btn_x",
+        [MUX_INPUT_Y] = "btn_y",
+        [MUX_INPUT_Z] = "btn_z",
+        [MUX_INPUT_L1] = "btn_l1",
+        [MUX_INPUT_L2] = "btn_l2",
+        [MUX_INPUT_L3] = "btn_l3",
+        [MUX_INPUT_R1] = "btn_r1",
+        [MUX_INPUT_R2] = "btn_r2",
+        [MUX_INPUT_R3] = "btn_r3",
+        [MUX_INPUT_SELECT] = "btn_select",
+        [MUX_INPUT_START] = "btn_start",
+        [MUX_INPUT_MENU_SHORT] = "btn_menu",
+        [MUX_INPUT_MENU_LONG] = "btn_menu",
+
+        // D-pad:
+        [MUX_INPUT_DPAD_UP] = "dpad_up",
+        [MUX_INPUT_DPAD_DOWN] = "dpad_down",
+        [MUX_INPUT_DPAD_LEFT] = "dpad_left",
+        [MUX_INPUT_DPAD_RIGHT] = "dpad_right",
+
+        // Left stick:
+        [MUX_INPUT_LS_UP] = "ls_up",
+        [MUX_INPUT_LS_DOWN] = "ls_down",
+        [MUX_INPUT_LS_LEFT] = "ls_left",
+        [MUX_INPUT_LS_RIGHT] = "ls_right",
+
+        // Right stick:
+        [MUX_INPUT_RS_UP] = "rs_up",
+        [MUX_INPUT_RS_DOWN] = "rs_down",
+        [MUX_INPUT_RS_LEFT] = "rs_left",
+        [MUX_INPUT_RS_RIGHT] = "rs_right",
+
+        // Volume buttons:
+        [MUX_INPUT_VOL_UP] = "vol_up",
+        [MUX_INPUT_VOL_DOWN] = "vol_down",
+};
+
+static void show_icon(const char *name) {
+    char path[MAX_BUFFER_SIZE];
+    char embed[MAX_BUFFER_SIZE];
+
+    generate_image_embed(mux_dimension, mux_module, name, path, sizeof(path), embed, sizeof(embed));
+
+    if (file_exist(path)) {
+        lv_img_set_src(ui_imgButton, embed);
+    } else {
+        lv_img_set_src(ui_imgButton, &ui_image_Nothing);
+    }
+}
+
+static void clear_icon(void) {
+    lv_img_set_src(ui_imgButton, &ui_image_Nothing);
+}
+
 static void handle_input(mux_input_type type, mux_input_action action) {
-    char image_path[MAX_BUFFER_SIZE];
-    char image_embed[MAX_BUFFER_SIZE];
+    if (action == MUX_INPUT_PRESS) {
+        if (!glyph[type]) return;
 
-    const char *glyph[MUX_INPUT_COUNT] = {
-            // Gamepad buttons:
-            [MUX_INPUT_A] = "btn_a",
-            [MUX_INPUT_B] = "btn_b",
-            [MUX_INPUT_C] = "btn_c",
-            [MUX_INPUT_X] = "btn_x",
-            [MUX_INPUT_Y] = "btn_y",
-            [MUX_INPUT_Z] = "btn_z",
-            [MUX_INPUT_L1] = "btn_l1",
-            [MUX_INPUT_L2] = "btn_l2",
-            [MUX_INPUT_L3] = "btn_l3",
-            [MUX_INPUT_R1] = "btn_r1",
-            [MUX_INPUT_R2] = "btn_r2",
-            [MUX_INPUT_R3] = "btn_r3",
-            [MUX_INPUT_SELECT] = "btn_select",
-            [MUX_INPUT_START] = "btn_start",
-            [MUX_INPUT_MENU_SHORT] = "btn_menu",
-            [MUX_INPUT_MENU_LONG] = "btn_menu",
+        lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+        show_icon(glyph[type]);
+    } else if (action == MUX_INPUT_RELEASE) {
+        if (glyph[type]) clear_icon();
+    }
+}
 
-            // D-pad:
-            [MUX_INPUT_DPAD_UP] = "dpad_up",
-            [MUX_INPUT_DPAD_DOWN] = "dpad_down",
-            [MUX_INPUT_DPAD_LEFT] = "dpad_left",
-            [MUX_INPUT_DPAD_RIGHT] = "dpad_right",
+static void handle_idle(void) {
+    ui_common_handle_idle();
 
-            // Left stick:
-            [MUX_INPUT_LS_UP] = "ls_up",
-            [MUX_INPUT_LS_DOWN] = "ls_down",
-            [MUX_INPUT_LS_LEFT] = "ls_left",
-            [MUX_INPUT_LS_RIGHT] = "ls_right",
-
-            // Right stick:
-            [MUX_INPUT_RS_UP] = "rs_up",
-            [MUX_INPUT_RS_DOWN] = "rs_down",
-            [MUX_INPUT_RS_LEFT] = "rs_left",
-            [MUX_INPUT_RS_RIGHT] = "rs_right",
-
-            // Volume buttons:
-            [MUX_INPUT_VOL_UP] = "vol_up",
-            [MUX_INPUT_VOL_DOWN] = "vol_down",
-    };
-
-    switch (action) {
-        case MUX_INPUT_PRESS:
-            if (glyph[type]) {
-                lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-                generate_image_embed(mux_dimension, mux_module, glyph[type], image_path,
-                                     sizeof(image_path), image_embed, sizeof(image_embed));
-                if (file_exist(image_path)) {
-                    lv_img_set_src(ui_imgButton, image_embed);
-                } else {
-                    lv_img_set_src(ui_imgButton, &ui_image_Nothing);
-                }
-            }
-            break;
-        case MUX_INPUT_RELEASE:
-            lv_img_set_src(ui_imgButton, &ui_image_Nothing);
-            break;
-        case MUX_INPUT_HOLD:
-            break;
+    if (g350_mode && g350_menu_pressed) {
+        if (!menu_icon_active) {
+            show_icon("btn_menu");
+            menu_icon_active = 1;
+        }
+    } else if (menu_icon_active) {
+        clear_icon();
+        menu_icon_active = 0;
     }
 }
 
@@ -113,6 +132,7 @@ int muxtester_main(void) {
 
     mux_input_options input_opts = {
             .input_handler = handle_input,
+            .idle_handler = handle_idle,
             .combo = {
                     {
                             .type_mask = BIT(MUX_INPUT_DPAD_DOWN) |
@@ -120,8 +140,10 @@ int muxtester_main(void) {
                             .press_handler = handle_quit,
                             .hold_handler = handle_quit,
                     }
-            }
+            },
+            .combo_count = 1
     };
+
     init_input(&input_opts, false);
     input_opts.remap_to_dpad = false;
     mux_input_task(&input_opts);
