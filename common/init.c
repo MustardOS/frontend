@@ -216,6 +216,9 @@ int open_input(const char *path, const char *error_message) {
 void init_input(mux_input_options *opts, int def_combo) {
     if (!opts) return;
 
+    g350_mode = board_is_g350();
+    tui_mode = board_is_tui();
+
     joy_general = open_input(device.INPUT_EVENT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
     joy_power = open_input(device.INPUT_EVENT.JOY_POWER, lang.SYSTEM.NO_JOY_POWER);
     joy_volume = open_input(device.INPUT_EVENT.JOY_VOLUME, lang.SYSTEM.NO_JOY_VOLUME);
@@ -243,36 +246,39 @@ void init_input(mux_input_options *opts, int def_combo) {
     opts->remap_to_dpad = true;
 
     if (def_combo) {
-        opts->combo[0] = (mux_input_combo) {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+        mux_input_type bright_key;
+
+        if (tui_mode) {
+            bright_key = MUX_INPUT_SWITCH;
+        } else if (g350_mode) {
+            bright_key = MUX_INPUT_MENU_SHORT;
+        } else {
+            bright_key = MUX_INPUT_MENU_LONG;
+        }
+
+        append_combo(opts, (mux_input_combo) {
+                .type_mask = BIT(bright_key) | BIT(MUX_INPUT_VOL_UP),
                 .press_handler = ui_common_handle_bright_up,
                 .hold_handler = ui_common_handle_bright_up
-        };
-        opts->combo[1] = (mux_input_combo) {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+        });
+
+        append_combo(opts, (mux_input_combo) {
+                .type_mask = BIT(bright_key) | BIT(MUX_INPUT_VOL_DOWN),
                 .press_handler = ui_common_handle_bright_down,
                 .hold_handler = ui_common_handle_bright_down
-        };
-        opts->combo[2] = (mux_input_combo) {
-                .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright_up,
-                .hold_handler = ui_common_handle_bright_up
-        };
-        opts->combo[3] = (mux_input_combo) {
-                .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright_down,
-                .hold_handler = ui_common_handle_bright_down
-        };
-        opts->combo[4] = (mux_input_combo) {
+        });
+
+        append_combo(opts, (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_UP),
                 .press_handler = ui_common_handle_volume_up,
                 .hold_handler = ui_common_handle_volume_up
-        };
-        opts->combo[5] = (mux_input_combo) {
+        });
+
+        append_combo(opts, (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_DOWN),
                 .press_handler = ui_common_handle_volume_down,
                 .hold_handler = ui_common_handle_volume_down
-        };
+        });
     }
 
     if (opts->idle_handler == NULL) opts->idle_handler = ui_common_handle_idle;

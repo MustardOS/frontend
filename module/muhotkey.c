@@ -49,10 +49,14 @@ typedef struct {
     int is_sequence;
     int is_handheld_mode;
     int is_normal_mode;
+
     uint64_t type_mask;
+    uint64_t negate_mask;
+
     int sequence_inputs[MAX_SEQUENCE];
     int sequence_length;
     uint32_t max_interval;
+
     char *exec_cmd;
 } combo_config;
 
@@ -336,8 +340,18 @@ static void handle_idle(void) {
     if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout);
 }
 
+static inline int mux_input_pressed_mask(uint64_t mask) {
+    for (int i = 0; i < MUX_INPUT_COUNT; i++) {
+        if ((mask & SAFE_BIT(i)) && mux_input_pressed(i)) return 1;
+    }
+    return 0;
+}
+
 static void handle_combo(int num, mux_input_action action) {
+    combo_config *c = &combo[num];
     uint64_t mask = input_opts.combo[num].type_mask;
+
+    if (c->negate_mask && mux_input_pressed_mask(c->negate_mask)) return;
 
     if (mask == SAFE_BIT(MUX_INPUT_POWER_SHORT)) {
         // The power button behaves differently from every other button (including the menu button).
@@ -369,6 +383,8 @@ static void handle_combo(int num, mux_input_action action) {
         return;
     }
 
+    if (!mux_input_pressed_mask(mask)) return;
+
     if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && combo[num].handle_hold)) {
         printf("%s\n", combo[num].name);
         run_command(&combo[num]);
@@ -392,6 +408,17 @@ static void parse_inputs_array(struct json array, combo_config *c) {
             exit(1);
         }
         c->type_mask |= SAFE_BIT(type);
+    }
+}
+
+static void parse_negate_array(struct json array, combo_config *c) {
+    for (struct json input = json_first(array); json_exists(input); input = json_next(input)) {
+        int type = parse_type(input);
+        if (type == MUX_INPUT_COUNT) {
+            LOG_ERROR("input", "JSON Error: Invalid negate input name");
+            exit(1);
+        }
+        c->negate_mask |= SAFE_BIT(type);
     }
 }
 
@@ -555,6 +582,7 @@ static void parse_combos_file(const char *filename) {
         struct json normal = json_object_get(value, "is_normal_mode");
         struct json exec_json = json_object_get(value, "run_command");
         struct json inputs = json_object_get(value, "inputs");
+        struct json negate = json_object_get(value, "negate");
 
         c->handle_hold = json_exists(hold_json) && json_bool(hold_json);
         c->handle_double_press = json_exists(dp_json) && json_bool(dp_json);
@@ -580,6 +608,10 @@ static void parse_combos_file(const char *filename) {
             parse_sequence_array(inputs, c);
         } else {
             parse_inputs_array(inputs, c);
+        }
+
+        if (json_exists(negate)) {
+            parse_negate_array(negate, c);
         }
 
         key = json_next(value);

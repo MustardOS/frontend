@@ -160,6 +160,9 @@ typedef struct {
     //
     // May be NULL, in which case no idle handler will be invoked.
     mux_input_handler idle_handler;
+
+    // Additional combos from modules
+    int combo_count;
 } mux_input_options;
 
 void mux_input_flush_all(void);
@@ -179,6 +182,8 @@ bool mux_input_pressed(mux_input_type type);
 // Causes the input task to exit at the start of the next iteration of the event loop (e.g., after
 // processing currently pressed or held inputs).
 void mux_input_stop(void);
+
+void append_combo(mux_input_options *opts, mux_input_combo combo);
 
 typedef void (*key_event_callback)(struct input_event ev);
 

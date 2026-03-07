@@ -41,6 +41,12 @@ extern int safe_quit_exists;
 extern int do_refresh_exists;
 extern int blank_exists;
 
+extern int tui_mode;
+
+extern int g350_mode;
+extern int g350_menu_pressed;
+extern int g350_menu_used_with_volume;
+
 extern const char *theme_base;
 extern char *theme_back_compat[];
 
@@ -534,3 +540,7 @@ int int_to_pct(int num, int min, int max);
 void set_setting_value(const char *script_name, int value, int offset);
 
 int get_index_on_delete(int current_index, int post_delete_count);
+
+int board_is_g350(void);
+
+int board_is_tui(void);

@@ -76,6 +76,12 @@ char progress_bar_message[MAX_BUFFER_SIZE];
 volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
+int tui_mode = 0;
+
+int g350_mode = 0;
+int g350_menu_pressed = 0;
+int g350_menu_used_with_volume = 0;
+
 const char *theme_base;
 char *theme_back_compat[THEME_COMPAT];
 
@@ -531,7 +537,7 @@ char *get_file_name(char *text) {
 char *get_content_path(char *path) {
     char *directory_path = strip_dir(path);
     if (dir_exist(path)) return directory_path;
-    
+
     char *directory_name = get_last_dir(directory_path);
     if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0) {
         return strip_dir(directory_path);
@@ -3913,4 +3919,18 @@ int get_index_on_delete(int current_index, int post_delete_count) {
 
     int max_index = post_delete_count - 1;
     return current_index > max_index ? max_index : current_index;
+}
+
+int board_is_g350(void) {
+    int is_g350 = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
+    if (is_g350) LOG_DEBUG("input", "Using G350 Control Scheme");
+
+    return is_g350;
+}
+
+int board_is_tui(void) {
+    int is_tui = strcmp(device.BOARD.NAME, "tui-brick") == 0 || strcmp(device.BOARD.NAME, "tui-spoon") == 0;
+    if (is_tui) LOG_DEBUG("input", "Using TrimUI Control Scheme");
+
+    return is_tui;
 }

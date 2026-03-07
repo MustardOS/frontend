@@ -600,40 +600,12 @@ int muxsysinfo_main(void) {
                             .press_handler = launch_device,
                             .hold_handler = launch_device,
                     },
-                    {
-                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_bright_up,
-                            .hold_handler = ui_common_handle_bright_up,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_bright_down,
-                            .hold_handler = ui_common_handle_bright_down,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_bright_up,
-                            .hold_handler = ui_common_handle_bright_up,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_bright_down,
-                            .hold_handler = ui_common_handle_bright_down,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_volume_up,
-                            .hold_handler = ui_common_handle_volume_up,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_volume_down,
-                            .hold_handler = ui_common_handle_volume_down,
-                    },
-            }
+            },
+            .combo_count = 1
     };
+
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, false);
+    init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
     return 0;

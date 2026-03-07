@@ -126,8 +126,10 @@ int main(void) {
                             .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU_LONG),
                             .press_handler = trigger_timeout,
                     },
-            }
+            },
+            .combo_count = 2
     };
+
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 

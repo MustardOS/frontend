@@ -32,7 +32,6 @@ pthread_t keyboard_thread;
 struct controller_profile controller;
 
 bool swap_axis = false;
-bool g350_mode = false;
 
 // Cross-thread quit flag (set during shutdown)
 static volatile sig_atomic_t stop_flag = 0;
@@ -54,13 +53,6 @@ static volatile uint32_t suppress_until_tick = 0;
 
 static inline bool input_is_suppressed(void) {
     return mux_tick() < suppress_until_tick;
-}
-
-static inline bool board_is_g350(void) {
-    int is_g350 = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
-    if (is_g350) LOG_DEBUG("input", "Using G350 Control Scheme");
-
-    return is_g350;
 }
 
 static inline mux_input_type g350_remap_type(mux_input_type t) {
@@ -204,6 +196,18 @@ static void process_key(const mux_input_options *opts, const struct input_event 
         mux_type = MUX_INPUT_START;
     } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_SHORT &&
                event->code == device.INPUT_CODE.BUTTON.MENU_SHORT) {
+        if (g350_mode) {
+            if (event->value == 1) {
+                g350_menu_pressed = 1;
+                g350_menu_used_with_volume = 0;
+            } else {
+                if (!g350_menu_used_with_volume) {
+                    pressed |= BIT(MUX_INPUT_MENU_SHORT);
+                }
+                g350_menu_pressed = 0;
+            }
+            return;
+        }
         mux_type = MUX_INPUT_MENU_SHORT;
     } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_LONG &&
                event->code == device.INPUT_CODE.BUTTON.MENU_LONG) {
@@ -232,6 +236,7 @@ static void process_volume(const mux_input_options *opts, const struct input_eve
         return;
     }
 
+    if (g350_mode && g350_menu_pressed && event->value == 1) g350_menu_used_with_volume = 1;
     pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
@@ -849,6 +854,22 @@ static void handle_inputs(const mux_input_options *opts) {
             dispatch_input(opts, i, MUX_INPUT_RELEASE);
         }
     }
+
+    if (g350_mode && !g350_menu_pressed && !g350_menu_used_with_volume) {
+        if (pressed & BIT(MUX_INPUT_MENU_SHORT)) pressed &= ~BIT(MUX_INPUT_MENU_SHORT);
+    }
+}
+
+void append_combo(mux_input_options *opts, mux_input_combo combo) {
+    if (opts->combo_count >= MUX_INPUT_COMBO_COUNT) return;
+    opts->combo[opts->combo_count++] = combo;
+}
+
+static inline uint64_t combo_pressed_mask(void) {
+    uint64_t mask = pressed;
+    if (g350_mode && g350_menu_pressed) mask |= BIT(MUX_INPUT_MENU_SHORT);
+
+    return mask;
 }
 
 static void handle_combos(const mux_input_options *opts) {
@@ -861,12 +882,16 @@ static void handle_combos(const mux_input_options *opts) {
     // Combo number that was active during the previous iteration of the event loop, or
     // MUX_INPUT_COMBO_COUNT when no combo is held.
     static int active_combo = MUX_INPUT_COMBO_COUNT;
+    uint64_t active_pressed = combo_pressed_mask();
+    uint64_t active_held = held;
+
+    if (g350_mode && g350_menu_pressed) active_held |= BIT(MUX_INPUT_MENU_SHORT);
 
     if (active_combo != MUX_INPUT_COMBO_COUNT) {
         // Active combo; check if it's still held or was released.
         uint64_t mask = opts->combo[active_combo].type_mask;
 
-        if ((pressed & mask) == mask) {
+        if ((active_pressed & mask) == mask) {
             if (tick - hold_tick >= hold_delay) {
                 // Single hold
                 dispatch_combo(opts, active_combo, MUX_INPUT_HOLD);
@@ -882,7 +907,7 @@ static void handle_combos(const mux_input_options *opts) {
         }
     }
 
-    if (active_combo == MUX_INPUT_COMBO_COUNT && (pressed & ~held)) {
+    if (active_combo == MUX_INPUT_COMBO_COUNT && (active_pressed & ~active_held)) {
         // No active combo, but a new input was pressed. Check if a combo should activate.
         //
         // Sometimes, a single evdev event can result in us registering both a release and a press
@@ -891,7 +916,7 @@ static void handle_combos(const mux_input_options *opts) {
         for (int i = 0; i < MUX_INPUT_COMBO_COUNT; ++i) {
             uint64_t mask = opts->combo[i].type_mask;
 
-            if (mask && (pressed & mask) == mask) {
+            if (mask && (active_pressed & mask) == mask) {
                 // Pressed & not held: Invoke "press" handler.
                 dispatch_combo(opts, i, MUX_INPUT_PRESS);
 
@@ -1098,6 +1123,7 @@ static void init_defaults(void) {
     pressed = 0;
     held = 0;
     g350_mode = board_is_g350();
+    tui_mode = board_is_tui();
 }
 
 bool is_switch_held(int fd) {
@@ -1262,7 +1288,10 @@ uint32_t mux_input_tick(void) {
 }
 
 bool mux_input_pressed(mux_input_type mux_type) {
-    return pressed & BIT(mux_type);
+    if ((pressed & BIT(mux_type)) != 0) return true;
+    if (g350_mode && mux_type == MUX_INPUT_MENU_SHORT && g350_menu_pressed) return true;
+
+    return false;
 }
 
 void mux_input_stop(void) {
