@@ -2,8 +2,8 @@
 #include <SDL2/SDL.h>
 #include <GLES2/gl2.h>
 #include "../../common/log.h"
-#include "../common/common.h"
 #include "../../common/inotify.h"
+#include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/colour.h"
@@ -55,6 +55,46 @@ static GLint content_tex_internal = GL_RGBA;
 static GLenum content_tex_format = GL_RGBA;
 static int content_copy_supported = 1;
 
+static GLuint output_tex = 0;
+static GLuint output_fbo = 0;
+static int output_tex_w = 0;
+static int output_tex_h = 0;
+
+static GLuint content_fbo = 0;
+static GLuint current_program = 0;
+
+static GLuint overlay_tex = 0;
+static GLuint overlay_fbo = 0;
+
+static int overlay_tex_w = 0;
+static int overlay_tex_h = 0;
+static int overlay_valid = 0;
+
+typedef struct {
+    int fb_w;
+    int fb_h;
+
+    int base_disabled;
+    GLuint base_tex;
+    float base_alpha;
+
+    int battery_step;
+    GLuint battery_tex;
+    float battery_alpha;
+
+    int bright_visible;
+    int bright_step;
+    GLuint bright_tex;
+    float bright_alpha;
+
+    int volume_visible;
+    int volume_step;
+    GLuint volume_tex;
+    float volume_alpha;
+} overlay_state_t;
+
+static overlay_state_t overlay_cache;
+
 typedef struct {
     GLint program;
     GLint active_tex;
@@ -72,6 +112,18 @@ typedef struct {
     GLint scissor_box[4];
 
     GLboolean depth_test;
+    GLint array_buffer;
+
+    int max_attribs;
+    struct {
+        GLint enabled;
+        GLint size;
+        GLint type;
+        GLint normal;
+        GLint stride;
+        GLvoid *pointer;
+        GLint buffer;
+    } attrib[16];
 } gles_state_t;
 
 static inline int content_pass_needed(int rot) {
@@ -160,8 +212,57 @@ static void destroy_content(void) {
         content_tex = 0;
     }
 
+    if (content_fbo) {
+        glDeleteFramebuffers(1, &content_fbo);
+        content_fbo = 0;
+    }
+
     content_tex_w = 0;
     content_tex_h = 0;
+}
+
+static void destroy_overlay(void) {
+    if (gles_prog) {
+        glDeleteProgram(gles_prog);
+        gles_prog = 0;
+    }
+
+    gles_a_pos = -1;
+    gles_a_uv = -1;
+    gles_u_alpha = -1;
+
+    gles_u_tex_overlay = -1;
+    gles_u_tex_content = -1;
+
+    current_program = 0;
+
+    prog_ready = 0;
+    prog_attempted = 0;
+}
+
+static void destroy_overlay_all(void) {
+    if (overlay_tex) {
+        glDeleteTextures(1, &overlay_tex);
+        overlay_tex = 0;
+    }
+
+    if (overlay_fbo) {
+        glDeleteFramebuffers(1, &overlay_fbo);
+        overlay_fbo = 0;
+    }
+
+    overlay_tex_w = 0;
+    overlay_tex_h = 0;
+
+    overlay_valid = 0;
+    memset(&overlay_cache, 0, sizeof(overlay_cache));
+}
+
+static inline void use_program(GLuint program) {
+    if (current_program != program) {
+        glUseProgram(program);
+        current_program = program;
+    }
 }
 
 static void ensure_content_tex(int w, int h) {
@@ -180,15 +281,20 @@ static void ensure_content_tex(int w, int h) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, content_tex_internal, w, h, 0, content_tex_format, GL_UNSIGNED_BYTE, NULL);
 
-    if (glGetError() != GL_NO_ERROR) {
-        glDeleteTextures(1, &content_tex);
-        content_tex = 0;
-        content_tex_w = 0;
-        content_tex_h = 0;
+    glGenFramebuffers(1, &content_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, content_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, content_tex, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        destroy_content();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     content_tex_w = w;
     content_tex_h = h;
@@ -422,10 +528,19 @@ static GLuint compile_shader(GLenum type, const char *src) {
     return sh;
 }
 
-static GLuint link_program(GLuint vs, GLuint fs) {
+static GLuint link_program(GLuint vs, GLuint fs, int is_overlay) {
     GLuint p = glCreateProgram();
     glAttachShader(p, vs);
     glAttachShader(p, fs);
+
+    if (is_overlay) {
+        glBindAttribLocation(p, 14, "a_pos");
+        glBindAttribLocation(p, 15, "a_uv");
+    } else {
+        glBindAttribLocation(p, 12, "a_pos");
+        glBindAttribLocation(p, 13, "a_uv");
+    }
+
     glLinkProgram(p);
 
     GLint ok = GL_FALSE;
@@ -458,7 +573,7 @@ static void ensure_content_program(void) {
         return;
     }
 
-    gles_prog_content = link_program(vs, fs);
+    gles_prog_content = link_program(vs, fs, 0);
 
     glDeleteShader(vs);
     glDeleteShader(fs);
@@ -483,6 +598,8 @@ static void ensure_content_program(void) {
     gles_u_saturation = glGetUniformLocation(gles_prog_content, "u_saturation");
     gles_u_hueshift = glGetUniformLocation(gles_prog_content, "u_hueshift");
     gles_u_gamma = glGetUniformLocation(gles_prog_content, "u_gamma");
+
+    content_uniform_cache.valid = 0;
 }
 
 static void save_gles_state(gles_state_t *st) {
@@ -502,6 +619,24 @@ static void save_gles_state(gles_state_t *st) {
     glGetIntegerv(GL_SCISSOR_BOX, st->scissor_box);
 
     st->depth_test = glIsEnabled(GL_DEPTH_TEST);
+
+    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &st->array_buffer);
+
+    GLint max = 0;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max);
+    if (max > 16) max = 16;
+    st->max_attribs = max;
+
+    for (int i = 0; i < max; i++) {
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &st->attrib[i].enabled);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_SIZE, &st->attrib[i].size);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_TYPE, &st->attrib[i].type);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &st->attrib[i].normal);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &st->attrib[i].stride);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &st->attrib[i].buffer);
+
+        glGetVertexAttribPointerv(i, GL_VERTEX_ATTRIB_ARRAY_POINTER, &st->attrib[i].pointer);
+    }
 }
 
 static void restore_gles_state(const gles_state_t *st) {
@@ -526,23 +661,23 @@ static void restore_gles_state(const gles_state_t *st) {
     glUseProgram(st->program);
     glActiveTexture(st->active_tex);
     glBindTexture(GL_TEXTURE_2D, (GLuint) st->tex_binding);
-}
 
-static void destroy_overlay(void) {
-    if (gles_prog) {
-        glDeleteProgram(gles_prog);
-        gles_prog = 0;
+    for (int i = 0; i < st->max_attribs; i++) {
+        glBindBuffer(GL_ARRAY_BUFFER, (GLuint) st->attrib[i].buffer);
+
+        if (st->attrib[i].size > 0) {
+            glVertexAttribPointer((GLuint) i, st->attrib[i].size, st->attrib[i].type, (GLboolean) st->attrib[i].normal,
+                                  st->attrib[i].stride, st->attrib[i].pointer);
+        }
+
+        if (st->attrib[i].enabled) {
+            glEnableVertexAttribArray((GLuint) i);
+        } else {
+            glDisableVertexAttribArray((GLuint) i);
+        }
     }
 
-    gles_a_pos = -1;
-    gles_a_uv = -1;
-    gles_u_alpha = -1;
-
-    gles_u_tex_overlay = -1;
-    gles_u_tex_content = -1;
-
-    prog_ready = 0;
-    prog_attempted = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, (GLuint) st->array_buffer);
 }
 
 static void on_context_changed(void) {
@@ -555,7 +690,24 @@ static void on_context_changed(void) {
     colour_filter_reset();
     colour_filter_get();
 
+    content_uniform_cache.valid = 0;
+
     destroy_content();
+
+    if (output_tex) {
+        glDeleteTextures(1, &output_tex);
+        output_tex = 0;
+    }
+
+    if (output_fbo) {
+        glDeleteFramebuffers(1, &output_fbo);
+        output_fbo = 0;
+    }
+
+    output_tex_w = 0;
+    output_tex_h = 0;
+
+    destroy_overlay_all();
     destroy_base_gles();
     destroy_overlay();
 
@@ -622,7 +774,7 @@ static void ensure_program(void) {
         return;
     }
 
-    gles_prog = link_program(vs, fs);
+    gles_prog = link_program(vs, fs, 1);
 
     glDeleteShader(vs);
     glDeleteShader(fs);
@@ -649,29 +801,32 @@ static void ensure_program(void) {
 static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
     if (!gles_prog_content || !tex) return;
 
-    glUseProgram(gles_prog_content);
+    use_program(gles_prog_content);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 
     if (gles_u_tex_content >= 0) glUniform1i(gles_u_tex_content, 0);
 
+    const void *base = (const void *) vtx;
+
     glEnableVertexAttribArray((GLuint) gles_content_a_pos);
     glEnableVertexAttribArray((GLuint) gles_content_a_uv);
 
-    glVertexAttribPointer((GLuint) gles_content_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), &vtx[0].x);
-    glVertexAttribPointer((GLuint) gles_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), &vtx[0].u);
+    glVertexAttribPointer((GLuint) gles_content_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), base);
+    glVertexAttribPointer((GLuint) gles_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), (const char *) base + offsetof(gl_vtx_t, u));
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glDisableVertexAttribArray((GLuint) gles_content_a_pos);
     glDisableVertexAttribArray((GLuint) gles_content_a_uv);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     if (!prog_ready || !tex) return;
 
-    glUseProgram(gles_prog);
+    use_program(gles_prog);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -679,16 +834,184 @@ static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     if (gles_u_tex_overlay >= 0) glUniform1i(gles_u_tex_overlay, 0);
     if (gles_u_alpha >= 0) glUniform1f(gles_u_alpha, alpha);
 
+    const void *base = (const void *) vtx;
+
     glEnableVertexAttribArray((GLuint) gles_a_pos);
     glEnableVertexAttribArray((GLuint) gles_a_uv);
 
-    glVertexAttribPointer((GLuint) gles_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), &vtx[0].x);
-    glVertexAttribPointer((GLuint) gles_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), &vtx[0].u);
+    glVertexAttribPointer((GLuint) gles_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), base);
+    glVertexAttribPointer((GLuint) gles_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), (const char *) base + offsetof(gl_vtx_t, u));
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glDisableVertexAttribArray((GLuint) gles_a_pos);
     glDisableVertexAttribArray((GLuint) gles_a_uv);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+static void ensure_output_tex(int w, int h) {
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+    if (output_tex && w == output_tex_w && h == output_tex_h) return;
+
+    if (output_tex) {
+        glDeleteTextures(1, &output_tex);
+        output_tex = 0;
+    }
+    if (output_fbo) {
+        glDeleteFramebuffers(1, &output_fbo);
+        output_fbo = 0;
+    }
+
+    glGenTextures(1, &output_tex);
+    glBindTexture(GL_TEXTURE_2D, output_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glGenFramebuffers(1, &output_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, output_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, output_tex, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        glDeleteTextures(1, &output_tex);
+        output_tex = 0;
+        glDeleteFramebuffers(1, &output_fbo);
+        output_fbo = 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        return;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    output_tex_w = w;
+    output_tex_h = h;
+}
+
+static void ensure_overlay_tex(int w, int h) {
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+
+    if (overlay_tex && w == overlay_tex_w && h == overlay_tex_h) return;
+
+    destroy_overlay_all();
+
+    glGenTextures(1, &overlay_tex);
+    glBindTexture(GL_TEXTURE_2D, overlay_tex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glGenFramebuffers(1, &overlay_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, overlay_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, overlay_tex, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        destroy_overlay_all();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        return;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    overlay_tex_w = w;
+    overlay_tex_h = h;
+}
+
+// Compare two overlay states and return any tracked fields if they differ.
+static inline int overlay_change(const overlay_state_t *a, const overlay_state_t *b) {
+    if (a->fb_w != b->fb_w) return 1;
+    if (a->fb_h != b->fb_h) return 1;
+
+    if (a->base_disabled != b->base_disabled) return 1;
+    if (a->base_tex != b->base_tex) return 1;
+    if (a->base_alpha != b->base_alpha) return 1;
+
+    if (a->battery_step != b->battery_step) return 1;
+    if (a->battery_tex != b->battery_tex) return 1;
+    if (a->battery_alpha != b->battery_alpha) return 1;
+
+    if (a->bright_visible != b->bright_visible) return 1;
+    if (a->bright_step != b->bright_step) return 1;
+    if (a->bright_tex != b->bright_tex) return 1;
+    if (a->bright_alpha != b->bright_alpha) return 1;
+
+    if (a->volume_visible != b->volume_visible) return 1;
+    if (a->volume_step != b->volume_step) return 1;
+    if (a->volume_tex != b->volume_tex) return 1;
+    if (a->volume_alpha != b->volume_alpha) return 1;
+
+    return 0;
+}
+
+static overlay_state_t build_overlay_state(int fb_w, int fb_h, int base_disabled, int battery_step) {
+    overlay_state_t st;
+
+    memset(&st, 0, sizeof(st));
+
+    st.fb_w = fb_w;
+    st.fb_h = fb_h;
+
+    st.base_disabled = base_disabled;
+    st.base_tex = (!base_disabled && base_gles_ready) ? base_gles_tex : 0;
+    st.base_alpha = (!base_disabled && base_gles_ready) ? get_alpha_cached(&overlay_alpha_cache) : 0.0f;
+
+    st.battery_step = battery_step;
+    st.battery_tex = (battery_step >= 0 && battery_step < INDICATOR_STEPS) ? battery_gles_tex[battery_step] : 0;
+    st.battery_alpha = st.battery_tex ? get_alpha_cached(&battery_alpha_cache) : 0.0f;
+
+    st.bright_visible = bright_is_visible() ? 1 : 0;
+    st.bright_step = bright_last_step;
+    st.bright_tex = (st.bright_visible && st.bright_step >= 0 && st.bright_step < INDICATOR_STEPS) ? bright_gles_tex[st.bright_step] : 0;
+    st.bright_alpha = st.bright_tex ? get_alpha_cached(&bright_alpha_cache) : 0.0f;
+
+    st.volume_visible = volume_is_visible() ? 1 : 0;
+    st.volume_step = volume_last_step;
+    st.volume_tex = (st.volume_visible && st.volume_step >= 0 && st.volume_step < INDICATOR_STEPS) ? volume_gles_tex[st.volume_step] : 0;
+    st.volume_alpha = st.volume_tex ? get_alpha_cached(&volume_alpha_cache) : 0.0f;
+
+    return st;
+}
+
+static void rebuild_overlay(const overlay_state_t *st) {
+    ensure_overlay_tex(st->fb_w, st->fb_h);
+    if (!overlay_tex || !overlay_fbo) return;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, overlay_fbo);
+    glViewport(0, 0, st->fb_w, st->fb_h);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_SCISSOR_TEST);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (st->base_tex && vtx_base_valid) draw_quad_overlay(st->base_tex, vtx_base, st->base_alpha);
+    if (st->battery_tex && vtx_battery_valid) draw_quad_overlay(st->battery_tex, vtx_battery, st->battery_alpha);
+    if (st->bright_tex && vtx_bright_valid) draw_quad_overlay(st->bright_tex, vtx_bright, st->bright_alpha);
+    if (st->volume_tex && vtx_volume_valid) draw_quad_overlay(st->volume_tex, vtx_volume, st->volume_alpha);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) 0);
+
+    overlay_cache = *st;
+    overlay_valid = 1;
+}
+
+// Compare two colour filter matrix values and return if any value differs.
+static inline int matrix_change(const float *a, const float *b) {
+    for (int i = 0; i < 9; i++) {
+        if (a[i] != b[i]) return 1;
+    }
+
+    return 0;
 }
 
 static int draw_rotated_content(int fb_w, int fb_h, int rot) {
@@ -697,12 +1020,19 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
 
     ensure_content_program();
     if (!gles_prog_content) return 0;
+    if (!prog_ready) return 0;
 
     ensure_content_tex(fb_w, fb_h);
     if (!content_tex) return 0;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    ensure_output_tex(fb_w, fb_h);
+    if (!output_tex || !output_fbo) return 0;
 
+    GLint src_fbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &src_fbo);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) src_fbo);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, content_tex);
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
 
@@ -711,7 +1041,12 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
         return 0;
     }
 
-    glUseProgram(gles_prog_content);
+    glBindFramebuffer(GL_FRAMEBUFFER, output_fbo);
+    glViewport(0, 0, fb_w, fb_h);
+    glDisable(GL_BLEND);
+    glDisable(GL_SCISSOR_TEST);
+
+    use_program(gles_prog_content);
 
     const struct colour_state *adjust = colour_adjust_get();
     const colour_filter_matrix_t *filter = colour_filter_get();
@@ -741,26 +1076,35 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
         content_uniform_cache.gamma = adjust->gamma;
     }
 
-    if (!content_uniform_cache.valid || content_uniform_cache.filter_enabled != (filter->enabled ? 1 : 0)) {
-        if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, filter->enabled ? 1 : 0);
-        content_uniform_cache.filter_enabled = filter->enabled ? 1 : 0;
+    int enabled = filter->enabled ? 1 : 0;
+
+    if (!content_uniform_cache.valid || content_uniform_cache.filter_enabled != enabled) {
+        if (gles_u_filter_enabled >= 0) glUniform1i(gles_u_filter_enabled, enabled);
+        content_uniform_cache.filter_enabled = enabled;
     }
 
-    if (filter->enabled && gles_u_filter >= 0) {
-        if (!content_uniform_cache.valid ||
-            memcmp(content_uniform_cache.filter, filter->matrix, sizeof(float) * 9) != 0) {
+    if (enabled && gles_u_filter >= 0) {
+        if (!content_uniform_cache.valid || matrix_change(content_uniform_cache.filter, filter->matrix)) {
             glUniformMatrix3fv(gles_u_filter, 1, GL_FALSE, filter->matrix);
             memcpy(content_uniform_cache.filter, filter->matrix, sizeof(float) * 9);
         }
     }
 
     content_uniform_cache.valid = 1;
-    glViewport(0, 0, fb_w, fb_h);
 
     gl_vtx_t vtx[4];
     build_fullscreen_quad(vtx, rot);
 
     draw_quad_content(content_tex, vtx);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, fb_w, fb_h);
+    glDisable(GL_BLEND);
+
+    gl_vtx_t vtx0[4];
+    build_fullscreen_quad(vtx0, ROTATE_0);
+    draw_quad_overlay(output_tex, vtx0, 1.0f);
+
     return 1;
 }
 
@@ -811,6 +1155,7 @@ static void stage_draw(int fb_w, int fb_h) {
         if (base_disabled) destroy_base_gles();
 
         vtx_base_valid = 0;
+        overlay_valid = 0;
         base_nop_last = base_disabled;
     }
 
@@ -820,40 +1165,44 @@ static void stage_draw(int fb_w, int fb_h) {
     update_geometry_caches();
 
     if (!base_disabled && base_gles_ready && !vtx_base_valid) {
-        build_quad_ndc(vtx_base, base_gles_w, base_gles_h, fb_w, fb_h,
-                       base_anchor_cached, base_scale_cached);
+        build_quad_ndc(vtx_base, base_gles_w, base_gles_h,
+                       fb_w, fb_h, base_anchor_cached, base_scale_cached);
         vtx_base_valid = 1;
+        overlay_valid = 0;
     }
 
     int battery_step = battery_last_step;
     if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_gles_tex[battery_step] && !vtx_battery_valid) {
-        build_quad_ndc(vtx_battery, battery_gles_w[battery_step], battery_gles_h[battery_step], fb_w, fb_h,
-                       battery_anchor_cached, battery_scale_cached);
+        build_quad_ndc(vtx_battery, battery_gles_w[battery_step], battery_gles_h[battery_step],
+                       fb_w, fb_h, battery_anchor_cached, battery_scale_cached);
         vtx_battery_valid = 1;
+        overlay_valid = 0;
     }
 
     if (bright_is_visible()) {
+        gl_bright_overlay_init();
         int step = bright_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && bright_gles_tex[step] && !vtx_bright_valid) {
             build_quad_ndc(vtx_bright, bright_gles_w[step], bright_gles_h[step],
                            fb_w, fb_h, bright_anchor_cached, bright_scale_cached);
             vtx_bright_valid = 1;
+            overlay_valid = 0;
         }
     }
 
     if (volume_is_visible()) {
+        gl_volume_overlay_init();
         int step = volume_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && volume_gles_tex[step] && !vtx_volume_valid) {
             build_quad_ndc(vtx_volume, volume_gles_w[step], volume_gles_h[step],
                            fb_w, fb_h, volume_anchor_cached, volume_scale_cached);
             vtx_volume_valid = 1;
+            overlay_valid = 0;
         }
     }
 
     gles_state_t st;
     save_gles_state(&st);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -865,43 +1214,24 @@ static void stage_draw(int fb_w, int fb_h) {
         (void) draw_rotated_content(fb_w, fb_h, rot);
     }
 
-    glDisable(GL_SCISSOR_TEST);
+    overlay_state_t batch_state = build_overlay_state(fb_w, fb_h, base_disabled, battery_step);
+    if (!overlay_valid || overlay_change(&overlay_cache, &batch_state)) rebuild_overlay(&batch_state);
 
-    glViewport(0, 0, fb_w, fb_h);
+    if (overlay_valid && overlay_tex) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_SCISSOR_TEST);
+        glViewport(0, 0, fb_w, fb_h);
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Draw base overlay if present (and not disabled)
-    if (!base_disabled && base_gles_ready && vtx_base_valid) {
-        draw_quad_overlay(base_gles_tex, vtx_base, get_alpha_cached(&overlay_alpha_cache));
-    }
-
-    // Draw battery overlay if activated
-    if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_gles_tex[battery_step] && vtx_battery_valid) {
-        draw_quad_overlay(battery_gles_tex[battery_step], vtx_battery, get_alpha_cached(&battery_alpha_cache));
-    }
-
-    if (bright_is_visible()) {
-        gl_bright_overlay_init();
-
-        int step = bright_last_step;
-        if (step >= 0 && step < INDICATOR_STEPS && bright_gles_tex[step] && vtx_bright_valid) {
-            draw_quad_overlay(bright_gles_tex[step], vtx_bright, get_alpha_cached(&bright_alpha_cache));
-        }
-    }
-
-    if (volume_is_visible()) {
-        gl_volume_overlay_init();
-
-        int step = volume_last_step;
-        if (step >= 0 && step < INDICATOR_STEPS && volume_gles_tex[step] && vtx_volume_valid) {
-            draw_quad_overlay(volume_gles_tex[step], vtx_volume, get_alpha_cached(&volume_alpha_cache));
-        }
+        gl_vtx_t vtx[4];
+        build_fullscreen_quad(vtx, ROTATE_0);
+        draw_quad_overlay(overlay_tex, vtx, 1.0f);
     }
 
     restore_gles_state(&st);
+    current_program = (GLuint) st.program;
 }
 
 void SDL_GL_SwapWindow(SDL_Window *window) {
@@ -947,6 +1277,7 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
         vtx_battery_valid = 0;
         vtx_bright_valid = 0;
         vtx_volume_valid = 0;
+        overlay_valid = 0;
     }
 
     if (fb_cached_w > 0 && fb_cached_h > 0) stage_draw(fb_cached_w, fb_cached_h);
