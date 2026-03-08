@@ -129,8 +129,9 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
 static void add_info_items(void) {
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
-    const char *sys_dir = get_content_path(file_path);
-    const char *file_name = get_file_name(file_path);
+
+    char *sys_dir = get_content_path(file_path);
+    char *file_name = get_file_name(file_path);
 
     core_file = get_content_line(sys_dir, file_name, "cfg", 2);
     const char *core_dir = get_content_line(sys_dir, NULL, "cfg", 1);
@@ -232,10 +233,13 @@ static void init_navigation_group(void) {
 
     int dir_level = 4;
     if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
+
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
-    const char *sys_dir = get_content_path(file_path);
-    const char *file_name = strip_ext(get_file_name(file_path));
+
+    char *sys_dir = get_content_path(file_path);
+    char *file_name = strip_ext(get_file_name(file_path));
+
     curr_dir = get_last_subdir(strip_dir(file_path), '/', dir_level);
 
     add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
@@ -273,6 +277,8 @@ static void init_navigation_group(void) {
         HIDE_VALUE_ITEM(option, RetroArch);
         HIDE_VALUE_ITEM(option, RemConfig);
     }
+
+    if (hdmi_mode) HIDE_VALUE_ITEM(option, ColFilter);
 }
 
 static void check_focus(void) {

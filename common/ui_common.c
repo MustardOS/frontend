@@ -1018,7 +1018,7 @@ void ui_common_handle_idle(void) {
     }
 
     if (do_refresh_exists) {
-        remove(MUX_DO_REFRESH);
+        remove(HDMI_REFRESH);
         do_refresh_exists = 0;
 
         lv_obj_invalidate(ui_pnlHeader);

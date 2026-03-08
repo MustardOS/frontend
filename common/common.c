@@ -76,6 +76,7 @@ char progress_bar_message[MAX_BUFFER_SIZE];
 volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
+int hdmi_mode = 0;
 int tui_mode = 0;
 
 int g350_mode = 0;

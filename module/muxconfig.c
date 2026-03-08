@@ -40,6 +40,11 @@ static void init_navigation_group(void) {
 
     if (!storage_available()) HIDE_STATIC_ITEM(config, Storage);
 
+    if (hdmi_mode) {
+        HIDE_STATIC_ITEM(config, Colour);
+        HIDE_STATIC_ITEM(config, Overlay);
+    }
+
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 

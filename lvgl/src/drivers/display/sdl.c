@@ -40,7 +40,6 @@ typedef struct {
 static monitor_t monitor;
 
 int scale_width, scale_height, underscan;
-int hdmi_in_use = 0;
 
 static void update_blend_mode(void) {
     SDL_SetTextureBlendMode(monitor.texture, theme.SDL.TEXTURE_BLEND_MODE);
@@ -174,7 +173,7 @@ static void update_render_state(void) {
             scale_height - (underscan * 2)
     };
 
-    if (hdmi_in_use) {
+    if (hdmi_mode) {
         monitor.angle = 0.0;
         monitor.pivot_ptr = NULL;
     } else {
@@ -193,16 +192,13 @@ static void update_render_state(void) {
 }
 
 void sdl_init(void) {
-    hdmi_in_use = file_exist("/tmp/hdmi_in_use");
-    LOG_INFO("video", "HDMI in use: %s", hdmi_in_use ? "yes" : "no");
-
     SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
     SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE, "1");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
     SDL_SetHint(SDL_HINT_APP_NAME, MUX_CALLER);
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
 
-    if (hdmi_in_use) {
+    if (hdmi_mode) {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
     } else {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
@@ -232,8 +228,8 @@ void sdl_init(void) {
     }
 
     monitor.renderer = SDL_CreateRenderer(monitor.window, -1,
-                                          hdmi_in_use ? SDL_RENDERER_ACCELERATED
-                                                      : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)
+                                          hdmi_mode ? SDL_RENDERER_ACCELERATED
+                                                    : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)
     );
 
     if (!monitor.renderer) {

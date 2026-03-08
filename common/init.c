@@ -156,6 +156,9 @@ static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, uint32_t size) {
 }
 
 void init_display() {
+    hdmi_mode = file_exist(HDMI_MODE);
+    LOG_INFO("video", "HDMI in use: %s", hdmi_mode ? "yes" : "no");
+
     lv_init();
     sdl_init();
 

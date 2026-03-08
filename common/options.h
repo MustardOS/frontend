@@ -163,7 +163,8 @@
 
 #define MUX_BOOT_AUTH   "/tmp/mux_boot_auth"
 #define MUX_BLANK       "/tmp/mux_blank"
-#define MUX_DO_REFRESH  "/tmp/hdmi_do_refresh"
+#define HDMI_MODE       "/run/muos/hdmi_mode"
+#define HDMI_REFRESH    "/run/muos/hdmi_refresh"
 #define FRIENDLY_RESULT "/tmp/f_result.json"
 #define MANUAL_RA_LOAD  "/tmp/ra_no_load"
 #define PLAYTIME_DATA   "playtime_data.json"

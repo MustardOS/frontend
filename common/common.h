@@ -41,6 +41,7 @@ extern int safe_quit_exists;
 extern int do_refresh_exists;
 extern int blank_exists;
 
+extern int hdmi_mode;
 extern int tui_mode;
 
 extern int g350_mode;
