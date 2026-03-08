@@ -124,39 +124,42 @@ static void image_refresh(char *image_type) {
 }
 
 static void add_file_names(const char *base_dir, char ***file_names) {
-    struct dirent *entry;
     DIR *dir = opendir(base_dir);
+
     if (!dir) {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
+    struct dirent *entry;
+    file_count = 0;
+
     while ((entry = readdir(dir))) {
-        if (entry->d_type != DT_REG || strcmp(entry->d_name, ".nogrid") == 0) continue;
+        const char *name = entry->d_name;
 
-        char full_path[PATH_MAX];
-        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
+        if (name[0] == '.' && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) continue;
+        if (!config.VISUAL.HIDDEN && name[0] == '.') continue;
 
-        char *file_path = strdup(entry->d_name);
-        *file_names = realloc(*file_names, (file_count + 1) * sizeof(char *));
-        (*file_names)[file_count] = file_path;
+        int type = entry->d_type;
 
-        char *path_line = read_line_char_from(full_path, 1);
-        char *dir_name = NULL;
+        if (type == DT_UNKNOWN) {
+            char full_path[PATH_MAX];
+            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, name);
 
-        if (path_line) {
-            char *last_slash = strrchr(path_line, '/');
+            struct stat st;
+            if (stat(full_path, &st) == 0) {
+                if (S_ISREG(st.st_mode)) type = DT_REG;
+            }
+        }
 
-            if (last_slash) {
-                *last_slash = '\0';
-                char *second_last_slash = strrchr(path_line, '/');
-                dir_name = second_last_slash ? strdup(second_last_slash + 1) : strdup(path_line);
-            } else dir_name = strdup("");
+        if (type != DT_REG) continue;
+        if (strcmp(name, ".nogrid") == 0) continue;
 
-            free(path_line);
-        } else dir_name = strdup("");
+        char **tmp = realloc(*file_names, (file_count + 1) * sizeof(char *));
+        if (!tmp) continue;
 
-        file_count++;
+        *file_names = tmp;
+        (*file_names)[file_count++] = strdup(name);
     }
 
     closedir(dir);

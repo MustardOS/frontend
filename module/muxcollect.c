@@ -147,9 +147,6 @@ static void image_refresh(char *image_type) {
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
-    file_count = 0;
-    dir_count = 0;
-    struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
@@ -157,42 +154,50 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
         return;
     }
 
+    struct dirent *entry;
+    file_count = 0;
+    dir_count = 0;
+
     while ((entry = readdir(dir))) {
-        char full_path[PATH_MAX];
-        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-        if (entry->d_type == DT_DIR && at_base(sys_dir, access_mode)) {
-            if (strcmp(entry->d_name, "kiosk") != 0 &&
-                strcmp(entry->d_name, ".") != 0 &&
-                strcmp(entry->d_name, "..") != 0) {
-                char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
-                snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+        const char *name = entry->d_name;
 
-                *dir_names = (char **) realloc(*dir_names, (dir_count + 1) * sizeof(char *));
-                (*dir_names)[dir_count] = subdir_path;
-                (dir_count)++;
+        if (name[0] == '.' && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) continue;
+        if (!config.VISUAL.HIDDEN && name[0] == '.') continue;
+
+        int type = entry->d_type;
+
+        if (type == DT_UNKNOWN) {
+            char full_path[PATH_MAX];
+            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, name);
+
+            struct stat st;
+            if (stat(full_path, &st) == 0) {
+                if (S_ISDIR(st.st_mode)) {
+                    type = DT_DIR;
+                } else if (S_ISREG(st.st_mode)) {
+                    type = DT_REG;
+                }
             }
-        } else if (entry->d_type == DT_REG) {
-            if (strcmp(entry->d_name, ".nogrid") == 0) continue;
-            char *file_path = strdup(entry->d_name);
-            *file_names = realloc(*file_names, (file_count + 1) * sizeof(char *));
-            (*file_names)[file_count] = file_path;
+        }
 
-            char *path_line = read_line_char_from(full_path, 1);
-            char *dir_name = NULL;
+        if (type == DT_DIR) {
+            if (!at_base(sys_dir, access_mode)) continue;
+            if (strcmp(name, "kiosk") == 0) continue;
 
-            if (path_line) {
-                char *last_slash = strrchr(path_line, '/');
+            char **tmp = realloc(*dir_names, (dir_count + 1) * sizeof(char *));
+            if (!tmp) continue;
 
-                if (last_slash) {
-                    *last_slash = '\0';
-                    char *second_last_slash = strrchr(path_line, '/');
-                    dir_name = second_last_slash ? strdup(second_last_slash + 1) : strdup(path_line);
-                } else dir_name = strdup("");
+            *dir_names = tmp;
+            (*dir_names)[dir_count++] = strdup(name);
 
-                free(path_line);
-            } else dir_name = strdup("");
+        } else if (type == DT_REG) {
+            if (strcmp(name, ".nogrid") == 0) continue;
 
-            file_count++;
+            char **tmp = realloc(*file_names, (file_count + 1) * sizeof(char *));
+            if (!tmp) continue;
+
+            *file_names = tmp;
+            (*file_names)[file_count++] = strdup(name);
         }
     }
 
