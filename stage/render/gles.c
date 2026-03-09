@@ -17,6 +17,8 @@
 #include "../overlay/volume.h"
 #include "../hook.h"
 
+#define RENDER_PATHS 8
+
 static int fb_cached_w = 0;
 static int fb_cached_h = 0;
 
@@ -125,6 +127,68 @@ typedef struct {
         GLint buffer;
     } attrib[16];
 } gles_state_t;
+
+typedef enum {
+    RENDER_PATH_UNKNOWN = 0,
+    RENDER_PATH_DEFAULT_FBO,
+    RENDER_PATH_OFFSCREEN_FBO,
+} render_path_t;
+
+static render_path_t render_path = RENDER_PATH_UNKNOWN;
+static GLint render_nonzero_fbo = 0;
+static int render_window_calls = 0;
+static int render_nonzero_count = 0;
+static int render_zero_count = 0;
+
+static GLint render_fbo_ring[RENDER_PATHS];
+static int render_fbo_ring_head = 0;
+
+static void reset_render_path(void) {
+    render_path = RENDER_PATH_UNKNOWN;
+
+    render_nonzero_fbo = 0;
+    render_window_calls = 0;
+    render_nonzero_count = 0;
+    render_zero_count = 0;
+    render_fbo_ring_head = 0;
+
+    memset(render_fbo_ring, 0, sizeof(render_fbo_ring));
+}
+
+static void detect_render_path(GLint app_fbo) {
+    if (app_fbo != 0) render_nonzero_fbo = app_fbo;
+
+    if (render_window_calls >= RENDER_PATHS) {
+        const GLint evicted = render_fbo_ring[render_fbo_ring_head];
+        if (evicted != 0) {
+            render_nonzero_count--;
+        } else {
+            render_zero_count--;
+        }
+    }
+
+    render_fbo_ring[render_fbo_ring_head] = app_fbo;
+    render_fbo_ring_head = (render_fbo_ring_head + 1) % RENDER_PATHS;
+
+    if (app_fbo != 0) {
+        render_nonzero_count++;
+    } else {
+        render_zero_count++;
+    }
+
+    if (render_window_calls < RENDER_PATHS) render_window_calls++;
+
+    if (render_window_calls < RENDER_PATHS) {
+        render_path = RENDER_PATH_UNKNOWN;
+        return;
+    }
+
+    if (render_nonzero_count > 0) {
+        render_path = RENDER_PATH_OFFSCREEN_FBO;
+    } else {
+        render_path = RENDER_PATH_DEFAULT_FBO;
+    }
+}
 
 static inline int content_pass_needed(int rot) {
     const struct colour_state *a = colour_adjust_get();
@@ -681,6 +745,8 @@ static void restore_gles_state(const gles_state_t *st) {
 }
 
 static void on_context_changed(void) {
+    reset_render_path();
+
     content_tex_format = GL_RGBA;
     content_copy_supported = 1;
 
@@ -1014,13 +1080,12 @@ static inline int matrix_change(const float *a, const float *b) {
     return 0;
 }
 
-static int draw_rotated_content(int fb_w, int fb_h, int rot) {
+static int draw_rotated_content(int fb_w, int fb_h, int rot, GLint dst_fbo) {
     if (!content_copy_supported) return 0;
     if (!content_pass_needed(rot)) return 0;
 
     ensure_content_program();
     if (!gles_prog_content) return 0;
-    if (!prog_ready) return 0;
 
     ensure_content_tex(fb_w, fb_h);
     if (!content_tex) return 0;
@@ -1028,16 +1093,17 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
     ensure_output_tex(fb_w, fb_h);
     if (!output_tex || !output_fbo) return 0;
 
-    GLint src_fbo = 0;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &src_fbo);
+    // This may looking fucking stupid but it does correct some colour filter
+    // support for some content like: Chromium BSU - Honestly I don't get it.
+    while (glGetError() != GL_NO_ERROR) {}
 
-    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) src_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, content_tex);
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
 
     if (glGetError() != GL_NO_ERROR) {
-        content_copy_supported = 0;
+        reset_render_path();
         return 0;
     }
 
@@ -1096,14 +1162,6 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot) {
     build_fullscreen_quad(vtx, rot);
 
     draw_quad_content(content_tex, vtx);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, fb_w, fb_h);
-    glDisable(GL_BLEND);
-
-    gl_vtx_t vtx0[4];
-    build_fullscreen_quad(vtx0, ROTATE_0);
-    draw_quad_overlay(output_tex, vtx0, 1.0f);
 
     return 1;
 }
@@ -1208,19 +1266,37 @@ static void stage_draw(int fb_w, int fb_h) {
 
     // Ensure we preserve the aspect ration and blending methods
     const int rot = rotate_read_cached();
+
+    const int use_offscreen = (render_path == RENDER_PATH_OFFSCREEN_FBO) && (render_nonzero_fbo != 0);
+    const GLint dst_fbo = use_offscreen ? render_nonzero_fbo : 0;
+
+    ensure_content_program();
+
+    int content_ran = 0;
     if (content_copy_supported && content_pass_needed(rot)) {
         glDisable(GL_SCISSOR_TEST);
         glDisable(GL_BLEND);
-        (void) draw_rotated_content(fb_w, fb_h, rot);
+        content_ran = draw_rotated_content(fb_w, fb_h, rot, dst_fbo);
     }
 
     overlay_state_t batch_state = build_overlay_state(fb_w, fb_h, base_disabled, battery_step);
     if (!overlay_valid || overlay_change(&overlay_cache, &batch_state)) rebuild_overlay(&batch_state);
 
-    if (overlay_valid && overlay_tex) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_SCISSOR_TEST);
+    if (content_ran && output_tex) {
+        glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
         glViewport(0, 0, fb_w, fb_h);
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_BLEND);
+
+        gl_vtx_t vtx_out[4];
+        build_fullscreen_quad(vtx_out, ROTATE_0);
+        draw_quad_overlay(output_tex, vtx_out, 1.0f);
+    }
+
+    if (overlay_valid && overlay_tex) {
+        glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
+        glViewport(0, 0, fb_w, fb_h);
+        glDisable(GL_SCISSOR_TEST);
         glEnable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1255,6 +1331,12 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     int nw = 0;
     int nh = 0;
     SDL_GL_GetDrawableSize(window, &nw, &nh);
+
+    // Sample the framebuffer binding and detect the render path
+    // then reset if required on context change!
+    GLint app_fbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &app_fbo);
+    detect_render_path(app_fbo);
 
     static int last_rot = ROTATE_0;
     const int r = rotate_read_cached();
