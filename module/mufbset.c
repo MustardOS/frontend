@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include "../common/png/screenshot.h"
 #include "../common/common.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -170,11 +171,15 @@ void print_help(const char *prog) {
     printf("  -m, --modes                Show available framebuffer modes\n");
     printf("  -s, --show                 Show current framebuffer mode\n");
     printf("  -c, --clear                Clear framebuffer\n");
+    printf("  -g, --grab   <FILE>        Save screenshot to PNG\n");
+    printf("  -M, --method <auto|fbdev|drm>  Screenshot capture method\n");
     printf("  -v, --verbose              Verbose output\n");
     printf("  -H, --help                 Show this help\n");
+
     printf("\nExamples:\n");
-    printf("  %s -w 640 -h 480 -d 32 -c  Clear and set resolution to 640x480 with 32bpp\n", prog);
-    printf("  %s -m                      Show available modes\n\n", prog);
+    printf("  %s -w 640 -h 480 -d 32 -c\n", prog);
+    printf("  %s -g /mnt/mmc/screen.png\n", prog);
+    printf("  %s -g /mnt/mmc/screen.png -M drm\n\n", prog);
 }
 
 int main(int argc, char *argv[]) {
@@ -183,6 +188,9 @@ int main(int argc, char *argv[]) {
     int hsync_len = 0, vsync_len = 0, ignore_dh = 2;
     int show_modes = 0, clear_screen = 0;
     int rotation = -1, show_info = 0;
+
+    const char *grab_path = NULL;
+    screenshot_mode grab_mode = SCREENSHOT_AUTO;
 
     static struct option long_options[] = {
             {"width",   required_argument, 0, 'w'},
@@ -195,12 +203,14 @@ int main(int argc, char *argv[]) {
             {"modes",   no_argument,       0, 'm'},
             {"show",    no_argument,       0, 's'},
             {"clear",   no_argument,       0, 'c'},
+            {"grab",    required_argument, 0, 'g'},
+            {"method",  required_argument, 0, 'M'},
             {"verbose", no_argument,       0, 'v'},
             {"help",    no_argument,       0, 'H'},
             {0, 0,                         0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "w:h:d:x:y:r:imscvH", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "w:h:d:x:y:r:imscg:M:vH", long_options, NULL)) != -1) {
         switch (opt) {
             case 'w':
                 width = safe_atoi(optarg);
@@ -232,6 +242,17 @@ int main(int argc, char *argv[]) {
             case 'c':
                 clear_screen = 1;
                 break;
+            case 'g':
+                grab_path = optarg;
+                break;
+            case 'M':
+                if (!strcmp(optarg, "fbdev"))
+                    grab_mode = SCREENSHOT_FBDEV;
+                else if (!strcmp(optarg, "drm"))
+                    grab_mode = SCREENSHOT_DRM;
+                else
+                    grab_mode = SCREENSHOT_AUTO;
+                break;
             case 'v':
                 verbose = 1;
                 break;
@@ -246,6 +267,17 @@ int main(int argc, char *argv[]) {
 
     load_device(&device);
     load_config(&config);
+
+    if (grab_path) {
+        if (screenshot_save(grab_path, grab_mode) < 0) {
+            LOG_ERROR(module, "Failed to capture screenshot");
+            return 1;
+        }
+
+        if (verbose) LOG_SUCCESS(module, "Screenshot saved to %s", grab_path);
+
+        return 0;
+    }
 
     if (show_modes) {
         print_available_modes();
