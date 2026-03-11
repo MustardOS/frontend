@@ -21,7 +21,7 @@
 #define BATTERY_CAPACITY_PREFIX "capacity_"
 #define BATTERY_CHARGING_PREFIX "capacity_charging_"
 
-#define BATTERY_VOLTAGE_OFFSET 16
+#define BATTERY_VOLTAGE_OFFSET 64
 
 #define BATTERY_ZERO_VOLTAGE "0.00 V"
 #define BATTERY_GOOD_VOLTAGE "%.2f V"
@@ -74,8 +74,8 @@ static void load_daemon_battery_config(void) {
     battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/voltage", 1);
     if (battery_file) snprintf(daemon_voltage_path, sizeof(daemon_voltage_path), "%s", battery_file);
 
-    daemon_volt_min = read_line_int_from(BATTERY_DEVICE_CONFIG "/volt_min", 0);
-    daemon_volt_max = read_line_int_from(BATTERY_DEVICE_CONFIG "/volt_max", 0);
+    daemon_volt_min = read_line_int_from(BATTERY_DEVICE_CONFIG "/volt_min", 1);
+    daemon_volt_max = read_line_int_from(BATTERY_DEVICE_CONFIG "/volt_max", 1);
 }
 
 static void write_capacity_file(int percent) {
@@ -176,10 +176,21 @@ static int voltage_to_percent(int mv) {
     const int volt_min = battery_daemon_mode ? daemon_volt_min : device.BATTERY.VOLT_MIN;
     const int volt_max = battery_daemon_mode ? daemon_volt_max : device.BATTERY.VOLT_MAX;
 
-    if (mv <= volt_min + BATTERY_VOLTAGE_OFFSET) return 0;
-    if (mv >= volt_max - BATTERY_VOLTAGE_OFFSET) return 100;
+    if (mv >= (volt_max - BATTERY_VOLTAGE_OFFSET)) return 100;
+    if (mv <= (volt_min + BATTERY_VOLTAGE_OFFSET)) return 0;
 
-    return ((mv - volt_min) * 100) / (volt_max - volt_min);
+    if (mv >= 4000) return 85 + (mv - 4000) * 15 / 100;
+    if (mv >= 3900) return 72 + (mv - 3900) * 13 / 100;
+    if (mv >= 3850) return 65 + (mv - 3850) * 7 / 50;
+    if (mv >= 3800) return 60 + (mv - 3800) * 5 / 50;
+    if (mv >= 3750) return 55 + (mv - 3750) * 5 / 50;
+    if (mv >= 3700) return 46 + (mv - 3700) * 9 / 50;
+    if (mv >= 3650) return 38 + (mv - 3650) * 8 / 50;
+    if (mv >= 3600) return 30 + (mv - 3600) * 8 / 50;
+    if (mv >= 3500) return 18 + (mv - 3500) * 12 / 100;
+    if (mv >= 3400) return 8 + (mv - 3400) * 10 / 100;
+
+    return 0;
 }
 
 static int stabilise_percent(int raw_percent, int charging) {
