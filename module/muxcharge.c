@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxcharge.h"
+#include "../common/battery.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
 static int exit_status = -1;
@@ -96,8 +97,10 @@ static void battery_task_charge() {
         return;
     }
 
-    int bat_cap = read_battery_capacity();
-    char *bat_vol = read_battery_voltage();
+    battery_update();
+
+    int bat_cap = battery_get_capacity();
+    const char *bat_vol = battery_get_voltage();
 
     LOG_INFO(mux_module, "Capacity: %d%%", bat_cap);
     LOG_INFO(mux_module, "Voltage: %s", bat_vol);
@@ -119,8 +122,9 @@ int main(void) {
     init_theme(0, 0);
 
     init_display();
-
     init_muxcharge();
+
+    battery_init();
 
     LOG_INFO(mux_module, "Current Brightness: %d", config.SETTINGS.GENERAL.BRIGHTNESS);
     write_text_to_file(CHARGER_BRIGHT, "w", INT, config.SETTINGS.GENERAL.BRIGHTNESS);

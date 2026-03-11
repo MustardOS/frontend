@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxsysinfo.h"
+#include "../common/battery.h"
 
 #define UI_COUNT 15
 #define UI_BUFFER 128
@@ -285,8 +286,9 @@ static const char *get_system_uptime(void) {
 
 const char *get_battery_cap(void) {
     static char battery_cap[UI_BUFFER];
-    snprintf(battery_cap, sizeof(battery_cap), "%d%% (Offset: %d)",
-             read_battery_capacity(), config.SETTINGS.ADVANCED.OFFSET);
+    snprintf(battery_cap, sizeof(battery_cap), "%d%%",
+             battery_get_capacity());
+
     return battery_cap;
 }
 
@@ -294,6 +296,7 @@ const char *get_device_info(void) {
     static char device_info[UI_BUFFER];
     snprintf(device_info, sizeof(device_info), "%s",
              str_toupper(read_line_char_from((CONF_DEVICE_PATH "board/name"), 1)));
+
     return device_info;
 }
 
@@ -321,15 +324,8 @@ const char *get_kernel_version(void) {
 const char *get_charger_status(void) {
     static char buffer[UI_BUFFER];
 
-    if (file_exist(device.BATTERY.CHARGER)) {
-        const char *status = read_line_int_from(device.BATTERY.CHARGER, 1)
-                             ? lang.GENERIC.ONLINE
-                             : lang.GENERIC.OFFLINE;
-
-        snprintf(buffer, sizeof(buffer), "%s", status);
-    } else {
-        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
-    }
+    snprintf(buffer, sizeof(buffer), "%s",
+             battery_is_charging() ? lang.GENERIC.ONLINE : lang.GENERIC.OFFLINE);
 
     return buffer;
 }
@@ -355,7 +351,7 @@ static void update_system_info() {
     lv_label_set_text(ui_lblSwapValue_sysinfo, get_swap_usage());
     lv_label_set_text(ui_lblTempValue_sysinfo, get_temperature());
     lv_label_set_text(ui_lblCapacityValue_sysinfo, get_battery_cap());
-    lv_label_set_text(ui_lblVoltageValue_sysinfo, read_battery_voltage());
+    lv_label_set_text(ui_lblVoltageValue_sysinfo, battery_get_voltage());
     lv_label_set_text(ui_lblChargerValue_sysinfo, get_charger_status());
 }
 
@@ -377,7 +373,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Swap, lang.MUXSYSINFO.SWAP, "swap", get_swap_usage());
     INIT_VALUE_ITEM(-1, sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
     INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
-    INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", read_battery_voltage());
+    INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", battery_get_voltage());
     INIT_VALUE_ITEM(-1, sysinfo, Charger, lang.MUXSYSINFO.CHARGER, "charger", get_charger_status());
     INIT_VALUE_ITEM(-1, sysinfo, Reload, lang.MUXSYSINFO.RELOAD, "reload", "");
 
