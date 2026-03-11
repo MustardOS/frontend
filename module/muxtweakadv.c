@@ -33,7 +33,6 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droIncBright_tweakadv, config.SETTINGS.ADVANCED.INCBRIGHT - 1);
     lv_dropdown_set_selected(ui_droIncVolume_tweakadv, config.SETTINGS.ADVANCED.INCVOLUME - 1);
 
-    map_drop_down_to_index(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET, battery_offset_values, 101, 50);
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
     map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEATDELAY, repeat_delay_values, 33, 13);
     map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, swap_values, 11, 0);
@@ -99,7 +98,6 @@ static void save_tweak_options(void) {
     } while (0);
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
-    CHECK_AND_SAVE_MAP(tweakadv, Offset, "settings/advanced/offset", battery_offset_values, 101, 50);
     CHECK_AND_SAVE_MAP(tweakadv, RepeatDelay, "settings/advanced/repeat_delay", repeat_delay_values, 33, 13);
     CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", swap_values, 11, 0);
     CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", swap_values, 11, 0);
@@ -154,7 +152,6 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, tweakadv, Accelerate, lang.MUXTWEAKADV.ACCELERATE, "accelerate", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, RepeatDelay, lang.MUXTWEAKADV.REPEATDELAY, "repeat", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakadv, Offset, lang.MUXTWEAKADV.OFFSET, "offset", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Swap, lang.MUXTWEAKADV.SWAP.TITLE, "swap", swap_options, 2);
     INIT_OPTION_ITEM(-1, tweakadv, StickNav, lang.MUXTWEAKADV.STICKNAV.TITLE, "sticknav", sticknav_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, Volume, lang.MUXTWEAKADV.VOLUME.TITLE, "volume", volume_options, 4);
@@ -191,10 +188,6 @@ static void init_navigation_group(void) {
     char *repeat_delay_values = generate_number_string(16, 512, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droRepeatDelay_tweakadv, repeat_delay_values);
     free(repeat_delay_values);
-
-    char *offset_values = generate_number_string(-50, 50, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droOffset_tweakadv, offset_values);
-    free(offset_values);
 
     char *swap_values = generate_number_string(128, 1024, 128, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droSwapfile_tweakadv, swap_values);

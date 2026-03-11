@@ -376,7 +376,6 @@
 #define TWEAKADV_ELEMENTS                             \
     TWEAKADV(Accelerate,  ACCELERATE,  "accelerate")  \
     TWEAKADV(RepeatDelay, REPEATDELAY, "repeat")      \
-    TWEAKADV(Offset,      OFFSET,      "offset")      \
     TWEAKADV(Swap,        SWAP,        "swap")        \
     TWEAKADV(StickNav,    STICKNAV,    "sticknav")    \
     TWEAKADV(Volume,      VOLUME,      "volume")      \

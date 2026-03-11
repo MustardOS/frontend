@@ -102,7 +102,6 @@ struct mux_config {
             int16_t FONT;
             int16_t VOLUME;
             int16_t BRIGHTNESS;
-            int16_t OFFSET;
             int16_t PASSCODE;
             int16_t LED;
             int16_t RANDOMTHEME;

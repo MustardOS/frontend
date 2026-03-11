@@ -1131,7 +1131,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.ACCELERATE, "Menu Acceleration");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.REPEATDELAY, "Menu Repeat Delay");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.THERMAL, "Thermal Zone Control");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.OFFSET, "Battery Offset");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.PASSCODE, "Passcode Lock");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LED, "LED During Play");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RANDOMTHEME, "Random Theme on Boot");
@@ -1183,7 +1182,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACCELERATE, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEATDELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.PASSCODE, "Toggle the passcode lock - More information can be found on the MustardOS website");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LED, "Toggle the power LED during content launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOMTHEME, "Change the default theme used for the next device launch");

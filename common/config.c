@@ -91,7 +91,6 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.STICKNAV, CONF_CONFIG_PATH "settings/advanced/sticknav", 3);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 1);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, CONF_CONFIG_PATH "settings/advanced/font", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.OFFSET, CONF_CONFIG_PATH "settings/advanced/offset", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.PASSCODE, CONF_CONFIG_PATH "settings/advanced/passcode", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.LED, CONF_CONFIG_PATH "settings/advanced/led", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RANDOMTHEME, CONF_CONFIG_PATH "settings/advanced/random_theme", 0);

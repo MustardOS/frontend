@@ -1279,7 +1279,6 @@ struct mux_lang {
         char ACCELERATE[MAX_BUFFER_SIZE];
         char REPEATDELAY[MAX_BUFFER_SIZE];
         char THERMAL[MAX_BUFFER_SIZE];
-        char OFFSET[MAX_BUFFER_SIZE];
         char PASSCODE[MAX_BUFFER_SIZE];
         char LED[MAX_BUFFER_SIZE];
         char RANDOMTHEME[MAX_BUFFER_SIZE];
@@ -1342,7 +1341,6 @@ struct mux_lang {
             char ACCELERATE[MAX_BUFFER_SIZE];
             char REPEATDELAY[MAX_BUFFER_SIZE];
             char THERMAL[MAX_BUFFER_SIZE];
-            char OFFSET[MAX_BUFFER_SIZE];
             char PASSCODE[MAX_BUFFER_SIZE];
             char LED[MAX_BUFFER_SIZE];
             char RANDOMTHEME[MAX_BUFFER_SIZE];
