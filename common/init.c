@@ -19,6 +19,7 @@
 #include "options.h"
 #include "config.h"
 #include "device.h"
+#include "battery.h"
 #include "theme.h"
 
 static uint64_t start_ms = 0;
@@ -205,6 +206,7 @@ void init_display() {
     mux_set_refresh_timer(disp->refr_timer);
 
     inotify_init();
+    battery_init();
 }
 
 int open_input(const char *path, const char *error_message) {
@@ -356,7 +358,7 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     }
 
     if (config.VISUAL.BATTERY) {
-        timer_ensure(&timer_capacity, capacity_task, TIMER_CAPACITY, &bat_par);
+        timer_ensure(&timer_capacity, battery_capacity_task, TIMER_CAPACITY, &bat_par);
     } else {
         timer_suspend(&timer_capacity);
     }

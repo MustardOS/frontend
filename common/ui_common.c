@@ -10,6 +10,7 @@
 #include "input.h"
 #include "theme.h"
 #include "device.h"
+#include "battery.h"
 #include "collection.h"
 #include "ui_common.h"
 #include "log.h"
@@ -439,7 +440,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     if (!config.VISUAL.NETWORK) lv_obj_add_flag(ui_staNetwork, LV_OBJ_FLAG_HIDDEN);
 
     ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
-    battery_capacity = read_battery_capacity();
+    battery_update();
     update_battery_capacity(ui_staCapacity, theme);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
@@ -1159,14 +1160,14 @@ void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_
 }
 
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme) {
-    char *battery_glyph_name = get_capacity();
+    char *battery_glyph_name = battery_get_capacity_glyph();
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
     if (str_startswith(battery_glyph_name, "capacity_charging_")) {
         lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.ACTIVE_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    } else if (battery_capacity <= 15) {
+    } else if (battery_is_low()) {
         lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.LOW), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.LOW_ALPHA, MU_OBJ_MAIN_DEFAULT);
     } else {

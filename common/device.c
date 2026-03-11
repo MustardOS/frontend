@@ -144,6 +144,9 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->BATTERY.HEALTH, "battery/health")
     DEV_STR_FIELD(device->BATTERY.VOLTAGE, "battery/voltage")
     DEV_STR_FIELD(device->BATTERY.CHARGER, "battery/charger")
+    DEV_INT_FIELD(device->BATTERY.VOLT_MIN, "battery/volt_min")
+    DEV_INT_FIELD(device->BATTERY.VOLT_MAX, "battery/volt_max")
+    DEV_INT_FIELD(device->BATTERY.SIZE, "battery/size")
 
     DEV_INT_FIELD(device->INPUT_EVENT.AXIS, "input/axis")
     DEV_STR_FIELD(device->INPUT_EVENT.JOY_GENERAL, "input/general")

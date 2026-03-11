@@ -15,7 +15,6 @@
 extern int msgbox_active;
 extern int block_input;
 extern lv_obj_t *msgbox_element;
-extern int battery_capacity;
 extern int fe_snd;
 extern int fe_bgm;
 extern int last_idle;
@@ -259,10 +258,6 @@ char *grab_ext(char *text);
 
 char *get_execute_result(const char *command, int line);
 
-int read_battery_capacity();
-
-char *read_battery_voltage();
-
 char *read_all_char_from(const char *filename);
 
 char *read_line_char_from(const char *filename, size_t line_number);
@@ -303,11 +298,7 @@ void nav_next(lv_group_t *group, int count);
 
 char *get_datetime();
 
-char *get_capacity();
-
 void datetime_task(lv_timer_t *timer);
-
-void capacity_task(lv_timer_t *timer);
 
 void move_option(lv_obj_t *element, int count);
 

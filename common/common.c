@@ -46,7 +46,6 @@ int last_idle = -1;
 struct json translation_generic;
 struct json translation_specific;
 struct pattern skip_pattern_list = {NULL, 0, 0};
-int battery_capacity = 100;
 lv_anim_t animation;
 lv_obj_t *img_obj;
 char **img_paths = NULL;
@@ -635,72 +634,6 @@ char *get_execute_result(const char *command, int line) {
     return result;
 }
 
-int read_battery_capacity(void) {
-    FILE *file = fopen(device.BATTERY.CAPACITY, "r");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.CAPACITY);
-        return 0;
-    }
-
-    char buf[32];
-    if (!fgets(buf, sizeof(buf), file)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY);
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-
-    char *end_ptr;
-    long capacity = strtol(buf, &end_ptr, 10);
-
-    int invalid_input = (end_ptr == buf);
-    int trailing_garbage = (*end_ptr != '\0' && *end_ptr != '\n');
-
-    if (invalid_input || trailing_garbage) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.CAPACITY);
-        return 0;
-    }
-
-    capacity += (config.SETTINGS.ADVANCED.OFFSET);
-    if (capacity > 100) capacity = 100;
-    if (capacity < 0) capacity = 0;
-    return (int) capacity;
-}
-
-char *read_battery_voltage(void) {
-    FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, device.BATTERY.VOLTAGE);
-        return "0.00 V";
-    }
-
-    char buf[32];
-    if (!fgets(buf, sizeof(buf), file)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE);
-        fclose(file);
-        return "0.00 V";
-    }
-
-    fclose(file);
-
-    char *end_ptr;
-    long raw_voltage = strtol(buf, &end_ptr, 10);
-    if (end_ptr == buf) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_READ, device.BATTERY.VOLTAGE);
-        return "0.00 V";
-    }
-
-    char *form_voltage = malloc(10);
-    if (!form_voltage) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
-        return "0.00 V";
-    }
-
-    snprintf(form_voltage, 10, "%.2f V", (double) raw_voltage / 1000000.0);
-    return form_voltage;
-}
-
 char *read_all_char_from(const char *filename) {
     char *text = NULL;
     FILE *file = fopen(filename, "r");
@@ -1018,33 +951,9 @@ char *get_datetime(void) {
     return datetime_str;
 }
 
-char *get_capacity(void) {
-    static char capacity[MAX_BUFFER_SIZE];
-    const char *prefix = read_line_int_from(device.BATTERY.CHARGER, 1) ? "capacity_charging_" : "capacity_";
-
-    int level = battery_capacity;
-    if (level < 0) level = 0;
-    if (level > 100) level = 100;
-
-    // Round down to nearest multiple of 10
-    int rounded = (level / 10) * 10;
-
-    snprintf(capacity, sizeof(capacity), "%s%d", prefix, rounded);
-    return capacity;
-}
-
 void datetime_task(lv_timer_t *timer) {
     struct dt_task_param *dt_par = timer->user_data;
     lv_label_set_text(dt_par->lblDatetime, get_datetime());
-}
-
-void capacity_task(lv_timer_t *timer) {
-    LV_UNUSED(timer);
-
-    if (!ui_staCapacity || !lv_obj_is_valid(ui_staCapacity)) return;
-
-    battery_capacity = read_battery_capacity();
-    update_battery_capacity(ui_staCapacity, &theme);
 }
 
 void move_option(lv_obj_t *element, int count) {
