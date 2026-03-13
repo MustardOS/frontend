@@ -39,6 +39,19 @@ static void restore_tweak_options(void) {
     map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, swap_values, 11, 0);
 }
 
+static void normalise_overdrive(int overdrive_old, int overdrive_new) {
+    if (overdrive_old && !overdrive_new) {
+        int current = read_line_int_from(CONF_CONFIG_PATH "settings/general/volume", 1);
+
+        if (current > 100) {
+            int new_volume = current * 100 / 200;
+
+            write_text_to_file(CONF_CONFIG_PATH "settings/general/volume", "w", INT, new_volume);
+            set_setting_value("audio", new_volume, 0);
+        }
+    }
+}
+
 static void save_tweak_options(void) {
     int is_modified = 0;
 
@@ -58,7 +71,6 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, Rumble, "settings/advanced/rumble", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DpadSwap, "settings/advanced/dpad_swap", INT, 0);
-    CHECK_AND_SAVE_STD(tweakadv, Overdrive, "settings/advanced/overdrive", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, LidSwitch, "settings/advanced/lidswitch", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DispSuspend, "settings/advanced/disp_suspend", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, MaxGpu, "settings/advanced/maxgpu", INT, 0);
@@ -94,6 +106,15 @@ static void save_tweak_options(void) {
         if (volume_current != IncVolume_original) {
             is_modified++;
             write_text_to_file(CONF_CONFIG_PATH "settings/advanced/incvolume", "w", INT, volume_current + 1);
+        }
+    } while (0);
+
+    do {
+        int overdrive_current = lv_dropdown_get_selected(ui_droOverdrive_tweakadv);
+        if (overdrive_current != Overdrive_original) {
+            is_modified++;
+            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/overdrive", "w", INT, overdrive_current);
+            normalise_overdrive(Overdrive_original, overdrive_current);
         }
     } while (0);
 
