@@ -270,6 +270,7 @@ static void list_nav_next(int steps) {
             if (v != TYPE##_original) {                      \
                 toast_message(TOAST, SHORT);                 \
                 set_setting_value(SCRIPT, v, (OFFSET));      \
+                TYPE##_original = (v - OFFSET);              \
             }                                                \
             return;                                          \
         }                                                    \
