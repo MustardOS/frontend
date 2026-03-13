@@ -36,13 +36,13 @@ static void init_dropdown_settings(void) {
 
     if (!hdmi_mode) {
         Brightness_original = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
-        Volume_original = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
+        Volume_original = clamp_range(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, lv_dropdown_get_option_cnt(ui_droVolume_tweakgen) - 1);
     }
 }
 
 static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, int_to_pct(config.SETTINGS.GENERAL.BRIGHTNESS, 2, device.SCREEN.BRIGHT));
-    lv_dropdown_set_selected(ui_droVolume_tweakgen, int_to_pct(config.SETTINGS.GENERAL.VOLUME, 0, audio_overdrive));
+    lv_dropdown_set_selected(ui_droVolume_tweakgen, clamp_range(config.SETTINGS.GENERAL.VOLUME, 0, lv_dropdown_get_option_cnt(ui_droVolume_tweakgen) - 1));
     lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
     lv_dropdown_set_selected(ui_droHkDpad_tweakgen, device.BOARD.HASSTICK > 0 ? 0 : config.SETTINGS.GENERAL.HKDPAD);
     lv_dropdown_set_selected(ui_droHkShot_tweakgen, config.SETTINGS.GENERAL.HKSHOT);
@@ -77,7 +77,7 @@ static void save_tweak_options(void) {
     if (bright_mod != Brightness_original) set_setting_value("bright", bright_mod, 0);
 
     if (!hdmi_mode) {
-        int volume_mod = pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive);
+        int volume_mod = lv_dropdown_get_selected(ui_droVolume_tweakgen);
         if (volume_mod != Volume_original) set_setting_value("audio", volume_mod, 0);
     }
 
@@ -281,7 +281,7 @@ static void update_option_values(void) {
     HANDLE_TWEAK_OPT(Brightness, lang.MUXTWEAKGEN.BRIGHTNESS_SET,
                      pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT), "bright", 0);
     HANDLE_TWEAK_OPT(Volume, lang.MUXTWEAKGEN.VOLUME_SET,
-                     pct_to_int(lv_dropdown_get_selected(ui_droVolume_tweakgen), 0, audio_overdrive), "audio", 0);
+                     lv_dropdown_get_selected(ui_droVolume_tweakgen), "audio", 0);
 }
 
 static void handle_option_prev(void) {
@@ -465,11 +465,12 @@ int muxtweakgen_main(void) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
+    init_audio_limits();
+
     init_navigation_group();
 
     restore_tweak_options();
     init_dropdown_settings();
-    init_audio_limits();
 
     init_timer(ui_gen_refresh_task, NULL);
 

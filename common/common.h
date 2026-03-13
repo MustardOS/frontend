@@ -525,6 +525,8 @@ const char *get_process_name(void);
 
 const char *module_from_func(const char *func);
 
+int clamp_range(int value, int min, int max);
+
 int pct_to_int(int pct, int min, int max);
 
 int int_to_pct(int num, int min, int max);

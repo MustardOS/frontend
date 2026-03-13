@@ -3783,7 +3783,7 @@ static void fix_range(int *min, int *max) {
     }
 }
 
-static int clamp_range(int value, int min, int max) {
+int clamp_range(int value, int min, int max) {
     if (value < min) return min;
     if (value > max) return max;
     return value;

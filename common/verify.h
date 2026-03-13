@@ -8,7 +8,7 @@ struct int_script_hash {
 int script_hash_check(void);
 
 static const struct int_script_hash int_scripts[] = {
-        {"/opt/muos/script/device/audio.sh",      "17df6ff58e5df48b"},
+        {"/opt/muos/script/device/audio.sh",      "3eb913da7f719324"},
         {"/opt/muos/script/device/bright.sh",     "e41118c16356a2c8"},
         {"/opt/muos/script/device/charge.sh",     "ca071db54eb613fe"},
         {"/opt/muos/script/device/colour.sh",     "607ab00f9a2ebe34"},
@@ -38,7 +38,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/mux/backup.sh",        "dd85d34d6451e8bd"},
         {"/opt/muos/script/mux/extract.sh",       "e03f0e3620e6e0d0"},
         {"/opt/muos/script/mux/find.sh",          "2a0e623cddcaabec"},
-        {"/opt/muos/script/mux/frontend.sh",      "4a4e7149618e7ba1"},
+        {"/opt/muos/script/mux/frontend.sh",      "447b9eca032b6af8"},
         {"/opt/muos/script/mux/hotkey.sh",        "3ec4262af2e894c0"},
         {"/opt/muos/script/mux/idle.sh",          "f04ca312e6636636"},
         {"/opt/muos/script/mux/install.sh",       "66d2deea91da77c1"},
@@ -67,7 +67,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/system/lowpower.sh",   "2518cbdfb7023cd7"},
         {"/opt/muos/script/system/network.sh",    "177fb266cf82ac62"},
         {"/opt/muos/script/system/os_release.sh", "f887d3813502b8e0"},
-        {"/opt/muos/script/system/pipewire.sh",   "2ab1f5d0d47b4e21"},
+        {"/opt/muos/script/system/pipewire.sh",   "691ff71dfc50c989"},
         {"/opt/muos/script/system/reset.sh",      "16b5d331a02225bc"},
         {"/opt/muos/script/system/serial.sh",     "fd299732230cf472"},
         {"/opt/muos/script/system/startup.sh",    "42d3a895f80c76b3"},
@@ -75,7 +75,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/system/swap.sh",       "136b812ef94a0aa2"},
         {"/opt/muos/script/system/usb_gadget.sh", "cc00a75b4a1e7186"},
         {"/opt/muos/script/system/user_init.sh",  "c25a63c50bf5fbd2"},
-        {"/opt/muos/script/var/func.sh",          "e4a61257878ccfe1"},
+        {"/opt/muos/script/var/func.sh",          "86ecd907473b7f29"},
         {"/opt/muos/script/var/sync.sh",          "456820ca25251e52"},
         {"/opt/muos/script/var/zip.sh",           "4f7b05b88f86bd6e"},
         {"/opt/muos/script/web/keepalive.sh",     "3b03b003d3bb91d7"},
