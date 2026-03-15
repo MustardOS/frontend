@@ -165,10 +165,15 @@ static void update_render_state(void) {
     underscan = (config.BOOT.DEVICE_MODE && config.SETTINGS.HDMI.SCAN) ? 16 : 0;
     LOG_INFO("video", "Device Underscan: %d", underscan);
 
-    monitor.dest_rect = (SDL_Rect) {
-            pct_offset(device.SCREEN.WIDTH, scale_width, theme.SDL.RENDER.OFFSET_X) + underscan,
-            pct_offset(device.SCREEN.HEIGHT, scale_height, theme.SDL.RENDER.OFFSET_Y) + underscan,
+    int offset_render_x = pct_offset(device.SCREEN.WIDTH, scale_width, device.SCREEN.RENDER_OFFSET_X);
+    int offset_render_y = pct_offset(device.SCREEN.HEIGHT, scale_height, device.SCREEN.RENDER_OFFSET_Y);
 
+    int offset_theme_x = pct_offset(scale_width, scale_width, theme.SDL.RENDER.OFFSET_X);
+    int offset_theme_y = pct_offset(scale_height, scale_height, theme.SDL.RENDER.OFFSET_Y);
+
+    monitor.dest_rect = (SDL_Rect) {
+            offset_render_x + offset_theme_x + underscan,
+            offset_render_y + offset_theme_y + underscan,
             scale_width - (underscan * 2),
             scale_height - (underscan * 2)
     };

@@ -96,6 +96,8 @@ struct mux_device {
         int16_t ROTATE;
         int16_t ROTATE_PIVOT_X;
         int16_t ROTATE_PIVOT_Y;
+        int16_t RENDER_OFFSET_X;
+        int16_t RENDER_OFFSET_Y;
         int16_t WAIT;
         int16_t WIDTH;
         int16_t HEIGHT;
