@@ -1079,7 +1079,7 @@ static void show_detail_view(const activity_item_t *it) {
         apply_theme_list_value(&theme, ui_lblActItemValue, detail_value);
 
         lv_obj_t *ui_lblActItemGlyph = lv_img_create(ui_pnlAct);
-        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, mux_module, detail_glyph);
+        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, "muxactivity", detail_glyph);
 
         lv_group_add_obj(ui_group, ui_lblActItem);
         lv_group_add_obj(ui_group_value, ui_lblActItemValue);
@@ -1241,7 +1241,7 @@ static void show_global_view(void) {
         apply_theme_list_value(&theme, ui_lblActItemValue, global_value);
 
         lv_obj_t *ui_lblActItemGlyph = lv_img_create(ui_pnlAct);
-        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, mux_module, global_glyph);
+        apply_theme_list_glyph(&theme, ui_lblActItemGlyph, "muxactivity", global_glyph);
 
         lv_group_add_obj(ui_group, ui_lblActItem);
         lv_group_add_obj(ui_group_value, ui_lblActItemValue);
