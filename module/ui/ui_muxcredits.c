@@ -209,8 +209,9 @@ static const char *knight_two[] = {
 };
 
 static const char *contributors[] = {
+        "antikk",
         "bitter_bizarro",
-        "bmdhacks",
+        "corey",
         "xonglebongle",
         NULL
 };
