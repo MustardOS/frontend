@@ -72,13 +72,13 @@ static void image_refresh() {
 
     if (strlen(core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 theme_base, mux_dimension, "box");
+                 theme_base, mux_dim, "box");
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
                      theme_base, "box");
         }
     } else {
-        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dimension, "box",
+        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dim, "box",
                              image, sizeof(image));
     }
 

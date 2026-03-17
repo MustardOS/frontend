@@ -71,7 +71,7 @@ static void image_refresh(char *image_type) {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 theme_base, mux_dimension, image_type);
+                 theme_base, mux_dim, image_type);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
                      theme_base, image_type);
@@ -79,11 +79,11 @@ static void image_refresh(char *image_type) {
     } else {
         if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
             load_image_catalogue(h_core_artwork, h_file_name, "", "default",
-                                 mux_dimension, image_type, image, sizeof(image));
+                                 mux_dim, image_type, image, sizeof(image));
         }
 
         if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
-            load_splash_image_fallback(mux_dimension, image, sizeof(image));
+            load_splash_image_fallback(mux_dim, image, sizeof(image));
         }
     }
 

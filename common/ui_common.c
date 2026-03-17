@@ -93,21 +93,32 @@ int volume_changed = 0;
 int last_brightness = -1;
 int last_volume = -1;
 
+static lv_obj_t *canvas;
+
+static lv_style_t grid_cell_shadow_style;
+static int grid_cell_shadow_style_ready = 0;
+
+static lv_coord_t *grid_col_dsc = NULL;
+static lv_coord_t *grid_row_dsc = NULL;
+
+static int grid_col_alloc = 0;
+static int grid_row_alloc = 0;
+
 // Global buffer for the canvas
-static lv_color_t *cbuf;
+static lv_color_t *canvas_buffer;
 
 // 4x4 Bayer Ordered Dithering Matrix (Normalized to 0-16)
-const int bayerMatrix[4][4] = {
-        {0,  8,  2,  10},
-        {12, 4,  14, 6},
-        {3,  11, 1,  9},
-        {15, 7,  13, 5}
+static const uint8_t bayerMatrix[16] = {
+        0, 8, 2, 10,
+        12, 4, 14, 6,
+        3, 11, 1, 9,
+        15, 7, 13, 5
 };
 
 // Improved dithering function using Bayer matrix
-static lv_color_t dither_color(lv_color_t color, int x, int y) {
+static inline lv_color_t dither_color(lv_color_t color, int x, int y) {
     // Get matrix value (normalized to range -4 to +4)
-    int bayerValue = bayerMatrix[y % 4][x % 4] - 7;
+    int bayerValue = bayerMatrix[((y & 3) << 2) | (x & 3)] - 7;
 
     int r = LV_COLOR_GET_R(color) + bayerValue;
     int g = LV_COLOR_GET_G(color) + bayerValue;
@@ -122,91 +133,128 @@ static lv_color_t dither_color(lv_color_t color, int x, int y) {
 }
 
 void blur_gradient(lv_color_t *buf, int width, int height, int blur_strength) {
+    if (!buf || blur_strength <= 0 || width < 3 || height < 3) return;
+
+    size_t size = (size_t) width * height;
+    lv_color_t * blur_grad = lv_mem_alloc(size * sizeof(lv_color_t));
+    if (!blur_grad) return;
+
     for (int pass = 0; pass < blur_strength; pass++) {
+        memcpy(blur_grad, buf, size * sizeof(lv_color_t));
+
         for (int y = 1; y < height - 1; y++) {
-            for (int x = 1; x < width - 1; x++) {
-                // Use a 3×3 box blur (increases smoothness)
-                int r = (
-                                LV_COLOR_GET_R(buf[(y - 1) * width + (x - 1)]) +
-                                LV_COLOR_GET_R(buf[(y - 1) * width + x]) +
-                                LV_COLOR_GET_R(buf[(y - 1) * width + (x + 1)]) +
-                                LV_COLOR_GET_R(buf[y * width + (x - 1)]) +
-                                LV_COLOR_GET_R(buf[y * width + x]) +
-                                LV_COLOR_GET_R(buf[y * width + (x + 1)]) +
-                                LV_COLOR_GET_R(buf[(y + 1) * width + (x - 1)]) +
-                                LV_COLOR_GET_R(buf[(y + 1) * width + x]) +
-                                LV_COLOR_GET_R(buf[(y + 1) * width + (x + 1)])
-                        ) / 9;  // Average 9 surrounding pixels
+            lv_color_t * row_up = blur_grad + (y - 1) * width;
+            lv_color_t * row = blur_grad + y * width;
+            lv_color_t * row_dn = blur_grad + (y + 1) * width;
 
-                int g = (
-                                LV_COLOR_GET_G(buf[(y - 1) * width + (x - 1)]) +
-                                LV_COLOR_GET_G(buf[(y - 1) * width + x]) +
-                                LV_COLOR_GET_G(buf[(y - 1) * width + (x + 1)]) +
-                                LV_COLOR_GET_G(buf[y * width + (x - 1)]) +
-                                LV_COLOR_GET_G(buf[y * width + x]) +
-                                LV_COLOR_GET_G(buf[y * width + (x + 1)]) +
-                                LV_COLOR_GET_G(buf[(y + 1) * width + (x - 1)]) +
-                                LV_COLOR_GET_G(buf[(y + 1) * width + x]) +
-                                LV_COLOR_GET_G(buf[(y + 1) * width + (x + 1)])
-                        ) / 9;
+            lv_color_t * dst = buf + y * width + 1;
 
-                int b = (
-                                LV_COLOR_GET_B(buf[(y - 1) * width + (x - 1)]) +
-                                LV_COLOR_GET_B(buf[(y - 1) * width + x]) +
-                                LV_COLOR_GET_B(buf[(y - 1) * width + (x + 1)]) +
-                                LV_COLOR_GET_B(buf[y * width + (x - 1)]) +
-                                LV_COLOR_GET_B(buf[y * width + x]) +
-                                LV_COLOR_GET_B(buf[y * width + (x + 1)]) +
-                                LV_COLOR_GET_B(buf[(y + 1) * width + (x - 1)]) +
-                                LV_COLOR_GET_B(buf[(y + 1) * width + x]) +
-                                LV_COLOR_GET_B(buf[(y + 1) * width + (x + 1)])
-                        ) / 9;
+            for (int x = 1; x < width - 1; x++, dst++) {
+                int r = LV_COLOR_GET_R(row_up[x - 1]) +
+                        LV_COLOR_GET_R(row_up[x]) +
+                        LV_COLOR_GET_R(row_up[x + 1]) +
+                        LV_COLOR_GET_R(row[x - 1]) +
+                        LV_COLOR_GET_R(row[x]) +
+                        LV_COLOR_GET_R(row[x + 1]) +
+                        LV_COLOR_GET_R(row_dn[x - 1]) +
+                        LV_COLOR_GET_R(row_dn[x]) +
+                        LV_COLOR_GET_R(row_dn[x + 1]);
 
-                buf[y * width + x] = lv_color_make(r, g, b);
+                int g = LV_COLOR_GET_G(row_up[x - 1]) +
+                        LV_COLOR_GET_G(row_up[x]) +
+                        LV_COLOR_GET_G(row_up[x + 1]) +
+                        LV_COLOR_GET_G(row[x - 1]) +
+                        LV_COLOR_GET_G(row[x]) +
+                        LV_COLOR_GET_G(row[x + 1]) +
+                        LV_COLOR_GET_G(row_dn[x - 1]) +
+                        LV_COLOR_GET_G(row_dn[x]) +
+                        LV_COLOR_GET_G(row_dn[x + 1]);
+
+                int b = LV_COLOR_GET_B(row_up[x - 1]) +
+                        LV_COLOR_GET_B(row_up[x]) +
+                        LV_COLOR_GET_B(row_up[x + 1]) +
+                        LV_COLOR_GET_B(row[x - 1]) +
+                        LV_COLOR_GET_B(row[x]) +
+                        LV_COLOR_GET_B(row[x + 1]) +
+                        LV_COLOR_GET_B(row_dn[x - 1]) +
+                        LV_COLOR_GET_B(row_dn[x]) +
+                        LV_COLOR_GET_B(row_dn[x + 1]);
+
+                *dst = lv_color_make(r / 9, g / 9, b / 9);
             }
         }
     }
+
+    lv_mem_free(blur_grad);
 }
 
-void generate_gradient_with_bayer_dither(lv_color_t *buf, int width, int height,
-                                         lv_color_t start_color, lv_color_t end_color,
-                                         bool apply_dither, bool vertical,
-                                         uint8_t main_stop, uint8_t grad_stop) {
+void generate_gradient_with_bayer_dither(lv_color_t *buf, int width, int height, lv_color_t start_color, lv_color_t end_color,
+                                         bool apply_dither, bool vertical, uint8_t main_stop, uint8_t grad_stop) {
+    int span = vertical ? height : width;
+
     // Convert gradient stop values (0-255) to pixel positions
-    int start_pos = (int) round(main_stop / 255.0) * (vertical ? height : width);
-    int end_pos = (int) round(grad_stop / 255.0) * (vertical ? height : width);
+    int start_pos = (main_stop * span) / 255;
+    int end_pos = (grad_stop * span) / 255;
 
     // Prevent invalid cases where start is beyond end
+    if (start_pos < 0) start_pos = 0;
+    if (end_pos < 0) end_pos = 0;
+    if (start_pos > span) start_pos = span;
+    if (end_pos > span) end_pos = span;
+
     if (start_pos >= end_pos) {
         start_pos = 0;
-        end_pos = vertical ? height : width;
+        end_pos = span;
     }
 
+    int ov_pos = end_pos - start_pos;
+    if (ov_pos <= 0) ov_pos = 1;
+
     // Iterate over each pixel
+    uint8_t sr = LV_COLOR_GET_R(start_color);
+    uint8_t sg = LV_COLOR_GET_G(start_color);
+    uint8_t sb = LV_COLOR_GET_B(start_color);
+
+    uint8_t er = LV_COLOR_GET_R(end_color);
+    uint8_t eg = LV_COLOR_GET_G(end_color);
+    uint8_t eb = LV_COLOR_GET_B(end_color);
+
+    int dr = (int) er - sr;
+    int dg = (int) eg - sg;
+    int db = (int) eb - sb;
+
+    lv_color_t * p = buf;
+
     for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            // Determine pixel position in gradient
-            int pos = vertical ? y : x;
+        // Determine pixel position in gradient
+        int pos = vertical ? y : 0;
+        int grad = ((pos - start_pos) * 255) / ov_pos;
 
-            // Normalize position within gradient stops
-            float ratio = (float) (pos - start_pos) / (float) (end_pos - start_pos);
-            ratio = LV_CLAMP(0.0f, ratio, 1.0f); // Ensure within valid range
+        if (grad < 0) grad = 0;
+        if (grad > 255) grad = 255;
 
-            // Compute interpolated color values
-            uint8_t r = (uint8_t) ((1.0f - ratio) * LV_COLOR_GET_R(start_color) + ratio * LV_COLOR_GET_R(end_color));
-            uint8_t g = (uint8_t) ((1.0f - ratio) * LV_COLOR_GET_G(start_color) + ratio * LV_COLOR_GET_G(end_color));
-            uint8_t b = (uint8_t) ((1.0f - ratio) * LV_COLOR_GET_B(start_color) + ratio * LV_COLOR_GET_B(end_color));
+        // Compute interpolated color values
+        int r = sr + ((dr * grad) >> 8);
+        int g = sg + ((dg * grad) >> 8);
+        int b = sb + ((db * grad) >> 8);
 
+        int r_step = vertical ? 0 : ((dr * 255) / ov_pos) >> 8;
+        int g_step = vertical ? 0 : ((dg * 255) / ov_pos) >> 8;
+        int b_step = vertical ? 0 : ((db * 255) / ov_pos) >> 8;
+
+        for (int x = 0; x < width; x++, p++) {
             // Ensure valid LVGL color format
             lv_color_t final_color = lv_color_make(r, g, b);
 
             // Apply Bayer dithering if enabled
-            if (apply_dither) {
-                final_color = dither_color(final_color, x, y);
-            }
+            if (apply_dither) final_color = dither_color(final_color, x, y);
 
-            // Assign the final color to the buffer
-            buf[y * width + x] = final_color;
+            *p = final_color;
+            if (!vertical) {
+                r += r_step;
+                g += g_step;
+                b += b_step;
+            }
         }
     }
 }
@@ -214,41 +262,58 @@ void generate_gradient_with_bayer_dither(lv_color_t *buf, int width, int height,
 void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device) {
     if (theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE) return;
 
-    // Allocate memory for the canvas buffer
-    cbuf = lv_mem_alloc(device->MUX.WIDTH * device->MUX.HEIGHT * sizeof(lv_color_t));
+    size_t buf_size = (size_t) device->MUX.WIDTH * (size_t) device->MUX.HEIGHT * sizeof(lv_color_t);
 
-    if (!cbuf) {
+    static size_t canvas_buf_size = 0;
+
+    // Allocate memory for the canvas buffer and reuse
+    if (!canvas_buffer || canvas_buf_size != buf_size) {
+        lv_mem_free(canvas_buffer);
+        canvas_buffer = lv_mem_alloc(buf_size);
+
+        if (!canvas_buffer) {
+            LV_LOG_ERROR("Canvas buffer alloc failed");
+            return;
+        }
+
+        canvas_buf_size = buf_size;
+    }
+
+    if (!canvas_buffer) {
         LV_LOG_ERROR("Failed to allocate memory for canvas buffer!");
         return;
     }
 
     // Create a canvas
-    lv_obj_t *canvas = lv_canvas_create(ui_screen);
-    lv_canvas_set_buffer(canvas, cbuf, device->MUX.WIDTH, device->MUX.HEIGHT, LV_IMG_CF_TRUE_COLOR);
+    canvas = lv_canvas_create(ui_screen);
+    lv_canvas_set_buffer(canvas, canvas_buffer, device->MUX.WIDTH, device->MUX.HEIGHT, LV_IMG_CF_TRUE_COLOR);
 
     // Set size and position to cover the full screen
     lv_obj_set_size(canvas, device->MUX.WIDTH, device->MUX.HEIGHT);
     lv_obj_align(canvas, LV_ALIGN_CENTER, 0, 0);  // Center on the screen
+    lv_obj_clear_flag(canvas, LV_OBJ_FLAG_SCROLLABLE);
 
     // Define gradient colors
     lv_color_t start_color = lv_color_hex(theme->SYSTEM.BACKGROUND); // Black
     lv_color_t end_color = lv_color_hex(theme->SYSTEM.BACKGROUND_GRADIENT_COLOR);   // Dark Gray
 
     // Generate the gradient with dithering
-    generate_gradient_with_bayer_dither(cbuf, device->MUX.WIDTH, device->MUX.HEIGHT, start_color, end_color,
+    generate_gradient_with_bayer_dither(canvas_buffer, device->MUX.WIDTH, device->MUX.HEIGHT, start_color, end_color,
                                         theme->SYSTEM.BACKGROUND_GRADIENT_DITHER == 1,
                                         theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_VER,
                                         theme->SYSTEM.BACKGROUND_GRADIENT_START,
                                         theme->SYSTEM.BACKGROUND_GRADIENT_STOP);
-    blur_gradient(cbuf, device->MUX.WIDTH, device->MUX.HEIGHT, theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
 
     // Refresh the canvas
+    if (theme->SYSTEM.BACKGROUND_GRADIENT_BLUR > 0) blur_gradient(canvas_buffer, device->MUX.WIDTH, device->MUX.HEIGHT, theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
+
     lv_obj_invalidate(canvas);
 }
 
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
     ui_screen_container = lv_obj_create(NULL);
+
     if (ui_screen_temp == NULL) ui_screen_temp = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -257,6 +322,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_blank = lv_obj_create(ui_screen_container);
     lv_obj_set_width(ui_blank, device->MUX.WIDTH);
     lv_obj_set_height(ui_blank, device->MUX.HEIGHT);
+
     lv_obj_set_align(ui_blank, LV_ALIGN_CENTER);
     lv_obj_set_style_bg_color(ui_blank, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_blank, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
@@ -275,13 +341,16 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_pnlWall, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlWall, device->MUX.HEIGHT);
     lv_obj_set_align(ui_pnlWall, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlWall, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                                  LV_OBJ_FLAG_SCROLL_CHAIN);
+
+    lv_obj_clear_flag(ui_pnlWall, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlWall, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlWall, LV_DIR_VER);
+
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlWall, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_border_width(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
@@ -294,6 +363,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     lv_obj_set_width(ui_imgWall, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgWall, LV_SIZE_CONTENT);
+
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
@@ -306,9 +376,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlContent, theme->MISC.CONTENT.HEIGHT);
+
     lv_obj_set_x(ui_pnlContent, 0);
     lv_obj_set_y(ui_pnlContent, theme->HEADER.HEIGHT + 2 + theme->MISC.CONTENT.PADDING_TOP);
+
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_COLUMN);
+
     if (theme->MISC.CONTENT.ALIGNMENT == 1) {
         lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT * 2, MU_OBJ_MAIN_DEFAULT);
@@ -319,12 +392,16 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
         lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
     }
+
     lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlContent, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlContent, LV_DIR_VER);
+
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlContent, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_border_width(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_top(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlContent, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_row(ui_pnlContent, 2, MU_OBJ_MAIN_DEFAULT);
@@ -338,16 +415,19 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_pnlBox = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlBox, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlBox, device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4);
+
     lv_obj_set_x(ui_pnlBox, 0);
     lv_obj_set_y(ui_pnlBox, theme->HEADER.HEIGHT + 2);
+
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_TOP_MID);
-    lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                                 LV_OBJ_FLAG_SCROLL_CHAIN);
+    lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlBox, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlBox, LV_DIR_VER);
+
     lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlBox, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlBox, 0, MU_OBJ_MAIN_DEFAULT);
@@ -360,16 +440,20 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     ui_imgBox = lv_img_create(ui_pnlBox);
     lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+
     lv_obj_set_width(ui_imgBox, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgBox, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
+
     lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_clip_corner(ui_imgBox, true, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(ui_imgBox, theme->IMAGE_LIST.RADIUS, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_img_opa(ui_imgBox, theme->IMAGE_LIST.ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor(ui_imgBox, lv_color_hex(theme->IMAGE_LIST.RECOLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_imgBox, theme->IMAGE_LIST.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_imgBox, theme->IMAGE_LIST.PAD_LEFT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_imgBox, theme->IMAGE_LIST.PAD_RIGHT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_imgBox, theme->IMAGE_LIST.PAD_TOP, MU_OBJ_MAIN_DEFAULT);
@@ -378,14 +462,18 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_pnlHeader = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlHeader, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlHeader, theme->HEADER.HEIGHT);
+
     lv_obj_set_align(ui_pnlHeader, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlHeader, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlHeader, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_style_radius(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHeader, lv_color_hex(theme->HEADER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHeader, theme->HEADER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_border_width(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlHeader, 0, MU_OBJ_MAIN_DEFAULT);
@@ -394,13 +482,17 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblDatetime = lv_label_create(ui_pnlHeader);
     lv_obj_set_width(ui_lblDatetime, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblDatetime, LV_SIZE_CONTENT);
+
     lv_label_set_long_mode(ui_lblDatetime, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblDatetime, "");
     lv_obj_clear_flag(ui_lblDatetime, LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_style_text_align(ui_lblDatetime, theme->DATETIME.ALIGN, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(ui_lblDatetime, lv_color_hex(theme->DATETIME.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblDatetime, theme->DATETIME.ALPHA, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_border_width(ui_lblDatetime, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_lblDatetime, theme->DATETIME.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblDatetime, theme->DATETIME.PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblDatetime, theme->FONT.HEADER_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
@@ -410,11 +502,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_lblTitle, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblTitle, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblTitle, LV_ALIGN_TOP_MID);
+
     lv_label_set_long_mode(ui_lblTitle, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblTitle, title);
     lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(theme->HEADER.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblTitle, theme->HEADER.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(ui_lblTitle, theme->HEADER.TEXT_ALIGN, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_lblTitle, theme->HEADER.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblTitle, theme->HEADER.PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblTitle, theme->FONT.HEADER_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
@@ -424,9 +518,11 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_conGlyphs, device->MUX.WIDTH);
     lv_obj_set_height(ui_conGlyphs, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_conGlyphs, LV_ALIGN_TOP_MID);
+
     lv_obj_set_flex_flow(ui_conGlyphs, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_conGlyphs, theme->STATUS.ALIGN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_conGlyphs, LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_style_pad_left(ui_conGlyphs, theme->STATUS.PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_conGlyphs, theme->STATUS.PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_conGlyphs, theme->FONT.HEADER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
@@ -444,22 +540,27 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     update_battery_capacity(ui_staCapacity, theme);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
+
     lv_obj_set_width(ui_pnlFooter, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlFooter, theme->FOOTER.HEIGHT);
     lv_obj_set_align(ui_pnlFooter, LV_ALIGN_BOTTOM_MID);
+
     lv_obj_set_flex_flow(ui_pnlFooter, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlFooter, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_style_radius(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlFooter, lv_color_hex(theme->FOOTER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlFooter, theme->FOOTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_row(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlFooter, 0, MU_OBJ_MAIN_DEFAULT);
+
     lv_flex_align_t e_align;
     switch (theme->NAV.ALIGNMENT) {
         case 1:
@@ -488,23 +589,19 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblNavLRGlyph = create_footer_glyph(ui_pnlFooter, theme, "lr", theme->NAV.LR, 1);
     ui_lblNavLR = create_footer_text(ui_pnlFooter, theme, theme->NAV.LR.TEXT, theme->NAV.LR.TEXT_ALPHA, 1);
 
-    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
-                                          theme->NAV.A, 1);
+    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A, 1);
     ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 1);
 
-    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
-                                          theme->NAV.B, 1);
+    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B, 1);
     ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 1);
 
     ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C, 1);
     ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA, 1);
 
-    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "y" : "x",
-                                          theme->NAV.X, 1);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "y" : "x", theme->NAV.X, 1);
     ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA, 1);
 
-    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "x" : "y",
-                                          theme->NAV.Y, 1);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "x" : "y", theme->NAV.Y, 1);
     ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA, 1);
 
     ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z, 1);
@@ -634,8 +731,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_flex_align(ui_pnlHelpExtra, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpExtra, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
                                        LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE |
-                                       LV_OBJ_FLAG_SCROLL_ELASTIC |
-                                       LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
+                                       LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_style_radius(ui_pnlHelpExtra, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpExtra, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpExtra, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
@@ -645,14 +741,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblHelpNavUD = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.UD.TEXT, theme->NAV.UD.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpNavUD, lang->GENERIC.SCROLL);
 
-    ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
-                                                   theme->NAV.A, 0);
+    ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A, 0);
 
     ui_lblPreviewHeader = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblPreviewHeader, lang->GENERIC.SWITCH_IMAGE);
 
-    ui_lblHelpNavBGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
-                                              theme->NAV.B, 0);
+    ui_lblHelpNavBGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B, 0);
 
     ui_lblHelpNavB = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpNavB, lang->GENERIC.CLOSE);
@@ -702,8 +796,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_imgHelpPreviewImage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_clip_corner(ui_imgHelpPreviewImage, true, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_img_recolor(ui_imgHelpPreviewImage, lv_color_hex(theme->IMAGE_PREVIEW.RECOLOUR),
-                                 MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_imgHelpPreviewImage, lv_color_hex(theme->IMAGE_PREVIEW.RECOLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlHelpPreviewInfo = lv_obj_create(ui_pnlHelpPreview);
@@ -718,20 +811,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
-    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme,
-                                                     (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
-                                                     theme->NAV.A, 0);
+    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A, 0);
 
-    ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT,
-                                                      theme->NAV.A.TEXT_ALPHA, 0);
+    ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpPreviewInfoMessage, lang->GENERIC.SWITCH_INFO);
 
-    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme,
-                                                     (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
-                                                     theme->NAV.B, 0);
+    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B, 0);
 
-    ui_lblHelpPreviewNavB = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA,
-                                               0);
+    ui_lblHelpPreviewNavB = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpPreviewNavB, lang->GENERIC.CLOSE);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
@@ -741,8 +828,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_y(ui_pnlProgressBrightness, theme->BAR.Y_POS);
     lv_obj_set_align(ui_pnlProgressBrightness, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlProgressBrightness, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnlProgressBrightness, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER,
-                          LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(ui_pnlProgressBrightness, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_RADIUS, MU_OBJ_MAIN_DEFAULT);
@@ -768,12 +854,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_barProgressBrightness, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressBrightness, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_barProgressBrightness, theme->BAR.PROGRESS_RADIUS, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
-                              MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(ui_barProgressBrightness, 0, MU_OBJ_INDI_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
-                              MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND), MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, MU_OBJ_INDI_DEFAULT);
 
     ui_pnlProgressVolume = lv_obj_create(ui_screen);
@@ -809,12 +893,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_barProgressVolume, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_barProgressVolume, theme->BAR.PROGRESS_RADIUS, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
-                              MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(ui_barProgressVolume, 0, MU_OBJ_INDI_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
-                              MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND), MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, MU_OBJ_INDI_DEFAULT);
 
     ui_pnlProgress = lv_obj_create(ui_screen);
@@ -857,25 +939,31 @@ int ui_common_check(int mode) {
 void init_ui_item_counter(struct theme_config *theme) {
     ui_lblCounter_explore = lv_label_create(ui_screen);
     lv_label_set_text(ui_lblCounter_explore, "");
+
     lv_obj_set_width(ui_lblCounter_explore, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblCounter_explore, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblCounter_explore, LV_ALIGN_CENTER);
+
     lv_label_set_text(ui_lblCounter_explore, "");
     lv_obj_add_flag(ui_lblCounter_explore, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_lblCounter_explore, LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_style_text_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblCounter_explore, theme->COUNTER.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(ui_lblCounter_explore, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_bg_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter_explore, theme->COUNTER.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
-                                  MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_border_color(ui_lblCounter_explore, lv_color_hex(theme->COUNTER.BORDER_COLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblCounter_explore, theme->COUNTER.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_lblCounter_explore, theme->COUNTER.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_pad_left(ui_lblCounter_explore, theme->COUNTER.PADDING_AROUND, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblCounter_explore, theme->COUNTER.PADDING_AROUND, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblCounter_explore, theme->COUNTER.PADDING_AROUND, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblCounter_explore, theme->COUNTER.PADDING_AROUND, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_set_style_radius(ui_lblCounter_explore, theme->COUNTER.RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_y(ui_lblCounter_explore, theme->COUNTER.PADDING_TOP);
 
@@ -926,9 +1014,13 @@ static void adjust_brightness(int direction) {
     int percent = brightness_to_percent(current_brightness);
 
     const char *glyph = "bright_0";
-    if (percent > 70) glyph = "bright_3";
-    else if (percent > 35) glyph = "bright_2";
-    else if (percent > 0) glyph = "bright_1";
+    if (percent > 70) {
+        glyph = "bright_3";
+    } else if (percent > 35) {
+        glyph = "bright_2";
+    } else if (percent > 0) {
+        glyph = "bright_1";
+    }
 
     update_glyph(ui_icoProgressBrightness, "bar", glyph);
 
@@ -954,9 +1046,13 @@ static void adjust_volume(int direction) {
     int percent = volume_to_percent(current_volume);
 
     const char *glyph = "volume_0";
-    if (percent > 70) glyph = "volume_3";
-    else if (percent > 35) glyph = "volume_2";
-    else if (percent > 0) glyph = "volume_1";
+    if (percent > 70) {
+        glyph = "volume_3";
+    } else if (percent > 35) {
+        glyph = "volume_2";
+    } else if (percent > 0) {
+        glyph = "volume_1";
+    }
 
     update_glyph(ui_icoProgressVolume, "bar", glyph);
 
@@ -989,6 +1085,7 @@ void ui_common_handle_idle(void) {
     }
 
     inotify_check(ino_proc);
+    int need_update = 0;
 
     if (brightness_changed || last_brightness != current_brightness) {
         lv_bar_set_value(ui_barProgressBrightness, brightness_to_percent(current_brightness), LV_ANIM_OFF);
@@ -1000,9 +1097,7 @@ void ui_common_handle_idle(void) {
         CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90);
 
         blank_check();
-
-        lv_task_handler();
-        return;
+        need_update = 1;
     }
 
     if (volume_changed || last_volume != current_volume) {
@@ -1014,8 +1109,7 @@ void ui_common_handle_idle(void) {
         char buffer[MAX_BUFFER_SIZE];
         CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75);
 
-        lv_task_handler();
-        return;
+        need_update = 1;
     }
 
     if (do_refresh_exists) {
@@ -1028,68 +1122,64 @@ void ui_common_handle_idle(void) {
         lv_obj_invalidate(ui_screen);
 
         refresh_screen(ui_screen, 3);
+        need_update = 1;
     }
 
-    if (!blank_exists && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > LV_OPA_TRANSP) {
-        blank_check();
-    }
+    if (!blank_exists && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > LV_OPA_TRANSP) blank_check();
 
-    lv_task_handler();
+    if (need_update) {
+        lv_task_handler();
+    } else {
+        lv_timer_handler();
+    }
 }
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
     lv_obj_t *ui_glyph;
     ui_glyph = lv_img_create(parent);
+
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
+
     lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
+
     lv_obj_set_style_pad_left(ui_glyph, 6, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_glyph, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_glyph, theme->FONT.HEADER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
+
     return ui_glyph;
 }
 
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
                               struct footer_glyph nav_footer_glyph, int16_t add_hide_flag) {
-    lv_obj_t *ui_glyph;
-    char footer_image_path[MAX_BUFFER_SIZE];
-    char footer_image_embed[MAX_BUFFER_SIZE];
+    lv_obj_t *ui_glyph = lv_img_create(parent);
+    char footer_image_path[MAX_BUFFER_SIZE] = "";
+    char footer_image_embed[MAX_BUFFER_SIZE] = "";
 
-    if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  theme_base, mux_dimension, glyph_name) >= 0 &&
-         file_exist(footer_image_path)) ||
-        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                  theme_base, glyph_name) >= 0 &&
-         file_exist(footer_image_path)) ||
-        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  INTERNAL_THEME, mux_dimension, glyph_name) >= 0 &&
-         file_exist(footer_image_path)) ||
-        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                  INTERNAL_THEME, glyph_name) >= 0 &&
-         file_exist(footer_image_path))) {
-
-        int written = snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s", footer_image_path);
-        if (written < 0 || (size_t) written >= sizeof(footer_image_embed)) return NULL;
+    if (generate_image_embed(mux_dim, "footer", glyph_name,
+                             footer_image_path, sizeof(footer_image_path),
+                             footer_image_embed, sizeof(footer_image_embed)) &&
+        nav_footer_glyph.GLYPH_ALPHA > 0) {
+        lv_img_set_src(ui_glyph, footer_image_embed);
     }
 
-    ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
-    if (file_exist(footer_image_path) && nav_footer_glyph.GLYPH_ALPHA > 0) lv_img_set_src(ui_glyph, footer_image_embed);
-    lv_obj_set_style_img_opa(ui_glyph, nav_footer_glyph.GLYPH_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_glyph, 6, MU_OBJ_MAIN_DEFAULT);
-
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
-    lv_obj_set_style_pad_left(ui_glyph, theme->NAV.SPACING, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
 
+    lv_obj_set_style_img_opa(ui_glyph, nav_footer_glyph.GLYPH_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor(ui_glyph, lv_color_hex(nav_footer_glyph.GLYPH), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_glyph, nav_footer_glyph.GLYPH_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
+    lv_obj_set_style_pad_left(ui_glyph, theme->NAV.SPACING, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_glyph, 6, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
+
     if (nav_footer_glyph.GLYPH_ALPHA == 0) lv_obj_set_width(ui_glyph, 0);
     if (add_hide_flag) lv_obj_add_flag(ui_glyph, LV_OBJ_FLAG_HIDDEN);
+
     return ui_glyph;
 }
 
@@ -1119,24 +1209,17 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     return ui_lblNavText;
 }
 
-int load_glyph_icon(const char *mux_dimension, const char *glyph_folder,
+int load_glyph_icon(const char *mux_dim, const char *glyph_folder,
                     const char *glyph_name, char *image_path, size_t image_size) {
-    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png",
-                 theme_base, mux_dimension, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
-        return 1;
+    if (!glyph_folder || !glyph_name || !image_path || image_size == 0) return 0;
 
-    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png",
-                 theme_base, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
-        return 1;
+    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png", theme_base, mux_dim, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
+    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png", theme_base, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
 
-    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png",
-                 INTERNAL_THEME, mux_dimension, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
-        return 1;
+    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
+    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png", INTERNAL_THEME, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
 
-    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png",
-                 INTERNAL_THEME, glyph_folder, glyph_name) >= 0 && file_exist(image_path))
-        return 1;
-
+    image_path[0] = '\0';
     return 0;
 }
 
@@ -1145,7 +1228,10 @@ int generate_image_embed(const char *dimension, const char *glyph_folder, const 
     if (!load_glyph_icon(dimension, glyph_folder, glyph_name, image_path, path_size)) return 0;
 
     int written = snprintf(image_embed, embed_size, "M:%s", image_path);
-    if (written < 0 || (size_t) written >= embed_size) return 0;
+    if (written < 0 || (size_t) written >= embed_size) {
+        image_embed[0] = '\0';
+        return 0;
+    }
 
     return 1;
 }
@@ -1154,9 +1240,9 @@ void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
-    generate_image_embed(mux_dimension, glyph_folder, glyph_name, image_path,
-                         sizeof(image_path), image_embed, sizeof(image_embed));
-    if (file_exist(image_path)) lv_img_set_src(ui_img, image_embed);
+    if (generate_image_embed(mux_dim, glyph_folder, glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
+        lv_img_set_src(ui_img, image_embed);
+    }
 }
 
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme) {
@@ -1175,18 +1261,18 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA, MU_OBJ_MAIN_DEFAULT);
     }
 
-    generate_image_embed(mux_dimension, "header", battery_glyph_name, image_path,
-                         sizeof(image_path), image_embed, sizeof(image_embed));
-    if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
+    if (generate_image_embed(mux_dim, "header", battery_glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
+        lv_img_set_src(ui_staCapacity, image_embed);
+    }
 }
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
-    generate_image_embed(mux_dimension, "header", "bluetooth", image_path,
-                         sizeof(image_path), image_embed, sizeof(image_embed));
-    if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
+    if (generate_image_embed(mux_dim, "header", "bluetooth", image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
+        lv_img_set_src(ui_staBluetooth, image_embed);
+    }
 }
 
 void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, int force_glyph) {
@@ -1209,15 +1295,14 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
     lv_obj_set_style_img_recolor(ui_staNetwork, status_style.color, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_staNetwork, status_style.alpha, MU_OBJ_MAIN_DEFAULT);
 
-    char network_status_filename[20];
-    snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", status_style.status);
+    const char *network_status_filename = (status_style.status[0] == 'a') ? "network_active" : "network_normal";
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
-    generate_image_embed(mux_dimension, "header", network_status_filename, image_path,
-                         sizeof(image_path), image_embed, sizeof(image_embed));
-    if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
+    if (generate_image_embed(mux_dim, "header", network_status_filename, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
+        lv_img_set_src(ui_staNetwork, image_embed);
+    }
 }
 
 static void hide_message(lv_timer_t *msg_timer) {
@@ -1272,7 +1357,7 @@ void adjust_panel_priority(lv_obj_t *panels[]) {
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type) {
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", theme_base, mux_dimension);
+        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", theme_base, mux_dim);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, wall_type);
@@ -1354,39 +1439,63 @@ void fade_from_black(lv_obj_t *ui_screen) {
     fade_black(ui_screen, LV_OPA_COVER, LV_OPA_TRANSP, -25, 1);
 }
 
+static int calc_grid_row_count(struct theme_config *theme, int item_count) {
+    if (theme->GRID.COLUMN_COUNT <= 0) return 1;
+
+    if (is_carousel_grid_mode()) return theme->GRID.ROW_COUNT > 0 ? theme->GRID.ROW_COUNT : 1;
+    return (item_count + theme->GRID.COLUMN_COUNT - 1) / theme->GRID.COLUMN_COUNT;
+}
+
 void create_grid_panel(struct theme_config *theme, int item_count) {
-    int row_count = is_carousel_grid_mode() ? theme->GRID.ROW_COUNT : item_count / theme->GRID.COLUMN_COUNT + 1;
+    int column_count = theme->GRID.COLUMN_COUNT > 0 ? theme->GRID.COLUMN_COUNT : 1;
+    int row_count = calc_grid_row_count(theme, item_count);
 
-    lv_coord_t * col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
-    lv_coord_t * row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
+    if (grid_col_alloc < column_count + 1) {
+        lv_coord_t * grid_alloc = lv_mem_realloc(grid_col_dsc, (column_count + 1) * sizeof(lv_coord_t));
+        if (!grid_alloc) {
+            LOG_ERROR(mux_module, "Grid column allocation failed");
+            return;
+        }
 
-    for (int i = 0; i < theme->GRID.COLUMN_COUNT; i++) {
-        col_dsc[i] = theme->GRID.COLUMN_WIDTH == 0 ? LV_GRID_CONTENT : theme->GRID.COLUMN_WIDTH;
+        grid_col_dsc = grid_alloc;
+        grid_col_alloc = column_count + 1;
     }
-    col_dsc[theme->GRID.COLUMN_COUNT] = LV_GRID_TEMPLATE_LAST;
 
-    for (int i = 0; i < row_count; i++) {
-        row_dsc[i] = theme->GRID.ROW_HEIGHT == 0 ? LV_GRID_CONTENT : theme->GRID.ROW_HEIGHT;
+    if (grid_row_alloc < row_count + 1) {
+        lv_coord_t * grid_alloc = lv_mem_realloc(grid_row_dsc, (row_count + 1) * sizeof(lv_coord_t));
+        if (!grid_alloc) {
+            LOG_ERROR(mux_module, "Grid row allocation failed");
+            return;
+        }
+
+        grid_row_dsc = grid_alloc;
+        grid_row_alloc = row_count + 1;
     }
-    row_dsc[row_count] = LV_GRID_TEMPLATE_LAST;
 
-    lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, MU_OBJ_MAIN_DEFAULT);
+    for (int i = 0; i < column_count; i++) grid_col_dsc[i] = theme->GRID.COLUMN_WIDTH == 0 ? LV_GRID_CONTENT : theme->GRID.COLUMN_WIDTH;
+    grid_col_dsc[column_count] = LV_GRID_TEMPLATE_LAST;
+
+    for (int i = 0; i < row_count; i++) grid_row_dsc[i] = theme->GRID.ROW_HEIGHT == 0 ? LV_GRID_CONTENT : theme->GRID.ROW_HEIGHT;
+    grid_row_dsc[row_count] = LV_GRID_TEMPLATE_LAST;
+
+    lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, grid_col_dsc, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, grid_row_dsc, MU_OBJ_MAIN_DEFAULT);
 
     if (theme->GRID.COLUMN_WIDTH == 0 && theme->GRID.ROW_HEIGHT == 0) {
         LOG_INFO(mux_module, "Setting Grid Size to: content");
 
-        lv_obj_set_height(ui_pnlGrid, LV_SIZE_CONTENT);
         lv_obj_set_width(ui_pnlGrid, LV_SIZE_CONTENT);
+        lv_obj_set_height(ui_pnlGrid, LV_SIZE_CONTENT);
     } else {
+        int visible_rows = theme->GRID.ROW_COUNT > 0 ? theme->GRID.ROW_COUNT : row_count;
+        int extra_rows = row_count - visible_rows;
+        if (extra_rows < 0) extra_rows = 0;
+
         LOG_INFO(mux_module, "Setting Grid Size to: height (%d) width (%d)",
                  theme->GRID.ROW_HEIGHT, theme->GRID.COLUMN_WIDTH);
 
-        lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
-                        theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
-        //add padding to the bottom to make sure grid panel scrolls correctly
-        lv_obj_set_style_pad_bottom(ui_pnlGrid, (row_count - theme->GRID.ROW_COUNT + 1) * theme->GRID.ROW_HEIGHT,
-                                    LV_PART_MAIN);
+        lv_obj_set_size(ui_pnlGrid, column_count * theme->GRID.COLUMN_WIDTH, visible_rows * theme->GRID.ROW_HEIGHT);
+        lv_obj_set_style_pad_bottom(ui_pnlGrid, (extra_rows + 1) * theme->GRID.ROW_HEIGHT, MU_OBJ_MAIN_DEFAULT);
     }
 
     if (theme->GRID.ALIGNMENT == 0) {
@@ -1395,6 +1504,7 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     } else {
         lv_obj_align(ui_pnlGrid, theme->GRID.ALIGNMENT, theme->GRID.ALIGNMENT_X_OFFSET, theme->GRID.ALIGNMENT_Y_OFFSET);
     }
+
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
     lv_obj_set_style_bg_color(ui_pnlGrid, lv_color_hex(theme->GRID.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlGrid, theme->GRID.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
@@ -1406,61 +1516,41 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
 
     lv_obj_clear_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
-                 theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X, theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
-    lv_label_set_long_mode(ui_lblGridCurrentItem, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT,
-                                MU_OBJ_MAIN_DEFAULT);
+                 theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X,
+                 theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
 
-    lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT
-                                                                                      : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
-    lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT
-                                                                                        : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
-    lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS,
-                            MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH,
-                                  MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
+    lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
 
-    lv_obj_set_style_bg_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND),
-                              MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA,
-                            MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblGridCurrentItem,
-                                   lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR),
-                                   MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START,
-                                  MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP,
-                                  MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION,
-                                 MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH,
-                                  MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW),
-                                  MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_ofs_x(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET,
-                                  MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_ofs_y(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET,
-                                  MU_OBJ_MAIN_DEFAULT);
     lv_label_set_long_mode(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
-    lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER),
-                                  MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA,
-                                MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_set_style_text_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.TEXT),
-                                MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA,
-                              MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING,
-                                     MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT,
-                              MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT,
-                               MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP,
-                             MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM,
-                                MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_bg_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_shadow_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_x(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_y(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_text_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.TEXT), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM, MU_OBJ_MAIN_DEFAULT);
 }
 
 void grid_item_focus_event_cb(lv_event_t *e) {
@@ -1488,24 +1578,28 @@ void grid_item_focus_event_cb(lv_event_t *e) {
 
 void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image,
                       int16_t col, int16_t row, char *item_image_path, char *item_image_focused_path, char *item_text) {
+    if (!grid_cell_shadow_style_ready) {
+        lv_style_init(&grid_cell_shadow_style);
+        grid_cell_shadow_style_ready = 1;
+    } else {
+        lv_style_reset(&grid_cell_shadow_style);
+    }
+
+    lv_style_set_shadow_width(&grid_cell_shadow_style, theme->GRID.CELL.SHADOW_WIDTH);
+    lv_style_set_shadow_color(&grid_cell_shadow_style, lv_color_hex(theme->GRID.CELL.SHADOW));
+    lv_style_set_shadow_ofs_x(&grid_cell_shadow_style, theme->GRID.CELL.SHADOW_X_OFFSET);
+    lv_style_set_shadow_ofs_y(&grid_cell_shadow_style, theme->GRID.CELL.SHADOW_Y_OFFSET);
+
     lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CELL.WIDTH);
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CELL.HEIGHT);
 
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
-
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_shadow_width(&style, theme->GRID.CELL.SHADOW_WIDTH);
-    lv_style_set_shadow_color(&style, lv_color_hex(theme->GRID.CELL.SHADOW));
-    lv_style_set_shadow_ofs_x(&style, theme->GRID.CELL.SHADOW_X_OFFSET);
-    lv_style_set_shadow_ofs_y(&style, theme->GRID.CELL.SHADOW_Y_OFFSET);
-    lv_obj_add_style(cell_pnl, &style, 0);
+    lv_obj_add_style(cell_pnl, &grid_cell_shadow_style, 0);
 
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR),
-                                   MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
@@ -1517,16 +1611,13 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_text_line_space(cell_label, theme->GRID.CELL.TEXT_LINE_SPACING, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR),
-                                 MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA, MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER), MU_OBJ_MAIN_FOCUS);
-
-    lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR),
-                                   MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_FOCUS);
@@ -1546,19 +1637,22 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     } else {
         lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
     }
-    if (file_exist(item_image_path)) {
+
+    if (item_image_path && *item_image_path && file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
         snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
         lv_img_set_src(cell_image, grid_image);
+    } else {
+        lv_img_set_src(cell_image, &ui_image_Nothing);
     }
 
-    char grid_image_focused[MAX_BUFFER_SIZE];
-    snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
     lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
     lv_obj_set_width(cell_image_focused, 0);
     lv_obj_set_height(cell_image_focused, 0);
 
-    if (file_exist(item_image_focused_path)) {
+    if (item_image_focused_path && *item_image_focused_path && file_exist(item_image_focused_path)) {
+        char grid_image_focused[MAX_BUFFER_SIZE];
+        snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
         lv_img_set_src(cell_image_focused, grid_image_focused);
     } else {
         lv_img_set_src(cell_image_focused, &ui_image_Nothing);
@@ -1578,10 +1672,11 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0)) {
         lv_obj_set_width(cell_label, 0);
         lv_obj_set_height(cell_label, 0);
+        lv_label_set_text(cell_label, "");
     } else {
         lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
         lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
-        lv_label_set_text(cell_label, item_text);
+        lv_label_set_text(cell_label, item_text ? item_text : "");
         lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
@@ -1595,6 +1690,7 @@ void scroll_help_content(int direction, bool page_down) {
     int line_height = lv_font_get_line_height(lv_obj_get_style_text_font(ui_lblHelpContent, LV_PART_MAIN));
     int line_space = lv_obj_get_style_text_line_space(ui_lblHelpContent, LV_PART_MAIN);
     int total_line_height = line_height + line_space;
+
     if (page_down) {
         int lines_per_page = lv_obj_get_content_height(ui_pnlHelpContent) / total_line_height;
         total_line_height = lines_per_page * total_line_height;

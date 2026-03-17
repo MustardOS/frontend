@@ -180,5 +180,5 @@ void load_device(struct mux_device *device) {
 #undef DEV_DPA_FIELD
 #undef DEV_BTN_FIELD
 
-    snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
+    snprintf(mux_dim, sizeof(mux_dim), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 }

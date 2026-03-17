@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dimension, mux_module);
+        snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dim, mux_module);
 
         if (!file_exist(init_wall)) snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
 

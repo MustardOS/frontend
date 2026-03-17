@@ -93,7 +93,7 @@ static void image_refresh(char *image_type) {
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                     theme_base, mux_dimension, image_type);
+                     theme_base, mux_dim, image_type);
             if (!file_exist(image)) {
                 snprintf(image, sizeof(image), "%s/image/none_%s.png",
                          theme_base, image_type);
@@ -103,14 +103,14 @@ static void image_refresh(char *image_type) {
                 if (items[current_item_index].content_type == FOLDER) {
                     char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, file_name);
                     load_image_catalogue("Folder", file_name_no_ext, catalogue_name, "default",
-                                         mux_dimension, image_type, image, sizeof(image));
+                                         mux_dim, image_type, image, sizeof(image));
                 } else {
-                    load_image_catalogue(core_artwork, file_name_no_ext, "", "default", mux_dimension,
+                    load_image_catalogue(core_artwork, file_name_no_ext, "", "default", mux_dim,
                                          image_type, image, sizeof(image));
                 }
             }
             if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
-                load_splash_image_fallback(mux_dimension, image, sizeof(image));
+                load_splash_image_fallback(mux_dim, image, sizeof(image));
             }
         }
     }

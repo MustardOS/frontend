@@ -180,10 +180,10 @@ int set_splash_image_path(char *splash_image_name) {
 
         switch (i) {
             case 0:
-                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dimension, curr_lang, splash_image_name);
+                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dim, curr_lang, splash_image_name);
                 break;
             case 1:
-                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dimension, splash_image_name);
+                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dim, splash_image_name);
                 break;
             case 2:
                 written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, curr_lang, splash_image_name);

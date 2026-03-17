@@ -20,7 +20,7 @@ extern int fe_bgm;
 extern int last_idle;
 extern int progress_onscreen;
 extern struct mux_config config;
-extern char mux_dimension[15];
+extern char mux_dim[15];
 extern char **history_items;
 extern int history_item_count;
 extern char **collection_items;
@@ -323,10 +323,10 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size);
 
-int load_image_specifics(const char *mux_dimension, const char *program, const char *image_type,
+int load_image_specifics(const char *mux_dim, const char *program, const char *image_type,
                          const char *image_extension, char *image_path, size_t path_size);
 
-int load_element_image_specifics(const char *mux_dimension, const char *program, const char *image_type,
+int load_element_image_specifics(const char *mux_dim, const char *program, const char *image_type,
                                  const char *element, const char *element_fallback,
                                  const char *image_extension, char *image_path, size_t path_size);
 
@@ -442,7 +442,7 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line);
 char *get_application_line(char *dir, char *ext, size_t line);
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt,
-                         const char *program_default, const char *mux_dimension, const char *image_type,
+                         const char *program_default, const char *mux_dim, const char *image_type,
                          char *image_path, size_t path_size);
 
 struct screen_dimension get_device_dimensions();
@@ -475,7 +475,7 @@ char *get_content_explorer_glyph_name(char *file_path);
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);
 
-void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size);
+void load_splash_image_fallback(const char *mux_dim, char *image, size_t image_size);
 
 const char *get_theme_base(void);
 

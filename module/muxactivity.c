@@ -144,7 +144,7 @@ static void image_refresh() {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_box.png",
-                 theme_base, mux_dimension);
+                 theme_base, mux_dim);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_box.png",
                      theme_base);
@@ -152,7 +152,7 @@ static void image_refresh() {
     } else {
         if (!grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
             load_image_catalogue(h_core_artwork, h_file_name, "", "default",
-                                 mux_dimension, "box", image, sizeof(image));
+                                 mux_dim, "box", image, sizeof(image));
         }
     }
 

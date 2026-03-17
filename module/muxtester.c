@@ -50,7 +50,7 @@ static void show_icon(const char *name) {
     char path[MAX_BUFFER_SIZE];
     char embed[MAX_BUFFER_SIZE];
 
-    generate_image_embed(mux_dimension, mux_module, name, path, sizeof(path), embed, sizeof(embed));
+    generate_image_embed(mux_dim, mux_module, name, path, sizeof(path), embed, sizeof(embed));
 
     if (file_exist(path)) {
         lv_img_set_src(ui_imgButton, embed);
