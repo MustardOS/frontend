@@ -14,9 +14,10 @@
 #define OVERLAY_LOADER "/tmp/ovl_go"
 #define OVERLAY_RUNNER "/run/muos/overlay."
 
-#define INTERNAL_SHARE  "/opt/muos/share" // Do NOT put a trailing slash here!
-#define INTERNAL_STORE  "/run/muos/storage/"
-#define INTERNAL_CONFIG "/opt/muos/config/"
+#define INTERNAL_SHARE   "/opt/muos/share" // Do NOT put a trailing slash here!
+#define INTERNAL_STORE   "/run/muos/storage/"
+#define INTERNAL_BATTERY "/run/muos/battery/"
+#define INTERNAL_CONFIG  "/opt/muos/config/"
 
 // This too is used in several files but is complaining "is never used"...
 #define INTERNAL_DEVICE "/opt/muos/device/config/"

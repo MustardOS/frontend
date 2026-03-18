@@ -43,12 +43,6 @@ int battery_disabled_gles = 0;
 gl_vtx_t vtx_battery[4];
 int vtx_battery_valid = 0;
 
-struct offset_cache battery_offset_cache = {
-        .path  = BATTERY_OFFSET,
-        .mtime = 0,
-        .value = 0
-};
-
 struct flag_cache battery_enable_cache = {
         .path  = BATTERY_DETECT,
         .mtime = 0,
@@ -72,31 +66,6 @@ struct scale_cache battery_scale_cache = {
         .mtime = 0,
         .value = SCALE_ORIGINAL
 };
-
-static int get_battery_offset(void) {
-    struct stat st;
-
-    if (stat(battery_offset_cache.path, &st) != 0) {
-        battery_offset_cache.mtime = 0;
-        battery_offset_cache.value = 0;
-        return 0;
-    }
-
-    if (st.st_mtime == battery_offset_cache.mtime) return battery_offset_cache.value;
-
-    char buf[16];
-    int v = 0;
-
-    if (read_line_from_file(battery_offset_cache.path, 1, buf, sizeof(buf))) v = safe_atoi(buf);
-
-    if (v < -50) v = -50;
-    if (v > 50) v = 50;
-
-    battery_offset_cache.mtime = st.st_mtime;
-    battery_offset_cache.value = v;
-
-    return v;
-}
 
 static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
     GLuint t = 0;
@@ -270,7 +239,6 @@ static void reset_runtime_state(void) {
     battery_anchor_cache.mtime = 0;
     battery_alpha_cache.mtime = 0;
     battery_scale_cache.mtime = 0;
-    battery_offset_cache.mtime = 0;
 
     battery_anchor_cached = -1;
     battery_scale_cached = -1;
@@ -309,28 +277,25 @@ void battery_overlay_update(void) {
 
     if (!enabled) return;
 
-    // Get the battery from our device config area
-    char dev_battery[128];
-    if (!read_line_from_file(INTERNAL_DEVICE "battery/capacity", 1, dev_battery, sizeof(dev_battery))) return;
+    const char *battery_path = INTERNAL_BATTERY "capacity";
 
-    // Track battery % changes without polling too hard
+    // Track battery changes without polling too hard
     struct stat sv;
-    if (stat(dev_battery, &sv) != 0) return;
+    if (stat(battery_path, &sv) != 0) return;
+    if (battery_primed && sv.st_mtime == battery_stat_last.st_mtime) return;
 
-    char pct_buf[16];
-    if (!read_line_from_file(dev_battery, 1, pct_buf, sizeof(pct_buf))) return;
+    battery_stat_last = sv;
 
-    int pct = safe_atoi(pct_buf);
-    int offset = get_battery_offset();
+    char dev_battery[16];
+    if (!read_line_from_file(battery_path, 1, dev_battery, sizeof(dev_battery))) return;
 
-    pct += offset;
+    int pct = safe_atoi(dev_battery);
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
 
     if (!battery_primed) {
         battery_primed = 1;
         battery_last_pct = pct;
-        battery_stat_last = sv;
 
         int step = pct / 10;
         if (step < 0) step = 0;
@@ -339,10 +304,9 @@ void battery_overlay_update(void) {
         return;
     }
 
-    if (sv.st_mtime == battery_stat_last.st_mtime && pct == battery_last_pct) return;
+    if (pct == battery_last_pct) return;
 
     battery_last_pct = pct;
-    battery_stat_last = sv;
 
     int step = pct / 10;
     if (step < 0) step = 0;
