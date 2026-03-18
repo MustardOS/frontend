@@ -1,23 +1,132 @@
 #include "muxshare.h"
 
+#define ZONE_REGION_OTHER "Other"
+#define ZONE_REGION_MAX   64
+#define ZONE_LABEL_MAX    128
+
+typedef enum {
+    VIEW_REGION, // Region groups
+    VIEW_CITY,   // Cities inside a chosen region
+} zone_view_t;
+
+static zone_view_t zone_view = VIEW_REGION;
+static char zone_selected_region[ZONE_LABEL_MAX] = {0};
+static int zone_region_index = 0;
+
 static void show_help(void) {
     show_info_box(lang.MUXTIMEZONE.TITLE, lang.MUXTIMEZONE.HELP, 0);
 }
 
-static void create_timezone_items(void) {
+// This is currently the best I can come up with considering timezones
+// are god damn awful and the way we present timezones in muX is using
+// regions and then cities within.  If this needs changes let us know!
+static const struct {
+    const char *alias;
+    const char *region;
+    const char *city;
+} zone_alias_map[] = {
+        {"Cuba",      "America",  "Havana"},
+        {"Egypt",     "Africa",   "Cairo"},
+        {"Eire",      "Europe",   "Dublin"},
+        {"Hongkong",  "Asia",     "Hong_Kong"},
+        {"Iceland",   "Atlantic", "Reykjavik"},
+        {"Iran",      "Asia",     "Tehran"},
+        {"Israel",    "Asia",     "Jerusalem"},
+        {"Jamaica",   "America",  "Jamaica"},
+        {"Japan",     "Asia",     "Tokyo"},
+        {"Kwajalein", "Pacific",  "Kwajalein"},
+        {"Libya",     "Africa",   "Tripoli"},
+        {"Navajo",    "America",  "Denver"},
+        {"Poland",    "Europe",   "Warsaw"},
+        {"Portugal",  "Europe",   "Lisbon"},
+        {"Singapore", "Asia",     "Singapore"},
+        {"Turkey",    "Europe",   "Istanbul"},
+        {NULL, NULL, NULL}
+};
+
+static const char *alias_region(const char *zone) {
+    for (int i = 0; zone_alias_map[i].alias != NULL; i++) {
+        if (strcmp(zone, zone_alias_map[i].alias) == 0) return zone_alias_map[i].region;
+    }
+
+    return NULL;
+}
+
+static const char *alias_city(const char *zone) {
+    for (int i = 0; zone_alias_map[i].alias != NULL; i++) {
+        if (strcmp(zone, zone_alias_map[i].alias) == 0) return zone_alias_map[i].city;
+    }
+
+    return NULL;
+}
+
+static void get_region(const char *zone, char *dst) {
+    const char *mapped = alias_region(zone);
+    if (mapped) {
+        snprintf(dst, ZONE_LABEL_MAX, "%s", mapped);
+        return;
+    }
+
+    const char *slash = strchr(zone, '/');
+    if (slash) {
+        size_t len = (size_t) (slash - zone);
+        if (len >= ZONE_LABEL_MAX) len = ZONE_LABEL_MAX - 1;
+        memcpy(dst, zone, len);
+        dst[len] = '\0';
+    } else {
+        snprintf(dst, ZONE_LABEL_MAX, "%s", ZONE_REGION_OTHER);
+    }
+}
+
+static const char *get_city_label(const char *zone) {
+    const char *mapped = alias_city(zone);
+    if (mapped) return mapped;
+
+    const char *slash = strchr(zone, '/');
+    return slash ? slash + 1 : zone;
+}
+
+static void create_region_items(void) {
+    lv_obj_clean(ui_pnlContent);
     reset_ui_groups();
 
+    ui_count = 0;
+    current_item_index = 0;
+
+    char seen[ZONE_REGION_MAX][ZONE_LABEL_MAX];
+    int seen_count = 0;
+
     for (size_t i = 0; timezone_location[i] != NULL; i++) {
-        const char *base_key = timezone_location[i];
+        char region[ZONE_LABEL_MAX];
+        get_region(timezone_location[i], region);
+
+        int found = 0;
+        for (int j = 0; j < seen_count; j++) {
+            if (strcmp(seen[j], region) == 0) {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found && seen_count < ZONE_REGION_MAX) snprintf(seen[seen_count++], ZONE_LABEL_MAX, "%s", region);
+    }
+
+    const char *sorted[ZONE_REGION_MAX];
+    for (int i = 0; i < seen_count; i++) sorted[i] = seen[i];
+    qsort(sorted, seen_count, sizeof(sorted[0]), str_compare);
+
+    for (int i = 0; i < seen_count; i++) {
+        const char *region = sorted[i];
+        char *region_display = str_replace(region, "_", " ");
 
         ui_count++;
 
         lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlTimezone);
-        lv_obj_set_user_data(ui_pnlTimezone, strdup(base_key));
+        lv_obj_set_user_data(ui_pnlTimezone, strdup(region));
 
         lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
-        apply_theme_list_item(&theme, ui_lblTimezoneItem, base_key);
+        apply_theme_list_item(&theme, ui_lblTimezoneItem, region_display);
 
         lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
         apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
@@ -26,8 +135,63 @@ static void create_timezone_items(void) {
         lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlTimezone);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, ui_lblTimezoneGlyph, base_key);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, ui_lblTimezoneGlyph, region_display);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblTimezoneItem);
+
+        free(region_display);
+    }
+
+    if (ui_count > 0) {
+        lv_obj_update_layout(ui_pnlContent);
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    }
+}
+
+static void create_timezone_items(void) {
+    lv_obj_clean(ui_pnlContent);
+    reset_ui_groups();
+
+    ui_count = 0;
+    current_item_index = 0;
+
+    const char *sorted[ZONE_REGION_MAX * 16];
+    int sorted_count = 0;
+
+    for (size_t i = 0; timezone_location[i] != NULL; i++) {
+        char region[ZONE_LABEL_MAX];
+        get_region(timezone_location[i], region);
+
+        if (strcmp(region, zone_selected_region) != 0) continue;
+        sorted[sorted_count++] = timezone_location[i];
+    }
+
+    qsort(sorted, sorted_count, sizeof(sorted[0]), str_compare);
+
+    for (int i = 0; i < sorted_count; i++) {
+        const char *base_key = sorted[i];
+        const char *city_label = get_city_label(base_key);
+        char *city_display = str_replace(city_label, "_", " ");
+
+        ui_count++;
+
+        lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(ui_pnlTimezone);
+        lv_obj_set_user_data(ui_pnlTimezone, strdup(base_key));
+
+        lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
+        apply_theme_list_item(&theme, ui_lblTimezoneItem, city_display);
+
+        lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
+        apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
+
+        lv_group_add_obj(ui_group, ui_lblTimezoneItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlTimezone);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, ui_lblTimezoneGlyph, city_display);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblTimezoneItem);
+
+        free(city_display);
     }
 
     if (ui_count > 0) {
@@ -51,12 +215,34 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
+    if (zone_view == VIEW_REGION) {
+        lv_obj_t *focused_panel = lv_group_get_focused(ui_group_panel);
+        const char *region = (const char *) lv_obj_get_user_data(focused_panel);
+
+        snprintf(zone_selected_region, sizeof(zone_selected_region), "%s", region);
+
+        zone_region_index = current_item_index;
+        zone_view = VIEW_CITY;
+
+        play_sound(SND_CONFIRM);
+        create_timezone_items();
+
+        if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
+
+        first_open = 1;
+        list_nav_next(0);
+
+        return;
+    }
+
     play_sound(SND_CONFIRM);
     toast_message(lang.MUXTIMEZONE.SAVE, FOREVER);
 
+    lv_obj_t *focused_panel = lv_group_get_focused(ui_group_panel);
+    const char *full_zone = (const char *) lv_obj_get_user_data(focused_panel);
+
     char zone_group[MAX_BUFFER_SIZE];
-    snprintf(zone_group, sizeof(zone_group), "/usr/share/zoneinfo/%s",
-             lv_label_get_text(lv_group_get_focused(ui_group)));
+    snprintf(zone_group, sizeof(zone_group), "/usr/share/zoneinfo/%s", full_zone);
 
     unlink(LOCAL_TIME);
     if (symlink(zone_group, LOCAL_TIME) != 0) {
@@ -75,6 +261,9 @@ static void handle_a(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
     refresh_config = 1;
 
+    zone_view = VIEW_REGION;
+    zone_selected_region[0] = '\0';
+
     close_input();
     mux_input_stop();
 }
@@ -87,6 +276,16 @@ static void handle_b(void) {
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    if (zone_view == VIEW_CITY) {
+        play_sound(SND_BACK);
+        zone_view = VIEW_REGION;
+        zone_selected_region[0] = '\0';
+        create_region_items();
+        first_open = 1;
+        list_nav_next(zone_region_index);
         return;
     }
 
@@ -130,7 +329,7 @@ int muxtimezone_main(void) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
-    create_timezone_items();
+    create_region_items();
 
     if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
 
