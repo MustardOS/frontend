@@ -168,16 +168,25 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
         if (txt[line_start] == '\0') return;
     }
 
+    uint32_t trim_line_end = line_end;
+
+    /* Only trim if the line didn't end with explicit newline */
+    if (txt[trim_line_end] != '\n' && txt[trim_line_end] != '\r') {
+        while (trim_line_end > line_start && txt[trim_line_end - 1] == ' ') {
+            trim_line_end--;
+        }
+    }
+
     /*Align to middle*/
     if (align == LV_TEXT_ALIGN_CENTER) {
-        line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
+        line_width = lv_txt_get_width(&txt[line_start], trim_line_end - line_start, font, dsc->letter_space, dsc->flag);
 
         pos.x += (lv_area_get_width(coords) - line_width) / 2;
 
     }
         /*Align to the right*/
     else if (align == LV_TEXT_ALIGN_RIGHT) {
-        line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
+        line_width = lv_txt_get_width(&txt[line_start], trim_line_end - line_start, font, dsc->letter_space, dsc->flag);
         pos.x += lv_area_get_width(coords) - line_width;
     }
     uint32_t sel_start = dsc->sel_start;
