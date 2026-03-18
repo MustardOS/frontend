@@ -9,6 +9,11 @@ typedef enum {
     VIEW_CITY,   // Cities inside a chosen region
 } zone_view_t;
 
+typedef enum {
+    ALIAS_REGION,
+    ALIAS_CITY,
+} alias_field_t;
+
 static zone_view_t zone_view = VIEW_REGION;
 static char zone_selected_region[ZONE_LABEL_MAX] = {0};
 static int zone_region_index = 0;
@@ -44,24 +49,56 @@ static const struct {
         {NULL, NULL, NULL}
 };
 
-static const char *alias_region(const char *zone) {
+static const char *alias_lookup(const char *zone, alias_field_t field) {
     for (int i = 0; zone_alias_map[i].alias != NULL; i++) {
-        if (strcmp(zone, zone_alias_map[i].alias) == 0) return zone_alias_map[i].region;
+        if (strcmp(zone, zone_alias_map[i].alias) == 0) {
+            return field == ALIAS_REGION ? zone_alias_map[i].region : zone_alias_map[i].city;
+        }
     }
 
     return NULL;
 }
 
-static const char *alias_city(const char *zone) {
+static void alias_lookup_both(const char *zone, const char **region_out, const char **city_out) {
     for (int i = 0; zone_alias_map[i].alias != NULL; i++) {
-        if (strcmp(zone, zone_alias_map[i].alias) == 0) return zone_alias_map[i].city;
+        if (strcmp(zone, zone_alias_map[i].alias) == 0) {
+            *region_out = zone_alias_map[i].region;
+            *city_out = zone_alias_map[i].city;
+            return;
+        }
     }
 
-    return NULL;
+    *region_out = NULL;
+    *city_out = NULL;
+}
+
+static void create_list_item(const char *base_key, const char *label) {
+    char *label_display = str_replace(label, "_", " ");
+
+    ui_count++;
+
+    lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
+    apply_theme_list_panel(ui_pnlTimezone);
+    lv_obj_set_user_data(ui_pnlTimezone, strdup(base_key));
+
+    lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
+    apply_theme_list_item(&theme, ui_lblTimezoneItem, label_display);
+
+    lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
+    apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
+
+    lv_group_add_obj(ui_group, ui_lblTimezoneItem);
+    lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
+    lv_group_add_obj(ui_group_panel, ui_pnlTimezone);
+
+    apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, ui_lblTimezoneGlyph, label_display);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblTimezoneItem);
+
+    free(label_display);
 }
 
 static void get_region(const char *zone, char *dst) {
-    const char *mapped = alias_region(zone);
+    const char *mapped = alias_lookup(zone, ALIAS_REGION);
     if (mapped) {
         snprintf(dst, ZONE_LABEL_MAX, "%s", mapped);
         return;
@@ -79,7 +116,7 @@ static void get_region(const char *zone, char *dst) {
 }
 
 static const char *get_city_label(const char *zone) {
-    const char *mapped = alias_city(zone);
+    const char *mapped = alias_lookup(zone, ALIAS_CITY);
     if (mapped) return mapped;
 
     const char *slash = strchr(zone, '/');
@@ -117,28 +154,7 @@ static void create_region_items(void) {
 
     for (int i = 0; i < seen_count; i++) {
         const char *region = sorted[i];
-        char *region_display = str_replace(region, "_", " ");
-
-        ui_count++;
-
-        lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlTimezone);
-        lv_obj_set_user_data(ui_pnlTimezone, strdup(region));
-
-        lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
-        apply_theme_list_item(&theme, ui_lblTimezoneItem, region_display);
-
-        lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
-        apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
-
-        lv_group_add_obj(ui_group, ui_lblTimezoneItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlTimezone);
-
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, ui_lblTimezoneGlyph, region_display);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblTimezoneItem);
-
-        free(region_display);
+        create_list_item(region, region);
     }
 
     if (ui_count > 0) {
@@ -158,40 +174,34 @@ static void create_timezone_items(void) {
     int sorted_count = 0;
 
     for (size_t i = 0; timezone_location[i] != NULL; i++) {
+        const char *zone = timezone_location[i];
+
+        const char *mapped_region = NULL;
+        const char *mapped_city = NULL;
+        alias_lookup_both(zone, &mapped_region, &mapped_city);
+
         char region[ZONE_LABEL_MAX];
-        get_region(timezone_location[i], region);
+        if (mapped_region) {
+            snprintf(region, sizeof(region), "%s", mapped_region);
+        } else {
+            get_region(zone, region);
+        }
 
         if (strcmp(region, zone_selected_region) != 0) continue;
-        sorted[sorted_count++] = timezone_location[i];
+        sorted[sorted_count++] = zone;
     }
 
     qsort(sorted, sorted_count, sizeof(sorted[0]), str_compare);
 
     for (int i = 0; i < sorted_count; i++) {
         const char *base_key = sorted[i];
-        const char *city_label = get_city_label(base_key);
-        char *city_display = str_replace(city_label, "_", " ");
 
-        ui_count++;
+        const char *mapped_region = NULL;
+        const char *mapped_city = NULL;
+        alias_lookup_both(base_key, &mapped_region, &mapped_city);
 
-        lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlTimezone);
-        lv_obj_set_user_data(ui_pnlTimezone, strdup(base_key));
-
-        lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
-        apply_theme_list_item(&theme, ui_lblTimezoneItem, city_display);
-
-        lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
-        apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
-
-        lv_group_add_obj(ui_group, ui_lblTimezoneItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlTimezone);
-
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, ui_lblTimezoneGlyph, city_display);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblTimezoneItem);
-
-        free(city_display);
+        const char *city_label = mapped_city ? mapped_city : get_city_label(base_key);
+        create_list_item(base_key, city_label);
     }
 
     if (ui_count > 0) {
