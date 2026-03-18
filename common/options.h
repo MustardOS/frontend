@@ -1,6 +1,9 @@
 #pragma once
 
+#ifndef TEST_IMAGE
 #define TEST_IMAGE 1
+#endif
+
 #define MUX_CALLER "MustardOS FE Spectacular"
 
 #define MAX_BUFFER_SIZE 1024

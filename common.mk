@@ -3,6 +3,14 @@ DEVICE := $(strip $(DEVICE))
 
 A53_FIX = -mfix-cortex-a53-835769 -mfix-cortex-a53-843419
 
+BUILD ?= test
+
+ifeq ($(BUILD),release)
+    BUILD_FLAGS = -DTEST_IMAGE=0
+else
+    BUILD_FLAGS = -DTEST_IMAGE=1
+endif
+
 # standard aarch64
 ifeq ($(DEVICE), ARM64)
     ARCH = -march=armv8-a
@@ -44,7 +52,8 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -ffunction-sections -fdata-sections \
               -Wall -Wno-format-zero-length \
               -Wno-unused-function -fno-plt \
-              -fno-stack-protector -fno-ident
+              -fno-stack-protector -fno-ident \
+              $(BUILD_FLAGS)
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread
 

@@ -5,6 +5,7 @@ set -euf
 DEVICE=${DEVICE:-ARM64_A53}
 PLATFORM=${PLATFORM:-unix}
 ARCH=${ARCH:-arm64}
+BUILD=${BUILD:-test}
 
 XTOOL=${XTOOL:-"$HOME/x-tools"}
 XHOST=${XHOST:-"aarch64-buildroot-linux-gnu"}
@@ -153,7 +154,7 @@ fi
 ARMABI="$XHOST"
 TOOLCHAIN_DIR="$XTOOL/$XHOST"
 DESTDIR="${SYSROOT:-}"
-export DEVICE PLATFORM ARCH ARMABI TOOLCHAIN_DIR DESTDIR
+export DEVICE PLATFORM ARCH ARMABI TOOLCHAIN_DIR DESTDIR BUILD
 
 # Optional legacy-style INC_DIR/LIB_DIR for build systems that read them
 INC_DIR="$CPPFLAGS"
@@ -180,6 +181,7 @@ PRINT_ENV() {
 	printf 'Device:        %s\n' "$DEVICE"
 	printf 'Platform:      %s\n' "$PLATFORM"
 	printf 'Arch:          %s\n' "$ARCH"
+	printf 'Build:         %s\n' "$BUILD"
 	printf 'Cross Root:    %s\n' "$XTOOL"
 	printf 'Host Tuple:    %s\n' "$XHOST"
 	printf 'Bin Path:      %s\n' "$XBIN"
@@ -203,7 +205,7 @@ PRINT_ENV() {
 
 RUN_MAKE() {
 	if command -v make >/dev/null 2>&1; then
-		exec make "${@-}"
+		exec make BUILD="$BUILD" "${@-}"
 	fi
 
 	printf '%s\n' "Error: 'make' not found on PATH." 1>&2
