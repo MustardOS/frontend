@@ -11,6 +11,7 @@
 #include "../common/rotate.h"
 #include "../common/scale.h"
 #include "../common/stretch.h"
+#include "../common/shader.h"
 #include "../overlay/base.h"
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
@@ -47,6 +48,8 @@ static GLint gles_content_a_uv = -1;
 static int prog_attempted = 0;
 static int prog_ready = 0;
 
+static int shader_frame_count = 0;
+
 static SDL_GLContext last_ctx = NULL;
 
 static GLuint content_tex = 0;
@@ -71,6 +74,13 @@ static GLuint overlay_fbo = 0;
 static int overlay_tex_w = 0;
 static int overlay_tex_h = 0;
 static int overlay_valid = 0;
+
+static struct {
+    GLuint program;
+
+    float res_w;
+    float res_h;
+} shader_uniform_cache;
 
 typedef struct {
     int fb_w;
@@ -889,6 +899,31 @@ static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+static const float fullscreen_quad[4][4] = {
+        {-1.0f, 1.0f,  0.0f, 1.0f},
+        {-1.0f, -1.0f, 0.0f, 0.0f},
+        {1.0f,  1.0f,  1.0f, 1.0f},
+        {1.0f,  -1.0f, 1.0f, 0.0f},
+};
+
+static void draw_quad_shader(GLuint tex) {
+    if (!tex) return;
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, &fullscreen_quad[0][0]);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, &fullscreen_quad[0][2]);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+}
+
 static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     if (!prog_ready || !tex) return;
 
@@ -1282,7 +1317,47 @@ static void stage_draw(int fb_w, int fb_h) {
     overlay_state_t batch_state = build_overlay_state(fb_w, fb_h, base_disabled, battery_step);
     if (!overlay_valid || overlay_change(&overlay_cache, &batch_state)) rebuild_overlay(&batch_state);
 
-    if (content_ran && output_tex) {
+    const shader_prog_t *shader = shader_get();
+    if (shader) {
+        int content_copy = content_ran;
+        if (!content_copy && content_copy_supported) {
+            ensure_content_tex(fb_w, fb_h);
+            if (content_tex) {
+                while (glGetError() != GL_NO_ERROR) {}
+
+                glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, content_tex);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, fb_w, fb_h);
+
+                if (glGetError() == GL_NO_ERROR) content_copy = 1;
+            }
+        }
+
+        if (content_copy) {
+            GLuint src_tex = (content_ran && output_tex) ? output_tex : content_tex;
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(0, 0, fb_w, fb_h);
+            glDisable(GL_SCISSOR_TEST);
+            glDisable(GL_BLEND);
+
+            use_program(shader->program);
+
+            if (shader_uniform_cache.program != shader->program || shader_uniform_cache.res_w != (float) fb_w || shader_uniform_cache.res_h != (float) fb_h) {
+                glUniform2f(shader->u_resolution, (float) fb_w, (float) fb_h);
+
+                shader_uniform_cache.program = shader->program;
+                shader_uniform_cache.res_w = (float) fb_w;
+                shader_uniform_cache.res_h = (float) fb_h;
+            }
+
+            glUniform1f(shader->u_time, (float) shader_frame_count);
+            glUniform1i(shader->u_frame, shader_frame_count);
+
+            draw_quad_shader(src_tex);
+        }
+    } else if (content_ran && output_tex) {
         glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
         glViewport(0, 0, fb_w, fb_h);
         glDisable(GL_SCISSOR_TEST);
@@ -1328,6 +1403,8 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     bright_overlay_update();
     volume_overlay_update();
 
+    shader_reload();
+
     int nw = 0;
     int nh = 0;
     SDL_GL_GetDrawableSize(window, &nw, &nh);
@@ -1363,5 +1440,7 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     }
 
     if (fb_cached_w > 0 && fb_cached_h > 0) stage_draw(fb_cached_w, fb_cached_h);
+    shader_frame_count++;
+
     real_SDL_GL_SwapWindow(window);
 }
