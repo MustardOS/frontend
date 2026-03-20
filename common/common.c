@@ -995,6 +995,25 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
+int play_sound_wait(int sound) {
+    if (!fe_snd || sound < 0 || sound >= SOUND_TOTAL) return 0;
+
+    CachedSound *cs = &sound_cache[sound];
+    if (!cs->chunk) return 0;
+
+    if (Mix_PlayingMusic()) {
+        Mix_HaltMusic();
+        current_bgm = NULL;
+    }
+
+    int channel = Mix_PlayChannel(-1, cs->chunk, 0);
+    if (channel < 0) return 0;
+
+    while (Mix_Playing(channel)) SDL_Delay(10);
+
+    return 1;
+}
+
 void play_sound(int sound) {
     if (!fe_snd || sound < 0 || sound >= SOUND_TOTAL) return;
 
@@ -1217,16 +1236,16 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     } args[] = {
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program_alt},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_alt},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program_alt},
             {CAT_INFO, INFO_CAT_PATH,                mux_dim, program},
             {CAT_INFO, INFO_CAT_PATH,                mux_dim, program_alt},
-            {CAT_INFO, INFO_CAT_PATH,                "",            program},
-            {CAT_INFO, INFO_CAT_PATH,                "",            program_alt},
+            {CAT_INFO, INFO_CAT_PATH,                "",      program},
+            {CAT_INFO, INFO_CAT_PATH,                "",      program_alt},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program_default},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",            program_default},
+            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program_default},
             {CAT_INFO, INFO_CAT_PATH,                mux_dim, program_default},
-            {CAT_INFO, INFO_CAT_PATH,                "",            program_default},
+            {CAT_INFO, INFO_CAT_PATH,                "",      program_default},
     };
 
     for (size_t i = 0; i < A_SIZE(args); i++) {

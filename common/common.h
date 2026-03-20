@@ -306,6 +306,8 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 
 void load_mux(const char *value);
 
+int play_sound_wait(int sound);
+
 void play_sound(int sound);
 
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);

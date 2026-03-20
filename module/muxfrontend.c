@@ -223,7 +223,15 @@ static void module_reset(void) {
 }
 
 static void module_exit(char *module, bool apply_recolour) {
-    if (set_splash_image_path(module)) muxsplash_main(splash_image_path, apply_recolour);
+    if (set_splash_image_path(module)) {
+        muxsplash_main(splash_image_path, apply_recolour);
+    }
+
+    if (strcmp(module, "shutdown") == 0) {
+        play_sound_wait(SND_SHUTDOWN);
+    } else if (strcmp(module, "reboot") == 0) {
+        play_sound_wait(SND_REBOOT);
+    }
 
     load_mux(module);
     safe_quit(0);
