@@ -155,6 +155,8 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->INPUT_EVENT.JOY_POWER, "input/power")
     DEV_STR_FIELD(device->INPUT_EVENT.JOY_VOLUME, "input/volume")
     DEV_STR_FIELD(device->INPUT_EVENT.JOY_EXTRA, "input/extra")
+    DEV_STR_FIELD(device->INPUT_EVENT.JOY_SWAP, "input/swap")
+    DEV_STR_FIELD(device->INPUT_EVENT.JOY_HALL, "input/hall")
 
     DEV_INT_FIELD(device->INPUT_CODE.DPAD.UP, "input/code/dpad/up")
     DEV_INT_FIELD(device->INPUT_CODE.DPAD.DOWN, "input/code/dpad/down")

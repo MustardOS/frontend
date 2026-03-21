@@ -134,6 +134,8 @@ struct mux_device {
         char JOY_POWER[MAX_BUFFER_SIZE];
         char JOY_VOLUME[MAX_BUFFER_SIZE];
         char JOY_EXTRA[MAX_BUFFER_SIZE];
+        char JOY_SWAP[MAX_BUFFER_SIZE];
+        char JOY_HALL[MAX_BUFFER_SIZE];
         int32_t AXIS;
     } INPUT_EVENT;
 

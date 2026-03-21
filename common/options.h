@@ -53,6 +53,8 @@
 #define IDLE_STATE   RUN_PATH "idle_state"
 #define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
 
+#define DEV_SCRIPT OPT_PATH "script/device/"
+
 #define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"
 
