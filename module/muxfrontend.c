@@ -2,8 +2,12 @@
 #include <sys/prctl.h>
 
 #include "muxshare.h"
+#include "../common/battery.h"
 #include "../common/inotify.h"
 #include "../lvgl/src/drivers/display/sdl.h"
+
+#define DISPATCH_SLOTS 64
+#define DISPATCH_MASK  (DISPATCH_SLOTS - 1)
 
 static volatile sig_atomic_t quit_signal = 0;
 static volatile sig_atomic_t shutting_down = 0;
@@ -35,6 +39,17 @@ __attribute__((cold)) static void module_reboot(void);
 __attribute__((cold)) static void module_install(void);
 
 typedef struct {
+    void (*func)(void *);
+
+    void *arg;
+} ParamLoader;
+
+typedef struct {
+    const char *action;
+    size_t index;
+} DispatchSlot;
+
+typedef struct {
     char *action;
     char *goback;
     char *module;
@@ -43,6 +58,9 @@ typedef struct {
 
     void (*mux_func)(void);
 } ModuleEntry;
+
+static DispatchSlot dispatch_map[DISPATCH_SLOTS];
+static int dispatch_map_ready = 0;
 
 static void on_signal(int sig) {
     quit_signal = sig ? sig : 1;
@@ -78,10 +96,8 @@ static void cleanup_screen(void) {
 
     lv_disp_load_scr(ui_screen_temp);
 
-    if (ui_screen_container && lv_obj_is_valid(ui_screen_container)) {
-        lv_obj_del(ui_screen_container);
-        ui_screen_container = NULL;
-    }
+    if (lv_obj_is_valid(ui_screen_container)) lv_obj_del(ui_screen_container);
+    ui_screen_container = NULL;
 
     current_item_index = 0;
     first_open = 1;
@@ -101,6 +117,7 @@ static void cleanup_all(void) {
     dispose_input();
     timer_destroy_all();
     cleanup_screen();
+    fade_reset();
     sdl_cleanup();
 }
 
@@ -123,21 +140,40 @@ static void quit_watchdog(lv_timer_t *timer) {
 static int process_action(const char *action, const char *module) {
     if (!file_exist(action)) return 0;
 
-    char *name = read_line_char_from(action, 1);
-    char *dir = read_line_char_from(action, 2);
-    char *sys = read_line_char_from(action, 3);
-
-    if (!name || !dir || !sys) {
+    FILE *f = fopen(action, "r");
+    if (!f) {
         remove(action);
         return 0;
     }
 
-    snprintf(rom_name, sizeof(rom_name), "%s", name);
-    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
-    snprintf(rom_sys, sizeof(rom_sys), "%s", sys);
+    char name_buf[PATH_MAX] = {0};
+    char dir_buf[PATH_MAX] = {0};
+    char sys_buf[PATH_MAX] = {0};
+    char forced_buf[16] = {0};
+    char app_buf[16] = {0};
 
-    forced_flag = read_line_int_from(action, 4);
-    is_app = read_line_int_from(action, 5);
+    (void) fgets(name_buf, sizeof(name_buf), f);
+    (void) fgets(dir_buf, sizeof(dir_buf), f);
+    (void) fgets(sys_buf, sizeof(sys_buf), f);
+    (void) fgets(forced_buf, sizeof(forced_buf), f);
+    (void) fgets(app_buf, sizeof(app_buf), f);
+    fclose(f);
+
+    str_nonew(name_buf);
+    str_nonew(dir_buf);
+    str_nonew(sys_buf);
+
+    if (!name_buf[0] || !dir_buf[0] || !sys_buf[0]) {
+        remove(action);
+        return 0;
+    }
+
+    snprintf(rom_name, sizeof(rom_name), "%s", name_buf);
+    snprintf(rom_dir, sizeof(rom_dir), "%s", dir_buf);
+    snprintf(rom_sys, sizeof(rom_sys), "%s", sys_buf);
+
+    forced_flag = safe_atoi(forced_buf);
+    is_app = safe_atoi(app_buf);
 
     remove(action);
 
@@ -154,7 +190,14 @@ void last_index_check(void) {
 
     if (file_exist(ADD_MODE_WORK)) return;
 
-    const char *index_path = file_exist(MUOS_CIX_LOAD) ? MUOS_CIX_LOAD : file_exist(MUOS_IDX_LOAD) ? MUOS_IDX_LOAD : NULL;
+    const char *index_path = NULL;
+
+    if (file_exist(MUOS_CIX_LOAD)) {
+        index_path = MUOS_CIX_LOAD;
+    } else if (file_exist(MUOS_IDX_LOAD)) {
+        index_path = MUOS_IDX_LOAD;
+    }
+
     if (!index_path) return;
 
     last_index = safe_atoi(read_line_char_from(index_path, 1));
@@ -166,11 +209,15 @@ static void set_previous_module(char *module) {
 }
 
 int set_splash_image_path(char *splash_image_name) {
-    const char *paths[] = {
-            "%s/%simage/%s/%s.png",
-            "%s/%simage/%s.png",
-            "%s/image/%s/%s.png",
-            "%s/image/%s.png"
+    static const struct {
+        const char *fmt;
+        int uses_dim;
+        int uses_lang;
+    } paths[] = {
+            {"%s/%simage/%s/%s.png", 1, 1},
+            {"%s/%simage/%s.png",    1, 0},
+            {"%s/image/%s/%s.png",   0, 1},
+            {"%s/image/%s.png",      0, 0},
     };
 
     const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
@@ -178,20 +225,18 @@ int set_splash_image_path(char *splash_image_name) {
     for (size_t i = 0; i < A_SIZE(paths); ++i) {
         int written;
 
-        switch (i) {
-            case 0:
-                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dim, curr_lang, splash_image_name);
-                break;
-            case 1:
-                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, mux_dim, splash_image_name);
-                break;
-            case 2:
-                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, curr_lang, splash_image_name);
-                break;
-            case 3:
-            default:
-                written = snprintf(splash_image_path, sizeof(splash_image_path), paths[i], theme_base, splash_image_name);
-                break;
+        if (paths[i].uses_dim && paths[i].uses_lang) {
+            written = snprintf(splash_image_path, sizeof(splash_image_path),
+                               paths[i].fmt, theme_base, mux_dim, curr_lang, splash_image_name);
+        } else if (paths[i].uses_dim) {
+            written = snprintf(splash_image_path, sizeof(splash_image_path),
+                               paths[i].fmt, theme_base, mux_dim, splash_image_name);
+        } else if (paths[i].uses_lang) {
+            written = snprintf(splash_image_path, sizeof(splash_image_path),
+                               paths[i].fmt, theme_base, curr_lang, splash_image_name);
+        } else {
+            written = snprintf(splash_image_path, sizeof(splash_image_path),
+                               paths[i].fmt, theme_base, splash_image_name);
         }
 
         if (written < 0 || (size_t) written >= sizeof(splash_image_path)) continue;
@@ -530,6 +575,20 @@ static const ModuleEntry modules[] = {
         {NULL,         NULL, NULL, NULL,                                    NULL}
 };
 
+static void dispatch_map_build(void) {
+    memset(dispatch_map, 0, sizeof(dispatch_map));
+
+    for (size_t i = 0; modules[i].action; ++i) {
+        uint32_t slot = fnv1a_hash_str(modules[i].action) & DISPATCH_MASK;
+        while (dispatch_map[slot].action) slot = (slot + 1) & DISPATCH_MASK;
+
+        dispatch_map[slot].action = modules[i].action;
+        dispatch_map[slot].index = i;
+    }
+
+    dispatch_map_ready = 1;
+}
+
 static int module_dispatch(void) {
     if (!file_exist(MUOS_ACT_LOAD)) return 0;
 
@@ -538,8 +597,12 @@ static int module_dispatch(void) {
 
     remove(MUOS_ACT_LOAD);
 
-    for (size_t i = 0; modules[i].action; ++i) {
-        if (strcmp(action, modules[i].action) == 0) {
+    if (!dispatch_map_ready) dispatch_map_build();
+    uint32_t slot = fnv1a_hash_str(action) & DISPATCH_MASK;
+
+    while (dispatch_map[slot].action) {
+        if (strcmp(action, dispatch_map[slot].action) == 0) {
+            size_t i = dispatch_map[slot].index;
             screen_clean = 0;
 
             if (modules[i].mux_func) {
@@ -550,6 +613,8 @@ static int module_dispatch(void) {
 
             return 1;
         }
+
+        slot = (slot + 1) & DISPATCH_MASK;
     }
 
     return 0;
@@ -572,7 +637,7 @@ static void reset_alert(void) {
 
 static void init_audio(void) {
     const useconds_t backoff[] = {10000, 25000, 50000, 100000, 200000, 400000, 800000};
-    size_t tries = sizeof(backoff) / sizeof(backoff[0]);
+    const size_t tries = sizeof(backoff) / sizeof(backoff[0]);
 
     for (size_t i = 0; i < tries; ++i) {
         if (init_audio_backend()) {
@@ -592,6 +657,20 @@ static void init_audio(void) {
     }
 }
 
+static void *load_params(void *arg) {
+    ParamLoader *p_load = arg;
+    p_load->func(p_load->arg);
+
+    return NULL;
+}
+
+static void parallel_load(ParamLoader *loaders, size_t count) {
+    pthread_t threads[count];
+
+    for (size_t i = 0; i < count; ++i) pthread_create(&threads[i], NULL, load_params, &loaders[i]);
+    for (size_t i = 0; i < count; ++i) pthread_join(threads[i], NULL);
+}
+
 int main(void) {
     install_signal_handlers();
     verify_check = script_hash_check();
@@ -602,9 +681,13 @@ int main(void) {
     // Close the stupid race where the parent already died before the prctl call or we get a segfault...
     if (getppid() == 1) raise(SIGTERM);
 
-    load_device(&device);
-    load_config(&config);
-    load_kiosk(&kiosk);
+    ParamLoader loaders[] = {
+            {(void (*)(void *)) load_device, &device},
+            {(void (*)(void *)) load_config, &config},
+            {(void (*)(void *)) load_kiosk,  &kiosk},
+    };
+
+    parallel_load(loaders, 3);
 
     LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build());
     if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
@@ -614,10 +697,19 @@ int main(void) {
     init_theme(0, 0);
     init_display();
 
-    lv_timer_create(quit_watchdog, 100, NULL);
+    inotify_init();
+    battery_init();
+
+    lv_timer_create(quit_watchdog, 250, NULL);
 
     reset_alert();
-    init_audio();
+
+    pthread_t t_audio;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&t_audio, &attr, (void *(*)(void *)) init_audio, NULL);
+    pthread_attr_destroy(&attr);
 
     if (config.SETTINGS.ADVANCED.PASSCODE && !file_exist(MUX_BOOT_AUTH)) {
         int result = 0;
