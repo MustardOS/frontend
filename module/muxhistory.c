@@ -362,7 +362,7 @@ static void process_load(int from_start) {
                 switch (result) {
                     case 1:
                         show_splash();
-                        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+                        fade_out_screen();
                         exit_status = 1;
                         break;
                     case 2:
@@ -380,7 +380,7 @@ static void process_load(int from_start) {
             }
         } else {
             show_splash();
-            config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+            fade_out_screen();
             exit_status = 1;
         }
     } else {

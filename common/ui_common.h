@@ -23,6 +23,12 @@ struct nav_bar {
 
 void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device);
 
+void fade_reset(void);
+
+void fade_in_screen(void);
+
+void fade_out_screen(void);
+
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 
@@ -64,10 +70,6 @@ void counter_message(lv_obj_t *ui_lblCounter, const char *msg, uint32_t delay);
 void adjust_panel_priority(lv_obj_t *panels[]);
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type);
-
-void fade_to_black(lv_obj_t *ui_screen);
-
-void fade_from_black(lv_obj_t *ui_black);
 
 void create_grid_panel(struct theme_config *theme, int item_count);
 

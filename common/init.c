@@ -156,7 +156,7 @@ static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, uint32_t size) {
     memset(buf, 0, size);
 }
 
-void init_display() {
+void init_display(void) {
     hdmi_mode = file_exist(HDMI_MODE);
     LOG_INFO("video", "HDMI in use: %s", hdmi_mode ? "yes" : "no");
 
@@ -175,7 +175,7 @@ void init_display() {
     static lv_color_t *disp_buf_s2 = NULL;
     static uint32_t disp_buf_pixels = 0;
 
-    if (disp_buf_size != disp_buf_pixels) {
+    if (__builtin_expect(!!(disp_buf_size != disp_buf_pixels), 0)) {
         free(disp_buf_s1);
         free(disp_buf_s2);
 
@@ -204,9 +204,6 @@ void init_display() {
 
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
     mux_set_refresh_timer(disp->refr_timer);
-
-    inotify_init();
-    battery_init();
 }
 
 int open_input(const char *path, const char *error_message) {
@@ -302,8 +299,9 @@ static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t p
         return *timer;
     }
 
-    lv_timer_set_cb(*timer, cb);
-    lv_timer_set_period(*timer, period);
+    if ((*timer)->timer_cb != cb) lv_timer_set_cb(*timer, cb);
+    if ((*timer)->period != period) lv_timer_set_period(*timer, period);
+
     lv_timer_resume(*timer);
 
     return *timer;
@@ -327,6 +325,8 @@ static void timer_destroy(lv_timer_t **timer) {
 void timer_action(int action) {
     for (size_t i = 0; i < A_SIZE(timers); ++i) {
         lv_timer_t **t = timers[i];
+        if (!t || !*t) continue;
+
         switch (action) {
             case 0:
                 timer_suspend(t);

@@ -18,6 +18,7 @@
 lv_obj_t *ui_screen_container;
 lv_obj_t *ui_screen_temp;
 lv_obj_t *ui_blank;
+lv_obj_t *ui_black;
 lv_obj_t *ui_screen;
 lv_obj_t *ui_pnlWall;
 lv_obj_t *ui_imgWall;
@@ -92,6 +93,7 @@ int brightness_changed = 0;
 int volume_changed = 0;
 int last_brightness = -1;
 int last_volume = -1;
+int fade_in_done = 0;
 
 static lv_obj_t *canvas;
 
@@ -308,6 +310,66 @@ void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme
     if (theme->SYSTEM.BACKGROUND_GRADIENT_BLUR > 0) blur_gradient(canvas_buffer, device->MUX.WIDTH, device->MUX.HEIGHT, theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
 
     lv_obj_invalidate(canvas);
+}
+
+
+void fade_reset(void) {
+    fade_in_done = 0;
+}
+
+static void gen_black(int opacity) {
+    ui_black = lv_obj_create(ui_screen_container);
+
+    lv_obj_set_size(ui_black, device.MUX.WIDTH, device.MUX.HEIGHT);
+    lv_obj_set_style_radius(ui_black, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_black, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_black, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_black, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_black, opacity, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_center(ui_black);
+    lv_obj_invalidate(ui_black);
+}
+
+static void fade_step(int start, int end, int keep) {
+    for (int i = 0; i <= FADE_STEP; i++) {
+        lv_opa_t opa = (lv_opa_t) (start + ((end - start) * i) / FADE_STEP);
+        lv_obj_set_style_bg_opa(ui_black, opa, MU_OBJ_MAIN_DEFAULT);
+
+        lv_obj_invalidate(ui_black);
+        lv_refr_now(NULL);
+
+        usleep((FADE_TIME * 1000) / FADE_STEP);
+    }
+
+    if (!keep) {
+        lv_obj_del(ui_black);
+        ui_black = NULL;
+    }
+}
+
+void fade_in_screen(void) {
+    if (!config.VISUAL.BLACKFADE || !ui_black || !lv_obj_is_valid(ui_black) || fade_in_done) return;
+
+    fade_in_done = 1;
+
+    lv_obj_move_foreground(ui_black);
+    lv_refr_now(NULL);
+
+    fade_step(LV_OPA_COVER, LV_OPA_TRANSP, 0);
+}
+
+void fade_out_screen(void) {
+    unload_image_animation();
+
+    if (!config.VISUAL.BLACKFADE) return;
+
+    gen_black(LV_OPA_TRANSP);
+
+    lv_obj_move_foreground(ui_black);
+    lv_refr_now(NULL);
+
+    fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
 }
 
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
@@ -927,6 +989,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_opa(ui_lblProgress, theme->MESSAGE.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
     lv_disp_load_scr(ui_screen_container);
+
+    if (config.VISUAL.BLACKFADE && !fade_in_done) gen_black(LV_OPA_COVER);
 }
 
 int ui_common_check(int mode) {
@@ -1408,35 +1472,6 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
     }
 
     return 1;
-}
-
-static void fade_black(lv_obj_t *ui_screen, int start_opa, int end_opa, int step, int destroy) {
-    lv_obj_t *black = lv_obj_create(ui_screen);
-
-    lv_obj_set_size(black, device.MUX.WIDTH, device.MUX.HEIGHT);
-    lv_obj_set_style_bg_color(black, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(black, start_opa, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_center(black);
-    lv_obj_move_foreground(black);
-
-    if (start_opa < end_opa) unload_image_animation();
-
-    for (int i = start_opa; (step > 0) ? (i <= end_opa) : (i >= end_opa); i += step) {
-        lv_obj_set_style_bg_opa(black, i, MU_OBJ_MAIN_DEFAULT);
-        lv_task_handler();
-        usleep(128);
-    }
-
-    if (destroy) lv_obj_del_async(black);
-}
-
-void fade_to_black(lv_obj_t *ui_screen) {
-    fade_black(ui_screen, LV_OPA_TRANSP, LV_OPA_COVER, 25, 0);
-}
-
-void fade_from_black(lv_obj_t *ui_screen) {
-    fade_black(ui_screen, LV_OPA_COVER, LV_OPA_TRANSP, -25, 1);
 }
 
 static int calc_grid_row_count(struct theme_config *theme, int item_count) {

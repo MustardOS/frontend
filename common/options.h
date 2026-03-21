@@ -41,6 +41,9 @@
 #define TIMER_IDLE      512
 #define TIMER_REFRESH   IDLE_MS
 
+#define FADE_TIME 256
+#define FADE_STEP 16
+
 #define TIME_STRING    "%Y-%m-%d %H:%M"
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"

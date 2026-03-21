@@ -100,7 +100,7 @@ static void handle_a(void) {
         const char **exec = build_term_exec(args, &exec_count);
 
         if (exec) {
-            config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+            fade_out_screen();
             run_exec(exec, exec_count, 0, 1, NULL, NULL);
         }
         free(exec);

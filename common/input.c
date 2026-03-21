@@ -16,6 +16,7 @@
 #include <poll.h>
 
 #include "common.h"
+#include "ui_common.h"
 #include "config.h"
 #include "controller_profile.h"
 #include "device.h"
@@ -1204,6 +1205,8 @@ void mux_input_task(const mux_input_options *opts) {
 
     if (is_switch_held(opts->general_fd)) pressed |= BIT(MUX_INPUT_SWITCH);
     struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
+
+    fade_in_screen();
 
     while (!stop_flag) {
         int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.HASEVENT, held ? timeout_hold : timeout);

@@ -185,7 +185,7 @@ void extract_archive(const char *filename, const char *screen) {
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
-        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+        fade_out_screen();
         run_exec(exec, exec_count, 0, 1, NULL, NULL);
     }
     free(exec);
@@ -197,7 +197,7 @@ void update_bootlogo(const char *next_screen) {
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
-        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+        fade_out_screen();
         run_exec(exec, exec_count, 0, 1, NULL, NULL);
     }
     free(exec);
