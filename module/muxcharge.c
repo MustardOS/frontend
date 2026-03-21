@@ -68,6 +68,33 @@ static void handle_start(void) {
     exit_status = 0;
 }
 
+static void wake_screen_on_input(void) {
+    LOG_SUCCESS(mux_module, "Button Pressed");
+
+    int bright_value = read_line_int_from(CHARGER_BRIGHT, 1);
+
+    LOG_INFO(mux_module, "Setting Brightness To: %d", bright_value);
+    set_brightness(bright_value);
+
+    if (file_exist(MUX_BLANK)) remove(MUX_BLANK);
+    blank_check();
+
+    blank_timeout = 3;
+
+    return;
+}
+
+static void wake_screen_on_input_lid_open(void) {
+    if (device.BOARD.HASLID) {
+        int hall_key = read_line_int_from("/sys/class/power_supply/axp2202-battery/hallkey", 1);
+        if (hall_key != 1) {
+            return;
+        }
+    }
+    wake_screen_on_input();
+}
+
+
 static void handle_idle(void) {
     refresh_screen(ui_scrCharge_charge, 1);
 
@@ -156,7 +183,36 @@ int main(void) {
     refresh_screen(ui_scrCharge_charge, 1);
 
     mux_input_options input_opts = {
-            .press_handler = {[MUX_INPUT_START] = handle_start},
+            .press_handler = {
+                [MUX_INPUT_START] = handle_start,
+                [MUX_INPUT_SELECT] = wake_screen_on_input,
+                [MUX_INPUT_A] = wake_screen_on_input,
+                [MUX_INPUT_B] = wake_screen_on_input,
+                [MUX_INPUT_X] = wake_screen_on_input,
+                [MUX_INPUT_Y] = wake_screen_on_input,
+                [MUX_INPUT_MENU_SHORT] = wake_screen_on_input,
+                [MUX_INPUT_DPAD_DOWN] = wake_screen_on_input,
+                [MUX_INPUT_DPAD_LEFT] = wake_screen_on_input,
+                [MUX_INPUT_DPAD_RIGHT] = wake_screen_on_input,
+                [MUX_INPUT_DPAD_UP] = wake_screen_on_input,
+                [MUX_INPUT_LS_DOWN] = wake_screen_on_input,
+                [MUX_INPUT_LS_LEFT] = wake_screen_on_input,
+                [MUX_INPUT_LS_RIGHT] = wake_screen_on_input,
+                [MUX_INPUT_LS_UP] = wake_screen_on_input,
+                [MUX_INPUT_L3] = wake_screen_on_input,
+                [MUX_INPUT_RS_DOWN] = wake_screen_on_input,
+                [MUX_INPUT_RS_LEFT] = wake_screen_on_input,
+                [MUX_INPUT_RS_RIGHT] = wake_screen_on_input,
+                [MUX_INPUT_RS_UP] = wake_screen_on_input,
+                [MUX_INPUT_R3] = wake_screen_on_input,
+                [MUX_INPUT_L1] = wake_screen_on_input_lid_open,
+                [MUX_INPUT_L2] = wake_screen_on_input_lid_open,
+                [MUX_INPUT_R1] = wake_screen_on_input_lid_open,
+                [MUX_INPUT_R2] = wake_screen_on_input_lid_open,
+                [MUX_INPUT_VOL_DOWN] = wake_screen_on_input_lid_open,
+                [MUX_INPUT_VOL_UP] = wake_screen_on_input_lid_open,
+                [MUX_INPUT_POWER_SHORT] = wake_screen_on_input_lid_open,
+            },
             .idle_handler = handle_idle
     };
 
