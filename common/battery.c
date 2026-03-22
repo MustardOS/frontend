@@ -20,16 +20,14 @@
 #define BATTERY_VOLT_MIN BATTERY_DEVICE_CONFIG "/volt_min"
 #define BATTERY_VOLT_MAX BATTERY_DEVICE_CONFIG "/volt_max"
 
-#define BATTERY_CURVE_CHARGE    BATTERY_DEVICE_CONFIG "/curve/charge"
-#define BATTERY_CURVE_DISCHARGE BATTERY_DEVICE_CONFIG "/curve/discharge"
+#define BATTERY_CURVE_FILE BATTERY_DEVICE_CONFIG "/curve"
 
 #define BATTERY_CAPACITY_PREFIX "capacity_"
 #define BATTERY_CHARGING_PREFIX "capacity_charging_"
 
-#define BATTERY_VOLTAGE_OFFSET       64
+#define BATTERY_CURVE_POINTS         10
 #define BATTERY_LOAD_COMPENSATION_MV 20
 #define BATTERY_VOLTAGE_DEADBAND_MV  8
-#define BATTERY_CURVE_MAX_POINTS     32
 
 #define BATTERY_ZERO_VOLTAGE "0.00 V"
 #define BATTERY_GOOD_VOLTAGE "%.2f V"
@@ -43,7 +41,6 @@
 
 typedef struct {
     int mv;
-    int percent;
 } battery_curve_point_t;
 
 static int battery_daemon_mode = 0;
@@ -78,53 +75,42 @@ static int voltage_samples[BATTERY_VOLTAGE_SAMPLES];
 static int voltage_sample_index = 0;
 static int voltage_sample_count = 0;
 
-static battery_curve_point_t battery_curve_discharge[BATTERY_CURVE_MAX_POINTS];
-static battery_curve_point_t battery_curve_charge[BATTERY_CURVE_MAX_POINTS];
+static battery_curve_point_t battery_curve[BATTERY_CURVE_POINTS];
 
-static size_t battery_curve_discharge_size = 0;
-static size_t battery_curve_charge_size = 0;
+static unsigned char *battery_lookup = NULL;
+static int battery_lookup_size = 0;
+static int battery_curve_valid = 0;
 
-static size_t load_curve_file(const char *path, battery_curve_point_t *curve) {
+static int load_curve_file(const char *path, battery_curve_point_t *curve) {
     if (!*path) return 0;
 
     char *data = read_all_char_from(path);
     if (!data) return 0;
 
     char *p = data;
-    size_t count = 0;
+    int i = 0;
 
-    while (*p && count < BATTERY_CURVE_MAX_POINTS) {
+    while (*p && i < BATTERY_CURVE_POINTS) {
         char *end;
-
         long mv = strtol(p, &end, 10);
+
         if (p == end) {
             while (*p && *p != '\n') p++;
             if (*p) p++;
             continue;
         }
 
-        p = end;
-
-        long pct = strtol(p, &end, 10);
-        if (p == end) {
-            while (*p && *p != '\n') p++;
-            if (*p) p++;
-            continue;
-        }
-
-        if (mv >= 0 && pct >= 0) {
-            curve[count].mv = (int) mv;
-            curve[count].percent = (int) pct;
-            count++;
-        }
-
+        curve[i].mv = (int) mv;
+        i++;
         p = end;
     }
 
     free(data);
 
-    if (count < 2) return 0;
-    return count;
+    if (i != BATTERY_CURVE_POINTS) return 0;
+    for (i = 1; i < BATTERY_CURVE_POINTS; i++) if (curve[i].mv >= curve[i - 1].mv) return 0;
+
+    return 1;
 }
 
 void battery_set_daemon_mode(int enable) {
@@ -227,6 +213,65 @@ static void set_battery_state_unknown(void) {
     write_charging_file(0);
 }
 
+static void build_battery_lookup(void) {
+    free(battery_lookup);
+
+    battery_lookup = NULL;
+    battery_lookup_size = 0;
+
+    if (!battery_curve_valid || battery_volt_max <= battery_volt_min) return;
+
+    battery_lookup_size = battery_volt_max - battery_volt_min + 1;
+    battery_lookup = malloc((size_t) battery_lookup_size);
+
+    if (!battery_lookup) {
+        LOG_ERROR("battery", "Failed to allocate battery lookup");
+        battery_lookup_size = 0;
+        return;
+    }
+
+    int mv;
+    for (mv = battery_volt_min; mv <= battery_volt_max; mv++) {
+        int percent = 0;
+        int i;
+
+        if (mv >= battery_curve[0].mv) {
+            percent = 100;
+        } else if (mv <= battery_curve[BATTERY_CURVE_POINTS - 1].mv) {
+            percent = 0;
+        } else {
+            for (i = 0; i < BATTERY_CURVE_POINTS - 1; i++) {
+                int high_mv = battery_curve[i].mv;
+                int low_mv = battery_curve[i + 1].mv;
+
+                if (mv <= high_mv && mv >= low_mv) {
+                    int low_pct = 100 - ((i + 1) * 10);
+                    int span_mv = high_mv - low_mv;
+
+                    if (span_mv <= 0) {
+                        percent = low_pct;
+                    } else {
+                        int high_pct = 100 - (i * 10);
+                        int span_pct = high_pct - low_pct;
+                        int pos_mv = mv - low_mv;
+
+                        percent = low_pct + (pos_mv * span_pct + span_mv / 2) / span_mv;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+
+        battery_lookup[mv - battery_volt_min] = (unsigned char) percent;
+    }
+
+    LOG_INFO("battery", "Battery lookup built (%d entries)", battery_lookup_size);
+}
+
 static void init_battery_paths(void) {
     load_daemon_battery_config();
 
@@ -243,21 +288,8 @@ static void init_battery_paths(void) {
 }
 
 static void init_battery_curves(void) {
-    const char *charge_curve;
-    const char *discharge_curve;
-
-    charge_curve = BATTERY_CURVE_CHARGE;
-    discharge_curve = BATTERY_CURVE_DISCHARGE;
-
-    battery_curve_charge_size = load_curve_file(charge_curve, battery_curve_charge);
-    battery_curve_discharge_size = load_curve_file(discharge_curve, battery_curve_discharge);
-
-    if (battery_curve_charge_size < 2 || battery_curve_discharge_size < 2) {
-        LOG_ERROR("battery", "Battery curves failed to load");
-    }
-
-    if (!battery_curve_charge_size) LOG_WARN("battery", "Charging curve not loaded");
-    if (!battery_curve_discharge_size) LOG_WARN("battery", "Discharge curve not loaded");
+    battery_curve_valid = load_curve_file(BATTERY_CURVE_FILE, battery_curve);
+    if (!battery_curve_valid) LOG_ERROR("battery", "Battery curve failed to load");
 
     battery_volt_min = read_line_int_from(BATTERY_VOLT_MIN, 1);
     battery_volt_max = read_line_int_from(BATTERY_VOLT_MAX, 1);
@@ -279,88 +311,46 @@ static int read_voltage_mv(void) {
     return (int) raw;
 }
 
+static inline void swap_int(int *a, int *b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
 static int median_voltage(int mv) {
-    int temp[BATTERY_VOLTAGE_SAMPLES];
-    int count, i, j, key;
+    int a, b, c, d, e; // Now I know my ABCs...
 
     voltage_samples[voltage_sample_index++] = mv;
     if (voltage_sample_index >= BATTERY_VOLTAGE_SAMPLES) voltage_sample_index = 0;
     if (voltage_sample_count < BATTERY_VOLTAGE_SAMPLES) voltage_sample_count++;
+    if (voltage_sample_count < BATTERY_VOLTAGE_SAMPLES) return mv;
 
-    count = voltage_sample_count;
-    for (i = 0; i < count; i++) temp[i] = voltage_samples[i];
+    a = voltage_samples[0];
+    b = voltage_samples[1];
+    c = voltage_samples[2];
+    d = voltage_samples[3];
+    e = voltage_samples[4];
 
-    for (i = 1; i < count; i++) {
-        key = temp[i];
-        j = i - 1;
+    if (a > b) swap_int(&a, &b);
+    if (d > e) swap_int(&d, &e);
+    if (a > c) swap_int(&a, &c);
+    if (b > c) swap_int(&b, &c);
+    if (a > d) swap_int(&a, &d);
+    if (c > d) swap_int(&c, &d);
+    if (b > e) swap_int(&b, &e);
+    if (b > c) swap_int(&b, &c);
 
-        while (j >= 0 && temp[j] > key) {
-            temp[j + 1] = temp[j];
-            j--;
-        }
-
-        temp[j + 1] = key;
-    }
-
-    return temp[count / 2];
-}
-
-static int interpolate_curve_percent(const battery_curve_point_t *curve, size_t curve_size, int mv, int volt_min, int volt_max) {
-    if (mv >= (volt_max - BATTERY_VOLTAGE_OFFSET)) return 100;
-    if (mv <= (volt_min + BATTERY_VOLTAGE_OFFSET)) return 0;
-
-    if (mv >= curve[0].mv) return curve[0].percent;
-    if (mv <= curve[curve_size - 1].mv) return curve[curve_size - 1].percent;
-
-    size_t lo = 0;
-    size_t hi = curve_size - 1;
-
-    while (hi - lo > 1) {
-        size_t mid = (lo + hi) >> 1;
-
-        if (mv > curve[mid].mv) {
-            hi = mid;
-        } else {
-            lo = mid;
-        }
-    }
-
-    const int high_mv = curve[lo].mv;
-    const int low_mv = curve[hi].mv;
-    const int high_pct = curve[lo].percent;
-    const int low_pct = curve[hi].percent;
-
-    const int span_mv = high_mv - low_mv;
-    const int span_pct = high_pct - low_pct;
-    const int pos_mv = mv - low_mv;
-
-    if (span_mv <= 0) return low_pct;
-
-    return low_pct + (pos_mv * span_pct + (span_mv >> 1)) / span_mv;
-}
-
-static int voltage_to_percent_discharge(int mv) {
-    if (mv >= battery_volt_max) return 100;
-    if (battery_curve_discharge_size < 2) return 0;
-
-    return interpolate_curve_percent(battery_curve_discharge, battery_curve_discharge_size, mv, battery_volt_min, battery_volt_max);
-}
-
-static int voltage_to_percent_charge(int mv) {
-    if (mv >= battery_volt_max) return 100;
-    if (battery_curve_charge_size < 2) return 0;
-
-    return interpolate_curve_percent(battery_curve_charge, battery_curve_charge_size, mv, battery_volt_min, battery_volt_max);
+    return c;
 }
 
 static int voltage_to_percent(int mv, int charging) {
     if (!charging) mv += BATTERY_LOAD_COMPENSATION_MV;
-    if (charging) return voltage_to_percent_charge(mv);
+    if (!battery_lookup || battery_lookup_size <= 0) return 0;
 
     if (mv < battery_volt_min) mv = battery_volt_min;
     if (mv > battery_volt_max) mv = battery_volt_max;
 
-    return voltage_to_percent_discharge(mv);
+    return battery_lookup[mv - battery_volt_min];
 }
 
 static int stabilise_percent(int raw_percent, int charging) {
@@ -413,6 +403,8 @@ void battery_init(void) {
 
     init_battery_paths();
     init_battery_curves();
+
+    build_battery_lookup();
 
     battery_reset();
     battery_update();
