@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxrtc.h"
 
-#define UI_COUNT 7
+#define RTC(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(RTC_ELEMENTS)
+};
+#undef RTC
 
 #define MIN_YEAR 1970
 #define MAX_YEAR 2199

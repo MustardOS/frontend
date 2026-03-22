@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxstorage.h"
 
-#define UI_COUNT 15
+#define STORAGE(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(STORAGE_ELEMENTS)
+};
+#undef STORAGE
 
 struct storage {
     const char *path_suffix;

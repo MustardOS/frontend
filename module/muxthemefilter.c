@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxthemefilter.h"
 
-#define UI_COUNT 5
+#define THEMEFILTER(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(THEMEFILTER_ELEMENTS)
+};
+#undef THEMEFILTER
 
 static char lookup_original_value[MAX_BUFFER_SIZE];
 

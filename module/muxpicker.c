@@ -4,7 +4,6 @@ static char base_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
 
-#define TEMP_PREVIEW "preview.png"
 #define TEMP_VERSION "version.txt"
 #define TEMP_CREDITS "credits.txt"
 

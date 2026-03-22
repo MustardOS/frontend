@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxspace.h"
 
-#define UI_COUNT 4
+#define SPACE(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(SPACE_ELEMENTS)
+};
+#undef SPACE
 
 struct mount {
     lv_obj_t *value_panel;

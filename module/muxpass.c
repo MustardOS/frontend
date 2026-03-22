@@ -1,8 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxpass.h"
 
-#define UI_COUNT 6
-
 static int exit_status_muxpass = 0;
 
 struct mux_passcode passcode;
@@ -12,7 +10,7 @@ static int p_type;
 static char *p_code;
 static char *p_msg;
 
-static lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[6];
 
 static void init_navigation_group(void) {
     ui_objects[0] = ui_rolComboOne;

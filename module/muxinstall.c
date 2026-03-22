@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxinstall.h"
 
-#define UI_COUNT 4
+#define INSTALL(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(INSTALL_ELEMENTS)
+};
+#undef INSTALL
 
 static void list_nav_move(int steps, int direction);
 

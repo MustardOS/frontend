@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxconfig.h"
 
-#define UI_COUNT 10
+#define CONFIG(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(CONFIG_ELEMENTS)
+};
+#undef CONFIG
 
 static void list_nav_move(int steps, int direction);
 

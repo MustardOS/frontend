@@ -1,7 +1,12 @@
 #include "muxshare.h"
 #include "ui/ui_muxchrony.h"
 
-#define UI_COUNT 11
+#define CHRONY(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(CHRONY_ELEMENTS)
+};
+#undef CHRONY
+
 #define CHRONY_BUFFER 2048
 
 static char chrony_raw[CHRONY_BUFFER];

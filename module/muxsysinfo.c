@@ -2,7 +2,12 @@
 #include "ui/ui_muxsysinfo.h"
 #include "../common/battery.h"
 
-#define UI_COUNT 15
+#define SYSINFO(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(SYSINFO_ELEMENTS)
+};
+#undef SYSINFO
+
 #define UI_BUFFER 128
 
 static char hostname[32];

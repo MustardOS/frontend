@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxlaunch.h"
 
-#define UI_COUNT 8
+#define LAUNCH(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(LAUNCH_ELEMENTS)
+};
+#undef LAUNCH
 
 static void list_nav_move(int steps, int direction);
 

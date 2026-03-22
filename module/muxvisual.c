@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxvisual.h"
 
-#define UI_COUNT 19
+#define VISUAL(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(VISUAL_ELEMENTS)
+};
+#undef VISUAL
 
 #define VISUAL(NAME, ENUM, UDATA) static int NAME##_original;
 VISUAL_ELEMENTS

@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxinfo.h"
 
-#define UI_COUNT 9
+#define INFO(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(INFO_ELEMENTS)
+};
+#undef INFO
 
 static void list_nav_move(int steps, int direction);
 

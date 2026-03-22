@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakgen.h"
 
-#define UI_COUNT 9
+#define TWEAKGEN(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(TWEAKGEN_ELEMENTS)
+};
+#undef TWEAKGEN
 
 #define TWEAKGEN(NAME, ENUM, UDATA) static int NAME##_original;
 TWEAKGEN_ELEMENTS

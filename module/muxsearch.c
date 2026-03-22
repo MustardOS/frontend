@@ -2,7 +2,11 @@
 #include "ui/ui_muxsearch.h"
 #include "../common/skip_list.h"
 
-#define UI_COUNT 3
+#define SEARCH(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(SEARCH_ELEMENTS)
+};
+#undef SEARCH
 
 static int starter_image = 0;
 static int got_results = 0;

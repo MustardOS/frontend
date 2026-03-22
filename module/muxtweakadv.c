@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 30
+#define TWEAKADV(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(TWEAKADV_ELEMENTS)
+};
+#undef TWEAKADV
 
 #define TWEAKADV(NAME, ENUM, UDATA) static int NAME##_original;
 TWEAKADV_ELEMENTS

@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxoption.h"
 
-#define UI_COUNT 13
+#define OPTION(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(OPTION_ELEMENTS)
+};
+#undef OPTION
 
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];

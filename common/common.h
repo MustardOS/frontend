@@ -7,6 +7,8 @@
 #include <pthread.h>
 
 #define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define E_SIZE(LIST) A_SIZE(((int[]){ LIST }))
+
 #define BIT(n) (UINT64_C(1) << (n))
 #define TS(str) translate_specific(str)
 #define UFI(i) ((void *)(uintptr_t)(i))

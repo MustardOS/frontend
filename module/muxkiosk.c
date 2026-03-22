@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 44
+#define KIOSK(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(KIOSK_ELEMENTS)
+};
+#undef KIOSK
 
 #define KIOSK(NAME, ENUM, UDATA) static int NAME##_original;
 KIOSK_ELEMENTS

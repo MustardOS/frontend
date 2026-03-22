@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxdevice.h"
 
-#define UI_COUNT 7
+#define DEVICE(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(DEVICE_ELEMENTS)
+};
+#undef DEVICE
 
 #define DEVICE(NAME, ENUM, UDATA) static int NAME##_original;
 DEVICE_ELEMENTS

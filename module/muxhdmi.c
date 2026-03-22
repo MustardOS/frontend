@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxhdmi.h"
 
-#define UI_COUNT 6
+#define HDMI(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(HDMI_ELEMENTS)
+};
+#undef HDMI
 
 #define HDMI(NAME, ENUM, UDATA) static int NAME##_original;
 HDMI_ELEMENTS

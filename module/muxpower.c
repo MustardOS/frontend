@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxpower.h"
 
-#define UI_COUNT 8
+#define POWER(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(POWER_ELEMENTS)
+};
+#undef POWER
 
 #define POWER(NAME, ENUM, UDATA) static int NAME##_original;
 POWER_ELEMENTS

@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxcoladjust.h"
 
-#define UI_COUNT 6
+#define COLADJUST(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(COLADJUST_ELEMENTS)
+};
+#undef COLADJUST
 
 #define COLADJUST(NAME, ENUM, UDATA) static int NAME##_original;
 COLADJUST_ELEMENTS

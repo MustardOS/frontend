@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxconnect.h"
 
-#define UI_COUNT 5
+#define CONNECT(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(CONNECT_ELEMENTS)
+};
+#undef CONNECT
 
 #define CONNECT(NAME, ENUM, UDATA) static int NAME##_original;
 CONNECT_ELEMENTS

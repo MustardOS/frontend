@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetwork.h"
 
-#define UI_COUNT 9
+#define NETWORK(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(NETWORK_ELEMENTS)
+};
+#undef NETWORK
 
 const char *pass_args[] = {(OPT_PATH "script/web/password.sh"), NULL};
 const char *net_c_args[] = {(OPT_PATH "script/system/network.sh"), "connect", NULL};

@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxcustom.h"
 
-#define UI_COUNT 22
+#define CUSTOM(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(CUSTOM_ELEMENTS)
+};
+#undef CUSTOM
 
 #define CUSTOM(NAME, ENUM, UDATA) static int NAME##_original;
 CUSTOM_ELEMENTS

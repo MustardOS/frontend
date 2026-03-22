@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxappcon.h"
 
-#define UI_COUNT 3
+#define APPCON(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(APPCON_ELEMENTS)
+};
+#undef APPCON
 
 static char app_name[MAX_BUFFER_SIZE];
 static char app_dir[MAX_BUFFER_SIZE];

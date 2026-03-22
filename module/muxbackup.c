@@ -1,8 +1,12 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 24
-#define STORAGE_COUNT (UI_COUNT - 3)
+#define BACKUP(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(BACKUP_ELEMENTS),
+    STORAGE_COUNT = (UI_COUNT - 3)
+};
+#undef BACKUP
 
 #define BACKUP(NAME, ENUM, UDATA) static int NAME##_original;
 BACKUP_ELEMENTS

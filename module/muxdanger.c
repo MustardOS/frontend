@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxdanger.h"
 
-#define UI_COUNT 15
+#define DANGER(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(DANGER_ELEMENTS)
+};
+#undef DANGER
 
 #define DANGER(NAME, ENUM, UDATA) static int NAME##_original;
 DANGER_ELEMENTS

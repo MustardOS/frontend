@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxoverlay.h"
 
-#define UI_COUNT 12
+#define OVERLAY(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(OVERLAY_ELEMENTS)
+};
+#undef OVERLAY
 
 #define OVERLAY(NAME, ENUM, UDATA) static int NAME##_original;
 OVERLAY_ELEMENTS

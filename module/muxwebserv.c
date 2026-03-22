@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxwebserv.h"
 
-#define UI_COUNT 5
+#define WEBSERV(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(WEBSERV_ELEMENTS)
+};
+#undef WEBSERV
 
 #define WEBSERV(NAME, ENUM, UDATA) static int NAME##_original;
 WEBSERV_ELEMENTS

@@ -1,7 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetinfo.h"
 
-#define UI_COUNT 10
+#define NETINFO(NAME, ENUM, UDATA) 1,
+enum {
+    UI_COUNT = E_SIZE(NETINFO_ELEMENTS)
+};
+#undef NETINFO
 
 static void list_nav_move(int steps, int direction);
 
