@@ -127,6 +127,10 @@ struct mux_device {
         int16_t VOLT_MIN;
         int16_t VOLT_MAX;
         int16_t SIZE;
+        struct {
+            char CHARGE[MAX_BUFFER_SIZE];
+            char DISCHARGE[MAX_BUFFER_SIZE];
+        } CURVE;
     } BATTERY;
 
     struct {
