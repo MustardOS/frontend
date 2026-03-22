@@ -6,22 +6,20 @@
 bool cancel_download = false;
 bool download_in_progress = false;
 
+volatile int download_finish_result = 0;
+
 typedef struct {
     char *url;
     char *save_path;
 } download_args_t;
 
-typedef struct {
-    int result;
-    void (*cb)(int);
-} download_finish_ctx_t;
-
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    size_t written = fwrite(ptr, size, nmemb, stream);
-    return written * size;
+    return fwrite(ptr, size, nmemb, stream) * size;
 }
 
 static void (*download_finish_cb)(int) = NULL;
+
+void (*download_finish_pending_cb)(int) = NULL;
 
 void set_download_callbacks(void (*callback)(int)) {
     download_finish_cb = callback;
@@ -42,49 +40,19 @@ static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
     return 0;
 }
 
-static void download_finish_async(void *p) {
-    download_finish_ctx_t *ctx = (download_finish_ctx_t *) p;
-
-    if (ctx->result == 0) progress_bar_value = 100;
-
-    hide_progress_bar();
-    download_in_progress = false;
-    cancel_download = false;
-
-    if (ctx->cb) ctx->cb(ctx->result);
-
-    free(ctx);
-}
-
 static void download_finished(int result) {
     LOG_INFO(mux_module, "Download finished with result: %d", result);
 
-    void (*cb)(int) = download_finish_cb;
-
+    download_finish_pending_cb = download_finish_cb;
     download_finish_cb = NULL;
-    download_finish_ctx_t *ctx = malloc(sizeof(*ctx));
-
-    if (!ctx) {
-        hide_progress_bar();
-
-        download_in_progress = false;
-        cancel_download = false;
-
-        if (cb) cb(result);
-
-        return;
-    }
-
-    ctx->result = result;
-    ctx->cb = cb;
-
-    lv_async_call(download_finish_async, ctx);
+    download_finish_result = result;
 }
 
 int download_file(const char *url, const char *output_path) {
     progress_bar_value = 0;
     cancel_download = false;
     download_in_progress = true;
+    download_finish_result = INT_MIN;
 
     CURL *curl;
     FILE *fp;
@@ -131,8 +99,8 @@ int download_file(const char *url, const char *output_path) {
 
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-        download_finished(-3);
         remove(output_path);
+        download_finished(-3);
         return -3;
     }
 
@@ -154,6 +122,7 @@ int download_file(const char *url, const char *output_path) {
 
     LOG_SUCCESS(mux_module, "Download finished (%.0ld bytes)", cl);
     download_finished(0);
+
     return 0;
 }
 
@@ -170,6 +139,8 @@ static void *download_thread(void *arg) {
 }
 
 void initiate_download(const char *url, const char *output_path, bool showProgress, char *message) {
+    download_finish_result = INT_MIN;
+
     if (showProgress) show_progress_bar(message);
 
     download_args_t *args = malloc(sizeof(*args));

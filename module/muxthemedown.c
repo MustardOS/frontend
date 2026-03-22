@@ -6,7 +6,7 @@ static bool theme_extracting = false;
 static char theme_data_local_path[MAX_BUFFER_SIZE];
 static theme_item *theme_items = NULL;
 static size_t theme_item_count = 0;
-static char *preview_zip_path = "/tmp/theme_catalogue.muxzip";
+static char *preview_zip_path = "/opt/theme_catalogue.muxzip";
 
 static int exit_status = 0;
 
@@ -21,7 +21,7 @@ static char theme_extract_zip_done[PATH_MAX];
 
 static void show_help(void) {
     char text_path[MAX_BUFFER_SIZE];
-    snprintf(text_path, sizeof(text_path), "%s/theme/text/%s.txt", INFO_CAT_PATH, theme_items[current_item_index].name);
+    snprintf(text_path, sizeof(text_path), INFO_CAT_PATH "/theme/text/%s.txt", theme_items[current_item_index].name);
 
     char credits[MAX_BUFFER_SIZE];
     if (file_exist(text_path)) {
@@ -35,8 +35,8 @@ static void show_help(void) {
 
 static bool is_downloaded(int index) {
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), "%stheme/%s",
-             RUN_STORAGE_PATH, theme_items[index].name);
+    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s",
+             theme_items[index].name);
     return (dir_exist(theme_path));
 }
 
@@ -44,7 +44,7 @@ static void image_refresh() {
     if (!theme_items || theme_item_count == 0 || current_item_index < 0) return;
 
     char base_image_path[MAX_BUFFER_SIZE];
-    snprintf(base_image_path, sizeof(base_image_path), "%s/theme/box", INFO_CAT_PATH);
+    snprintf(base_image_path, sizeof(base_image_path), INFO_CAT_PATH "/theme/box");
 
     char preview_path[MAX_BUFFER_SIZE];
     if (get_theme_preview_path(base_image_path, theme_items[current_item_index].name, preview_path,
@@ -111,22 +111,23 @@ static void create_content_items(void) {
         bool grid_enabled = json_bool(json_object_get(theme_item, "grid"));
         bool hdmi = json_bool(json_object_get(theme_item, "hdmi"));
         bool language = json_bool(json_object_get(theme_item, "language"));
+
         bool resolution640x480 = json_bool(json_object_get(theme_item, "resolution640x480"));
         bool resolution720x480 = json_bool(json_object_get(theme_item, "resolution720x480"));
         bool resolution720x720 = json_bool(json_object_get(theme_item, "resolution720x720"));
         bool resolution1024x768 = json_bool(json_object_get(theme_item, "resolution1024x768"));
         bool resolution1280x720 = json_bool(json_object_get(theme_item, "resolution1280x720"));
+
         char theme_name[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "name"), theme_name, sizeof(theme_name));
+
         char theme_url[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "url"), theme_url, sizeof(theme_url));
 
         if (!skip_theme_item(theme_name, grid_enabled, hdmi, language,
-                             resolution640x480, resolution720x480, resolution720x720, resolution1024x768,
-                             resolution1280x720)) {
+                             resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720)) {
             add_theme_item(&theme_items, &theme_item_count, theme_name, theme_url, grid_enabled, hdmi, language,
-                           resolution640x480, resolution720x480, resolution720x720, resolution1024x768,
-                           resolution1280x720);
+                           resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720);
         }
     }
     sort_theme_items(theme_items, theme_item_count);
@@ -143,8 +144,7 @@ static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, in
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
-        get_glyph_path(mux_module, is_downloaded(index) ? "theme_down" : "theme", glyph_image_embed,
-                       MAX_BUFFER_SIZE);
+        get_glyph_path(mux_module, is_downloaded(index) ? "theme_down" : "theme", glyph_image_embed, MAX_BUFFER_SIZE);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 
@@ -199,8 +199,7 @@ static void list_nav_move(int steps, int direction) {
                         current_item_index < theme_item_count - items_after_selected) {
                         lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
                         lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
-                        update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
-                                         current_item_index + items_after_selected);
+                        update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1), current_item_index + items_after_selected);
                     }
                 }
             }
@@ -240,17 +239,32 @@ static void theme_extraction_finished(char *theme_path) {
     theme_extract_done = 1;
 }
 
-static void theme_download_finished() {
-    char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name);
-    if (file_exist(theme_path)) {
-        char output_path[MAX_BUFFER_SIZE];
-        snprintf(output_path, sizeof(output_path), "%stheme/%s", RUN_STORAGE_PATH,
-                 theme_items[current_item_index].name);
-        theme_extracting = true;
-        block_input = 1;
-        extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
+static void theme_download_finished(int result) {
+    if (result != 0) {
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, SHORT);
+        return;
     }
+
+    char theme_path[MAX_BUFFER_SIZE];
+    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
+             theme_items[current_item_index].name);
+
+    if (!file_exist(theme_path)) {
+        LOG_WARN(mux_module, "Theme archive missing after download: %s", theme_path);
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, SHORT);
+        return;
+    }
+
+    char output_path[MAX_BUFFER_SIZE];
+    snprintf(output_path, sizeof(output_path), RUN_STORAGE_PATH "theme/%s",
+             theme_items[current_item_index].name);
+
+    theme_extracting = true;
+    block_input = 1;
+
+    extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
 }
 
 static void refresh_theme_previews_finished(int result) {
@@ -288,8 +302,8 @@ static void handle_a(void) {
     play_sound(SND_CONFIRM);
 
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), "%stheme/%s",
-             RUN_STORAGE_PATH, theme_items[current_item_index].name);
+    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s",
+             theme_items[current_item_index].name);
     if (dir_exist(theme_path)) {
         if (strcasecmp(theme_path, theme_base) == 0) {
             toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, SHORT);
@@ -402,6 +416,22 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
+    if (download_finish_result != INT_MIN) {
+        int result = download_finish_result;
+        download_finish_result = INT_MIN;
+
+        void (*cb)(int) = download_finish_pending_cb;
+        download_finish_pending_cb = NULL;
+
+        if (result == 0) progress_bar_value = 100;
+        hide_progress_bar();
+
+        download_in_progress = false;
+        cancel_download = false;
+
+        if (cb) cb(result);
+    }
+
     if (theme_extract_done) {
         theme_extract_done = 0;
 

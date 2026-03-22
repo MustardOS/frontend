@@ -11,6 +11,9 @@
 
 extern bool cancel_download;
 extern bool download_in_progress;
+extern volatile int download_finish_result;
+
+extern void (*download_finish_pending_cb)(int);
 
 void set_download_callbacks(void (*callback)(int));
 
