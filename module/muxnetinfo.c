@@ -375,7 +375,6 @@ static void list_nav_next(int steps) {
 
 static void reload_netinfo(void) {
     load_mux("netinfo");
-    close_input();
     mux_input_stop();
 }
 
@@ -429,7 +428,6 @@ static void handle_back(void) {
     play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netinfo");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -606,7 +604,6 @@ int muxnetinfo_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
@@ -616,6 +613,7 @@ int muxnetinfo_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,

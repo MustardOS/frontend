@@ -3,13 +3,13 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "../../../../common/log.h"
-#include "../../../../common/options.h"
-#include "../../../../common/common.h"
-#include "../../../../common/device.h"
-#include "../../../../common/input.h"
-#include "../../../../common/config.h"
-#include "../../../../common/theme.h"
+#include "../log.h"
+#include "../options.h"
+#include "../common.h"
+#include "../device.h"
+#include "../input.h"
+#include "../config.h"
+#include "../theme.h"
 #include "sdl.h"
 #include "dvd.h"
 

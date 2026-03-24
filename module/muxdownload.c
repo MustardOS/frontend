@@ -161,7 +161,7 @@ static void download_finished(int result) {
 static void refresh_extra_data_finished(int result) {
     if (result == 0) {
         load_mux("coredown");
-        close_input();
+
         mux_input_stop();
     } else {
         play_sound(SND_ERROR);
@@ -227,7 +227,6 @@ static void handle_b(void) {
 
         load_mux("assign");
 
-        close_input();
         mux_input_stop();
     }
 }
@@ -356,7 +355,6 @@ int muxdownload_main(char *type) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
@@ -366,6 +364,7 @@ int muxdownload_main(char *type) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

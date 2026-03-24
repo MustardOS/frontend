@@ -152,7 +152,7 @@ static void handle_b(void) {
     save_sort_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
-    close_input();
+
     mux_input_stop();
 }
 
@@ -207,7 +207,6 @@ int muxsort_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -215,6 +214,7 @@ int muxsort_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,

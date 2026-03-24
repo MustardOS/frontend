@@ -383,7 +383,6 @@ static void handle_a(void) {
             save_tweak_options();
             load_mux(entry->mux_name);
 
-            close_input();
             mux_input_stop();
             break;
         case MENU_OPTION:
@@ -412,7 +411,7 @@ static void handle_b(void) {
     save_tweak_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
-    close_input();
+
     mux_input_stop();
 }
 
@@ -429,7 +428,6 @@ static void launch_danger(void) {
     if (lv_group_get_focused(ui_group) == ui_lblAdvanced_tweakgen) {
         load_mux("danger");
 
-        close_input();
         mux_input_stop();
     }
 }
@@ -486,7 +484,6 @@ int muxtweakgen_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -496,6 +493,7 @@ int muxtweakgen_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,

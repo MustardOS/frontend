@@ -485,7 +485,6 @@ static void handle_a(void) {
 
             load_mux(entry->action == MENU_THEME ? "theme" : "picker");
 
-            close_input();
             mux_input_stop();
             break;
         case MENU_MUSIC_VOLUME:
@@ -501,7 +500,6 @@ static void handle_a(void) {
             save_custom_options();
             load_mux("custom");
 
-            close_input();
             mux_input_stop();
             break;
         case MENU_OPTION:
@@ -528,7 +526,6 @@ static void handle_b(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
     save_custom_options();
 
-    close_input();
     mux_input_stop();
 }
 
@@ -591,7 +588,6 @@ int muxcustom_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -599,6 +595,7 @@ int muxcustom_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

@@ -406,7 +406,6 @@ static void handle_keyboard_OK_press(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry_collect));
     load_mux("collection");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -577,7 +576,6 @@ static void process_load(int from_start) {
         load_mux("collection");
     }
 
-    close_input();
     mux_input_stop();
 }
 
@@ -630,7 +628,6 @@ static void handle_b(void) {
         }
     }
 
-    close_input();
     mux_input_stop();
 }
 
@@ -688,7 +685,6 @@ static void handle_x(void) {
 
     load_mux("collection");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -713,7 +709,7 @@ static void handle_y(void) {
     }
 }
 
-static void handle_menu(void) {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
@@ -991,7 +987,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
@@ -1003,6 +998,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
             .release_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,

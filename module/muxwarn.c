@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../lvgl/src/drivers/display/sdl.h"
+#include "../common/display/sdl.h"
 
 int main(void) {
     init_module("muxwarn");

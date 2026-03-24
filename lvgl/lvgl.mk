@@ -1,4 +1,3 @@
-include $(LVGL_DIR)/$(LVGL_DIR_NAME)/src/drivers/lv_drivers.mk
 include $(LVGL_DIR)/$(LVGL_DIR_NAME)/src/core/lv_core.mk
 include $(LVGL_DIR)/$(LVGL_DIR_NAME)/src/draw/lv_draw.mk
 include $(LVGL_DIR)/$(LVGL_DIR_NAME)/src/extra/lv_extra.mk

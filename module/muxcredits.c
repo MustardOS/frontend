@@ -1,6 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxcredits.h"
-#include "../lvgl/src/drivers/display/sdl.h"
+#include "../common/display/sdl.h"
 
 #define CREDIT_ITEM_COUNT 11
 #define CREDIT_DELAY 4675
@@ -19,7 +19,6 @@ static void fade_in(lv_obj_t *obj);
 static void fade_out(lv_obj_t *obj);
 
 static void timeout_task(void) {
-    close_input();
     safe_quit(0);
     mux_input_stop();
 }
@@ -119,11 +118,7 @@ int main(void) {
             },
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU_SHORT),
-                            .press_handler = trigger_timeout,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU_LONG),
+                            .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU),
                             .press_handler = trigger_timeout,
                     },
             },

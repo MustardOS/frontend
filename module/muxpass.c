@@ -44,7 +44,7 @@ static void handle_a(void) {
     if (strcasecmp(try_code, p_code) == 0) {
         play_sound(SND_MUOS);
         exit_status_muxpass = 1;
-        close_input();
+
         mux_input_stop();
     } else {
         play_sound(SND_ERROR);
@@ -55,7 +55,6 @@ static void handle_b(void) {
     if (!PCT_BOOT) play_sound(SND_BACK);
 
     exit_status_muxpass = 2;
-    close_input();
     mux_input_stop();
 }
 

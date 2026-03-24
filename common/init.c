@@ -3,11 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/display/sdl.h"
-#include "../lvgl/src/drivers/input/evdev.h"
+#include "display/sdl.h"
 #include "init.h"
 #include "input.h"
 #include "inotify.h"
@@ -25,14 +23,7 @@
 static uint64_t start_ms = 0;
 static struct dt_task_param dt_par;
 static struct bat_task_param bat_par;
-static lv_indev_t *indev = NULL;
-static lv_indev_drv_t indev_drv; // must be declared here to prevent LVGL deadlocks
 static lv_timer_t *mux_refresh_timer = NULL;
-
-static int joy_general = -1;
-static int joy_power = -1;
-static int joy_volume = -1;
-static int joy_extra = -1;
 
 lv_timer_t *timer_ui_refresh;
 lv_timer_t *timer_datetime;
@@ -136,13 +127,6 @@ static void close_fd(int *fd) {
     }
 }
 
-void close_input(void) {
-    close_fd(&joy_general);
-    close_fd(&joy_power);
-    close_fd(&joy_volume);
-    close_fd(&joy_extra);
-}
-
 void init_module(const char *module) {
     snprintf(mux_module, sizeof(mux_module), "%s", module_from_func(module));
     set_process_name(mux_module);
@@ -206,41 +190,11 @@ void init_display(void) {
     mux_set_refresh_timer(disp->refr_timer);
 }
 
-int open_input(const char *path, const char *error_message) {
-    int fd = open(path, O_RDONLY);
-    if (fd < 0) {
-        perror(error_message);
-        exit(EXIT_FAILURE);
-    }
-    return fd;
-}
-
 void init_input(mux_input_options *opts, int def_combo) {
     if (!opts) return;
 
     g350_mode = board_is_g350();
     tui_mode = board_is_tui();
-
-    joy_general = open_input(device.INPUT_EVENT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
-    joy_power = open_input(device.INPUT_EVENT.JOY_POWER, lang.SYSTEM.NO_JOY_POWER);
-    joy_volume = open_input(device.INPUT_EVENT.JOY_VOLUME, lang.SYSTEM.NO_JOY_VOLUME);
-    joy_extra = open_input(device.INPUT_EVENT.JOY_EXTRA, lang.SYSTEM.NO_JOY_EXTRA);
-
-    opts->general_fd = joy_general;
-    opts->power_fd = joy_power;
-    opts->volume_fd = joy_volume;
-    opts->extra_fd = joy_extra;
-
-    if (!indev) {
-        lv_indev_drv_init(&indev_drv);
-
-        indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-        indev_drv.read_cb = evdev_read;
-        indev_drv.user_data = (void *) (intptr_t) opts->general_fd;
-        indev_drv.feedback_cb = NULL;
-
-        indev = lv_indev_drv_register(&indev_drv);
-    }
 
     opts->max_idle_ms = IDLE_MS;
     opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
@@ -248,27 +202,24 @@ void init_input(mux_input_options *opts, int def_combo) {
     opts->remap_to_dpad = true;
 
     if (def_combo) {
-        mux_input_type bright_key;
+        mux_input_type bright_mods[] = {
+                MUX_INPUT_MENU,
+                MUX_INPUT_SWITCH
+        };
 
-        if (tui_mode) {
-            bright_key = MUX_INPUT_SWITCH;
-        } else if (g350_mode) {
-            bright_key = MUX_INPUT_MENU_SHORT;
-        } else {
-            bright_key = MUX_INPUT_MENU_LONG;
+        for (size_t i = 0; i < sizeof(bright_mods) / sizeof(bright_mods[0]); i++) {
+            append_combo(opts, (mux_input_combo) {
+                    .type_mask = BIT(bright_mods[i]) | BIT(MUX_INPUT_VOL_UP),
+                    .press_handler = ui_common_handle_bright_up,
+                    .hold_handler = ui_common_handle_bright_up
+            });
+
+            append_combo(opts, (mux_input_combo) {
+                    .type_mask = BIT(bright_mods[i]) | BIT(MUX_INPUT_VOL_DOWN),
+                    .press_handler = ui_common_handle_bright_down,
+                    .hold_handler = ui_common_handle_bright_down
+            });
         }
-
-        append_combo(opts, (mux_input_combo) {
-                .type_mask = BIT(bright_key) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright_up,
-                .hold_handler = ui_common_handle_bright_up
-        });
-
-        append_combo(opts, (mux_input_combo) {
-                .type_mask = BIT(bright_key) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright_down,
-                .hold_handler = ui_common_handle_bright_down
-        });
 
         append_combo(opts, (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_UP),
@@ -284,13 +235,6 @@ void init_input(mux_input_options *opts, int def_combo) {
     }
 
     if (opts->idle_handler == NULL) opts->idle_handler = ui_common_handle_idle;
-}
-
-void dispose_input() {
-    if (indev) {
-        lv_indev_delete(indev);
-        indev = NULL;
-    }
 }
 
 static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t period, void *user_data) {

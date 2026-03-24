@@ -4,7 +4,7 @@
 #include "muxshare.h"
 #include "../common/battery.h"
 #include "../common/inotify.h"
-#include "../lvgl/src/drivers/display/sdl.h"
+#include "../common/display/sdl.h"
 
 #define DISPATCH_SLOTS 64
 #define DISPATCH_MASK  (DISPATCH_SLOTS - 1)
@@ -91,7 +91,6 @@ static void cleanup_screen(void) {
 
     if (!ui_screen_container) return;
 
-    dispose_input();
     timer_suspend_all();
 
     lv_disp_load_scr(ui_screen_temp);
@@ -114,7 +113,6 @@ static void cleanup_screen(void) {
 }
 
 static void cleanup_all(void) {
-    dispose_input();
     timer_destroy_all();
     cleanup_screen();
     fade_reset();

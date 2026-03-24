@@ -394,7 +394,6 @@ static void handle_a(void) {
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, skip_toast ? item_name : items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
-        close_input();
         mux_input_stop();
     }
 }
@@ -413,11 +412,10 @@ static void handle_b(void) {
     play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "apps");
 
-    close_input();
     mux_input_stop();
 }
 
-static void handle_menu(void) {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
@@ -440,7 +438,6 @@ static void handle_x(void) {
 
     load_mux("appcon");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -518,7 +515,6 @@ int muxapp_main(void) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
@@ -528,6 +524,7 @@ int muxapp_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

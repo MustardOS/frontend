@@ -3,7 +3,7 @@ include ../common.mk
 CFLAGS = $(BASE_CFLAGS) -I. -Iimg -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -isystem miniz
 LDFLAGS = $(COMMON_LIBS) $(SHARED_PIC)
 
-SRC_DIRS = . img input json mini miniz core xxhash png
+SRC_DIRS = . display img input json mini miniz core xxhash png
 SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
 
 OBJS = $(SRCS:.c=.o)

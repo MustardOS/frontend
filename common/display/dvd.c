@@ -3,9 +3,9 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "../../../../common/log.h"
-#include "../../../../common/options.h"
-#include "../../../../common/common.h"
+#include "../log.h"
+#include "../options.h"
+#include "../common.h"
 #include "dvd.h"
 
 #define FRAME_SHF 16

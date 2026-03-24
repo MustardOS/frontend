@@ -489,7 +489,6 @@ static void handle_confirm(void) {
 
         load_mux("search");
 
-        close_input();
         mux_input_stop();
 
         return;
@@ -519,7 +518,6 @@ static void handle_confirm(void) {
 
         load_mux("explore");
 
-        close_input();
         mux_input_stop();
     }
 }
@@ -539,7 +537,6 @@ static void handle_back(void) {
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (is_ksk(kiosk.CONTENT.OPTION)) load_mux("explore");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -582,7 +579,6 @@ static void handle_x(void) {
     play_sound(SND_CONFIRM);
     load_mux("search");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -785,7 +781,6 @@ int muxsearch_main(char *dir) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
@@ -796,6 +791,7 @@ int muxsearch_main(char *dir) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,

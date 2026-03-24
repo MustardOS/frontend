@@ -200,7 +200,6 @@ static void handle_a(void) {
 
         load_mux("archive");
 
-        close_input();
         mux_input_stop();
     }
 }
@@ -231,7 +230,6 @@ static void handle_x(void) {
     hold_call = 0;
     load_mux("archive");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -249,11 +247,10 @@ static void handle_b(void) {
 
     play_sound(SND_BACK);
 
-    close_input();
     mux_input_stop();
 }
 
-static void handle_menu(void) {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
@@ -341,7 +338,6 @@ int muxarchive_main(void) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -349,6 +345,7 @@ int muxarchive_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

@@ -27,15 +27,11 @@ void refresh_screen(lv_obj_t *screen, int flush);
 
 void safe_quit(int exit_status);
 
-void close_input(void);
-
 void init_module(const char *module);
 
 void init_display();
 
 void init_input(mux_input_options *opts, int def_combo);
-
-void dispose_input(void);
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
 

@@ -749,7 +749,6 @@ static void process_load(int from_start) {
     load_end:
     load_mux("explore");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -785,7 +784,6 @@ static void handle_b(void) {
 
     load_mux(file_exist(EXPLORE_DIR) ? "explore" : "launcher");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -800,7 +798,6 @@ static void handle_x(void) {
         if (!is_ksk(kiosk.CONTENT.SEARCH)) {
             load_mux("search");
 
-            close_input();
             mux_input_stop();
         }
         return;
@@ -815,7 +812,6 @@ static void handle_x(void) {
 
     load_mux("option");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -845,7 +841,6 @@ static void handle_start(void) {
     remove(EXPLORE_DIR);
     load_mux("explore");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -860,11 +855,10 @@ static void handle_select(void) {
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     load_mux("explore");
 
-    close_input();
     mux_input_stop();
 }
 
-static void handle_menu(void) {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
     play_sound(SND_INFO_OPEN);
@@ -1069,7 +1063,6 @@ int muxplore_main(int index, char *dir) {
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_SELECT] = handle_select,
                     [MUX_INPUT_START] = handle_start,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
@@ -1081,6 +1074,7 @@ int muxplore_main(int index, char *dir) {
             .release_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,

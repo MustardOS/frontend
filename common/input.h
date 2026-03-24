@@ -1,20 +1,19 @@
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <linux/input.h>
+#include <SDL2/SDL.h>
 
-extern int key_show;
-extern bool swap_axis;
+#define BIT(n) (UINT64_C(1) << (n))
 
-typedef enum {
-    NAV_NONE = 0,
-    NAV_DPAD = 1 << 0,
-    NAV_LEFT_STICK = 1 << 1,
-    NAV_RIGHT_STICK = 1 << 2,
-} mux_nav_type;
+#define NAV_NONE         ((mux_nav_type)0x00)
+#define NAV_DPAD         ((mux_nav_type)0x01)
+#define NAV_LEFT_STICK   ((mux_nav_type)0x02)
+#define NAV_RIGHT_STICK  ((mux_nav_type)0x04)
 
-mux_nav_type get_sticknav_mask(int sticknav_setting);
+// Maximum number of combos allowed per input task.
+#define MUX_INPUT_COMBO_COUNT 16
 
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {
@@ -58,8 +57,7 @@ typedef enum {
     MUX_INPUT_VOL_DOWN,
 
     // Function buttons:
-    MUX_INPUT_MENU_SHORT,
-    MUX_INPUT_MENU_LONG,
+    MUX_INPUT_MENU,
 
     // System buttons:
     MUX_INPUT_POWER_SHORT,
@@ -75,17 +73,20 @@ typedef enum {
     MUX_INPUT_RELEASE,
 } mux_input_action;
 
+typedef uint8_t mux_nav_type;
+
 // Callback function invoked in response to a single specific input type and action.
 typedef void (*mux_input_handler)(void);
 
 // Callback function invoked in response to any arbitrary input type and action.
-typedef void (*mux_input_catchall_handler)(mux_input_type, mux_input_action);
+typedef void (*mux_input_generic_handler)(mux_input_type, mux_input_action);
 
 // Callback function invoked in response to a multi-input combo.
-typedef void (*mux_input_catchall_combo_handler)(int, mux_input_action);
+typedef void (*mux_input_combo_handler)(int, mux_input_action);
 
-// Maximum number of combos allowed per input task.
-#define MUX_INPUT_COMBO_COUNT 32
+typedef void (*mux_idle_handler)(void);
+
+typedef void (*key_event_callback)(struct input_event);
 
 // Configuration for a multi-input combo.
 typedef struct {
@@ -112,20 +113,17 @@ typedef struct {
 
     // If nonzero, the longest delay allowed without an input before the idle_handler is called.
     // (The idle_handler may still be called more frequently at times.)
-    int max_idle_ms;
+    uint32_t max_idle_ms;
 
     // Whether to swap the A/B/X/Y buttons. False is the Japanese layout (A on the right) and true
     // is the Western layout (A on the bottom).
-    bool swap_btn;
-
+    int swap_btn;
     // Whether to swap the up/down and left/right axes on the D-pad and sticks.
-    bool swap_axis;
+    int swap_axis;
+    int remap_to_dpad;
 
     // Whether to use the left or right stick for navigation (direction -> D-pad, click -> A button).
     mux_nav_type nav;
-
-    // This is primarily used for the input tester to show true values of the controller
-    bool remap_to_dpad;
 
     // Callback functions for inputs. Fired in sequence: one press, zero or more holds, one release.
     //
@@ -134,57 +132,33 @@ typedef struct {
     mux_input_handler hold_handler[MUX_INPUT_COUNT];
     mux_input_handler release_handler[MUX_INPUT_COUNT];
 
-    // Generic handler for input press/hold/release events. For programs that want to "go offroad"
-    // and handle every input event in a custom way.
-    //
-    // Most use cases are probably easier to read if they use the individual handlers above instead.
-    //
-    // May be NULL, in which case no input handler will be invoked.
-    mux_input_catchall_handler input_handler;
+    mux_input_generic_handler input_handler;
+    mux_input_combo_handler combo_handler;
 
-    // Multi-input combo definitions. At most one combo can be active at once, so order matters.
-    //
-    // Generally, longer combos should be set before shorter ones. For example, a combo for A+B
-    // should come before a combo for just A. (If the combo for A comes first, it will always
-    // trigger, and the combo for A+B will be ignored even if B is also pressed.)
+    mux_idle_handler idle_handler;
+
     mux_input_combo combo[MUX_INPUT_COMBO_COUNT];
-
-    // Generic handler for combo press/hold/release events. Allows central handling of every combo.
-    //
-    // Most use cases should use the individual handlers instead the mux_input_combo struct instead.
-    //
-    // May be NULL, in which case no combo handler will be invoked.
-    mux_input_catchall_combo_handler combo_handler;
-
-    // Handler called after each iteration of the event loop, regardless of whether any input fired.
-    //
-    // May be NULL, in which case no idle handler will be invoked.
-    mux_input_handler idle_handler;
-
-    // Additional combos from modules
     int combo_count;
 } mux_input_options;
+
+extern int swap_axis;
+
+void mux_input_task(const mux_input_options *opts);
+
+void mux_input_stop(void);
 
 void mux_input_flush_all(void);
 
 void mux_input_resume(void);
 
-// Starts the main input event loop, which runs until terminated by calling mux_input_stop.
-void mux_input_task(const mux_input_options *opts);
-
-// Returns the system clock tick at the start of this iteration of the event loop. Provides a common
-// reference point for computing hold duration, activity timestamps, etc.
 uint32_t mux_input_tick(void);
 
-// Returns whether or not the specified input is currently pressed.
-bool mux_input_pressed(mux_input_type type);
-
-// Causes the input task to exit at the start of the next iteration of the event loop (e.g., after
-// processing currently pressed or held inputs).
-void mux_input_stop(void);
+int mux_input_pressed(mux_input_type mux_type);
 
 void append_combo(mux_input_options *opts, mux_input_combo combo);
 
-typedef void (*key_event_callback)(struct input_event ev);
+mux_nav_type get_sticknav_mask(int sticknav_setting);
 
 void register_key_event_callback(key_event_callback cb);
+
+void ep_wait_wake(void);

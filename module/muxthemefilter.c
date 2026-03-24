@@ -214,7 +214,6 @@ static void handle_b(void) {
 
     load_mux("themedwn");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -316,7 +315,6 @@ int muxthemefilter_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
@@ -326,6 +324,7 @@ int muxthemefilter_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,

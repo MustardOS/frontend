@@ -41,42 +41,6 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->STORAGE.field.TYPE,      "storage/" path "/type" ); \
     DEV_STR_FIELD(device->STORAGE.field.LABEL,     "storage/" path "/label");
 
-#define DEV_ALG_FIELD(input, field, method, path)                                              \
-    DEV_INT_FIELD(device->input.ANALOG.field.UP,    "input/" method "/analog/" path "/up"   ); \
-    DEV_INT_FIELD(device->input.ANALOG.field.DOWN,  "input/" method "/analog/" path "/down" ); \
-    DEV_INT_FIELD(device->input.ANALOG.field.LEFT,  "input/" method "/analog/" path "/left" ); \
-    DEV_INT_FIELD(device->input.ANALOG.field.RIGHT, "input/" method "/analog/" path "/right"); \
-    DEV_INT_FIELD(device->input.ANALOG.field.CLICK, "input/" method "/analog/" path "/click");
-
-#define DEV_DPA_FIELD(input, method)                                        \
-    DEV_INT_FIELD(device->input.DPAD.UP,    "input/" method "/dpad/up"   ); \
-    DEV_INT_FIELD(device->input.DPAD.DOWN,  "input/" method "/dpad/down" ); \
-    DEV_INT_FIELD(device->input.DPAD.LEFT,  "input/" method "/dpad/left" ); \
-    DEV_INT_FIELD(device->input.DPAD.RIGHT, "input/" method "/dpad/right");
-
-#define DEV_BTN_FIELD(input, method)                                                        \
-    DEV_INT_FIELD(device->input.BUTTON.A,           "input/" method "/button/a"          ); \
-    DEV_INT_FIELD(device->input.BUTTON.B,           "input/" method "/button/b"          ); \
-    DEV_INT_FIELD(device->input.BUTTON.C,           "input/" method "/button/c"          ); \
-    DEV_INT_FIELD(device->input.BUTTON.X,           "input/" method "/button/x"          ); \
-    DEV_INT_FIELD(device->input.BUTTON.Y,           "input/" method "/button/y"          ); \
-    DEV_INT_FIELD(device->input.BUTTON.Z,           "input/" method "/button/z"          ); \
-    DEV_INT_FIELD(device->input.BUTTON.L1,          "input/" method "/button/l1"         ); \
-    DEV_INT_FIELD(device->input.BUTTON.L2,          "input/" method "/button/l2"         ); \
-    DEV_INT_FIELD(device->input.BUTTON.L3,          "input/" method "/button/l3"         ); \
-    DEV_INT_FIELD(device->input.BUTTON.R1,          "input/" method "/button/r1"         ); \
-    DEV_INT_FIELD(device->input.BUTTON.R2,          "input/" method "/button/r2"         ); \
-    DEV_INT_FIELD(device->input.BUTTON.R3,          "input/" method "/button/r3"         ); \
-    DEV_INT_FIELD(device->input.BUTTON.MENU_SHORT,  "input/" method "/button/menu_short" ); \
-    DEV_INT_FIELD(device->input.BUTTON.MENU_LONG,   "input/" method "/button/menu_long"  ); \
-    DEV_INT_FIELD(device->input.BUTTON.SELECT,      "input/" method "/button/select"     ); \
-    DEV_INT_FIELD(device->input.BUTTON.START,       "input/" method "/button/start"      ); \
-    DEV_INT_FIELD(device->input.BUTTON.SWITCH,      "input/" method "/button/switch"     ); \
-    DEV_INT_FIELD(device->input.BUTTON.POWER_SHORT, "input/" method "/button/power_short"); \
-    DEV_INT_FIELD(device->input.BUTTON.POWER_LONG,  "input/" method "/button/power_long" ); \
-    DEV_INT_FIELD(device->input.BUTTON.VOLUME_UP,   "input/" method "/button/vol_up"     ); \
-    DEV_INT_FIELD(device->input.BUTTON.VOLUME_DOWN, "input/" method "/button/vol_down"   );
-
     DEV_STR_FIELD(device->BOARD.NAME, "board/name")
     DEV_INT_FIELD(device->BOARD.HASNETWORK, "board/network")
     DEV_INT_FIELD(device->BOARD.HASBLUETOOTH, "board/bluetooth")
@@ -87,6 +51,7 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->BOARD.HASDEBUGFS, "board/debugfs")
     DEV_INT_FIELD(device->BOARD.HASRGB, "led/rgb")
     DEV_INT_FIELD(device->BOARD.HASSTICK, "board/stick")
+    DEV_STR_FIELD(device->BOARD.JOY_HALL, "board/hall")
     DEV_STR_FIELD(device->BOARD.LED, "board/led")
     DEV_STR_FIELD(device->BOARD.RTC_CLOCK, "board/rtc_clock")
     DEV_STR_FIELD(device->BOARD.RTC_WAKE, "board/rtc_wake")
@@ -152,37 +117,9 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->BATTERY.CURVE.CHARGE, "battery/curve/charge")
     DEV_STR_FIELD(device->BATTERY.CURVE.DISCHARGE, "battery/curve/discharge")
 
-    DEV_INT_FIELD(device->INPUT_EVENT.AXIS, "input/axis")
-    DEV_STR_FIELD(device->INPUT_EVENT.JOY_GENERAL, "input/general")
-    DEV_STR_FIELD(device->INPUT_EVENT.JOY_POWER, "input/power")
-    DEV_STR_FIELD(device->INPUT_EVENT.JOY_VOLUME, "input/volume")
-    DEV_STR_FIELD(device->INPUT_EVENT.JOY_EXTRA, "input/extra")
-    DEV_STR_FIELD(device->INPUT_EVENT.JOY_SWAP, "input/swap")
-    DEV_STR_FIELD(device->INPUT_EVENT.JOY_HALL, "input/hall")
-
-    DEV_INT_FIELD(device->INPUT_CODE.DPAD.UP, "input/code/dpad/up")
-    DEV_INT_FIELD(device->INPUT_CODE.DPAD.DOWN, "input/code/dpad/down")
-    DEV_INT_FIELD(device->INPUT_CODE.DPAD.LEFT, "input/code/dpad/left")
-    DEV_INT_FIELD(device->INPUT_CODE.DPAD.RIGHT, "input/code/dpad/right")
-
-    DEV_ALG_FIELD(INPUT_CODE, LEFT, "code", "left")
-    DEV_ALG_FIELD(INPUT_CODE, RIGHT, "code", "right")
-
-    DEV_DPA_FIELD(INPUT_CODE, "code")
-    DEV_BTN_FIELD(INPUT_CODE, "code")
-
-    DEV_ALG_FIELD(INPUT_TYPE, LEFT, "type", "left")
-    DEV_ALG_FIELD(INPUT_TYPE, RIGHT, "type", "right")
-
-    DEV_DPA_FIELD(INPUT_TYPE, "type")
-    DEV_BTN_FIELD(INPUT_TYPE, "type")
-
 #undef DEV_INT_FIELD
 #undef DEV_STR_FIELD
 #undef DEV_MNT_FIELD
-#undef DEV_ALG_FIELD
-#undef DEV_DPA_FIELD
-#undef DEV_BTN_FIELD
 
     snprintf(mux_dim, sizeof(mux_dim), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 }

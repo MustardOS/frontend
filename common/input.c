@@ -1,44 +1,27 @@
-#include "input.h"
-#include <dirent.h>
-#include <pthread.h>
-#include <linux/input.h>
-#include <linux/joystick.h>
-#include <fcntl.h>
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/epoll.h>
-#include <sys/param.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <errno.h>
-#include <poll.h>
-
+#include <signal.h>
+#include <SDL2/SDL.h>
 #include "common.h"
 #include "ui_common.h"
 #include "config.h"
-#include "controller_profile.h"
-#include "device.h"
+#include "input.h"
+#include "osk.h"
 #include "log.h"
 
-#define INPUT_PATH "/dev/input/by-id/"
-#define INPUT_COOLDOWN 256
+#define INPUT_COOLDOWN          256
+#define AXIS_THRESHOLD_FRACTION 0.80f
+#define AXIS_MAX                32767 // TODO: Maybe set this value as a device variable?
+#define AXIS_THRESHOLD          ((int16_t)((float)AXIS_MAX * AXIS_THRESHOLD_FRACTION))
+#define TRIGGER_THRESHOLD       ((int16_t)((float)AXIS_MAX * AXIS_THRESHOLD_FRACTION))
 
-key_event_callback event_handler = NULL;
+int swap_axis = 0;
+int input_init_done = 0;
 
-pthread_t joystick_thread;
-pthread_t keyboard_thread;
-
-struct controller_profile controller;
-
-bool swap_axis = false;
+static int menu_short_pressed = 0;
+static int menu_short_consumed = 0;
 
 // Cross-thread quit flag (set during shutdown)
 static volatile sig_atomic_t stop_flag = 0;
-
-// Self-pipe to wake epoll_wait in mux_input_task()
-static int wake_pipe[2] = {-1, -1};
 
 // System clock tick at the start of this iteration of the event loop.
 static uint32_t tick = 0;
@@ -52,692 +35,281 @@ static volatile uint64_t held = 0;
 // Suppress any input during screensaver runs
 static volatile uint32_t suppress_until_tick = 0;
 
-static inline bool input_is_suppressed(void) {
+static SDL_GameController *controller = NULL;
+
+static inline int input_is_suppressed(void) {
     return mux_tick() < suppress_until_tick;
 }
 
-static inline mux_input_type g350_remap_type(mux_input_type t) {
+// This looks unused but it isn't... not sure how or why?
+static key_event_callback event_handler = NULL;
+
+static mux_input_type controller_button_map[SDL_CONTROLLER_BUTTON_MAX];
+
+static mux_input_type joy_button_map[32];
+
+typedef struct {
+    mux_input_type neg;
+    mux_input_type pos;
+} axis_map_entry;
+
+static axis_map_entry axis_map[SDL_CONTROLLER_AXIS_MAX];
+static mux_input_type key_map[SDL_NUM_SCANCODES];
+
+static void init_input_maps(void) {
+    if (input_init_done) return;
+
+    for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++) controller_button_map[i] = MUX_INPUT_COUNT;
+
+    for (int i = 0; i < 32; i++) joy_button_map[i] = MUX_INPUT_COUNT;
+
+    for (int i = 0; i < SDL_NUM_SCANCODES; i++) key_map[i] = MUX_INPUT_COUNT;
+
+    for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; i++) {
+        axis_map[i].neg = MUX_INPUT_COUNT;
+        axis_map[i].pos = MUX_INPUT_COUNT;
+    }
+
+    // TODO: Work out what C and Z would eventually map to,
+    // TODO: as well as the TrimUI Switch fella!
+    controller_button_map[SDL_CONTROLLER_BUTTON_A] = MUX_INPUT_A;
+    controller_button_map[SDL_CONTROLLER_BUTTON_B] = MUX_INPUT_B;
+    controller_button_map[SDL_CONTROLLER_BUTTON_X] = MUX_INPUT_X;
+    controller_button_map[SDL_CONTROLLER_BUTTON_Y] = MUX_INPUT_Y;
+    controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = MUX_INPUT_L1;
+    controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = MUX_INPUT_R1;
+    controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSTICK] = MUX_INPUT_L3;
+    controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSTICK] = MUX_INPUT_R3;
+    controller_button_map[SDL_CONTROLLER_BUTTON_BACK] = MUX_INPUT_SELECT;
+    controller_button_map[SDL_CONTROLLER_BUTTON_START] = MUX_INPUT_START;
+    controller_button_map[SDL_CONTROLLER_BUTTON_GUIDE] = MUX_INPUT_MENU;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_UP] = MUX_INPUT_DPAD_UP;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = MUX_INPUT_DPAD_DOWN;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = MUX_INPUT_DPAD_LEFT;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = MUX_INPUT_DPAD_RIGHT;
+
+    joy_button_map[2] = MUX_INPUT_VOL_UP;
+    joy_button_map[1] = MUX_INPUT_VOL_DOWN;
+
+    axis_map[SDL_CONTROLLER_AXIS_LEFTX].neg = MUX_INPUT_LS_LEFT;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTX].pos = MUX_INPUT_LS_RIGHT;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTY].neg = MUX_INPUT_LS_UP;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTY].pos = MUX_INPUT_LS_DOWN;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTX].neg = MUX_INPUT_RS_LEFT;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTX].pos = MUX_INPUT_RS_RIGHT;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTY].neg = MUX_INPUT_RS_UP;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTY].pos = MUX_INPUT_RS_DOWN;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERLEFT].neg = MUX_INPUT_COUNT;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERLEFT].pos = MUX_INPUT_L2;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].neg = MUX_INPUT_COUNT;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].pos = MUX_INPUT_R2;
+
+    key_map[SDL_SCANCODE_SPACE] = MUX_INPUT_A;
+    key_map[SDL_SCANCODE_BACKSPACE] = MUX_INPUT_B;
+    key_map[SDL_SCANCODE_R] = MUX_INPUT_X;
+    key_map[SDL_SCANCODE_F] = MUX_INPUT_Y;
+
+    key_map[SDL_SCANCODE_Q] = MUX_INPUT_L1;
+    key_map[SDL_SCANCODE_E] = MUX_INPUT_R1;
+    key_map[SDL_SCANCODE_Z] = MUX_INPUT_L2;
+    key_map[SDL_SCANCODE_C] = MUX_INPUT_R2;
+
+    key_map[SDL_SCANCODE_LCTRL] = MUX_INPUT_SELECT;
+    key_map[SDL_SCANCODE_LSHIFT] = MUX_INPUT_START;
+
+    key_map[SDL_SCANCODE_F1] = MUX_INPUT_MENU;
+
+    key_map[SDL_SCANCODE_UP] = MUX_INPUT_DPAD_UP;
+    key_map[SDL_SCANCODE_DOWN] = MUX_INPUT_DPAD_DOWN;
+    key_map[SDL_SCANCODE_LEFT] = MUX_INPUT_DPAD_LEFT;
+    key_map[SDL_SCANCODE_RIGHT] = MUX_INPUT_DPAD_RIGHT;
+
+    key_map[SDL_SCANCODE_W] = MUX_INPUT_DPAD_UP;
+    key_map[SDL_SCANCODE_S] = MUX_INPUT_DPAD_DOWN;
+    key_map[SDL_SCANCODE_A] = MUX_INPUT_DPAD_LEFT;
+    key_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
+
+    key_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
+    key_map[SDL_SCANCODE_PAGEDOWN] = MUX_INPUT_VOL_DOWN;
+
+    input_init_done = 1;
+}
+
+static inline mux_input_type swap_button_type(mux_input_type t) {
     switch (t) {
-        case MUX_INPUT_LS_UP:
-            return MUX_INPUT_LS_DOWN;
-        case MUX_INPUT_LS_DOWN:
-            return MUX_INPUT_LS_UP;
-        case MUX_INPUT_LS_LEFT:
-            return MUX_INPUT_LS_RIGHT;
-        case MUX_INPUT_LS_RIGHT:
-            return MUX_INPUT_LS_LEFT;
-        case MUX_INPUT_RS_UP:
-            return MUX_INPUT_RS_UP;
-        case MUX_INPUT_RS_DOWN:
-            return MUX_INPUT_RS_DOWN;
-        case MUX_INPUT_RS_LEFT:
-            return MUX_INPUT_RS_RIGHT;
-        case MUX_INPUT_RS_RIGHT:
-            return MUX_INPUT_RS_LEFT;
+        case MUX_INPUT_A:
+            return MUX_INPUT_B;
+        case MUX_INPUT_B:
+            return MUX_INPUT_A;
+        case MUX_INPUT_X:
+            return MUX_INPUT_Y;
+        case MUX_INPUT_Y:
+            return MUX_INPUT_X;
         default:
             return t;
     }
 }
 
 static inline void apply_dir_pair(mux_input_type neg, mux_input_type pos, int direction) {
-    if (g350_mode) {
-        neg = g350_remap_type(neg);
-        pos = g350_remap_type(pos);
-    }
+    uint64_t clear_mask = BIT(neg) | BIT(pos);
+    pressed &= ~clear_mask;
 
     if (direction < 0) {
-        pressed = ((pressed | BIT(neg)) & ~BIT(pos));
+        pressed |= BIT(neg);
     } else if (direction > 0) {
-        pressed = ((pressed | BIT(pos)) & ~BIT(neg));
-    } else {
-        pressed &= ~(BIT(neg) | BIT(pos));
+        pressed |= BIT(pos);
     }
 }
 
-void ep_wait_wake(void) {
-    if (wake_pipe[1] != -1) {
-        unsigned char b = 1;
-        (void) write(wake_pipe[1], &b, 1); // wake epoll_wait
-    }
-}
+static void process_sdl_button(const mux_input_options *opts, SDL_GameControllerButton btn, int down) {
+    if (input_is_suppressed() || btn >= SDL_CONTROLLER_BUTTON_MAX) return;
 
-void mux_input_flush_all(void) {
-    pressed = 0;
-    held = 0;
+    mux_input_type t = controller_button_map[btn];
 
-    suppress_until_tick = UINT32_MAX;
-    ep_wait_wake();
-}
-
-void mux_input_resume(void) {
-    pressed = 0;
-    held = 0;
-
-    suppress_until_tick = mux_tick() + INPUT_COOLDOWN;
-}
-
-static inline void set_stop_flag(void) {
-    stop_flag = 1;
-    ep_wait_wake();
-}
-
-int find_keyboard_devices(int *fds, int max_fds) {
-    struct dirent *entry;
-    DIR *dir = opendir(INPUT_PATH);
-    if (!dir) {
-        LOG_WARN("input", "Failed to open input directory: '%s'", INPUT_PATH);
-        return 0;
-    }
-
-    static char device_path[256];
-    int count = 0;
-    while ((entry = readdir(dir)) != NULL) {
-        if (count >= max_fds) break;
-        if (strstr(entry->d_name, "usb") &&
-            (strstr(entry->d_name, "-event-kbd") || strstr(entry->d_name, "-event-mouse"))) {
-            snprintf(device_path, sizeof(device_path), "%s%s", INPUT_PATH, entry->d_name);
-            int fd = open(device_path, O_RDONLY | O_NONBLOCK);
-            if (fd != -1) {
-                LOG_INFO("input", "Listening on keyboard: %s (fd: %d)", entry->d_name, fd);
-                fds[count++] = fd;
-            }
-        }
-    }
-
-    closedir(dir);
-    return count;
-}
-
-// Processes gamepad buttons.
-static void process_key(const mux_input_options *opts, const struct input_event *event) {
-    if (input_is_suppressed()) return;
-    mux_input_type mux_type;
-
-    if (event->type == device.INPUT_TYPE.BUTTON.A &&
-        event->code == device.INPUT_CODE.BUTTON.A) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.B &&
-               event->code == device.INPUT_CODE.BUTTON.B) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.C &&
-               event->code == device.INPUT_CODE.BUTTON.C) {
-        mux_type = MUX_INPUT_C;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.X &&
-               event->code == device.INPUT_CODE.BUTTON.X) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.Y &&
-               event->code == device.INPUT_CODE.BUTTON.Y) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.Z &&
-               event->code == device.INPUT_CODE.BUTTON.Z) {
-        mux_type = MUX_INPUT_Z;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.L1 &&
-               event->code == device.INPUT_CODE.BUTTON.L1) {
-        mux_type = MUX_INPUT_L1;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.L2 &&
-               event->code == device.INPUT_CODE.BUTTON.L2) {
-        mux_type = MUX_INPUT_L2;
-    } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.CLICK &&
-               event->code == device.INPUT_CODE.ANALOG.LEFT.CLICK) {
-        mux_type = MUX_INPUT_L3;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.R1 &&
-               event->code == device.INPUT_CODE.BUTTON.R1) {
-        mux_type = MUX_INPUT_R1;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.R2 &&
-               event->code == device.INPUT_CODE.BUTTON.R2) {
-        mux_type = MUX_INPUT_R2;
-    } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.CLICK &&
-               event->code == device.INPUT_CODE.ANALOG.RIGHT.CLICK) {
-        mux_type = MUX_INPUT_R3;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.SELECT &&
-               event->code == device.INPUT_CODE.BUTTON.SELECT) {
-        mux_type = MUX_INPUT_SELECT;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.START &&
-               event->code == device.INPUT_CODE.BUTTON.START) {
-        mux_type = MUX_INPUT_START;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_SHORT &&
-               event->code == device.INPUT_CODE.BUTTON.MENU_SHORT) {
-        if (g350_mode) {
-            if (event->value == 1) {
-                g350_menu_pressed = 1;
-                g350_menu_used_with_volume = 0;
-            } else {
-                if (!g350_menu_used_with_volume) {
-                    pressed |= BIT(MUX_INPUT_MENU_SHORT);
-                }
-                g350_menu_pressed = 0;
-            }
-            return;
-        }
-        mux_type = MUX_INPUT_MENU_SHORT;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_LONG &&
-               event->code == device.INPUT_CODE.BUTTON.MENU_LONG) {
-        mux_type = MUX_INPUT_MENU_LONG;
-    } else {
+    if (t == MUX_INPUT_COUNT) {
+        LOG_DEBUG("input", "Unmapped controller button %d", btn);
         return;
     }
 
-    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
+    if (opts->swap_btn) t = swap_button_type(t);
+
+    if (t == MUX_INPUT_MENU) {
+        if (down) {
+            menu_short_pressed = 1;
+            menu_short_consumed = 0;
+        } else {
+            menu_short_pressed = 0;
+            if (menu_short_consumed) return;
+        }
+    }
+
+    if (menu_short_pressed && (t == MUX_INPUT_VOL_UP || t == MUX_INPUT_VOL_DOWN) && down) menu_short_consumed = 1;
+
+    pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
 }
 
-// Processes volume buttons.
-static void process_volume(const mux_input_options *opts, const struct input_event *event) {
-    (void) opts;
-    if (input_is_suppressed()) return;
+static void process_sdl_joy_button(uint8_t button, int down) {
+    if (button >= 32) return;
 
-    mux_input_type mux_type;
-
-    if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_UP &&
-        event->code == device.INPUT_CODE.BUTTON.VOLUME_UP) {
-        mux_type = MUX_INPUT_VOL_UP;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_DOWN &&
-               event->code == device.INPUT_CODE.BUTTON.VOLUME_DOWN) {
-        mux_type = MUX_INPUT_VOL_DOWN;
-    } else {
+    mux_input_type t = joy_button_map[button];
+    if (t == MUX_INPUT_COUNT) {
+        LOG_DEBUG("input", "Unmapped joystick button %d", button);
         return;
     }
 
-    if (g350_mode && g350_menu_pressed && event->value == 1) g350_menu_used_with_volume = 1;
-    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
+    pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
 }
 
-// Processes gamepad axes (D-pad and the sticks).
-static void process_abs(const mux_input_options *opts, const struct input_event *event) {
-    if (input_is_suppressed()) return;
+static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
+    if (input_is_suppressed() || axis >= SDL_CONTROLLER_AXIS_MAX) return;
 
-    mux_input_type neg = 0;
-    mux_input_type pos = 0;
+    axis_map_entry m = axis_map[axis];
 
-    bool analog = false;
-
-    // DPAD disabled in the navigation setting so ignore DPAD entirely!
-    if (!(opts->nav & NAV_DPAD)) {
-        if (event->code == device.INPUT_CODE.DPAD.UP ||
-            event->code == device.INPUT_CODE.DPAD.DOWN ||
-            event->code == device.INPUT_CODE.DPAD.LEFT ||
-            event->code == device.INPUT_CODE.DPAD.RIGHT) {
-            return;
-        }
+    if (m.pos == MUX_INPUT_COUNT && m.neg == MUX_INPUT_COUNT) {
+        LOG_DEBUG("input", "Unmapped axis %d", axis);
+        return;
     }
 
-    if (event->type == device.INPUT_TYPE.DPAD.UP &&
-        event->code == device.INPUT_CODE.DPAD.UP) {
-        // Axis: D-pad vertical
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_DPAD_UP;
-            pos = MUX_INPUT_DPAD_DOWN;
-        } else {
+    if (m.neg == MUX_INPUT_COUNT) {
+        pressed = (value >= TRIGGER_THRESHOLD) ? (pressed | BIT(m.pos)) : (pressed & ~BIT(m.pos));
+        return;
+    }
+
+    mux_input_type neg = m.neg;
+    mux_input_type pos = m.pos;
+
+    if (swap_axis && !key_show) {
+        if (neg == MUX_INPUT_DPAD_UP) {
             neg = MUX_INPUT_DPAD_LEFT;
             pos = MUX_INPUT_DPAD_RIGHT;
-        }
-        analog = false;
-    } else if (event->type == device.INPUT_TYPE.DPAD.LEFT &&
-               event->code == device.INPUT_CODE.DPAD.LEFT) {
-        // Axis: D-pad horizontal
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_DPAD_LEFT;
-            pos = MUX_INPUT_DPAD_RIGHT;
-        } else {
+        } else if (neg == MUX_INPUT_DPAD_LEFT) {
             neg = MUX_INPUT_DPAD_UP;
             pos = MUX_INPUT_DPAD_DOWN;
-        }
-        analog = false;
-    } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.UP &&
-               event->code == device.INPUT_CODE.ANALOG.LEFT.UP) {
-        // Axis: left stick vertical
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_LS_UP;
-            pos = MUX_INPUT_LS_DOWN;
-        } else {
+        } else if (neg == MUX_INPUT_LS_UP) {
             neg = MUX_INPUT_LS_LEFT;
             pos = MUX_INPUT_LS_RIGHT;
-        }
-        analog = true;
-    } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.LEFT &&
-               event->code == device.INPUT_CODE.ANALOG.LEFT.LEFT) {
-        // Axis: left stick horizontal
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_LS_LEFT;
-            pos = MUX_INPUT_LS_RIGHT;
-        } else {
+        } else if (neg == MUX_INPUT_LS_LEFT) {
             neg = MUX_INPUT_LS_UP;
             pos = MUX_INPUT_LS_DOWN;
-        }
-        analog = true;
-    } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.UP &&
-               event->code == device.INPUT_CODE.ANALOG.RIGHT.UP) {
-        // Axis: right stick vertical
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_RS_UP;
-            pos = MUX_INPUT_RS_DOWN;
-        } else {
+        } else if (neg == MUX_INPUT_RS_UP) {
             neg = MUX_INPUT_RS_LEFT;
             pos = MUX_INPUT_RS_RIGHT;
-        }
-        analog = true;
-    } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.LEFT &&
-               event->code == device.INPUT_CODE.ANALOG.RIGHT.LEFT) {
-        // Axis: right stick horizontal
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_RS_LEFT;
-            pos = MUX_INPUT_RS_RIGHT;
-        } else {
+        } else if (neg == MUX_INPUT_RS_LEFT) {
             neg = MUX_INPUT_RS_UP;
             pos = MUX_INPUT_RS_DOWN;
         }
-        analog = true;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.L2 &&
-               event->code == device.INPUT_CODE.BUTTON.L2) {
-        // TRIM-UI DEVICE: left shoulder
-        mux_input_type mux_type = MUX_INPUT_L2;
-        pressed = (event->value == 255) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
-        return;
-    } else if (event->type == device.INPUT_TYPE.BUTTON.R2 &&
-               event->code == device.INPUT_CODE.BUTTON.R2) {
-        // TRIM-UI DEVICE: right shoulder
-        mux_input_type mux_type = MUX_INPUT_R2;
-        pressed = (event->value == 255) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
-        return;
-    } else {
-        return;
     }
 
     int direction = 0;
 
-    // Sometimes, hardware issues prevent sticks from reaching the full range of the analog axis.
-    // (This is especially common with cheap Hall-effect sticks.)
-    //
-    // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
-    // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
-
-    if (analog) {
-        const int thr = device.INPUT_EVENT.AXIS / 5;
-        if (event->value <= -device.INPUT_EVENT.AXIS + thr) {
-            // Direction: up/left
-            direction = -1;
-        } else if (event->value >= device.INPUT_EVENT.AXIS - thr) {
-            // Direction: down/right
-            direction = 1;
-        } else {
-            // Direction: center
-            direction = 0;
-        }
-    } else {
-        if (event->value == -1) {
-            // Direction: up/left
-            direction = -1;
-        } else if (event->value == 1) {
-            // Direction: down/right
-            direction = 1;
-        } else {
-            // Direction: center
-            direction = 0;
-        }
-    }
-
-    apply_dir_pair(neg, pos, direction);
-}
-
-// Processes gamepad button DPAD
-// Some devices like zero28 the DPAD triggers button press events
-static void process_dpad_as_buttons(const mux_input_options *opts, const struct input_event *event) {
-    if (input_is_suppressed()) return;
-    int axis, direction;
-
-    if (!(opts->nav & NAV_DPAD)) return;
-
-    if (event->type == device.INPUT_TYPE.DPAD.UP &&
-        event->code == device.INPUT_CODE.DPAD.UP) {
-        // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        direction = -event->value;
-    } else if (event->type == device.INPUT_TYPE.DPAD.LEFT &&
-               event->code == device.INPUT_CODE.DPAD.LEFT) {
-        // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        direction = -event->value;
-    } else if (event->type == device.INPUT_TYPE.DPAD.DOWN &&
-               event->code == device.INPUT_CODE.DPAD.DOWN) {
-        // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        direction = event->value;
-    } else if (event->type == device.INPUT_TYPE.DPAD.RIGHT &&
-               event->code == device.INPUT_CODE.DPAD.RIGHT) {
-        // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        direction = event->value;
-    } else {
-        return;
-    }
-
-    if (direction == -1) {
-        // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if (direction == 1) {
-        // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
-    } else {
-        // Direction: center
-        pressed &= ~(BIT(axis) | BIT(axis + 1));
-    }
-}
-
-// Process system buttons.
-static void process_sys(const mux_input_options *opts, const struct input_event *event) {
-    (void) opts;
-    if (input_is_suppressed()) return;
-
-    if (event->type == device.INPUT_TYPE.BUTTON.POWER_SHORT && event->code == device.INPUT_CODE.BUTTON.POWER_SHORT) {
-        switch (event->value) {
-            case 1:
-                // Power button: short press
-                pressed = ((pressed | BIT(MUX_INPUT_POWER_SHORT)) & ~BIT(MUX_INPUT_POWER_LONG));
-                break;
-            case 2:
-                // Power button: long press
-                pressed = ((pressed | BIT(MUX_INPUT_POWER_LONG)) & ~BIT(MUX_INPUT_POWER_SHORT));
-                break;
-            default:
-                // Power button: release
-                pressed &= ~(BIT(MUX_INPUT_POWER_SHORT) | BIT(MUX_INPUT_POWER_LONG));
-                break;
-        }
-    }
-}
-
-// Process switch that is currently on the trim-ui devices
-static void process_sw(const mux_input_options *opts, const struct input_event *event) {
-    (void) opts;
-    if (input_is_suppressed()) return;
-
-    mux_input_type mux_type;
-
-    if (event->type == device.INPUT_TYPE.BUTTON.SWITCH && event->code == device.INPUT_CODE.BUTTON.SWITCH) {
-        mux_type = MUX_INPUT_SWITCH;
-    } else {
-        return;
-    }
-
-    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
-}
-
-// Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
-static void process_usb_key(const mux_input_options *opts, struct js_event js) {
-    if (input_is_suppressed()) return;
-    mux_input_type mux_type;
-
-    if (js.number == controller.BUTTON.A) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
-    } else if (js.number == controller.BUTTON.B) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
-    } else if (js.number == controller.BUTTON.X) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
-    } else if (js.number == controller.BUTTON.Y) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
-    } else if (js.number == controller.BUTTON.L1) {
-        mux_type = MUX_INPUT_L1;
-    } else if (js.number == controller.BUTTON.L2) {
-        mux_type = MUX_INPUT_L2;
-    } else if (js.number == controller.BUTTON.L3) {
-        mux_type = MUX_INPUT_L3;
-    } else if (js.number == controller.BUTTON.R1) {
-        mux_type = MUX_INPUT_R1;
-    } else if (js.number == controller.BUTTON.R2) {
-        mux_type = MUX_INPUT_R2;
-    } else if (js.number == controller.BUTTON.R3) {
-        mux_type = MUX_INPUT_R3;
-    } else if (js.number == controller.BUTTON.SELECT) {
-        mux_type = MUX_INPUT_SELECT;
-    } else if (js.number == controller.BUTTON.START) {
-        mux_type = MUX_INPUT_START;
-    } else if (js.number == controller.BUTTON.MENU) {
-        mux_type = MUX_INPUT_MENU_SHORT;
-    } else {
-        return;
-    }
-
-    pressed = (js.value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
-}
-
-// Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
-static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
-    if (input_is_suppressed()) return;
-
-    mux_input_type neg = 0;
-    mux_input_type pos = 0;
-
-    int axis_max = 0;
-
-    // DPAD disabled in the navigation setting so ignore DPAD entirely!
-    // Still confused as to why this is only up and left... but I'll leave it be!
-    if (!(opts->nav & NAV_DPAD)) {
-        if (js.number == controller.DPAD.UP ||
-            js.number == controller.DPAD.LEFT) {
-            return;
-        }
-    }
-
-    if (js.number == controller.DPAD.UP) {
-        // Axis: D-pad vertical
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_DPAD_UP;
-            pos = MUX_INPUT_DPAD_DOWN;
-        } else {
-            neg = MUX_INPUT_DPAD_LEFT;
-            pos = MUX_INPUT_DPAD_RIGHT;
-        }
-        axis_max = controller.DPAD.AXIS;
-    } else if (js.number == controller.DPAD.LEFT) {
-        // Axis: D-pad horizontal
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_DPAD_LEFT;
-            pos = MUX_INPUT_DPAD_RIGHT;
-        } else {
-            neg = MUX_INPUT_DPAD_UP;
-            pos = MUX_INPUT_DPAD_DOWN;
-        }
-        axis_max = controller.DPAD.AXIS;
-    } else if (js.number == controller.ANALOG.LEFT.UP) {
-        // Axis: left stick vertical
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_LS_UP;
-            pos = MUX_INPUT_LS_DOWN;
-        } else {
-            neg = MUX_INPUT_LS_LEFT;
-            pos = MUX_INPUT_LS_RIGHT;
-        }
-        axis_max = controller.ANALOG.LEFT.AXIS;
-    } else if (js.number == controller.ANALOG.LEFT.LEFT) {
-        // Axis: left stick horizontal
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_LS_LEFT;
-            pos = MUX_INPUT_LS_RIGHT;
-        } else {
-            neg = MUX_INPUT_LS_UP;
-            pos = MUX_INPUT_LS_DOWN;
-        }
-        axis_max = controller.ANALOG.LEFT.AXIS;
-    } else if (js.number == controller.ANALOG.RIGHT.UP) {
-        // Axis: right stick vertical
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_RS_UP;
-            pos = MUX_INPUT_RS_DOWN;
-        } else {
-            neg = MUX_INPUT_RS_LEFT;
-            pos = MUX_INPUT_RS_RIGHT;
-        }
-        axis_max = controller.ANALOG.RIGHT.AXIS;
-    } else if (js.number == controller.ANALOG.RIGHT.LEFT) {
-        // Axis: right stick horizontal
-        if (!opts->swap_axis || key_show) {
-            neg = MUX_INPUT_RS_LEFT;
-            pos = MUX_INPUT_RS_RIGHT;
-        } else {
-            neg = MUX_INPUT_RS_UP;
-            pos = MUX_INPUT_RS_DOWN;
-        }
-        axis_max = controller.ANALOG.RIGHT.AXIS;
-    } else if (js.number == controller.TRIGGER.L2) {
-        int threshold = (controller.TRIGGER.AXIS * 80) / 100;
-        if (threshold > 0) {
-            pressed = (js.value >= threshold) ? (pressed | BIT(MUX_INPUT_L2)) : (pressed & ~BIT(MUX_INPUT_L2));
-        } else {
-            pressed = (js.value <= threshold) ? (pressed | BIT(MUX_INPUT_L2)) : (pressed & ~BIT(MUX_INPUT_L2));
-        }
-        return;
-    } else if (js.number == controller.TRIGGER.R2) {
-        int threshold = (controller.TRIGGER.AXIS * 80) / 100;
-        if (threshold > 0) {
-            pressed = (js.value >= threshold) ? (pressed | BIT(MUX_INPUT_R2)) : (pressed & ~BIT(MUX_INPUT_R2));
-        } else {
-            pressed = (js.value <= threshold) ? (pressed | BIT(MUX_INPUT_R2)) : (pressed & ~BIT(MUX_INPUT_R2));
-        }
-        return;
-    } else {
-        return;
-    }
-
-    // Sometimes, hardware issues prevent sticks from reaching the full range of the analog axis.
-    // (This is especially common with cheap Hall-effect sticks.)
-    //
-    // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
-    // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
-    const int thr = axis_max / 5;
-    int direction = 0;
-
-    if (js.value <= -axis_max + thr) {
-        // Direction: up/left
+    if (value <= -AXIS_THRESHOLD) {
         direction = -1;
-    } else if (js.value >= axis_max - thr) {
-        // Direction: down/right
+    } else if (value >= AXIS_THRESHOLD) {
         direction = 1;
-    } else {
-        // Direction: center
-        direction = 0;
     }
 
     apply_dir_pair(neg, pos, direction);
 }
 
-// Processes gamepad button D-pad. Some controllers like PS3 the DPAD triggers button press events
-static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js_event js) {
+static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEvent *kev, int down) {
     if (input_is_suppressed()) return;
-    int axis, direction;
 
-    if (!(opts->nav & NAV_DPAD)) return;
+    SDL_Scancode sc = kev->keysym.scancode;
+    if (sc >= SDL_NUM_SCANCODES) return;
 
-    if (js.number == controller.BUTTON.UP) {
-        // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        direction = -js.value;
-    } else if (js.number == controller.BUTTON.LEFT) {
-        // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        direction = -js.value;
-    } else if (js.number == controller.BUTTON.DOWN) {
-        // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        direction = js.value;
-    } else if (js.number == controller.BUTTON.RIGHT) {
-        // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        direction = js.value;
-    } else {
+    mux_input_type t = key_map[sc];
+
+    if (t == MUX_INPUT_COUNT) {
+        LOG_DEBUG("input", "Unmapped key %s", SDL_GetScancodeName(sc));
         return;
     }
 
-    if (direction == -1) {
-        // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if (direction == 1) {
-        // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
-    } else {
-        // Direction: center
-        pressed &= ~(BIT(axis) | BIT(axis + 1));
-    }
+    if (kev->repeat) return;
+    if (opts->swap_btn) t = swap_button_type(t);
+
+    pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
 }
 
-static void process_usb_keyboard_keys(const mux_input_options *opts, struct input_event event) {
-    if (input_is_suppressed()) return;
-    mux_input_type mux_type;
+static SDL_GameController *controller_open(void) {
+    static int mappings_loaded = 0;
 
-    if (event.code == KEY_ENTER || event.code == KEY_A) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
-    } else if (event.code == KEY_BACKSPACE || event.code == KEY_B) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
-    } else if (event.code == KEY_X) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
-    } else if (event.code == KEY_Y) {
-        mux_type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
-    } else if (event.code == KEY_PAGEUP) {
-        mux_type = MUX_INPUT_L1;
-    } else if (event.code == KEY_PAGEDOWN) {
-        mux_type = MUX_INPUT_R1;
-    } else if (event.code == KEY_SPACE) {
-        mux_type = MUX_INPUT_R2;
-    } else if (event.code == KEY_LEFTCTRL || event.code == KEY_RIGHTCTRL) {
-        mux_type = MUX_INPUT_SELECT;
-    } else if (event.code == KEY_LEFTSHIFT || event.code == KEY_RIGHTSHIFT) {
-        mux_type = MUX_INPUT_START;
-    } else if (event.code == KEY_ESC) {
-        mux_type = MUX_INPUT_MENU_SHORT;
-    } else {
-        return;
+    if (!mappings_loaded) {
+        // TODO: Load from our internal path instead and map to either modern or retro...
+        int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
+
+        if (mappings < 0) {
+            LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
+        } else {
+            LOG_INFO("input", "Loaded %d controller mappings", mappings);
+        }
+
+        mappings_loaded = 1;
     }
 
-    pressed = (event.value > 0) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
-}
-
-static void process_usb_keyboard_arrow_keys(const mux_input_options *opts, struct input_event event) {
-    if (input_is_suppressed()) return;
-    int axis, direction;
-
-    if (event.code == KEY_UP) {
-        // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        direction = -event.value;
-    } else if (event.code == KEY_LEFT) {
-        // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        direction = -event.value;
-    } else if (event.code == KEY_DOWN) {
-        // Axis: D-pad vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        direction = event.value;
-    } else if (event.code == KEY_RIGHT) {
-        // Axis: D-pad horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        direction = event.value;
-    } else {
-        return;
+    int n = SDL_NumJoysticks();
+    if (n <= 0) {
+        LOG_WARN("input", "No joysticks detected");
+        return NULL;
     }
 
-    if (direction < 0) {
-        // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if (direction > 0) {
-        // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
-    } else {
-        // Direction: center
-        pressed &= ~(BIT(axis) | BIT(axis + 1));
+    for (int i = 0; i < n; i++) {
+        if (SDL_IsGameController(i)) {
+            SDL_GameController *c = SDL_GameControllerOpen(i);
+            if (c) {
+                LOG_INFO("input", "Controller opened: %s", SDL_GameControllerName(c));
+                return c;
+            }
+
+            LOG_WARN("input", "Failed to open controller %d: %s", i, SDL_GetError());
+            continue;
+        }
+
+        const char *name = SDL_JoystickNameForIndex(i);
+        LOG_WARN("input", "Joystick detected but not mapped: %s", name ? name : "unknown");
     }
-}
 
-static const mux_nav_type nav_map[] = {
-        NAV_DPAD,
-        NAV_LEFT_STICK,
-        NAV_RIGHT_STICK,
-        NAV_DPAD | NAV_LEFT_STICK,
-        NAV_DPAD | NAV_RIGHT_STICK,
-        NAV_DPAD | NAV_LEFT_STICK | NAV_RIGHT_STICK,
-        NAV_LEFT_STICK | NAV_RIGHT_STICK
-};
-
-mux_nav_type get_sticknav_mask(int sticknav_setting) {
-    if (sticknav_setting < 0 || sticknav_setting >= (int) (sizeof(nav_map) / sizeof(nav_map[0]))) return NAV_NONE;
-    return nav_map[sticknav_setting];
+    LOG_WARN("input", "No game controller found at startup");
+    return NULL;
 }
 
 static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
@@ -828,49 +400,62 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
 
 static void handle_inputs(const mux_input_options *opts) {
     if (input_is_suppressed()) return;
-    // Delay (millis) before invoking hold handler again.
+
     static uint32_t hold_delay[MUX_INPUT_COUNT] = {};
-    // Tick (millis) of last press or hold.
     static uint32_t hold_tick[MUX_INPUT_COUNT] = {};
 
-    for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
-        if (pressed & BIT(i)) {
-            if (!(held & BIT(i))) {
-                // Pressed & not held: Invoke "press" handler.
-                dispatch_input(opts, i, MUX_INPUT_PRESS);
+    uint64_t blocked = 0;
 
-                // Initial repeat delay
-                hold_delay[i] = config.SETTINGS.ADVANCED.REPEATDELAY;
-                hold_tick[i] = tick;
-            } else if (tick - hold_tick[i] >= hold_delay[i]) {
-                // Pressed & held: Invoke "hold" handler.
-                dispatch_input(opts, i, MUX_INPUT_HOLD);
+    /*
+     * Only block keys involved in multi-key combos.
+     * Single-key combos must still pass through
+     * so things like MENU and POWER work.
+     */
+    for (int i = 0; i < opts->combo_count; i++) {
+        uint64_t mask = opts->combo[i].type_mask;
 
-                // Single delay for each subsequent repeat.
-                hold_delay[i] = config.SETTINGS.ADVANCED.ACCELERATE;
-                hold_tick[i] = tick;
-            }
-        } else if (held & BIT(i)) {
-            // Held & not pressed: Invoke "release" handler.
-            dispatch_input(opts, i, MUX_INPUT_RELEASE);
+        if (!mask) continue;
+
+        /* Ignore single-key combos */
+        if (__builtin_popcountll(mask) <= 1) continue;
+
+        if ((pressed & mask) == mask) {
+            blocked |= mask;
         }
     }
 
-    if (g350_mode && !g350_menu_pressed && !g350_menu_used_with_volume) {
-        if (pressed & BIT(MUX_INPUT_MENU_SHORT)) pressed &= ~BIT(MUX_INPUT_MENU_SHORT);
+    uint64_t pressed_filtered = pressed & ~blocked;
+    uint64_t held_filtered = held & ~blocked;
+
+    uint64_t changed = pressed_filtered ^ held_filtered;
+    uint64_t active = pressed_filtered | held_filtered;
+
+    while (active) {
+        int i = __builtin_ctzll(active);
+        active &= active - 1;
+
+        uint64_t bit = BIT(i);
+
+        if (pressed_filtered & bit) {
+            if (changed & bit) {
+                dispatch_input(opts, i, MUX_INPUT_PRESS);
+
+                hold_delay[i] = config.SETTINGS.ADVANCED.REPEATDELAY;
+                hold_tick[i] = tick;
+            } else if (tick - hold_tick[i] >= hold_delay[i]) {
+                dispatch_input(opts, i, MUX_INPUT_HOLD);
+
+                hold_delay[i] = config.SETTINGS.ADVANCED.ACCELERATE;
+                hold_tick[i] = tick;
+            }
+        } else {
+            dispatch_input(opts, i, MUX_INPUT_RELEASE);
+        }
     }
 }
 
-void append_combo(mux_input_options *opts, mux_input_combo combo) {
-    if (opts->combo_count >= MUX_INPUT_COMBO_COUNT) return;
-    opts->combo[opts->combo_count++] = combo;
-}
-
 static inline uint64_t combo_pressed_mask(void) {
-    uint64_t mask = pressed;
-    if (g350_mode && g350_menu_pressed) mask |= BIT(MUX_INPUT_MENU_SHORT);
-
-    return mask;
+    return pressed;
 }
 
 static void handle_combos(const mux_input_options *opts) {
@@ -886,7 +471,10 @@ static void handle_combos(const mux_input_options *opts) {
     uint64_t active_pressed = combo_pressed_mask();
     uint64_t active_held = held;
 
-    if (g350_mode && g350_menu_pressed) active_held |= BIT(MUX_INPUT_MENU_SHORT);
+    if (!active_pressed) {
+        active_combo = MUX_INPUT_COMBO_COUNT;
+        return;
+    }
 
     if (active_combo != MUX_INPUT_COMBO_COUNT) {
         // Active combo; check if it's still held or was released.
@@ -901,365 +489,171 @@ static void handle_combos(const mux_input_options *opts) {
                 hold_delay = config.SETTINGS.ADVANCED.ACCELERATE;
                 hold_tick = tick;
             }
-        } else {
-            // Held & not pressed: Invoke release handler.
-            dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
-            active_combo = MUX_INPUT_COMBO_COUNT;
+            return;
+        }
+
+        // Held & not pressed: Invoke release handler.
+        dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
+        active_combo = MUX_INPUT_COMBO_COUNT;
+    }
+
+    int best_combo = MUX_INPUT_COMBO_COUNT;
+    int best_bits = -1;
+
+    // Sometimes, a single evdev event can result in us registering both a release and a press
+    // (e.g., when transitioning from POWER_SHORT to POWER_LONG), so we have to check this even
+    // if a combo was previously active at the start of the function.
+    for (int i = 0; i < opts->combo_count; i++) {
+        uint64_t mask = opts->combo[i].type_mask;
+        if (!mask) continue;
+        if ((active_pressed & mask) != mask) continue;
+
+        int bits = __builtin_popcountll(mask);
+        if (bits > best_bits) {
+            best_bits = bits;
+            best_combo = i;
         }
     }
 
-    if (active_combo == MUX_INPUT_COMBO_COUNT && (active_pressed & ~active_held)) {
-        // No active combo, but a new input was pressed. Check if a combo should activate.
-        //
-        // Sometimes, a single evdev event can result in us registering both a release and a press
-        // (e.g., when transitioning from POWER_SHORT to POWER_LONG), so we have to check this even
-        // if a combo was previously active at the start of the function.
-        for (int i = 0; i < MUX_INPUT_COMBO_COUNT; ++i) {
-            uint64_t mask = opts->combo[i].type_mask;
+    if (best_combo != MUX_INPUT_COMBO_COUNT) {
+        if (active_pressed & ~active_held) {
+            // Pressed & not held: Invoke "press" handler.
+            dispatch_combo(opts, best_combo, MUX_INPUT_PRESS);
 
-            if (mask && (active_pressed & mask) == mask) {
-                // Pressed & not held: Invoke "press" handler.
-                dispatch_combo(opts, i, MUX_INPUT_PRESS);
-
-                // Initial repeat delay
-                hold_delay = config.SETTINGS.ADVANCED.REPEATDELAY;
-                hold_tick = tick;
-                active_combo = i;
-
-                // Only one combo can be active at a time.
-                break;
-            }
+            // Initial repeat delay
+            hold_delay = config.SETTINGS.ADVANCED.REPEATDELAY;
+            hold_tick = tick;
+            active_combo = best_combo;
         }
     }
 }
 
-char *get_unique_controller_id(int usb_fd) {
-    char name[128] = "Unknown";
-    char vendor[16] = "0000";
-    char product[16] = "0000";
-    char controller_id[256];
-    static char result[256];
+static const mux_nav_type nav_map[] = {
+        NAV_DPAD,
+        NAV_LEFT_STICK,
+        NAV_RIGHT_STICK,
+        NAV_DPAD | NAV_LEFT_STICK,
+        NAV_DPAD | NAV_RIGHT_STICK,
+        NAV_DPAD | NAV_LEFT_STICK | NAV_RIGHT_STICK,
+        NAV_LEFT_STICK | NAV_RIGHT_STICK,
+};
 
-    // Get joystick name
-    if (ioctl(usb_fd, JSIOCGNAME(sizeof(name)), name) < 0) {
-        LOG_ERROR("input", "Error reading joystick name");
-        strncpy(name, "Unknown", sizeof(name));
+mux_nav_type get_sticknav_mask(int sticknav_setting) {
+    if (sticknav_setting < 0 ||
+        sticknav_setting >= (int) (sizeof nav_map / sizeof nav_map[0])) {
+        return NAV_NONE;
     }
 
-    // Normalize name to remove multiple spaces
-    int j = 0;
-    for (int i = 0; name[i] != '\0'; i++) {
-        if (!(isspace((unsigned char) name[i]) && (j > 0 && isspace((unsigned char) result[j - 1])))) {
-            result[j++] = name[i];
-        }
-    }
-    result[j] = '\0';
-    strncpy(name, result, sizeof(name));
-
-    FILE *vendor_file = fopen("/sys/class/input/js1/device/id/vendor", "r");
-    if (vendor_file) {
-        if (fgets(vendor, sizeof(vendor), vendor_file)) {
-            vendor[strcspn(vendor, "\n")] = '\0';
-        }
-        fclose(vendor_file);
-    } else {
-        LOG_ERROR("input", "Failed to read vendor ID");
-    }
-
-    FILE *product_file = fopen("/sys/class/input/js1/device/id/product", "r");
-    if (product_file) {
-        if (fgets(product, sizeof(product), product_file)) {
-            product[strcspn(product, "\n")] = '\0';
-        }
-        fclose(product_file);
-    } else {
-        LOG_ERROR("input", "Failed to read product ID");
-    }
-
-    snprintf(controller_id, sizeof(controller_id), "%s_V%s_P%s", name, vendor, product);
-    strncpy(result, controller_id, sizeof(result));
-    result[sizeof(result) - 1] = '\0';
-
-    return result;
+    return nav_map[sticknav_setting];
 }
 
-void *keyboard_handler(void *arg) {
-    const mux_input_options *opts = (const mux_input_options *) arg;
-
-    int max_devices = 10;
-    int max_events = 10;
-    int keyboard_mouse_fds[max_devices];
-    int num_fds = find_keyboard_devices(keyboard_mouse_fds, max_devices);
-
-    if (num_fds == 0) {
-        LOG_ERROR("input", "No keyboard devices found!");
-        return NULL;
-    }
-
-    int epoll_fd = epoll_create1(0);
-    if (epoll_fd == -1) {
-        LOG_ERROR("input", "Failed to create epoll instance (kbd)");
-        for (int i = 0; i < num_fds; i++) close(keyboard_mouse_fds[i]);
-        return NULL;
-    }
-
-    struct epoll_event event;
-    struct epoll_event events[max_events];
-    memset(&event, 0, sizeof(event));
-
-    for (int i = 0; i < num_fds; i++) {
-        event.events = EPOLLIN;
-        event.data.fd = keyboard_mouse_fds[i];
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, keyboard_mouse_fds[i], &event) == -1) {
-            LOG_ERROR("input", "Failed to add keyboard device to epoll");
-            close(keyboard_mouse_fds[i]);
-        }
-    }
-
-    LOG_INFO("input", "Listening for keyboard events...");
-
-    while (!stop_flag) {
-        int event_count = epoll_wait(epoll_fd, events, max_events, 100);
-        if (event_count == -1) {
-            if (errno == EINTR) continue;
-            if (errno == EBADF || errno == EINVAL) break;
-            LOG_ERROR("input", "epoll_wait (kbd) error: %s", strerror(errno));
-            continue;
-        }
-
-        for (int i = 0; i < event_count; i++) {
-            if (events[i].events & EPOLLIN) {
-                struct input_event ev;
-                ssize_t r = read(events[i].data.fd, &ev, sizeof(struct input_event));
-                if (r < 0) {
-                    if (errno == EINTR || errno == EAGAIN) continue;
-                    LOG_DEBUG("input", "kbd read error: %s", strerror(errno));
-                    continue;
-                }
-                if ((size_t) r < sizeof(struct input_event)) continue;
-
-                if (ev.type == EV_KEY) {
-                    if (key_show) {
-                        if (event_handler) event_handler(ev);
-                    } else {
-                        if (ev.code == KEY_UP || ev.code == KEY_DOWN ||
-                            ev.code == KEY_LEFT || ev.code == KEY_RIGHT) {
-                            process_usb_keyboard_arrow_keys(opts, ev);
-                        } else {
-                            process_usb_keyboard_keys(opts, ev);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < num_fds; i++) close(keyboard_mouse_fds[i]);
-
-    close(epoll_fd);
-    LOG_DEBUG("input", "Exiting keyboard thread");
-
-    return NULL;
+void ep_wait_wake(void) {
+    SDL_Event ev = {0};
+    ev.type = SDL_USEREVENT;
+    SDL_PushEvent(&ev);
 }
 
-void *joystick_handler(void *arg) {
-    const mux_input_options *opts = (const mux_input_options *) arg;
+void mux_input_flush_all(void) {
+    pressed = 0;
+    held = 0;
+    suppress_until_tick = UINT32_MAX;
+    ep_wait_wake();
+}
 
-    int usb_fd = open("/dev/input/js1", O_RDONLY);
-    if (usb_fd == -1) {
-        LOG_WARN("input", "Failed to open USB controller");
-        return NULL;
-    }
+void mux_input_resume(void) {
+    pressed = 0;
+    held = 0;
+    suppress_until_tick = (uint32_t) (mux_tick() + INPUT_COOLDOWN);
+}
 
-    load_controller_profile(&controller, get_unique_controller_id(usb_fd));
-
-    struct js_event js;
-    struct pollfd pfd = {.fd = usb_fd, .events = POLLIN};
-
-    while (!stop_flag) {
-        int ret = poll(&pfd, 1, 100);
-
-        if (ret == -1) {
-            if (errno == EINTR) continue;
-            LOG_ERROR("input", "poll() error on joystick: %s", strerror(errno));
-            break;
-        } else if (ret == 0) {
-            continue;
-        }
-
-        ssize_t bytes = read(usb_fd, &js, sizeof(struct js_event));
-        if (bytes != (ssize_t) sizeof(struct js_event)) {
-            if (bytes < 0 && (errno == EINTR || errno == EAGAIN)) continue;
-            LOG_ERROR("input", "Error reading joystick event");
-            break;
-        }
-
-        if (js.type & JS_EVENT_INIT) continue;
-        LOG_INFO("input", "Joystick Event: type=%u number=%u value=%d", js.type, js.number, js.value);
-
-        if (js.type & JS_EVENT_BUTTON) {
-            if (js.number == controller.BUTTON.UP || js.number == controller.BUTTON.DOWN ||
-                js.number == controller.BUTTON.LEFT || js.number == controller.BUTTON.RIGHT) {
-                process_usb_dpad_as_buttons(opts, js);
-            } else {
-                process_usb_key(opts, js);
-            }
-        } else if (js.type & JS_EVENT_AXIS) {
-            process_usb_abs(opts, js);
-        }
-    }
-
-    close(usb_fd);
-    LOG_DEBUG("input", "Exiting joystick thread");
-
-    return NULL;
+uint32_t mux_input_tick(void) {
+    return tick;
 }
 
 void register_key_event_callback(key_event_callback cb) {
     event_handler = cb;
 }
 
-static void init_defaults(void) {
-    stop_flag = 0;
-    pressed = 0;
-    held = 0;
-    g350_mode = board_is_g350();
-    tui_mode = board_is_tui();
-}
-
-bool is_switch_held(int fd) {
-    unsigned char sw_states[SW_MAX / 8 + 1] = {0};
-
-    if (ioctl(fd, EVIOCGSW(sizeof(sw_states)), sw_states) < 0) {
-        perror("ioctl EVIOCGSW failed");
-        return false;
-    }
-
-    return sw_states[device.INPUT_CODE.BUTTON.SWITCH / 8] & (1 << (device.INPUT_CODE.BUTTON.SWITCH % 8));
+void append_combo(mux_input_options *opts, mux_input_combo combo) {
+    if (opts->combo_count >= MUX_INPUT_COMBO_COUNT) return;
+    opts->combo[opts->combo_count++] = combo;
 }
 
 void mux_input_task(const mux_input_options *opts) {
-    init_defaults();
+    init_input_maps();
+
+    stop_flag = 0;
+    pressed = 0;
+    held = 0;
+    suppress_until_tick = 0;
+
     swap_axis = opts->swap_axis;
+    g350_mode = board_is_g350();
+    tui_mode = board_is_tui();
 
-    int epoll_fd = epoll_create1(0);
-    if (epoll_fd == -1) {
-        LOG_ERROR("input", "epoll create error");
-        return;
-    }
-
-    // Create a self-pipe to wake epoll_wait during shutdown
-    if (pipe(wake_pipe) == 0) {
-        // non-blocking read end
-        fcntl(wake_pipe[0], F_SETFL, O_NONBLOCK);
-        struct epoll_event wev = {0};
-        wev.events = EPOLLIN;
-        wev.data.fd = wake_pipe[0];
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, wake_pipe[0], &wev);
-    }
-
-    struct epoll_event ev = {0};
-    ev.events = EPOLLIN;
-
-    ev.data.fd = opts->general_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->general_fd, &ev);
-
-    ev.data.fd = opts->power_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->power_fd, &ev);
-
-    ev.data.fd = opts->volume_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->volume_fd, &ev);
-
-    ev.data.fd = opts->extra_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->extra_fd, &ev);
-
-    // Launch USB joystick & keyboard threads
-    mux_input_options joystick_opts = *opts;
-    pthread_create(&joystick_thread, NULL, joystick_handler, &joystick_opts);
-
-    mux_input_options keyboard_opts = *opts;
-    pthread_create(&keyboard_thread, NULL, keyboard_handler, &keyboard_opts);
-
-    // Detect menu navigation options
     ((mux_input_options *) opts)->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
-    LOG_DEBUG("input", "Navigation Mask: 0x%x", opts->nav);
 
-    // Delay (millis) to wait for input before timing out. This determines the rate at which the
-    // hold_handlers and idle_handler are called. To save CPU, we want to wait as long as possible.
-    //
-    // If no inputs are held, we only have the idle_handler to worry about, so we wait max_idle_ms
-    // (or forever if unspecified).
-    //
-    // If at least one input is held, we instead wait either max_idle_ms or the "menu acceleration"
-    // delay (whichever is shorter).
-    int timeout;
-    int timeout_hold;
+    LOG_DEBUG("input", "Navigation mask: 0x%x | g350=%d | tui=%d", opts->nav, g350_mode, tui_mode);
 
-    if (opts->max_idle_ms) {
-        timeout = opts->max_idle_ms;
-        timeout_hold = MIN(opts->max_idle_ms, config.SETTINGS.ADVANCED.ACCELERATE);
-    } else {
-        timeout = -1;
-        timeout_hold = config.SETTINGS.ADVANCED.ACCELERATE;
-    }
+    controller = controller_open();
 
-    if (is_switch_held(opts->general_fd)) pressed |= BIT(MUX_INPUT_SWITCH);
-    struct epoll_event epoll_event_arr[device.BOARD.HASEVENT];
+    const int timeout_idle = (opts->max_idle_ms > 0) ? (int) opts->max_idle_ms : (int) IDLE_MS;
+    const int accel_ms = config.SETTINGS.ADVANCED.ACCELERATE > 0 ? config.SETTINGS.ADVANCED.ACCELERATE : 1;
+    const int timeout_hold = (opts->max_idle_ms > 0) ? ((int) opts->max_idle_ms < accel_ms ? (int) opts->max_idle_ms : accel_ms) : accel_ms;
 
     fade_in_screen();
 
+    SDL_Event ev;
     while (!stop_flag) {
-        int num_events = epoll_wait(epoll_fd, epoll_event_arr, device.BOARD.HASEVENT, held ? timeout_hold : timeout);
+        int timeout = held ? timeout_hold : timeout_idle;
+        if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
-        if (num_events == -1) {
-            if (errno == EINTR) continue; // interrupted by signal
-            break;
-        }
-
-        for (int i = 0; i < num_events; ++i) {
-            int fd = epoll_event_arr[i].data.fd;
-
-            if (fd == wake_pipe[0]) {
-                char buf[64];
-                while (read(wake_pipe[0], buf, sizeof buf) > 0) {}
-                continue;
-            }
-
-            struct input_event event;
-            ssize_t r = read(fd, &event, sizeof(event));
-
-            if (r < 0) {
-                if (errno == EINTR || errno == EAGAIN) continue;
-                LOG_DEBUG("input", "epoll event read error on fd %d: %s", fd, strerror(errno));
-                continue;
-            }
-
-            if ((size_t) r < sizeof(event)) continue;
-
-            if (fd == opts->general_fd) {
-                if (event.type == EV_KEY) {
-                    if ((opts->nav) &&
-                        (event.code == device.INPUT_CODE.DPAD.UP ||
-                         event.code == device.INPUT_CODE.DPAD.DOWN ||
-                         event.code == device.INPUT_CODE.DPAD.LEFT ||
-                         event.code == device.INPUT_CODE.DPAD.RIGHT)) {
-                        process_dpad_as_buttons(opts, &event);
-                    } else {
-                        process_key(opts, &event);
+        do {
+            switch (ev.type) {
+                case SDL_CONTROLLERBUTTONDOWN:
+                    process_sdl_button(opts, ev.cbutton.button, 1);
+                    break;
+                case SDL_CONTROLLERBUTTONUP:
+                    process_sdl_button(opts, ev.cbutton.button, 0);
+                    break;
+                case SDL_CONTROLLERAXISMOTION:
+                    process_sdl_axis(ev.caxis.axis, ev.caxis.value);
+                    break;
+                case SDL_JOYBUTTONDOWN:
+                    process_sdl_joy_button(ev.jbutton.button, 1);
+                    break;
+                case SDL_JOYBUTTONUP:
+                    process_sdl_joy_button(ev.jbutton.button, 0);
+                    break;
+                case SDL_CONTROLLERDEVICEADDED:
+                    if (!controller) {
+                        controller = SDL_GameControllerOpen(ev.cdevice.which);
+                        if (controller) LOG_INFO("input", "Controller connected: %s", SDL_GameControllerName(controller));
                     }
-                } else if (event.type == EV_ABS) {
-                    process_abs(opts, &event);
-                } else if (event.type == EV_SW) {
-                    process_sw(opts, &event);
-                }
-            } else if (fd == opts->power_fd) {
-                process_sys(opts, &event);
-            } else if (fd == opts->volume_fd) {
-                process_volume(opts, &event);
-            } else if (fd == opts->extra_fd) {
-                // TODO: Add extra input functions to do, something?
+                    break;
+                case SDL_CONTROLLERDEVICEREMOVED:
+                    if (controller) {
+                        SDL_Joystick *joy = SDL_GameControllerGetJoystick(controller);
+                        if (joy && SDL_JoystickInstanceID(joy) == ev.cdevice.which) {
+                            SDL_GameControllerClose(controller);
+                            controller = NULL;
+                            pressed = 0;
+                            controller = controller_open();
+                        }
+                    }
+                    break;
+                case SDL_KEYDOWN:
+                    process_sdl_key(opts, &ev.key, 1);
+                    break;
+                case SDL_KEYUP:
+                    process_sdl_key(opts, &ev.key, 0);
+                    break;
+                default:
+                    break;
             }
-        }
+        } while (!stop_flag && SDL_PollEvent(&ev));
+
+        if (stop_flag) break;
 
         if (input_is_suppressed()) {
             pressed = 0;
@@ -1269,7 +663,8 @@ void mux_input_task(const mux_input_options *opts) {
             continue;
         }
 
-        tick = mux_tick();
+        tick = (uint32_t) mux_tick();
+
         handle_inputs(opts);
         handle_combos(opts);
 
@@ -1280,26 +675,22 @@ void mux_input_task(const mux_input_options *opts) {
         held = pressed;
     }
 
-    if (wake_pipe[0] != -1) close(wake_pipe[0]);
-    if (wake_pipe[1] != -1) close(wake_pipe[1]);
-
-    close(epoll_fd);
+    if (controller) {
+        SDL_GameControllerClose(controller);
+        controller = NULL;
+    }
 }
 
-uint32_t mux_input_tick(void) {
-    return tick;
-}
+int mux_input_pressed(mux_input_type mux_type) {
+    if (pressed & BIT(mux_type)) return 1;
+    if (g350_mode && mux_type == MUX_INPUT_MENU && g350_menu_pressed) return 1;
 
-bool mux_input_pressed(mux_input_type mux_type) {
-    if ((pressed & BIT(mux_type)) != 0) return true;
-    if (g350_mode && mux_type == MUX_INPUT_MENU_SHORT && g350_menu_pressed) return true;
-
-    return false;
+    return 0;
 }
 
 void mux_input_stop(void) {
-    set_stop_flag();
-
-    pthread_join(joystick_thread, NULL);
-    pthread_join(keyboard_thread, NULL);
+    stop_flag = 1;
+    SDL_Event ev = {0};
+    ev.type = SDL_QUIT;
+    SDL_PushEvent(&ev);
 }

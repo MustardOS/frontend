@@ -211,7 +211,6 @@ static void handle_b(void) {
 
     remove(MUOS_SAA_LOAD);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -321,7 +320,6 @@ static void handle_a(void) {
 
     write_text_to_file(MUOS_AIX_LOAD, "w", INT, current_item_index);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -330,7 +328,6 @@ static void handle_x(void) {
 
     handle_core_assignment("Directory Core Assignment Triggered", DIRECTORY);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -339,7 +336,6 @@ static void handle_y(void) {
 
     handle_core_assignment("Parent Core Assignment Triggered", PARENT);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -405,7 +401,6 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
     if (auto_assign && !file_exist(MUOS_SAA_LOAD)) {
         if (automatic_assign_core(rom_dir) || strcmp(rom_system, "none") == 0) {
-            close_input();
             return 0;
         }
     }
@@ -459,7 +454,6 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -467,6 +461,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

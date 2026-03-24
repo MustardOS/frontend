@@ -20,8 +20,7 @@ static const char *glyph[MUX_INPUT_COUNT] = {
         [MUX_INPUT_R3] = "btn_r3",
         [MUX_INPUT_SELECT] = "btn_select",
         [MUX_INPUT_START] = "btn_start",
-        [MUX_INPUT_MENU_SHORT] = "btn_menu",
-        [MUX_INPUT_MENU_LONG] = "btn_menu",
+        [MUX_INPUT_MENU] = "btn_menu",
 
         // D-pad:
         [MUX_INPUT_DPAD_UP] = "dpad_up",
@@ -91,7 +90,6 @@ static void handle_idle(void) {
 static void handle_quit(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
 
-    close_input();
     mux_input_stop();
 }
 

@@ -3584,7 +3584,6 @@ void add_to_collection(char *filename, const char *pointer, char *sys_dir) {
 
     load_mux("collection");
 
-    close_input();
     mux_input_stop();
 }
 

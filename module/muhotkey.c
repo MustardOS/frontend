@@ -12,7 +12,6 @@
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/log.h"
-#include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/theme.h"
@@ -107,8 +106,7 @@ static const char *input_name[MUX_INPUT_COUNT] = {
         [MUX_INPUT_VOL_DOWN] = "VOL_DOWN",
 
         // Function buttons:
-        [MUX_INPUT_MENU_LONG] = "MENU_LONG",
-        [MUX_INPUT_MENU_SHORT] = "MENU_SHORT",
+        [MUX_INPUT_MENU] = "MENU",
 
         // System buttons:
         [MUX_INPUT_POWER_LONG] = "POWER_LONG",
@@ -160,11 +158,6 @@ static void cleanup(int signo) {
 
     const char *restore_governor = running_governor ? running_governor : boot_governor;
     if (restore_governor) set_scaling_governor(restore_governor, 0);
-
-    if (input_opts.general_fd >= 0) close(input_opts.general_fd);
-    if (input_opts.power_fd >= 0) close(input_opts.power_fd);
-    if (input_opts.volume_fd >= 0) close(input_opts.volume_fd);
-    if (input_opts.extra_fd >= 0) close(input_opts.extra_fd);
 
     free(boot_governor);
     free(running_governor);
@@ -351,43 +344,37 @@ static void handle_combo(int num, mux_input_action action) {
     combo_config *c = &combo[num];
     uint64_t mask = input_opts.combo[num].type_mask;
 
-    if (c->negate_mask && mux_input_pressed_mask(c->negate_mask)) return;
+    if (!mask) return;
 
+    if (c->negate_mask && mux_input_pressed_mask(c->negate_mask))
+        return;
+
+    /* POWER_SHORT special behaviour */
     if (mask == SAFE_BIT(MUX_INPUT_POWER_SHORT)) {
-        // The power button behaves differently from every other button (including the menu button).
-        // We receive these events on a short press:
-        //
-        // 1. POWER_SHORT PRESS
-        // 2. POWER_SHORT RELEASE
-        //
-        // And these on a long press:
-        //
-        // 1. POWER_SHORT PRESS
-        // 2. POWER_SHORT RELEASE + POWER_LONG PRESS (simultaneous)
-        // 3. POWER_LONG RELEASE
-        //
-        // To support separate hotkeys for these two cases, we delay triggering of a POWER_SHORT
-        // combo till release (2) so we can tell if the short press turned into a long press or not.
         if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_POWER_LONG)) {
-            printf("%s\n", combo[num].name);
-            run_command(&combo[num]);
+            printf("%s\n", c->name);
+            run_command(c);
         }
         return;
     }
 
-    if (mask == SAFE_BIT(MUX_INPUT_MENU_SHORT)) {
-        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_MENU_SHORT)) {
-            printf("%s\n", combo[num].name);
-            run_command(&combo[num]);
+    /* MENU special behaviour */
+    if (mask == SAFE_BIT(MUX_INPUT_MENU)) {
+        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_MENU)) {
+            printf("%s\n", c->name);
+            run_command(c);
         }
         return;
     }
 
-    if (!mux_input_pressed_mask(mask)) return;
+    if (!mux_input_pressed_mask(mask))
+        return;
 
-    if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && combo[num].handle_hold)) {
-        printf("%s\n", combo[num].name);
-        run_command(&combo[num]);
+    if (action == MUX_INPUT_PRESS ||
+        (action == MUX_INPUT_HOLD && c->handle_hold)) {
+
+        printf("%s\n", c->name);
+        run_command(c);
     }
 }
 
@@ -453,8 +440,8 @@ static int combo_name_exists(const char *name) {
 
 // Orders combos from longest to shortest (by number of keys), then alphabetically.
 //
-// This ensures that when overlapping combos like VOL_UP and VOL_UP+MENU_LONG are specified, the
-// longer combo (e.g., VOL_UP+MENU_LONG) is checked first. (If the shorter combo were checked first,
+// This ensures that when overlapping combos like VOL_UP and VOL_UP+MENU are specified, the
+// longer combo (e.g., VOL_UP+MENU) is checked first. (If the shorter combo were checked first,
 // it would always match when VOL_UP was pressed, and the longer combo would never trigger.)
 static int cmp_combo(const void *p1, const void *p2) {
     const combo_config *c1 = p1, *c2 = p2;
@@ -673,14 +660,14 @@ int main(int argc, char *argv[]) {
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    // Reap old processes to prevent zombies
+    /* Reap old processes to prevent zombies */
     struct sigaction old_proc = {0};
     old_proc.sa_handler = del_old_proc;
     sigemptyset(&old_proc.sa_mask);
     old_proc.sa_flags = SA_RESTART | SA_NOCLDSTOP;
     sigaction(SIGCHLD, &old_proc, NULL);
 
-    // Read config and open input devices.
+    /* Load configuration */
     load_device(&device);
     load_config(&config);
 
@@ -692,73 +679,74 @@ int main(int argc, char *argv[]) {
         LOG_INFO("input", "Initial CPU governor: %s", boot_governor);
     }
 
-    input_opts.general_fd = open(device.INPUT_EVENT.JOY_GENERAL, O_RDONLY);
-    if (input_opts.general_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_GENERAL);
+    /*
+     * Initialise SDL input subsystem
+     */
+    if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
+        LOG_ERROR("input", "SDL init failed: %s", SDL_GetError());
         return 1;
     }
 
-    input_opts.power_fd = open(device.INPUT_EVENT.JOY_POWER, O_RDONLY);
-    if (input_opts.power_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_POWER);
-        return 1;
-    }
+    SDL_GameControllerEventState(SDL_ENABLE);
+    SDL_JoystickEventState(SDL_ENABLE);
 
-    input_opts.volume_fd = open(device.INPUT_EVENT.JOY_VOLUME, O_RDONLY);
-    if (input_opts.volume_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_VOLUME);
-        return 1;
-    }
-
-    input_opts.extra_fd = open(device.INPUT_EVENT.JOY_EXTRA, O_RDONLY);
-    if (input_opts.extra_fd < 0) {
-        LOG_ERROR("input", "%s", lang.SYSTEM.NO_JOY_EXTRA);
-        return 1;
-    }
-
-    // Parse command line arguments.
+    /*
+     * Parse CLI args
+     */
     for (int opt; (opt = getopt(argc, argv, "vlh")) != -1;) {
         switch (opt) {
             case 'v':
                 verbose = true;
                 break;
+
             case 'l':
                 for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
                     if (input_name[i]) printf("%s\n", input_name[i]);
                 }
                 return 0;
+
             case 'h':
                 usage(stdout);
                 return 0;
+
             default:
                 usage(stderr);
                 return 1;
         }
     }
 
-    // Parse combo files, and then sort them from longest to shortest, ensuring longer combos
-    // (e.g. VOL_UP+MENU_LONG) can still trigger when they overlap with shorter ones (e.g, VOL_UP).
+    /*
+     * Load JSON combo definitions
+     */
     load_hotkeys();
 
-    // Sort longest to shortest so super combos get first dibs
+/*
+ * Add fallback defaults only when they are not already present.
+ * This is mainly useful on boards without matching JSON hotkey files.
+ */
+    last_combo_index = combo_count;
+
+/*
+ * Sort longest combos first
+ */
     qsort(combo, combo_count, sizeof(*combo), cmp_combo);
 
-    // Copy masks AGAIN to the runtime table in the **sorted** order
-    for (int i = 0; i < combo_count; ++i) {
+    for (int i = 0; i < combo_count; ++i)
         input_opts.combo[i].type_mask = combo[i].type_mask;
-    }
 
-    // Zero out any remaining combo entries to be safe
-    for (int i = combo_count; i < MUX_INPUT_COMBO_COUNT; ++i) {
+    for (int i = combo_count; i < MUX_INPUT_COMBO_COUNT; ++i)
         input_opts.combo[i].type_mask = 0;
-    }
+
+    input_opts.combo_count = combo_count;
 
     if (verbose) {
         LOG_INFO("input", "====================================");
         LOG_INFO("input", "Final Sorted Combo Order");
+
         for (int i = 0; i < combo_count; ++i) {
             char buf[MAX_BUFFER_SIZE] = {0};
             int first = 1;
+
             for (int b = 0; b < MUX_INPUT_COUNT; ++b) {
                 if (input_opts.combo[i].type_mask & SAFE_BIT(b)) {
                     if (!first) strlcat(buf, ",", sizeof(buf));
@@ -768,21 +756,26 @@ int main(int argc, char *argv[]) {
             }
 
             LOG_INFO("input", "\t%2d: %-14s\tmask=%016llx [%s]",
-                     i, combo[i].name,
-                     (unsigned long long) input_opts.combo[i].type_mask, buf);
+                     i,
+                     combo[i].name,
+                     (unsigned long long) input_opts.combo[i].type_mask,
+                     buf);
         }
+
         LOG_INFO("input", "====================================");
     }
 
-    // Flush triggered combo names to stdout immediately.
     setlinebuf(stdout);
+
     global_tick = mux_tick();
     idle_display.tick = idle_sleep.tick = global_tick;
 
-    // Process input and respond to combos indefinitely.
     LOG_INFO("input", "Hotkey daemon ready! Monitoring input events...");
+
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
     mux_input_task(&input_opts);
 
+    SDL_Quit();
     cleanup(0);
     return 0;
 }

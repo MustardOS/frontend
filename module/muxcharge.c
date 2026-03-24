@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcharge.h"
 #include "../common/battery.h"
-#include "../lvgl/src/drivers/display/sdl.h"
+#include "../common/display/sdl.h"
 
 static int exit_status = -1;
 static int blank_timeout = 3;
@@ -82,7 +82,7 @@ static void wake_screen_on_input(void) {
 }
 
 static void wake_screen_on_input_lid_open(void) {
-    if (device.BOARD.HASLID && read_line_int_from(device.INPUT_EVENT.JOY_HALL, 1) != 1) return;
+    if (device.BOARD.HASLID && read_line_int_from(device.BOARD.JOY_HALL, 1) != 1) return;
     wake_screen_on_input();
 }
 
@@ -93,7 +93,6 @@ static void handle_idle(void) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
         if (file_exist(CHARGER_BRIGHT)) remove(CHARGER_BRIGHT);
 
-        close_input();
         safe_quit(0);
         mux_input_stop();
 
@@ -181,7 +180,7 @@ int main(void) {
                     [MUX_INPUT_B] = wake_screen_on_input,
                     [MUX_INPUT_X] = wake_screen_on_input,
                     [MUX_INPUT_Y] = wake_screen_on_input,
-                    [MUX_INPUT_MENU_SHORT] = wake_screen_on_input,
+                    [MUX_INPUT_MENU] = wake_screen_on_input,
                     [MUX_INPUT_DPAD_DOWN] = wake_screen_on_input,
                     [MUX_INPUT_DPAD_LEFT] = wake_screen_on_input,
                     [MUX_INPUT_DPAD_RIGHT] = wake_screen_on_input,

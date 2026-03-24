@@ -101,7 +101,6 @@ static void handle_a(void) {
 
     refresh_config = 1;
 
-    close_input();
     mux_input_stop();
 }
 
@@ -120,7 +119,6 @@ static void handle_b(void) {
 
     if (config.BOOT.FACTORY_RESET) load_mux("installer");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -195,7 +193,6 @@ int muxlanguage_main(void) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -203,6 +200,7 @@ int muxlanguage_main(void) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

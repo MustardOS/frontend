@@ -218,7 +218,6 @@ static void handle_a(void) {
 
     if (is_app) load_mux("appcon");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -238,7 +237,6 @@ static void handle_b(void) {
 
     if (is_app) load_mux("appcon");
 
-    close_input();
     mux_input_stop();
 }
 
@@ -251,7 +249,6 @@ static void handle_x(void) {
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_control_assignment(selected, rom_name, DIRECTORY);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -264,7 +261,6 @@ static void handle_y(void) {
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_control_assignment(selected, rom_name, PARENT);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -334,10 +330,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                  get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
-        if (file_exist(core_file)) {
-            close_input();
-            return 0;
-        }
+        if (file_exist(core_file)) return 0;
 
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
@@ -400,13 +393,11 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
 
                 mini_free(global_ini);
 
-                close_input();
                 return 0;
             } else {
                 LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
                 create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
 
-                close_input();
                 return 0;
             }
         }
@@ -466,7 +457,6 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -474,6 +464,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,

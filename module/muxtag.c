@@ -149,7 +149,6 @@ static void handle_a(void) {
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, SINGLE);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -167,7 +166,6 @@ static void handle_b(void) {
     play_sound(SND_BACK);
     remove(MUOS_SAG_LOAD);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -180,7 +178,6 @@ static void handle_x(void) {
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, DIRECTORY);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -193,7 +190,6 @@ static void handle_y(void) {
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, PARENT);
 
-    close_input();
     mux_input_stop();
 }
 
@@ -263,7 +259,6 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -271,6 +266,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
             },
             .release_handler = {
                     [MUX_INPUT_L2] = hold_call_release,
+                    [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
