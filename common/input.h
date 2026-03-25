@@ -153,6 +153,8 @@ void mux_input_resume(void);
 
 uint32_t mux_input_tick(void);
 
+int mux_input_pressed_any(uint64_t mask);
+
 int mux_input_pressed(mux_input_type mux_type);
 
 void append_combo(mux_input_options *opts, mux_input_combo combo);

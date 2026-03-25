@@ -10,7 +10,7 @@
 
 #define INPUT_COOLDOWN          256
 #define AXIS_THRESHOLD_FRACTION 0.80f
-#define AXIS_MAX                32767 // TODO: Maybe set this value as a device variable?
+#define AXIS_MAX                32767
 #define AXIS_THRESHOLD          ((int16_t)((float)AXIS_MAX * AXIS_THRESHOLD_FRACTION))
 #define TRIGGER_THRESHOLD       ((int16_t)((float)AXIS_MAX * AXIS_THRESHOLD_FRACTION))
 
@@ -173,6 +173,26 @@ static void process_sdl_button(const mux_input_options *opts, SDL_GameController
 
     if (opts->swap_btn) t = swap_button_type(t);
 
+    // Wonky donkey input...
+    if (swap_axis && !key_show) {
+        switch (t) {
+            case MUX_INPUT_DPAD_UP:
+                t = MUX_INPUT_DPAD_LEFT;
+                break;
+            case MUX_INPUT_DPAD_DOWN:
+                t = MUX_INPUT_DPAD_RIGHT;
+                break;
+            case MUX_INPUT_DPAD_LEFT:
+                t = MUX_INPUT_DPAD_UP;
+                break;
+            case MUX_INPUT_DPAD_RIGHT:
+                t = MUX_INPUT_DPAD_DOWN;
+                break;
+            default:
+                break;
+        }
+    }
+
     if (t == MUX_INPUT_MENU) {
         if (down) {
             menu_short_pressed = 1;
@@ -274,7 +294,6 @@ static SDL_GameController *controller_open(void) {
     static int mappings_loaded = 0;
 
     if (!mappings_loaded) {
-        // TODO: Load from our internal path instead and map to either modern or retro...
         int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
 
         if (mappings < 0) {
@@ -406,11 +425,6 @@ static void handle_inputs(const mux_input_options *opts) {
 
     uint64_t blocked = 0;
 
-    /*
-     * Only block keys involved in multi-key combos.
-     * Single-key combos must still pass through
-     * so things like MENU and POWER work.
-     */
     for (int i = 0; i < opts->combo_count; i++) {
         uint64_t mask = opts->combo[i].type_mask;
 
@@ -454,10 +468,6 @@ static void handle_inputs(const mux_input_options *opts) {
     }
 }
 
-static inline uint64_t combo_pressed_mask(void) {
-    return pressed;
-}
-
 static void handle_combos(const mux_input_options *opts) {
     if (input_is_suppressed()) return;
     // Delay (millis) before invoking hold handler again.
@@ -468,7 +478,8 @@ static void handle_combos(const mux_input_options *opts) {
     // Combo number that was active during the previous iteration of the event loop, or
     // MUX_INPUT_COMBO_COUNT when no combo is held.
     static int active_combo = MUX_INPUT_COMBO_COUNT;
-    uint64_t active_pressed = combo_pressed_mask();
+
+    uint64_t active_pressed = pressed;
     uint64_t active_held = held;
 
     if (!active_pressed) {
@@ -655,6 +666,8 @@ void mux_input_task(const mux_input_options *opts) {
 
         if (stop_flag) break;
 
+        tick = (uint32_t) mux_tick();
+
         if (input_is_suppressed()) {
             pressed = 0;
             held = 0;
@@ -662,8 +675,6 @@ void mux_input_task(const mux_input_options *opts) {
             if (opts->idle_handler) opts->idle_handler();
             continue;
         }
-
-        tick = (uint32_t) mux_tick();
 
         handle_inputs(opts);
         handle_combos(opts);
@@ -679,6 +690,10 @@ void mux_input_task(const mux_input_options *opts) {
         SDL_GameControllerClose(controller);
         controller = NULL;
     }
+}
+
+int mux_input_pressed_any(uint64_t mask) {
+    return (pressed & mask) != 0;
 }
 
 int mux_input_pressed(mux_input_type mux_type) {

@@ -212,7 +212,6 @@ int dvd_active(void) {
 }
 
 void dvd_stop(void) {
-    dvd.enabled = 0;
     dvd.idle_active = 0;
     dvd.was_idle_active = 0;
 }

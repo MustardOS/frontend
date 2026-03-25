@@ -80,7 +80,6 @@ int tui_mode = 0;
 
 int g350_mode = 0;
 int g350_menu_pressed = 0;
-int g350_menu_used_with_volume = 0;
 
 const char *theme_base;
 char *theme_back_compat[THEME_COMPAT];
@@ -343,39 +342,45 @@ char *str_trim(char *text) {
 }
 
 char *str_replace(const char *orig, const char *rep, const char *with) {
-    char *result;
-    const char *ins;
-    char *tmp;
-    size_t len_rep;
-    size_t len_with;
-    size_t len_front;
-    int count;
-
     if (!orig || !rep) return NULL;
 
-    len_rep = strlen(rep);
-
+    size_t len_rep = strlen(rep);
     if (len_rep == 0) return NULL;
 
     if (!with) with = "";
 
-    len_with = strlen(with);
+    size_t len_with = strlen(with);
 
-    ins = orig;
-    for (count = 0; (tmp = strstr(ins, rep)); ++count) ins = tmp + len_rep;
-    tmp = result = (char *) malloc(strlen(orig) + (len_with - len_rep) * count + 1);
-
-    if (!result) return NULL;
-
-    while (count--) {
-        ins = strstr(orig, rep);
-        len_front = ins - orig;
-        tmp = strncpy(tmp, orig, len_front) + len_front;
-        tmp = strcpy(tmp, with) + len_with;
-        orig += len_front + len_rep;
+    int count = 0;
+    const char *ins = orig;
+    const char *tmp;
+    while ((tmp = strstr(ins, rep))) {
+        count++;
+        ins = tmp + len_rep;
     }
 
-    strcpy(tmp, orig);
+    if (count == 0) return strdup(orig);
+
+    char *result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+    if (!result) return NULL;
+
+    char *out = result;
+    ins = orig;
+
+    while (count--) {
+        tmp = strstr(ins, rep);
+        size_t len_front = tmp - ins;
+
+        memcpy(out, ins, len_front);
+        out += len_front;
+
+        memcpy(out, with, len_with);
+        out += len_with;
+
+        ins = tmp + len_rep;
+    }
+
+    strcpy(out, ins);
     return result;
 }
 
@@ -635,16 +640,15 @@ char *get_execute_result(const char *command, int line) {
 }
 
 char *read_all_char_from(const char *filename) {
-    char *text = NULL;
     FILE *file = fopen(filename, "r");
 
-    if (file == NULL) return "";
+    if (file == NULL) return strdup("");
 
     fseek(file, 0, SEEK_END);
     long fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    text = (char *) malloc(fileSize + 1);
+    char *text = malloc(fileSize + 1);
 
     if (text != NULL) {
         size_t bytesRead = fread(text, 1, fileSize, file);
@@ -3612,15 +3616,6 @@ void turbo_time(int toggle, int show_done) {
     set_scaling_governor(toggle ? "performance" : device.CPU.DEFAULT, show_done);
 }
 
-int bc64(uint64_t n) {
-    int count = 0;
-    while (n) {
-        n &= (n - 1);
-        ++count;
-    }
-    return count;
-}
-
 char **split_command(const char *cmd, size_t *argc_out) {
 #define FREE_ARGV                                        \
     do {                                                 \
@@ -3850,15 +3845,23 @@ int get_index_on_delete(int current_index, int post_delete_count) {
 }
 
 int board_is_g350(void) {
-    int is_g350 = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
-    if (is_g350) LOG_DEBUG("input", "Using G350 Control Scheme");
+    static int cached = -1;
 
-    return is_g350;
+    if (cached == -1) {
+        cached = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
+        if (cached) LOG_DEBUG("input", "Using G350 Control Scheme");
+    }
+
+    return cached;
 }
 
 int board_is_tui(void) {
-    int is_tui = strcmp(device.BOARD.NAME, "tui-brick") == 0 || strcmp(device.BOARD.NAME, "tui-spoon") == 0;
-    if (is_tui) LOG_DEBUG("input", "Using TrimUI Control Scheme");
+    static int cached = -1;
 
-    return is_tui;
+    if (cached == -1) {
+        cached = (strcmp(device.BOARD.NAME, "tui-brick") == 0 || strcmp(device.BOARD.NAME, "tui-spoon") == 0);
+        if (cached) LOG_DEBUG("input", "Using TrimUI Control Scheme");
+    }
+
+    return cached;
 }

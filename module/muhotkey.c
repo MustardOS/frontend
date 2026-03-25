@@ -57,6 +57,8 @@ typedef struct {
     uint32_t max_interval;
 
     char *exec_cmd;
+    char **exec_argv;
+    size_t exec_argc;
 } combo_config;
 
 static struct {
@@ -159,6 +161,12 @@ static void cleanup(int signo) {
     const char *restore_governor = running_governor ? running_governor : boot_governor;
     if (restore_governor) set_scaling_governor(restore_governor, 0);
 
+    for (int i = 0; i < combo_count; ++i) {
+        free(combo[i].name);
+        free(combo[i].exec_cmd);
+        free_array(combo[i].exec_argv, combo[i].exec_argc);
+    }
+
     free(boot_governor);
     free(running_governor);
     free(previous_governor);
@@ -196,27 +204,19 @@ static void record_sequence(mux_input_type type) {
 }
 
 static void run_command(const combo_config *c) {
-    if (!c || !c->exec_cmd || !*c->exec_cmd) return;
+    if (!c || !c->exec_argv || c->exec_argc == 0) return;
 
-    int handheld_ok = 1;
-    if (c->is_handheld_mode) handheld_ok = (config.BOOT.DEVICE_MODE == 0);
-
-    int normal_ok = 1;
-    if (c->is_normal_mode) normal_ok = (config.BOOT.FACTORY_RESET == 0);
-
-    if (!handheld_ok || !normal_ok) {
+    if (c->is_handheld_mode && config.BOOT.DEVICE_MODE != 0) {
         if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
         return;
     }
 
-    size_t argc = 0;
-    char **args = split_command(c->exec_cmd, &argc);
-    if (!args || argc == 0) return;
+    if (c->is_normal_mode && config.BOOT.FACTORY_RESET != 0) {
+        if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
+        return;
+    }
 
-    run_exec((const char **) args, argc + 1, 1, 0, NULL, NULL);
-
-    for (size_t i = 0; i < argc; i++) free(args[i]);
-    free(args);
+    run_exec((const char **) c->exec_argv, c->exec_argc + 1, 1, 0, NULL, NULL);
 }
 
 static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
@@ -333,23 +333,12 @@ static void handle_idle(void) {
     if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout);
 }
 
-static inline int mux_input_pressed_mask(uint64_t mask) {
-    for (int i = 0; i < MUX_INPUT_COUNT; i++) {
-        if ((mask & SAFE_BIT(i)) && mux_input_pressed(i)) return 1;
-    }
-    return 0;
-}
-
 static void handle_combo(int num, mux_input_action action) {
     combo_config *c = &combo[num];
     uint64_t mask = input_opts.combo[num].type_mask;
 
-    if (!mask) return;
+    if (!mask || (c->negate_mask && mux_input_pressed_any(c->negate_mask))) return;
 
-    if (c->negate_mask && mux_input_pressed_mask(c->negate_mask))
-        return;
-
-    /* POWER_SHORT special behaviour */
     if (mask == SAFE_BIT(MUX_INPUT_POWER_SHORT)) {
         if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_POWER_LONG)) {
             printf("%s\n", c->name);
@@ -358,7 +347,6 @@ static void handle_combo(int num, mux_input_action action) {
         return;
     }
 
-    /* MENU special behaviour */
     if (mask == SAFE_BIT(MUX_INPUT_MENU)) {
         if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_MENU)) {
             printf("%s\n", c->name);
@@ -367,12 +355,9 @@ static void handle_combo(int num, mux_input_action action) {
         return;
     }
 
-    if (!mux_input_pressed_mask(mask))
-        return;
+    if (!mux_input_pressed_any(mask)) return;
 
-    if (action == MUX_INPUT_PRESS ||
-        (action == MUX_INPUT_HOLD && c->handle_hold)) {
-
+    if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && c->handle_hold)) {
         printf("%s\n", c->name);
         run_command(c);
     }
@@ -446,8 +431,8 @@ static int combo_name_exists(const char *name) {
 static int cmp_combo(const void *p1, const void *p2) {
     const combo_config *c1 = p1, *c2 = p2;
 
-    int o1 = bc64(c1->type_mask);
-    int o2 = bc64(c2->type_mask);
+    int o1 = __builtin_popcountll(c1->type_mask);
+    int o2 = __builtin_popcountll(c2->type_mask);
 
     return (o1 != o2) ? o2 - o1 : strcmp(c1->name, c2->name);
 }
@@ -583,6 +568,7 @@ static void parse_combos_file(const char *filename) {
             size_t l = json_string_length(exec_json) + 1;
             c->exec_cmd = malloc(l);
             json_string_copy(exec_json, c->exec_cmd, l);
+            c->exec_argv = split_command(c->exec_cmd, &c->exec_argc);
         }
 
         if (!json_exists(inputs)) {
@@ -607,7 +593,7 @@ static void parse_combos_file(const char *filename) {
     free(json_str);
 }
 
-static void load_hotkeys() {
+static void load_hotkeys(void) {
     DIR *dir = opendir(STORAGE_HOTKEY);
     if (!dir) {
         perror("opendir");
@@ -626,9 +612,10 @@ static void load_hotkeys() {
         if (verbose) LOG_INFO("input", "Parsing Hotkey File: %s", path);
         parse_combos_file(path);
 
-        for (int i = last_combo_index; i < combo_count; ++i) {
-            input_opts.combo[i].type_mask = combo[i].type_mask;
-            if (verbose) print_combo_config(&combo[i]);
+        if (verbose) {
+            for (int i = last_combo_index; i < combo_count; ++i) {
+                print_combo_config(&combo[i]);
+            }
         }
 
         last_combo_index = combo_count;
@@ -660,14 +647,12 @@ int main(int argc, char *argv[]) {
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    /* Reap old processes to prevent zombies */
     struct sigaction old_proc = {0};
     old_proc.sa_handler = del_old_proc;
     sigemptyset(&old_proc.sa_mask);
     old_proc.sa_flags = SA_RESTART | SA_NOCLDSTOP;
     sigaction(SIGCHLD, &old_proc, NULL);
 
-    /* Load configuration */
     load_device(&device);
     load_config(&config);
 
@@ -679,9 +664,6 @@ int main(int argc, char *argv[]) {
         LOG_INFO("input", "Initial CPU governor: %s", boot_governor);
     }
 
-    /*
-     * Initialise SDL input subsystem
-     */
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
         LOG_ERROR("input", "SDL init failed: %s", SDL_GetError());
         return 1;
@@ -690,9 +672,6 @@ int main(int argc, char *argv[]) {
     SDL_GameControllerEventState(SDL_ENABLE);
     SDL_JoystickEventState(SDL_ENABLE);
 
-    /*
-     * Parse CLI args
-     */
     for (int opt; (opt = getopt(argc, argv, "vlh")) != -1;) {
         switch (opt) {
             case 'v':
@@ -715,20 +694,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    /*
-     * Load JSON combo definitions
-     */
     load_hotkeys();
-
-/*
- * Add fallback defaults only when they are not already present.
- * This is mainly useful on boards without matching JSON hotkey files.
- */
     last_combo_index = combo_count;
 
-/*
- * Sort longest combos first
- */
     qsort(combo, combo_count, sizeof(*combo), cmp_combo);
 
     for (int i = 0; i < combo_count; ++i)

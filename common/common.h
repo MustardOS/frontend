@@ -47,7 +47,6 @@ extern int tui_mode;
 
 extern int g350_mode;
 extern int g350_menu_pressed;
-extern int g350_menu_used_with_volume;
 
 extern const char *theme_base;
 extern char *theme_back_compat[];
@@ -513,8 +512,6 @@ void add_to_collection(char *filename, const char *pointer, char *sys_dir);
 int set_scaling_governor(const char *governor, int show_done);
 
 void turbo_time(int toggle, int show_done);
-
-int bc64(uint64_t n);
 
 char **split_command(const char *cmd, size_t *argc_out);
 
