@@ -53,6 +53,7 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->BOARD.HASDEBUGFS, "board/debugfs");
     DEV_INT_FIELD(device->BOARD.HASRGB, "led/rgb");
     DEV_INT_FIELD(device->BOARD.HASSTICK, "board/stick");
+    DEV_STR_FIELD(device->BOARD.SDL_MAP, "board/sdl_map");
     DEV_STR_FIELD(device->BOARD.JOY_HALL, "board/hall");
     DEV_STR_FIELD(device->BOARD.LED, "board/led");
     DEV_STR_FIELD(device->BOARD.RTC_CLOCK, "board/rtc_clock");

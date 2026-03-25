@@ -4,6 +4,7 @@
 #include "common.h"
 #include "ui_common.h"
 #include "config.h"
+#include "device.h"
 #include "input.h"
 #include "osk.h"
 #include "log.h"
@@ -36,6 +37,9 @@ static volatile uint64_t held = 0;
 static volatile uint32_t suppress_until_tick = 0;
 
 static SDL_GameController *controller = NULL;
+static SDL_Joystick *joystick = NULL;
+static SDL_JoystickID active_instance = -1;
+static int using_raw_joystick = 0;
 
 static inline int input_is_suppressed(void) {
     return mux_tick() < suppress_until_tick;
@@ -88,8 +92,13 @@ static void init_input_maps(void) {
     controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = MUX_INPUT_DPAD_LEFT;
     controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = MUX_INPUT_DPAD_RIGHT;
 
-    joy_button_map[2] = MUX_INPUT_VOL_UP;
-    joy_button_map[1] = MUX_INPUT_VOL_DOWN;
+    if (board_is_tui()) {
+        joy_button_map[1] = MUX_INPUT_VOL_UP;
+        joy_button_map[0] = MUX_INPUT_VOL_DOWN;
+    } else {
+        joy_button_map[2] = MUX_INPUT_VOL_UP;
+        joy_button_map[1] = MUX_INPUT_VOL_DOWN;
+    }
 
     axis_map[SDL_CONTROLLER_AXIS_LEFTX].neg = MUX_INPUT_LS_LEFT;
     axis_map[SDL_CONTROLLER_AXIS_LEFTX].pos = MUX_INPUT_LS_RIGHT;
@@ -290,45 +299,92 @@ static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEve
     pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
 }
 
-static SDL_GameController *controller_open(void) {
+static void close_input_device(void) {
+    if (controller) {
+        SDL_GameControllerClose(controller);
+        controller = NULL;
+        joystick = NULL;
+    } else if (joystick) {
+        SDL_JoystickClose(joystick);
+        joystick = NULL;
+    }
+
+    active_instance = -1;
+    using_raw_joystick = 0;
+}
+
+static void open_input_device(void) {
+    close_input_device();
     static int mappings_loaded = 0;
 
     if (!mappings_loaded) {
         int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
+        if (mappings < 0) LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
 
-        if (mappings < 0) {
-            LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
-        } else {
-            LOG_INFO("input", "Loaded %d controller mappings", mappings);
+        // This SDL specific map must in the "retro" format
+        // as we do our own internal key swapping mechanism
+        if (SDL_GameControllerAddMapping(device.BOARD.SDL_MAP) < 0) {
+            LOG_WARN("input", "Failed to add mapping: %s", SDL_GetError());
         }
 
         mappings_loaded = 1;
     }
 
-    int n = SDL_NumJoysticks();
-    if (n <= 0) {
-        LOG_WARN("input", "No joysticks detected");
-        return NULL;
+    int num_joy = SDL_NumJoysticks();
+    if (num_joy <= 0) {
+        LOG_WARN("input", "No controllers detected");
+        return;
     }
 
-    for (int i = 0; i < n; i++) {
-        if (SDL_IsGameController(i)) {
-            SDL_GameController *c = SDL_GameControllerOpen(i);
-            if (c) {
-                LOG_INFO("input", "Controller opened: %s", SDL_GameControllerName(c));
-                return c;
-            }
+    for (int i = 0; i < num_joy; i++) {
+        SDL_JoystickGUID guid = SDL_JoystickGetDeviceGUID(i);
+        char guid_str[64];
+        SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
 
+        if (!SDL_IsGameController(i)) {
+            LOG_DEBUG("input", "Joystick %d is not a GameController (GUID=%s)", i, guid_str);
+            continue;
+        }
+
+        controller = SDL_GameControllerOpen(i);
+        if (!controller) {
             LOG_WARN("input", "Failed to open controller %d: %s", i, SDL_GetError());
             continue;
         }
 
-        const char *name = SDL_JoystickNameForIndex(i);
-        LOG_WARN("input", "Joystick detected but not mapped: %s", name ? name : "unknown");
+        SDL_Joystick *joy = SDL_GameControllerGetJoystick(controller);
+        joystick = joy;
+        active_instance = SDL_JoystickInstanceID(joy);
+        using_raw_joystick = 0;
+
+        const char *name = SDL_GameControllerName(controller);
+        LOG_INFO("input", "Controller opened: %s", name ? name : "unknown");
+        LOG_INFO("input", "Controller GUID: %s", guid_str);
+
+        //if (mapping) LOG_DEBUG("input", "Active mapping: %s", SDL_GameControllerMapping(controller));
+
+        return;
     }
 
-    LOG_WARN("input", "No game controller found at startup");
-    return NULL;
+    for (int i = 0; i < num_joy; i++) {
+        joystick = SDL_JoystickOpen(i);
+        if (!joystick) continue;
+
+        SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
+        char guid_str[64];
+        SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
+
+        active_instance = SDL_JoystickInstanceID(joystick);
+        using_raw_joystick = 1;
+
+        const char *name = SDL_JoystickName(joystick);
+        LOG_WARN("input", "Using raw joystick fallback: %s", name ? name : "unknown");
+        LOG_DEBUG("input", "Raw joystick GUID: %s", guid_str);
+
+        return;
+    }
+
+    LOG_WARN("input", "No usable input device found");
 }
 
 static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
@@ -606,7 +662,7 @@ void mux_input_task(const mux_input_options *opts) {
 
     LOG_DEBUG("input", "Navigation mask: 0x%x | g350=%d | tui=%d", opts->nav, g350_mode, tui_mode);
 
-    controller = controller_open();
+    open_input_device();
 
     const int timeout_idle = (opts->max_idle_ms > 0) ? (int) opts->max_idle_ms : (int) IDLE_MS;
     const int accel_ms = config.SETTINGS.ADVANCED.ACCELERATE > 0 ? config.SETTINGS.ADVANCED.ACCELERATE : 1;
@@ -622,35 +678,53 @@ void mux_input_task(const mux_input_options *opts) {
         do {
             switch (ev.type) {
                 case SDL_CONTROLLERBUTTONDOWN:
-                    process_sdl_button(opts, ev.cbutton.button, 1);
+                    if (controller && ev.cbutton.which == active_instance) {
+                        process_sdl_button(opts, ev.cbutton.button, 1);
+                    }
                     break;
                 case SDL_CONTROLLERBUTTONUP:
-                    process_sdl_button(opts, ev.cbutton.button, 0);
+                    if (controller && ev.cbutton.which == active_instance) {
+                        process_sdl_button(opts, ev.cbutton.button, 0);
+                    }
                     break;
                 case SDL_CONTROLLERAXISMOTION:
-                    process_sdl_axis(ev.caxis.axis, ev.caxis.value);
+                    if (controller && ev.caxis.which == active_instance) {
+                        process_sdl_axis(ev.caxis.axis, ev.caxis.value);
+                    }
                     break;
                 case SDL_JOYBUTTONDOWN:
-                    process_sdl_joy_button(ev.jbutton.button, 1);
+                    if (joystick && ev.jbutton.which == active_instance) {
+                        process_sdl_joy_button(ev.jbutton.button, 1);
+                    }
                     break;
                 case SDL_JOYBUTTONUP:
-                    process_sdl_joy_button(ev.jbutton.button, 0);
+                    if (joystick && ev.jbutton.which == active_instance) {
+                        process_sdl_joy_button(ev.jbutton.button, 0);
+                    }
                     break;
                 case SDL_CONTROLLERDEVICEADDED:
-                    if (!controller) {
-                        controller = SDL_GameControllerOpen(ev.cdevice.which);
-                        if (controller) LOG_INFO("input", "Controller connected: %s", SDL_GameControllerName(controller));
+                case SDL_JOYDEVICEADDED:
+                    if (!controller && !joystick) {
+                        LOG_INFO("input", "Input device connected");
+                        open_input_device();
                     }
                     break;
                 case SDL_CONTROLLERDEVICEREMOVED:
-                    if (controller) {
-                        SDL_Joystick *joy = SDL_GameControllerGetJoystick(controller);
-                        if (joy && SDL_JoystickInstanceID(joy) == ev.cdevice.which) {
-                            SDL_GameControllerClose(controller);
-                            controller = NULL;
-                            pressed = 0;
-                            controller = controller_open();
-                        }
+                    if (controller && ev.cdevice.which == active_instance) {
+                        LOG_INFO("input", "Controller removed");
+                        close_input_device();
+                        pressed = 0;
+                        held = 0;
+                        open_input_device();
+                    }
+                    break;
+                case SDL_JOYDEVICEREMOVED:
+                    if (joystick && ev.jdevice.which == active_instance) {
+                        LOG_INFO("input", "Joystick removed");
+                        close_input_device();
+                        pressed = 0;
+                        held = 0;
+                        open_input_device();
                     }
                     break;
                 case SDL_KEYDOWN:
@@ -686,10 +760,7 @@ void mux_input_task(const mux_input_options *opts) {
         held = pressed;
     }
 
-    if (controller) {
-        SDL_GameControllerClose(controller);
-        controller = NULL;
-    }
+    close_input_device();
 }
 
 int mux_input_pressed_any(uint64_t mask) {
