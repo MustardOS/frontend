@@ -7,6 +7,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <poll.h>
+#include <linux/input.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include "../common/init.h"
@@ -14,12 +16,20 @@
 #include "../common/log.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/board.h"
 #include "../common/theme.h"
 #include "../common/json/json.h"
 
-#define MAX_SEQUENCE 12
+#define SEQ_BUF_SIZE 32
+#define MAX_SEQUENCE 16
+
 #define SAFE_BIT(i) ((uint64_t)1 << ((i) & 63))
 #define SEQUENCE_WIN (400 + 150 * seq_buf.count)
+
+static struct pollfd vol_pfd = {
+        .fd = -1,
+        .events = POLLIN
+};
 
 static void handle_combo(int num, mux_input_action action);
 
@@ -62,8 +72,8 @@ typedef struct {
 } combo_config;
 
 static struct {
-    int inputs[16];
-    uint32_t time[16];
+    int inputs[SEQ_BUF_SIZE];
+    uint32_t time[SEQ_BUF_SIZE];
     int count;
 } seq_buf = {0};
 
@@ -122,17 +132,28 @@ static const char *action_name[] = {
 };
 
 static mux_input_options input_opts = {
-        .max_idle_ms = 1000,
+        .max_idle_ms = IDLE_MS,
         .input_handler = handle_input,
         .combo_handler = handle_combo,
         .idle_handler = handle_idle,
 };
 
 static combo_config combo[MUX_INPUT_COMBO_COUNT] = {};
+
+static int vol_fd = -1;
 static int combo_count = 0;
 static int last_combo_index = 0;
 static int verbose = 0;
 static uint32_t global_tick = 0;
+
+static int raw_vol_up_pressed = 0;
+static int raw_vol_down_pressed = 0;
+
+static uint32_t raw_vol_up_next_repeat = 0;
+static uint32_t raw_vol_down_next_repeat = 0;
+
+#define RAW_REPEAT_INITIAL_MS 180
+#define RAW_REPEAT_INTERVAL_MS 70
 
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
@@ -167,6 +188,17 @@ static void cleanup(int signo) {
         free_array(combo[i].exec_argv, combo[i].exec_argc);
     }
 
+    if (vol_fd >= 0) {
+        close(vol_fd);
+        vol_fd = -1;
+        vol_pfd.fd = -1;
+    }
+
+    raw_vol_up_pressed = 0;
+    raw_vol_down_pressed = 0;
+    raw_vol_up_next_repeat = 0;
+    raw_vol_down_next_repeat = 0;
+
     free(boot_governor);
     free(running_governor);
     free(previous_governor);
@@ -175,6 +207,12 @@ static void cleanup(int signo) {
 }
 
 static void record_sequence(mux_input_type type) {
+    if (seq_buf.count >= SEQ_BUF_SIZE) {
+        memmove(seq_buf.inputs, seq_buf.inputs + 1, (SEQ_BUF_SIZE - 1) * sizeof(int));
+        memmove(seq_buf.time, seq_buf.time + 1, (SEQ_BUF_SIZE - 1) * sizeof(uint32_t));
+        seq_buf.count = SEQ_BUF_SIZE - 1;
+    }
+
     seq_buf.inputs[seq_buf.count] = type;
     seq_buf.time[seq_buf.count] = global_tick;
     seq_buf.count++;
@@ -217,6 +255,112 @@ static void run_command(const combo_config *c) {
     }
 
     run_exec((const char **) c->exec_argv, c->exec_argc + 1, 1, 0, NULL, NULL);
+}
+
+static void run_raw_volume_action(mux_input_type type, mux_input_action action) {
+    handle_input(type, action);
+
+    uint64_t vol_bit = SAFE_BIT(type);
+    int brightness_triggered = 0;
+
+    if (mux_input_pressed(MUX_INPUT_MENU)) {
+        for (int i = 0; i < combo_count; ++i) {
+            combo_config *c = &combo[i];
+
+            if (c->is_sequence) continue;
+            if (!(c->type_mask & vol_bit)) continue;
+            if (!(c->type_mask & SAFE_BIT(MUX_INPUT_MENU))) continue;
+            if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
+
+            if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && c->handle_hold)) {
+                printf("%s\n", c->name);
+                run_command(c);
+                brightness_triggered = 1;
+                break;
+            }
+        }
+    }
+
+    if (brightness_triggered) return;
+
+    for (int i = 0; i < combo_count; ++i) {
+        combo_config *c = &combo[i];
+
+        if (c->is_sequence) continue;
+        if (c->type_mask != vol_bit) continue;
+        if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
+
+        if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && c->handle_hold)) {
+            printf("%s\n", c->name);
+            run_command(c);
+            break;
+        }
+    }
+}
+
+static void handle_raw_volume(void) {
+    if (vol_pfd.fd < 0 || poll(&vol_pfd, 1, 0) <= 0) return;
+    struct input_event ev;
+
+    for (;;) {
+        ssize_t r = read(vol_pfd.fd, &ev, sizeof(ev));
+
+        if (r != sizeof(ev)) break;
+        if (ev.type != EV_KEY) continue;
+
+        mux_input_type type;
+        int *pressed;
+        uint32_t * next_repeat;
+
+        if (ev.code == KEY_VOLUMEUP) {
+            type = MUX_INPUT_VOL_UP;
+            pressed = &raw_vol_up_pressed;
+            next_repeat = &raw_vol_up_next_repeat;
+        } else if (ev.code == KEY_VOLUMEDOWN) {
+            type = MUX_INPUT_VOL_DOWN;
+            pressed = &raw_vol_down_pressed;
+            next_repeat = &raw_vol_down_next_repeat;
+        } else {
+            continue;
+        }
+
+        global_tick = mux_input_tick();
+
+        if (ev.value == 1) {
+            *pressed = 1;
+            *next_repeat = global_tick + RAW_REPEAT_INITIAL_MS;
+            run_raw_volume_action(type, MUX_INPUT_PRESS);
+        } else if (ev.value == 2) {
+            *pressed = 1;
+            *next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
+            run_raw_volume_action(type, MUX_INPUT_HOLD);
+        } else {
+            *pressed = 0;
+            *next_repeat = 0;
+            run_raw_volume_action(type, MUX_INPUT_RELEASE);
+        }
+    }
+}
+
+static int open_volume_event_index(int idx) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "/dev/input/event%d", idx);
+
+    int fd = open(path, O_RDONLY | O_NONBLOCK);
+    if (fd < 0) {
+        LOG_WARN("input", "Cannot open %s", path);
+        return -1;
+    }
+
+    char name[128] = {0};
+    if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) strcpy(name, "unknown");
+
+    LOG_DEBUG("input", "Raw volume device: %s (%s)", path, name);
+
+    vol_pfd.fd = fd;
+    vol_pfd.events = POLLIN;
+
+    return fd;
 }
 
 static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
@@ -312,6 +456,18 @@ static void handle_idle(void) {
     // and don't need to read the idle_inhibit file. That helps performance since the idle handler
     // is effectively called in a tight loop for continuous input (e.g., spinning a control stick).
     global_tick = mux_input_tick();
+
+    if (vol_fd >= 0) handle_raw_volume();
+
+    if (raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat) {
+        raw_vol_up_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
+        run_raw_volume_action(MUX_INPUT_VOL_UP, MUX_INPUT_HOLD);
+    }
+
+    if (raw_vol_down_pressed && raw_vol_down_next_repeat && global_tick >= raw_vol_down_next_repeat) {
+        raw_vol_down_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
+        run_raw_volume_action(MUX_INPUT_VOL_DOWN, MUX_INPUT_HOLD);
+    }
 
     if (idle_display.tick != global_tick) {
         // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
@@ -655,6 +811,14 @@ int main(int argc, char *argv[]) {
 
     load_device(&device);
     load_config(&config);
+
+    board_init(device.BOARD.NAME);
+
+    int volume_idx = board_volume_event_index();
+    if (volume_idx >= 0) {
+        vol_fd = open_volume_event_index(volume_idx);
+        if (vol_fd < 0) LOG_WARN("input", "Volume input event%d could not be opened", volume_idx);
+    }
 
     boot_governor = read_all_char_from(device.CPU.GOVERNOR);
     if (!boot_governor) {
