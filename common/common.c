@@ -76,9 +76,6 @@ volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
 int hdmi_mode = 0;
-int tui_mode = 0;
-
-int g350_mode = 0;
 int g350_menu_pressed = 0;
 
 const char *theme_base;
@@ -3842,26 +3839,4 @@ int get_index_on_delete(int current_index, int post_delete_count) {
 
     int max_index = post_delete_count - 1;
     return current_index > max_index ? max_index : current_index;
-}
-
-int board_is_g350(void) {
-    static int cached = -1;
-
-    if (cached == -1) {
-        cached = strcmp(device.BOARD.NAME, "rk-g350-v") == 0;
-        if (cached) LOG_DEBUG("input", "Using G350 Control Scheme");
-    }
-
-    return cached;
-}
-
-int board_is_tui(void) {
-    static int cached = -1;
-
-    if (cached == -1) {
-        cached = (strcmp(device.BOARD.NAME, "tui-brick") == 0 || strcmp(device.BOARD.NAME, "tui-spoon") == 0);
-        if (cached) LOG_DEBUG("input", "Using TrimUI Control Scheme");
-    }
-
-    return cached;
 }

@@ -76,7 +76,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
 static void handle_idle(void) {
     ui_common_handle_idle();
 
-    if (g350_mode && g350_menu_pressed) {
+    if (board_is(BOARD_SPECIAL_G350) && g350_menu_pressed) {
         if (!menu_icon_active) {
             show_icon("btn_menu");
             menu_icon_active = 1;

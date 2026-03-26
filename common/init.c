@@ -18,6 +18,7 @@
 #include "config.h"
 #include "device.h"
 #include "battery.h"
+#include "board.h"
 #include "theme.h"
 
 static uint64_t start_ms = 0;
@@ -193,8 +194,7 @@ void init_display(void) {
 void init_input(mux_input_options *opts, int def_combo) {
     if (!opts) return;
 
-    g350_mode = board_is_g350();
-    tui_mode = board_is_tui();
+    board_init(device.BOARD.NAME);
 
     opts->max_idle_ms = IDLE_MS;
     opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
