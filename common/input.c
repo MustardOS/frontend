@@ -5,6 +5,7 @@
 #include "ui_common.h"
 #include "config.h"
 #include "device.h"
+#include "board.h"
 #include "input.h"
 #include "osk.h"
 #include "log.h"
@@ -39,7 +40,6 @@ static volatile uint32_t suppress_until_tick = 0;
 static SDL_GameController *controller = NULL;
 static SDL_Joystick *joystick = NULL;
 static SDL_JoystickID active_instance = -1;
-static int using_raw_joystick = 0;
 
 static inline int input_is_suppressed(void) {
     return mux_tick() < suppress_until_tick;
@@ -92,12 +92,14 @@ static void init_input_maps(void) {
     controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = MUX_INPUT_DPAD_LEFT;
     controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = MUX_INPUT_DPAD_RIGHT;
 
-    if (board_is_tui()) {
+    if (board_is(BOARD_SPECIAL_TUI_BRICK)) {
         joy_button_map[1] = MUX_INPUT_VOL_UP;
         joy_button_map[0] = MUX_INPUT_VOL_DOWN;
     } else {
-        joy_button_map[2] = MUX_INPUT_VOL_UP;
-        joy_button_map[1] = MUX_INPUT_VOL_DOWN;
+        if (board_is(BOARD_SPECIAL_NONE)) {
+            joy_button_map[2] = MUX_INPUT_VOL_UP;
+            joy_button_map[1] = MUX_INPUT_VOL_DOWN;
+        }
     }
 
     axis_map[SDL_CONTROLLER_AXIS_LEFTX].neg = MUX_INPUT_LS_LEFT;
@@ -139,7 +141,10 @@ static void init_input_maps(void) {
     key_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
 
     key_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
+    key_map[SDL_SCANCODE_VOLUMEUP] = MUX_INPUT_VOL_UP;
+
     key_map[SDL_SCANCODE_PAGEDOWN] = MUX_INPUT_VOL_DOWN;
+    key_map[SDL_SCANCODE_VOLUMEDOWN] = MUX_INPUT_VOL_DOWN;
 
     input_init_done = 1;
 }
@@ -280,20 +285,19 @@ static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
     apply_dir_pair(neg, pos, direction);
 }
 
-static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEvent *kev, int down) {
+static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEvent *key, int down) {
     if (input_is_suppressed()) return;
 
-    SDL_Scancode sc = kev->keysym.scancode;
+    SDL_Scancode sc = key->keysym.scancode;
     if (sc >= SDL_NUM_SCANCODES) return;
 
     mux_input_type t = key_map[sc];
-
     if (t == MUX_INPUT_COUNT) {
-        LOG_DEBUG("input", "Unmapped key %s", SDL_GetScancodeName(sc));
+        LOG_DEBUG("input", "Unmapped key %s (%d)", SDL_GetScancodeName(sc), sc);
         return;
     }
 
-    if (kev->repeat) return;
+    if (key->repeat) return;
     if (opts->swap_btn) t = swap_button_type(t);
 
     pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
@@ -310,7 +314,6 @@ static void close_input_device(void) {
     }
 
     active_instance = -1;
-    using_raw_joystick = 0;
 }
 
 static void open_input_device(void) {
@@ -352,10 +355,8 @@ static void open_input_device(void) {
             continue;
         }
 
-        SDL_Joystick *joy = SDL_GameControllerGetJoystick(controller);
-        joystick = joy;
-        active_instance = SDL_JoystickInstanceID(joy);
-        using_raw_joystick = 0;
+        joystick = SDL_GameControllerGetJoystick(controller);
+        active_instance = SDL_JoystickInstanceID(joystick);
 
         const char *name = SDL_GameControllerName(controller);
         LOG_INFO("input", "Controller opened: %s", name ? name : "unknown");
@@ -375,7 +376,6 @@ static void open_input_device(void) {
         SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
 
         active_instance = SDL_JoystickInstanceID(joystick);
-        using_raw_joystick = 1;
 
         const char *name = SDL_JoystickName(joystick);
         LOG_WARN("input", "Using raw joystick fallback: %s", name ? name : "unknown");
@@ -655,12 +655,7 @@ void mux_input_task(const mux_input_options *opts) {
     suppress_until_tick = 0;
 
     swap_axis = opts->swap_axis;
-    g350_mode = board_is_g350();
-    tui_mode = board_is_tui();
-
     ((mux_input_options *) opts)->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
-
-    LOG_DEBUG("input", "Navigation mask: 0x%x | g350=%d | tui=%d", opts->nav, g350_mode, tui_mode);
 
     open_input_device();
 
@@ -769,7 +764,7 @@ int mux_input_pressed_any(uint64_t mask) {
 
 int mux_input_pressed(mux_input_type mux_type) {
     if (pressed & BIT(mux_type)) return 1;
-    if (g350_mode && mux_type == MUX_INPUT_MENU && g350_menu_pressed) return 1;
+    if (board_is(BOARD_SPECIAL_G350) && mux_type == MUX_INPUT_MENU && g350_menu_pressed) return 1;
 
     return 0;
 }
