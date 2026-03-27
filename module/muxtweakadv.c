@@ -224,7 +224,7 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droUsbPart_tweakadv, partition_values);
     free(partition_values);
 
-    char *increment_values = generate_number_string(1, 16, 1, NULL, NULL, NULL, 0);
+    char *increment_values = generate_number_string(1, 32, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droIncBright_tweakadv, increment_values);
     apply_theme_list_drop_down(&theme, ui_droIncVolume_tweakadv, increment_values);
     free(increment_values);
