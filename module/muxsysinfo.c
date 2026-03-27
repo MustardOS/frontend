@@ -1,6 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxsysinfo.h"
 #include "../common/battery.h"
+#include "../common/board.h"
 
 #define SYSINFO(NAME, ENUM, UDATA) 1,
 enum {
@@ -300,7 +301,7 @@ const char *get_battery_cap(void) {
 const char *get_device_info(void) {
     static char device_info[UI_BUFFER];
     snprintf(device_info, sizeof(device_info), "%s",
-             str_toupper(read_line_char_from((CONF_DEVICE_PATH "board/name"), 1)));
+             board_name());
 
     return device_info;
 }

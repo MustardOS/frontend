@@ -11,6 +11,8 @@ typedef struct {
     const char *name;
     const char *code;
     board_special_t special;
+    int vol_event;
+    int pwr_event;
 } board_info_t;
 
 void board_init(const char *code);
@@ -26,3 +28,5 @@ int board_is(board_special_t type);
 int board_is_special(void);
 
 int board_volume_event_index(void);
+
+int board_power_event_index(void);

@@ -31,6 +31,11 @@ static struct pollfd vol_pfd = {
         .events = POLLIN
 };
 
+static struct pollfd pwr_pfd = {
+        .fd = -1,
+        .events = POLLIN
+};
+
 static void handle_combo(int num, mux_input_action action);
 
 static void handle_input(mux_input_type type, mux_input_action action);
@@ -140,17 +145,24 @@ static mux_input_options input_opts = {
 
 static combo_config combo[MUX_INPUT_COMBO_COUNT] = {};
 
-static int vol_fd = -1;
 static int combo_count = 0;
 static int last_combo_index = 0;
 static int verbose = 0;
 static uint32_t global_tick = 0;
 
+static int vol_fd = -1;
 static int raw_vol_up_pressed = 0;
 static int raw_vol_down_pressed = 0;
 
 static uint32_t raw_vol_up_next_repeat = 0;
 static uint32_t raw_vol_down_next_repeat = 0;
+
+#define POWER_LONG_MS 400
+
+static int pwr_fd = -1;
+static int raw_power_pressed = 0;
+static int raw_power_long_active = 0;
+static uint32_t raw_power_press_tick = 0;
 
 #define RAW_REPEAT_INITIAL_MS 180
 #define RAW_REPEAT_INTERVAL_MS 70
@@ -194,10 +206,19 @@ static void cleanup(int signo) {
         vol_pfd.fd = -1;
     }
 
+    if (pwr_fd >= 0) {
+        close(pwr_fd);
+        pwr_fd = -1;
+        pwr_pfd.fd = -1;
+    }
+
     raw_vol_up_pressed = 0;
     raw_vol_down_pressed = 0;
     raw_vol_up_next_repeat = 0;
     raw_vol_down_next_repeat = 0;
+
+    raw_power_pressed = 0;
+    raw_power_long_active = 0;
 
     free(boot_governor);
     free(running_governor);
@@ -257,6 +278,37 @@ static void run_command(const combo_config *c) {
     run_exec((const char **) c->exec_argv, c->exec_argc + 1, 1, 0, NULL, NULL);
 }
 
+static void run_raw_power_short_release(void) {
+    for (int i = 0; i < combo_count; ++i) {
+        combo_config *c = &combo[i];
+
+        if (c->is_sequence) continue;
+        if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
+        if (c->type_mask != SAFE_BIT(MUX_INPUT_POWER_SHORT)) continue;
+
+        printf("%s\n", c->name);
+        run_command(c);
+        break;
+    }
+}
+
+static void run_raw_power_long_action(void) {
+    uint64_t pwr_long_bit = SAFE_BIT(MUX_INPUT_POWER_LONG);
+
+    for (int i = 0; i < combo_count; ++i) {
+        combo_config *c = &combo[i];
+
+        if (c->is_sequence) continue;
+        if (!(c->type_mask & pwr_long_bit)) continue;
+        if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
+
+        printf("%s\n", c->name);
+        run_command(c);
+        raw_power_long_active = 1;
+        break;
+    }
+}
+
 static void run_raw_volume_action(mux_input_type type, mux_input_action action) {
     handle_input(type, action);
 
@@ -294,6 +346,39 @@ static void run_raw_volume_action(mux_input_type type, mux_input_action action) 
             printf("%s\n", c->name);
             run_command(c);
             break;
+        }
+    }
+}
+
+static void handle_raw_power(void) {
+    if (pwr_pfd.fd < 0 || poll(&pwr_pfd, 1, 0) <= 0) return;
+
+    struct input_event ev;
+
+    for (;;) {
+        ssize_t r = read(pwr_pfd.fd, &ev, sizeof(ev));
+
+        if (r != sizeof(ev)) break;
+        if (ev.type != EV_KEY) continue;
+        if (ev.code != KEY_POWER) continue;
+
+        global_tick = mux_input_tick();
+
+        if (ev.value == 1) {
+            raw_power_pressed = 1;
+            raw_power_long_active = 0;
+            raw_power_press_tick = global_tick;
+
+            handle_input(MUX_INPUT_POWER_SHORT, MUX_INPUT_PRESS);
+        } else if (ev.value == 0) {
+            if (raw_power_long_active) handle_input(MUX_INPUT_POWER_LONG, MUX_INPUT_RELEASE);
+
+            handle_input(MUX_INPUT_POWER_SHORT, MUX_INPUT_RELEASE);
+            if (!raw_power_long_active) run_raw_power_short_release();
+
+            raw_power_pressed = 0;
+            raw_power_long_active = 0;
+            raw_power_press_tick = 0;
         }
     }
 }
@@ -342,7 +427,7 @@ static void handle_raw_volume(void) {
     }
 }
 
-static int open_volume_event_index(int idx) {
+static int open_raw_event_index(int idx, struct pollfd *pfd, const char *label) {
     char path[PATH_MAX];
     snprintf(path, sizeof(path), "/dev/input/event%d", idx);
 
@@ -355,10 +440,10 @@ static int open_volume_event_index(int idx) {
     char name[128] = {0};
     if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) strcpy(name, "unknown");
 
-    LOG_DEBUG("input", "Raw volume device: %s (%s)", path, name);
+    LOG_DEBUG("input", "Raw %s device: %s (%s)", label, path, name);
 
-    vol_pfd.fd = fd;
-    vol_pfd.events = POLLIN;
+    pfd->fd = fd;
+    pfd->events = POLLIN;
 
     return fd;
 }
@@ -452,12 +537,10 @@ static void handle_input(mux_input_type type, mux_input_action action) {
 }
 
 static void handle_idle(void) {
-    // If we handled input on this iteration of the event loop, we're already in the active state
-    // and don't need to read the idle_inhibit file. That helps performance since the idle handler
-    // is effectively called in a tight loop for continuous input (e.g., spinning a control stick).
     global_tick = mux_input_tick();
 
     if (vol_fd >= 0) handle_raw_volume();
+    if (pwr_fd >= 0) handle_raw_power();
 
     if (raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat) {
         raw_vol_up_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
@@ -467,6 +550,14 @@ static void handle_idle(void) {
     if (raw_vol_down_pressed && raw_vol_down_next_repeat && global_tick >= raw_vol_down_next_repeat) {
         raw_vol_down_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
         run_raw_volume_action(MUX_INPUT_VOL_DOWN, MUX_INPUT_HOLD);
+    }
+
+    if (raw_power_pressed && !raw_power_long_active) {
+        if (global_tick - raw_power_press_tick >= POWER_LONG_MS) {
+            raw_power_long_active = 1;
+            handle_input(MUX_INPUT_POWER_LONG, MUX_INPUT_PRESS);
+            run_raw_power_long_action();
+        }
     }
 
     if (idle_display.tick != global_tick) {
@@ -816,8 +907,14 @@ int main(int argc, char *argv[]) {
 
     int volume_idx = board_volume_event_index();
     if (volume_idx >= 0) {
-        vol_fd = open_volume_event_index(volume_idx);
+        vol_fd = open_raw_event_index(volume_idx, &vol_pfd, "volume");
         if (vol_fd < 0) LOG_WARN("input", "Volume input event%d could not be opened", volume_idx);
+    }
+
+    int power_idx = board_power_event_index();
+    if (power_idx >= 0) {
+        pwr_fd = open_raw_event_index(power_idx, &pwr_pfd, "power");
+        if (pwr_fd < 0) LOG_WARN("input", "Power input event%d could not be opened", power_idx);
     }
 
     boot_governor = read_all_char_from(device.CPU.GOVERNOR);
