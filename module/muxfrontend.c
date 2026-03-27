@@ -138,40 +138,21 @@ static void quit_watchdog(lv_timer_t *timer) {
 static int process_action(const char *action, const char *module) {
     if (!file_exist(action)) return 0;
 
-    FILE *f = fopen(action, "r");
-    if (!f) {
+    char *name = read_line_char_from(action, 1);
+    char *dir = read_line_char_from(action, 2);
+    char *sys = read_line_char_from(action, 3);
+
+    if (!name || !dir || !sys) {
         remove(action);
         return 0;
     }
 
-    char name_buf[PATH_MAX] = {0};
-    char dir_buf[PATH_MAX] = {0};
-    char sys_buf[PATH_MAX] = {0};
-    char forced_buf[16] = {0};
-    char app_buf[16] = {0};
+    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    snprintf(rom_sys, sizeof(rom_sys), "%s", sys);
 
-    (void) fgets(name_buf, sizeof(name_buf), f);
-    (void) fgets(dir_buf, sizeof(dir_buf), f);
-    (void) fgets(sys_buf, sizeof(sys_buf), f);
-    (void) fgets(forced_buf, sizeof(forced_buf), f);
-    (void) fgets(app_buf, sizeof(app_buf), f);
-    fclose(f);
-
-    str_nonew(name_buf);
-    str_nonew(dir_buf);
-    str_nonew(sys_buf);
-
-    if (!name_buf[0] || !dir_buf[0] || !sys_buf[0]) {
-        remove(action);
-        return 0;
-    }
-
-    snprintf(rom_name, sizeof(rom_name), "%s", name_buf);
-    snprintf(rom_dir, sizeof(rom_dir), "%s", dir_buf);
-    snprintf(rom_sys, sizeof(rom_sys), "%s", sys_buf);
-
-    forced_flag = safe_atoi(forced_buf);
-    is_app = safe_atoi(app_buf);
+    forced_flag = read_line_int_from(action, 4);
+    is_app = read_line_int_from(action, 5);
 
     remove(action);
 
