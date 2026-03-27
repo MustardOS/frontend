@@ -13,7 +13,14 @@ typedef struct {
     board_special_t special;
     int vol_event;
     int pwr_event;
+    int lid_event;
 } board_info_t;
+
+enum {
+    NOP = -1,
+    EV0 = 0,
+    EV1 = 1
+};
 
 void board_init(const char *code);
 
@@ -30,3 +37,5 @@ int board_is_special(void);
 int board_volume_event_index(void);
 
 int board_power_event_index(void);
+
+int board_lid_event_index(void);

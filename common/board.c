@@ -3,29 +3,29 @@
 #include "log.h"
 
 static const board_info_t board_table[] = {
-        {"Generic H36S",       "gcs-h36s",    BOARD_SPECIAL_NONE,      -1, -1},
-        {"MagicX Zero28",      "mgx-zero28",  BOARD_SPECIAL_NONE,      -1, -1},
+        {"Generic H36S",       "gcs-h36s",    BOARD_SPECIAL_NONE,      NOP, NOP, NOP},
+        {"MagicX Zero28",      "mgx-zero28",  BOARD_SPECIAL_NONE,      NOP, NOP, NOP},
 
-        {"Anbernic RG28-H",    "rg28xx-h",    BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG34-H",    "rg34xx-h",    BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG34-SP",   "rg34xx-sp",   BOARD_SPECIAL_NONE,      -1, 0},
+        {"Anbernic RG28-H",    "rg28xx-h",    BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG34-H",    "rg34xx-h",    BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG34-SP",   "rg34xx-sp",   BOARD_SPECIAL_NONE,      NOP, EV0, EV0},
 
-        {"Anbernic RG35-2024", "rg35xx-2024", BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG35-H",    "rg35xx-h",    BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG35-PLUS", "rg35xx-plus", BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG35-PRO",  "rg35xx-pro",  BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG35-SP",   "rg35xx-sp",   BOARD_SPECIAL_NONE,      -1, 0},
+        {"Anbernic RG35-2024", "rg35xx-2024", BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG35-H",    "rg35xx-h",    BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG35-PLUS", "rg35xx-plus", BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG35-PRO",  "rg35xx-pro",  BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG35-SP",   "rg35xx-sp",   BOARD_SPECIAL_NONE,      NOP, EV0, EV0},
 
-        {"Anbernic RG40-H",    "rg40xx-h",    BOARD_SPECIAL_NONE,      -1, 0},
-        {"Anbernic RG40-V",    "rg40xx-v",    BOARD_SPECIAL_NONE,      -1, 0},
+        {"Anbernic RG40-H",    "rg40xx-h",    BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
+        {"Anbernic RG40-V",    "rg40xx-v",    BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
 
-        {"Anbernic RGCUBE-H",  "rgcubexx-h",  BOARD_SPECIAL_NONE,      -1, 0},
+        {"Anbernic RGCUBE-H",  "rgcubexx-h",  BOARD_SPECIAL_NONE,      NOP, EV0, NOP},
 
-        {"Batlexp G350",       "rk-g350-v",   BOARD_SPECIAL_G350,      -1, -1},
-        {"GKD Pixel 2",        "rk-pixel-2",  BOARD_SPECIAL_NONE,      -1, -1},
+        {"Batlexp G350",       "rk-g350-v",   BOARD_SPECIAL_G350,      NOP, NOP, NOP},
+        {"GKD Pixel 2",        "rk-pixel-2",  BOARD_SPECIAL_NONE,      NOP, NOP, NOP},
 
-        {"TrimUI Brick",       "tui-brick",   BOARD_SPECIAL_TUI_BRICK, -1, 1},
-        {"TrimUI Smart Pro",   "tui-spoon",   BOARD_SPECIAL_TUI_SPOON, 0,  1},
+        {"TrimUI Brick",       "tui-brick",   BOARD_SPECIAL_TUI_BRICK, NOP, EV1, NOP},
+        {"TrimUI Smart Pro",   "tui-spoon",   BOARD_SPECIAL_TUI_SPOON, EV0, EV1, NOP},
 };
 
 #define BOARD_TABLE_SIZE (sizeof(board_table) / sizeof(board_table[0]))
@@ -71,9 +71,13 @@ int board_is_special(void) {
 }
 
 int board_volume_event_index(void) {
-    return current_board ? current_board->vol_event : -1;
+    return current_board ? current_board->vol_event : NOP;
 }
 
 int board_power_event_index(void) {
-    return current_board ? current_board->pwr_event : -1;
+    return current_board ? current_board->pwr_event : NOP;
+}
+
+int board_lid_event_index(void) {
+    return current_board ? current_board->lid_event : NOP;
 }

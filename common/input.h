@@ -63,6 +63,10 @@ typedef enum {
     MUX_INPUT_POWER_SHORT,
     MUX_INPUT_POWER_LONG,
 
+    // Lid (Hall Switch):
+    MUX_INPUT_LID_OPEN,
+    MUX_INPUT_LID_CLOSE,
+
     MUX_INPUT_COUNT,
 } mux_input_type;
 

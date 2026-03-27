@@ -36,6 +36,11 @@ static struct pollfd pwr_pfd = {
         .events = POLLIN
 };
 
+static struct pollfd lid_pfd = {
+        .fd = -1,
+        .events = POLLIN
+};
+
 static void handle_combo(int num, mux_input_action action);
 
 static void handle_input(mux_input_type type, mux_input_action action);
@@ -128,6 +133,10 @@ static const char *input_name[MUX_INPUT_COUNT] = {
         // System buttons:
         [MUX_INPUT_POWER_LONG] = "POWER_LONG",
         [MUX_INPUT_POWER_SHORT] = "POWER_SHORT",
+
+        // Lid (Hall Switch):
+        [MUX_INPUT_LID_OPEN] = "LID_OPEN",
+        [MUX_INPUT_LID_CLOSE] = "LID_CLOSE",
 };
 
 static const char *action_name[] = {
@@ -166,6 +175,8 @@ static uint32_t raw_power_press_tick = 0;
 
 #define RAW_REPEAT_INITIAL_MS 180
 #define RAW_REPEAT_INTERVAL_MS 70
+
+static int lid_fd = -1;
 
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
@@ -210,6 +221,12 @@ static void cleanup(int signo) {
         close(pwr_fd);
         pwr_fd = -1;
         pwr_pfd.fd = -1;
+    }
+
+    if (lid_fd >= 0) {
+        close(lid_fd);
+        lid_fd = -1;
+        lid_pfd.fd = -1;
     }
 
     raw_vol_up_pressed = 0;
@@ -289,6 +306,48 @@ static void run_raw_power_short_release(void) {
         printf("%s\n", c->name);
         run_command(c);
         break;
+    }
+}
+
+static void run_raw_lid_action(mux_input_type type) {
+    uint64_t lid_bit = SAFE_BIT(type);
+
+    for (int i = 0; i < combo_count; ++i) {
+        combo_config *c = &combo[i];
+
+        if (c->is_sequence) continue;
+        if (c->type_mask != lid_bit) continue;
+        if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
+
+        printf("%s\n", c->name);
+        run_command(c);
+        break;
+    }
+}
+
+static void handle_raw_lid(void) {
+    if (lid_pfd.fd < 0 || poll(&lid_pfd, 1, 0) <= 0) return;
+
+    struct input_event ev;
+
+    for (;;) {
+        ssize_t r = read(lid_pfd.fd, &ev, sizeof(ev));
+
+        if (r != sizeof(ev)) break;
+        if (ev.type != EV_KEY) continue;
+
+        global_tick = mux_input_tick();
+
+        if (ev.code == KEY_INSERT && ev.value == 0) {
+            handle_input(MUX_INPUT_LID_CLOSE, MUX_INPUT_PRESS);
+            handle_input(MUX_INPUT_LID_CLOSE, MUX_INPUT_RELEASE);
+            run_raw_lid_action(MUX_INPUT_LID_CLOSE);
+
+        } else if (ev.code == KEY_DELETE && ev.value == 1) {
+            handle_input(MUX_INPUT_LID_OPEN, MUX_INPUT_PRESS);
+            handle_input(MUX_INPUT_LID_OPEN, MUX_INPUT_RELEASE);
+            run_raw_lid_action(MUX_INPUT_LID_OPEN);
+        }
     }
 }
 
@@ -541,6 +600,7 @@ static void handle_idle(void) {
 
     if (vol_fd >= 0) handle_raw_volume();
     if (pwr_fd >= 0) handle_raw_power();
+    if (lid_fd >= 0) handle_raw_lid();
 
     if (raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat) {
         raw_vol_up_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
@@ -915,6 +975,12 @@ int main(int argc, char *argv[]) {
     if (power_idx >= 0) {
         pwr_fd = open_raw_event_index(power_idx, &pwr_pfd, "power");
         if (pwr_fd < 0) LOG_WARN("input", "Power input event%d could not be opened", power_idx);
+    }
+
+    int lid_idx = board_lid_event_index();
+    if (lid_idx >= 0) {
+        lid_fd = open_raw_event_index(lid_idx, &lid_pfd, "lid");
+        if (lid_fd < 0) LOG_WARN("input", "Lid input event%d could not be opened", lid_idx);
     }
 
     boot_governor = read_all_char_from(device.CPU.GOVERNOR);
