@@ -278,6 +278,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
+    download_poll();
+
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, WALL_GENERAL);
         adjust_panels();

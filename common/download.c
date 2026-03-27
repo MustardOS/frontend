@@ -25,6 +25,24 @@ void set_download_callbacks(void (*callback)(int)) {
     download_finish_cb = callback;
 }
 
+void download_poll(void) {
+    if (download_finish_result == INT_MIN) return;
+
+    int result = download_finish_result;
+    download_finish_result = INT_MIN;
+
+    void (*cb)(int) = download_finish_pending_cb;
+    download_finish_pending_cb = NULL;
+
+    if (result == 0) progress_bar_value = 100;
+    hide_progress_bar();
+
+    download_in_progress = false;
+    cancel_download = false;
+
+    if (cb) cb(result);
+}
+
 static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
                              curl_off_t ultotal, curl_off_t ulnow) {
     if (cancel_download) {

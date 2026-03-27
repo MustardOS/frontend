@@ -414,21 +414,7 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task() {
-    if (download_finish_result != INT_MIN) {
-        int result = download_finish_result;
-        download_finish_result = INT_MIN;
-
-        void (*cb)(int) = download_finish_pending_cb;
-        download_finish_pending_cb = NULL;
-
-        if (result == 0) progress_bar_value = 100;
-        hide_progress_bar();
-
-        download_in_progress = false;
-        cancel_download = false;
-
-        if (cb) cb(result);
-    }
+    download_poll();
 
     if (theme_extract_done) {
         theme_extract_done = 0;
