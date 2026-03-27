@@ -13,6 +13,7 @@
 
 #define DVD_SPEED_PATH "/opt/muos/config/settings/power/screensaver"
 #define DVD_SPEED_DEFAULT 90
+#define DVD_SPEED_COLOUR 600
 
 typedef struct {
     SDL_Texture *tex;
@@ -35,6 +36,10 @@ typedef struct {
 
     int dvd_speed;
     int32_t speed_fp_per_ms;
+
+    uint8_t colour_r;
+    uint8_t colour_g;
+    uint8_t colour_b;
 } dvd_state_t;
 
 static dvd_state_t dvd = {0};
@@ -42,6 +47,40 @@ static dvd_state_t dvd = {0};
 static int read_dvd_speed(void) {
     if (!file_exist(DVD_SPEED_PATH)) return DVD_SPEED_DEFAULT;
     return read_line_int_from(DVD_SPEED_PATH, 1);
+}
+
+static void dvd_bounce_colour(void) {
+    static const struct {
+        uint8_t r, g, b;
+    } palette[] = {
+            {255, 255, 255}, // Original...
+            {255, 182, 193}, // Pastel Pink
+            {255, 179, 128}, // Pastel Orange
+            {255, 255, 153}, // Pastel Yellow
+            {178, 255, 178}, // Pastel Green
+            {153, 255, 255}, // Pastel Cyan
+            {179, 204, 255}, // Pastel Blue
+            {204, 153, 255}, // Pastel Purple
+            {255, 153, 204}, // Pastel Rose
+            {255, 218, 153}, // Pastel Peach
+            {153, 255, 220}, // Pastel Mint
+    };
+    static const int palette_len = (int) (sizeof palette / sizeof palette[0]);
+
+    static int index = 0;
+    static int last_index = -1;
+
+    if (index == last_index) index = (index + 1) % palette_len;
+
+    dvd.colour_r = palette[index].r;
+    dvd.colour_g = palette[index].g;
+    dvd.colour_b = palette[index].b;
+
+    if (dvd.tex) SDL_SetTextureColorMod(dvd.tex, palette[index].r, palette[index].g, palette[index].b);
+    LOG_INFO("saver", "DVD Colour Change: #%02X%02X%02X", palette[index].r, palette[index].g, palette[index].b);
+
+    last_index = index;
+    index = (index + 1) % palette_len;
 }
 
 static void dvd_launch(void) {
@@ -91,6 +130,12 @@ int dvd_init(SDL_Renderer *renderer, const char *png_path, int screen_w, int scr
 
     dvd.enabled = true;
     dvd.idle_active = false;
+
+    dvd.colour_r = 255;
+    dvd.colour_g = 255;
+    dvd.colour_b = 255;
+
+    SDL_SetTextureColorMod(dvd.tex, 255, 255, 255);
 
     dvd.last_tick = SDL_GetTicks();
     dvd.last_idle_poll = 0;
@@ -160,6 +205,12 @@ void dvd_update(void) {
 
             dvd_launch();
             dvd.last_tick = now;
+
+            dvd.colour_r = 255;
+            dvd.colour_g = 255;
+            dvd.colour_b = 255;
+
+            if (dvd.tex) SDL_SetTextureColorMod(dvd.tex, 255, 255, 255);
         }
     }
 
@@ -182,17 +233,21 @@ void dvd_update(void) {
     if (dvd.fx <= 0) {
         dvd.fx = 0;
         dvd.vx = -dvd.vx;
+        if (dvd.dvd_speed >= DVD_SPEED_COLOUR) dvd_bounce_colour();
     } else if (dvd.fx >= cached_max_fx) {
         dvd.fx = cached_max_fx;
         dvd.vx = -dvd.vx;
+        if (dvd.dvd_speed >= DVD_SPEED_COLOUR) dvd_bounce_colour();
     }
 
     if (dvd.fy <= 0) {
         dvd.fy = 0;
         dvd.vy = -dvd.vy;
+        if (dvd.dvd_speed >= DVD_SPEED_COLOUR) dvd_bounce_colour();
     } else if (dvd.fy >= cached_max_fy) {
         dvd.fy = cached_max_fy;
         dvd.vy = -dvd.vy;
+        if (dvd.dvd_speed >= DVD_SPEED_COLOUR) dvd_bounce_colour();
     }
 
     int x = dvd.fx >> FRAME_SHF;
@@ -203,8 +258,33 @@ void dvd_update(void) {
 }
 
 void dvd_render(SDL_Renderer *renderer) {
-    if (!dvd.enabled || !dvd.idle_active) return;
+    if (!dvd.enabled || !dvd.idle_active || !dvd.tex) return;
+
+    SDL_SetTextureBlendMode(dvd.tex, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(dvd.tex, 255);
     SDL_RenderCopy(renderer, dvd.tex, NULL, &dvd.rect);
+
+    int boost_alpha = 0;
+
+    if (dvd.dvd_speed >= DVD_SPEED_COLOUR) {
+        int range = dvd.dvd_speed - DVD_SPEED_COLOUR;
+
+        const int min_boost = 32;
+        const int max_boost = 96;
+
+        if (range > 120) range = 120;
+        boost_alpha = min_boost + (range * (max_boost - min_boost) / 120);
+    }
+
+    if (boost_alpha > 0) {
+        SDL_SetTextureBlendMode(dvd.tex, SDL_BLENDMODE_ADD);
+        SDL_SetTextureAlphaMod(dvd.tex, (uint8_t) boost_alpha);
+
+        SDL_RenderCopy(renderer, dvd.tex, NULL, &dvd.rect);
+
+        SDL_SetTextureBlendMode(dvd.tex, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(dvd.tex, 255);
+    }
 }
 
 int dvd_active(void) {
