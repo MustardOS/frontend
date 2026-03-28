@@ -1,6 +1,5 @@
 #include "muxshare.h"
 #include "ui/ui_muxsearch.h"
-#include "../common/skip_list.h"
 
 #define SEARCH(NAME, ENUM, UDATA) 1,
 enum {
@@ -498,22 +497,31 @@ static void handle_confirm(void) {
         play_sound(SND_CONFIRM);
 
         const char *selected_raw = all_items[current_item_index].extra_data;
-        char *selected_path = str_replace(selected_raw, "/./", "/");
+        char selected_path[MAX_BUFFER_SIZE];
+        char resolved_path[PATH_MAX];
 
-        char *path_union = str_replace(selected_path, device.STORAGE.ROM.MOUNT, "/mnt/union");
-        path_union = str_replace(path_union, device.STORAGE.SDCARD.MOUNT, "/mnt/union");
-        path_union = str_replace(path_union, device.STORAGE.USB.MOUNT, "/mnt/union");
+        snprintf(selected_path, sizeof(selected_path), "%s", selected_raw);
+        remove_double_slashes(selected_path);
+        char *clean_path = str_replace(selected_path, "/./", "/");
+        if (clean_path) {
+            snprintf(selected_path, sizeof(selected_path), "%s", clean_path);
+            free(clean_path);
+        }
 
-        write_text_to_file(MUOS_RES_LOAD, "w", CHAR, path_union);
+        if (!union_resolve_to_real(selected_path, resolved_path, sizeof(resolved_path))) {
+            snprintf(resolved_path, sizeof(resolved_path), "%s", selected_path);
+        }
+
+        write_text_to_file(MUOS_RES_LOAD, "w", CHAR, resolved_path);
 
         char base_dir[MAX_BUFFER_SIZE];
-        snprintf(base_dir, sizeof(base_dir), "%s", path_union);
+        snprintf(base_dir, sizeof(base_dir), "%s", resolved_path);
 
         char *last_slash = strrchr(base_dir, '/');
         if (last_slash) *last_slash = '\0';
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
-         char *item_file = get_last_dir(path_union);
+        char *item_file = get_last_dir(resolved_path);
         write_text_to_file(MUOS_HST_LOAD, "w", CHAR, item_file);
 
         load_mux("explore");
@@ -715,8 +723,13 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxsearch_main(char *dir) {
-    if (!strlen(dir)) dir = UNION_ROM_PATH;
-    snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    if (!strlen(dir)) {
+        union_get_roms_root(rom_dir, sizeof(rom_dir));
+    } else {
+        if (!union_resolve_to_real(dir, rom_dir, sizeof(rom_dir))) {
+            snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+        }
+    }
 
     starter_image = 0;
     got_results = 0;

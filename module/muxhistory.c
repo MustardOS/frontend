@@ -342,17 +342,20 @@ static void process_load(int from_start) {
         return;
     }
 
-    if (!file_exist(items[current_item_index].extra_data)) {
+    char resolved_path[PATH_MAX];
+    const char *launch_path = items[current_item_index].extra_data;
+
+    if (!union_resolve_to_real(launch_path, resolved_path, sizeof(resolved_path)) || !file_exist(resolved_path)) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.NO_LOAD, LONG);
 
-        LOG_ERROR(mux_module, "Could not launch content: %s", items[current_item_index].extra_data);
+        LOG_ERROR(mux_module, "Could not launch content: %s", resolved_path[0] ? resolved_path : launch_path);
         return;
     }
 
     play_sound(SND_CONFIRM);
 
-    if (load_content(0, items[current_item_index].extra_data)) {
+    if (load_content(0, resolved_path)) {
         if (config.SETTINGS.ADVANCED.PASSCODE) {
             int result = 0;
 

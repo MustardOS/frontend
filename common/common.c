@@ -27,6 +27,7 @@
 #include "language.h"
 #include "log.h"
 #include "options.h"
+#include "union.h"
 #include "config.h"
 #include "device.h"
 #include "kiosk.h"
@@ -2881,6 +2882,7 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line) {
                  subdir, strip_ext(name), ext);
     }
 
+    remove_double_slashes(path);
     if (file_exist(path)) return read_line_char_from(path, line);
 
     return "";
@@ -3416,47 +3418,125 @@ int remove_directory_recursive(const char *path) {
 }
 
 int load_content(int add_collection, char *file_path) {
+    char resolved_path[PATH_MAX];
+
+    if (!union_resolve_to_real(file_path, resolved_path, sizeof(resolved_path))) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.NO_LOAD, MEDIUM);
+
+        LOG_ERROR(mux_module, "Could not launch content: %s", file_path);
+        return 0;
+    }
+
+    file_path = resolved_path;
+
     char *assigned_core = load_content_core(0, !add_collection, file_path);
     if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
 
     char *content_path = get_content_path(file_path);
     char *file_name = get_file_name(file_path);
-    const char *content_name = strip_ext(file_name);
+    char *content_name = strip_ext(file_name);
     char *item_dir = strip_dir(file_path);
-    const char *cfg_sub = get_last_subdir(content_path, '/', 4);
-    const char *system_sub = get_last_subdir(item_dir, '/', 4);
+
+    char cfg_sub[PATH_MAX];
+    char system_sub[PATH_MAX];
+    char mount_path[PATH_MAX];
+
+    union_get_relative_path(content_path, cfg_sub, sizeof(cfg_sub));
+    union_get_relative_path(item_dir, system_sub, sizeof(system_sub));
+    union_get_mount_path(file_path, mount_path, sizeof(mount_path));
+
+    if (strncasecmp(cfg_sub, "ROMS", 4) == 0) {
+        char *p = cfg_sub + 4;
+        while (*p == '/') p++;
+        memmove(cfg_sub, p, strlen(p) + 1);
+    }
+
+    if (strncasecmp(system_sub, "ROMS", 4) == 0) {
+        char *p = system_sub + 4;
+        while (*p == '/') p++;
+        memmove(system_sub, p, strlen(p) + 1);
+    }
 
     char content_loader_file[MAX_BUFFER_SIZE];
     snprintf(content_loader_file, sizeof(content_loader_file), INFO_CON_PATH "/%s/%s.cfg",
-             cfg_sub,
-             content_name);
+             cfg_sub, content_name);
+
+    remove_double_slashes(content_loader_file);
     LOG_INFO(mux_module, "Configuration File: %s", content_loader_file);
 
-    if (!file_exist(content_loader_file)) {
-        char content_loader_data[MAX_BUFFER_SIZE];
-        snprintf(content_loader_data, sizeof(content_loader_data), "%s|%s|%s/|%s|%s",
-                 content_name,
-                 str_replace(assigned_core, "\n", "|"),
-                 UNION_ROM_PATH,
-                 system_sub,
-                 file_name);
+    // Going to do some rebuilding of potentially broken or inconsistent
+    // loader files here, just in case we change something in the future
+    int rebuild_cfg = !file_exist(content_loader_file);
 
-        write_text_to_file(content_loader_file, "w", CHAR, str_replace(content_loader_data, "|", "\n"));
-        LOG_INFO(mux_module, "Configuration Data: %s", content_loader_data);
+    if (!rebuild_cfg) {
+        char *line1 = read_line_char_from(content_loader_file, 1);
+        char *line2 = read_line_char_from(content_loader_file, 2);
+        char *line3 = read_line_char_from(content_loader_file, 3);
+        char *line4 = read_line_char_from(content_loader_file, 4);
+        char *line5 = read_line_char_from(content_loader_file, 5);
+        char *line6 = read_line_char_from(content_loader_file, 6);
+        char *line7 = read_line_char_from(content_loader_file, 7);
+        char *line8 = read_line_char_from(content_loader_file, 8);
+        char *line9 = read_line_char_from(content_loader_file, 9);
+
+        if (!line1 || !*line1 || !line2 || !*line2 || !line3 || !*line3 ||
+            !line4 || !*line4 || !line5 || !*line5 || !line6 || !*line6 ||
+            !line7 || !*line7 || !line8 || !*line8 || !line9 || !*line9) {
+            rebuild_cfg = 1;
+        }
+
+        if (line1 && *line1) free(line1);
+        if (line2 && *line2) free(line2);
+        if (line3 && *line3) free(line3);
+        if (line4 && *line4) free(line4);
+        if (line5 && *line5) free(line5);
+        if (line6 && *line6) free(line6);
+        if (line7 && *line7) free(line7);
+        if (line8 && *line8) free(line8);
+        if (line9 && *line9) free(line9);
+    }
+
+    if (rebuild_cfg) {
+        char core[MAX_BUFFER_SIZE] = {0};
+        char sys1[MAX_BUFFER_SIZE] = {0};
+        char sys2[MAX_BUFFER_SIZE] = {0};
+        char zero[MAX_BUFFER_SIZE] = {0};
+        char launch[MAX_BUFFER_SIZE] = {0};
+
+        sscanf(assigned_core, "%1023[^\n]\n%1023[^\n]\n%1023[^\n]\n%1023[^\n]\n%1023[^\n]",
+               core, sys1, sys2, zero, launch);
+
+        char roms_path[PATH_MAX];
+        snprintf(roms_path, sizeof(roms_path), "%s/ROMS/", mount_path);
+        remove_double_slashes(roms_path);
+
+        FILE *fp = fopen(content_loader_file, "w");
+        if (!fp) {
+            LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, content_loader_file);
+            free(content_name);
+            free(item_dir);
+            return 0;
+        }
+
+        fprintf(fp, "%s\n", content_name);
+        fprintf(fp, "%s\n", core);
+        fprintf(fp, "%s\n", sys1);
+        fprintf(fp, "%s\n", sys2);
+        fprintf(fp, "%s\n", (*zero) ? zero : "0");
+        fprintf(fp, "%s\n", launch);
+        fprintf(fp, "%s\n", roms_path);
+        fprintf(fp, "%s\n", system_sub);
+        fprintf(fp, "%s\n", file_name);
+
+        fclose(fp);
     }
 
     if (file_exist(content_loader_file)) {
-        char pointer[MAX_BUFFER_SIZE];
-        char content[MAX_BUFFER_SIZE];
-
-        char cache_file[MAX_BUFFER_SIZE];
-        snprintf(cache_file, sizeof(cache_file), INFO_CON_PATH "/%s/%s.cfg",
-                 cfg_sub, content_name);
-
-        LOG_INFO(mux_module, "Using Configuration: %s", cache_file);
+        LOG_INFO(mux_module, "Using Configuration: %s", content_loader_file);
 
         if (add_collection) {
-            add_to_collection(file_name, cache_file, content_path);
+            add_to_collection(file_name, content_loader_file, content_path);
         } else {
             LOG_INFO(mux_module, "Assigned Core: %s", assigned_core);
 
@@ -3472,20 +3552,16 @@ int load_content(int add_collection, char *file_path) {
             char *assigned_flt = specify_asset(load_content_filter(content_path, content_name, 0, 1, 0),
                                                "none", "Colour Filter");
 
-            char full_file_path[MAX_BUFFER_SIZE];
-            snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s",
-                     read_line_char_from(cache_file, CONTENT_MOUNT),
-                     read_line_char_from(cache_file, CONTENT_DIR),
-                     file_name);
-
+            char pointer[MAX_BUFFER_SIZE];
             snprintf(pointer, sizeof(pointer), "%s\n%s\n%s",
-                     full_file_path, system_sub, content_name);
+                     file_path, system_sub, content_name);
 
+            char content[MAX_BUFFER_SIZE];
             snprintf(content, sizeof(content), INFO_HIS_PATH "/%s-%08X.cfg",
-                     content_name, fnv1a_hash_str(full_file_path));
+                     content_name, fnv1a_hash_str(file_path));
 
             write_text_to_file(content, "w", CHAR, pointer);
-            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
+            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, content_loader_file);
 
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
@@ -3506,29 +3582,25 @@ int load_content(int add_collection, char *file_path) {
 char *load_content_core(int force, int run_quit, char *file_path) {
     char *sys_dir = get_content_path(file_path);
     char *file_name = get_file_name(file_path);
-    char *content_name = (dir_exist(file_path)) ? get_last_dir(file_path) : get_content_name(file_path);
-    char content_core[MAX_BUFFER_SIZE] = {0};
+
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
-    if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
-        snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/core.cfg");
-    } else {
-        snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/%s/%s.cfg",
-                 last_subdir, strip_ext(file_name));
+    char content_core[MAX_BUFFER_SIZE];
+    snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/%s/%s.cfg",
+             last_subdir, strip_ext(file_name));
 
-        if (file_exist(content_core) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Content Core: %s", content_core);
+    remove_double_slashes(content_core);
 
-            char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
-                                    CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
+    if (file_exist(content_core) && !force) {
+        LOG_SUCCESS(mux_module, "Loading Content Core: %s", content_core);
 
-            if (core) return core;
+        char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
+                                CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
 
-            LOG_ERROR(mux_module, "Failed to build Content Core: %s", content_core);
-        }
-
-        snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/%s/core.cfg", last_subdir);
+        if (core) return core;
     }
+
+    snprintf(content_core, sizeof(content_core), INFO_CON_PATH "/%s/core.cfg", last_subdir);
 
     if (file_exist(content_core) && !force) {
         LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core);
@@ -3541,7 +3613,7 @@ char *load_content_core(int force, int run_quit, char *file_path) {
         LOG_ERROR(mux_module, "Failed to build Global Core: %s", content_core);
     }
 
-    load_assign(MUOS_ASS_LOAD, content_name, sys_dir, "none", force, 0);
+    load_assign(MUOS_ASS_LOAD, file_name, sys_dir, "none", force, 0);
     if (run_quit) mux_input_stop();
 
     LOG_INFO(mux_module, "No core detected");

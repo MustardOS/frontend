@@ -1,5 +1,4 @@
 #include "muxshare.h"
-#include "../common/skip_list.h"
 
 static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
@@ -85,7 +84,7 @@ static void image_refresh(char *image_type) {
     char *file_name = get_file_name(items[current_item_index].name);
     char *file_name_no_ext = strip_ext(file_name);
 
-    if (strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(UNION_ROM_PATH)) == 0) {
+    if (union_is_root(sys_dir) || at_base(sys_dir, "ROMS")) {
         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
                  INFO_CAT_PATH, image_type, content_label);
     } else {
@@ -178,45 +177,94 @@ static void image_refresh(char *image_type) {
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+    char **all_dir_names = NULL;
+    char **all_file_names = NULL;
+    int all_dir_count = 0;
+    int all_file_count = 0;
+
     file_count = 0;
     dir_count = 0;
-    struct dirent *entry;
-    DIR *dir = opendir(base_dir);
+    *dir_names = NULL;
+    *file_names = NULL;
 
-    if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
-        return;
-    }
+    union_collect(base_dir, &all_dir_names, &all_dir_count, &all_file_names, &all_file_count);
 
-    while ((entry = readdir(dir))) {
-        char full_path[PATH_MAX];
-        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-        if (entry->d_type == DT_DIR) {
-            if (!should_skip(entry->d_name, 1)) {
-                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                    if (config.VISUAL.DISPLAYEMPTYFOLDER || get_directory_item_count(base_dir, entry->d_name, 1) != 0) {
-                        char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
-                        snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+    if (all_dir_count > 0) {
+        if (config.VISUAL.DISPLAYEMPTYFOLDER) {
+            *dir_names = all_dir_names;
+            dir_count = all_dir_count;
 
-                        *dir_names = (char **) realloc(*dir_names, (dir_count + 1) * sizeof(char *));
-                        (*dir_names)[dir_count] = subdir_path;
-                        (dir_count)++;
-                    }
+            all_dir_names = NULL;
+        } else {
+            int8_t *keep = calloc((size_t) all_dir_count, sizeof(int8_t));
+            if (keep) {
+                int thread_count = all_dir_count < get_empty_threads() ? all_dir_count : get_empty_threads();
+
+                pthread_t threads[get_empty_threads()];
+                empty_check_args_t args[get_empty_threads()];
+
+                int chunk = all_dir_count / thread_count;
+                int remainder = all_dir_count % thread_count;
+
+                for (int t = 0; t < thread_count; t++) {
+                    args[t].base_dir = base_dir;
+                    args[t].dir_names = all_dir_names;
+                    args[t].dir_count = all_dir_count;
+                    args[t].keep = keep;
+                    args[t].start = t * chunk + (t < remainder ? t : remainder);
+                    args[t].end = args[t].start + chunk + (t < remainder ? 1 : 0);
+
+                    pthread_create(&threads[t], NULL, empty_check_worker, &args[t]);
                 }
-            }
-        } else if (entry->d_type == DT_REG) {
-            if (!should_skip(entry->d_name, 0)) {
-                char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
-                snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
-                *file_names = (char **) realloc(*file_names, (file_count + 1) * sizeof(char *));
-                (*file_names)[file_count] = file_path;
-                (file_count)++;
+                for (int t = 0; t < thread_count; t++) pthread_join(threads[t], NULL);
+
+                *dir_names = malloc((size_t) all_dir_count * sizeof(char *));
+                if (*dir_names) {
+                    for (int i = 0; i < all_dir_count; i++) {
+                        if (keep[i]) {
+                            (*dir_names)[dir_count++] = all_dir_names[i];
+                        } else {
+                            free(all_dir_names[i]);
+                        }
+                    }
+                    if (dir_count < all_dir_count) {
+                        char **tmp = realloc(*dir_names, (size_t) dir_count * sizeof(char *));
+                        if (tmp) *dir_names = tmp;
+                    }
+                } else {
+                    for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
+                }
+
+                free(keep);
+            } else {
+                *dir_names = malloc((size_t) all_dir_count * sizeof(char *));
+                if (*dir_names) {
+                    for (int i = 0; i < all_dir_count; i++) {
+                        if (union_get_directory_item_count(base_dir, all_dir_names[i], COUNT_BOTH) != 0) {
+                            (*dir_names)[dir_count++] = all_dir_names[i];
+                        } else {
+                            free(all_dir_names[i]);
+                        }
+                    }
+
+                    if (dir_count < all_dir_count) {
+                        char **tmp = realloc(*dir_names, (size_t) dir_count * sizeof(char *));
+                        if (tmp) *dir_names = tmp;
+                    }
+                } else {
+                    for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
+                }
             }
         }
     }
 
-    closedir(dir);
+    *file_names = all_file_names;
+    file_count = all_file_count;
+    all_file_names = NULL;
+
+    free(all_dir_names);
+    free(all_file_names);
 }
 
 static void remove_match_items(const char *filter_name, int mode, char ***filter_list, int *filter_count,
@@ -242,15 +290,21 @@ static void remove_match_items(const char *filter_name, int mode, char ***filter
 
 static void gen_item(char **file_names, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
-    char *sub_path = sys_dir;
+    char sub_path[PATH_MAX];
+    char content_tag[MAX_BUFFER_SIZE];
+    char content_file[MAX_BUFFER_SIZE];
 
-    if (strncasecmp(sys_dir, UNION_ROM_PATH, strlen(UNION_ROM_PATH)) == 0) {
-        sub_path = sys_dir + strlen(UNION_ROM_PATH);
-        while (*sub_path == '/') sub_path++;
+    union_get_relative_path(sys_dir, sub_path, sizeof(sub_path));
+
+    if (strncasecmp(sub_path, "ROMS", 4) == 0) {
+        char *p = sub_path + 4;
+        while (*p == '/') p++;
+        memmove(sub_path, p, strlen(p) + 1);
     }
 
-    snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/",
-             sub_path);
+    snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
+
+    remove_double_slashes(init_meta_dir);
     create_directories(init_meta_dir, 0);
 
     SkipList skiplist;
@@ -267,7 +321,8 @@ static void gen_item(char **file_names, int file_count) {
 
     for (int i = 0; i < file_count; i++) {
         char full_path[MAX_BUFFER_SIZE];
-        snprintf(full_path, sizeof(full_path), "%s/%s", sys_dir, file_names[i]);
+        union_resolve_path(sys_dir, file_names[i], 0, full_path, sizeof(full_path));
+
         if (!in_skiplist(&skiplist, full_path)) {
             char fn_name[MAX_BUFFER_SIZE];
             char *stripped_name = strip_ext(file_names[i]);
@@ -300,24 +355,19 @@ static void gen_item(char **file_names, int file_count) {
     remove_match_items("Collected", config.VISUAL.CONTENTCOLLECT, &collection_items, &collection_item_count,
                        populate_collection_items, &items, &item_count, sys_dir);
 
-    const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
-    char content_tag[MAX_BUFFER_SIZE];
-    char content_file[MAX_BUFFER_SIZE];
-
     for (size_t i = 0; i < item_count; ++i) {
         if (items[i].content_type != ITEM) continue;
 
         const char *basename = strip_ext(items[i].name);
 
-        snprintf(content_tag, sizeof(content_tag), INFO_CON_PATH "/%s/%s.tag",
-                 last_subdir, basename);
+        snprintf(content_tag, sizeof(content_tag), INFO_CON_PATH "/%s/%s.tag", sub_path, basename);
+        remove_double_slashes(content_tag);
 
         if (file_exist(content_tag)) {
             items[i].glyph_icon = strdup(str_remchar(read_line_char_from(content_tag, 1), ' '));
             items[i].use_module = strdup("muxtag");
         } else {
-            snprintf(content_file, sizeof(content_file), "%s/%s", sys_dir, items[i].name);
-
+            snprintf(content_file, sizeof(content_file), "%s", items[i].extra_data);
             items[i].glyph_icon = strdup(get_content_explorer_glyph_name(content_file));
             items[i].use_module = strdup(mux_module);
         }
@@ -379,17 +429,24 @@ static void create_content_items(void) {
         }
     }
 
-    update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, UNION_ROM_PATH);
+    {
+        char root_dir[PATH_MAX];
+        union_get_title_root(item_curr_dir, root_dir, sizeof(root_dir));
+        update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, root_dir);
+    }
 
     for (int i = 0; i < dir_count; i++) {
-        if (folder_has_launch_file(sys_dir, dir_names[i])) continue;
+        char resolved_dir[MAX_BUFFER_SIZE];
+        union_resolve_path(sys_dir, dir_names[i], 1, resolved_dir, sizeof(resolved_dir));
+
+        if (folder_has_launch_file(sys_dir, dir_names[i])) {
+            free(dir_names[i]);
+            continue;
+        }
+
         char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
-
-        char rom_dir[MAX_BUFFER_SIZE];
-        snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, dir_names[i]);
-        automatic_assign_core(rom_dir);
-
-        content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, rom_dir, FOLDER);
+        automatic_assign_core(resolved_dir);
+        content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, resolved_dir, FOLDER);
 
         new_item->glyph_icon = "folder";
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
@@ -397,7 +454,7 @@ static void create_content_items(void) {
         if (config.VISUAL.FOLDERITEMCOUNT) {
             char display_name[MAX_BUFFER_SIZE];
             snprintf(display_name, sizeof(display_name), "%s (%d)",
-                     new_item->display_name, get_directory_item_count(item_curr_dir, new_item->name, 1));
+                     new_item->display_name, union_get_directory_item_count(item_curr_dir, new_item->name, COUNT_BOTH));
             new_item->display_name = strdup(display_name);
         }
 
@@ -694,12 +751,7 @@ static void process_load(int from_start) {
 
     if (items[current_item_index].content_type == FOLDER) {
         load_message = 1;
-
-        char n_dir[MAX_BUFFER_SIZE];
-        snprintf(n_dir, sizeof(n_dir), "%s/%s",
-                 sys_dir, items[current_item_index].name);
-
-        write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
+        write_text_to_file(EXPLORE_DIR, "w", CHAR, items[current_item_index].extra_data);
     } else {
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
@@ -844,20 +896,6 @@ static void handle_start(void) {
     mux_input_stop();
 }
 
-static void handle_select(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
-
-    toast_message(lang.GENERIC.REFRESH_RUN, FOREVER);
-
-    const char *args[] = {(OPT_PATH "script/mount/union.sh"), "restart", NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-    write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
-    load_mux("explore");
-
-    mux_input_stop();
-}
-
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
@@ -967,7 +1005,11 @@ int muxplore_main(int index, char *dir) {
     starter_image = 0;
     splash_valid = 0;
 
-    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? UNION_ROM_PATH : dir);
+    if (strcmp(dir, "") == 0) {
+        union_get_roms_root(sys_dir, sizeof(sys_dir));
+    } else {
+        snprintf(sys_dir, sizeof(sys_dir), "%s", dir);
+    }
     sys_index = index;
 
     init_module(__func__);
@@ -1061,7 +1103,6 @@ int muxplore_main(int index, char *dir) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_SELECT] = handle_select,
                     [MUX_INPUT_START] = handle_start,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

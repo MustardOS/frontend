@@ -31,6 +31,7 @@
 #include "../common/kiosk.h"
 #include "../common/common.h"
 #include "../common/board.h"
+#include "../common/union.h"
 #include "../common/ui_common.h"
 #include "../common/font.h"
 #include "../common/osk.h"
@@ -38,6 +39,7 @@
 #include "../common/language.h"
 #include "../common/collection.h"
 #include "../common/collection_tag.h"
+#include "../common/skip_list.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
 #include "../common/verify.h"
@@ -107,8 +109,7 @@ void header_and_footer_setup();
 
 void overlay_display();
 
-void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
-                      char *catalogue_folder, char *content_name);
+void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config, char *catalogue_folder, char *content_name);
 
 char *specify_asset(char *val, const char *def_val, const char *label);
 
@@ -128,8 +129,7 @@ char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_j
 
 int folder_has_launch_file(char *base_dir, char *dir_name);
 
-void update_title(char *folder_path, int fn_valid, struct json fn_json,
-                  const char *label, const char *module_path);
+void update_title(char *folder_path, int fn_valid, struct json fn_json, const char *label, const char *module_path);
 
 void gen_label(char *module, char *item_glyph, char *item_text);
 

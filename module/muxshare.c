@@ -1,5 +1,4 @@
 #include "muxshare.h"
-#include "../common/skip_list.h"
 
 size_t item_count = 0;
 content_item *items = NULL;
@@ -173,7 +172,7 @@ char *specify_asset(char *val, const char *def_val, const char *label) {
 static char *load_content_asset(char *sys_dir, const char *pointer, int force, int run_quit,
                                 const char *ext, const char *label, int is_app) {
     char path[MAX_BUFFER_SIZE];
-    const char *last_subdir = NULL;
+    if (!sys_dir) return NULL;
 
     if (is_app) {
         snprintf(path, sizeof(path), "%s/mux_option.%s", sys_dir, ext);
@@ -187,14 +186,22 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
         return NULL;
     }
 
-    last_subdir = get_last_subdir(sys_dir, '/', 4);
+    char rel_path[PATH_MAX];
+    union_get_relative_path(sys_dir, rel_path, sizeof(rel_path));
 
-    if (strcasecmp(last_subdir, strip_dir(UNION_ROM_PATH)) == 0) {
-        snprintf(path, sizeof(path), INFO_CON_PATH "/core.%s",
-                 ext);
+    if (strncasecmp(rel_path, "ROMS", 4) == 0) {
+        char *p = rel_path + 4;
+        while (*p == '/') p++;
+        memmove(rel_path, p, strlen(p) + 1);
+    }
+
+    if (rel_path[0] == '\0') {
+        snprintf(path, sizeof(path), INFO_CON_PATH "/core.%s", ext);
     } else {
-        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/%s.%s",
-                 last_subdir, pointer == NULL ? strip_ext(items[current_item_index].name) : pointer, ext);
+        const char *name = pointer ? pointer : strip_ext(items[current_item_index].name);
+
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/%s.%s", rel_path, name, ext);
+        remove_double_slashes(path);
 
         if (file_exist(path) && !force) {
             LOG_SUCCESS(mux_module, "Loading Content Asset %s: %s", label, path);
@@ -205,8 +212,8 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
             LOG_ERROR(mux_module, "Failed to read Content Asset: %s", label);
         }
 
-        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/core.%s",
-                 last_subdir, ext);
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/core.%s", rel_path, ext);
+        remove_double_slashes(path);
     }
 
     if (file_exist(path) && !force) {
@@ -240,8 +247,7 @@ char *load_content_filter(char *sys_dir, const char *pointer, int force, int run
     return load_content_asset(sys_dir, pointer, force, run_quit, "flt", "Colour Filter", is_app);
 }
 
-void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
-                      char *catalogue_folder, char *content_name) {
+void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config, char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
     int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) (device.MUX.WIDTH / 2));
@@ -251,10 +257,10 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
 
     lv_obj_set_width(ui_viewport_objects[0], viewport_width == 0 ? LV_SIZE_CONTENT : viewport_width);
     lv_obj_set_height(ui_viewport_objects[0], viewport_height == 0 ? LV_SIZE_CONTENT : viewport_height);
+
     if (column_mode) {
         lv_obj_set_flex_flow(ui_viewport_objects[0], LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(ui_viewport_objects[0], LV_FLEX_ALIGN_CENTER, column_mode_alignment,
-                              LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_flex_align(ui_viewport_objects[0], LV_FLEX_ALIGN_CENTER, column_mode_alignment, LV_FLEX_ALIGN_CENTER);
     }
 
     for (int index = 1; index < 6; index++) {
@@ -349,7 +355,7 @@ int folder_has_launch_file_with_extension(char *base_dir, char *dir_name, char *
     snprintf(file_path, sizeof(file_path), "%s/%s/%s.%s", base_dir, dir_name, dir_name, ext);
     if (file_exist(file_path)) {
         char item_name[MAX_BUFFER_SIZE];
-        snprintf(item_name, sizeof(item_name), "%s/%s.%s", dir_name, dir_name, ext);        
+        snprintf(item_name, sizeof(item_name), "%s/%s.%s", dir_name, dir_name, ext);
         char fn_name[MAX_BUFFER_SIZE];
         resolve_friendly_name(base_dir, dir_name, fn_name);
         add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
@@ -369,7 +375,7 @@ int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
     }
     if (file_exist(file_path)) {
         char item_name[MAX_BUFFER_SIZE];
-        snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, dir_name);        
+        snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, dir_name);
         char fn_name[MAX_BUFFER_SIZE];
         resolve_friendly_name(base_dir, strip_ext(dir_name), fn_name);
         add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
@@ -387,8 +393,7 @@ int folder_has_launch_file(char *base_dir, char *dir_name) {
     return 0;
 }
 
-void update_title(char *folder_path, int fn_valid, struct json fn_json,
-                  const char *label, const char *module_path) {
+void update_title(char *folder_path, int fn_valid, struct json fn_json, const char *label, const char *module_path) {
     char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
     adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
 

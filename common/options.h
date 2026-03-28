@@ -72,12 +72,10 @@
 #define EXPLORE_DIR  "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-#define UNION_ROM_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP    "/tmp/skip_opt"
 
 #define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
-#define BGM_SILENCE    OPT_PATH "share/media/silence.ogg"
 
 #define ADD_MODE_WORK "/tmp/add_mode_work"
 #define ADD_MODE_DONE "/tmp/add_mode_done"
