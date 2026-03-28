@@ -3912,3 +3912,13 @@ int get_index_on_delete(int current_index, int post_delete_count) {
     int max_index = post_delete_count - 1;
     return current_index > max_index ? max_index : current_index;
 }
+
+char *get_storage_label(const char *path) {
+    if (!path) return "Unknown";
+
+    if (strncmp(path, device.STORAGE.ROM.MOUNT, strlen(device.STORAGE.ROM.MOUNT)) == 0) return lang.MUXSPACE.PRIMARY;
+    if (strncmp(path, device.STORAGE.SDCARD.MOUNT, strlen(device.STORAGE.SDCARD.MOUNT)) == 0) return lang.MUXSPACE.SECONDARY;
+    if (strncmp(path, device.STORAGE.USB.MOUNT, strlen(device.STORAGE.USB.MOUNT)) == 0) return lang.MUXSPACE.EXTERNAL;
+
+    return "Unknown";
+}

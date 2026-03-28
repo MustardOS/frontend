@@ -40,6 +40,7 @@ struct mux_lang {
         char CLOSE[MAX_BUFFER_SIZE];
         char COLLECT[MAX_BUFFER_SIZE];
         char CONTENT[MAX_BUFFER_SIZE];
+        char DETAILS[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
@@ -90,6 +91,7 @@ struct mux_lang {
         char SELECT[MAX_BUFFER_SIZE];
         char SET[MAX_BUFFER_SIZE];
         char SHUTTING_DOWN[MAX_BUFFER_SIZE];
+        char STORAGE[MAX_BUFFER_SIZE];
         char SWITCH_IMAGE[MAX_BUFFER_SIZE];
         char SWITCH_INFO[MAX_BUFFER_SIZE];
         char SYNC[MAX_BUFFER_SIZE];

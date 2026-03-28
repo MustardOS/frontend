@@ -56,6 +56,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.CLOSE, "Close");
     GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
     GENERIC_FIELD(lang->GENERIC.CONTENT, "Content");
+    GENERIC_FIELD(lang->GENERIC.DETAILS, "Details");
     GENERIC_FIELD(lang->GENERIC.DIRECTORY, "Directory");
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.DOWNLOAD, "Download");
@@ -106,6 +107,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SELECT, "Select");
     GENERIC_FIELD(lang->GENERIC.SET, "Set");
     GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down…");
+    GENERIC_FIELD(lang->GENERIC.STORAGE, "Storage");
     GENERIC_FIELD(lang->GENERIC.SWITCH_IMAGE, "Preview Image");
     GENERIC_FIELD(lang->GENERIC.SWITCH_INFO, "Information");
     GENERIC_FIELD(lang->GENERIC.SYNC, "Sync to SD1");

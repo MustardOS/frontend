@@ -7,6 +7,16 @@ enum {
 };
 #undef OPTION
 
+typedef enum {
+    VIEW_OPTIONS = 0,
+    VIEW_INFO
+} option_view_t;
+
+static option_view_t current_view = VIEW_OPTIONS;
+
+static lv_obj_t *ui_pnlInfoView;
+static lv_obj_t *ui_pnlOptionsView;
+
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
@@ -51,10 +61,10 @@ static int visible_tag(void) {
     return !lv_obj_has_flag(ui_pnlTag_option, LV_OBJ_FLAG_HIDDEN);
 }
 
-static void add_static_item(int index, const char *item_label, const char *item_value,
-                            const char *glyph_name, bool add_bottom_border) {
-    lv_obj_t *ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
+static void add_static_item(lv_obj_t *parent, int index, const char *item_label, const char *item_value, const char *glyph_name) {
+    lv_obj_t *ui_pnlInfoItem = lv_obj_create(parent);
     apply_theme_list_panel(ui_pnlInfoItem);
+    lv_obj_set_width(ui_pnlInfoItem, lv_pct(100));
 
     lv_obj_t *ui_lblInfoItem = lv_label_create(ui_pnlInfoItem);
     apply_theme_list_item(&theme, ui_lblInfoItem, item_label);
@@ -65,13 +75,7 @@ static void add_static_item(int index, const char *item_label, const char *item_
     lv_obj_t *ui_lblInfoItemValue = lv_label_create(ui_pnlInfoItem);
     apply_theme_list_value(&theme, ui_lblInfoItemValue, item_value);
 
-    if (add_bottom_border) {
-        lv_obj_set_height(ui_pnlInfoItem, 1);
-        lv_obj_set_style_border_width(ui_pnlInfoItem, 1, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_border_color(ui_pnlInfoItem, lv_color_hex(theme.LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_border_opa(ui_pnlInfoItem, theme.LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
-    } else if (theme.MUX.ITEM.COUNT < UI_COUNT) {
+    if (group_index < UI_COUNT) {
         ui_objects_panel[group_index] = ui_pnlInfoItem;
         ui_objects[group_index] = ui_lblInfoItem;
         lv_obj_set_user_data(ui_lblInfoItem, "info_item");
@@ -80,14 +84,47 @@ static void add_static_item(int index, const char *item_label, const char *item_
         group_index++;
     }
 
-    adjust_label_value_width(ui_pnlContent, ui_lblInfoItem, ui_lblInfoItemValue);
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lblInfoItemValue);
+    adjust_label_value_width(parent, ui_lblInfoItem, ui_lblInfoItemValue);
+    apply_text_long_dot(&theme, parent, ui_lblInfoItemValue);
 
     lv_obj_move_to_index(ui_pnlInfoItem, index);
 }
 
-static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *get_dir,
-                               const char *opt_type, bool cap_label) {
+static void create_view_containers(void) {
+    ui_pnlOptionsView = lv_obj_create(ui_pnlContent);
+    lv_obj_remove_style_all(ui_pnlOptionsView);
+    lv_obj_set_size(ui_pnlOptionsView, lv_pct(100), lv_pct(100));
+    lv_obj_align(ui_pnlOptionsView, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_clear_flag(ui_pnlOptionsView, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(ui_pnlOptionsView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlOptionsView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_layout(ui_pnlOptionsView, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(ui_pnlOptionsView, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_pnlOptionsView, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+    ui_pnlInfoView = lv_obj_create(ui_pnlContent);
+    lv_obj_remove_style_all(ui_pnlInfoView);
+    lv_obj_set_size(ui_pnlInfoView, lv_pct(100), lv_pct(100));
+    lv_obj_align(ui_pnlInfoView, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_clear_flag(ui_pnlInfoView, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(ui_pnlInfoView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlInfoView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_layout(ui_pnlInfoView, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(ui_pnlInfoView, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_pnlInfoView, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+    lv_obj_add_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *get_dir, const char *opt_type, bool cap_label) {
     const char *value = get_file;
     if (!*value) value = get_dir;
 
@@ -165,33 +202,31 @@ static void add_info_items(void) {
 }
 
 static struct json get_playtime_json(void) {
+    static char *json_str = NULL;
+    static struct json root = {0};
+    static int loaded = 0;
+
+    if (!loaded) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), INFO_ACT_PATH "/" PLAYTIME_DATA);
+
+        if (!file_exist(path)) return (struct json) {0};
+
+        json_str = read_all_char_from(path);
+        if (!json_str || !json_valid(json_str)) {
+            free(json_str);
+            json_str = NULL;
+            return (struct json) {0};
+        }
+
+        root = json_parse(json_str);
+        loaded = 1;
+    }
+
     char fullpath[PATH_MAX];
     snprintf(fullpath, sizeof(fullpath), "%s/%s", rom_dir, rom_name);
 
-    char playtime_data[MAX_BUFFER_SIZE];
-    snprintf(playtime_data, sizeof(playtime_data), INFO_ACT_PATH "/" PLAYTIME_DATA);
-
-    if (!file_exist(playtime_data)) {
-        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data);
-        return (struct json) {0};
-    } else {
-        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data);
-    }
-
-    char *json_str = read_all_char_from(playtime_data);
-    if (!json_valid(json_str)) {
-        free(json_str);
-        return (struct json) {0};
-    }
-
-    struct json fn_json = json_parse(json_str);
-
-    struct json playtime_json = json_object_get(fn_json, fullpath);
-    if (!json_exists(playtime_json)) return (struct json) {0};
-
-    free(json_str);
-
-    return playtime_json;
+    return json_object_get(root, fullpath);
 }
 
 static char *get_time_played(void) {
@@ -232,42 +267,27 @@ static char *get_launch_count(void) {
     return launch_count;
 }
 
-static void init_navigation_group(void) {
-    int line_index = 0;
+static void build_options_view(void) {
+    group_index = 0;
 
-    int dir_level = 4;
-    if (strcasecmp(rom_dir, UNION_ROM_PATH) == 0) dir_level = 3;
+    memset(ui_objects, 0, sizeof(ui_objects));
+    memset(ui_objects_panel, 0, sizeof(ui_objects_panel));
+    memset(ui_objects_glyph, 0, sizeof(ui_objects_glyph));
+    memset(ui_objects_value, 0, sizeof(ui_objects_value));
 
-    char file_path[MAX_BUFFER_SIZE];
-    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
+    lv_obj_clean(ui_pnlOptionsView);
+    init_muxoption(ui_pnlOptionsView);
 
-    char *sys_dir = get_content_path(file_path);
-    char *file_name = strip_ext(get_file_name(file_path));
-
-    curr_dir = get_last_subdir(strip_dir(file_path), '/', dir_level);
-
-    add_static_item(line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder", false);
-
-    if (!is_dir) {
-        char friendly_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(sys_dir, file_name, friendly_name);
-        adjust_visual_label(friendly_name, config.VISUAL.NAME, config.VISUAL.DASH);
-
-        add_static_item(line_index++, lang.MUXOPTION.NAME, friendly_name, "rom", false);
-        add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
-        add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
-    }
-
-    add_static_item(line_index, "", "", "", true);
-
-    char *rem_config_opt = is_dir ? lang.GENERIC.DIRECTORY : lang.GENERIC.CONTENT;
+#define OPTION(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
+    OPTION_ELEMENTS
+#undef OPTION
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
     INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
     INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
     INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
     INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
-    INIT_VALUE_ITEM(-1, option, RemConfig, lang.MUXOPTION.REMCONFIG, "remconfig", rem_config_opt);
+    INIT_VALUE_ITEM(-1, option, RemConfig, lang.MUXOPTION.REMCONFIG, "remconfig", is_dir ? lang.GENERIC.DIRECTORY : lang.GENERIC.CONTENT);
     INIT_VALUE_ITEM(-1, option, ColFilter, lang.MUXOPTION.COLFILTER, "colfilter", "");
     if (!is_dir) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
 
@@ -282,12 +302,74 @@ static void init_navigation_group(void) {
         HIDE_VALUE_ITEM(option, RemConfig);
     }
 
-    if (hdmi_mode) HIDE_VALUE_ITEM(option, ColFilter);
+    if (hdmi_mode) {
+        HIDE_VALUE_ITEM(option, ColFilter);
+    }
+}
+
+static void build_info_view(void) {
+    int line_index = 0;
+    group_index = 0;
+
+    memset(ui_objects, 0, sizeof(ui_objects));
+    memset(ui_objects_panel, 0, sizeof(ui_objects_panel));
+    memset(ui_objects_glyph, 0, sizeof(ui_objects_glyph));
+    memset(ui_objects_value, 0, sizeof(ui_objects_value));
+
+    lv_obj_clean(ui_pnlInfoView);
+
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
+
+    const char *storage_label = get_storage_label(rom_dir);
+    add_static_item(ui_pnlInfoView, line_index++, lang.GENERIC.STORAGE, storage_label, "storage");
+
+    char rel_path[PATH_MAX];
+    union_get_relative_path(rom_dir, rel_path, sizeof(rel_path));
+
+    if (strncasecmp(rel_path, "ROMS", 4) == 0) {
+        char *p = rel_path + 4;
+        while (*p == '/') p++;
+        memmove(rel_path, p, strlen(p) + 1);
+    }
+
+    {
+        int dir_level = rel_path[0] ? 4 : 3;
+        curr_dir = get_last_subdir(strip_dir(file_path), '/', dir_level);
+    }
+
+    add_static_item(ui_pnlInfoView, line_index++, lang.GENERIC.DIRECTORY, curr_dir, "folder");
+
+    if (!is_dir) {
+        char *sys_dir = get_content_path(file_path);
+        char *file_name = strip_ext(get_file_name(file_path));
+
+        char friendly_name[MAX_BUFFER_SIZE];
+        resolve_friendly_name(sys_dir, file_name, friendly_name);
+        adjust_visual_label(friendly_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
+        add_static_item(ui_pnlInfoView, line_index++, lang.MUXOPTION.NAME, friendly_name, "rom");
+        add_static_item(ui_pnlInfoView, line_index++, lang.MUXOPTION.TIME, get_time_played(), "time");
+        add_static_item(ui_pnlInfoView, line_index, lang.MUXOPTION.LAUNCH, get_launch_count(), "count");
+    }
+
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 }
 
 static void check_focus(void) {
-    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) {
+    if (current_view != VIEW_OPTIONS) {
+        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        return;
+    }
+
+    struct _lv_obj_t *focused_element = lv_group_get_focused(ui_group);
+    if (focused_element == ui_lblRemConfig_option) {
         lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -304,8 +386,44 @@ static void check_focus(void) {
     }
 }
 
+static void refresh_option_view(void) {
+    lv_group_remove_all_objs(ui_group);
+    lv_group_remove_all_objs(ui_group_value);
+    lv_group_remove_all_objs(ui_group_glyph);
+    lv_group_remove_all_objs(ui_group_panel);
+
+    ui_count = 0;
+    current_item_index = 0;
+
+    if (current_view == VIEW_OPTIONS) {
+        lv_obj_clear_flag(ui_pnlOptionsView, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
+
+        build_options_view();
+
+        lv_label_set_text(ui_lblNavY, lang.GENERIC.INFO);
+        check_focus();
+    } else {
+        lv_obj_add_flag(ui_pnlOptionsView, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
+
+        build_info_view();
+
+        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+
+        lv_label_set_text(ui_lblNavY, lang.GENERIC.DETAILS);
+    }
+
+    lv_obj_update_layout(ui_pnlContent);
+}
+
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, is_dir ? -1 : -4);
+    gen_step_movement(steps, direction, false, 0);
     check_focus();
 }
 
@@ -339,7 +457,7 @@ static char *change_config_opt(int steps) {
 }
 
 static void handle_option_prev(void) {
-    if (msgbox_active || hold_call) return;
+    if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
     if (f == ui_lblRemConfig_option) {
@@ -349,7 +467,7 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (msgbox_active || hold_call) return;
+    if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
     if (f == ui_lblRemConfig_option) {
@@ -359,7 +477,7 @@ static void handle_option_next(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
     if (f == ui_lblRemConfig_option) return;
@@ -427,6 +545,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (current_view != VIEW_OPTIONS) return;
+
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
     if (f == ui_lblRemConfig_option) {
         if (!hold_call) {
@@ -459,8 +579,17 @@ static void handle_x(void) {
                 break;
         }
 
-        return;
+        refresh_option_view();
     }
+}
+
+static void handle_y(void) {
+    if (hold_call) return;
+
+    play_sound(SND_CONFIRM);
+
+    current_view = (current_view == VIEW_OPTIONS) ? VIEW_INFO : VIEW_OPTIONS;
+    refresh_option_view();
 }
 
 static void handle_help(void) {
@@ -482,25 +611,28 @@ static void init_elements(void) {
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
             {ui_lblNavXGlyph,  "",                  0},
             {ui_lblNavX,       lang.GENERIC.REMOVE, 0},
+            {ui_lblNavYGlyph,  "",                  0},
+            {ui_lblNavY,       lang.GENERIC.INFO,   0},
             {NULL, NULL,                            0}
     });
-
-    check_focus();
-
-#define OPTION(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
-    OPTION_ELEMENTS
-#undef OPTION
 
     overlay_display();
 }
 
 int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     group_index = 0;
+    rem_config = 0;
+    current_view = VIEW_OPTIONS;
 
-    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+    char resolved_dir[PATH_MAX];
+    if (!union_resolve_to_real(dir, resolved_dir, sizeof(resolved_dir))) {
+        snprintf(resolved_dir, sizeof(resolved_dir), "%s", dir);
+    }
+
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", resolved_dir, name);
     is_dir = dir_exist(rom_dir);
 
-    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", resolved_dir);
 
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
@@ -518,7 +650,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
-    init_muxoption(ui_pnlContent);
+    create_view_containers();
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -527,9 +659,9 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
-    init_navigation_group();
+    refresh_option_view();
 
-    if (file_exist(MUOS_OPI_LOAD)) {
+    if (file_exist(MUOS_OPI_LOAD) && current_view == VIEW_OPTIONS) {
         list_nav_move(read_line_int_from(MUOS_OPI_LOAD, 1), +1);
         remove(MUOS_OPI_LOAD);
     }
@@ -542,6 +674,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
