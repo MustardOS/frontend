@@ -62,7 +62,7 @@ void inotify_init(void) {
 
     inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, 0);
     inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists, 0);
-    inotify_track(ino_proc, "/run/muos", "do_refresh", &do_refresh_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "hdmi_refresh", &hdmi_refresh_exists, 0);
     inotify_track(ino_proc, "/run/muos", "blank", &blank_exists, 0);
 }
 

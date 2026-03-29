@@ -1176,9 +1176,9 @@ void ui_common_handle_idle(void) {
         need_update = 1;
     }
 
-    if (do_refresh_exists) {
+    if (hdmi_refresh_exists) {
         remove(HDMI_REFRESH);
-        do_refresh_exists = 0;
+        hdmi_refresh_exists = 0;
 
         lv_obj_invalidate(ui_pnlHeader);
         lv_obj_invalidate(ui_pnlContent);

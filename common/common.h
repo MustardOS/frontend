@@ -39,7 +39,7 @@ extern int is_blank;
 
 extern int idle_state_exists;
 extern int safe_quit_exists;
-extern int do_refresh_exists;
+extern int hdmi_refresh_exists;
 extern int blank_exists;
 
 extern int hdmi_mode;
