@@ -317,8 +317,10 @@ static void close_input_device(void) {
 }
 
 static void open_input_device(void) {
-    close_input_device();
     static int mappings_loaded = 0;
+    static uint32_t last_no_device_log = UINT32_MAX;
+
+    close_input_device();
 
     if (!mappings_loaded) {
         int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
@@ -326,18 +328,38 @@ static void open_input_device(void) {
 
         // This SDL specific map must in the "retro" format
         // as we do our own internal key swapping mechanism
-        if (SDL_GameControllerAddMapping(device.BOARD.SDL_MAP) < 0) {
+        if (device.BOARD.SDL_MAP[0] != '\0' && SDL_GameControllerAddMapping(device.BOARD.SDL_MAP) < 0) {
             LOG_WARN("input", "Failed to add mapping: %s", SDL_GetError());
         }
 
         mappings_loaded = 1;
     }
 
+    SDL_GameControllerEventState(SDL_ENABLE);
+    SDL_JoystickEventState(SDL_ENABLE);
+    SDL_PumpEvents();
+    SDL_JoystickUpdate();
+
+    const char *video_driver = SDL_GetCurrentVideoDriver();
     int num_joy = SDL_NumJoysticks();
     if (num_joy <= 0) {
-        LOG_WARN("input", "No controllers detected");
+        uint32_t now = (uint32_t) mux_tick();
+
+        // Avoid log spam during retry loops...
+        if (last_no_device_log == UINT32_MAX || now - last_no_device_log >= 2000U) {
+            LOG_INFO("input", "SDL video driver: %s", video_driver ? video_driver : "unknown");
+            LOG_INFO("input", "Detected %d joystick(s)", num_joy);
+            LOG_WARN("input", "No controllers detected");
+            last_no_device_log = now;
+        }
+
         return;
     }
+
+    last_no_device_log = UINT32_MAX;
+
+    LOG_INFO("input", "SDL video driver: %s", video_driver ? video_driver : "unknown");
+    LOG_INFO("input", "Detected %d joystick(s)", num_joy);
 
     for (int i = 0; i < num_joy; i++) {
         SDL_JoystickGUID guid = SDL_JoystickGetDeviceGUID(i);
@@ -367,14 +389,21 @@ static void open_input_device(void) {
         return;
     }
 
+    // Fall back to raw joystick if no SDL GameController mapping applies.
+    // This can be 50/50 and is best to set a 'sdl_map' for the device!
     for (int i = 0; i < num_joy; i++) {
-        joystick = SDL_JoystickOpen(i);
-        if (!joystick) continue;
+        SDL_Joystick *joy = SDL_JoystickOpen(i);
+        if (!joy) {
+            LOG_WARN("input", "Failed to open joystick %d: %s", i, SDL_GetError());
+            continue;
+        }
 
-        SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
+        SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
         char guid_str[64];
         SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
 
+        controller = NULL;
+        joystick = joy;
         active_instance = SDL_JoystickInstanceID(joystick);
 
         const char *name = SDL_JoystickName(joystick);
@@ -663,11 +692,17 @@ void mux_input_task(const mux_input_options *opts) {
     const int accel_ms = config.SETTINGS.ADVANCED.ACCELERATE > 0 ? config.SETTINGS.ADVANCED.ACCELERATE : 1;
     const int timeout_hold = (opts->max_idle_ms > 0) ? ((int) opts->max_idle_ms < accel_ms ? (int) opts->max_idle_ms : accel_ms) : accel_ms;
 
+    const uint32_t retry_interval_ms = 750U;
+    const int no_device_wait_ms = 250;
+    uint32_t next_retry_tick = 0;
+
     fade_in_screen();
 
     SDL_Event ev;
     while (!stop_flag) {
         int timeout = held ? timeout_hold : timeout_idle;
+
+        if (!controller && !joystick && timeout > no_device_wait_ms) timeout = no_device_wait_ms;
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         do {
@@ -702,6 +737,7 @@ void mux_input_task(const mux_input_options *opts) {
                     if (!controller && !joystick) {
                         LOG_INFO("input", "Input device connected");
                         open_input_device();
+                        next_retry_tick = tick + retry_interval_ms;
                     }
                     break;
                 case SDL_CONTROLLERDEVICEREMOVED:
@@ -710,6 +746,7 @@ void mux_input_task(const mux_input_options *opts) {
                         close_input_device();
                         pressed = 0;
                         held = 0;
+                        next_retry_tick = 0;
                         open_input_device();
                     }
                     break;
@@ -719,6 +756,7 @@ void mux_input_task(const mux_input_options *opts) {
                         close_input_device();
                         pressed = 0;
                         held = 0;
+                        next_retry_tick = 0;
                         open_input_device();
                     }
                     break;
@@ -736,6 +774,12 @@ void mux_input_task(const mux_input_options *opts) {
         if (stop_flag) break;
 
         tick = (uint32_t) mux_tick();
+
+        if (!controller && !joystick && tick >= next_retry_tick) {
+            LOG_DEBUG("input", "Retrying input device detection...");
+            open_input_device();
+            next_retry_tick = tick + retry_interval_ms;
+        }
 
         if (input_is_suppressed()) {
             pressed = 0;
