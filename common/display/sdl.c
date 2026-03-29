@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "../log.h"
-#include "../options.h"
 #include "../common.h"
 #include "../device.h"
 #include "../input.h"
@@ -39,11 +38,14 @@ typedef struct {
 
 static monitor_t monitor;
 
+static SDL_Rect pending_rect;
+static bool pending_rect_valid = false;
+
 int scale_width, scale_height, underscan;
 
 static void update_blend_mode(void) {
-    SDL_SetTextureBlendMode(monitor.texture, theme.SDL.TEXTURE_BLEND_MODE);
-    SDL_SetRenderDrawBlendMode(monitor.renderer, theme.SDL.DRAW_BLEND_MODE);
+    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
 
     monitor.force_clear = true;
 }
@@ -133,6 +135,32 @@ void check_theme_change(void) {
     }
 }
 
+static inline void rect_union_xywh(SDL_Rect *dst, const SDL_Rect *src) {
+    int x1 = (dst->x < src->x) ? dst->x : src->x;
+    int y1 = (dst->y < src->y) ? dst->y : src->y;
+
+    int x2 = ((dst->x + dst->w) > (src->x + src->w)) ? (dst->x + dst->w) : (src->x + src->w);
+    int y2 = ((dst->y + dst->h) > (src->y + src->h)) ? (dst->y + dst->h) : (src->y + src->h);
+
+    dst->x = x1;
+    dst->y = y1;
+
+    dst->w = x2 - x1;
+    dst->h = y2 - y1;
+}
+
+static inline void accumulate_pending_rect(const SDL_Rect *upd) {
+    if (upd->w <= 0 || upd->h <= 0) return;
+
+    if (!pending_rect_valid) {
+        pending_rect = *upd;
+        pending_rect_valid = true;
+        return;
+    }
+
+    rect_union_xywh(&pending_rect, upd);
+}
+
 static inline int scale_pixels(int px, float zoom) {
     return (int) ((float) px * zoom + 0.5f);
 }
@@ -149,13 +177,23 @@ static void update_render_state(void) {
             LOG_INFO("video", "Scaling: Disabled");
             break;
         case 2: // Stretch to Screen
-            scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM_WIDTH);
-            scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM_HEIGHT);
+            if (device.SCREEN.ZOOM_WIDTH <= 0.0f || device.SCREEN.ZOOM_HEIGHT <= 0.0f) {
+                scale_width = device.MUX.WIDTH;
+                scale_height = device.MUX.HEIGHT;
+            } else {
+                scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM_WIDTH);
+                scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM_HEIGHT);
+            }
             LOG_INFO("video", "Scaling: Stretch");
             break;
         default: // Scale with letterbox
-            scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM);
-            scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM);
+            if (device.SCREEN.ZOOM <= 0.0f) {
+                scale_width = device.MUX.WIDTH;
+                scale_height = device.MUX.HEIGHT;
+            } else {
+                scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM);
+                scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM);
+            }
             LOG_INFO("video", "Scaling: Scale");
             break;
     }
@@ -178,6 +216,10 @@ static void update_render_state(void) {
             scale_height - (underscan * 2)
     };
 
+    if (monitor.dest_rect.w <= 0 || monitor.dest_rect.h <= 0) {
+        monitor.dest_rect = (SDL_Rect) {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+    }
+
     if (hdmi_mode) {
         monitor.angle = 0.0;
         monitor.pivot_ptr = NULL;
@@ -199,9 +241,10 @@ static void update_render_state(void) {
 void sdl_init(void) {
     SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
     SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE, "1");
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     SDL_SetHint(SDL_HINT_APP_NAME, MUX_CALLER);
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
 
     if (hdmi_mode) {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
@@ -242,8 +285,11 @@ void sdl_init(void) {
         exit(EXIT_FAILURE);
     }
 
+    int out_w = 0, out_h = 0;
+    SDL_GetRendererOutputSize(monitor.renderer, &out_w, &out_h);
+
     monitor.texture = SDL_CreateTexture(monitor.renderer,
-                                        SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                        SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
                                         device.MUX.WIDTH, device.MUX.HEIGHT);
 
     if (!monitor.texture) {
@@ -251,24 +297,39 @@ void sdl_init(void) {
         exit(EXIT_FAILURE);
     }
 
+    SDL_SetTextureScaleMode(monitor.texture, SDL_ScaleModeNearest);
     update_blend_mode();
 
-    void *pixels = NULL;
-    int pitch = 0;
-    if (SDL_LockTexture(monitor.texture, NULL, &pixels, &pitch) == 0) {
-        uint32_t * px = pixels;
-        size_t pt = (pitch / 4) * device.MUX.HEIGHT;
-        for (size_t i = 0; i < pt; i++) px[i] = 0x00000000;
-        SDL_UnlockTexture(monitor.texture);
+    {
+        const size_t tex_pixels = (size_t) device.MUX.WIDTH * (size_t) device.MUX.HEIGHT;
+        const size_t tex_bytes = tex_pixels * sizeof(uint32_t);
+        uint32_t * clear_buf = calloc(tex_pixels, sizeof(uint32_t));
+
+        if (!clear_buf) {
+            LOG_ERROR("video", "Texture clear buffer allocation failed");
+            exit(EXIT_FAILURE);
+        }
+
+        if (SDL_UpdateTexture(monitor.texture, NULL, clear_buf, device.MUX.WIDTH * (int) sizeof(uint32_t)) != 0) {
+            LOG_ERROR("video", "Initial texture clear failed: %s", SDL_GetError());
+            free(clear_buf);
+            exit(EXIT_FAILURE);
+        }
+
+        free(clear_buf);
+        (void) tex_bytes;
     }
 
+    pending_rect = (SDL_Rect) {0, 0, 0, 0};
+    pending_rect_valid = false;
     monitor.refresh = true;
+    monitor.force_clear = true;
+
     LOG_INFO("video", "SDL Video Initialised Successfully");
 
-    int out_w = 0, out_h = 0;
     SDL_RendererInfo info;
     SDL_GetRendererInfo(monitor.renderer, &info);
-    SDL_GetRendererOutputSize(monitor.renderer, &out_w, &out_h);
+
     LOG_INFO("video", "SDL Renderer: %s (%dx%d)", info.name, out_w, out_h);
 
     reload_background(config.THEME.ACTIVE);
@@ -334,7 +395,8 @@ void run_dvd_screensaver_loop(void) {
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
-    if (!monitor.texture || area->x2 < 0 || area->y2 < 0 ||
+    if (!monitor.texture || !monitor.renderer || !area || !color_p ||
+        area->x2 < 0 || area->y2 < 0 ||
         area->x1 >= device.MUX.WIDTH || area->y1 >= device.MUX.HEIGHT) {
         lv_disp_flush_ready(disp_drv);
         return;
@@ -353,37 +415,46 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     }
 
     // Optimised full-screen flush...
-    int copy_w = x2 - x1 + 1;
-    int copy_h = y2 - y1 + 1;
+    const int copy_w = x2 - x1 + 1;
+    const int copy_h = y2 - y1 + 1;
 
-    int src_w = area->x2 - area->x1 + 1;
-    int src_x_ofs = x1 - area->x1;
-    int src_y_ofs = y1 - area->y1;
+    const int src_w = area->x2 - area->x1 + 1;
+    const int src_x_ofs = x1 - area->x1;
+    const int src_y_ofs = y1 - area->y1;
 
-    SDL_Rect upd = {x1, y1, copy_w, copy_h};
+    SDL_Rect upd = {.x = x1, .y = y1, .w = copy_w, .h = copy_h};
 
-    void *dst_pixels = NULL;
-    int dst_pitch = 0;
+    const uint8_t *src_base = (const uint8_t *) color_p;
+    const uint8_t *src_ptr = src_base + ((size_t) (src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
 
-    if (SDL_LockTexture(monitor.texture, &upd, &dst_pixels, &dst_pitch) != 0) {
+    const int src_pitch = src_w * (int) sizeof(lv_color_t);
+    const int dst_pitch = copy_w * (int) sizeof(lv_color_t);
+
+    uint8_t *stage = malloc((size_t) copy_h * dst_pitch);
+    if (!stage) {
+        LOG_ERROR("video", "Failed to allocate staging buffer for partial flush");
         lv_disp_flush_ready(disp_drv);
         return;
     }
 
-    // Flush the buffer only if it's the last frame
-    uint8_t *dst_row = (uint8_t *) dst_pixels;
-    uint8_t *src_row = (uint8_t *) color_p + ((size_t) (src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
-
-    size_t row_bytes = (size_t) copy_w * sizeof(lv_color_t);
-    size_t src_pitch = (size_t) src_w * sizeof(lv_color_t);
+    uint8_t *dst = stage;
+    const uint8_t *src = src_ptr;
 
     for (int y = 0; y < copy_h; y++) {
-        memcpy(dst_row, src_row, row_bytes);
-        dst_row += dst_pitch;
-        src_row += src_pitch;
+        memcpy(dst, src, dst_pitch);
+        dst += dst_pitch;
+        src += src_pitch;
     }
 
-    SDL_UnlockTexture(monitor.texture);
+    if (SDL_UpdateTexture(monitor.texture, &upd, stage, dst_pitch) != 0) {
+        LOG_ERROR("video", "SDL_UpdateTexture staged upload failed: %s", SDL_GetError());
+        free(stage);
+        lv_disp_flush_ready(disp_drv);
+        return;
+    }
+
+    free(stage);
+    accumulate_pending_rect(&upd);
 
     if (!lv_disp_flush_is_last(disp_drv)) {
         lv_disp_flush_ready(disp_drv);
@@ -394,7 +465,10 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     // then we mark it as active and run the loop with a complete
     // separate input logic scheme that does not interrupt the muX frontend!
     if (config.SETTINGS.POWER.SCREENSAVER) dvd_update();
-    if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) run_dvd_screensaver_loop();
+    if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) {
+        pending_rect_valid = false;
+        run_dvd_screensaver_loop();
+    }
 
     if (monitor.needs_clear || monitor.force_clear) {
         if (monitor.background_image) {
@@ -419,5 +493,9 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     }
 
     SDL_RenderPresent(monitor.renderer);
+
+    pending_rect_valid = false;
+    pending_rect = (SDL_Rect) {0, 0, 0, 0};
+
     lv_disp_flush_ready(disp_drv);
 }

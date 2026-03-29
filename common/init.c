@@ -145,16 +145,32 @@ void init_display(void) {
     hdmi_mode = file_exist(HDMI_MODE);
     LOG_INFO("video", "HDMI in use: %s", hdmi_mode ? "yes" : "no");
 
+    if (hdmi_mode) {
+        int ext_w = read_line_int_from("/opt/muos/device/config/screen/external/width", 1);
+        int ext_h = read_line_int_from("/opt/muos/device/config/screen/external/height", 1);
+
+        if (ext_w > 0 && ext_h > 0) {
+            LOG_INFO("video", "Overriding MUX resolution for HDMI: %dx%d", ext_w, ext_h);
+            device.MUX.WIDTH = (int16_t) ext_w;
+            device.MUX.HEIGHT = (int16_t) ext_h;
+        } else {
+            LOG_WARN("video", "Failed to read HDMI external resolution, using default MUX size");
+        }
+    }
+
     lv_init();
     sdl_init();
 
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
 
-    uint32_t buf_lines = device.MUX.HEIGHT / 4;
-    uint32_t disp_buf_size = device.MUX.WIDTH * buf_lines;
+    uint32_t disp_buf_lines = 64;
+    if (disp_buf_lines > (uint32_t) device.MUX.HEIGHT) disp_buf_lines = (uint32_t) device.MUX.HEIGHT;
 
-    LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", buf_lines, (disp_buf_size * sizeof(lv_color_t)) / 1024);
+    uint32_t disp_buf_size = (uint32_t) device.MUX.WIDTH * disp_buf_lines;
+    size_t disp_buf_bytes = (size_t) disp_buf_size * sizeof(lv_color_t);
+
+    LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", disp_buf_lines, disp_buf_bytes / 1024);
 
     static lv_color_t *disp_buf_s1 = NULL;
     static lv_color_t *disp_buf_s2 = NULL;
@@ -163,9 +179,27 @@ void init_display(void) {
     if (__builtin_expect(!!(disp_buf_size != disp_buf_pixels), 0)) {
         free(disp_buf_s1);
         free(disp_buf_s2);
+        disp_buf_s1 = NULL;
+        disp_buf_s2 = NULL;
 
-        disp_buf_s1 = malloc(disp_buf_size * sizeof(lv_color_t));
-        disp_buf_s2 = malloc(disp_buf_size * sizeof(lv_color_t));
+        if (posix_memalign((void **) &disp_buf_s1, 64, disp_buf_bytes) != 0) disp_buf_s1 = NULL;
+        if (posix_memalign((void **) &disp_buf_s2, 64, disp_buf_bytes) != 0) disp_buf_s2 = NULL;
+
+        if (!disp_buf_s1 || !disp_buf_s2) {
+            LOG_ERROR("init", "Failed to allocate display buffer(s)!");
+            LOG_ERROR("init", "Requested %zu KB each. Out of memory?", disp_buf_bytes / 1024);
+
+            free(disp_buf_s1);
+            disp_buf_s1 = NULL;
+
+            free(disp_buf_s2);
+            disp_buf_s2 = NULL;
+
+            exit(EXIT_FAILURE);
+        }
+
+        memset(disp_buf_s1, 0, disp_buf_bytes);
+        memset(disp_buf_s2, 0, disp_buf_bytes);
 
         disp_buf_pixels = disp_buf_size;
     }
@@ -188,6 +222,12 @@ void init_display(void) {
     disp_drv.clear_cb = clear_cb;
 
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
+
+    if (!disp) {
+        LOG_ERROR("init", "No display could be drawn to!");
+        exit(EXIT_FAILURE);
+    }
+
     mux_set_refresh_timer(disp->refr_timer);
 }
 
