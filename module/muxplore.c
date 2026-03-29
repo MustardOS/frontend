@@ -15,6 +15,9 @@ static int splash_valid = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
+static int *union_dir_item_count = NULL;
+static int union_dir_item_count_len = 0;
+
 static void assign_item_buckets(void) {
     for (size_t i = 0; i < item_count; i++) {
         content_item *it = &items[i];
@@ -181,90 +184,69 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     char **all_file_names = NULL;
     int all_dir_count = 0;
     int all_file_count = 0;
+    int *raw_counts = NULL;
 
     file_count = 0;
     dir_count = 0;
     *dir_names = NULL;
     *file_names = NULL;
 
-    union_collect(base_dir, &all_dir_names, &all_dir_count, &all_file_names, &all_file_count);
+    free(union_dir_item_count);
+    union_dir_item_count = NULL;
+    union_dir_item_count_len = 0;
+
+    union_collect(base_dir, &all_dir_names, &all_dir_count, &all_file_names, &all_file_count, &raw_counts);
 
     if (all_dir_count > 0) {
         if (config.VISUAL.DISPLAYEMPTYFOLDER) {
             *dir_names = all_dir_names;
             dir_count = all_dir_count;
+            union_dir_item_count = raw_counts;
+            union_dir_item_count_len = all_dir_count;
 
             all_dir_names = NULL;
+            raw_counts = NULL;
         } else {
-            int8_t *keep = calloc((size_t) all_dir_count, sizeof(int8_t));
-            if (keep) {
-                int thread_count = all_dir_count < get_empty_threads() ? all_dir_count : get_empty_threads();
+            *dir_names = malloc((size_t) all_dir_count * sizeof(char *));
+            int *kept_counts = config.VISUAL.FOLDERITEMCOUNT ? malloc((size_t) all_dir_count * sizeof(int)) : NULL;
 
-                pthread_t threads[get_empty_threads()];
-                empty_check_args_t args[get_empty_threads()];
-
-                int chunk = all_dir_count / thread_count;
-                int remainder = all_dir_count % thread_count;
-
-                for (int t = 0; t < thread_count; t++) {
-                    args[t].base_dir = base_dir;
-                    args[t].dir_names = all_dir_names;
-                    args[t].dir_count = all_dir_count;
-                    args[t].keep = keep;
-                    args[t].start = t * chunk + (t < remainder ? t : remainder);
-                    args[t].end = args[t].start + chunk + (t < remainder ? 1 : 0);
-
-                    pthread_create(&threads[t], NULL, empty_check_worker, &args[t]);
+            if (*dir_names) {
+                for (int i = 0; i < all_dir_count; i++) {
+                    int cnt = (raw_counts) ? raw_counts[i] : 0;
+                    if (cnt > 0) {
+                        if (kept_counts) kept_counts[dir_count] = cnt;
+                        (*dir_names)[dir_count++] = all_dir_names[i];
+                    } else {
+                        free(all_dir_names[i]);
+                    }
                 }
 
-                for (int t = 0; t < thread_count; t++) pthread_join(threads[t], NULL);
+                if (dir_count < all_dir_count) {
+                    char **tmp = realloc(*dir_names, (size_t) dir_count * sizeof(char *));
+                    if (tmp) *dir_names = tmp;
 
-                *dir_names = malloc((size_t) all_dir_count * sizeof(char *));
-                if (*dir_names) {
-                    for (int i = 0; i < all_dir_count; i++) {
-                        if (keep[i]) {
-                            (*dir_names)[dir_count++] = all_dir_names[i];
-                        } else {
-                            free(all_dir_names[i]);
-                        }
+                    if (kept_counts) {
+                        int *ctmp = realloc(kept_counts, (size_t) dir_count * sizeof(int));
+                        if (ctmp) kept_counts = ctmp;
                     }
-                    if (dir_count < all_dir_count) {
-                        char **tmp = realloc(*dir_names, (size_t) dir_count * sizeof(char *));
-                        if (tmp) *dir_names = tmp;
-                    }
-                } else {
-                    for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
                 }
 
-                free(keep);
+                union_dir_item_count = kept_counts;
+                union_dir_item_count_len = dir_count;
+
+                kept_counts = NULL;
             } else {
-                *dir_names = malloc((size_t) all_dir_count * sizeof(char *));
-                if (*dir_names) {
-                    for (int i = 0; i < all_dir_count; i++) {
-                        if (union_get_directory_item_count(base_dir, all_dir_names[i], COUNT_BOTH) != 0) {
-                            (*dir_names)[dir_count++] = all_dir_names[i];
-                        } else {
-                            free(all_dir_names[i]);
-                        }
-                    }
-
-                    if (dir_count < all_dir_count) {
-                        char **tmp = realloc(*dir_names, (size_t) dir_count * sizeof(char *));
-                        if (tmp) *dir_names = tmp;
-                    }
-                } else {
-                    for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
-                }
+                for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
+                free(kept_counts);
             }
         }
     }
 
+    free(raw_counts);
+    free(all_dir_names);
+
     *file_names = all_file_names;
     file_count = all_file_count;
-    all_file_names = NULL;
-
-    free(all_dir_names);
-    free(all_file_names);
 }
 
 static void remove_match_items(const char *filter_name, int mode, char ***filter_list, int *filter_count,
@@ -452,15 +434,22 @@ static void create_content_items(void) {
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         if (config.VISUAL.FOLDERITEMCOUNT) {
+            int cnt = -1;
+            if (union_dir_item_count && i < union_dir_item_count_len) cnt = union_dir_item_count[i];
+            if (cnt < 0) cnt = union_get_directory_item_count(item_curr_dir, new_item->name, COUNT_BOTH);
+
             char display_name[MAX_BUFFER_SIZE];
-            snprintf(display_name, sizeof(display_name), "%s (%d)",
-                     new_item->display_name, union_get_directory_item_count(item_curr_dir, new_item->name, COUNT_BOTH));
+            snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name, cnt);
             new_item->display_name = strdup(display_name);
         }
 
         free(dir_names[i]);
         free(friendly_folder_name);
     }
+
+    free(union_dir_item_count);
+    union_dir_item_count = NULL;
+    union_dir_item_count_len = 0;
 
     gen_item(file_names, file_count);
 
