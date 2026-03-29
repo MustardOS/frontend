@@ -13,7 +13,7 @@
 #define NAV_RIGHT_STICK  ((mux_nav_type)0x04)
 
 // Maximum number of combos allowed per input task.
-#define MUX_INPUT_COMBO_COUNT 16
+#define MUX_INPUT_COMBO_COUNT 32
 
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {
