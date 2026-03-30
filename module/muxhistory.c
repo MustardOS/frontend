@@ -191,7 +191,16 @@ static void gen_item(int file_count, char **file_names) {
         snprintf(history_file, sizeof(history_file), "%s/%s",
                  INFO_HIS_PATH, file_names[i]);
 
-        char *file_path = read_line_char_from(history_file, CACHE_CORE_PATH);
+        union_rewrite_file_paths(history_file);
+        char *file_path_raw = read_line_char_from(history_file, CACHE_CORE_PATH);
+
+        char resolved_path[PATH_MAX];
+        if (union_resolve_to_real(file_path_raw, resolved_path, sizeof(resolved_path))) {
+            free(file_path_raw);
+            file_path_raw = strdup(resolved_path);
+        }
+
+        char *file_path = file_path_raw;
         char *file_name = get_last_dir(strdup(file_path));
         char *stripped_name = read_line_char_from(history_file, CACHE_CORE_NAME);
         char *sub_path = read_line_char_from(history_file, CACHE_CORE_DIR);
@@ -345,12 +354,30 @@ static void process_load(int from_start) {
     char resolved_path[PATH_MAX];
     const char *launch_path = items[current_item_index].extra_data;
 
-    if (!union_resolve_to_real(launch_path, resolved_path, sizeof(resolved_path)) || !file_exist(resolved_path)) {
+    if (!union_resolve_to_real(launch_path, resolved_path, sizeof(resolved_path)) ||
+        !file_exist(resolved_path)) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.NO_LOAD, LONG);
 
         LOG_ERROR(mux_module, "Could not launch content: %s", resolved_path[0] ? resolved_path : launch_path);
         return;
+    }
+
+    if (strcmp(launch_path, resolved_path) != 0) {
+        char history_file[MAX_BUFFER_SIZE];
+        snprintf(history_file, sizeof(history_file), INFO_HIS_PATH "/%s", items[current_item_index].name);
+
+        if (!ends_with(history_file, ".cfg")) strncat(history_file, ".cfg", sizeof(history_file) - strlen(history_file) - 1);
+
+        if (file_exist(history_file)) {
+            rewrite_launch_file(history_file, resolved_path);
+
+            char *content_name = strip_ext(items[current_item_index].name);
+            migrate_history_entry(history_file, resolved_path, content_name);
+            free(content_name);
+        }
+
+        snprintf(items[current_item_index].extra_data, MAX_BUFFER_SIZE, "%s", resolved_path);
     }
 
     play_sound(SND_CONFIRM);
@@ -362,23 +389,17 @@ static void process_load(int from_start) {
             while (result != 1) {
                 result = muxpass_main(PCT_LAUNCH);
 
-                switch (result) {
-                    case 1:
-                        show_splash();
-                        fade_out_screen();
-                        exit_status = 1;
-                        break;
-                    case 2:
-                    default:
-                        if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
-                        if (file_exist(MUOS_CON_LOAD)) remove(MUOS_CON_LOAD);
-                        if (file_exist(MUOS_GOV_LOAD)) remove(MUOS_GOV_LOAD);
-                        if (file_exist(MUOS_RAC_LOAD)) remove(MUOS_RAC_LOAD);
-                        if (file_exist(MUOS_FLT_LOAD)) remove(MUOS_FLT_LOAD);
-
-                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-
-                        goto load_end;
+                if (result == 1) {
+                    show_splash();
+                    fade_out_screen();
+                    exit_status = 1;
+                } else {
+                    if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
+                    if (file_exist(MUOS_CON_LOAD)) remove(MUOS_CON_LOAD);
+                    if (file_exist(MUOS_GOV_LOAD)) remove(MUOS_GOV_LOAD);
+                    if (file_exist(MUOS_RAC_LOAD)) remove(MUOS_RAC_LOAD);
+                    if (file_exist(MUOS_FLT_LOAD)) remove(MUOS_FLT_LOAD);
+                    goto load_end;
                 }
             }
         } else {

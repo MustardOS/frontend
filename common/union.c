@@ -14,7 +14,7 @@
 
 #define UNION_ROM_NAME "ROMS"
 
-#define UNION_SET_INIT_BIT 16
+#define UNION_SET_INIT_BIT 8
 #define UNION_SET_INIT_CAP 512
 #define UNION_SET_LOAD_NUM 4
 #define UNION_SET_LOAD_DEN 4
@@ -196,12 +196,22 @@ static void scan_mount(const char *mount, const char *rel_path,
             union_set *set = is_dir ? dir_set : file_set;
             union_list *list = is_dir ? dir_list : file_list;
 
-            int ret = union_set_insert(set, name);
-            if (ret < 0) goto done;
-            if (ret > 0) continue;
-
             char *copy = strdup(name);
-            if (!copy || !union_list_push(list, copy)) {
+            if (!copy) goto done;
+
+            int ret = union_set_insert(set, copy);
+
+            if (ret < 0) {
+                free(copy);
+                goto done;
+            }
+
+            if (ret > 0) {
+                free(copy);
+                continue;
+            }
+
+            if (!union_list_push(list, copy)) {
                 free(copy);
                 goto done;
             }
@@ -327,7 +337,8 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
     pthread_t threads[A_SIZE(union_mounts)];
     deep_arg_t args[A_SIZE(union_mounts)];
 
-    int *mount_counts[A_SIZE(union_mounts)] = {0};
+    int *mount_counts[A_SIZE(union_mounts)];
+    memset(mount_counts, 0, sizeof(mount_counts));
 
     for (size_t i = 0; i < n; i++) {
         scan_worker_t *w = &workers[i];
@@ -360,8 +371,8 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
     int merged_cap = 0;
 
     if (dir_item_counts) {
-        merged_counts = malloc(UNION_SET_INIT_CAP * sizeof(int));
-        if (merged_counts) merged_cap = UNION_SET_INIT_CAP;
+        merged_counts = malloc(sizeof(int));
+        if (merged_counts) merged_cap = 1;
     }
 
     for (size_t i = 0; i < n; i++) {
@@ -378,7 +389,8 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
 
                     if (idx >= merged_cap) {
                         int new_cap = merged_cap * 2;
-                        int *tmp = realloc(merged_counts, new_cap * sizeof(int));
+                        int *tmp = realloc(merged_counts, (size_t) new_cap * sizeof(int));
+
                         if (tmp) {
                             merged_counts = tmp;
                             merged_cap = new_cap;
@@ -580,32 +592,92 @@ int union_resolve_to_real(const char *union_path, char *out, size_t out_size) {
     if (!union_path || !out || out_size == 0) return 0;
 
     out[0] = '\0';
-    if (strncmp(union_path, "/mnt/union/", 11) != 0) {
+    union_init_mounts();
+
+    const char *rel;
+
+    if (strncmp(union_path, "/mnt/union/", 11) == 0) {
+        rel = union_path + 11;
+    } else if (strncmp(union_path, "/mnt/union", 10) == 0) {
+        rel = union_path + 10;
+        while (*rel == '/') rel++;
+    } else if (strncmp(union_path, "/mnt/", 5) == 0) {
+        rel = union_path + 5;
+        const char *slash = strchr(rel, '/');
+        if (slash) {
+            rel = slash + 1;
+        } else {
+            snprintf(out, out_size, "%s", union_path);
+            return file_exist(out) || dir_exist(out);
+        }
+    } else {
         snprintf(out, out_size, "%s", union_path);
         return file_exist(out) || dir_exist(out);
     }
 
-    const char *rel = union_path + 11;
+    for (size_t i = 0; i < A_SIZE(union_mounts); i++) {
+        if (!union_mounts[i] || !*union_mounts[i]) continue;
 
-    const char *mounts[] = {
-            device.STORAGE.USB.MOUNT,
-            device.STORAGE.SDCARD.MOUNT,
-            device.STORAGE.ROM.MOUNT
-    };
+        char test_path[PATH_MAX];
+        snprintf(test_path, sizeof(test_path), "%s/%s", union_mounts[i], rel);
+        remove_double_slashes(test_path);
 
-    char test[PATH_MAX];
-
-    for (size_t i = 0; i < A_SIZE(mounts); i++) {
-        if (!mounts[i] || mounts[i][0] == '\0') continue;
-
-        snprintf(test, sizeof(test), "%s/%s", mounts[i], rel);
-        remove_double_slashes(test);
-
-        if (file_exist(test) || dir_exist(test)) {
-            snprintf(out, out_size, "%s", test);
+        if (file_exist(test_path) || dir_exist(test_path)) {
+            snprintf(out, out_size, "%s", test_path);
             return 1;
         }
     }
 
+    if (union_mounts[0] && *union_mounts[0]) {
+        snprintf(out, out_size, "%s/%s", union_mounts[0], rel);
+        remove_double_slashes(out);
+    }
+
     return 0;
+}
+
+int union_rewrite_file_paths(const char *file) {
+    if (!file_exist(file)) return 0;
+
+    char *data = read_all_char_from(file);
+    if (!data || !*data) {
+        free(data);
+        return 0;
+    }
+
+    char *cursor = data;
+    int modified = 0;
+
+    while ((cursor = strstr(cursor, "/mnt/union"))) {
+        char resolved[PATH_MAX];
+
+        char temp[PATH_MAX];
+        snprintf(temp, sizeof(temp), "%s", cursor);
+
+        char *end = strpbrk(temp, "\n\r|");
+        if (end) *end = '\0';
+
+        if (union_resolve_to_real(temp, resolved, sizeof(resolved))) {
+            char *new_data = str_replace(data, temp, resolved);
+            free(data);
+            data = new_data;
+            cursor = data;
+            modified = 1;
+        } else {
+            cursor += 10;
+        }
+    }
+
+    if (modified) {
+        FILE *fp = fopen(file, "w");
+        if (fp) {
+            fwrite(data, 1, strlen(data), fp);
+            fflush(fp);
+            fsync(fileno(fp));
+            fclose(fp);
+        }
+    }
+
+    free(data);
+    return modified;
 }

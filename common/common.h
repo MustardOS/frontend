@@ -504,6 +504,10 @@ char *load_content_core(int force, int run_quit, char *file_path);
 char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system,
                  int line_catalogue, int line_lookup, int line_launch);
 
+void rewrite_launch_file(const char *file, const char *new_path);
+
+void migrate_history_entry(const char *old_file, const char *new_path, const char *content_name);
+
 void add_to_collection(char *filename, const char *pointer, char *sys_dir);
 
 int set_scaling_governor(const char *governor, int show_done);

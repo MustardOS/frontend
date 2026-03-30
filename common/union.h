@@ -23,3 +23,5 @@ void union_get_roms_root(char *out, size_t out_size);
 char *union_get_title_root(char *path, char *out, size_t out_size);
 
 int union_resolve_to_real(const char *union_path, char *out, size_t out_size);
+
+int union_rewrite_file_paths(const char *file);

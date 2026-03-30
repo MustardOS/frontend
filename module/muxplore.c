@@ -47,7 +47,7 @@ static char *load_content_description(void) {
     char content_desc[MAX_BUFFER_SIZE];
 
     char *content_label = get_file_name(items[current_item_index].name);
-    char *desc_name = strip_ext(get_file_name(items[current_item_index].name));
+    char *desc_name = strip_ext(content_label);
 
     char core_desc[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
@@ -83,9 +83,9 @@ static void image_refresh(char *image_type) {
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];
 
-    char *content_label = get_file_name(items[current_item_index].name);
     char *file_name = get_file_name(items[current_item_index].name);
-    char *file_name_no_ext = strip_ext(file_name);
+    char *content_label = file_name;
+    char *file_name_no_ext = strip_ext(content_label);
 
     if (union_is_root(sys_dir) || at_base(sys_dir, "ROMS")) {
         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
@@ -235,6 +235,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
                 union_dir_item_count_len = dir_count;
 
                 kept_counts = NULL;
+                raw_counts = NULL;
             } else {
                 for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
                 free(kept_counts);
@@ -417,12 +418,15 @@ static void create_content_items(void) {
         update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, root_dir);
     }
 
+    int count_idx = 0;
+
     for (int i = 0; i < dir_count; i++) {
         char resolved_dir[MAX_BUFFER_SIZE];
         union_resolve_path(sys_dir, dir_names[i], 1, resolved_dir, sizeof(resolved_dir));
 
         if (folder_has_launch_file(sys_dir, dir_names[i])) {
             free(dir_names[i]);
+            dir_names[i] = NULL;
             continue;
         }
 
@@ -435,7 +439,8 @@ static void create_content_items(void) {
 
         if (config.VISUAL.FOLDERITEMCOUNT) {
             int cnt = -1;
-            if (union_dir_item_count && i < union_dir_item_count_len) cnt = union_dir_item_count[i];
+
+            if (union_dir_item_count && count_idx < union_dir_item_count_len) cnt = union_dir_item_count[count_idx];
             if (cnt < 0) cnt = union_get_directory_item_count(item_curr_dir, new_item->name, COUNT_BOTH);
 
             char display_name[MAX_BUFFER_SIZE];
@@ -445,6 +450,8 @@ static void create_content_items(void) {
 
         free(dir_names[i]);
         free(friendly_folder_name);
+
+        count_idx++;
     }
 
     free(union_dir_item_count);
@@ -820,7 +827,11 @@ static void handle_b(void) {
         remove(EXPLORE_DIR);
     } else {
         char *base_dir = strrchr(sys_dir, '/');
-        if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
+        if (base_dir) {
+            char *parent = strndup(sys_dir, (size_t) (base_dir - sys_dir));
+            write_text_to_file(EXPLORE_DIR, "w", CHAR, parent);
+            free(parent);
+        }
     }
 
     load_mux(file_exist(EXPLORE_DIR) ? "explore" : "launcher");
