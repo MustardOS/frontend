@@ -212,6 +212,7 @@ static const char *contributors[] = {
         "antikk",
         "bitter_bizarro",
         "corey",
+        "imcokeman",
         "xonglebongle",
         NULL
 };

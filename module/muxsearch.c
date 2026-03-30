@@ -267,6 +267,7 @@ static void process_results(const char *json_results) {
                 snprintf(storage_name_short, sizeof(storage_name_short), "SD2");
             } else if (strcasecmp(storage_name_short, device.STORAGE.USB.MOUNT) == 0) {
                 snprintf(storage_name_short, sizeof(storage_name_short), "USB");
+            }
         }
 
         char folder_name_short[MAX_BUFFER_SIZE] = "";
