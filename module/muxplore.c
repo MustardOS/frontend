@@ -207,38 +207,49 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
             all_dir_names = NULL;
             raw_counts = NULL;
         } else {
-            *dir_names = malloc((size_t) all_dir_count * sizeof(char *));
-            int *kept_counts = config.VISUAL.FOLDERITEMCOUNT ? malloc((size_t) all_dir_count * sizeof(int)) : NULL;
+            char **kept_dirs = malloc((size_t) all_dir_count * sizeof(char *));
+            int *kept_counts = malloc((size_t) all_dir_count * sizeof(int));
 
-            if (*dir_names) {
+            if (kept_dirs && kept_counts) {
                 for (int i = 0; i < all_dir_count; i++) {
-                    int cnt = (raw_counts) ? raw_counts[i] : 0;
+                    int cnt = -1;
+
+                    if (raw_counts) cnt = raw_counts[i];
+                    if (cnt < 0) cnt = union_get_directory_item_count(base_dir, all_dir_names[i], COUNT_BOTH);
+
                     if (cnt > 0) {
-                        if (kept_counts) kept_counts[dir_count] = cnt;
-                        (*dir_names)[dir_count++] = all_dir_names[i];
+                        kept_dirs[dir_count] = all_dir_names[i];
+                        kept_counts[dir_count] = cnt;
+                        dir_count++;
                     } else {
                         free(all_dir_names[i]);
                     }
                 }
 
-                if (dir_count < all_dir_count) {
-                    char **tmp = realloc(*dir_names, (size_t) dir_count * sizeof(char *));
-                    if (tmp) *dir_names = tmp;
+                if (dir_count > 0) {
+                    char **dirs_tmp = realloc(kept_dirs, (size_t) dir_count * sizeof(char *));
+                    int *counts_tmp = realloc(kept_counts, (size_t) dir_count * sizeof(int));
 
-                    if (kept_counts) {
-                        int *ctmp = realloc(kept_counts, (size_t) dir_count * sizeof(int));
-                        if (ctmp) kept_counts = ctmp;
-                    }
+                    *dir_names = dirs_tmp ? dirs_tmp : kept_dirs;
+                    union_dir_item_count = counts_tmp ? counts_tmp : kept_counts;
+                    union_dir_item_count_len = dir_count;
+                } else {
+                    free(kept_dirs);
+                    free(kept_counts);
+                    *dir_names = NULL;
+                    union_dir_item_count = NULL;
+                    union_dir_item_count_len = 0;
                 }
-
-                union_dir_item_count = kept_counts;
-                union_dir_item_count_len = dir_count;
-
-                kept_counts = NULL;
-                raw_counts = NULL;
             } else {
-                for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
+                free(kept_dirs);
                 free(kept_counts);
+
+                for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
+
+                *dir_names = NULL;
+                dir_count = 0;
+                union_dir_item_count = NULL;
+                union_dir_item_count_len = 0;
             }
         }
     }
@@ -378,6 +389,15 @@ static void init_navigation_group_grid(void) {
     }
 }
 
+static int get_visible_dir_count(const char *base_dir, const char *name, int idx) {
+    if (union_dir_item_count && idx >= 0 && idx < union_dir_item_count_len) {
+        int cnt = union_dir_item_count[idx];
+        if (cnt >= 0) return cnt;
+    }
+
+    return union_get_directory_item_count(base_dir, name, COUNT_BOTH);
+}
+
 static void create_content_items(void) {
     char item_curr_dir[PATH_MAX];
     snprintf(item_curr_dir, sizeof(item_curr_dir), "%s", sys_dir);
@@ -418,11 +438,15 @@ static void create_content_items(void) {
         update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, root_dir);
     }
 
-    int count_idx = 0;
-
     for (int i = 0; i < dir_count; i++) {
-        char resolved_dir[MAX_BUFFER_SIZE];
-        union_resolve_path(sys_dir, dir_names[i], 1, resolved_dir, sizeof(resolved_dir));
+        if (!dir_names || !dir_names[i]) continue;
+
+        int cnt = get_visible_dir_count(item_curr_dir, dir_names[i], i);
+        if (!config.VISUAL.DISPLAYEMPTYFOLDER && cnt <= 0) {
+            free(dir_names[i]);
+            dir_names[i] = NULL;
+            continue;
+        }
 
         if (folder_has_launch_file(sys_dir, dir_names[i])) {
             free(dir_names[i]);
@@ -430,28 +454,40 @@ static void create_content_items(void) {
             continue;
         }
 
+        char resolved_dir[MAX_BUFFER_SIZE];
+        if (!union_resolve_path(sys_dir, dir_names[i], 1, resolved_dir, sizeof(resolved_dir))) {
+            free(dir_names[i]);
+            dir_names[i] = NULL;
+            continue;
+        }
+
         char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
+        if (!friendly_folder_name) {
+            free(dir_names[i]);
+            dir_names[i] = NULL;
+            continue;
+        }
+
         automatic_assign_core(resolved_dir);
         content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, resolved_dir, FOLDER);
 
-        new_item->glyph_icon = "folder";
-        adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+        if (new_item) {
+            new_item->glyph_icon = "folder";
+            adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
-        if (config.VISUAL.FOLDERITEMCOUNT) {
-            int cnt = -1;
+            if (config.VISUAL.FOLDERITEMCOUNT) {
+                char display_name[MAX_BUFFER_SIZE];
+                snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name, cnt);
 
-            if (union_dir_item_count && count_idx < union_dir_item_count_len) cnt = union_dir_item_count[count_idx];
-            if (cnt < 0) cnt = union_get_directory_item_count(item_curr_dir, new_item->name, COUNT_BOTH);
-
-            char display_name[MAX_BUFFER_SIZE];
-            snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name, cnt);
-            new_item->display_name = strdup(display_name);
+                char *new_display = strdup(display_name);
+                if (new_display) new_item->display_name = new_display;
+            }
         }
 
-        free(dir_names[i]);
         free(friendly_folder_name);
 
-        count_idx++;
+        free(dir_names[i]);
+        dir_names[i] = NULL;
     }
 
     free(union_dir_item_count);
