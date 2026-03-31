@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "common.h"
+#include "config.h"
 #include "device.h"
 #include "collection.h"
 #include "union.h"
@@ -180,6 +181,7 @@ static void scan_mount(const char *mount, const char *rel_path,
             // Skip '.' and '..'
             if (name[0] == '.') {
                 if (name[1] == '\0' || (name[1] == '.' && name[2] == '\0')) continue;
+                if (!config.VISUAL.HIDDEN) continue;
             }
 
             int is_dir;
