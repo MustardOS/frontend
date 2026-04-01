@@ -1122,9 +1122,16 @@ int muxplore_main(int index, char *dir) {
     update_file_counter(ui_lblCounter_explore, file_count);
 
     if (file_exist(ADD_MODE_DONE)) {
-        if (strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE") == 0) {
-            toast_message(lang.GENERIC.ADD_COLLECT, SHORT);
+        char *done_content = read_all_char_from(ADD_MODE_DONE);
+        if (done_content && strncasecmp(done_content, "DONE", 4) == 0) {
+            char *col_file = read_line_char_from(ADD_MODE_DONE, 2);
+            if (col_file && *col_file) check_collection(col_file);
+
+            free(col_file);
+            refresh_screen(ui_screen, 1);
         }
+
+        free(done_content);
         remove(ADD_MODE_DONE);
     }
 

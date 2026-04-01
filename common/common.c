@@ -3839,6 +3839,61 @@ void migrate_history_entry(const char *old_file, const char *new_path, const cha
     rename(old_file, new_file);
 }
 
+void check_collection(const char *col_file) {
+    if (!col_file || !*col_file) return;
+
+    FILE *new_fp = fopen(col_file, "r");
+    if (!new_fp) return;
+
+    uint32_t new_hash = fnv1a_hash_file(new_fp);
+    fclose(new_fp);
+
+    if (new_hash == 0) return;
+
+    const char *new_col_file = strrchr(col_file, '/');
+    new_col_file = new_col_file ? new_col_file + 1 : col_file;
+
+    char base_name[PATH_MAX];
+    snprintf(base_name, sizeof(base_name), "%s", new_col_file);
+
+    char *dash = strrchr(base_name, '-');
+    if (dash) *dash = '\0';
+
+    DIR *col_dir = opendir(INFO_COL_PATH);
+    if (!col_dir) return;
+
+    struct dirent *ent;
+    while ((ent = readdir(col_dir)) != NULL) {
+        if (ent->d_name[0] == '.') continue;
+        if (!strstr(ent->d_name, ".cfg")) continue;
+
+        // Only look at the files sharing the same base name
+        size_t prefix_len = strlen(base_name);
+        if (strncmp(ent->d_name, base_name, prefix_len) != 0) continue;
+        if (ent->d_name[prefix_len] != '-') continue;
+
+        char cfg_path[PATH_MAX];
+        snprintf(cfg_path, sizeof(cfg_path), "%s/%s", INFO_COL_PATH, ent->d_name);
+
+        // Do NOT fucking delete the file we just wrote...
+        if (strcmp(cfg_path, col_file) == 0) continue;
+
+        FILE *fp = fopen(cfg_path, "r");
+        if (!fp) continue;
+
+        // Compare the hash, that's good hash!
+        uint32_t existing_hash = fnv1a_hash_file(fp);
+        fclose(fp);
+
+        if (existing_hash == new_hash) {
+            LOG_INFO(mux_module, "Removing duplicate collection entry: %s", cfg_path);
+            remove(cfg_path);
+        }
+    }
+
+    closedir(col_dir);
+}
+
 void add_to_collection(char *filename, const char *pointer, char *sys_dir) {
     play_sound(SND_CONFIRM);
 

@@ -457,7 +457,10 @@ static void add_collection_item(void) {
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 
     if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
-    write_text_to_file(ADD_MODE_DONE, "w", CHAR, "DONE");
+
+    char done_content[MAX_BUFFER_SIZE];
+    snprintf(done_content, sizeof(done_content), "DONE\n%s", collection_file);
+    write_text_to_file(ADD_MODE_DONE, "w", CHAR, done_content);
 
     if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
 }
