@@ -480,8 +480,6 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || !ui_count || is_ksk(kiosk.COLLECT.ADD_CON) || hold_call) return;
 
-    play_sound(SND_CONFIRM);
-
     write_text_to_file(ADD_MODE_FROM, "w", CHAR, "history");
     if (!load_content(1, items[current_item_index].extra_data)) {
         remove(ADD_MODE_FROM);
