@@ -224,7 +224,44 @@ static void scan_mount(const char *mount, const char *rel_path,
                 int *tmp = realloc(*counts_out, (size_t) list->count * sizeof(int));
                 if (tmp) {
                     *counts_out = tmp;
-                    (*counts_out)[new_idx] = -1;
+
+                    char child_path[PATH_MAX];
+                    union_join_path(child_path, sizeof(child_path), scan_path, name, NULL);
+
+                    int child_fd = open(child_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+                    if (child_fd < 0) {
+                        (*counts_out)[new_idx] = 0;
+                    } else {
+                        char *child_buf = malloc(DENTS_BUF_SIZE);
+                        int child_count = 0;
+
+                        if (child_buf) {
+                            for (;;) {
+                                long cr = syscall(SYS_getdents64, child_fd, child_buf, DENTS_BUF_SIZE);
+                                if (cr <= 0) break;
+
+                                for (long cp = 0; cp < cr;) {
+                                    struct linux_dirent64 *cd = (struct linux_dirent64 *) (child_buf + cp);
+                                    cp += cd->d_reclen;
+
+                                    const char *cn = cd->d_name;
+                                    if (cn[0] == '.') {
+                                        if (cn[1] == '\0' || (cn[1] == '.' && cn[2] == '\0')) continue;
+                                        if (!config.VISUAL.HIDDEN) continue;
+                                    }
+
+                                    int cis_dir = (cd->d_type == DT_DIR) ? 1 : (cd->d_type == DT_REG) ? 0 : -1;
+                                    if (cis_dir < 0) continue;
+
+                                    if (!should_skip(cn, cis_dir)) child_count++;
+                                }
+                            }
+                            free(child_buf);
+                        }
+
+                        close(child_fd);
+                        (*counts_out)[new_idx] = child_count;
+                    }
                 }
             }
         }
@@ -399,7 +436,12 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
                         }
                     }
 
-                    if (idx < merged_cap) merged_counts[idx] = -1;
+                    if (idx < merged_cap) {
+                        int cnt = -1;
+                        if (mount_counts[i] && j < w->dir_list.count) cnt = mount_counts[i][j];
+
+                        merged_counts[idx] = cnt;
+                    }
                 }
             } else {
                 free(name);
@@ -486,9 +528,12 @@ int union_get_directory_item_count(const char *base_dir, const char *name, int c
     char *buf = malloc(DENTS_BUF_SIZE);
     if (!buf) return 0;
 
+    union_set seen;
+    union_set_init(&seen);
+
     int found = 0;
 
-    for (size_t i = 0; i < A_SIZE(union_mounts) && !found; i++) {
+    for (size_t i = 0; i < A_SIZE(union_mounts); i++) {
         if (!union_mounts[i] || !*union_mounts[i]) continue;
 
         char scan_path[PATH_MAX];
@@ -502,12 +547,15 @@ int union_get_directory_item_count(const char *base_dir, const char *name, int c
             long dent_read = syscall(SYS_getdents64, fd, buf, DENTS_BUF_SIZE);
             if (dent_read <= 0) break;
 
-            for (long pos = 0; pos < dent_read && !found;) {
+            for (long pos = 0; pos < dent_read;) {
                 struct linux_dirent64 *d = (struct linux_dirent64 *) (buf + pos);
                 pos += d->d_reclen;
 
                 const char *entry = d->d_name;
-                if (entry[0] == '.') if (entry[1] == '\0' || (entry[1] == '.' && entry[2] == '\0')) continue;
+                if (entry[0] == '.') {
+                    if (entry[1] == '\0' || (entry[1] == '.' && entry[2] == '\0')) continue;
+                    if (!config.VISUAL.HIDDEN) continue;
+                }
 
                 int is_dir;
                 if (d->d_type == DT_DIR) {
@@ -532,26 +580,36 @@ int union_get_directory_item_count(const char *base_dir, const char *name, int c
 
                 if (should_skip(entry, is_dir)) continue;
 
-                if (count_type == COUNT_DIRS && is_dir) {
-                    found = 1;
-                    break;
+                int count_quality = 0;
+                if (count_type == COUNT_DIRS && is_dir) count_quality = 1;
+                if (count_type == COUNT_FILES && !is_dir) count_quality = 1;
+                if (count_type == COUNT_BOTH) count_quality = 1;
+
+                if (!count_quality) continue;
+
+                char *copy = strdup(entry);
+                if (!copy) goto done;
+
+                int ret = union_set_insert(&seen, copy);
+                if (ret < 0) {
+                    free(copy);
+                    goto done;
                 }
 
-                if (count_type == COUNT_FILES && !is_dir) {
-                    found = 1;
-                    break;
+                if (ret > 0) {
+                    free(copy);
+                    continue;
                 }
 
-                if (count_type == COUNT_BOTH) {
-                    found = 1;
-                    break;
-                }
+                found++;
             }
         }
 
         close(fd);
     }
 
+    done:
+    union_set_free(&seen);
     free(buf);
     return found;
 }
