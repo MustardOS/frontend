@@ -1,7 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxsysinfo.h"
 #include "../common/battery.h"
-#include "../common/board.h"
 
 #define SYSINFO(NAME, ENUM, UDATA) 1,
 enum {
@@ -79,43 +78,99 @@ const char *get_cpu_model(void) {
     FILE *fp = popen("lscpu", "r");
     if (!fp) return lang.GENERIC.UNKNOWN;
 
-    char line[256];
-    char cpu_model[128] = {0};
+    char models[4][64] = {{0}};
+    int model_count = 0;
+
     char cpu_cores[16] = {0};
+    char line[256];
 
     while (fgets(line, sizeof(line), fp)) {
-        if (strncmp(line, "Model name:", 11) == 0) {
-            char *value = line + 11;
-            while (*value && isspace((unsigned char) *value)) value++;
+        char *trimmed = line;
+        while (*trimmed && isspace((unsigned char) *trimmed)) trimmed++;
 
+        if (strncmp(trimmed, "CPU(s):", 7) == 0 && !cpu_cores[0]) {
+            char *value = trimmed + 7;
+            while (*value && isspace((unsigned char) *value)) value++;
             char *end = value + strlen(value);
             while (end > value && isspace((unsigned char) *(end - 1))) --end;
             *end = '\0';
-
-            snprintf(cpu_model, sizeof(cpu_model), "%s", value);
-        } else if (strncmp(line, "CPU(s):", 7) == 0) {
-            char *value = line + 7;
-
-            while (*value && isspace((unsigned char) *value)) value++;
-
-            char *end = value + strlen(value);
-            while (end > value && isspace((unsigned char) *(end - 1))) --end;
-            *end = '\0';
-
             snprintf(cpu_cores, sizeof(cpu_cores), "%s", value);
-        }
 
-        if (cpu_model[0] && cpu_cores[0]) break;
+        } else if (strncmp(trimmed, "Model name:", 11) == 0) {
+            char *value = trimmed + 11;
+            while (*value && isspace((unsigned char) *value)) value++;
+            char *end = value + strlen(value);
+            while (end > value && isspace((unsigned char) *(end - 1))) --end;
+            *end = '\0';
+
+            int duplicate = 0;
+            for (int i = 0; i < model_count; i++) {
+                if (strcmp(models[i], value) == 0) {
+                    duplicate = 1;
+                    break;
+                }
+            }
+            if (!duplicate && model_count < 4) {
+                snprintf(models[model_count++], sizeof(models[0]), "%s", value);
+            }
+        }
     }
 
     pclose(fp);
 
-    if (cpu_model[0] == '\0') return lang.GENERIC.UNKNOWN;
+    if (model_count == 0) return lang.GENERIC.UNKNOWN;
+    char joined[UI_BUFFER] = {0};
 
-    if (cpu_cores[0])
-        snprintf(cached, sizeof(cached), "%s (%s)", cpu_model, cpu_cores);
-    else
-        snprintf(cached, sizeof(cached), "%s", cpu_model);
+    if (model_count == 1) {
+        snprintf(joined, sizeof(joined), "%s", models[0]);
+        for (char *p = joined; *p; p++) if (*p == '-') *p = ' ';
+    } else {
+
+        size_t prefix_len = strlen(models[0]);
+        for (int i = 1; i < model_count; i++) {
+            size_t j = 0;
+
+            while (j < prefix_len && models[i][j] == models[0][j]) j++;
+            prefix_len = j;
+        }
+
+        while (prefix_len > 0 && !isspace((unsigned char) models[0][prefix_len - 1])) prefix_len--;
+
+        if (prefix_len > 0) {
+            char prefix[64];
+            snprintf(prefix, sizeof(prefix), "%.*s", (int) prefix_len, models[0]);
+
+            char *end = prefix + strlen(prefix);
+            while (end > prefix && (isspace((unsigned char) end[-1]) || end[-1] == '-')) --end;
+
+            *end = '\0';
+
+            for (char *p = prefix; *p; p++) if (*p == '-') *p = ' ';
+
+            char suffixes[UI_BUFFER] = {0};
+            for (int i = 0; i < model_count; i++) {
+                if (i > 0) strncat(suffixes, "+", sizeof(suffixes) - strlen(suffixes) - 1);
+
+                const char *suffix = models[i] + prefix_len;
+                while (isspace((unsigned char) *suffix) || *suffix == '-') suffix++;
+
+                strncat(suffixes, suffix, sizeof(suffixes) - strlen(suffixes) - 1);
+            }
+
+            snprintf(joined, sizeof(joined), "%s %s", prefix, suffixes);
+        } else {
+            for (int i = 0; i < model_count; i++) {
+                if (i > 0) strncat(joined, " / ", sizeof(joined) - strlen(joined) - 1);
+                strncat(joined, models[i], sizeof(joined) - strlen(joined) - 1);
+            }
+        }
+    }
+
+    if (cpu_cores[0]) {
+        snprintf(cached, sizeof(cached), "%s (%s)", joined, cpu_cores);
+    } else {
+        snprintf(cached, sizeof(cached), "%s", joined);
+    }
 
     cached_ok = 1;
     return cached;
