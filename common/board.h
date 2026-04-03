@@ -5,6 +5,7 @@ typedef enum {
     BOARD_SPECIAL_G350,
     BOARD_SPECIAL_TUI_BRICK,
     BOARD_SPECIAL_TUI_SPOON,
+    BOARD_SPECIAL_VITA_PRO,
 } board_special_t;
 
 typedef struct {
@@ -19,7 +20,14 @@ typedef struct {
 enum {
     NOP = -1,
     EV0 = 0,
-    EV1 = 1
+    EV1 = 1,
+    EV2 = 2,
+    EV3 = 3,
+    EV4 = 4,
+    EV5 = 5,
+    EV6 = 6,
+    EV7 = 7,
+    EV8 = 8,
 };
 
 void board_init(const char *code);
