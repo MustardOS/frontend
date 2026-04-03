@@ -541,7 +541,7 @@ static void handle_back(void) {
     play_sound(SND_BACK);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-    if (is_ksk(kiosk.CONTENT.OPTION)) load_mux("explore");
+    load_mux("explore");
 
     mux_input_stop();
 }

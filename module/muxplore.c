@@ -499,7 +499,14 @@ static void create_content_items(void) {
     assign_item_buckets();
     qsort(items, item_count, sizeof(content_item), bucket_item_compare);
 
-    if (file_exist(MUOS_HST_LOAD)) {
+    if (file_exist(MUOS_IDX_LOAD)) {
+        int idx = read_line_int_from(MUOS_IDX_LOAD, 1);
+        remove(MUOS_IDX_LOAD);
+
+        if (idx >= 0 && idx < (int) item_count) sys_index = idx;
+    }
+
+    if (sys_index < 0 && file_exist(MUOS_HST_LOAD)) {
         char *last_name = read_all_char_from(MUOS_HST_LOAD);
         remove(MUOS_HST_LOAD);
 
@@ -509,7 +516,9 @@ static void create_content_items(void) {
 
             free(last_name);
         }
-    } else {
+    }
+
+    if (sys_index < 0) {
         for (size_t i = 0; i < item_count; i++) {
             if (strcasecmp(items[i].extra_data, prev_dir) == 0) {
                 sys_index = (int) i;
@@ -932,6 +941,26 @@ static void handle_start(void) {
     mux_input_stop();
 }
 
+static void handle_select(void) {
+    if (msgbox_active || hold_call) return;
+
+    if (is_ksk(kiosk.CONTENT.SEARCH)) {
+        kiosk_denied();
+        return;
+    }
+
+    play_sound(SND_CONFIRM);
+
+    if (ui_count > 0) {
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+    }
+
+    load_mux("search");
+
+    mux_input_stop();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
@@ -1147,6 +1176,7 @@ int muxplore_main(int index, char *dir) {
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_START] = handle_start,
+                    [MUX_INPUT_SELECT] = handle_select,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
