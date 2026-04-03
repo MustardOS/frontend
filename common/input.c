@@ -92,16 +92,6 @@ static void init_input_maps(void) {
     controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = MUX_INPUT_DPAD_LEFT;
     controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = MUX_INPUT_DPAD_RIGHT;
 
-    if (board_is(BOARD_SPECIAL_TUI_BRICK)) {
-        joy_button_map[1] = MUX_INPUT_VOL_UP;
-        joy_button_map[0] = MUX_INPUT_VOL_DOWN;
-    } else {
-        if (board_is(BOARD_SPECIAL_NONE)) {
-            joy_button_map[2] = MUX_INPUT_VOL_UP;
-            joy_button_map[1] = MUX_INPUT_VOL_DOWN;
-        }
-    }
-
     axis_map[SDL_CONTROLLER_AXIS_LEFTX].neg = MUX_INPUT_LS_LEFT;
     axis_map[SDL_CONTROLLER_AXIS_LEFTX].pos = MUX_INPUT_LS_RIGHT;
     axis_map[SDL_CONTROLLER_AXIS_LEFTY].neg = MUX_INPUT_LS_UP;
@@ -139,6 +129,19 @@ static void init_input_maps(void) {
     key_map[SDL_SCANCODE_S] = MUX_INPUT_DPAD_DOWN;
     key_map[SDL_SCANCODE_A] = MUX_INPUT_DPAD_LEFT;
     key_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
+
+    if (board_is(BOARD_SPECIAL_TUI_BRICK)) {
+        joy_button_map[1] = MUX_INPUT_VOL_UP;
+        joy_button_map[0] = MUX_INPUT_VOL_DOWN;
+    } else {
+        if (board_is(BOARD_SPECIAL_NONE)) {
+            joy_button_map[2] = MUX_INPUT_VOL_UP;
+            joy_button_map[1] = MUX_INPUT_VOL_DOWN;
+        } else if (board_is(BOARD_SPECIAL_VITA_PRO)) {
+            joy_button_map[14] = MUX_INPUT_VOL_UP;
+            joy_button_map[13] = MUX_INPUT_VOL_DOWN;
+        }
+    }
 
     key_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
     key_map[SDL_SCANCODE_VOLUMEUP] = MUX_INPUT_VOL_UP;
