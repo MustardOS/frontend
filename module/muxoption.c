@@ -704,7 +704,6 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[UI_COUNT] = {
-            {"search",    &kiosk.CONTENT.SEARCH,    NULL},
             {"assign",    &kiosk.CONTENT.CORE,      NULL},
             {"governor",  &kiosk.CONTENT.GOVERNOR,  NULL},
             {"control",   &kiosk.CONTENT.CONTROL,   visible_control},
