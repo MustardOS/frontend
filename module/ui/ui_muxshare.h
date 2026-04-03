@@ -280,14 +280,18 @@
     NETWORK(Connect,    CONNECT,    "connect")
 
 #define OPTION_ELEMENTS                       \
-    OPTION(Search,    SEARCH,    "search")    \
     OPTION(Core,      CORE,      "core")      \
     OPTION(Governor,  GOVERNOR,  "governor")  \
     OPTION(Control,   CONTROL,   "control")   \
     OPTION(RetroArch, RETROARCH, "retroarch") \
     OPTION(RemConfig, REMCONFIG, "remconfig") \
     OPTION(ColFilter, COLFILTER, "colfilter") \
-    OPTION(Tag,       TAG,       "tag")
+    OPTION(Tag,       TAG,       "tag")       \
+    OPTION(Storage,   STORAGE,   "storage")   \
+    OPTION(Folder,    FOLDER,    "folder")    \
+    OPTION(Name,      NAME,      "name")      \
+    OPTION(Time,      TIME,      "time")      \
+    OPTION(Launch,    LAUNCH,    "launch")
 
 #define OVERLAY_ELEMENTS                        \
     OVERLAY(GenAlpha,  GENALPHA,  "gen_alpha")  \

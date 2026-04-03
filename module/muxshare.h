@@ -67,6 +67,7 @@ extern int refresh_resolution;
 extern int nav_moved;
 extern int current_item_index;
 extern int first_open;
+extern int nav_silent;
 extern int ui_count;
 extern int hold_call;
 
@@ -430,8 +431,18 @@ int muxwebserv_main();
         int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE); \
         int value = ((VAL_MIN) == (VAL_MAX)) ? (VAL_MIN)                 \
                     : pct_to_int(current, VAL_MIN, VAL_MAX);             \
-        if (value != NAME##_original) {                                \
+        if (value != NAME##_original) {                                  \
             is_modified++;                                               \
             write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, value); \
         }                                                                \
     } while (0)
+
+#define OPTION_APPLY_WIDTH(NAME) adjust_label_value_width(ui_pnl##NAME##_option, ui_lbl##NAME##_option, ui_lbl##NAME##Value_option)
+
+#define OPTION_SHOW(NAME) lv_obj_clear_flag(ui_pnl##NAME##_option, LV_OBJ_FLAG_HIDDEN)
+
+#define OPTION_HIDE(NAME) lv_obj_add_flag(ui_pnl##NAME##_option, LV_OBJ_FLAG_HIDDEN)
+
+#define OPTION_APPLY_LONG(NAME)                                            \
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lbl##NAME##_option);     \
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lbl##NAME##Value_option)

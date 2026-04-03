@@ -22,6 +22,7 @@ struct theme_config theme;
 int nav_moved = 0;
 int current_item_index = 0;
 int first_open = 1;
+int nav_silent = 0;
 int ui_count = 0;
 int hold_call = 0;
 
@@ -497,7 +498,12 @@ void ui_gen_refresh_task() {
 
 void gen_step_movement(int steps, int direction, int long_dot, int count_offset) {
     if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+
+    if (first_open) {
+        first_open = 0;
+    } else if (!nav_silent) {
+        play_sound(SND_NAVIGATE);
+    }
 
     for (int step = 0; step < steps; ++step) {
         if (long_dot) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));

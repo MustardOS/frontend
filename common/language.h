@@ -920,8 +920,8 @@ struct mux_lang {
     } MUXNEWS;
 
     struct {
-        char TITLE[MAX_BUFFER_SIZE];
-        char SEARCH[MAX_BUFFER_SIZE];
+        char TITLE_MAIN[MAX_BUFFER_SIZE];
+        char TITLE_INFO[MAX_BUFFER_SIZE];
         char NAME[MAX_BUFFER_SIZE];
         char TIME[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
@@ -938,6 +938,8 @@ struct mux_lang {
         char REMCORE[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
+        char STORAGE[MAX_BUFFER_SIZE];
+        char FOLDER[MAX_BUFFER_SIZE];
         struct {
             char CORE[MAX_BUFFER_SIZE];
             char GOVERNOR[MAX_BUFFER_SIZE];
@@ -946,7 +948,11 @@ struct mux_lang {
             char RETROARCH[MAX_BUFFER_SIZE];
             char COLFILTER[MAX_BUFFER_SIZE];
             char REMCONFIG[MAX_BUFFER_SIZE];
-            char SEARCH[MAX_BUFFER_SIZE];
+            char STORAGE[MAX_BUFFER_SIZE];
+            char FOLDER[MAX_BUFFER_SIZE];
+            char NAME[MAX_BUFFER_SIZE];
+            char TIME[MAX_BUFFER_SIZE];
+            char LAUNCH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXOPTION;
 

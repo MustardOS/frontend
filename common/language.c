@@ -813,14 +813,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNEWS.OPEN, "Downloading Post…");
 
     // muxoption
-    SPECIFIC_FIELD(lang->MUXOPTION.TITLE, "CONTENT OPTION");
-    SPECIFIC_FIELD(lang->MUXOPTION.SEARCH, "Search");
-    SPECIFIC_FIELD(lang->MUXOPTION.NAME, "Name");
+    SPECIFIC_FIELD(lang->MUXOPTION.TITLE_MAIN, "CONTENT OPTIONS");
+    SPECIFIC_FIELD(lang->MUXOPTION.TITLE_INFO, "CONTENT INFO");
+    SPECIFIC_FIELD(lang->MUXOPTION.NAME, "Content Name");
     SPECIFIC_FIELD(lang->MUXOPTION.TIME, "Time Played");
     SPECIFIC_FIELD(lang->MUXOPTION.LAUNCH, "Times Launched");
     SPECIFIC_FIELD(lang->MUXOPTION.CURRENT, "Current");
-    SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Core");
-    SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
+    SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Content Core");
+    SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "System Governor");
     SPECIFIC_FIELD(lang->MUXOPTION.CONTROL, "Control Scheme");
     SPECIFIC_FIELD(lang->MUXOPTION.RETROARCH, "Threaded Video");
     SPECIFIC_FIELD(lang->MUXOPTION.COLFILTER, "Colour Filter");
@@ -831,6 +831,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.REMCORE, "Removing Core Config…");
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
+    SPECIFIC_FIELD(lang->MUXOPTION.STORAGE, "Storage");
+    SPECIFIC_FIELD(lang->MUXOPTION.FOLDER, "Folder Path");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CORE, "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.GOVERNOR, "Set the CPU governor for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
@@ -838,7 +840,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.COLFILTER, "Select a colour filter that will change the display output of the running content. May not work with everything!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.REMCONFIG, "Remove specific RetroArch configuration, just in case something goes horribly wrong");
-    SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.STORAGE, "Displays which storage device the selected content is located on");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.FOLDER, "Shows the parent directory of the selected content");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.NAME, "Displays the resolved or friendly name of the selected content");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.TIME, "Shows the total accumulated play time for the selected content");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.LAUNCH, "Displays how many times the selected content has been launched");
 
     // muxoverlay
     SPECIFIC_FIELD(lang->MUXOVERLAY.TITLE, "OVERLAY OPTIONS");
