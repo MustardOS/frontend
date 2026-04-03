@@ -152,6 +152,10 @@ void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value)
 
 void update_label_scroll();
 
+void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_file_name,
+                          lv_obj_t *ui_imgSplash, lv_obj_t *ui_viewport_objects[],
+                          int *starter_image, int *splash_valid);
+
 int muxactivity_main();
 
 int muxapp_main();

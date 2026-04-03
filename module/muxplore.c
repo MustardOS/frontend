@@ -79,104 +79,38 @@ static char *load_content_description(void) {
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
-    char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
-    char core_artwork[MAX_BUFFER_SIZE];
-
     char *file_name = get_file_name(items[current_item_index].name);
     char *content_label = file_name;
     char *file_name_no_ext = strip_ext(content_label);
 
+    char core_artwork[MAX_BUFFER_SIZE];
+    char h_core_artwork_buf[MAX_BUFFER_SIZE];
+    char *h_core_artwork;
+    char *h_file_name;
+
     if (union_is_root(sys_dir) || at_base(sys_dir, "ROMS")) {
-        snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                 INFO_CAT_PATH, image_type, content_label);
+        char image[MAX_BUFFER_SIZE];
+        snprintf(image, sizeof(image), INFO_CAT_PATH "/Folder/%s/%s.png", image_type, content_label);
+        snprintf(h_core_artwork_buf, sizeof(h_core_artwork_buf), "Folder");
+
+        h_core_artwork = h_core_artwork_buf;
+        h_file_name = file_name_no_ext;
     } else {
         get_catalogue_name(sys_dir, content_label, core_artwork, sizeof(core_artwork));
 
-        if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
-            snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                     theme_base, mux_dim, image_type);
-            if (!file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         theme_base, image_type);
-            }
+        if (items[current_item_index].content_type == FOLDER) {
+            char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, file_name);
+            snprintf(h_core_artwork_buf, sizeof(h_core_artwork_buf), "%s", strlen(catalogue_name) > 0 ? catalogue_name : "Folder");
+
+            h_core_artwork = h_core_artwork_buf;
+            h_file_name = file_name_no_ext;
         } else {
-            if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
-                if (items[current_item_index].content_type == FOLDER) {
-                    char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, file_name);
-                    load_image_catalogue("Folder", file_name_no_ext, catalogue_name, "default",
-                                         mux_dim, image_type, image, sizeof(image));
-                } else {
-                    load_image_catalogue(core_artwork, file_name_no_ext, "", "default", mux_dim,
-                                         image_type, image, sizeof(image));
-                }
-            }
-            if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
-                load_splash_image_fallback(mux_dim, image, sizeof(image));
-            }
+            h_core_artwork = core_artwork;
+            h_file_name = file_name_no_ext;
         }
     }
 
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
-
-    if (strcasecmp(image_type, "preview") == 0) {
-        if (strcasecmp(preview_image_previous_path, image) != 0) {
-            if (file_exist(image)) {
-                struct ImageSettings image_settings = {
-                        image, LV_ALIGN_CENTER,
-                        validate_int16((int16_t) (device.MUX.WIDTH * .9) - 60, "width"),
-                        validate_int16((int16_t) (device.MUX.HEIGHT * .9) - 120, "height"),
-                        0, 0, 0, 0
-                };
-                update_image(ui_imgHelpPreviewImage, image_settings);
-                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
-            } else {
-                lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
-                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
-            }
-        }
-    } else if (strcasecmp(image_type, "splash") == 0) {
-        if (strcasecmp(splash_image_previous_path, image) != 0) {
-            if (file_exist(image)) {
-                splash_valid = 1;
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-                lv_img_set_src(ui_imgSplash, image_path);
-                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
-            } else {
-                splash_valid = 0;
-                lv_img_set_src(ui_imgSplash, &ui_image_Nothing);
-                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
-            }
-        }
-    } else {
-        if (strcasecmp(box_image_previous_path, image) != 0) {
-            char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Folder" : core_artwork;
-            char *content_name =
-                    items[current_item_index].content_type == FOLDER ? file_name : file_name_no_ext;
-            char artwork_config_path[MAX_BUFFER_SIZE];
-            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
-                     INFO_CAT_PATH, catalogue_folder);
-            if (!file_exist(artwork_config_path)) {
-                snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
-                         INFO_CAT_PATH);
-            }
-
-            if (file_exist(artwork_config_path)) {
-                viewport_refresh(ui_viewport_objects, artwork_config_path, catalogue_folder, content_name);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-            } else {
-                if (file_exist(image)) {
-                    starter_image = 1;
-                    snprintf(image_path, sizeof(image_path), "M:%s", image);
-                    lv_img_set_src(ui_imgBox, image_path);
-                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-                } else {
-                    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
-                }
-            }
-        }
-    }
+    render_image_refresh(image_type, h_core_artwork, h_file_name, ui_imgSplash, ui_viewport_objects, &starter_image, &splash_valid);
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {

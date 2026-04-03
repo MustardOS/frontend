@@ -587,3 +587,92 @@ void update_label_scroll() {
         set_label_long_mode(&theme, lv_group_get_focused(ui_group_value));
     }
 }
+
+void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_file_name,
+                          lv_obj_t *ui_imgSplash, lv_obj_t *ui_viewport_objects[],
+                          int *starter_image, int *splash_valid) {
+    if (strlen(h_core_artwork) <= 1) {
+        LOG_WARN(mux_module, "Catalogue name unavailable for '%s', deferring image cache", h_file_name);
+
+        if (strcasecmp(image_type, "preview") == 0) {
+            lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
+        } else if (strcasecmp(image_type, "splash") == 0) {
+            *splash_valid = 0;
+            lv_img_set_src(ui_imgSplash, &ui_image_Nothing);
+        } else {
+            lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        }
+        return;
+    }
+
+    char image[MAX_BUFFER_SIZE];
+    char image_path[MAX_BUFFER_SIZE];
+
+    if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
+        load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, image_type, image, sizeof(image));
+    }
+
+    if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
+        load_splash_image_fallback(mux_dim, image, sizeof(image));
+    }
+
+    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
+
+    if (strcasecmp(image_type, "preview") == 0) {
+        if (strcasecmp(preview_image_previous_path, image) != 0) {
+            if (file_exist(image)) {
+                struct ImageSettings image_settings = {
+                        image, LV_ALIGN_CENTER,
+                        validate_int16((int16_t) (device.MUX.WIDTH * .9) - 60, "width"),
+                        validate_int16((int16_t) (device.MUX.HEIGHT * .9) - 120, "height"),
+                        0, 0, 0, 0
+                };
+
+                update_image(ui_imgHelpPreviewImage, image_settings);
+                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
+            } else {
+                lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
+                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
+            }
+        }
+    } else if (strcasecmp(image_type, "splash") == 0) {
+        if (strcasecmp(splash_image_previous_path, image) != 0) {
+            if (file_exist(image)) {
+                *splash_valid = 1;
+
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
+                lv_img_set_src(ui_imgSplash, image_path);
+
+                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
+            } else {
+                *splash_valid = 0;
+                lv_img_set_src(ui_imgSplash, &ui_image_Nothing);
+                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
+            }
+        }
+    } else {
+        if (strcasecmp(box_image_previous_path, image) != 0) {
+            char artwork_config_path[MAX_BUFFER_SIZE];
+            snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/%s.ini", h_core_artwork);
+
+            if (!file_exist(artwork_config_path)) snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/default.ini");
+
+            if (file_exist(artwork_config_path)) {
+                viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
+                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+            } else {
+                if (file_exist(image)) {
+                    *starter_image = 1;
+
+                    snprintf(image_path, sizeof(image_path), "M:%s", image);
+                    lv_img_set_src(ui_imgBox, image_path);
+
+                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+                } else {
+                    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+                }
+            }
+        }
+    }
+}
