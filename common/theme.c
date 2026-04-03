@@ -1055,7 +1055,8 @@ void scale_theme(struct mux_device *device) {
             {720,  576},
             {720,  720},
             {1024, 768},
-            {1280, 720}
+            {1280, 720},
+            {1920, 1080},
     };
 
     char theme_device_folder[MAX_BUFFER_SIZE];

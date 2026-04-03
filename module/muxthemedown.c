@@ -76,13 +76,14 @@ static void image_refresh() {
 
 static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabled, bool language_enabled,
                             bool resolution640x480, bool resolution720x480, bool resolution720x720,
-                            bool resolution1024x768, bool resolution1280x720) {
+                            bool resolution1024x768, bool resolution1280x720, bool resolution1920x1080) {
     return (
             (config.THEME.FILTER.RESOLUTION_640x480 && !resolution640x480) ||
             (config.THEME.FILTER.RESOLUTION_720x480 && !resolution720x480) ||
             (config.THEME.FILTER.RESOLUTION_720x720 && !resolution720x720) ||
             (config.THEME.FILTER.RESOLUTION_1024x768 && !resolution1024x768) ||
             (config.THEME.FILTER.RESOLUTION_1280x720 && !resolution1280x720) ||
+            (config.THEME.FILTER.RESOLUTION_1920x1080 && !resolution1920x1080) ||
             (config.THEME.FILTER.GRID && !grid_enabled) ||
             (config.THEME.FILTER.HDMI && !hdmi_enabled) ||
             (config.THEME.FILTER.LANGUAGE && !language_enabled) ||
@@ -117,6 +118,7 @@ static void create_content_items(void) {
         bool resolution720x720 = json_bool(json_object_get(theme_item, "resolution720x720"));
         bool resolution1024x768 = json_bool(json_object_get(theme_item, "resolution1024x768"));
         bool resolution1280x720 = json_bool(json_object_get(theme_item, "resolution1280x720"));
+        bool resolution1920x1080 = json_bool(json_object_get(theme_item, "resolution1920x1080"));
 
         char theme_name[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "name"), theme_name, sizeof(theme_name));
@@ -125,9 +127,9 @@ static void create_content_items(void) {
         json_string_copy(json_object_get(theme_item, "url"), theme_url, sizeof(theme_url));
 
         if (!skip_theme_item(theme_name, grid_enabled, hdmi, language,
-                             resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720)) {
+                             resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720, resolution1920x1080)) {
             add_theme_item(&theme_items, &theme_item_count, theme_name, theme_url, grid_enabled, hdmi, language,
-                           resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720);
+                           resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720, resolution1920x1080);
         }
     }
     sort_theme_items(theme_items, theme_item_count);

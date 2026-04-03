@@ -28,7 +28,8 @@ struct theme_resolution theme_resolutions[] = {
         {"720x576",  3},
         {"720x720",  4},
         {"1024x768", 5},
-        {"1280x720", 6}
+        {"1280x720", 6},
+        {"1920x1080", 7},
 };
 
 static int get_theme_resolution_value(char *resolution) {

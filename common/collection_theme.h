@@ -14,12 +14,13 @@ typedef struct {
     bool resolution720x720;
     bool resolution1024x768;
     bool resolution1280x720;
+    bool resolution1920x1080;
 } theme_item;
 
 theme_item *add_theme_item(theme_item **theme_items, size_t *count, const char *name, const char *url,
                            bool grid_enabled, bool hdmi_enabled, bool language_enabled, bool resolution640x480,
                            bool resolution720x480, bool resolution720x720, bool resolution1024x768,
-                           bool resolution1280x720);
+                           bool resolution1280x720, bool resolution1920x1080);
 
 int theme_item_exists(theme_item *theme_items, size_t count, const char *name);
 

@@ -80,6 +80,7 @@ struct mux_config {
             int16_t RESOLUTION_720x720;
             int16_t RESOLUTION_1024x768;
             int16_t RESOLUTION_1280x720;
+            int16_t RESOLUTION_1920x1080;
             int16_t GRID;
             int16_t HDMI;
             int16_t LANGUAGE;

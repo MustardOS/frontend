@@ -49,6 +49,10 @@ static char *overlay_1280x720[] = {
         // TODO: Add resolution specific overlays!
 };
 
+static char *overlay_1920x1080[] = {
+        // TODO: Add resolution specific overlays!
+};
+
 typedef struct {
     int width;
     int height;
@@ -63,6 +67,7 @@ static overlay_resolution overlay_map[] = {
         {720,  720, overlay_720x720,  0},
         {1024, 768, overlay_1024x768, 0},
         {1280, 720, overlay_1280x720, 0},
+        {1920, 1080, overlay_1920x1080, 0},
 };
 
 static char **merge_overlays(char **extra, size_t extra_size, size_t *merged_size) {

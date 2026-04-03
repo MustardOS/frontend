@@ -67,6 +67,8 @@ void load_config(struct mux_config *config) {
             config->THEME.FILTER.RESOLUTION_1024x768 = 1;
         } else if (width == 1280 && height == 720) {
             config->THEME.FILTER.RESOLUTION_1280x720 = 1;
+        } else if (width == 1920 && height == 1080) {
+            config->THEME.FILTER.RESOLUTION_1920x1080 = 1;
         }
     } else {
         config->THEME.FILTER.RESOLUTION_640x480 = 0;
@@ -74,6 +76,7 @@ void load_config(struct mux_config *config) {
         config->THEME.FILTER.RESOLUTION_720x720 = 0;
         config->THEME.FILTER.RESOLUTION_1024x768 = 0;
         config->THEME.FILTER.RESOLUTION_1280x720 = 0;
+        config->THEME.FILTER.RESOLUTION_1920x1080 = 0;
     }
 
     CFG_STR_FIELD(config->EXTRA.DOWNLOAD.DATA, CONF_CONFIG_PATH "extra/download/data", "");
@@ -164,6 +167,10 @@ void load_config(struct mux_config *config) {
         case 6:
             config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 1280;
             config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 720;
+            break;
+        case 7:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 1920;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 1080;
             break;
     }
 

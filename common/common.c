@@ -2000,7 +2000,7 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
 int resolution_check(const char *theme_path) {
     LOG_INFO(mux_module, "Inspecting theme for supported resolutions: %s", theme_path);
-    const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720"};
+    const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720", "1920x1080"};
 
     // Check if the folder name matches any target resolutions
     for (size_t j = 0; j < A_SIZE(resolutions); j++) {
