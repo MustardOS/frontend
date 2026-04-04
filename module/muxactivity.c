@@ -3,6 +3,7 @@
 
 static lv_obj_t *ui_viewport_objects[7];
 static int starter_image = 0;
+static int track_delete = 0;
 
 typedef enum {
     LOCAL_PLAYSTYLE_UNKNOWN,         // Something could not be calculated
@@ -37,6 +38,8 @@ typedef enum {
 } global_playstyle_t;
 
 typedef struct {
+    char path[PATH_MAX];
+
     char name[256]; // To be fair exFAT is max 255 :D
     char file_name[256]; // To be fair exFAT is max 255 :D
     char dir[512];
@@ -534,6 +537,106 @@ static struct json get_playtime_json(void) {
     return playtime_json_root;
 }
 
+static int ensure_capacity(char **buf, size_t *cap, size_t len, size_t need) {
+    if (len + need < *cap) return 1;
+
+    size_t new_cap = *cap ? *cap * 2 : 4096;
+    while (len + need >= new_cap) new_cap *= 2;
+
+    char *tmp = realloc(*buf, new_cap);
+    if (!tmp) return 0;
+
+    *buf = tmp;
+    *cap = new_cap;
+
+    return 1;
+}
+
+static int delete_activity_entry(const char *target_path) {
+    if (!target_path || !*target_path) return 0;
+
+    struct json root = get_playtime_json();
+    if (!json_exists(root)) return 0;
+
+    size_t cap = 4096;
+    size_t len = 0;
+
+    char *output = malloc(cap);
+    if (!output) return 0;
+
+    output[len++] = '{';
+
+    int first = 1;
+
+    struct json child = json_first(root);
+    while (json_exists(child)) {
+        struct json key = child;
+        struct json val = json_next(key);
+
+        if (!json_exists(val)) break;
+
+        char key_buf[PATH_MAX];
+        json_string_copy(key, key_buf, sizeof(key_buf));
+
+        if (strcasecmp(key_buf, target_path) != 0) {
+            if (!first) {
+                if (!ensure_capacity(&output, &cap, len, 1)) {
+                    LOG_ERROR(mux_module, "Capacity overflow...");
+                    free(output);
+                    return 0;
+                }
+                output[len++] = ',';
+            }
+            first = 0;
+
+            int needed = snprintf(NULL, 0, "\"%s\":", key_buf);
+            if (needed < 0 || !ensure_capacity(&output, &cap, len, (size_t) needed + 1)) {
+                free(output);
+                return 0;
+            }
+
+            len += snprintf(output + len, cap - len, "\"%s\":", key_buf);
+
+            const char *raw = json_raw(val);
+            size_t raw_len = json_raw_length(val);
+
+            if (!raw || raw_len == 0) {
+                LOG_ERROR(mux_module, "Invalid JSON raw value...");
+                free(output);
+                return 0;
+            }
+
+            if (!ensure_capacity(&output, &cap, len, raw_len)) {
+                LOG_ERROR(mux_module, "Capacity overflow...");
+                free(output);
+                return 0;
+            }
+
+            memcpy(output + len, raw, raw_len);
+            len += raw_len;
+        }
+
+        child = json_next(val);
+    }
+
+    if (!ensure_capacity(&output, &cap, len, 2)) {
+        free(output);
+        return 0;
+    }
+
+    output[len++] = '}';
+    output[len] = '\0';
+
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/%s", INFO_ACT_PATH, PLAYTIME_DATA);
+
+    write_text_to_file(path, "w", CHAR, output);
+    track_delete = 1;
+
+    free(output);
+    return 1;
+}
+
 static void normalise_json_values(char *dst, size_t dst_size, const char *src) {
     if (!src || !*src) {
         dst[0] = '\0';
@@ -804,8 +907,11 @@ static void load_activity_items(void) {
                 activity_item_t *it = &activity_items[activity_count];
                 memset(it, 0, sizeof(*it));
 
+                json_string_copy(key, it->path, sizeof(it->path));
+
                 char full_path[512];
-                json_string_copy(key, full_path, sizeof(full_path));
+                snprintf(full_path, sizeof(full_path), "%s", it->path);
+
                 char *item_file_name = get_file_name(strdup(full_path));
                 snprintf(it->file_name, sizeof(it->file_name), "%s", item_file_name);
 
@@ -958,8 +1064,20 @@ static void refresh_activity_labels(void) {
     }
 
     lv_obj_update_layout(ui_pnlContent);
-
     current_item_index = 0;
+
+    if (ui_count == 0) {
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXACTIVITY.NONE);
+
+        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_label_set_text(ui_lblScreenMessage, "");
+    }
 }
 
 static void show_detail_view(const activity_item_t *it) {
@@ -1576,10 +1694,10 @@ static void hide_nav(void) {
     lv_obj_add_flag(ui_lblCounter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
 }
 
 static void show_nav(void) {
@@ -1587,10 +1705,10 @@ static void show_nav(void) {
     lv_obj_clear_flag(ui_lblCounter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    lv_label_set_text(ui_lblNavX, lang.MUXACTIVITY.GLOBAL.NAV);
 }
 
 static void handle_a(void) {
@@ -1609,7 +1727,7 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (hold_call) return;
+    if (hold_call && !track_delete) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -1619,7 +1737,12 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    if (track_delete) {
+        toast_message("Content Playtime Removed", MEDIUM);
+        track_delete = 0;
+    } else {
+        play_sound(SND_BACK);
+    }
 
     if (in_detail_view) {
         show_nav();
@@ -1654,7 +1777,37 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || hold_call || in_detail_view) return;
+    if (msgbox_active || !ui_count) return;
+
+    if (in_detail_view && overview_item_index >= 0 && (size_t) overview_item_index < activity_count) {
+        if (!hold_call) {
+            toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
+            play_sound(SND_ERROR);
+
+            return;
+        }
+
+        LOG_INFO(mux_module, "Purging Playtime Entry: %s", activity_items[overview_item_index].path);
+
+        if (delete_activity_entry(activity_items[overview_item_index].path)) {
+            play_sound(SND_MUOS);
+
+            free_activity_items();
+            load_activity_items();
+
+            last_sort_mode = -1;
+            handle_b();
+
+            return;
+        } else {
+            toast_message(lang.GENERIC.REMOVE_FAIL, SHORT);
+            play_sound(SND_ERROR);
+
+            return;
+        }
+    }
+
+    if (hold_call || in_detail_view) return;
 
     play_sound(SND_CONFIRM);
 
@@ -1773,6 +1926,10 @@ int muxactivity_main() {
 
     if (ui_count == 0) {
         hide_nav();
+
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+
         lv_label_set_text(ui_lblScreenMessage, lang.MUXACTIVITY.NONE);
     } else {
         image_refresh();
