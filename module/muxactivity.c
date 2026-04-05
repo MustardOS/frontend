@@ -208,7 +208,7 @@ static int ensure_activity_capacity(void) {
     activity_item_t *items = realloc(activity_items, new_capacity * sizeof(*items));
 
     if (!items) {
-        toast_message("Activity list full (memory)", SHORT);
+        LOG_ERROR(mux_module, "Activity list memory overflow!");
         return 0;
     }
 
@@ -1404,7 +1404,7 @@ static void export_activity_html(void) {
 
     FILE *f = fopen(html_export, "w");
     if (!f) {
-        toast_message("Error exporting statistics", MEDIUM);
+        toast_message(lang.MUXACTIVITY.EXPORT_ERROR, MEDIUM);
         refresh_screen(ui_screen, 1);
         return;
     }
@@ -1630,7 +1630,7 @@ static void export_activity_html(void) {
 
     fclose(f);
 
-    toast_message("Activity statistics exported", MEDIUM);
+    toast_message(lang.MUXACTIVITY.EXPORT_SUCCESS, MEDIUM);
     refresh_screen(ui_screen, 1);
 }
 
@@ -1738,7 +1738,7 @@ static void handle_b(void) {
     }
 
     if (track_delete) {
-        toast_message("Content Playtime Removed", MEDIUM);
+        toast_message(lang.MUXACTIVITY.REMOVED, MEDIUM);
         track_delete = 0;
     } else {
         play_sound(SND_BACK);

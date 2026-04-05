@@ -121,6 +121,9 @@ struct mux_lang {
         char TIME[MAX_BUFFER_SIZE];
         char HTML[MAX_BUFFER_SIZE];
         char UNIQUE[MAX_BUFFER_SIZE];
+        char EXPORT_SUCCESS[MAX_BUFFER_SIZE];
+        char EXPORT_ERROR[MAX_BUFFER_SIZE];
+        char REMOVED[MAX_BUFFER_SIZE];
         struct {
             char NAME[MAX_BUFFER_SIZE];
             char CORE[MAX_BUFFER_SIZE];
