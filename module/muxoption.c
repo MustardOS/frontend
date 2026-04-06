@@ -858,15 +858,10 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     info_item_index = 0;
     info_has_init = 0;
 
-    char resolved_dir[PATH_MAX];
-    if (!union_resolve_to_real(dir, resolved_dir, sizeof(resolved_dir))) {
-        snprintf(resolved_dir, sizeof(resolved_dir), "%s", dir);
-    }
-
-    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", resolved_dir, name);
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir);
 
-    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", resolved_dir);
+    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
