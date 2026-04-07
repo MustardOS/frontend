@@ -7,9 +7,11 @@ enum {
 };
 #undef NETWORK
 
+#define NET_SCRIPT "script/init/async/S02network.sh"
+
 const char *pass_args[] = {(OPT_PATH "script/web/password.sh"), NULL};
-const char *net_c_args[] = {(OPT_PATH "script/system/network.sh"), "connect", NULL};
-const char *net_d_args[] = {(OPT_PATH "script/system/network.sh"), "disconnect", NULL};
+const char *net_c_args[] = {(OPT_PATH NET_SCRIPT), "start", NULL};
+const char *net_d_args[] = {(OPT_PATH NET_SCRIPT), "stop", NULL};
 
 #define PASS_ENCODE "********"
 
