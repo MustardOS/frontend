@@ -104,6 +104,8 @@ static void create_view_containers(void) {
     lv_obj_set_style_pad_right(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlOptionsView, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_layout(ui_pnlOptionsView, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(ui_pnlOptionsView, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui_pnlOptionsView, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -119,6 +121,8 @@ static void create_view_containers(void) {
     lv_obj_set_style_pad_right(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlInfoView, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_layout(ui_pnlInfoView, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(ui_pnlInfoView, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui_pnlInfoView, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
