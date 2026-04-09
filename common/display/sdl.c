@@ -40,6 +40,7 @@ static monitor_t monitor;
 
 static SDL_Rect pending_rect;
 static bool pending_rect_valid = false;
+static uint32_t last_saver_exit = 0;
 
 int scale_width, scale_height, underscan;
 
@@ -466,8 +467,13 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     // separate input logic scheme that does not interrupt the muX frontend!
     if (config.SETTINGS.POWER.SCREENSAVER) dvd_update();
     if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) {
-        pending_rect_valid = false;
-        run_dvd_screensaver_loop();
+        uint32_t now = SDL_GetTicks();
+
+        if (now - last_saver_exit > SCREENSAVER_DELAY) {
+            pending_rect_valid = false;
+            run_dvd_screensaver_loop();
+            last_saver_exit = SDL_GetTicks();
+        }
     }
 
     if (monitor.needs_clear || monitor.force_clear) {

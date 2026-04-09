@@ -13,10 +13,11 @@
 // module_count * (screen + content section + header + footer)
 #define FONT_CACHE_MAX  256
 
-#define RTC_MAX_RETRIES 5
+#define RTC_MAX_RETRIES 4
 #define RTC_RETRY_DELAY 1
 
-#define THEME_PREVIEW_DELAY 1000
+#define THEME_PREVIEW_DELAY 1024
+#define SCREENSAVER_DELAY   512
 #define DEFAULT_TEMPERATURE 30
 
 #define IDLE_MS 16 // ~60 FPS

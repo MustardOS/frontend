@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "../log.h"
-#include "../options.h"
 #include "../common.h"
 #include "dvd.h"
 
@@ -14,6 +13,8 @@
 #define DVD_SPEED_PATH "/opt/muos/config/settings/power/screensaver"
 #define DVD_SPEED_DEFAULT 90
 #define DVD_SPEED_COLOUR 600
+
+static uint32_t suppress_until = 0;
 
 typedef struct {
     SDL_Texture *tex;
@@ -180,6 +181,13 @@ void dvd_update(void) {
 
     uint32_t now = SDL_GetTicks();
 
+    if (now < suppress_until) {
+        dvd.idle_active = 0;
+        dvd.last_tick = now;
+
+        return;
+    }
+
     if (now - dvd.last_idle_poll >= TIMER_IDLE) {
         dvd.was_idle_active = dvd.idle_active;
         dvd.idle_active = read_line_int_from(IDLE_STATE, 1);
@@ -294,6 +302,8 @@ int dvd_active(void) {
 void dvd_stop(void) {
     dvd.idle_active = 0;
     dvd.was_idle_active = 0;
+
+    suppress_until = SDL_GetTicks() + SCREENSAVER_DELAY;
 }
 
 void dvd_shutdown(void) {
