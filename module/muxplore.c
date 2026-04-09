@@ -1009,7 +1009,7 @@ int muxplore_main(int index, char *dir) {
     } else {
         snprintf(sys_dir, sizeof(sys_dir), "%s", dir);
     }
-    sys_index = index;
+    if (index > 0) sys_index = index;
 
     init_module(__func__);
     init_theme(1, 1);
