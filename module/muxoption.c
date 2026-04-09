@@ -22,8 +22,13 @@ static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
 
 static int is_dir = 0;
-static char *curr_dir = "";
-static char *core_file = "";
+
+static const char *curr_dir = "";
+static const char *core_file = "";
+
+static char *playtime_json_str = NULL;
+static struct json playtime_json_root = {0};
+static int playtime_json_loaded = 0;
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -51,21 +56,15 @@ static int get_info_base_index(void) {
     return is_dir ? 6 : 7; // Don't you even think about it... https://youtu.be/YBCgmi4SItA
 }
 
-static int visible_control(void) {
-    return !lv_obj_has_flag(ui_pnlControl_option, LV_OBJ_FLAG_HIDDEN);
-}
+#define OPTION_VISIBLE(NAME, OBJ) static int visible_##NAME(void) { return !lv_obj_has_flag(OBJ, LV_OBJ_FLAG_HIDDEN); }
 
-static int visible_retroarch(void) {
-    return !lv_obj_has_flag(ui_pnlRetroArch_option, LV_OBJ_FLAG_HIDDEN);
-}
+OPTION_VISIBLE(control, ui_pnlControl_option)
 
-static int visible_remconfig(void) {
-    return !lv_obj_has_flag(ui_pnlRemConfig_option, LV_OBJ_FLAG_HIDDEN);
-}
+OPTION_VISIBLE(retroarch, ui_pnlRetroArch_option)
 
-static int visible_tag(void) {
-    return !lv_obj_has_flag(ui_pnlTag_option, LV_OBJ_FLAG_HIDDEN);
-}
+OPTION_VISIBLE(remconfig, ui_pnlRemConfig_option)
+
+OPTION_VISIBLE(tag, ui_pnlTag_option)
 
 static void refresh_option_row_widths(void) {
 #define OPTION(NAME, ENUM, UDATA) \
@@ -171,71 +170,33 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
 }
 
-static void add_info_items(void) {
-    char file_path[MAX_BUFFER_SIZE];
-    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
-
-    char *sys_dir = get_content_path(file_path);
-    char *file_name = get_file_name(file_path);
-
-    core_file = get_content_line(sys_dir, file_name, "cfg", 2);
-    const char *core_dir = get_content_line(sys_dir, NULL, "cfg", 1);
-    add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
-
-    const char *gov_file = get_content_line(sys_dir, file_name, "gov", 1);
-    const char *gov_dir = get_content_line(sys_dir, NULL, "gov", 1);
-    add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
-
-    const char *control_file = get_content_line(sys_dir, file_name, "con", 1);
-    const char *control_dir = get_content_line(sys_dir, NULL, "con", 1);
-    add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "control", true);
-
-    const char *rac_file = get_content_line(sys_dir, file_name, "rac", 1);
-    const char *rac_dir = get_content_line(sys_dir, NULL, "rac", 1);
-    add_info_item_type(ui_lblRetroArchValue_option, rac_file, rac_dir, "retroarch", true);
-
-    const char *flt_file = get_content_line(sys_dir, file_name, "flt", 1);
-    const char *flt_dir = get_content_line(sys_dir, NULL, "flt", 1);
-    add_info_item_type(ui_lblColFilterValue_option, flt_file, flt_dir, "filter", true);
-
-    if (!is_dir) {
-        const char *tag_file = get_content_line(sys_dir, file_name, "tag", 1);
-        const char *tag_dir = get_content_line(sys_dir, NULL, "tag", 1);
-        add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
-    }
-}
-
 static struct json get_playtime_json(void) {
-    static char *json_str = NULL;
-    static struct json root = {0};
-    static int loaded = 0;
-
-    if (!loaded) {
+    if (!playtime_json_loaded) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INFO_ACT_PATH "/" PLAYTIME_DATA);
 
         if (!file_exist(path)) return (struct json) {0};
 
-        json_str = read_all_char_from(path);
-        if (!json_str || !json_valid(json_str)) {
-            free(json_str);
-            json_str = NULL;
+        playtime_json_str = read_all_char_from(path);
+        if (!playtime_json_str || !json_valid(playtime_json_str)) {
+            free(playtime_json_str);
+            playtime_json_str = NULL;
             return (struct json) {0};
         }
 
-        root = json_parse(json_str);
-        loaded = 1;
+        playtime_json_root = json_parse(playtime_json_str);
+        playtime_json_loaded = 1;
     }
 
     char fullpath[PATH_MAX];
     snprintf(fullpath, sizeof(fullpath), "%s/%s", rom_dir, rom_name);
 
-    return json_object_get(root, fullpath);
+    return json_object_get(playtime_json_root, fullpath);
 }
 
 static char *get_time_played(void) {
     struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
+    if (!json_exists(playtime_json)) return "0";
 
     static char time_buffer[MAX_BUFFER_SIZE] = "0m";
     int total_time = json_int(json_object_get(playtime_json, "total_time"));
@@ -329,6 +290,18 @@ static void populate_info_values(void) {
     }
 }
 
+static void save_info_index(void) {
+    info_item_index = current_item_index - get_info_base_index();
+    if (info_item_index < 0) info_item_index = 0;
+}
+
+static void rebuild_ui_groups(void) {
+    lv_obj_update_layout(ui_pnlContent);
+    refresh_option_row_widths();
+    reset_ui_groups();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+}
+
 static void build_all_items(void) {
     memset(ui_objects, 0, sizeof(ui_objects));
     memset(ui_objects_panel, 0, sizeof(ui_objects_panel));
@@ -361,23 +334,22 @@ static void build_all_items(void) {
 
     lv_obj_set_parent(ui_pnlStorage_option, ui_pnlInfoView);
     lv_obj_set_parent(ui_pnlFolder_option, ui_pnlInfoView);
-    lv_obj_set_parent(ui_pnlName_option, ui_pnlInfoView);
-    lv_obj_set_parent(ui_pnlTime_option, ui_pnlInfoView);
-    lv_obj_set_parent(ui_pnlLaunch_option, ui_pnlInfoView);
 
     lv_obj_add_flag(ui_pnlStorage_option, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_pnlFolder_option, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_pnlName_option, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_pnlTime_option, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_pnlLaunch_option, LV_OBJ_FLAG_HIDDEN);
+
+    if (!is_dir) {
+        lv_obj_set_parent(ui_pnlName_option, ui_pnlInfoView);
+        lv_obj_set_parent(ui_pnlTime_option, ui_pnlInfoView);
+        lv_obj_set_parent(ui_pnlLaunch_option, ui_pnlInfoView);
+
+        lv_obj_add_flag(ui_pnlName_option, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlTime_option, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlLaunch_option, LV_OBJ_FLAG_HIDDEN);
+    }
 
     populate_info_values();
-
-    lv_obj_update_layout(ui_pnlContent);
-    refresh_option_row_widths();
-
-    reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    rebuild_ui_groups();
 
     lv_obj_add_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
 }
@@ -393,11 +365,7 @@ static void build_options_view(void) {
     OPTION_HIDE(Time);
     OPTION_HIDE(Launch);
 
-    lv_obj_update_layout(ui_pnlContent);
-    refresh_option_row_widths();
-
-    reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    rebuild_ui_groups();
 
     const char *core_label = lv_label_get_text(ui_lblCoreValue_option);
     if (core_label && !strcasestr(core_label, "RetroArch")) {
@@ -425,12 +393,7 @@ static void build_info_view(void) {
     }
 
     populate_info_values();
-
-    lv_obj_update_layout(ui_pnlContent);
-    refresh_option_row_widths();
-
-    reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    rebuild_ui_groups();
 }
 
 static void check_focus(void) {
@@ -587,8 +550,8 @@ static void list_nav_move(int steps, int direction) {
         play_sound(SND_NAVIGATE);
     }
 
-    int base_index = (current_view == VIEW_INFO) ? get_info_base_index() : 0;
-    int view_count = (current_view == VIEW_INFO) ? (is_dir ? 2 : 5) : get_info_base_index();
+    const int base_index = get_info_base_index();
+    int view_count = (current_view == VIEW_INFO) ? (is_dir ? 2 : 5) : base_index;
 
     for (int i = 0; i < steps; i++) {
         if (lv_group_get_focused(ui_group)) {
@@ -653,12 +616,6 @@ static void list_nav_next(int steps) {
 }
 
 static char *change_config_opt(int steps) {
-    int max_opt = is_dir ? 1 : 2;
-    rem_config += steps;
-
-    if (rem_config > max_opt) rem_config = 0;
-    if (rem_config < 0) rem_config = max_opt;
-
     char *remove_options_dir[] = {
             lang.MUXOPTION.FOLDER,
             lang.MUXOPTION.CORE
@@ -670,7 +627,14 @@ static char *change_config_opt(int steps) {
             lang.MUXOPTION.CORE
     };
 
-    return is_dir ? remove_options_dir[rem_config] : remove_options_all[rem_config];
+    char **opts = is_dir ? remove_options_dir : remove_options_all;
+    int max_opt = (int) (is_dir ? A_SIZE(remove_options_dir) : A_SIZE(remove_options_all)) - 1;
+
+    rem_config += steps;
+    if (rem_config > max_opt) rem_config = 0;
+    if (rem_config < 0) rem_config = max_opt;
+
+    return opts[rem_config];
 }
 
 static void handle_option_prev(void) {
@@ -755,10 +719,9 @@ static void handle_b(void) {
     if (current_view == VIEW_INFO) {
         play_sound(SND_BACK);
 
-        info_item_index = current_item_index - get_info_base_index();
-        if (info_item_index < 0) info_item_index = 0;
-
+        save_info_index();
         current_view = VIEW_OPTIONS;
+
         refresh_option_view();
         return;
     }
@@ -817,8 +780,7 @@ static void handle_y(void) {
         options_item_index = current_item_index;
         if (!info_has_init) info_item_index = 0;
     } else {
-        info_item_index = current_item_index - get_info_base_index();
-        if (info_item_index < 0) info_item_index = 0;
+        save_info_index();
     }
 
     play_sound(SND_CONFIRM);
@@ -861,6 +823,11 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     options_item_index = 0;
     info_item_index = 0;
     info_has_init = 0;
+
+    playtime_json_loaded = 0;
+    free(playtime_json_str);
+    playtime_json_str = NULL;
+    playtime_json_root = (struct json) {0};
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir);
