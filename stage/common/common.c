@@ -117,6 +117,25 @@ int read_line_from_file(const char *filename, size_t line_number, char *out, siz
     return 0;
 }
 
+int read_line_int_from(const char *filename, size_t line_number) {
+    char line[MAX_BUFFER_SIZE];
+    FILE *file = fopen(filename, "r");
+    if (!file) return 0;
+
+    for (size_t i = 1; i <= line_number && fgets(line, sizeof(line), file); i++) {
+        if (i == line_number) {
+            line[strcspn(line, "\n")] = '\0';
+            errno = 0;
+            long value = strtol(line, NULL, 10);
+            fclose(file);
+            return (errno == ERANGE) ? 0 : (int) value;
+        }
+    }
+
+    fclose(file);
+    return 0;
+}
+
 static const char *get_active_theme(void) {
     static char theme[256];
     static time_t mtime = 0;
