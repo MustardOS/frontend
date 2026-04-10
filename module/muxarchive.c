@@ -108,7 +108,7 @@ static void create_archive_items(void) {
         char storage_prefix[MAX_BUFFER_SIZE];
         const char *ext_type = "UNK";
 
-        const char *dot = strrchr(base_filename, '.');
+        char *dot = strrchr(base_filename, '.');
         if (dot) {
             for (size_t e = 0; e < A_SIZE(mux_archive); ++e) {
                 if (strcasecmp(dot, mux_archive[e]) == 0) {

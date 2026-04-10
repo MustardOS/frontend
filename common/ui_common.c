@@ -1770,7 +1770,7 @@ void gen_help(int current_index, const struct help_msg *help_messages, size_t ms
         lv_obj_t *focused = group ? lv_group_get_focused(group) : NULL;
 
         if (focused) {
-            title = TS(lv_label_get_text(focused));
+            title = TRS(lv_label_get_text(focused));
             key = (const char *) lv_obj_get_user_data(focused);
         }
     }

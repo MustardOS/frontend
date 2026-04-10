@@ -116,8 +116,7 @@ int muxpass_main(int auth_type) {
     exit_status_muxpass = 0;
 
     init_module(__func__);
-
-    load_passcode(&passcode, &device);
+    load_passcode(&passcode);
 
     if (p_type == PCT_BOOT) {
         p_code = passcode.CODE.BOOT;

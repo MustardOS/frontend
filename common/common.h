@@ -10,18 +10,19 @@
 #define E_SIZE(LIST) A_SIZE(((int[]){ LIST }))
 
 #define BIT(n) (UINT64_C(1) << (n))
-#define TS(str) translate_specific(str)
+#define TRS(s) translate_specific(s)
 #define UFI(i) ((void *)(uintptr_t)(i))
 #define IFU(p) ((size_t)(uintptr_t)(p))
 
 extern int msgbox_active;
 extern int block_input;
 extern lv_obj_t *msgbox_element;
+extern struct pattern skip_pattern_list;
+extern int skip_patterns_loaded;
 extern int fe_snd;
 extern int fe_bgm;
 extern int last_idle;
 extern int progress_onscreen;
-extern struct mux_config config;
 extern char mux_dim[15];
 extern char **history_items;
 extern int history_item_count;
@@ -540,3 +541,5 @@ void set_setting_value(const char *script_name, int value, int offset);
 int get_index_on_delete(int current_index, int post_delete_count);
 
 char *get_storage_label(const char *path);
+
+const char *resolve_info_path(const char *rel);

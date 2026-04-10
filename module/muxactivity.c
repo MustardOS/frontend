@@ -133,17 +133,27 @@ static void image_refresh() {
     if (in_detail_view || in_global_view || config.VISUAL.BOX_ART == 8) return;
 
     char full_path[MAX_BUFFER_SIZE];
-    snprintf(full_path, sizeof(full_path), "%s%s", activity_items[current_item_index].dir, activity_items[current_item_index].file_name);
+    snprintf(full_path, sizeof(full_path), "%s%s",
+             activity_items[current_item_index].dir,
+             activity_items[current_item_index].file_name);
+
     char *item_dir = get_content_path(full_path);
-    char *item_file_name = strdup(activity_items[current_item_index].file_name);
+
+    char item_file_name[MAX_BUFFER_SIZE];
+    snprintf(item_file_name, sizeof(item_file_name), "%s",
+             activity_items[current_item_index].file_name);
 
     char h_core_artwork[MAX_BUFFER_SIZE];
     get_catalogue_name(item_dir, item_file_name, h_core_artwork, sizeof(h_core_artwork));
 
-    char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
+    char h_file_name[MAX_BUFFER_SIZE];
+    snprintf(h_file_name, sizeof(h_file_name), "%s", item_file_name);
 
-    char *h_file_name = strip_ext(item_file_name);
+    char *dot = strrchr(h_file_name, '.');
+    if (dot) *dot = '\0';
+
+    char image[MAX_BUFFER_SIZE] = {0};
+    char image_path[MAX_BUFFER_SIZE];
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_box.png",
@@ -1677,7 +1687,8 @@ static void list_nav_move(int steps, int direction) {
     set_label_long_mode(&theme, lv_group_get_focused(ui_group));
 
     update_label_scroll();
-    image_refresh();
+
+    if (config.VISUAL.BOX_ART < 4) image_refresh();
     nav_moved = 1;
 }
 
@@ -1837,7 +1848,8 @@ static void handle_y(void) {
     overview_item_index = current_item_index;
 
     refresh_activity_labels();
-    image_refresh();
+
+    if (config.VISUAL.BOX_ART < 4) image_refresh();
     nav_moved = 1;
 }
 
@@ -1932,7 +1944,7 @@ int muxactivity_main() {
 
         lv_label_set_text(ui_lblScreenMessage, lang.MUXACTIVITY.NONE);
     } else {
-        image_refresh();
+        if (config.VISUAL.BOX_ART < 4) image_refresh();
         nav_moved = 1;
     }
 

@@ -116,7 +116,7 @@ int download_file(const char *url, const char *output_path) {
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        LOG_ERROR(mux_module, "cURL Failure: %s", curl_easy_strerror(res));
         remove(output_path);
         download_finished(-3);
         return -3;
@@ -124,7 +124,7 @@ int download_file(const char *url, const char *output_path) {
 
     // Verify HTTP status
     if (response_code < 200 || response_code >= 300) {
-        fprintf(stderr, "Unexpected HTTP status: %ld\n", response_code);
+        LOG_ERROR(mux_module, "Unexpected HTTP Status: %ld", response_code);
         remove(output_path);
         download_finished(-4);
         return -4;
@@ -132,7 +132,7 @@ int download_file(const char *url, const char *output_path) {
 
     // Verify file is not empty
     if (cl_response != CURLE_OK || cl <= 0) {
-        fprintf(stderr, "No data downloaded\n");
+        LOG_ERROR(mux_module, "No data downloaded...");
         remove(output_path);
         download_finished(-5);
         return -5;

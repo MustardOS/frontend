@@ -68,7 +68,7 @@ static void show_help(void) {
         char message[MAX_BUFFER_SIZE];
         snprintf(message, sizeof(message), "%s",
                  mux_app->help);
-        show_info_box(TS(items[current_item_index].name), TS(message), 0);
+        show_info_box(TRS(items[current_item_index].name), TRS(message), 0);
     } else {
         char app_lang_file[FILENAME_MAX];
         snprintf(app_lang_file, sizeof(app_lang_file), "%s/" APP_LANGUAGE, items[current_item_index].extra_data);
@@ -80,7 +80,7 @@ static void show_help(void) {
             mini_t *app_lang = mini_load(app_lang_file);
 
             strncpy(app_help, get_ini_string(app_lang, "help", config.SETTINGS.GENERAL.LANGUAGE,
-                                             TS(lang.GENERIC.NO_HELP)), sizeof(app_help));
+                                             TRS(lang.GENERIC.NO_HELP)), sizeof(app_help));
             app_help[sizeof(app_help) - 1] = '\0';
 
             mini_free(app_lang);
@@ -90,7 +90,7 @@ static void show_help(void) {
                      lang.GENERIC.NO_HELP);
         }
 
-        show_info_box(TS(items[current_item_index].name), app_help, 0);
+        show_info_box(TRS(items[current_item_index].name), app_help, 0);
     }
 }
 
@@ -217,8 +217,8 @@ static void create_app_items(void) {
         char full_app_name[MAX_BUFFER_SIZE];
         char grid_app_name[MAX_BUFFER_SIZE];
         if (mux_app && mux_app->grid) {
-            snprintf(full_app_name, sizeof(full_app_name), "%s", TS(dir_names[i]));
-            snprintf(grid_app_name, sizeof(grid_app_name), "%s", TS(mux_app->grid));
+            snprintf(full_app_name, sizeof(full_app_name), "%s", TRS(dir_names[i]));
+            snprintf(grid_app_name, sizeof(grid_app_name), "%s", TRS(mux_app->grid));
         } else {
             char app_lang_file[FILENAME_MAX];
             snprintf(app_lang_file, sizeof(app_lang_file), "%s/%s/" APP_LANGUAGE,
@@ -229,14 +229,14 @@ static void create_app_items(void) {
 
                 mini_t *app_lang = mini_load(app_lang_file);
                 snprintf(full_app_name, sizeof(full_app_name), "%s",
-                         get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
+                         get_ini_string(app_lang, "full", config.SETTINGS.GENERAL.LANGUAGE, TRS(dir_names[i])));
                 snprintf(grid_app_name, sizeof(grid_app_name), "%s",
-                         get_ini_string(app_lang, "grid", config.SETTINGS.GENERAL.LANGUAGE, TS(dir_names[i])));
+                         get_ini_string(app_lang, "grid", config.SETTINGS.GENERAL.LANGUAGE, TRS(dir_names[i])));
 
                 mini_free(app_lang);
             } else {
                 LOG_WARN(mux_module, "No Application Translation Found: %s", app_lang_file);
-                snprintf(full_app_name, sizeof(full_app_name), "%s", TS(dir_names[i]));
+                snprintf(full_app_name, sizeof(full_app_name), "%s", TRS(dir_names[i]));
                 char *from_script = get_script_value(app_launcher, "GRID", dir_names[i]);
                 snprintf(grid_app_name, sizeof(grid_app_name), "%s", from_script ? from_script : dir_names[i]);
             }
@@ -339,7 +339,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-    lv_label_set_text(ui_lblGridCurrentItem, TS(items[current_item_index].name));
+    lv_label_set_text(ui_lblGridCurrentItem, TRS(items[current_item_index].name));
 
     nav_moved = 1;
     check_focus();

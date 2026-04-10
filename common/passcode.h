@@ -19,4 +19,4 @@ struct mux_passcode {
     } MESSAGE;
 };
 
-void load_passcode(struct mux_passcode *passcode, struct mux_device *device);
+void load_passcode(struct mux_passcode *passcode);

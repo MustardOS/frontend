@@ -4,7 +4,7 @@ lv_obj_t *ui_imgScreenshot;
 static int is_fullscreen = 0;
 
 static void show_help(void) {
-    show_info_box(TS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.MUXSHOT.HELP, 0);
+    show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.MUXSHOT.HELP, 0);
 }
 
 static void image_refresh(void) {

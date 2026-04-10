@@ -275,7 +275,7 @@ static void build_all_items(void) {
 
     INIT_VALUE_ITEM(-1, option, Storage, lang.GENERIC.STORAGE, "storage", "");
     INIT_VALUE_ITEM(-1, option, Folder, lang.MUXOPTION.FOLDER, "folder", "");
-    
+
 
     INIT_VALUE_ITEM(-1, option, Name, lang.MUXOPTION.NAME, "name", "");
     INIT_VALUE_ITEM(-1, option, Time, lang.MUXOPTION.TIME, "time", "");
@@ -374,7 +374,6 @@ static void check_focus(void) {
 }
 
 static void refresh_option_view(void) {
-    int restore_index = 0;
     int anchor_index = 0;
 
     if (current_view == VIEW_OPTIONS) {
@@ -384,7 +383,6 @@ static void refresh_option_view(void) {
 
         lv_label_set_text(ui_lblNavY, lang.GENERIC.INFO);
 
-        restore_index = options_item_index;
         anchor_index = options_item_index;
         current_item_index = options_item_index;
     } else {
@@ -392,7 +390,6 @@ static void refresh_option_view(void) {
 
         build_info_view();
 
-        restore_index = info_item_index;
         anchor_index = 7 + info_item_index;
         current_item_index = info_item_index;
     }

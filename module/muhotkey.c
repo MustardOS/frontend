@@ -910,7 +910,8 @@ static void load_hotkeys(void) {
     struct dirent *ent;
     while ((ent = readdir(dir))) {
         if (ent->d_name[0] == '.') continue;
-        const char *dot = strrchr(ent->d_name, '.');
+
+        char *dot = strrchr(ent->d_name, '.');
         if (!dot || strcmp(dot, ".json") != 0) continue;
 
         char path[PATH_MAX];

@@ -10,7 +10,7 @@ static void show_help(void) {
              title);
 
     char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
-    show_info_box(TS(title), TS(message), 0);
+    show_info_box(TRS(title), TRS(message), 0);
 }
 
 static void create_task_items(void) {

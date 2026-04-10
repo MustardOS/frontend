@@ -89,7 +89,11 @@ static void create_tag_assignment(char *tag, char *rom, enum gen_type method) {
 
 static void generate_available_tags(void) {
     int tag_count;
-    char **tags = str_parse_file(INFO_NAM_PATH "/tag.txt", &tag_count, PARSE_LINES);
+
+    const char *tag_path = resolve_info_path("name/tag.txt");
+    if (!tag_path) return;
+
+    char **tags = str_parse_file(tag_path, &tag_count, PARSE_LINES);
     if (!tags) return;
 
     for (int i = 0; i < tag_count; ++i) add_item(&items, &item_count, tags[i], tags[i], "", ITEM);

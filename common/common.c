@@ -47,6 +47,7 @@ int last_idle = -1;
 struct json translation_generic;
 struct json translation_specific;
 struct pattern skip_pattern_list = {NULL, 0, 0};
+int skip_patterns_loaded = 0;
 lv_anim_t animation;
 lv_obj_t *img_obj;
 char **img_paths = NULL;
@@ -595,7 +596,7 @@ char *grab_ext(char *text) {
 char *get_execute_result(const char *command, int line) {
     FILE *fp = popen(command, "r");
     if (!fp) {
-        fprintf(stderr, "Failed to run: %s\n", command);
+        LOG_ERROR(mux_module, "Failed to run: %s", command);
         return NULL;
     }
 
@@ -666,7 +667,7 @@ char *read_all_char_from(const char *filename) {
 
 char *read_line_char_from(const char *filename, size_t line_number) {
     if (!filename || line_number == 0) {
-        fprintf(stderr, "Invalid filename or line number.\n");
+        LOG_ERROR(mux_module, "Invalid filename or line number...");
         return "";
     }
 
@@ -1332,7 +1333,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
     snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(
             ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND, wall_type));
 
-            if (strcasecmp(new_wall, current_wall) != 0) {
+    if (strcasecmp(new_wall, current_wall) != 0) {
         snprintf(current_wall, sizeof(current_wall), "%s", new_wall);
         if (strlen(new_wall) > 3) {
             if (theme.MISC.RANDOM_BACKGROUND) {
@@ -1368,8 +1369,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
     static char static_image_embed[MAX_BUFFER_SIZE];
 
     if (lv_group_get_obj_count(ui_group) > 0) {
-        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-        const char *element = element_focused == NULL ? "" : lv_obj_get_user_data(element_focused);
+        const char *element = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         switch (wall_type) {
             case WALL_APPLICATION:
                 if (grid_mode_enabled && config.VISUAL.BOX_ART_HIDE) {
@@ -1613,15 +1613,13 @@ static void free_skip_patterns(void) {
 }
 
 void load_skip_patterns(void) {
-    char skip_ini[MAX_BUFFER_SIZE];
-    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini",
-                           device.STORAGE.SDCARD.MOUNT, MUOS_INFO_PATH);
-    if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
+    if (skip_patterns_loaded) return;
+    skip_patterns_loaded = 1;
 
-    if (!file_exist(skip_ini)) {
-        written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini",
-                           device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
-        if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
+    const char *skip_ini = resolve_info_path("skip.ini");
+    if (!skip_ini) {
+        LOG_ERROR(mux_module, "skip.ini not found");
+        return;
     }
 
     FILE *file = fopen(skip_ini, "r");
@@ -1632,62 +1630,62 @@ void load_skip_patterns(void) {
 
     free_skip_patterns();
 
-    skip_pattern_list.capacity = 4;
-    skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof *skip_pattern_list.patterns);
-    if (!skip_pattern_list.patterns) {
-        perror("malloc failed");
-        fclose(file);
-        return;
-    }
+    skip_pattern_list.patterns = NULL;
+    skip_pattern_list.count = 0;
+    skip_pattern_list.capacity = 0;
 
     char line[MAX_BUFFER_SIZE];
-    while (fgets(line, sizeof line, file)) {
+
+    while (fgets(line, sizeof(line), file)) {
         size_t len = strlen(line);
         while (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) line[--len] = '\0';
 
         if (len == 0 || line[0] == '#') continue;
 
         if (skip_pattern_list.count >= skip_pattern_list.capacity) {
-            size_t newcap = skip_pattern_list.capacity * 2;
-            char **newptr = realloc(skip_pattern_list.patterns, newcap * sizeof *newptr);
-
-            if (!newptr) {
-                perror("realloc failed");
-                free_skip_patterns();
-                fclose(file);
-                return;
-            }
+            size_t newcap = skip_pattern_list.capacity ? skip_pattern_list.capacity * 2 : 8;
+            char **newptr = realloc(skip_pattern_list.patterns, newcap * sizeof(char *));
+            if (!newptr) break;
 
             skip_pattern_list.patterns = newptr;
             skip_pattern_list.capacity = newcap;
         }
 
-        skip_pattern_list.patterns[skip_pattern_list.count] = strdup(line);
-        if (!skip_pattern_list.patterns[skip_pattern_list.count]) {
-            perror("strdup failed");
-            free_skip_patterns();
-            fclose(file);
-            return;
-        }
-        skip_pattern_list.count++;
+        skip_pattern_list.patterns[skip_pattern_list.count++] = strdup(line);
     }
 
     fclose(file);
+
+    LOG_INFO(mux_module, "Loaded skip patterns: %zu", skip_pattern_list.count);
 }
 
 int should_skip(const char *name, int is_dir) {
-    if (config.VISUAL.HIDDEN) return 0;
+    if (!name || !*name) return 0;
+
+    char name_l[MAX_BUFFER_SIZE];
+    snprintf(name_l, sizeof(name_l), "%s", name);
+
+    for (char *p = name_l; *p; p++) *p = (char) tolower((unsigned char) *p);
 
     for (size_t i = 0; i < skip_pattern_list.count; i++) {
         const char *pat = skip_pattern_list.patterns[i];
+        if (!pat || !*pat) continue;
 
-        // Directory only pattern if it starts with a '/'
+        int dir_only = 0;
+
         if (pat[0] == '/') {
-            if (!is_dir) continue;
+            dir_only = 1;
             pat++;
+            if (!*pat) continue;
         }
 
-        if (fnmatch(pat, name, 0) == 0) return 1;
+        if (dir_only && !is_dir) continue;
+
+        char pat_l[MAX_BUFFER_SIZE];
+        snprintf(pat_l, sizeof(pat_l), "%s", pat);
+
+        for (char *p = pat_l; *p; p++) *p = (char) tolower((unsigned char) *p);
+        if (fnmatch(pat_l, name_l, 0) == 0) return 1;
     }
 
     return 0;
@@ -4171,4 +4169,32 @@ char *get_storage_label(const char *path) {
     if (strncmp(path, device.STORAGE.USB.MOUNT, strlen(device.STORAGE.USB.MOUNT)) == 0) return lang.MUXSPACE.EXTERNAL;
 
     return "Unknown";
+}
+
+const char *resolve_info_path(const char *rel) {
+    if (rel[0] == '/') return NULL;
+
+    static char path[PATH_MAX];
+
+    struct {
+        const char *base;
+        const char *sub;
+    } sources[] = {
+            {device.STORAGE.USB.MOUNT,    "MUOS/info"},
+            {device.STORAGE.SDCARD.MOUNT, "MUOS/info"},
+            {device.STORAGE.ROM.MOUNT,    "MUOS/info"},
+            {"/opt/muos/share",           "info"}
+    };
+
+    for (size_t i = 0; i < sizeof(sources) / sizeof(sources[0]); i++) {
+        if (!sources[i].base || !*sources[i].base) continue;
+
+        snprintf(path, sizeof(path), "%s/%s/%s",
+                 sources[i].base, sources[i].sub, rel);
+
+        remove_double_slashes(path);
+        if (file_exist(path)) return path;
+    }
+
+    return NULL;
 }

@@ -1,17 +1,22 @@
-#include "skip_list.h"
-#include "common.h"
-#include "options.h"
+#include <fnmatch.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "skip_list.h"
+#include "common.h"
+#include "options.h"
 
 void init_skiplist(SkipList *sl) {
+    if (!sl) return;
+
     sl->items = NULL;
     sl->count = 0;
     sl->capacity = 0;
 }
 
 void free_skiplist(SkipList *sl) {
+    if (!sl) return;
+
     for (size_t i = 0; i < sl->count; i++) {
         free(sl->items[i]);
     }
@@ -29,7 +34,7 @@ void add_to_skiplist(SkipList *sl, const char *dir, const char *name) {
 
     if (sl->count == sl->capacity) {
         size_t new_capacity = sl->capacity == 0 ? 8 : sl->capacity * 2;
-        char **new_items = realloc(sl->items, new_capacity * sizeof(char*));
+        char **new_items = realloc(sl->items, new_capacity * sizeof(char *));
 
         if (!new_items) {
             perror("realloc");
@@ -50,12 +55,29 @@ void add_to_skiplist(SkipList *sl, const char *dir, const char *name) {
     sl->count++;
 }
 
-bool in_skiplist(const SkipList *sl, const char *name) {
-    for (size_t i = 0; i < sl->count; i++) {
-        if (strcasecmp(sl->items[i], name) == 0) return true;
+bool in_skiplist(const SkipList *sl, const char *path) {
+    if (!path) return 1;
+
+    const char *name = get_file_name((char *) path);
+
+    for (size_t i = 0; i < skip_pattern_list.count; i++) {
+        const char *pattern = skip_pattern_list.patterns[i];
+        if (!pattern || !*pattern) continue;
+
+        if (pattern[0] == '/') {
+            if (fnmatch(pattern + 1, name, 0) == 0) return 1;
+        } else {
+            if (fnmatch(pattern, name, 0) == 0) return 1;
+        }
     }
 
-    return false;
+    if (sl) {
+        for (size_t i = 0; i < sl->count; i++) {
+            if (strcasecmp(sl->items[i], path) == 0) return 1;
+        }
+    }
+
+    return 0;
 }
 
 bool ends_with(char *str, const char *suffix) {
@@ -86,7 +108,7 @@ void process_cue_file(char *dir, const char *filename, SkipList *sl) {
         if (strncmp(line + skip_whitespace, "FILE", 4) != 0) continue;
 
         char *start = strchr(line + skip_whitespace, '"');
-        if (!start) continue; 
+        if (!start) continue;
         start++;
 
         char *end = strchr(start, '"');
@@ -124,7 +146,7 @@ void process_gdi_file(char *dir, const char *filename, SkipList *sl) {
     char line[MAX_BUFFER_SIZE];
     while (fgets(line, sizeof(line), f)) {
         char *start = strchr(line, '"');
-        if (!start) continue; 
+        if (!start) continue;
         start++;
 
         char *end = strchr(start, '"');

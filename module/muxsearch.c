@@ -50,12 +50,19 @@ static void init_navigation_group(void) {
 static void image_refresh() {
     if (config.VISUAL.BOX_ART == 8) return;
 
+    char extra_no_ext[MAX_BUFFER_SIZE];
+    snprintf(extra_no_ext, sizeof(extra_no_ext), "%s",
+             all_items[current_item_index].extra_data);
+
+    char *dot = strrchr(extra_no_ext, '.');
+    if (dot) *dot = '\0';
+
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];
 
-    char *file_name = get_last_subdir(strip_ext(all_items[current_item_index].extra_data), '/', 4);
-    char *last_dir = get_last_dir(strip_ext(all_items[current_item_index].extra_data));
+    char *file_name = get_last_subdir(extra_no_ext, '/', 4);
+    char *last_dir = get_last_dir(extra_no_ext);
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s.cfg",
@@ -198,7 +205,7 @@ static void list_nav_move(int steps, int direction) {
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
 
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
-        image_refresh();
+        if (config.VISUAL.BOX_ART < 4) image_refresh();
         set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     } else {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);

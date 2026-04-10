@@ -2,19 +2,20 @@
 #include "common.h"
 #include "options.h"
 #include "passcode.h"
-#include "device.h"
+#include "log.h"
 #include "mini/mini.h"
 
-void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
-    char pass_file[MAX_BUFFER_SIZE];
-    int written = snprintf(pass_file, sizeof(pass_file), "%s/%s/pass.ini",
-                           device->STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+void load_passcode(struct mux_passcode *passcode) {
+    const char *pass_file = resolve_info_path("pass.ini");
 
-    if (written < 0 || (size_t) written >= sizeof(pass_file)) exit(1);
+    if (!pass_file) {
+        LOG_ERROR(mux_module, "Password configuration not found");
+        exit(1);
+    }
 
     mini_t *muos_pass = mini_try_load(pass_file);
     if (!muos_pass) {
-        fprintf(stderr, "Error: Could not load pass_file: %s\n", pass_file);
+        LOG_ERROR(mux_module, "Password configuration could not be loaded: %s", pass_file);
         exit(1);
     }
 

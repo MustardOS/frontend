@@ -173,8 +173,7 @@ static void dedupe_results(struct results *r) {
 
     size_t w = 0;
     for (size_t i = 1; i < r->count; i++) {
-        int same = !strcasecmp(r->items[w].name, r->items[i].name)
-                && !strcasecmp(r->items[w].value, r->items[i].value);
+        int same = !strcasecmp(r->items[w].name, r->items[i].name) && !strcasecmp(r->items[w].value, r->items[i].value);
 
         if (!same) {
             r->items[++w] = r->items[i];
@@ -189,6 +188,7 @@ static void dedupe_results(struct results *r) {
 
 static struct {
     void (*forward_multi)(const char *, void (*emit)(const char *, const char *, void *), void *);
+
     void (*reverse_multi)(const char *, void (*emit)(const char *, const char *, void *), void *);
 } multi_table[] = {
         {lookup_0_multi, r_lookup_0_multi},
@@ -304,7 +304,10 @@ static void generate_all(void) {
     generate_internal();
     generate_global();
 
-    DIR *d = opendir(INFO_NAM_PATH);
+    const char *info_path = resolve_info_path("name");
+    if (!info_path) return;
+
+    DIR *d = opendir(info_path);
     if (!d) return;
 
     struct dirent *e;
@@ -314,8 +317,10 @@ static void generate_all(void) {
         if (!strcmp(e->d_name, "folder.json")) continue;
 
         char folder_name[MAX_BUFFER_SIZE];
-        strncpy(folder_name, e->d_name, sizeof(folder_name));
-        folder_name[strlen(folder_name) - 5] = '\0';
+        snprintf(folder_name, sizeof(folder_name), "%s", e->d_name);
+
+        size_t len = strlen(folder_name);
+        if (len > 5) folder_name[len - 5] = '\0';
 
         generate_folder(folder_name);
     }

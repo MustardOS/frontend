@@ -7,6 +7,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include "debug.h"
 #include "options.h"
 
 #define COL_RED    "\x1b[38;5;196m"
@@ -46,7 +47,7 @@
         uptime, time_buffer, symbol, truncated_module,                  \
         ##__VA_ARGS__);                                                 \
                                                                         \
-    if (TEST_IMAGE) {                                                   \
+    if (is_debug_mode()) {                                              \
         char log_path[256];                                             \
         snprintf(log_path, sizeof(log_path), "/opt/muos/log/%s_%s.log", \
                  date_buffer, truncated_module);                        \

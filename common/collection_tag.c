@@ -1,6 +1,3 @@
-#define _GNU_SOURCE
-
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include "collection_tag.h"
@@ -8,11 +5,16 @@
 
 void load_tag_items(tag_item **tag_items, size_t *count) {
     int tag_count;
-    char **tags = str_parse_file(INFO_NAM_PATH "/tag.txt", &tag_count, PARSE_LINES);
+
+    const char *tag_path = resolve_info_path("name/tag.txt");
+    if (!tag_path) return;
+
+    char **tags = str_parse_file(tag_path, &tag_count, PARSE_LINES);
     if (!tags) return;
 
     for (int i = 0; i < tag_count; ++i) {
-        if (strcasecmp(tags[i], "None") == 0) continue;;;
+        if (strcasecmp(tags[i], "None") == 0) continue;
+
         if (*tag_items == NULL) {
             *tag_items = malloc(sizeof(tag_item));
         } else {
@@ -41,11 +43,13 @@ int get_tag_sort_bucket(tag_item *tag_items, size_t count, char *glyph) {
 }
 
 int tag_item_compare(const void *a, const void *b) {
-    tag_item *itemA = (tag_item *) a;
-    tag_item *itemB = (tag_item *) b;
+    const tag_item *itemA = (const tag_item *) a;
+    const tag_item *itemB = (const tag_item *) b;
 
-    // Use strverscmp for natural sorting on sort_name
-    return strverscmp(str_tolower(itemA->name), str_tolower(itemB->name));
+    const char *sa = itemA->name ? itemA->name : "";
+    const char *sb = itemB->name ? itemB->name : "";
+
+    return str_compare(&sa, &sb);
 }
 
 void sort_tag_items(tag_item *tag_items, size_t count) {

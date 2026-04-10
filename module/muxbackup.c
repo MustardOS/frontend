@@ -179,10 +179,12 @@ static void handle_a(void) {
     strncpy(datetime, get_datetime(), sizeof(datetime) - 1);
     datetime[sizeof(datetime) - 1] = '\0';
 
+    char *manifest_file = "/tmp/muxbackup_manifest.txt";
+
     FILE *fp;
-    fp = fopen("/tmp/muxbackup_manifest.txt", "w");
+    fp = fopen(manifest_file, "w");
     if (!fp) {
-        fprintf(stderr, "Failed to open /tmp/muxbackup_manifest.txt for writing\n");
+        LOG_ERROR(mux_module, "Failed to open '%s' for writing", manifest_file);
         return;
     }
 

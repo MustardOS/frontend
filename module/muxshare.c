@@ -528,7 +528,6 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset)
 
 void resolve_friendly_name(char *dir, char *raw_name, char *out) {
     char stripped[MAX_BUFFER_SIZE];
-    char lookup_path[MAX_BUFFER_SIZE];
     char lowered[MAX_BUFFER_SIZE];
 
     snprintf(stripped, sizeof(stripped), "%s", get_file_name(raw_name));
@@ -536,10 +535,18 @@ void resolve_friendly_name(char *dir, char *raw_name, char *out) {
     snprintf(lowered, sizeof(lowered), "%s", str_tolower(stripped));
     int has_custom = 0;
 
-    snprintf(lookup_path, sizeof(lookup_path), INFO_NAM_PATH "/%s.json", strip_dir(dir));
-    if (!file_exist(lookup_path)) snprintf(lookup_path, sizeof(lookup_path), INFO_NAM_PATH "/global.json");
+    char base[MAX_BUFFER_SIZE];
+    snprintf(base, sizeof(base), "%s", strip_dir(dir));
 
-    if (file_exist(lookup_path)) {
+    char *name_only = get_last_dir(base);
+
+    char specific_rel[MAX_BUFFER_SIZE];
+    snprintf(specific_rel, sizeof(specific_rel), "name/%s.json", name_only);
+
+    const char *lookup_path = resolve_info_path(specific_rel);
+    if (!lookup_path) lookup_path = resolve_info_path("name/global.json");
+
+    if (lookup_path) {
         char *json_str = read_all_char_from(lookup_path);
         if (json_str && json_valid(json_str)) {
             struct json root = json_parse(json_str);
@@ -592,8 +599,6 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                           lv_obj_t *ui_imgSplash, lv_obj_t *ui_viewport_objects[],
                           int *starter_image, int *splash_valid) {
     if (strlen(h_core_artwork) <= 1) {
-        LOG_WARN(mux_module, "Catalogue name unavailable for '%s', deferring image cache", h_file_name);
-
         if (strcasecmp(image_type, "preview") == 0) {
             lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
         } else if (strcasecmp(image_type, "splash") == 0) {
@@ -605,18 +610,17 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
         return;
     }
 
-    char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
+    char image[MAX_BUFFER_SIZE] = {0};
 
     if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.VISUAL.BOX_ART_HIDE) {
         load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, image_type, image, sizeof(image));
+        LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
     }
 
     if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
         load_splash_image_fallback(mux_dim, image, sizeof(image));
+        LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
     }
-
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
 
     if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
@@ -637,6 +641,8 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
         }
     } else if (strcasecmp(image_type, "splash") == 0) {
         if (strcasecmp(splash_image_previous_path, image) != 0) {
+            char image_path[MAX_BUFFER_SIZE];
+
             if (file_exist(image)) {
                 *splash_valid = 1;
 
@@ -661,6 +667,8 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                 viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
+                char image_path[MAX_BUFFER_SIZE];
+
                 if (file_exist(image)) {
                     *starter_image = 1;
 
