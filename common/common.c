@@ -1275,7 +1275,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
 
     if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-        const char *element = lv_obj_get_user_data(element_focused);
+        const char *element = element_focused == NULL ? "" : lv_obj_get_user_data(element_focused);
         switch (wall_type) {
             case WALL_APPLICATION:
                 if (load_image_catalogue("Application", element, "", "default", mux_dim, "wall",
@@ -1332,7 +1332,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
     snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(
             ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND, wall_type));
 
-    if (strcasecmp(new_wall, current_wall) != 0) {
+            if (strcasecmp(new_wall, current_wall) != 0) {
         snprintf(current_wall, sizeof(current_wall), "%s", new_wall);
         if (strlen(new_wall) > 3) {
             if (theme.MISC.RANDOM_BACKGROUND) {
@@ -1368,7 +1368,8 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
     static char static_image_embed[MAX_BUFFER_SIZE];
 
     if (lv_group_get_obj_count(ui_group) > 0) {
-        const char *element = lv_obj_get_user_data(lv_group_get_focused(ui_group));
+        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+        const char *element = element_focused == NULL ? "" : lv_obj_get_user_data(element_focused);
         switch (wall_type) {
             case WALL_APPLICATION:
                 if (grid_mode_enabled && config.VISUAL.BOX_ART_HIDE) {
