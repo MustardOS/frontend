@@ -566,11 +566,6 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
-        char REMOVE[MAX_BUFFER_SIZE];
-        struct {
-            char REMOVE[MAX_BUFFER_SIZE];
-            char LOAD[MAX_BUFFER_SIZE];
-        } ERROR;
     } MUXHISTORY;
 
     struct {

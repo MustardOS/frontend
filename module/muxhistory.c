@@ -389,7 +389,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || is_ksk(kiosk.CONTENT.HISTORY)) return;
 
     if (!hold_call) {
         play_sound(SND_ERROR);

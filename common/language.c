@@ -536,9 +536,6 @@ void load_lang(struct mux_lang *lang) {
     // muxhistory
     SPECIFIC_FIELD(lang->MUXHISTORY.TITLE, "HISTORY");
     SPECIFIC_FIELD(lang->MUXHISTORY.NONE, "Nothing Played Yet…");
-    SPECIFIC_FIELD(lang->MUXHISTORY.REMOVE, "Removed from History");
-    SPECIFIC_FIELD(lang->MUXHISTORY.ERROR.REMOVE, "Error removing from History");
-    SPECIFIC_FIELD(lang->MUXHISTORY.ERROR.LOAD, "Error loading content file");
 
     // muxinfo
     SPECIFIC_FIELD(lang->MUXINFO.TITLE, "INFORMATION");
