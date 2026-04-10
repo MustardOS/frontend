@@ -3594,7 +3594,8 @@ int load_content(int add_collection, char *file_path) {
     if (add_collection) {
         add_to_collection(file_name, content_loader_file, content_path);
     } else {
-        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core);
+        LOG_INFO(mux_module, "Assigned System: %s", sys1);
+        LOG_INFO(mux_module, "Assigned Core: %s", core);
 
         char *assigned_gov = specify_asset(load_content_governor(content_path, content_name, 0, 1, 0), device.CPU.DEFAULT, "Governor");
         char *assigned_con = specify_asset(load_content_control_scheme(content_path, content_name, 0, 1, 0), "system", "Control Scheme");

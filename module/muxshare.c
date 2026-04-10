@@ -177,7 +177,6 @@ static char *load_content_asset(char *sys_dir, const char *pointer, int force, i
 
     if (is_app) {
         snprintf(path, sizeof(path), "%s/mux_option.%s", sys_dir, ext);
-
         LOG_SUCCESS(mux_module, "Loading Application %s: %s", label, path);
 
         char *txt = read_all_char_from(path);
