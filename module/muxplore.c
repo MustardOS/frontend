@@ -770,6 +770,7 @@ static void process_load(int from_start) {
                         if (file_exist(MUOS_HST_LOAD)) remove(MUOS_HST_LOAD);
 
                         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
 
                         goto load_end;
                 }
@@ -1132,10 +1133,18 @@ int muxplore_main(int index, char *dir) {
     starter_image = 0;
     splash_valid = 0;
 
-    if (strcmp(dir, "") == 0) {
-        union_get_roms_root(sys_dir, sizeof(sys_dir));
-    } else {
+    if (dir && *dir) {
         snprintf(sys_dir, sizeof(sys_dir), "%s", dir);
+    } else if (file_exist(MUOS_PDI_LOAD)) {
+        char *saved_dir = read_all_char_from(MUOS_PDI_LOAD);
+        if (saved_dir && *saved_dir) {
+            snprintf(sys_dir, sizeof(sys_dir), "%s", saved_dir);
+        } else {
+            union_get_roms_root(sys_dir, sizeof(sys_dir));
+        }
+        free(saved_dir);
+    } else {
+        union_get_roms_root(sys_dir, sizeof(sys_dir));
     }
 
     if (index > 0) sys_index = index;
