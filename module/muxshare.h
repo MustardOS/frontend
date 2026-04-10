@@ -365,14 +365,38 @@ int muxwebserv_main();
         ui_count++;                                                                 \
     } while (0)
 
-#define HIDE_VALUE_ITEM(MODULE, NAME)                                          \
-    do {                                                                       \
-        lv_obj_add_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
-        lv_obj_add_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
-        lv_obj_add_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
-        lv_obj_add_flag(ui_lbl##NAME##Value_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
-                                                                               \
-        ui_count--;                                                            \
+#define HIDE_VALUE_ITEM(MODULE, NAME)                                              \
+    do {                                                                           \
+        if (!lv_obj_has_flag(ui_pnl##NAME##_##MODULE, LV_OBJ_FLAG_HIDDEN)) {       \
+            lv_obj_add_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
+            lv_obj_add_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
+            lv_obj_add_flag(ui_lbl##NAME##Value_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
+            lv_obj_add_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
+                                                                                   \
+            lv_group_remove_obj(ui_pnl##NAME##_##MODULE);                          \
+            lv_group_remove_obj(ui_lbl##NAME##_##MODULE);                          \
+            lv_group_remove_obj(ui_ico##NAME##_##MODULE);                          \
+            lv_group_remove_obj(ui_lbl##NAME##Value_##MODULE);                     \
+                                                                                   \
+            ui_count--;                                                            \
+        }                                                                          \
+    } while (0)
+
+#define SHOW_VALUE_ITEM(MODULE, NAME)                                                \
+    do {                                                                             \
+        if (lv_obj_has_flag(ui_pnl##NAME##_##MODULE, LV_OBJ_FLAG_HIDDEN)) {          \
+            lv_obj_clear_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
+            lv_obj_clear_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
+            lv_obj_clear_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);      \
+            lv_obj_clear_flag(ui_lbl##NAME##Value_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
+                                                                                     \
+            lv_group_add_obj(ui_group_panel, ui_pnl##NAME##_##MODULE);               \
+            lv_group_add_obj(ui_group, ui_lbl##NAME##_##MODULE);                     \
+            lv_group_add_obj(ui_group_glyph, ui_ico##NAME##_##MODULE);               \
+            lv_group_add_obj(ui_group_value, ui_lbl##NAME##Value_##MODULE);          \
+                                                                                     \
+            ui_count++;                                                              \
+        }                                                                            \
     } while (0)
 
 #define CHECK_AND_SAVE_KSK(MODULE, NAME, FILE, TYPE)                      \

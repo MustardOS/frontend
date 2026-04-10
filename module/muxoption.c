@@ -14,9 +14,6 @@ typedef enum {
 
 static option_view_t current_view = VIEW_OPTIONS;
 
-static lv_obj_t *ui_pnlInfoView;
-static lv_obj_t *ui_pnlOptionsView;
-
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
@@ -38,7 +35,6 @@ static lv_obj_t *ui_objects_value[UI_COUNT];
 static int rem_config = 0;
 static int options_item_index = 0;
 static int info_item_index = 0;
-static int info_has_init = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -50,10 +46,6 @@ static void show_help(void) {
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
-}
-
-static int get_info_base_index(void) {
-    return is_dir ? 6 : 7; // Don't you even think about it... https://youtu.be/YBCgmi4SItA
 }
 
 #define OPTION_VISIBLE(NAME, OBJ) static int visible_##NAME(void) { return !lv_obj_has_flag(OBJ, LV_OBJ_FLAG_HIDDEN); }
@@ -89,42 +81,6 @@ static void refresh_option_row_widths(void) {
         OPTION_APPLY_LONG(Time);
         OPTION_APPLY_LONG(Launch);
     }
-}
-
-static void create_view_containers(void) {
-    ui_pnlOptionsView = lv_obj_create(ui_pnlContent);
-    lv_obj_remove_style_all(ui_pnlOptionsView);
-    lv_obj_set_size(ui_pnlOptionsView, lv_pct(100), lv_pct(100));
-    lv_obj_align(ui_pnlOptionsView, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_clear_flag(ui_pnlOptionsView, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_opa(ui_pnlOptionsView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlOptionsView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlOptionsView, 2, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlOptionsView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_layout(ui_pnlOptionsView, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(ui_pnlOptionsView, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(ui_pnlOptionsView, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-
-    ui_pnlInfoView = lv_obj_create(ui_pnlContent);
-    lv_obj_remove_style_all(ui_pnlInfoView);
-    lv_obj_set_size(ui_pnlInfoView, lv_pct(100), lv_pct(100));
-    lv_obj_align(ui_pnlInfoView, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_clear_flag(ui_pnlInfoView, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_opa(ui_pnlInfoView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlInfoView, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlInfoView, 2, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlInfoView, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_layout(ui_pnlInfoView, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(ui_pnlInfoView, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(ui_pnlInfoView, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 }
 
 static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *get_dir, const char *opt_type, bool cap_label) {
@@ -290,11 +246,6 @@ static void populate_info_values(void) {
     }
 }
 
-static void save_info_index(void) {
-    info_item_index = current_item_index - get_info_base_index();
-    if (info_item_index < 0) info_item_index = 0;
-}
-
 static void rebuild_ui_groups(void) {
     lv_obj_update_layout(ui_pnlContent);
     refresh_option_row_widths();
@@ -308,8 +259,7 @@ static void build_all_items(void) {
     memset(ui_objects_glyph, 0, sizeof(ui_objects_glyph));
     memset(ui_objects_value, 0, sizeof(ui_objects_value));
 
-    lv_obj_clean(ui_pnlOptionsView);
-    init_muxoption(ui_pnlOptionsView);
+    init_muxoption(ui_pnlContent);
 
 #define OPTION(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
     OPTION_ELEMENTS
@@ -321,51 +271,43 @@ static void build_all_items(void) {
     INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
     INIT_VALUE_ITEM(-1, option, RemConfig, lang.MUXOPTION.REMCONFIG, "remconfig", is_dir ? lang.GENERIC.DIRECTORY : lang.GENERIC.CONTENT);
     INIT_VALUE_ITEM(-1, option, ColFilter, lang.MUXOPTION.COLFILTER, "colfilter", "");
-    if (!is_dir) INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
+    INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
 
     INIT_VALUE_ITEM(-1, option, Storage, lang.GENERIC.STORAGE, "storage", "");
     INIT_VALUE_ITEM(-1, option, Folder, lang.MUXOPTION.FOLDER, "folder", "");
+    
 
-    if (!is_dir) {
-        INIT_VALUE_ITEM(-1, option, Name, lang.MUXOPTION.NAME, "name", "");
-        INIT_VALUE_ITEM(-1, option, Time, lang.MUXOPTION.TIME, "time", "");
-        INIT_VALUE_ITEM(-1, option, Launch, lang.MUXOPTION.LAUNCH, "launch", "");
-    }
+    INIT_VALUE_ITEM(-1, option, Name, lang.MUXOPTION.NAME, "name", "");
+    INIT_VALUE_ITEM(-1, option, Time, lang.MUXOPTION.TIME, "time", "");
+    INIT_VALUE_ITEM(-1, option, Launch, lang.MUXOPTION.LAUNCH, "launch", "");
 
-    lv_obj_set_parent(ui_pnlStorage_option, ui_pnlInfoView);
-    lv_obj_set_parent(ui_pnlFolder_option, ui_pnlInfoView);
-
-    lv_obj_add_flag(ui_pnlStorage_option, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_pnlFolder_option, LV_OBJ_FLAG_HIDDEN);
-
-    if (!is_dir) {
-        lv_obj_set_parent(ui_pnlName_option, ui_pnlInfoView);
-        lv_obj_set_parent(ui_pnlTime_option, ui_pnlInfoView);
-        lv_obj_set_parent(ui_pnlLaunch_option, ui_pnlInfoView);
-
-        lv_obj_add_flag(ui_pnlName_option, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlTime_option, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlLaunch_option, LV_OBJ_FLAG_HIDDEN);
+    if (is_dir) {
+        HIDE_VALUE_ITEM(option, Tag);
+        HIDE_VALUE_ITEM(option, Name);
+        HIDE_VALUE_ITEM(option, Time);
+        HIDE_VALUE_ITEM(option, Launch);
     }
 
     populate_info_values();
     rebuild_ui_groups();
-
-    lv_obj_add_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void build_options_view(void) {
-#define OPTION(NAME, ENUM, UDATA) OPTION_SHOW(NAME);
-    OPTION_ELEMENTS
-#undef OPTION
+    SHOW_VALUE_ITEM(option, Core);
+    SHOW_VALUE_ITEM(option, Governor);
+    SHOW_VALUE_ITEM(option, Control);
+    SHOW_VALUE_ITEM(option, RetroArch);
+    SHOW_VALUE_ITEM(option, RemConfig);
+    SHOW_VALUE_ITEM(option, ColFilter);
+    if (!is_dir) SHOW_VALUE_ITEM(option, Tag);
 
-    OPTION_HIDE(Storage);
-    OPTION_HIDE(Folder);
-    OPTION_HIDE(Name);
-    OPTION_HIDE(Time);
-    OPTION_HIDE(Launch);
-
-    rebuild_ui_groups();
+    HIDE_VALUE_ITEM(option, Storage);
+    HIDE_VALUE_ITEM(option, Folder);
+    if (!is_dir) {
+        HIDE_VALUE_ITEM(option, Name);
+        HIDE_VALUE_ITEM(option, Time);
+        HIDE_VALUE_ITEM(option, Launch);
+    }
 
     const char *core_label = lv_label_get_text(ui_lblCoreValue_option);
     if (core_label && !strcasestr(core_label, "RetroArch")) {
@@ -379,21 +321,22 @@ static void build_options_view(void) {
 }
 
 static void build_info_view(void) {
-#define OPTION(NAME, ENUM, UDATA) OPTION_HIDE(NAME);
-    OPTION_ELEMENTS
-#undef OPTION
-
-    OPTION_SHOW(Storage);
-    OPTION_SHOW(Folder);
+    SHOW_VALUE_ITEM(option, Storage);
+    SHOW_VALUE_ITEM(option, Folder);
 
     if (!is_dir) {
-        OPTION_SHOW(Name);
-        OPTION_SHOW(Time);
-        OPTION_SHOW(Launch);
+        SHOW_VALUE_ITEM(option, Name);
+        SHOW_VALUE_ITEM(option, Time);
+        SHOW_VALUE_ITEM(option, Launch);
     }
 
-    populate_info_values();
-    rebuild_ui_groups();
+    HIDE_VALUE_ITEM(option, Core);
+    HIDE_VALUE_ITEM(option, Governor);
+    HIDE_VALUE_ITEM(option, Control);
+    HIDE_VALUE_ITEM(option, RetroArch);
+    HIDE_VALUE_ITEM(option, RemConfig);
+    HIDE_VALUE_ITEM(option, ColFilter);
+    if (!is_dir) HIDE_VALUE_ITEM(option, Tag);
 }
 
 static void check_focus(void) {
@@ -434,33 +377,24 @@ static void refresh_option_view(void) {
     int restore_index = 0;
     int anchor_index = 0;
 
-    lv_group_remove_all_objs(ui_group);
-    lv_group_remove_all_objs(ui_group_value);
-    lv_group_remove_all_objs(ui_group_glyph);
-    lv_group_remove_all_objs(ui_group_panel);
-
     if (current_view == VIEW_OPTIONS) {
         lv_label_set_text(ui_lblTitle, lang.MUXOPTION.TITLE_MAIN);
-
-        lv_obj_clear_flag(ui_pnlOptionsView, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
 
         build_options_view();
 
         lv_label_set_text(ui_lblNavY, lang.GENERIC.INFO);
 
         restore_index = options_item_index;
-        anchor_index = 0;
+        anchor_index = options_item_index;
+        current_item_index = options_item_index;
     } else {
         lv_label_set_text(ui_lblTitle, lang.MUXOPTION.TITLE_INFO);
-
-        lv_obj_add_flag(ui_pnlOptionsView, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlInfoView, LV_OBJ_FLAG_HIDDEN);
 
         build_info_view();
 
         restore_index = info_item_index;
-        anchor_index = get_info_base_index();
+        anchor_index = 7 + info_item_index;
+        current_item_index = info_item_index;
     }
 
     lv_obj_update_layout(ui_pnlContent);
@@ -471,73 +405,12 @@ static void refresh_option_view(void) {
         return;
     }
 
-    if (current_view == VIEW_OPTIONS) {
-        int option_count = get_info_base_index();
-        if (restore_index < 0) restore_index = 0;
-        if (restore_index >= option_count) restore_index = option_count - 1;
-    } else {
-        int info_count = is_dir ? 2 : 5;
-        if (restore_index < 0) restore_index = 0;
-        if (restore_index >= info_count) restore_index = info_count - 1;
-    }
-
-    nav_silent = 1;
-
     if (ui_objects[anchor_index]) lv_group_focus_obj(ui_objects[anchor_index]);
     if (ui_objects_value[anchor_index]) lv_group_focus_obj(ui_objects_value[anchor_index]);
     if (ui_objects_glyph[anchor_index]) lv_group_focus_obj(ui_objects_glyph[anchor_index]);
     if (ui_objects_panel[anchor_index]) lv_group_focus_obj(ui_objects_panel[anchor_index]);
 
-    current_item_index = anchor_index;
-
-    if (restore_index > 0) {
-        list_nav_move(restore_index, +1);
-    } else {
-        if (lv_group_get_focused(ui_group)) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
-            set_label_long_mode(&theme, lv_group_get_focused(ui_group));
-        }
-
-        if (lv_group_get_focused(ui_group_value)) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group_value));
-            set_label_long_mode(&theme, lv_group_get_focused(ui_group_value));
-        }
-
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-        update_label_scroll();
-        nav_moved = 1;
-    }
-
-    nav_silent = 0;
-
-    if (current_view == VIEW_INFO && !info_has_init) info_has_init = 1;
     check_focus();
-}
-
-static inline void focus_and_update(int target) {
-    if (ui_objects[target]) lv_group_focus_obj(ui_objects[target]);
-    if (ui_objects_value[target]) lv_group_focus_obj(ui_objects_value[target]);
-    if (ui_objects_glyph[target]) lv_group_focus_obj(ui_objects_glyph[target]);
-    if (ui_objects_panel[target]) lv_group_focus_obj(ui_objects_panel[target]);
-
-    current_item_index = target;
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-
-    struct _lv_obj_t *focused;
-
-    focused = lv_group_get_focused(ui_group);
-    if (focused) {
-        apply_text_long_dot(&theme, ui_pnlContent, focused);
-        set_label_long_mode(&theme, focused);
-    }
-
-    focused = lv_group_get_focused(ui_group_value);
-    if (focused) {
-        apply_text_long_dot(&theme, ui_pnlContent, focused);
-        set_label_long_mode(&theme, focused);
-    }
-
-    update_label_scroll();
     nav_moved = 1;
 }
 
@@ -550,9 +423,6 @@ static void list_nav_move(int steps, int direction) {
         play_sound(SND_NAVIGATE);
     }
 
-    const int base_index = get_info_base_index();
-    int view_count = (current_view == VIEW_INFO) ? (is_dir ? 2 : 5) : base_index;
-
     for (int i = 0; i < steps; i++) {
         if (lv_group_get_focused(ui_group)) {
             apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
@@ -561,23 +431,6 @@ static void list_nav_move(int steps, int direction) {
         if (lv_group_get_focused(ui_group_value)) {
             apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group_value));
         }
-
-        if (current_view == VIEW_INFO) {
-            int local = current_item_index - base_index;
-            int wrap_target = -1;
-
-            if (direction < 0 && local == 0) {
-                wrap_target = base_index + (view_count - 1);
-            } else if (direction > 0 && local == view_count - 1) {
-                wrap_target = base_index;
-            }
-
-            if (wrap_target >= 0) {
-                focus_and_update(wrap_target);
-                continue;
-            }
-        }
-
         gen_step_movement(1, direction, false, 0);
     }
 
@@ -585,8 +438,7 @@ static void list_nav_move(int steps, int direction) {
         if (current_view == VIEW_OPTIONS) {
             options_item_index = current_item_index;
         } else {
-            info_item_index = current_item_index - base_index;
-            if (info_item_index < 0) info_item_index = 0;
+            info_item_index = current_item_index;
         }
     }
 
@@ -719,7 +571,6 @@ static void handle_b(void) {
     if (current_view == VIEW_INFO) {
         play_sound(SND_BACK);
 
-        save_info_index();
         current_view = VIEW_OPTIONS;
 
         refresh_option_view();
@@ -776,13 +627,6 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (hold_call) return;
 
-    if (current_view == VIEW_OPTIONS) {
-        options_item_index = current_item_index;
-        if (!info_has_init) info_item_index = 0;
-    } else {
-        save_info_index();
-    }
-
     play_sound(SND_CONFIRM);
 
     current_view = (current_view == VIEW_OPTIONS) ? VIEW_INFO : VIEW_OPTIONS;
@@ -822,7 +666,6 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     options_item_index = 0;
     info_item_index = 0;
-    info_has_init = 0;
 
     playtime_json_loaded = 0;
     free(playtime_json_str);
@@ -850,7 +693,6 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE_MAIN);
-    create_view_containers();
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
