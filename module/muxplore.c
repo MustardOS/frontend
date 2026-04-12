@@ -1,6 +1,6 @@
 #include "muxshare.h"
 
-#define LARGE_CONTENT_LOAD 2048
+#define LARGE_CONTENT_LOAD 512
 
 static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
@@ -114,38 +114,52 @@ static void image_refresh(char *image_type) {
     render_image_refresh(image_type, h_core_artwork, file_name_no_ext, ui_imgSplash, ui_viewport_objects, &starter_image, &splash_valid);
 }
 
-static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***dir_paths, char ***file_names, char ***file_paths) {
     char **all_dir_names = NULL;
+    char **all_dir_paths = NULL;
+
     char **all_file_names = NULL;
+    char **all_file_paths = NULL;
+
     int all_dir_count = 0;
     int all_file_count = 0;
+
     int *raw_counts = NULL;
 
     file_count = 0;
     dir_count = 0;
+
     *dir_names = NULL;
+    *dir_paths = NULL;
+
     *file_names = NULL;
+    *file_paths = NULL;
 
     free(union_dir_item_count);
     union_dir_item_count = NULL;
     union_dir_item_count_len = 0;
 
-    union_collect(base_dir, &all_dir_names, &all_dir_count, &all_file_names, &all_file_count, &raw_counts);
+    union_collect(base_dir, &all_dir_names, &all_dir_paths, &all_dir_count, &all_file_names, &all_file_paths, &all_file_count, &raw_counts);
 
     if (all_dir_count > 0) {
         if (config.VISUAL.DISPLAYEMPTYFOLDER) {
             *dir_names = all_dir_names;
+            *dir_paths = all_dir_paths;
             dir_count = all_dir_count;
+
             union_dir_item_count = raw_counts;
             union_dir_item_count_len = all_dir_count;
 
             all_dir_names = NULL;
+            all_dir_paths = NULL;
+
             raw_counts = NULL;
         } else {
             char **kept_dirs = malloc((size_t) all_dir_count * sizeof(char *));
+            char **kept_paths = malloc((size_t) all_dir_count * sizeof(char *));
             int *kept_counts = malloc((size_t) all_dir_count * sizeof(int));
 
-            if (kept_dirs && kept_counts) {
+            if (kept_dirs && kept_paths && kept_counts) {
                 for (int i = 0; i < all_dir_count; i++) {
                     int cnt = -1;
 
@@ -154,35 +168,52 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
 
                     if (cnt > 0) {
                         kept_dirs[dir_count] = all_dir_names[i];
+                        kept_paths[dir_count] = all_dir_paths[i];
                         kept_counts[dir_count] = cnt;
+
                         dir_count++;
                     } else {
                         free(all_dir_names[i]);
+                        free(all_dir_paths[i]);
                     }
                 }
 
                 if (dir_count > 0) {
                     char **dirs_tmp = realloc(kept_dirs, (size_t) dir_count * sizeof(char *));
+                    char **paths_tmp = realloc(kept_paths, (size_t) dir_count * sizeof(char *));
                     int *counts_tmp = realloc(kept_counts, (size_t) dir_count * sizeof(int));
 
                     *dir_names = dirs_tmp ? dirs_tmp : kept_dirs;
+                    *dir_paths = paths_tmp ? paths_tmp : kept_paths;
+
                     union_dir_item_count = counts_tmp ? counts_tmp : kept_counts;
                     union_dir_item_count_len = dir_count;
                 } else {
                     free(kept_dirs);
+                    free(kept_paths);
                     free(kept_counts);
+
                     *dir_names = NULL;
+                    *dir_paths = NULL;
+
                     union_dir_item_count = NULL;
                     union_dir_item_count_len = 0;
                 }
             } else {
                 free(kept_dirs);
+                free(kept_paths);
                 free(kept_counts);
 
-                for (int i = 0; i < all_dir_count; i++) free(all_dir_names[i]);
+                for (int i = 0; i < all_dir_count; i++) {
+                    free(all_dir_names[i]);
+                    free(all_dir_paths[i]);
+                }
 
                 *dir_names = NULL;
+                *dir_paths = NULL;
+
                 dir_count = 0;
+
                 union_dir_item_count = NULL;
                 union_dir_item_count_len = 0;
             }
@@ -190,9 +221,13 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     }
 
     free(raw_counts);
+
     free(all_dir_names);
+    free(all_dir_paths);
 
     *file_names = all_file_names;
+    *file_paths = all_file_paths;
+
     file_count = all_file_count;
 }
 
@@ -217,11 +252,9 @@ static void remove_match_items(const char *filter_name, int mode, char ***filter
     }
 }
 
-static void gen_item(char **file_names, int file_count) {
+static void gen_item(char **file_names, char **file_paths, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
     char sub_path[PATH_MAX];
-    char content_tag[MAX_BUFFER_SIZE];
-    char content_file[MAX_BUFFER_SIZE];
 
     union_get_relative_path(sys_dir, sub_path, sizeof(sub_path));
 
@@ -238,39 +271,88 @@ static void gen_item(char **file_names, int file_count) {
 
     SkipList skiplist;
     init_skiplist(&skiplist);
-    for (int i = 0; i < file_count; i++) {
-        char resolved[MAX_BUFFER_SIZE];
-        if (!union_resolve_path(sys_dir, file_names[i], 0, resolved, sizeof(resolved))) continue;
 
-        if (ends_with(file_names[i], ".cue")) {
-            process_cue_file(sys_dir, resolved, &skiplist);
-        } else if (ends_with(file_names[i], ".gdi")) {
-            process_gdi_file(sys_dir, resolved, &skiplist);
-        } else if (ends_with(file_names[i], ".m3u")) {
-            process_m3u_file(sys_dir, resolved, &skiplist);
-        }
+    typedef struct {
+        char *name;
+        char *full_path;
+        char display[MAX_BUFFER_SIZE];
+    } temp_item;
+
+    temp_item *tmp = malloc((size_t) file_count * sizeof(temp_item));
+    if (!tmp) {
+        free_skiplist(&skiplist);
+        return;
     }
 
-    for (int i = 0; i < file_count; i++) {
-        char full_path[MAX_BUFFER_SIZE];
+    int tmp_count = 0;
+    int show_hidden = config.VISUAL.HIDDEN;
 
-        if (!union_resolve_path(sys_dir, file_names[i], 0, full_path, sizeof(full_path))) {
-            free(file_names[i]);
+    for (int i = 0; i < file_count; i++) {
+        if ((i % 500) == 0 && i > 0) {
+            LOG_DEBUG(mux_module, "Content Collect: %d/%d", i, file_count);
+        }
+
+        char *name = file_names[i];
+        char *full_path = file_paths[i];
+
+        if (!name || !full_path) {
+            free(name);
+            free(full_path);
             continue;
         }
 
-        if (!in_skiplist(&skiplist, full_path)) {
-            char fn_name[MAX_BUFFER_SIZE];
-            char *stripped_name = strip_ext(file_names[i]);
+        const char *ext = strrchr(name, '.');
 
-            resolve_friendly_name(sys_dir, stripped_name, fn_name);
-            add_item(&items, &item_count, file_names[i], fn_name, full_path, ITEM);
+        if (!show_hidden && ext) {
+            if (strcasecmp(ext, ".cue") == 0) {
+                process_cue_file(sys_dir, name, &skiplist);
+                free(name);
+                free(full_path);
+                continue;
+            }
+
+            if (strcasecmp(ext, ".gdi") == 0) {
+                process_gdi_file(sys_dir, name, &skiplist);
+                free(name);
+                free(full_path);
+                continue;
+            }
+
+            if (strcasecmp(ext, ".m3u") == 0) {
+                process_m3u_file(sys_dir, name, &skiplist);
+                free(name);
+                free(full_path);
+                continue;
+            }
         }
 
-        free(file_names[i]);
+        if (!show_hidden && in_skiplist(&skiplist, full_path)) {
+            free(name);
+            free(full_path);
+            continue;
+        }
+
+        char base[MAX_BUFFER_SIZE];
+        snprintf(base, sizeof(base), "%s", name);
+
+        char *dot = strrchr(base, '.');
+        if (dot) *dot = '\0';
+
+        resolve_friendly_name(sys_dir, base, tmp[tmp_count].display);
+
+        tmp[tmp_count].name = name;
+        tmp[tmp_count].full_path = full_path;
+        tmp_count++;
     }
 
     free_skiplist(&skiplist);
+
+    for (int i = 0; i < tmp_count; i++) {
+        add_item(&items, &item_count, tmp[i].name, tmp[i].display, tmp[i].full_path, ITEM);
+        free(tmp[i].full_path);
+    }
+
+    free(tmp);
 
     sort_items(items, item_count);
 
@@ -283,6 +365,7 @@ static void gen_item(char **file_names, int file_count) {
                 break;
             }
         }
+        free(e_name_line);
     }
 
     remove_match_items("History", config.VISUAL.CONTENTHISTORY, &history_items, &history_item_count,
@@ -291,21 +374,35 @@ static void gen_item(char **file_names, int file_count) {
     remove_match_items("Collected", config.VISUAL.CONTENTCOLLECT, &collection_items, &collection_item_count,
                        populate_collection_items, &items, &item_count, sys_dir);
 
+    char content_tag[PATH_MAX];
+
     for (size_t i = 0; i < item_count; ++i) {
         if (items[i].content_type != ITEM) continue;
 
-        const char *basename = strip_ext(items[i].name);
+        char basename[MAX_BUFFER_SIZE];
+        snprintf(basename, sizeof(basename), "%s", items[i].name);
+
+        char *dot = strrchr(basename, '.');
+        if (dot) *dot = '\0';
 
         snprintf(content_tag, sizeof(content_tag), INFO_CON_PATH "/%s/%s.tag", sub_path, basename);
         remove_double_slashes(content_tag);
 
         if (file_exist(content_tag)) {
-            items[i].glyph_icon = strdup(str_remchar(read_line_char_from(content_tag, 1), ' '));
-            items[i].use_module = strdup("muxtag");
+            char *line = read_line_char_from(content_tag, 1);
+
+            if (line && *line) {
+                str_remchar(line, ' ');
+                items[i].glyph_icon = line;
+            } else {
+                if (line) free(line);
+                items[i].glyph_icon = "default";
+            }
+
+            items[i].use_module = "muxtag";
         } else {
-            snprintf(content_file, sizeof(content_file), "%s", items[i].extra_data);
-            items[i].glyph_icon = strdup(get_content_explorer_glyph_name(content_file));
-            items[i].use_module = strdup(mux_module);
+            items[i].glyph_icon = get_content_explorer_glyph_name(items[i].extra_data);
+            items[i].use_module = mux_module;
         }
     }
 }
@@ -345,8 +442,12 @@ static void create_content_items(void) {
     snprintf(item_curr_dir, sizeof(item_curr_dir), "%s", sys_dir);
 
     char **dir_names = NULL;
+    char **dir_paths = NULL;
+
     char **file_names = NULL;
-    add_directory_and_file_names(item_curr_dir, &dir_names, &file_names);
+    char **file_paths = NULL;
+
+    add_directory_and_file_names(item_curr_dir, &dir_names, &dir_paths, &file_names, &file_paths);
 
     int fn_valid = 0;
     struct json fn_json = {0};
@@ -380,37 +481,42 @@ static void create_content_items(void) {
     }
 
     for (int i = 0; i < dir_count; i++) {
-        if (!dir_names || !dir_names[i]) continue;
+        if (!dir_names || !dir_names[i] || !dir_paths || !dir_paths[i]) continue;
 
         int cnt = get_visible_dir_count(item_curr_dir, dir_names[i], i);
         if (!config.VISUAL.DISPLAYEMPTYFOLDER && cnt <= 0) {
             free(dir_names[i]);
+            free(dir_paths[i]);
+
             dir_names[i] = NULL;
+            dir_paths[i] = NULL;
+
             continue;
         }
 
         if (folder_has_launch_file(sys_dir, dir_names[i])) {
             free(dir_names[i]);
-            dir_names[i] = NULL;
-            continue;
-        }
+            free(dir_paths[i]);
 
-        char resolved_dir[MAX_BUFFER_SIZE];
-        if (!union_resolve_path(sys_dir, dir_names[i], 1, resolved_dir, sizeof(resolved_dir))) {
-            free(dir_names[i]);
             dir_names[i] = NULL;
+            dir_paths[i] = NULL;
+
             continue;
         }
 
         char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
         if (!friendly_folder_name) {
             free(dir_names[i]);
+            free(dir_paths[i]);
+
             dir_names[i] = NULL;
+            dir_paths[i] = NULL;
+
             continue;
         }
 
-        automatic_assign_core(resolved_dir);
-        content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, resolved_dir, FOLDER);
+        automatic_assign_core(dir_paths[i]);
+        content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, dir_paths[i], FOLDER);
 
         if (new_item) {
             new_item->glyph_icon = "folder";
@@ -426,16 +532,17 @@ static void create_content_items(void) {
         }
 
         free(friendly_folder_name);
+        free(dir_paths[i]);
 
-        free(dir_names[i]);
         dir_names[i] = NULL;
+        dir_paths[i] = NULL;
     }
 
     free(union_dir_item_count);
     union_dir_item_count = NULL;
     union_dir_item_count_len = 0;
 
-    gen_item(file_names, file_count);
+    gen_item(file_names, file_paths, file_count);
 
     assign_item_buckets();
     qsort(items, item_count, sizeof(content_item), bucket_item_compare);
@@ -485,7 +592,10 @@ static void create_content_items(void) {
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 
     free(file_names);
+    free(file_paths);
+
     free(dir_names);
+    free(dir_paths);
 
     turbo_time(0, 1);
 }
