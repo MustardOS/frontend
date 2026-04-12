@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SKIPLIST_H
-#define SKIPLIST_H
-
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -10,6 +7,9 @@ typedef struct {
     char **items;
     size_t count;
     size_t capacity;
+
+    char **buckets;
+    size_t bucket_cap;
 } SkipList;
 
 void init_skiplist(SkipList *sl);
@@ -27,5 +27,3 @@ void process_gdi_file(char *dir, const char *filename, SkipList *sl);
 void process_cue_file(char *dir, const char *filename, SkipList *sl);
 
 void process_m3u_file(char *dir, const char *filename, SkipList *sl);
-
-#endif

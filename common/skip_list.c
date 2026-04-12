@@ -1,4 +1,3 @@
-#include <fnmatch.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,12 +5,24 @@
 #include "common.h"
 #include "options.h"
 
+static size_t skip_hash(const char *key, size_t cap) {
+    uint32_t h = 2166136261u;
+    for (const unsigned char *p = (const unsigned char *) key; *p; p++) {
+        h = (h ^ (unsigned char) *p) * 16777619u;
+    }
+
+    return (size_t) h & (cap - 1);
+}
+
 void init_skiplist(SkipList *sl) {
     if (!sl) return;
 
     sl->items = NULL;
     sl->count = 0;
     sl->capacity = 0;
+
+    sl->bucket_cap = 512;
+    sl->buckets = calloc(sl->bucket_cap, sizeof(char *));
 }
 
 void free_skiplist(SkipList *sl) {
@@ -22,62 +33,55 @@ void free_skiplist(SkipList *sl) {
     }
 
     free(sl->items);
+    free(sl->buckets);
 
     sl->items = NULL;
+    sl->buckets = NULL;
     sl->count = 0;
     sl->capacity = 0;
+    sl->bucket_cap = 0;
 }
 
 void add_to_skiplist(SkipList *sl, const char *dir, const char *name) {
+    if (!sl || !dir || !name) return;
+
     char full_path[MAX_BUFFER_SIZE];
     snprintf(full_path, sizeof(full_path), "%s/%s", dir, name);
 
+    size_t i = skip_hash(full_path, sl->bucket_cap);
+
+    while (sl->buckets[i]) {
+        if (strcasecmp(sl->buckets[i], full_path) == 0) return;
+        i = (i + 1) & (sl->bucket_cap - 1);
+    }
+
     if (sl->count == sl->capacity) {
-        size_t new_capacity = sl->capacity == 0 ? 8 : sl->capacity * 2;
-        char **new_items = realloc(sl->items, new_capacity * sizeof(char *));
+        size_t new_cap = sl->capacity ? sl->capacity * 2 : 256;
+        char **tmp = realloc(sl->items, new_cap * sizeof(char *));
+        if (!tmp) return;
 
-        if (!new_items) {
-            perror("realloc");
-            exit(EXIT_FAILURE);
-        }
-
-        sl->items = new_items;
-        sl->capacity = new_capacity;
+        sl->items = tmp;
+        sl->capacity = new_cap;
     }
 
-    sl->items[sl->count] = strdup(full_path);
+    char *copy = strdup(full_path);
+    if (!copy) return;
 
-    if (!sl->items[sl->count]) {
-        perror("strdup");
-        exit(EXIT_FAILURE);
-    }
-
-    sl->count++;
+    sl->items[sl->count++] = copy;
+    sl->buckets[i] = copy;
 }
 
-bool in_skiplist(const SkipList *sl, const char *path) {
-    if (!path) return 1;
+bool in_skiplist(const SkipList *sl, const char *name) {
+    if (!sl || !sl->buckets || !name) return false;
 
-    const char *name = get_file_name((char *) path);
+    size_t i = skip_hash(name, sl->bucket_cap);
 
-    for (size_t i = 0; i < skip_pattern_list.count; i++) {
-        const char *pattern = skip_pattern_list.patterns[i];
-        if (!pattern || !*pattern) continue;
-
-        if (pattern[0] == '/') {
-            if (fnmatch(pattern + 1, name, 0) == 0) return 1;
-        } else {
-            if (fnmatch(pattern, name, 0) == 0) return 1;
-        }
+    while (sl->buckets[i]) {
+        if (strcasecmp(sl->buckets[i], name) == 0) return true;
+        i = (i + 1) & (sl->bucket_cap - 1);
     }
 
-    if (sl) {
-        for (size_t i = 0; i < sl->count; i++) {
-            if (strcasecmp(sl->items[i], path) == 0) return 1;
-        }
-    }
-
-    return 0;
+    return false;
 }
 
 bool ends_with(char *str, const char *suffix) {
@@ -87,7 +91,7 @@ bool ends_with(char *str, const char *suffix) {
     size_t len_suffix = strlen(suffix);
 
     if (len_suffix > len_str) return false;
-    return strcmp(str_tolower(str) + len_str - len_suffix, suffix) == 0;
+    return strcasecmp(str + len_str - len_suffix, suffix) == 0;
 }
 
 void process_cue_file(char *dir, const char *filename, SkipList *sl) {
@@ -114,7 +118,7 @@ void process_cue_file(char *dir, const char *filename, SkipList *sl) {
         char *end = strchr(start, '"');
         if (!end) continue;
 
-        size_t len = end - start;
+        size_t len = (size_t) (end - start);
         if (len > 0) {
             char *name = malloc(len + 1);
             if (!name) {
@@ -152,7 +156,7 @@ void process_gdi_file(char *dir, const char *filename, SkipList *sl) {
         char *end = strchr(start, '"');
         if (!end) continue;
 
-        size_t len = end - start;
+        size_t len = (size_t) (end - start);
         if (len > 0) {
             char *name = malloc(len + 1);
             if (!name) {
