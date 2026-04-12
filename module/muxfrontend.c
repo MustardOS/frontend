@@ -281,7 +281,24 @@ static void module_credits(void) {
 static void module_explore(void) {
     last_index_check();
 
-    char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
+    char explore_dir[PATH_MAX];
+    char *explore_src = read_line_char_from(EXPLORE_DIR, 1);
+
+    if (explore_src && *explore_src && dir_exist(explore_src)) {
+        snprintf(explore_dir, sizeof(explore_dir), "%s", explore_src);
+    } else {
+        char *explore_pdi = NULL;
+        if (file_exist(MUOS_PDI_LOAD)) explore_pdi = read_all_char_from(MUOS_PDI_LOAD);
+
+        if (explore_pdi && *explore_pdi && dir_exist(explore_pdi)) {
+            snprintf(explore_dir, sizeof(explore_dir), "%s", explore_pdi);
+        } else {
+            union_get_roms_root(explore_dir, sizeof(explore_dir));
+        }
+
+        free(explore_pdi);
+    }
+
     muxassign_main(1, rom_name, explore_dir, "none", 0);
     muxgov_main(1, rom_name, explore_dir, "none", 0);
     muxcontrol_main(1, rom_name, explore_dir, "none", 0);
