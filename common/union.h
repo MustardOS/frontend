@@ -11,12 +11,10 @@ void union_get_mount_path(const char *path, char *out, size_t out_size);
 
 int union_is_root(const char *path);
 
-int union_resolve_path(const char *base_dir, const char *name, int want_dir,
-                       char *out, size_t out_size);
-
 int union_get_directory_item_count(const char *base_dir, const char *name, int count_type);
 
-int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char ***file_names, int *file_count, int **dir_item_counts);
+int union_collect(const char *base_dir, char ***dir_names, char ***dir_paths, int *dir_count,
+                  char ***file_names, char ***file_paths, int *file_count, int **dir_item_counts);
 
 void union_get_roms_root(char *out, size_t out_size);
 

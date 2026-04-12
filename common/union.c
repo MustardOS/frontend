@@ -30,6 +30,36 @@ typedef struct {
     size_t count;
 } union_set;
 
+typedef struct {
+    char **names;
+    char **paths;
+    int count;
+    int capacity;
+} union_entry_list;
+
+typedef struct {
+    const char *mount;
+    const char *rel_path;
+    union_set dir_set;
+    union_entry_list dir_list;
+    union_set file_set;
+    union_entry_list file_list;
+    int ok;
+} scan_worker_t;
+
+typedef struct {
+    scan_worker_t *w;
+    int **counts;
+} deep_arg_t;
+
+struct linux_dirent64 {
+    unsigned long long d_ino;
+    long long d_off;
+    unsigned short d_reclen;
+    unsigned char d_type;
+    char d_name[];
+};
+
 static char _tombstone;
 #define TOMBSTONE (&_tombstone)
 
@@ -41,11 +71,56 @@ static void union_set_init(union_set *s) {
 
 static void union_set_free(union_set *s) {
     if (!s->buckets) return;
-
     free(s->buckets);
+
     s->buckets = NULL;
     s->count = 0;
     s->capacity = 0;
+}
+
+static int union_entry_list_init(union_entry_list *l) {
+    l->count = 0;
+    l->capacity = UNION_SET_INIT_CAP;
+
+    l->names = malloc((size_t) l->capacity * sizeof(char *));
+    l->paths = malloc((size_t) l->capacity * sizeof(char *));
+
+    return l->names && l->paths;
+}
+
+static void union_entry_list_free_arrays(union_entry_list *l) {
+    if (!l) return;
+
+    free(l->names);
+    free(l->paths);
+
+    l->names = NULL;
+    l->paths = NULL;
+
+    l->count = 0;
+    l->capacity = 0;
+}
+
+static int union_entry_list_push(union_entry_list *l, char *name, char *path) {
+    if (l->count >= l->capacity) {
+        int new_cap = l->capacity * 2;
+        char **new_names = realloc(l->names, (size_t) new_cap * sizeof(char *));
+        char **new_paths = realloc(l->paths, (size_t) new_cap * sizeof(char *));
+        if (!new_names || !new_paths) {
+            free(new_names);
+            free(new_paths);
+            return 0;
+        }
+
+        l->names = new_names;
+        l->paths = new_paths;
+        l->capacity = new_cap;
+    }
+
+    l->names[l->count] = name;
+    l->paths[l->count] = path;
+    l->count++;
+    return 1;
 }
 
 // Lowercased version of FNV1a
@@ -96,68 +171,20 @@ static int union_set_insert(union_set *s, const char *name) {
     return 0;
 }
 
-typedef struct {
-    char **names;
-    int count;
-    int capacity;
-} union_list;
-
-static int union_list_init(union_list *l) {
-    l->count = 0;
-    l->capacity = UNION_SET_INIT_CAP;
-    l->names = malloc((size_t) l->capacity * sizeof(char *));
-    return l->names ? 1 : 0;
-}
-
 static void union_init_mounts(void) {
     union_mounts[0] = device.STORAGE.USB.MOUNT;
     union_mounts[1] = device.STORAGE.SDCARD.MOUNT;
     union_mounts[2] = device.STORAGE.ROM.MOUNT;
 }
 
-static int union_list_push(union_list *l, char *name) {
-    if (l->count >= l->capacity) {
-        int new_cap = l->capacity * 2;
-        char **tmp = realloc(l->names, (size_t) new_cap * sizeof(char *));
-        if (!tmp) return 0;
-        l->names = tmp;
-        l->capacity = new_cap;
-    }
-    l->names[l->count++] = name;
-    return 1;
-}
-
-struct linux_dirent64 {
-    unsigned long long d_ino;
-    long long d_off;
-    unsigned short d_reclen;
-    unsigned char d_type;
-    char d_name[];
-};
-
-typedef struct {
-    const char *mount;
-    const char *rel_path;
-    union_set dir_set;
-    union_list dir_list;
-    union_set file_set;
-    union_list file_list;
-    int ok;
-} scan_worker_t;
-
-typedef struct {
-    scan_worker_t *w;
-    int **counts;
-} deep_arg_t;
-
-static void union_join_path(char *out, size_t out_size, const char *a, const char *b, const char *c);
+static void union_join_path(char *out, const char *a, const char *b);
 
 static void scan_mount(const char *mount, const char *rel_path,
-                       union_set *dir_set, union_list *dir_list,
-                       union_set *file_set, union_list *file_list,
+                       union_set *dir_set, union_entry_list *dir_list,
+                       union_set *file_set, union_entry_list *file_list,
                        int **counts_out) {
     char scan_path[PATH_MAX];
-    union_join_path(scan_path, sizeof(scan_path), mount, rel_path, NULL);
+    union_join_path(scan_path, mount, rel_path);
 
     int fd = open(scan_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (fd < 0) return;
@@ -178,7 +205,6 @@ static void scan_mount(const char *mount, const char *rel_path,
 
             const char *name = d->d_name;
 
-            // Skip '.' and '..'
             if (name[0] == '.') {
                 if (name[1] == '\0' || (name[1] == '.' && name[2] == '\0')) continue;
                 if (!config.VISUAL.HIDDEN) continue;
@@ -193,28 +219,37 @@ static void scan_mount(const char *mount, const char *rel_path,
                 continue;
             }
 
-            if (should_skip(name, is_dir)) continue;
+            if (!config.VISUAL.HIDDEN && should_skip(name, is_dir)) continue;
 
             union_set *set = is_dir ? dir_set : file_set;
-            union_list *list = is_dir ? dir_list : file_list;
+            union_entry_list *list = is_dir ? dir_list : file_list;
 
-            char *copy = strdup(name);
-            if (!copy) goto done;
+            char *name_copy = strdup(name);
+            if (!name_copy) goto done;
 
-            int ret = union_set_insert(set, copy);
-
+            int ret = union_set_insert(set, name_copy);
             if (ret < 0) {
-                free(copy);
+                free(name_copy);
                 goto done;
             }
 
             if (ret > 0) {
-                free(copy);
+                free(name_copy);
                 continue;
             }
 
-            if (!union_list_push(list, copy)) {
-                free(copy);
+            char full_path[PATH_MAX];
+            union_join_path(full_path, scan_path, name);
+
+            char *path_copy = strdup(full_path);
+            if (!path_copy) {
+                free(name_copy);
+                goto done;
+            }
+
+            if (!union_entry_list_push(list, name_copy, path_copy)) {
+                free(name_copy);
+                free(path_copy);
                 goto done;
             }
 
@@ -225,10 +260,7 @@ static void scan_mount(const char *mount, const char *rel_path,
                 if (tmp) {
                     *counts_out = tmp;
 
-                    char child_path[PATH_MAX];
-                    union_join_path(child_path, sizeof(child_path), scan_path, name, NULL);
-
-                    int child_fd = open(child_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+                    int child_fd = open(full_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
                     if (child_fd < 0) {
                         (*counts_out)[new_idx] = 0;
                     } else {
@@ -253,9 +285,10 @@ static void scan_mount(const char *mount, const char *rel_path,
                                     int cis_dir = (cd->d_type == DT_DIR) ? 1 : (cd->d_type == DT_REG) ? 0 : -1;
                                     if (cis_dir < 0) continue;
 
-                                    if (!should_skip(cn, cis_dir)) child_count++;
+                                    if (config.VISUAL.HIDDEN || !should_skip(cn, cis_dir)) child_count++;
                                 }
                             }
+
                             free(child_buf);
                         }
 
@@ -291,20 +324,13 @@ static int union_is_path_prefix(const char *path, const char *prefix) {
     return path[len] == '\0' || path[len] == '/';
 }
 
-static void union_join_path(char *out, size_t out_size, const char *a, const char *b, const char *c) {
+static void union_join_path(char *out, const char *a, const char *b) {
     out[0] = '\0';
-    if (a && *a) snprintf(out, out_size, "%s", a);
+    if (*a) snprintf(out, 4096, "%s", a);
 
-    if (b && *b) {
+    if (*b) {
         size_t len = strlen(out);
-        snprintf(out + len, out_size - len, "%s%s",
-                 (len > 0 && out[len - 1] == '/') ? "" : "/", b);
-    }
-
-    if (c && *c) {
-        size_t len = strlen(out);
-        snprintf(out + len, out_size - len, "%s%s",
-                 (len > 0 && out[len - 1] == '/') ? "" : "/", c);
+        snprintf(out + len, 4096 - len, "%s%s", (len > 0 && out[len - 1] == '/') ? "" : "/", b);
     }
 
     remove_double_slashes(out);
@@ -358,12 +384,17 @@ int union_is_root(const char *path) {
     return rel_path[0] == '\0';
 }
 
-int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char ***file_names, int *file_count, int **dir_item_counts) {
+int union_collect(const char *base_dir, char ***dir_names, char ***dir_paths, int *dir_count,
+                  char ***file_names, char ***file_paths, int *file_count, int **dir_item_counts) {
     char rel_path[PATH_MAX];
     size_t n = A_SIZE(union_mounts);
 
     *dir_names = NULL;
+    *dir_paths = NULL;
+
     *file_names = NULL;
+    *file_paths = NULL;
+
     *dir_count = 0;
     *file_count = 0;
 
@@ -387,8 +418,9 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
 
         union_set_init(&w->dir_set);
         union_set_init(&w->file_set);
-        union_list_init(&w->dir_list);
-        union_list_init(&w->file_list);
+
+        union_entry_list_init(&w->dir_list);
+        union_entry_list_init(&w->file_list);
 
         args[i].w = w;
         args[i].counts = dir_item_counts ? &mount_counts[i] : NULL;
@@ -399,12 +431,13 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
     for (size_t i = 0; i < n; i++) pthread_join(threads[i], NULL);
 
     union_set global_dir_set, global_file_set;
-    union_list global_dir_list, global_file_list;
+    union_entry_list global_dir_list, global_file_list;
 
     union_set_init(&global_dir_set);
     union_set_init(&global_file_set);
-    union_list_init(&global_dir_list);
-    union_list_init(&global_file_list);
+
+    union_entry_list_init(&global_dir_list);
+    union_entry_list_init(&global_file_list);
 
     int *merged_counts = NULL;
     int merged_cap = 0;
@@ -419,9 +452,10 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
 
         for (int j = 0; j < w->dir_list.count; j++) {
             char *name = w->dir_list.names[j];
+            char *path = w->dir_list.paths[j];
 
             if (union_set_insert(&global_dir_set, name) == 0) {
-                union_list_push(&global_dir_list, name);
+                union_entry_list_push(&global_dir_list, name, path);
 
                 if (merged_counts) {
                     int idx = global_dir_list.count - 1;
@@ -429,7 +463,6 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
                     if (idx >= merged_cap) {
                         int new_cap = merged_cap * 2;
                         int *tmp = realloc(merged_counts, (size_t) new_cap * sizeof(int));
-
                         if (tmp) {
                             merged_counts = tmp;
                             merged_cap = new_cap;
@@ -439,27 +472,30 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
                     if (idx < merged_cap) {
                         int cnt = -1;
                         if (mount_counts[i] && j < w->dir_list.count) cnt = mount_counts[i][j];
-
                         merged_counts[idx] = cnt;
                     }
                 }
             } else {
                 free(name);
+                free(path);
             }
         }
 
         for (int j = 0; j < w->file_list.count; j++) {
             char *name = w->file_list.names[j];
+            char *path = w->file_list.paths[j];
 
             if (union_set_insert(&global_file_set, name) == 0) {
-                union_list_push(&global_file_list, name);
+                union_entry_list_push(&global_file_list, name, path);
             } else {
                 free(name);
+                free(path);
             }
         }
 
-        free(w->dir_list.names);
-        free(w->file_list.names);
+        union_entry_list_free_arrays(&w->dir_list);
+        union_entry_list_free_arrays(&w->file_list);
+
         free(mount_counts[i]);
 
         union_set_free(&w->dir_set);
@@ -470,8 +506,12 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
     union_set_free(&global_file_set);
 
     *dir_names = global_dir_list.names;
+    *dir_paths = global_dir_list.paths;
+
     *dir_count = global_dir_list.count;
+
     *file_names = global_file_list.names;
+    *file_paths = global_file_list.paths;
     *file_count = global_file_list.count;
 
     if (dir_item_counts) {
@@ -485,26 +525,6 @@ int union_collect(const char *base_dir, char ***dir_names, int *dir_count, char 
     }
 
     return *dir_count + *file_count;
-}
-
-int union_resolve_path(const char *base_dir, const char *name, int want_dir, char *out, size_t out_size) {
-    char rel_path[PATH_MAX];
-    struct stat st;
-
-    union_init_mounts();
-    union_get_relative_path(base_dir, rel_path, sizeof(rel_path));
-
-    for (size_t i = 0; i < A_SIZE(union_mounts); i++) {
-        if (!union_mounts[i] || !*union_mounts[i]) continue;
-        union_join_path(out, out_size, union_mounts[i], rel_path, name);
-
-        if (stat(out, &st) == 0) {
-            if ((want_dir && S_ISDIR(st.st_mode)) || (!want_dir && S_ISREG(st.st_mode))) return 1;
-        }
-    }
-
-    union_join_path(out, out_size, device.STORAGE.ROM.MOUNT, rel_path, name);
-    return 0;
 }
 
 int union_get_directory_item_count(const char *base_dir, const char *name, int count_type) {
@@ -578,7 +598,7 @@ int union_get_directory_item_count(const char *base_dir, const char *name, int c
                     }
                 }
 
-                if (should_skip(entry, is_dir)) continue;
+                if (!config.VISUAL.HIDDEN && should_skip(entry, is_dir)) continue;
 
                 int count_quality = 0;
                 if (count_type == COUNT_DIRS && is_dir) count_quality = 1;
