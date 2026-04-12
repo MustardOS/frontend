@@ -301,7 +301,7 @@ static void create_collection_items(void) {
 static void update_footer_glyph(void) {
     if (!add_mode) return;
     lv_label_set_text(ui_lblNavA,
-                      items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
+                      item_count > 0 && items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -949,6 +949,8 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     update_file_counter(ui_lblCounter_collect, file_count);
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false);
+
+    update_footer_glyph();
 
     init_timer(ui_refresh_task, NULL);
 
