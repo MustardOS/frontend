@@ -994,8 +994,10 @@ static void handle_y(void) {
         if (is_ksk(kiosk.LAUNCH.COLLECTION) || is_ksk(kiosk.COLLECT.ADD_CON)) return;
 
         write_text_to_file(ADD_MODE_FROM, "w", CHAR, "explore");
+        write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
         if (!load_content(1, items[current_item_index].extra_data)) {
             remove(ADD_MODE_FROM);
+            remove(EXPLORE_DIR);
             play_sound(SND_ERROR);
             toast_message(lang.MUXPLORE.ERROR.NO_CORE, SHORT);
         }
