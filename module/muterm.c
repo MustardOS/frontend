@@ -840,50 +840,50 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 l = 1;
                 r = 1;
                 t = light;
-                break; /* ─ */
+                break;
             case 0x2501:
                 l = 1;
                 r = 1;
                 t = heavy;
-                break; /* ━ */
+                break;
             case 0x2502:
                 u = 1;
                 d = 1;
                 t = light;
-                break; /* │ */
+                break;
             case 0x2503:
                 u = 1;
                 d = 1;
                 t = heavy;
-                break; /* ┃ */
+                break;
             case 0x250C:
             case 0x250D:
             case 0x250E:
             case 0x250F:
                 r = 1;
                 d = 1;
-                break; /* ┌ */
+                break;
             case 0x2510:
             case 0x2511:
             case 0x2512:
             case 0x2513:
                 l = 1;
                 d = 1;
-                break; /* ┐ */
+                break;
             case 0x2514:
             case 0x2515:
             case 0x2516:
             case 0x2517:
                 r = 1;
                 u = 1;
-                break; /* └ */
+                break;
             case 0x2518:
             case 0x2519:
             case 0x251A:
             case 0x251B:
                 l = 1;
                 u = 1;
-                break; /* ┘ */
+                break;
             case 0x251C:
             case 0x251D:
             case 0x251E:
@@ -895,7 +895,7 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 u = 1;
                 d = 1;
                 r = 1;
-                break; /* ├ */
+                break;
             case 0x2524:
             case 0x2525:
             case 0x2526:
@@ -907,7 +907,7 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 u = 1;
                 d = 1;
                 l = 1;
-                break; /* ┤ */
+                break;
             case 0x252C:
             case 0x252D:
             case 0x252E:
@@ -919,7 +919,7 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 l = 1;
                 r = 1;
                 d = 1;
-                break; /* ┬ */
+                break;
             case 0x2534:
             case 0x2535:
             case 0x2536:
@@ -931,7 +931,7 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 l = 1;
                 r = 1;
                 u = 1;
-                break; /* ┴ */
+                break;
             case 0x253C:
             case 0x253D:
             case 0x253E:
@@ -952,7 +952,7 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 r = 1;
                 u = 1;
                 d = 1;
-                break; /* ┼ */
+                break;
             case 0x254C:
             case 0x254D:
             case 0x254E:
@@ -964,63 +964,63 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 l = 1;
                 r = 1;
                 t = heavy;
-                break; /* ═ */
+                break;
             case 0x2551:
                 u = 1;
                 d = 1;
                 t = heavy;
-                break; /* ║ */
+                break;
             case 0x2554:
                 r = 1;
                 d = 1;
                 t = heavy;
-                break; /* ╔ */
+                break;
             case 0x2557:
                 l = 1;
                 d = 1;
                 t = heavy;
-                break; /* ╗ */
+                break;
             case 0x255A:
                 r = 1;
                 u = 1;
                 t = heavy;
-                break; /* ╚ */
+                break;
             case 0x255D:
                 l = 1;
                 u = 1;
                 t = heavy;
-                break; /* ╝ */
+                break;
             case 0x2560:
                 u = 1;
                 d = 1;
                 r = 1;
                 t = heavy;
-                break; /* ╠ */
+                break;
             case 0x2563:
                 u = 1;
                 d = 1;
                 l = 1;
                 t = heavy;
-                break; /* ╣ */
+                break;
             case 0x2566:
                 l = 1;
                 r = 1;
                 d = 1;
                 t = heavy;
-                break; /* ╦ */
+                break;
             case 0x2569:
                 l = 1;
                 r = 1;
                 u = 1;
                 t = heavy;
-                break; /* ╩ */
+                break;
             case 0x256C:
                 l = 1;
                 r = 1;
                 u = 1;
                 d = 1;
                 t = heavy;
-                break; /* ╬ */
+                break;
             default:
                 l = 1;
                 r = 1;
@@ -1039,35 +1039,63 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
 
     if (is_vt_block_char(cp)) {
         switch (cp) {
-            case 0x2580:
+            case 0x2580: /* ▀ upper half */
                 fill_rect_px(surf, col, 0, 0, cw, ch / 2);
-                break; /* ▀ */
-            case 0x2584:
+                break;
+            case 0x2584: /* ▄ lower half */
                 fill_rect_px(surf, col, 0, ch / 2, cw, ch - (ch / 2));
-                break; /* ▄ */
-            case 0x2588:
-                fill_rect_px(surf, col, 0, 0, cw, ch);
-                break; /* █ */
-            case 0x258C:
-                fill_rect_px(surf, col, 0, 0, cw / 2, ch);
-                break; /* ▌ */
-            case 0x2590:
-                fill_rect_px(surf, col, cw / 2, 0, cw - (cw / 2), ch);
-                break; /* ▐ */
-            case 0x2592:
-            case 0x2593:
+                break;
+            case 0x2588: /* █ full */
                 fill_rect_px(surf, col, 0, 0, cw, ch);
                 break;
-            case 0x2596:
+            case 0x258C: /* ▌ left half */
+                fill_rect_px(surf, col, 0, 0, cw / 2, ch);
+                break;
+            case 0x2590: /* ▐ right half */
+                fill_rect_px(surf, col, cw / 2, 0, cw - (cw / 2), ch);
+                break;
+
+            case 0x2591: /* ░ light shade ~25% */
+            {
+                Uint32 *px = (Uint32 *) surf->pixels;
+                int pitch4 = surf->pitch / 4;
+                for (int y = 0; y < ch; y++)
+                    for (int x = 0; x < cw; x++)
+                        if (((x + y * 2) & 3) == 0)
+                            px[y * pitch4 + x] = col;
+                break;
+            }
+            case 0x2592: /* ▒ medium shade ~50% */
+            {
+                Uint32 *px = (Uint32 *) surf->pixels;
+                int pitch4 = surf->pitch / 4;
+                for (int y = 0; y < ch; y++)
+                    for (int x = 0; x < cw; x++)
+                        if (((x + y) & 1) == 0)
+                            px[y * pitch4 + x] = col;
+                break;
+            }
+            case 0x2593: /* ▓ dark shade ~75% */
+            {
+                Uint32 *px = (Uint32 *) surf->pixels;
+                int pitch4 = surf->pitch / 4;
+                for (int y = 0; y < ch; y++)
+                    for (int x = 0; x < cw; x++)
+                        if (((x + y) & 1) != 0 || ((x & 1) == 0 && (y & 1) == 0))
+                            px[y * pitch4 + x] = col;
+                break;
+            }
+
+            case 0x2596: /* ▖ lower-left quadrant */
                 fill_rect_px(surf, col, 0, ch / 2, cw / 2, ch - (ch / 2));
                 break;
-            case 0x2597:
+            case 0x2597: /* ▗ lower-right quadrant */
                 fill_rect_px(surf, col, cw / 2, ch / 2, cw - (cw / 2), ch - (ch / 2));
                 break;
-            case 0x2598:
+            case 0x2598: /* ▘ upper-left quadrant */
                 fill_rect_px(surf, col, 0, 0, cw / 2, ch / 2);
                 break;
-            case 0x259D:
+            case 0x259D: /* ▝ upper-right quadrant */
                 fill_rect_px(surf, col, cw / 2, 0, cw - (cw / 2), ch / 2);
                 break;
             default:
@@ -1083,22 +1111,19 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
             case 0x25A0: /* ■ */
                 fill_rect_px(surf, col, cw / 4, ch / 4, cw / 2, ch / 2);
                 return surf;
-            case 0x25CF: { /* ● */
+            case 0x25CF: /* ● */
+            {
                 int x, y;
                 Uint32 *px = (Uint32 *) surf->pixels;
                 int radius = (cw < ch ? cw : ch) / 4;
                 int ox = cw / 2;
                 int oy = ch / 2;
-
-                for (y = 0; y < ch; y++) {
+                for (y = 0; y < ch; y++)
                     for (x = 0; x < cw; x++) {
-                        int dx = x - ox;
-                        int dy = y - oy;
-                        if (dx * dx + dy * dy <= radius * radius) {
+                        int dx = x - ox, dy = y - oy;
+                        if (dx * dx + dy * dy <= radius * radius)
                             px[y * surf->pitch / 4 + x] = col;
-                        }
                     }
-                }
                 return surf;
             }
             default:
@@ -2031,6 +2056,70 @@ static void sigchld_handler(int s) {
     child_exited = 1;
 }
 
+static pid_t spawn_pty_child(int *master_fd_out, int argc, char **argv) {
+    int master_fd = -1;
+    int slave_fd = -1;
+    pid_t pid;
+
+    struct winsize ws = {
+            .ws_row = TERM_ROWS,
+            .ws_col = TERM_COLS,
+            .ws_xpixel = 0,
+            .ws_ypixel = 0
+    };
+
+    if (openpty(&master_fd, &slave_fd, NULL, NULL, &ws) < 0) {
+        perror("openpty");
+        return -1;
+    }
+
+    pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        close(master_fd);
+        close(slave_fd);
+        return -1;
+    }
+
+    if (pid == 0) {
+        setsid();
+
+        if (ioctl(slave_fd, TIOCSCTTY, 0) < 0) {
+            perror("TIOCSCTTY");
+        }
+
+        if (dup2(slave_fd, STDIN_FILENO) < 0 ||
+            dup2(slave_fd, STDOUT_FILENO) < 0 ||
+            dup2(slave_fd, STDERR_FILENO) < 0) {
+            perror("dup2");
+            _exit(1);
+        }
+
+        close(master_fd);
+        close(slave_fd);
+
+        setenv("TERM", "xterm-256color", 1);
+        setenv("COLORTERM", "truecolor", 1);
+
+        if (!getenv("HOME")) {
+            setenv("HOME", "/root", 1);
+        }
+
+        if (argc > 1 && argv[1] && argv[1][0]) {
+            execl("/bin/sh", "sh", "-l", "-c", argv[1], (char *) NULL);
+        } else {
+            execl("/bin/sh", "sh", "-l", (char *) NULL);
+        }
+
+        perror("exec");
+        _exit(127);
+    }
+
+    close(slave_fd);
+    *master_fd_out = master_fd;
+    return pid;
+}
+
 int main(int argc, char *argv[]) {
     setlocale(LC_CTYPE, "");
 
@@ -2039,7 +2128,7 @@ int main(int argc, char *argv[]) {
 
     int term_width = 0, term_height = 0, font_size = 0;
     const char *font_path = NULL, *bg_path = NULL;
-    const char **cmd = NULL;
+    char **cmd = NULL;
 
     if (argc >= 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-?") == 0))
         print_help(argv[0]);
@@ -2061,19 +2150,9 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(a, "-ro") == 0 || strcmp(a, "--readonly") == 0) {
             readonly_mode = 1;
         } else if (a[0] != '-') {
-            cmd = (const char **) &argv[i];
+            cmd = &argv[i];
             break;
         }
-    }
-
-    /* Default to $SHELL, then /bin/sh if no command given */
-    static const char *default_shell_argv[2];
-    if (!cmd) {
-        const char *sh = getenv("SHELL");
-        if (!sh || sh[0] == '\0') sh = "/bin/sh";
-        default_shell_argv[0] = sh;
-        default_shell_argv[1] = NULL;
-        cmd = default_shell_argv;
     }
 
     if (term_width == 0) term_width = device.SCREEN.WIDTH;
@@ -2095,16 +2174,10 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < num_joy; i++) {
         if (SDL_IsGameController(i)) {
             SDL_GameController *gc = SDL_GameControllerOpen(i);
-            if (gc) {
-                fprintf(stderr, "[OSK] Opened GameController %d: %s\n",
-                        i, SDL_GameControllerName(gc));
-            }
+            if (gc) fprintf(stderr, "[OSK] Opened GameController %d: %s\n", i, SDL_GameControllerName(gc));
         } else {
             SDL_Joystick *joy = SDL_JoystickOpen(i);
-            if (joy) {
-                fprintf(stderr, "[OSK] Opened Joystick %d: %s\n",
-                        i, SDL_JoystickName(joy));
-            }
+            if (joy) fprintf(stderr, "[OSK] Opened Joystick %d: %s\n", i, SDL_JoystickName(joy));
         }
     }
 
@@ -2149,38 +2222,11 @@ int main(int argc, char *argv[]) {
     screen_dirty = 1;
 
     osk_calc_metrics(term_width);
-
-    struct winsize ws;
-    memset(&ws, 0, sizeof(ws));
-
-    ws.ws_col = (unsigned short) TERM_COLS;
-    ws.ws_row = (unsigned short) TERM_ROWS;
-
-    ws.ws_xpixel = (unsigned short) term_width;
-    ws.ws_ypixel = (unsigned short) term_height;
+    osk_init_layers();
 
     int pty_fd = -1;
-    pid_t child = forkpty(&pty_fd, NULL, NULL, &ws);
-    if (child == 0) {
-        setenv("TERM", "xterm-256color", 1);
-        setenv("COLORTERM", "truecolor", 1);
-        if (cmd) {
-            /* If it's a single command with no extra args, launch as interactive shell */
-            if (cmd[1] == NULL) {
-                const char *sh = cmd[0];
-                execl(sh, sh, "-i", (char *) NULL);
-                /* fallback: try via execvp in case it's not a full path */
-                execlp(sh, sh, "-i", (char *) NULL);
-            } else {
-                size_t n = 0;
-                while (cmd[n]) n++;
-                run_exec(cmd, n + 1, 0, 1, NULL, NULL);
-            }
-        }
-        _exit(127);
-    }
-
-    if (pty_fd < 0) return 1;
+    pid_t child = spawn_pty_child(&pty_fd, argc, cmd ? cmd : argv);
+    if (child < 0 || pty_fd < 0) return 1;
 
     pty_fd_global = pty_fd;
     int fl = fcntl(pty_fd, F_GETFL);
@@ -2237,8 +2283,6 @@ int main(int argc, char *argv[]) {
 
     const Uint32 frame_ms = 33;
     SDL_Event e;
-
-    osk_init_layers();
 
     while (running) {
         while (SDL_PollEvent(&e)) {
@@ -2564,7 +2608,11 @@ int main(int argc, char *argv[]) {
                                 continue;
                             }
 
-                            if (vt_acs_mode) cp = vt_map_acs(cp);
+                            if (vt_acs_mode) {
+                                if (cp >= 0x20 && cp <= 0x7E) {
+                                    cp = vt_map_acs(cp);
+                                }
+                            }
 
                             put_char(cp);
                             screen_dirty = 1;
