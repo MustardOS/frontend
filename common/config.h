@@ -239,6 +239,7 @@ struct mux_config {
         int16_t CONTENTCOLLECT;
         int16_t CONTENTHISTORY;
         int16_t MIXEDCONTENT;
+        int16_t FORWARDHISTORY;
     } VISUAL;
 
     struct {

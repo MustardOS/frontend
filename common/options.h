@@ -93,14 +93,16 @@
 #define RUN_STORAGE_PATH RUN_PATH "storage/"
 #define OPT_SHARE_PATH   OPT_PATH "share/"
 
-#define STORAGE_SHOTS   RUN_STORAGE_PATH "screenshot"
-#define STORAGE_MUSIC   RUN_STORAGE_PATH "music"
+#define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
+#define STORAGE_MUSIC RUN_STORAGE_PATH "music"
 
 #define STORAGE_HOTKEY  OPT_SHARE_PATH "hotkey"
 #define STORAGE_SOUND   OPT_SHARE_PATH "media/sound"
 #define STORAGE_LANG    OPT_SHARE_PATH "language"
 #define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
 #define STORAGE_FILTER  OPT_SHARE_PATH "filter"
+
+#define FWD_HIST_FILE OPT_SHARE_PATH "info/fwd_hist.txt"
 
 #define INFO_CFG_PATH OPT_SHARE_PATH "info/config"
 #define INFO_CON_PATH OPT_SHARE_PATH "info/content"

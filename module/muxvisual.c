@@ -59,6 +59,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
+    CHECK_AND_SAVE_STD(visual, ForwardHistory, "visual/forwardhistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
     CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 255);
 
@@ -98,6 +99,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, MixedContent, lang.MUXVISUAL.MIXEDCONTENT, "mixedcontent", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, ForwardHistory, lang.MUXVISUAL.FORWARDHISTORY, "forwardhistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
 

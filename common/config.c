@@ -245,6 +245,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.CONTENTCOLLECT, CONF_CONFIG_PATH "visual/contentcollect", 0);
     CFG_INT_FIELD(config->VISUAL.CONTENTHISTORY, CONF_CONFIG_PATH "visual/contenthistory", 0);
     CFG_INT_FIELD(config->VISUAL.MIXEDCONTENT, CONF_CONFIG_PATH "visual/mixedcontent", 0);
+    CFG_INT_FIELD(config->VISUAL.FORWARDHISTORY, CONF_CONFIG_PATH "visual/forwardhistory", 1);
 
     CFG_INT_FIELD(config->WEB.SSHD, CONF_CONFIG_PATH "web/sshd", 0);
     CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0);

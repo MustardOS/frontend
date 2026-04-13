@@ -438,6 +438,7 @@
     VISUAL(ContentCollect,        CONTENTCOLLECT,        "contentcollect")        \
     VISUAL(ContentHistory,        CONTENTHISTORY,        "contenthistory")        \
     VISUAL(MixedContent,          MIXEDCONTENT,          "mixedcontent")          \
+    VISUAL(ForwardHistory,        FORWARDHISTORY,        "forwardhistory")        \
     VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
     VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")
 

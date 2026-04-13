@@ -1456,6 +1456,7 @@ struct mux_lang {
         char CONTENTCOLLECT[MAX_BUFFER_SIZE];
         char CONTENTHISTORY[MAX_BUFFER_SIZE];
         char MIXEDCONTENT[MAX_BUFFER_SIZE];
+        char FORWARDHISTORY[MAX_BUFFER_SIZE];
         struct {
             char IMAGE[MAX_BUFFER_SIZE];
             char TRANSPARENCY[MAX_BUFFER_SIZE];
@@ -1509,6 +1510,7 @@ struct mux_lang {
             char CONTENTCOLLECT[MAX_BUFFER_SIZE];
             char CONTENTHISTORY[MAX_BUFFER_SIZE];
             char MIXEDCONTENT[MAX_BUFFER_SIZE];
+            char FORWARDHISTORY[MAX_BUFFER_SIZE];
             char OVERLAYIMAGE[MAX_BUFFER_SIZE];
             char OVERLAYTRANSPARENCY[MAX_BUFFER_SIZE];
         } HELP;

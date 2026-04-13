@@ -826,6 +826,99 @@ static void show_splash() {
     }
 }
 
+static int fwd_hist_parse(char *line, char *key, int *out_val) {
+    const char *eq = strchr(line, '=');
+    if (!eq) return 0;
+
+    size_t len = (size_t) (eq - line);
+    if (len >= 4096) len = 4096 - 1;
+
+    memcpy(key, line, len);
+    key[len] = '\0';
+    str_trim(key);
+
+    const char *val_str = eq + 1;
+    while (*val_str == ' ' || *val_str == '\t') val_str++;
+
+    char *end_ptr;
+    long tmp = strtol(val_str, &end_ptr, 10);
+
+    if (val_str == end_ptr) return 0;
+    if (tmp < 0 || tmp > INT_MAX) return 0;
+
+    *out_val = (int) tmp;
+    return 1;
+}
+
+static void fwd_hist_set(char *dir, int index) {
+    if (!config.VISUAL.FORWARDHISTORY || index < 0 || union_is_root(dir) || at_base(dir, "ROMS")) return;
+
+    char rel[PATH_MAX];
+    union_get_relative_path(dir, rel, sizeof(rel));
+    if (!*rel) return;
+
+    FILE *in = fopen(FWD_HIST_FILE, "r");
+    FILE *out = fopen(FWD_HIST_FILE ".tmp", "w");
+    if (!out) {
+        if (in) fclose(in);
+        return;
+    }
+
+    int found = 0;
+
+    if (in) {
+        char line[PATH_MAX + 32];
+        char key[PATH_MAX];
+        int val;
+
+        while (fgets(line, sizeof(line), in)) {
+            if (fwd_hist_parse(line, key, &val)) {
+                if (strcmp(key, rel) == 0) {
+                    fprintf(out, "%s = %d\n", rel, index);
+                    found = 1;
+                } else {
+                    fprintf(out, "%s = %d\n", key, val);
+                }
+            }
+        }
+
+        fclose(in);
+    }
+
+    if (!found) fprintf(out, "%s = %d\n", rel, index);
+
+    fclose(out);
+    rename(FWD_HIST_FILE ".tmp", FWD_HIST_FILE);
+}
+
+static int fwd_hist_get(char *dir) {
+    if (!config.VISUAL.FORWARDHISTORY || union_is_root(dir) || at_base(dir, "ROMS")) return -1;
+
+    char rel[PATH_MAX];
+    union_get_relative_path(dir, rel, sizeof(rel));
+    if (!*rel) return -1;
+
+    FILE *f = fopen(FWD_HIST_FILE, "r");
+    if (!f) return -1;
+
+    char line[PATH_MAX + 32];
+    char key[PATH_MAX];
+    int val;
+    int result = -1;
+
+    while (fgets(line, sizeof(line), f)) {
+        if (fwd_hist_parse(line, key, &val)) {
+            if (strcmp(key, rel) == 0) {
+                result = val;
+                break;
+            }
+        }
+    }
+
+    fclose(f);
+    return result;
+}
+
 static void process_load(int from_start) {
     if (!ui_count || hold_call) return;
 
@@ -851,6 +944,7 @@ static void process_load(int from_start) {
             toast_message(lang.GENERIC.LOADING, FOREVER);
         }
 
+        fwd_hist_set(sys_dir, current_item_index);
         navigate_to_dir(folder_path, -1);
         return;
     }
@@ -950,6 +1044,8 @@ static void handle_b(void) {
     }
 
     *slash = '\0';
+
+    fwd_hist_set(sys_dir, current_item_index);
     navigate_to_dir(parent, -1);
 }
 
@@ -1172,8 +1268,13 @@ static void navigate_to_dir(const char *new_dir, int restore_index) {
     dir_count = 0;
     starter_image = 0;
     splash_valid = 0;
-    sys_index = restore_index;
     current_item_index = 0;
+    sys_index = restore_index;
+
+    if (sys_index < 0) {
+        int fwd_idx = fwd_hist_get(dest);
+        if (fwd_idx >= 0) sys_index = fwd_idx;
+    }
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
 

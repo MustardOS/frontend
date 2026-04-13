@@ -25,7 +25,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/init/S30dbus.sh",          "5f4d46a68df03a20"},
         {"/opt/muos/script/init/S80pipewire.sh",      "fc688da61199068b"},
         {"/opt/muos/script/init/S81mode.sh",          "430bc1426a56ec09"},
-        {"/opt/muos/script/init/S99muos.sh",          "a0ff8794963a238a"},
+        {"/opt/muos/script/init/S99muos.sh",          "cb7b13779533b509"},
         {"/opt/muos/script/init/async/S00entropy.sh", "6385a5ba237b097e"},
         {"/opt/muos/script/init/async/S01init.sh",    "55fb7c3a060fb423"},
         {"/opt/muos/script/init/async/S02network.sh", "fb85a895b44ee533"},

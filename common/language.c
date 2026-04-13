@@ -1270,6 +1270,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.CONTENTCOLLECT, "Collection In Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.CONTENTHISTORY, "History In Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.MIXEDCONTENT, "Mixed Folder Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.FORWARDHISTORY, "Forward History");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.IMAGE, "Frontend Overlay Image");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.TRANSPARENCY, "Frontend Overlay Transparency");
     SPECIFIC_FIELD(lang->MUXVISUAL.OVERLAY.THEME, "Theme Provided");
@@ -1305,6 +1306,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CONTENTCOLLECT, "Toggle the collection visibility withing Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CONTENTHISTORY, "Toggle the history visibility within Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.MIXEDCONTENT, "If enabled folders within content explorer will be mixed in with other content alphabetically");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FORWARDHISTORY, "Toggle remembering last selected item when returning to folders in Explore Content");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");
