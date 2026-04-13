@@ -150,6 +150,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
 
     size_t i = 0;
     exec[i++] = (OPT_PATH "frontend/muterm");
+    exec[i++] = "-ro";
     exec[i++] = "-s";
     exec[i++] = (char *) theme.TERMINAL.FONT_SIZE;
 
