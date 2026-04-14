@@ -1468,6 +1468,15 @@ static OskKey (*osk_layers[OSK_LAYERS])[OSK_MAX_COLS] = {
 
 static const char *layer_names[OSK_LAYERS] = {"abc", "ABC", "Ctrl"};
 
+#define OSK_STATE_HIDDEN        0
+#define OSK_STATE_BOTTOM_OPAQUE 1
+#define OSK_STATE_BOTTOM_TRANS  2
+#define OSK_STATE_TOP_OPAQUE    3
+#define OSK_STATE_TOP_TRANS     4
+#define OSK_NUM_STATES          5
+
+static int osk_state = OSK_STATE_HIDDEN;
+
 static int osk_visible = 0;
 static int osk_layer = 0;
 static int osk_sel_row = 0;
@@ -1621,6 +1630,14 @@ static void render_osk(SDL_Renderer *ren, int screen_w, int screen_h) {
         return;
     }
 
+    int osk_at_top = (osk_state == OSK_STATE_TOP_OPAQUE || osk_state == OSK_STATE_TOP_TRANS);
+    int osk_transparent = (osk_state == OSK_STATE_BOTTOM_TRANS || osk_state == OSK_STATE_TOP_TRANS);
+
+    Uint8 backdrop_alpha = osk_transparent ? 115 : 230;
+    Uint8 widget_alpha = osk_transparent ? 128 : 255;
+
+    int osk_y0 = osk_at_top ? 0 : (screen_h - osk_height);
+
     SDL_Color accent = {255, 200, 0, 255};
     SDL_Color key_dark = {40, 40, 40, 255};
     SDL_Color key_ctrl = {200, 100, 60, 255};
@@ -1628,11 +1645,9 @@ static void render_osk(SDL_Renderer *ren, int screen_w, int screen_h) {
     SDL_Color lbl_norm = {255, 200, 0, 255};
     SDL_Color lbl_sel = {0, 0, 0, 255};
 
-    int osk_y0 = screen_h - osk_height;
-
     SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
     SDL_Rect backdrop = {0, osk_y0, screen_w, osk_height};
-    SDL_SetRenderDrawColor(ren, 18, 18, 18, 230);
+    SDL_SetRenderDrawColor(ren, 18, 18, 18, backdrop_alpha);
     SDL_RenderFillRect(ren, &backdrop);
 
     {
@@ -1646,6 +1661,7 @@ static void render_osk(SDL_Renderer *ren, int screen_w, int screen_h) {
         SDL_Surface *s = TTF_RenderUTF8_Blended(fonts[0], info, accent);
         if (s) {
             SDL_Texture *t = SDL_CreateTextureFromSurface(ren, s);
+            SDL_SetTextureAlphaMod(t, widget_alpha);
             SDL_Rect dst = {OSK_MARGIN, osk_y0 + 2, s->w, s->h};
             SDL_RenderCopy(ren, t, NULL, &dst);
             SDL_DestroyTexture(t);
@@ -1681,15 +1697,17 @@ static void render_osk(SDL_Renderer *ren, int screen_w, int screen_h) {
             int is_alt = strcmp(key->label, "Alt") == 0;
             SDL_Color fill = sel ? key_sel : ((is_ctrl && osk_ctrl) || (is_alt && osk_alt)) ? key_ctrl : key_dark;
 
-            SDL_SetRenderDrawColor(ren, fill.r, fill.g, fill.b, 255);
+            SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(ren, fill.r, fill.g, fill.b, widget_alpha);
             SDL_RenderFillRect(ren, &kr);
-            SDL_SetRenderDrawColor(ren, 90, 90, 110, 255);
+            SDL_SetRenderDrawColor(ren, 90, 90, 110, widget_alpha);
             SDL_RenderDrawRect(ren, &kr);
 
             SDL_Color lc = sel ? lbl_sel : lbl_norm;
             SDL_Surface *ls = TTF_RenderUTF8_Blended(fonts[0], key->label, lc);
             if (ls) {
                 SDL_Texture *lt = SDL_CreateTextureFromSurface(ren, ls);
+                SDL_SetTextureAlphaMod(lt, widget_alpha);
                 SDL_Rect ld = {x + (kw - ls->w) / 2, y + (osk_key_h - ls->h) / 2, ls->w, ls->h};
                 SDL_RenderCopy(ren, lt, NULL, &ld);
                 SDL_DestroyTexture(lt);
@@ -2003,7 +2021,7 @@ static void print_help(const char *name) {
     printf("\t-ro,--readonly           View-only: display PTY output, no input\n\n");
 
     printf("Global controls:\n");
-    printf("\t Select       Toggle OSK\n");
+    printf("\t Select       Cycle OSK (bottom → bottom 50%% → top → top 50%% → hide)\n");
     printf("\t Menu         Quit\n\n");
 
     printf("When OSK is active:\n");
@@ -2404,16 +2422,24 @@ int main(int argc, char *argv[]) {
                     fprintf(stderr, "[OSK] DOWN RAW=%d\n", raw);
 
                     switch (raw) {
-                        case 9:
-                            osk_visible = !osk_visible;
-                            fprintf(stderr, "[OSK] TOGGLE -> %d\n", osk_visible);
+                        case 9: {
+                            osk_state = (osk_state + 1) % OSK_NUM_STATES;
+                            osk_visible = (osk_state != OSK_STATE_HIDDEN);
 
-                            vis_rows = osk_visible ? (term_height - osk_height) / CELL_HEIGHT : TERM_ROWS;
+                            fprintf(stderr, "[OSK] STATE -> %d visible=%d\n", osk_state, osk_visible);
+
+                            if (osk_state == OSK_STATE_BOTTOM_OPAQUE) {
+                                vis_rows = (term_height - osk_height) / CELL_HEIGHT;
+                            } else {
+                                vis_rows = TERM_ROWS;
+                            }
+
                             if (vis_rows < 1) vis_rows = 1;
 
                             scroll_offset = 0;
                             screen_dirty = 1;
                             break;
+                        }
                         case 11:
                             fprintf(stderr, "[OSK] QUIT\n");
                             running = 0;
