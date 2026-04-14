@@ -287,6 +287,18 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
     int tmp_count = 0;
     int show_hidden = config.VISUAL.HIDDEN;
 
+    if (!show_hidden) {
+        for (int i = 0; i < file_count; i++) {
+            if (ends_with(file_names[i], ".cue")) {
+                process_cue_file(sys_dir, file_names[i], &skiplist);
+            } else if (ends_with(file_names[i], ".gdi")) {
+                process_gdi_file(sys_dir, file_names[i], &skiplist);
+            } else if (ends_with(file_names[i], ".m3u")) {
+                process_m3u_file(sys_dir, file_names[i], &skiplist);
+            }
+        }
+    }
+
     for (int i = 0; i < file_count; i++) {
         if ((i % 500) == 0 && i > 0) {
             LOG_DEBUG(mux_module, "Content Collect: %d/%d", i, file_count);
@@ -299,31 +311,6 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
             free(name);
             free(full_path);
             continue;
-        }
-
-        const char *ext = strrchr(name, '.');
-
-        if (!show_hidden && ext) {
-            if (strcasecmp(ext, ".cue") == 0) {
-                process_cue_file(sys_dir, name, &skiplist);
-                free(name);
-                free(full_path);
-                continue;
-            }
-
-            if (strcasecmp(ext, ".gdi") == 0) {
-                process_gdi_file(sys_dir, name, &skiplist);
-                free(name);
-                free(full_path);
-                continue;
-            }
-
-            if (strcasecmp(ext, ".m3u") == 0) {
-                process_m3u_file(sys_dir, name, &skiplist);
-                free(name);
-                free(full_path);
-                continue;
-            }
         }
 
         if (!show_hidden && in_skiplist(&skiplist, full_path)) {
