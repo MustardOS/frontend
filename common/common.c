@@ -144,7 +144,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     size_t arg_count = 0;
     for (const char **p = term_cmd; p && *p; p++) arg_count++;
 
-    size_t total_args = 16 + arg_count + 1;
+    size_t total_args = 16 + arg_count + 2;
     const char **exec = malloc(sizeof(char *) * total_args);
     if (!exec) return NULL;
 
@@ -170,6 +170,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     exec[i++] = (char *) theme.TERMINAL.BACKGROUND;
     exec[i++] = "-fg";
     exec[i++] = (char *) theme.TERMINAL.FOREGROUND;
+    exec[i++] = "--";
 
     for (const char **p = term_cmd; p && *p; p++) exec[i++] = *p;
 

@@ -2124,12 +2124,16 @@ static pid_t spawn_pty_child(int *master_fd_out, int argc, char **argv) {
         }
 
         if (argc > 1 && argv[1] && argv[1][0]) {
-            execl("/bin/sh", "sh", "-l", "-c", argv[1], (char *) NULL);
-        } else {
-            execl("/bin/sh", "sh", "-l", (char *) NULL);
+            execvp(argv[1], &argv[1]);
+            perror("execvp");
+            _exit(127);
         }
 
-        perror("exec");
+        const char *shell = getenv("SHELL");
+        if (!shell || !*shell) shell = "/bin/sh";
+
+        execlp(shell, shell, "-l", (char *) NULL);
+        perror("execlp");
         _exit(127);
     }
 
@@ -2144,22 +2148,39 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    int term_width = 0, term_height = 0, font_size = 0;
-    const char *font_path = NULL, *bg_path = NULL;
-    char **cmd = NULL;
+    int term_width = 0;
+    int term_height = 0;
+    int font_size = 0;
 
-    if (argc >= 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-?") == 0))
-        print_help(argv[0]);
+    const char *font_path = NULL;
+    const char *bg_path = NULL;
+
+    char **child_argv = NULL;
+
+    int child_argc = 1;
+    int cmd_index = 0;
+
+    if (argc >= 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-?") == 0)) print_help(argv[0]);
 
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
-        if ((strcmp(a, "-w") == 0 || strcmp(a, "--width") == 0) && i + 1 < argc) term_width = safe_atoi(str_trim(argv[++i]));
-        else if ((strcmp(a, "-h") == 0 || strcmp(a, "--height") == 0) && i + 1 < argc) term_height = safe_atoi(str_trim(argv[++i]));
-        else if ((strcmp(a, "-s") == 0 || strcmp(a, "--size") == 0) && i + 1 < argc) font_size = safe_atoi(str_trim(argv[++i]));
-        else if ((strcmp(a, "-f") == 0 || strcmp(a, "--font") == 0) && i + 1 < argc) font_path = str_trim(argv[++i]);
-        else if ((strcmp(a, "-i") == 0 || strcmp(a, "--image") == 0) && i + 1 < argc) bg_path = str_trim(argv[++i]);
-        else if ((strcmp(a, "-sb") == 0 || strcmp(a, "--scrollback") == 0) && i + 1 < argc) sb_capacity = safe_atoi(str_trim(argv[++i]));
-        else if ((strcmp(a, "-bg") == 0 || strcmp(a, "--bgcolour") == 0) && i + 1 < argc) {
+
+        if (strcmp(a, "--") == 0) {
+            cmd_index = i + 1;
+            break;
+        } else if ((strcmp(a, "-w") == 0 || strcmp(a, "--width") == 0) && i + 1 < argc) {
+            term_width = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(a, "-h") == 0 || strcmp(a, "--height") == 0) && i + 1 < argc) {
+            term_height = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(a, "-s") == 0 || strcmp(a, "--size") == 0) && i + 1 < argc) {
+            font_size = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(a, "-f") == 0 || strcmp(a, "--font") == 0) && i + 1 < argc) {
+            font_path = str_trim(argv[++i]);
+        } else if ((strcmp(a, "-i") == 0 || strcmp(a, "--image") == 0) && i + 1 < argc) {
+            bg_path = str_trim(argv[++i]);
+        } else if ((strcmp(a, "-sb") == 0 || strcmp(a, "--scrollback") == 0) && i + 1 < argc) {
+            sb_capacity = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(a, "-bg") == 0 || strcmp(a, "--bgcolour") == 0) && i + 1 < argc) {
             if (!parse_hex_colour(str_trim(argv[++i]), &solid_bg)) return 1;
             use_solid_bg = 1;
         } else if ((strcmp(a, "-fg") == 0 || strcmp(a, "--fgcolour") == 0) && i + 1 < argc) {
@@ -2168,9 +2189,17 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(a, "-ro") == 0 || strcmp(a, "--readonly") == 0) {
             readonly_mode = 1;
         } else if (a[0] != '-') {
-            cmd = &argv[i];
+            cmd_index = i;
             break;
         }
+    }
+
+    if (cmd_index > 0 && cmd_index < argc) {
+        child_argv = &argv[cmd_index - 1];
+        child_argc = argc - cmd_index + 1;
+    } else {
+        child_argv = argv;
+        child_argc = 1;
     }
 
     if (term_width == 0) term_width = device.SCREEN.WIDTH;
@@ -2179,7 +2208,7 @@ int main(int argc, char *argv[]) {
     if (!font_path) font_path = OPT_PATH "share/font/muterm.ttf";
     if (sb_capacity < 1) sb_capacity = 1;
 
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK);
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) != 0) return 1;
 
     SDL_GameControllerEventState(SDL_ENABLE);
     SDL_JoystickEventState(SDL_ENABLE);
@@ -2243,7 +2272,7 @@ int main(int argc, char *argv[]) {
     osk_init_layers();
 
     int pty_fd = -1;
-    pid_t child = spawn_pty_child(&pty_fd, argc, cmd ? cmd : argv);
+    pid_t child = spawn_pty_child(&pty_fd, child_argc, child_argv);
     if (child < 0 || pty_fd < 0) return 1;
 
     pty_fd_global = pty_fd;
@@ -2568,8 +2597,11 @@ int main(int argc, char *argv[]) {
             if (pfd.revents & POLLIN) {
                 char buf[4096];
                 ssize_t n;
+
                 while ((n = read(pty_fd, buf, sizeof(buf))) > 0) {
-                    const char *p = buf, *end = buf + n;
+                    const char *p = buf;
+                    const char *end = buf + n;
+
                     while (p < end) {
                         if ((unsigned char) *p == 0x1B) {
                             p++;
