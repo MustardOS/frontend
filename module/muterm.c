@@ -34,7 +34,26 @@ enum {
 
 static Cell *screen_buf = NULL;
 
-static int vt_acs_mode = 0;
+static Cell *main_screen_buf = NULL;
+static Cell *alt_screen_buf = NULL;
+
+static int using_alt_screen = 0;
+
+static int saved_main_row = 0;
+static int saved_main_col = 0;
+
+static int vt_g0_charset = 0;
+static int vt_g1_charset = 0;
+static int vt_gl_charset = 0;
+
+static unsigned char esc_pending[128];
+static size_t esc_pending_len = 0;
+
+static int cursor_keys_application = 0;
+static int linefeed_mode = 0;
+
+static int scroll_top = 0;
+static int scroll_bottom = 0;
 
 static int axis_x_state = 0;
 static int axis_y_state = 0;
@@ -93,33 +112,115 @@ static SDL_Color bright_colours[8] = {
 
 static Uint32 vt_map_acs(Uint32 cp) {
     switch (cp) {
-        case 'q':
-        case 'o':
-        case 's':
-            return 0x2500; /* ─ */
-        case 'x':
-            return 0x2502; /* │ */
-        case 'l':
-            return 0x250C; /* ┌ */
-        case 'k':
-            return 0x2510; /* ┐ */
-        case 'm':
-            return 0x2514; /* └ */
+        case '`':
+            return 0x25C6; /* ◆ */
+        case 'a':
+            return 0x2592; /* ▒ */
+        case 'b':
+            return 0x2409; /* ␉ */
+        case 'c':
+            return 0x240C; /* ␌ */
+        case 'd':
+            return 0x240D; /* ␍ */
+        case 'e':
+            return 0x240A; /* ␊ */
+        case 'f':
+            return 0x00B0; /* ° */
+        case 'g':
+            return 0x00B1; /* ± */
+        case 'h':
+            return 0x2424; /* ␤ */
+        case 'i':
+            return 0x240B; /* ␋ */
         case 'j':
             return 0x2518; /* ┘ */
+        case 'k':
+            return 0x2510; /* ┐ */
+        case 'l':
+            return 0x250C; /* ┌ */
+        case 'm':
+            return 0x2514; /* └ */
+        case 'n':
+            return 0x253C; /* ┼ */
+        case 'o':
+            return 0x23BA; /* ⎺ */
+        case 'p':
+            return 0x23BB; /* ⎻ */
+        case 'q':
+            return 0x2500; /* ─ */
+        case 'r':
+            return 0x23BC; /* ⎼ */
+        case 's':
+            return 0x23BD; /* ⎽ */
         case 't':
             return 0x251C; /* ├ */
         case 'u':
             return 0x2524; /* ┤ */
-        case 'w':
-            return 0x252C; /* ┬ */
         case 'v':
             return 0x2534; /* ┴ */
-        case 'n':
-            return 0x253C; /* ┼ */
+        case 'w':
+            return 0x252C; /* ┬ */
+        case 'x':
+            return 0x2502; /* │ */
+        case 'y':
+            return 0x2264; /* ≤ */
+        case 'z':
+            return 0x2265; /* ≥ */
+        case '{':
+            return 0x03C0; /* π */
+        case '|':
+            return 0x2260; /* ≠ */
+        case '}':
+            return 0x00A3; /* £ */
+        case '~':
+            return 0x00B7; /* · */
+
         default:
             return cp;
     }
+}
+
+static inline int vt_charset_is_graphics(int which) {
+    return which ? (vt_g1_charset == 1) : (vt_g0_charset == 1);
+}
+
+static inline int vt_gl_is_graphics(void) {
+    return vt_charset_is_graphics(vt_gl_charset);
+}
+
+static inline Uint32 vt_apply_graphics_charset(Uint32 cp) {
+    if (cp < 0x20 || cp > 0x7E) return cp;
+    if (!vt_gl_is_graphics()) return cp;
+
+    return vt_map_acs(cp);
+}
+
+static void vt_designate_charset(int which, char final) {
+    int mode = 0;
+
+    switch (final) {
+        case '0':
+            mode = 1;
+            break;
+        case 'B':
+        default:
+            mode = 0;
+            break;
+    }
+
+    if (which == 0) {
+        vt_g0_charset = mode;
+    } else {
+        vt_g1_charset = mode;
+    }
+}
+
+static void vt_shift_in(void) {
+    vt_gl_charset = 0;
+}
+
+static void vt_shift_out(void) {
+    vt_gl_charset = 1;
 }
 
 static const Uint8 cube6[6] = {0, 95, 135, 175, 215, 255};
@@ -132,13 +233,53 @@ static inline int colour_equal(SDL_Color a, SDL_Color b) {
     return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
 }
 
-#define DEFAULT_SCROLLBACK 500
+#define DEFAULT_SCROLLBACK 512
 
 static Cell *scrollback = NULL;
 static int sb_capacity = DEFAULT_SCROLLBACK;
 static int sb_count = 0;
 static int sb_head = 0;
 static int scroll_offset = 0;
+
+static void clear_cells(Cell *buf) {
+    size_t total = (size_t) TERM_ROWS * (size_t) TERM_COLS;
+
+    for (size_t i = 0; i < total; i++) {
+        buf[i].codepoint = (Uint32) ' ';
+        buf[i].width = 1;
+        buf[i].fg = current_fg;
+        buf[i].bg = current_bg;
+        buf[i].style = 0;
+    }
+}
+
+static void vt_enter_alt_screen(void) {
+    if (using_alt_screen) return;
+
+    saved_main_row = cursor_row;
+    saved_main_col = cursor_col;
+
+    screen_buf = alt_screen_buf;
+    using_alt_screen = 1;
+
+    clear_cells(screen_buf);
+    cursor_row = 0;
+    cursor_col = 0;
+    scroll_offset = 0;
+    screen_dirty = 1;
+}
+
+static void vt_leave_alt_screen(void) {
+    if (!using_alt_screen) return;
+
+    screen_buf = main_screen_buf;
+    using_alt_screen = 0;
+
+    cursor_row = saved_main_row;
+    cursor_col = saved_main_col;
+    scroll_offset = 0;
+    screen_dirty = 1;
+}
 
 static void scrollback_init(void) {
     scrollback = calloc((size_t) sb_capacity * (size_t) TERM_COLS, sizeof(Cell));
@@ -148,15 +289,16 @@ static void scrollback_init(void) {
 }
 
 static void scrollback_push(const Cell *row) {
-    memcpy(&scrollback[(size_t) sb_head * (size_t) TERM_COLS], row,
-           (size_t) TERM_COLS * sizeof(Cell));
+    memcpy(&scrollback[(size_t) sb_head * (size_t) TERM_COLS], row, (size_t) TERM_COLS * sizeof(Cell));
     sb_head = (sb_head + 1) % sb_capacity;
+
     if (sb_count < sb_capacity) sb_count++;
 }
 
 static const Cell *scrollback_row(int idx) {
     if (idx < 0 || idx >= sb_count) return NULL;
     int pos = (sb_head - sb_count + idx + sb_capacity) % sb_capacity;
+
     return &scrollback[(size_t) pos * (size_t) TERM_COLS];
 }
 
@@ -170,7 +312,9 @@ static inline void reset_cell(Cell *c) {
 
 static void clear_screen(void) {
     size_t total = (size_t) TERM_ROWS * (size_t) TERM_COLS;
-    for (size_t i = 0; i < total; i++) reset_cell(&screen_buf[i]);
+    for (size_t i = 0; i < total; i++) {
+        reset_cell(&screen_buf[i]);
+    }
 }
 
 static void set_cursor(int row, int col) {
@@ -184,67 +328,167 @@ static void set_cursor(int row, int col) {
     cursor_col = col;
 }
 
-static void scroll_up(void) {
-    if (TERM_ROWS <= 1) return;
+static inline int row_in_scroll_region(int row) {
+    return row >= scroll_top && row <= scroll_bottom;
+}
 
-    scrollback_push(screen_buf);
-    memmove(screen_buf, screen_buf + TERM_COLS, sizeof(Cell) * (size_t) TERM_COLS * (size_t) (TERM_ROWS - 1));
+static void clear_row_range(int row, int start_col, int end_col) {
+    if (row < 0 || row >= TERM_ROWS) return;
+    if (start_col < 0) start_col = 0;
+    if (end_col >= TERM_COLS) end_col = TERM_COLS - 1;
+    if (start_col > end_col) return;
 
-    for (int c = 0; c < TERM_COLS; c++) {
-        reset_cell(CELL(TERM_ROWS - 1, c));
+    for (int c = start_col; c <= end_col; c++) {
+        reset_cell(CELL(row, c));
     }
 }
 
-static void scroll_down_one(void) {
+static void scroll_region_up(int top, int bottom, int lines, int allow_scrollback) {
     if (TERM_ROWS <= 1) return;
+    if (top < 0) top = 0;
+    if (bottom >= TERM_ROWS) bottom = TERM_ROWS - 1;
+    if (top >= bottom || lines <= 0) return;
 
-    if (cursor_row > 0) {
-        cursor_row--;
+    int height = bottom - top + 1;
+    if (lines > height) lines = height;
+
+    if (allow_scrollback && !using_alt_screen && top == 0 && bottom == TERM_ROWS - 1) {
+        for (int i = 0; i < lines; i++) {
+            scrollback_push(CELL(top + i, 0));
+        }
+    }
+
+    if (lines < height) memmove(CELL(top, 0), CELL(top + lines, 0), sizeof(Cell) * (size_t) TERM_COLS * (size_t) (height - lines));
+
+    for (int r = bottom - lines + 1; r <= bottom; r++) {
+        clear_row_range(r, 0, TERM_COLS - 1);
+    }
+}
+
+static void scroll_region_down(int top, int bottom, int lines) {
+    if (TERM_ROWS <= 1) return;
+    if (top < 0) top = 0;
+    if (bottom >= TERM_ROWS) bottom = TERM_ROWS - 1;
+    if (top >= bottom || lines <= 0) return;
+
+    int height = bottom - top + 1;
+    if (lines > height) lines = height;
+
+    if (lines < height) memmove(CELL(top + lines, 0), CELL(top, 0), sizeof(Cell) * (size_t) TERM_COLS * (size_t) (height - lines));
+
+    for (int r = top; r < top + lines; r++) {
+        clear_row_range(r, 0, TERM_COLS - 1);
+    }
+}
+
+static void vt_index(void) {
+    if (row_in_scroll_region(cursor_row)) {
+        if (cursor_row == scroll_bottom) {
+            scroll_region_up(scroll_top, scroll_bottom, 1, 1);
+        } else {
+            cursor_row++;
+        }
         return;
     }
 
-    memmove(screen_buf + TERM_COLS, screen_buf, sizeof(Cell) * (size_t) TERM_COLS * (size_t) (TERM_ROWS - 1));
-
-    for (int c = 0; c < TERM_COLS; c++) {
-        reset_cell(CELL(0, c));
+    if (cursor_row < TERM_ROWS - 1) {
+        cursor_row++;
+    } else if (scroll_top == 0 && scroll_bottom == TERM_ROWS - 1) {
+        scroll_region_up(0, TERM_ROWS - 1, 1, 1);
     }
+}
+
+static void vt_reverse_index(void) {
+    if (row_in_scroll_region(cursor_row)) {
+        if (cursor_row == scroll_top) {
+            scroll_region_down(scroll_top, scroll_bottom, 1);
+        } else {
+            cursor_row--;
+        }
+        return;
+    }
+
+    if (cursor_row > 0) {
+        cursor_row--;
+    } else if (scroll_top == 0 && scroll_bottom == TERM_ROWS - 1) {
+        scroll_region_down(0, TERM_ROWS - 1, 1);
+    }
+}
+
+static void vt_newline(void) {
+    if (linefeed_mode) cursor_col = 0;
+    vt_index();
+}
+
+static void vt_reset_state(int clear_buffers) {
+    cursor_keys_application = 0;
+    linefeed_mode = 0;
+
+    scroll_top = 0;
+    scroll_bottom = TERM_ROWS - 1;
+
+    cursor_vis = 1;
+    saved_row = 0;
+    saved_col = 0;
+    saved_main_row = 0;
+    saved_main_col = 0;
+
+    current_fg = default_fg;
+    current_bg = default_bg;
+    current_style = 0;
+
+    vt_g0_charset = 0;
+    vt_g1_charset = 0;
+    vt_gl_charset = 0;
+
+    screen_buf = main_screen_buf;
+    using_alt_screen = 0;
+
+    if (clear_buffers) {
+        if (main_screen_buf) clear_cells(main_screen_buf);
+        if (alt_screen_buf) clear_cells(alt_screen_buf);
+    }
+
+    set_cursor(0, 0);
+    scroll_offset = 0;
+    screen_dirty = 1;
 }
 
 static void handle_esc(const char *seq) {
     if (!seq || !*seq) return;
 
-    if (seq[0] == '(') {
-        if (seq[1] == '0') {
-            if (vt_acs_mode != 1) {
-                vt_acs_mode = 1;
-                fprintf(stderr, "[VT] ACS ON\n");
-            }
-        } else if (seq[1] == 'B') {
-            if (vt_acs_mode != 0) {
-                vt_acs_mode = 0;
-                fprintf(stderr, "[VT] ACS OFF\n");
-            }
-        }
-        return;
-    }
-
-    if (seq[0] == '7') {
-        saved_row = cursor_row;
-        saved_col = cursor_col;
-
-        return;
-    }
-
-    if (seq[0] == '8') {
-        set_cursor(saved_row, saved_col);
-
-        return;
-    }
-
-    if (seq[0] == 'M') {
-        scroll_down_one();
-
-        return;
+    switch (seq[0]) {
+        case '(':
+            if (seq[1]) vt_designate_charset(0, seq[1]);
+            return;
+        case ')':
+            if (seq[1]) vt_designate_charset(1, seq[1]);
+            return;
+        case '7':
+            saved_row = cursor_row;
+            saved_col = cursor_col;
+            return;
+        case '8':
+            set_cursor(saved_row, saved_col);
+            return;
+        case 'D':
+            vt_index();
+            return;
+        case 'E':
+            cursor_col = 0;
+            vt_index();
+            return;
+        case 'M':
+            vt_reverse_index();
+            return;
+        case '=':
+        case '>':
+            return;
+        case 'c':
+            vt_reset_state(1);
+            return;
+        default:
+            return;
     }
 }
 
@@ -289,14 +533,14 @@ static int wcwidth_emu(Uint32 cp) {
 static void put_char(Uint32 ch) {
     int w;
 
-    if (ch == '\n') {
-        cursor_col = 0;
-        cursor_row++;
+    if (ch == '\n' || ch == '\v' || ch == '\f') {
+        vt_newline();
         return;
     }
 
     if (ch == '\r') {
         cursor_col = 0;
+        screen_dirty = 1;
         return;
     }
 
@@ -311,31 +555,28 @@ static void put_char(Uint32 ch) {
         return;
     }
 
-    if (vt_acs_mode) ch = vt_map_acs(ch);
+    ch = vt_apply_graphics_charset(ch);
 
     w = wcwidth_emu(ch);
     if (w <= 0) return;
 
     if (cursor_col >= TERM_COLS || cursor_col + w > TERM_COLS) {
-        cursor_row++;
         cursor_col = 0;
+        vt_index();
     }
 
-    if (cursor_row >= TERM_ROWS) {
-        scroll_up();
-        cursor_row = TERM_ROWS - 1;
-    }
+    if (cursor_row >= TERM_ROWS) cursor_row = TERM_ROWS - 1;
 
-    Cell *c = CELL(cursor_row, cursor_col);
+    {
+        Cell *c = CELL(cursor_row, cursor_col);
 
-    c->codepoint = ch;
-    c->width = (Uint8) w;
-    c->fg = use_solid_fg ? solid_fg : current_fg;
-    c->bg = current_bg;
-    c->style = current_style;
+        c->codepoint = ch;
+        c->width = (Uint8) w;
+        c->fg = use_solid_fg ? solid_fg : current_fg;
+        c->bg = current_bg;
+        c->style = current_style;
 
-    if (w == 2) {
-        if (cursor_col + 1 < TERM_COLS) {
+        if (w == 2 && cursor_col + 1 < TERM_COLS) {
             Cell *c2 = CELL(cursor_row, cursor_col + 1);
             c2->codepoint = 0;
             c2->width = 0;
@@ -346,11 +587,6 @@ static void put_char(Uint32 ch) {
     }
 
     cursor_col += w;
-
-    if (cursor_row >= TERM_ROWS) {
-        scroll_up();
-        cursor_row = TERM_ROWS - 1;
-    }
 }
 
 static int utf8_encode(char out[8], Uint32 cp) {
@@ -468,6 +704,7 @@ static void apply_sgr(int *params, int count) {
         current_fg = default_fg;
         current_bg = default_bg;
         current_style = 0;
+
         return;
     }
 
@@ -517,9 +754,7 @@ static void apply_sgr(int *params, int count) {
                         current_fg = colour_from_256(params[i + 2]);
                         i += 2;
                     } else if (i + 1 < count && params[i + 1] == 2 && i + 4 < count) {
-                        current_fg = (SDL_Color) {
-                                (Uint8) params[i + 2], (Uint8) params[i + 3],
-                                (Uint8) params[i + 4], 255};
+                        current_fg = (SDL_Color) {(Uint8) params[i + 2], (Uint8) params[i + 3], (Uint8) params[i + 4], 255};
                         i += 4;
                     }
                 } else if (p == 48) {
@@ -537,7 +772,7 @@ static void apply_sgr(int *params, int count) {
 }
 
 static void parse_csi(const char *seq) {
-    if (seq[0] != '[') return;
+    if (!seq || seq[0] != '[') return;
 
     int params[16] = {0};
     int count = 0;
@@ -567,157 +802,314 @@ static void parse_csi(const char *seq) {
 
     count++;
 
-    char cmd = *p ? *p : '\0';
-    int p0 = params[0];
-    int p1 = (count > 1) ? params[1] : 0;
+    {
+        char cmd = *p ? *p : '\0';
+        int p0 = params[0];
+        int p1 = (count > 1) ? params[1] : 0;
 
-    switch (cmd) {
-        case 'A':
-            set_cursor(cursor_row - (p0 ? p0 : 1), cursor_col);
-            break;
-        case 'B':
-            set_cursor(cursor_row + (p0 ? p0 : 1), cursor_col);
-            break;
-        case 'C':
-            set_cursor(cursor_row, cursor_col + (p0 ? p0 : 1));
-            break;
-        case 'D':
-            set_cursor(cursor_row, cursor_col - (p0 ? p0 : 1));
-            break;
-        case 'E':
-            set_cursor(cursor_row + (p0 ? p0 : 1), 0);
-            break;
-        case 'F':
-            set_cursor(cursor_row - (p0 ? p0 : 1), 0);
-            break;
-        case 'G':
-            set_cursor(cursor_row, (p0 ? p0 : 1) - 1);
-            break;
-        case 'd':
-            set_cursor((p0 ? p0 : 1) - 1, cursor_col);
-            break;
-        case 'H':
-        case 'f':
-            set_cursor((p0 ? p0 : 1) - 1, (p1 ? p1 : 1) - 1);
-            break;
-        case 'J': {
-            int mode = p0;
+        switch (cmd) {
+            case 'A':
+                set_cursor(cursor_row - (p0 ? p0 : 1), cursor_col);
+                break;
+            case 'B':
+                set_cursor(cursor_row + (p0 ? p0 : 1), cursor_col);
+                break;
+            case 'C':
+                set_cursor(cursor_row, cursor_col + (p0 ? p0 : 1));
+                break;
+            case 'D':
+                set_cursor(cursor_row, cursor_col - (p0 ? p0 : 1));
+                break;
+            case 'E':
+                set_cursor(cursor_row + (p0 ? p0 : 1), 0);
+                break;
+            case 'F':
+                set_cursor(cursor_row - (p0 ? p0 : 1), 0);
+                break;
+            case 'G':
+                set_cursor(cursor_row, (p0 ? p0 : 1) - 1);
+                break;
+            case 'd':
+                set_cursor((p0 ? p0 : 1) - 1, cursor_col);
+                break;
+            case 'H':
+            case 'f':
+                set_cursor((p0 ? p0 : 1) - 1, (p1 ? p1 : 1) - 1);
+                break;
+            case 'J': {
+                int mode = p0;
 
-            if (mode == 0) {
-                for (int c = cursor_col; c < TERM_COLS; c++)
-                    reset_cell(CELL(cursor_row, c));
-
-                for (int r = cursor_row + 1; r < TERM_ROWS; r++)
-                    for (int c = 0; c < TERM_COLS; c++)
-                        reset_cell(CELL(r, c));
-
-            } else if (mode == 1) {
-                for (int r = 0; r < cursor_row; r++)
-                    for (int c = 0; c < TERM_COLS; c++)
-                        reset_cell(CELL(r, c));
-
-                for (int c = 0; c <= cursor_col; c++)
-                    reset_cell(CELL(cursor_row, c));
-
-            } else if (mode == 2) {
-                for (int r = 0; r < TERM_ROWS; r++)
-                    for (int c = 0; c < TERM_COLS; c++)
-                        reset_cell(CELL(r, c));
-
-                set_cursor(0, 0);
+                if (mode == 0) {
+                    clear_row_range(cursor_row, cursor_col, TERM_COLS - 1);
+                    for (int r = cursor_row + 1; r < TERM_ROWS; r++) clear_row_range(r, 0, TERM_COLS - 1);
+                } else if (mode == 1) {
+                    for (int r = 0; r < cursor_row; r++) clear_row_range(r, 0, TERM_COLS - 1);
+                    clear_row_range(cursor_row, 0, cursor_col);
+                } else if (mode == 2) {
+                    clear_screen();
+                    set_cursor(0, 0);
+                }
+                break;
             }
-            break;
-        }
-        case 'K': {
-            int mode = p0;
-            int start = 0;
-            int end = TERM_COLS;
+            case 'K': {
+                int mode = p0;
 
-            if (mode == 0) start = cursor_col;
-            else if (mode == 1) end = cursor_col + 1;
-
-            for (int c = start; c < end; c++) {
-                reset_cell(CELL(cursor_row, c));
+                if (mode == 0) {
+                    clear_row_range(cursor_row, cursor_col, TERM_COLS - 1);
+                } else if (mode == 1) {
+                    clear_row_range(cursor_row, 0, cursor_col);
+                } else if (mode == 2) {
+                    clear_row_range(cursor_row, 0, TERM_COLS - 1);
+                }
+                break;
             }
-            break;
-        }
-        case 'S': {
-            int n = p0 ? p0 : 1;
-            for (int i = 0; i < n; i++) scroll_up();
-            break;
-        }
-        case 'T': {
-            int n = p0 ? p0 : 1;
-            for (int i = 0; i < n; i++) scroll_down_one();
-            break;
-        }
-        case 'L': {
-            int n = p0 ? p0 : 1;
-            for (int i = 0; i < n; i++) {
-                memmove(CELL(cursor_row + 1, 0), CELL(cursor_row, 0), sizeof(Cell) * (size_t) TERM_COLS * (size_t) (TERM_ROWS - cursor_row - 1));
-                for (int c = 0; c < TERM_COLS; c++)
+            case 'L': {
+                int n = p0 ? p0 : 1;
+                if (row_in_scroll_region(cursor_row)) scroll_region_down(cursor_row, scroll_bottom, n);
+                break;
+            }
+            case 'M': {
+                int n = p0 ? p0 : 1;
+                if (row_in_scroll_region(cursor_row)) scroll_region_up(cursor_row, scroll_bottom, n, 0);
+                break;
+            }
+            case 'P': {
+                int n = p0 ? p0 : 1;
+                if (n < 0) n = 0;
+                if (cursor_col + n > TERM_COLS) n = TERM_COLS - cursor_col;
+
+                if (n > 0) {
+                    memmove(CELL(cursor_row, cursor_col), CELL(cursor_row, cursor_col + n), sizeof(Cell) * (size_t) (TERM_COLS - cursor_col - n));
+
+                    for (int c = TERM_COLS - n; c < TERM_COLS; c++) {
+                        reset_cell(CELL(cursor_row, c));
+                    }
+                }
+                break;
+            }
+            case '@': {
+                int n = p0 ? p0 : 1;
+                if (n < 0) n = 0;
+                if (cursor_col + n > TERM_COLS) n = TERM_COLS - cursor_col;
+
+                if (n > 0) {
+                    memmove(CELL(cursor_row, cursor_col + n), CELL(cursor_row, cursor_col), sizeof(Cell) * (size_t) (TERM_COLS - cursor_col - n));
+
+                    for (int c = cursor_col; c < cursor_col + n; c++) {
+                        reset_cell(CELL(cursor_row, c));
+                    }
+                }
+                break;
+            }
+            case 'S': {
+                int n = p0 ? p0 : 1;
+                scroll_region_up(scroll_top, scroll_bottom, n, 1);
+                break;
+            }
+            case 'T': {
+                int n = p0 ? p0 : 1;
+                scroll_region_down(scroll_top, scroll_bottom, n);
+                break;
+            }
+            case 'X': {
+                int n = p0 ? p0 : 1;
+                for (int c = cursor_col; c < cursor_col + n && c < TERM_COLS; c++) {
                     reset_cell(CELL(cursor_row, c));
+                }
+                break;
             }
-            break;
-        }
-        case 'M': {
-            int n = p0 ? p0 : 1;
-            for (int i = 0; i < n; i++) {
-                if (cursor_row < TERM_ROWS - 1) {
-                    memmove(CELL(cursor_row, 0), CELL(cursor_row + 1, 0), sizeof(Cell) * (size_t) TERM_COLS * (size_t) (TERM_ROWS - cursor_row - 1));
+            case 'm':
+                apply_sgr(params, count);
+                break;
+            case 'r': {
+                int top = (p0 ? p0 : 1) - 1;
+                int bottom = (p1 ? p1 : TERM_ROWS) - 1;
+
+                if (top < 0) top = 0;
+                if (bottom >= TERM_ROWS) bottom = TERM_ROWS - 1;
+
+                if (top >= bottom) {
+                    scroll_top = 0;
+                    scroll_bottom = TERM_ROWS - 1;
+                } else {
+                    scroll_top = top;
+                    scroll_bottom = bottom;
                 }
 
-                for (int c = 0; c < TERM_COLS; c++)
-                    reset_cell(CELL(TERM_ROWS - 1, c));
+                set_cursor(0, 0);
+                break;
             }
-            break;
-        }
-        case 'P': {
-            int n = p0 ? p0 : 1;
+            case 's':
+                saved_row = cursor_row;
+                saved_col = cursor_col;
+                break;
+            case 'u':
+                set_cursor(saved_row, saved_col);
+                break;
+            case 'h':
+            case 'l': {
+                int enable = (cmd == 'h');
 
-            if (cursor_col + n > TERM_COLS) n = TERM_COLS - cursor_col;
-            memmove(CELL(cursor_row, cursor_col), CELL(cursor_row, cursor_col + n), sizeof(Cell) * (size_t) (TERM_COLS - cursor_col - n));
-
-            for (int c = TERM_COLS - n; c < TERM_COLS; c++)
-                reset_cell(CELL(cursor_row, c));
-            break;
+                for (int i = 0; i < count; i++) {
+                    int mode = params[i];
+                    if (is_private) {
+                        switch (mode) {
+                            case 1:
+                                cursor_keys_application = enable;
+                                break;
+                            case 25:
+                                cursor_vis = enable;
+                                break;
+                            case 47:
+                            case 1047:
+                            case 1049:
+                                if (enable) vt_enter_alt_screen();
+                                else vt_leave_alt_screen();
+                                break;
+                            default:
+                                break;
+                        }
+                    } else {
+                        if (mode == 20) linefeed_mode = enable;
+                    }
+                }
+                break;
+            }
+            default:
+                break;
         }
-        case '@': {
-            int n = p0 ? p0 : 1;
-            if (cursor_col + n > TERM_COLS) n = TERM_COLS - cursor_col;
-            memmove(CELL(cursor_row, cursor_col + n), CELL(cursor_row, cursor_col), sizeof(Cell) * (size_t) (TERM_COLS - cursor_col - n));
-
-            for (int c = cursor_col; c < cursor_col + n; c++)
-                reset_cell(CELL(cursor_row, c));
-            break;
-        }
-        case 'X': {
-            int n = p0 ? p0 : 1;
-            for (int c = cursor_col;
-                 c < cursor_col + n && c < TERM_COLS;
-                 c++)
-                reset_cell(CELL(cursor_row, c));
-            break;
-        }
-        case 'm':
-            apply_sgr(params, count);
-            break;
-        case 's':
-            saved_row = cursor_row;
-            saved_col = cursor_col;
-            break;
-        case 'u':
-            set_cursor(saved_row, saved_col);
-            break;
-        case 'h':
-            if (is_private && p0 == 25) cursor_vis = 1;
-            break;
-        case 'l':
-            if (is_private && p0 == 25) cursor_vis = 0;
-            break;
-        default:
-            break;
     }
+
+    screen_dirty = 1;
+}
+
+static size_t vt_try_parse_escape(const unsigned char *buf, size_t len) {
+    if (len == 0 || buf[0] != 0x1B || len == 1) return 0;
+
+    if (buf[1] == '[') {
+        size_t i = 2;
+        while (i < len && !is_csi_final(buf[i])) i++;
+        if (i >= len) return 0;
+
+        {
+            char tmp[64];
+            size_t slen = i;
+            if (slen >= sizeof(tmp)) slen = sizeof(tmp) - 1;
+
+            memcpy(tmp, buf + 1, slen);
+            tmp[slen] = '\0';
+            parse_csi(tmp);
+        }
+        return i + 1;
+    }
+
+    if (buf[1] == '(' || buf[1] == ')') {
+        if (len < 3) return 0;
+        {
+            char tmp[4];
+            tmp[0] = (char) buf[1];
+            tmp[1] = (char) buf[2];
+            tmp[2] = '\0';
+
+            handle_esc(tmp);
+        }
+        return 3;
+    }
+
+    {
+        char tmp[2];
+        tmp[0] = (char) buf[1];
+        tmp[1] = '\0';
+
+        handle_esc(tmp);
+    }
+    return 2;
+}
+
+static int vt_process_stream_bytes(const unsigned char *buf, size_t len) {
+    size_t pos = 0;
+    int saw_output = 0;
+
+    while (pos < len) {
+        unsigned char ch = buf[pos];
+
+        if (ch == 0x0E) {
+            vt_shift_out();
+            screen_dirty = 1;
+            pos++;
+            continue;
+        }
+
+        if (ch == 0x0F) {
+            vt_shift_in();
+            screen_dirty = 1;
+            pos++;
+            continue;
+        }
+
+        if (ch == 0x1B) {
+            size_t consumed = vt_try_parse_escape(buf + pos, len - pos);
+            if (consumed == 0) break;
+            pos += consumed;
+            saw_output = 1;
+            continue;
+        }
+
+        {
+            Uint32 cp = 0;
+            size_t consumed = utf8_decode_char(&cp, buf + pos, len - pos);
+
+            if (consumed == (size_t) -2) break;
+
+            if (consumed == (size_t) -1) {
+                put_char(0xFFFD);
+                screen_dirty = 1;
+                saw_output = 1;
+                pos++;
+
+                continue;
+            }
+
+            put_char(cp);
+            screen_dirty = 1;
+            saw_output = 1;
+            pos += consumed;
+        }
+    }
+
+    if (pos < len) {
+        size_t rem = len - pos;
+        if (rem > sizeof(esc_pending)) rem = sizeof(esc_pending);
+
+        memcpy(esc_pending, buf + pos, rem);
+        esc_pending_len = rem;
+    } else {
+        esc_pending_len = 0;
+    }
+
+    if (saw_output) screen_dirty = 1;
+    return saw_output;
+}
+
+static int vt_feed_pty_bytes(const char *buf, size_t len) {
+    unsigned char merged[sizeof(esc_pending) + 4096];
+    size_t total = 0;
+    int saw_output;
+
+    if (esc_pending_len > 0) {
+        memcpy(merged, esc_pending, esc_pending_len);
+        total += esc_pending_len;
+    }
+
+    if (len > sizeof(merged) - total) len = sizeof(merged) - total;
+
+    memcpy(merged + total, buf, len);
+    total += len;
+
+    esc_pending_len = 0;
+    saw_output = vt_process_stream_bytes(merged, total);
+
+    return saw_output;
 }
 
 typedef struct GlyphEntry {
@@ -730,7 +1122,7 @@ typedef struct GlyphEntry {
 } GlyphEntry;
 
 #define GLYPH_BUCKETS     1024u
-#define GLYPH_MAX_ENTRIES 4096u
+#define GLYPH_MAX_ENTRIES 8192u
 
 static GlyphEntry *glyph_table[GLYPH_BUCKETS];
 static unsigned glyph_entries = 0;
@@ -779,8 +1171,32 @@ static int is_vt_geom_char(Uint32 cp) {
     return cp >= 0x25A0 && cp <= 0x25FF;
 }
 
+static int is_vt_scanline_char(Uint32 cp) {
+    return cp >= 0x23BA && cp <= 0x23BD;
+}
+
+static int is_vt_control_picture(Uint32 cp) {
+    switch (cp) {
+        case 0x2409: /* ␉ */
+        case 0x240A: /* ␊ */
+        case 0x240B: /* ␋ */
+        case 0x240C: /* ␌ */
+        case 0x240D: /* ␍ */
+        case 0x2424: /* ␤ */
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
 static int is_vt_soft_char(Uint32 cp) {
-    return is_vt_box_char(cp) || is_vt_block_char(cp) || is_vt_geom_char(cp) || cp == 0x00B7;
+    return is_vt_box_char(cp) ||
+           is_vt_block_char(cp) ||
+           is_vt_geom_char(cp) ||
+           is_vt_scanline_char(cp) ||
+           is_vt_control_picture(cp) ||
+           cp == 0x00B7;
 }
 
 static int vt_line_thickness(int cell_h, int heavy) {
@@ -811,6 +1227,65 @@ static void draw_hline_mid(SDL_Surface *surf, Uint32 col, int cw, int ch, int fr
 static void draw_vline_mid(SDL_Surface *surf, Uint32 col, int cw, int ch, int from_y, int to_y, int t) {
     int x = (cw - t) / 2;
     fill_rect_px(surf, col, x, from_y, t, to_y - from_y);
+}
+
+static void draw_hline_px(SDL_Surface *surf, Uint32 col, int x0, int x1, int y, int t) {
+    fill_rect_px(surf, col, x0, y, x1 - x0, t);
+}
+
+static void draw_vline_px(SDL_Surface *surf, Uint32 col, int x, int y0, int y1, int t) {
+    fill_rect_px(surf, col, x, y0, t, y1 - y0);
+}
+
+static void draw_frame_px(SDL_Surface *surf, Uint32 col, int x, int y, int w, int h, int t) {
+    draw_hline_px(surf, col, x, x + w, y, t);
+    draw_hline_px(surf, col, x, x + w, y + h - t, t);
+    draw_vline_px(surf, col, x, y, y + h, t);
+    draw_vline_px(surf, col, x + w - t, y, y + h, t);
+}
+
+static void draw_arrow_right_px(SDL_Surface *surf, Uint32 col, int x0, int x1, int y, int t, int head) {
+    int shaft_end = x1 - head;
+
+    if (shaft_end < x0) shaft_end = x0;
+    draw_hline_px(surf, col, x0, shaft_end, y, t);
+
+    for (int i = 0; i < head; i++) {
+        fill_rect_px(surf, col, shaft_end + i, y - i, 1, (i * 2) + t);
+    }
+}
+
+static void draw_arrow_left_px(SDL_Surface *surf, Uint32 col, int x0, int x1, int y, int t, int head) {
+    int shaft_start = x0 + head;
+
+    if (shaft_start > x1) shaft_start = x1;
+    draw_hline_px(surf, col, shaft_start, x1, y, t);
+
+    for (int i = 0; i < head; i++) {
+        fill_rect_px(surf, col, x0 + i, y - (head - 1 - i), 1, (((head - 1 - i) * 2) + t));
+    }
+}
+
+static void draw_arrow_down_px(SDL_Surface *surf, Uint32 col, int x, int y0, int y1, int t, int head) {
+    int shaft_end = y1 - head;
+
+    if (shaft_end < y0) shaft_end = y0;
+    draw_vline_px(surf, col, x, y0, shaft_end, t);
+
+    for (int i = 0; i < head; i++) {
+        fill_rect_px(surf, col, x - i, shaft_end + i, (i * 2) + t, 1);
+    }
+}
+
+static void draw_arrow_up_px(SDL_Surface *surf, Uint32 col, int x, int y0, int y1, int t, int head) {
+    int shaft_start = y0 + head;
+
+    if (shaft_start > y1) shaft_start = y1;
+    draw_vline_px(surf, col, x, shaft_start, y1, t);
+
+    for (int i = 0; i < head; i++) {
+        fill_rect_px(surf, col, x - (head - 1 - i), y0 + i, (((head - 1 - i) * 2) + t), 1);
+    }
 }
 
 static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, int cell_h) {
@@ -1129,6 +1604,82 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
             default:
                 fill_rect_px(surf, col, cw / 4, ch / 4, cw / 2, ch / 2);
                 return surf;
+        }
+    }
+
+    if (is_vt_scanline_char(cp)) {
+        int y;
+
+        switch (cp) {
+            case 0x23BA:
+                y = ch / 6;
+                break; /* ⎺ */
+            case 0x23BB:
+                y = (2 * ch) / 6;
+                break; /* ⎻ */
+            case 0x23BC:
+                y = (4 * ch) / 6;
+                break; /* ⎼ */
+            case 0x23BD:
+                y = (5 * ch) / 6;
+                break; /* ⎽ */
+            default:
+                y = ch / 2;
+                break;
+        }
+
+        if (y < 0) y = 0;
+        if (y > ch - light) y = ch - light;
+
+        draw_hline_px(surf, col, 0, cw, y, light);
+        return surf;
+    }
+
+    if (is_vt_control_picture(cp)) {
+        int t = light;
+        int head = ch / 6;
+        int left = cw / 6;
+        int right = cw - (cw / 6);
+        int top = ch / 6;
+        int bottom = ch - (ch / 6);
+        int mid_x = (cw - t) / 2;
+        int mid_y = (ch - t) / 2;
+
+        if (head < 2) head = 2;
+        if (right <= left) right = left + t + head + 1;
+        if (bottom <= top) bottom = top + t + head + 1;
+
+        switch (cp) {
+            case 0x2409: /* ␉ */
+                draw_arrow_right_px(surf, col, left, right - t - 1, mid_y, t, head);
+                draw_vline_px(surf, col, right - t, top, bottom, t);
+                return surf;
+
+            case 0x240A: /* ␊ */
+                draw_arrow_down_px(surf, col, mid_x, top, bottom, t, head);
+                return surf;
+
+            case 0x240B: /* ␋ */
+                draw_arrow_up_px(surf, col, mid_x, top, bottom, t, head);
+                draw_arrow_down_px(surf, col, mid_x, top, bottom, t, head);
+                return surf;
+
+            case 0x240C: /* ␌ */
+                draw_frame_px(surf, col, left, top, right - left, bottom - top, t);
+                draw_hline_px(surf, col, left + t, right - t, bottom - (2 * t), t);
+                return surf;
+
+            case 0x240D: /* ␍ */
+                draw_arrow_left_px(surf, col, left, right, mid_y, t, head);
+                return surf;
+
+            case 0x2424: /* ␤ */
+                draw_vline_px(surf, col, right - t, top, mid_y + t, t);
+                draw_arrow_left_px(surf, col, left, right, mid_y, t, head);
+                return surf;
+
+            default:
+                break;
         }
     }
 
@@ -1563,13 +2114,41 @@ static void osk_press_key(void) {
     }
 
     const char *seq = key->send;
-    int slen = (int) strlen(seq);
+    char dyn_seq[8];
 
-    if (slen <= 0) return;
+    if (strcmp(key->label, "Up") == 0 || strcmp(key->label, "Down") == 0 || strcmp(key->label, "Left") == 0 || strcmp(key->label, "Right") == 0) {
+        char code = 0;
+
+        switch (key->label[0]) {
+            case 'U':
+                code = 'A';
+                break;
+            case 'D':
+                code = 'B';
+                break;
+            case 'R':
+                code = 'C';
+                break;
+            case 'L':
+                code = 'D';
+                break;
+        }
+
+        if (cursor_keys_application) {
+            snprintf(dyn_seq, sizeof(dyn_seq), "\x1BO%c", code);
+        } else {
+            snprintf(dyn_seq, sizeof(dyn_seq), "\x1B[%c", code);
+        }
+
+        seq = dyn_seq;
+    }
+
+    int str_len = (int) strlen(seq);
+    if (str_len <= 0) return;
 
     if (osk_alt) pty_write("\x1B", 1);
 
-    if (osk_ctrl && slen == 1) {
+    if (osk_ctrl && str_len == 1) {
         char ch = seq[0];
 
         if (ch >= 'a' && ch <= 'z') {
@@ -1580,7 +2159,7 @@ static void osk_press_key(void) {
 
         pty_write(&ch, 1);
     } else {
-        pty_write(seq, slen);
+        pty_write(seq, str_len);
     }
 
     osk_ctrl = 0;
@@ -1590,17 +2169,20 @@ static void osk_press_key(void) {
 static void osk_move(int drow, int dcol) {
     int orig = osk_sel_row;
     osk_sel_row += drow;
+
     for (int t = 0; t < OSK_ROWS; t++) {
         if (osk_sel_row < 0) osk_sel_row = OSK_ROWS - 1;
         if (osk_sel_row >= OSK_ROWS) osk_sel_row = 0;
         if (osk_row_len(osk_layer, osk_sel_row) > 0) break;
         osk_sel_row += (drow != 0) ? drow : 1;
     }
+
     int rlen = osk_row_len(osk_layer, osk_sel_row);
     if (rlen == 0) {
         osk_sel_row = orig;
         rlen = osk_row_len(osk_layer, osk_sel_row);
     }
+
     osk_sel_col += dcol;
     if (osk_sel_col < 0) osk_sel_col = rlen - 1;
     if (osk_sel_col >= rlen) osk_sel_col = 0;
@@ -1609,6 +2191,7 @@ static void osk_move(int drow, int dcol) {
 static void osk_switch_layer(int delta) {
     osk_layer = (osk_layer + delta + OSK_LAYERS) % OSK_LAYERS;
     int rlen = osk_row_len(osk_layer, osk_sel_row);
+
     if (rlen == 0) {
         for (int r = 0; r < OSK_ROWS; r++) {
             if (osk_row_len(osk_layer, r) > 0) {
@@ -1618,6 +2201,7 @@ static void osk_switch_layer(int delta) {
             }
         }
     }
+
     if (osk_sel_col >= rlen) osk_sel_col = rlen > 0 ? rlen - 1 : 0;
     if (osk_sel_col < 0) osk_sel_col = 0;
 }
@@ -1802,19 +2386,8 @@ static void render_screen_to_target(SDL_Renderer *ren, SDL_Texture *target,
                 Cell *c = CELL(cursor_row, cursor_col);
                 if (c->width == 2) w = 2;
 
-                SDL_Rect cr = {
-                        cursor_col * CELL_WIDTH,
-                        cursor_row * CELL_HEIGHT,
-                        CELL_WIDTH * w,
-                        CELL_HEIGHT
-                };
-
-                SDL_SetRenderDrawColor(ren,
-                                       default_fg.r,
-                                       default_fg.g,
-                                       default_fg.b,
-                                       160);
-
+                SDL_Rect cr = {cursor_col * CELL_WIDTH, cursor_row * CELL_HEIGHT, CELL_WIDTH * w, CELL_HEIGHT};
+                SDL_SetRenderDrawColor(ren, default_fg.r, default_fg.g, default_fg.b, 160);
                 SDL_RenderFillRect(ren, &cr);
             }
         }
@@ -1883,23 +2456,15 @@ static void handle_keyboard(SDL_KeyboardEvent *key) {
     int shift = (mods & (KMOD_LSHIFT | KMOD_RSHIFT)) != 0;
     int alt = (mods & (KMOD_LALT | KMOD_RALT)) != 0;
 
-    if (sym == SDLK_UP) {
-        pty_write("\x1B[A", 3);
-        return;
-    }
+    if (sym == SDLK_UP || sym == SDLK_DOWN || sym == SDLK_RIGHT || sym == SDLK_LEFT) {
+        char seq[4] = {'\x1B', cursor_keys_application ? 'O' : '[', 'A', '\0'};
 
-    if (sym == SDLK_DOWN) {
-        pty_write("\x1B[B", 3);
-        return;
-    }
+        if (sym == SDLK_UP) seq[2] = 'A';
+        else if (sym == SDLK_DOWN) seq[2] = 'B';
+        else if (sym == SDLK_RIGHT) seq[2] = 'C';
+        else seq[2] = 'D';
 
-    if (sym == SDLK_RIGHT) {
-        pty_write("\x1B[C", 3);
-        return;
-    }
-
-    if (sym == SDLK_LEFT) {
-        pty_write("\x1B[D", 3);
+        pty_write(seq, 3);
         return;
     }
 
@@ -1984,15 +2549,18 @@ static void handle_keyboard(SDL_KeyboardEvent *key) {
             return;
         }
         case SDLK_BACKSPACE: {
-            char c = '\x7F';
+            char c = '';
             pty_write(&c, 1);
             return;
         }
-        case SDLK_TAB: {
-            char c = '\t';
-            pty_write(&c, 1);
+        case SDLK_TAB:
+            if (shift) {
+                pty_write("\x1B[Z", 3);
+            } else {
+                char c = '\t';
+                pty_write(&c, 1);
+            }
             return;
-        }
         case SDLK_ESCAPE: {
             char c = '\x1B';
             pty_write(&c, 1);
@@ -2001,8 +2569,6 @@ static void handle_keyboard(SDL_KeyboardEvent *key) {
         default:
             break;
     }
-
-    (void) shift;
 }
 
 static void print_help(const char *name) {
@@ -2257,16 +2823,22 @@ int main(int argc, char *argv[]) {
     }
     TTF_CloseFont(base);
 
-    screen_buf = (Cell *) calloc((size_t) TERM_ROWS * (size_t) TERM_COLS, sizeof(Cell));
-    if (!screen_buf) return 1;
-
+    main_screen_buf = calloc((size_t) TERM_ROWS * (size_t) TERM_COLS, sizeof(Cell));
+    alt_screen_buf = calloc((size_t) TERM_ROWS * (size_t) TERM_COLS, sizeof(Cell));
     scrollback_init();
+
+    if (!main_screen_buf || !alt_screen_buf || !scrollback) {
+        return 1;
+    }
+
+    screen_buf = main_screen_buf;
+    using_alt_screen = 0;
 
     current_fg = default_fg;
     current_bg = default_bg;
     current_style = 0;
-    clear_screen();
-    screen_dirty = 1;
+
+    vt_reset_state(1);
 
     osk_calc_metrics(term_width);
     osk_init_layers();
@@ -2597,92 +3169,21 @@ int main(int argc, char *argv[]) {
             if (pfd.revents & POLLIN) {
                 char buf[4096];
                 ssize_t n;
+                int saw_output = 0;
 
                 while ((n = read(pty_fd, buf, sizeof(buf))) > 0) {
-                    const char *p = buf;
-                    const char *end = buf + n;
-
-                    while (p < end) {
-                        if ((unsigned char) *p == 0x1B) {
-                            p++;
-                            if (p >= end) break;
-
-                            if (*p == '[') {
-                                const char *start = p;
-                                p++;
-
-                                while (p < end && !is_csi_final((unsigned char) *p)) p++;
-                                if (p < end) p++;
-
-                                size_t len = (size_t) (p - start);
-                                char tmp[64];
-
-                                if (len < sizeof(tmp)) {
-                                    memcpy(tmp, start, len);
-                                    tmp[len] = '\0';
-                                    parse_csi(tmp);
-                                }
-
-                                continue;
-                            }
-
-                            {
-                                char tmp[8] = {0};
-                                size_t i = 0;
-
-                                while (p < end && i < sizeof(tmp) - 1) {
-                                    tmp[i++] = *p;
-
-                                    if (i == 2) {
-                                        p++;
-                                        break;
-                                    }
-
-                                    p++;
-                                }
-
-                                tmp[i] = '\0';
-                                handle_esc(tmp);
-                            }
-
-                            continue;
-                        }
-
-                        {
-                            Uint32 cp = 0;
-                            size_t consumed = utf8_decode_char(&cp, (const unsigned char *) p, (size_t) (end - p));
-
-                            if (consumed == (size_t) -2) {
-                                p = end;
-                                break;
-                            }
-
-                            if (consumed == (size_t) -1) {
-                                fprintf(stderr, "[UTF8] invalid byte 0x%02X\n", (unsigned char) *p);
-                                put_char(0xFFFD);
-                                screen_dirty = 1;
-                                p++;
-
-                                continue;
-                            }
-
-                            if (vt_acs_mode) {
-                                if (cp >= 0x20 && cp <= 0x7E) {
-                                    cp = vt_map_acs(cp);
-                                }
-                            }
-
-                            put_char(cp);
-                            screen_dirty = 1;
-
-                            p += (ptrdiff_t) consumed;
-                            continue;
-                        }
+                    if (vt_feed_pty_bytes(buf, (size_t) n)) {
+                        saw_output = 1;
                     }
                 }
 
-                if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) if (errno == EIO) shell_dead = 1;
-                scroll_offset = 0;
+                if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                    if (errno == EIO) shell_dead = 1;
+                }
+
+                if (saw_output) {
+                    scroll_offset = 0;
+                }
             }
         }
 
@@ -2770,8 +3271,9 @@ int main(int argc, char *argv[]) {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
 
-    free(screen_buf);
-    free(scrollback);
+    if (main_screen_buf) free(main_screen_buf);
+    if (alt_screen_buf) free(alt_screen_buf);
+    if (scrollback) free(scrollback);
 
     TTF_Quit();
     IMG_Quit();
