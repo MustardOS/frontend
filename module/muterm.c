@@ -174,7 +174,6 @@ static Uint32 vt_map_acs(Uint32 cp) {
             return 0x00A3; /* £ */
         case '~':
             return 0x00B7; /* · */
-
         default:
             return cp;
     }
@@ -1529,7 +1528,6 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
             case 0x2590: /* ▐ right half */
                 fill_rect_px(surf, col, cw / 2, 0, cw - (cw / 2), ch);
                 break;
-
             case 0x2591: /* ░ light shade ~25% */
             {
                 Uint32 *px = (Uint32 *) surf->pixels;
@@ -1560,7 +1558,6 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                             px[y * pitch4 + x] = col;
                 break;
             }
-
             case 0x2596: /* ▖ lower-left quadrant */
                 fill_rect_px(surf, col, 0, ch / 2, cw / 2, ch - (ch / 2));
                 break;
@@ -1654,30 +1651,24 @@ static SDL_Surface *render_vt_soft_glyph(Uint32 cp, SDL_Color fg, int cell_w, in
                 draw_arrow_right_px(surf, col, left, right - t - 1, mid_y, t, head);
                 draw_vline_px(surf, col, right - t, top, bottom, t);
                 return surf;
-
             case 0x240A: /* ␊ */
                 draw_arrow_down_px(surf, col, mid_x, top, bottom, t, head);
                 return surf;
-
             case 0x240B: /* ␋ */
                 draw_arrow_up_px(surf, col, mid_x, top, bottom, t, head);
                 draw_arrow_down_px(surf, col, mid_x, top, bottom, t, head);
                 return surf;
-
             case 0x240C: /* ␌ */
                 draw_frame_px(surf, col, left, top, right - left, bottom - top, t);
                 draw_hline_px(surf, col, left + t, right - t, bottom - (2 * t), t);
                 return surf;
-
             case 0x240D: /* ␍ */
                 draw_arrow_left_px(surf, col, left, right, mid_y, t, head);
                 return surf;
-
             case 0x2424: /* ␤ */
                 draw_vline_px(surf, col, right - t, top, mid_y + t, t);
                 draw_arrow_left_px(surf, col, left, right, mid_y, t, head);
                 return surf;
-
             default:
                 break;
         }
@@ -2035,12 +2026,27 @@ static int osk_sel_col = 0;
 static int osk_ctrl = 0;
 static int osk_alt = 0;
 
-#define KEY_REPEAT_DELAY 500
-#define KEY_REPEAT_RATE  80
+#define KEY_REPEAT_DELAY 350
+#define KEY_REPEAT_RATE  70
 
-static int osk_a_held = 0;
-static Uint32 osk_a_press_t = 0;
-static Uint32 osk_a_last_rep = 0;
+typedef enum {
+    INPUT_ACT_NONE = 0,
+    INPUT_ACT_OSK_TOGGLE,
+    INPUT_ACT_QUIT,
+    INPUT_ACT_PRESS,
+    INPUT_ACT_BACKSPACE,
+    INPUT_ACT_SPACE,
+    INPUT_ACT_LAYER_PREV,
+    INPUT_ACT_LAYER_NEXT,
+    INPUT_ACT_ENTER,
+    INPUT_ACT_PAGE_UP,
+    INPUT_ACT_PAGE_DOWN
+} input_action_t;
+
+static int osk_hold_active = 0;
+static input_action_t osk_hold_action = INPUT_ACT_NONE;
+static Uint32 osk_hold_press_t = 0;
+static Uint32 osk_hold_last_rep = 0;
 
 static int osk_key_w = 0;
 static int osk_key_h = 0;
@@ -2175,6 +2181,8 @@ static void osk_move(int drow, int dcol) {
         if (osk_sel_row >= OSK_ROWS) osk_sel_row = 0;
         if (osk_row_len(osk_layer, osk_sel_row) > 0) break;
         osk_sel_row += (drow != 0) ? drow : 1;
+        if (osk_sel_row < 0) osk_sel_row = OSK_ROWS - 1;
+        if (osk_sel_row >= OSK_ROWS) osk_sel_row = 0;
     }
 
     int rlen = osk_row_len(osk_layer, osk_sel_row);
@@ -2708,6 +2716,466 @@ static pid_t spawn_pty_child(int *master_fd_out, int argc, char **argv) {
     return pid;
 }
 
+static void osk_hold_start(input_action_t action) {
+    if (!osk_hold_active) {
+        osk_hold_active = 1;
+        osk_hold_action = action;
+        osk_hold_press_t = SDL_GetTicks();
+        osk_hold_last_rep = osk_hold_press_t;
+    }
+}
+
+static void osk_hold_end(void) {
+    osk_hold_active = 0;
+    osk_hold_action = INPUT_ACT_NONE;
+}
+
+static void osk_reset_axis_state(void) {
+    axis_x_state = 0;
+    axis_y_state = 0;
+}
+
+static int event_from_active_controller(const SDL_Event *e, SDL_GameController *controller) {
+    SDL_Joystick *joy;
+    SDL_JoystickID which;
+
+    if (!controller || !e) return 0;
+
+    joy = SDL_GameControllerGetJoystick(controller);
+    if (!joy) return 0;
+
+    which = SDL_JoystickInstanceID(joy);
+
+    switch (e->type) {
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+            return e->cbutton.which == which;
+        case SDL_JOYAXISMOTION:
+            return e->jaxis.which == which;
+        case SDL_JOYHATMOTION:
+            return e->jhat.which == which;
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+            return e->jbutton.which == which;
+        default:
+            return 0;
+    }
+}
+
+static input_action_t map_controller_button_down(Uint8 button) {
+    switch (button) {
+        case SDL_CONTROLLER_BUTTON_BACK:
+            return INPUT_ACT_OSK_TOGGLE;
+        case SDL_CONTROLLER_BUTTON_GUIDE:
+            return INPUT_ACT_QUIT;
+        case SDL_CONTROLLER_BUTTON_A:
+            return INPUT_ACT_PRESS;
+        case SDL_CONTROLLER_BUTTON_B:
+            return INPUT_ACT_BACKSPACE;
+        case SDL_CONTROLLER_BUTTON_Y:
+            return INPUT_ACT_SPACE;
+        case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+            return INPUT_ACT_LAYER_PREV;
+        case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+            return INPUT_ACT_LAYER_NEXT;
+        case SDL_CONTROLLER_BUTTON_START:
+            return INPUT_ACT_ENTER;
+        case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+            return INPUT_ACT_PRESS;
+        default:
+            return INPUT_ACT_NONE;
+    }
+}
+
+static void handle_controller_dpad(Uint8 button) {
+    if (!osk_visible) return;
+
+    switch (button) {
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            fprintf(stderr, "[OSK] DPAD UP\n");
+            osk_move(-1, 0);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            fprintf(stderr, "[OSK] DPAD DOWN\n");
+            osk_move(1, 0);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            fprintf(stderr, "[OSK] DPAD LEFT\n");
+            osk_move(0, -1);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            fprintf(stderr, "[OSK] DPAD RIGHT\n");
+            osk_move(0, 1);
+            break;
+        default:
+            return;
+    }
+
+    screen_dirty = 1;
+}
+
+static void handle_controller_axis(const SDL_Event *e) {
+    const int dead = 16000;
+    int axis = e->caxis.axis;
+    int val = e->caxis.value;
+
+    if (!osk_visible) return;
+
+    if (axis == SDL_CONTROLLER_AXIS_LEFTX) {
+        if (val < -dead && axis_x_state != -1) {
+            axis_x_state = -1;
+            fprintf(stderr, "[OSK] LEFT (STICK)\n");
+            osk_move(0, -1);
+            screen_dirty = 1;
+        } else if (val > dead && axis_x_state != 1) {
+            axis_x_state = 1;
+            fprintf(stderr, "[OSK] RIGHT (STICK)\n");
+            osk_move(0, 1);
+            screen_dirty = 1;
+        } else if (val >= -dead && val <= dead) {
+            axis_x_state = 0;
+        }
+    } else if (axis == SDL_CONTROLLER_AXIS_LEFTY) {
+        if (val < -dead && axis_y_state != -1) {
+            axis_y_state = -1;
+            fprintf(stderr, "[OSK] UP (STICK)\n");
+            osk_move(-1, 0);
+            screen_dirty = 1;
+        } else if (val > dead && axis_y_state != 1) {
+            axis_y_state = 1;
+            fprintf(stderr, "[OSK] DOWN (STICK)\n");
+            osk_move(1, 0);
+            screen_dirty = 1;
+        } else if (val >= -dead && val <= dead) {
+            axis_y_state = 0;
+        }
+    }
+}
+
+static input_action_t map_joystick_button_down(int raw) {
+    switch (raw) {
+        case 9:
+            return INPUT_ACT_OSK_TOGGLE;
+        case 11:
+            return INPUT_ACT_QUIT;
+        case 3:
+            return INPUT_ACT_PRESS;
+        case 4:
+            return INPUT_ACT_BACKSPACE;
+        case 5:
+            return INPUT_ACT_SPACE;
+        case 7:
+            return INPUT_ACT_LAYER_PREV;
+        case 8:
+            return INPUT_ACT_LAYER_NEXT;
+        case 10:
+            return INPUT_ACT_ENTER;
+        case 2:
+            return INPUT_ACT_PAGE_UP;
+        case 1:
+            return INPUT_ACT_PAGE_DOWN;
+        default:
+            return INPUT_ACT_NONE;
+    }
+}
+
+static void apply_input_action(
+        input_action_t action,
+        int *running,
+        int *vis_rows,
+        int term_height
+) {
+    switch (action) {
+        case INPUT_ACT_NONE:
+            break;
+        case INPUT_ACT_OSK_TOGGLE:
+            osk_state = (osk_state + 1) % OSK_NUM_STATES;
+            osk_visible = (osk_state != OSK_STATE_HIDDEN);
+
+            fprintf(stderr, "[OSK] STATE -> %d visible=%d\n", osk_state, osk_visible);
+
+            if (osk_state == OSK_STATE_BOTTOM_OPAQUE) {
+                *vis_rows = (term_height - osk_height) / CELL_HEIGHT;
+            } else {
+                *vis_rows = TERM_ROWS;
+            }
+
+            if (*vis_rows < 1) *vis_rows = 1;
+
+            scroll_offset = 0;
+            osk_reset_axis_state();
+            screen_dirty = 1;
+            break;
+        case INPUT_ACT_QUIT:
+            fprintf(stderr, "[OSK] QUIT\n");
+            *running = 0;
+            break;
+        case INPUT_ACT_PRESS:
+            if (!osk_visible) break;
+
+            fprintf(stderr, "[OSK] PRESS KEY\n");
+            osk_press_key();
+
+            osk_hold_start(INPUT_ACT_PRESS);
+
+            scroll_offset = 0;
+            screen_dirty = 1;
+            break;
+        case INPUT_ACT_BACKSPACE:
+            fprintf(stderr, "[OSK] BACKSPACE\n");
+
+            if (!readonly_mode) {
+                char bs = '\x7F';
+                pty_write(&bs, 1);
+            }
+
+            osk_hold_start(INPUT_ACT_BACKSPACE);
+            break;
+        case INPUT_ACT_SPACE:
+            fprintf(stderr, "[OSK] SPACE\n");
+
+            if (!readonly_mode) {
+                char sp = ' ';
+                pty_write(&sp, 1);
+            }
+
+            osk_hold_start(INPUT_ACT_SPACE);
+            break;
+        case INPUT_ACT_LAYER_PREV:
+            if (!osk_visible) break;
+
+            fprintf(stderr, "[OSK] LAYER -1\n");
+            osk_switch_layer(-1);
+            screen_dirty = 1;
+            break;
+        case INPUT_ACT_LAYER_NEXT:
+            if (!osk_visible) break;
+
+            fprintf(stderr, "[OSK] LAYER +1\n");
+            osk_switch_layer(1);
+            screen_dirty = 1;
+            break;
+        case INPUT_ACT_ENTER:
+            fprintf(stderr, "[OSK] ENTER\n");
+            if (!readonly_mode) {
+                pty_write("\r", 1);
+            }
+            break;
+        case INPUT_ACT_PAGE_UP:
+            fprintf(stderr, "[OSK] PAGE UP\n");
+            scroll_offset += *vis_rows / 2;
+            if (scroll_offset > sb_count) scroll_offset = sb_count;
+            screen_dirty = 1;
+            break;
+        case INPUT_ACT_PAGE_DOWN:
+            fprintf(stderr, "[OSK] PAGE DOWN\n");
+            scroll_offset -= *vis_rows / 2;
+            if (scroll_offset < 0) scroll_offset = 0;
+            screen_dirty = 1;
+            break;
+    }
+}
+
+static void handle_joy_axis_event(const SDL_Event *e) {
+    const int dead = 16000;
+    int axis = e->jaxis.axis;
+    int val = e->jaxis.value;
+
+    if (!osk_visible) return;
+
+    if (axis == 0) {
+        if (val < -dead && axis_x_state != -1) {
+            axis_x_state = -1;
+            fprintf(stderr, "[OSK] LEFT\n");
+            osk_move(0, -1);
+            screen_dirty = 1;
+        } else if (val > dead && axis_x_state != 1) {
+            axis_x_state = 1;
+            fprintf(stderr, "[OSK] RIGHT\n");
+            osk_move(0, 1);
+            screen_dirty = 1;
+        } else if (val >= -dead && val <= dead) {
+            axis_x_state = 0;
+        }
+    } else if (axis == 1) {
+        if (val < -dead && axis_y_state != -1) {
+            axis_y_state = -1;
+            fprintf(stderr, "[OSK] UP\n");
+            osk_move(-1, 0);
+            screen_dirty = 1;
+        } else if (val > dead && axis_y_state != 1) {
+            axis_y_state = 1;
+            fprintf(stderr, "[OSK] DOWN\n");
+            osk_move(1, 0);
+            screen_dirty = 1;
+        } else if (val >= -dead && val <= dead) {
+            axis_y_state = 0;
+        }
+    }
+}
+
+static void handle_joy_hat_event(const SDL_Event *e) {
+    Uint8 hat = e->jhat.value;
+
+    if (!osk_visible) return;
+
+    fprintf(stderr, "[OSK] HAT=%d\n", hat);
+
+    if (hat & SDL_HAT_UP) {
+        osk_move(-1, 0);
+        fprintf(stderr, "[OSK] DPAD UP\n");
+    } else if (hat & SDL_HAT_DOWN) {
+        osk_move(1, 0);
+        fprintf(stderr, "[OSK] DPAD DOWN\n");
+    } else if (hat & SDL_HAT_LEFT) {
+        osk_move(0, -1);
+        fprintf(stderr, "[OSK] DPAD LEFT\n");
+    } else if (hat & SDL_HAT_RIGHT) {
+        osk_move(0, 1);
+        fprintf(stderr, "[OSK] DPAD RIGHT\n");
+    }
+
+    screen_dirty = 1;
+}
+
+static void handle_button_down_event(const SDL_Event *e, SDL_GameController *controller, int *running, int *vis_rows, int term_height) {
+    input_action_t action;
+
+    if (e->type == SDL_CONTROLLERBUTTONDOWN) {
+        handle_controller_dpad(e->cbutton.button);
+        action = map_controller_button_down(e->cbutton.button);
+        apply_input_action(action, running, vis_rows, term_height);
+        return;
+    }
+
+    if (e->type == SDL_JOYBUTTONDOWN) {
+        int raw = (int) e->jbutton.button;
+        if (raw == 1 || raw == 2) {
+            action = map_joystick_button_down(raw);
+            apply_input_action(action, running, vis_rows, term_height);
+            return;
+        }
+    }
+
+    if (controller) return;
+
+    action = map_joystick_button_down(e->jbutton.button);
+    if (action == INPUT_ACT_NONE) return;
+
+    apply_input_action(action, running, vis_rows, term_height);
+}
+
+static void handle_button_up_event(const SDL_Event *e, SDL_GameController *controller) {
+    if (e->type == SDL_CONTROLLERBUTTONUP) {
+        fprintf(stderr, "[OSK] CTRL UP BTN=%u\n", (unsigned) e->cbutton.button);
+
+        if (e->cbutton.button == SDL_CONTROLLER_BUTTON_A ||
+            e->cbutton.button == SDL_CONTROLLER_BUTTON_B ||
+            e->cbutton.button == SDL_CONTROLLER_BUTTON_Y ||
+            e->cbutton.button == SDL_CONTROLLER_BUTTON_LEFTSTICK) {
+            fprintf(stderr, "[OSK] PRESS RELEASE\n");
+            osk_hold_end();
+        }
+
+        return;
+    }
+
+    if (controller) return;
+
+    if (e->type == SDL_JOYBUTTONUP) {
+        if (e->jbutton.button == 3) {
+            fprintf(stderr, "[OSK] JOY PRESS RELEASE\n");
+            osk_hold_end();
+        }
+    }
+}
+
+static void reopen_controller(SDL_GameController **controller) {
+    if (*controller) {
+        SDL_GameControllerClose(*controller);
+        *controller = NULL;
+    }
+
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        if (SDL_IsGameController(i)) {
+            *controller = SDL_GameControllerOpen(i);
+            if (*controller) {
+                fprintf(stderr, "[OSK] Opened GameController %d: %s\n", i, SDL_GameControllerName(*controller));
+                break;
+            }
+        }
+    }
+}
+
+static void handle_sdl_event(const SDL_Event *e, SDL_GameController **controller, int *running,
+                             int shell_dead, int *vis_rows, int term_width, int term_height) {
+    switch (e->type) {
+        case SDL_QUIT:
+            *running = 0;
+            return;
+        case SDL_TEXTINPUT:
+            if (!readonly_mode && !osk_visible) {
+                pty_write(e->text.text, (int) strlen(e->text.text));
+                scroll_offset = 0;
+            }
+            return;
+        case SDL_KEYDOWN:
+            if (e->key.keysym.sym == SDLK_ESCAPE &&
+                !(SDL_GetModState() & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT))) {
+                if (shell_dead) {
+                    *running = 0;
+                    return;
+                }
+            }
+
+            if (e->key.keysym.sym == SDLK_PAGEUP) {
+                scroll_offset += *vis_rows / 2;
+                if (scroll_offset > sb_count) scroll_offset = sb_count;
+                screen_dirty = 1;
+                return;
+            }
+
+            if (e->key.keysym.sym == SDLK_PAGEDOWN) {
+                scroll_offset -= *vis_rows / 2;
+                if (scroll_offset < 0) scroll_offset = 0;
+                screen_dirty = 1;
+                return;
+            }
+
+            handle_keyboard((SDL_KeyboardEvent *) &e->key);
+            screen_dirty = 1;
+            return;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_JOYBUTTONDOWN:
+            handle_button_down_event(e, *controller, running, vis_rows, term_height);
+            return;
+        case SDL_CONTROLLERBUTTONUP:
+        case SDL_JOYBUTTONUP:
+            handle_button_up_event(e, *controller);
+            return;
+        case SDL_JOYAXISMOTION:
+            if (*controller && event_from_active_controller(e, *controller)) return;
+            handle_joy_axis_event(e);
+            return;
+        case SDL_CONTROLLERAXISMOTION:
+            handle_controller_axis(e);
+            return;
+        case SDL_JOYHATMOTION:
+            if (*controller) return;
+            handle_joy_hat_event(e);
+            return;
+        case SDL_CONTROLLERDEVICEADDED:
+            if (!*controller) reopen_controller(controller);
+            return;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            reopen_controller(controller);
+            return;
+        default:
+            fprintf(stderr, "[SDL] EVENT type=%d\n", e->type);
+            return;
+    }
+}
+
 int main(int argc, char *argv[]) {
     setlocale(LC_CTYPE, "");
 
@@ -2797,11 +3265,9 @@ int main(int argc, char *argv[]) {
     if (IMG_Init(IMG_INIT_PNG) == 0) return 1;
     if (TTF_Init() != 0) return 1;
 
-    /* fonts */
     TTF_Font *base = TTF_OpenFont(font_path, font_size);
     if (!base) return 1;
 
-    // Determine cell size from typical glyph
     TTF_SizeUTF8(base, "M", &CELL_WIDTH, &CELL_HEIGHT);
     if (CELL_WIDTH <= 0) CELL_WIDTH = 8;
     if (CELL_HEIGHT <= 0) CELL_HEIGHT = 16;
@@ -2812,7 +3278,6 @@ int main(int argc, char *argv[]) {
     if (TERM_COLS < 1) TERM_COLS = 1;
     if (TERM_ROWS < 1) TERM_ROWS = 1;
 
-    // Create different styled font handles
     for (int i = 0; i < 4; i++) {
         fonts[i] = TTF_OpenFont(font_path, font_size);
         if (!fonts[i]) return 1;
@@ -2827,9 +3292,7 @@ int main(int argc, char *argv[]) {
     alt_screen_buf = calloc((size_t) TERM_ROWS * (size_t) TERM_COLS, sizeof(Cell));
     scrollback_init();
 
-    if (!main_screen_buf || !alt_screen_buf || !scrollback) {
-        return 1;
-    }
+    if (!main_screen_buf || !alt_screen_buf || !scrollback) return 1;
 
     screen_buf = main_screen_buf;
     using_alt_screen = 0;
@@ -2859,12 +3322,11 @@ int main(int argc, char *argv[]) {
         sigaction(SIGCHLD, &sa, NULL);
     }
 
-    SDL_Window *win = SDL_CreateWindow("muterm",
-                                       SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    SDL_Window *win = SDL_CreateWindow("Mustard Terminal", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                        term_width, term_height, SDL_WINDOW_SHOWN);
     if (!win) return 1;
 
-    SDL_StartTextInput(); /* enable text input events for USB keyboard */
+    SDL_StartTextInput();
 
     SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!ren) {
@@ -2886,12 +3348,7 @@ int main(int argc, char *argv[]) {
     }
 
     SDL_GameController *controller = NULL;
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
-        if (SDL_IsGameController(i)) {
-            controller = SDL_GameControllerOpen(i);
-            if (controller) break;
-        }
-    }
+    reopen_controller(&controller);
 
     int running = 1;
     int shell_dead = 0;
@@ -2904,261 +3361,38 @@ int main(int argc, char *argv[]) {
     SDL_Event e;
 
     while (running) {
-        while (SDL_PollEvent(&e)) {
-            switch (e.type) {
-                case SDL_QUIT:
-                    running = 0;
-                    break;
-                case SDL_TEXTINPUT:
-                    if (!readonly_mode && !osk_visible) {
-                        pty_write(e.text.text, (int) strlen(e.text.text));
-                        scroll_offset = 0;
-                    }
-                    break;
-                case SDL_KEYDOWN:
-                    if (e.key.keysym.sym == SDLK_ESCAPE &&
-                        !(SDL_GetModState() & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT))) {
-                        /* only quit if shell is dead; otherwise pass ESC to PTY */
-                        if (shell_dead) {
-                            running = 0;
+        while (SDL_PollEvent(&e)) handle_sdl_event(&e, &controller, &running, shell_dead, &vis_rows, term_width, term_height);
+
+        if (osk_hold_active) {
+            Uint32 now = SDL_GetTicks();
+            const Uint32 initial_delay = KEY_REPEAT_DELAY;
+            const Uint32 repeat_rate = KEY_REPEAT_RATE;
+
+            if (now - osk_hold_press_t >= initial_delay) {
+                if (now - osk_hold_last_rep >= repeat_rate) {
+
+                    switch (osk_hold_action) {
+                        case INPUT_ACT_PRESS:
+                            osk_press_key();
                             break;
-                        }
-                    }
-
-                    if (e.key.keysym.sym == SDLK_PAGEUP) {
-                        scroll_offset += vis_rows / 2;
-                        if (scroll_offset > sb_count) scroll_offset = sb_count;
-                        screen_dirty = 1;
-                        break;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_PAGEDOWN) {
-                        scroll_offset -= vis_rows / 2;
-                        if (scroll_offset < 0) scroll_offset = 0;
-                        screen_dirty = 1;
-                        break;
-                    }
-
-                    handle_keyboard(&e.key);
-                    screen_dirty = 1;
-                    break;
-
-                case SDL_JOYAXISMOTION: {
-                    int axis = e.jaxis.axis;
-                    int val = e.jaxis.value;
-                    const int DEAD = 16000;
-
-                    if (!osk_visible) break;
-
-                    if (axis == 0) {
-                        if (val < -DEAD && axis_x_state != -1) {
-                            axis_x_state = -1;
-                            fprintf(stderr, "[OSK] LEFT\n");
-                            osk_move(0, -1);
-                            screen_dirty = 1;
-                        } else if (val > DEAD && axis_x_state != 1) {
-                            axis_x_state = 1;
-                            fprintf(stderr, "[OSK] RIGHT\n");
-                            osk_move(0, 1);
-                            screen_dirty = 1;
-                        } else if (val >= -DEAD && val <= DEAD) {
-                            axis_x_state = 0;
-                        }
-                    } else if (axis == 1) {
-                        if (val < -DEAD && axis_y_state != -1) {
-                            axis_y_state = -1;
-                            fprintf(stderr, "[OSK] UP\n");
-                            osk_move(-1, 0);
-                            screen_dirty = 1;
-                        } else if (val > DEAD && axis_y_state != 1) {
-                            axis_y_state = 1;
-                            fprintf(stderr, "[OSK] DOWN\n");
-                            osk_move(1, 0);
-                            screen_dirty = 1;
-                        } else if (val >= -DEAD && val <= DEAD) {
-                            axis_y_state = 0;
-                        }
-                    }
-
-                    break;
-                }
-
-                case SDL_JOYHATMOTION: {
-                    if (!osk_visible) break;
-
-                    Uint8 hat = e.jhat.value;
-                    fprintf(stderr, "[OSK] HAT=%d\n", hat);
-
-                    if (hat & SDL_HAT_UP) {
-                        osk_move(-1, 0);
-                        fprintf(stderr, "[OSK] DPAD UP\n");
-                    }
-                    if (hat & SDL_HAT_DOWN) {
-                        osk_move(1, 0);
-                        fprintf(stderr, "[OSK] DPAD DOWN\n");
-                    }
-                    if (hat & SDL_HAT_LEFT) {
-                        osk_move(0, -1);
-                        fprintf(stderr, "[OSK] DPAD LEFT\n");
-                    }
-                    if (hat & SDL_HAT_RIGHT) {
-                        osk_move(0, 1);
-                        fprintf(stderr, "[OSK] DPAD RIGHT\n");
-                    }
-
-                    screen_dirty = 1;
-                    break;
-                }
-
-                case SDL_CONTROLLERBUTTONDOWN:
-                case SDL_JOYBUTTONDOWN: {
-                    int raw = -1;
-
-                    if (e.type == SDL_CONTROLLERBUTTONDOWN) {
-                        raw = e.cbutton.button;
-                    } else {
-                        raw = e.jbutton.button;
-                    }
-
-                    fprintf(stderr, "[OSK] DOWN RAW=%d\n", raw);
-
-                    switch (raw) {
-                        case 9: {
-                            osk_state = (osk_state + 1) % OSK_NUM_STATES;
-                            osk_visible = (osk_state != OSK_STATE_HIDDEN);
-
-                            fprintf(stderr, "[OSK] STATE -> %d visible=%d\n", osk_state, osk_visible);
-
-                            if (osk_state == OSK_STATE_BOTTOM_OPAQUE) {
-                                vis_rows = (term_height - osk_height) / CELL_HEIGHT;
-                            } else {
-                                vis_rows = TERM_ROWS;
-                            }
-
-                            if (vis_rows < 1) vis_rows = 1;
-
-                            scroll_offset = 0;
-                            screen_dirty = 1;
-                            break;
-                        }
-                        case 11:
-                            fprintf(stderr, "[OSK] QUIT\n");
-                            running = 0;
-                            break;
-                        case 3:
-                            if (osk_visible) {
-                                fprintf(stderr, "[OSK] PRESS KEY\n");
-                                osk_press_key();
-
-                                if (!osk_a_held) {
-                                    osk_a_held = 1;
-                                    osk_a_press_t = SDL_GetTicks();
-                                    osk_a_last_rep = osk_a_press_t;
-                                }
-
-                                scroll_offset = 0;
-                                screen_dirty = 1;
-                            }
-                            break;
-                        case 4:
-                            fprintf(stderr, "[OSK] BACKSPACE\n");
+                        case INPUT_ACT_BACKSPACE:
                             if (!readonly_mode) {
                                 char bs = '\x7F';
                                 pty_write(&bs, 1);
                             }
                             break;
-                        case 5:
-                            fprintf(stderr, "[OSK] SPACE\n");
+                        case INPUT_ACT_SPACE:
                             if (!readonly_mode) {
-                                pty_write(" ", 1);
+                                char sp = ' ';
+                                pty_write(&sp, 1);
                             }
-                            break;
-                        case 6:
-                            break;
-                        case 7:
-                            if (osk_visible) {
-                                fprintf(stderr, "[OSK] LAYER -1\n");
-                                osk_switch_layer(-1);
-                                screen_dirty = 1;
-                            }
-                            break;
-                        case 8:
-                            if (osk_visible) {
-                                fprintf(stderr, "[OSK] LAYER +1\n");
-                                osk_switch_layer(1);
-                                screen_dirty = 1;
-                            }
-                            break;
-                        case 10:
-                            fprintf(stderr, "[OSK] ENTER\n");
-                            if (!readonly_mode) {
-                                pty_write("\r", 1);
-                            }
-                            break;
-                        case 2:
-                            fprintf(stderr, "[OSK] PAGE UP\n");
-                            scroll_offset += vis_rows / 2;
-                            if (scroll_offset > sb_count) scroll_offset = sb_count;
-                            screen_dirty = 1;
-                            break;
-                        case 1:
-                            fprintf(stderr, "[OSK] PAGE DOWN\n");
-                            scroll_offset -= vis_rows / 2;
-                            if (scroll_offset < 0) scroll_offset = 0;
-                            screen_dirty = 1;
                             break;
                         default:
-                            fprintf(stderr, "[OSK] UNHANDLED RAW=%d\n", raw);
                             break;
                     }
 
-                    break;
+                    osk_hold_last_rep = now;
                 }
-                case SDL_CONTROLLERBUTTONUP:
-                case SDL_JOYBUTTONUP: {
-                    int raw = -1;
-
-                    if (e.type == SDL_CONTROLLERBUTTONUP) {
-                        raw = e.cbutton.button;
-                    } else {
-                        raw = e.jbutton.button;
-                    }
-
-                    fprintf(stderr, "[OSK] UP RAW=%d\n", raw);
-                    if (raw == 3) {
-                        fprintf(stderr, "[OSK] A RELEASE\n");
-                        osk_a_held = 0;
-                    }
-
-                    break;
-                }
-                case SDL_CONTROLLERDEVICEADDED:
-                    if (!controller) controller = SDL_GameControllerOpen(e.cdevice.which);
-                    break;
-                case SDL_CONTROLLERDEVICEREMOVED:
-                    if (controller) {
-                        SDL_GameControllerClose(controller);
-                        controller = NULL;
-                        for (int i = 0; i < SDL_NumJoysticks(); i++) {
-                            if (SDL_IsGameController(i)) {
-                                controller = SDL_GameControllerOpen(i);
-                                if (controller) break;
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    fprintf(stderr, "[SDL] EVENT type=%d\n", e.type);
-                    break;
-            }
-        }
-
-        if (osk_visible && osk_a_held) {
-            Uint32 now = SDL_GetTicks();
-            if (now - osk_a_press_t >= KEY_REPEAT_DELAY && now - osk_a_last_rep >= KEY_REPEAT_RATE) {
-                osk_press_key();
-                osk_a_last_rep = now;
-                screen_dirty = 1;
             }
         }
 
@@ -3181,9 +3415,7 @@ int main(int argc, char *argv[]) {
                     if (errno == EIO) shell_dead = 1;
                 }
 
-                if (saw_output) {
-                    scroll_offset = 0;
-                }
+                if (saw_output) scroll_offset = 0;
             }
         }
 
