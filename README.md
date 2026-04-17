@@ -16,7 +16,6 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
 * `mulookup`: Content Name Lookup
-* `muterm`: Custom Terminal Emulator
 * `muxcharge`: Charging Information Screen
 * `muxcredits`: Supporter Credits Screen
 * `muxfrontend`: Main Frontend Specific Runner
