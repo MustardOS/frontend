@@ -35,8 +35,9 @@ static void load_profile(char *name) {
 
     mini_t *net_profile = mini_try_load(profile_file);
 
-    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT,
-                       (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0) ? 1 : 0);
+    int is_static = (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0);
+
+    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT, is_static ? 1 : 0);
 
     write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
@@ -48,16 +49,16 @@ static void load_profile(char *name) {
                        mini_get_string(net_profile, "network", "pass", ""));
 
     write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR,
-                       mini_get_string(net_profile, "network", "address", ""));
+                       is_static ? mini_get_string(net_profile, "network", "address", "") : "");
 
     write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR,
-                       mini_get_string(net_profile, "network", "subnet", ""));
+                       is_static ? mini_get_string(net_profile, "network", "subnet", "") : "");
 
     write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR,
-                       mini_get_string(net_profile, "network", "gateway", ""));
+                       is_static ? mini_get_string(net_profile, "network", "gateway", "") : "");
 
     write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR,
-                       mini_get_string(net_profile, "network", "dns", ""));
+                       is_static ? mini_get_string(net_profile, "network", "dns", "") : "");
 
     write_text_to_file(CONF_CONFIG_PATH "network/hostname", "w", CHAR,
                        mini_get_string(net_profile, "network", "hostname", read_line_char_from("/etc/hostname", 1)));
@@ -117,7 +118,7 @@ static int save_profile(void) {
 
     mini_set_string(net_profile, "network", "ssid", p_ssid);
     mini_set_string(net_profile, "network", "pass", p_pass);
-    mini_set_string(net_profile, "network", "scan", p_hidden);
+    mini_set_string(net_profile, "network", "hidden", p_hidden);
     mini_set_string(net_profile, "network", "type", (!type) ? "dhcp" : "static");
     mini_set_string(net_profile, "network", "address", (!type) ? "" : p_address);
     mini_set_string(net_profile, "network", "subnet", (!type) ? "" : p_subnet);
