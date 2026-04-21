@@ -392,6 +392,7 @@ void run_dvd_screensaver_loop(void) {
     monitor.force_clear = true;
     monitor.refresh = true;
 
+    SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
     mux_input_resume();
 }
 
@@ -465,14 +466,16 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     // Update our screensaver function, and if we update successfully
     // then we mark it as active and run the loop with a complete
     // separate input logic scheme that does not interrupt the muX frontend!
-    if (config.SETTINGS.POWER.SCREENSAVER) dvd_update();
-    if (config.SETTINGS.POWER.SCREENSAVER && dvd_active()) {
+    if (config.SETTINGS.POWER.SCREENSAVER) {
         uint32_t now = SDL_GetTicks();
 
         if (now - last_saver_exit > SCREENSAVER_DELAY) {
-            pending_rect_valid = false;
-            run_dvd_screensaver_loop();
-            last_saver_exit = SDL_GetTicks();
+            dvd_update();
+            if (dvd_active()) {
+                pending_rect_valid = false;
+                run_dvd_screensaver_loop();
+                last_saver_exit = SDL_GetTicks();
+            }
         }
     }
 

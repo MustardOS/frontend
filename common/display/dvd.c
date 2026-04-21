@@ -183,7 +183,9 @@ void dvd_update(void) {
 
     if (now < suppress_until) {
         dvd.idle_active = 0;
+        dvd.was_idle_active = 0;
         dvd.last_tick = now;
+        dvd.last_idle_poll = now;
 
         return;
     }
@@ -296,6 +298,7 @@ void dvd_render(SDL_Renderer *renderer) {
 }
 
 int dvd_active(void) {
+    if (suppress_until && SDL_GetTicks() < suppress_until) return 0;
     return dvd.enabled && dvd.idle_active;
 }
 
@@ -313,5 +316,7 @@ void dvd_shutdown(void) {
     }
 
     dvd.enabled = false;
+    suppress_until = 0;
+
     LOG_INFO("saver", "Screensaver Shutdown");
 }
