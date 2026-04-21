@@ -54,6 +54,8 @@ const struct ext_core_name ext_core_names[] = {
         {"amiberry",                  "Amiberry"},
         {"pyxel",                     "Pyxel"},
         {"crisp",                     "Crisp Game Lib"},
+        {"terminal",                  "Linux Script"},
+        {"frotz",                     "Frotz - Z-Machine"},
 
         {NULL, NULL}
 };
