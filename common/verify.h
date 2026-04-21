@@ -8,6 +8,7 @@ struct int_script_hash {
 int script_hash_check(void);
 
 static const struct int_script_hash int_scripts[] = {
+        {"/opt/muos/script/device/amp.sh",            "989c633ead4ab77d"},
         {"/opt/muos/script/device/audio.sh",          "26db1c0af1f11b70"},
         {"/opt/muos/script/device/bind.sh",           "6e0bb4b04205beb0"},
         {"/opt/muos/script/device/bright.sh",         "c0f28a898eaf8345"},
@@ -23,7 +24,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/device/storage.sh",        "3d588cba718c3d5d"},
         {"/opt/muos/script/init/S10udev.sh",          "161e434ba70a305e"},
         {"/opt/muos/script/init/S30dbus.sh",          "5f4d46a68df03a20"},
-        {"/opt/muos/script/init/S80pipewire.sh",      "e72e8a096408fba1"},
+        {"/opt/muos/script/init/S80pipewire.sh",      "17c60fa614285548"},
         {"/opt/muos/script/init/S81mode.sh",          "ed11ea05b502149c"},
         {"/opt/muos/script/init/S99muos.sh",          "48183264f829deb3"},
         {"/opt/muos/script/init/async/S00entropy.sh", "6385a5ba237b097e"},
@@ -31,7 +32,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/init/async/S02network.sh", "f169deda915f53ae"},
         {"/opt/muos/script/init/async/S03chrony.sh",  "fe634402ef3c5eda"},
         {"/opt/muos/script/init/async/S04rumble.sh",  "41f32bdac2bc624b"},
-        {"/opt/muos/script/init/async/S05device.sh",  "40ddcdc2849bfcce"},
+        {"/opt/muos/script/init/async/S05device.sh",  "423d62dd7e694985"},
         {"/opt/muos/script/init/async/S06mount.sh",   "bd1521db1fd92729"},
         {"/opt/muos/script/init/shutdown",            "501e1e3209d1bcc8"},
         {"/opt/muos/script/init/sysinit",             "e5f0f116c29a7f11"},
