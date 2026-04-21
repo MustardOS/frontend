@@ -160,6 +160,9 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
         exec[i++] = font_path;
     }
 
+    exec[i++] = "--font-hinting";
+    exec[i++] = (char *) theme.TERMINAL.FONT_HINT;
+
     static char image_path[MAX_BUFFER_SIZE];
     if (load_terminal_resource("image", "png", image_path, sizeof(image_path))) {
         exec[i++] = "-i";

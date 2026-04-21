@@ -411,6 +411,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
 
     strncpy(theme->TERMINAL.FONT_SIZE, "16", MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(theme->TERMINAL.FONT_HINT, "mono", MAX_BUFFER_SIZE - 1);
+    theme->TERMINAL.FONT_HINT[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.FOREGROUND, "FFFFFF", MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.BACKGROUND, "000000", MAX_BUFFER_SIZE - 1);

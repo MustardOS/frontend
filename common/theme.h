@@ -425,6 +425,7 @@ struct theme_config {
 
     struct {
         char FONT_SIZE[MAX_BUFFER_SIZE];
+        char FONT_HINT[MAX_BUFFER_SIZE];
         char FOREGROUND[MAX_BUFFER_SIZE];
         char BACKGROUND[MAX_BUFFER_SIZE];
     } TERMINAL;
