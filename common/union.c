@@ -9,11 +9,10 @@
 #include <pthread.h>
 #include "common.h"
 #include "config.h"
+#include "options.h"
 #include "device.h"
 #include "collection.h"
 #include "union.h"
-
-#define UNION_ROM_NAME "ROMS"
 
 #define UNION_SET_INIT_BIT 8
 #define UNION_SET_INIT_CAP 512
@@ -641,7 +640,7 @@ void union_get_roms_root(char *out, size_t out_size) {
         if (!union_mounts[i] || !*union_mounts[i]) continue;
 
         char path[PATH_MAX];
-        snprintf(path, sizeof(path), "%s/%s", union_mounts[i], UNION_ROM_NAME);
+        snprintf(path, sizeof(path), "%s/%s", union_mounts[i], MAIN_ROM_DIR);
 
         remove_double_slashes(path);
         if (dir_exist(path)) {
@@ -650,7 +649,7 @@ void union_get_roms_root(char *out, size_t out_size) {
         }
     }
 
-    snprintf(out, out_size, "%s/%s", device.STORAGE.ROM.MOUNT, UNION_ROM_NAME);
+    snprintf(out, out_size, "%s/%s", device.STORAGE.ROM.MOUNT, MAIN_ROM_DIR);
 }
 
 char *union_get_title_root(char *path, char *out, size_t out_size) {
@@ -659,7 +658,7 @@ char *union_get_title_root(char *path, char *out, size_t out_size) {
 
     if (!path || !*path) return NULL;
 
-    if (at_base(path, UNION_ROM_NAME)) {
+    if (at_base(path, MAIN_ROM_DIR)) {
         snprintf(out, out_size, "%s", path);
         return out;
     }

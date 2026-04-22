@@ -310,7 +310,7 @@ static void init_elements(void) {
         nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
         nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
 
-        if (!at_base(rom_dir, "ROMS")) {
+        if (!at_base(rom_dir, MAIN_ROM_DIR)) {
             nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
             nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
         }

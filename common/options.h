@@ -67,6 +67,8 @@
 #define OSK_CHAR  "!@#"
 #define OSK_DONE  "OK"
 
+#define MAIN_ROM_DIR "ROMS"
+
 #define CHIME_DONE "/tmp/chime_done"
 #define SAFE_QUIT  "/tmp/safe_quit"
 

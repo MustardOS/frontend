@@ -95,7 +95,7 @@ static void image_refresh(char *image_type) {
     char h_core_artwork_buf[MAX_BUFFER_SIZE];
     char *h_core_artwork;
 
-    if (union_is_root(sys_dir) || at_base(sys_dir, "ROMS")) {
+    if (union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR)) {
         snprintf(h_core_artwork_buf, sizeof(h_core_artwork_buf), "Folder");
         h_core_artwork = h_core_artwork_buf;
     } else {
@@ -258,7 +258,7 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
 
     union_get_relative_path(sys_dir, sub_path, sizeof(sub_path));
 
-    if (strncasecmp(sub_path, "ROMS", 4) == 0) {
+    if (strncasecmp(sub_path, MAIN_ROM_DIR, 4) == 0) {
         char *p = sub_path + 4;
         while (*p == '/') p++;
         memmove(sub_path, p, strlen(p) + 1);
@@ -838,7 +838,7 @@ static int fwd_hist_parse(char *line, char *key, int *out_val) {
 }
 
 static void fwd_hist_set(char *dir, int index) {
-    if (!config.VISUAL.FORWARDHISTORY || index < 0 || union_is_root(dir) || at_base(dir, "ROMS")) return;
+    if (!config.VISUAL.FORWARDHISTORY || index < 0 || union_is_root(dir) || at_base(dir, MAIN_ROM_DIR)) return;
 
     char rel[PATH_MAX];
     union_get_relative_path(dir, rel, sizeof(rel));
@@ -879,7 +879,7 @@ static void fwd_hist_set(char *dir, int index) {
 }
 
 static int fwd_hist_get(char *dir) {
-    if (!config.VISUAL.FORWARDHISTORY || union_is_root(dir) || at_base(dir, "ROMS")) return -1;
+    if (!config.VISUAL.FORWARDHISTORY || union_is_root(dir) || at_base(dir, MAIN_ROM_DIR)) return -1;
 
     char rel[PATH_MAX];
     union_get_relative_path(dir, rel, sizeof(rel));
@@ -1017,7 +1017,7 @@ static void handle_b(void) {
 
     play_sound(SND_BACK);
 
-    if (at_base(sys_dir, "ROMS")) {
+    if (at_base(sys_dir, MAIN_ROM_DIR)) {
         reload_explore();
         return;
     }

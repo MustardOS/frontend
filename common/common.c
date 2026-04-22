@@ -3544,13 +3544,13 @@ int load_content(int add_collection, char *file_path) {
     union_get_relative_path(item_dir, system_sub, sizeof(system_sub));
     union_get_mount_path(file_path, mount_path, sizeof(mount_path));
 
-    if (strncasecmp(cfg_sub, "ROMS", 4) == 0) {
+    if (strncasecmp(cfg_sub, MAIN_ROM_DIR, 4) == 0) {
         char *p = cfg_sub + 4;
         while (*p == '/') p++;
         memmove(cfg_sub, p, strlen(p) + 1);
     }
 
-    if (strncasecmp(system_sub, "ROMS", 4) == 0) {
+    if (strncasecmp(system_sub, MAIN_ROM_DIR, 4) == 0) {
         char *p = system_sub + 4;
         while (*p == '/') p++;
         memmove(system_sub, p, strlen(p) + 1);
@@ -3698,7 +3698,7 @@ char *load_content_core(int force, int run_quit, char *file_path) {
     char rel_sys_dir[PATH_MAX];
     union_get_relative_path(sys_dir, rel_sys_dir, sizeof(rel_sys_dir));
 
-    if (strncasecmp(rel_sys_dir, "ROMS", 4) == 0) {
+    if (strncasecmp(rel_sys_dir, MAIN_ROM_DIR, 4) == 0) {
         char *p = rel_sys_dir + 4;
         while (*p == '/') p++;
         memmove(rel_sys_dir, p, strlen(p) + 1);

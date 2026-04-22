@@ -246,7 +246,7 @@ static void populate_info_values(void) {
     char rel_path[PATH_MAX];
     union_get_relative_path(rom_dir, rel_path, sizeof(rel_path));
 
-    if (strncasecmp(rel_path, "ROMS", 4) == 0) {
+    if (strncasecmp(rel_path, MAIN_ROM_DIR, 4) == 0) {
         char *p = rel_path + 4;
         while (*p == '/') p++;
         memmove(rel_path, p, strlen(p) + 1);

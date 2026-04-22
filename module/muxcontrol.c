@@ -253,7 +253,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || is_app || at_base(rom_dir, "ROMS") || hold_call) return;
+    if (msgbox_active || is_app || at_base(rom_dir, MAIN_ROM_DIR) || hold_call) return;
 
     LOG_INFO(mux_module, "Parent Control Assignment Triggered");
     play_sound(SND_CONFIRM);
@@ -288,7 +288,7 @@ static void init_elements(void) {
         nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
         nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
 
-        if (!at_base(rom_dir, "ROMS")) {
+        if (!at_base(rom_dir, MAIN_ROM_DIR)) {
             nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
             nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
         }
