@@ -398,6 +398,10 @@ static void module_filter(void) {
     module_run("option", muxcolfilter_main);
 }
 
+static void module_shader(void) {
+    module_run("option", muxshader_main);
+}
+
 static void module_option(void) {
     module_run("explore", muxoption_main);
 }
@@ -510,6 +514,7 @@ static const ModuleEntry modules[] = {
         {"retroarch",  NULL, NULL, NULL, module_retroarch},
         {"tag",        NULL, NULL, NULL, module_tag},
         {"filter",     NULL, NULL, NULL, module_filter},
+        {"shader",     NULL, NULL, NULL, module_shader},
         {"explore",    NULL, NULL, NULL, module_explore},
         {"collection", NULL, NULL, NULL, module_collection},
         {"history",    NULL, NULL, NULL, module_history},

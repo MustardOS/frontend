@@ -665,6 +665,7 @@ struct mux_lang {
         char SEARCH[MAX_BUFFER_SIZE];
         char TAG[MAX_BUFFER_SIZE];
         char COLFILTER[MAX_BUFFER_SIZE];
+        char SHADER[MAX_BUFFER_SIZE];
         char REMCONFIG[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char RACONFIG[MAX_BUFFER_SIZE];
@@ -714,6 +715,7 @@ struct mux_lang {
             char SEARCH[MAX_BUFFER_SIZE];
             char TAG[MAX_BUFFER_SIZE];
             char COLFILTER[MAX_BUFFER_SIZE];
+            char SHADER[MAX_BUFFER_SIZE];
             char REMCONFIG[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RACONFIG[MAX_BUFFER_SIZE];
@@ -930,6 +932,7 @@ struct mux_lang {
         char TAG[MAX_BUFFER_SIZE];
         char RETROARCH[MAX_BUFFER_SIZE];
         char COLFILTER[MAX_BUFFER_SIZE];
+        char SHADER[MAX_BUFFER_SIZE];
         char REMCONFIG[MAX_BUFFER_SIZE];
         char REMCONTENT[MAX_BUFFER_SIZE];
         char REMDIR[MAX_BUFFER_SIZE];
@@ -945,6 +948,7 @@ struct mux_lang {
             char TAG[MAX_BUFFER_SIZE];
             char RETROARCH[MAX_BUFFER_SIZE];
             char COLFILTER[MAX_BUFFER_SIZE];
+            char SHADER[MAX_BUFFER_SIZE];
             char REMCONFIG[MAX_BUFFER_SIZE];
             char STORAGE[MAX_BUFFER_SIZE];
             char FOLDER[MAX_BUFFER_SIZE];
@@ -1125,6 +1129,12 @@ struct mux_lang {
             char LOOKUP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXSEARCH;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+    } MUXSHADER;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

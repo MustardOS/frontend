@@ -247,6 +247,10 @@ char *load_content_filter(char *sys_dir, const char *pointer, int force, int run
     return load_content_asset(sys_dir, pointer, force, run_quit, "flt", "Colour Filter", is_app);
 }
 
+char *load_content_shader(char *sys_dir, const char *pointer, int force, int run_quit, int is_app) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "shd", "Shader", is_app);
+}
+
 void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config, char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
@@ -682,4 +686,47 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
             }
         }
     }
+}
+
+char *read_shader_info(const char *shader_store, const char *key) {
+    if (!shader_store || !*shader_store || !*key) return NULL;
+
+    char shader_path[PATH_MAX];
+    snprintf(shader_path, sizeof(shader_path), "%s/%s.frag", STORAGE_SHADER, shader_store);
+    remove_double_slashes(shader_path);
+
+    FILE *f = fopen(shader_path, "r");
+    if (!f) return NULL;
+
+    char line[MAX_BUFFER_SIZE];
+
+    while (fgets(line, sizeof(line), f)) {
+        char *s = str_trim(line);
+        if (!s || !*s) continue;
+
+        if (strncmp(s, "//", 2) != 0) break;
+
+        s += 2;
+        s = str_trim(s);
+        if (!s || !*s) continue;
+
+        char *colon = strchr(s, ':');
+        if (!colon) continue;
+
+        *colon = '\0';
+
+        char *k = str_trim(s);
+        char *v = str_trim(colon + 1);
+
+        if (!k || !v || !*v) continue;
+
+        if (strcasecmp(k, key) == 0) {
+            char *out = strdup(v);
+            fclose(f);
+            return out;
+        }
+    }
+
+    fclose(f);
+    return NULL;
 }

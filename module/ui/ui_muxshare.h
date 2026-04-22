@@ -210,6 +210,7 @@
     KIOSK(Search,     SEARCH,     "search")     \
     KIOSK(Tag,        TAG,        "tag")        \
     KIOSK(ColFilter,  COLFILTER,  "colfilter")  \
+    KIOSK(Shader,     SHADER,     "shader")     \
     KIOSK(RemConfig,  REMCONFIG,  "remconfig")  \
     KIOSK(Catalogue,  CATALOGUE,  "catalogue")  \
     KIOSK(RAConfig,   RACONFIG,   "raconfig")   \
@@ -286,6 +287,7 @@
     OPTION(RetroArch, RETROARCH, "retroarch") \
     OPTION(RemConfig, REMCONFIG, "remconfig") \
     OPTION(ColFilter, COLFILTER, "colfilter") \
+    OPTION(Shader,    SHADER,    "shader")    \
     OPTION(Tag,       TAG,       "tag")       \
     OPTION(Storage,   STORAGE,   "storage")   \
     OPTION(Folder,    FOLDER,    "folder")    \

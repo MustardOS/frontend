@@ -92,6 +92,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     bool is_con = strcmp(opt_type, "control") == 0;
     bool is_tag = strcmp(opt_type, "tag") == 0;
     bool is_flt = strcmp(opt_type, "filter") == 0;
+    bool is_shd = strcmp(opt_type, "shader") == 0;
     bool is_rac = strcmp(opt_type, "retroarch") == 0;
 
     if (!*value) {
@@ -100,6 +101,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
                 is_con ? lang.MUXOPTION.NONE :
                 is_tag ? lang.MUXOPTION.NOT_ASSIGNED :
                 is_flt ? lang.MUXOPTION.NONE :
+                is_shd ? lang.MUXOPTION.NONE :
                 is_rac ? lang.GENERIC.DISABLED :
                 lang.GENERIC.UNKNOWN;
     }
@@ -116,6 +118,20 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
             snprintf(cap_value, sizeof(cap_value), "%s", lang.GENERIC.DISABLED);
         } else {
             snprintf(cap_value, sizeof(cap_value), "%s", lang.GENERIC.ENABLED);
+        }
+    } else if (is_shd) {
+        if (strcmp(value, lang.MUXOPTION.NONE) == 0) {
+            snprintf(cap_value, sizeof(cap_value), "%s", lang.MUXOPTION.NONE);
+        } else {
+            char *meta_name = read_shader_info(value, "Name");
+
+            if (meta_name && *meta_name) {
+                snprintf(cap_value, sizeof(cap_value), "%s", meta_name);
+            } else {
+                snprintf(cap_value, sizeof(cap_value), "%s", str_replace(value, "_", " "));
+            }
+
+            if (meta_name) free(meta_name);
         }
     } else if (is_flt) {
         snprintf(cap_value, sizeof(cap_value), "%s", str_replace(value, "_", " "));
@@ -215,6 +231,10 @@ static void populate_info_values(void) {
     const char *flt_dir = get_content_line(sys_dir, NULL, "flt", 1);
     add_info_item_type(ui_lblColFilterValue_option, flt_file, flt_dir, "filter", true);
 
+    const char *shd_file = get_content_line(sys_dir, file_name, "shd", 1);
+    const char *shd_dir = get_content_line(sys_dir, NULL, "shd", 1);
+    add_info_item_type(ui_lblShaderValue_option, shd_file, shd_dir, "shader", true);
+
     if (!is_dir) {
         const char *tag_file = get_content_line(sys_dir, file_name, "tag", 1);
         const char *tag_dir = get_content_line(sys_dir, NULL, "tag", 1);
@@ -271,6 +291,7 @@ static void build_all_items(void) {
     INIT_VALUE_ITEM(-1, option, RetroArch, lang.MUXOPTION.RETROARCH, "retroarch", "");
     INIT_VALUE_ITEM(-1, option, RemConfig, lang.MUXOPTION.REMCONFIG, "remconfig", is_dir ? lang.GENERIC.DIRECTORY : lang.GENERIC.CONTENT);
     INIT_VALUE_ITEM(-1, option, ColFilter, lang.MUXOPTION.COLFILTER, "colfilter", "");
+    INIT_VALUE_ITEM(-1, option, Shader, lang.MUXOPTION.SHADER, "shader", "");
     INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
 
     INIT_VALUE_ITEM(-1, option, Storage, lang.GENERIC.STORAGE, "storage", "");
@@ -299,6 +320,7 @@ static void build_options_view(void) {
     SHOW_VALUE_ITEM(option, RetroArch);
     SHOW_VALUE_ITEM(option, RemConfig);
     SHOW_VALUE_ITEM(option, ColFilter);
+    SHOW_VALUE_ITEM(option, Shader);
     if (!is_dir) SHOW_VALUE_ITEM(option, Tag);
 
     HIDE_VALUE_ITEM(option, Storage);
@@ -317,6 +339,7 @@ static void build_options_view(void) {
 
     if (hdmi_mode) {
         HIDE_VALUE_ITEM(option, ColFilter);
+        HIDE_VALUE_ITEM(option, Shader);
     }
 }
 
@@ -336,6 +359,7 @@ static void build_info_view(void) {
     HIDE_VALUE_ITEM(option, RetroArch);
     HIDE_VALUE_ITEM(option, RemConfig);
     HIDE_VALUE_ITEM(option, ColFilter);
+    HIDE_VALUE_ITEM(option, Shader);
     if (!is_dir) HIDE_VALUE_ITEM(option, Tag);
 }
 
@@ -527,6 +551,7 @@ static void handle_a(void) {
             {"retroarch", &kiosk.CONTENT.RETROARCH, visible_retroarch},
             {"remconfig", &kiosk.CONTENT.REMCONFIG, visible_remconfig},
             {"filter",    &kiosk.CONTENT.COLFILTER, NULL},
+            {"shader",    &kiosk.CONTENT.SHADER,    NULL},
             {"tag",       &kiosk.CONTENT.TAG,       visible_tag},
     };
 

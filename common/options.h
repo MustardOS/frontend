@@ -101,6 +101,7 @@
 #define STORAGE_LANG    OPT_SHARE_PATH "language"
 #define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
 #define STORAGE_FILTER  OPT_SHARE_PATH "filter"
+#define STORAGE_SHADER  OPT_SHARE_PATH "shader"
 
 #define FWD_HIST_FILE OPT_SHARE_PATH "info/fwd_hist.txt"
 
@@ -168,6 +169,7 @@
 #define MUOS_SAG_LOAD "/tmp/sag_go" // Auto Assign Governor Flag
 #define MUOS_SAR_LOAD "/tmp/sar_go" // Auto Assign RetroArch Config Flag
 #define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
+#define MUOS_SHD_LOAD "/tmp/shd_go" // Content Shader Name
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 

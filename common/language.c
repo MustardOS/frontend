@@ -824,6 +824,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.CONTROL, "Control Scheme");
     SPECIFIC_FIELD(lang->MUXOPTION.RETROARCH, "Threaded Video");
     SPECIFIC_FIELD(lang->MUXOPTION.COLFILTER, "Colour Filter");
+    SPECIFIC_FIELD(lang->MUXOPTION.SHADER, "Shader");
     SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Content Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.REMCONFIG, "Remove Config");
     SPECIFIC_FIELD(lang->MUXOPTION.REMCONTENT, "Removing Content Config…");
@@ -838,6 +839,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.RETROARCH, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.COLFILTER, "Select a colour filter that will change the display output of the running content. May not work with everything!");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.SHADER, "Select a shader that will affect the look and feel of the running content. May not work with everything!");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.REMCONFIG, "Remove specific RetroArch configuration, just in case something goes horribly wrong");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.STORAGE, "Displays which storage device the selected content is located on");
@@ -981,6 +983,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.SEARCHGLOBAL, "Search all current active storage devices");
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.SEARCHLOCAL, "Search within the current selected folder and folders within");
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOOKUP, "Enter in the name of the content you are looking for");
+
+    // muxshader
+    SPECIFIC_FIELD(lang->MUXSHADER.TITLE, "SHADERS");
+    SPECIFIC_FIELD(lang->MUXSHADER.HELP, "Change the shader of your current selected content");
+    SPECIFIC_FIELD(lang->MUXSHADER.NONE, "No Shaders Found…");
 
     // muxshot
     SPECIFIC_FIELD(lang->MUXSHOT.TITLE, "SCREENSHOTS");

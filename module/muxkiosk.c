@@ -47,6 +47,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droSearch_kiosk, kiosk.CONTENT.SEARCH);
     lv_dropdown_set_selected(ui_droTag_kiosk, kiosk.CONTENT.TAG);
     lv_dropdown_set_selected(ui_droColFilter_kiosk, kiosk.CONTENT.COLFILTER);
+    lv_dropdown_set_selected(ui_droShader_kiosk, kiosk.CONTENT.SHADER);
     lv_dropdown_set_selected(ui_droRemConfig_kiosk, kiosk.CONTENT.REMCONFIG);
     lv_dropdown_set_selected(ui_droCatalogue_kiosk, kiosk.CUSTOM.CATALOGUE);
     lv_dropdown_set_selected(ui_droRAConfig_kiosk, kiosk.CUSTOM.RACONFIG);
@@ -93,6 +94,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, Control, "content/control", INT);
     CHECK_AND_SAVE_KSK(kiosk, Tag, "content/tag", INT);
     CHECK_AND_SAVE_KSK(kiosk, ColFilter, "content/colfilter", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Shader, "content/shader", INT);
     CHECK_AND_SAVE_KSK(kiosk, RemConfig, "content/remconfig", INT);
     CHECK_AND_SAVE_KSK(kiosk, Option, "content/option", INT);
     CHECK_AND_SAVE_KSK(kiosk, RetroArch, "content/retroarch", INT);
@@ -157,6 +159,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, Search, lang.MUXKIOSK.SEARCH, "search", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Tag, lang.MUXKIOSK.TAG, "tag", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, ColFilter, lang.MUXKIOSK.COLFILTER, "colfilter", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Shader, lang.MUXKIOSK.SHADER, "shader", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, RemConfig, lang.MUXKIOSK.REMCONFIG, "remconfig", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig", allowed_restricted, 2);

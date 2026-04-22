@@ -3606,6 +3606,7 @@ int load_content(int add_collection, char *file_path) {
         char *assigned_con = specify_asset(load_content_control_scheme(content_path, content_name, 0, 1, 0), "system", "Control Scheme");
         char *assigned_rac = specify_asset(load_content_retroarch(content_path, content_name, 0, 1, 0), "false", "RetroArch Config");
         char *assigned_flt = specify_asset(load_content_filter(content_path, content_name, 0, 1, 0), "none", "Colour Filter");
+        char *assigned_shd = specify_asset(load_content_shader(content_path, content_name, 0, 1, 0), "none", "Shader");
 
         unsigned int new_hash = fnv1a_hash_str(file_path);
         char new_history[PATH_MAX];
@@ -3664,6 +3665,7 @@ int load_content(int add_collection, char *file_path) {
         write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
         write_text_to_file(MUOS_RAC_LOAD, "w", CHAR, assigned_rac);
         write_text_to_file(MUOS_FLT_LOAD, "w", CHAR, assigned_flt);
+        write_text_to_file(MUOS_SHD_LOAD, "w", CHAR, assigned_shd);
 
         char *loader_text = read_all_char_from(content_loader_file);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, loader_text);

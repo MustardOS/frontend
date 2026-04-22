@@ -338,6 +338,7 @@ static void process_load(int from_start) {
                     if (file_exist(MUOS_GOV_LOAD)) remove(MUOS_GOV_LOAD);
                     if (file_exist(MUOS_RAC_LOAD)) remove(MUOS_RAC_LOAD);
                     if (file_exist(MUOS_FLT_LOAD)) remove(MUOS_FLT_LOAD);
+                    if (file_exist(MUOS_SHD_LOAD)) remove(MUOS_SHD_LOAD);
                     goto load_end;
                 }
             }
