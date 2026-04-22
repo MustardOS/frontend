@@ -397,5 +397,6 @@ int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     free_items(&items, &item_count);
 
+    nav_silent = 1;
     return 0;
 }

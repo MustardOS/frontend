@@ -437,12 +437,7 @@ static void refresh_option_view(void) {
 
 static void list_nav_move(int steps, int direction) {
     if (!ui_count) return;
-
-    if (first_open) {
-        first_open = 0;
-    } else if (!nav_silent) {
-        play_sound(SND_NAVIGATE);
-    }
+    if (first_open) first_open = 0;
 
     for (int i = 0; i < steps; i++) {
         if (lv_group_get_focused(ui_group)) {
@@ -730,6 +725,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
         list_nav_move(read_line_int_from(MUOS_OPI_LOAD, 1), +1);
         remove(MUOS_OPI_LOAD);
     }
+
+    nav_silent = 0;
 
     init_timer(ui_gen_refresh_task, NULL);
 

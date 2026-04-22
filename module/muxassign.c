@@ -476,5 +476,6 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
+    nav_silent = 1;
     return 0;
 }
