@@ -55,13 +55,13 @@
         int fd = open(log_path, O_WRONLY | O_CREAT | O_APPEND, 0644);   \
         if (fd >= 0) {                                                  \
             char file_buffer[1024];                                     \
-            int len = snprintf(file_buffer, sizeof(file_buffer),        \
+            int log_len = snprintf(file_buffer, sizeof(file_buffer),    \
                 "[%.2f]\t[%s] [%s]\t" msg "\n",                         \
                 uptime, time_buffer, truncated_module,                  \
                 ##__VA_ARGS__);                                         \
                                                                         \
-            if (len > 0) {                                              \
-                write(fd, file_buffer, (size_t)len);                    \
+            if (log_len > 0) {                                          \
+                write(fd, file_buffer, (size_t)log_len);                \
                 fsync(fd);                                              \
             }                                                           \
             close(fd);                                                  \
