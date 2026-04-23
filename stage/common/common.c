@@ -290,3 +290,56 @@ void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz)
         out[0] = '\0';
     }
 }
+
+int parse_hex_colour(const char *hex, SDL_Color *out) {
+    if (!hex) return 0;
+
+    while (*hex && isspace((unsigned char) *hex)) hex++;
+
+    if (*hex == '#') hex++;
+    while (*hex && isspace((unsigned char) *hex)) hex++;
+
+    if (strlen(hex) < 6) return 0;
+
+    char buf[3] = {0};
+    char *end;
+
+    buf[0] = hex[0];
+    buf[1] = hex[1];
+    unsigned long r = strtoul(buf, &end, 16);
+    if (end != buf + 2) return 0;
+
+    buf[0] = hex[2];
+    buf[1] = hex[3];
+    unsigned long g = strtoul(buf, &end, 16);
+    if (end != buf + 2) return 0;
+
+    buf[0] = hex[4];
+    buf[1] = hex[5];
+    unsigned long b = strtoul(buf, &end, 16);
+    if (end != buf + 2) return 0;
+
+    out->r = (Uint8) r;
+    out->g = (Uint8) g;
+    out->b = (Uint8) b;
+    out->a = 255;
+
+    return 1;
+}
+
+void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
+    GLuint t = 0;
+
+    glGenTextures(1, &t);
+    glBindTexture(GL_TEXTURE_2D, t);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
+
+    *out_tex = t;
+}

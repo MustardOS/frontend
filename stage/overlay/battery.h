@@ -17,7 +17,6 @@ extern int battery_last_step;
 
 extern int battery_anchor_cached;
 extern int battery_scale_cached;
-extern int battery_rotate_cached;
 
 extern SDL_Texture *battery_sdl_tex[INDICATOR_STEPS];
 extern int battery_sdl_w[INDICATOR_STEPS];

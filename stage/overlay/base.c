@@ -8,13 +8,11 @@
 #include "../../common/inotify.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
-#include "../common/rotate.h"
 #include "../common/scale.h"
 #include "base.h"
 
 int base_anchor_cached = -1;
 int base_scale_cached = -1;
-int base_rotate_cached = ROTATE_0;
 
 SDL_Texture *base_sdl_tex;
 int base_sdl_ready;
@@ -89,23 +87,6 @@ void destroy_base_gles(void) {
     base_gles_attempted = 0;
 
     vtx_base_valid = 0;
-}
-
-static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
-    GLuint t = 0;
-
-    glGenTextures(1, &t);
-    glBindTexture(GL_TEXTURE_2D, t);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-
-    *out_tex = t;
 }
 
 static int read_overlay_loader(struct overlay_go_cache *cache) {

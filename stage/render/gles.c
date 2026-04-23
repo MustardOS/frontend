@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 #include <GLES2/gl2.h>
 #include "../../common/log.h"
@@ -16,9 +17,11 @@
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
+#include "../overlay/notif.h"
 #include "../hook.h"
 
 #define RENDER_PATHS 8
+
 
 static int fb_cached_w = 0;
 static int fb_cached_h = 0;
@@ -36,7 +39,8 @@ static GLuint gles_prog_content = 0;
 static GLint gles_u_brightness = -1;
 static GLint gles_u_contrast = -1;
 static GLint gles_u_saturation = -1;
-static GLint gles_u_hueshift = -1;
+static GLint gles_u_cosH = -1;
+static GLint gles_u_sinH = -1;
 static GLint gles_u_gamma = -1;
 
 static GLint gles_u_filter = -1;
@@ -74,6 +78,8 @@ static GLuint overlay_fbo = 0;
 static int overlay_tex_w = 0;
 static int overlay_tex_h = 0;
 static int overlay_valid = 0;
+
+static GLuint dim_tex = 0;
 
 static struct {
     GLuint program;
@@ -218,7 +224,7 @@ static inline int content_pass_needed(int rot) {
 }
 
 static struct {
-    float brightness, contrast, saturation, hueshift, gamma;
+    float brightness, contrast, saturation, cosH, sinH, gamma;
     int filter_enabled;
     float filter[9];
     int valid;
@@ -250,7 +256,8 @@ static const char *fs_content_src =
         "uniform float u_brightness;"
         "uniform float u_contrast;"
         "uniform float u_saturation;"
-        "uniform float u_hueshift;"
+        "uniform float u_cosH;"
+        "uniform float u_sinH;"
         "uniform float u_gamma;"
         "uniform mat3 u_filter;"
         "uniform int u_filter_enabled;"
@@ -261,12 +268,10 @@ static const char *fs_content_src =
         "    c = (c - 0.5) * u_contrast + 0.5;"
         "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
         "    c = mix(vec3(l), c, u_saturation);"
-        "    float cosH = cos(u_hueshift);"
-        "    float sinH = sin(u_hueshift);"
         "    mat3 hueMat = mat3("
-        "        0.299 + 0.701*cosH + 0.168*sinH, 0.587 - 0.587*cosH + 0.330*sinH, 0.114 - 0.114*cosH - 0.497*sinH,"
-        "        0.299 - 0.299*cosH - 0.328*sinH, 0.587 + 0.413*cosH + 0.035*sinH, 0.114 - 0.114*cosH + 0.292*sinH,"
-        "        0.299 - 0.300*cosH + 1.250*sinH, 0.587 - 0.588*cosH - 1.050*sinH, 0.114 + 0.886*cosH - 0.203*sinH"
+        "        0.299 + 0.701*u_cosH + 0.168*u_sinH, 0.587 - 0.587*u_cosH + 0.330*u_sinH, 0.114 - 0.114*u_cosH - 0.497*u_sinH,"
+        "        0.299 - 0.299*u_cosH - 0.328*u_sinH, 0.587 + 0.413*u_cosH + 0.035*u_sinH, 0.114 - 0.114*u_cosH + 0.292*u_sinH,"
+        "        0.299 - 0.300*u_cosH + 1.250*u_sinH, 0.587 - 0.588*u_cosH - 1.050*u_sinH, 0.114 + 0.886*u_cosH - 0.203*u_sinH"
         "    );"
         "    c = clamp(hueMat * c, 0.0, 1.0);"
         "    if (u_filter_enabled != 0) { c = clamp(u_filter * c, 0.0, 1.0); }"
@@ -670,7 +675,8 @@ static void ensure_content_program(void) {
     gles_u_brightness = glGetUniformLocation(gles_prog_content, "u_brightness");
     gles_u_contrast = glGetUniformLocation(gles_prog_content, "u_contrast");
     gles_u_saturation = glGetUniformLocation(gles_prog_content, "u_saturation");
-    gles_u_hueshift = glGetUniformLocation(gles_prog_content, "u_hueshift");
+    gles_u_cosH = glGetUniformLocation(gles_prog_content, "u_cosH");
+    gles_u_sinH = glGetUniformLocation(gles_prog_content, "u_sinH");
     gles_u_gamma = glGetUniformLocation(gles_prog_content, "u_gamma");
 
     content_uniform_cache.valid = 0;
@@ -787,11 +793,16 @@ static void on_context_changed(void) {
     destroy_base_gles();
     destroy_overlay();
 
-    base_rotate_cached = ROTATE_0;
+    if (dim_tex) {
+        glDeleteTextures(1, &dim_tex);
+        dim_tex = 0;
+    }
+
+    gl_notif_free();
+
     base_nop_last = -1;
     vtx_base_valid = 0;
 
-    battery_rotate_cached = ROTATE_0;
     battery_preload_gles_done = 0;
     battery_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -802,7 +813,6 @@ static void on_context_changed(void) {
     }
     vtx_battery_valid = 0;
 
-    bright_rotate_cached = ROTATE_0;
     bright_preload_gles_done = 0;
     bright_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -813,7 +823,6 @@ static void on_context_changed(void) {
     }
     vtx_bright_valid = 0;
 
-    volume_rotate_cached = ROTATE_0;
     volume_preload_gles_done = 0;
     volume_disabled_gles = 0;
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -1117,7 +1126,6 @@ static inline int matrix_change(const float *a, const float *b) {
 
 static int draw_rotated_content(int fb_w, int fb_h, int rot, GLint dst_fbo) {
     if (!content_copy_supported) return 0;
-    if (!content_pass_needed(rot)) return 0;
 
     ensure_content_program();
     if (!gles_prog_content) return 0;
@@ -1167,9 +1175,16 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot, GLint dst_fbo) {
         content_uniform_cache.saturation = adjust->saturation;
     }
 
-    if (!content_uniform_cache.valid || content_uniform_cache.hueshift != adjust->hueshift) {
-        if (gles_u_hueshift >= 0) glUniform1f(gles_u_hueshift, adjust->hueshift);
-        content_uniform_cache.hueshift = adjust->hueshift;
+    float cosH = cosf(adjust->hueshift);
+    if (!content_uniform_cache.valid || content_uniform_cache.cosH != cosH) {
+        if (gles_u_cosH >= 0) glUniform1f(gles_u_cosH, cosH);
+        content_uniform_cache.cosH = cosH;
+    }
+
+    float sinH = sinf(adjust->hueshift);
+    if (!content_uniform_cache.valid || content_uniform_cache.sinH != sinH) {
+        if (gles_u_sinH >= 0) glUniform1f(gles_u_sinH, sinH);
+        content_uniform_cache.sinH = sinH;
     }
 
     if (!content_uniform_cache.valid || content_uniform_cache.gamma != adjust->gamma) {
@@ -1210,31 +1225,46 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot, GLint dst_fbo) {
         }                                                        \
     } while (0)
 
-#define UPDATE_ROT_CACHE(LAYER)           \
-    do {                                  \
-        int r = rotate_read_cached();     \
-        if (r != LAYER##_rotate_cached) { \
-            LAYER##_rotate_cached = r;    \
-            vtx_##LAYER##_valid = 0;      \
-        }                                 \
-    } while (0)
-
 static void update_geometry_caches(void) {
     UPDATE_GEOM_CACHE(base, anchor);
     UPDATE_GEOM_CACHE(base, scale);
-    UPDATE_ROT_CACHE(base);
 
     UPDATE_GEOM_CACHE(battery, anchor);
     UPDATE_GEOM_CACHE(battery, scale);
-    UPDATE_ROT_CACHE(battery);
 
     UPDATE_GEOM_CACHE(bright, anchor);
     UPDATE_GEOM_CACHE(bright, scale);
-    UPDATE_ROT_CACHE(bright);
 
     UPDATE_GEOM_CACHE(volume, anchor);
     UPDATE_GEOM_CACHE(volume, scale);
-    UPDATE_ROT_CACHE(volume);
+}
+
+static void ensure_dim_tex(void) {
+    if (dim_tex) return;
+
+    // 1x1 opaque black pixel used for the fullscreen dim quad
+    static const Uint8 black[4] = {0, 0, 0, 255};
+
+    glGenTextures(1, &dim_tex);
+    glBindTexture(GL_TEXTURE_2D, dim_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, black);
+}
+
+static inline int stage_has_work(int base_disabled, int rot) {
+    if (render_path == RENDER_PATH_UNKNOWN) return 1;
+    if (!overlay_valid) return 1;
+    if (!base_disabled && base_gles_ready) return 1;
+    if (battery_last_step >= 0 && battery_last_step < INDICATOR_STEPS && battery_gles_tex[battery_last_step]) return 1;
+    if (bright_is_visible()) return 1;
+    if (volume_is_visible()) return 1;
+    if (notif_is_visible()) return 1;
+    if (content_pass_needed(rot)) return 1;
+    if (shader_get()) return 1;
+    return 0;
 }
 
 static void stage_draw(int fb_w, int fb_h) {
@@ -1295,12 +1325,13 @@ static void stage_draw(int fb_w, int fb_h) {
     }
 
     gles_state_t st;
+
+    const int rot = rotate_read_cached();
+    if (!stage_has_work(base_disabled, rot)) return;
+
     save_gles_state(&st);
 
     glDisable(GL_DEPTH_TEST);
-
-    // Ensure we preserve the aspect ration and blending methods
-    const int rot = rotate_read_cached();
 
     const int use_offscreen = (render_path == RENDER_PATH_OFFSCREEN_FBO) && (render_nonzero_fbo != 0);
     const GLint dst_fbo = use_offscreen ? render_nonzero_fbo : 0;
@@ -1381,6 +1412,26 @@ static void stage_draw(int fb_w, int fb_h) {
         draw_quad_overlay(overlay_tex, vtx, 1.0f);
     }
 
+    if (notif_is_visible() && gl_notif_prepare(fb_w, fb_h)) {
+        glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
+        glViewport(0, 0, fb_w, fb_h);
+        glDisable(GL_SCISSOR_TEST);
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        if (gl_notif_needs_dim()) {
+            ensure_dim_tex();
+            if (dim_tex) {
+                gl_vtx_t dim_vtx[4];
+                build_fullscreen_quad(dim_vtx, ROTATE_0);
+                draw_quad_overlay(dim_tex, dim_vtx, (float) NOTIF_ALPHA / 255.0f);
+            }
+        }
+
+        draw_quad_overlay(gl_notif_get_tex(), gl_notif_get_vtx(), 1.0f);
+    }
+
     restore_gles_state(&st);
     current_program = (GLuint) st.program;
 }
@@ -1402,6 +1453,7 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     battery_overlay_update();
     bright_overlay_update();
     volume_overlay_update();
+    notif_update();
 
     shader_reload();
 

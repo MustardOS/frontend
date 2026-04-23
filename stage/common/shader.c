@@ -76,7 +76,7 @@ static GLuint compile_shader(GLenum type, const char **parts, int count) {
     if (ok != GL_TRUE) {
         char log_buf[1024];
         GLsizei len = 0;
-        glGetShaderInfoLog(sh, sizeof(log_buf), &len, log_buf);
+        glGetShaderInfoLog(sh, (GLsizei) sizeof(log_buf), &len, log_buf);
 
         LOG_ERROR("shader", "Compile Error: %.*s", (int) len, log_buf);
         glDeleteShader(sh);
@@ -104,7 +104,7 @@ static GLuint link_program(GLuint vs, GLuint fs) {
     if (ok != GL_TRUE) {
         char log_buf[512];
         GLsizei len = 0;
-        glGetProgramInfoLog(p, sizeof(log_buf), &len, log_buf);
+        glGetProgramInfoLog(p, (GLsizei) sizeof(log_buf), &len, log_buf);
 
         LOG_ERROR("shader", "Link Error: %.*s", (int) len, log_buf);
         glDeleteProgram(p);

@@ -13,7 +13,6 @@
 
 extern int base_anchor_cached;
 extern int base_scale_cached;
-extern int base_rotate_cached;
 
 extern SDL_Texture *base_sdl_tex;
 extern int base_sdl_ready;

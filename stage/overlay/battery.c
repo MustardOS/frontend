@@ -9,7 +9,6 @@
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
-#include "../common/rotate.h"
 #include "../common/scale.h"
 #include "battery.h"
 
@@ -24,7 +23,6 @@ int battery_last_step = -1;
 
 int battery_anchor_cached = -1;
 int battery_scale_cached = -1;
-int battery_rotate_cached = ROTATE_0;
 
 SDL_Texture *battery_sdl_tex[INDICATOR_STEPS];
 int battery_sdl_w[INDICATOR_STEPS];
@@ -66,23 +64,6 @@ struct scale_cache battery_scale_cache = {
         .mtime = 0,
         .value = SCALE_ORIGINAL
 };
-
-static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
-    GLuint t = 0;
-
-    glGenTextures(1, &t);
-    glBindTexture(GL_TEXTURE_2D, t);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-
-    *out_tex = t;
-}
 
 static void disable_sdl(void) {
     for (int i = 0; i < INDICATOR_STEPS; i++) {

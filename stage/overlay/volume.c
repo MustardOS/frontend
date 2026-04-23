@@ -10,7 +10,6 @@
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"
-#include "../common/rotate.h"
 #include "../common/scale.h"
 #include "volume.h"
 
@@ -27,7 +26,6 @@ uint64_t volume_last_change_ms = 0;
 
 int volume_anchor_cached = -1;
 int volume_scale_cached = -1;
-int volume_rotate_cached = ROTATE_0;
 
 SDL_Texture *volume_sdl_tex[INDICATOR_STEPS];
 int volume_sdl_w[INDICATOR_STEPS];
@@ -77,24 +75,6 @@ static int ensure_volume_path(const char *dim, int step) {
 
     LOG_WARN("stage", "Volume " OVERLAY_NOP, ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dim, step);
     return 0;
-}
-
-static void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
-    GLuint t = 0;
-
-    glGenTextures(1, &t);
-    glBindTexture(GL_TEXTURE_2D, t);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-
-    *out_tex = t;
 }
 
 static void disable_sdl(void) {

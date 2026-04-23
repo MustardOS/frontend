@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <stddef.h>
 #include <time.h>
 #include <GLES2/gl2.h>
@@ -92,3 +93,7 @@ int read_line_int_from(const char *filename, size_t line_number);
 int load_stage_image(const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path);
 
 void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz);
+
+int parse_hex_colour(const char *hex, SDL_Color *out);
+
+void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex);

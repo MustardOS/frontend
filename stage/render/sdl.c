@@ -11,6 +11,7 @@
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
+#include "../overlay/notif.h"
 #include "../hook.h"
 
 static SDL_Texture *content_tex = NULL;
@@ -215,6 +216,8 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
         sdl_overlay_path_last[0] = '\0';
         base_nop_last = -1;
 
+        sdl_notif_free();
+
         last_renderer = renderer;
     }
 
@@ -252,6 +255,7 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     battery_overlay_update();
     bright_overlay_update();
     volume_overlay_update();
+    notif_update();
 
     if (rot != ROTATE_0) draw_rotated_content(renderer, rot, fb_w, fb_h);
 
@@ -301,6 +305,8 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
                              get_scale_cached(&volume_scale_cache));
         }
     }
+
+    if (notif_is_visible()) sdl_notif_draw(renderer, fb_w, fb_h);
 
     real_SDL_RenderPresent(renderer);
 }
