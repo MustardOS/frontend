@@ -1348,6 +1348,7 @@ int muxplore_main(int index, char *dir) {
         union_get_roms_root(sys_dir, sizeof(sys_dir));
     }
 
+    if (file_exist(EXPLORE_DIR)) remove(EXPLORE_DIR);
     if (index > 0) sys_index = index;
 
     init_module(__func__);
