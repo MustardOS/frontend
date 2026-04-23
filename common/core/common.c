@@ -378,6 +378,21 @@ bool automatic_assign_core(char *rom_dir) {
 
             mini_free(global_ini);
         }
+        else {
+            char *parent_rom_dir = strip_dir(rom_dir);
+            char parent_core_file[MAX_BUFFER_SIZE];
+            snprintf(parent_core_file, sizeof(parent_core_file), INFO_CON_PATH "/%s/core.cfg",
+                    get_last_subdir(parent_rom_dir, '/', 4));
+            remove_double_slashes(parent_core_file);
+
+            char root_core_file[MAX_BUFFER_SIZE];
+            snprintf(root_core_file, sizeof(root_core_file), INFO_CON_PATH "/core.cfg");
+            if (strcasecmp(root_core_file, parent_core_file) != 0 && !file_exist(core_file) && file_exist(parent_core_file)) {
+                LOG_INFO(mux_module, "Copying core configuration from parent");
+                create_directories(core_file, 1);
+                copy_file(parent_core_file, core_file);
+            }
+        }
     }
 
     return auto_assign_good == 1;
