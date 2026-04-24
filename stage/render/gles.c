@@ -52,6 +52,7 @@ static GLint gles_content_a_uv = -1;
 static int prog_attempted = 0;
 static int prog_ready = 0;
 
+static int max_vertex_attribs = 0;
 static int shader_frame_count = 0;
 
 static SDL_GLContext last_ctx = NULL;
@@ -702,12 +703,16 @@ static void save_gles_state(gles_state_t *st) {
 
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &st->array_buffer);
 
-    GLint max = 0;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max);
-    if (max > 16) max = 16;
-    st->max_attribs = max;
+    if (!max_vertex_attribs) {
+        GLint max = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max);
+        if (max > 16) max = 16;
+        max_vertex_attribs = (int) max;
+    }
 
-    for (int i = 0; i < max; i++) {
+    st->max_attribs = max_vertex_attribs;
+
+    for (int i = 0; i < st->max_attribs; i++) {
         glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &st->attrib[i].enabled);
         glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_SIZE, &st->attrib[i].size);
         glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_TYPE, &st->attrib[i].type);
@@ -800,6 +805,7 @@ static void on_context_changed(void) {
 
     gl_notif_free();
 
+    max_vertex_attribs = 0;
     base_nop_last = -1;
     vtx_base_valid = 0;
 
@@ -905,10 +911,16 @@ static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
 
     glDisableVertexAttribArray((GLuint) gles_content_a_pos);
     glDisableVertexAttribArray((GLuint) gles_content_a_uv);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static const float fullscreen_quad[4][4] = {
+        {-1.0f, 1.0f,  0.0f, 1.0f},
+        {-1.0f, -1.0f, 0.0f, 0.0f},
+        {1.0f,  1.0f,  1.0f, 1.0f},
+        {1.0f,  -1.0f, 1.0f, 0.0f},
+};
+
+static const gl_vtx_t fullscreen_vtx[4] = {
         {-1.0f, 1.0f,  0.0f, 1.0f},
         {-1.0f, -1.0f, 0.0f, 0.0f},
         {1.0f,  1.0f,  1.0f, 1.0f},
@@ -956,7 +968,6 @@ static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
 
     glDisableVertexAttribArray((GLuint) gles_a_pos);
     glDisableVertexAttribArray((GLuint) gles_a_uv);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static void ensure_output_tex(int w, int h) {
@@ -1240,18 +1251,31 @@ static void update_geometry_caches(void) {
 }
 
 static void ensure_dim_tex(void) {
-    if (dim_tex) return;
+    static SDL_Color last_colour = {0, 0, 0, 0};
 
-    // 1x1 opaque black pixel used for the fullscreen dim quad
-    static const Uint8 black[4] = {0, 0, 0, 255};
+    const SDL_Color *c = &notif_cfg.dim_colour;
+    const Uint8 pixel[4] = {c->r, c->g, c->b, 255};
 
-    glGenTextures(1, &dim_tex);
+    if (!dim_tex) {
+        glGenTextures(1, &dim_tex);
+        glBindTexture(GL_TEXTURE_2D, dim_tex);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+        last_colour = *c;
+        return;
+    }
+
+    if (c->r == last_colour.r && c->g == last_colour.g && c->b == last_colour.b) return;
+
     glBindTexture(GL_TEXTURE_2D, dim_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, black);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+
+    last_colour = *c;
 }
 
 static inline int stage_has_work(int base_disabled, int rot) {
@@ -1394,12 +1418,13 @@ static void stage_draw(int fb_w, int fb_h) {
         glDisable(GL_SCISSOR_TEST);
         glDisable(GL_BLEND);
 
-        gl_vtx_t vtx_out[4];
-        build_fullscreen_quad(vtx_out, ROTATE_0);
-        draw_quad_overlay(output_tex, vtx_out, 1.0f);
+        draw_quad_overlay(output_tex, fullscreen_vtx, 1.0f);
     }
 
-    if (overlay_valid && overlay_tex) {
+    const int draw_overlay = overlay_valid && overlay_tex;
+    const int draw_notif = notif_is_visible() && gl_notif_prepare(fb_w, fb_h);
+
+    if (draw_overlay || draw_notif) {
         glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
         glViewport(0, 0, fb_w, fb_h);
         glDisable(GL_SCISSOR_TEST);
@@ -1407,29 +1432,16 @@ static void stage_draw(int fb_w, int fb_h) {
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        gl_vtx_t vtx[4];
-        build_fullscreen_quad(vtx, ROTATE_0);
-        draw_quad_overlay(overlay_tex, vtx, 1.0f);
-    }
+        if (draw_overlay) draw_quad_overlay(overlay_tex, fullscreen_vtx, 1.0f);
 
-    if (notif_is_visible() && gl_notif_prepare(fb_w, fb_h)) {
-        glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
-        glViewport(0, 0, fb_w, fb_h);
-        glDisable(GL_SCISSOR_TEST);
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        if (gl_notif_needs_dim()) {
-            ensure_dim_tex();
-            if (dim_tex) {
-                gl_vtx_t dim_vtx[4];
-                build_fullscreen_quad(dim_vtx, ROTATE_0);
-                draw_quad_overlay(dim_tex, dim_vtx, (float) NOTIF_ALPHA / 255.0f);
+        if (draw_notif) {
+            if (gl_notif_needs_dim()) {
+                ensure_dim_tex();
+                if (dim_tex) draw_quad_overlay(dim_tex, fullscreen_vtx, (float) notif_cfg.dim_alpha / 255.0f);
             }
-        }
 
-        draw_quad_overlay(gl_notif_get_tex(), gl_notif_get_vtx(), 1.0f);
+            draw_quad_overlay(gl_notif_get_tex(), gl_notif_get_vtx(), 1.0f);
+        }
     }
 
     restore_gles_state(&st);
@@ -1492,7 +1504,7 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     }
 
     if (fb_cached_w > 0 && fb_cached_h > 0) stage_draw(fb_cached_w, fb_cached_h);
-    shader_frame_count++;
+    shader_frame_count = (shader_frame_count + 1) & 0xFFFF;
 
     real_SDL_GL_SwapWindow(window);
 }

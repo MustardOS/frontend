@@ -1,13 +1,47 @@
 #include <sys/stat.h>
 #include <string.h>
+#include <ctype.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../../common/log.h"
 #include "../common/common.h"
 #include "notif.h"
 
-#define MAX_LINES 128
-#define MAX_LINE_CHARS 512
+/* ---------------------------------------------------------------------------
+ * Stage Overlay Notification file format
+ * File location at: /run/muos/overlay.notif
+ *
+ * Key and value pairs (spaces around '=' are trimmed), then a line containing
+ * exactly '-' as the separator.  Everything after the separator is treated
+ * as raw notification text: newlines are preserved and blank lines create
+ * visual gaps between paragraphs.
+ *
+ *   position      = 4         0-8 grid (0=top left  4=centre  8=bottom right)
+ *   font_size     = 24        8-96 (be reasonable!)
+ *   font_align    = 0         0=auto  1=right  2=centre  3=left
+ *   font_colour   = FFFFFF    hex RGB, no '#' character!
+ *   font_alpha    = 255       0-255
+ *   box_colour    = 000000    hex RGB
+ *   box_alpha     = 210       0-255
+ *   border_colour = 444444    hex RGB
+ *   border_alpha  = 180       0-255
+ *   dim_colour    = 000000    hex RGB
+ *   dim_alpha     = 100       0-255  (0 disables the dim layer entirely)
+ *   -
+ *   Line one of the notification
+ *   Second line
+ *
+ *   Blank line above creates a visual gap
+ *
+ * Unknown keys are silently ignored. A '#' at the start of a line is a comment
+ * but only in the key/value section.  After '-' every line is literal text.
+ *
+ * You can source the `notif.sh` script at `/opt/muos/script/var` for
+ * various functions that can be used to make this process easier!
+ * -------------------------------------------------------------------------*/
+
+#define WW_MAX_LINES 256
+#define WW_LINE_LEN  NOTIF_TEXT_LINE_LEN
 
 int notif_visible = 0;
 notif_cfg_t notif_cfg;
@@ -46,76 +80,134 @@ static int notif_gles_w = 0;
 static int notif_gles_h = 0;
 static gl_vtx_t vtx_notif[4];
 
-/* File parsing:
- * /run/muos/overlay.notif format (one field per line):
- *   Line 1 – font size (integer, e.g. 24)
- *   Line 2 – foreground colour, hex without '#' (e.g. FFFFFF)
- *   Line 3 – border colour, hex without '#' (e.g. 000000)
- *   Line 4 – position: top | middle | bottom
- *   Line 5 – dim screen: 0 or 1
- *   Line 6 – notification text (word-wrapped automatically, can be long!)
- */
-static int parse_notif_file(void) {
-    char fs_buf[16] = "24";
-    char fg_buf[16] = "FFFFFF";
-    char bdr_buf[16] = "000000";
-    char pos_buf[16] = "middle";
-    char dim_buf[4] = "1";
-    char text_buf[1024];
-    text_buf[0] = '\0';
+static Uint8 parse_alpha(const char *s) {
+    int v = safe_atoi(s);
 
-    if (!read_line_from_file(NOTIF_PATH, 1, fs_buf, sizeof(fs_buf))) return 0;
-    if (!read_line_from_file(NOTIF_PATH, 2, fg_buf, sizeof(fg_buf))) return 0;
-    if (!read_line_from_file(NOTIF_PATH, 3, bdr_buf, sizeof(bdr_buf))) return 0;
-    if (!read_line_from_file(NOTIF_PATH, 4, pos_buf, sizeof(pos_buf))) return 0;
-    if (!read_line_from_file(NOTIF_PATH, 5, dim_buf, sizeof(dim_buf))) return 0;
-    if (!read_line_from_file(NOTIF_PATH, 6, text_buf, sizeof(text_buf))) return 0;
+    if (v < 0) v = 0;
+    if (v > 255) v = 255;
 
-    if (!text_buf[0]) return 0;
-
-    notif_cfg.font_size = safe_atoi(fs_buf);
-    if (notif_cfg.font_size < 8) notif_cfg.font_size = 8;
-    if (notif_cfg.font_size > 96) notif_cfg.font_size = 96;
-
-    notif_cfg.fg.a = 255;
-    notif_cfg.border.a = 255;
-
-    if (!parse_hex_colour(fg_buf, &notif_cfg.fg)) {
-        notif_cfg.fg.r = 255;
-        notif_cfg.fg.g = 255;
-        notif_cfg.fg.b = 255;
-    }
-    if (!parse_hex_colour(bdr_buf, &notif_cfg.border)) {
-        notif_cfg.border.r = 0;
-        notif_cfg.border.g = 0;
-        notif_cfg.border.b = 0;
-    }
-
-    if (strcmp(pos_buf, "top") == 0) {
-        notif_cfg.position = NOTIF_POS_TOP;
-    } else if (strcmp(pos_buf, "bottom") == 0) {
-        notif_cfg.position = NOTIF_POS_BOTTOM;
-    } else {
-        notif_cfg.position = NOTIF_POS_MIDDLE;
-    }
-
-    notif_cfg.dim = (safe_atoi(dim_buf) != 0);
-
-    strncpy(notif_cfg.text, text_buf, sizeof(notif_cfg.text) - 1);
-    notif_cfg.text[sizeof(notif_cfg.text) - 1] = '\0';
-
-    return 1;
+    return (Uint8) v;
 }
 
-static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][MAX_LINE_CHARS]) {
+static char *trim(char *s) {
+    while (*s && isspace((unsigned char) *s)) s++;
+
+    char *end = s + strlen(s);
+    while (end > s && isspace((unsigned char) *(end - 1))) end--;
+
+    *end = '\0';
+    return s;
+}
+
+static int parse_notif_file(void) {
+    FILE *f = fopen(NOTIF_PATH, "r");
+    if (!f) return 0;
+
+    notif_cfg.font_size = 24;
+    notif_cfg.font_align = 0;
+    notif_cfg.font_colour.r = 255;
+    notif_cfg.font_colour.g = 255;
+    notif_cfg.font_colour.b = 255;
+    notif_cfg.font_alpha = 255;
+
+    notif_cfg.box_colour.r = 0;
+    notif_cfg.box_colour.g = 0;
+    notif_cfg.box_colour.b = 0;
+    notif_cfg.box_alpha = 210;
+
+    notif_cfg.border_colour.r = 68;
+    notif_cfg.border_colour.g = 68;
+    notif_cfg.border_colour.b = 68;
+    notif_cfg.border_alpha = 180;
+
+    notif_cfg.dim_colour.r = 0;
+    notif_cfg.dim_colour.g = 0;
+    notif_cfg.dim_colour.b = 0;
+    notif_cfg.dim_alpha = 100;
+
+    notif_cfg.position = 4;
+    notif_cfg.text_line_count = 0;
+
+    char line[NOTIF_TEXT_LINE_LEN + 16];
+    int in_text = 0;
+
+    while (fgets(line, sizeof(line), f)) {
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') { line[--len] = '\0'; }
+        if (len > 0 && line[len - 1] == '\r') { line[--len] = '\0'; }
+
+        if (!in_text) {
+            char *trimmed = trim(line);
+            if (strcmp(trimmed, "-") == 0) {
+                in_text = 1;
+                continue;
+            }
+            if (trimmed[0] == '\0' || trimmed[0] == '#') continue;
+
+            char *eq = strchr(trimmed, '=');
+            if (!eq) continue;
+
+            *eq = '\0';
+            char *key = trim(trimmed);
+            char *val = trim(eq + 1);
+
+            if (strcmp(key, "position") == 0) {
+                int v = safe_atoi(val);
+                if (v < 0) v = 0;
+                if (v > 8) v = 8;
+                notif_cfg.position = (notif_pos_t) v;
+            } else if (strcmp(key, "font_size") == 0) {
+                notif_cfg.font_size = safe_atoi(val);
+                if (notif_cfg.font_size < 8) notif_cfg.font_size = 8;
+                if (notif_cfg.font_size > 96) notif_cfg.font_size = 96;
+            } else if (strcmp(key, "font_align") == 0) {
+                int v = safe_atoi(val);
+                if (v < 0) v = 0;
+                if (v > 3) v = 3;
+                notif_cfg.font_align = (notif_align_t) v;
+            } else if (strcmp(key, "font_colour") == 0) {
+                parse_hex_colour(val, &notif_cfg.font_colour);
+            } else if (strcmp(key, "font_alpha") == 0) {
+                notif_cfg.font_alpha = parse_alpha(val);
+            } else if (strcmp(key, "box_colour") == 0) {
+                parse_hex_colour(val, &notif_cfg.box_colour);
+            } else if (strcmp(key, "box_alpha") == 0) {
+                notif_cfg.box_alpha = parse_alpha(val);
+            } else if (strcmp(key, "border_colour") == 0) {
+                parse_hex_colour(val, &notif_cfg.border_colour);
+            } else if (strcmp(key, "border_alpha") == 0) {
+                notif_cfg.border_alpha = parse_alpha(val);
+            } else if (strcmp(key, "dim_colour") == 0) {
+                parse_hex_colour(val, &notif_cfg.dim_colour);
+            } else if (strcmp(key, "dim_alpha") == 0) {
+                notif_cfg.dim_alpha = parse_alpha(val);
+            }
+        } else {
+            if (notif_cfg.text_line_count < NOTIF_MAX_TEXT_LINES) {
+                strncpy(notif_cfg.text_lines[notif_cfg.text_line_count], line, NOTIF_TEXT_LINE_LEN - 1);
+                notif_cfg.text_lines[notif_cfg.text_line_count][NOTIF_TEXT_LINE_LEN - 1] = '\0';
+                notif_cfg.text_line_count++;
+            }
+        }
+    }
+
+    while (notif_cfg.text_line_count > 0 && notif_cfg.text_lines[notif_cfg.text_line_count - 1][0] == '\0') {
+        notif_cfg.text_line_count--;
+    }
+
+    fclose(f);
+    return (in_text && notif_cfg.text_line_count > 0);
+}
+
+static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][WW_LINE_LEN], int max_lines) {
     int line_count = 0;
-    char cur[MAX_LINE_CHARS];
+    char cur[WW_LINE_LEN];
     cur[0] = '\0';
 
     const char *src = text;
 
-    while (*src && line_count < MAX_LINES) {
-        char word[MAX_LINE_CHARS];
+    while (*src && line_count < max_lines) {
+        char word[WW_LINE_LEN];
         int wi = 0;
 
         while (*src && *src != ' ' && *src != '\n') {
@@ -129,13 +221,13 @@ static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][
 
         if (wi == 0) {
             if (at_newline) {
-                strncpy(lines[line_count++], cur, MAX_LINE_CHARS - 1);
+                strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
                 cur[0] = '\0';
             }
             continue;
         }
 
-        char trial[MAX_LINE_CHARS];
+        char trial[WW_LINE_LEN];
         if (cur[0]) snprintf(trial, sizeof(trial), "%s %s", cur, word);
         else snprintf(trial, sizeof(trial), "%s", word);
 
@@ -143,22 +235,64 @@ static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][
         TTF_SizeUTF8(font, trial, &tw, &th);
 
         if (tw > max_px && cur[0]) {
-            strncpy(lines[line_count++], cur, MAX_LINE_CHARS - 1);
+            strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
             strncpy(cur, word, sizeof(cur) - 1);
         } else {
             strncpy(cur, trial, sizeof(cur) - 1);
         }
 
         if (at_newline) {
-            strncpy(lines[line_count++], cur, MAX_LINE_CHARS - 1);
+            strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
             cur[0] = '\0';
         }
     }
 
-    if (cur[0] && line_count < MAX_LINES)
-        strncpy(lines[line_count++], cur, MAX_LINE_CHARS - 1);
-
+    if (line_count < max_lines) strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
     return line_count;
+}
+
+static int text_line_x(notif_align_t align, int surf_w, int txt_w, int border, int pad, int total_lines) {
+    notif_align_t effective = align;
+    if (effective == NOTIF_ALIGN_AUTO) effective = (total_lines == 1) ? NOTIF_ALIGN_LEFT : NOTIF_ALIGN_CENTRE;
+    switch (effective) {
+        case NOTIF_ALIGN_RIGHT:
+            return surf_w - border - pad - txt_w;
+        case NOTIF_ALIGN_CENTRE:
+            return (surf_w - txt_w) / 2;
+        case NOTIF_ALIGN_LEFT:
+        default:
+            return border + pad;
+    }
+}
+
+static void calc_box_position(int pos, int fb_w, int fb_h, int box_w, int box_h, int margin, int *out_bx, int *out_by) {
+    int bx, by;
+    switch (pos % 3) {
+        case 0:
+            bx = margin;
+            break;
+        case 1:
+            bx = (fb_w - box_w) / 2;
+            break;
+        default:
+            bx = fb_w - box_w - margin;
+            break;
+    }
+
+    switch (pos / 3) {
+        case 0:
+            by = margin;
+            break;
+        case 1:
+            by = (fb_h - box_h) / 2;
+            break;
+        default:
+            by = fb_h - box_h - margin;
+            break;
+    }
+
+    *out_bx = bx < 0 ? 0 : bx;
+    *out_by = by < 0 ? 0 : by;
 }
 
 static SDL_Surface *build_notif_content(int fb_w, int fb_h, int *out_bx, int *out_by, int *out_box_w, int *out_box_h,
@@ -181,66 +315,59 @@ static SDL_Surface *build_notif_content(int fb_w, int fb_h, int *out_bx, int *ou
     const int max_box_w = (int) ((float) fb_w * NOTIF_MAX_BOX_FRAC);
     const int max_text_w = max_box_w - 2 * (pad + border);
 
-    static char lines[MAX_LINES][MAX_LINE_CHARS];
-    int line_count = word_wrap(font, notif_cfg.text, max_text_w, lines);
+    static char ww_lines[WW_MAX_LINES][WW_LINE_LEN];
+    int total_lines = 0;
 
-    if (line_count == 0) {
+    for (int p = 0; p < notif_cfg.text_line_count && total_lines < WW_MAX_LINES; p++) {
+        const char *para = notif_cfg.text_lines[p];
+        if (para[0] == '\0') {
+            ww_lines[total_lines][0] = '\0';
+            total_lines++;
+            continue;
+        }
+        int wrapped = word_wrap(font, para, max_text_w, &ww_lines[total_lines], WW_MAX_LINES - total_lines);
+        total_lines += wrapped;
+    }
+
+    if (total_lines == 0) {
         TTF_CloseFont(font);
         return NULL;
     }
 
     int max_line_px = 0;
-    for (int i = 0; i < line_count; i++) {
+    for (int i = 0; i < total_lines; i++) {
+        if (!ww_lines[i][0]) continue;
         int tw = 0, th = 0;
-
-        if (lines[i][0]) TTF_SizeUTF8(font, lines[i], &tw, &th);
+        TTF_SizeUTF8(font, ww_lines[i], &tw, &th);
         if (tw > max_line_px) max_line_px = tw;
     }
 
-    int content_text_w = max_line_px;
-    if (content_text_w > max_text_w) content_text_w = max_text_w;
+    int content_text_w = max_line_px < max_text_w ? max_line_px : max_text_w;
+    int clipped_box_w = content_text_w + 2 * (pad + border);
+    if (clipped_box_w > max_box_w) clipped_box_w = max_box_w;
 
-    const int box_inner_w = content_text_w + 2 * pad;
-    const int box_w = box_inner_w + 2 * border;
-
-    const int clipped_box_w = box_w < max_box_w ? box_w : max_box_w;
-    const int total_content_h = line_count * line_h + 2 * (pad + border);
-
+    const int total_content_h = total_lines * line_h + 2 * (pad + border);
     const int screen_margin = 2 * pad;
-    const int max_visible_h = fb_h - 2 * screen_margin;
 
+    const int max_visible_h = fb_h - 2 * screen_margin;
     const int max_vis_lines = (max_visible_h - 2 * (pad + border)) / line_h;
 
     notif_scroll_mode_t scroll_mode = NOTIF_SCROLL_NONE;
     int scroll_total = 0;
 
-    if (line_count == 1 && max_line_px > max_text_w) {
+    if (total_lines == 1 && max_line_px > max_text_w) {
         scroll_mode = NOTIF_SCROLL_MARQUEE;
         scroll_total = max_line_px + NOTIF_MARQUEE_GAP;
-    } else if (line_count > max_vis_lines) {
+    } else if (total_lines > max_vis_lines) {
         scroll_mode = NOTIF_SCROLL_VERTICAL;
         scroll_total = total_content_h - (max_vis_lines * line_h + 2 * (pad + border));
     }
 
-    const int visible_lines = (scroll_mode == NOTIF_SCROLL_NONE) ? line_count : (line_count < max_vis_lines ? line_count : max_vis_lines);
+    const int visible_lines = (scroll_mode == NOTIF_SCROLL_NONE) ? total_lines : (total_lines < max_vis_lines ? total_lines : max_vis_lines);
     const int box_h = visible_lines * line_h + 2 * (pad + border);
 
-    int bx = (fb_w - clipped_box_w) / 2;
-    int by = 0;
-    switch (notif_cfg.position) {
-        case NOTIF_POS_TOP:
-            by = screen_margin;
-            break;
-        case NOTIF_POS_BOTTOM:
-            by = fb_h - box_h - screen_margin;
-            break;
-        default:
-            by = (fb_h - box_h) / 2;
-            break;
-    }
-
-    if (bx < 0) bx = 0;
-    if (by < 0) by = 0;
+    int bx = 0, by = 0;
+    calc_box_position((int) notif_cfg.position, fb_w, fb_h, clipped_box_w, box_h, screen_margin, &bx, &by);
 
     const int surf_h = (scroll_mode == NOTIF_SCROLL_VERTICAL) ? total_content_h : box_h;
     const int surf_w = (scroll_mode == NOTIF_SCROLL_MARQUEE) ? (max_line_px + NOTIF_MARQUEE_GAP) : clipped_box_w;
@@ -252,22 +379,43 @@ static SDL_Surface *build_notif_content(int fb_w, int fb_h, int *out_bx, int *ou
     }
 
     SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND);
+    SDL_FillRect(surf, NULL, SDL_MapRGBA(surf->format, 0, 0, 0, 0));
 
-    const SDL_Color *bc = &notif_cfg.border;
-    SDL_FillRect(surf, NULL, SDL_MapRGBA(surf->format, bc->r, bc->g, bc->b, 255));
-
+    const SDL_Color *bdc = &notif_cfg.border_colour;
     if (scroll_mode == NOTIF_SCROLL_MARQUEE) {
-        SDL_Rect inner = {0, border, surf_w, surf_h - 2 * border};
-        SDL_FillRect(surf, &inner, SDL_MapRGBA(surf->format, 0, 0, 0, 210));
+        SDL_Rect top_strip = {0, 0, surf_w, border};
+        SDL_Rect bot_strip = {0, surf_h - border, surf_w, border};
+        Uint32 b_col = SDL_MapRGBA(surf->format, bdc->r, bdc->g, bdc->b, notif_cfg.border_alpha);
+        SDL_FillRect(surf, &top_strip, b_col);
+        SDL_FillRect(surf, &bot_strip, b_col);
     } else {
-        SDL_Rect inner = {border, border, surf_w - 2 * border, surf_h - 2 * border};
-        SDL_FillRect(surf, &inner, SDL_MapRGBA(surf->format, 0, 0, 0, 210));
+        SDL_FillRect(surf, NULL, SDL_MapRGBA(surf->format, bdc->r, bdc->g, bdc->b, notif_cfg.border_alpha));
     }
 
-    for (int i = 0; i < line_count; i++) {
-        if (!lines[i][0]) continue;
+    const SDL_Color *bxc = &notif_cfg.box_colour;
+    {
+        SDL_Rect inner;
+        if (scroll_mode == NOTIF_SCROLL_MARQUEE) {
+            inner.x = 0;
+            inner.y = border;
+            inner.w = surf_w;
+            inner.h = surf_h - 2 * border;
+        } else {
+            inner.x = border;
+            inner.y = border;
+            inner.w = surf_w - 2 * border;
+            inner.h = surf_h - 2 * border;
+        }
+        SDL_FillRect(surf, &inner, SDL_MapRGBA(surf->format, bxc->r, bxc->g, bxc->b, notif_cfg.box_alpha));
+    }
 
-        SDL_Surface *txt = TTF_RenderUTF8_Blended(font, lines[i], notif_cfg.fg);
+    SDL_Color fg = notif_cfg.font_colour;
+    fg.a = notif_cfg.font_alpha;
+
+    for (int i = 0; i < total_lines; i++) {
+        if (!ww_lines[i][0]) continue;
+
+        SDL_Surface *txt = TTF_RenderUTF8_Blended(font, ww_lines[i], fg);
         if (!txt) continue;
 
         int lx, ly;
@@ -275,7 +423,7 @@ static SDL_Surface *build_notif_content(int fb_w, int fb_h, int *out_bx, int *ou
             lx = 0;
             ly = border + pad;
         } else {
-            lx = (surf_w - txt->w) / 2;
+            lx = text_line_x(notif_cfg.font_align, surf_w, txt->w, border, pad, total_lines);
             ly = border + pad + i * line_h;
         }
 
@@ -328,22 +476,19 @@ static SDL_Surface *compose_frame(void) {
     } else if (notif_scroll_mode == NOTIF_SCROLL_MARQUEE) {
         int offset = (int) notif_scroll_pos;
         int cw = notif_content_w;
+        int tail_w = cw - offset;
+        if (tail_w > notif_box_w) tail_w = notif_box_w;
 
-        SDL_Rect src1 = {offset, 0, cw - offset, notif_box_h};
-        SDL_Rect dst1 = {0, 0, cw - offset, notif_box_h};
-
-        if (dst1.w > notif_box_w) dst1.w = notif_box_w;
-        if (src1.w > notif_box_w) src1.w = notif_box_w;
-
+        SDL_Rect src1 = {offset, 0, tail_w, notif_box_h};
+        SDL_Rect dst1 = {0, 0, tail_w, notif_box_h};
         SDL_BlitSurface(notif_content_surf, &src1, frame, &dst1);
 
-        int wrapped = notif_box_w - dst1.w;
+        int wrapped = notif_box_w - tail_w;
         if (wrapped > 0) {
             SDL_Rect src2 = {0, 0, wrapped, notif_box_h};
-            SDL_Rect dst2 = {dst1.w, 0, wrapped, notif_box_h};
+            SDL_Rect dst2 = {tail_w, 0, wrapped, notif_box_h};
             SDL_BlitSurface(notif_content_surf, &src2, frame, &dst2);
         }
-
     } else {
         int offset = (int) notif_scroll_pos;
         SDL_Rect src = {0, offset, notif_box_w, notif_box_h};
@@ -353,9 +498,6 @@ static SDL_Surface *compose_frame(void) {
     return frame;
 }
 
-/* ---------------------------------------------------------------------------
- * Internal texture/surface cleanup
- * -------------------------------------------------------------------------*/
 static void free_content(void) {
     if (notif_content_surf) {
         SDL_FreeSurface(notif_content_surf);
@@ -384,6 +526,7 @@ static void notif_free_textures(void) {
 
     notif_sdl_w = 0;
     notif_sdl_h = 0;
+
     notif_sdl_bx = 0;
     notif_sdl_by = 0;
 
@@ -412,7 +555,6 @@ void notif_update(void) {
 
     notif_stat_last = st;
     notif_free_textures();
-
     free_content();
     notif_visible = 0;
 
@@ -432,6 +574,7 @@ void sdl_notif_free(void) {
 
     notif_sdl_w = 0;
     notif_sdl_h = 0;
+
     notif_sdl_bx = 0;
     notif_sdl_by = 0;
 }
@@ -477,9 +620,10 @@ void sdl_notif_draw(SDL_Renderer *renderer, int fb_w, int fb_h) {
         notif_sdl_by = notif_by;
     }
 
-    if (notif_cfg.dim) {
+    if (notif_cfg.dim_alpha > 0) {
+        const SDL_Color *dc = &notif_cfg.dim_colour;
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, NOTIF_ALPHA);
+        SDL_SetRenderDrawColor(renderer, dc->r, dc->g, dc->b, notif_cfg.dim_alpha);
         SDL_RenderFillRect(renderer, NULL);
     }
 
@@ -529,7 +673,6 @@ static void build_notif_vtx(int fb_w, int fb_h, int bx, int by) {
 int gl_notif_prepare(int fb_w, int fb_h) {
     if (!notif_visible) return 0;
 
-    /* Build content surface lazily */
     if (!notif_content_surf) {
         notif_content_surf = build_notif_content(fb_w, fb_h, &notif_bx, &notif_by, &notif_box_w, &notif_box_h,
                                                  &notif_scroll_mode, &notif_scroll_total);
@@ -591,5 +734,5 @@ const gl_vtx_t *gl_notif_get_vtx(void) {
 }
 
 int gl_notif_needs_dim(void) {
-    return notif_visible && notif_cfg.dim;
+    return notif_visible && (notif_cfg.dim_alpha > 0);
 }
