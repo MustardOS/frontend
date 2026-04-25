@@ -50,7 +50,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/mux/proc_die.sh",          "cd110b70b34829b9"},
         {"/opt/muos/script/mux/quit.sh",              "d8d575e55ab451ff"},
         {"/opt/muos/script/mux/resume.sh",            "14cbc5d55efe046d"},
-        {"/opt/muos/script/mux/screenshot.sh",        "b5e59b5ecdbd6e5a"},
+        {"/opt/muos/script/mux/screenshot.sh",        "0aa799efb7fd11bf"},
         {"/opt/muos/script/mux/sdl_map.sh",           "4321f14de048926f"},
         {"/opt/muos/script/mux/swap_abxy.sh",         "a968ab908b97e7a4"},
         {"/opt/muos/script/mux/swap_dpad.sh",         "22939d3a7b10c403"},

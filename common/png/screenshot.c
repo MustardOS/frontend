@@ -16,14 +16,19 @@
 #define DRM_IOCTL_BASE 'd'
 #define DRM_IOWR(nr, type) _IOWR(DRM_IOCTL_BASE, nr, type)
 
-#define DRM_IOCTL_MODE_GETRESOURCES DRM_IOWR(0xA0, struct drm_mode_card_res)
-#define DRM_IOCTL_MODE_GETCRTC      DRM_IOWR(0xA1, struct drm_mode_crtc)
-#define DRM_IOCTL_MODE_GETFB        DRM_IOWR(0xAD, struct drm_mode_fb_cmd)
-#define DRM_IOCTL_MODE_MAP_DUMB     DRM_IOWR(0xB3, struct drm_mode_map_dumb)
+#define DRM_IOCTL_PRIME_HANDLE_TO_FD DRM_IOWR(0x2d, struct drm_prime_handle)
+#define DRM_IOCTL_MODE_GETRESOURCES  DRM_IOWR(0xA0, struct drm_mode_card_res)
+#define DRM_IOCTL_MODE_GETCRTC       DRM_IOWR(0xA1, struct drm_mode_crtc)
+#define DRM_IOCTL_MODE_GETFB         DRM_IOWR(0xAD, struct drm_mode_fb_cmd)
+#define DRM_IOCTL_MODE_MAP_DUMB      DRM_IOWR(0xB3, struct drm_mode_map_dumb)
 
 #define DRM_MAX_CRTCS 8
 #define DRM_MAX_CARDS 4
+
 #define FBDEV_MAX 4
+
+#define BLANK_SAMPLE_STEP    256
+#define BLANK_NONZERO_NEEDED 4
 
 struct drm_mode_card_res {
     uint64_t fb_id_ptr;
@@ -86,11 +91,27 @@ struct drm_mode_map_dumb {
     uint64_t offset;
 };
 
+struct drm_prime_handle {
+    uint32_t handle;
+    uint32_t flags;
+    int32_t fd;
+};
+
 static inline uint8_t scale_bits(uint32_t value, uint32_t bits) {
     if (bits == 0) return 0;
     if (bits >= 8) return (uint8_t) (value >> (bits - 8));
 
     return (uint8_t) ((value * 255U) / ((1U << bits) - 1U));
+}
+
+static int buffer_is_blank(const uint8_t *buf, size_t len) {
+    size_t nonzero = 0;
+    for (size_t i = 0; i < len; i += BLANK_SAMPLE_STEP) {
+        if (buf[i]) {
+            if (++nonzero >= BLANK_NONZERO_NEEDED) return 0;
+        }
+    }
+    return 1;
 }
 
 static int png_write(const char *path, const uint8_t *rgb, uint32_t width, uint32_t height) {
@@ -261,10 +282,7 @@ static void convert_drm(uint8_t *dst, const uint8_t *src, uint32_t width, uint32
     }
 
     for (uint32_t y = 0; y < height; y++) {
-        const uint8_t *src_row = src + ((size_t) y * pitch);
-        uint8_t *dst_row = dst + ((size_t) y * width * 3U);
-
-        conv(dst_row, src_row, width);
+        conv(dst + (size_t) y * width * 3U, src + (size_t) y * pitch, width);
     }
 }
 
@@ -300,6 +318,12 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
         return -1;
     }
 
+    if (buffer_is_blank(fb, map_size)) {
+        munmap(fb, map_size);
+        close(fd);
+        return -1;
+    }
+
     size_t rgb_size = (size_t) var.xres * var.yres * 3U;
     uint8_t *rgb = malloc(rgb_size);
     if (!rgb) {
@@ -331,10 +355,37 @@ static int capture_fbdev(const char *path) {
     return -1;
 }
 
+static uint8_t *map_gem_handle(int drm_fd, uint32_t handle, size_t map_size, int *out_prime_fd) {
+    *out_prime_fd = -1;
+
+    struct drm_mode_map_dumb map;
+    memset(&map, 0, sizeof(map));
+    map.handle = handle;
+
+    if (ioctl(drm_fd, DRM_IOCTL_MODE_MAP_DUMB, &map) == 0 && map.offset <= (uint64_t) INT64_MAX) {
+        uint8_t *mem = mmap(NULL, map_size, PROT_READ, MAP_SHARED, drm_fd, (off_t) map.offset);
+        if (mem != MAP_FAILED) return mem;
+    }
+
+    struct drm_prime_handle prime;
+    memset(&prime, 0, sizeof(prime));
+    prime.handle = handle;
+    prime.flags = 0;
+
+    if (ioctl(drm_fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime) < 0) return MAP_FAILED;
+
+    uint8_t *mem = mmap(NULL, map_size, PROT_READ, MAP_SHARED, prime.fd, 0);
+    if (mem == MAP_FAILED) {
+        close(prime.fd);
+        return MAP_FAILED;
+    }
+
+    *out_prime_fd = prime.fd;
+    return mem;
+}
+
 static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
     struct drm_mode_crtc crtc;
-    struct drm_mode_fb_cmd fb;
-    struct drm_mode_map_dumb map;
 
     memset(&crtc, 0, sizeof(crtc));
     crtc.crtc_id = crtc_id;
@@ -342,6 +393,7 @@ static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
     if (ioctl(fd, DRM_IOCTL_MODE_GETCRTC, &crtc) < 0) return -1;
     if (!crtc.mode_valid || crtc.fb_id == 0) return -1;
 
+    struct drm_mode_fb_cmd fb;
     memset(&fb, 0, sizeof(fb));
     fb.fb_id = crtc.fb_id;
 
@@ -349,20 +401,23 @@ static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
     if (fb.width == 0 || fb.height == 0 || fb.pitch == 0) return -1;
     if (fb.bpp != 16 && fb.bpp != 24 && fb.bpp != 32) return -1;
 
-    memset(&map, 0, sizeof(map));
-    map.handle = fb.handle;
-
-    if (ioctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &map) < 0) return -1;
-    if (map.offset > (uint64_t) INT64_MAX) return -1;
-
     size_t map_size = (size_t) fb.pitch * fb.height;
-    uint8_t *mem = mmap(NULL, map_size, PROT_READ, MAP_SHARED, fd, (off_t) map.offset);
+
+    int prime_fd = -1;
+    uint8_t *mem = map_gem_handle(fd, fb.handle, map_size, &prime_fd);
     if (mem == MAP_FAILED) return -1;
+
+    if (buffer_is_blank(mem, map_size)) {
+        munmap(mem, map_size);
+        if (prime_fd >= 0) close(prime_fd);
+        return -1;
+    }
 
     size_t rgb_size = (size_t) fb.width * fb.height * 3U;
     uint8_t *rgb = malloc(rgb_size);
     if (!rgb) {
         munmap(mem, map_size);
+        if (prime_fd >= 0) close(prime_fd);
         return -1;
     }
 
@@ -371,6 +426,7 @@ static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
 
     free(rgb);
     munmap(mem, map_size);
+    if (prime_fd >= 0) close(prime_fd);
 
     if (ret != 0) unlink(path);
     return ret;
@@ -420,10 +476,11 @@ static int capture_drm(const char *path) {
             "/dev/dri/card0",
             "/dev/dri/card1",
             "/dev/dri/card2",
-            "/dev/dri/card3"
+            "/dev/dri/card3",
     };
 
     for (size_t i = 0; i < DRM_MAX_CARDS; i++) {
+        if (access(cards[i], R_OK) != 0) continue;
         if (capture_drm_card(cards[i], path) == 0) return 0;
     }
 
@@ -440,7 +497,7 @@ int screenshot_save(const char *path, screenshot_mode mode) {
             return capture_drm(path);
         case SCREENSHOT_AUTO:
         default:
-            if (capture_fbdev(path) == 0) return 0;
-            return capture_drm(path);
+            if (capture_drm(path) == 0) return 0;
+            return capture_fbdev(path);
     }
 }
