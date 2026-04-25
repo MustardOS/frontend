@@ -74,7 +74,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/system/swap.sh",           "cd67778a2c08c706"},
         {"/opt/muos/script/system/usb_gadget.sh",     "8dd676a2701adf8a"},
         {"/opt/muos/script/system/user_init.sh",      "c25a63c50bf5fbd2"},
-        {"/opt/muos/script/var/func.sh",              "753e982989551b50"},
+        {"/opt/muos/script/var/func.sh",              "f5de4fabc55cc181"},
         {"/opt/muos/script/var/glyph.sh",             "1e16c77203f027a4"},
         {"/opt/muos/script/var/notif.sh",             "3ed9de1fb9a3db1c"},
         {"/opt/muos/script/var/sync.sh",              "456820ca25251e52"},
