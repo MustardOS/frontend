@@ -60,6 +60,11 @@ typedef struct {
 static axis_map_entry axis_map[SDL_CONTROLLER_AXIS_MAX];
 static mux_input_type key_map[SDL_NUM_SCANCODES];
 
+static void map_vol_buttons(mux_input_type *map, int down_idx, int up_idx) {
+    map[down_idx] = MUX_INPUT_VOL_DOWN;
+    map[up_idx] = MUX_INPUT_VOL_UP;
+}
+
 static void init_input_maps(void) {
     if (input_init_done) return;
 
@@ -130,17 +135,16 @@ static void init_input_maps(void) {
     key_map[SDL_SCANCODE_A] = MUX_INPUT_DPAD_LEFT;
     key_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
 
-    if (board_is(BOARD_SPECIAL_TUI_BRICK)) {
-        joy_button_map[1] = MUX_INPUT_VOL_UP;
-        joy_button_map[0] = MUX_INPUT_VOL_DOWN;
-    } else {
-        if (board_is(BOARD_SPECIAL_NONE)) {
-            joy_button_map[2] = MUX_INPUT_VOL_UP;
-            joy_button_map[1] = MUX_INPUT_VOL_DOWN;
-        } else if (board_is(BOARD_SPECIAL_VITA_PRO)) {
-            joy_button_map[14] = MUX_INPUT_VOL_UP;
-            joy_button_map[13] = MUX_INPUT_VOL_DOWN;
-        }
+    switch (board_special()) {
+        case BOARD_SPECIAL_TUI_BRICK:
+            map_vol_buttons(joy_button_map, 0, 1);
+            break;
+        case BOARD_SPECIAL_VITA_PRO:
+            map_vol_buttons(joy_button_map, 13, 14);
+            break;
+        default:
+            map_vol_buttons(joy_button_map, 1, 2);
+            break;
     }
 
     key_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
@@ -148,6 +152,8 @@ static void init_input_maps(void) {
 
     key_map[SDL_SCANCODE_PAGEDOWN] = MUX_INPUT_VOL_DOWN;
     key_map[SDL_SCANCODE_VOLUMEDOWN] = MUX_INPUT_VOL_DOWN;
+
+    // key_map[SDL_SCANCODE_AC_BACK] = ??????????
 
     input_init_done = 1;
 }
