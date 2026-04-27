@@ -9,6 +9,7 @@ typedef struct {
 
     GLint u_tex;
     GLint u_resolution;
+    GLint u_native_resolution;
     GLint u_time;
     GLint u_frame;
 

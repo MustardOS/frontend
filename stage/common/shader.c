@@ -31,6 +31,7 @@ static const char frag[] =
         "precision mediump float;\n"
         "uniform sampler2D u_tex;\n"
         "uniform vec2 u_resolution;\n"
+        "uniform vec2 u_native_resolution;\n"
         "uniform float u_time;\n"
         "uniform int u_frame;\n"
         "varying vec2 v_uv;\n";
@@ -146,6 +147,7 @@ int shader_load(const char *path, shader_prog_t *out) {
     sh.program = prog;
     sh.u_tex = glGetUniformLocation(prog, "u_tex");
     sh.u_resolution = glGetUniformLocation(prog, "u_resolution");
+    sh.u_native_resolution = glGetUniformLocation(prog, "u_native_resolution");
     sh.u_time = glGetUniformLocation(prog, "u_time");
     sh.u_frame = glGetUniformLocation(prog, "u_frame");
     sh.a_pos = glGetAttribLocation(prog, "a_pos");

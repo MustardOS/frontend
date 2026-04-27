@@ -916,8 +916,283 @@ static const float k_fullscreen_quad[4][4] = {
         {1.0f,  -1.0f, 1.0f, 0.0f},
 };
 
+static GLuint k_shader_work_tex = 0;
+static GLuint k_shader_work_fbo = 0;
+static int k_shader_work_w = 0;
+static int k_shader_work_h = 0;
+
+static GLuint k_smooth_prog = 0;
+static GLint k_smooth_a_pos = -1;
+static GLint k_smooth_a_uv = -1;
+static GLint k_smooth_u_tex = -1;
+static GLint k_smooth_u_texel = -1;
+static GLint k_smooth_u_strength = -1;
+
+static const char *k_fs_smooth_src =
+        "precision mediump float;"
+        "uniform sampler2D u_tex;"
+        "uniform vec2 u_texel;"
+        "uniform float u_strength;"
+        "varying vec2 v_uv;"
+        "void main(){"
+        "    vec4 c;"
+        "    vec4 s;"
+        "    vec2 dx;"
+        "    vec2 dy;"
+        "    c = texture2D(u_tex, v_uv);"
+        "    if (u_strength <= 0.0001) {"
+        "        gl_FragColor = c;"
+        "        return;"
+        "    }"
+        "    dx = vec2(u_texel.x, 0.0);"
+        "    dy = vec2(0.0, u_texel.y);"
+        "    s = c * 0.25;"
+        "    s += texture2D(u_tex, v_uv - dx) * 0.125;"
+        "    s += texture2D(u_tex, v_uv + dx) * 0.125;"
+        "    s += texture2D(u_tex, v_uv - dy) * 0.125;"
+        "    s += texture2D(u_tex, v_uv + dy) * 0.125;"
+        "    s += texture2D(u_tex, v_uv - dx - dy) * 0.0625;"
+        "    s += texture2D(u_tex, v_uv + dx - dy) * 0.0625;"
+        "    s += texture2D(u_tex, v_uv - dx + dy) * 0.0625;"
+        "    s += texture2D(u_tex, v_uv + dx + dy) * 0.0625;"
+        "    gl_FragColor = mix(c, s, u_strength);"
+        "}";
+
+static float k_get_shader_smooth_strength(int src_w, int src_h, int dst_w, int dst_h) {
+    float scale_x;
+    float scale_y;
+    float scale;
+
+    if (src_w < 1 || src_h < 1 || dst_w < 1 || dst_h < 1) return 0.0f;
+
+    scale_x = (float) dst_w / (float) src_w;
+    scale_y = (float) dst_h / (float) src_h;
+    scale = (scale_x > scale_y) ? scale_x : scale_y;
+
+    if (scale <= 1.05f) return 0.0f;
+    if (scale <= 1.25f) return 0.18f;
+    if (scale <= 1.50f) return 0.28f;
+    if (scale <= 2.00f) return 0.38f;
+
+    return 0.48f;
+}
+
+static int k_ensure_smooth_program(void) {
+    if (k_smooth_prog) return 1;
+
+    GLuint vs = k_compile_shader(GL_VERTEX_SHADER, k_vs_src);
+    GLuint fs = k_compile_shader(GL_FRAGMENT_SHADER, k_fs_smooth_src);
+
+    if (!vs || !fs) {
+        if (vs) glDeleteShader(vs);
+        if (fs) glDeleteShader(fs);
+        return 0;
+    }
+
+    k_smooth_prog = k_link_program(vs, fs, 0);
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    if (!k_smooth_prog) return 0;
+
+    k_smooth_a_pos = glGetAttribLocation(k_smooth_prog, "a_pos");
+    k_smooth_a_uv = glGetAttribLocation(k_smooth_prog, "a_uv");
+    k_smooth_u_tex = glGetUniformLocation(k_smooth_prog, "u_tex");
+    k_smooth_u_texel = glGetUniformLocation(k_smooth_prog, "u_texel");
+    k_smooth_u_strength = glGetUniformLocation(k_smooth_prog, "u_strength");
+
+    if (k_smooth_a_pos < 0 || k_smooth_a_uv < 0 || k_smooth_u_tex < 0 || k_smooth_u_texel < 0 || k_smooth_u_strength < 0) {
+        glDeleteProgram(k_smooth_prog);
+        k_smooth_prog = 0;
+
+        k_smooth_a_pos = -1;
+        k_smooth_a_uv = -1;
+        k_smooth_u_tex = -1;
+        k_smooth_u_texel = -1;
+        k_smooth_u_strength = -1;
+
+        return 0;
+    }
+
+    k_use_program(k_smooth_prog);
+    glUniform1i(k_smooth_u_tex, 0);
+
+    return 1;
+}
+
+static void k_draw_quad_smooth(GLuint tex, int src_w, int src_h, int dst_w, int dst_h, GLint dst_fbo) {
+    float strength;
+
+    if (!tex) return;
+
+    strength = k_get_shader_smooth_strength(src_w, src_h, dst_w, dst_h);
+    if (strength <= 0.0f) {
+        k_draw_quad_overlay(tex, k_fullscreen_vtx, 1.0f);
+        return;
+    }
+
+    if (!k_ensure_smooth_program()) {
+        k_draw_quad_overlay(tex, k_fullscreen_vtx, 1.0f);
+        return;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
+    glViewport(0, 0, dst_w, dst_h);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_BLEND);
+
+    k_use_program(k_smooth_prog);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glUniform2f(k_smooth_u_texel,
+                1.0f / (float) src_w,
+                1.0f / (float) src_h);
+
+    glUniform1f(k_smooth_u_strength, strength);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glEnableVertexAttribArray((GLuint) k_smooth_a_pos);
+    glEnableVertexAttribArray((GLuint) k_smooth_a_uv);
+
+    glVertexAttribPointer((GLuint) k_smooth_a_pos,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (GLsizei) (sizeof(float) * 4),
+                          &k_fullscreen_quad[0][0]);
+
+    glVertexAttribPointer((GLuint) k_smooth_a_uv,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (GLsizei) (sizeof(float) * 4),
+                          &k_fullscreen_quad[0][2]);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glDisableVertexAttribArray((GLuint) k_smooth_a_pos);
+    glDisableVertexAttribArray((GLuint) k_smooth_a_uv);
+}
+
+static void k_get_shader_work_size(int fb_w, int fb_h, int *out_w, int *out_h) {
+    int w = fb_w;
+    int h = fb_h;
+
+    if (fb_w > 960 && fb_h > 720) {
+        h = 720;
+        w = (fb_w * h + (fb_h / 2)) / fb_h;
+
+        if (w > fb_w) w = fb_w;
+        if (h > fb_h) h = fb_h;
+
+        if ((w & 1) && w > 1) w--;
+        if ((h & 1) && h > 1) h--;
+    }
+
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+
+    *out_w = w;
+    *out_h = h;
+}
+
+static void k_get_shader_native_resolution(int pass_w, int pass_h, float *out_w, float *out_h) {
+    int div_w;
+    int div_h;
+    int div;
+    int native_w;
+    int native_h;
+
+    if (pass_w < 1) pass_w = 1;
+    if (pass_h < 1) pass_h = 1;
+
+    div_w = pass_w / 640;
+    div_h = pass_h / 480;
+    div = (div_w < div_h) ? div_w : div_h;
+
+    if (div < 1) div = 1;
+
+    native_w = (pass_w + (div / 2)) / div;
+    native_h = (pass_h + (div / 2)) / div;
+
+    if (native_w < 640) native_w = 640;
+    if (native_h < 480) native_h = 480;
+
+    *out_w = (float) native_w;
+    *out_h = (float) native_h;
+}
+
 static void k_draw_quad_shader(const shader_prog_t *shader, GLuint tex, int fb_w, int fb_h, int frame, GLint dst_fbo) {
     if (!shader || !shader->program || !tex) return;
+    if (shader->a_pos < 0 || shader->a_uv < 0) return;
+    if (fb_w < 1 || fb_h < 1) return;
+
+    int pass_w = fb_w;
+    int pass_h = fb_h;
+    float native_w = 0.0f;
+    float native_h = 0.0f;
+
+    k_get_shader_work_size(fb_w, fb_h, &pass_w, &pass_h);
+    k_get_shader_native_resolution(pass_w, pass_h, &native_w, &native_h);
+
+    if ((pass_w != fb_w || pass_h != fb_h) &&
+        k_ensure_target(&k_shader_work_tex, &k_shader_work_fbo, &k_shader_work_w, &k_shader_work_h, pass_w, pass_h)) {
+        glBindFramebuffer(GL_FRAMEBUFFER, k_shader_work_fbo);
+        glViewport(0, 0, pass_w, pass_h);
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_BLEND);
+
+        k_use_program(shader->program);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+
+        if (shader->u_tex >= 0) glUniform1i(shader->u_tex, 0);
+        if (shader->u_resolution >= 0) glUniform2f(shader->u_resolution, (float) pass_w, (float) pass_h);
+        if (shader->u_native_resolution >= 0) glUniform2f(shader->u_native_resolution, native_w, native_h);
+        if (shader->u_time >= 0) glUniform1f(shader->u_time, (float) frame);
+        if (shader->u_frame >= 0) glUniform1i(shader->u_frame, frame);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glEnableVertexAttribArray((GLuint) shader->a_pos);
+        glEnableVertexAttribArray((GLuint) shader->a_uv);
+
+        glVertexAttribPointer((GLuint) shader->a_pos,
+                              2,
+                              GL_FLOAT,
+                              GL_FALSE,
+                              (GLsizei) (sizeof(float) * 4),
+                              &k_fullscreen_quad[0][0]);
+
+        glVertexAttribPointer((GLuint) shader->a_uv,
+                              2,
+                              GL_FLOAT,
+                              GL_FALSE,
+                              (GLsizei) (sizeof(float) * 4),
+                              &k_fullscreen_quad[0][2]);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        glDisableVertexAttribArray((GLuint) shader->a_pos);
+        glDisableVertexAttribArray((GLuint) shader->a_uv);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
+        glViewport(0, 0, fb_w, fb_h);
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_BLEND);
+
+        k_draw_quad_smooth(k_shader_work_tex, pass_w, pass_h, fb_w, fb_h, dst_fbo);
+        return;
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
     glViewport(0, 0, fb_w, fb_h);
@@ -933,21 +1208,38 @@ static void k_draw_quad_shader(const shader_prog_t *shader, GLuint tex, int fb_w
 
     if (shader->u_tex >= 0) glUniform1i(shader->u_tex, 0);
     if (shader->u_resolution >= 0) glUniform2f(shader->u_resolution, (float) fb_w, (float) fb_h);
+    if (shader->u_native_resolution >= 0) {
+        float full_native_w = 0.0f;
+        float full_native_h = 0.0f;
+        k_get_shader_native_resolution(fb_w, fb_h, &full_native_w, &full_native_h);
+        glUniform2f(shader->u_native_resolution, full_native_w, full_native_h);
+    }
     if (shader->u_time >= 0) glUniform1f(shader->u_time, (float) frame);
     if (shader->u_frame >= 0) glUniform1i(shader->u_frame, frame);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, &k_fullscreen_quad[0][0]);
+    glEnableVertexAttribArray((GLuint) shader->a_pos);
+    glEnableVertexAttribArray((GLuint) shader->a_uv);
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, &k_fullscreen_quad[0][2]);
+    glVertexAttribPointer((GLuint) shader->a_pos,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (GLsizei) (sizeof(float) * 4),
+                          &k_fullscreen_quad[0][0]);
+
+    glVertexAttribPointer((GLuint) shader->a_uv,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          (GLsizei) (sizeof(float) * 4),
+                          &k_fullscreen_quad[0][2]);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray((GLuint) shader->a_pos);
+    glDisableVertexAttribArray((GLuint) shader->a_uv);
 }
 
 typedef struct {
@@ -2093,6 +2385,7 @@ static void k_on_context_changed(void) {
     k_destroy_target(&k_content_tex, &k_content_fbo, &k_content_w, &k_content_h);
     k_destroy_target(&k_output_tex, &k_output_fbo, &k_output_w, &k_output_h);
     k_destroy_target(&k_overlay_tex, &k_overlay_fbo, &k_overlay_w, &k_overlay_h);
+    k_destroy_target(&k_shader_work_tex, &k_shader_work_fbo, &k_shader_work_w, &k_shader_work_h);
 
     if (k_dim_tex) {
         glDeleteTextures(1, &k_dim_tex);
@@ -2110,19 +2403,49 @@ static void k_on_context_changed(void) {
         glDeleteProgram(k_prog_overlay);
         k_prog_overlay = 0;
     }
+
     if (k_prog_content) {
         glDeleteProgram(k_prog_content);
         k_prog_content = 0;
     }
 
+    if (k_smooth_prog) {
+        glDeleteProgram(k_smooth_prog);
+        k_smooth_prog = 0;
+    }
+
+    k_overlay_a_pos = -1;
+    k_overlay_a_uv = -1;
+    k_overlay_u_tex = -1;
+    k_overlay_u_alpha = -1;
+
+    k_content_a_pos = -1;
+    k_content_a_uv = -1;
+    k_content_u_tex = -1;
+    k_content_u_brightness = -1;
+    k_content_u_contrast = -1;
+    k_content_u_saturation = -1;
+    k_content_u_cosH = -1;
+    k_content_u_sinH = -1;
+    k_content_u_gamma = -1;
+    k_content_u_filter = -1;
+    k_content_u_filter_enabled = -1;
+
+    k_smooth_a_pos = -1;
+    k_smooth_a_uv = -1;
+    k_smooth_u_tex = -1;
+    k_smooth_u_texel = -1;
+    k_smooth_u_strength = -1;
+
     k_prog_overlay_attempted = 0;
     k_prog_overlay_ready = 0;
     k_prog_content_attempted = 0;
     k_prog_content_ready = 0;
+
     k_current_program = 0;
     k_max_attribs = 0;
-
     k_overlay_valid = 0;
+
     k_vtx_base_valid = 0;
     k_vtx_battery_valid = 0;
     k_vtx_bright_valid = 0;
@@ -2138,23 +2461,7 @@ static void k_on_context_changed(void) {
     k_volume_scale_cached = -1;
 
     k_base_nop_last = -1;
-    k_base_resolved = 0;
-    k_base_resolved_path[0] = '\0';
-    k_loader_valid = 0;
 
-    k_capture_mode = CAPTURE_UNTRIED;
-    k_content_internal = GL_RGBA;
-    k_content_format = GL_RGBA;
-
-    if (k_read_buf) {
-        free(k_read_buf);
-        k_read_buf = NULL;
-        k_read_buf_size = 0;
-    }
-
-    memset(&k_overlay_cache, 0, sizeof(k_overlay_cache));
-
-    k_reset_render_path();
     if (pl.ready) pl_shutdown();
 
     colour_adjust_reset();
