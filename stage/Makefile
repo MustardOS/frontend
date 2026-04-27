@@ -5,14 +5,14 @@ LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(LIB_DIR)/libmustage.so
 
 CFLAGS  := $(BASE_CFLAGS) -fPIC
-LDFLAGS := -shared -Wl,--strip-all -ldl -lSDL2 -lSDL2_image -lSDL2_ttf -lGLESv2 -lm
+LDFLAGS := -shared -Wl,--strip-all -ldl -lSDL2 -lSDL2_image -lSDL2_ttf -lGLESv2 -lEGL -lm
 
 INCLUDES := -I. -I./common -I./overlay -I./render -I../common
 
 SRC := hook.c common/common.c ../common/debug.c ../common/inotify.c \
 	common/alpha.c common/anchor.c common/colour.c common/filter.c common/rotate.c common/scale.c common/stretch.c common/shader.c \
 	overlay/base.c overlay/battery.c overlay/bright.c overlay/volume.c overlay/notif.c \
-	render/sdl.c render/gles.c
+	render/sdl.c render/gles.c render/kms.c
 
 OBJ := $(SRC:.c=.o)
 
