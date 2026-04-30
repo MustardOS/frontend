@@ -22,7 +22,6 @@
 
 #define RENDER_PATHS 8
 
-
 static int fb_cached_w = 0;
 static int fb_cached_h = 0;
 
@@ -81,13 +80,6 @@ static int overlay_tex_h = 0;
 static int overlay_valid = 0;
 
 static GLuint dim_tex = 0;
-
-static struct {
-    GLuint program;
-
-    float res_w;
-    float res_h;
-} shader_uniform_cache;
 
 typedef struct {
     int fb_w;

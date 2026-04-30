@@ -55,7 +55,7 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -fno-stack-protector -fno-ident \
               $(BUILD_FLAGS)
 
-COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread
+COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng
 
 BIN_LDFLAGS  = -Wl,--gc-sections -s
 LIB_LDFLAGS  = -Wl,-rpath,'./lib'
