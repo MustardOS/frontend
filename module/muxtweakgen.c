@@ -47,7 +47,6 @@ static void init_dropdown_settings(void) {
 static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, int_to_pct(config.SETTINGS.GENERAL.BRIGHTNESS, 2, device.SCREEN.BRIGHT));
     lv_dropdown_set_selected(ui_droVolume_tweakgen, clamp_range(config.SETTINGS.GENERAL.VOLUME, 0, lv_dropdown_get_option_cnt(ui_droVolume_tweakgen) - 1));
-    lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
     lv_dropdown_set_selected(ui_droHkDpad_tweakgen, device.BOARD.HASSTICK > 0 ? 0 : config.SETTINGS.GENERAL.HKDPAD);
     lv_dropdown_set_selected(ui_droHkShot_tweakgen, config.SETTINGS.GENERAL.HKSHOT);
 
@@ -72,8 +71,6 @@ static void save_tweak_options(void) {
     };
 
     CHECK_AND_SAVE_VAL(tweakgen, Startup, "settings/general/startup", CHAR, startup_options);
-    CHECK_AND_SAVE_STD(tweakgen, Rgb, "settings/general/rgb", INT, 0);
-
     CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
 
@@ -179,10 +176,10 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.RTC, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHTNESS, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
@@ -239,7 +236,8 @@ static void nav_show_lr(int show) {
 static void check_focus(void) {
     struct _lv_obj_t *f = lv_group_get_focused(ui_group);
 
-    int is_module = (f == ui_lblHdmi_tweakgen || f == ui_lblRtc_tweakgen || f == ui_lblAdvanced_tweakgen);
+    int is_module = (f == ui_lblHdmi_tweakgen || f == ui_lblRtc_tweakgen ||
+                     f == ui_lblAdvanced_tweakgen || f == ui_lblRgb_tweakgen);
     int is_set_opt = (f == ui_lblBrightness_tweakgen || f == ui_lblVolume_tweakgen);
 
     if (is_module) {
@@ -335,6 +333,7 @@ static void handle_a(void) {
         MENU_OPTION,
         MENU_CLOCK,
         MENU_HDMI,
+        MENU_RGB,
         MENU_ADVANCED,
     } menu_action;
 
@@ -350,10 +349,10 @@ static void handle_a(void) {
     static const menu_entry entries[UI_COUNT] = {
             {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK,    NULL},
             {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI, visible_hdmi},
+            {"rgb",      &KIOSK_PASS,             MENU_RGB,      NULL},
             {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume
-            {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // RGB Lights
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey DPAD
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey Screenshot
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Startup Mode
@@ -373,6 +372,7 @@ static void handle_a(void) {
     switch (entry->action) {
         case MENU_CLOCK:
         case MENU_HDMI:
+        case MENU_RGB:
         case MENU_ADVANCED:
             if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();

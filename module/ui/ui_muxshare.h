@@ -319,6 +319,18 @@
     POWER(GovDefault,  GOVDEFAULT,  "gov_default")  \
     POWER(Screensaver, SCREENSAVER, "screensaver")
 
+#define RGB_ELEMENTS                              \
+    RGB(Mode,        MODE,        "mode")         \
+    RGB(Bright,      BRIGHT,      "bright")       \
+    RGB(BreathSpeed, BREATH_SPEED,"breath_speed") \
+    RGB(ColourL,     COLOURL,     "colour_l")     \
+    RGB(ColourR,     COLOURR,     "colour_r")     \
+    RGB(ColourM,     COLOURM,     "colour_m")     \
+    RGB(ColourF1,    COLOURF1,    "colour_f1")    \
+    RGB(ColourF2,    COLOURF2,    "colour_f2")    \
+    RGB(Combo,       COMBO,       "combo")        \
+    RGB(Backend,     BACKEND,     "backend")
+
 #define RTC_ELEMENTS                    \
     RTC(Timezone, TIMEZONE, "timezone") \
     RTC(Year,     YEAR,     "year")     \
@@ -414,10 +426,10 @@
 #define TWEAKGEN_ELEMENTS                          \
     TWEAKGEN(Rtc,        RTC,        "clock")      \
     TWEAKGEN(Hdmi,       HDMI,       "hdmi")       \
+    TWEAKGEN(Rgb,        RGB,        "rgb")        \
     TWEAKGEN(Advanced,   ADVANCED,   "advanced")   \
     TWEAKGEN(Brightness, BRIGHTNESS, "brightness") \
     TWEAKGEN(Volume,     VOLUME,     "volume")     \
-    TWEAKGEN(Rgb,        RGB,        "rgb")        \
     TWEAKGEN(HkDpad,     HKDPAD,     "hkdpad")     \
     TWEAKGEN(HkShot,     HKSHOT,     "hkshot")     \
     TWEAKGEN(Startup,    STARTUP,    "startup")

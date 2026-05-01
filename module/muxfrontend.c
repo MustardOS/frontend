@@ -547,6 +547,7 @@ static const ModuleEntry modules[] = {
         {"netadv",      "connect",   "muxnetadv",      muxnetadv_main,      NULL},
         {"webserv",     "connect",   "muxwebserv",     muxwebserv_main,     NULL},
         {"hdmi",        "tweakgen",  "muxhdmi",        muxhdmi_main,        NULL},
+        {"rgb",         "tweakgen",  "muxrgb",         muxrgb_main,         NULL},
         {"storage",     "config",    "muxstorage",     muxstorage_main,     NULL},
         {"backup",      "config",    "muxbackup",      muxbackup_main,      NULL},
         {"power",       "config",    "muxpower",       muxpower_main,       NULL},

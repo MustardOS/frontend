@@ -1104,6 +1104,50 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char MODE[MAX_BUFFER_SIZE];
+        char BRIGHT[MAX_BUFFER_SIZE];
+        char BREATH_SPEED[MAX_BUFFER_SIZE];
+        char COLOURL[MAX_BUFFER_SIZE];
+        char COLOURR[MAX_BUFFER_SIZE];
+        char COLOURM[MAX_BUFFER_SIZE];
+        char COLOURF1[MAX_BUFFER_SIZE];
+        char COLOURF2[MAX_BUFFER_SIZE];
+        char COMBO[MAX_BUFFER_SIZE];
+        char BACKEND[MAX_BUFFER_SIZE];
+        char SAME_AS_L[MAX_BUFFER_SIZE];
+        struct {
+            char OFF[MAX_BUFFER_SIZE];
+            char STATIC[MAX_BUFFER_SIZE];
+            char BREATHING[MAX_BUFFER_SIZE];
+            char PRESET_COMBO[MAX_BUFFER_SIZE];
+            char THEME_SUPPLIED[MAX_BUFFER_SIZE];
+        } MODE_NAME;
+        struct {
+            char FAST[MAX_BUFFER_SIZE];
+            char MEDIUM[MAX_BUFFER_SIZE];
+            char SLOW[MAX_BUFFER_SIZE];
+        } BREATH_SPEED_NAME;
+        struct {
+            char AUTO[MAX_BUFFER_SIZE];
+            char SYSFS[MAX_BUFFER_SIZE];
+            char SERIAL[MAX_BUFFER_SIZE];
+        } BACKEND_NAME;
+        struct {
+            char MODE[MAX_BUFFER_SIZE];
+            char BRIGHT[MAX_BUFFER_SIZE];
+            char BREATH_SPEED[MAX_BUFFER_SIZE];
+            char COLOURL[MAX_BUFFER_SIZE];
+            char COLOURR[MAX_BUFFER_SIZE];
+            char COLOURM[MAX_BUFFER_SIZE];
+            char COLOURF1[MAX_BUFFER_SIZE];
+            char COLOURF2[MAX_BUFFER_SIZE];
+            char COMBO[MAX_BUFFER_SIZE];
+            char BACKEND[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXRGB;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char DAY[MAX_BUFFER_SIZE];
         char MONTH[MAX_BUFFER_SIZE];
         char YEAR[MAX_BUFFER_SIZE];

@@ -529,9 +529,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO, "Switch between device speaker or external monitor audio via HDMI connection");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.RESOLUTION, "Select the resolution for HDMI output, such as 720p or 1080p");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.SCAN, "Switch between overscan or underscan to fit the display screen");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.DEPTH, "Set the color depth, such as 8-bit or 10-bit");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.RANGE, "Set the color range of RGB colour space");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.SPACE, "Set the color space, such as RGB or YUV");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.DEPTH, "Set the colour depth, such as 8-bit or 10-bit");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.RANGE, "Set the colour range of RGB colour space");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.SPACE, "Set the colour space, such as RGB or YUV");
 
     // muxhistory
     SPECIFIC_FIELD(lang->MUXHISTORY.TITLE, "HISTORY");
@@ -960,6 +960,41 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXRAOPT.TITLE, "THREADED VIDEO");
     SPECIFIC_FIELD(lang->MUXRAOPT.HELP, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
 
+    // muxrgb
+    SPECIFIC_FIELD(lang->MUXRGB.TITLE, "RGB LIGHTS");
+    SPECIFIC_FIELD(lang->MUXRGB.MODE, "Mode");
+    SPECIFIC_FIELD(lang->MUXRGB.BRIGHT, "Brightness");
+    SPECIFIC_FIELD(lang->MUXRGB.BREATH_SPEED, "Breath Speed");
+    SPECIFIC_FIELD(lang->MUXRGB.COLOURL, "Left Stick Colour");
+    SPECIFIC_FIELD(lang->MUXRGB.COLOURR, "Right Stick Colour");
+    SPECIFIC_FIELD(lang->MUXRGB.COLOURM, "Middle Zone Colour");
+    SPECIFIC_FIELD(lang->MUXRGB.COLOURF1, "Front Zone 1 Colour");
+    SPECIFIC_FIELD(lang->MUXRGB.COLOURF2, "Front Zone 2 Colour");
+    SPECIFIC_FIELD(lang->MUXRGB.COMBO, "Colour Combo");
+    SPECIFIC_FIELD(lang->MUXRGB.BACKEND, "Backend");
+    SPECIFIC_FIELD(lang->MUXRGB.SAME_AS_L, "Same as Main");
+    SPECIFIC_FIELD(lang->MUXRGB.MODE_NAME.OFF, "Off");
+    SPECIFIC_FIELD(lang->MUXRGB.MODE_NAME.STATIC, "Static");
+    SPECIFIC_FIELD(lang->MUXRGB.MODE_NAME.BREATHING, "Breathing");
+    SPECIFIC_FIELD(lang->MUXRGB.MODE_NAME.PRESET_COMBO, "Preset Combo");
+    SPECIFIC_FIELD(lang->MUXRGB.MODE_NAME.THEME_SUPPLIED, "Theme Supplied");
+    SPECIFIC_FIELD(lang->MUXRGB.BREATH_SPEED_NAME.FAST, "Fast");
+    SPECIFIC_FIELD(lang->MUXRGB.BREATH_SPEED_NAME.MEDIUM, "Medium");
+    SPECIFIC_FIELD(lang->MUXRGB.BREATH_SPEED_NAME.SLOW, "Slow");
+    SPECIFIC_FIELD(lang->MUXRGB.BACKEND_NAME.AUTO, "Auto");
+    SPECIFIC_FIELD(lang->MUXRGB.BACKEND_NAME.SYSFS, "SYSFS");
+    SPECIFIC_FIELD(lang->MUXRGB.BACKEND_NAME.SERIAL, "Serial");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.MODE, "The animation mode driving the RGB lights");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.BRIGHT, "Overall brightness of the RGB lights, from 1 to 10");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.BREATH_SPEED, "How quickly the breathing animation pulses");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.COLOURL, "Primary colour used by single-colour modes");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.COLOURR, "Right stick colour override\n\nSelect 'Same as Main' to follow the primary colour");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.COLOURM, "Middle zone colour override\n\nSelect 'Same as Main' to follow the primary colour");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.COLOURF1, "Front zone 1 colour override\n\nSelect 'Same as Main' to follow the primary colour");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.COLOURF2, "Front zone 2 colour override\n\nSelect 'Same as Main' to follow the primary colour");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.COMBO, "Two-colour preset used by the Preset Combo mode");
+    SPECIFIC_FIELD(lang->MUXRGB.HELP.BACKEND, "Driver backend used to talk to the RGB hardware\n\nLeave on Auto unless you know your device prefers a specific backend");
+
     // muxrtc
     SPECIFIC_FIELD(lang->MUXRTC.TITLE, "DATE AND TIME");
     SPECIFIC_FIELD(lang->MUXRTC.DAY, "Day");
@@ -1249,7 +1284,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.VOLUME, "Change the volume of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED, "Settings that should only be changed by those who know what they are doing!");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.RGB, "Toggle the device fancy RGB light system");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.RGB, "Configure the device fancy RGB light system");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKDPAD, "Switch between different hotkeys for toggling DPAD swap");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKSHOT, "Switch between different hotkeys for taking a screenshot");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");

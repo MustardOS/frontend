@@ -200,6 +200,18 @@ struct mux_config {
                 char IDLE[MAX_BUFFER_SIZE];
             } GOV;
         } POWER;
+        struct {
+            int16_t MODE;
+            int16_t BRIGHT;
+            int16_t BREATH_SPEED;
+            int16_t COLOURL;
+            int16_t COLOURR;
+            int16_t COLOURM;
+            int16_t COLOURF1;
+            int16_t COLOURF2;
+            int16_t COMBO;
+            int16_t BACKEND;
+        } RGB;
     } SETTINGS;
 
     struct {

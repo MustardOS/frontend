@@ -36,6 +36,7 @@
 #include "../common/font.h"
 #include "../common/osk.h"
 #include "../common/overlay.h"
+#include "../common/colour.h"
 #include "../common/language.h"
 #include "../common/collection.h"
 #include "../common/collection_tag.h"
@@ -238,6 +239,8 @@ int muxpower_main();
 
 int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app);
 
+int muxrgb_main();
+
 int muxrtc_main();
 
 int muxsearch_main(char *dir);
@@ -312,14 +315,28 @@ int muxwebserv_main();
         ui_count++;                                                                 \
     } while (0)
 
-#define HIDE_OPTION_ITEM(MODULE, NAME)                                    \
-    do {                                                                  \
-        lv_obj_add_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
-        lv_obj_add_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
-        lv_obj_add_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
-        lv_obj_add_flag(ui_dro##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
-                                                                          \
-        ui_count--;                                                       \
+#define HIDE_OPTION_ITEM(MODULE, NAME)                                           \
+    do {                                                                         \
+        if (!lv_obj_has_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT)) { \
+            lv_obj_add_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);    \
+            lv_obj_add_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);    \
+            lv_obj_add_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);    \
+            lv_obj_add_flag(ui_dro##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);    \
+                                                                                 \
+            ui_count--;                                                          \
+        }                                                                        \
+    } while (0)
+
+#define SHOW_OPTION_ITEM(MODULE, NAME)                                          \
+    do {                                                                        \
+        if (lv_obj_has_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT)) { \
+            lv_obj_clear_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
+            lv_obj_clear_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
+            lv_obj_clear_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
+            lv_obj_clear_flag(ui_dro##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT); \
+                                                                                \
+            ui_count++;                                                         \
+        }                                                                       \
     } while (0)
 
 #define INIT_STATIC_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, NOGEN)                                                       \

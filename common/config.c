@@ -212,6 +212,17 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.POWER.GOV.IDLE, CONF_CONFIG_PATH "settings/power/gov_idle", "powersave");
     CFG_INT_FIELD(config->SETTINGS.POWER.SCREENSAVER, CONF_CONFIG_PATH "settings/power/screensaver", 0);
 
+    CFG_INT_FIELD(config->SETTINGS.RGB.MODE, CONF_CONFIG_PATH "settings/rgb/mode", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.BRIGHT, CONF_CONFIG_PATH "settings/rgb/bright", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.BREATH_SPEED, CONF_CONFIG_PATH "settings/rgb/breath_speed", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURL, CONF_CONFIG_PATH "settings/rgb/colour_l", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURR, CONF_CONFIG_PATH "settings/rgb/colour_r", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURM, CONF_CONFIG_PATH "settings/rgb/colour_m", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURF1, CONF_CONFIG_PATH "settings/rgb/colour_f1", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURF2, CONF_CONFIG_PATH "settings/rgb/colour_f2", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.COMBO, CONF_CONFIG_PATH "settings/rgb/combo", 0);
+    CFG_INT_FIELD(config->SETTINGS.RGB.BACKEND, CONF_CONFIG_PATH "settings/rgb/backend", 0);
+
     CFG_INT_FIELD(config->SORT.DEFAULT, CONF_CONFIG_PATH "sort/default", 0);
     CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);
     CFG_INT_FIELD(config->SORT.HISTORY, CONF_CONFIG_PATH "sort/history", 0);
