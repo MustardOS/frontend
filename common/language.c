@@ -915,12 +915,15 @@ void load_lang(struct mux_lang *lang) {
     // muxpower
     SPECIFIC_FIELD(lang->MUXPOWER.TITLE, "POWER SETTINGS");
     SPECIFIC_FIELD(lang->MUXPOWER.LOW_BATTERY, "Low Battery Indicator");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TITLE, "Frontend Screensaver");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.CRAWL, "Crawl");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.CRUISE, "Cruise");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.FAST, "Fast");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TURBO, "Turbo");
-    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.LUDICROUS, "Ludicrous");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TYPE.TITLE, "Screensaver Type");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TYPE.DVD, "Bouncer");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.TYPE.STAR, "Starfield");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.SPEED.TITLE, "Screensaver Speed");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.SPEED.CRAWL, "Crawl");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.SPEED.CRUISE, "Cruise");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.SPEED.FAST, "Fast");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.SPEED.TURBO, "Turbo");
+    SPECIFIC_FIELD(lang->MUXPOWER.SCREENSAVER.SPEED.LUDICROUS, "Ludicrous");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.ERROR, "Idle Display must be less than Idle Sleep");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.DISPLAY, "Idle Input Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.SLEEP, "Idle Input Sleep Timeout");
@@ -954,7 +957,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.GOVDEFAULT, "Configure the default frontend and device power governor");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.BATTERY, "Configure when the red LED will display based on the current capacity percentage");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SHUTDOWN, "Configure how the power button functions on short press");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SCREENSAVER, "Toggle the frontend screensaver on Idle Display Timeout activation");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SAVERTYPE, "Choose the frontend screensaver shown on Idle Display Timeout, or disable it entirely");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SAVERSPEED, "Adjust the speed of the screensaver");
 
     // muxraopt
     SPECIFIC_FIELD(lang->MUXRAOPT.TITLE, "THREADED VIDEO");

@@ -317,7 +317,8 @@
     POWER(IdleMute,    IDLEMUTE,    "idle_mute")    \
     POWER(GovIdle,     GOVIDLE,     "gov_idle")     \
     POWER(GovDefault,  GOVDEFAULT,  "gov_default")  \
-    POWER(Screensaver, SCREENSAVER, "screensaver")
+    POWER(SaverType,   SAVERTYPE,   "saver_type")   \
+    POWER(SaverSpeed,  SAVERSPEED,  "saver_speed")
 
 #define RGB_ELEMENTS                              \
     RGB(Mode,        MODE,        "mode")         \

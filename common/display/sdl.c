@@ -11,6 +11,7 @@
 #include "../theme.h"
 #include "sdl.h"
 #include "dvd.h"
+#include "star.h"
 
 typedef struct {
     // Just the default base stuff we need
@@ -110,18 +111,56 @@ static void reload_background(const char *active_theme) {
     LOG_INFO("video", "Loaded theme background: %s", back_image);
 }
 
+enum {
+    SAVER_TYPE_DISABLED = 0,
+    SAVER_TYPE_DVD = 1,
+    SAVER_TYPE_STAR = 2,
+};
+
+static int active_saver = -1;
+
+static int saver_active(void) {
+    if (active_saver == SAVER_TYPE_STAR) return star_active();
+    if (active_saver == SAVER_TYPE_DVD) return dvd_active();
+    return 0;
+}
+
+static void saver_update(void) {
+    if (active_saver == SAVER_TYPE_STAR) star_update();
+    else if (active_saver == SAVER_TYPE_DVD) dvd_update();
+}
+
+static void saver_render(SDL_Renderer *r) {
+    if (active_saver == SAVER_TYPE_STAR) star_render(r);
+    else if (active_saver == SAVER_TYPE_DVD) dvd_render(r);
+}
+
+static void saver_stop(void) {
+    if (active_saver == SAVER_TYPE_STAR) star_stop();
+    else if (active_saver == SAVER_TYPE_DVD) dvd_stop();
+}
+
 static void reload_screensaver() {
     dvd_shutdown();
+    star_shutdown();
 
-    char saver_image[MAX_BUFFER_SIZE];
-    snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
+    int type = config.SETTINGS.POWER.SAVERTYPE;
 
-    if (!file_exist(saver_image)) {
-        snprintf(saver_image, sizeof(saver_image), "%s/image/screensaver.png", theme_base);
-        if (!file_exist(saver_image)) snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
+    if (type == SAVER_TYPE_STAR) {
+        star_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_DVD) {
+        char saver_image[MAX_BUFFER_SIZE];
+        snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
+
+        if (!file_exist(saver_image)) {
+            snprintf(saver_image, sizeof(saver_image), "%s/image/screensaver.png", theme_base);
+            if (!file_exist(saver_image)) snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
+        }
+
+        dvd_init(monitor.renderer, saver_image, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
     }
 
-    dvd_init(monitor.renderer, saver_image, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    active_saver = type;
 }
 
 void check_theme_change(void) {
@@ -339,6 +378,7 @@ void sdl_init(void) {
 
 void sdl_cleanup(void) {
     dvd_shutdown();
+    star_shutdown();
 
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
@@ -349,14 +389,14 @@ void sdl_cleanup(void) {
     SDL_Quit();
 }
 
-void run_dvd_screensaver_loop(void) {
+void run_screensaver_loop(void) {
     mux_input_flush_all();
 
     SDL_Event ev;
     const uint32_t frame_ms = IDLE_MS;
     uint32_t next = SDL_GetTicks();
 
-    while (dvd_active()) {
+    while (saver_active()) {
         uint32_t now = SDL_GetTicks();
         int timeout = (int) (next > now ? next - now : 0);
 
@@ -368,7 +408,7 @@ void run_dvd_screensaver_loop(void) {
                     case SDL_JOYBUTTONDOWN:
                     case SDL_MOUSEBUTTONDOWN:
                     case SDL_QUIT:
-                        dvd_stop();
+                        saver_stop();
                         break;
                     default:
                         break;
@@ -377,13 +417,13 @@ void run_dvd_screensaver_loop(void) {
         }
 
         // The following looks really stupid but it works!
-        if (!dvd_active()) break;
-        dvd_update();
-        if (!dvd_active()) break;
+        if (!saver_active()) break;
+        saver_update();
+        if (!saver_active()) break;
 
         SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
         SDL_RenderClear(monitor.renderer);
-        dvd_render(monitor.renderer);
+        saver_render(monitor.renderer);
         SDL_RenderPresent(monitor.renderer);
 
         next += frame_ms;
@@ -427,7 +467,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     SDL_Rect upd = {.x = x1, .y = y1, .w = copy_w, .h = copy_h};
 
     const uint8_t *src_base = (const uint8_t *) color_p;
-    const uint8_t *src_ptr = src_base + ((size_t) (src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
+    const uint8_t *src_ptr = src_base + ((size_t)(src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
 
     const int src_pitch = src_w * (int) sizeof(lv_color_t);
     const int dst_pitch = copy_w * (int) sizeof(lv_color_t);
@@ -463,17 +503,30 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
         return;
     }
 
-    // Update our screensaver function, and if we update successfully
-    // then we mark it as active and run the loop with a complete
-    // separate input logic scheme that does not interrupt the muX frontend!
-    if (config.SETTINGS.POWER.SCREENSAVER) {
+    {
+        uint32_t now = SDL_GetTicks();
+        static uint32_t last_type_poll = 0;
+        if (now - last_type_poll >= TIMER_IDLE) {
+            int wanted_type = read_line_int_from(CONF_CONFIG_PATH "settings/power/saver_type", 1);
+            if (wanted_type < 0) wanted_type = 0;
+
+            if (active_saver != wanted_type) {
+                config.SETTINGS.POWER.SAVERTYPE = (int16_t) wanted_type;
+                reload_screensaver();
+            }
+
+            last_type_poll = now;
+        }
+    }
+
+    if (active_saver != SAVER_TYPE_DISABLED) {
         uint32_t now = SDL_GetTicks();
 
         if (now - last_saver_exit > SCREENSAVER_DELAY) {
-            dvd_update();
-            if (dvd_active()) {
+            saver_update();
+            if (saver_active()) {
                 pending_rect_valid = false;
-                run_dvd_screensaver_loop();
+                run_screensaver_loop();
                 last_saver_exit = SDL_GetTicks();
             }
         }

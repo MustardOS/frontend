@@ -17,9 +17,8 @@ static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900,
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
 
-#define SCREENSAVER_COUNT 5
+#define SCREENSAVER_COUNT 4
 enum screensaver_speed {
-    SCREENSAVER_DISABLED = 0,
     SCREENSAVER_CRAWL = 30,
     SCREENSAVER_CRUISE = 90,
     SCREENSAVER_FAST = 150,
@@ -28,19 +27,23 @@ enum screensaver_speed {
 };
 
 static const int screensaver_values[SCREENSAVER_COUNT] = {
-        SCREENSAVER_DISABLED,
         SCREENSAVER_CRAWL,
         SCREENSAVER_CRUISE,
         SCREENSAVER_FAST,
         SCREENSAVER_TURBO
 };
 
-static const char *screensaver_timer[SCREENSAVER_COUNT] = {
-        lang.GENERIC.DISABLED,
-        lang.MUXPOWER.SCREENSAVER.CRAWL,
-        lang.MUXPOWER.SCREENSAVER.CRUISE,
-        lang.MUXPOWER.SCREENSAVER.FAST,
-        lang.MUXPOWER.SCREENSAVER.TURBO
+#define SCREENSAVER_TYPE_COUNT 3
+enum screensaver_type {
+    SCREENSAVER_TYPE_DISABLED = 0,
+    SCREENSAVER_TYPE_DVD = 1,
+    SCREENSAVER_TYPE_STAR = 2
+};
+
+static const int screensaver_type_values[SCREENSAVER_TYPE_COUNT] = {
+        SCREENSAVER_TYPE_DISABLED,
+        SCREENSAVER_TYPE_DVD,
+        SCREENSAVER_TYPE_STAR
 };
 
 char **gov_values_lower = NULL;
@@ -139,6 +142,17 @@ static int find_governor(char *governor) {
     return 0;
 }
 
+static void update_saver_speed_visibility(void) {
+    int sel = (int) lv_dropdown_get_selected(ui_droSaverType_power);
+    int type = map_drop_down_to_value(sel, screensaver_type_values, SCREENSAVER_TYPE_COUNT, SCREENSAVER_TYPE_DVD);
+
+    if (type == SCREENSAVER_TYPE_DISABLED) {
+        lv_obj_add_flag(ui_pnlSaverSpeed_power, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_pnlSaverSpeed_power, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
 static void restore_power_options(void) {
     lv_obj_t *ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
     int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
@@ -150,13 +164,15 @@ static void restore_power_options(void) {
     lv_dropdown_set_selected(ui_droGovIdle_power, find_governor(config.SETTINGS.POWER.GOV.IDLE));
     lv_dropdown_set_selected(ui_droGovDefault_power, find_governor(config.SETTINGS.POWER.GOV.DEFAULT));
 
-    if (config.SETTINGS.POWER.SCREENSAVER == SCREENSAVER_LUDICROUS) {
-        const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droScreensaver_power); // heh...
-        if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.LUDICROUS, LV_DROPDOWN_POS_LAST);
-        lv_dropdown_set_selected(ui_droScreensaver_power, SCREENSAVER_COUNT);
+    if (config.SETTINGS.POWER.SAVERSPEED == SCREENSAVER_LUDICROUS) {
+        const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power); // heh...
+        if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SCREENSAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
+        lv_dropdown_set_selected(ui_droSaverSpeed_power, SCREENSAVER_COUNT);
     } else {
-        map_drop_down_to_index(ui_droScreensaver_power, config.SETTINGS.POWER.SCREENSAVER, screensaver_values, SCREENSAVER_COUNT, 0);
+        map_drop_down_to_index(ui_droSaverSpeed_power, config.SETTINGS.POWER.SAVERSPEED, screensaver_values, SCREENSAVER_COUNT, 0);
     }
+
+    map_drop_down_to_index(ui_droSaverType_power, config.SETTINGS.POWER.SAVERTYPE, screensaver_type_values, SCREENSAVER_TYPE_COUNT, SCREENSAVER_TYPE_DVD);
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
@@ -174,13 +190,13 @@ static void restore_power_options(void) {
             map_drop_down_to_index(ui_droIdle[i], *config_values[i], idle_values, IDLE_COUNT + 1, 0);
         }
     }
+
+    update_saver_speed_visibility();
 }
 
 static int save_power_options(void) {
-    int idx_idle_display = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleDisplay_power),
-                                                  idle_values, IDLE_COUNT, 0);
-    int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep_power),
-                                                idle_values, IDLE_COUNT, 0);
+    int idx_idle_display = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleDisplay_power), idle_values, IDLE_COUNT, 0);
+    int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep_power), idle_values, IDLE_COUNT, 0);
 
     if (idx_idle_display && idx_idle_sleep && idx_idle_display >= idx_idle_sleep) {
         play_sound(SND_ERROR);
@@ -193,8 +209,7 @@ static int save_power_options(void) {
 
     int is_modified = 0;
 
-    int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown_power),
-                                              shutdown_values, SHUTDOWN_COUNT, -2);
+    int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown_power), shutdown_values, SHUTDOWN_COUNT, -2);
 
     if (lv_dropdown_get_selected(ui_droShutdown_power) != Shutdown_original) {
         is_modified++;
@@ -237,16 +252,25 @@ static int save_power_options(void) {
         CHECK_AND_SAVE_DEV_VAL(power, GovDefault, "cpu/default", CHAR, gov_values_lower);
     }
 
-    if (lv_dropdown_get_option_cnt(ui_droScreensaver_power) > 1 && lv_dropdown_get_selected(ui_droScreensaver_power) != Screensaver_original) {
+    if (lv_dropdown_get_option_cnt(ui_droSaverSpeed_power) > 1 && lv_dropdown_get_selected(ui_droSaverSpeed_power) != SaverSpeed_original) {
         int ss_value;
-        if (lv_dropdown_get_selected(ui_droScreensaver_power) == SCREENSAVER_COUNT) {
+        if (lv_dropdown_get_selected(ui_droSaverSpeed_power) == SCREENSAVER_COUNT) {
             ss_value = SCREENSAVER_LUDICROUS;
         } else {
-            ss_value = map_drop_down_to_value(lv_dropdown_get_selected(ui_droScreensaver_power), screensaver_values, SCREENSAVER_COUNT, SCREENSAVER_DISABLED);
+            ss_value = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverSpeed_power),
+                                              screensaver_values, SCREENSAVER_COUNT, SCREENSAVER_CRAWL);
         }
 
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/screensaver", "w", INT, ss_value);
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_speed", "w", INT, ss_value);
+    }
+
+    if (lv_dropdown_get_option_cnt(ui_droSaverType_power) > 1 &&
+        lv_dropdown_get_selected(ui_droSaverType_power) != SaverType_original) {
+        int idx_type = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverType_power),
+                                              screensaver_type_values, SCREENSAVER_TYPE_COUNT, SCREENSAVER_TYPE_DVD);
+        is_modified++;
+        write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_type", "w", INT, idx_type);
     }
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
@@ -276,6 +300,19 @@ static void init_navigation_group(void) {
             lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t15m, lang.MUXPOWER.IDLE.t30m
     };
 
+    static const char *saver_speed[SCREENSAVER_COUNT] = {
+            lang.MUXPOWER.SCREENSAVER.SPEED.CRAWL,
+            lang.MUXPOWER.SCREENSAVER.SPEED.CRUISE,
+            lang.MUXPOWER.SCREENSAVER.SPEED.FAST,
+            lang.MUXPOWER.SCREENSAVER.SPEED.TURBO
+    };
+
+    static const char *saver_type[SCREENSAVER_TYPE_COUNT] = {
+            lang.GENERIC.DISABLED,
+            lang.MUXPOWER.SCREENSAVER.TYPE.DVD,
+            lang.MUXPOWER.SCREENSAVER.TYPE.STAR
+    };
+
     INIT_OPTION_ITEM(-1, power, Shutdown, lang.MUXPOWER.SLEEP.TITLE, "shutdown", sleep_timer, SHUTDOWN_COUNT);
     INIT_OPTION_ITEM(-1, power, Battery, lang.MUXPOWER.LOW_BATTERY, "battery", NULL, 0);
     INIT_OPTION_ITEM(-1, power, IdleSleep, lang.MUXPOWER.IDLE.SLEEP, "idle_sleep", idle_timer, IDLE_COUNT);
@@ -283,7 +320,11 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, IdleMute, lang.MUXPOWER.IDLE.MUTE, "idle_mute", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, power, GovIdle, lang.MUXPOWER.GOV.IDLE, "gov_idle", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(-1, power, GovDefault, lang.MUXPOWER.GOV.DEFAULT, "gov_fe", gov_values_disp, (int) gov_count);
-    INIT_OPTION_ITEM(-1, power, Screensaver, lang.MUXPOWER.SCREENSAVER.TITLE, "screensaver", (char **) screensaver_timer, SCREENSAVER_COUNT);
+
+    INIT_OPTION_ITEM(-1, power, SaverType, lang.MUXPOWER.SCREENSAVER.TYPE.TITLE, "saver_type",
+                     (char **) saver_type, SCREENSAVER_TYPE_COUNT);
+    INIT_OPTION_ITEM(-1, power, SaverSpeed, lang.MUXPOWER.SCREENSAVER.SPEED.TITLE, "saver_speed",
+                     (char **) saver_speed, SCREENSAVER_COUNT);
 
     char *battery_pct = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_pct);
@@ -308,13 +349,19 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    move_option(lv_group_get_focused(ui_group_value), -1);
+    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
+    move_option(focused, -1);
+
+    if (focused == ui_droSaverType_power) update_saver_speed_visibility();
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    move_option(lv_group_get_focused(ui_group_value), +1);
+    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
+    move_option(focused, +1);
+
+    if (focused == ui_droSaverType_power) update_saver_speed_visibility();
 }
 
 static void handle_a(void) {
@@ -342,10 +389,10 @@ static void handle_b(void) {
 }
 
 static void set_screensaver(void) {
-    const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droScreensaver_power);
-    if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droScreensaver_power, lang.MUXPOWER.SCREENSAVER.LUDICROUS, LV_DROPDOWN_POS_LAST);
+    const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power);
+    if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SCREENSAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
 
-    lv_dropdown_set_selected(ui_droScreensaver_power, SCREENSAVER_COUNT);
+    lv_dropdown_set_selected(ui_droSaverSpeed_power, SCREENSAVER_COUNT);
     play_sound(SND_MUOS);
 
     toast_message(
@@ -361,7 +408,7 @@ static void set_screensaver(void) {
 static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
-    if (lv_group_get_focused(ui_group_value) == ui_droScreensaver_power) set_screensaver();
+    if (lv_group_get_focused(ui_group_value) == ui_droSaverSpeed_power) set_screensaver();
 }
 
 static void handle_help(void) {

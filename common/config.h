@@ -189,7 +189,8 @@ struct mux_config {
         struct {
             int16_t LOW_BATTERY;
             int16_t SHUTDOWN;
-            int16_t SCREENSAVER;
+            int16_t SAVERTYPE;
+            int16_t SAVERSPEED;
             struct {
                 int16_t DISPLAY;
                 int16_t SLEEP;

@@ -93,7 +93,7 @@ static void mux_idle_poll(lv_timer_t *timer) {
     if (idle < 0 || idle == last_idle) return;
 
     // Screensaver is disabled so we'll just pause the frontend
-    if (!config.SETTINGS.POWER.SCREENSAVER) {
+    if (!config.SETTINGS.POWER.SAVERTYPE) {
         lv_timer_t *display_timer = mux_get_refresh_timer();
 
         if (idle) {

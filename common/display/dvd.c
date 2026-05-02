@@ -10,7 +10,7 @@
 #define FRAME_SHF 16
 #define FRAME_ONE (1 << FRAME_SHF)
 
-#define DVD_SPEED_PATH "/opt/muos/config/settings/power/screensaver"
+#define DVD_SPEED_PATH "/opt/muos/config/settings/power/saver_speed"
 #define DVD_SPEED_DEFAULT 90
 #define DVD_SPEED_COLOUR 600
 

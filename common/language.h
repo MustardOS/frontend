@@ -1046,12 +1046,19 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char LOW_BATTERY[MAX_BUFFER_SIZE];
         struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            char CRAWL[MAX_BUFFER_SIZE];
-            char CRUISE[MAX_BUFFER_SIZE];
-            char FAST[MAX_BUFFER_SIZE];
-            char TURBO[MAX_BUFFER_SIZE];
-            char LUDICROUS[MAX_BUFFER_SIZE];
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char DVD[MAX_BUFFER_SIZE];
+                char STAR[MAX_BUFFER_SIZE];
+            } TYPE;
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char CRAWL[MAX_BUFFER_SIZE];
+                char CRUISE[MAX_BUFFER_SIZE];
+                char FAST[MAX_BUFFER_SIZE];
+                char TURBO[MAX_BUFFER_SIZE];
+                char LUDICROUS[MAX_BUFFER_SIZE];
+            } SPEED;
         } SCREENSAVER;
         struct {
             char ERROR[MAX_BUFFER_SIZE];
@@ -1093,7 +1100,8 @@ struct mux_lang {
             char IDLEMUTE[MAX_BUFFER_SIZE];
             char GOVIDLE[MAX_BUFFER_SIZE];
             char GOVDEFAULT[MAX_BUFFER_SIZE];
-            char SCREENSAVER[MAX_BUFFER_SIZE];
+            char SAVERTYPE[MAX_BUFFER_SIZE];
+            char SAVERSPEED[MAX_BUFFER_SIZE];
         } HELP;
     } MUXPOWER;
 
