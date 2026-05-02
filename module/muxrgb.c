@@ -181,15 +181,20 @@ static int resolve_theme_rgb_script(char *out) {
     return 0;
 }
 
-static void rgb_apply(void) {
+static void rgb_focus(void) {
     if (!rgb_caps) return;
 
     int ui_mode = dro_selected(ui_droMode_rgb);
-
     if (ui_mode != last_applied_mode) {
         apply_mode_visibility(ui_mode);
         last_applied_mode = ui_mode;
     }
+}
+
+static void rgb_apply(void) {
+    if (!rgb_caps) return;
+
+    int ui_mode = dro_selected(ui_droMode_rgb);
 
     if (ui_mode == RGB_MODE_THEME_SUPPLIED) {
         char script_path[MAX_BUFFER_SIZE];
@@ -547,14 +552,14 @@ static void handle_option_prev(void) {
     if (msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), -1);
-    rgb_apply();
+    rgb_focus();
 }
 
 static void handle_option_next(void) {
     if (msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), +1);
-    rgb_apply();
+    rgb_focus();
 }
 
 static void handle_a(void) {
@@ -582,6 +587,12 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_x(void) {
+    if (msgbox_active || block_input || hold_call) return;
+
+    rgb_apply();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || block_input || hold_call) return;
 
@@ -597,6 +608,8 @@ static void init_elements(void) {
             {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph,  "",                  0},
+            {ui_lblNavX,       lang.GENERIC.SET,    0},
             {NULL, NULL,                            0}
     });
 
@@ -628,7 +641,7 @@ int muxrgb_main(void) {
     restore_rgb_options();
     init_dropdown_settings();
 
-    rgb_apply();
+    rgb_focus();
 
     init_timer(ui_gen_refresh_task, NULL);
     list_nav_next(0);
@@ -638,6 +651,7 @@ int muxrgb_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
