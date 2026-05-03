@@ -160,12 +160,12 @@ static void handle_b(void) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
     // Return if backup set to Excluded or if on Toggle Target Storage
-    if (element_focused == ui_lblMerge_backup ||
-        element_focused == ui_lblTarget_backup ||
-        (element_focused != ui_lblStart_backup && lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) == 0))
+    if (e_focused == ui_lblMerge_backup ||
+        e_focused == ui_lblTarget_backup ||
+        (e_focused != ui_lblStart_backup && lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) == 0))
         return;
 
     play_sound(SND_CONFIRM);
@@ -190,7 +190,7 @@ static void handle_a(void) {
 
     // Write for batch backup
     char do_merge[4];
-    if (element_focused == ui_lblStart_backup) {
+    if (e_focused == ui_lblStart_backup) {
         sprintf(do_merge, "%d", lv_dropdown_get_selected(ui_droMerge_backup));
 
         fprintf(fp, "%s %s\n", "BATCH", target_value);
@@ -208,7 +208,7 @@ static void handle_a(void) {
     } else { // For other backup paths, write the focused label and its path suffix
         sprintf(do_merge, "%d", 0);
         fprintf(fp, "%s %s\n", "INDIVIDUAL", target_value);
-        char *runner = lv_obj_get_user_data(element_focused);
+        char *runner = lv_obj_get_user_data(e_focused);
         fprintf(fp, "%s %s\n", target_value, runner);
     }
     fclose(fp);
@@ -280,9 +280,9 @@ static void ui_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
         adjust_gen_panel();
 
-        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+        struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-        if (element_focused == ui_lblMerge_backup || element_focused == ui_lblTarget_backup) {
+        if (e_focused == ui_lblMerge_backup || e_focused == ui_lblTarget_backup) {
             lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         } else {

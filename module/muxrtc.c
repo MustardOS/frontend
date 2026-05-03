@@ -177,8 +177,8 @@ static void init_navigation_group(void) {
 }
 
 static void check_focus() {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblTimezone_rtc) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblTimezone_rtc) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -291,18 +291,18 @@ static void adjust_option(int direction) {
     rtc_state_t old_rtc = rtc;
     play_sound(SND_OPTION);
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblYear_rtc) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblYear_rtc) {
         adjust_year(direction);
-    } else if (element_focused == ui_lblMonth_rtc) {
+    } else if (e_focused == ui_lblMonth_rtc) {
         adjust_month(direction);
-    } else if (element_focused == ui_lblDay_rtc) {
+    } else if (e_focused == ui_lblDay_rtc) {
         adjust_day(direction);
-    } else if (element_focused == ui_lblHour_rtc) {
+    } else if (e_focused == ui_lblHour_rtc) {
         adjust_hour(direction);
-    } else if (element_focused == ui_lblMinute_rtc) {
+    } else if (e_focused == ui_lblMinute_rtc) {
         adjust_minute(direction);
-    } else if (element_focused == ui_lblNotation_rtc) {
+    } else if (e_focused == ui_lblNotation_rtc) {
         adjust_notation(direction);
     }
 

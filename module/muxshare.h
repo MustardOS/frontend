@@ -30,6 +30,7 @@
 #include "../common/theme.h"
 #include "../common/kiosk.h"
 #include "../common/common.h"
+#include "../common/display.h"
 #include "../common/board.h"
 #include "../common/union.h"
 #include "../common/ui_common.h"

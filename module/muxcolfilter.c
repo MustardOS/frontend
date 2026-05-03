@@ -8,10 +8,10 @@ static bool is_dir = false;
 static int is_app = 0;
 
 static char *get_selected_filter(void) {
-    lv_obj_t *focused = lv_group_get_focused(ui_group);
-    if (!focused) return NULL;
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (!e_focused) return NULL;
 
-    const char *text = lv_label_get_text(focused);
+    const char *text = lv_label_get_text(e_focused);
     if (!text) return NULL;
 
     return str_tolower(str_trim(str_replace(text, " ", "_")));

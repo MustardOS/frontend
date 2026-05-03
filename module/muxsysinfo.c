@@ -457,15 +457,15 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblVersion_sysinfo) {
+    if (e_focused == ui_lblVersion_sysinfo) {
         toast_message(verify_check ? lang.GENERIC.MODIFIED : lang.GENERIC.CLEAN, SHORT);
         refresh_screen(ui_screen, 1);
         return;
     }
 
-    if (element_focused == ui_lblBuild_sysinfo) {
+    if (e_focused == ui_lblBuild_sysinfo) {
         play_sound(SND_MUOS);
 
         if (++tap_count > 50) {
@@ -524,20 +524,20 @@ static void handle_a(void) {
         return;
     }
 
-    if (element_focused == ui_lblMemory_sysinfo) {
+    if (e_focused == ui_lblMemory_sysinfo) {
         write_text_to_file("/proc/sys/vm/drop_caches", "w", INT, 3);
         toast_message(lang.MUXSYSINFO.MEMORY.DROP, MEDIUM);
         refresh_screen(ui_screen, 1);
         return;
     }
 
-    if (element_focused == ui_lblKernel_sysinfo) {
+    if (e_focused == ui_lblKernel_sysinfo) {
         toast_message(hostname, MEDIUM);
         refresh_screen(ui_screen, 1);
         return;
     }
 
-    if (element_focused == ui_lblReload_sysinfo) {
+    if (e_focused == ui_lblReload_sysinfo) {
         toast_message(lang.MUXSYSINFO.RELOAD_RUN, FOREVER);
 
         refresh_config = 1;

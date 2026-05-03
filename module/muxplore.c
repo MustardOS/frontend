@@ -1209,8 +1209,8 @@ static void ui_refresh_task() {
         adjust_panels();
 
         if (ui_count > 0) {
-            lv_obj_t *focused = lv_group_get_focused(ui_group);
-            const char *content_label = focused ? lv_obj_get_user_data(focused) : NULL;
+            lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+            const char *content_label = e_focused ? lv_obj_get_user_data(e_focused) : NULL;
 
             if (content_label) {
                 snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);

@@ -5,7 +5,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include "../lvgl/lvgl.h"
-#include "display/sdl.h"
+#include "display.h"
 #include "init.h"
 #include "input.h"
 #include "inotify.h"

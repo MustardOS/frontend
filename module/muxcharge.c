@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcharge.h"
 #include "../common/battery.h"
-#include "../common/display/sdl.h"
+#include "../common/display.h"
 
 static int exit_status = -1;
 static int blank_timeout = 3;

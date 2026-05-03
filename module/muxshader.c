@@ -8,10 +8,10 @@ static bool is_dir = false;
 static int is_app = 0;
 
 static char *get_selected_shader(void) {
-    lv_obj_t *focused = lv_group_get_focused(ui_group_panel);
-    if (!focused) return NULL;
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group_panel);
+    if (!e_focused) return NULL;
 
-    return (char *) lv_obj_get_user_data(focused);
+    return (char *) lv_obj_get_user_data(e_focused);
 }
 
 static void show_help(void) {

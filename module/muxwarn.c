@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/display/sdl.h"
+#include "../common/display.h"
 
 int main(void) {
     init_module("muxwarn");

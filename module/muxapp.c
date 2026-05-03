@@ -461,9 +461,9 @@ static void init_elements(void) {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+            struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
             char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
-            lv_obj_set_user_data(element_focused, item_name);
+            lv_obj_set_user_data(e_focused, item_name);
 
             adjust_wallpaper_element(ui_group, 0, WALL_APPLICATION);
         }

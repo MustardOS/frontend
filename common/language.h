@@ -73,6 +73,7 @@ struct mux_lang {
         char ONLINE[MAX_BUFFER_SIZE];
         char OPEN[MAX_BUFFER_SIZE];
         char OPTION[MAX_BUFFER_SIZE];
+        char PREVIEW[MAX_BUFFER_SIZE];
         char PREVIOUS[MAX_BUFFER_SIZE];
         char READ[MAX_BUFFER_SIZE];
         char REBOOTING[MAX_BUFFER_SIZE];
@@ -1050,6 +1051,14 @@ struct mux_lang {
                 char TITLE[MAX_BUFFER_SIZE];
                 char DVD[MAX_BUFFER_SIZE];
                 char STAR[MAX_BUFFER_SIZE];
+                char MATRIX[MAX_BUFFER_SIZE];
+                char FIREFLY[MAX_BUFFER_SIZE];
+                char PULSE[MAX_BUFFER_SIZE];
+                char TRACE[MAX_BUFFER_SIZE];
+                char CONSTELLATION[MAX_BUFFER_SIZE];
+                char MYSTIFY[MAX_BUFFER_SIZE];
+                char MAZE[MAX_BUFFER_SIZE];
+                char BLOCKFALL[MAX_BUFFER_SIZE];
             } TYPE;
             struct {
                 char TITLE[MAX_BUFFER_SIZE];
@@ -1059,7 +1068,7 @@ struct mux_lang {
                 char TURBO[MAX_BUFFER_SIZE];
                 char LUDICROUS[MAX_BUFFER_SIZE];
             } SPEED;
-        } SCREENSAVER;
+        } SAVER;
         struct {
             char ERROR[MAX_BUFFER_SIZE];
             char DISPLAY[MAX_BUFFER_SIZE];

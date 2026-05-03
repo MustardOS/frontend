@@ -234,11 +234,11 @@ static void nav_show_lr(int show) {
 }
 
 static void check_focus(void) {
-    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    int is_module = (f == ui_lblHdmi_tweakgen || f == ui_lblRtc_tweakgen ||
-                     f == ui_lblAdvanced_tweakgen || f == ui_lblRgb_tweakgen);
-    int is_set_opt = (f == ui_lblBrightness_tweakgen || f == ui_lblVolume_tweakgen);
+    int is_module = (e_focused == ui_lblHdmi_tweakgen || e_focused == ui_lblRtc_tweakgen ||
+                     e_focused == ui_lblAdvanced_tweakgen || e_focused == ui_lblRgb_tweakgen);
+    int is_set_opt = (e_focused == ui_lblBrightness_tweakgen || e_focused == ui_lblVolume_tweakgen);
 
     if (is_module) {
         nav_show_a(1, lang.GENERIC.SELECT);
@@ -267,7 +267,7 @@ static void list_nav_next(int steps) {
 
 #define HANDLE_TWEAK_OPT(TYPE, TOAST, VALUE, SCRIPT, OFFSET) \
     do {                                                     \
-        if (element_focused == ui_lbl##TYPE##_tweakgen) {    \
+        if (e_focused == ui_lbl##TYPE##_tweakgen) {    \
             int v = (VALUE);                                 \
             if (v != TYPE##_original) {                      \
                 toast_message(TOAST, SHORT);                 \
@@ -279,7 +279,7 @@ static void list_nav_next(int steps) {
     } while (0)
 
 static void update_option_values(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
     HANDLE_TWEAK_OPT(Brightness, lang.MUXTWEAKGEN.BRIGHTNESS_SET,
                      pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT), "bright", 0);
@@ -300,11 +300,11 @@ static void handle_option_next(void) {
 }
 
 static int get_multi_count(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblBrightness_tweakgen) {
+    if (e_focused == ui_lblBrightness_tweakgen) {
         return config.SETTINGS.ADVANCED.INCBRIGHT;
-    } else if (element_focused == ui_lblVolume_tweakgen) {
+    } else if (e_focused == ui_lblVolume_tweakgen) {
         return config.SETTINGS.ADVANCED.INCVOLUME;
     }
 

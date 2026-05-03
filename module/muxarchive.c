@@ -281,8 +281,8 @@ static void init_elements(void) {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-            lv_obj_set_user_data(element_focused, get_last_subdir(strip_ext(items[current_item_index].name), '/', 4));
+            struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+            lv_obj_set_user_data(e_focused, get_last_subdir(strip_ext(items[current_item_index].name), '/', 4));
 
             adjust_wallpaper_element(ui_group, 0, WALL_ARCHIVE);
         }

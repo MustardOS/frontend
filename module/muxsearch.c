@@ -393,9 +393,9 @@ static void process_results(const char *json_results) {
 
 static void handle_keyboard_OK_press(void) {
     key_show = 0;
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblLookup_search) {
+    if (e_focused == ui_lblLookup_search) {
         lv_label_set_text(ui_lblLookupValue_search,
                           lv_textarea_get_text(ui_txtEntry_search));
     }
@@ -428,9 +428,9 @@ static void handle_confirm(void) {
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblLookup_search) {
+    if (e_focused == ui_lblLookup_search) {
         play_sound(SND_CONFIRM);
 
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
@@ -445,7 +445,7 @@ static void handle_confirm(void) {
         return;
     }
 
-    if (element_focused == ui_lblSearchLocal_search || element_focused == ui_lblSearchGlobal_search) {
+    if (e_focused == ui_lblSearchLocal_search || e_focused == ui_lblSearchGlobal_search) {
         char *lookup_value = lv_label_get_text(ui_lblLookupValue_search);
 
         if (strlen(lookup_value) <= 2) {
@@ -458,7 +458,7 @@ static void handle_confirm(void) {
         play_sound(SND_CONFIRM);
         toast_message(lang.MUXSEARCH.SEARCH, FOREVER);
 
-        if (element_focused == ui_lblSearchLocal_search) {
+        if (e_focused == ui_lblSearchLocal_search) {
             const char *args[] = {(OPT_PATH "script/mux/find.sh"), "--local",
                                   str_trim(lookup_value), rom_dir, NULL};
             run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
@@ -498,7 +498,7 @@ static void handle_confirm(void) {
         return;
     }
 
-    if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
+    if (strcasecmp(lv_obj_get_user_data(e_focused), "content") == 0) {
         play_sound(SND_CONFIRM);
 
         const char *selected_raw = all_items[current_item_index].extra_data;

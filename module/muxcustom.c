@@ -227,18 +227,18 @@ static void init_navigation_group(void) {
 }
 
 static void check_focus(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblCatalogue_custom ||
-        element_focused == ui_lblConfig_custom ||
-        element_focused == ui_lblTheme_custom) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblCatalogue_custom ||
+        e_focused == ui_lblConfig_custom ||
+        e_focused == ui_lblTheme_custom) {
         lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else if (element_focused == ui_lblThemeAlternate_custom ||
-               element_focused == ui_lblMusicVolume_custom ||
-               element_focused == ui_lblSoundVolume_custom) {
+    } else if (e_focused == ui_lblThemeAlternate_custom ||
+               e_focused == ui_lblMusicVolume_custom ||
+               e_focused == ui_lblSoundVolume_custom) {
         lv_label_set_text(ui_lblNavA, lang.GENERIC.SET);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);

@@ -61,18 +61,18 @@ static void handle_b(void) {
 static void handle_up(void) {
     play_sound(SND_NAVIGATE);
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    lv_roller_set_selected(element_focused,
-                           lv_roller_get_selected(element_focused) - 1,
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    lv_roller_set_selected(e_focused,
+                           lv_roller_get_selected(e_focused) - 1,
                            LV_ANIM_ON);
 }
 
 static void handle_down(void) {
     play_sound(SND_NAVIGATE);
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    lv_roller_set_selected(element_focused,
-                           lv_roller_get_selected(element_focused) + 1,
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    lv_roller_set_selected(e_focused,
+                           lv_roller_get_selected(e_focused) + 1,
                            LV_ANIM_ON);
 }
 

@@ -1280,8 +1280,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     const char *wall_extension = random ? "0.png" : (animated == 1 ? "gif" : (animated == 2 ? "0.png" : "png"));
 
     if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
-        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-        const char *element = element_focused == NULL ? "" : lv_obj_get_user_data(element_focused);
+        struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+        const char *element = e_focused == NULL ? "" : lv_obj_get_user_data(e_focused);
         switch (wall_type) {
             case WALL_APPLICATION:
                 if (load_image_catalogue("Application", element, "", "default", mux_dim, "wall",

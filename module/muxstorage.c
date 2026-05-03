@@ -138,10 +138,10 @@ static void handle_a(void) {
 
     play_sound(SND_CONFIRM);
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
 
     static char storage_script[MAX_BUFFER_SIZE];
-    if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
+    if (strcasecmp(lv_label_get_text(e_focused), "SD2") == 0) {
         snprintf(storage_script, sizeof(storage_script), "%s/script/mux/sync.sh", OPT_PATH);
     } else {
         snprintf(storage_script, sizeof(storage_script), "%s/script/mux/migrate.sh", OPT_PATH);
@@ -194,8 +194,8 @@ static void ui_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
         adjust_gen_panel();
 
-        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
-        if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
+        struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
+        if (strcasecmp(lv_label_get_text(e_focused), "SD2") == 0) {
             lv_label_set_text(ui_lblNavX, lang.GENERIC.SYNC);
         } else {
             lv_label_set_text(ui_lblNavX, lang.GENERIC.MIGRATE);

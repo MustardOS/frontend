@@ -1767,11 +1767,11 @@ void gen_help(int current_index, const struct help_msg *help_messages, size_t ms
             key = items[current_index].glyph_icon;
         }
     } else {
-        lv_obj_t *focused = group ? lv_group_get_focused(group) : NULL;
+        lv_obj_t *e_focused = group ? lv_group_get_focused(group) : NULL;
 
-        if (focused) {
-            title = TRS(lv_label_get_text(focused));
-            key = (const char *) lv_obj_get_user_data(focused);
+        if (e_focused) {
+            title = TRS(lv_label_get_text(e_focused));
+            key = (const char *) lv_obj_get_user_data(e_focused);
         }
     }
 

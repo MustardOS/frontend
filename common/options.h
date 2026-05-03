@@ -17,8 +17,9 @@
 #define RTC_RETRY_DELAY 1
 
 #define THEME_PREVIEW_DELAY 1024
-#define SCREENSAVER_DELAY   512
 #define DEFAULT_TEMPERATURE 30
+
+#define SAVER_DELAY 512
 
 #define IDLE_MS 16 // ~60 FPS
 #define IDLE_FZ (12 * 60 * 60 * 1000U) // Freeze for 12 hours!

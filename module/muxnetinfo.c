@@ -348,9 +348,9 @@ static void init_navigation_group(void) {
 }
 
 static void check_focus() {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblHostname_netinfo || element_focused == ui_lblMac_netinfo) {
-        lv_label_set_text(ui_lblNavA, element_focused == ui_lblHostname_netinfo ? lang.GENERIC.EDIT : lang.GENERIC.CHANGE);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblHostname_netinfo || e_focused == ui_lblMac_netinfo) {
+        lv_label_set_text(ui_lblNavA, e_focused == ui_lblHostname_netinfo ? lang.GENERIC.EDIT : lang.GENERIC.CHANGE);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
@@ -380,9 +380,9 @@ static void reload_netinfo(void) {
 
 static void handle_keyboard_OK_press(void) {
     key_show = 0;
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblHostname_netinfo) {
+    if (e_focused == ui_lblHostname_netinfo) {
         const char *new_hostname = lv_textarea_get_text(ui_txtEntry_netinfo);
         if (strlen(new_hostname) < 3) goto clear_osk;
 
@@ -439,8 +439,8 @@ static void handle_a(void) {
         return;
     }
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblHostname_netinfo) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblHostname_netinfo) {
         if (is_network_connected()) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXNETINFO.ERROR.EDIT, SHORT);
@@ -456,7 +456,7 @@ static void handle_a(void) {
         lv_obj_move_foreground(ui_pnlEntry_netinfo);
 
         lv_textarea_set_text(ui_txtEntry_netinfo, lv_label_get_text(lv_group_get_focused(ui_group_value)));
-    } else if (element_focused == ui_lblMac_netinfo) {
+    } else if (e_focused == ui_lblMac_netinfo) {
         if (is_network_connected()) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXNETINFO.ERROR.CHANGE, SHORT);

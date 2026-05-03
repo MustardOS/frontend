@@ -1,6 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxcredits.h"
-#include "../common/display/sdl.h"
+#include "../common/display.h"
 
 #define CREDIT_ITEM_COUNT 11
 #define CREDIT_DELAY 4675

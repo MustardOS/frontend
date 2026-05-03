@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/display/sdl.h"
+#include "../common/display.h"
 
 static char base_dir[PATH_MAX];
 

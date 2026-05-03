@@ -379,8 +379,8 @@ static void check_focus(void) {
     lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
 
-    struct _lv_obj_t *focused_element = lv_group_get_focused(ui_group);
-    if (focused_element == ui_lblRemConfig_option) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblRemConfig_option) {
         lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -508,8 +508,8 @@ static char *change_config_opt(int steps) {
 static void handle_option_prev(void) {
     if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblRemConfig_option) {
         play_sound(SND_OPTION);
         lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(-1));
     }
@@ -518,8 +518,8 @@ static void handle_option_prev(void) {
 static void handle_option_next(void) {
     if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblRemConfig_option) {
         play_sound(SND_OPTION);
         lv_label_set_text(ui_lblRemConfigValue_option, change_config_opt(+1));
     }
@@ -528,8 +528,8 @@ static void handle_option_next(void) {
 static void handle_a(void) {
     if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) return;
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblRemConfig_option) return;
 
     typedef int (*visible_fn)(void);
 
@@ -605,8 +605,8 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (current_view != VIEW_OPTIONS) return;
 
-    struct _lv_obj_t *f = lv_group_get_focused(ui_group);
-    if (f == ui_lblRemConfig_option) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblRemConfig_option) {
         if (!hold_call) {
             play_sound(SND_ERROR);
             toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);

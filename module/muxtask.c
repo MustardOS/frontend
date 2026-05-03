@@ -160,8 +160,8 @@ static void init_elements(void) {
 static void ui_refresh_task() {
     if (ui_count > 0 && nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-            lv_obj_set_user_data(element_focused, items[current_item_index].name);
+            struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+            lv_obj_set_user_data(e_focused, items[current_item_index].name);
             lv_label_set_text(ui_lblNavA, items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.LAUNCH);
             adjust_wallpaper_element(ui_group, 0, WALL_TASK);
         }

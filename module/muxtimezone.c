@@ -226,8 +226,8 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     if (zone_view == VIEW_REGION) {
-        lv_obj_t *focused_panel = lv_group_get_focused(ui_group_panel);
-        const char *region = (const char *) lv_obj_get_user_data(focused_panel);
+        lv_obj_t *e_focused = lv_group_get_focused(ui_group_panel);
+        const char *region = (const char *) lv_obj_get_user_data(e_focused);
 
         snprintf(zone_selected_region, sizeof(zone_selected_region), "%s", region);
 
@@ -248,8 +248,8 @@ static void handle_a(void) {
     play_sound(SND_CONFIRM);
     toast_message(lang.MUXTIMEZONE.SAVE, FOREVER);
 
-    lv_obj_t *focused_panel = lv_group_get_focused(ui_group_panel);
-    const char *full_zone = (const char *) lv_obj_get_user_data(focused_panel);
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group_panel);
+    const char *full_zone = (const char *) lv_obj_get_user_data(e_focused);
 
     char zone_group[MAX_BUFFER_SIZE];
     snprintf(zone_group, sizeof(zone_group), "/usr/share/zoneinfo/%s", full_zone);

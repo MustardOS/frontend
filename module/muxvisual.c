@@ -142,8 +142,8 @@ static void handle_option_next(void) {
 static void handle_a(void) {
     if (msgbox_active) return;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblSort_visual) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblSort_visual) {
         play_sound(SND_CONFIRM);
 
         save_visual_options();

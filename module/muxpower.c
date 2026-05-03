@@ -17,33 +17,49 @@ static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900,
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
 
-#define SCREENSAVER_COUNT 4
-enum screensaver_speed {
-    SCREENSAVER_CRAWL = 30,
-    SCREENSAVER_CRUISE = 90,
-    SCREENSAVER_FAST = 150,
-    SCREENSAVER_TURBO = 300,
-    SCREENSAVER_LUDICROUS = 600
+#define SAVER_SPEED_COUNT 4
+enum saver_speed {
+    SAVER_SPEED_CRAWL = 30,
+    SAVER_SPEED_CRUISE = 90,
+    SAVER_SPEED_FAST = 150,
+    SAVER_SPEED_TURBO = 300,
+    SAVER_SPEED_LUDICROUS = 600
 };
 
-static const int screensaver_values[SCREENSAVER_COUNT] = {
-        SCREENSAVER_CRAWL,
-        SCREENSAVER_CRUISE,
-        SCREENSAVER_FAST,
-        SCREENSAVER_TURBO
+static const int saver_speed_values[SAVER_SPEED_COUNT] = {
+        SAVER_SPEED_CRAWL,
+        SAVER_SPEED_CRUISE,
+        SAVER_SPEED_FAST,
+        SAVER_SPEED_TURBO
 };
 
-#define SCREENSAVER_TYPE_COUNT 3
-enum screensaver_type {
-    SCREENSAVER_TYPE_DISABLED = 0,
-    SCREENSAVER_TYPE_DVD = 1,
-    SCREENSAVER_TYPE_STAR = 2
+#define SAVER_TYPE_COUNT 11
+enum saver_type {
+    SAVER_TYPE_DISABLED = 0,
+    SAVER_TYPE_DVD = 1,
+    SAVER_TYPE_STAR = 2,
+    SAVER_TYPE_MATRIX = 3,
+    SAVER_TYPE_FIREFLY = 4,
+    SAVER_TYPE_PULSE = 5,
+    SAVER_TYPE_TRACE = 6,
+    SAVER_TYPE_CONSTELLATION = 7,
+    SAVER_TYPE_MYSTIFY = 8,
+    SAVER_TYPE_MAZE = 9,
+    SAVER_TYPE_BLOCKFALL = 10,
 };
 
-static const int screensaver_type_values[SCREENSAVER_TYPE_COUNT] = {
-        SCREENSAVER_TYPE_DISABLED,
-        SCREENSAVER_TYPE_DVD,
-        SCREENSAVER_TYPE_STAR
+static const int saver_type_values[SAVER_TYPE_COUNT] = {
+        SAVER_TYPE_DISABLED,
+        SAVER_TYPE_DVD,
+        SAVER_TYPE_STAR,
+        SAVER_TYPE_MATRIX,
+        SAVER_TYPE_FIREFLY,
+        SAVER_TYPE_PULSE,
+        SAVER_TYPE_TRACE,
+        SAVER_TYPE_CONSTELLATION,
+        SAVER_TYPE_MYSTIFY,
+        SAVER_TYPE_MAZE,
+        SAVER_TYPE_BLOCKFALL,
 };
 
 char **gov_values_lower = NULL;
@@ -142,14 +158,57 @@ static int find_governor(char *governor) {
     return 0;
 }
 
-static void update_saver_speed_visibility(void) {
-    int sel = (int) lv_dropdown_get_selected(ui_droSaverType_power);
-    int type = map_drop_down_to_value(sel, screensaver_type_values, SCREENSAVER_TYPE_COUNT, SCREENSAVER_TYPE_DVD);
+static void set_saver(void) {
+    const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power);
+    if (cnt <= SAVER_SPEED_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
 
-    if (type == SCREENSAVER_TYPE_DISABLED) {
-        lv_obj_add_flag(ui_pnlSaverSpeed_power, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else {
+    lv_dropdown_set_selected(ui_droSaverSpeed_power, SAVER_SPEED_COUNT);
+    play_sound(SND_MUOS);
+
+    toast_message("\x54\x68\x65\x79\x27\x76\x65\x20\x67\x6F\x6E\x65\x20\x70\x6C\x61\x69\x64\x2E\x2E\x2E", SHORT);
+
+    refresh_screen(ui_screen, 1);
+}
+
+static int get_selected_saver_type(void) {
+    return map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverType_power), saver_type_values, SAVER_TYPE_COUNT, SAVER_TYPE_DVD);
+}
+
+static int get_selected_saver_speed(void) {
+    uint16_t selected = lv_dropdown_get_selected(ui_droSaverSpeed_power);
+
+    if (selected == SAVER_SPEED_COUNT) return SAVER_SPEED_LUDICROUS;
+    return map_drop_down_to_value(selected, saver_speed_values, SAVER_SPEED_COUNT, SAVER_SPEED_CRAWL);
+}
+
+static int is_saver_preview_item(lv_obj_t *e_focused) {
+    return e_focused == ui_droSaverType_power || e_focused == ui_droSaverSpeed_power;
+}
+
+static int saver_type_enabled(void) {
+    return get_selected_saver_type() != SAVER_TYPE_DISABLED;
+}
+
+static int saver_preview_focus_active(void) {
+    lv_obj_t *focused = lv_group_get_focused(ui_group);
+
+    return saver_type_enabled() &&
+           (focused == ui_lblSaverType_power || focused == ui_lblSaverSpeed_power);
+}
+
+static void check_focus(void) {
+    if (saver_type_enabled()) {
         lv_obj_clear_flag(ui_pnlSaverSpeed_power, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_pnlSaverSpeed_power, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (saver_preview_focus_active()) {
+        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
@@ -164,15 +223,15 @@ static void restore_power_options(void) {
     lv_dropdown_set_selected(ui_droGovIdle_power, find_governor(config.SETTINGS.POWER.GOV.IDLE));
     lv_dropdown_set_selected(ui_droGovDefault_power, find_governor(config.SETTINGS.POWER.GOV.DEFAULT));
 
-    if (config.SETTINGS.POWER.SAVERSPEED == SCREENSAVER_LUDICROUS) {
+    if (config.SETTINGS.POWER.SAVERSPEED == SAVER_SPEED_LUDICROUS) {
         const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power); // heh...
-        if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SCREENSAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
-        lv_dropdown_set_selected(ui_droSaverSpeed_power, SCREENSAVER_COUNT);
+        if (cnt <= SAVER_SPEED_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
+        lv_dropdown_set_selected(ui_droSaverSpeed_power, SAVER_SPEED_COUNT);
     } else {
-        map_drop_down_to_index(ui_droSaverSpeed_power, config.SETTINGS.POWER.SAVERSPEED, screensaver_values, SCREENSAVER_COUNT, 0);
+        map_drop_down_to_index(ui_droSaverSpeed_power, config.SETTINGS.POWER.SAVERSPEED, saver_speed_values, SAVER_SPEED_COUNT, 0);
     }
 
-    map_drop_down_to_index(ui_droSaverType_power, config.SETTINGS.POWER.SAVERTYPE, screensaver_type_values, SCREENSAVER_TYPE_COUNT, SCREENSAVER_TYPE_DVD);
+    map_drop_down_to_index(ui_droSaverType_power, config.SETTINGS.POWER.SAVERTYPE, saver_type_values, SAVER_TYPE_COUNT, SAVER_TYPE_DVD);
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
@@ -191,7 +250,7 @@ static void restore_power_options(void) {
         }
     }
 
-    update_saver_speed_visibility();
+    check_focus();
 }
 
 static int save_power_options(void) {
@@ -254,11 +313,10 @@ static int save_power_options(void) {
 
     if (lv_dropdown_get_option_cnt(ui_droSaverSpeed_power) > 1 && lv_dropdown_get_selected(ui_droSaverSpeed_power) != SaverSpeed_original) {
         int ss_value;
-        if (lv_dropdown_get_selected(ui_droSaverSpeed_power) == SCREENSAVER_COUNT) {
-            ss_value = SCREENSAVER_LUDICROUS;
+        if (lv_dropdown_get_selected(ui_droSaverSpeed_power) == SAVER_SPEED_COUNT) {
+            ss_value = SAVER_SPEED_LUDICROUS;
         } else {
-            ss_value = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverSpeed_power),
-                                              screensaver_values, SCREENSAVER_COUNT, SCREENSAVER_CRAWL);
+            ss_value = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverSpeed_power), saver_speed_values, SAVER_SPEED_COUNT, SAVER_SPEED_CRAWL);
         }
 
         is_modified++;
@@ -267,8 +325,7 @@ static int save_power_options(void) {
 
     if (lv_dropdown_get_option_cnt(ui_droSaverType_power) > 1 &&
         lv_dropdown_get_selected(ui_droSaverType_power) != SaverType_original) {
-        int idx_type = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverType_power),
-                                              screensaver_type_values, SCREENSAVER_TYPE_COUNT, SCREENSAVER_TYPE_DVD);
+        int idx_type = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSaverType_power), saver_type_values, SAVER_TYPE_COUNT, SAVER_TYPE_DVD);
         is_modified++;
         write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_type", "w", INT, idx_type);
     }
@@ -300,17 +357,25 @@ static void init_navigation_group(void) {
             lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t15m, lang.MUXPOWER.IDLE.t30m
     };
 
-    static const char *saver_speed[SCREENSAVER_COUNT] = {
-            lang.MUXPOWER.SCREENSAVER.SPEED.CRAWL,
-            lang.MUXPOWER.SCREENSAVER.SPEED.CRUISE,
-            lang.MUXPOWER.SCREENSAVER.SPEED.FAST,
-            lang.MUXPOWER.SCREENSAVER.SPEED.TURBO
+    static const char *saver_speed[SAVER_SPEED_COUNT] = {
+            lang.MUXPOWER.SAVER.SPEED.CRAWL,
+            lang.MUXPOWER.SAVER.SPEED.CRUISE,
+            lang.MUXPOWER.SAVER.SPEED.FAST,
+            lang.MUXPOWER.SAVER.SPEED.TURBO
     };
 
-    static const char *saver_type[SCREENSAVER_TYPE_COUNT] = {
+    static const char *saver_type[SAVER_TYPE_COUNT] = {
             lang.GENERIC.DISABLED,
-            lang.MUXPOWER.SCREENSAVER.TYPE.DVD,
-            lang.MUXPOWER.SCREENSAVER.TYPE.STAR
+            lang.MUXPOWER.SAVER.TYPE.DVD,
+            lang.MUXPOWER.SAVER.TYPE.STAR,
+            lang.MUXPOWER.SAVER.TYPE.MATRIX,
+            lang.MUXPOWER.SAVER.TYPE.FIREFLY,
+            lang.MUXPOWER.SAVER.TYPE.PULSE,
+            lang.MUXPOWER.SAVER.TYPE.TRACE,
+            lang.MUXPOWER.SAVER.TYPE.CONSTELLATION,
+            lang.MUXPOWER.SAVER.TYPE.MYSTIFY,
+            lang.MUXPOWER.SAVER.TYPE.MAZE,
+            lang.MUXPOWER.SAVER.TYPE.BLOCKFALL,
     };
 
     INIT_OPTION_ITEM(-1, power, Shutdown, lang.MUXPOWER.SLEEP.TITLE, "shutdown", sleep_timer, SHUTDOWN_COUNT);
@@ -320,11 +385,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, IdleMute, lang.MUXPOWER.IDLE.MUTE, "idle_mute", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, power, GovIdle, lang.MUXPOWER.GOV.IDLE, "gov_idle", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(-1, power, GovDefault, lang.MUXPOWER.GOV.DEFAULT, "gov_fe", gov_values_disp, (int) gov_count);
-
-    INIT_OPTION_ITEM(-1, power, SaverType, lang.MUXPOWER.SCREENSAVER.TYPE.TITLE, "saver_type",
-                     (char **) saver_type, SCREENSAVER_TYPE_COUNT);
-    INIT_OPTION_ITEM(-1, power, SaverSpeed, lang.MUXPOWER.SCREENSAVER.SPEED.TITLE, "saver_speed",
-                     (char **) saver_speed, SCREENSAVER_COUNT);
+    INIT_OPTION_ITEM(-1, power, SaverType, lang.MUXPOWER.SAVER.TYPE.TITLE, "saver_type", (char **) saver_type, SAVER_TYPE_COUNT);
+    INIT_OPTION_ITEM(-1, power, SaverSpeed, lang.MUXPOWER.SAVER.SPEED.TITLE, "saver_speed", (char **) saver_speed, SAVER_SPEED_COUNT);
 
     char *battery_pct = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_pct);
@@ -336,6 +398,7 @@ static void init_navigation_group(void) {
 
 static void list_nav_move(int steps, int direction) {
     gen_step_movement(steps, direction, false, 0);
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -349,19 +412,19 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-    move_option(focused, -1);
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
+    move_option(e_focused, -1);
 
-    if (focused == ui_droSaverType_power) update_saver_speed_visibility();
+    if (e_focused == ui_droSaverType_power) check_focus();
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-    move_option(focused, +1);
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
+    move_option(e_focused, +1);
 
-    if (focused == ui_droSaverType_power) update_saver_speed_visibility();
+    if (e_focused == ui_droSaverType_power) check_focus();
 }
 
 static void handle_a(void) {
@@ -388,27 +451,25 @@ static void handle_b(void) {
     }
 }
 
-static void set_screensaver(void) {
-    const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power);
-    if (cnt <= SCREENSAVER_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SCREENSAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
+static void handle_x(void) {
+    if (msgbox_active || hold_call) return;
 
-    lv_dropdown_set_selected(ui_droSaverSpeed_power, SCREENSAVER_COUNT);
-    play_sound(SND_MUOS);
+    lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
+    if (!is_saver_preview_item(e_focused)) return;
 
-    toast_message(
-            "\x54\x68\x65\x79\x27\x76\x65"
-            "\x20\x67\x6F\x6E\x65\x20\x70"
-            "\x6C\x61\x69\x64\x2E\x2E\x2E",
-            SHORT
-    );
+    int type = get_selected_saver_type();
+    if (type == SAVER_TYPE_DISABLED) return;
+
+    play_sound(SND_CONFIRM);
+    preview_saver(type, get_selected_saver_speed());
 
     refresh_screen(ui_screen, 1);
 }
 
-static void handle_x(void) {
+static void handle_y(void) {
     if (msgbox_active || hold_call) return;
 
-    if (lv_group_get_focused(ui_group_value) == ui_droSaverSpeed_power) set_screensaver();
+    if (lv_group_get_focused(ui_group_value) == ui_droSaverSpeed_power) set_saver();
 }
 
 static void handle_help(void) {
@@ -422,12 +483,16 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
+            {ui_lblNavLRGlyph, "",                   0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE,  0},
+            {ui_lblNavBGlyph,  "",                   0},
+            {ui_lblNavB,       lang.GENERIC.BACK,    0},
+            {ui_lblNavXGlyph,  "",                   0},
+            {ui_lblNavX,       lang.GENERIC.PREVIEW, 0},
+            {NULL, NULL,                             0}
     });
+
+    check_focus();
 
 #define POWER(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_power, UDATA);
     POWER_ELEMENTS
@@ -466,6 +531,7 @@ int muxpower_main(void) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,

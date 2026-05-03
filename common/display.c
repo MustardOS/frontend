@@ -3,15 +3,25 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "../log.h"
-#include "../common.h"
-#include "../device.h"
-#include "../input.h"
-#include "../config.h"
-#include "../theme.h"
-#include "sdl.h"
-#include "dvd.h"
-#include "star.h"
+#include "log.h"
+#include "common.h"
+#include "device.h"
+#include "input.h"
+#include "config.h"
+#include "theme.h"
+#include "display.h"
+#include "saver.h"
+
+#include "saver/dvd.h"
+#include "saver/star.h"
+#include "saver/matrix.h"
+#include "saver/firefly.h"
+#include "saver/pulse.h"
+#include "saver/trace.h"
+#include "saver/constellation.h"
+#include "saver/mystify.h"
+#include "saver/maze.h"
+#include "saver/blockfall.h"
 
 typedef struct {
     // Just the default base stuff we need
@@ -115,38 +125,113 @@ enum {
     SAVER_TYPE_DISABLED = 0,
     SAVER_TYPE_DVD = 1,
     SAVER_TYPE_STAR = 2,
+    SAVER_TYPE_MATRIX = 3,
+    SAVER_TYPE_FIREFLY = 4,
+    SAVER_TYPE_PULSE = 5,
+    SAVER_TYPE_TRACE = 6,
+    SAVER_TYPE_CONSTELLATION = 7,
+    SAVER_TYPE_MYSTIFY = 8,
+    SAVER_TYPE_MAZE = 9,
+    SAVER_TYPE_BLOCKFALL = 10,
 };
 
+static int saver_speed_override = 0;
 static int active_saver = -1;
 
 static int saver_active(void) {
+    if (active_saver == SAVER_TYPE_BLOCKFALL) return blockfall_active();
+    if (active_saver == SAVER_TYPE_MAZE) return maze_active();
+    if (active_saver == SAVER_TYPE_MYSTIFY) return mystify_active();
+    if (active_saver == SAVER_TYPE_CONSTELLATION) return constellation_active();
+    if (active_saver == SAVER_TYPE_TRACE) return trace_active();
+    if (active_saver == SAVER_TYPE_PULSE) return pulse_active();
+    if (active_saver == SAVER_TYPE_FIREFLY) return firefly_active();
+    if (active_saver == SAVER_TYPE_MATRIX) return matrix_active();
     if (active_saver == SAVER_TYPE_STAR) return star_active();
     if (active_saver == SAVER_TYPE_DVD) return dvd_active();
     return 0;
 }
 
 static void saver_update(void) {
-    if (active_saver == SAVER_TYPE_STAR) star_update();
+    if (active_saver == SAVER_TYPE_BLOCKFALL) blockfall_update();
+    else if (active_saver == SAVER_TYPE_MAZE) maze_update();
+    else if (active_saver == SAVER_TYPE_MYSTIFY) mystify_update();
+    else if (active_saver == SAVER_TYPE_CONSTELLATION) constellation_update();
+    else if (active_saver == SAVER_TYPE_TRACE) trace_update();
+    else if (active_saver == SAVER_TYPE_PULSE) pulse_update();
+    else if (active_saver == SAVER_TYPE_FIREFLY) firefly_update();
+    else if (active_saver == SAVER_TYPE_MATRIX) matrix_update();
+    else if (active_saver == SAVER_TYPE_STAR) star_update();
     else if (active_saver == SAVER_TYPE_DVD) dvd_update();
 }
 
 static void saver_render(SDL_Renderer *r) {
-    if (active_saver == SAVER_TYPE_STAR) star_render(r);
+    if (active_saver == SAVER_TYPE_BLOCKFALL) blockfall_render(r);
+    else if (active_saver == SAVER_TYPE_MAZE) maze_render(r);
+    else if (active_saver == SAVER_TYPE_MYSTIFY) mystify_render(r);
+    else if (active_saver == SAVER_TYPE_CONSTELLATION) constellation_render(r);
+    else if (active_saver == SAVER_TYPE_TRACE) trace_render(r);
+    else if (active_saver == SAVER_TYPE_PULSE) pulse_render(r);
+    else if (active_saver == SAVER_TYPE_FIREFLY) firefly_render(r);
+    else if (active_saver == SAVER_TYPE_MATRIX) matrix_render(r);
+    else if (active_saver == SAVER_TYPE_STAR) star_render(r);
     else if (active_saver == SAVER_TYPE_DVD) dvd_render(r);
 }
 
 static void saver_stop(void) {
-    if (active_saver == SAVER_TYPE_STAR) star_stop();
+    if (active_saver == SAVER_TYPE_BLOCKFALL) blockfall_stop();
+    else if (active_saver == SAVER_TYPE_MAZE) maze_stop();
+    else if (active_saver == SAVER_TYPE_MYSTIFY) mystify_stop();
+    else if (active_saver == SAVER_TYPE_CONSTELLATION) constellation_stop();
+    else if (active_saver == SAVER_TYPE_TRACE) trace_stop();
+    else if (active_saver == SAVER_TYPE_PULSE) pulse_stop();
+    else if (active_saver == SAVER_TYPE_FIREFLY) firefly_stop();
+    else if (active_saver == SAVER_TYPE_MATRIX) matrix_stop();
+    else if (active_saver == SAVER_TYPE_STAR) star_stop();
     else if (active_saver == SAVER_TYPE_DVD) dvd_stop();
 }
 
-static void reload_screensaver() {
+int get_saver_speed(int fallback) {
+    int speed = saver_speed_override;
+
+    if (speed <= 0) speed = config.SETTINGS.POWER.SAVERSPEED;
+    if (speed <= 0) speed = read_line_int_from(CONF_CONFIG_PATH "settings/power/saver_speed", fallback);
+    if (speed <= 0) speed = fallback;
+
+    return speed;
+}
+
+static void reload_saver() {
     dvd_shutdown();
     star_shutdown();
+    matrix_shutdown();
+    firefly_shutdown();
+    pulse_shutdown();
+    trace_shutdown();
+    constellation_shutdown();
+    mystify_shutdown();
+    maze_shutdown();
+    blockfall_shutdown();
 
     int type = config.SETTINGS.POWER.SAVERTYPE;
 
-    if (type == SAVER_TYPE_STAR) {
+    if (type == SAVER_TYPE_BLOCKFALL) {
+        blockfall_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_MAZE) {
+        maze_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_MYSTIFY) {
+        mystify_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_CONSTELLATION) {
+        constellation_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_TRACE) {
+        trace_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_PULSE) {
+        pulse_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_FIREFLY) {
+        firefly_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_MATRIX) {
+        matrix_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+    } else if (type == SAVER_TYPE_STAR) {
         star_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
     } else if (type == SAVER_TYPE_DVD) {
         char saver_image[MAX_BUFFER_SIZE];
@@ -169,7 +254,7 @@ void check_theme_change(void) {
         LOG_DEBUG("video", "Theme change detected: %s -> %s", monitor.theme_name, theme);
 
         reload_background(theme);
-        reload_screensaver();
+        reload_saver();
 
         monitor.refresh = true;
     }
@@ -300,26 +385,19 @@ void sdl_init(void) {
     SDL_GameControllerEventState(SDL_ENABLE);
     SDL_JoystickEventState(SDL_ENABLE);
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        LOG_ERROR("video", "PNG Init Failed: %s", IMG_GetError());
-    }
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) LOG_ERROR("video", "PNG Init Failed: %s", IMG_GetError());
 
     SDL_ShowCursor(SDL_DISABLE);
     update_render_state();
 
-    monitor.window = SDL_CreateWindow(MUX_CALLER, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                      device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
+    monitor.window = SDL_CreateWindow(MUX_CALLER, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
                                       SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!monitor.window) {
         LOG_ERROR("video", "Window Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    monitor.renderer = SDL_CreateRenderer(monitor.window, -1,
-                                          hdmi_mode ? SDL_RENDERER_ACCELERATED
-                                                    : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)
-    );
-
+    monitor.renderer = SDL_CreateRenderer(monitor.window, -1, hdmi_mode ? SDL_RENDERER_ACCELERATED : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
     if (!monitor.renderer) {
         LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -328,10 +406,7 @@ void sdl_init(void) {
     int out_w = 0, out_h = 0;
     SDL_GetRendererOutputSize(monitor.renderer, &out_w, &out_h);
 
-    monitor.texture = SDL_CreateTexture(monitor.renderer,
-                                        SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
-                                        device.MUX.WIDTH, device.MUX.HEIGHT);
-
+    monitor.texture = SDL_CreateTexture(monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, device.MUX.WIDTH, device.MUX.HEIGHT);
     if (!monitor.texture) {
         LOG_ERROR("video", "Texture Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -343,6 +418,7 @@ void sdl_init(void) {
     {
         const size_t tex_pixels = (size_t) device.MUX.WIDTH * (size_t) device.MUX.HEIGHT;
         const size_t tex_bytes = tex_pixels * sizeof(uint32_t);
+
         uint32_t * clear_buf = calloc(tex_pixels, sizeof(uint32_t));
 
         if (!clear_buf) {
@@ -373,12 +449,20 @@ void sdl_init(void) {
     LOG_INFO("video", "SDL Renderer: %s (%dx%d)", info.name, out_w, out_h);
 
     reload_background(config.THEME.ACTIVE);
-    reload_screensaver();
+    reload_saver();
 }
 
 void sdl_cleanup(void) {
     dvd_shutdown();
     star_shutdown();
+    matrix_shutdown();
+    firefly_shutdown();
+    pulse_shutdown();
+    trace_shutdown();
+    constellation_shutdown();
+    mystify_shutdown();
+    maze_shutdown();
+    blockfall_shutdown();
 
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
@@ -389,14 +473,37 @@ void sdl_cleanup(void) {
     SDL_Quit();
 }
 
-void run_screensaver_loop(void) {
+static void drain_saver_launch_input(void) {
+    SDL_Event ev;
+    uint32_t start = SDL_GetTicks();
+
+    SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
+
+    while (SDL_GetTicks() - start < 180) {
+        while (SDL_PollEvent(&ev)) {}
+        SDL_Delay(10);
+    }
+}
+
+static void render_saver_frame(void) {
+    SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+    SDL_RenderClear(monitor.renderer);
+
+    saver_render(monitor.renderer);
+
+    SDL_RenderPresent(monitor.renderer);
+}
+
+static void run_saver_loop(int preview) {
     mux_input_flush_all();
+
+    if (preview) drain_saver_launch_input();
 
     SDL_Event ev;
     const uint32_t frame_ms = IDLE_MS;
     uint32_t next = SDL_GetTicks();
 
-    while (saver_active()) {
+    while (preview || saver_active()) {
         uint32_t now = SDL_GetTicks();
         int timeout = (int) (next > now ? next - now : 0);
 
@@ -409,6 +516,7 @@ void run_screensaver_loop(void) {
                     case SDL_MOUSEBUTTONDOWN:
                     case SDL_QUIT:
                         saver_stop();
+                        preview = 0;
                         break;
                     default:
                         break;
@@ -416,17 +524,17 @@ void run_screensaver_loop(void) {
             } while (SDL_PollEvent(&ev));
         }
 
-        // The following looks really stupid but it works!
-        if (!saver_active()) break;
+        if (!preview && !saver_active()) break;
+
         saver_update();
-        if (!saver_active()) break;
 
-        SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
-        SDL_RenderClear(monitor.renderer);
-        saver_render(monitor.renderer);
-        SDL_RenderPresent(monitor.renderer);
+        if (!preview && !saver_active()) break;
 
+        render_saver_frame();
         next += frame_ms;
+
+        now = SDL_GetTicks();
+        if (next <= now) next = now + frame_ms;
     }
 
     monitor.force_clear = true;
@@ -434,6 +542,50 @@ void run_screensaver_loop(void) {
 
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
     mux_input_resume();
+}
+
+void preview_saver(int type, int speed) {
+    if (!monitor.renderer || type == SAVER_TYPE_DISABLED || speed <= 0) return;
+
+    int old_type = config.SETTINGS.POWER.SAVERTYPE;
+    int old_speed = config.SETTINGS.POWER.SAVERSPEED;
+    int old_idle = read_line_int_from(IDLE_STATE, 0);
+
+    saver_set_speed_override(speed);
+
+    config.SETTINGS.POWER.SAVERTYPE = (int16_t) type;
+    config.SETTINGS.POWER.SAVERSPEED = (int16_t) speed;
+
+    write_text_to_file(IDLE_STATE, "w", INT, 1);
+
+    reload_saver();
+
+    pending_rect_valid = false;
+    monitor.force_clear = true;
+    monitor.refresh = true;
+
+    for (int i = 0; i < 3; i++) {
+        saver_update();
+        render_saver_frame();
+        SDL_Delay(IDLE_MS);
+    }
+
+    run_saver_loop(1);
+
+    write_text_to_file(IDLE_STATE, "w", INT, old_idle);
+
+    saver_clear_speed_override();
+
+    config.SETTINGS.POWER.SAVERTYPE = (int16_t) old_type;
+    config.SETTINGS.POWER.SAVERSPEED = (int16_t) old_speed;
+
+    reload_saver();
+
+    last_saver_exit = SDL_GetTicks();
+
+    pending_rect_valid = false;
+    monitor.force_clear = true;
+    monitor.refresh = true;
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
@@ -512,7 +664,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 
             if (active_saver != wanted_type) {
                 config.SETTINGS.POWER.SAVERTYPE = (int16_t) wanted_type;
-                reload_screensaver();
+                reload_saver();
             }
 
             last_type_poll = now;
@@ -522,11 +674,11 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     if (active_saver != SAVER_TYPE_DISABLED) {
         uint32_t now = SDL_GetTicks();
 
-        if (now - last_saver_exit > SCREENSAVER_DELAY) {
+        if (now - last_saver_exit > SAVER_DELAY) {
             saver_update();
             if (saver_active()) {
                 pending_rect_valid = false;
-                run_screensaver_loop();
+                run_saver_loop(0);
                 last_saver_exit = SDL_GetTicks();
             }
         }

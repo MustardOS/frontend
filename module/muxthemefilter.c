@@ -81,8 +81,8 @@ static void init_navigation_group(void) {
 }
 
 static void check_focus(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblLookup_themefilter) {
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lblLookup_themefilter) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -117,9 +117,9 @@ static void handle_option_prev(void) {
 
 static void handle_keyboard_OK_press(void) {
     key_show = 0;
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblLookup_themefilter) {
+    if (e_focused == ui_lblLookup_themefilter) {
         lv_label_set_text(ui_lblLookupValue_themefilter, lv_textarea_get_text(ui_txtEntry_themefilter));
     }
 
@@ -157,9 +157,9 @@ static void handle_option_next(void) {
 static void handle_confirm(void) {
     play_sound(SND_CONFIRM);
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblLookup_themefilter) {
+    if (e_focused == ui_lblLookup_themefilter) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
