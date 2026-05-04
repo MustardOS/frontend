@@ -9,6 +9,9 @@
 #include <termios.h>
 #include <unistd.h>
 #include <../common/colour.h>
+#include "../common/config.h"
+#include <../common/common.h>
+#include <../common/options.h>
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 
@@ -465,14 +468,65 @@ static int restore_brightness_to_byte(int b) {
     return clamp(b, MCU_BRI);
 }
 
+static int get_rgb_path(char *rgb_path, size_t rgb_path_size) {
+    theme_base = get_theme_base();
+    char active_path[MAX_BUFFER_SIZE];
+    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
+    if (file_exist(active_path)) {
+        snprintf(rgb_path, rgb_path_size, "%s/alternate/rgb/%s/", theme_base,
+                 str_replace(read_line_char_from(active_path, 1), "\r", ""));
+        return dir_exist(rgb_path);
+    }
+    snprintf(rgb_path, rgb_path_size, "%s/rgb/", theme_base);
+    return dir_exist(rgb_path);
+}
+
 static int dispatch_restore(void) {
     int saved_mode = read_config_int("settings/rgb/mode", 0);
+    int saved_backend = read_config_int("settings/rgb/backend", 0);
+    int saved_bright_raw = 6;
+    rgb_colour_t col_l, col_r, col_m, col_f1, col_f2;
 
-    if (saved_mode == 4 || saved_mode == 6) return 0;
+    if (saved_mode == 4) {
+        char base_path[MAX_BUFFER_SIZE];
+        get_rgb_path(base_path, sizeof(base_path));
+        char settings_path[MAX_BUFFER_SIZE];
+
+        snprintf(settings_path, sizeof(settings_path), "%smode", base_path);
+        saved_mode = read_line_int_from(settings_path, 1);
+
+        snprintf(settings_path, sizeof(settings_path), "%sbackend", base_path);
+        saved_backend = read_line_int_from(settings_path, 1);
+
+        snprintf(settings_path, sizeof(settings_path), "%sbright", base_path);
+        saved_bright_raw = read_line_int_from(settings_path, 1);
+
+        snprintf(settings_path, sizeof(settings_path), "%scolour_l", base_path);
+        read_rgb_colour_from_file(settings_path, &col_l, &RGB_COLOURS[0]);
+        
+        snprintf(settings_path, sizeof(settings_path), "%scolour_r", base_path);
+        read_rgb_colour_from_file(settings_path, &col_r, &col_l);
+
+        snprintf(settings_path, sizeof(settings_path), "%scolour_m", base_path);
+        read_rgb_colour_from_file(settings_path, &col_m, &col_l);
+
+        snprintf(settings_path, sizeof(settings_path), "%scolour_f1", base_path);
+        read_rgb_colour_from_file(settings_path, &col_f1, &col_l);
+
+        snprintf(settings_path, sizeof(settings_path), "%scolour_f2", base_path);
+        read_rgb_colour_from_file(settings_path, &col_f2, &col_r);
+    } else {
+        saved_bright_raw = read_config_int("settings/rgb/bright", 6);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &col_l, &RGB_COLOURS[0]);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_r", &col_r, &col_l);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_m", &col_m, &col_l);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_f1", &col_f1, &col_l);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_f2", &col_f2, &col_r);
+    }
+
+    if (saved_mode == 6) return 0;
     if (saved_mode == 5) saved_mode = 0;
 
-    int saved_backend = read_config_int("settings/rgb/backend", 0);
-    int saved_bright_raw = read_config_int("settings/rgb/bright", 6);
     backend_t use = detect_backend(restore_backend_from_config(saved_backend));
 
     if (saved_mode == 0) return dispatch_off(restore_backend_from_config(saved_backend));
@@ -482,18 +536,6 @@ static int dispatch_restore(void) {
     fl.cyc_all = fl.cyc_l = fl.cyc_r = fl.cyc_m = fl.cyc_f1 = fl.cyc_f2 = INT32_MIN;
 
     int bright_byte = restore_brightness_to_byte(saved_bright_raw);
-
-    int idx_l = read_config_int("settings/rgb/colour_l", 1);
-    int idx_r = read_config_int("settings/rgb/colour_r", 0);
-    int idx_m = read_config_int("settings/rgb/colour_m", 0);
-    int idx_f1 = read_config_int("settings/rgb/colour_f1", 0);
-    int idx_f2 = read_config_int("settings/rgb/colour_f2", 0);
-
-    const rgb_colour_t *col_l = rgb_colour_or_fallback(idx_l, &RGB_COLOURS[0]);
-    const rgb_colour_t *col_r = rgb_colour_or_fallback(idx_r, col_l);
-    const rgb_colour_t *col_m = rgb_colour_or_fallback(idx_m, col_l);
-    const rgb_colour_t *col_f1 = rgb_colour_or_fallback(idx_f1, col_l);
-    const rgb_colour_t *col_f2 = rgb_colour_or_fallback(idx_f2, col_r);
 
     int combo_idx = read_config_int("settings/rgb/combo", 0);
     const rgb_colour_combo_t *kc = rgb_colour_combo_at(combo_idx);
@@ -519,19 +561,22 @@ static int dispatch_restore(void) {
 
         if (use == BE_JOYPAD) {
             int sec_r, sec_g, sec_b;
-            if (idx_r <= 0) {
-                sec_r = sec_g = sec_b = 0;
-            } else {
-                sec_r = col_r->r;
-                sec_g = col_r->g;
-                sec_b = col_r->b;
-            }
+            //
+            //TODO: by Xongle
+            //
+            // if (idx_r <= 0) {
+            //     sec_r = sec_g = sec_b = 0;
+            // } else {
+                sec_r = col_r.r;
+                sec_g = col_r.g;
+                sec_b = col_r.b;
+            // }
 
             wire_mode = 8;
             PUSH(joypad_speed_pct_from_saved(bs));
-            PUSH(col_l->r);
-            PUSH(col_l->g);
-            PUSH(col_l->b);
+            PUSH(col_l.r);
+            PUSH(col_l.g);
+            PUSH(col_l.b);
             PUSH(sec_r);
             PUSH(sec_g);
             PUSH(sec_b);
@@ -539,25 +584,25 @@ static int dispatch_restore(void) {
             wire_mode = restore_breath_wire_mode(bs);
 
             if (use == BE_SYSFS) {
-                PUSH(col_l->r);
-                PUSH(col_l->g);
-                PUSH(col_l->b);
-                PUSH(col_r->r);
-                PUSH(col_r->g);
-                PUSH(col_r->b);
-                PUSH(col_m->r);
-                PUSH(col_m->g);
-                PUSH(col_m->b);
-                PUSH(col_f1->r);
-                PUSH(col_f1->g);
-                PUSH(col_f1->b);
-                PUSH(col_f2->r);
-                PUSH(col_f2->g);
-                PUSH(col_f2->b);
+                PUSH(col_l.r);
+                PUSH(col_l.g);
+                PUSH(col_l.b);
+                PUSH(col_r.r);
+                PUSH(col_r.g);
+                PUSH(col_r.b);
+                PUSH(col_m.r);
+                PUSH(col_m.g);
+                PUSH(col_m.b);
+                PUSH(col_f1.r);
+                PUSH(col_f1.g);
+                PUSH(col_f1.b);
+                PUSH(col_f2.r);
+                PUSH(col_f2.g);
+                PUSH(col_f2.b);
             } else {
-                PUSH(col_l->r);
-                PUSH(col_l->g);
-                PUSH(col_l->b);
+                PUSH(col_l.r);
+                PUSH(col_l.g);
+                PUSH(col_l.b);
             }
         }
     } else if (saved_mode == 7) {
@@ -569,11 +614,11 @@ static int dispatch_restore(void) {
         wire_mode = 5;
         PUSH(joypad_speed_pct_from_saved(bs));
     } else if (saved_mode == 9) {
-        if (col_l->r || col_l->g || col_l->b) {
+        if (col_l.r || col_l.g || col_l.b) {
             wire_mode = 6;
-            PUSH(col_l->r);
-            PUSH(col_l->g);
-            PUSH(col_l->b);
+            PUSH(col_l.r);
+            PUSH(col_l.g);
+            PUSH(col_l.b);
         } else {
             return dispatch_off(restore_backend_from_config(saved_backend));
         }
@@ -581,28 +626,28 @@ static int dispatch_restore(void) {
         wire_mode = 1;
 
         if (use == BE_SYSFS) {
-            PUSH(col_l->r);
-            PUSH(col_l->g);
-            PUSH(col_l->b);
-            PUSH(col_r->r);
-            PUSH(col_r->g);
-            PUSH(col_r->b);
-            PUSH(col_m->r);
-            PUSH(col_m->g);
-            PUSH(col_m->b);
-            PUSH(col_f1->r);
-            PUSH(col_f1->g);
-            PUSH(col_f1->b);
-            PUSH(col_f2->r);
-            PUSH(col_f2->g);
-            PUSH(col_f2->b);
+            PUSH(col_l.r);
+            PUSH(col_l.g);
+            PUSH(col_l.b);
+            PUSH(col_r.r);
+            PUSH(col_r.g);
+            PUSH(col_r.b);
+            PUSH(col_m.r);
+            PUSH(col_m.g);
+            PUSH(col_m.b);
+            PUSH(col_f1.r);
+            PUSH(col_f1.g);
+            PUSH(col_f1.b);
+            PUSH(col_f2.r);
+            PUSH(col_f2.g);
+            PUSH(col_f2.b);
         } else {
-            PUSH(col_r->r);
-            PUSH(col_r->g);
-            PUSH(col_r->b);
-            PUSH(col_l->r);
-            PUSH(col_l->g);
-            PUSH(col_l->b);
+            PUSH(col_r.r);
+            PUSH(col_r.g);
+            PUSH(col_r.b);
+            PUSH(col_l.r);
+            PUSH(col_l.g);
+            PUSH(col_l.b);
         }
     }
 
@@ -989,6 +1034,8 @@ static backend_t parse_backend(const char *s) {
 }
 
 int main(int argc, char **argv) {
+    load_config(&config);
+
     const char *dbg = getenv("RGB_DEBUG");
     g_debug = (dbg && *dbg && strcmp(dbg, "0") != 0);
 

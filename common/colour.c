@@ -1,4 +1,5 @@
 #include "colour.h"
+#include "common.h"
 
 const rgb_colour_t RGB_COLOURS[] = {
         {"Off",           0,   0,   0},
@@ -94,6 +95,20 @@ const rgb_colour_combo_t RGB_COLOUR_COMBOS[] = {
 
 const size_t RGB_COLOUR_COMBO_COUNT = sizeof(RGB_COLOUR_COMBOS) / sizeof(RGB_COLOUR_COMBOS[0]);
 
+static int hex_to_byte(const char *hex, uint8_t *out) {
+    char buf[3] = { hex[0], hex[1], '\0' };
+
+    char *endptr;
+    long val = strtol(buf, &endptr, 16);
+
+    if (*endptr != '\0' || val < 0 || val > 255) {
+        return 0;
+    }
+
+    *out = (uint8_t)val;
+    return 1;
+}
+
 const rgb_colour_t *rgb_colour_at(int idx) {
     if (idx < 0 || idx >= (int) RGB_COLOUR_COUNT) idx = 0;
 
@@ -104,6 +119,72 @@ const rgb_colour_t *rgb_colour_or_fallback(int idx, const rgb_colour_t *fallback
     if (idx <= 0) return fallback ? fallback : &RGB_COLOURS[0];
 
     return rgb_colour_at(idx - 1);
+}
+
+int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb_colour_t *fallback) {
+    if (!file_exist(filepath)) {
+        *out = *fallback;
+        return 0;
+    }
+
+    const char *line = read_line_char_from(filepath, 1);
+    if (!line || *line == '\0') {
+        *out = *fallback;
+        return 0;
+    }
+
+    // --- Try parsing as integer index ---
+    char *endptr;
+    long idx = strtol(line, &endptr, 10);
+
+    if (*endptr == '\0') {
+        // Entire string was a valid integer
+
+        size_t count = sizeof(RGB_COLOURS) / sizeof(RGB_COLOURS[0]);
+
+        if (idx >= 0 && (size_t)idx < count) {
+            *out = RGB_COLOURS[idx];
+            return 1;
+        } else {
+            *out = *fallback;
+            return 0;
+        }
+    }
+
+    // --- Otherwise treat as hex ---
+    const char *hex = line;
+
+    if (hex[0] == '#') {
+        hex++;
+    }
+
+    if (strlen(hex) != 6) {
+        *out = *fallback;
+        return 0;
+    }
+
+    for (int i = 0; i < 6; i++) {
+        if (!isxdigit((unsigned char)hex[i])) {
+            *out = *fallback;
+            return 0;
+        }
+    }
+
+    uint8_t r, g, b;
+
+    if (!hex_to_byte(hex, &r) ||
+        !hex_to_byte(hex + 2, &g) ||
+        !hex_to_byte(hex + 4, &b)) {
+        *out = *fallback;
+        return 0;
+    }
+
+    out->name = NULL;
+    out->r = r;
+    out->g = g;
+    out->b = b;
+
+    return 1;
 }
 
 const rgb_colour_combo_t *rgb_colour_combo_at(int idx) {

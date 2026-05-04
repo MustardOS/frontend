@@ -11,30 +11,6 @@ enum {
 RGB_ELEMENTS
 #undef RGB
 
-typedef enum {
-    RGB_MODE_OFF = 0,
-    RGB_MODE_STATIC = 1,
-    RGB_MODE_BREATHING = 2,
-    RGB_MODE_PRESET_COMBO = 3,
-    RGB_MODE_THEME_SUPPLIED = 4,
-    RGB_MODE_COLOUR_CYCLE = 7,
-    RGB_MODE_RAINBOW = 8,
-    RGB_MODE_STICK_FOLLOW = 9,
-} rgb_mode_t;
-
-typedef enum {
-    RGB_BREATH_FAST = 0,
-    RGB_BREATH_MEDIUM,
-    RGB_BREATH_SLOW,
-} rgb_breath_speed_t;
-
-typedef enum {
-    RGB_BACKEND_AUTO = 0,
-    RGB_BACKEND_SYSFS,
-    RGB_BACKEND_SERIAL,
-    RGB_BACKEND_JOYPAD,
-} rgb_backend_t;
-
 #define RGB_ZONE_L      (1u << 0)
 #define RGB_ZONE_R      (1u << 1)
 #define RGB_ZONE_M      (1u << 2)
@@ -447,66 +423,10 @@ static int rgb_protocol_mode_for_backend(int backend, int ui_mode, int breath_sp
 }
 
 static void rgb_apply(void) {
-    if (!rgb_caps) return;
-    int ui_mode = current_mode_enum();
-
-    if (ui_mode == RGB_MODE_THEME_SUPPLIED) {
-        char script_path[MAX_BUFFER_SIZE];
-        if (!resolve_theme_rgb_script(script_path)) {
-            LOG_WARN(mux_module, "Theme Supplied RGB selected but no 'rgbconf.sh' script found under '%s'", config.THEME.STORAGE_THEME);
-            return;
-        }
-
-        const char *args[] = {script_path, NULL};
-        run_exec(args, 1, 0, 0, NULL, NULL);
-        return;
-    }
-
-    int ui_bright = dro_selected(ui_droBright_rgb);
-    int ui_breath_speed = dro_selected(ui_droBreathSpeed_rgb);
-
-    int ui_colour_l = colourl_palette_idx();
-    int ui_colour_r = dro_selected(ui_droColourR_rgb);
-    int ui_colour_m = dro_selected(ui_droColourM_rgb);
-    int ui_colour_f1 = dro_selected(ui_droColourF1_rgb);
-    int ui_colour_f2 = dro_selected(ui_droColourF2_rgb);
-
-    int ui_combo = dro_selected(ui_droCombo_rgb);
-    int ui_backend = dro_selected(ui_droBackend_rgb);
-
-    int active_backend = effective_backend_from_saved(ui_backend);
-
-    int is_preset_combo = 0;
-    int is_off = 0;
-
-    int proto_mode = rgb_protocol_mode_for_backend(active_backend, ui_mode, ui_breath_speed, &is_preset_combo, &is_off);
-    int proto_bright = is_off ? 0 : ui_brightness_to_protocol(ui_bright);
-
-    const rgb_colour_t *col_l = rgb_colour_at(ui_colour_l);
-    const rgb_colour_t *col_r = rgb_colour_or_fallback(ui_colour_r, col_l);
-    const rgb_colour_t *col_m = rgb_colour_or_fallback(ui_colour_m, col_l);
-    const rgb_colour_t *col_f1 = rgb_colour_or_fallback(ui_colour_f1, col_l);
-    const rgb_colour_t *col_f2 = rgb_colour_or_fallback(ui_colour_f2, col_r);
-    const rgb_colour_combo_t *kc = rgb_colour_combo_at(ui_combo);
-
-    rgb_argv_t args;
-    rgb_argv_init(&args, active_backend, proto_mode, proto_bright);
-
-    switch (active_backend) {
-        case RGB_BACKEND_JOYPAD:
-            rgb_push_joypad_args(&args, ui_mode, ui_breath_speed, is_off, is_preset_combo, ui_colour_r, col_l, col_r, kc);
-            break;
-        case RGB_BACKEND_SYSFS:
-            rgb_push_sysfs_args(&args, ui_mode, ui_breath_speed, is_off, is_preset_combo, col_l, col_r, col_m, col_f1, col_f2, kc);
-            break;
-        case RGB_BACKEND_SERIAL:
-        case RGB_BACKEND_AUTO:
-        default:
-            rgb_push_serial_args(&args, ui_mode, ui_breath_speed, is_off, is_preset_combo, col_l, col_r, kc);
-            break;
-    }
-
-    run_exec(args.argv, args.n, 0, 0, NULL, NULL);
+    const char *argv[2];
+    argv[0] = RGBLED_BIN;
+    argv[1] = "restore";
+    run_exec(argv, 2, 0, 0, NULL, NULL);
 }
 
 static void init_dropdown_settings(void) {

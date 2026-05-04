@@ -358,19 +358,11 @@ static void save_custom_options() {
             }
             write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
-            static char rgb_script[MAX_BUFFER_SIZE];
-            snprintf(rgb_script, sizeof(rgb_script), "%s/alternate/rgb/%s/rgbconf.sh", theme_base, theme_alt);
-            if (file_exist(rgb_script)) {
-                if (device.BOARD.HASRGB && config.SETTINGS.GENERAL.RGB) {
-                    const char *args[] = {rgb_script, NULL};
-                    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-                }
-
-                static char rgb_script_dest[MAX_BUFFER_SIZE];
-                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", theme_base);
-
-                create_directories(strip_dir(rgb_script_dest), 0);
-                write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
+            if (config.SETTINGS.RGB.MODE == RGB_MODE_THEME_SUPPLIED) {
+                const char *argv[2];
+                argv[0] = RGBLED_BIN;
+                argv[1] = "restore";
+                run_exec(argv, 2, 0, 0, NULL, NULL);
             }
         }
     }
