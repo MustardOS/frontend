@@ -427,6 +427,7 @@ static int get_visible_dir_count(const char *base_dir, const char *name, int idx
 static void create_content_items(void) {
     char item_curr_dir[PATH_MAX];
     snprintf(item_curr_dir, sizeof(item_curr_dir), "%s", sys_dir);
+    automatic_assign_core(item_curr_dir);
 
     char **dir_names = NULL;
     char **dir_paths = NULL;

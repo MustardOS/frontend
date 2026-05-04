@@ -195,6 +195,12 @@ static void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, ch
     delete_files_of_type(core_dir, ".rac", NULL, 1);
 
     assign_core_directory(def_core, core_dir, core, sys, cat, gov, con, rac, lookup, 1);
+    char root_core[MAX_BUFFER_SIZE];
+    snprintf(root_core, sizeof(root_core), "%s/core.cfg", core_dir);
+    char recursive_core[MAX_BUFFER_SIZE];
+    snprintf(recursive_core, sizeof(recursive_core), "%s/core_recursive.cfg", core_dir);
+    if (file_exist(recursive_core)) remove(recursive_core);
+    copy_file(root_core, recursive_core);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (!subdirs) return;
@@ -381,13 +387,11 @@ bool automatic_assign_core(char *rom_dir) {
         else {
             char *parent_rom_dir = strip_dir(rom_dir);
             char parent_core_file[MAX_BUFFER_SIZE];
-            snprintf(parent_core_file, sizeof(parent_core_file), INFO_CON_PATH "/%s/core.cfg",
+            snprintf(parent_core_file, sizeof(parent_core_file), INFO_CON_PATH "/%s/core_recursive.cfg",
                     get_last_subdir(parent_rom_dir, '/', 4));
             remove_double_slashes(parent_core_file);
 
-            char root_core_file[MAX_BUFFER_SIZE];
-            snprintf(root_core_file, sizeof(root_core_file), INFO_CON_PATH "/core.cfg");
-            if (strcasecmp(root_core_file, parent_core_file) != 0 && !file_exist(core_file) && file_exist(parent_core_file)) {
+            if (!file_exist(core_file) && file_exist(parent_core_file)) {
                 LOG_INFO(mux_module, "Copying core configuration from parent");
                 create_directories(core_file, 1);
                 copy_file(parent_core_file, core_file);
