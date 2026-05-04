@@ -66,6 +66,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_droHistoryMod_kiosk, kiosk.LAUNCH.HISTORY);
     lv_dropdown_set_selected(ui_droHistoryRem_kiosk, kiosk.CONTENT.HISTORY);
     lv_dropdown_set_selected(ui_droInfo_kiosk, kiosk.LAUNCH.INFORMATION);
+    lv_dropdown_set_selected(ui_droRgb_kiosk, kiosk.SETTING.RGB);
     lv_dropdown_set_selected(ui_droAdvanced_kiosk, kiosk.SETTING.ADVANCED);
     lv_dropdown_set_selected(ui_droGeneral_kiosk, kiosk.SETTING.GENERAL);
     lv_dropdown_set_selected(ui_droHdmi_kiosk, kiosk.SETTING.HDMI);
@@ -116,6 +117,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, CollectMod, "launch/collection", INT);
     CHECK_AND_SAVE_KSK(kiosk, HistoryMod, "launch/history", INT);
     CHECK_AND_SAVE_KSK(kiosk, Info, "launch/info", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Rgb, "setting/rgb", INT);
     CHECK_AND_SAVE_KSK(kiosk, Advanced, "setting/advanced", INT);
     CHECK_AND_SAVE_KSK(kiosk, General, "setting/general", INT);
     CHECK_AND_SAVE_KSK(kiosk, Hdmi, "setting/hdmi", INT);
@@ -178,6 +180,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, HistoryMod, lang.MUXKIOSK.HISTORY.MAIN, "historymod", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, HistoryRem, lang.MUXKIOSK.HISTORY.REMOVE, "historyrem", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Info, lang.MUXKIOSK.INFO, "info", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Rgb, lang.MUXKIOSK.RGB, "rgb", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Advanced, lang.MUXKIOSK.ADVANCED, "advanced", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, General, lang.MUXKIOSK.GENERAL, "general", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Hdmi, lang.MUXKIOSK.HDMI, "hdmi", allowed_restricted, 2);

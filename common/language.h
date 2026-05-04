@@ -678,6 +678,7 @@ struct mux_lang {
         char CONFIG[MAX_BUFFER_SIZE];
         char EXPLORE[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
+        char RGB[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
         char GENERAL[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
@@ -728,6 +729,7 @@ struct mux_lang {
             char CONFIG[MAX_BUFFER_SIZE];
             char EXPLORE[MAX_BUFFER_SIZE];
             char INFO[MAX_BUFFER_SIZE];
+            char RGB[MAX_BUFFER_SIZE];
             char ADVANCED[MAX_BUFFER_SIZE];
             char GENERAL[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];

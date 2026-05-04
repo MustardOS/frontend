@@ -229,6 +229,7 @@
     KIOSK(HistoryMod, HISTORYMOD, "historymod") \
     KIOSK(HistoryRem, HISTORYREM, "historyrem") \
     KIOSK(Info,       INFO,       "info")       \
+    KIOSK(Rgb,        RGB,        "rgb")        \
     KIOSK(Advanced,   ADVANCED,   "advanced")   \
     KIOSK(General,    GENERAL,    "general")    \
     KIOSK(Hdmi,       HDMI,       "hdmi")       \

@@ -606,6 +606,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.CONFIG, "Configuration");
     SPECIFIC_FIELD(lang->MUXKIOSK.EXPLORE, "Content Explorer");
     SPECIFIC_FIELD(lang->MUXKIOSK.INFO, "Information");
+    SPECIFIC_FIELD(lang->MUXKIOSK.RGB, "Device Light Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.ADVANCED, "Advanced Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HDMI, "HDMI Settings");
@@ -649,6 +650,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CONFIG, "Enable access to system configuration");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.EXPLORE, "Permit access to the content explorer");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.INFO, "Allow viewing system information");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RGB, "Enable access to device light settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.ADVANCED, "Enable access to advanced settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.GENERAL, "Enable access to general settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HDMI, "Allow modifying HDMI display settings");

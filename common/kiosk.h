@@ -68,6 +68,7 @@ struct mux_kiosk {
 
     struct {
         int16_t ADVANCED;
+        int16_t RGB;
         int16_t GENERAL;
         int16_t HDMI;
         int16_t POWER;

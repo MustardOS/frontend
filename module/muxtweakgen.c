@@ -33,6 +33,10 @@ static int visible_hdmi(void) {
     return !lv_obj_has_flag(ui_pnlHdmi_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
+static int visible_rgb(void) {
+    return !lv_obj_has_flag(ui_pnlRgb_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
 static void init_dropdown_settings(void) {
 #define TWEAKGEN(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
@@ -349,7 +353,7 @@ static void handle_a(void) {
     static const menu_entry entries[UI_COUNT] = {
             {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK,    NULL},
             {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI, visible_hdmi},
-            {"rgb",      &KIOSK_PASS,             MENU_RGB,      NULL},
+            {"rgb",      &kiosk.SETTING.RGB,      MENU_RGB,  visible_rgb},
             {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume

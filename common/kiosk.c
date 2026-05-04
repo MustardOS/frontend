@@ -52,6 +52,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->LAUNCH.INFORMATION, CONF_KIOSK_PATH "launch/info", 0);
 
     CFG_INT_FIELD(kiosk->SETTING.ADVANCED, CONF_KIOSK_PATH "setting/advanced", 0);
+    CFG_INT_FIELD(kiosk->SETTING.RGB, CONF_KIOSK_PATH "setting/rgb", 0);
     CFG_INT_FIELD(kiosk->SETTING.GENERAL, CONF_KIOSK_PATH "setting/general", 0);
     CFG_INT_FIELD(kiosk->SETTING.HDMI, CONF_KIOSK_PATH "setting/hdmi", 0);
     CFG_INT_FIELD(kiosk->SETTING.POWER, CONF_KIOSK_PATH "setting/power", 0);
