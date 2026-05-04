@@ -2,31 +2,74 @@
 
 const rgb_colour_t RGB_COLOURS[] = {
         {"Off",           0,   0,   0},
+
+        // Reds
         {"Red",           255, 0,   0},
-        {"Hot Pink",      255, 20,  40},
-        {"Pink",          190, 18,  80},
-        {"Blossom",       255, 119, 168},
+        {"Scarlet",       255, 36,  0},
+
+        // Oranges
         {"Peach",         255, 157, 129},
-        {"Pastel Orange", 210, 105, 30},
         {"Salmon",        171, 82,  54},
         {"Light Orange",  255, 87,  34},
+        {"Coral",         255, 127, 80},
+        {"Pastel Orange", 210, 105, 30},
         {"Orange",        255, 130, 0},
+        {"Tangerine",     242, 133, 0},
+
+        // Ambers
+        {"Amber",         255, 191, 0},
         {"Mustard",       225, 173, 1},
-        {"Yellow",        255, 255, 0},
-        {"Olive",         128, 128, 0},
+        {"Gold",          255, 215, 0},
         {"Vanilla",       255, 236, 39},
+        {"Lemon",         255, 247, 0},
+        {"Olive",         128, 128, 0},
+        {"Yellow",        255, 255, 0},
+
+        // Greens
         {"Lime Green",    168, 231, 46},
-        {"Pistachio",     50,  255, 50},
+        {"Forest Green",  34,  139, 34},
         {"Green",         0,   255, 0},
+        {"Mint",          152, 255, 152},
+        {"Pistachio",     50,  255, 50},
         {"Neon Green",    0,   228, 54},
-        {"Neon Cyan",     0,   255, 255},
+        {"Emerald",       80,  200, 120},
+        {"Seafoam",       159, 226, 191},
+
+        // Cyans
         {"Light Blue",    64,  224, 208},
+        {"Neon Cyan",     0,   255, 255},
+        {"Teal",          0,   128, 128},
+        {"Powder Blue",   176, 224, 230},
         {"Sky Blue",      135, 206, 235},
+
+        // Blues
         {"Blue",          41,  173, 255},
+        {"Cobalt",        0,   71,  171},
+        {"Navy",          0,   0,   128},
         {"True Blue",     0,   0,   255},
+
+        // Purples
         {"Neon Purple",   128, 0,   255},
+        {"Violet",        143, 0,   255},
+        {"Indigo",        75,  0,   130},
         {"Purple",        160, 32,  240},
         {"Lavender",      131, 70,  156},
+        {"Lilac",         200, 162, 200},
+        {"Magenta",       255, 0,   255},
+        {"Plum",          142, 69,  133},
+
+        // Pinks
+        {"Bubblegum",     255, 105, 180},
+        {"Pink",          190, 18,  80},
+        {"Blossom",       255, 119, 168},
+        {"Rose",          255, 102, 153},
+        {"Crimson",       220, 20,  60},
+        {"Hot Pink",      255, 20,  40},
+
+        // Neutrals
+        {"Silver",        192, 192, 192},
+        {"Warm White",    255, 244, 229},
+        {"Cool White",    240, 248, 255},
         {"White",         255, 255, 255},
 };
 

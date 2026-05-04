@@ -13,13 +13,19 @@
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 
 #define LED_SYS "/sys/class/led_anim"
+#define JOY_SYS "/sys/devices/platform/singleadc-joypad"
 #define SER_DEV "/dev/ttyS5"
 #define MCU_DEV "/sys/class/power_supply/axp2202-battery/mcu_pwr"
+
 #define SER_BRI 60
 #define MCU_BRI 255
+#define JOY_BRI 100
 
 typedef enum {
-    BE_AUTO, BE_SYSFS, BE_SERIAL
+    BE_AUTO,
+    BE_SYSFS,
+    BE_SERIAL,
+    BE_JOYPAD
 } backend_t;
 
 typedef struct {
@@ -106,12 +112,94 @@ static int sysfs_write_int(const char *leaf, int v) {
     return sysfs_write(leaf, buf);
 }
 
+static int joypad_writable(const char *leaf) {
+    char path[512];
+
+    snprintf(path, sizeof path, "%s/%s", JOY_SYS, leaf);
+
+    return access(path, W_OK) == 0;
+}
+
+static int joypad_write(const char *leaf, const char *value) {
+    char path[512];
+
+    snprintf(path, sizeof path, "%s/%s", JOY_SYS, leaf);
+    if (access(path, W_OK) != 0) return -1;
+
+    return write_string(path, value);
+}
+
+static int joypad_write_int(const char *leaf, int v) {
+    char buf[32];
+
+    snprintf(buf, sizeof buf, "%d\n", v);
+
+    return joypad_write(leaf, buf);
+}
+
+static int joypad_level_from_byte(int brightness) {
+    return clamp((clamp(brightness, MCU_BRI) * JOY_BRI + (MCU_BRI / 2)) / MCU_BRI, JOY_BRI);
+}
+
+static int joypad_mode_from_protocol(int mode) {
+    switch (mode) {
+        case 1:
+            return 1;
+        case 2:
+        case 3:
+        case 4:
+        case 8:
+            return 2;
+        case 7:
+            return 3;
+        case 5:
+            return 4;
+        case 6:
+            return 5;
+        default:
+            return 1;
+    }
+}
+
+static int joypad_speed_pct_to_reg(int pct) {
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    return pct;
+}
+
+static int joypad_breathing_speed_invert(int ui_pct) {
+    if (ui_pct < 0) ui_pct = 0;
+    if (ui_pct > 100) ui_pct = 100;
+    return 100 - ui_pct;
+}
+
+static int joypad_breathing_speed_pct_for_protocol(int mode) {
+    switch (mode) {
+        case 2:
+            return 80;
+        case 3:
+            return 50;
+        case 4:
+            return 20;
+        default:
+            return 50;
+    }
+}
+
+static int joypad_commit(void) {
+    if (joypad_writable("led_set")) joypad_write_int("led_set", 1);
+
+    return 0;
+}
+
 static backend_t detect_backend(backend_t requested) {
     if (requested != BE_AUTO) return requested;
+
+    if (dir_exists(JOY_SYS)) return BE_JOYPAD;
     if (dir_exists(LED_SYS)) return BE_SYSFS;
     if (char_dev_exists(SER_DEV)) return BE_SERIAL;
 
-    die("Error: no supported LED backend found (missing %s and %s)", LED_SYS, SER_DEV);
+    die("Error: no supported LED backend found (missing %s, %s and %s)", JOY_SYS, LED_SYS, SER_DEV);
 
     return BE_AUTO;
 }
@@ -269,6 +357,8 @@ static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, cons
 
 static int apply_serial(int mode, int brightness, int argc, char **argv);
 
+static int apply_joypad(int mode, int brightness, int argc, char **argv);
+
 static int read_config_int(const char *leaf, int fallback) {
     char path[512];
     snprintf(path, sizeof path, "%s%s", MUOS_CONFIG_PATH, leaf);
@@ -292,8 +382,18 @@ static int read_config_int(const char *leaf, int fallback) {
 static int dispatch_off(backend_t requested) {
     backend_t use = detect_backend(requested);
     flags_t fl;
+
     fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
     fl.cyc_all = fl.cyc_l = fl.cyc_r = fl.cyc_m = fl.cyc_f1 = fl.cyc_f2 = INT32_MIN;
+
+    if (use == BE_JOYPAD) {
+        if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
+
+        joypad_write_int("led_switch", 0);
+        joypad_commit();
+
+        return 0;
+    }
 
     if (use == BE_SYSFS) {
         if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
@@ -328,6 +428,8 @@ static backend_t restore_backend_from_config(int saved) {
             return BE_SYSFS;
         case 2:
             return BE_SERIAL;
+        case 3:
+            return BE_JOYPAD;
         default:
             return BE_AUTO;
     }
@@ -344,6 +446,21 @@ static int restore_breath_wire_mode(int saved) {
     }
 }
 
+static int joypad_speed_pct_from_saved(int bs) {
+    if (bs > 2) {
+        if (bs > 100) bs = 100;
+        return bs;
+    }
+    switch (bs) {
+        case 0:
+            return 80;
+        case 2:
+            return 20;
+        default:
+            return 50;
+    }
+}
+
 static int restore_brightness_to_byte(int b) {
     return clamp(b, MCU_BRI);
 }
@@ -351,7 +468,8 @@ static int restore_brightness_to_byte(int b) {
 static int dispatch_restore(void) {
     int saved_mode = read_config_int("settings/rgb/mode", 0);
 
-    if (saved_mode == 4) return 0;
+    if (saved_mode == 4 || saved_mode == 6) return 0;
+    if (saved_mode == 5) saved_mode = 0;
 
     int saved_backend = read_config_int("settings/rgb/backend", 0);
     int saved_bright_raw = read_config_int("settings/rgb/bright", 6);
@@ -398,28 +516,66 @@ static int dispatch_restore(void) {
         PUSH(kc->b_b);
     } else if (saved_mode == 2) {
         int bs = read_config_int("settings/rgb/breath_speed", 1);
-        wire_mode = restore_breath_wire_mode(bs);
 
-        if (use == BE_SYSFS) {
+        if (use == BE_JOYPAD) {
+            int sec_r, sec_g, sec_b;
+            if (idx_r <= 0) {
+                sec_r = sec_g = sec_b = 0;
+            } else {
+                sec_r = col_r->r;
+                sec_g = col_r->g;
+                sec_b = col_r->b;
+            }
+
+            wire_mode = 8;
+            PUSH(joypad_speed_pct_from_saved(bs));
             PUSH(col_l->r);
             PUSH(col_l->g);
             PUSH(col_l->b);
-            PUSH(col_r->r);
-            PUSH(col_r->g);
-            PUSH(col_r->b);
-            PUSH(col_m->r);
-            PUSH(col_m->g);
-            PUSH(col_m->b);
-            PUSH(col_f1->r);
-            PUSH(col_f1->g);
-            PUSH(col_f1->b);
-            PUSH(col_f2->r);
-            PUSH(col_f2->g);
-            PUSH(col_f2->b);
+            PUSH(sec_r);
+            PUSH(sec_g);
+            PUSH(sec_b);
         } else {
+            wire_mode = restore_breath_wire_mode(bs);
+
+            if (use == BE_SYSFS) {
+                PUSH(col_l->r);
+                PUSH(col_l->g);
+                PUSH(col_l->b);
+                PUSH(col_r->r);
+                PUSH(col_r->g);
+                PUSH(col_r->b);
+                PUSH(col_m->r);
+                PUSH(col_m->g);
+                PUSH(col_m->b);
+                PUSH(col_f1->r);
+                PUSH(col_f1->g);
+                PUSH(col_f1->b);
+                PUSH(col_f2->r);
+                PUSH(col_f2->g);
+                PUSH(col_f2->b);
+            } else {
+                PUSH(col_l->r);
+                PUSH(col_l->g);
+                PUSH(col_l->b);
+            }
+        }
+    } else if (saved_mode == 7) {
+        int bs = read_config_int("settings/rgb/breath_speed", 50);
+        wire_mode = 7;
+        PUSH(joypad_speed_pct_from_saved(bs));
+    } else if (saved_mode == 8) {
+        int bs = read_config_int("settings/rgb/breath_speed", 50);
+        wire_mode = 5;
+        PUSH(joypad_speed_pct_from_saved(bs));
+    } else if (saved_mode == 9) {
+        if (col_l->r || col_l->g || col_l->b) {
+            wire_mode = 6;
             PUSH(col_l->r);
             PUSH(col_l->g);
             PUSH(col_l->b);
+        } else {
+            return dispatch_off(restore_backend_from_config(saved_backend));
         }
     } else {
         wire_mode = 1;
@@ -451,6 +607,11 @@ static int dispatch_restore(void) {
     }
 
 #undef PUSH
+
+    if (use == BE_JOYPAD) {
+        if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
+        return apply_joypad(wire_mode, bright_byte, n, argv_buf);
+    }
 
     if (use == BE_SYSFS) {
         if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
@@ -581,6 +742,161 @@ static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, cons
     return 0;
 }
 
+static int apply_joypad(int mode, int brightness, int argc, char **argv) {
+    if (mode < 1 || mode > 8) die("Invalid mode for JOYPAD: %d (1-8)", mode);
+
+    int level = joypad_level_from_byte(brightness);
+
+    if (level <= 0) {
+        joypad_write_int("led_switch", 0);
+        joypad_commit();
+
+        printf("LED off (JOYPAD)\n");
+
+        return 0;
+    }
+
+    if (mode == 6) {
+        joypad_write_int("led_switch", 1);
+        joypad_write_int("led_level", level);
+
+        if (argc >= 3) {
+            int sr = clamp(parse_int(argv[0], "R"), MCU_BRI);
+            int sg = clamp(parse_int(argv[1], "G"), MCU_BRI);
+            int sb = clamp(parse_int(argv[2], "B"), MCU_BRI);
+
+            joypad_write_int("Led_rgb_r1", sr);
+            joypad_write_int("Led_rgb_g1", sg);
+            joypad_write_int("Led_rgb_b1", sb);
+
+            joypad_write_int("Led_rgb_r2", 0);
+            joypad_write_int("Led_rgb_g2", 0);
+            joypad_write_int("Led_rgb_b2", 0);
+        }
+
+        joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
+        joypad_commit();
+
+        printf("LED mode %d set with brightness %d (JOYPAD, stick-follow)\n", mode, level);
+        return 0;
+    }
+
+    if (mode == 5) {
+        joypad_write_int("led_switch", 1);
+        joypad_write_int("led_level", level);
+
+        if (argc >= 1) {
+            int speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
+            joypad_write_int("led_speed", speed_pct);
+        }
+
+        joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
+        joypad_commit();
+
+        printf("LED mode %d set with brightness %d (JOYPAD, rainbow)\n", mode, level);
+        return 0;
+    }
+
+    if (mode == 7 || mode == 8) {
+        int mode8_argc_ok = (mode == 8 && (argc == 4 || argc == 7));
+        if (!(mode == 7 && argc == 1) && !mode8_argc_ok) {
+            fprintf(stderr, "JOYPAD usage:\n"
+                            "  murgb -b joypad 7 <brightness> <speed 0-100>\n"
+                            "  murgb -b joypad 8 <brightness> <speed 0-100> <R1> <G1> <B1> [<R2> <G2> <B2>]\n");
+            return 1;
+        }
+
+        int ui_speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
+        int reg_speed_pct = (mode == 8) ? joypad_breathing_speed_invert(ui_speed_pct) : ui_speed_pct;
+
+        joypad_write_int("led_switch", 1);
+        joypad_write_int("led_level", level);
+        joypad_write_int("led_sync_colour", 1);
+        joypad_write_int("led_speed", reg_speed_pct);
+
+        if (mode == 8) {
+            int r1 = clamp(parse_int(argv[1], "R1"), MCU_BRI);
+            int g1 = clamp(parse_int(argv[2], "G1"), MCU_BRI);
+            int b1 = clamp(parse_int(argv[3], "B1"), MCU_BRI);
+
+            int r2, g2, b2;
+            if (argc == 7) {
+                r2 = clamp(parse_int(argv[4], "R2"), MCU_BRI);
+                g2 = clamp(parse_int(argv[5], "G2"), MCU_BRI);
+                b2 = clamp(parse_int(argv[6], "B2"), MCU_BRI);
+            } else {
+                r2 = r1;
+                g2 = g1;
+                b2 = b1;
+            }
+
+            joypad_write_int("Led_rgb_r1", r1);
+            joypad_write_int("Led_rgb_g1", g1);
+            joypad_write_int("Led_rgb_b1", b1);
+
+            joypad_write_int("Led_rgb_r2", r2);
+            joypad_write_int("Led_rgb_g2", g2);
+            joypad_write_int("Led_rgb_b2", b2);
+        }
+
+        joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
+        joypad_commit();
+
+        printf("LED mode %d set with brightness %d speed %d%% (JOYPAD)\n", mode, level, ui_speed_pct);
+        return 0;
+    }
+
+    if (argc < 3) {
+        fprintf(stderr, "JOYPAD usage: murgb -b joypad <mode 1-4> <brightness> <R G B>\n");
+        return 1;
+    }
+
+    int lr = clamp(parse_int(argv[0], "R"), MCU_BRI);
+    int lg = clamp(parse_int(argv[1], "G"), MCU_BRI);
+    int lb = clamp(parse_int(argv[2], "B"), MCU_BRI);
+
+    int enabled = lr || lg || lb;
+
+    if (!enabled) {
+        joypad_write_int("led_switch", 0);
+        joypad_commit();
+
+        printf("LED off (JOYPAD)\n");
+
+        return 0;
+    }
+
+    joypad_write_int("led_switch", 1);
+    joypad_write_int("led_level", level);
+    joypad_write_int("led_sync_colour", 1);
+
+    if (mode >= 2 && mode <= 4) {
+        int ui_pct = joypad_breathing_speed_pct_for_protocol(mode);
+        joypad_write_int("led_speed", joypad_breathing_speed_invert(ui_pct));
+    }
+
+    if (mode == 1) {
+        joypad_write_int("custum_rgb_r", lr);
+        joypad_write_int("custum_rgb_g", lg);
+        joypad_write_int("custum_rgb_b", lb);
+    } else {
+        joypad_write_int("Led_rgb_r1", lr);
+        joypad_write_int("Led_rgb_g1", lg);
+        joypad_write_int("Led_rgb_b1", lb);
+
+        joypad_write_int("Led_rgb_r2", 0);
+        joypad_write_int("Led_rgb_g2", 0);
+        joypad_write_int("Led_rgb_b2", 0);
+    }
+
+    joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
+    joypad_commit();
+
+    printf("LED mode %d set with brightness %d (JOYPAD)\n", mode, level);
+
+    return 0;
+}
+
 static int apply_serial(int mode, int brightness, int argc, char **argv) {
     if (mode < 1 || mode > 6) die("Invalid mode for SERIAL: %d (1-6)", mode);
 
@@ -640,7 +956,7 @@ static int apply_serial(int mode, int brightness, int argc, char **argv) {
 static void usage(void) {
     fputs(
             "Usage:\n"
-            "  murgb [-b auto|sysfs|serial] [--dur MS] [--dur-l MS] [--dur-r MS]\n"
+            "  murgb [-b auto|sysfs|serial|joypad] [--dur MS] [--dur-l MS] [--dur-r MS]\n"
             "        [--dur-m MS] [--dur-f1 MS] [--dur-f2 MS]\n"
             "        [--cycles N] [--cycles-l N] [--cycles-r N] [--cycles-m N]\n"
             "        [--cycles-f1 N] [--cycles-f2 N]\n"
@@ -653,9 +969,10 @@ static void usage(void) {
             "                  Useful for boot, suspend resume, etc.  Takes no\n"
             "                  other args.\n"
             "\nBackends:\n"
+            "  JOYPAD : " JOY_SYS "\n"
             "  SYSFS  : " LED_SYS "\n"
             "  SERIAL : " SER_DEV "\n"
-            "  AUTO   : prefer SYSFS if present, else SERIAL\n",
+            "  AUTO   : prefer JOYPAD if present, else SYSFS, else SERIAL\n",
             stderr);
 }
 
@@ -665,6 +982,7 @@ static backend_t parse_backend(const char *s) {
     if (!strcasecmp(s, "auto")) return BE_AUTO;
     if (!strcasecmp(s, "sysfs")) return BE_SYSFS;
     if (!strcasecmp(s, "serial")) return BE_SERIAL;
+    if (!strcasecmp(s, "joypad")) return BE_JOYPAD;
 
     die("Invalid backend: %s", s);
     return BE_AUTO;
@@ -745,18 +1063,25 @@ int main(int argc, char **argv) {
     char **rest_argv = argv + i + 2;
 
     backend_t use = detect_backend(be);
-    if (use == BE_SYSFS) {
-        if (!dir_exists(LED_SYS))
-            die("Error: SYSFS backend selected but %s not present.", LED_SYS);
-        return apply_sysfs(mode, brightness, rest_argc, rest_argv, &fl);
-    } else {
-        if (!char_dev_exists(SER_DEV))
-            die("Error: SERIAL backend selected but %s not present.", SER_DEV);
-        int rc = apply_serial(mode, brightness, rest_argc, rest_argv);
-        if (serial_fd >= 0) {
-            close(serial_fd);
-            serial_fd = -1;
-        }
-        return rc;
+
+    if (use == BE_JOYPAD) {
+        if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
+        return apply_joypad(mode, brightness, rest_argc, rest_argv);
     }
+
+    if (use == BE_SYSFS) {
+        if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
+        return apply_sysfs(mode, brightness, rest_argc, rest_argv, &fl);
+    }
+
+    if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present.", SER_DEV);
+
+    int rc = apply_serial(mode, brightness, rest_argc, rest_argv);
+
+    if (serial_fd >= 0) {
+        close(serial_fd);
+        serial_fd = -1;
+    }
+
+    return rc;
 }
