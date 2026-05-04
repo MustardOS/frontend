@@ -788,15 +788,14 @@ static char **build_mode_options(int *count) {
         int gated;
         const char *fallback_name;
     } slots[] = {
-            // TODO: language check
-            {RGB_MODE_OFF,            0, "Off"},
-            {RGB_MODE_STATIC,         0, "Static"},
-            {RGB_MODE_BREATHING,      0, "Breathing"},
-            {RGB_MODE_COLOUR_CYCLE,   1, "Colour Cycle"},
-            {RGB_MODE_RAINBOW,        1, "Rainbow"},
-            {RGB_MODE_STICK_FOLLOW,   1, "Stick Follow"},
-            {RGB_MODE_PRESET_COMBO,   1, "Preset Combo"},
-            {RGB_MODE_THEME_SUPPLIED, 0, "Theme Supplied"},
+            {RGB_MODE_OFF,            0, lang.MUXRGB.MODE_NAME.OFF},
+            {RGB_MODE_STATIC,         0, lang.MUXRGB.MODE_NAME.STATIC},
+            {RGB_MODE_BREATHING,      0, lang.MUXRGB.MODE_NAME.BREATHING},
+            {RGB_MODE_COLOUR_CYCLE,   1, lang.MUXRGB.MODE_NAME.COLOUR_CYCLE},
+            {RGB_MODE_RAINBOW,        1, lang.MUXRGB.MODE_NAME.RAINBOW},
+            {RGB_MODE_STICK_FOLLOW,   1, lang.MUXRGB.MODE_NAME.STICK_FOLLOW},
+            {RGB_MODE_PRESET_COMBO,   1, lang.MUXRGB.MODE_NAME.PRESET_COMBO},
+            {RGB_MODE_THEME_SUPPLIED, 0, lang.MUXRGB.MODE_NAME.THEME_SUPPLIED},
     };
     const size_t slot_count = sizeof(slots) / sizeof(slots[0]);
 
@@ -996,17 +995,16 @@ static void apply_mode_visibility(int ui_mode) {
     if (show_combo) SHOW_OPTION_ITEM(rgb, Combo); else HIDE_OPTION_ITEM(rgb, Combo);
     if (show_backend) SHOW_OPTION_ITEM(rgb, Backend); else HIDE_OPTION_ITEM(rgb, Backend);
 
-    // TODO: language check
     if (is_joypad) {
         if (ui_mode == RGB_MODE_BREATHING) {
-            lv_label_set_text(ui_lblColourL_rgb, "Primary Colour");
-            lv_label_set_text(ui_lblColourR_rgb, "Secondary Colour");
+            lv_label_set_text(ui_lblColourL_rgb, lang.MUXRGB.STICK.PRIMARY);
+            lv_label_set_text(ui_lblColourR_rgb, lang.MUXRGB.STICK.SECONDARY);
         } else if (ui_mode == RGB_MODE_STICK_FOLLOW) {
-            lv_label_set_text(ui_lblColourL_rgb, "Stick Colour");
-            lv_label_set_text(ui_lblColourR_rgb, "Stick Colour");
+            lv_label_set_text(ui_lblColourL_rgb, lang.MUXRGB.STICK.SINGLE);
+            lv_label_set_text(ui_lblColourR_rgb, lang.MUXRGB.STICK.SINGLE);
         } else {
-            lv_label_set_text(ui_lblColourL_rgb, "Both Sticks");
-            lv_label_set_text(ui_lblColourR_rgb, "Both Sticks");
+            lv_label_set_text(ui_lblColourL_rgb, lang.MUXRGB.STICK.BOTH);
+            lv_label_set_text(ui_lblColourR_rgb, lang.MUXRGB.STICK.BOTH);
         }
 
         colourl_set_dropdown_set(ui_mode == RGB_MODE_STICK_FOLLOW ? COLOURL_DROPDOWN_STICK : COLOURL_DROPDOWN_FULL);
@@ -1031,7 +1029,7 @@ static void init_navigation_group(void) {
             lang.MUXRGB.BACKEND_NAME.AUTO,
             lang.MUXRGB.BACKEND_NAME.SYSFS,
             lang.MUXRGB.BACKEND_NAME.SERIAL,
-            "Joypad", // TODO: language check
+            lang.MUXRGB.BACKEND_NAME.JOYPAD,
     };
 
     int mode_count = 0;
@@ -1087,9 +1085,8 @@ static void init_navigation_group(void) {
         }
     }
 
-    // TODO: language check
     if (rgb_caps && rgb_caps->backend == RGB_BACKEND_JOYPAD) {
-        lv_label_set_text(ui_lblBreathSpeed_rgb, "Speed");
+        lv_label_set_text(ui_lblBreathSpeed_rgb, lang.MUXRGB.SPEED);
     }
 
     int initial_mode = current_mode_enum();

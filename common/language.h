@@ -1123,6 +1123,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char MODE[MAX_BUFFER_SIZE];
         char BRIGHT[MAX_BUFFER_SIZE];
+        char SPEED[MAX_BUFFER_SIZE];
         char BREATH_SPEED[MAX_BUFFER_SIZE];
         char COLOURL[MAX_BUFFER_SIZE];
         char COLOURR[MAX_BUFFER_SIZE];
@@ -1136,6 +1137,9 @@ struct mux_lang {
             char OFF[MAX_BUFFER_SIZE];
             char STATIC[MAX_BUFFER_SIZE];
             char BREATHING[MAX_BUFFER_SIZE];
+            char COLOUR_CYCLE[MAX_BUFFER_SIZE];
+            char RAINBOW[MAX_BUFFER_SIZE];
+            char STICK_FOLLOW[MAX_BUFFER_SIZE];
             char PRESET_COMBO[MAX_BUFFER_SIZE];
             char THEME_SUPPLIED[MAX_BUFFER_SIZE];
         } MODE_NAME;
@@ -1145,9 +1149,16 @@ struct mux_lang {
             char SLOW[MAX_BUFFER_SIZE];
         } BREATH_SPEED_NAME;
         struct {
+            char PRIMARY[MAX_BUFFER_SIZE];
+            char SECONDARY[MAX_BUFFER_SIZE];
+            char SINGLE[MAX_BUFFER_SIZE];
+            char BOTH[MAX_BUFFER_SIZE];
+        } STICK;
+        struct {
             char AUTO[MAX_BUFFER_SIZE];
             char SYSFS[MAX_BUFFER_SIZE];
             char SERIAL[MAX_BUFFER_SIZE];
+            char JOYPAD[MAX_BUFFER_SIZE];
         } BACKEND_NAME;
         struct {
             char MODE[MAX_BUFFER_SIZE];
