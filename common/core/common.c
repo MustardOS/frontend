@@ -262,6 +262,25 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
 }
 
+static int find_recursive_core_file(const char *start_path, char *recursive_core_file) {
+    char root_core_file[MAX_BUFFER_SIZE];
+    snprintf(root_core_file, sizeof(root_core_file), INFO_CON_PATH "/core_recursive.cfg");
+
+    char current_dir[MAX_BUFFER_SIZE];
+    snprintf(current_dir, sizeof(current_dir), "%s", start_path);
+    while (1) {
+        snprintf(current_dir, sizeof(current_dir), "%s", strip_dir(current_dir));
+
+        snprintf(recursive_core_file, MAX_BUFFER_SIZE, INFO_CON_PATH "/%s/core_recursive.cfg",
+                get_last_subdir(current_dir, '/', 4));
+        remove_double_slashes(recursive_core_file);
+
+        if (file_exist(recursive_core_file)) return 1;
+        if (strcasecmp(root_core_file, recursive_core_file) == 0) return 0;
+    }
+    return 0;
+}
+
 bool automatic_assign_core(char *rom_dir) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.cfg",
@@ -385,16 +404,13 @@ bool automatic_assign_core(char *rom_dir) {
             mini_free(global_ini);
         }
         else {
-            char *parent_rom_dir = strip_dir(rom_dir);
-            char parent_core_file[MAX_BUFFER_SIZE];
-            snprintf(parent_core_file, sizeof(parent_core_file), INFO_CON_PATH "/%s/core_recursive.cfg",
-                    get_last_subdir(parent_rom_dir, '/', 4));
-            remove_double_slashes(parent_core_file);
-
-            if (!file_exist(core_file) && file_exist(parent_core_file)) {
-                LOG_INFO(mux_module, "Copying core configuration from parent");
-                create_directories(core_file, 1);
-                copy_file(parent_core_file, core_file);
+            if (!file_exist(core_file)) {
+                char recursive_core_file[MAX_BUFFER_SIZE];
+                if (find_recursive_core_file(rom_dir, recursive_core_file)) {
+                    LOG_INFO(mux_module, "Copying core configuration from parent");
+                    create_directories(core_file, 1);
+                    copy_file(recursive_core_file, core_file);
+                }
             }
         }
     }
