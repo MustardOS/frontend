@@ -17,10 +17,10 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
 * `mulookup`: Content Name Lookup
+* `muwarn`: First Install Disclaimer Message
 * `muxcharge`: Charging Information Screen
 * `muxfrontend`: Main Frontend Specific Runner
 * `muxmessage`: Information and Progress Screen
-* `muxwarn`: First Install Disclaimer Message
 
 ### Modules
 

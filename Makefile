@@ -4,7 +4,7 @@ BIN_DIR = ./bin
 LIB_DIR = $(BIN_DIR)/lib
 
 MODULE_DIR = module
-MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muxcharge muxfrontend muxmessage muxwarn
+MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muwarn muxcharge muxfrontend muxmessage
 
 DEPENDENCIES = common font lvgl lookup module
 
