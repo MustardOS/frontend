@@ -64,10 +64,8 @@
 #define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"
 
-#define OSK_UPPER "ABC"
-#define OSK_LOWER "abc"
-#define OSK_CHAR  "!@#"
-#define OSK_DONE  "OK"
+#define OSK_DONE "OK"
+#define OSK_MAX  192
 
 #define MAIN_ROM_DIR "ROMS"
 

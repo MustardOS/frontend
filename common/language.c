@@ -48,6 +48,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.ADD_COLLECT, "Added to Collection");
     GENERIC_FIELD(lang->GENERIC.ALLOWED, "Allowed");
     GENERIC_FIELD(lang->GENERIC.BACK, "Back");
+    GENERIC_FIELD(lang->GENERIC.BACKSPACE, "Backspace");
     GENERIC_FIELD(lang->GENERIC.CANNOT_DELETE_ACTIVE_THEME, "Cannot Delete Active Theme");
     GENERIC_FIELD(lang->GENERIC.CHANGE, "Change");
     GENERIC_FIELD(lang->GENERIC.CHANNEL, "Channel");
@@ -108,12 +109,14 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SELECT, "Select");
     GENERIC_FIELD(lang->GENERIC.SET, "Set");
     GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down…");
+    GENERIC_FIELD(lang->GENERIC.SPACE, "Space");
     GENERIC_FIELD(lang->GENERIC.STORAGE, "Storage");
     GENERIC_FIELD(lang->GENERIC.SWITCH_IMAGE, "Preview Image");
     GENERIC_FIELD(lang->GENERIC.SWITCH_INFO, "Information");
     GENERIC_FIELD(lang->GENERIC.SYNC, "Sync to SD1");
     GENERIC_FIELD(lang->GENERIC.TOGGLE_ALL, "Toggle All");
     GENERIC_FIELD(lang->GENERIC.TOP, "Top");
+    GENERIC_FIELD(lang->GENERIC.TYPE, "Type");
     GENERIC_FIELD(lang->GENERIC.UNKNOWN, "Unknown");
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
     GENERIC_FIELD(lang->GENERIC.USER_DEFINED, "User Defined");

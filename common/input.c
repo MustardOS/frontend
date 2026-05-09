@@ -58,7 +58,7 @@ typedef struct {
 } axis_map_entry;
 
 static axis_map_entry axis_map[SDL_CONTROLLER_AXIS_MAX];
-static mux_input_type key_map[SDL_NUM_SCANCODES];
+static mux_input_type input_map[SDL_NUM_SCANCODES];
 
 static void map_vol_buttons(mux_input_type *map, int down_idx, int up_idx) {
     map[down_idx] = MUX_INPUT_VOL_DOWN;
@@ -72,7 +72,7 @@ static void init_input_maps(void) {
 
     for (int i = 0; i < 32; i++) joy_button_map[i] = MUX_INPUT_COUNT;
 
-    for (int i = 0; i < SDL_NUM_SCANCODES; i++) key_map[i] = MUX_INPUT_COUNT;
+    for (int i = 0; i < SDL_NUM_SCANCODES; i++) input_map[i] = MUX_INPUT_COUNT;
 
     for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; i++) {
         axis_map[i].neg = MUX_INPUT_COUNT;
@@ -110,30 +110,30 @@ static void init_input_maps(void) {
     axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].neg = MUX_INPUT_COUNT;
     axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].pos = MUX_INPUT_R2;
 
-    key_map[SDL_SCANCODE_SPACE] = MUX_INPUT_A;
-    key_map[SDL_SCANCODE_BACKSPACE] = MUX_INPUT_B;
-    key_map[SDL_SCANCODE_R] = MUX_INPUT_X;
-    key_map[SDL_SCANCODE_F] = MUX_INPUT_Y;
+    input_map[SDL_SCANCODE_SPACE] = MUX_INPUT_A;
+    input_map[SDL_SCANCODE_BACKSPACE] = MUX_INPUT_B;
+    input_map[SDL_SCANCODE_R] = MUX_INPUT_X;
+    input_map[SDL_SCANCODE_F] = MUX_INPUT_Y;
 
-    key_map[SDL_SCANCODE_Q] = MUX_INPUT_L1;
-    key_map[SDL_SCANCODE_E] = MUX_INPUT_R1;
-    key_map[SDL_SCANCODE_Z] = MUX_INPUT_L2;
-    key_map[SDL_SCANCODE_C] = MUX_INPUT_R2;
+    input_map[SDL_SCANCODE_Q] = MUX_INPUT_L1;
+    input_map[SDL_SCANCODE_E] = MUX_INPUT_R1;
+    input_map[SDL_SCANCODE_Z] = MUX_INPUT_L2;
+    input_map[SDL_SCANCODE_C] = MUX_INPUT_R2;
 
-    key_map[SDL_SCANCODE_LCTRL] = MUX_INPUT_SELECT;
-    key_map[SDL_SCANCODE_LSHIFT] = MUX_INPUT_START;
+    input_map[SDL_SCANCODE_LCTRL] = MUX_INPUT_SELECT;
+    input_map[SDL_SCANCODE_LSHIFT] = MUX_INPUT_START;
 
-    key_map[SDL_SCANCODE_F1] = MUX_INPUT_MENU;
+    input_map[SDL_SCANCODE_F1] = MUX_INPUT_MENU;
 
-    key_map[SDL_SCANCODE_UP] = MUX_INPUT_DPAD_UP;
-    key_map[SDL_SCANCODE_DOWN] = MUX_INPUT_DPAD_DOWN;
-    key_map[SDL_SCANCODE_LEFT] = MUX_INPUT_DPAD_LEFT;
-    key_map[SDL_SCANCODE_RIGHT] = MUX_INPUT_DPAD_RIGHT;
+    input_map[SDL_SCANCODE_UP] = MUX_INPUT_DPAD_UP;
+    input_map[SDL_SCANCODE_DOWN] = MUX_INPUT_DPAD_DOWN;
+    input_map[SDL_SCANCODE_LEFT] = MUX_INPUT_DPAD_LEFT;
+    input_map[SDL_SCANCODE_RIGHT] = MUX_INPUT_DPAD_RIGHT;
 
-    key_map[SDL_SCANCODE_W] = MUX_INPUT_DPAD_UP;
-    key_map[SDL_SCANCODE_S] = MUX_INPUT_DPAD_DOWN;
-    key_map[SDL_SCANCODE_A] = MUX_INPUT_DPAD_LEFT;
-    key_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
+    input_map[SDL_SCANCODE_W] = MUX_INPUT_DPAD_UP;
+    input_map[SDL_SCANCODE_S] = MUX_INPUT_DPAD_DOWN;
+    input_map[SDL_SCANCODE_A] = MUX_INPUT_DPAD_LEFT;
+    input_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
 
     switch (board_special()) {
         case BOARD_SPECIAL_TUI_BRICK:
@@ -147,13 +147,13 @@ static void init_input_maps(void) {
             break;
     }
 
-    key_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
-    key_map[SDL_SCANCODE_VOLUMEUP] = MUX_INPUT_VOL_UP;
+    input_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
+    input_map[SDL_SCANCODE_VOLUMEUP] = MUX_INPUT_VOL_UP;
 
-    key_map[SDL_SCANCODE_PAGEDOWN] = MUX_INPUT_VOL_DOWN;
-    key_map[SDL_SCANCODE_VOLUMEDOWN] = MUX_INPUT_VOL_DOWN;
+    input_map[SDL_SCANCODE_PAGEDOWN] = MUX_INPUT_VOL_DOWN;
+    input_map[SDL_SCANCODE_VOLUMEDOWN] = MUX_INPUT_VOL_DOWN;
 
-    // key_map[SDL_SCANCODE_AC_BACK] = ??????????
+    // input_map[SDL_SCANCODE_AC_BACK] = ??????????
 
     input_init_done = 1;
 }
@@ -300,7 +300,7 @@ static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEve
     SDL_Scancode sc = key->keysym.scancode;
     if (sc >= SDL_NUM_SCANCODES) return;
 
-    mux_input_type t = key_map[sc];
+    mux_input_type t = input_map[sc];
     if (t == MUX_INPUT_COUNT) {
         LOG_DEBUG("input", "Unmapped key %s (%d)", SDL_GetScancodeName(sc), sc);
         return;

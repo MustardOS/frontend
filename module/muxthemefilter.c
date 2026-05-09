@@ -127,21 +127,15 @@ static void handle_keyboard_OK_press(void) {
 
     lv_textarea_set_text(ui_txtEntry_themefilter, "");
     lv_group_set_focus_cb(ui_group, NULL);
-    lv_obj_add_flag(ui_pnlEntry_themefilter, LV_OBJ_FLAG_HIDDEN);
+    osk_hide(ui_pnlEntry_themefilter);
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+    first_open ? (first_open = 0) : play_sound(SND_KEYPRESS);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
-    if (strcasecmp(is_key, OSK_DONE) == 0) {
+    if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
         handle_keyboard_OK_press();
-    } else if (strcmp(is_key, OSK_UPPER) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (strcmp(is_key, OSK_CHAR) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (strcmp(is_key, OSK_LOWER) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
         lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
     }
@@ -165,8 +159,7 @@ static void handle_confirm(void) {
 
         key_show = 1;
 
-        lv_obj_clear_flag(ui_pnlEntry_themefilter, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_move_foreground(ui_pnlEntry_themefilter);
+        osk_show(ui_pnlEntry_themefilter);
 
         lv_textarea_set_text(ui_txtEntry_themefilter, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else {
@@ -183,13 +176,13 @@ static void handle_a(void) {
 static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
-    if (key_show) key_backspace(ui_txtEntry_themefilter);
+    if (key_show) close_osk(key_entry, ui_group, ui_txtEntry_themefilter, ui_pnlEntry_themefilter);
 }
 
 static void handle_y(void) {
     if (msgbox_active || hold_call) return;
 
-    if (key_show) key_swap();
+    if (key_show) key_space(ui_txtEntry_themefilter);
 }
 
 static void handle_b(void) {
@@ -204,7 +197,7 @@ static void handle_b(void) {
     }
 
     if (key_show) {
-        close_osk(key_entry, ui_group, ui_txtEntry_themefilter, ui_pnlEntry_themefilter);
+        key_backspace(ui_txtEntry_themefilter);
         return;
     }
 
@@ -215,6 +208,10 @@ static void handle_b(void) {
     load_mux("themedwn");
 
     mux_input_stop();
+}
+
+static void handle_b_hold(void) {
+    if (key_show) key_backspace(ui_txtEntry_themefilter);
 }
 
 static void handle_help(void) {
@@ -257,11 +254,21 @@ static void handle_right_hold(void) {
 }
 
 static void handle_l1(void) {
-    if (!key_show) handle_list_nav_page_up();
+    if (key_show) {
+        key_swap_back();
+        return;
+    }
+
+    handle_list_nav_page_up();
 }
 
 static void handle_r1(void) {
-    if (!key_show) handle_list_nav_page_down();
+    if (key_show) {
+        key_swap();
+        return;
+    }
+
+    handle_list_nav_page_down();
 }
 
 static void init_elements(void) {
@@ -304,7 +311,7 @@ int muxthemefilter_main(void) {
     restore_theme_filter_options();
     init_dropdown_settings();
 
-    init_osk(ui_pnlEntry_themefilter, ui_txtEntry_themefilter, false);
+    init_osk(ui_pnlEntry_themefilter, ui_txtEntry_themefilter, false, false, OSK_MAX);
 
     init_timer(ui_gen_refresh_task, NULL);
 
@@ -327,6 +334,7 @@ int muxthemefilter_main(void) {
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
+                    [MUX_INPUT_B] = handle_b_hold,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,

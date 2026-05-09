@@ -362,17 +362,11 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+    first_open ? (first_open = 0) : play_sound(SND_KEYPRESS);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
-    if (strcasecmp(is_key, OSK_DONE) == 0) {
+    if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
         handle_keyboard_OK_press();
-    } else if (strcmp(is_key, OSK_UPPER) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (strcmp(is_key, OSK_CHAR) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (strcmp(is_key, OSK_LOWER) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
         lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
     }
@@ -557,7 +551,7 @@ static void handle_a_hold(void) {
 
 static void handle_b(void) {
     if (key_show) {
-        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
+        key_backspace(ui_txtEntry_collect);
         return;
     }
 
@@ -597,9 +591,13 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_b_hold(void) {
+    if (key_show) key_backspace(ui_txtEntry_collect);
+}
+
 static void handle_x(void) {
     if (key_show) {
-        key_backspace(ui_txtEntry_collect);
+        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
         return;
     }
 
@@ -663,7 +661,7 @@ static void handle_x(void) {
 
 static void handle_y(void) {
     if (key_show) {
-        key_swap();
+        key_space(ui_txtEntry_collect);
         return;
     }
 
@@ -674,10 +672,7 @@ static void handle_y(void) {
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
         key_show = 1;
-
-        lv_obj_clear_flag(ui_pnlEntry_collect, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_move_foreground(ui_pnlEntry_collect);
-
+        osk_show(ui_pnlEntry_collect);
         lv_textarea_set_text(ui_txtEntry_collect, "");
     }
 }
@@ -739,11 +734,21 @@ static void handle_right_hold(void) {
 }
 
 static void handle_l1(void) {
-    if (!key_show) handle_list_nav_page_up();
+    if (key_show) {
+        key_swap_back();
+        return;
+    }
+
+    handle_list_nav_page_up();
 }
 
 static void handle_r1(void) {
-    if (!key_show) handle_list_nav_page_down();
+    if (key_show) {
+        key_swap();
+        return;
+    }
+
+    handle_list_nav_page_down();
 }
 
 static void adjust_panels(void) {
@@ -949,7 +954,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     }
 
     update_file_counter(ui_lblCounter_collect, file_count);
-    init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false);
+    init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false, false, OSK_MAX);
 
     update_footer_glyph();
 
@@ -977,6 +982,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,
+                    [MUX_INPUT_B] = handle_b_hold,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,

@@ -359,29 +359,20 @@ static void handle_keyboard_OK_press(void) {
 
     lv_textarea_set_text(ui_txtEntry_network, "");
     lv_group_set_focus_cb(ui_group, NULL);
-    lv_obj_add_flag(ui_pnlEntry_network, LV_OBJ_FLAG_HIDDEN);
+
+    osk_hide(ui_pnlEntry_network);
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+    first_open ? (first_open = 0) : play_sound(SND_KEYPRESS);
 
-    const char *is_key = lv_btnmatrix_get_btn_text(
-            lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN) ? num_entry : key_entry, key_curr);
+    lv_obj_t *active = lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN) ? num_entry : key_entry;
+    const char *is_key = lv_btnmatrix_get_btn_text(active, key_curr);
 
-    if (strcasecmp(is_key, OSK_DONE) == 0) {
+    if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
         handle_keyboard_OK_press();
-    } else if (strcmp(is_key, OSK_UPPER) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (strcmp(is_key, OSK_CHAR) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (strcmp(is_key, OSK_LOWER) == 0) {
-        lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
-        if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-            lv_event_send(num_entry, LV_EVENT_CLICKED, &key_curr);
-        } else {
-            lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
-        }
+        lv_event_send(active, LV_EVENT_CLICKED, &key_curr);
     }
 }
 
@@ -527,11 +518,10 @@ static void handle_confirm(void) {
                     key_show = 2;
                 }
 
-                lv_obj_clear_flag(ui_pnlEntry_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_move_foreground(ui_pnlEntry_network);
+                osk_show(ui_pnlEntry_network);
+                osk_refresh_labels();
 
-                lv_textarea_set_text(ui_txtEntry_network, e_focused == ui_lblPassword_network ? "" :
-                                                          lv_label_get_text(lv_group_get_focused(ui_group_value)));
+                lv_textarea_set_text(ui_txtEntry_network, e_focused == ui_lblPassword_network ? "" : lv_label_get_text(lv_group_get_focused(ui_group_value)));
             }
         } else {
             play_sound(SND_ERROR);
@@ -601,24 +591,40 @@ static void handle_b(void) {
     }
 
     if (key_show) {
-        close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry :
-                  key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
+        key_backspace(ui_txtEntry_network);
         return;
     }
 
     handle_back();
 }
 
+static void handle_b_hold(void) {
+    if (ui_network_locked) return;
+    if (key_show) key_backspace(ui_txtEntry_network);
+}
+
 static void handle_x(void) {
     if (msgbox_active || hold_call || ui_network_locked) return;
 
-    key_show ? key_backspace(ui_txtEntry_network) : handle_scan();
+    if (key_show) {
+        close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry : key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
+        return;
+    }
+
+    handle_scan();
 }
 
 static void handle_y(void) {
     if (msgbox_active || hold_call || ui_network_locked) return;
 
-    key_show ? key_swap() : handle_profiles();
+    if (key_show == 1) {
+        key_space(ui_txtEntry_network);
+        return;
+    }
+
+    if (key_show == 2) return;
+
+    handle_profiles();
 }
 
 static void handle_help(void) {
@@ -669,10 +675,20 @@ static void handle_right_hold(void) {
 }
 
 static void handle_l1(void) {
+    if (key_show == 1) {
+        key_swap_back();
+        return;
+    }
+
     if (!key_show) handle_list_nav_page_up();
 }
 
 static void handle_r1(void) {
+    if (key_show == 1) {
+        key_swap();
+        return;
+    }
+
     if (!key_show) handle_list_nav_page_down();
 }
 
@@ -766,7 +782,7 @@ int muxnetwork_main(void) {
 
     restore_network_values();
 
-    init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1);
+    init_osk(ui_pnlEntry_network, ui_txtEntry_network, true, true, OSK_MAX);
     can_scan_check(0);
 
     init_timer(ui_refresh_task, NULL);
@@ -790,6 +806,7 @@ int muxnetwork_main(void) {
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
+                    [MUX_INPUT_B] = handle_b_hold,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,

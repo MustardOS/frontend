@@ -32,6 +32,7 @@ struct mux_lang {
         char ADD_COLLECT[MAX_BUFFER_SIZE];
         char ALLOWED[MAX_BUFFER_SIZE];
         char BACK[MAX_BUFFER_SIZE];
+        char BACKSPACE[MAX_BUFFER_SIZE];
         char CANNOT_DELETE_ACTIVE_THEME[MAX_BUFFER_SIZE];
         char CHANGE[MAX_BUFFER_SIZE];
         char CHANNEL[MAX_BUFFER_SIZE];
@@ -92,12 +93,14 @@ struct mux_lang {
         char SELECT[MAX_BUFFER_SIZE];
         char SET[MAX_BUFFER_SIZE];
         char SHUTTING_DOWN[MAX_BUFFER_SIZE];
+        char SPACE[MAX_BUFFER_SIZE];
         char STORAGE[MAX_BUFFER_SIZE];
         char SWITCH_IMAGE[MAX_BUFFER_SIZE];
         char SWITCH_INFO[MAX_BUFFER_SIZE];
         char SYNC[MAX_BUFFER_SIZE];
         char TOGGLE_ALL[MAX_BUFFER_SIZE];
         char TOP[MAX_BUFFER_SIZE];
+        char TYPE[MAX_BUFFER_SIZE];
         char UNKNOWN[MAX_BUFFER_SIZE];
         char USER_DEFINED[MAX_BUFFER_SIZE];
         char USE[MAX_BUFFER_SIZE];
