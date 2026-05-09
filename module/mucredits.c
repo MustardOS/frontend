@@ -129,36 +129,46 @@ static const char *contributors[] = {
 #define LANG_THANKS "Thank you for choosing MustardOS"
 #define LANG_MESSAGE \
     "The people listed throughout have been amazing supporters and " \
-    "contributors to MustardOS and shaping its future.\n\n" \
+    "contributors to MustardOS, helping shape its wild future.\n\n" \
     "From the bottom of my heart, thank you for your time, ideas, " \
-    "testing, and support. I appreciate you all more than a simple " \
-    "\"thank you\" could express!"
+    "testing, and support. MustardOS is better because of you."
 
 #define LANG_SPECIAL "Special Thanks"
 #define LANG_EVERYONE \
-    "A heartfelt thanks to artificers, druids, porters, theme creators, " \
-    "and translators for your contributions to MustardOS. Your dedication " \
-    "has enriched this project, and I am truly grateful for all your " \
-    "contributions and testing!"
+    "A heartfelt thanks to the artificers, druids, porters, theme creators, " \
+    "and translators who have helped shape MustardOS. Your dedication, " \
+    "creativity, testing, and care have enriched this project in so many " \
+    "ways, and I am truly grateful for everything you have contributed."
+
+#define LANG_SHOUTS "Shout Out"
+#define LANG_AWESOME \
+    "I would like to thank one of our MustardOS community members. Here is " \
+    "to Egg for keeping a much needed positive and warm energy within the " \
+    "MustardOS community. Thank you for being someone people can talk to, " \
+    "for greeting new people, and for always sharing good vibes. Your kindness " \
+    "and presence help make this community feel welcoming, friendly, and special."
 
 #define LANG_SUPPORT "My One True Supporter"
 #define LANG_BONGLE \
-    "To my wonderful wife, Mrs. Bongle. Whose amazing support, guidance, " \
-    "and patience has been my light throughout this entire adventure. " \
-    "You mean everything to me and I love you more than words could ever " \
-    "express!"
+    "To my wonderful wife, Mrs. Bongle, whose endless support, guidance, " \
+    "and patience have been my light throughout this entire adventure. " \
+    "Thank you for believing in me, standing beside me, and helping make " \
+    "this journey possible. You mean everything to me, and I love you more " \
+    "than words could ever express!"
 
 #define LANG_DONATE \
-    "You can support us by donating or subscribing which helps the " \
-    "development of this project.\n\nThis project is done as a hobby!"
+    "You can support MustardOS by donating or subscribing, which helps " \
+    "keep the project running, from development and new device support " \
+    "to the website, forums, and other community services.\n\nMustardOS " \
+    "is made and maintained as a free time hobby!"
 
 #define LANG_QRCODE "Scan the QR code below to visit the Ko-fi page!"
 
 #define SONG_TITLE   "Supporter Music"
 #define SONG_TRACK   "Embers"
 #define SONG_ARTIST  "???"
-#define SONG_REBOOT  "Press any button to reboot..."
-#define SONG_BLESSED "Have a blessed day..."
+#define SONG_REBOOT  "Please wait while we reboot…"
+#define SONG_BLESSED "Have a blessed day…"
 
 typedef enum {
     BLK_TITLE_BIG,
@@ -1148,6 +1158,11 @@ static void build_reel(void) {
     add_title(g_font_big, LANG_SPECIAL, C_CON, "special");
     add_spacer(sml_gap, "special");
     add_paragraph(LANG_EVERYONE, C_CON, "special");
+    add_spacer(sec_gap, "special");
+
+    add_title(g_font_big, LANG_SHOUTS, C_CON, "special");
+    add_spacer(sml_gap, "special");
+    add_paragraph(LANG_AWESOME, C_CON, "special");
     add_spacer(sec_gap, "special");
 
     add_title(g_font_big, LANG_SUPPORT, C_CON, "special");
