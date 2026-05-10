@@ -3,7 +3,8 @@
 #define STICK_AXE_MAX 32767
 #define STICK_RAD_MIN 80
 #define STICK_RAD_MAX 224
-#define STICK_LBL_GAP 64
+#define STICK_LBL_MIN 76
+#define STICK_LBL_MAX 132
 #define STICK_SQR_RAD 5
 #define STICK_CVS_MAX (STICK_RAD_MAX * 2)
 
@@ -12,6 +13,7 @@ static lv_coord_t stick_deadzone_px;
 static lv_coord_t stick_dot_px;
 static lv_coord_t stick_edge_gap_px;
 static lv_coord_t stick_target_px;
+static lv_coord_t stick_label_gap_px;
 
 lv_obj_t *ui_imgButton;
 
@@ -125,7 +127,7 @@ static void draw_stick_canvas(lv_obj_t *canvas, int16_t x, int16_t y) {
     rect_dsc.bg_opa = LV_OPA_TRANSP;
     rect_dsc.border_width = 2;
     rect_dsc.border_color = ring_col;
-    rect_dsc.border_opa = LV_OPA_40;
+    rect_dsc.border_opa = LV_OPA_30;
     rect_dsc.radius = STICK_SQR_RAD;
     lv_canvas_draw_rect(canvas, 1, 1, (lv_coord_t) (target - 2), (lv_coord_t) (target - 2), &rect_dsc);
 
@@ -140,7 +142,7 @@ static void draw_stick_canvas(lv_obj_t *canvas, int16_t x, int16_t y) {
     lv_draw_line_dsc_t line_dsc;
     lv_draw_line_dsc_init(&line_dsc);
     line_dsc.color = ring_col;
-    line_dsc.opa = LV_OPA_30;
+    line_dsc.opa = LV_OPA_20;
     line_dsc.width = 1;
 
     lv_point_t h_line[] = {
@@ -159,7 +161,8 @@ static void draw_stick_canvas(lv_obj_t *canvas, int16_t x, int16_t y) {
     int inner_pos = centre - deadzone;
 
     lv_draw_rect_dsc_init(&rect_dsc);
-    rect_dsc.bg_opa = LV_OPA_TRANSP;
+    rect_dsc.bg_color = ring_col;
+    rect_dsc.bg_opa = LV_OPA_10;
     rect_dsc.border_width = 1;
     rect_dsc.border_color = ring_col;
     rect_dsc.border_opa = LV_OPA_60;
@@ -167,12 +170,33 @@ static void draw_stick_canvas(lv_obj_t *canvas, int16_t x, int16_t y) {
     lv_canvas_draw_rect(canvas, (lv_coord_t) inner_pos, (lv_coord_t) inner_pos, (lv_coord_t) inner, (lv_coord_t) inner, &rect_dsc);
 
     lv_draw_rect_dsc_init(&rect_dsc);
-    rect_dsc.bg_opa = LV_OPA_TRANSP;
+    rect_dsc.bg_color = ring_col;
+    rect_dsc.bg_opa = LV_OPA_10;
     rect_dsc.border_width = 1;
     rect_dsc.border_color = ring_col;
-    rect_dsc.border_opa = LV_OPA_50;
+    rect_dsc.border_opa = LV_OPA_70;
     rect_dsc.radius = LV_RADIUS_CIRCLE;
     lv_canvas_draw_rect(canvas, (lv_coord_t) inner_pos, (lv_coord_t) inner_pos, (lv_coord_t) inner, (lv_coord_t) inner, &rect_dsc);
+
+    int centre_mark = deadzone / 3;
+    if (centre_mark < 8) centre_mark = 8;
+
+    lv_draw_line_dsc_init(&line_dsc);
+    line_dsc.color = ring_col;
+    line_dsc.opa = LV_OPA_40;
+    line_dsc.width = 1;
+
+    lv_point_t dz_h_line[] = {
+            {(lv_coord_t) (centre - centre_mark), (lv_coord_t) centre},
+            {(lv_coord_t) (centre + centre_mark), (lv_coord_t) centre},
+    };
+    lv_canvas_draw_line(canvas, dz_h_line, 2, &line_dsc);
+
+    lv_point_t dz_v_line[] = {
+            {(lv_coord_t) centre, (lv_coord_t) (centre - centre_mark)},
+            {(lv_coord_t) centre, (lv_coord_t) (centre + centre_mark)},
+    };
+    lv_canvas_draw_line(canvas, dz_v_line, 2, &line_dsc);
 
     int dot_x = centre + axis_to_px(x) - dot / 2;
     int dot_y = centre + axis_to_px(y) - dot / 2;
@@ -238,7 +262,7 @@ static void handle_quit(void) {
 }
 
 static lv_obj_t *create_stick_target(lv_obj_t *parent, lv_align_t align, lv_coord_t x_offset, lv_obj_t **out_canvas, lv_obj_t **out_label, uint8_t *buf) {
-    lv_coord_t panel_h = (lv_coord_t) (stick_target_px + STICK_LBL_GAP);
+    lv_coord_t panel_h = (lv_coord_t) (stick_target_px + stick_label_gap_px);
 
     lv_obj_t *panel = lv_obj_create(parent);
     lv_obj_remove_style_all(panel);
@@ -260,8 +284,8 @@ static lv_obj_t *create_stick_target(lv_obj_t *parent, lv_align_t align, lv_coor
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(label, lv_color_hex(theme.LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(label, theme.LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_align(label, LV_ALIGN_BOTTOM_MID, 0, 8);
-    set_stick_value_label(label, 0, 8);
+    lv_obj_align(label, LV_ALIGN_BOTTOM_MID, 0, 0);
+    set_stick_value_label(label, 0, 0);
 
     *out_canvas = canvas;
     *out_label = label;
@@ -284,13 +308,18 @@ static void init_elements(void) {
     stick_radius_px = (lv_coord_t) radius;
     stick_target_px = (lv_coord_t) (radius * 2);
 
-    int deadzone = radius / 5;
-    if (deadzone < 10) deadzone = 10;
+    int deadzone = radius / 4;
+    if (deadzone < 18) deadzone = 18;
     stick_deadzone_px = (lv_coord_t) deadzone;
 
     int dot = radius / 5;
     if (dot < 14) dot = 14;
     stick_dot_px = (lv_coord_t) dot;
+
+    int label_gap = radius / 2;
+    if (label_gap < STICK_LBL_MIN) label_gap = STICK_LBL_MIN;
+    if (label_gap > STICK_LBL_MAX) label_gap = STICK_LBL_MAX;
+    stick_label_gap_px = (lv_coord_t) label_gap;
 
     int edge_gap = w / 40;
     if (edge_gap < 18) edge_gap = 18;
