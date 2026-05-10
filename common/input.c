@@ -37,6 +37,17 @@ static volatile uint64_t held = 0;
 // Suppress any input during screensaver runs
 static volatile uint32_t suppress_until_tick = 0;
 
+// Latest raw stick positions, cached from SDL_CONTROLLERAXISMOTION events.
+// Range matches AXIS_MAX (int16_t [-32768, 32767])
+static volatile int16_t raw_ls_x = 0;
+static volatile int16_t raw_ls_y = 0;
+static volatile int16_t raw_rs_x = 0;
+static volatile int16_t raw_rs_y = 0;
+
+static uint8_t controller_axis_ready[SDL_CONTROLLER_AXIS_MAX];
+static uint32_t controller_axis_log_mask = 0;
+static uint32_t raw_axis_log_mask = 0;
+
 static SDL_GameController *controller = NULL;
 static SDL_Joystick *joystick = NULL;
 static SDL_JoystickID active_instance = -1;
@@ -243,18 +254,133 @@ static void process_sdl_joy_button(uint8_t button, int down) {
     pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
 }
 
-static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
-    if (input_is_suppressed() || axis >= SDL_CONTROLLER_AXIS_MAX) return;
+static inline int axis_magnitude(int16_t value) {
+    return value < 0 ? -(int) value : (int) value;
+}
 
-    axis_map_entry m = axis_map[axis];
+static void log_axis_once(const char *source, uint8_t axis, int16_t value, uint32_t *mask) {
+    if (axis >= 32) return;
+    if (*mask & (UINT32_C(1) << axis)) return;
+    if (axis_magnitude(value) < 4096) return;
 
-    if (m.pos == MUX_INPUT_COUNT && m.neg == MUX_INPUT_COUNT) {
-        LOG_DEBUG("input", "Unmapped axis %d", axis);
-        return;
+    *mask |= UINT32_C(1) << axis;
+
+    LOG_INFO("input", "%s axis %u active: %d", source, axis, value);
+}
+
+static inline void reset_raw_analog(void) {
+    raw_ls_x = 0;
+    raw_ls_y = 0;
+    raw_rs_x = 0;
+    raw_rs_y = 0;
+
+    for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; i++) {
+        controller_axis_ready[i] = 0;
     }
 
+    controller_axis_log_mask = 0;
+    raw_axis_log_mask = 0;
+}
+
+static inline void cache_controller_axis(SDL_GameControllerAxis axis, int16_t value) {
+    switch (axis) {
+        case SDL_CONTROLLER_AXIS_LEFTX:
+            raw_ls_x = value;
+            break;
+        case SDL_CONTROLLER_AXIS_LEFTY:
+            raw_ls_y = value;
+            break;
+        case SDL_CONTROLLER_AXIS_RIGHTX:
+            raw_rs_x = value;
+            break;
+        case SDL_CONTROLLER_AXIS_RIGHTY:
+            raw_rs_y = value;
+            break;
+        default:
+            break;
+    }
+}
+
+static int raw_axis_to_controller_axis(uint8_t axis, SDL_GameControllerAxis *out_axis) {
+    switch (axis) {
+        case 0:
+            *out_axis = SDL_CONTROLLER_AXIS_LEFTX;
+            return 1;
+        case 1:
+            *out_axis = SDL_CONTROLLER_AXIS_LEFTY;
+            return 1;
+        case 2:
+            *out_axis = SDL_CONTROLLER_AXIS_RIGHTX;
+            return 1;
+        case 3:
+            *out_axis = SDL_CONTROLLER_AXIS_RIGHTY;
+            return 1;
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+static axis_map_entry raw_joystick_axis_map(uint8_t axis) {
+    axis_map_entry m = {
+            .neg = MUX_INPUT_COUNT,
+            .pos = MUX_INPUT_COUNT,
+    };
+
+    switch (axis) {
+        case 0:
+            m.neg = MUX_INPUT_LS_LEFT;
+            m.pos = MUX_INPUT_LS_RIGHT;
+            break;
+        case 1:
+            m.neg = MUX_INPUT_LS_UP;
+            m.pos = MUX_INPUT_LS_DOWN;
+            break;
+        case 2:
+            m.neg = MUX_INPUT_RS_LEFT;
+            m.pos = MUX_INPUT_RS_RIGHT;
+            break;
+        case 3:
+            m.neg = MUX_INPUT_RS_UP;
+            m.pos = MUX_INPUT_RS_DOWN;
+            break;
+        default:
+            break;
+    }
+
+    return m;
+}
+
+static inline void cache_raw_joystick_axis(uint8_t axis, int16_t value) {
+    switch (axis) {
+        case 0:
+            raw_ls_x = value;
+            break;
+        case 1:
+            raw_ls_y = value;
+            break;
+        case 2:
+            raw_rs_x = value;
+            break;
+        case 3:
+            raw_rs_y = value;
+            break;
+        default:
+            break;
+    }
+}
+
+static void apply_axis_motion(axis_map_entry m, int16_t value) {
+    if (m.pos == MUX_INPUT_COUNT && m.neg == MUX_INPUT_COUNT) return;
+
     if (m.neg == MUX_INPUT_COUNT) {
-        pressed = (value >= TRIGGER_THRESHOLD) ? (pressed | BIT(m.pos)) : (pressed & ~BIT(m.pos));
+        if (value >= TRIGGER_THRESHOLD) {
+            pressed |= BIT(m.pos);
+        } else {
+            pressed &= ~BIT(m.pos);
+        }
+
         return;
     }
 
@@ -292,6 +418,34 @@ static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
     }
 
     apply_dir_pair(neg, pos, direction);
+}
+
+static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
+    if (input_is_suppressed() || axis >= SDL_CONTROLLER_AXIS_MAX) return;
+
+    controller_axis_ready[axis] = 1;
+
+    log_axis_once("Controller", (uint8_t) axis, value, &controller_axis_log_mask);
+
+    cache_controller_axis(axis, value);
+    apply_axis_motion(axis_map[axis], value);
+}
+
+static void process_sdl_joy_axis(uint8_t axis, int16_t value) {
+    if (input_is_suppressed()) return;
+
+    SDL_GameControllerAxis controller_axis;
+
+    if (controller &&
+        raw_axis_to_controller_axis(axis, &controller_axis) &&
+        controller_axis_ready[controller_axis]) {
+        return;
+    }
+
+    log_axis_once("Raw joystick", axis, value, &raw_axis_log_mask);
+
+    cache_raw_joystick_axis(axis, value);
+    apply_axis_motion(raw_joystick_axis_map(axis), value);
 }
 
 static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEvent *key, int down) {
@@ -351,6 +505,7 @@ static void open_input_device(void) {
 
     const char *video_driver = SDL_GetCurrentVideoDriver();
     int num_joy = SDL_NumJoysticks();
+
     if (num_joy <= 0) {
         uint32_t now = (uint32_t) mux_tick();
 
@@ -392,8 +547,14 @@ static void open_input_device(void) {
         const char *name = SDL_GameControllerName(controller);
         LOG_INFO("input", "Controller opened: %s", name ? name : "unknown");
         LOG_INFO("input", "Controller GUID: %s", guid_str);
+        LOG_INFO("input", "Controller raw axes: %d", SDL_JoystickNumAxes(joystick));
+        LOG_INFO("input", "Controller raw buttons: %d", SDL_JoystickNumButtons(joystick));
 
-        //if (mapping) LOG_DEBUG("input", "Active mapping: %s", SDL_GameControllerMapping(controller));
+        char *mapping = SDL_GameControllerMapping(controller);
+        if (mapping) {
+            LOG_DEBUG("input", "Active mapping: %s", mapping);
+            SDL_free(mapping);
+        }
 
         return;
     }
@@ -418,6 +579,10 @@ static void open_input_device(void) {
         const char *name = SDL_JoystickName(joystick);
         LOG_WARN("input", "Using raw joystick fallback: %s", name ? name : "unknown");
         LOG_DEBUG("input", "Raw joystick GUID: %s", guid_str);
+        LOG_INFO("input", "Raw joystick axes: %d", SDL_JoystickNumAxes(joystick));
+        LOG_INFO("input", "Raw joystick buttons: %d", SDL_JoystickNumButtons(joystick));
+
+        if (SDL_JoystickNumAxes(joystick) < 2) LOG_WARN("input", "Raw joystick fallback has no usable stick axes");
 
         return;
     }
@@ -692,6 +857,8 @@ void mux_input_task(const mux_input_options *opts) {
     held = 0;
     suppress_until_tick = 0;
 
+    reset_raw_analog();
+
     swap_axis = opts->swap_axis;
     ((mux_input_options *) opts)->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
 
@@ -741,6 +908,11 @@ void mux_input_task(const mux_input_options *opts) {
                         process_sdl_joy_button(ev.jbutton.button, 0);
                     }
                     break;
+                case SDL_JOYAXISMOTION:
+                    if (joystick && ev.jaxis.which == active_instance) {
+                        process_sdl_joy_axis(ev.jaxis.axis, ev.jaxis.value);
+                    }
+                    break;
                 case SDL_CONTROLLERDEVICEADDED:
                 case SDL_JOYDEVICEADDED:
                     if (!controller && !joystick) {
@@ -755,6 +927,7 @@ void mux_input_task(const mux_input_options *opts) {
                         close_input_device();
                         pressed = 0;
                         held = 0;
+                        reset_raw_analog();
                         next_retry_tick = 0;
                         open_input_device();
                     }
@@ -765,6 +938,7 @@ void mux_input_task(const mux_input_options *opts) {
                         close_input_device();
                         pressed = 0;
                         held = 0;
+                        reset_raw_analog();
                         next_retry_tick = 0;
                         open_input_device();
                     }
@@ -801,7 +975,7 @@ void mux_input_task(const mux_input_options *opts) {
         handle_inputs(opts);
         handle_combos(opts);
 
-        // Invoke "idle" handler to run extra logic every iteration of the event loop.
+        if (opts->analog_handler) opts->analog_handler(raw_ls_x, raw_ls_y, raw_rs_x, raw_rs_y);
         if (opts->idle_handler) opts->idle_handler();
 
         // Inputs pressed at the end of one iteration are held at the start of the next.

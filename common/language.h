@@ -1320,7 +1320,6 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char ANY[MAX_BUFFER_SIZE];
         char QUIT[MAX_BUFFER_SIZE];
         char QUIT_ALT[MAX_BUFFER_SIZE];
     } MUXTESTER;

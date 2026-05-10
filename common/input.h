@@ -90,6 +90,8 @@ typedef void (*mux_input_combo_handler)(int, mux_input_action);
 
 typedef void (*mux_idle_handler)(void);
 
+typedef void (*mux_input_analog_handler)(int16_t ls_x, int16_t ls_y, int16_t rs_x, int16_t rs_y);
+
 typedef void (*key_event_callback)(struct input_event);
 
 // Configuration for a multi-input combo.
@@ -140,6 +142,9 @@ typedef struct {
     mux_input_combo_handler combo_handler;
 
     mux_idle_handler idle_handler;
+
+    // This is optional.  If set, called once per poll cycle with raw stick positioning
+    mux_input_analog_handler analog_handler;
 
     mux_input_combo combo[MUX_INPUT_COMBO_COUNT];
     int combo_count;
