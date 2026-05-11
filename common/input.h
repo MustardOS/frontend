@@ -90,6 +90,9 @@ typedef void (*mux_input_combo_handler)(int, mux_input_action);
 
 typedef void (*mux_idle_handler)(void);
 
+// Callback function invoked once per input poll cycle with the current raw stick positions.
+// Each axis is in the SDL int16_t range [-32768, 32767]. +Y points DOWN (screen-space) so
+// values can be added directly to coordinates without inversion.
 typedef void (*mux_input_analog_handler)(int16_t ls_x, int16_t ls_y, int16_t rs_x, int16_t rs_y);
 
 typedef void (*key_event_callback)(struct input_event);

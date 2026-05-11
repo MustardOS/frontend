@@ -39,10 +39,10 @@ static volatile uint32_t suppress_until_tick = 0;
 
 // Latest raw stick positions, cached from SDL_CONTROLLERAXISMOTION events.
 // Range matches AXIS_MAX (int16_t [-32768, 32767])
-static volatile int16_t raw_ls_x = 0;
-static volatile int16_t raw_ls_y = 0;
-static volatile int16_t raw_rs_x = 0;
-static volatile int16_t raw_rs_y = 0;
+static int16_t raw_ls_x = 0;
+static int16_t raw_ls_y = 0;
+static int16_t raw_rs_x = 0;
+static int16_t raw_rs_y = 0;
 
 static uint8_t controller_axis_ready[SDL_CONTROLLER_AXIS_MAX];
 static uint32_t controller_axis_log_mask = 0;
@@ -421,9 +421,10 @@ static void apply_axis_motion(axis_map_entry m, int16_t value) {
 }
 
 static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
-    if (input_is_suppressed() || axis >= SDL_CONTROLLER_AXIS_MAX) return;
+    if (axis >= SDL_CONTROLLER_AXIS_MAX) return;
 
     controller_axis_ready[axis] = 1;
+    if (input_is_suppressed()) return;
 
     log_axis_once("Controller", (uint8_t) axis, value, &controller_axis_log_mask);
 
@@ -438,6 +439,7 @@ static void process_sdl_joy_axis(uint8_t axis, int16_t value) {
 
     if (controller &&
         raw_axis_to_controller_axis(axis, &controller_axis) &&
+        controller_axis < SDL_CONTROLLER_AXIS_MAX &&
         controller_axis_ready[controller_axis]) {
         return;
     }

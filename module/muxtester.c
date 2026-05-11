@@ -1,13 +1,13 @@
 #include "muxshare.h"
 
 #define STICK_AXE_MAX 32767
-#define STICK_RAD_MIN 80
-#define STICK_RAD_MAX 224
+#define STICK_RAD_MIN 56
+#define STICK_RAD_MAX 192
 #define STICK_LBL_MIN 64
 #define STICK_LBL_MAX 256
-#define STICK_SQR_RAD 5
 #define STICK_TRL_NUM 8
-#define STICK_CVS_MAX (STICK_RAD_MAX * 2)
+
+#define STICK_REDRAW_DELTA 128
 
 #define STICK_OPA_OUT_SQR 20
 #define STICK_OPA_OUT_CIR 90
@@ -17,15 +17,23 @@
 #define STICK_OPA_DZ_CIR  70
 #define STICK_OPA_CENTRE  45
 
+#define STICK_TRAIL_OPA_BASE  24
+#define STICK_TRAIL_OPA_RANGE 96
+
+#define STICK_PEAK_MIN_PCT 5
+#define STICK_PEAK_MARKER  6
+
 typedef struct {
     int16_t x;
     int16_t y;
 } stick_sample_t;
 
 typedef struct {
-    lv_obj_t *canvas;
+    lv_obj_t *static_canvas;
+    lv_obj_t *dynamic_canvas;
     lv_obj_t *label;
-    uint8_t *buf;
+    uint8_t *static_buf;
+    uint8_t *dynamic_buf;
 
     int16_t x;
     int16_t y;
@@ -44,6 +52,7 @@ static lv_coord_t stick_edge_gap_px;
 static lv_coord_t stick_target_px;
 static lv_coord_t stick_label_gap_px;
 static lv_coord_t stick_panel_y_offset_px;
+static lv_coord_t stick_square_radius_px;
 
 lv_obj_t *ui_imgButton;
 
@@ -51,16 +60,8 @@ static lv_obj_t *ui_pnlInputPreview = NULL;
 static lv_obj_t *ui_pnlStickL = NULL;
 static lv_obj_t *ui_pnlStickR = NULL;
 
-static LV_ATTRIBUTE_MEM_ALIGN uint8_t stick_buf_l[LV_CANVAS_BUF_SIZE_TRUE_COLOR_ALPHA(STICK_CVS_MAX, STICK_CVS_MAX)];
-static LV_ATTRIBUTE_MEM_ALIGN uint8_t stick_buf_r[LV_CANVAS_BUF_SIZE_TRUE_COLOR_ALPHA(STICK_CVS_MAX, STICK_CVS_MAX)];
-
-static stick_state_t stick_l = {
-        .buf = stick_buf_l,
-};
-
-static stick_state_t stick_r = {
-        .buf = stick_buf_r,
-};
+static stick_state_t stick_l = {0};
+static stick_state_t stick_r = {0};
 
 static int menu_icon_active = 0;
 
@@ -182,19 +183,19 @@ static const char *stick_state_text(int16_t x, int16_t y) {
     int dz = stick_deadzone_raw();
     int mag = stick_magnitude_raw(x, y);
 
-    if (mag <= dz / 3) return "CENTRE";
-    if (mag <= dz) return "DEADZONE";
+    if (mag <= dz / 3) return TRS("CENTRE");
+    if (mag <= dz) return TRS("DEADZONE");
 
-    if (ax > dz * 2 && ay <= ax / 8) return "SNAP-X";
-    if (ay > dz * 2 && ax <= ay / 8) return "SNAP-Y";
+    if (ax > dz * 2 && ay <= ax / 8) return TRS("SNAP-X");
+    if (ay > dz * 2 && ax <= ay / 8) return TRS("SNAP-Y");
 
     int max_axis = ax > ay ? ax : ay;
     int diff = ax > ay ? ax - ay : ay - ax;
 
-    if (ax > dz && ay > dz && diff <= max_axis / 5) return "DIAG";
-    if (max_axis >= (STICK_AXE_MAX * 95) / 100) return "EDGE";
+    if (ax > dz && ay > dz && diff <= max_axis / 5) return TRS("DIAG");
+    if (max_axis >= (STICK_AXE_MAX * 95) / 100) return TRS("EDGE");
 
-    return "ACTIVE";
+    return TRS("ACTIVE");
 }
 
 static void reset_stick_state(stick_state_t *stick) {
@@ -256,17 +257,6 @@ static void clear_icon(void) {
     if (ui_pnlInputPreview) lv_obj_add_flag(ui_pnlInputPreview, LV_OBJ_FLAG_HIDDEN);
 }
 
-static void handle_input(mux_input_type type, mux_input_action action) {
-    if (action == MUX_INPUT_PRESS) {
-        if (!glyph[type]) return;
-
-        lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-        show_icon(glyph[type]);
-    } else if (action == MUX_INPUT_RELEASE) {
-        if (glyph[type]) clear_icon();
-    }
-}
-
 static void draw_outer_guides(lv_obj_t *canvas, int target, lv_color_t ring_col) {
     lv_draw_rect_dsc_t rect_dsc;
 
@@ -275,7 +265,7 @@ static void draw_outer_guides(lv_obj_t *canvas, int target, lv_color_t ring_col)
     rect_dsc.border_width = 2;
     rect_dsc.border_color = ring_col;
     rect_dsc.border_opa = STICK_OPA_OUT_SQR;
-    rect_dsc.radius = STICK_SQR_RAD;
+    rect_dsc.radius = stick_square_radius_px;
     lv_canvas_draw_rect(canvas, 1, 1, (lv_coord_t) (target - 2), (lv_coord_t) (target - 2), &rect_dsc);
 
     lv_draw_rect_dsc_init(&rect_dsc);
@@ -319,7 +309,7 @@ static void draw_deadzone_guides(lv_obj_t *canvas, int centre, int deadzone, lv_
     rect_dsc.border_width = 1;
     rect_dsc.border_color = ring_col;
     rect_dsc.border_opa = STICK_OPA_DZ_SQR;
-    rect_dsc.radius = STICK_SQR_RAD;
+    rect_dsc.radius = stick_square_radius_px;
     lv_canvas_draw_rect(canvas, (lv_coord_t) inner_pos, (lv_coord_t) inner_pos, (lv_coord_t) inner, (lv_coord_t) inner, &rect_dsc);
 
     lv_draw_rect_dsc_init(&rect_dsc);
@@ -353,6 +343,26 @@ static void draw_deadzone_guides(lv_obj_t *canvas, int centre, int deadzone, lv_
     lv_canvas_draw_line(canvas, dz_v_line, 2, &line_dsc);
 }
 
+static void draw_stick_static(stick_state_t *stick) {
+    if (!stick->static_canvas) return;
+
+    int target = (int) stick_target_px;
+    int deadzone = (int) stick_deadzone_px;
+    int centre = target / 2;
+
+    if (target <= 0 || deadzone <= 0) return;
+
+    lv_color_t ring_col = lv_color_hex(theme.MESSAGE.BORDER);
+
+    lv_canvas_fill_bg(stick->static_canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
+
+    draw_outer_guides(stick->static_canvas, target, ring_col);
+    draw_stick_crosshair(stick->static_canvas, target, centre, ring_col);
+    draw_deadzone_guides(stick->static_canvas, centre, deadzone, ring_col);
+
+    lv_obj_invalidate(stick->static_canvas);
+}
+
 static void draw_stick_trail(lv_obj_t *canvas, const stick_state_t *stick, int centre, int dot, lv_color_t dot_col) {
     if (stick->trail_count <= 1) return;
 
@@ -363,7 +373,7 @@ static void draw_stick_trail(lv_obj_t *canvas, const stick_state_t *stick, int c
 
     for (int i = 0; i < stick->trail_count; i++) {
         int idx = (start + i) % STICK_TRL_NUM;
-        int opa = 12 + ((i + 1) * 48) / stick->trail_count;
+        int opa = STICK_TRAIL_OPA_BASE + ((i + 1) * STICK_TRAIL_OPA_RANGE) / stick->trail_count;
 
         int x = centre + axis_to_px(stick->trail[idx].x) - trail_dot / 2;
         int y = centre + axis_to_px(stick->trail[idx].y) - trail_dot / 2;
@@ -377,6 +387,39 @@ static void draw_stick_trail(lv_obj_t *canvas, const stick_state_t *stick, int c
         rect_dsc.radius = LV_RADIUS_CIRCLE;
 
         lv_canvas_draw_rect(canvas, (lv_coord_t) x, (lv_coord_t) y, (lv_coord_t) trail_dot, (lv_coord_t) trail_dot, &rect_dsc);
+    }
+}
+
+static void draw_peak_markers(lv_obj_t *canvas, const stick_state_t *stick, int centre, int radius, lv_color_t peak_col) {
+    if (stick->peak_x_pct < STICK_PEAK_MIN_PCT && stick->peak_y_pct < STICK_PEAK_MIN_PCT) return;
+
+    lv_draw_rect_dsc_t marker;
+    lv_draw_rect_dsc_init(&marker);
+
+    marker.bg_color = peak_col;
+    marker.bg_opa = LV_OPA_60;
+    marker.border_width = 0;
+    marker.radius = LV_RADIUS_CIRCLE;
+
+    int sz = STICK_PEAK_MARKER;
+    int half = sz / 2;
+
+    if (stick->peak_x_pct >= STICK_PEAK_MIN_PCT) {
+        int px = centre + (radius * stick->peak_x_pct) / 100 - half;
+        int py = centre - half;
+        lv_canvas_draw_rect(canvas, (lv_coord_t) px, (lv_coord_t) py, (lv_coord_t) sz, (lv_coord_t) sz, &marker);
+
+        int px_neg = centre - (radius * stick->peak_x_pct) / 100 - half;
+        lv_canvas_draw_rect(canvas, (lv_coord_t) px_neg, (lv_coord_t) py, (lv_coord_t) sz, (lv_coord_t) sz, &marker);
+    }
+
+    if (stick->peak_y_pct >= STICK_PEAK_MIN_PCT) {
+        int px = centre - half;
+        int py = centre + (radius * stick->peak_y_pct) / 100 - half;
+        lv_canvas_draw_rect(canvas, (lv_coord_t) px, (lv_coord_t) py, (lv_coord_t) sz, (lv_coord_t) sz, &marker);
+
+        int py_neg = centre - (radius * stick->peak_y_pct) / 100 - half;
+        lv_canvas_draw_rect(canvas, (lv_coord_t) px, (lv_coord_t) py_neg, (lv_coord_t) sz, (lv_coord_t) sz, &marker);
     }
 }
 
@@ -401,47 +444,53 @@ static void draw_stick_dot(lv_obj_t *canvas, int target, int centre, int dot, in
     lv_canvas_draw_rect(canvas, (lv_coord_t) dot_x, (lv_coord_t) dot_y, (lv_coord_t) dot, (lv_coord_t) dot, &rect_dsc);
 }
 
-static void draw_stick_canvas(stick_state_t *stick) {
-    if (!stick->canvas) return;
+static void draw_stick_dynamic(stick_state_t *stick) {
+    if (!stick->dynamic_canvas) return;
 
     int target = (int) stick_target_px;
     int radius = (int) stick_radius_px;
-    int deadzone = (int) stick_deadzone_px;
     int dot = (int) stick_dot_px;
     int centre = target / 2;
 
-    if (target <= 0 || radius <= 0 || deadzone <= 0 || dot <= 0) return;
+    if (target <= 0 || radius <= 0 || dot <= 0) return;
 
-    lv_color_t ring_col = lv_color_hex(theme.MESSAGE.BORDER);
     lv_color_t dot_col = lv_color_hex(theme.LIST_DEFAULT.TEXT);
+    lv_color_t peak_col = lv_color_hex(theme.MESSAGE.BORDER);
 
-    lv_canvas_fill_bg(stick->canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
+    lv_canvas_fill_bg(stick->dynamic_canvas, lv_color_hex(0x000000), LV_OPA_TRANSP);
 
-    draw_outer_guides(stick->canvas, target, ring_col);
-    draw_stick_crosshair(stick->canvas, target, centre, ring_col);
-    draw_deadzone_guides(stick->canvas, centre, deadzone, ring_col);
-    draw_stick_trail(stick->canvas, stick, centre, dot, dot_col);
-    draw_stick_dot(stick->canvas, target, centre, dot, stick->x, stick->y, dot_col);
+    draw_stick_trail(stick->dynamic_canvas, stick, centre, dot, dot_col);
+    draw_peak_markers(stick->dynamic_canvas, stick, centre, radius, peak_col);
+    draw_stick_dot(stick->dynamic_canvas, target, centre, dot, stick->x, stick->y, dot_col);
 
-    lv_obj_invalidate(stick->canvas);
+    lv_obj_invalidate(stick->dynamic_canvas);
 }
 
 static void set_stick_value_label(stick_state_t *stick) {
     if (!stick->label) return;
 
-    char value[128];
-    snprintf(value, sizeof(value), "X:%6d %4d%%\nY:%6d %4d%%\nM:%3d%% %s",
+    char value[160];
+    snprintf(value, sizeof(value),
+             "X:%6d %4d%%\n"
+             "Y:%6d %4d%%\n"
+             "M:%3d%% %s\n"
+             "PEAK X:%3d%% Y:%3d%%",
              stick->x, axis_pct_signed(stick->x),
              stick->y, axis_pct_signed(stick->y),
              stick_magnitude_pct(stick->x, stick->y),
-             stick_state_text(stick->x, stick->y));
+             stick_state_text(stick->x, stick->y),
+             stick->peak_x_pct, stick->peak_y_pct);
 
     lv_label_set_text(stick->label, value);
 }
 
 static void update_stick_canvas(stick_state_t *stick, int16_t x, int16_t y) {
-    if (!stick || !stick->canvas) return;
-    if (stick->x == x && stick->y == y) return;
+    if (!stick || !stick->dynamic_canvas) return;
+
+    int dx = (int) x - (int) stick->x;
+    int dy = (int) y - (int) stick->y;
+
+    if (dx > -STICK_REDRAW_DELTA && dx < STICK_REDRAW_DELTA && dy > -STICK_REDRAW_DELTA && dy < STICK_REDRAW_DELTA) return;
 
     stick->x = x;
     stick->y = y;
@@ -449,8 +498,19 @@ static void update_stick_canvas(stick_state_t *stick, int16_t x, int16_t y) {
     update_stick_peak(stick);
     push_stick_sample(stick);
 
-    draw_stick_canvas(stick);
+    draw_stick_dynamic(stick);
     set_stick_value_label(stick);
+}
+
+static void handle_input(mux_input_type type, mux_input_action action) {
+    if (action == MUX_INPUT_PRESS) {
+        if (!glyph[type]) return;
+
+        lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+        show_icon(glyph[type]);
+    } else if (action == MUX_INPUT_RELEASE) {
+        if (glyph[type]) clear_icon();
+    }
 }
 
 static void handle_analog(int16_t ls_x, int16_t ls_y, int16_t rs_x, int16_t rs_y) {
@@ -488,7 +548,7 @@ static void create_input_preview_panel(lv_obj_t *parent, int shorter) {
     lv_obj_remove_style_all(ui_pnlInputPreview);
     lv_obj_set_size(ui_pnlInputPreview, (lv_coord_t) preview, (lv_coord_t) preview);
     lv_obj_align(ui_pnlInputPreview, LV_ALIGN_CENTER, 0, -32);
-    lv_obj_set_style_radius(ui_pnlInputPreview, STICK_SQR_RAD * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(ui_pnlInputPreview, (lv_coord_t) (stick_square_radius_px * 2), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlInputPreview, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlInputPreview, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlInputPreview, 0, MU_OBJ_MAIN_DEFAULT);
@@ -498,8 +558,41 @@ static void create_input_preview_panel(lv_obj_t *parent, int shorter) {
     lv_obj_add_flag(ui_pnlInputPreview, LV_OBJ_FLAG_HIDDEN);
 }
 
+static int alloc_stick_buffers(stick_state_t *stick) {
+    size_t buf_size = (size_t)LV_CANVAS_BUF_SIZE_TRUE_COLOR_ALPHA(stick_target_px, stick_target_px);
+
+    stick->static_buf = lv_mem_alloc(buf_size);
+    stick->dynamic_buf = lv_mem_alloc(buf_size);
+
+    if (!stick->static_buf || !stick->dynamic_buf) {
+        if (stick->static_buf) {
+            lv_mem_free(stick->static_buf);
+            stick->static_buf = NULL;
+        }
+        if (stick->dynamic_buf) {
+            lv_mem_free(stick->dynamic_buf);
+            stick->dynamic_buf = NULL;
+        }
+        return -1;
+    }
+
+    return 0;
+}
+
+static void free_stick_buffers(stick_state_t *stick) {
+    if (stick->static_buf) {
+        lv_mem_free(stick->static_buf);
+        stick->static_buf = NULL;
+    }
+    if (stick->dynamic_buf) {
+        lv_mem_free(stick->dynamic_buf);
+        stick->dynamic_buf = NULL;
+    }
+}
+
 static lv_obj_t *create_stick_target(lv_obj_t *parent, lv_align_t align, lv_coord_t x_offset, stick_state_t *stick) {
     if (!stick) return NULL;
+    if (alloc_stick_buffers(stick) != 0) return NULL;
 
     lv_coord_t panel_h = (lv_coord_t) (stick_target_px + stick_label_gap_px);
 
@@ -511,22 +604,30 @@ static lv_obj_t *create_stick_target(lv_obj_t *parent, lv_align_t align, lv_coor
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_CLICKABLE);
 
-    stick->canvas = lv_canvas_create(panel);
-    lv_canvas_set_buffer(stick->canvas, stick->buf, stick_target_px, stick_target_px, LV_IMG_CF_TRUE_COLOR_ALPHA);
-    lv_obj_align(stick->canvas, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_clear_flag(stick->canvas, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_clear_flag(stick->canvas, LV_OBJ_FLAG_CLICKABLE);
+    stick->static_canvas = lv_canvas_create(panel);
+    lv_canvas_set_buffer(stick->static_canvas, stick->static_buf, stick_target_px, stick_target_px, LV_IMG_CF_TRUE_COLOR_ALPHA);
+    lv_obj_align(stick->static_canvas, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_clear_flag(stick->static_canvas, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(stick->static_canvas, LV_OBJ_FLAG_CLICKABLE);
+
+    stick->dynamic_canvas = lv_canvas_create(panel);
+    lv_canvas_set_buffer(stick->dynamic_canvas, stick->dynamic_buf, stick_target_px, stick_target_px, LV_IMG_CF_TRUE_COLOR_ALPHA);
+    lv_obj_align(stick->dynamic_canvas, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_clear_flag(stick->dynamic_canvas, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(stick->dynamic_canvas, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_move_foreground(stick->dynamic_canvas);
 
     stick->label = lv_label_create(panel);
     lv_obj_set_width(stick->label, stick_target_px);
-    lv_label_set_long_mode(stick->label, LV_LABEL_LONG_CLIP);
+    lv_label_set_long_mode(stick->label, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_align(stick->label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(stick->label, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(stick->label, lv_color_hex(theme.LIST_DEFAULT.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(stick->label, theme.LIST_DEFAULT.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_align(stick->label, LV_ALIGN_BOTTOM_MID, 0, 0);
 
-    draw_stick_canvas(stick);
+    draw_stick_static(stick);
+    draw_stick_dynamic(stick);
     set_stick_value_label(stick);
 
     return panel;
@@ -535,18 +636,26 @@ static lv_obj_t *create_stick_target(lv_obj_t *parent, lv_align_t align, lv_coor
 static void init_elements(void) {
     header_and_footer_setup();
 
-    int w = device.MUX.WIDTH;
-    int h = device.MUX.HEIGHT;
+    struct screen_dimension dims = get_device_dimensions();
+    int w = dims.WIDTH;
+    int h = dims.HEIGHT;
     int shorter = (w < h) ? w : h;
 
-    int radius = shorter / 5;
+    int chrome_reserve = (h / 8) * 2;
+    int label_reserve = STICK_LBL_MIN;
+    int max_target_h = h - chrome_reserve - label_reserve;
+    int radius_from_h = max_target_h / 2;
+    int radius_from_w = shorter / 5;
+
+    int radius = (radius_from_h < radius_from_w) ? radius_from_h : radius_from_w;
+    radius = clamp_int(radius, STICK_RAD_MIN, STICK_RAD_MAX);
+
     stick_panel_y_offset_px = -16;
 
-    if (radius < STICK_RAD_MIN) radius = STICK_RAD_MIN;
-    if (radius > STICK_RAD_MAX) radius = STICK_RAD_MAX;
     stick_radius_px = (lv_coord_t) radius;
     stick_target_px = (lv_coord_t) (radius * 2);
 
+    stick_square_radius_px = (lv_coord_t) clamp_int(radius / 12, 4, 16);
     stick_label_gap_px = (lv_coord_t) clamp_int((radius * 3) / 2, STICK_LBL_MIN, STICK_LBL_MAX);
 
     int deadzone = radius / 4;
@@ -614,8 +723,7 @@ int muxtester_main(void) {
             .idle_handler = handle_idle,
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) |
-                                         BIT(config.SETTINGS.ADVANCED.SWAP ? MUX_INPUT_A : MUX_INPUT_B),
+                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) | BIT(config.SETTINGS.ADVANCED.SWAP ? MUX_INPUT_A : MUX_INPUT_B),
                             .press_handler = handle_quit,
                             .hold_handler = handle_quit,
                     }
@@ -629,6 +737,9 @@ int muxtester_main(void) {
     input_opts.analog_handler = device.BOARD.HASSTICK ? handle_analog : NULL;
 
     mux_input_task(&input_opts);
+
+    free_stick_buffers(&stick_l);
+    free_stick_buffers(&stick_r);
 
     return 0;
 }
