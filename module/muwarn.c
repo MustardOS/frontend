@@ -13,6 +13,7 @@
 #define FONT_FILE SHARE_DIR "font/mucredits.ttf"
 
 #define REF_H 480
+#define REF_W 640
 
 #define PAGE_PAD_FRAC   0.06f
 #define WARN_TIME_SCALE 2.25f
@@ -36,6 +37,11 @@
 #define BG_DARKEN_ALPHA  45
 #define TXT_SHADOW_ALPHA 160
 
+#define FONT_BIG_PT 30
+#define FONT_MED_PT 22
+
+#define FONT_MED_MIN_PT 10
+
 #define LANG_TITLE "MustardOS Disclaimer"
 
 #define LANG_BODY \
@@ -55,6 +61,7 @@ static SDL_Renderer *g_renderer = NULL;
 static int g_screen_w = 0;
 static int g_screen_h = 0;
 static float g_scale = 1.0f;
+static float g_font_scale = 1.0f;  /* like g_scale but capped by width too */
 
 static TTF_Font *g_font_big = NULL;
 static TTF_Font *g_font_med = NULL;
@@ -307,6 +314,30 @@ static SDL_Texture *render_text_wrapped(TTF_Font *font, const char *text, SDL_Co
     return t;
 }
 
+static int layout_title_gap(void) {
+    return sx(14);
+}
+
+static int layout_bar_gap(void) {
+    return sx(28);
+}
+
+static int layout_bar_h(void) {
+    return sx(10);
+}
+
+static int layout_v_margin(void) {
+    return sx(20);
+}
+
+static int layout_chrome_h(void) {
+    return g_tex_title_h + layout_title_gap() + layout_bar_gap() + layout_bar_h();
+}
+
+static int layout_avail_h(void) {
+    return g_screen_h - 2 * layout_v_margin();
+}
+
 static void build_textures(void) {
     SDL_Color C_TITLE = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
     SDL_Color C_BODY = {COL_BODY_R, COL_BODY_G, COL_BODY_B, 255};
@@ -323,18 +354,40 @@ static void build_textures(void) {
     g_tex_body = render_text_wrapped(g_font_med, LANG_BODY, C_BODY, wrap, &g_tex_body_w, &g_tex_body_h);
 
     if (!g_tex_title || !g_tex_body) die("build_textures");
+
+    int body_pt = (int) lroundf((float) FONT_MED_PT * g_font_scale);
+    int min_pt = (int) lroundf((float) FONT_MED_MIN_PT * g_font_scale);
+    if (min_pt < FONT_MED_MIN_PT) min_pt = FONT_MED_MIN_PT;
+    int avail_h = layout_avail_h();
+
+    while (body_pt > min_pt) {
+        if (g_tex_body_h + layout_chrome_h() <= avail_h) break;
+
+        body_pt -= 1;
+
+        TTF_CloseFont(g_font_med);
+        g_font_med = TTF_OpenFont(FONT_FILE, body_pt);
+        if (!g_font_med) die("TTF_OpenFont (shrink)");
+
+        SDL_DestroyTexture(g_tex_body);
+        g_tex_body = render_text_wrapped(g_font_med, LANG_BODY, C_BODY, wrap, &g_tex_body_w, &g_tex_body_h);
+        if (!g_tex_body) die("build_textures (shrink)");
+    }
 }
 
 static void build_layout(void) {
-    int title_gap = sx(14);
-    int bar_gap = sx(28);
+    int title_gap = layout_title_gap();
+    int bar_gap = layout_bar_gap();
 
-    g_bar_h = sx(10);
+    g_bar_h = layout_bar_h();
     g_bar_w = (int) ((float) g_screen_w * (1.0f - PAGE_PAD_FRAC * 2.0f) * 0.70f);
     g_bar_radius = g_bar_h / 2;
 
     int content_h = g_tex_title_h + title_gap + g_tex_body_h + bar_gap + g_bar_h;
+
     int start_y = (g_screen_h - content_h) / 2;
+    int v_margin = layout_v_margin();
+    if (start_y < v_margin) start_y = v_margin;
 
     g_title_x = (g_screen_w - g_tex_title_w) / 2;
     g_title_y = start_y;
@@ -458,13 +511,17 @@ static void init_sdl(void) {
     SDL_GetRendererOutputSize(g_renderer, &g_screen_w, &g_screen_h);
     g_scale = (float) g_screen_h / (float) REF_H;
 
+    float scale_w = (float) g_screen_w / (float) REF_W;
+    float scale_h = (float) g_screen_h / (float) REF_H;
+    g_font_scale = scale_w < scale_h ? scale_w : scale_h;
+
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
     SDL_ShowCursor(SDL_DISABLE);
 }
 
 static void load_fonts(void) {
-    int s_big = sx(30);
-    int s_med = sx(22);
+    int s_big = (int) lroundf((float) FONT_BIG_PT * g_font_scale);
+    int s_med = (int) lroundf((float) FONT_MED_PT * g_font_scale);
 
     g_font_big = TTF_OpenFont(FONT_FILE, s_big);
     g_font_med = TTF_OpenFont(FONT_FILE, s_med);
