@@ -1226,6 +1226,21 @@ struct mux_lang {
         char SECONDARY[MAX_BUFFER_SIZE];
         char EXTERNAL[MAX_BUFFER_SIZE];
         char SYSTEM[MAX_BUFFER_SIZE];
+        struct {
+            char FILESYSTEM[MAX_BUFFER_SIZE];
+            char QUALITY_CHECK[MAX_BUFFER_SIZE];
+            char MANUFACTURER[MAX_BUFFER_SIZE];
+            char MODEL[MAX_BUFFER_SIZE];
+            char DATE[MAX_BUFFER_SIZE];
+        } DETAIL;
+        struct {
+            char GENUINE[MAX_BUFFER_SIZE];
+            char LIKELY_GENUINE[MAX_BUFFER_SIZE];
+            char SUSPICIOUS[MAX_BUFFER_SIZE];
+            char SUSPECTED_FAKE[MAX_BUFFER_SIZE];
+            char FAKE[MAX_BUFFER_SIZE];
+            char TRASH[MAX_BUFFER_SIZE];
+        } QUALITY;
     } MUXSPACE;
 
     struct {
