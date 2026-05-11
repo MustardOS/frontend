@@ -61,7 +61,7 @@ static SDL_Renderer *g_renderer = NULL;
 static int g_screen_w = 0;
 static int g_screen_h = 0;
 static float g_scale = 1.0f;
-static float g_font_scale = 1.0f;  /* like g_scale but capped by width too */
+static float g_font_scale = 1.0f;
 
 static TTF_Font *g_font_big = NULL;
 static TTF_Font *g_font_med = NULL;

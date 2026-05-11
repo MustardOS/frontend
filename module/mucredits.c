@@ -245,6 +245,8 @@ static bool g_skip_requested = false;
 static bool g_quit_requested = false;
 static float g_quit_fade = 0.0f;
 
+static bool g_factory_music_fading = false;
+
 static int sx(int v) {
     return (int) lroundf((float) v * g_scale);
 }
@@ -525,15 +527,23 @@ static void render_backgrounds(float dt) {
         bg_render_one(g_bg_current, g_bg_kb_t, g_bg_kb_dir, (Uint8) (eased_in * 255));
     }
 
-    SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, BG_DARKEN_ALPHA);
-    SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
-    SDL_RenderFillRect(g_renderer, &full);
+    if (BG_DARKEN_ALPHA > 0) {
+        SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, BG_DARKEN_ALPHA);
+        SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
+        SDL_RenderFillRect(g_renderer, &full);
+    }
+}
+
+static int g_text_shadow_offset = 1;
+
+static void recompute_text_shadow_offset(void) {
+    int v = sx(1);
+    g_text_shadow_offset = v < 1 ? 1 : v;
 }
 
 static int text_shadow_offset(void) {
-    int v = sx(1);
-    return v < 1 ? 1 : v;
+    return g_text_shadow_offset;
 }
 
 static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Color col) {
@@ -677,14 +687,29 @@ static block_t *new_block(block_kind_t kind, const char *bg_key) {
     return b;
 }
 
-static void block_set_line(block_t *b, SDL_Texture **texs, int *ws, int *hs) {
-    b->lines = texs;
+static bool block_install_single(block_t *b, SDL_Texture *tex, int w, int h) {
+    SDL_Texture **arr = malloc(sizeof(SDL_Texture *));
+    int *aw = malloc(sizeof(int));
+    int *ah = malloc(sizeof(int));
 
-    b->line_w = ws;
-    b->line_h = hs;
+    if (!arr || !aw || !ah) {
+        free(arr);
+        free(aw);
+        free(ah);
+        return false;
+    }
 
+    arr[0] = tex;
+    aw[0] = w;
+    ah[0] = h;
+
+    b->lines = arr;
+    b->line_w = aw;
+    b->line_h = ah;
     b->line_count = 1;
-    b->height = hs[0];
+    b->height = h;
+
+    return true;
 }
 
 static void block_free_lines(block_t *b) {
@@ -775,24 +800,11 @@ static void add_title(TTF_Font *font, const char *text, SDL_Color col, const cha
         if (!t) return;
     }
 
-    SDL_Texture **arr = malloc(sizeof(SDL_Texture *));
-    int *aw = malloc(sizeof(int));
-    int *ah = malloc(sizeof(int));
-
-    if (!arr || !aw || !ah) {
-        free(arr);
-        free(aw);
-        free(ah);
-        SDL_DestroyTexture(t);
-        return;
-    }
-
-    arr[0] = t;
-    aw[0] = w;
-    ah[0] = h;
-
     block_t *b = new_block(font == g_font_huge ? BLK_TITLE_BIG : BLK_TITLE_MED, bg_key);
-    block_set_line(b, arr, aw, ah);
+    if (!block_install_single(b, t, w, h)) {
+        SDL_DestroyTexture(t);
+        --g_block_count;
+    }
 }
 
 static block_t *add_paragraph(const char *text, SDL_Color col, const char *bg_key) {
@@ -802,24 +814,12 @@ static block_t *add_paragraph(const char *text, SDL_Color col, const char *bg_ke
     SDL_Texture *t = render_text_wrapped(g_font_med, text, col, wrap, &w, &h);
     if (!t) return NULL;
 
-    SDL_Texture **arr = malloc(sizeof(SDL_Texture *));
-    int *aw = malloc(sizeof(int));
-    int *ah = malloc(sizeof(int));
-
-    if (!arr || !aw || !ah) {
-        free(arr);
-        free(aw);
-        free(ah);
+    block_t *b = new_block(BLK_PARAGRAPH, bg_key);
+    if (!block_install_single(b, t, w, h)) {
         SDL_DestroyTexture(t);
+        --g_block_count;
         return NULL;
     }
-
-    arr[0] = t;
-    aw[0] = w;
-    ah[0] = h;
-
-    block_t *b = new_block(BLK_PARAGRAPH, bg_key);
-    block_set_line(b, arr, aw, ah);
 
     return b;
 }
@@ -832,10 +832,7 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     int *widths = NULL;
     int *regular = NULL;
     int *oversized = NULL;
-    SDL_Texture **row_texs = NULL;
-    int *row_ws = NULL;
-    int *row_hs = NULL;
-    int row_count = 0;
+    SDL_Surface *full = NULL;
 
     widths = malloc(sizeof(*widths) * (size_t) n);
     if (!widths) goto cleanup;
@@ -891,17 +888,16 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
 
     if (total_rows == 0) goto cleanup;
 
-    row_texs = calloc((size_t) total_rows, sizeof(*row_texs));
-    row_ws = malloc(sizeof(*row_ws) * (size_t) total_rows);
-    row_hs = malloc(sizeof(*row_hs) * (size_t) total_rows);
-    if (!row_texs || !row_ws || !row_hs) goto cleanup;
+    int total_h = total_rows * line_h;
+
+    full = SDL_CreateRGBSurfaceWithFormat(0, avail, total_h, 32, SDL_PIXELFORMAT_RGBA32);
+    if (!full) goto cleanup;
+
+    SDL_FillRect(full, NULL, SDL_MapRGBA(full->format, 0, 0, 0, 0));
+
+    int cursor_y = 0;
 
     for (int r = 0; r < reg_rows; ++r) {
-        SDL_Surface *row_surf = SDL_CreateRGBSurfaceWithFormat(0, avail, line_h, 32, SDL_PIXELFORMAT_RGBA32);
-        if (!row_surf) goto cleanup;
-
-        SDL_FillRect(row_surf, NULL, SDL_MapRGBA(row_surf->format, 0, 0, 0, 0));
-
         int cells_in_row = cols;
         if (r == reg_rows - 1) {
             int leftover = reg_n - r * cols;
@@ -920,32 +916,20 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
 
             SDL_Rect dst;
             dst.x = row_x_offset + c * cell_w2 + (cell_w2 - ns->w) / 2;
-            dst.y = (line_h - ns->h) / 2;
+            dst.y = cursor_y + (line_h - ns->h) / 2;
             dst.w = ns->w;
             dst.h = ns->h;
 
             SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
-            SDL_BlitSurface(ns, NULL, row_surf, &dst);
+            SDL_BlitSurface(ns, NULL, full, &dst);
             SDL_FreeSurface(ns);
         }
 
-        row_texs[row_count] = SDL_CreateTextureFromSurface(g_renderer, row_surf);
-        SDL_FreeSurface(row_surf);
-
-        if (!row_texs[row_count]) goto cleanup;
-
-        row_ws[row_count] = avail;
-        row_hs[row_count] = line_h;
-        ++row_count;
+        cursor_y += line_h;
     }
 
     for (int o = 0; o < over_n; ++o) {
         int idx = oversized[o];
-
-        SDL_Surface *row_surf = SDL_CreateRGBSurfaceWithFormat(0, avail, line_h, 32, SDL_PIXELFORMAT_RGBA32);
-        if (!row_surf) goto cleanup;
-
-        SDL_FillRect(row_surf, NULL, SDL_MapRGBA(row_surf->format, 0, 0, 0, 0));
 
         SDL_Surface *ns = render_text_surface(g_font_sml, names[idx], col);
         if (ns) {
@@ -953,65 +937,44 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
 
             if (ns->w <= avail) {
                 dst.x = (avail - ns->w) / 2;
-                dst.y = (line_h - ns->h) / 2;
+                dst.y = cursor_y + (line_h - ns->h) / 2;
                 dst.w = ns->w;
                 dst.h = ns->h;
 
                 SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
-                SDL_BlitSurface(ns, NULL, row_surf, &dst);
+                SDL_BlitSurface(ns, NULL, full, &dst);
             } else {
                 float k = (float) avail / (float) ns->w;
                 int tw = avail;
                 int th = (int) lroundf((float) ns->h * k);
 
                 dst.x = 0;
-                dst.y = (line_h - th) / 2;
+                dst.y = cursor_y + (line_h - th) / 2;
                 dst.w = tw;
                 dst.h = th;
 
                 SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
-                SDL_BlitScaled(ns, NULL, row_surf, &dst);
+                SDL_BlitScaled(ns, NULL, full, &dst);
             }
 
             SDL_FreeSurface(ns);
         }
 
-        row_texs[row_count] = SDL_CreateTextureFromSurface(g_renderer, row_surf);
-        SDL_FreeSurface(row_surf);
-
-        if (!row_texs[row_count]) goto cleanup;
-
-        row_ws[row_count] = avail;
-        row_hs[row_count] = line_h;
-        ++row_count;
+        cursor_y += line_h;
     }
+
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(g_renderer, full);
+    if (!tex) goto cleanup;
 
     block_t *b = new_block(BLK_NAMES, bg_key);
-    b->lines = row_texs;
-    b->line_w = row_ws;
-    b->line_h = row_hs;
-    b->line_count = total_rows;
-
-    b->height = 0;
-    for (int i = 0; i < total_rows; ++i) {
-        b->height += row_hs[i];
+    if (!block_install_single(b, tex, avail, total_h)) {
+        SDL_DestroyTexture(tex);
+        --g_block_count;
+        goto cleanup;
     }
-
-    row_texs = NULL;
-    row_ws = NULL;
-    row_hs = NULL;
-    row_count = 0;
 
     cleanup:
-    if (row_texs) {
-        for (int i = 0; i < row_count; ++i) {
-            if (row_texs[i]) SDL_DestroyTexture(row_texs[i]);
-        }
-    }
-
-    free(row_texs);
-    free(row_ws);
-    free(row_hs);
+    if (full) SDL_FreeSurface(full);
     free(widths);
     free(regular);
     free(oversized);
@@ -1054,24 +1017,12 @@ static bool replace_quote_block(block_t *b, const char *quote) {
 
     if (!t) return false;
 
-    SDL_Texture **arr = malloc(sizeof(SDL_Texture *));
-    int *aw = malloc(sizeof(int));
-    int *ah = malloc(sizeof(int));
+    block_free_lines(b);
 
-    if (!arr || !aw || !ah) {
-        free(arr);
-        free(aw);
-        free(ah);
+    if (!block_install_single(b, t, w, h)) {
         SDL_DestroyTexture(t);
         return false;
     }
-
-    arr[0] = t;
-    aw[0] = w;
-    ah[0] = h;
-
-    block_free_lines(b);
-    block_set_line(b, arr, aw, ah);
 
     return true;
 }
@@ -1216,45 +1167,45 @@ static void build_reel(void) {
     relayout_reel();
 }
 
-static void render_block(block_t *b, int draw_y) {
+static void render_block(block_t *b, float draw_y) {
     switch (b->kind) {
         case BLK_QR: {
-            SDL_Rect dst;
-            dst.x = (g_screen_w - b->img_w) / 2;
+            SDL_FRect dst;
+            dst.x = (float) ((g_screen_w - b->img_w) / 2);
             dst.y = draw_y;
-            dst.w = b->img_w;
-            dst.h = b->img_h;
-            SDL_RenderCopy(g_renderer, b->image, NULL, &dst);
+            dst.w = (float) b->img_w;
+            dst.h = (float) b->img_h;
+            SDL_RenderCopyF(g_renderer, b->image, NULL, &dst);
             break;
         }
         case BLK_SPACER:
             break;
         default: {
-            int y = draw_y;
+            float y = draw_y;
             for (int i = 0; i < b->line_count; ++i) {
-                SDL_Rect dst;
-                dst.w = b->line_w[i];
-                dst.h = b->line_h[i];
-                dst.x = (g_screen_w - dst.w) / 2;
+                SDL_FRect dst;
+                dst.w = (float) b->line_w[i];
+                dst.h = (float) b->line_h[i];
+                dst.x = (float) ((g_screen_w - b->line_w[i]) / 2);
                 dst.y = y;
-                SDL_RenderCopy(g_renderer, b->lines[i], NULL, &dst);
-                y += b->line_h[i];
+                SDL_RenderCopyF(g_renderer, b->lines[i], NULL, &dst);
+                y += (float) b->line_h[i];
             }
             break;
         }
     }
 }
 
-static void render_reel_pass(int top, int bottom, int reel_offset, const char **want_bg) {
-    int centre = top + g_screen_h / 2;
+static void render_reel_pass(float top, float bottom, int reel_offset, const char **want_bg) {
+    float centre = top + (float) g_screen_h * 0.5f;
     for (int i = 0; i < g_block_count; ++i) {
         block_t *b = &g_blocks[i];
-        int by = b->y_top + reel_offset;
-        int bh = b->height;
+        float by = (float) (b->y_top + reel_offset);
+        float bh = (float) b->height;
         if (by + bh < top) continue;
         if (by > bottom) break;
 
-        int draw_y = by - top;
+        float draw_y = by - top;
         render_block(b, draw_y);
 
         if (!*want_bg && by <= centre && by + bh >= centre) *want_bg = b->bg_key;
@@ -1262,8 +1213,8 @@ static void render_reel_pass(int top, int bottom, int reel_offset, const char **
 }
 
 static void render_reel(void) {
-    int top = (int) g_scroll_y;
-    int bottom = top + g_screen_h;
+    float top = g_scroll_y;
+    float bottom = top + (float) g_screen_h;
 
     const char *want_bg = NULL;
 
@@ -1277,7 +1228,7 @@ static void render_reel(void) {
     if (!want_bg) {
         for (int i = 0; i < g_block_count; ++i) {
             block_t *b = &g_blocks[i];
-            if (b->y_top + b->height >= top) {
+            if ((float) (b->y_top + b->height) >= top) {
                 want_bg = b->bg_key;
                 break;
             }
@@ -1381,6 +1332,8 @@ static void init_sdl(void) {
     SDL_GetRendererOutputSize(g_renderer, &g_screen_w, &g_screen_h);
     g_scale = (float) g_screen_h / (float) REF_H;
 
+    recompute_text_shadow_offset();
+
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
     SDL_ShowCursor(SDL_DISABLE);
 
@@ -1409,8 +1362,6 @@ static void main_loop(void) {
     g_scroll_y = (float) -g_screen_h;
 
     float intro_hold = INTRO_HOLD_S;
-    float outro_hold = 0.0f;
-    bool at_end = false;
 
     while (true) {
         SDL_Event ev;
@@ -1429,23 +1380,20 @@ static void main_loop(void) {
             if (intro_hold > 0.0f) {
                 intro_hold -= dt;
             } else if (config.BOOT.FACTORY_RESET) {
-                float stop_y = (float) g_last_content_y_centre - ((float) g_screen_h * 0.5f);
-                if (stop_y < 0.0f) stop_y = 0.0f;
+                g_scroll_y += scroll_speed * dt;
 
-                if (!at_end) {
-                    g_scroll_y += scroll_speed * dt;
-                    if (g_scroll_y >= stop_y) {
-                        g_scroll_y = stop_y;
-                        at_end = true;
-                        outro_hold = OUTRO_HOLD_S;
-                        if (g_music && Mix_PlayingMusic()) Mix_FadeOutMusic((int) (OUTRO_HOLD_S * 1000.0f));
-                    }
-                } else {
-                    outro_hold -= dt;
-                    if (outro_hold <= 0.0f) {
-                        g_first_pass_done = true;
-                        quit_credits();
-                    }
+                float end_y = (float) g_reel_height;
+                float fade_trigger_y = end_y - scroll_speed * OUTRO_HOLD_S;
+
+                if (!g_factory_music_fading && g_scroll_y >= fade_trigger_y) {
+                    g_factory_music_fading = true;
+                    if (g_music && Mix_PlayingMusic()) Mix_FadeOutMusic((int) (OUTRO_HOLD_S * 1000.0f));
+                }
+
+                if (g_scroll_y >= end_y) {
+                    g_scroll_y = end_y;
+                    g_first_pass_done = true;
+                    quit_credits();
                 }
             } else {
                 g_scroll_y += scroll_speed * dt;
