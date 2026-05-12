@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
+#include <linux/limits.h>
 #include <math.h>
 #include <stddef.h>
 #include <pthread.h>
@@ -201,6 +203,12 @@ static struct {
     int (*gbm_bo_get_fd)(gbm_bo_t *);
 
     uint32_t (*gbm_bo_get_format)(gbm_bo_t *);
+
+    int (*Ioctl)(int, unsigned long, void *);
+
+    int (*SetPlane)(int, uint32_t, uint32_t, uint32_t, uint32_t,
+                    int32_t, int32_t, uint32_t, uint32_t,
+                    uint32_t, uint32_t, uint32_t, uint32_t);
 } dl;
 
 static pthread_once_t dl_once = PTHREAD_ONCE_INIT;
@@ -246,6 +254,9 @@ static int dl_load_all(void) {
     LOAD(h_drm, RmFB, "drmModeRmFB");
     LOAD(h_drm, AtomicAddProperty, "drmModeAtomicAddProperty");
     LOAD(h_drm, SetClientCap, "drmSetClientCap");
+
+    LOAD(h_drm, Ioctl, "drmIoctl");
+    LOAD(h_drm, SetPlane, "drmModeSetPlane");
 
     LOAD(h_gbm, gbm_create_device, "gbm_create_device");
     LOAD(h_gbm, gbm_device_destroy, "gbm_device_destroy");
@@ -2161,6 +2172,543 @@ static void pl_shutdown(void) {
     pl.ready = 0;
 }
 
+struct cpl_create_dumb {
+    uint32_t height;
+    uint32_t width;
+    uint32_t bpp;
+    uint32_t flags;
+    uint32_t handle;
+    uint32_t pitch;
+    uint64_t size;
+};
+
+struct cpl_map_dumb {
+    uint32_t handle;
+    uint32_t pad;
+    uint64_t offset;
+};
+
+struct cpl_destroy_dumb {
+    uint32_t handle;
+};
+
+#define CPL_IOCTL_MODE_CREATE_DUMB  0xC02064B2u
+#define CPL_IOCTL_MODE_MAP_DUMB     0xC01064B3u
+#define CPL_IOCTL_MODE_DESTROY_DUMB 0xC00464B4u
+
+#define CPL_MAX_BATTERY_STEPS INDICATOR_STEPS
+#define CPL_MAX_BRIGHT_STEPS  INDICATOR_STEPS
+#define CPL_MAX_VOLUME_STEPS  INDICATOR_STEPS
+
+static struct {
+    int ready;
+    int tried;
+    int disabled;
+    int drm_fd;
+    uint32_t crtc_id;
+    int crtc_w, crtc_h;
+    uint32_t plane_id;
+    uint32_t fmt;
+
+    uint32_t gem_handle;
+    uint32_t pitch;
+    size_t size;
+    void *map;
+    uint32_t fb_id;
+    int buf_w, buf_h;
+
+    SDL_Surface *compose;
+
+    SDL_Surface *sf_base;
+    SDL_Surface *sf_battery[CPL_MAX_BATTERY_STEPS];
+    SDL_Surface *sf_bright[CPL_MAX_BRIGHT_STEPS];
+    SDL_Surface *sf_volume[CPL_MAX_VOLUME_STEPS];
+
+    int last_battery_step;
+    int last_bright_step;
+    int last_volume_step;
+    int last_base_disabled;
+    int last_rot;
+    int last_fb_w;
+    int last_fb_h;
+
+    int dirty;
+} cpl;
+
+static int cpl_find_overlay_plane_above(int fd, uint32_t crtc_id, int crtc_idx, uint64_t primary_zpos) {
+    drm_pres_t *pres = dl.GetPlaneResources(fd);
+    if (!pres) return 0;
+
+    const uint32_t fmts[] = {DRM_FORMAT_ARGB8888, DRM_FORMAT_ABGR8888};
+
+    uint32_t best_pid = 0;
+    uint64_t best_zpos = (uint64_t) -1;
+    uint32_t best_fmt = 0;
+
+    for (size_t fi = 0; fi < sizeof(fmts) / sizeof(fmts[0]); fi++) {
+        const uint32_t fmt = fmts[fi];
+
+        for (uint32_t i = 0; i < pres->count_planes; i++) {
+            const uint32_t pid = pres->planes[i];
+            drm_plane_t *p = dl.GetPlane(fd, pid);
+            if (!p) continue;
+
+            if (!pl_plane_is_candidate(fd, p, pid, crtc_idx, fmt)) {
+                dl.FreePlane(p);
+                continue;
+            }
+
+            const uint64_t z = pl_read_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "zpos");
+
+            if (z > primary_zpos && z < best_zpos) {
+                best_pid = pid;
+                best_zpos = z;
+                best_fmt = fmt;
+            }
+
+            dl.FreePlane(p);
+        }
+
+        if (best_pid) break;
+    }
+
+    dl.FreePlaneResources(pres);
+
+    if (!best_pid) return 0;
+
+    cpl.plane_id = best_pid;
+    cpl.crtc_id = crtc_id;
+    cpl.fmt = best_fmt;
+    return 1;
+}
+
+static int cpl_alloc_dumb_buffer(int drm_fd, int w, int h) {
+    struct cpl_create_dumb create = {0};
+    create.width = (uint32_t) w;
+    create.height = (uint32_t) h;
+    create.bpp = 32;
+
+    if (dl.Ioctl(drm_fd, CPL_IOCTL_MODE_CREATE_DUMB, &create) != 0) {
+        LOG_INFO("stage", "[kms-cpu] DRM_IOCTL_MODE_CREATE_DUMB failed");
+        return 0;
+    }
+
+    cpl.gem_handle = create.handle;
+    cpl.pitch = create.pitch;
+    cpl.size = create.size;
+    cpl.buf_w = w;
+    cpl.buf_h = h;
+
+    struct cpl_map_dumb mreq = {0};
+    mreq.handle = create.handle;
+    if (dl.Ioctl(drm_fd, CPL_IOCTL_MODE_MAP_DUMB, &mreq) != 0) {
+        LOG_INFO("stage", "[kms-cpu] DRM_IOCTL_MODE_MAP_DUMB failed");
+        return 0;
+    }
+
+    cpl.map = mmap(NULL, create.size, PROT_READ | PROT_WRITE, MAP_SHARED, drm_fd, (off_t) mreq.offset);
+    if (cpl.map == MAP_FAILED) {
+        LOG_INFO("stage", "[kms-cpu] mmap of dumb buffer failed");
+        cpl.map = NULL;
+        return 0;
+    }
+
+    // Clear to transparent.
+    memset(cpl.map, 0, create.size);
+
+    const uint32_t handles[4] = {cpl.gem_handle, 0, 0, 0};
+    const uint32_t pitches[4] = {cpl.pitch, 0, 0, 0};
+    const uint32_t offsets[4] = {0, 0, 0, 0};
+    if (dl.AddFB2(drm_fd, w, h, cpl.fmt, handles, pitches, offsets, &cpl.fb_id, 0) != 0) {
+        LOG_INFO("stage", "[kms-cpu] drmModeAddFB2 failed");
+        return 0;
+    }
+
+    return 1;
+}
+
+static SDL_Surface *cpl_to_premult_argb(SDL_Surface *src) {
+    if (!src) return NULL;
+
+    SDL_Surface *conv = SDL_ConvertSurfaceFormat(src, SDL_PIXELFORMAT_ARGB8888, 0);
+    SDL_FreeSurface(src);
+    if (!conv) return NULL;
+
+    if (SDL_LockSurface(conv) == 0) {
+        uint8_t *row = (uint8_t *) conv->pixels;
+        for (int y = 0; y < conv->h; y++) {
+            uint32_t *px = (uint32_t *) (row + y * conv->pitch);
+            for (int x = 0; x < conv->w; x++) {
+                const uint32_t v = px[x];
+                const uint32_t a = (v >> 24) & 0xFFu;
+                if (a == 0xFFu) continue;
+                if (a == 0) {
+                    px[x] = 0;
+                    continue;
+                }
+
+                const uint32_t r = ((v >> 16) & 0xFFu) * a / 255u;
+                const uint32_t g = ((v >> 8) & 0xFFu) * a / 255u;
+                const uint32_t b = ((v) & 0xFFu) * a / 255u;
+                px[x] = (a << 24) | (r << 16) | (g << 8) | b;
+            }
+        }
+        SDL_UnlockSurface(conv);
+    }
+
+    SDL_SetSurfaceBlendMode(conv, SDL_BLENDMODE_BLEND);
+    return conv;
+}
+
+static SDL_Surface *cpl_load_png(const char *path) {
+    if (!path || !path[0]) return NULL;
+    SDL_Surface *raw = IMG_Load(path);
+    if (!raw) return NULL;
+    return cpl_to_premult_argb(raw);
+}
+
+static void cpl_free_cached(void) {
+    if (cpl.sf_base) {
+        SDL_FreeSurface(cpl.sf_base);
+        cpl.sf_base = NULL;
+    }
+    for (int i = 0; i < CPL_MAX_BATTERY_STEPS; i++) {
+        if (cpl.sf_battery[i]) {
+            SDL_FreeSurface(cpl.sf_battery[i]);
+            cpl.sf_battery[i] = NULL;
+        }
+    }
+    for (int i = 0; i < CPL_MAX_BRIGHT_STEPS; i++) {
+        if (cpl.sf_bright[i]) {
+            SDL_FreeSurface(cpl.sf_bright[i]);
+            cpl.sf_bright[i] = NULL;
+        }
+    }
+    for (int i = 0; i < CPL_MAX_VOLUME_STEPS; i++) {
+        if (cpl.sf_volume[i]) {
+            SDL_FreeSurface(cpl.sf_volume[i]);
+            cpl.sf_volume[i] = NULL;
+        }
+    }
+}
+
+static SDL_Surface *cpl_get_indicator(SDL_Surface **slot, const char *type, int step) {
+    if (step < 0 || step >= INDICATOR_STEPS) return NULL;
+    if (slot[step]) return slot[step];
+
+    char path[PATH_MAX];
+    if (!k_resolve_indicator_path(type, step, path, sizeof(path))) return NULL;
+
+    slot[step] = cpl_load_png(path);
+    return slot[step];
+}
+
+static SDL_Surface *cpl_get_base(int fb_w, int fb_h) {
+    if (cpl.sf_base) return cpl.sf_base;
+
+    const char *p = k_resolve_base_path(fb_w, fb_h);
+    if (!p || !p[0]) return NULL;
+    cpl.sf_base = cpl_load_png(p);
+    return cpl.sf_base;
+}
+
+static void cpl_place_sprite(int tex_w, int tex_h, int fb_w, int fb_h, int anchor, int scale, int rot, SDL_Rect *out) {
+    int draw_w = tex_w, draw_h = tex_h;
+    stretch_draw_size(tex_w, tex_h, fb_w, fb_h, scale, rot, &draw_w, &draw_h);
+    if (draw_w < 1) draw_w = 1;
+    if (draw_h < 1) draw_h = 1;
+
+    int x = 0, y = 0;
+    const int r_anchor = get_anchor_rotate(anchor, rot);
+    switch (r_anchor) {
+        case ANCHOR_TOP_LEFT:
+            x = 0;
+            y = 0;
+            break;
+        case ANCHOR_TOP_MIDDLE:
+            x = (fb_w - draw_w) / 2;
+            y = 0;
+            break;
+        case ANCHOR_TOP_RIGHT:
+            x = fb_w - draw_w;
+            y = 0;
+            break;
+        case ANCHOR_CENTRE_LEFT:
+            x = 0;
+            y = (fb_h - draw_h) / 2;
+            break;
+        case ANCHOR_CENTRE_MIDDLE:
+            x = (fb_w - draw_w) / 2;
+            y = (fb_h - draw_h) / 2;
+            break;
+        case ANCHOR_CENTRE_RIGHT:
+            x = fb_w - draw_w;
+            y = (fb_h - draw_h) / 2;
+            break;
+        case ANCHOR_BOTTOM_LEFT:
+            x = 0;
+            y = fb_h - draw_h;
+            break;
+        case ANCHOR_BOTTOM_MIDDLE:
+            x = (fb_w - draw_w) / 2;
+            y = fb_h - draw_h;
+            break;
+        case ANCHOR_BOTTOM_RIGHT:
+            x = fb_w - draw_w;
+            y = fb_h - draw_h;
+            break;
+        default:
+            x = (fb_w - draw_w) / 2;
+            y = (fb_h - draw_h) / 2;
+            break;
+    }
+
+    out->x = x;
+    out->y = y;
+    out->w = draw_w;
+    out->h = draw_h;
+}
+
+static void cpl_blit_sprite(SDL_Surface *src, const SDL_Rect *dst_rect) {
+    if (!src || !cpl.compose) return;
+    SDL_Rect dst = *dst_rect;
+    if (dst.w == src->w && dst.h == src->h) {
+        SDL_BlitSurface(src, NULL, cpl.compose, &dst);
+    } else {
+        SDL_BlitScaled(src, NULL, cpl.compose, &dst);
+    }
+}
+
+static int cpl_state_dirty(int fb_w, int fb_h) {
+    const int b = bright_is_visible() ? bright_last_step : -1;
+    const int v = volume_is_visible() ? volume_last_step : -1;
+    const int bat = battery_last_step;
+    const int base_disabled = is_overlay_disabled() ? 1 : (base_overlay_disabled_cached ? 1 : 0);
+    const int rot = rotate_read_cached();
+
+    if (b != cpl.last_bright_step ||
+        v != cpl.last_volume_step ||
+        bat != cpl.last_battery_step ||
+        base_disabled != cpl.last_base_disabled ||
+        rot != cpl.last_rot ||
+        fb_w != cpl.last_fb_w ||
+        fb_h != cpl.last_fb_h ||
+        cpl.dirty) {
+
+        cpl.last_bright_step = b;
+        cpl.last_volume_step = v;
+        cpl.last_battery_step = bat;
+        cpl.last_base_disabled = base_disabled;
+        cpl.last_rot = rot;
+        cpl.last_fb_w = fb_w;
+        cpl.last_fb_h = fb_h;
+        cpl.dirty = 0;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+static void cpl_redraw(int fb_w, int fb_h) {
+    if (!cpl.compose || !cpl.map) return;
+
+    // Clear compose to transparent.
+    SDL_SetSurfaceBlendMode(cpl.compose, SDL_BLENDMODE_NONE);
+    SDL_FillRect(cpl.compose, NULL, 0);
+    SDL_SetSurfaceBlendMode(cpl.compose, SDL_BLENDMODE_BLEND);
+
+    const int rot = cpl.last_rot;
+
+    if (!cpl.last_base_disabled) {
+        SDL_Surface *base = cpl_get_base(fb_w, fb_h);
+        if (base) {
+            SDL_Rect dst;
+            cpl_place_sprite(base->w, base->h, fb_w, fb_h, get_anchor_cached(&overlay_anchor_cache), get_scale_cached(&overlay_scale_cache), rot, &dst);
+            cpl_blit_sprite(base, &dst);
+        }
+    }
+
+    if (cpl.last_battery_step >= 0) {
+        SDL_Surface *s = cpl_get_indicator(cpl.sf_battery, "battery", cpl.last_battery_step);
+        if (s) {
+            SDL_Rect dst;
+            cpl_place_sprite(s->w, s->h, fb_w, fb_h, get_anchor_cached(&battery_anchor_cache), get_scale_cached(&battery_scale_cache), rot, &dst);
+            cpl_blit_sprite(s, &dst);
+        }
+    }
+
+    if (cpl.last_bright_step >= 0) {
+        SDL_Surface *s = cpl_get_indicator(cpl.sf_bright, "bright", cpl.last_bright_step);
+        if (s) {
+            SDL_Rect dst;
+            cpl_place_sprite(s->w, s->h, fb_w, fb_h, get_anchor_cached(&bright_anchor_cache), get_scale_cached(&bright_scale_cache), rot, &dst);
+            cpl_blit_sprite(s, &dst);
+        }
+    }
+
+    if (cpl.last_volume_step >= 0) {
+        SDL_Surface *s = cpl_get_indicator(cpl.sf_volume, "volume", cpl.last_volume_step);
+        if (s) {
+            SDL_Rect dst;
+            cpl_place_sprite(s->w, s->h, fb_w, fb_h, get_anchor_cached(&volume_anchor_cache), get_scale_cached(&volume_scale_cache), rot, &dst);
+            cpl_blit_sprite(s, &dst);
+        }
+    }
+
+    if (SDL_LockSurface(cpl.compose) == 0) {
+        const uint8_t *src = (const uint8_t *) cpl.compose->pixels;
+        const size_t src_pitch = (size_t) cpl.compose->pitch;
+        const size_t copy_bytes = (size_t) cpl.compose->w * 4u;
+        uint8_t *dst = (uint8_t *) cpl.map;
+        const int h = cpl.compose->h < cpl.buf_h ? cpl.compose->h : cpl.buf_h;
+        for (int y = 0; y < h; y++) {
+            memcpy(dst + y * cpl.pitch, src + y * src_pitch, copy_bytes);
+        }
+        SDL_UnlockSurface(cpl.compose);
+    }
+}
+
+static int cpl_attach_plane(void) {
+    const int rc = dl.SetPlane(cpl.drm_fd, cpl.plane_id, cpl.crtc_id, cpl.fb_id, 0,
+                               0, 0, (uint32_t) cpl.crtc_w, (uint32_t) cpl.crtc_h,
+                               0, 0, (uint32_t) cpl.buf_w << 16, (uint32_t) cpl.buf_h << 16);
+    if (rc != 0) {
+        LOG_INFO("stage", "[kms-cpu] drmModeSetPlane failed: rc=%d", rc);
+        return 0;
+    }
+
+    return 1;
+}
+
+static int cpl_init(int drm_fd) {
+    if (cpl.ready) return 1;
+    if (cpl.disabled) return 0;
+
+    if (!dl_init()) {
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    if (dl.SetClientCap(drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1) != 0) {
+        LOG_INFO("stage", "[kms-cpu] cannot enable universal planes");
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    int crtc_idx = -1;
+    uint32_t crtc_id = 0;
+    int crtc_w = 0, crtc_h = 0;
+    if (!pl_find_active_crtc(drm_fd, &crtc_id, &crtc_idx, &crtc_w, &crtc_h)) {
+        LOG_INFO("stage", "[kms-cpu] no active CRTC found");
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    cpl.crtc_w = crtc_w;
+    cpl.crtc_h = crtc_h;
+
+    uint64_t primary_zpos = 0;
+    drm_pres_t *pres = dl.GetPlaneResources(drm_fd);
+    if (pres) {
+        for (uint32_t i = 0; i < pres->count_planes; i++) {
+            drm_plane_t *p = dl.GetPlane(drm_fd, pres->planes[i]);
+            if (p && p->crtc_id == crtc_id) {
+                primary_zpos = pl_read_prop(drm_fd, pres->planes[i], DRM_MODE_OBJECT_PLANE, "zpos");
+                dl.FreePlane(p);
+                break;
+            }
+            if (p) dl.FreePlane(p);
+        }
+        dl.FreePlaneResources(pres);
+    }
+
+    if (!cpl_find_overlay_plane_above(drm_fd, crtc_id, crtc_idx, primary_zpos)) {
+        LOG_INFO("stage", "[kms-cpu] no free overlay plane above primary (zpos=%llu)", (unsigned long long) primary_zpos);
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    cpl.drm_fd = drm_fd;
+
+    if (!cpl_alloc_dumb_buffer(drm_fd, crtc_w, crtc_h)) {
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    cpl.compose = SDL_CreateRGBSurfaceWithFormat(0, crtc_w, crtc_h, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (!cpl.compose) {
+        LOG_INFO("stage", "[kms-cpu] SDL_CreateRGBSurfaceWithFormat failed");
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    cpl.last_battery_step = -2;
+    cpl.last_bright_step = -2;
+    cpl.last_volume_step = -2;
+    cpl.last_base_disabled = -1;
+    cpl.last_rot = -1;
+    cpl.last_fb_w = -1;
+    cpl.last_fb_h = -1;
+
+    cpl.dirty = 1;
+
+    cpl_state_dirty(crtc_w, crtc_h);
+    cpl_redraw(crtc_w, crtc_h);
+
+    if (!cpl_attach_plane()) {
+        cpl.disabled = 1;
+        return 0;
+    }
+
+    cpl.ready = 1;
+    LOG_INFO("stage", "[kms-cpu] plane path ready: plane=%u crtc=%u fb=%u %dx%d pitch=%u",
+             cpl.plane_id, cpl.crtc_id, cpl.fb_id, crtc_w, crtc_h, cpl.pitch);
+
+    return 1;
+}
+
+static void cpl_tick(int fb_w, int fb_h) {
+    if (!cpl.ready) return;
+
+    base_inotify_check();
+    if (ino_proc) inotify_check(ino_proc);
+
+    battery_overlay_update();
+    bright_overlay_update();
+    volume_overlay_update();
+
+    if (cpl_state_dirty(fb_w, fb_h)) cpl_redraw(fb_w, fb_h);
+}
+
+static void cpl_shutdown(void) __attribute__((unused));
+
+static void cpl_shutdown(void) {
+    if (cpl.fb_id) {
+        dl.RmFB(cpl.drm_fd, cpl.fb_id);
+        cpl.fb_id = 0;
+    }
+
+    if (cpl.map) {
+        munmap(cpl.map, cpl.size);
+        cpl.map = NULL;
+    }
+
+    if (cpl.gem_handle) {
+        struct cpl_destroy_dumb destroy = {.handle = cpl.gem_handle};
+        dl.Ioctl(cpl.drm_fd, CPL_IOCTL_MODE_DESTROY_DUMB, &destroy);
+        cpl.gem_handle = 0;
+    }
+
+    if (cpl.compose) {
+        SDL_FreeSurface(cpl.compose);
+        cpl.compose = NULL;
+    }
+
+    cpl_free_cached();
+    cpl.ready = 0;
+}
+
 static void k_load_layer_textures(int fb_w, int fb_h, int base_disabled) {
     k_update_dimension(fb_w, fb_h);
 
@@ -2617,6 +3165,14 @@ int drmModeAtomicCommit(int fd, void *req, uint32_t flags, void *user_data) {
         if (eglGetCurrentContext() != EGL_NO_CONTEXT) k_path = k_try_promote_plane(fd, k_fb_w_cached, k_fb_h_cached);
     }
 
+    if (!cpl.disabled && eglGetCurrentContext() == EGL_NO_CONTEXT) {
+        if (!cpl.tried) {
+            cpl.tried = 1;
+            cpl_init(fd);
+        }
+        if (cpl.ready) cpl_tick(cpl.crtc_w, cpl.crtc_h);
+    }
+
     if (k_path == PATH_PLANE) {
         if (pl_inject((drm_atomic_req_t) req)) {
             k_inject_fail = 0;
@@ -2665,6 +3221,14 @@ int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id, uint32_t flags, vo
     if (k_path == PATH_UNKNOWN || k_path == PATH_PLANE) {
         k_path = PATH_FBO0;
         k_plane_tried = 1;
+    }
+
+    if (!is_overlay_disabled() && !cpl.disabled && eglGetCurrentContext() == EGL_NO_CONTEXT) {
+        if (!cpl.tried) {
+            cpl.tried = 1;
+            cpl_init(fd);
+        }
+        if (cpl.ready) cpl_tick(cpl.crtc_w, cpl.crtc_h);
     }
 
     return real_drmModePageFlip(fd, crtc_id, fb_id, flags, user_data);
