@@ -23,7 +23,6 @@
 #include "../common/rotate.h"
 #include "../common/scale.h"
 #include "../common/stretch.h"
-#include "../common/shader.h"
 #include "../overlay/base.h"
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
@@ -52,7 +51,7 @@ typedef struct {
 
 #define V_QUAD_MAX_DRAWS 64u
 
-#define V_QUAD_BUFFER_SIZE    ((VkDeviceSize) (V_QUAD_MAX_DRAWS * V_QUAD_VERTS_PER_DRAW * sizeof(v_quad_vertex_t)))
+#define V_QUAD_BUFFER_SIZE ((VkDeviceSize) (V_QUAD_MAX_DRAWS * V_QUAD_VERTS_PER_DRAW * sizeof(v_quad_vertex_t)))
 
 typedef struct {
     float brightness;
@@ -572,9 +571,9 @@ typedef struct {
     } pipe_present[V_MAX_SWAPCHAINS];
     int pipe_present_count;
 
-    const shader_prog_t *user_shader_last;
     VkShaderModule fs_user_module;
     char user_shader_name[128];
+    time_t user_shader_mtime;
 
     VkPhysicalDeviceMemoryProperties mem_props;
 
@@ -600,7 +599,6 @@ static v_device_t *v_device_alloc(void) {
     }
     return NULL;
 }
-
 
 typedef struct {
     uint64_t base_key, battery_key, bright_key, volume_key;
@@ -672,7 +670,6 @@ static v_swapchain_t *v_swapchain_alloc(void) {
     }
     return NULL;
 }
-
 
 static uint32_t v_find_memory_type(v_device_t *dev, uint32_t type_bits, VkMemoryPropertyFlags required, VkMemoryPropertyFlags *out_actual) {
     for (uint32_t i = 0; i < dev->mem_props.memoryTypeCount; i++) {
@@ -978,7 +975,6 @@ static int v_upload_rgba(v_device_t *dev, const void *pixels, uint32_t w, uint32
     return 1;
 }
 
-
 static v_tex_t *v_tex_find(v_device_t *dev, uint64_t key) {
     for (int i = 0; i < V_MAX_TRACKED_TEX; i++) {
         if (dev->textures[i].key == key && dev->textures[i].image != VK_NULL_HANDLE) {
@@ -1003,7 +999,6 @@ static void v_tex_destroy(v_device_t *dev, v_tex_t *t) {
     if (t->memory) vk_dl.FreeMemory(dev->device, t->memory, NULL);
     memset(t, 0, sizeof(*t));
 }
-
 
 static v_tex_t *v_tex_get_or_upload_rgba(v_device_t *dev, uint64_t key, const void *pixels, uint32_t w, uint32_t h);
 
@@ -1138,7 +1133,6 @@ static void v_tex_evict_layer(v_device_t *dev, uint16_t layer) {
         v_tex_destroy(dev, t);
     }
 }
-
 
 static VkShaderModule v_make_shader(v_device_t *dev, const uint32_t *code, size_t size) {
     if (!code || size == 0 || (size == sizeof(uint32_t) && code[0] == 0)) {
@@ -1332,6 +1326,26 @@ static VkPipelineLayout v_make_layout(v_device_t *dev, VkDescriptorSetLayout set
     return layout;
 }
 
+static VkPipelineLayout v_make_user_layout(v_device_t *dev, VkDescriptorSetLayout set_layout) {
+    VkPushConstantRange pcr[2] = {0};
+    pcr[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pcr[0].offset = 0;
+    pcr[0].size = sizeof(v_push_overlay_t);
+    pcr[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    pcr[1].offset = 0;
+    pcr[1].size = sizeof(v_push_user_shader_t);
+
+    VkPipelineLayoutCreateInfo ci = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+    ci.setLayoutCount = 1;
+    ci.pSetLayouts = &set_layout;
+    ci.pushConstantRangeCount = 2;
+    ci.pPushConstantRanges = pcr;
+
+    VkPipelineLayout layout = VK_NULL_HANDLE;
+    if (vk_dl.CreatePipelineLayout(dev->device, &ci, NULL, &layout) != VK_SUCCESS) return VK_NULL_HANDLE;
+    return layout;
+}
+
 static VkPipeline v_get_present_pipeline_overlay(v_device_t *dev, VkFormat fmt) {
     for (int i = 0; i < dev->pipe_present_count; i++) {
         if (dev->pipe_present[i].format == fmt) return dev->pipe_present[i].pipe_overlay;
@@ -1350,7 +1364,6 @@ static VkPipeline v_get_present_pipeline_overlay(v_device_t *dev, VkFormat fmt) 
     dev->pipe_present_count++;
     return pipe;
 }
-
 
 static VkPipeline v_get_present_pipeline_content(v_device_t *dev, VkFormat fmt) {
     if (dev->fs_content == VK_NULL_HANDLE) return VK_NULL_HANDLE;
@@ -1384,6 +1397,36 @@ static VkPipeline v_get_present_pipeline_content(v_device_t *dev, VkFormat fmt) 
     return VK_NULL_HANDLE;
 }
 
+static VkPipeline v_get_present_pipeline_user(v_device_t *dev, VkFormat fmt) {
+    if (dev->fs_user_module == VK_NULL_HANDLE) return VK_NULL_HANDLE;
+
+    for (int i = 0; i < dev->pipe_present_count; i++) {
+        if (dev->pipe_present[i].format == fmt) {
+            if (dev->pipe_present[i].pipe_user_shader != VK_NULL_HANDLE) return dev->pipe_present[i].pipe_user_shader;
+
+            VkRenderPass rp = v_get_present_renderpass(dev, fmt);
+            if (rp == VK_NULL_HANDLE) return VK_NULL_HANDLE;
+
+            VkPipeline pipe = v_make_pipeline(dev, dev->fs_user_module, dev->layout_user, rp, 0);
+            dev->pipe_present[i].pipe_user_shader = pipe;
+            return pipe;
+        }
+    }
+
+    (void) v_get_present_pipeline_overlay(dev, fmt);
+    for (int i = 0; i < dev->pipe_present_count; i++) {
+        if (dev->pipe_present[i].format == fmt) {
+            VkRenderPass rp = v_get_present_renderpass(dev, fmt);
+            if (rp == VK_NULL_HANDLE) return VK_NULL_HANDLE;
+
+            VkPipeline pipe = v_make_pipeline(dev, dev->fs_user_module, dev->layout_user, rp, 0);
+            dev->pipe_present[i].pipe_user_shader = pipe;
+            return pipe;
+        }
+    }
+
+    return VK_NULL_HANDLE;
+}
 
 static VkPipeline v_get_present_pipeline_solid(v_device_t *dev, VkFormat fmt) {
     if (dev->fs_solid == VK_NULL_HANDLE) return VK_NULL_HANDLE;
@@ -1417,10 +1460,10 @@ static VkPipeline v_get_present_pipeline_solid(v_device_t *dev, VkFormat fmt) {
     return VK_NULL_HANDLE;
 }
 
-static void v_user_shader_sync(v_device_t *dev) {
-    const shader_prog_t *cur = shader_get();
-    if (cur == dev->user_shader_last) return;
-    dev->user_shader_last = cur;
+static void v_user_shader_clear(v_device_t *dev) {
+    if (!dev || dev->device == VK_NULL_HANDLE) return;
+
+    vk_dl.DeviceWaitIdle(dev->device);
 
     for (int i = 0; i < dev->pipe_present_count; i++) {
         if (dev->pipe_present[i].pipe_user_shader) {
@@ -1428,42 +1471,90 @@ static void v_user_shader_sync(v_device_t *dev) {
             dev->pipe_present[i].pipe_user_shader = VK_NULL_HANDLE;
         }
     }
+
     if (dev->fs_user_module) {
         vk_dl.DestroyShaderModule(dev->device, dev->fs_user_module, NULL);
         dev->fs_user_module = VK_NULL_HANDLE;
     }
 
-    if (!cur) {
-        dev->user_shader_name[0] = 0;
-        return;
+    dev->user_shader_name[0] = '\0';
+    dev->user_shader_mtime = 0;
+}
+
+static int v_read_shader_name(char *out, size_t out_sz) {
+    if (!out || out_sz == 0) return 0;
+    out[0] = '\0';
+
+    if (!read_line_from_file(OVERLAY_RUNNER "shader", 1, out, out_sz)) return 0;
+    if (!out[0] || strcmp(out, "none") == 0) return 0;
+
+    return 1;
+}
+
+static void v_user_shader_sync(v_device_t *dev) {
+    static int reload_tick = 0;
+    if (dev->fs_user_module != VK_NULL_HANDLE) {
+        if (++reload_tick < 60) return;
+        reload_tick = 0;
     }
 
     char name[64];
-    if (!read_line_from_file(OVERLAY_RUNNER "shader", 1, name, sizeof(name))) return;
-    if (!name[0] || strcmp(name, "none") == 0) return;
+    if (!v_read_shader_name(name, sizeof(name))) {
+        if (dev->fs_user_module || dev->user_shader_name[0]) v_user_shader_clear(dev);
+        return;
+    }
 
     char spv_path[PATH_MAX];
     snprintf(spv_path, sizeof(spv_path), "%s/shader/%s.frag.spv", INTERNAL_SHARE, name);
-    if (access(spv_path, F_OK) != 0) {
+
+    struct stat st;
+    if (stat(spv_path, &st) != 0) {
+        static char missing_name[64];
+        if (strcmp(missing_name, name) != 0) {
+            snprintf(missing_name, sizeof(missing_name), "%s", name);
+            LOG_WARN("stage", "[vk] Vulkan shader SPIR-V missing: %s", spv_path);
+        }
+        if (dev->fs_user_module || strcmp(dev->user_shader_name, name) == 0) v_user_shader_clear(dev);
         return;
     }
 
+    if (dev->fs_user_module &&
+        strcmp(dev->user_shader_name, name) == 0 &&
+        dev->user_shader_mtime == st.st_mtime) {
+        return;
+    }
+
+    v_user_shader_clear(dev);
+
     FILE *f = fopen(spv_path, "rb");
     if (!f) return;
-    fseek(f, 0, SEEK_END);
-    long n = ftell(f);
-    if (n <= 0 || n > 256 * 1024) {
+
+    if (fseek(f, 0, SEEK_END) != 0) {
         fclose(f);
         return;
     }
-    fseek(f, 0, SEEK_SET);
+
+    long n = ftell(f);
+    if (n <= 0 || n > 256 * 1024 || (n & 3)) {
+        fclose(f);
+        LOG_WARN("stage", "[vk] bad Vulkan shader SPIR-V size: %s", spv_path);
+        return;
+    }
+
+    if (fseek(f, 0, SEEK_SET) != 0) {
+        fclose(f);
+        return;
+    }
+
     uint32_t *buf = malloc((size_t) n);
     if (!buf) {
         fclose(f);
         return;
     }
+
     size_t got = fread(buf, 1, (size_t) n, f);
     fclose(f);
+
     if (got != (size_t) n) {
         free(buf);
         return;
@@ -1471,9 +1562,16 @@ static void v_user_shader_sync(v_device_t *dev) {
 
     dev->fs_user_module = v_make_shader(dev, buf, (size_t) n);
     free(buf);
-    snprintf(dev->user_shader_name, sizeof(dev->user_shader_name), "%s", name);
-}
 
+    if (!dev->fs_user_module) {
+        LOG_WARN("stage", "[vk] failed to create Vulkan shader module: %s", spv_path);
+        return;
+    }
+
+    snprintf(dev->user_shader_name, sizeof(dev->user_shader_name), "%s", name);
+    dev->user_shader_mtime = st.st_mtime;
+    LOG_INFO("stage", "[vk] Vulkan shader loaded: %s", spv_path);
+}
 
 static void v_device_destroy(v_device_t *dev) {
     if (!dev || dev->device == VK_NULL_HANDLE) return;
@@ -1603,12 +1701,13 @@ static int v_device_init(v_device_t *dev) {
     dev->layout_overlay = v_make_layout(dev, dev->set_layout, sizeof(v_push_overlay_t));
     dev->layout_content = v_make_layout(dev, dev->set_layout, sizeof(v_push_content_t));
     dev->layout_smooth = v_make_layout(dev, dev->set_layout, sizeof(v_push_smooth_t));
-    dev->layout_user = v_make_layout(dev, dev->set_layout, sizeof(v_push_user_shader_t));
+    dev->layout_user = v_make_user_layout(dev, dev->set_layout);
 
     dev->rp_offscreen = v_make_renderpass(dev, VK_FORMAT_R8G8B8A8_UNORM,
                                           VK_IMAGE_LAYOUT_UNDEFINED,
                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                           VK_ATTACHMENT_LOAD_OP_CLEAR);
+
     if (dev->rp_offscreen == VK_NULL_HANDLE) goto fail;
 
     dev->pipe_overlay_offscreen = v_make_pipeline(dev, dev->fs_overlay, dev->layout_overlay, dev->rp_offscreen, 1);
@@ -1620,7 +1719,6 @@ static int v_device_init(v_device_t *dev) {
         goto fail;
     }
 
-
     dev->ready = 1;
     LOG_INFO("stage", "[vk] device ready (qf=%u)", dev->graphics_qf);
     return 1;
@@ -1631,7 +1729,6 @@ static int v_device_init(v_device_t *dev) {
     v_device_destroy(dev);
     return 0;
 }
-
 
 static void v_image_state_destroy(v_device_t *dev, v_image_state_t *st) {
     if (!dev || !st) return;
@@ -1805,7 +1902,6 @@ static int v_swapchain_register(v_device_t *dev, VkSwapchainKHR handle, VkFormat
     return 1;
 }
 
-
 static void v_barrier_image(VkCommandBuffer cb, VkImage img, VkAccessFlags src_acc, VkAccessFlags dst_acc,
                             VkImageLayout old_layout, VkImageLayout new_layout,
                             VkPipelineStageFlags src_stage, VkPipelineStageFlags dst_stage) {
@@ -1827,7 +1923,6 @@ static void v_barrier_image(VkCommandBuffer cb, VkImage img, VkAccessFlags src_a
 
     vk_dl.CmdPipelineBarrier(cb, src_stage, dst_stage, 0, 0, NULL, 0, NULL, 1, &b);
 }
-
 
 static void v_compute_quad(int tex_w, int tex_h, int fb_w, int fb_h, int anchor, int scale, int rot,
                            float *out_x0, float *out_y0, float *out_x1, float *out_y1) {
@@ -1940,7 +2035,6 @@ static void v_format_lookup_dim(int fb_w, int fb_h, int rot, char *out, size_t o
     snprintf(out, out_sz, "%dx%d/", lookup_w, lookup_h);
 }
 
-
 static int v_parse_rotation_env(const char *name, int *out) {
     const char *env = getenv(name);
     if (!env || !*env || !out) return 0;
@@ -2008,7 +2102,6 @@ static int v_read_overlay_loader(void) {
     return 1;
 }
 
-
 static v_batch_state_t v_snapshot_batch_state(int fb_w, int fb_h, int rot, int base_disabled) {
     v_batch_state_t s;
     memset(&s, 0, sizeof(s));
@@ -2051,7 +2144,6 @@ static v_batch_state_t v_snapshot_batch_state(int fb_w, int fb_h, int rot, int b
 
     return s;
 }
-
 
 static int v_ensure_base_sprite(v_device_t *dev, int fb_w, int fb_h, int rot, v_tex_t **out) {
     *out = NULL;
@@ -2113,7 +2205,6 @@ static int v_ensure_notif_texture(v_device_t *dev, int fb_w, int fb_h, v_tex_t *
     *out_by = 0;
     return 1;
 }
-
 
 static inline void v_set_uv(float uv[4][2], int rot) {
     const float base[4][2] = {
@@ -2217,7 +2308,6 @@ static inline void v_draw_solid_rect(v_image_state_t *st, VkPipelineLayout layou
     v_bind_quad_and_draw(st, offset);
 }
 
-
 static int v_colour_pass_needed(void) {
     const struct colour_state *a = colour_adjust_get();
     const colour_filter_matrix_t *f = colour_filter_get();
@@ -2278,13 +2368,115 @@ static void v_draw_content_fullscreen(v_device_t *dev, v_image_state_t *st) {
 
     vk_dl.CmdBindDescriptorSets(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, dev->layout_content, 0, 1, &st->content_sample_desc, 0, NULL);
     vk_dl.CmdPushConstants(st->cmdbuf, dev->layout_content, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+
     v_bind_quad_and_draw(st, offset);
 }
 
+static int v_user_shader_active(v_device_t *dev) {
+    return dev && dev->fs_user_module != VK_NULL_HANDLE;
+}
+
+static void v_get_shader_native_resolution(int pass_w, int pass_h, float *out_w, float *out_h) {
+    int div_w;
+    int div_h;
+    int div;
+    int native_w;
+    int native_h;
+
+    if (pass_w < 1) pass_w = 1;
+    if (pass_h < 1) pass_h = 1;
+
+    div_w = pass_w / 640;
+    div_h = pass_h / 480;
+    div = (div_w < div_h) ? div_w : div_h;
+
+    if (div < 1) div = 1;
+
+    native_w = (pass_w + (div / 2)) / div;
+    native_h = (pass_h + (div / 2)) / div;
+
+    if (native_w < 640) native_w = 640;
+    if (native_h < 480) native_h = 480;
+
+    *out_w = (float) native_w;
+    *out_h = (float) native_h;
+}
+
+static void v_fill_user_push(v_push_user_shader_t *pc, int fb_w, int fb_h, int frame) {
+    memset(pc, 0, sizeof(*pc));
+
+    pc->resolution[0] = (float) fb_w;
+    pc->resolution[1] = (float) fb_h;
+
+    v_get_shader_native_resolution(fb_w, fb_h, &pc->native_resolution[0], &pc->native_resolution[1]);
+
+    pc->time = (float) frame;
+    pc->frame = frame;
+}
+
+static void v_draw_user_shader_fullscreen(v_device_t *dev, v_image_state_t *st, int fb_w, int fb_h, int frame) {
+    static const float content_uv[4][2] = {
+            {0.0f, 1.0f},
+            {0.0f, 0.0f},
+            {1.0f, 1.0f},
+            {1.0f, 0.0f},
+    };
+
+    VkDeviceSize offset = 0;
+    if (!v_write_quad_uv(st, -1.0f, -1.0f, 1.0f, 1.0f, content_uv, &offset)) return;
+
+    v_push_overlay_t vpc;
+    vpc.colour[0] = 1.0f;
+    vpc.colour[1] = 1.0f;
+    vpc.colour[2] = 1.0f;
+    vpc.colour[3] = 1.0f;
+
+    v_push_user_shader_t fpc;
+    v_fill_user_push(&fpc, fb_w, fb_h, frame);
+
+    vk_dl.CmdBindDescriptorSets(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, dev->layout_user, 0, 1, &st->content_sample_desc, 0, NULL);
+
+    vk_dl.CmdPushConstants(st->cmdbuf, dev->layout_user, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(vpc), &vpc);
+    vk_dl.CmdPushConstants(st->cmdbuf, dev->layout_user, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(fpc), &fpc);
+
+    v_bind_quad_and_draw(st, offset);
+}
+
+static void v_copy_swap_to_content(VkCommandBuffer cb, v_image_state_t *st, VkImage swap_image, int fb_w, int fb_h,
+                                   VkImageLayout swap_src_layout, VkAccessFlags swap_src_access, VkPipelineStageFlags swap_src_stage,
+                                   VkImageLayout content_src_layout, VkAccessFlags content_src_access, VkPipelineStageFlags content_src_stage) {
+    v_barrier_image(cb, swap_image, swap_src_access, VK_ACCESS_TRANSFER_READ_BIT,
+                    swap_src_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    swap_src_stage, VK_PIPELINE_STAGE_TRANSFER_BIT);
+    v_barrier_image(cb, st->content_image, content_src_access, VK_ACCESS_TRANSFER_WRITE_BIT,
+                    content_src_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    content_src_stage, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+    VkImageCopy copy = {0};
+
+    copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    copy.srcSubresource.layerCount = 1;
+
+    copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    copy.dstSubresource.layerCount = 1;
+
+    copy.extent.width = (uint32_t) fb_w;
+    copy.extent.height = (uint32_t) fb_h;
+    copy.extent.depth = 1;
+
+    vk_dl.CmdCopyImage(cb, swap_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, st->content_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+
+    v_barrier_image(cb, st->content_image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+    v_barrier_image(cb, swap_image, VK_ACCESS_TRANSFER_READ_BIT,
+                    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+}
 
 static int v_record_cmdbuf(v_device_t *dev, v_swapchain_t *sc, v_image_state_t *st, VkImage swap_image, int fb_w, int fb_h, int rot, int shader_frame_count) {
-    (void) shader_frame_count;
-
     if (!(sc->usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
         static int logged_no_colour = 0;
         if (!logged_no_colour) {
@@ -2320,33 +2512,54 @@ static int v_record_cmdbuf(v_device_t *dev, v_swapchain_t *sc, v_image_state_t *
     VkRenderPass present_rp = v_get_present_renderpass(dev, sc->format);
     VkPipeline pipe_overlay_present = v_get_present_pipeline_overlay(dev, sc->format);
     VkPipeline pipe_content_present = VK_NULL_HANDLE;
+    VkPipeline pipe_user_present = VK_NULL_HANDLE;
     int colour_active = v_colour_pass_needed();
+    int shader_active = v_user_shader_active(dev);
+    int post_active = colour_active || shader_active;
+
+    if (post_active && !(sc->usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)) {
+        static int logged_no_transfer_src = 0;
+        if (!logged_no_transfer_src) {
+            LOG_WARN("stage", "[vk] swapchain usage=0x%x lacks TRANSFER_SRC - shader/colour pass disabled", (unsigned) sc->usage);
+            logged_no_transfer_src = 1;
+        }
+
+        colour_active = 0;
+        shader_active = 0;
+        post_active = 0;
+    }
 
     if (colour_active) {
-        if (!(sc->usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)) {
-            static int logged_no_transfer_src = 0;
-            if (!logged_no_transfer_src) {
-                LOG_WARN("stage", "[vk] swapchain usage=0x%x lacks TRANSFER_SRC - colour/filter pass disabled", (unsigned) sc->usage);
-                logged_no_transfer_src = 1;
+        pipe_content_present = v_get_present_pipeline_content(dev, sc->format);
+        if (pipe_content_present == VK_NULL_HANDLE) {
+            static int logged_no_content_pipe = 0;
+            if (!logged_no_content_pipe) {
+                LOG_WARN("stage", "[vk] present content pipeline unavailable - colour/filter pass disabled");
+                logged_no_content_pipe = 1;
             }
             colour_active = 0;
-        } else {
-            pipe_content_present = v_get_present_pipeline_content(dev, sc->format);
-            if (pipe_content_present == VK_NULL_HANDLE) {
-                static int logged_no_content_pipe = 0;
-                if (!logged_no_content_pipe) {
-                    LOG_WARN("stage", "[vk] present content pipeline unavailable - colour/filter pass disabled");
-                    logged_no_content_pipe = 1;
-                }
-                colour_active = 0;
-            }
         }
     }
+
+    if (shader_active) {
+        pipe_user_present = v_get_present_pipeline_user(dev, sc->format);
+        if (pipe_user_present == VK_NULL_HANDLE) {
+            static int logged_no_user_pipe = 0;
+            if (!logged_no_user_pipe) {
+                LOG_WARN("stage", "[vk] present user shader pipeline unavailable - shader pass disabled");
+                logged_no_user_pipe = 1;
+            }
+            shader_active = 0;
+        }
+    }
+
+    post_active = colour_active || shader_active;
 
     if (present_rp == VK_NULL_HANDLE || pipe_overlay_present == VK_NULL_HANDLE) {
         static int logged_no_pipe = 0;
         if (!logged_no_pipe) {
-            LOG_WARN("stage", "[vk] present overlay pipeline unavailable (rp=%p pipe=%p)", (void *) present_rp, (void *) pipe_overlay_present);
+            LOG_WARN("stage", "[vk] present overlay pipeline unavailable (rp=%p pipe=%p)",
+                     (void *) present_rp, (void *) pipe_overlay_present);
             logged_no_pipe = 1;
         }
 
@@ -2354,54 +2567,16 @@ static int v_record_cmdbuf(v_device_t *dev, v_swapchain_t *sc, v_image_state_t *
         return 0;
     }
 
-    if (colour_active) {
-        v_barrier_image(st->cmdbuf, swap_image,
-                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
-                        VK_ACCESS_TRANSFER_READ_BIT,
-                        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                        VK_PIPELINE_STAGE_TRANSFER_BIT);
-
-        v_barrier_image(st->cmdbuf, st->content_image,
-                        0, VK_ACCESS_TRANSFER_WRITE_BIT,
-                        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                        VK_PIPELINE_STAGE_TRANSFER_BIT);
-
-        VkImageCopy copy = {0};
-
-        copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.srcSubresource.layerCount = 1;
-        copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.dstSubresource.layerCount = 1;
-
-        copy.extent.width = (uint32_t) fb_w;
-        copy.extent.height = (uint32_t) fb_h;
-
-        copy.extent.depth = 1;
-
-        vk_dl.CmdCopyImage(st->cmdbuf, swap_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                           st->content_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                           1, &copy);
-
-        v_barrier_image(st->cmdbuf, st->content_image,
-                        VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT,
-                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                        VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-        v_barrier_image(st->cmdbuf, swap_image,
-                        VK_ACCESS_TRANSFER_READ_BIT,
-                        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                        VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+    if (post_active) {
+        v_copy_swap_to_content(st->cmdbuf, st, swap_image, fb_w, fb_h, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                               VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+                               VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_IMAGE_LAYOUT_UNDEFINED, 0,
+                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     } else {
-        v_barrier_image(st->cmdbuf, swap_image,
-                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+        v_barrier_image(st->cmdbuf, swap_image, VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
                         VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
     }
 
     VkRenderPassBeginInfo rpb = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -2419,26 +2594,38 @@ static int v_record_cmdbuf(v_device_t *dev, v_swapchain_t *sc, v_image_state_t *
         v_draw_content_fullscreen(dev, st);
     }
 
+    if (shader_active) {
+        if (colour_active) {
+            vk_dl.CmdEndRenderPass(st->cmdbuf);
+            v_copy_swap_to_content(st->cmdbuf, st, swap_image, fb_w, fb_h, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                                   VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                   VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            vk_dl.CmdBeginRenderPass(st->cmdbuf, &rpb, VK_SUBPASS_CONTENTS_INLINE);
+            vk_dl.CmdSetViewport(st->cmdbuf, 0, 1, &vp);
+            vk_dl.CmdSetScissor(st->cmdbuf, 0, 1, &scissor);
+        }
+
+        vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_user_present);
+        v_draw_user_shader_fullscreen(dev, st, fb_w, fb_h, shader_frame_count);
+    }
+
     vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_overlay_present);
     float x0, y0, x1, y1;
     if (tex_base) {
-        v_compute_quad((int) tex_base->width, (int) tex_base->height, fb_w, fb_h,
-                       batch.base_anchor, batch.base_scale, rot, &x0, &y0, &x1, &y1);
+        v_compute_quad((int) tex_base->width, (int) tex_base->height, fb_w, fb_h, batch.base_anchor, batch.base_scale, rot, &x0, &y0, &x1, &y1);
         v_draw_sprite(st, dev->layout_overlay, tex_base->desc, x0, y0, x1, y1, rot, batch.base_alpha);
     }
     if (tex_battery) {
-        v_compute_quad((int) tex_battery->width, (int) tex_battery->height, fb_w, fb_h,
-                       batch.battery_anchor, batch.battery_scale, rot, &x0, &y0, &x1, &y1);
+        v_compute_quad((int) tex_battery->width, (int) tex_battery->height, fb_w, fb_h, batch.battery_anchor, batch.battery_scale, rot, &x0, &y0, &x1, &y1);
         v_draw_sprite(st, dev->layout_overlay, tex_battery->desc, x0, y0, x1, y1, rot, batch.battery_alpha);
     }
     if (tex_bright) {
-        v_compute_quad((int) tex_bright->width, (int) tex_bright->height, fb_w, fb_h,
-                       batch.bright_anchor, batch.bright_scale, rot, &x0, &y0, &x1, &y1);
+        v_compute_quad((int) tex_bright->width, (int) tex_bright->height, fb_w, fb_h, batch.bright_anchor, batch.bright_scale, rot, &x0, &y0, &x1, &y1);
         v_draw_sprite(st, dev->layout_overlay, tex_bright->desc, x0, y0, x1, y1, rot, batch.bright_alpha);
     }
     if (tex_volume) {
-        v_compute_quad((int) tex_volume->width, (int) tex_volume->height, fb_w, fb_h,
-                       batch.volume_anchor, batch.volume_scale, rot, &x0, &y0, &x1, &y1);
+        v_compute_quad((int) tex_volume->width, (int) tex_volume->height, fb_w, fb_h, batch.volume_anchor, batch.volume_scale, rot, &x0, &y0, &x1, &y1);
         v_draw_sprite(st, dev->layout_overlay, tex_volume->desc, x0, y0, x1, y1, rot, batch.volume_alpha);
     }
 
@@ -2450,7 +2637,8 @@ static int v_record_cmdbuf(v_device_t *dev, v_swapchain_t *sc, v_image_state_t *
                 VkPipeline dim_pipe = v_get_present_pipeline_solid(dev, sc->format);
                 if (dim_pipe != VK_NULL_HANDLE) {
                     vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, dim_pipe);
-                    v_draw_solid_rect(st, dev->layout_overlay, -1.0f, -1.0f, 1.0f, 1.0f,
+                    v_draw_solid_rect(st, dev->layout_overlay,
+                                      -1.0f, -1.0f, 1.0f, 1.0f,
                                       notif_cfg.dim_colour.r / 255.0f,
                                       notif_cfg.dim_colour.g / 255.0f,
                                       notif_cfg.dim_colour.b / 255.0f,
@@ -2479,7 +2667,6 @@ static int v_record_cmdbuf(v_device_t *dev, v_swapchain_t *sc, v_image_state_t *
 
     return 1;
 }
-
 
 VkResult vkCreateDevice(VkPhysicalDevice phys, const VkDeviceCreateInfo *ci, const VkAllocationCallbacks *alloc, VkDevice *out_device) {
     resolve_vulkan_symbols();
@@ -2608,7 +2795,6 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR *info) {
     bright_overlay_update();
     volume_overlay_update();
     notif_update();
-    shader_reload();
 
     v_device_t *dev = NULL;
     pthread_mutex_lock(&v_devices_lock);
