@@ -15,9 +15,7 @@ INCLUDES = -I./module/ui -I./font -I./lookup -I./common \
            -I./common/mini -I./common/miniz
 
 LDLIBS = -L$(LIB_DIR) -lui -llookup -lmuxcom -lmuxmod \
-         -lnotosans_big -lnotosans_big_hd -lnotosans_medium \
-         -lnotosans_sc_medium -lnotosans_tc_medium -lnotosans_jp_medium \
-         -lnotosans_kr_medium -lnotosans_ar_medium
+         -lnotosans_big -lnotosans_big_hd
 
 LDFLAGS = $(COMMON_LIBS) $(BIN_LDFLAGS) $(LIB_LDFLAGS)
 

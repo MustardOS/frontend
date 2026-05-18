@@ -115,9 +115,18 @@
     CONNECT(Bluetooth,   BLUETOOTH,   "bluetooth")   \
     CONNECT(UsbFunction, USBFUNCTION, "usbfunction")
 
+#define FONT_ELEMENTS                          \
+    FONT(Type,       TYPE,       "type")       \
+    FONT(Name,       NAME,       "name")       \
+    FONT(ListSize,   LISTSIZE,   "listsize")   \
+    FONT(HeaderSize, HEADERSIZE, "headersize") \
+    FONT(FooterSize, FOOTERSIZE, "footersize") \
+    FONT(PanelSize,  PANELSIZE,  "panelsize")
+
 #define CUSTOM_ELEMENTS                                         \
     CUSTOM(Catalogue,       CATALOGUE,       "catalogue")       \
     CUSTOM(Config,          CONFIG,          "config")          \
+    CUSTOM(Font,            FONT,            "font")            \
     CUSTOM(Theme,           THEME,           "theme")           \
     CUSTOM(ThemeResolution, THEMERESOLUTION, "resolution")      \
     CUSTOM(ThemeScaling,    THEMESCALING,    "scaling")         \
@@ -134,7 +143,6 @@
     CUSTOM(LaunchSplash,    LAUNCHSPLASH,    "splash")          \
     CUSTOM(GridModeContent, GRIDMODECONTENT, "gridmodecontent") \
     CUSTOM(BoxArtHide,      BOXARTHIDE,      "boxarthide")      \
-    CUSTOM(Font,            FONT,            "font")            \
     CUSTOM(Sound,           SOUND,           "sound")           \
     CUSTOM(SoundVolume,     SOUNDVOLUME,     "soundvolume")     \
     CUSTOM(Chime,           CHIME,           "chime")

@@ -225,6 +225,12 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.RGB.COMBO, CONF_CONFIG_PATH "settings/rgb/combo", 0);
     CFG_INT_FIELD(config->SETTINGS.RGB.BACKEND, CONF_CONFIG_PATH "settings/rgb/backend", 0);
 
+    CFG_STR_FIELD(config->SETTINGS.FONT.NAME, CONF_CONFIG_PATH "settings/font/name", "");
+    CFG_INT_FIELD(config->SETTINGS.FONT.LIST_SIZE, CONF_CONFIG_PATH "settings/font/list_size", 0);
+    CFG_INT_FIELD(config->SETTINGS.FONT.HEADER_SIZE, CONF_CONFIG_PATH "settings/font/header_size", 0);
+    CFG_INT_FIELD(config->SETTINGS.FONT.FOOTER_SIZE, CONF_CONFIG_PATH "settings/font/footer_size", 0);
+    CFG_INT_FIELD(config->SETTINGS.FONT.PANEL_SIZE, CONF_CONFIG_PATH "settings/font/panel_size", 0);
+
     CFG_INT_FIELD(config->SORT.DEFAULT, CONF_CONFIG_PATH "sort/default", 0);
     CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);
     CFG_INT_FIELD(config->SORT.HISTORY, CONF_CONFIG_PATH "sort/history", 0);

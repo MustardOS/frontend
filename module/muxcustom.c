@@ -23,12 +23,12 @@ struct theme_resolution {
 };
 
 struct theme_resolution theme_resolutions[] = {
-        {"640x480",  1},
-        {"720x480",  2},
-        {"720x576",  3},
-        {"720x720",  4},
-        {"1024x768", 5},
-        {"1280x720", 6},
+        {"640x480",   1},
+        {"720x480",   2},
+        {"720x576",   3},
+        {"720x720",   4},
+        {"1024x768",  5},
+        {"1280x720",  6},
         {"1920x1080", 7},
 };
 
@@ -151,11 +151,6 @@ static void init_navigation_group(void) {
             lang.MUXCUSTOM.BOX_ART.ALIGN.M_MID
     };
 
-    char *font_options[] = {
-            lang.MUXCUSTOM.FONT.LANG,
-            lang.MUXCUSTOM.FONT.THEME
-    };
-
     char *launch_swap_options[] = {
             lang.MUXCUSTOM.LAUNCH_SWAP.PRESS_A,
             lang.MUXCUSTOM.LAUNCH_SWAP.HOLD_A,
@@ -171,6 +166,7 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEMERESOLUTION, "resolution", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeScaling, lang.MUXCUSTOM.THEMESCALING, "scaling", theme_scaling_options, 3);
@@ -193,7 +189,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.LAUNCHSPLASH, "splash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, GridModeContent, lang.MUXCUSTOM.GRIDMODECONTENT, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", font_options, 2);
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, SoundVolume, lang.MUXCUSTOM.SOUND.VOLUME, "soundvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
@@ -230,6 +225,7 @@ static void check_focus(void) {
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lblCatalogue_custom ||
         e_focused == ui_lblConfig_custom ||
+        e_focused == ui_lblFont_custom ||
         e_focused == ui_lblTheme_custom) {
         lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -294,7 +290,6 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droLaunchSwap_custom, config.VISUAL.LAUNCH_SWAP);
     lv_dropdown_set_selected(ui_droShuffle_custom, config.VISUAL.SHUFFLE);
     lv_dropdown_set_selected(ui_droGridModeContent_custom, config.VISUAL.GRID_MODE_CONTENT);
-    lv_dropdown_set_selected(ui_droFont_custom, config.SETTINGS.ADVANCED.FONT);
     lv_dropdown_set_selected(ui_droMusic_custom, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droMusicVolume_custom, int_to_pct(config.SETTINGS.GENERAL.BGMVOL, 0, 100));
     lv_dropdown_set_selected(ui_droSound_custom, config.SETTINGS.GENERAL.SOUND);
@@ -318,7 +313,6 @@ static void save_custom_options() {
     CHECK_AND_SAVE_STD(custom, LaunchSplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(custom, GridModeContent, "visual/gridmodecontent", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtHide, "visual/boxarthide", INT, 0);
-    CHECK_AND_SAVE_STD(custom, Font, "settings/advanced/font", INT, 0);
     CHECK_AND_SAVE_STD(custom, Sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_PCT(custom, SoundVolume, "settings/general/soundvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, Chime, "settings/general/chime", INT, 0);
@@ -408,6 +402,7 @@ static void handle_a(void) {
         MENU_THEME,
         MENU_CATALOGUE,
         MENU_CONFIG,
+        MENU_FONT,
         MENU_MUSIC_VOLUME,
         MENU_SOUND_VOLUME,
         MENU_THEME_ALTERNATE,
@@ -426,26 +421,26 @@ static void handle_a(void) {
     static const menu_entry entries[UI_COUNT] = {
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, MENU_CATALOGUE,    NULL},
             {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG,  MENU_CONFIG,       NULL},
+            {"font", NULL,                     &KIOSK_PASS,             MENU_FONT,         NULL}, // Font Settings
             {"theme",     "/theme",            &kiosk.CUSTOM.THEME,     MENU_THEME,        NULL},
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Resolution
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Scaling
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_THEME_ALTERNATE, visible_theme_alternate},
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,          visible_animation},
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Background Music
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_MUSIC_VOLUME, NULL},
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Black Fade Animation
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Save State Launch
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Shuffle
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art Alignment
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Full Width
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Launch Splash
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Grid Mode
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Hide Grid Mode Box Art
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Interface Font Type
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Navigation Sound
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_SOUND_VOLUME, NULL},
-            {NULL, NULL,                       &KIOSK_PASS,             MENU_OPTION,       NULL}, // Startup Chime
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Resolution
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Scaling
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_THEME_ALTERNATE, visible_theme_alternate},
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,          visible_animation},
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Background Music
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_MUSIC_VOLUME, NULL},
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Black Fade Animation
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Save State Launch
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Shuffle
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art Alignment
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Full Width
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Launch Splash
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Grid Mode
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Hide Grid Mode Box Art
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Navigation Sound
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_SOUND_VOLUME, NULL},
+            {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Startup Chime
     };
 
     const menu_entry *visible_entries[UI_COUNT];
@@ -477,6 +472,22 @@ static void handle_a(void) {
             toast_message(lang.GENERIC.LOADING, FOREVER);
 
             load_mux(entry->action == MENU_THEME ? "theme" : "picker");
+
+            mux_input_stop();
+            break;
+        case MENU_FONT:
+            if (is_ksk(*entry->kiosk_flag)) {
+                kiosk_denied();
+                return;
+            }
+
+            save_custom_options();
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
+
+            play_sound(SND_CONFIRM);
+            toast_message(lang.GENERIC.LOADING, FOREVER);
+
+            load_mux("font");
 
             mux_input_stop();
             break;

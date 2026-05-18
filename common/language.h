@@ -494,6 +494,31 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char TYPE[MAX_BUFFER_SIZE];
+        char NAME[MAX_BUFFER_SIZE];
+        char LIST_SIZE[MAX_BUFFER_SIZE];
+        char HEADER_SIZE[MAX_BUFFER_SIZE];
+        char FOOTER_SIZE[MAX_BUFFER_SIZE];
+        char PANEL_SIZE[MAX_BUFFER_SIZE];
+        char SIZE_DEFAULT[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        struct {
+            char LANGUAGE[MAX_BUFFER_SIZE];
+            char THEME[MAX_BUFFER_SIZE];
+            char CUSTOM[MAX_BUFFER_SIZE];
+        } TYPE_OPTIONS;
+        struct {
+            char TYPE[MAX_BUFFER_SIZE];
+            char NAME[MAX_BUFFER_SIZE];
+            char LISTSIZE[MAX_BUFFER_SIZE];
+            char HEADERSIZE[MAX_BUFFER_SIZE];
+            char FOOTERSIZE[MAX_BUFFER_SIZE];
+            char PANELSIZE[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXFONT;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char VMSWAP[MAX_BUFFER_SIZE];
         char DIRTYRATIO[MAX_BUFFER_SIZE];
         char DIRTYBACK[MAX_BUFFER_SIZE];

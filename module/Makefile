@@ -7,13 +7,11 @@ CFLAGS = $(BASE_CFLAGS) \
 
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
           -L../bin/lib -lui -llookup -lmuxcom \
-          -lnotosans_big -lnotosans_big_hd \
-          -lnotosans_medium -lnotosans_sc_medium -lnotosans_tc_medium \
-          -lnotosans_jp_medium -lnotosans_kr_medium -lnotosans_ar_medium
+          -lnotosans_big -lnotosans_big_hd
 
 MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxchrony \
           muxcoladjust muxcolfilter muxcollect muxconfig muxconnect muxcontrol \
-          muxcustom muxdanger muxdevice muxdownload muxgov muxhdmi muxhistory \
+          muxcustom muxdanger muxdevice muxdownload muxfont muxgov muxhdmi muxhistory \
           muxinfo muxinstall muxkiosk muxlanguage muxlaunch muxnetadv muxnetinfo \
           muxnetprofile muxnetscan muxnetwork muxnews muxoption muxoverlay muxpass \
           muxpicker muxplore muxpower muxraopt muxrgb muxrtc muxsearch muxshader \

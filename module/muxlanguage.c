@@ -3,6 +3,40 @@
 
 static char language_data_local_path[MAX_BUFFER_SIZE];
 
+static void update_font_for_language(const char *new_language) {
+    char dir[MAX_BUFFER_SIZE];
+    snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", new_language);
+
+    struct dirent **entries;
+    int n = scandir(dir, &entries, NULL, alphasort);
+
+    if (n >= 0) {
+        char first_name[MAX_BUFFER_SIZE] = "";
+        for (int i = 0; i < n; i++) {
+            const char *fname = entries[i]->d_name;
+            size_t len = strlen(fname);
+            if (!first_name[0] && len > 4 && strcasecmp(fname + len - 4, ".ttf") == 0) {
+                snprintf(first_name, sizeof(first_name), "%.*s", (int) (len - 4), fname);
+            }
+            free(entries[i]);
+        }
+        free(entries);
+
+        if (first_name[0]) {
+            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, 0);
+            write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, first_name);
+            return;
+        }
+    }
+
+    write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, 1);
+    write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, "Noto Sans");
+    write_text_to_file(CONF_CONFIG_PATH "settings/font/list_size", "w", INT, 0);
+    write_text_to_file(CONF_CONFIG_PATH "settings/font/header_size", "w", INT, 0);
+    write_text_to_file(CONF_CONFIG_PATH "settings/font/footer_size", "w", INT, 0);
+    write_text_to_file(CONF_CONFIG_PATH "settings/font/panel_size", "w", INT, 0);
+}
+
 static void show_help(void) {
     show_info_box(lang.MUXLANGUAGE.TITLE, lang.MUXLANGUAGE.HELP, 0);
 }
@@ -96,6 +130,8 @@ static void handle_a(void) {
 
     write_text_to_file(CONF_CONFIG_PATH "settings/general/language", "w", CHAR,
                        items[current_item_index].name);
+
+    update_font_for_language(items[current_item_index].name);
 
     if (config.BOOT.FACTORY_RESET) load_mux("installer");
 

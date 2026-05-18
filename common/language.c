@@ -408,9 +408,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_MID, "Top Middle");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT, "Top Right");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "Hide Grid Mode Box Art");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Interface Font Type");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Font Picker");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.TITLE, "Background Music");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.VOLUME, "Background Music Volume");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.SET, "Setting Background Volume");
@@ -444,7 +442,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTALIGN, "Change the screen alignment of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENTWIDTH, "Toggle if content highlight uses full width of device screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTHIDE, "Hide system box art images in Content Explorer when theme uses grid mode");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Open font settings to configure font type, custom TTF font, and size overrides for most sections");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSICVOLUME, "The volume of the background music currently playing, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
@@ -452,6 +450,26 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSWAP, "Switch between pressing A or holding A to launch content save state automatically");
+
+    // muxfont
+    SPECIFIC_FIELD(lang->MUXFONT.TITLE, "FONT PICKER");
+    SPECIFIC_FIELD(lang->MUXFONT.TYPE, "Font Type");
+    SPECIFIC_FIELD(lang->MUXFONT.NAME, "Font Name");
+    SPECIFIC_FIELD(lang->MUXFONT.LIST_SIZE, "List Font Size");
+    SPECIFIC_FIELD(lang->MUXFONT.HEADER_SIZE, "Header Font Size");
+    SPECIFIC_FIELD(lang->MUXFONT.FOOTER_SIZE, "Footer Font Size");
+    SPECIFIC_FIELD(lang->MUXFONT.PANEL_SIZE, "Panel Font Size");
+    SPECIFIC_FIELD(lang->MUXFONT.SIZE_DEFAULT, "Default");
+    SPECIFIC_FIELD(lang->MUXFONT.NONE, "No Fonts Available");
+    SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.LANGUAGE, "Language");
+    SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.THEME, "Theme");
+    SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.CUSTOM, "Custom");
+    SPECIFIC_FIELD(lang->MUXFONT.HELP.TYPE, "Select the font type: Language uses the built-in language font, Theme uses fonts provided by the active theme, Custom lets you pick a specific TTF font");
+    SPECIFIC_FIELD(lang->MUXFONT.HELP.NAME, "Select the custom TTF font to use (only applies when Font Type is Custom)");
+    SPECIFIC_FIELD(lang->MUXFONT.HELP.LISTSIZE, "Set the font size for list items (0 uses the device default)");
+    SPECIFIC_FIELD(lang->MUXFONT.HELP.HEADERSIZE, "Set the font size for the header bar (0 uses the device default)");
+    SPECIFIC_FIELD(lang->MUXFONT.HELP.FOOTERSIZE, "Set the font size for the footer bar (0 uses the device default)");
+    SPECIFIC_FIELD(lang->MUXFONT.HELP.PANELSIZE, "Set the font size for grid panel labels (0 uses the device default, only applies in grid mode)");
 
     // muxdanger
     SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGER SETTINGS");

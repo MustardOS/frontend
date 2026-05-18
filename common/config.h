@@ -214,6 +214,13 @@ struct mux_config {
             int16_t COMBO;
             int16_t BACKEND;
         } RGB;
+        struct {
+            char NAME[MAX_BUFFER_SIZE];
+            int16_t LIST_SIZE;
+            int16_t HEADER_SIZE;
+            int16_t FOOTER_SIZE;
+            int16_t PANEL_SIZE;
+        } FONT;
     } SETTINGS;
 
     struct {

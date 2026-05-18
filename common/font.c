@@ -8,12 +8,6 @@
 #include "config.h"
 #include "device.h"
 #include "input/list_nav.h"
-#include "../font/notosans_medium.h"
-#include "../font/notosans_ar_medium.h"
-#include "../font/notosans_jp_medium.h"
-#include "../font/notosans_kr_medium.h"
-#include "../font/notosans_sc_medium.h"
-#include "../font/notosans_tc_medium.h"
 
 // Max TTF file size accepted (64 MB). Protects against accidentally pointing at a
 // giant file and exhausting RAM before we've had a chance to log anything useful.
@@ -27,12 +21,8 @@ int font_cache_count = 0;
 char last_font_key[256] = "";
 
 typedef struct {
-    const char *lang;
-    const void *font;
-} font_lang_t;
-
-typedef struct {
     char path[MAX_BUFFER_SIZE];
+    int size;
 
     lv_font_t *font;
 
@@ -66,28 +56,27 @@ static int get_section_ttf_size(const char *section) {
     return get_font_size();
 }
 
+static int get_custom_section_size(const char *section) {
+    if (strcmp(section, FONT_HEADER_DIR) == 0 && config.SETTINGS.FONT.HEADER_SIZE > 0) return config.SETTINGS.FONT.HEADER_SIZE;
+    if (strcmp(section, FONT_FOOTER_DIR) == 0 && config.SETTINGS.FONT.FOOTER_SIZE > 0) return config.SETTINGS.FONT.FOOTER_SIZE;
+    if (strcmp(section, FONT_PANEL_DIR) == 0 && grid_mode_enabled && config.SETTINGS.FONT.PANEL_SIZE > 0) return config.SETTINGS.FONT.PANEL_SIZE;
+    return (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+}
+
+static lv_font_t *load_font_cached_ttf(const char *path, int size, bool set_fallback);
+
 static lv_font_t *create_language_font(int size) {
-    size_t cache_size = MAX_BUFFER_SIZE * 10;
-
-    static const font_lang_t font_map[] = {
-            {"Chinese (Simplified)",  &notosans_sc_medium_ttf},
-            {"Chinese (Traditional)", &notosans_tc_medium_ttf},
-            {"Japanese",              &notosans_jp_medium_ttf},
-            {"Arabic",                &notosans_ar_medium_ttf},
-            {"Korean",                &notosans_kr_medium_ttf},
-    };
-
     const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
-    const void *font_data = &notosans_medium_ttf;
+    const char *name = config.SETTINGS.FONT.NAME;
 
-    for (size_t i = 0; i < sizeof(font_map) / sizeof(font_map[0]); i++) {
-        if (strcasecmp(curr_lang, font_map[i].lang) == 0) {
-            font_data = font_map[i].font;
-            break;
-        }
+    if (curr_lang[0] && name[0]) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s/%s.ttf", curr_lang, name);
+        lv_font_t * font = load_font_cached_ttf(path, size, false);
+        if (font) return font;
     }
 
-    return lv_tiny_ttf_create_data_ex(font_data, notosans_medium_ttf_len, size, cache_size);
+    return NULL;
 }
 
 lv_font_t *get_language_font(void) {
@@ -123,7 +112,6 @@ static lv_font_t *load_font_from_bin(const char *filepath) {
     lv_font_t * font = lv_font_load(fs_path);
     if (!font) return NULL;
 
-    font->fallback = get_language_font();
     return font;
 }
 
@@ -168,22 +156,21 @@ static lv_font_t *load_font_from_ttf(const char *filepath, int size, void **out_
         return NULL;
     }
 
-    font->fallback = get_language_font();
     LOG_INFO(mux_module, "TTF font loaded into memory (%ld KB): %s", file_size / 1024, filepath);
 
     *out_data = data;
     return font;
 }
 
-static lv_font_t *cache_lookup(const char *path) {
+static lv_font_t *cache_lookup(const char *path, int size) {
     for (int i = 0; i < font_cache_count; i++) {
-        if (strcmp(font_cache[i].path, path) == 0) return font_cache[i].font;
+        if (font_cache[i].size == size && strcmp(font_cache[i].path, path) == 0) return font_cache[i].font;
     }
 
     return NULL;
 }
 
-static void cache_store(const char *path, lv_font_t *font, void *data, int is_ttf) {
+static void cache_store(const char *path, int size, lv_font_t *font, void *data, int is_ttf) {
     if (font_cache_count >= FONT_CACHE_MAX) {
         if (is_ttf) {
             lv_tiny_ttf_destroy(font);
@@ -199,6 +186,7 @@ static void cache_store(const char *path, lv_font_t *font, void *data, int is_tt
     strncpy(font_cache[font_cache_count].path, path, MAX_BUFFER_SIZE - 1);
 
     font_cache[font_cache_count].path[MAX_BUFFER_SIZE - 1] = '\0';
+    font_cache[font_cache_count].size = size;
     font_cache[font_cache_count].font = font;
     font_cache[font_cache_count].data = data;
     font_cache[font_cache_count].is_ttf = is_ttf;
@@ -207,23 +195,30 @@ static void cache_store(const char *path, lv_font_t *font, void *data, int is_tt
 }
 
 static lv_font_t *load_font_cached_bin(const char *path) {
-    lv_font_t * hit = cache_lookup(path);
+    lv_font_t * hit = cache_lookup(path, 0);
     if (hit) return hit;
 
     lv_font_t * font = load_font_from_bin(path);
-    if (font) cache_store(path, font, NULL, 0);
+    if (!font) return NULL;
+
+    cache_store(path, 0, font, NULL, 0);
+    font->fallback = get_language_font();
 
     return font;
 }
 
-static lv_font_t *load_font_cached_ttf(const char *path, int size) {
-    lv_font_t * hit = cache_lookup(path);
+static lv_font_t *load_font_cached_ttf(const char *path, int size, bool set_fallback) {
+    lv_font_t * hit = cache_lookup(path, size);
     if (hit) return hit;
 
     void *data = NULL;
 
     lv_font_t * font = load_font_from_ttf(path, size, &data);
-    if (font) cache_store(path, font, data, 1);
+    if (!font) return NULL;
+
+    cache_store(path, size, font, data, 1);
+
+    if (set_fallback) font->fallback = get_language_font();
 
     return font;
 }
@@ -233,7 +228,7 @@ static lv_font_t *try_font_at(const char *base, char *resolved, int size) {
 
     snprintf(path, sizeof(path), "%s.ttf", base);
     if (file_exist(path)) {
-        lv_font_t * f = load_font_cached_ttf(path, size);
+        lv_font_t * f = load_font_cached_ttf(path, size, true);
         if (f) {
             snprintf(resolved, 1024, "%s", path);
             return f;
@@ -253,9 +248,24 @@ static lv_font_t *try_font_at(const char *base, char *resolved, int size) {
 }
 
 void load_font_text(lv_obj_t *screen) {
-    lv_font_t * language_font = get_language_font();
+    int lang_size = (config.SETTINGS.ADVANCED.FONT == 0 && config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+    lv_font_t * language_font = create_language_font(lang_size);
 
-    if (config.SETTINGS.ADVANCED.FONT) {
+    if (config.SETTINGS.ADVANCED.FONT == 2 && config.SETTINGS.FONT.NAME[0]) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", config.SETTINGS.FONT.NAME);
+
+        int size = (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+        lv_font_t * font = load_font_cached_ttf(path, size, true);
+
+        if (font) {
+            LOG_INFO(mux_module, "Loading Custom Font: %s", path);
+            apply_font(screen, font);
+            return;
+        }
+    }
+
+    if (config.SETTINGS.ADVANCED.FONT == 1) {
         const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
 
         char *dims[2] = {mux_dim, ""};
@@ -308,11 +318,42 @@ void load_font_text(lv_obj_t *screen) {
     }
 
     LOG_INFO(mux_module, "Loading Default Language Font");
-    lv_obj_set_style_text_font(screen, language_font, MU_OBJ_MAIN_DEFAULT);
+    apply_font(screen, language_font);
 }
 
 void load_font_section(const char *section, lv_obj_t *element) {
-    if (!config.SETTINGS.ADVANCED.FONT) return;
+    if (config.SETTINGS.ADVANCED.FONT == 2 && config.SETTINGS.FONT.NAME[0]) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", config.SETTINGS.FONT.NAME);
+
+        int size = get_custom_section_size(section);
+        lv_font_t * font = load_font_cached_ttf(path, size, true);
+
+        if (font) {
+            LOG_INFO(mux_module, "Loading Custom Section '%s' Font: %s", section, path);
+            apply_font(element, font);
+            return;
+        }
+
+        if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
+            apply_font(element, create_language_font(size));
+        } else {
+            lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
+        }
+
+        return;
+    }
+
+    if (!config.SETTINGS.ADVANCED.FONT) {
+        int size = get_custom_section_size(section);
+        if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
+            apply_font(element, create_language_font(size));
+        } else {
+            lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
+        }
+
+        return;
+    }
 
     const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
 
@@ -366,15 +407,26 @@ void load_font_section(const char *section, lv_obj_t *element) {
 
     if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
         apply_font(element, create_language_font(get_section_ttf_size(section)));
+    } else {
+        lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
     }
 }
 
 int font_context_changed(void) {
     char context[MAX_BUFFER_SIZE];
-    snprintf(context, sizeof(context), "%s|%s", config.THEME.ACTIVE, config.SETTINGS.GENERAL.LANGUAGE);
+    snprintf(context, sizeof(context), "%s|%s|%d|%s|%d|%d|%d|%d",
+             config.THEME.ACTIVE,
+             config.SETTINGS.GENERAL.LANGUAGE,
+             config.SETTINGS.ADVANCED.FONT,
+             config.SETTINGS.FONT.NAME,
+             config.SETTINGS.FONT.LIST_SIZE,
+             config.SETTINGS.FONT.HEADER_SIZE,
+             config.SETTINGS.FONT.FOOTER_SIZE,
+             config.SETTINGS.FONT.PANEL_SIZE);
 
-    if (strcmp(context, last_font_key) != 0) {
-        strcpy(last_font_key, context);
+    if (strncmp(context, last_font_key, sizeof(last_font_key) - 1) != 0) {
+        strncpy(last_font_key, context, sizeof(last_font_key) - 1);
+        last_font_key[sizeof(last_font_key) - 1] = '\0';
         LOG_INFO(mux_module, "Font context has changed");
         return 1;
     }

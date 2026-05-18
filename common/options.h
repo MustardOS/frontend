@@ -75,8 +75,9 @@
 #define EXPLORE_DIR  "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-#define OPTION_SKIP    "/tmp/skip_opt"
+#define OPTION_SKIP "/tmp/skip_opt"
 
+#define INTERNAL_FONTS OPT_PATH "share/font/internal"
 #define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
 
