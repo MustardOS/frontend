@@ -112,6 +112,7 @@ struct mux_config {
             int16_t ACTIVITY;
             int16_t USBFUNCTION;
             int16_t VERBOSE;
+            int16_t DEBUGLOG;
             int16_t RUMBLE;
             int16_t USERINIT;
             int16_t DPADSWAP;

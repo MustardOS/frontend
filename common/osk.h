@@ -6,14 +6,6 @@
 #include <linux/input.h>
 #include "../lvgl/lvgl.h"
 
-typedef enum {
-    OSK_DIR_NONE = 0,
-    OSK_DIR_UP,
-    OSK_DIR_DOWN,
-    OSK_DIR_LEFT,
-    OSK_DIR_RIGHT,
-} osk_dir_t;
-
 extern int key_show;
 extern int key_curr;
 extern int key_map;

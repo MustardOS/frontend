@@ -20,7 +20,7 @@ static void image_refresh(void) {
         snprintf(screenshot_image, sizeof(screenshot_image), "M:%s", screenshot_file);
         lv_img_set_src(ui_imgScreenshot, screenshot_image);
     } else {
-        lv_img_set_src(ui_imgScreenshot, &ui_image_Nothing);
+        lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
     }
 }
 
@@ -176,7 +176,7 @@ static void init_elements(void) {
 
     ui_imgScreenshot = lv_img_create(ui_screen);
     lv_img_set_pivot(ui_imgScreenshot, 0, 0);
-    lv_img_set_src(ui_imgScreenshot, &ui_image_Nothing);
+    lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
     lv_obj_set_style_img_opa(ui_imgScreenshot, 25, MU_OBJ_MAIN_DEFAULT);
 
     overlay_display();

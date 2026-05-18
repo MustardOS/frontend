@@ -3,7 +3,6 @@
 #include "../../common/ui_common.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../common/img/nothing.h"
 
 lv_obj_t *ui_scrCharge_charge;
 lv_obj_t *ui_blank_charge;
@@ -30,7 +29,7 @@ void init_muxcharge(void) {
     apply_gradient_to_ui_screen(ui_scrCharge_charge, &theme, &device);
 
     lv_obj_clear_flag(ui_scrCharge_charge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
-LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
+                                           LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_set_scrollbar_mode(ui_scrCharge_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_color(ui_scrCharge_charge, lv_color_hex(theme.SYSTEM.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrCharge_charge, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
@@ -46,7 +45,7 @@ LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_set_style_border_width(ui_pnlWall_charge, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_imgWall_charge = lv_img_create(ui_pnlWall_charge);
-    lv_img_set_src(ui_imgWall_charge, &ui_image_Nothing);
+    lv_img_set_src(ui_imgWall_charge, &ui_img_blank);
     lv_obj_set_align(ui_imgWall_charge, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgWall_charge, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall_charge, LV_OBJ_FLAG_SCROLLABLE);

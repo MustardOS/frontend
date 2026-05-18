@@ -103,6 +103,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACTIVITY, CONF_CONFIG_PATH "settings/advanced/activity", 1);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, CONF_CONFIG_PATH "settings/advanced/usb_function", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.VERBOSE, CONF_CONFIG_PATH "settings/advanced/verbose", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.DEBUGLOG, CONF_CONFIG_PATH "system/debug_mode", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, CONF_CONFIG_PATH "settings/advanced/rumble", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.VOLUME, CONF_CONFIG_PATH "settings/advanced/volume", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, CONF_CONFIG_PATH "settings/advanced/brightness", 0);

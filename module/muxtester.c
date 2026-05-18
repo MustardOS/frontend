@@ -245,14 +245,14 @@ static void show_icon(const char *name) {
     if (file_exist(path)) {
         lv_img_set_src(ui_imgButton, embed);
     } else {
-        lv_img_set_src(ui_imgButton, &ui_image_Nothing);
+        lv_img_set_src(ui_imgButton, &ui_img_blank);
     }
 
     if (ui_pnlInputPreview) lv_obj_clear_flag(ui_pnlInputPreview, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void clear_icon(void) {
-    lv_img_set_src(ui_imgButton, &ui_image_Nothing);
+    lv_img_set_src(ui_imgButton, &ui_img_blank);
 
     if (ui_pnlInputPreview) lv_obj_add_flag(ui_pnlInputPreview, LV_OBJ_FLAG_HIDDEN);
 }
@@ -674,7 +674,7 @@ static void init_elements(void) {
     create_input_preview_panel(ui_screen, shorter);
 
     ui_imgButton = lv_img_create(ui_screen);
-    lv_img_set_src(ui_imgButton, &ui_image_Nothing);
+    lv_img_set_src(ui_imgButton, &ui_img_blank);
     lv_obj_align(ui_imgButton, LV_ALIGN_CENTER, 0, -32);
     lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);

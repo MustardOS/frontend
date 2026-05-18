@@ -161,7 +161,7 @@ INC_DIR="$CPPFLAGS"
 LIB_DIR="$LDFLAGS"
 export INC_DIR LIB_DIR
 
-# SDL/Freetype/ALSA via pkg-config — callers should prefer: $(pkg-config --cflags --libs sdl2 freetype2 alsa)
+# SDL/Freetype/ALSA via pkg-config - callers should prefer: $(pkg-config --cflags --libs sdl2 freetype2 alsa)
 # Kept for compatibility if some Makefiles look for them:
 if command -v "${PKG_CONFIG:-pkg-config}" >/dev/null 2>&1; then
 	if "${PKG_CONFIG:-pkg-config}" --exists sdl2 >/dev/null 2>&1; then

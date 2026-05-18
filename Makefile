@@ -33,6 +33,7 @@ info:
 
 prebuild:
 	@echo "Building Stage Overlay: libmustage.so"
+	$(VERBOSE)$(MAKE) -C stage clean $(QUIET)
 	$(VERBOSE)$(MAKE) -C stage DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 	$(VERBOSE)for DEP in $(DEPENDENCIES); do \
 		echo "Building Dependency: $$DEP"; \

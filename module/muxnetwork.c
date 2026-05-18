@@ -501,6 +501,8 @@ static void handle_confirm(void) {
                 key_curr = 0;
                 if (e_focused == ui_lblIdentifier_network ||
                     e_focused == ui_lblPassword_network) {
+                    lv_textarea_set_password_mode(ui_txtEntry_network, e_focused == ui_lblPassword_network);
+
                     lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -509,6 +511,8 @@ static void handle_confirm(void) {
 
                     key_show = 1;
                 } else {
+                    lv_textarea_set_password_mode(ui_txtEntry_network, false);
+
                     lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
 

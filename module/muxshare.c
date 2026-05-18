@@ -603,12 +603,12 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                           int *starter_image, int *splash_valid) {
     if (strlen(h_core_artwork) <= 1) {
         if (strcasecmp(image_type, "preview") == 0) {
-            lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
+            lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_blank);
         } else if (strcasecmp(image_type, "splash") == 0) {
             *splash_valid = 0;
-            lv_img_set_src(ui_imgSplash, &ui_image_Nothing);
+            lv_img_set_src(ui_imgSplash, &ui_img_blank);
         } else {
-            lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+            lv_img_set_src(ui_imgBox, &ui_img_blank);
         }
         return;
     }
@@ -638,7 +638,7 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                 update_image(ui_imgHelpPreviewImage, image_settings);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
             } else {
-                lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
+                lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_blank);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
             }
         }
@@ -655,7 +655,7 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                 snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
             } else {
                 *splash_valid = 0;
-                lv_img_set_src(ui_imgSplash, &ui_image_Nothing);
+                lv_img_set_src(ui_imgSplash, &ui_img_blank);
                 snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
             }
         }
@@ -680,7 +680,7 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
 
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
                 } else {
-                    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+                    lv_img_set_src(ui_imgBox, &ui_img_blank);
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
                 }
             }

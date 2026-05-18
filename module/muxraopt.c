@@ -356,7 +356,7 @@ int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     list_nav_next(0);
     init_timer(ui_gen_refresh_task, NULL);
 
-    mux_input_options input = {
+    mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
@@ -382,8 +382,8 @@ int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input, true);
-    mux_input_task(&input);
+    init_input(&input_opts, true);
+    mux_input_task(&input_opts);
 
     return 0;
 }

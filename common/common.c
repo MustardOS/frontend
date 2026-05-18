@@ -19,8 +19,8 @@
 #include <SDL2/SDL_mixer.h>
 #include "../lvgl/lvgl.h"
 #include "miniz/miniz.h"
-#include "img/nothing.h"
 #include "json/json.h"
+#include "anim.h"
 #include "init.h"
 #include "common.h"
 #include "ui_common.h"
@@ -880,10 +880,10 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 
     if (type == CHAR) { // type is general text!
         fprintf(file, "%s", va_arg(args,
-                                   const char *));
+        const char *));
     } else if (type == INT) { // type is a number!
         fprintf(file, "%d", va_arg(args,
-                                   int));
+        int));
     }
 
     va_end(args);
@@ -1350,10 +1350,20 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
                         lv_gif_set_src(wall_img, new_wall);
                         break;
                     case 2:
-                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY,
-                                             theme.ANIMATION.ANIMATION_REPEAT > 0 ? theme.ANIMATION.ANIMATION_REPEAT
-                                                                                  : LV_ANIM_REPEAT_INFINITE,
-                                             new_wall);
+                        if (config.VISUAL.BACKGROUNDANIMATION) {
+                            int fg = theme.ANIMATION.ANIMATION_FOREGROUND;
+                            int pos = theme.ANIMATION.ANIMATION_POSITION;
+                            int alpha = theme.ANIMATION.ANIMATION_ALPHA;
+                            anim_request(new_wall, theme.ANIMATION.ANIMATION_DELAY, fg, pos, alpha);
+                            lv_img_set_src(ui_imgWall, &ui_img_blank);
+                            if (!fg) {
+                                lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                                lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                                set_gradient_visible(0);
+                            }
+                        } else {
+                            lv_img_set_src(ui_imgWall, new_wall);
+                        }
                         break;
                     default:
                         lv_img_set_src(ui_imgWall, new_wall);
@@ -1362,7 +1372,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
             }
         } else {
             unload_image_animation();
-            lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+            lv_img_set_src(ui_imgWall, &ui_img_blank);
         }
     }
 }
@@ -1552,7 +1562,7 @@ void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path) {
     if (img_paths_count > 0) {
         lv_img_set_src(ui_imgWall, img_paths[random() % img_paths_count]);
     } else {
-        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+        lv_img_set_src(ui_imgWall, &ui_img_blank);
     }
 }
 
@@ -1580,6 +1590,16 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_c
 }
 
 void unload_image_animation(void) {
+    if (anim_is_active()) {
+        int was_background = !anim_is_foreground();
+        anim_unload();
+        if (was_background) {
+            set_gradient_visible(1);
+            lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_screen, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
+                                               ? theme.SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
+        }
+    }
     if (lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
@@ -1833,7 +1853,7 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
         lv_img_set_src(ui_imgobj, image_path);
         lv_obj_move_foreground(ui_imgobj);
     } else {
-        lv_img_set_src(ui_imgobj, &ui_image_Nothing);
+        lv_img_set_src(ui_imgobj, &ui_img_blank);
     }
 }
 
@@ -2579,7 +2599,7 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
         lv_img_set_src(cell, grid_image);
     } else {
-        lv_img_set_src(cell, &ui_image_Nothing);
+        lv_img_set_src(cell, &ui_img_blank);
     }
 }
 

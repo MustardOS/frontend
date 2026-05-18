@@ -23,8 +23,8 @@
 #define LOG_PID "/run/muos/arborist.pid"
 #define MSG_BIN "/opt/muos/frontend/muxmessage"
 
-#define DEBUG_FILE   "/opt/muos/config/system/debug_mode"
-#define VERBOSE_FILE "/opt/muos/config/settings/advanced/verbose"
+#define SYS_DEBUG_FILE "/opt/muos/config/system/debug_mode"
+#define VERBOSE_FILE   "/opt/muos/config/settings/advanced/verbose"
 
 #define MODULE_SIZE    64
 #define TITLE_SIZE     128
@@ -85,7 +85,7 @@ static int read_flag_file(const char *path) {
 }
 
 static int debug_enabled(void) {
-    return read_flag_file(DEBUG_FILE);
+    return read_flag_file(SYS_DEBUG_FILE);
 }
 
 static int verbose_enabled(void) {

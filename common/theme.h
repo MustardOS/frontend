@@ -39,6 +39,9 @@ struct theme_config {
     struct {
         int16_t ANIMATION_DELAY;
         int16_t ANIMATION_REPEAT;
+        int16_t ANIMATION_FOREGROUND;
+        int16_t ANIMATION_POSITION;
+        int16_t ANIMATION_ALPHA;
     } ANIMATION;
 
     struct {
@@ -50,6 +53,10 @@ struct theme_config {
     } MUX;
 
     struct {
+        int16_t FONT_LIST_SIZE;
+        int16_t FONT_HEADER_SIZE;
+        int16_t FONT_FOOTER_SIZE;
+        int16_t FONT_PANEL_SIZE;
         int16_t HEADER_PAD_TOP;
         int16_t HEADER_PAD_BOTTOM;
         int16_t HEADER_ICON_PAD_TOP;
@@ -478,5 +485,4 @@ void init_item_style(struct theme_config *theme);
 
 void init_glyph_style(struct theme_config *theme);
 
-int get_theme_preview_path(char *base_path, char *base_file_name, 
-                           char *image_path, size_t image_path_size, int preview_index);
+int get_theme_preview_path(char *base_path, char *base_file_name, char *image_path, size_t image_path_size, int preview_index);

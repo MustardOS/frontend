@@ -1226,6 +1226,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RETROCACHE, "RetroArch Startup Cache");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE, "Verbose Messages");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.DEBUGLOG, "Debug Logging");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.USERINIT, "User Init Scripts");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.DPADSWAP, "DPAD Swap Function");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.OVERDRIVE, "Audio Overdrive");
@@ -1277,6 +1278,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RETROCACHE, "Toggle the startup cache of RetroArch. This will increase boot by ~3s but will start RetroArch a bit faster on first runs");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACTIVITY, "Toggle the content activity tracker");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VERBOSE, "Toggle startup and shutdown verbose messages used for debugging faults");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DEBUGLOG, "Toggle additional debug logging written to the internal log directory for diagnostic purposes only");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USERINIT, "Toggle the functionality of the user initialisation scripts on device startup");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DPADSWAP, "Toggle the functionality of the power button to switch DPAD mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OVERDRIVE, "Toggle the audio overdrive moving it from 100% to 200%");

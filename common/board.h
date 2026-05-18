@@ -8,6 +8,17 @@ typedef enum {
     BOARD_SPECIAL_VITA_PRO,
 } board_special_t;
 
+typedef enum {
+    BOARD_EVENT_OFFSET_NONE = 0,
+    BOARD_EVENT_OFFSET_TOUCH,
+} board_event_offset_condition_t;
+
+typedef struct {
+    board_event_offset_condition_t condition;
+    int from_event;
+    int offset;
+} board_event_offset_t;
+
 typedef struct {
     const char *name;
     const char *code;
@@ -15,6 +26,7 @@ typedef struct {
     int vol_event;
     int pwr_event;
     int lid_event;
+    board_event_offset_t event_offset;
 } board_info_t;
 
 enum {

@@ -2,6 +2,8 @@
 
 #include "collection.h"
 
+extern const lv_img_dsc_t ui_img_blank;
+
 extern lv_timer_t *toast_timer;
 extern lv_timer_t *counter_timer;
 
@@ -22,6 +24,10 @@ struct nav_bar {
 };
 
 void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device);
+
+void set_gradient_visible(int visible);
+
+void ui_common_get_gradient_buffer(void **buf, int *w, int *h);
 
 void fade_reset(void);
 

@@ -1394,6 +1394,7 @@ struct mux_lang {
         char RETROCACHE[MAX_BUFFER_SIZE];
         char ACTIVITY[MAX_BUFFER_SIZE];
         char VERBOSE[MAX_BUFFER_SIZE];
+        char DEBUGLOG[MAX_BUFFER_SIZE];
         char USERINIT[MAX_BUFFER_SIZE];
         char DPADSWAP[MAX_BUFFER_SIZE];
         char OVERDRIVE[MAX_BUFFER_SIZE];
@@ -1456,6 +1457,7 @@ struct mux_lang {
             char RETROCACHE[MAX_BUFFER_SIZE];
             char ACTIVITY[MAX_BUFFER_SIZE];
             char VERBOSE[MAX_BUFFER_SIZE];
+            char DEBUGLOG[MAX_BUFFER_SIZE];
             char USERINIT[MAX_BUFFER_SIZE];
             char DPADSWAP[MAX_BUFFER_SIZE];
             char OVERDRIVE[MAX_BUFFER_SIZE];

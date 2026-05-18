@@ -1,7 +1,7 @@
 #include "ui_muxmessage.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../common/img/nothing.h"
+#include "../../common/ui_common.h"
 
 lv_obj_t *ui_scrMessage;
 
@@ -32,7 +32,7 @@ void init_muxmessage(void) {
     lv_obj_set_style_border_width(ui_pnlWall, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_imgWall = lv_img_create(ui_pnlWall);
-    lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+    lv_img_set_src(ui_imgWall, &ui_img_blank);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);

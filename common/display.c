@@ -3,6 +3,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "anim.h"
 #include "log.h"
 #include "common.h"
 #include "device.h"
@@ -10,8 +11,8 @@
 #include "config.h"
 #include "theme.h"
 #include "display.h"
+#include "ui_common.h"
 #include "saver.h"
-
 #include "saver/dvd.h"
 #include "saver/star.h"
 #include "saver/matrix.h"
@@ -52,6 +53,13 @@ static monitor_t monitor;
 static SDL_Rect pending_rect;
 static bool pending_rect_valid = false;
 static uint32_t last_saver_exit = 0;
+static uint8_t display_fade_alpha = 0;
+static bool gradient_captured = false;
+uint32_t anim_tick_event = 0;
+
+void display_set_fade_alpha(uint8_t alpha) {
+    display_fade_alpha = alpha;
+}
 
 int scale_width, scale_height, underscan;
 
@@ -363,6 +371,19 @@ static void update_render_state(void) {
             (underscan > 0);
 }
 
+static Uint32 anim_timer_cb(Uint32 interval, void *param) {
+    (void) param;
+
+    if (anim_is_active() && anim_tick_event != 0) {
+        SDL_Event e;
+        SDL_memset(&e, 0, sizeof(e));
+        e.type = anim_tick_event;
+        SDL_PushEvent(&e);
+    }
+
+    return interval;
+}
+
 void sdl_init(void) {
     SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
     SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE, "1");
@@ -377,7 +398,7 @@ void sdl_init(void) {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER) < 0) {
         LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
@@ -450,9 +471,18 @@ void sdl_init(void) {
 
     reload_background(config.THEME.ACTIVE);
     reload_saver();
+
+    anim_tick_event = SDL_RegisterEvents(1);
+    if (anim_tick_event == (uint32_t) -1) {
+        LOG_WARN("video", "SDL_RegisterEvents failed; animation timer disabled");
+        anim_tick_event = 0;
+    } else {
+        SDL_AddTimer(IDLE_MS, anim_timer_cb, NULL);
+    }
 }
 
 void sdl_cleanup(void) {
+    anim_unload();
     dvd_shutdown();
     star_shutdown();
     matrix_shutdown();
@@ -494,6 +524,47 @@ static void render_saver_frame(void) {
     SDL_RenderPresent(monitor.renderer);
 }
 
+static int saver_event_is_touch(const SDL_Event *ev) {
+    if (!device.BOARD.HASTOUCH) return 0;
+
+    switch (ev->type) {
+        case SDL_FINGERDOWN:
+        case SDL_FINGERUP:
+        case SDL_FINGERMOTION:
+        case SDL_MULTIGESTURE:
+        case SDL_DOLLARGESTURE:
+        case SDL_DOLLARRECORD:
+            return 1;
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+            if (ev->button.which == SDL_TOUCH_MOUSEID) return 1;
+            return 1;
+        case SDL_MOUSEMOTION:
+            if (ev->motion.which == SDL_TOUCH_MOUSEID) return 1;
+            return 1;
+        case SDL_MOUSEWHEEL:
+            if (ev->wheel.which == SDL_TOUCH_MOUSEID) return 1;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int saver_event_should_stop(const SDL_Event *ev) {
+    if (saver_event_is_touch(ev)) return 0;
+
+    switch (ev->type) {
+        case SDL_KEYDOWN:
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_JOYBUTTONDOWN:
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_QUIT:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 static void run_saver_loop(int preview) {
     mux_input_flush_all();
 
@@ -509,17 +580,10 @@ static void run_saver_loop(int preview) {
 
         if (SDL_WaitEventTimeout(&ev, timeout)) {
             do {
-                switch (ev.type) {
-                    case SDL_KEYDOWN:
-                    case SDL_CONTROLLERBUTTONDOWN:
-                    case SDL_JOYBUTTONDOWN:
-                    case SDL_MOUSEBUTTONDOWN:
-                    case SDL_QUIT:
-                        saver_stop();
-                        preview = 0;
-                        break;
-                    default:
-                        break;
+                if (saver_event_should_stop(&ev)) {
+                    saver_stop();
+                    preview = 0;
+                    break;
                 }
             } while (SDL_PollEvent(&ev));
         }
@@ -586,6 +650,61 @@ void preview_saver(int type, int speed) {
     pending_rect_valid = false;
     monitor.force_clear = true;
     monitor.refresh = true;
+}
+
+void display_composite_frame(void) {
+    if (!monitor.renderer || !monitor.texture) return;
+
+    int animating = anim_is_active();
+    int anim_fg = animating && anim_is_foreground();
+    int anim_bg = animating && !anim_fg;
+
+    if (monitor.background_image) {
+        SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+        SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
+    } else {
+        SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+        SDL_RenderClear(monitor.renderer);
+    }
+
+    monitor.force_clear = false;
+
+    if (anim_bg) {
+        if (!gradient_captured) {
+            void *buf;
+            int gw, gh;
+            ui_common_get_gradient_buffer(&buf, &gw, &gh);
+            if (buf) {
+                SDL_Surface *s = SDL_CreateRGBSurfaceFrom(buf, gw, gh, 32, gw * 4, 0x00FF0000, 0x0000FF00, 0x000000FF, 0);
+                if (s) {
+                    anim_set_gradient(SDL_CreateTextureFromSurface(monitor.renderer, s));
+                    SDL_FreeSurface(s);
+                }
+                gradient_captured = true;
+            }
+        }
+        anim_tick(monitor.renderer);
+        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
+    } else {
+        gradient_captured = false;
+        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_NONE);
+    }
+
+    if (monitor.angle == 0.0) {
+        SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
+    } else {
+        SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE);
+    }
+
+    if (anim_fg) anim_tick(monitor.renderer);
+
+    if (display_fade_alpha > 0) {
+        SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, display_fade_alpha);
+        SDL_RenderFillRect(monitor.renderer, NULL);
+    }
+
+    SDL_RenderPresent(monitor.renderer);
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
@@ -684,29 +803,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
         }
     }
 
-    if (monitor.needs_clear || monitor.force_clear) {
-        if (monitor.background_image) {
-            SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
-            SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
-        } else {
-            SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
-            SDL_RenderClear(monitor.renderer);
-        }
-
-        monitor.force_clear = false;
-    }
-
-    // LOG_DEBUG("sdl", "\tdest_rect: %d %d %d %d", dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
-
-    // Simplify the rendering if we are not rotating as this saves a few cycles
-    if (monitor.angle == 0.0) {
-        SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
-    } else {
-        SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect,
-                         monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE);
-    }
-
-    SDL_RenderPresent(monitor.renderer);
+    display_composite_frame();
 
     pending_rect_valid = false;
     pending_rect = (SDL_Rect) {0, 0, 0, 0};

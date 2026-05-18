@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include "options.h"
 
 extern struct mux_device device;
@@ -16,6 +17,7 @@ struct mux_device {
         int16_t HASDEBUGFS;
         int16_t HASRGB;
         int16_t HASSTICK;
+        int16_t HASTOUCH;
         char SDL_MAP[MAX_BUFFER_SIZE];
         char JOY_HALL[MAX_BUFFER_SIZE];
         char LED[MAX_BUFFER_SIZE];

@@ -72,6 +72,16 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, RetroCache, "settings/advanced/retrocache", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Activity, "settings/advanced/activity", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Verbose, "settings/advanced/verbose", INT, 0);
+
+    do {
+        int debuglog_current = lv_dropdown_get_selected(ui_droDebugLog_tweakadv);
+        if (debuglog_current != DebugLog_original) {
+            is_modified++;
+            write_text_to_file(DEBUG_FILE, "w", INT, debuglog_current);
+            nop_debug_mode();
+        }
+    } while (0);
+
     CHECK_AND_SAVE_STD(tweakadv, Rumble, "settings/advanced/rumble", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DpadSwap, "settings/advanced/dpad_swap", INT, 0);
@@ -190,6 +200,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, RetroCache, lang.MUXTWEAKADV.RETROCACHE, "retrocache", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Activity, lang.MUXTWEAKADV.ACTIVITY, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Verbose, lang.MUXTWEAKADV.VERBOSE, "verbose", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, DebugLog, lang.MUXTWEAKADV.DEBUGLOG, "debuglog", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Rumble, lang.MUXTWEAKADV.RUMBLE.TITLE, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, UserInit, lang.MUXTWEAKADV.USERINIT, "userinit", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, DpadSwap, lang.MUXTWEAKADV.DPADSWAP, "dpadswap", disabled_enabled, 2);

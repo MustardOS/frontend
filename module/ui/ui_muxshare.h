@@ -409,6 +409,7 @@
     TWEAKADV(RetroCache,  RETROCACHE,  "retrocache")  \
     TWEAKADV(Activity,    ACTIVITY,    "activity")    \
     TWEAKADV(Verbose,     VERBOSE,     "verbose")     \
+    TWEAKADV(DebugLog,    DEBUGLOG,    "debuglog")    \
     TWEAKADV(Rumble,      RUMBLE,      "rumble")      \
     TWEAKADV(UserInit,    USERINIT,    "userinit")    \
     TWEAKADV(DpadSwap,    DPADSWAP,    "dpadswap")    \

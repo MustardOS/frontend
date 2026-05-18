@@ -57,7 +57,7 @@ static void image_refresh() {
     if (strcasecmp(box_image_previous_path, preview_path) != 0) {
 
         if (!file_exist(preview_path)) {
-            lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+            lv_img_set_src(ui_imgBox, &ui_img_blank);
             snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
         } else {
             struct ImageSettings image_settings = {

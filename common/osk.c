@@ -642,6 +642,11 @@ void osk_hide(lv_obj_t *panel) {
     lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 }
 
+static lv_obj_t *active_osk(void) {
+    if (key_show == 2 && num_entry && lv_obj_is_valid(num_entry)) return num_entry;
+    return key_entry;
+}
+
 static bool is_action_row(const osk_layout_t *L, uint16_t row) {
     if (L->row_count == 0) return false;
 
@@ -719,7 +724,7 @@ static uint16_t vert_target(const osk_layout_t *L, uint16_t cur, uint16_t target
 
 void key_up(void) {
     play_sound(SND_NAVIGATE);
-    rebuild_layout(key_entry, &key_layout);
+    rebuild_layout(active_osk(), &key_layout);
 
     if (key_layout.btn_count == 0) return;
     if (key_curr < 0 || (uint16_t) key_curr >= key_layout.btn_count) key_curr = 0;
@@ -736,7 +741,7 @@ void key_up(void) {
 
 void key_down(void) {
     play_sound(SND_NAVIGATE);
-    rebuild_layout(key_entry, &key_layout);
+    rebuild_layout(active_osk(), &key_layout);
 
     if (key_layout.btn_count == 0) return;
     if (key_curr < 0 || (uint16_t) key_curr >= key_layout.btn_count) key_curr = 0;
@@ -753,7 +758,7 @@ void key_down(void) {
 
 void key_left(void) {
     play_sound(SND_NAVIGATE);
-    rebuild_layout(key_entry, &key_layout);
+    rebuild_layout(active_osk(), &key_layout);
 
     if (key_layout.btn_count == 0) return;
     if (key_curr < 0 || (uint16_t) key_curr >= key_layout.btn_count) key_curr = 0;
@@ -775,7 +780,7 @@ void key_left(void) {
 
 void key_right(void) {
     play_sound(SND_NAVIGATE);
-    rebuild_layout(key_entry, &key_layout);
+    rebuild_layout(active_osk(), &key_layout);
 
     if (key_layout.btn_count == 0) return;
     if (key_curr < 0 || (uint16_t) key_curr >= key_layout.btn_count) key_curr = 0;

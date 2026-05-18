@@ -2,8 +2,6 @@
 #include "options.h"
 #include "common.h"
 
-#define DEBUG_FILE CONF_CONFIG_PATH "system/debug_mode"
-
 static int debug_cached = -1;
 
 void nop_debug_mode(void) {

@@ -37,7 +37,14 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
 
     theme->ANIMATION.ANIMATION_DELAY = 100;
     theme->ANIMATION.ANIMATION_REPEAT = 0;
+    theme->ANIMATION.ANIMATION_FOREGROUND = 0;
+    theme->ANIMATION.ANIMATION_POSITION = 4;
+    theme->ANIMATION.ANIMATION_ALPHA = 255;
 
+    theme->FONT.FONT_LIST_SIZE = 0;
+    theme->FONT.FONT_HEADER_SIZE = 0;
+    theme->FONT.FONT_FOOTER_SIZE = 0;
+    theme->FONT.FONT_PANEL_SIZE = 0;
     theme->FONT.HEADER_PAD_TOP = 0;
     theme->FONT.HEADER_PAD_BOTTOM = 0;
     theme->FONT.HEADER_ICON_PAD_TOP = 0;
@@ -451,6 +458,23 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     if (theme->ANIMATION.ANIMATION_DELAY < 10) theme->ANIMATION.ANIMATION_DELAY = 10;
     theme->ANIMATION.ANIMATION_REPEAT = get_ini_int(muos_theme, "animation", "ANIMATION_REPEAT",
                                                     theme->ANIMATION.ANIMATION_REPEAT);
+    theme->ANIMATION.ANIMATION_FOREGROUND = get_ini_int(muos_theme, "animation", "ANIMATION_FOREGROUND",
+                                                        theme->ANIMATION.ANIMATION_FOREGROUND);
+    theme->ANIMATION.ANIMATION_POSITION = get_ini_int(muos_theme, "animation", "ANIMATION_POSITION",
+                                                      theme->ANIMATION.ANIMATION_POSITION);
+    theme->ANIMATION.ANIMATION_ALPHA = get_ini_int(muos_theme, "animation", "ANIMATION_ALPHA",
+                                                   theme->ANIMATION.ANIMATION_ALPHA);
+    if (theme->ANIMATION.ANIMATION_ALPHA < 0) theme->ANIMATION.ANIMATION_ALPHA = 0;
+    if (theme->ANIMATION.ANIMATION_ALPHA > 255) theme->ANIMATION.ANIMATION_ALPHA = 255;
+
+    theme->FONT.FONT_LIST_SIZE = get_ini_int(muos_theme, "font", "FONT_LIST_SIZE", theme->FONT.FONT_LIST_SIZE);
+    if (theme->FONT.FONT_LIST_SIZE < 0) theme->FONT.FONT_LIST_SIZE = 0;
+    theme->FONT.FONT_HEADER_SIZE = get_ini_int(muos_theme, "font", "FONT_HEADER_SIZE", theme->FONT.FONT_HEADER_SIZE);
+    if (theme->FONT.FONT_HEADER_SIZE < 0) theme->FONT.FONT_HEADER_SIZE = 0;
+    theme->FONT.FONT_FOOTER_SIZE = get_ini_int(muos_theme, "font", "FONT_FOOTER_SIZE", theme->FONT.FONT_FOOTER_SIZE);
+    if (theme->FONT.FONT_FOOTER_SIZE < 0) theme->FONT.FONT_FOOTER_SIZE = 0;
+    theme->FONT.FONT_PANEL_SIZE = get_ini_int(muos_theme, "font", "FONT_PANEL_SIZE", theme->FONT.FONT_PANEL_SIZE);
+    if (theme->FONT.FONT_PANEL_SIZE < 0) theme->FONT.FONT_PANEL_SIZE = 0;
 
     theme->FONT.HEADER_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_TOP", theme->FONT.HEADER_PAD_TOP);
     theme->FONT.HEADER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM",
@@ -1178,9 +1202,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     // Adjusts height if user picks a height that is not evenly divisible by item count.
     // Prevents seeing a few pixels of the next item.
     theme->MISC.CONTENT.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT);
-
-    // Disable animations
-    theme->MISC.ANIMATED_BACKGROUND = 0;
 }
 
 void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem) {

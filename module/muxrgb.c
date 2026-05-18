@@ -85,7 +85,7 @@ static int mode_enum_from_dropdown(int dropdown_idx);
 
 static int mode_dropdown_from_enum(int enum_val);
 
-static int colourl_palette_idx(void);
+static int colour_palette_idx(void);
 
 static void list_nav_move(int steps, int direction);
 
@@ -97,66 +97,6 @@ static void show_help(void) {
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
-}
-
-static const char *backend_flag(int idx) {
-    switch (idx) {
-        case RGB_BACKEND_SYSFS:
-            return "sysfs";
-        case RGB_BACKEND_SERIAL:
-            return "serial";
-        case RGB_BACKEND_JOYPAD:
-            return "joypad";
-        case RGB_BACKEND_AUTO:
-        default:
-            return "auto";
-    }
-}
-
-static int proto_mode_for(int ui_mode, int breath_speed, int *out_preset_combo, int *out_off) {
-    *out_preset_combo = 0;
-    *out_off = 0;
-
-    switch (ui_mode) {
-        case RGB_MODE_OFF:
-            *out_off = 1;
-            return 1;
-        case RGB_MODE_STATIC:
-            return 1;
-        case RGB_MODE_PRESET_COMBO:
-            *out_preset_combo = 1;
-            return 1;
-        case RGB_MODE_BREATHING:
-            switch (breath_speed) {
-                case RGB_BREATH_FAST:
-                    return 2;
-                case RGB_BREATH_MEDIUM:
-                    return 3;
-                case RGB_BREATH_SLOW:
-                    return 4;
-                default:
-                    return 3;
-            }
-        case RGB_MODE_RAINBOW:
-            return 5;
-        case RGB_MODE_STICK_FOLLOW:
-            return 6;
-        case RGB_MODE_COLOUR_CYCLE:
-            return 7;
-        default:
-            return 1;
-    }
-}
-
-static int ui_brightness_to_protocol(int pct) {
-    if (pct < 0) pct = 0;
-    if (pct > 100) pct = 100;
-
-    return pct_to_int(pct, 0, 255);
-}
-
-static int dro_selected(lv_obj_t *dro) {
-    return (int) lv_dropdown_get_selected(dro);
 }
 
 static int current_mode_enum(void) {
@@ -183,30 +123,6 @@ static int last_applied_mode = -1;
 
 static void apply_mode_visibility(int ui_mode);
 
-static int resolve_theme_rgb_script(char *out) {
-    const char *base = config.THEME.STORAGE_THEME;
-    if (!base || !*base) return 0;
-
-    char active_txt_path[MAX_BUFFER_SIZE];
-    snprintf(active_txt_path, sizeof active_txt_path, "%s/active.txt", base);
-    if (file_exist(active_txt_path)) {
-        char *alt_raw = read_line_char_from(active_txt_path, 1);
-        if (alt_raw && *alt_raw) {
-            char *alt = str_replace(alt_raw, "\r", "");
-            if (alt && *alt) {
-                snprintf(out, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/rgbconf.sh", base, alt);
-                if (file_exist(out)) return 1;
-            }
-        }
-    }
-
-    snprintf(out, MAX_BUFFER_SIZE, "%s/rgb/rgbconf.sh", base);
-    if (file_exist(out)) return 1;
-
-    out[0] = '\0';
-    return 0;
-}
-
 static void rgb_focus(void) {
     if (!rgb_caps) return;
 
@@ -215,211 +131,6 @@ static void rgb_focus(void) {
         apply_mode_visibility(ui_mode);
         last_applied_mode = ui_mode;
     }
-}
-
-typedef struct {
-    char buf[24][12];
-    const char *argv[32];
-    size_t n;
-} rgb_argv_t;
-
-static void rgb_argv_init(rgb_argv_t *a, int backend, int proto_mode, int proto_bright) {
-    a->n = 0;
-
-    a->argv[a->n++] = RGBLED_BIN;
-    a->argv[a->n++] = "-b";
-    a->argv[a->n++] = backend_flag(backend);
-
-    snprintf(a->buf[0], sizeof a->buf[0], "%d", proto_mode);
-    a->argv[a->n++] = a->buf[0];
-
-    snprintf(a->buf[1], sizeof a->buf[1], "%d", proto_bright);
-    a->argv[a->n++] = a->buf[1];
-}
-
-static void rgb_argv_int(rgb_argv_t *a, int slot, int value) {
-    if (slot < 0 || slot >= (int) A_SIZE(a->buf)) return;
-    if (a->n >= A_SIZE(a->argv)) return;
-
-    snprintf(a->buf[slot], sizeof a->buf[slot], "%d", value);
-    a->argv[a->n++] = a->buf[slot];
-}
-
-static int rgb_speed_pct_from_dropdown(int joypad, int value) {
-    if (joypad) {
-        if (value < 0) return 0;
-        if (value > 100) return 100;
-
-        return value;
-    }
-
-    switch (value) {
-        case RGB_BREATH_FAST:
-            return 80;
-        case RGB_BREATH_MEDIUM:
-            return 50;
-        case RGB_BREATH_SLOW:
-            return 20;
-        default:
-            return 50;
-    }
-}
-
-static void rgb_push_off(rgb_argv_t *a) {
-    for (int i = 0; i < 6; i++) {
-        rgb_argv_int(a, 2 + i, 0);
-    }
-}
-
-static void rgb_push_joypad_args(rgb_argv_t *a, int ui_mode, int ui_breath_speed, int is_off, int is_preset_combo, int ui_colour_r,
-                                 const rgb_colour_t *col_l, const rgb_colour_t *col_r, const rgb_colour_combo_t *kc) {
-    if (is_off) {
-        rgb_push_off(a);
-        return;
-    }
-
-    if (ui_mode == RGB_MODE_STICK_FOLLOW) {
-        rgb_argv_int(a, 2, col_l->r);
-        rgb_argv_int(a, 3, col_l->g);
-        rgb_argv_int(a, 4, col_l->b);
-        return;
-    }
-
-    if (ui_mode == RGB_MODE_RAINBOW || ui_mode == RGB_MODE_COLOUR_CYCLE) {
-        rgb_argv_int(a, 2, rgb_speed_pct_from_dropdown(1, ui_breath_speed));
-        return;
-    }
-
-    if (ui_mode == RGB_MODE_BREATHING) {
-        int sec_r = 0;
-        int sec_g = 0;
-        int sec_b = 0;
-
-        if (ui_colour_r > 0) {
-            sec_r = col_r->r;
-            sec_g = col_r->g;
-            sec_b = col_r->b;
-        }
-
-        rgb_argv_int(a, 2, rgb_speed_pct_from_dropdown(1, ui_breath_speed));
-        rgb_argv_int(a, 3, col_l->r);
-        rgb_argv_int(a, 4, col_l->g);
-        rgb_argv_int(a, 5, col_l->b);
-        rgb_argv_int(a, 6, sec_r);
-        rgb_argv_int(a, 7, sec_g);
-        rgb_argv_int(a, 8, sec_b);
-        return;
-    }
-
-    if (is_preset_combo) {
-        rgb_argv_int(a, 2, kc->a_r);
-        rgb_argv_int(a, 3, kc->a_g);
-        rgb_argv_int(a, 4, kc->a_b);
-        rgb_argv_int(a, 5, kc->b_r);
-        rgb_argv_int(a, 6, kc->b_g);
-        rgb_argv_int(a, 7, kc->b_b);
-        return;
-    }
-
-    rgb_argv_int(a, 2, col_l->r);
-    rgb_argv_int(a, 3, col_l->g);
-    rgb_argv_int(a, 4, col_l->b);
-    rgb_argv_int(a, 5, col_r->r);
-    rgb_argv_int(a, 6, col_r->g);
-    rgb_argv_int(a, 7, col_r->b);
-}
-
-static void rgb_push_sysfs_args(rgb_argv_t *a, int ui_mode, int ui_breath_speed, int is_off, int is_preset_combo,
-                                const rgb_colour_t *col_l, const rgb_colour_t *col_r, const rgb_colour_t *col_m,
-                                const rgb_colour_t *col_f1, const rgb_colour_t *col_f2, const rgb_colour_combo_t *kc) {
-    if (is_off) {
-        rgb_push_off(a);
-        return;
-    }
-
-    if (ui_mode == RGB_MODE_RAINBOW || ui_mode == RGB_MODE_COLOUR_CYCLE) {
-        rgb_argv_int(a, 2, rgb_speed_pct_from_dropdown(0, ui_breath_speed));
-        return;
-    }
-
-    if (is_preset_combo) {
-        rgb_argv_int(a, 2, kc->a_r);
-        rgb_argv_int(a, 3, kc->a_g);
-        rgb_argv_int(a, 4, kc->a_b);
-        rgb_argv_int(a, 5, kc->b_r);
-        rgb_argv_int(a, 6, kc->b_g);
-        rgb_argv_int(a, 7, kc->b_b);
-        return;
-    }
-
-    rgb_argv_int(a, 2, col_l->r);
-    rgb_argv_int(a, 3, col_l->g);
-    rgb_argv_int(a, 4, col_l->b);
-    rgb_argv_int(a, 5, col_r->r);
-    rgb_argv_int(a, 6, col_r->g);
-    rgb_argv_int(a, 7, col_r->b);
-
-    if (rgb_caps->zones & RGB_ZONE_M) {
-        rgb_argv_int(a, 8, col_m->r);
-        rgb_argv_int(a, 9, col_m->g);
-        rgb_argv_int(a, 10, col_m->b);
-    }
-
-    if (rgb_caps->zones & RGB_ZONE_F1) {
-        rgb_argv_int(a, 11, col_f1->r);
-        rgb_argv_int(a, 12, col_f1->g);
-        rgb_argv_int(a, 13, col_f1->b);
-    }
-
-    if (rgb_caps->zones & RGB_ZONE_F2) {
-        rgb_argv_int(a, 14, col_f2->r);
-        rgb_argv_int(a, 15, col_f2->g);
-        rgb_argv_int(a, 16, col_f2->b);
-    }
-}
-
-static void rgb_push_serial_args(rgb_argv_t *a, int ui_mode, int ui_breath_speed, int is_off, int is_preset_combo,
-                                 const rgb_colour_t *col_l, const rgb_colour_t *col_r, const rgb_colour_combo_t *kc) {
-    if (is_off) {
-        rgb_push_off(a);
-        return;
-    }
-
-    if (ui_mode == RGB_MODE_RAINBOW || ui_mode == RGB_MODE_COLOUR_CYCLE) {
-        rgb_argv_int(a, 2, rgb_speed_pct_from_dropdown(0, ui_breath_speed));
-        return;
-    }
-
-    if (is_preset_combo) {
-        rgb_argv_int(a, 2, kc->a_r);
-        rgb_argv_int(a, 3, kc->a_g);
-        rgb_argv_int(a, 4, kc->a_b);
-        rgb_argv_int(a, 5, kc->b_r);
-        rgb_argv_int(a, 6, kc->b_g);
-        rgb_argv_int(a, 7, kc->b_b);
-        return;
-    }
-
-    if (ui_mode == RGB_MODE_STATIC) {
-        rgb_argv_int(a, 2, col_r->r);
-        rgb_argv_int(a, 3, col_r->g);
-        rgb_argv_int(a, 4, col_r->b);
-        rgb_argv_int(a, 5, col_l->r);
-        rgb_argv_int(a, 6, col_l->g);
-        rgb_argv_int(a, 7, col_l->b);
-        return;
-    }
-
-    rgb_argv_int(a, 2, col_l->r);
-    rgb_argv_int(a, 3, col_l->g);
-    rgb_argv_int(a, 4, col_l->b);
-}
-
-static int rgb_protocol_mode_for_backend(int backend, int ui_mode, int breath_speed, int *is_preset_combo, int *is_off) {
-    int proto_mode = proto_mode_for(ui_mode, breath_speed, is_preset_combo, is_off);
-    if (backend == RGB_BACKEND_JOYPAD && ui_mode == RGB_MODE_BREATHING) return 8;
-
-    return proto_mode;
 }
 
 static void rgb_apply(void) {
@@ -497,7 +208,7 @@ static void restore_rgb_options(void) {
     lv_dropdown_set_selected(ui_droBackend_rgb, effective_backend_from_saved(config.SETTINGS.RGB.BACKEND));
 }
 
-static void save_rgb_options(void) {
+static void save_rgb_options(int toast_vis) {
     int is_modified = 0;
 
     {
@@ -513,7 +224,7 @@ static void save_rgb_options(void) {
     CHECK_AND_SAVE_STD(rgb, BreathSpeed, "settings/rgb/breath_speed", INT, 0);
 
     {
-        int current_palette_idx = colourl_palette_idx();
+        int current_palette_idx = colour_palette_idx();
         if (current_palette_idx != ColourL_original) {
             write_text_to_file("/opt/muos/config/settings/rgb/colour_l", "w", INT, current_palette_idx);
             is_modified++;
@@ -528,7 +239,7 @@ static void save_rgb_options(void) {
     CHECK_AND_SAVE_STD(rgb, Backend, "settings/rgb/backend", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
+        toast_message(lang.GENERIC.SAVING, toast_vis);
         refresh_config = 1;
     }
 
@@ -690,7 +401,7 @@ static void colourl_set_dropdown_set(colourl_dropdown_set_t target) {
     colourl_dropdown_state = target;
 }
 
-static int colourl_palette_idx(void) {
+static int colour_palette_idx(void) {
     int sel = (int) lv_dropdown_get_selected(ui_droColourL_rgb);
 
     if (colourl_dropdown_state == COLOURL_DROPDOWN_STICK) {
@@ -836,9 +547,10 @@ static void free_string_array(char **arr, int count) {
 static void apply_mode_visibility(int ui_mode) {
     int single = rgb_caps && (rgb_caps->zones & RGB_ZONE_SINGLE);
     int is_sysfs = rgb_caps && rgb_caps->backend == RGB_BACKEND_SYSFS;
+    int is_serial = rgb_caps && rgb_caps->backend == RGB_BACKEND_SERIAL;
     int is_joypad = rgb_caps && rgb_caps->backend == RGB_BACKEND_JOYPAD;
 
-    int caps_colour_r = is_sysfs && rgb_caps && !single && (rgb_caps->zones & RGB_ZONE_R);
+    int caps_colour_r = (is_sysfs || is_serial) && rgb_caps && !single && (rgb_caps->zones & RGB_ZONE_R);
     int caps_colour_m = is_sysfs && rgb_caps && !single && (rgb_caps->zones & RGB_ZONE_M);
     int caps_colour_f1 = is_sysfs && rgb_caps && !single && (rgb_caps->zones & RGB_ZONE_F1);
     int caps_colour_f2 = is_sysfs && rgb_caps && !single && (rgb_caps->zones & RGB_ZONE_F2);
@@ -1060,7 +772,7 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
-    save_rgb_options();
+    save_rgb_options(FOREVER);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "rgb");
 
@@ -1070,7 +782,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || block_input || hold_call) return;
 
-    rgb_apply();
+    save_rgb_options(MEDIUM);
 }
 
 static void handle_help(void) {

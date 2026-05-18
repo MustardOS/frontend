@@ -11,7 +11,6 @@
 #include <../common/colour.h>
 #include "../common/config.h"
 #include <../common/common.h>
-#include <../common/options.h>
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 
@@ -518,10 +517,10 @@ static int dispatch_restore(void) {
     } else {
         saved_bright_raw = read_config_int("settings/rgb/bright", 6);
         read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &col_l, &RGB_COLOURS[0]);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_r", &col_r, &col_l);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_m", &col_m, &col_l);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_f1", &col_f1, &col_l);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_f2", &col_f2, &col_r);
+        col_r  = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r",  0), &col_l);
+        col_m  = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m",  0), &col_l);
+        col_f1 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f1", 0), &col_l);
+        col_f2 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f2", 0), &col_r);
     }
 
     if (saved_mode == 6) return 0;
@@ -641,6 +640,10 @@ static int dispatch_restore(void) {
             PUSH(col_f2.r);
             PUSH(col_f2.g);
             PUSH(col_f2.b);
+        } else if (use == BE_JOYPAD) {
+            PUSH(col_l.r);
+            PUSH(col_l.g);
+            PUSH(col_l.b);
         } else {
             PUSH(col_r.r);
             PUSH(col_r.g);

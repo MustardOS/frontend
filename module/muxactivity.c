@@ -190,7 +190,7 @@ static void image_refresh() {
                 lv_img_set_src(ui_imgBox, image_path);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
-                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+                lv_img_set_src(ui_imgBox, &ui_img_blank);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
             }
         }
@@ -929,7 +929,7 @@ static void load_activity_items(void) {
 
                 char *last_slash = strrchr(full_path, '/');
                 if (last_slash) {
-                    size_t n = (size_t) (last_slash - full_path + 1);
+                    size_t n = (size_t)(last_slash - full_path + 1);
                     if (n >= sizeof(it->dir)) n = sizeof(it->dir) - 1;
 
                     memcpy(it->dir, full_path, n);

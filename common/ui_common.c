@@ -1,5 +1,6 @@
 #include <stdlib.h>
-#include "img/nothing.h"
+#include <SDL2/SDL.h>
+#include "anim.h"
 #include "input/list_nav.h"
 #include "common.h"
 #include "init.h"
@@ -12,14 +13,25 @@
 #include "device.h"
 #include "battery.h"
 #include "collection.h"
+#include "display.h"
 #include "ui_common.h"
 #include "log.h"
+
+const lv_img_dsc_t ui_img_blank = {
+        .header.always_zero = 0,
+        .header.w = 1,
+        .header.h = 1,
+        .data_size = 0,
+        .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+        .data = NULL
+};
 
 lv_obj_t *ui_screen_container;
 lv_obj_t *ui_screen_temp;
 lv_obj_t *ui_blank;
 lv_obj_t *ui_black;
 lv_obj_t *ui_screen;
+lv_obj_t *ui_anim_tick;
 lv_obj_t *ui_pnlWall;
 lv_obj_t *ui_imgWall;
 lv_obj_t *ui_pnlContent;
@@ -312,13 +324,36 @@ void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme
     lv_obj_invalidate(canvas);
 }
 
+void set_gradient_visible(int visible) {
+    if (!lv_obj_is_valid(canvas)) return;
+
+    if (visible) {
+        lv_obj_clear_flag(canvas, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(canvas, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+void ui_common_get_gradient_buffer(void **buf, int *w, int *h) {
+    if (!canvas_buffer || !lv_obj_is_valid(canvas)) {
+        *buf = NULL;
+
+        *w = 0;
+        *h = 0;
+
+        return;
+    }
+
+    *buf = canvas_buffer;
+
+    *w = (int) lv_obj_get_width(canvas);
+    *h = (int) lv_obj_get_height(canvas);
+}
+
 
 void fade_reset(void) {
     fade_in_done = 0;
-
-    if (ui_black && !lv_obj_is_valid(ui_black)) {
-        ui_black = NULL;
-    }
+    if (ui_black && !lv_obj_is_valid(ui_black)) ui_black = NULL;
 }
 
 static void gen_black(int opacity) {
@@ -365,33 +400,81 @@ void fade_in_screen(void) {
         return;
     }
 
-    fade_in_done = 1;
+    anim_process();
 
-    lv_obj_move_foreground(ui_black);
-    lv_refr_now(NULL);
+    if (anim_is_active()) {
+        display_set_fade_alpha(255);
+        lv_obj_del(ui_black);
+        ui_black = NULL;
 
-    fade_step(LV_OPA_COVER, LV_OPA_TRANSP, 0);
+        lv_obj_invalidate(ui_screen);
+        lv_refr_now(NULL);
+
+        uint32_t deadline = SDL_GetTicks() + 2000;
+        while (anim_frames_ready() == 0 && SDL_GetTicks() < deadline) {
+            lv_obj_invalidate(ui_screen);
+            lv_refr_now(NULL);
+        }
+
+        fade_in_done = 1;
+
+        for (int i = 0; i <= FADE_STEP; i++) {
+            uint8_t alpha = (uint8_t) (255 - (255 * i) / FADE_STEP);
+            display_set_fade_alpha(alpha);
+            lv_obj_invalidate(ui_screen);
+            lv_refr_now(NULL);
+            usleep((FADE_TIME * 1000) / FADE_STEP);
+        }
+
+        display_set_fade_alpha(0);
+    } else {
+        fade_in_done = 1;
+        lv_obj_move_foreground(ui_black);
+        lv_refr_now(NULL);
+        fade_step(LV_OPA_COVER, LV_OPA_TRANSP, 0);
+    }
 }
 
 void fade_out_screen(void) {
-    unload_image_animation();
+    if (!config.VISUAL.BLACKFADE) {
+        unload_image_animation();
+        return;
+    }
 
-    if (!config.VISUAL.BLACKFADE) return;
-    if (!ui_screen_container || !lv_obj_is_valid(ui_screen_container)) return;
+    if (!ui_screen_container || !lv_obj_is_valid(ui_screen_container)) {
+        unload_image_animation();
+        return;
+    }
 
     if (ui_black && lv_obj_is_valid(ui_black)) {
         lv_obj_del(ui_black);
         ui_black = NULL;
     }
 
-    gen_black(LV_OPA_TRANSP);
+    if (anim_is_active()) {
+        for (int i = 0; i <= FADE_STEP; i++) {
+            uint8_t alpha = (uint8_t) (255 * i / FADE_STEP);
+            display_set_fade_alpha(alpha);
+            lv_obj_invalidate(ui_screen);
+            lv_refr_now(NULL);
+            usleep((FADE_TIME * 1000) / FADE_STEP);
+        }
 
-    if (!ui_black || !lv_obj_is_valid(ui_black)) return;
+        unload_image_animation();
+        gen_black(LV_OPA_COVER);
 
-    lv_obj_move_foreground(ui_black);
-    lv_refr_now(NULL);
+        if (ui_black && lv_obj_is_valid(ui_black)) lv_obj_move_foreground(ui_black);
+    } else {
+        unload_image_animation();
+        gen_black(LV_OPA_TRANSP);
 
-    fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
+        if (!ui_black || !lv_obj_is_valid(ui_black)) return;
+
+        lv_obj_move_foreground(ui_black);
+        lv_refr_now(NULL);
+
+        fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
+    }
 }
 
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
@@ -421,6 +504,14 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_screen, device->MUX.HEIGHT);
     lv_obj_set_align(ui_screen, LV_ALIGN_CENTER);
 
+    ui_anim_tick = lv_obj_create(ui_screen);
+    lv_obj_set_size(ui_anim_tick, 1, 1);
+    lv_obj_set_pos(ui_anim_tick, 0, 0);
+    lv_obj_set_style_bg_opa(ui_anim_tick, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_border_width(ui_anim_tick, 0, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(ui_anim_tick, 0, LV_PART_MAIN);
+    lv_obj_clear_flag(ui_anim_tick, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+
     ui_pnlWall = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlWall, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlWall, device->MUX.HEIGHT);
@@ -444,7 +535,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlWall, LV_OPA_TRANSP, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
     ui_imgWall = lv_img_create(ui_pnlWall);
-    lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+    lv_img_set_src(ui_imgWall, &ui_img_blank);
     lv_obj_set_width(ui_imgWall, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgWall, LV_SIZE_CONTENT);
 
@@ -523,7 +614,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlBox, LV_OPA_TRANSP, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
     ui_imgBox = lv_img_create(ui_pnlBox);
-    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+    lv_img_set_src(ui_imgBox, &ui_img_blank);
 
     lv_obj_set_width(ui_imgBox, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgBox, LV_SIZE_CONTENT);
@@ -869,7 +960,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlHelpPreviewImage, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_imgHelpPreviewImage = lv_img_create(ui_pnlHelpPreviewImage);
-    lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
+    lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_blank);
     lv_obj_set_width(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgHelpPreviewImage, LV_ALIGN_CENTER);
@@ -1213,6 +1304,8 @@ void ui_common_handle_idle(void) {
 
     if (!blank_exists && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > LV_OPA_TRANSP) blank_check();
 
+    anim_process();
+
     if (need_update) {
         lv_task_handler();
     } else {
@@ -1489,7 +1582,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
     }
 
     if (!starter_image) {
-        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        lv_img_set_src(ui_imgBox, &ui_img_blank);
         return 0;
     }
 
@@ -1700,7 +1793,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
         lv_img_set_src(cell_image, grid_image);
     } else {
-        lv_img_set_src(cell_image, &ui_image_Nothing);
+        lv_img_set_src(cell_image, &ui_img_blank);
     }
 
     lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
@@ -1712,7 +1805,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
         lv_img_set_src(cell_image_focused, grid_image_focused);
     } else {
-        lv_img_set_src(cell_image_focused, &ui_image_Nothing);
+        lv_img_set_src(cell_image_focused, &ui_img_blank);
     }
 
     if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {

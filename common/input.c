@@ -9,6 +9,7 @@
 #include "input.h"
 #include "osk.h"
 #include "log.h"
+#include "display.h"
 
 #define INPUT_COOLDOWN          256
 #define AXIS_THRESHOLD_FRACTION 0.80f
@@ -952,6 +953,11 @@ void mux_input_task(const mux_input_options *opts) {
                     process_sdl_key(opts, &ev.key, 0);
                     break;
                 default:
+                    if (anim_tick_event != 0 && ev.type == anim_tick_event) {
+                        display_composite_frame();
+                        SDL_Event drain;
+                        while (SDL_PeepEvents(&drain, 1, SDL_GETEVENT, anim_tick_event, anim_tick_event) > 0);
+                    }
                     break;
             }
         } while (!stop_flag && SDL_PollEvent(&ev));

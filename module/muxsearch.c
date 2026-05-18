@@ -113,7 +113,7 @@ static void image_refresh() {
                 lv_img_set_src(ui_imgBox, image_path);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
-                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+                lv_img_set_src(ui_imgBox, &ui_img_blank);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
             }
         }
@@ -208,7 +208,7 @@ static void list_nav_move(int steps, int direction) {
         if (config.VISUAL.BOX_ART < 4) image_refresh();
         set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     } else {
-        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        lv_img_set_src(ui_imgBox, &ui_img_blank);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
     }
 
