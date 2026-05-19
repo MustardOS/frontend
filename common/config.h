@@ -221,6 +221,11 @@ struct mux_config {
             int16_t FOOTER_SIZE;
             int16_t PANEL_SIZE;
         } FONT;
+        struct {
+            int16_t HEADER_HEIGHT;
+            int16_t FOOTER_HEIGHT;
+            int16_t CONTENT_ITEM_COUNT;
+        } THEMEOPT;
     } SETTINGS;
 
     struct {

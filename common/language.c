@@ -383,6 +383,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.GRIDMODECONTENT, "Content Grid Mode");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEMEOPT, "Theme Options");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEMESCALING, "Theme Scaling");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEMERESOLUTION, "Theme Resolution");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCREEN, "Screen");
@@ -432,6 +433,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.GRIDMODECONTENT, "Allow grid mode for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the MustardOS frontend launcher");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMEOPT, "Override theme header, footer, and content item dimensions");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMERESOLUTION, "Allows for testing different theme resolutions");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMESCALING, "Controls the type of scaling used when applying Theme Resolution setting");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMEALTERNATE, "Switch between different theme alternatives");
@@ -1224,6 +1226,16 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.HDMI, "Filter to themes that support HDMI resolution 1280x720. Themes will still work on HDMI without support for 1280x720 but content will be letterboxed.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let MustardOS handle translating text. Themes that use static images for the main menu will be filtered out.");
     SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LOOKUP, "Filter to theme with a name containing lookup text.");
+
+    // muxthemeopt
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.TITLE, "THEME OPTIONS");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.HEADER_HEIGHT, "Header Height");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.FOOTER_HEIGHT, "Footer Height");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.CONTENT_ITEM_COUNT, "Item Count");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.SIZE_DEFAULT, "Default");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.HEADERHEIGHT, "Override the theme header bar height in pixels (Default uses the theme value)");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.FOOTERHEIGHT, "Override the theme footer bar height in pixels (Default uses the theme value)");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.CONTENTITEMCOUNT, "Override the number of visible list items (0 uses the theme default)");
 
     // muxtimezone
     SPECIFIC_FIELD(lang->MUXTIMEZONE.TITLE, "TIMEZONE");

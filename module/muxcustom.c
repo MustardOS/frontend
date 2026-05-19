@@ -167,6 +167,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, ThemeOpt, lang.MUXCUSTOM.THEMEOPT, "themeopt", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEMERESOLUTION, "resolution", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeScaling, lang.MUXCUSTOM.THEMESCALING, "scaling", theme_scaling_options, 3);
@@ -226,6 +227,7 @@ static void check_focus(void) {
     if (e_focused == ui_lblCatalogue_custom ||
         e_focused == ui_lblConfig_custom ||
         e_focused == ui_lblFont_custom ||
+        e_focused == ui_lblThemeOpt_custom ||
         e_focused == ui_lblTheme_custom) {
         lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -403,6 +405,7 @@ static void handle_a(void) {
         MENU_CATALOGUE,
         MENU_CONFIG,
         MENU_FONT,
+        MENU_THEMEOPT,
         MENU_MUSIC_VOLUME,
         MENU_SOUND_VOLUME,
         MENU_THEME_ALTERNATE,
@@ -422,6 +425,7 @@ static void handle_a(void) {
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, MENU_CATALOGUE,    NULL},
             {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG,  MENU_CONFIG,       NULL},
             {"font", NULL,                     &KIOSK_PASS,             MENU_FONT,         NULL}, // Font Settings
+            {"themeopt", NULL,                 &KIOSK_PASS,             MENU_THEMEOPT,     NULL}, // Theme Options
             {"theme",     "/theme",            &kiosk.CUSTOM.THEME,     MENU_THEME,        NULL},
             {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Resolution
             {NULL,   NULL,                     &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Scaling
@@ -488,6 +492,22 @@ static void handle_a(void) {
             toast_message(lang.GENERIC.LOADING, FOREVER);
 
             load_mux("font");
+
+            mux_input_stop();
+            break;
+        case MENU_THEMEOPT:
+            if (is_ksk(*entry->kiosk_flag)) {
+                kiosk_denied();
+                return;
+            }
+
+            save_custom_options();
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
+
+            play_sound(SND_CONFIRM);
+            toast_message(lang.GENERIC.LOADING, FOREVER);
+
+            load_mux("themeopt");
 
             mux_input_stop();
             break;

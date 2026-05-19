@@ -123,10 +123,16 @@
     FONT(FooterSize, FOOTERSIZE, "footersize") \
     FONT(PanelSize,  PANELSIZE,  "panelsize")
 
+#define THEMEOPT_ELEMENTS                                          \
+    THEMEOPT(HeaderHeight,      HEADERHEIGHT,      "headerheight") \
+    THEMEOPT(FooterHeight,      FOOTERHEIGHT,      "footerheight") \
+    THEMEOPT(ContentItemCount,  CONTENTITEMCOUNT,  "count")
+
 #define CUSTOM_ELEMENTS                                         \
     CUSTOM(Catalogue,       CATALOGUE,       "catalogue")       \
     CUSTOM(Config,          CONFIG,          "config")          \
     CUSTOM(Font,            FONT,            "font")            \
+    CUSTOM(ThemeOpt,        THEMEOPT,        "themeopt")        \
     CUSTOM(Theme,           THEME,           "theme")           \
     CUSTOM(ThemeResolution, THEMERESOLUTION, "resolution")      \
     CUSTOM(ThemeScaling,    THEMESCALING,    "scaling")         \

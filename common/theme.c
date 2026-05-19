@@ -1202,6 +1202,30 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     // Adjusts height if user picks a height that is not evenly divisible by item count.
     // Prevents seeing a few pixels of the next item.
     theme->MISC.CONTENT.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT);
+
+    if (config->SETTINGS.THEMEOPT.HEADER_HEIGHT >= 0) theme->HEADER.HEIGHT = (int16_t) config->SETTINGS.THEMEOPT.HEADER_HEIGHT;
+    if (config->SETTINGS.THEMEOPT.FOOTER_HEIGHT >= 0) theme->FOOTER.HEIGHT = (int16_t) config->SETTINGS.THEMEOPT.FOOTER_HEIGHT;
+
+    bool any_theme_opt = config->SETTINGS.THEMEOPT.HEADER_HEIGHT >= 0 || config->SETTINGS.THEMEOPT.FOOTER_HEIGHT >= 0
+                         || config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT > 0;
+
+    if (any_theme_opt) {
+        theme->MISC.CONTENT.HEIGHT = (int16_t) (device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4);
+        if (theme->MISC.CONTENT.HEIGHT < 0) theme->MISC.CONTENT.HEIGHT = 0;
+
+        if (config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT > 0) {
+            theme->MUX.ITEM.COUNT = (int16_t) config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT;
+            if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
+            theme->MUX.ITEM.PANEL = (int16_t) (theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT);
+            theme->MUX.ITEM.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL - 2);
+        } else {
+            theme->MUX.ITEM.PANEL = (int16_t) (theme->MUX.ITEM.HEIGHT + 2);
+            if (theme->MUX.ITEM.PANEL > 0) theme->MUX.ITEM.COUNT = (int16_t) (theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.PANEL);
+        }
+
+        if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
+        theme->MISC.CONTENT.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT);
+    }
 }
 
 void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem) {

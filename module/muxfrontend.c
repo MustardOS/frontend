@@ -5,7 +5,7 @@
 #include "../common/battery.h"
 #include "../common/inotify.h"
 
-#define DISPATCH_SLOTS 64
+#define DISPATCH_SLOTS 128
 #define DISPATCH_MASK  (DISPATCH_SLOTS - 1)
 
 static volatile sig_atomic_t quit_signal = 0;
@@ -563,6 +563,7 @@ static const ModuleEntry modules[] = {
         {"activity",    "info",      "muxactivity",    muxactivity_main,    NULL},
         {"themedwn",    "picker",    "muxthemedown",   muxthemedown_main,   NULL},
         {"themefilter", "themedwn",  "muxthemefilter", muxthemefilter_main, NULL},
+        {"themeopt",    "custom",    "muxthemeopt",    muxthemeopt_main,    NULL},
         {"tester",      "info",      "muxtester",      muxtester_main,      NULL},
         {"sysinfo",     "info",      "muxsysinfo",     muxsysinfo_main,     NULL},
         {"netinfo",     "info",      "muxnetinfo",     muxnetinfo_main,     NULL},

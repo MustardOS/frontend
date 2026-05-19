@@ -231,6 +231,10 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.FONT.FOOTER_SIZE, CONF_CONFIG_PATH "settings/font/footer_size", 0);
     CFG_INT_FIELD(config->SETTINGS.FONT.PANEL_SIZE, CONF_CONFIG_PATH "settings/font/panel_size", 0);
 
+    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.HEADER_HEIGHT, CONF_CONFIG_PATH "settings/theme/header_height", -1);
+    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.FOOTER_HEIGHT, CONF_CONFIG_PATH "settings/theme/footer_height", -1);
+    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT, CONF_CONFIG_PATH "settings/theme/content_item_count", 0);
+
     CFG_INT_FIELD(config->SORT.DEFAULT, CONF_CONFIG_PATH "sort/default", 0);
     CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);
     CFG_INT_FIELD(config->SORT.HISTORY, CONF_CONFIG_PATH "sort/history", 0);

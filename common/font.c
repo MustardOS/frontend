@@ -69,7 +69,7 @@ static lv_font_t *create_language_font(int size) {
     const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
     const char *name = config.SETTINGS.FONT.NAME;
 
-    if (curr_lang[0] && name[0]) {
+    if (config.SETTINGS.ADVANCED.FONT == 0 && curr_lang[0] && name[0]) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s/%s.ttf", curr_lang, name);
         lv_font_t * font = load_font_cached_ttf(path, size, false);

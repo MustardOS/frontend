@@ -404,6 +404,7 @@ struct mux_lang {
         char CONFIG[MAX_BUFFER_SIZE];
         char GRIDMODECONTENT[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
+        char THEMEOPT[MAX_BUFFER_SIZE];
         char THEMERESOLUTION[MAX_BUFFER_SIZE];
         char THEMESCALING[MAX_BUFFER_SIZE];
         char SCREEN[MAX_BUFFER_SIZE];
@@ -471,6 +472,7 @@ struct mux_lang {
             char CONFIG[MAX_BUFFER_SIZE];
             char GRIDMODECONTENT[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
+            char THEMEOPT[MAX_BUFFER_SIZE];
             char THEMESCALING[MAX_BUFFER_SIZE];
             char THEMERESOLUTION[MAX_BUFFER_SIZE];
             char THEMEALTERNATE[MAX_BUFFER_SIZE];
@@ -1398,6 +1400,19 @@ struct mux_lang {
             char LOOKUP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTHEMEFILTER;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char HEADER_HEIGHT[MAX_BUFFER_SIZE];
+        char FOOTER_HEIGHT[MAX_BUFFER_SIZE];
+        char CONTENT_ITEM_COUNT[MAX_BUFFER_SIZE];
+        char SIZE_DEFAULT[MAX_BUFFER_SIZE];
+        struct {
+            char HEADERHEIGHT[MAX_BUFFER_SIZE];
+            char FOOTERHEIGHT[MAX_BUFFER_SIZE];
+            char CONTENTITEMCOUNT[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXTHEMEOPT;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
