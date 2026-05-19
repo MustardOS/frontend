@@ -114,6 +114,9 @@ struct mux_lang {
         char SATURDAY[MAX_BUFFER_SIZE];
         char CLEAN[MAX_BUFFER_SIZE];
         char MODIFIED[MAX_BUFFER_SIZE];
+        char ICON_ONLY[MAX_BUFFER_SIZE];
+        char TEXT_ONLY[MAX_BUFFER_SIZE];
+        char TEXT_ICON[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {

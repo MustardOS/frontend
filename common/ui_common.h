@@ -64,6 +64,7 @@ int generate_image_embed(const char *dimension, const char *glyph_folder, const 
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
 
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme);
+void update_battery_percent_label(lv_obj_t *ui_label, struct theme_config *theme);
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme);
 
@@ -102,6 +103,7 @@ extern lv_obj_t *ui_conGlyphs;
 extern lv_obj_t *ui_staBluetooth;
 extern lv_obj_t *ui_staNetwork;
 extern lv_obj_t *ui_staCapacity;
+extern lv_obj_t *ui_lblBatteryPercent;
 extern lv_obj_t *ui_pnlFooter;
 extern lv_obj_t *ui_lblGridCurrentItem;
 extern lv_obj_t *ui_lblNavLRGlyph;

@@ -54,6 +54,7 @@ extern char *excluded_included[];
 extern char *allowed_restricted[];
 extern char *hidden_visible[];
 extern char *toggle_icon_visible[];
+extern char *battery_display[];
 
 extern char progress_bar_message[MAX_BUFFER_SIZE];
 extern volatile int progress_bar_value;

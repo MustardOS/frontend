@@ -130,6 +130,9 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SATURDAY, "Saturday");
     GENERIC_FIELD(lang->GENERIC.CLEAN, "Clean");
     GENERIC_FIELD(lang->GENERIC.MODIFIED, "Modified");
+    GENERIC_FIELD(lang->GENERIC.ICON_ONLY, "Icon Only");
+    GENERIC_FIELD(lang->GENERIC.TEXT_ONLY, "Text Only");
+    GENERIC_FIELD(lang->GENERIC.TEXT_ICON, "Text + Icon");
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");

@@ -44,6 +44,7 @@ lv_obj_t *ui_lblTitle;
 lv_obj_t *ui_conGlyphs;
 lv_obj_t *ui_staBluetooth;
 lv_obj_t *ui_staNetwork;
+lv_obj_t *ui_lblBatteryPercent;
 lv_obj_t *ui_staCapacity;
 lv_obj_t *ui_pnlFooter;
 lv_obj_t *ui_lblGridCurrentItem;
@@ -710,9 +711,20 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     update_network_status(ui_staNetwork, theme, 0);
     if (!config.VISUAL.NETWORK) lv_obj_add_flag(ui_staNetwork, LV_OBJ_FLAG_HIDDEN);
 
+    ui_lblBatteryPercent = lv_label_create(ui_conGlyphs);
+    lv_obj_set_width(ui_lblBatteryPercent, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblBatteryPercent, LV_SIZE_CONTENT);
+    lv_label_set_text(ui_lblBatteryPercent, "");
+    lv_obj_set_style_text_color(ui_lblBatteryPercent, lv_color_hex(theme->STATUS.BATTERY.NORMAL), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblBatteryPercent, theme->STATUS.BATTERY.NORMAL_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblBatteryPercent, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblBatteryPercent, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_flag(ui_lblBatteryPercent, LV_OBJ_FLAG_HIDDEN);
+
     ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
     battery_update();
     update_battery_capacity(ui_staCapacity, theme);
+    update_battery_percent_label(ui_lblBatteryPercent, theme);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
 
@@ -1442,6 +1454,26 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 
     if (generate_image_embed(mux_dim, "header", battery_glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
         lv_img_set_src(ui_staCapacity, image_embed);
+    }
+}
+
+void update_battery_percent_label(lv_obj_t *ui_label, struct theme_config *theme) {
+    if (!ui_label || !lv_obj_is_valid(ui_label)) return;
+
+    int percent = battery_get_capacity();
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d%%", percent);
+    lv_label_set_text(ui_label, buf);
+
+    if (battery_is_charging()) {
+        lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->STATUS.BATTERY.ACTIVE), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_opa(ui_label, theme->STATUS.BATTERY.ACTIVE_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    } else if (battery_is_low()) {
+        lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->STATUS.BATTERY.LOW), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_opa(ui_label, theme->STATUS.BATTERY.LOW_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->STATUS.BATTERY.NORMAL), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_opa(ui_label, theme->STATUS.BATTERY.NORMAL_ALPHA, MU_OBJ_MAIN_DEFAULT);
     }
 }
 

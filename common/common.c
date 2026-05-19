@@ -88,6 +88,7 @@ char *excluded_included[2];
 char *allowed_restricted[2];
 char *hidden_visible[2];
 char *toggle_icon_visible[3];
+char *battery_display[3];
 
 static void (*extraction_finish_cb)(char *result) = NULL;
 
@@ -129,6 +130,10 @@ void common_var_init(void) {
     toggle_icon_visible[0] = lang.GENERIC.VISIBLE;
     toggle_icon_visible[1] = lang.GENERIC.NOGLYPH;
     toggle_icon_visible[2] = lang.GENERIC.HIDDEN;
+
+    battery_display[0] = lang.GENERIC.ICON_ONLY;
+    battery_display[1] = lang.GENERIC.TEXT_ONLY;
+    battery_display[2] = lang.GENERIC.TEXT_ICON;
 }
 
 int file_exist(const char *filename) {
@@ -1624,7 +1629,20 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
             if (!config.VISUAL.NETWORK) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
         case VIS_BATTERY:
-            if (!config.VISUAL.BATTERY) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+            switch (config.VISUAL.BATTERY) {
+                case 1: // Text Only
+                    lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(ui_lblBatteryPercent, LV_OBJ_FLAG_HIDDEN);
+                    break;
+                case 2: // Text + Icon
+                    lv_obj_clear_flag(element, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(ui_lblBatteryPercent, LV_OBJ_FLAG_HIDDEN);
+                    break;
+                default: // Icon Only (0)
+                    lv_obj_clear_flag(element, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(ui_lblBatteryPercent, LV_OBJ_FLAG_HIDDEN);
+                    break;
+            }
             break;
         case VIS_HEADERTITLE:
             if (!config.VISUAL.HEADERTITLE) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);

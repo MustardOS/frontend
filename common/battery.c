@@ -501,4 +501,5 @@ void battery_capacity_task(lv_timer_t *timer) {
     last_ui_charging = charging;
 
     update_battery_capacity(ui_staCapacity, &theme);
+    update_battery_percent_label(ui_lblBatteryPercent, &theme);
 }
