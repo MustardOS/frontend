@@ -1626,6 +1626,9 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
         case VIS_BATTERY:
             if (!config.VISUAL.BATTERY) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
+        case VIS_HEADERTITLE:
+            if (!config.VISUAL.HEADERTITLE) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+            break;
     }
 }
 

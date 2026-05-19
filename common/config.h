@@ -238,6 +238,7 @@ struct mux_config {
         int16_t SORT;
         int16_t BATTERY;
         int16_t NETWORK;
+        int16_t HEADERTITLE;
         int16_t BLUETOOTH;
         int16_t CLOCK;
         int16_t OVERLAYIMAGE;

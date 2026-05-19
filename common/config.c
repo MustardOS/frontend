@@ -241,6 +241,7 @@ void load_config(struct mux_config *config) {
 
     CFG_INT_FIELD(config->VISUAL.BATTERY, CONF_CONFIG_PATH "visual/battery", 1);
     CFG_INT_FIELD(config->VISUAL.NETWORK, CONF_CONFIG_PATH "visual/network", 0);
+    CFG_INT_FIELD(config->VISUAL.HEADERTITLE, CONF_CONFIG_PATH "visual/headertitle", 0);
     CFG_INT_FIELD(config->VISUAL.BLUETOOTH, CONF_CONFIG_PATH "visual/bluetooth", 0);
     CFG_INT_FIELD(config->VISUAL.CLOCK, CONF_CONFIG_PATH "visual/clock", 1);
     CFG_INT_FIELD(config->VISUAL.OVERLAYIMAGE, CONF_CONFIG_PATH "visual/overlayimage", 1);

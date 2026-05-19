@@ -1363,6 +1363,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
     SPECIFIC_FIELD(lang->MUXVISUAL.BATTERY, "Battery");
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HEADERTITLE, "Header Title");
     SPECIFIC_FIELD(lang->MUXVISUAL.CLOCK, "Clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.DASH, "Content Dash Replacement");
     SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLYFOLDER, "Friendly Folder Names");
@@ -1401,6 +1402,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.SORT, "Set sorting priority levels for content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HEADERTITLE, "Toggle the visibility of the header title");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAYIMAGE, "Switch between different overlay styles for the frontend only");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAYTRANSPARENCY, "Changes the transparency of the overlay image for the frontend only");

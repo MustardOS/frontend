@@ -456,6 +456,7 @@
     VISUAL(Battery,               BATTERY,               "battery")               \
     VISUAL(Clock,                 CLOCK,                 "clock")                 \
     VISUAL(Network,               NETWORK,               "network")               \
+    VISUAL(HeaderTitle,           HEADERTITLE,           "headertitle")           \
     VISUAL(Name,                  NAME,                  "name")                  \
     VISUAL(Dash,                  DASH,                  "dash")                  \
     VISUAL(FriendlyFolder,        FRIENDLYFOLDER,        "friendlyfolder")        \

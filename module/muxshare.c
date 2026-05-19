@@ -144,6 +144,7 @@ void header_and_footer_setup(void) {
     process_visual_element(VIS_BLUETOOTH, ui_staBluetooth);
     process_visual_element(VIS_NETWORK, ui_staNetwork);
     process_visual_element(VIS_BATTERY, ui_staCapacity);
+    process_visual_element(VIS_HEADERTITLE, ui_lblTitle);
 
     lv_label_set_text(ui_lblMessage, "");
 }

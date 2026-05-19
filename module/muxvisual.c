@@ -46,6 +46,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT, 0);
     CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT, 0);
     CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT, 0);
+    CHECK_AND_SAVE_STD(visual, HeaderTitle, "visual/headertitle", INT, 0);
     CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT, 0);
     CHECK_AND_SAVE_STD(visual, Dash, "visual/dash", INT, 0);
     CHECK_AND_SAVE_STD(visual, FriendlyFolder, "visual/friendlyfolder", INT, 0);
@@ -86,6 +87,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLYFOLDER, "friendlyfolder", disabled_enabled, 2);

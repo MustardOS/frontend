@@ -171,7 +171,8 @@ enum visual_type {
     VIS_CLOCK,
     VIS_BLUETOOTH,
     VIS_NETWORK,
-    VIS_BATTERY
+    VIS_BATTERY,
+    VIS_HEADERTITLE
 };
 
 enum time_type {
