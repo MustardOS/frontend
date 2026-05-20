@@ -27,6 +27,10 @@ static int visible_network_opt(void) {
     return device.BOARD.HASNETWORK;
 }
 
+static int visible_bluetooth_opt(void) {
+    return device.BOARD.HASBLUETOOTH;
+}
+
 static void init_dropdown_settings(void) {
 #define CONNECT(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_connect);
     CONNECT_ELEMENTS
@@ -35,14 +39,12 @@ static void init_dropdown_settings(void) {
 
 static void restore_options(void) {
     lv_dropdown_set_selected(ui_droUsbFunction_connect, config.SETTINGS.ADVANCED.USBFUNCTION);
-    lv_dropdown_set_selected(ui_droBluetooth_connect, config.VISUAL.BLUETOOTH);
 }
 
 static void save_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(connect, UsbFunction, "settings/advanced/usb_function", INT, 0);
-    CHECK_AND_SAVE_STD(connect, Bluetooth, "visual/bluetooth", INT, 0);
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 }
@@ -74,7 +76,7 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(connect, Services);
     }
 
-    if (!device.BOARD.HASBLUETOOTH || true) { // TODO: remove true when bluetooth is implemented
+    if (!device.BOARD.HASBLUETOOTH) {
         HIDE_OPTION_ITEM(connect, Bluetooth);
     }
 
@@ -128,6 +130,7 @@ static void handle_a(void) {
             {"network", &kiosk.CONFIG.NETWORK,      MENU_GENERAL, visible_network_opt},
             {"netadv",  &kiosk.CONFIG.NET_SETTINGS, MENU_GENERAL, visible_network_opt},
             {"webserv", &kiosk.CONFIG.WEB_SERVICES, MENU_GENERAL, visible_network_opt},
+            {"btall",   &KIOSK_PASS,                MENU_GENERAL, visible_bluetooth_opt},
             {NULL,      &KIOSK_PASS,                MENU_OPTION, NULL}, // USB Function
     };
 

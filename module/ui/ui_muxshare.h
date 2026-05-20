@@ -75,6 +75,28 @@
     BACKUP(Merge,      MERGE,      "merge")       \
     BACKUP(Start,      START,      "start")
 
+#define BTALL_ELEMENTS                             \
+    BTALL(AutoConnect, AUTOCONNECT, "autoconnect") \
+    BTALL(Scan,        SCAN,        "scan")
+
+#define BTDEV_INFO_ELEMENTS                                \
+    BTDEV_INFO(FriendlyName, FRIENDLYNAME, "friendlyname") \
+    BTDEV_INFO(Type,         TYPE,         "type")         \
+    BTDEV_INFO(Battery,      BATTERY,      "battery")      \
+    BTDEV_INFO(Signal,       SIGNAL,       "signal")
+
+#define BTDEV_ACT_ELEMENTS              \
+    BTDEV_ACT(Status, STATUS, "status") \
+    BTDEV_ACT(Forget, FORGET, "forget")
+
+#define BTDEV_ELEMENTS                                \
+    BTDEV(FriendlyName, FRIENDLYNAME, "friendlyname") \
+    BTDEV(Type,         TYPE,         "type")         \
+    BTDEV(Battery,      BATTERY,      "battery")      \
+    BTDEV(Signal,       SIGNAL,       "signal")       \
+    BTDEV(Status,       STATUS,       "status")       \
+    BTDEV(Forget,       FORGET,       "forget")
+
 #define CHRONY_ELEMENTS                         \
     CHRONY(Reference,  REFERENCE,  "reference") \
     CHRONY(Stratum,    STRATUM,    "stratum")   \
@@ -447,6 +469,7 @@
     TWEAKGEN(Advanced,   ADVANCED,   "advanced")   \
     TWEAKGEN(Brightness, BRIGHTNESS, "brightness") \
     TWEAKGEN(Volume,     VOLUME,     "volume")     \
+    TWEAKGEN(AudioSink,  AUDIOSINK,  "audiosink")  \
     TWEAKGEN(HkDpad,     HKDPAD,     "hkdpad")     \
     TWEAKGEN(HkShot,     HKSHOT,     "hkshot")     \
     TWEAKGEN(Startup,    STARTUP,    "startup")

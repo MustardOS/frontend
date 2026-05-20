@@ -397,6 +397,52 @@ struct mux_lang {
     } MUXCONNECT;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char AUTOCONNECT[MAX_BUFFER_SIZE];
+        char SCAN[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char FORGET[MAX_BUFFER_SIZE];
+        char CONNECT[MAX_BUFFER_SIZE];
+        char DISCONNECT[MAX_BUFFER_SIZE];
+        char CONNECTED[MAX_BUFFER_SIZE];
+        char DISCONNECTED[MAX_BUFFER_SIZE];
+        char FORGET_CONFIRM[MAX_BUFFER_SIZE];
+        struct {
+            char AUTOCONNECT[MAX_BUFFER_SIZE];
+            char SCAN[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXBTALL;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char SCAN[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char INFO[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+    } MUXBTCON;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char FRIENDLYNAME[MAX_BUFFER_SIZE];
+        char TYPE[MAX_BUFFER_SIZE];
+        char BATTERY[MAX_BUFFER_SIZE];
+        char SIGNAL[MAX_BUFFER_SIZE];
+        char STATUS[MAX_BUFFER_SIZE];
+        char CONNECTED[MAX_BUFFER_SIZE];
+        char DISCONNECTED[MAX_BUFFER_SIZE];
+        char FORGET[MAX_BUFFER_SIZE];
+        char FORGET_CONFIRM[MAX_BUFFER_SIZE];
+        struct {
+            char FRIENDLYNAME[MAX_BUFFER_SIZE];
+            char TYPE[MAX_BUFFER_SIZE];
+            char BATTERY[MAX_BUFFER_SIZE];
+            char SIGNAL[MAX_BUFFER_SIZE];
+            char STATUS[MAX_BUFFER_SIZE];
+            char FORGET[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXBTDEV;
+
+    struct {
         char HELP[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
@@ -1535,6 +1581,7 @@ struct mux_lang {
         char RGB[MAX_BUFFER_SIZE];
         char HKDPAD[MAX_BUFFER_SIZE];
         char HKSHOT[MAX_BUFFER_SIZE];
+        char AUDIOSINK[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char MENU[MAX_BUFFER_SIZE];
@@ -1555,6 +1602,7 @@ struct mux_lang {
             char RGB[MAX_BUFFER_SIZE];
             char HKDPAD[MAX_BUFFER_SIZE];
             char HKSHOT[MAX_BUFFER_SIZE];
+            char AUDIOSINK[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
 

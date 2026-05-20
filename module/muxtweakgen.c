@@ -12,6 +12,8 @@ TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
 static int audio_overdrive = 100;
+static char **audio_sinks = NULL;
+static int audio_sink_count = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -31,6 +33,10 @@ static void init_audio_limits(void) {
 
 static int visible_hdmi(void) {
     return !lv_obj_has_flag(ui_pnlHdmi_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_audiosink(void) {
+    return !lv_obj_has_flag(ui_pnlAudioSink_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
 static int visible_rgb(void) {
@@ -53,6 +59,8 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droVolume_tweakgen, clamp_range(config.SETTINGS.GENERAL.VOLUME, 0, lv_dropdown_get_option_cnt(ui_droVolume_tweakgen) - 1));
     lv_dropdown_set_selected(ui_droHkDpad_tweakgen, device.BOARD.HASSTICK > 0 ? 0 : config.SETTINGS.GENERAL.HKDPAD);
     lv_dropdown_set_selected(ui_droHkShot_tweakgen, config.SETTINGS.GENERAL.HKSHOT);
+
+    if (audio_sink_count > 0) lv_dropdown_set_selected(ui_droAudioSink_tweakgen, clamp_range(config.SETTINGS.GENERAL.AUDIOSINK, 0, audio_sink_count - 1));
 
     lv_dropdown_set_selected(ui_droStartup_tweakgen,
                              strcasecmp(config.SETTINGS.GENERAL.STARTUP, "explore") == 0 ? 1 :
@@ -77,6 +85,21 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_VAL(tweakgen, Startup, "settings/general/startup", CHAR, startup_options);
     CHECK_AND_SAVE_STD(tweakgen, HkDpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, HkShot, "settings/hotkey/screenshot", INT, 0);
+
+    if (audio_sink_count > 0) {
+        int sink_mod = lv_dropdown_get_selected(ui_droAudioSink_tweakgen);
+
+        if (sink_mod != AudioSink_original) {
+            is_modified++;
+            write_text_to_file(CONF_CONFIG_PATH "settings/general/audiosink", "w", INT, sink_mod);
+
+            char idx_str[8];
+            snprintf(idx_str, sizeof(idx_str), "%d", sink_mod);
+
+            const char *sink_args[] = {(OPT_PATH "script/mux/audio_sink.sh"), "set", idx_str, NULL};
+            run_exec(sink_args, A_SIZE(sink_args), 1, 0, NULL, NULL);
+        }
+    }
 
     int bright_mod = pct_to_int(lv_dropdown_get_selected(ui_droBrightness_tweakgen), 2, device.SCREEN.BRIGHT);
     if (bright_mod != Brightness_original) set_setting_value("bright", bright_mod, 0);
@@ -178,12 +201,17 @@ static void init_navigation_group(void) {
 
     if (combo_path) hk_combos = load_combos(combo_path, &hk_combo_count);
 
+    const char *sink_args[] = {(OPT_PATH "script/mux/audio_sink.sh"), "list", NULL};
+    run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
+    audio_sinks = str_parse_file("/run/muos/audio_sinks", &audio_sink_count, PARSE_LINES);
+
     INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.RTC, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHTNESS, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, AudioSink, lang.MUXTWEAKGEN.AUDIOSINK, "audiosink", audio_sinks, audio_sink_count);
     INIT_OPTION_ITEM(-1, tweakgen, HkDpad, lang.MUXTWEAKGEN.HKDPAD, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, HkShot, lang.MUXTWEAKGEN.HKSHOT, "hkshot", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
@@ -202,6 +230,7 @@ static void init_navigation_group(void) {
     if (!device.BOARD.HASHDMI) HIDE_OPTION_ITEM(tweakgen, Hdmi);
     if (!device.BOARD.HASRGB) HIDE_OPTION_ITEM(tweakgen, Rgb);
     if (device.BOARD.HASSTICK > 0) HIDE_OPTION_ITEM(tweakgen, HkDpad);
+    if (!audio_sink_count) HIDE_OPTION_ITEM(tweakgen, AudioSink);
 
     if (!hk_combo_count) {
         HIDE_OPTION_ITEM(tweakgen, HkDpad);
@@ -352,11 +381,12 @@ static void handle_a(void) {
 
     static const menu_entry entries[UI_COUNT] = {
             {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK,    NULL},
-            {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI, visible_hdmi},
-            {"rgb",      &kiosk.SETTING.RGB,      MENU_RGB,  visible_rgb},
+            {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI,   visible_hdmi},
+            {"rgb",      &kiosk.SETTING.RGB,      MENU_RGB,    visible_rgb},
             {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume
+            {NULL,       &KIOSK_PASS,             MENU_TOGGLE, visible_audiosink},
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey DPAD
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Hotkey Screenshot
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE,   NULL}, // Startup Mode

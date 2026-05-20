@@ -373,7 +373,46 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USBFUNCTION, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETWORK, "Connect to a Wi-Fi network manually or via a saved profile");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETADV, "Adjust network connectivity settings");
-    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Manage Bluetooth devices and auto-connect settings");
+
+    // muxbtall
+    SPECIFIC_FIELD(lang->MUXBTALL.TITLE, "BLUETOOTH");
+    SPECIFIC_FIELD(lang->MUXBTALL.AUTOCONNECT, "Auto Connect");
+    SPECIFIC_FIELD(lang->MUXBTALL.SCAN, "Scan for Devices");
+    SPECIFIC_FIELD(lang->MUXBTALL.NONE, "No Paired Devices Found");
+    SPECIFIC_FIELD(lang->MUXBTALL.FORGET, "Forget");
+    SPECIFIC_FIELD(lang->MUXBTALL.CONNECT, "Connect");
+    SPECIFIC_FIELD(lang->MUXBTALL.DISCONNECT, "Disconnect");
+    SPECIFIC_FIELD(lang->MUXBTALL.CONNECTED, "Connected");
+    SPECIFIC_FIELD(lang->MUXBTALL.DISCONNECTED, "Disconnected");
+    SPECIFIC_FIELD(lang->MUXBTALL.FORGET_CONFIRM, "Forget this device?");
+    SPECIFIC_FIELD(lang->MUXBTALL.HELP.AUTOCONNECT, "Automatically reconnect to paired devices on startup");
+    SPECIFIC_FIELD(lang->MUXBTALL.HELP.SCAN, "Scan for and connect new Bluetooth controllers and audio devices");
+
+    // muxbtcon
+    SPECIFIC_FIELD(lang->MUXBTCON.TITLE, "BLUETOOTH SCAN");
+    SPECIFIC_FIELD(lang->MUXBTCON.SCAN, "Scanning for Bluetooth Devices…");
+    SPECIFIC_FIELD(lang->MUXBTCON.NONE, "No Bluetooth Devices Found");
+    SPECIFIC_FIELD(lang->MUXBTCON.INFO, "Device Info");
+    SPECIFIC_FIELD(lang->MUXBTCON.HELP, "Scan for nearby Bluetooth devices and pair or connect to them");
+
+    // muxbtdev
+    SPECIFIC_FIELD(lang->MUXBTDEV.TITLE, "BLUETOOTH DEVICE");
+    SPECIFIC_FIELD(lang->MUXBTDEV.FRIENDLYNAME, "Friendly Name");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE, "Device Type");
+    SPECIFIC_FIELD(lang->MUXBTDEV.BATTERY, "Battery");
+    SPECIFIC_FIELD(lang->MUXBTDEV.SIGNAL, "Signal");
+    SPECIFIC_FIELD(lang->MUXBTDEV.STATUS, "Status");
+    SPECIFIC_FIELD(lang->MUXBTDEV.CONNECTED, "Connected");
+    SPECIFIC_FIELD(lang->MUXBTDEV.DISCONNECTED, "Disconnected");
+    SPECIFIC_FIELD(lang->MUXBTDEV.FORGET, "Forget Device");
+    SPECIFIC_FIELD(lang->MUXBTDEV.FORGET_CONFIRM, "Remove this device from the paired list?");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FRIENDLYNAME, "The display name for this Bluetooth device");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.TYPE, "The type of Bluetooth device");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.BATTERY, "The battery level reported by the device");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.SIGNAL, "The signal strength of the Bluetooth connection");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.STATUS, "Connect or disconnect this device");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FORGET, "Remove this device from the paired list");
 
     // muxcontrol
     SPECIFIC_FIELD(lang->MUXCONTROL.TITLE, "CONTROL");
@@ -1344,6 +1383,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.RGB, "Device RGB Lights");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HKDPAD, "DPAD Swap Hotkey");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HKSHOT, "Screenshot Hotkey");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.AUDIOSINK, "Audio Output");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.TITLE, "Device Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.MENU, "Main Menu");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.EXPLORE, "Content Explorer");
@@ -1360,6 +1400,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKDPAD, "Switch between different hotkeys for toggling DPAD swap");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKSHOT, "Switch between different hotkeys for taking a screenshot");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.AUDIOSINK, "Select the active Pipewire audio output sink");
 
     // muxvisual
     SPECIFIC_FIELD(lang->MUXVISUAL.SORT, "Sorting Priority");

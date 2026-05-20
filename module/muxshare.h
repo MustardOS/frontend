@@ -184,6 +184,12 @@ int muxcollect_main(int add, char *dir, int last_index);
 
 int muxconfig_main();
 
+int muxbtall_main();
+
+int muxbtcon_main();
+
+int muxbtdev_main();
+
 int muxconnect_main();
 
 int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app);

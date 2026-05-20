@@ -154,6 +154,7 @@ struct mux_config {
             int16_t THEME_RESOLUTION_HEIGHT;
             int16_t HKDPAD;
             int16_t HKSHOT;
+            int16_t AUDIOSINK;
         } GENERAL;
         struct {
             int16_t RESOLUTION;
@@ -268,6 +269,10 @@ struct mux_config {
         int16_t MIXEDCONTENT;
         int16_t FORWARDHISTORY;
     } VISUAL;
+
+    struct {
+        int16_t AUTOCONNECT;
+    } BLUETOOTH;
 
     struct {
         int16_t SSHD;

@@ -139,6 +139,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.GENERAL.RGB, CONF_CONFIG_PATH "settings/general/rgb", 1);
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HKDPAD, CONF_CONFIG_PATH "settings/hotkey/dpad_toggle", 1);
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HKSHOT, CONF_CONFIG_PATH "settings/hotkey/screenshot", 0);
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.AUDIOSINK, CONF_CONFIG_PATH "settings/general/audiosink", 0);
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, CONF_CONFIG_PATH "settings/general/startup", "launcher");
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, CONF_CONFIG_PATH "settings/general/language", "English");
     CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_RESOLUTION, CONF_CONFIG_PATH "settings/general/theme_resolution", 0);
@@ -270,6 +271,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.CONTENTHISTORY, CONF_CONFIG_PATH "visual/contenthistory", 0);
     CFG_INT_FIELD(config->VISUAL.MIXEDCONTENT, CONF_CONFIG_PATH "visual/mixedcontent", 0);
     CFG_INT_FIELD(config->VISUAL.FORWARDHISTORY, CONF_CONFIG_PATH "visual/forwardhistory", 1);
+
+    CFG_INT_FIELD(config->BLUETOOTH.AUTOCONNECT, CONF_CONFIG_PATH "bluetooth/autoconnect", 0);
 
     CFG_INT_FIELD(config->WEB.SSHD, CONF_CONFIG_PATH "web/sshd", 0);
     CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0);
