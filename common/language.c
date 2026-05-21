@@ -55,6 +55,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.CHECK, "Check");
     GENERIC_FIELD(lang->GENERIC.CLEAR, "Clear");
     GENERIC_FIELD(lang->GENERIC.CLOSE, "Close");
+    GENERIC_FIELD(lang->GENERIC.CONFIRM, "Confirm");
     GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
     GENERIC_FIELD(lang->GENERIC.CONTENT, "Content");
     GENERIC_FIELD(lang->GENERIC.DETAILS, "Details");
@@ -395,22 +396,35 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTCON.NONE, "No Bluetooth Devices Found");
     SPECIFIC_FIELD(lang->MUXBTCON.INFO, "Device Info");
     SPECIFIC_FIELD(lang->MUXBTCON.HELP, "Scan for nearby Bluetooth devices and pair or connect to them");
+    SPECIFIC_FIELD(lang->MUXBTCON.CONNECT, "Connecting to device…");
 
     // muxbtdev
     SPECIFIC_FIELD(lang->MUXBTDEV.TITLE, "BLUETOOTH DEVICE");
     SPECIFIC_FIELD(lang->MUXBTDEV.FRIENDLYNAME, "Friendly Name");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE, "Device Type");
     SPECIFIC_FIELD(lang->MUXBTDEV.BATTERY, "Battery");
-    SPECIFIC_FIELD(lang->MUXBTDEV.SIGNAL, "Signal");
     SPECIFIC_FIELD(lang->MUXBTDEV.STATUS, "Status");
     SPECIFIC_FIELD(lang->MUXBTDEV.CONNECTED, "Connected");
     SPECIFIC_FIELD(lang->MUXBTDEV.DISCONNECTED, "Disconnected");
     SPECIFIC_FIELD(lang->MUXBTDEV.FORGET, "Forget Device");
     SPECIFIC_FIELD(lang->MUXBTDEV.FORGET_CONFIRM, "Remove this device from the paired list?");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.AUDIO_HEADSET, "Headset");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.AUDIO_HEADPHONES, "Headphones");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.AUDIO_SPEAKER, "Speaker");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.AUDIO_MICROPHONE, "Microphone");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.AUDIO_CARD, "Audio Card");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_GAMEPAD, "Gamepad");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_KEYBOARD, "Keyboard");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_MOUSE, "Mouse");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_COMBO, "Keyboard + Mouse");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.PHONE, "Phone");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.COMPUTER, "Computer");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.NETWORK, "Network");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.WEARABLE, "Wearable");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.UNKNOWN, "Unknown");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FRIENDLYNAME, "The display name for this Bluetooth device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.TYPE, "The type of Bluetooth device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.BATTERY, "The battery level reported by the device");
-    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.SIGNAL, "The signal strength of the Bluetooth connection");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.STATUS, "Connect or disconnect this device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FORGET, "Remove this device from the paired list");
 

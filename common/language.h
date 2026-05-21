@@ -39,6 +39,7 @@ struct mux_lang {
         char CHECK[MAX_BUFFER_SIZE];
         char CLEAR[MAX_BUFFER_SIZE];
         char CLOSE[MAX_BUFFER_SIZE];
+        char CONFIRM[MAX_BUFFER_SIZE];
         char COLLECT[MAX_BUFFER_SIZE];
         char CONTENT[MAX_BUFFER_SIZE];
         char DETAILS[MAX_BUFFER_SIZE];
@@ -419,6 +420,7 @@ struct mux_lang {
         char NONE[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
+        char CONNECT[MAX_BUFFER_SIZE];
     } MUXBTCON;
 
     struct {
@@ -426,17 +428,31 @@ struct mux_lang {
         char FRIENDLYNAME[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
         char BATTERY[MAX_BUFFER_SIZE];
-        char SIGNAL[MAX_BUFFER_SIZE];
         char STATUS[MAX_BUFFER_SIZE];
         char CONNECTED[MAX_BUFFER_SIZE];
         char DISCONNECTED[MAX_BUFFER_SIZE];
         char FORGET[MAX_BUFFER_SIZE];
         char FORGET_CONFIRM[MAX_BUFFER_SIZE];
         struct {
+            char AUDIO_HEADSET[MAX_BUFFER_SIZE];
+            char AUDIO_HEADPHONES[MAX_BUFFER_SIZE];
+            char AUDIO_SPEAKER[MAX_BUFFER_SIZE];
+            char AUDIO_MICROPHONE[MAX_BUFFER_SIZE];
+            char AUDIO_CARD[MAX_BUFFER_SIZE];
+            char INPUT_GAMEPAD[MAX_BUFFER_SIZE];
+            char INPUT_KEYBOARD[MAX_BUFFER_SIZE];
+            char INPUT_MOUSE[MAX_BUFFER_SIZE];
+            char INPUT_COMBO[MAX_BUFFER_SIZE];
+            char PHONE[MAX_BUFFER_SIZE];
+            char COMPUTER[MAX_BUFFER_SIZE];
+            char NETWORK[MAX_BUFFER_SIZE];
+            char WEARABLE[MAX_BUFFER_SIZE];
+            char UNKNOWN[MAX_BUFFER_SIZE];
+        } TYPE_NAME;
+        struct {
             char FRIENDLYNAME[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
             char BATTERY[MAX_BUFFER_SIZE];
-            char SIGNAL[MAX_BUFFER_SIZE];
             char STATUS[MAX_BUFFER_SIZE];
             char FORGET[MAX_BUFFER_SIZE];
         } HELP;

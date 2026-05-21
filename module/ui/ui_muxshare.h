@@ -81,19 +81,17 @@
 
 #define BTDEV_INFO_ELEMENTS                                \
     BTDEV_INFO(FriendlyName, FRIENDLYNAME, "friendlyname") \
-    BTDEV_INFO(Type,         TYPE,         "type")         \
-    BTDEV_INFO(Battery,      BATTERY,      "battery")      \
-    BTDEV_INFO(Signal,       SIGNAL,       "signal")
+    BTDEV_INFO(Battery,      BATTERY,      "battery")
 
 #define BTDEV_ACT_ELEMENTS              \
+    BTDEV_ACT(Type,   TYPE,   "type")   \
     BTDEV_ACT(Status, STATUS, "status") \
     BTDEV_ACT(Forget, FORGET, "forget")
 
 #define BTDEV_ELEMENTS                                \
     BTDEV(FriendlyName, FRIENDLYNAME, "friendlyname") \
-    BTDEV(Type,         TYPE,         "type")         \
     BTDEV(Battery,      BATTERY,      "battery")      \
-    BTDEV(Signal,       SIGNAL,       "signal")       \
+    BTDEV(Type,         TYPE,         "type")         \
     BTDEV(Status,       STATUS,       "status")       \
     BTDEV(Forget,       FORGET,       "forget")
 

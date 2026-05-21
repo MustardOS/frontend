@@ -13,11 +13,212 @@ enum {
 };
 #undef BTDEV_INFO
 
-#define BTDEV_STATUS_IDX BTDEV_INFO_COUNT
-#define BTDEV_FORGET_IDX (BTDEV_INFO_COUNT + 1)
+#define BTDEV_FRIENDLYNAME_IDX 0
+
+#define BTDEV_TYPE_IDX BTDEV_INFO_COUNT
+#define BTDEV_STAT_IDX (BTDEV_INFO_COUNT + 1)
+#define BTDEV_FRGT_IDX (BTDEV_INFO_COUNT + 2)
 
 static char selected_mac[18];
 static int status_original;
+static int type_original;
+
+typedef enum {
+    BT_TYPE_AUDIO_HEADSET = 0,
+    BT_TYPE_AUDIO_HEADPHONES,
+    BT_TYPE_AUDIO_SPEAKER,
+    BT_TYPE_AUDIO_MICROPHONE,
+    BT_TYPE_AUDIO_CARD,
+    BT_TYPE_INPUT_GAMEPAD,
+    BT_TYPE_INPUT_KEYBOARD,
+    BT_TYPE_INPUT_MOUSE,
+    BT_TYPE_INPUT_COMBO,
+    BT_TYPE_PHONE,
+    BT_TYPE_COMPUTER,
+    BT_TYPE_NETWORK,
+    BT_TYPE_WEARABLE,
+    BT_TYPE_UNKNOWN,
+    BT_TYPE_COUNT,
+} bt_type_t;
+
+static const char *const bt_type_keys[BT_TYPE_COUNT] = {
+        [BT_TYPE_AUDIO_HEADSET]    = "audio-headset",
+        [BT_TYPE_AUDIO_HEADPHONES] = "audio-headphones",
+        [BT_TYPE_AUDIO_SPEAKER]    = "audio-speaker",
+        [BT_TYPE_AUDIO_MICROPHONE] = "audio-microphone",
+        [BT_TYPE_AUDIO_CARD]       = "audio-card",
+        [BT_TYPE_INPUT_GAMEPAD]    = "input-gamepad",
+        [BT_TYPE_INPUT_KEYBOARD]   = "input-keyboard",
+        [BT_TYPE_INPUT_MOUSE]      = "input-mouse",
+        [BT_TYPE_INPUT_COMBO]      = "input-combo",
+        [BT_TYPE_PHONE]            = "phone",
+        [BT_TYPE_COMPUTER]         = "computer",
+        [BT_TYPE_NETWORK]          = "network",
+        [BT_TYPE_WEARABLE]         = "wearable",
+        [BT_TYPE_UNKNOWN]          = "unknown",
+};
+
+static bt_type_t bt_type_from_string(const char *key) {
+    if (!*key) return BT_TYPE_UNKNOWN;
+
+    for (int i = 0; i < BT_TYPE_COUNT; i++) {
+        if (strcasecmp(bt_type_keys[i], key) == 0) return (bt_type_t) i;
+    }
+
+    return BT_TYPE_UNKNOWN;
+}
+
+// TODO: Remake this whole thing so that it's better structured into a common bluetooth device file...
+static bt_type_t bt_type_derive(const char *icon, const char *class_str, const char *uuids, const char *name) {
+    if (*uuids) {
+        int has_hfp = strstr(uuids, "0000111e") || strstr(uuids, "00001108");
+        int has_a2dp = strstr(uuids, "0000110b") || strstr(uuids, "0000110a");
+        int has_hid = strstr(uuids, "00001124") != NULL;
+
+        if (has_hfp) return BT_TYPE_AUDIO_HEADSET;
+
+        if (has_a2dp) {
+            if (strstr(icon, "headphone") || strstr(icon, "headset")) return BT_TYPE_AUDIO_HEADPHONES;
+            if (strstr(icon, "speaker")) return BT_TYPE_AUDIO_SPEAKER;
+
+            char r_name[256];
+            snprintf(r_name, sizeof(r_name), "%s", name);
+
+            for (char *p = r_name; *p; p++) *p = (char) tolower((unsigned char) *p);
+
+            if (strstr(r_name, "headphone") || strstr(r_name, "earbud") || strstr(r_name, "airpod") ||
+                strstr(r_name, "buds") || strstr(r_name, "wh-") || strstr(r_name, "wf-"))
+                return BT_TYPE_AUDIO_HEADPHONES;
+            if (strstr(r_name, "speaker") || strstr(r_name, "jbl") || strstr(r_name, "soundbar"))
+                return BT_TYPE_AUDIO_SPEAKER;
+
+            return BT_TYPE_AUDIO_HEADPHONES;
+        }
+
+        if (has_hid) {
+            if (strstr(icon, "gamepad") || strstr(icon, "joystick")) return BT_TYPE_INPUT_GAMEPAD;
+            if (strstr(icon, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
+            if (strstr(icon, "mouse")) return BT_TYPE_INPUT_MOUSE;
+
+            char r_name[256];
+            snprintf(r_name, sizeof(r_name), "%s", name);
+
+            for (char *p = r_name; *p; p++) *p = (char) tolower((unsigned char) *p);
+
+            if (strstr(r_name, "xbox") || strstr(r_name, "ps5") || strstr(r_name, "ps4") ||
+                strstr(r_name, "dualshock") || strstr(r_name, "dualsense") || strstr(r_name, "8bitdo") ||
+                strstr(r_name, "gamepad") || strstr(r_name, "controller") || strstr(r_name, "joystick"))
+                return BT_TYPE_INPUT_GAMEPAD;
+
+            if (strstr(r_name, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
+            if (strstr(r_name, "mouse")) return BT_TYPE_INPUT_MOUSE;
+
+            return BT_TYPE_INPUT_GAMEPAD;
+        }
+    }
+
+    if (*icon) {
+        if (strstr(icon, "headset")) return BT_TYPE_AUDIO_HEADSET;
+        if (strstr(icon, "headphone")) return BT_TYPE_AUDIO_HEADPHONES;
+        if (strstr(icon, "speaker")) return BT_TYPE_AUDIO_SPEAKER;
+        if (strstr(icon, "microphone")) return BT_TYPE_AUDIO_MICROPHONE;
+        if (strstr(icon, "audio")) return BT_TYPE_AUDIO_CARD;
+        if (strstr(icon, "gamepad") || strstr(icon, "joystick")) return BT_TYPE_INPUT_GAMEPAD;
+        if (strstr(icon, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
+        if (strstr(icon, "mouse")) return BT_TYPE_INPUT_MOUSE;
+        if (strstr(icon, "phone")) return BT_TYPE_PHONE;
+        if (strstr(icon, "computer")) return BT_TYPE_COMPUTER;
+        if (strstr(icon, "network")) return BT_TYPE_NETWORK;
+        if (strstr(icon, "watch") || strstr(icon, "wearable")) return BT_TYPE_WEARABLE;
+    }
+
+    if (*class_str) {
+        char *end_hex;
+        long cod = strtol(class_str, &end_hex, 0);
+        if (end_hex != class_str) {
+            int major = (int) ((cod >> 8) & 0x1f);
+            int minor = (int) ((cod >> 2) & 0x3f);
+            switch (major) {
+                case 0x04:
+                    if (minor == 0x01 || minor == 0x02) return BT_TYPE_AUDIO_HEADSET;
+                    if (minor == 0x06) return BT_TYPE_AUDIO_HEADPHONES;
+                    if (minor == 0x0e) return BT_TYPE_AUDIO_SPEAKER;
+                    if (minor == 0x08) return BT_TYPE_AUDIO_MICROPHONE;
+                    return BT_TYPE_AUDIO_CARD;
+                case 0x05:
+                    if (minor == 0x01) return BT_TYPE_INPUT_GAMEPAD;
+                    if (minor == 0x10) return BT_TYPE_INPUT_KEYBOARD;
+                    if (minor == 0x20) return BT_TYPE_INPUT_MOUSE;
+                    if (minor == 0x30) return BT_TYPE_INPUT_COMBO;
+                    return BT_TYPE_INPUT_GAMEPAD;
+                case 0x02:
+                    return BT_TYPE_PHONE;
+                case 0x01:
+                    return BT_TYPE_COMPUTER;
+                case 0x03:
+                    return BT_TYPE_NETWORK;
+                case 0x07:
+                    return BT_TYPE_WEARABLE;
+                default:
+                    break;
+            }
+        }
+    }
+
+    if (*name) {
+        char r_name[256];
+        snprintf(r_name, sizeof(r_name), "%s", name);
+        for (char *p = r_name; *p; p++) *p = (char) tolower((unsigned char) *p);
+        if (strstr(r_name, "airpod") || strstr(r_name, "earbud") || strstr(r_name, "buds"))
+            return BT_TYPE_AUDIO_HEADPHONES;
+        if (strstr(r_name, "headphone") || strstr(r_name, "wh-") || strstr(r_name, "wf-"))
+            return BT_TYPE_AUDIO_HEADPHONES;
+        if (strstr(r_name, "headset")) return BT_TYPE_AUDIO_HEADSET;
+        if (strstr(r_name, "speaker") || strstr(r_name, "jbl") || strstr(r_name, "soundbar"))
+            return BT_TYPE_AUDIO_SPEAKER;
+        if (strstr(r_name, "xbox") || strstr(r_name, "ps5") || strstr(r_name, "ps4") ||
+            strstr(r_name, "dualshock") || strstr(r_name, "dualsense") || strstr(r_name, "8bitdo") ||
+            strstr(r_name, "gamepad") || strstr(r_name, "controller"))
+            return BT_TYPE_INPUT_GAMEPAD;
+        if (strstr(r_name, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
+        if (strstr(r_name, "mouse")) return BT_TYPE_INPUT_MOUSE;
+        if (strstr(r_name, "phone")) return BT_TYPE_PHONE;
+        if (strstr(r_name, "watch")) return BT_TYPE_WEARABLE;
+    }
+
+    return BT_TYPE_UNKNOWN;
+}
+
+static void handle_keyboard_OK_press(void) {
+    key_show = 0;
+    const char *new_text = lv_textarea_get_text(ui_txtEntry_btdev);
+
+    if (current_item_index == BTDEV_FRIENDLYNAME_IDX) {
+        lv_label_set_text(ui_lblFriendlyNameValue_btdev, new_text);
+        if (*selected_mac) {
+            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "alias", selected_mac, new_text, NULL};
+            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+        }
+    }
+
+    reset_osk(key_entry);
+
+    lv_textarea_set_text(ui_txtEntry_btdev, "");
+    lv_group_set_focus_cb(ui_group, NULL);
+
+    osk_hide(ui_pnlEntry_btdev);
+}
+
+static void handle_keyboard_press(void) {
+    play_sound(SND_KEYPRESS);
+
+    const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
+    if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
+        handle_keyboard_OK_press();
+    } else {
+        lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
+    }
+}
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
@@ -50,16 +251,38 @@ static void nav_show_lr(int show) {
     }
 }
 
+static void nav_show_x(int show, const char *text) {
+    if (show) {
+        lv_label_set_text(ui_lblNavX, text);
+        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
 static void check_focus(void) {
-    if (current_item_index < BTDEV_STATUS_IDX) {
+    if (current_item_index == BTDEV_FRIENDLYNAME_IDX) {
+        nav_show_a(1, lang.GENERIC.EDIT);
+        nav_show_lr(0);
+        nav_show_x(0, NULL);
+    } else if (current_item_index < BTDEV_TYPE_IDX) {
         nav_show_a(0, NULL);
         nav_show_lr(0);
-    } else if (current_item_index == BTDEV_STATUS_IDX) {
+        nav_show_x(0, NULL);
+    } else if (current_item_index == BTDEV_TYPE_IDX) {
         nav_show_a(0, NULL);
         nav_show_lr(1);
+        nav_show_x(0, NULL);
+    } else if (current_item_index == BTDEV_STAT_IDX) {
+        nav_show_a(1, lang.GENERIC.SELECT);
+        nav_show_lr(1);
+        nav_show_x(0, NULL);
     } else {
-        nav_show_a(1, lang.MUXBTDEV.FORGET);
+        nav_show_a(0, NULL);
         nav_show_lr(0);
+        nav_show_x(1, lang.GENERIC.REMOVE);
     }
 }
 
@@ -77,16 +300,48 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_option_prev(void) {
-    if (msgbox_active || current_item_index != BTDEV_STATUS_IDX) return;
-    move_option(ui_droStatus_btdev, -1);
+    if (msgbox_active) return;
+
+    if (current_item_index == BTDEV_TYPE_IDX) {
+        move_option(ui_droType_btdev, -1);
+        return;
+    }
+
+    if (current_item_index == BTDEV_STAT_IDX) {
+        move_option(ui_droStatus_btdev, -1);
+        return;
+    }
 }
 
 static void handle_option_next(void) {
-    if (msgbox_active || current_item_index != BTDEV_STATUS_IDX) return;
-    move_option(ui_droStatus_btdev, +1);
+    if (msgbox_active) return;
+
+    if (current_item_index == BTDEV_TYPE_IDX) {
+        move_option(ui_droType_btdev, +1);
+        return;
+    }
+
+    if (current_item_index == BTDEV_STAT_IDX) {
+        move_option(ui_droStatus_btdev, +1);
+        return;
+    }
 }
 
 static void save_btdev_options(void) {
+    int current_type = (int) lv_dropdown_get_selected(ui_droType_btdev);
+
+    if (*selected_mac && current_type != type_original) {
+        char mac_clean[18];
+        snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
+
+        for (char *p = mac_clean; *p; p++) { if (*p == ':') *p = '_'; }
+
+        char override_path[MAX_BUFFER_SIZE];
+        snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
+
+        write_text_to_file(override_path, "w", CHAR, bt_type_keys[current_type]);
+    }
+
     int current_status = lv_dropdown_get_selected(ui_droStatus_btdev);
     if (current_status == status_original || !*selected_mac) return;
 
@@ -100,36 +355,45 @@ static void save_btdev_options(void) {
 }
 
 static void handle_a(void) {
-    if (hold_call) return;
+    if (msgbox_active || hold_call) return;
 
-    if (msgbox_active) {
-        if (*selected_mac) {
-            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "forget", selected_mac, NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-        }
-        play_sound(SND_CONFIRM);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-        load_mux("btall");
-        mux_input_stop();
+    if (key_show) {
+        handle_keyboard_press();
         return;
     }
 
-    if (current_item_index < BTDEV_STATUS_IDX) return;
+    if (current_item_index == BTDEV_FRIENDLYNAME_IDX) {
+        key_curr = 0;
+        lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+        lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_state(num_entry, LV_STATE_DISABLED);
+        key_show = 1;
 
-    if (current_item_index == BTDEV_STATUS_IDX) {
+        osk_show(ui_pnlEntry_btdev);
+        osk_refresh_labels();
+        lv_textarea_set_text(ui_txtEntry_btdev, lv_label_get_text(ui_lblFriendlyNameValue_btdev));
+        return;
+    }
+
+    if (current_item_index <= BTDEV_TYPE_IDX) return;
+
+    if (current_item_index == BTDEV_STAT_IDX) {
         handle_option_next();
         return;
     }
 
-    play_sound(SND_INFO_OPEN);
-    show_info_box(lang.MUXBTDEV.FORGET, lang.MUXBTDEV.FORGET_CONFIRM, 0);
-    msgbox_active = 1;
+    play_sound(SND_ERROR);
+    toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (key_show) {
+        key_backspace(ui_txtEntry_btdev);
+        return;
+    }
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -140,9 +404,103 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
+
     save_btdev_options();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "btall");
+
     mux_input_stop();
+}
+
+static void handle_b_hold(void) {
+    if (key_show) key_backspace(ui_txtEntry_btdev);
+}
+
+static void handle_x(void) {
+    if (key_show) {
+        key_show = 0;
+        close_osk(key_entry, ui_group, ui_txtEntry_btdev, ui_pnlEntry_btdev);
+        return;
+    }
+
+    if (msgbox_active || current_item_index != BTDEV_FRGT_IDX) return;
+
+    if (!hold_call) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
+        return;
+    }
+
+    if (!*selected_mac) return;
+
+    play_sound(SND_CONFIRM);
+
+    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "forget", selected_mac, NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    hold_call = 0;
+    load_mux("btall");
+    mux_input_stop();
+}
+
+static void handle_y(void) {
+    if (key_show == 1) key_space(ui_txtEntry_btdev);
+}
+
+static void handle_up(void) {
+    key_show ? key_up() : handle_list_nav_up();
+}
+
+static void handle_up_hold(void) {
+    key_show ? key_up() : handle_list_nav_up_hold();
+}
+
+static void handle_down(void) {
+    key_show ? key_down() : handle_list_nav_down();
+}
+
+static void handle_down_hold(void) {
+    key_show ? key_down() : handle_list_nav_down_hold();
+}
+
+static void handle_left(void) {
+    if (key_show) {
+        key_left();
+        return;
+    }
+
+    handle_option_prev();
+}
+
+static void handle_right(void) {
+    if (key_show) {
+        key_right();
+        return;
+    }
+
+    handle_option_next();
+}
+
+static void handle_l1(void) {
+    if (key_show == 1) {
+        key_swap_back();
+        return;
+    }
+
+    if (!key_show) handle_list_nav_page_up();
+}
+
+static void handle_r1(void) {
+    if (key_show == 1) {
+        key_swap();
+        return;
+    }
+
+    if (!key_show) handle_list_nav_page_down();
+}
+
+static void on_key_event(struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_OK_press();
+    ev.code == KEY_ESC && ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txtEntry_btdev);
 }
 
 static void handle_help(void) {
@@ -178,28 +536,71 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_panel[BTDEV_COUNT];
 
     char val_name[MAX_BUFFER_SIZE];
-    char val_type[MAX_BUFFER_SIZE];
     char val_battery[MAX_BUFFER_SIZE];
-    char val_signal[MAX_BUFFER_SIZE];
+    char val_icon[MAX_BUFFER_SIZE];
+    char val_class[MAX_BUFFER_SIZE];
+    char val_uuids[MAX_BUFFER_SIZE];
     char val_conn[MAX_BUFFER_SIZE];
 
     read_device_info_field("Name", val_name);
-    read_device_info_field("Type", val_type);
     read_device_info_field("Battery", val_battery);
-    read_device_info_field("Signal", val_signal);
+    read_device_info_field("Icon", val_icon);
+    read_device_info_field("Class", val_class);
+    read_device_info_field("UUIDs", val_uuids);
     read_device_info_field("Connected", val_conn);
 
     int connected = (strcmp(val_conn, "yes") == 0);
 
     const char *name = *val_name ? val_name : lang.GENERIC.UNKNOWN;
-    const char *type = *val_type ? val_type : lang.GENERIC.UNKNOWN;
     const char *battery = *val_battery ? val_battery : lang.GENERIC.UNKNOWN;
-    const char *signal = *val_signal ? val_signal : lang.GENERIC.UNKNOWN;
+
+    bt_type_t type;
+
+    if (*selected_mac) {
+        char mac_clean[18];
+
+        snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
+        for (char *p = mac_clean; *p; p++) { if (*p == ':') *p = '_'; }
+
+        char override_path[MAX_BUFFER_SIZE];
+        snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
+
+        char override_key[64] = {0};
+        FILE *of = fopen(override_path, "r");
+
+        if (of) {
+            if (fgets(override_key, sizeof(override_key), of)) str_remchar(override_key, '\n');
+            fclose(of);
+        }
+
+        type = *override_key ? bt_type_from_string(override_key) : bt_type_derive(val_icon, val_class, val_uuids, val_name);
+    } else {
+        type = bt_type_derive(val_icon, val_class, val_uuids, val_name);
+    }
 
     INIT_VALUE_ITEM(-1, btdev, FriendlyName, lang.MUXBTDEV.FRIENDLYNAME, "friendlyname", name);
-    INIT_VALUE_ITEM(-1, btdev, Type, lang.MUXBTDEV.TYPE, "type", type);
     INIT_VALUE_ITEM(-1, btdev, Battery, lang.MUXBTDEV.BATTERY, "battery", battery);
-    INIT_VALUE_ITEM(-1, btdev, Signal, lang.MUXBTDEV.SIGNAL, "signal", signal);
+
+    char *type_options[] = {
+            lang.MUXBTDEV.TYPE_NAME.AUDIO_HEADSET,
+            lang.MUXBTDEV.TYPE_NAME.AUDIO_HEADPHONES,
+            lang.MUXBTDEV.TYPE_NAME.AUDIO_SPEAKER,
+            lang.MUXBTDEV.TYPE_NAME.AUDIO_MICROPHONE,
+            lang.MUXBTDEV.TYPE_NAME.AUDIO_CARD,
+            lang.MUXBTDEV.TYPE_NAME.INPUT_GAMEPAD,
+            lang.MUXBTDEV.TYPE_NAME.INPUT_KEYBOARD,
+            lang.MUXBTDEV.TYPE_NAME.INPUT_MOUSE,
+            lang.MUXBTDEV.TYPE_NAME.INPUT_COMBO,
+            lang.MUXBTDEV.TYPE_NAME.PHONE,
+            lang.MUXBTDEV.TYPE_NAME.COMPUTER,
+            lang.MUXBTDEV.TYPE_NAME.NETWORK,
+            lang.MUXBTDEV.TYPE_NAME.WEARABLE,
+            lang.MUXBTDEV.TYPE_NAME.UNKNOWN,
+    };
+
+    INIT_OPTION_ITEM(-1, btdev, Type, lang.MUXBTDEV.TYPE, "type", type_options, BT_TYPE_COUNT);
+    lv_dropdown_set_selected(ui_droType_btdev, (int) type);
+    type_original = (int) lv_dropdown_get_selected(ui_droType_btdev);
 
     char *status_options[] = {
             lang.MUXBTDEV.DISCONNECTED,
@@ -208,10 +609,9 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, btdev, Status, lang.MUXBTDEV.STATUS, "status", status_options, 2);
     lv_dropdown_set_selected(ui_droStatus_btdev, connected ? 1 : 0);
+    status_original = lv_dropdown_get_selected(ui_droStatus_btdev);
 
     INIT_OPTION_ITEM(-1, btdev, Forget, lang.MUXBTDEV.FORGET, "forget", NULL, 0);
-
-    status_original = lv_dropdown_get_selected(ui_droStatus_btdev);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
@@ -223,13 +623,15 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                   0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE,  0},
-            {ui_lblNavAGlyph,  "",                   0},
-            {ui_lblNavA,       lang.MUXBTDEV.FORGET, 0},
-            {ui_lblNavBGlyph,  "",                   0},
-            {ui_lblNavB,       lang.GENERIC.BACK,    0},
-            {NULL, NULL,                             0}
+            {ui_lblNavLRGlyph, "",                  0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
+            {ui_lblNavAGlyph,  "",                  0},
+            {ui_lblNavA,       lang.GENERIC.EDIT,   0},
+            {ui_lblNavBGlyph,  "",                  0},
+            {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph,  "",                  0},
+            {ui_lblNavX,       lang.GENERIC.REMOVE, 0},
+            {NULL, NULL,                            0}
     });
 
 #define BTDEV(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_btdev, UDATA);
@@ -259,7 +661,7 @@ int muxbtdev_main(void) {
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXBTDEV.TITLE);
-    init_muxbtdev(ui_pnlContent);
+    init_muxbtdev(ui_screen, ui_pnlContent, &theme);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -270,6 +672,8 @@ int muxbtdev_main(void) {
     init_fonts();
     init_navigation_group();
 
+    init_osk(ui_pnlEntry_btdev, ui_txtEntry_btdev, true, false, OSK_MAX);
+
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -277,30 +681,34 @@ int muxbtdev_main(void) {
             .press_handler = {
                     [MUX_INPUT_A]          = handle_a,
                     [MUX_INPUT_B]          = handle_b,
-                    [MUX_INPUT_DPAD_LEFT]  = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP]    = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN]  = handle_list_nav_down,
-                    [MUX_INPUT_L1]         = handle_list_nav_page_up,
-                    [MUX_INPUT_R1]         = handle_list_nav_page_down,
+                    [MUX_INPUT_X]          = handle_x,
+                    [MUX_INPUT_Y]          = handle_y,
+                    [MUX_INPUT_DPAD_LEFT]  = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_DPAD_UP]    = handle_up,
+                    [MUX_INPUT_DPAD_DOWN]  = handle_down,
+                    [MUX_INPUT_L1]         = handle_l1,
+                    [MUX_INPUT_R1]         = handle_r1,
             },
             .release_handler = {
                     [MUX_INPUT_L2]   = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT]  = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP]    = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN]  = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1]         = handle_list_nav_page_up,
+                    [MUX_INPUT_B]          = handle_b_hold,
+                    [MUX_INPUT_DPAD_LEFT]  = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_DPAD_UP]    = handle_up_hold,
+                    [MUX_INPUT_DPAD_DOWN]  = handle_down_hold,
+                    [MUX_INPUT_L1]         = handle_l1,
                     [MUX_INPUT_L2]         = hold_call_set,
-                    [MUX_INPUT_R1]         = handle_list_nav_page_down,
+                    [MUX_INPUT_R1]         = handle_r1,
             },
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
+    register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
     return 0;

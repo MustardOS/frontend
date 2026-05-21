@@ -30,8 +30,10 @@ static void handle_a(void) {
     char mac_copy[18];
     snprintf(mac_copy, sizeof(mac_copy), "%s", mac);
 
+    toast_message(lang.MUXBTCON.CONNECT, FOREVER);
+
     const char *args[] = {(OPT_PATH "script/mux/bt_scan.sh"), "connect", mac_copy, NULL};
-    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     load_mux("btall");
     mux_input_stop();
@@ -121,8 +123,12 @@ static void handle_y(void) {
     char mac_copy[18];
     snprintf(mac_copy, sizeof(mac_copy), "%s", mac);
 
+    toast_message(lang.GENERIC.REFRESH_RUN, FOREVER);
+
     const char *args[] = {(OPT_PATH "script/mux/bt_scan.sh"), "info", mac_copy, NULL};
-    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    lv_obj_set_style_opa(ui_pnlMessage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
     char info_buf[512] = {0};
     FILE *f = fopen("/run/muos/bt_info", "r");
