@@ -72,8 +72,7 @@ static void create_bt_scan_items(void) {
 
     reset_ui_groups();
 
-    char *scan_file = CONF_CONFIG_PATH
-    "bluetooth/scan";
+    char *scan_file = CONF_CONFIG_PATH "bluetooth/scan";
     FILE *file = fopen(scan_file, "r");
     if (!file) return;
 
@@ -105,6 +104,7 @@ static void create_bt_scan_items(void) {
         apply_size_to_content(&theme, ui_pnlContent, ui_lblBtScanItem, ui_lblBtScanGlyph, name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblBtScanItem);
     }
+
     fclose(file);
 
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
@@ -164,7 +164,7 @@ static void init_elements(void) {
             {ui_lblNavX,      lang.GENERIC.RESCAN, 0},
             {ui_lblNavYGlyph, "",                  0},
             {ui_lblNavY,      lang.MUXBTCON.INFO,  0},
-            {NULL,            NULL,                0}
+            {NULL, NULL,                           0}
     });
 
     overlay_display();

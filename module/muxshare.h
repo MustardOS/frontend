@@ -46,6 +46,7 @@
 #include "../common/skip_list.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
+#include "../common/bluetooth.h"
 #include "../common/verify.h"
 #include "../common/core/common.h"
 #include "../common/input/list_nav.h"

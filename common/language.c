@@ -106,6 +106,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.RESTRICTED, "Restricted");
     GENERIC_FIELD(lang->GENERIC.SAVE, "Save");
     GENERIC_FIELD(lang->GENERIC.SAVING, "Saving…");
+    GENERIC_FIELD(lang->GENERIC.SCAN, "Scan");
     GENERIC_FIELD(lang->GENERIC.SCROLL, "Scroll");
     GENERIC_FIELD(lang->GENERIC.SELECT, "Select");
     GENERIC_FIELD(lang->GENERIC.SET, "Set");
@@ -379,8 +380,8 @@ void load_lang(struct mux_lang *lang) {
     // muxbtall
     SPECIFIC_FIELD(lang->MUXBTALL.TITLE, "BLUETOOTH");
     SPECIFIC_FIELD(lang->MUXBTALL.AUTOCONNECT, "Auto Connect");
-    SPECIFIC_FIELD(lang->MUXBTALL.SCAN, "Scan for Devices");
     SPECIFIC_FIELD(lang->MUXBTALL.NONE, "No Paired Devices Found");
+    SPECIFIC_FIELD(lang->MUXBTALL.LOADING, "Updating device list…");
     SPECIFIC_FIELD(lang->MUXBTALL.FORGET, "Forget");
     SPECIFIC_FIELD(lang->MUXBTALL.CONNECT, "Connect");
     SPECIFIC_FIELD(lang->MUXBTALL.DISCONNECT, "Disconnect");
@@ -388,7 +389,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTALL.DISCONNECTED, "Disconnected");
     SPECIFIC_FIELD(lang->MUXBTALL.FORGET_CONFIRM, "Forget this device?");
     SPECIFIC_FIELD(lang->MUXBTALL.HELP.AUTOCONNECT, "Automatically reconnect to paired devices on startup");
-    SPECIFIC_FIELD(lang->MUXBTALL.HELP.SCAN, "Scan for and connect new Bluetooth controllers and audio devices");
 
     // muxbtcon
     SPECIFIC_FIELD(lang->MUXBTCON.TITLE, "BLUETOOTH SCAN");
@@ -417,10 +417,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_KEYBOARD, "Keyboard");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_MOUSE, "Mouse");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_COMBO, "Keyboard + Mouse");
+    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.INPUT_REMOTE, "Remote Control");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.PHONE, "Phone");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.COMPUTER, "Computer");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.NETWORK, "Network");
-    SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.WEARABLE, "Wearable");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE_NAME.UNKNOWN, "Unknown");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FRIENDLYNAME, "The display name for this Bluetooth device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.TYPE, "The type of Bluetooth device");
@@ -852,7 +852,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.SAVE, "Changes Saved");
     SPECIFIC_FIELD(lang->MUXNETWORK.DHCP, "DHCP");
     SPECIFIC_FIELD(lang->MUXNETWORK.STATIC, "Static");
-    SPECIFIC_FIELD(lang->MUXNETWORK.SCAN, "Scan");
     SPECIFIC_FIELD(lang->MUXNETWORK.SUBNET, "Subnet CIDR");
     SPECIFIC_FIELD(lang->MUXNETWORK.PROFILES, "Profiles");
     SPECIFIC_FIELD(lang->MUXNETWORK.CONNECT_TRY, "Trying to Connect…");

@@ -20,173 +20,17 @@ enum {
 #define BTDEV_FRGT_IDX (BTDEV_INFO_COUNT + 2)
 
 static char selected_mac[18];
-static int status_original;
+static int is_connected;
 static int type_original;
 
-typedef enum {
-    BT_TYPE_AUDIO_HEADSET = 0,
-    BT_TYPE_AUDIO_HEADPHONES,
-    BT_TYPE_AUDIO_SPEAKER,
-    BT_TYPE_AUDIO_MICROPHONE,
-    BT_TYPE_AUDIO_CARD,
-    BT_TYPE_INPUT_GAMEPAD,
-    BT_TYPE_INPUT_KEYBOARD,
-    BT_TYPE_INPUT_MOUSE,
-    BT_TYPE_INPUT_COMBO,
-    BT_TYPE_PHONE,
-    BT_TYPE_COMPUTER,
-    BT_TYPE_NETWORK,
-    BT_TYPE_WEARABLE,
-    BT_TYPE_UNKNOWN,
-    BT_TYPE_COUNT,
-} bt_type_t;
+static void show_help(void) {
+    struct help_msg help_messages[] = {
+#define BTDEV(NAME, ENUM, UDATA) { UDATA, lang.MUXBTDEV.HELP.ENUM },
+            BTDEV_ELEMENTS
+#undef BTDEV
+    };
 
-static const char *const bt_type_keys[BT_TYPE_COUNT] = {
-        [BT_TYPE_AUDIO_HEADSET]    = "audio-headset",
-        [BT_TYPE_AUDIO_HEADPHONES] = "audio-headphones",
-        [BT_TYPE_AUDIO_SPEAKER]    = "audio-speaker",
-        [BT_TYPE_AUDIO_MICROPHONE] = "audio-microphone",
-        [BT_TYPE_AUDIO_CARD]       = "audio-card",
-        [BT_TYPE_INPUT_GAMEPAD]    = "input-gamepad",
-        [BT_TYPE_INPUT_KEYBOARD]   = "input-keyboard",
-        [BT_TYPE_INPUT_MOUSE]      = "input-mouse",
-        [BT_TYPE_INPUT_COMBO]      = "input-combo",
-        [BT_TYPE_PHONE]            = "phone",
-        [BT_TYPE_COMPUTER]         = "computer",
-        [BT_TYPE_NETWORK]          = "network",
-        [BT_TYPE_WEARABLE]         = "wearable",
-        [BT_TYPE_UNKNOWN]          = "unknown",
-};
-
-static bt_type_t bt_type_from_string(const char *key) {
-    if (!*key) return BT_TYPE_UNKNOWN;
-
-    for (int i = 0; i < BT_TYPE_COUNT; i++) {
-        if (strcasecmp(bt_type_keys[i], key) == 0) return (bt_type_t) i;
-    }
-
-    return BT_TYPE_UNKNOWN;
-}
-
-// TODO: Remake this whole thing so that it's better structured into a common bluetooth device file...
-static bt_type_t bt_type_derive(const char *icon, const char *class_str, const char *uuids, const char *name) {
-    if (*uuids) {
-        int has_hfp = strstr(uuids, "0000111e") || strstr(uuids, "00001108");
-        int has_a2dp = strstr(uuids, "0000110b") || strstr(uuids, "0000110a");
-        int has_hid = strstr(uuids, "00001124") != NULL;
-
-        if (has_hfp) return BT_TYPE_AUDIO_HEADSET;
-
-        if (has_a2dp) {
-            if (strstr(icon, "headphone") || strstr(icon, "headset")) return BT_TYPE_AUDIO_HEADPHONES;
-            if (strstr(icon, "speaker")) return BT_TYPE_AUDIO_SPEAKER;
-
-            char r_name[256];
-            snprintf(r_name, sizeof(r_name), "%s", name);
-
-            for (char *p = r_name; *p; p++) *p = (char) tolower((unsigned char) *p);
-
-            if (strstr(r_name, "headphone") || strstr(r_name, "earbud") || strstr(r_name, "airpod") ||
-                strstr(r_name, "buds") || strstr(r_name, "wh-") || strstr(r_name, "wf-"))
-                return BT_TYPE_AUDIO_HEADPHONES;
-            if (strstr(r_name, "speaker") || strstr(r_name, "jbl") || strstr(r_name, "soundbar"))
-                return BT_TYPE_AUDIO_SPEAKER;
-
-            return BT_TYPE_AUDIO_HEADPHONES;
-        }
-
-        if (has_hid) {
-            if (strstr(icon, "gamepad") || strstr(icon, "joystick")) return BT_TYPE_INPUT_GAMEPAD;
-            if (strstr(icon, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
-            if (strstr(icon, "mouse")) return BT_TYPE_INPUT_MOUSE;
-
-            char r_name[256];
-            snprintf(r_name, sizeof(r_name), "%s", name);
-
-            for (char *p = r_name; *p; p++) *p = (char) tolower((unsigned char) *p);
-
-            if (strstr(r_name, "xbox") || strstr(r_name, "ps5") || strstr(r_name, "ps4") ||
-                strstr(r_name, "dualshock") || strstr(r_name, "dualsense") || strstr(r_name, "8bitdo") ||
-                strstr(r_name, "gamepad") || strstr(r_name, "controller") || strstr(r_name, "joystick"))
-                return BT_TYPE_INPUT_GAMEPAD;
-
-            if (strstr(r_name, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
-            if (strstr(r_name, "mouse")) return BT_TYPE_INPUT_MOUSE;
-
-            return BT_TYPE_INPUT_GAMEPAD;
-        }
-    }
-
-    if (*icon) {
-        if (strstr(icon, "headset")) return BT_TYPE_AUDIO_HEADSET;
-        if (strstr(icon, "headphone")) return BT_TYPE_AUDIO_HEADPHONES;
-        if (strstr(icon, "speaker")) return BT_TYPE_AUDIO_SPEAKER;
-        if (strstr(icon, "microphone")) return BT_TYPE_AUDIO_MICROPHONE;
-        if (strstr(icon, "audio")) return BT_TYPE_AUDIO_CARD;
-        if (strstr(icon, "gamepad") || strstr(icon, "joystick")) return BT_TYPE_INPUT_GAMEPAD;
-        if (strstr(icon, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
-        if (strstr(icon, "mouse")) return BT_TYPE_INPUT_MOUSE;
-        if (strstr(icon, "phone")) return BT_TYPE_PHONE;
-        if (strstr(icon, "computer")) return BT_TYPE_COMPUTER;
-        if (strstr(icon, "network")) return BT_TYPE_NETWORK;
-        if (strstr(icon, "watch") || strstr(icon, "wearable")) return BT_TYPE_WEARABLE;
-    }
-
-    if (*class_str) {
-        char *end_hex;
-        long cod = strtol(class_str, &end_hex, 0);
-        if (end_hex != class_str) {
-            int major = (int) ((cod >> 8) & 0x1f);
-            int minor = (int) ((cod >> 2) & 0x3f);
-            switch (major) {
-                case 0x04:
-                    if (minor == 0x01 || minor == 0x02) return BT_TYPE_AUDIO_HEADSET;
-                    if (minor == 0x06) return BT_TYPE_AUDIO_HEADPHONES;
-                    if (minor == 0x0e) return BT_TYPE_AUDIO_SPEAKER;
-                    if (minor == 0x08) return BT_TYPE_AUDIO_MICROPHONE;
-                    return BT_TYPE_AUDIO_CARD;
-                case 0x05:
-                    if (minor == 0x01) return BT_TYPE_INPUT_GAMEPAD;
-                    if (minor == 0x10) return BT_TYPE_INPUT_KEYBOARD;
-                    if (minor == 0x20) return BT_TYPE_INPUT_MOUSE;
-                    if (minor == 0x30) return BT_TYPE_INPUT_COMBO;
-                    return BT_TYPE_INPUT_GAMEPAD;
-                case 0x02:
-                    return BT_TYPE_PHONE;
-                case 0x01:
-                    return BT_TYPE_COMPUTER;
-                case 0x03:
-                    return BT_TYPE_NETWORK;
-                case 0x07:
-                    return BT_TYPE_WEARABLE;
-                default:
-                    break;
-            }
-        }
-    }
-
-    if (*name) {
-        char r_name[256];
-        snprintf(r_name, sizeof(r_name), "%s", name);
-        for (char *p = r_name; *p; p++) *p = (char) tolower((unsigned char) *p);
-        if (strstr(r_name, "airpod") || strstr(r_name, "earbud") || strstr(r_name, "buds"))
-            return BT_TYPE_AUDIO_HEADPHONES;
-        if (strstr(r_name, "headphone") || strstr(r_name, "wh-") || strstr(r_name, "wf-"))
-            return BT_TYPE_AUDIO_HEADPHONES;
-        if (strstr(r_name, "headset")) return BT_TYPE_AUDIO_HEADSET;
-        if (strstr(r_name, "speaker") || strstr(r_name, "jbl") || strstr(r_name, "soundbar"))
-            return BT_TYPE_AUDIO_SPEAKER;
-        if (strstr(r_name, "xbox") || strstr(r_name, "ps5") || strstr(r_name, "ps4") ||
-            strstr(r_name, "dualshock") || strstr(r_name, "dualsense") || strstr(r_name, "8bitdo") ||
-            strstr(r_name, "gamepad") || strstr(r_name, "controller"))
-            return BT_TYPE_INPUT_GAMEPAD;
-        if (strstr(r_name, "keyboard")) return BT_TYPE_INPUT_KEYBOARD;
-        if (strstr(r_name, "mouse")) return BT_TYPE_INPUT_MOUSE;
-        if (strstr(r_name, "phone")) return BT_TYPE_PHONE;
-        if (strstr(r_name, "watch")) return BT_TYPE_WEARABLE;
-    }
-
-    return BT_TYPE_UNKNOWN;
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void handle_keyboard_OK_press(void) {
@@ -218,16 +62,6 @@ static void handle_keyboard_press(void) {
     } else {
         lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
     }
-}
-
-static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define BTDEV(NAME, ENUM, UDATA) { UDATA, lang.MUXBTDEV.HELP.ENUM },
-            BTDEV_ELEMENTS
-#undef BTDEV
-    };
-
-    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void nav_show_a(int show, const char *text) {
@@ -276,8 +110,8 @@ static void check_focus(void) {
         nav_show_lr(1);
         nav_show_x(0, NULL);
     } else if (current_item_index == BTDEV_STAT_IDX) {
-        nav_show_a(1, lang.GENERIC.SELECT);
-        nav_show_lr(1);
+        nav_show_a(1, is_connected ? lang.MUXBTALL.DISCONNECT : lang.MUXBTALL.CONNECT);
+        nav_show_lr(0);
         nav_show_x(0, NULL);
     } else {
         nav_show_a(0, NULL);
@@ -300,58 +134,27 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_option_prev(void) {
-    if (msgbox_active) return;
-
-    if (current_item_index == BTDEV_TYPE_IDX) {
-        move_option(ui_droType_btdev, -1);
-        return;
-    }
-
-    if (current_item_index == BTDEV_STAT_IDX) {
-        move_option(ui_droStatus_btdev, -1);
-        return;
-    }
+    if (msgbox_active || current_item_index != BTDEV_TYPE_IDX) return;
+    move_option(ui_droType_btdev, -1);
 }
 
 static void handle_option_next(void) {
-    if (msgbox_active) return;
-
-    if (current_item_index == BTDEV_TYPE_IDX) {
-        move_option(ui_droType_btdev, +1);
-        return;
-    }
-
-    if (current_item_index == BTDEV_STAT_IDX) {
-        move_option(ui_droStatus_btdev, +1);
-        return;
-    }
+    if (msgbox_active || current_item_index != BTDEV_TYPE_IDX) return;
+    move_option(ui_droType_btdev, +1);
 }
 
 static void save_btdev_options(void) {
     int current_type = (int) lv_dropdown_get_selected(ui_droType_btdev);
 
-    if (*selected_mac && current_type != type_original) {
-        char mac_clean[18];
-        snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
+    if (!*selected_mac || current_type == type_original) return;
 
-        for (char *p = mac_clean; *p; p++) { if (*p == ':') *p = '_'; }
+    char mac_clean[18];
+    snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
+    for (char *p = mac_clean; *p; p++) { if (*p == ':') *p = '_'; }
 
-        char override_path[MAX_BUFFER_SIZE];
-        snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
-
-        write_text_to_file(override_path, "w", CHAR, bt_type_keys[current_type]);
-    }
-
-    int current_status = lv_dropdown_get_selected(ui_droStatus_btdev);
-    if (current_status == status_original || !*selected_mac) return;
-
-    if (current_status == 1) {
-        const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "connect", selected_mac, NULL};
-        run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
-    } else {
-        const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "disconnect", selected_mac, NULL};
-        run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
-    }
+    char override_path[MAX_BUFFER_SIZE];
+    snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
+    write_text_to_file(override_path, "w", CHAR, bt_type_keys[current_type]);
 }
 
 static void handle_a(void) {
@@ -379,7 +182,17 @@ static void handle_a(void) {
     if (current_item_index <= BTDEV_TYPE_IDX) return;
 
     if (current_item_index == BTDEV_STAT_IDX) {
-        handle_option_next();
+        if (!*selected_mac) return;
+        if (is_connected) {
+            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "disconnect", selected_mac, NULL};
+            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+        } else {
+            toast_message(lang.MUXBTCON.CONNECT, FOREVER);
+            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "connect", selected_mac, NULL};
+            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+        }
+        load_mux("btdev");
+        mux_input_stop();
         return;
     }
 
@@ -550,6 +363,7 @@ static void init_navigation_group(void) {
     read_device_info_field("Connected", val_conn);
 
     int connected = (strcmp(val_conn, "yes") == 0);
+    is_connected = connected;
 
     const char *name = *val_name ? val_name : lang.GENERIC.UNKNOWN;
     const char *battery = *val_battery ? val_battery : lang.GENERIC.UNKNOWN;
@@ -591,10 +405,10 @@ static void init_navigation_group(void) {
             lang.MUXBTDEV.TYPE_NAME.INPUT_KEYBOARD,
             lang.MUXBTDEV.TYPE_NAME.INPUT_MOUSE,
             lang.MUXBTDEV.TYPE_NAME.INPUT_COMBO,
+            lang.MUXBTDEV.TYPE_NAME.INPUT_REMOTE,
             lang.MUXBTDEV.TYPE_NAME.PHONE,
             lang.MUXBTDEV.TYPE_NAME.COMPUTER,
             lang.MUXBTDEV.TYPE_NAME.NETWORK,
-            lang.MUXBTDEV.TYPE_NAME.WEARABLE,
             lang.MUXBTDEV.TYPE_NAME.UNKNOWN,
     };
 
@@ -609,7 +423,6 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, btdev, Status, lang.MUXBTDEV.STATUS, "status", status_options, 2);
     lv_dropdown_set_selected(ui_droStatus_btdev, connected ? 1 : 0);
-    status_original = lv_dropdown_get_selected(ui_droStatus_btdev);
 
     INIT_OPTION_ITEM(-1, btdev, Forget, lang.MUXBTDEV.FORGET, "forget", NULL, 0);
 

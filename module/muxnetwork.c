@@ -719,7 +719,7 @@ static void init_elements(void) {
             {ui_lblNavBGlyph,  "",                       0},
             {ui_lblNavB,       lang.GENERIC.BACK,        0},
             {ui_lblNavXGlyph,  "",                       0},
-            {ui_lblNavX,       lang.MUXNETWORK.SCAN,     0},
+            {ui_lblNavX,       lang.GENERIC.SCAN,        0},
             {ui_lblNavYGlyph,  "",                       0},
             {ui_lblNavY,       lang.MUXNETWORK.PROFILES, 0},
             {NULL, NULL,                                 0}

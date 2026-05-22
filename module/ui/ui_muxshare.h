@@ -76,8 +76,7 @@
     BACKUP(Start,      START,      "start")
 
 #define BTALL_ELEMENTS                             \
-    BTALL(AutoConnect, AUTOCONNECT, "autoconnect") \
-    BTALL(Scan,        SCAN,        "scan")
+    BTALL(AutoConnect, AUTOCONNECT, "autoconnect")
 
 #define BTDEV_INFO_ELEMENTS                                \
     BTDEV_INFO(FriendlyName, FRIENDLYNAME, "friendlyname") \

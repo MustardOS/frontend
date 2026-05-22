@@ -90,6 +90,7 @@ struct mux_lang {
         char RESTRICTED[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
         char SAVING[MAX_BUFFER_SIZE];
+        char SCAN[MAX_BUFFER_SIZE];
         char SCROLL[MAX_BUFFER_SIZE];
         char SELECT[MAX_BUFFER_SIZE];
         char SET[MAX_BUFFER_SIZE];
@@ -400,8 +401,8 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char AUTOCONNECT[MAX_BUFFER_SIZE];
-        char SCAN[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
+        char LOADING[MAX_BUFFER_SIZE];
         char FORGET[MAX_BUFFER_SIZE];
         char CONNECT[MAX_BUFFER_SIZE];
         char DISCONNECT[MAX_BUFFER_SIZE];
@@ -410,7 +411,6 @@ struct mux_lang {
         char FORGET_CONFIRM[MAX_BUFFER_SIZE];
         struct {
             char AUTOCONNECT[MAX_BUFFER_SIZE];
-            char SCAN[MAX_BUFFER_SIZE];
         } HELP;
     } MUXBTALL;
 
@@ -443,10 +443,10 @@ struct mux_lang {
             char INPUT_KEYBOARD[MAX_BUFFER_SIZE];
             char INPUT_MOUSE[MAX_BUFFER_SIZE];
             char INPUT_COMBO[MAX_BUFFER_SIZE];
+            char INPUT_REMOTE[MAX_BUFFER_SIZE];
             char PHONE[MAX_BUFFER_SIZE];
             char COMPUTER[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
-            char WEARABLE[MAX_BUFFER_SIZE];
             char UNKNOWN[MAX_BUFFER_SIZE];
         } TYPE_NAME;
         struct {
@@ -969,7 +969,6 @@ struct mux_lang {
         char SAVE[MAX_BUFFER_SIZE];
         char DHCP[MAX_BUFFER_SIZE];
         char STATIC[MAX_BUFFER_SIZE];
-        char SCAN[MAX_BUFFER_SIZE];
         char SUBNET[MAX_BUFFER_SIZE];
         char PROFILES[MAX_BUFFER_SIZE];
         char CONNECT_TRY[MAX_BUFFER_SIZE];
