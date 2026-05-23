@@ -95,6 +95,10 @@ typedef void (*mux_idle_handler)(void);
 // values can be added directly to coordinates without inversion.
 typedef void (*mux_input_analog_handler)(int16_t ls_x, int16_t ls_y, int16_t rs_x, int16_t rs_y);
 
+// Callback invoked for every raw SDL event before normal input processing.
+// Use for capture modes that need unfiltered event access (e.g. input remap).
+typedef void (*mux_raw_event_handler)(const SDL_Event *ev);
+
 typedef void (*key_event_callback)(struct input_event);
 
 // Configuration for a multi-input combo.
@@ -148,6 +152,9 @@ typedef struct {
 
     // This is optional.  If set, called once per poll cycle with raw stick positioning
     mux_input_analog_handler analog_handler;
+
+    // This is optional.  If set, called for every raw SDL_Event before normal processing.
+    mux_raw_event_handler raw_event_handler;
 
     mux_input_combo combo[MUX_INPUT_COMBO_COUNT];
     int combo_count;
