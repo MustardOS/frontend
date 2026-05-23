@@ -1053,6 +1053,18 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXRAOPT.TITLE, "THREADED VIDEO");
     SPECIFIC_FIELD(lang->MUXRAOPT.HELP, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!");
 
+    // muxremap
+    SPECIFIC_FIELD(lang->MUXREMAP.TITLE, "Input Remap");
+    SPECIFIC_FIELD(lang->MUXREMAP.NONE, "No Controller Detected");
+    SPECIFIC_FIELD(lang->MUXREMAP.WAITING, "Press Any Input...");
+    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_TITLE, "Save Mapping?");
+    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_USER, "Custom Profile");
+    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_MODERN, "Modern Profile");
+    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_RETRO, "Retro Profile");
+    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_CANCEL, "Cancel Changes");
+    SPECIFIC_FIELD(lang->MUXREMAP.SAVED, "Mapping Saved");
+    SPECIFIC_FIELD(lang->MUXREMAP.INPUT_LABEL, "Input");
+
     // muxrgb
     SPECIFIC_FIELD(lang->MUXRGB.TITLE, "RGB LIGHTS");
     SPECIFIC_FIELD(lang->MUXRGB.MODE, "Mode");
@@ -1414,6 +1426,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKSHOT, "Switch between different hotkeys for taking a screenshot");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.AUDIOSINK, "Select the active Pipewire audio output sink");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.INPUTREMAP, "Input Remap");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.INPUTREMAP, "Remap controller buttons and axes for the muOS frontend");
 
     // muxvisual
     SPECIFIC_FIELD(lang->MUXVISUAL.SORT, "Sorting Priority");

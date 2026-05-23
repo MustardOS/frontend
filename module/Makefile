@@ -18,7 +18,7 @@ MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxbtall \
           muxpower muxraopt muxrgb muxrtc muxsearch muxshader muxshot muxsort \
           muxspace muxsplash muxstorage muxsysinfo muxtag muxtask muxtheme \
           muxthemedown muxthemefilter muxthemeopt muxtester muxtext muxtimezone \
-          muxtweakadv muxtweakgen muxvisual muxwebserv muxshare
+          muxtweakadv muxtweakgen muxvisual muxwebserv muxshare muxremap
 
 MODULE_DIR = .
 

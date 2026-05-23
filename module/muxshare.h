@@ -201,6 +201,8 @@ int muxcustom_main();
 
 int muxdanger_main();
 
+int muxremap_main();
+
 int muxdevice_main();
 
 int muxdownload_main(char *type);

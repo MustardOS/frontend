@@ -550,6 +550,7 @@ static const ModuleEntry modules[] = {
         {"btdev",       "btall",     "muxbtdev",       muxbtdev_main,       NULL},
         {"hdmi",        "tweakgen",  "muxhdmi",        muxhdmi_main,        NULL},
         {"rgb",         "tweakgen",  "muxrgb",         muxrgb_main,         NULL},
+        {"remap",       "tweakgen",  "muxremap",       muxremap_main,       NULL},
         {"storage",     "config",    "muxstorage",     muxstorage_main,     NULL},
         {"backup",      "config",    "muxbackup",      muxbackup_main,      NULL},
         {"power",       "config",    "muxpower",       muxpower_main,       NULL},

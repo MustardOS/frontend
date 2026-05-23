@@ -1217,6 +1217,19 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char WAITING[MAX_BUFFER_SIZE];
+        char SAVE_TITLE[MAX_BUFFER_SIZE];
+        char SAVE_USER[MAX_BUFFER_SIZE];
+        char SAVE_MODERN[MAX_BUFFER_SIZE];
+        char SAVE_RETRO[MAX_BUFFER_SIZE];
+        char SAVE_CANCEL[MAX_BUFFER_SIZE];
+        char SAVED[MAX_BUFFER_SIZE];
+        char INPUT_LABEL[MAX_BUFFER_SIZE];
+    } MUXREMAP;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
         char MODE[MAX_BUFFER_SIZE];
         char BRIGHT[MAX_BUFFER_SIZE];
         char SPEED[MAX_BUFFER_SIZE];
@@ -1606,6 +1619,7 @@ struct mux_lang {
             char LAST[MAX_BUFFER_SIZE];
             char RESUME[MAX_BUFFER_SIZE];
         } STARTUP;
+        char INPUTREMAP[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char RTC[MAX_BUFFER_SIZE];
@@ -1618,6 +1632,7 @@ struct mux_lang {
             char HKDPAD[MAX_BUFFER_SIZE];
             char HKSHOT[MAX_BUFFER_SIZE];
             char AUDIOSINK[MAX_BUFFER_SIZE];
+            char INPUTREMAP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
 

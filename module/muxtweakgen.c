@@ -208,6 +208,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.RTC, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, InputRemap, lang.MUXTWEAKGEN.INPUTREMAP, "inputremap", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHTNESS, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
@@ -367,6 +368,7 @@ static void handle_a(void) {
         MENU_CLOCK,
         MENU_HDMI,
         MENU_RGB,
+        MENU_REMAP,
         MENU_ADVANCED,
     } menu_action;
 
@@ -383,6 +385,7 @@ static void handle_a(void) {
             {"rtc",      &kiosk.DATETIME.CLOCK,   MENU_CLOCK,    NULL},
             {"hdmi",     &kiosk.SETTING.HDMI,     MENU_HDMI,   visible_hdmi},
             {"rgb",      &kiosk.SETTING.RGB,      MENU_RGB,    visible_rgb},
+            {"remap",    &KIOSK_PASS,             MENU_REMAP,    NULL},
             {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume
@@ -407,6 +410,7 @@ static void handle_a(void) {
         case MENU_CLOCK:
         case MENU_HDMI:
         case MENU_RGB:
+        case MENU_REMAP:
         case MENU_ADVANCED:
             if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();

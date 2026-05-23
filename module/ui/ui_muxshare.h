@@ -463,6 +463,7 @@
     TWEAKGEN(Rtc,        RTC,        "clock")      \
     TWEAKGEN(Hdmi,       HDMI,       "hdmi")       \
     TWEAKGEN(Rgb,        RGB,        "rgb")        \
+    TWEAKGEN(InputRemap, INPUTREMAP, "inputremap") \
     TWEAKGEN(Advanced,   ADVANCED,   "advanced")   \
     TWEAKGEN(Brightness, BRIGHTNESS, "brightness") \
     TWEAKGEN(Volume,     VOLUME,     "volume")     \
