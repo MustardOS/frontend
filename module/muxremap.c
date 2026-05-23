@@ -38,12 +38,17 @@ static const remap_slot_def slot_defs[REMAP_SLOT_COUNT] = {
 };
 
 static char phys[REMAP_SLOT_COUNT][32];
+
+static lv_obj_t *item_panels[REMAP_SLOT_COUNT];
+static lv_obj_t *item_labels[REMAP_SLOT_COUNT];
 static lv_obj_t *item_values[REMAP_SLOT_COUNT];
+static lv_obj_t *item_glyphs[REMAP_SLOT_COUNT];
 
 static lv_obj_t *device_panel = NULL;
 static lv_obj_t *device_label = NULL;
 static lv_obj_t *device_value = NULL;
 static lv_obj_t *device_glyph = NULL;
+
 static int has_device_item = 0;
 
 static char ctrl_guid[64] = "";
@@ -53,8 +58,6 @@ static int remap_dev_idx = 0;
 static volatile int capture_active = 0;
 static int capture_target = -1;
 static int capture_pending_clear = 0;
-static char capture_saved_phys[32];
-static int capture_saved_modified = 0;
 
 #define AXIS_CAPTURE_THRESHOLD 16384
 
@@ -257,14 +260,25 @@ static void show_save_dialog(void) {
     dialogue_refresh(&save_dlg, &theme);
 }
 
+static void close_remap_module(void) {
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "inputremap");
+    mux_input_stop();
+}
+
 static void hide_save_dialog(void) {
     save_mode = 0;
     dialogue_hide(&save_dlg);
 }
 
+static void clear_capture_state(void) {
+    capture_active = 0;
+    capture_target = -1;
+    capture_pending_clear = 0;
+}
+
 static void raw_event_capture(const SDL_Event *ev) {
     if (capture_pending_clear) {
-        capture_active = 0;
+        clear_capture_state();
         return;
     }
 
@@ -303,6 +317,7 @@ static void raw_event_capture(const SDL_Event *ev) {
 
     mapping_modified = 1;
     capture_pending_clear = 1;
+
     update_nav_b();
 }
 
@@ -318,21 +333,16 @@ static void handle_a(void) {
 
     if (save_mode) {
         if (save_dlg.selected == SAVE_CANCEL) {
-            hide_save_dialog();
             play_sound(SND_BACK);
-
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "remap");
-            mux_input_stop();
-        } else {
-            do_save((save_option_t) save_dlg.selected);
-            mapping_modified = 0;
-
-            hide_save_dialog();
-            play_sound(SND_CONFIRM);
-
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "remap");
-            mux_input_stop();
+            close_remap_module();
+            return;
         }
+
+        do_save((save_option_t) save_dlg.selected);
+        mapping_modified = 0;
+
+        play_sound(SND_CONFIRM);
+        close_remap_module();
         return;
     }
 
@@ -342,9 +352,6 @@ static void handle_a(void) {
     if (slot < 0 || slot >= REMAP_SLOT_COUNT) return;
 
     capture_target = slot;
-    snprintf(capture_saved_phys, sizeof(capture_saved_phys), "%s", phys[slot]);
-
-    capture_saved_modified = mapping_modified;
     capture_active = 1;
 
     lv_label_set_text(item_values[slot], lang.MUXREMAP.WAITING);
@@ -355,24 +362,14 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (capture_pending_clear) {
-        snprintf(phys[capture_target], sizeof(phys[0]), "%s", capture_saved_phys);
-
-        lv_label_set_text(item_values[capture_target], phys[capture_target]);
-        mapping_modified = capture_saved_modified;
-
-        update_nav_b();
-
-        capture_target = -1;
-        capture_pending_clear = 0;
-
+        clear_capture_state();
         return;
     }
 
     if (capture_active) {
-        capture_active = 0;
-        lv_label_set_text(item_values[capture_target], phys[capture_target]);
-        capture_target = -1;
+        if (capture_target >= 0 && capture_target < REMAP_SLOT_COUNT) lv_label_set_text(item_values[capture_target], phys[capture_target]);
 
+        clear_capture_state();
         return;
     }
 
@@ -388,9 +385,7 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
-
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "remap");
-    mux_input_stop();
+    close_remap_module();
 }
 
 static void handle_x(void) {
