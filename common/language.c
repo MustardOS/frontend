@@ -397,6 +397,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTCON.INFO, "Device Info");
     SPECIFIC_FIELD(lang->MUXBTCON.HELP, "Scan for nearby Bluetooth devices and pair or connect to them");
     SPECIFIC_FIELD(lang->MUXBTCON.CONNECT, "Connecting to device…");
+    SPECIFIC_FIELD(lang->MUXBTCON.DISCONNECT, "Disconnecting device…");
 
     // muxbtdev
     SPECIFIC_FIELD(lang->MUXBTDEV.TITLE, "BLUETOOTH DEVICE");
@@ -1058,7 +1059,7 @@ void load_lang(struct mux_lang *lang) {
     // muxremap
     SPECIFIC_FIELD(lang->MUXREMAP.TITLE, "Input Remap");
     SPECIFIC_FIELD(lang->MUXREMAP.NONE, "No Controller Detected");
-    SPECIFIC_FIELD(lang->MUXREMAP.WAITING, "Press Any Input...");
+    SPECIFIC_FIELD(lang->MUXREMAP.WAITING, "Press Any Input…");
     SPECIFIC_FIELD(lang->MUXREMAP.SAVE_TITLE, "Save Mapping?");
     SPECIFIC_FIELD(lang->MUXREMAP.SAVE_USER, "Custom Profile");
     SPECIFIC_FIELD(lang->MUXREMAP.SAVE_MODERN, "Modern Profile");

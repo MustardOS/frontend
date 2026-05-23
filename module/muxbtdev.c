@@ -157,6 +157,16 @@ static void save_btdev_options(void) {
     write_text_to_file(override_path, "w", CHAR, bt_type_keys[current_type]);
 }
 
+static void status_change(const char *method) {
+    lv_refr_now(NULL);
+
+    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), method, selected_mac, NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    load_mux("btall");
+    mux_input_stop();
+}
+
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
@@ -184,15 +194,12 @@ static void handle_a(void) {
     if (current_item_index == BTDEV_STAT_IDX) {
         if (!*selected_mac) return;
         if (is_connected) {
-            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "disconnect", selected_mac, NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+            toast_message(lang.MUXBTCON.DISCONNECT, FOREVER);
+            status_change("disconnect");
         } else {
             toast_message(lang.MUXBTCON.CONNECT, FOREVER);
-            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "connect", selected_mac, NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+            status_change("connect");
         }
-        load_mux("btdev");
-        mux_input_stop();
         return;
     }
 

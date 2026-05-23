@@ -421,6 +421,7 @@ struct mux_lang {
         char INFO[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
         char CONNECT[MAX_BUFFER_SIZE];
+        char DISCONNECT[MAX_BUFFER_SIZE];
     } MUXBTCON;
 
     struct {
