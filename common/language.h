@@ -428,6 +428,7 @@ struct mux_lang {
         char FRIENDLYNAME[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
         char BATTERY[MAX_BUFFER_SIZE];
+        char ADDRESS[MAX_BUFFER_SIZE];
         char STATUS[MAX_BUFFER_SIZE];
         char CONNECTED[MAX_BUFFER_SIZE];
         char DISCONNECTED[MAX_BUFFER_SIZE];
@@ -453,6 +454,7 @@ struct mux_lang {
             char FRIENDLYNAME[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
             char BATTERY[MAX_BUFFER_SIZE];
+            char ADDRESS[MAX_BUFFER_SIZE];
             char STATUS[MAX_BUFFER_SIZE];
             char FORGET[MAX_BUFFER_SIZE];
         } HELP;

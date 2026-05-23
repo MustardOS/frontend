@@ -394,6 +394,7 @@ static void init_navigation_group(void) {
 
     INIT_VALUE_ITEM(-1, btdev, FriendlyName, lang.MUXBTDEV.FRIENDLYNAME, "friendlyname", name);
     INIT_VALUE_ITEM(-1, btdev, Battery, lang.MUXBTDEV.BATTERY, "battery", battery);
+    INIT_VALUE_ITEM(-1, btdev, Address, lang.MUXBTDEV.ADDRESS, "address", *selected_mac ? selected_mac : lang.GENERIC.UNKNOWN);
 
     char *type_options[] = {
             lang.MUXBTDEV.TYPE_NAME.AUDIO_HEADSET,

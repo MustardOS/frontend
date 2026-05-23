@@ -80,7 +80,8 @@
 
 #define BTDEV_INFO_ELEMENTS                                \
     BTDEV_INFO(FriendlyName, FRIENDLYNAME, "friendlyname") \
-    BTDEV_INFO(Battery,      BATTERY,      "battery")
+    BTDEV_INFO(Battery,      BATTERY,      "battery")      \
+    BTDEV_INFO(Address,      ADDRESS,      "address")
 
 #define BTDEV_ACT_ELEMENTS              \
     BTDEV_ACT(Type,   TYPE,   "type")   \
@@ -90,6 +91,7 @@
 #define BTDEV_ELEMENTS                                \
     BTDEV(FriendlyName, FRIENDLYNAME, "friendlyname") \
     BTDEV(Battery,      BATTERY,      "battery")      \
+    BTDEV(Address,      ADDRESS,      "address")      \
     BTDEV(Type,         TYPE,         "type")         \
     BTDEV(Status,       STATUS,       "status")       \
     BTDEV(Forget,       FORGET,       "forget")

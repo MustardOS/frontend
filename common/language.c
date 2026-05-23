@@ -403,6 +403,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTDEV.FRIENDLYNAME, "Friendly Name");
     SPECIFIC_FIELD(lang->MUXBTDEV.TYPE, "Device Type");
     SPECIFIC_FIELD(lang->MUXBTDEV.BATTERY, "Battery");
+    SPECIFIC_FIELD(lang->MUXBTDEV.ADDRESS, "Address");
     SPECIFIC_FIELD(lang->MUXBTDEV.STATUS, "Status");
     SPECIFIC_FIELD(lang->MUXBTDEV.CONNECTED, "Connected");
     SPECIFIC_FIELD(lang->MUXBTDEV.DISCONNECTED, "Disconnected");
@@ -425,6 +426,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FRIENDLYNAME, "The display name for this Bluetooth device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.TYPE, "The type of Bluetooth device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.BATTERY, "The battery level reported by the device");
+    SPECIFIC_FIELD(lang->MUXBTDEV.HELP.ADDRESS, "The Bluetooth address of this device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.STATUS, "Connect or disconnect this device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FORGET, "Remove this device from the paired list");
 
