@@ -59,6 +59,8 @@ typedef struct {
 static tracked_device devices[MAX_INPUT_DEVICES];
 static int device_count = 0;
 
+static SDL_JoystickID primary_instance = -1;
+
 static int find_device_by_instance(SDL_JoystickID id) {
     for (int i = 0; i < device_count; i++) {
         if (devices[i].instance == id) return i;
@@ -505,6 +507,7 @@ static void close_all_devices(void) {
 static void open_all_input_devices(void) {
     static int mappings_loaded = 0;
     static uint32_t last_no_device_log = UINT32_MAX;
+    int was_empty = (device_count == 0);
 
     if (!mappings_loaded) {
         int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
@@ -618,6 +621,11 @@ static void open_all_input_devices(void) {
     }
 
     if (device_count == 0) LOG_WARN("input", "No usable input device found");
+
+    if (was_empty && device_count > 0 && primary_instance < 0) {
+        primary_instance = devices[0].instance;
+        LOG_INFO("input", "Primary input device set (instance %d)", primary_instance);
+    }
 }
 
 static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
@@ -886,6 +894,7 @@ void mux_input_task(const mux_input_options *opts) {
     pressed = 0;
     held = 0;
     suppress_until_tick = 0;
+    primary_instance = -1;
 
     reset_raw_analog();
 
@@ -923,10 +932,10 @@ void mux_input_task(const mux_input_options *opts) {
                     if (is_tracked_as_controller(ev.caxis.which)) process_sdl_axis(ev.caxis.axis, ev.caxis.value);
                     break;
                 case SDL_JOYBUTTONDOWN:
-                    if (is_tracked_instance(ev.jbutton.which)) process_sdl_joy_button(ev.jbutton.button, 1);
+                    if (ev.jbutton.which == primary_instance) process_sdl_joy_button(ev.jbutton.button, 1);
                     break;
                 case SDL_JOYBUTTONUP:
-                    if (is_tracked_instance(ev.jbutton.which)) process_sdl_joy_button(ev.jbutton.button, 0);
+                    if (ev.jbutton.which == primary_instance) process_sdl_joy_button(ev.jbutton.button, 0);
                     break;
                 case SDL_JOYAXISMOTION:
                     if (is_tracked_instance(ev.jaxis.which) && !is_tracked_as_controller(ev.jaxis.which)) {
