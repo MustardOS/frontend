@@ -141,6 +141,23 @@ struct theme_config {
     } HELP;
 
     struct {
+        uint32_t BACKGROUND;
+        int16_t BACKGROUND_ALPHA;
+        uint32_t BORDER;
+        int16_t BORDER_ALPHA;
+        uint32_t TITLE;
+        uint32_t CONTENT;
+        uint32_t OPTION;
+        int16_t DIM_ALPHA;
+        uint32_t SELECTION;
+        int16_t SELECTION_ALPHA;
+        struct {
+            int16_t MAIN;
+            int16_t SELECTED;
+        } RADIUS;
+    } DIALOGUE;
+
+    struct {
         uint16_t ALIGNMENT;
         uint16_t SPACING;
         struct footer_glyph LR;

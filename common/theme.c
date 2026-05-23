@@ -114,6 +114,19 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->HELP.TITLE = 0xF7E318;
     theme->HELP.RADIUS = 3;
 
+    theme->DIALOGUE.BACKGROUND = 0x282525;
+    theme->DIALOGUE.BACKGROUND_ALPHA = 255;
+    theme->DIALOGUE.BORDER = 0x100808;
+    theme->DIALOGUE.BORDER_ALPHA = 255;
+    theme->DIALOGUE.TITLE = 0xF7E318;
+    theme->DIALOGUE.CONTENT = 0xA5B2B5;
+    theme->DIALOGUE.OPTION = 0x282525;
+    theme->DIALOGUE.DIM_ALPHA = 128;
+    theme->DIALOGUE.SELECTION = 0xF7E318;
+    theme->DIALOGUE.SELECTION_ALPHA = 255;
+    theme->DIALOGUE.RADIUS.MAIN = 3;
+    theme->DIALOGUE.RADIUS.SELECTED = 0;
+
     theme->NAV.ALIGNMENT = 255;
     theme->NAV.SPACING = 5;
 
@@ -567,6 +580,27 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->HELP.CONTENT = get_ini_hex(muos_theme, "help", "HELP_CONTENT", theme->HELP.CONTENT);
     theme->HELP.TITLE = get_ini_hex(muos_theme, "help", "HELP_TITLE", theme->HELP.TITLE);
     theme->HELP.RADIUS = get_ini_int(muos_theme, "help", "HELP_RADIUS", theme->HELP.RADIUS);
+
+    theme->DIALOGUE.BACKGROUND = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_BACKGROUND",
+                                             theme->DIALOGUE.BACKGROUND);
+    theme->DIALOGUE.BACKGROUND_ALPHA = get_ini_int(muos_theme, "dialogue", "DIALOGUE_BACKGROUND_ALPHA",
+                                                   theme->DIALOGUE.BACKGROUND_ALPHA);
+    theme->DIALOGUE.BORDER = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_BORDER", theme->DIALOGUE.BORDER);
+    theme->DIALOGUE.BORDER_ALPHA = get_ini_int(muos_theme, "dialogue", "DIALOGUE_BORDER_ALPHA",
+                                               theme->DIALOGUE.BORDER_ALPHA);
+    theme->DIALOGUE.TITLE = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_TITLE", theme->DIALOGUE.TITLE);
+    theme->DIALOGUE.CONTENT = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_CONTENT", theme->DIALOGUE.CONTENT);
+    theme->DIALOGUE.OPTION = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_OPTION", theme->DIALOGUE.OPTION);
+    theme->DIALOGUE.DIM_ALPHA = get_ini_int(muos_theme, "dialogue", "DIALOGUE_DIM_ALPHA",
+                                            theme->DIALOGUE.DIM_ALPHA);
+    theme->DIALOGUE.SELECTION = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_SELECTION",
+                                            theme->DIALOGUE.SELECTION);
+    theme->DIALOGUE.SELECTION_ALPHA = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SELECTION_ALPHA",
+                                                  theme->DIALOGUE.SELECTION_ALPHA);
+    theme->DIALOGUE.RADIUS.MAIN = get_ini_int(muos_theme, "dialogue", "DIALOGUE_RADIUS_MAIN",
+                                              theme->DIALOGUE.RADIUS.MAIN);
+    theme->DIALOGUE.RADIUS.SELECTED = get_ini_int(muos_theme, "dialogue", "DIALOGUE_RADIUS_SELECTED",
+                                                  theme->DIALOGUE.RADIUS.SELECTED);
 
     theme->NAV.ALIGNMENT = get_ini_uint(muos_theme, "navigation", "ALIGNMENT", theme->NAV.ALIGNMENT);
     theme->NAV.SPACING = get_ini_uint(muos_theme, "navigation", "SPACING", theme->NAV.SPACING);
