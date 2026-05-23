@@ -247,17 +247,14 @@ static void handle_b(void) {
     play_sound(SND_BACK);
     save_btall_options();
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "connect");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "bluetooth");
     mux_input_stop();
 }
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
 
-    if (current_item_index >= UI_COUNT) {
-        show_info_box(lang.MUXBTALL.TITLE, lang.MUXBTALL.HELP.SCAN, 0);
-        return;
-    }
+    if (current_item_index >= UI_COUNT) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
