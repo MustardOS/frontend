@@ -474,7 +474,7 @@ static void set_stick_value_label(stick_state_t *stick) {
              "X:%6d %4d%%\n"
              "Y:%6d %4d%%\n"
              "M:%3d%% %s\n"
-             "PEAK X:%3d%% Y:%3d%%",
+             "PX:%3d%% PY:%3d%%",
              stick->x, axis_pct_signed(stick->x),
              stick->y, axis_pct_signed(stick->y),
              stick_magnitude_pct(stick->x, stick->y),
