@@ -341,6 +341,11 @@ static void apply_layout(int layout) {
     check_focus();
 
     if (layout_value) lv_label_set_text(layout_value, remap_layout == 1 ? lang.MUXREMAP.LAYOUT_MODERN : lang.MUXREMAP.LAYOUT_RETRO);
+
+    update_glyph(ui_lblNavAGlyph, "footer", remap_layout ? "b" : "a");
+    update_glyph(ui_lblNavBGlyph, "footer", remap_layout ? "a" : "b");
+    update_glyph(ui_lblNavXGlyph, "footer", remap_layout ? "y" : "x");
+    update_glyph(ui_lblNavYGlyph, "footer", remap_layout ? "x" : "y");
 }
 
 static void cycle_to_next_device(void) {
