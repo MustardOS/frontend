@@ -130,11 +130,14 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.THURSDAY, "Thursday");
     GENERIC_FIELD(lang->GENERIC.FRIDAY, "Friday");
     GENERIC_FIELD(lang->GENERIC.SATURDAY, "Saturday");
+    GENERIC_FIELD(lang->GENERIC.CANCEL, "Cancel");
     GENERIC_FIELD(lang->GENERIC.CLEAN, "Clean");
+    GENERIC_FIELD(lang->GENERIC.DISCARD, "Discard");
     GENERIC_FIELD(lang->GENERIC.MODIFIED, "Modified");
     GENERIC_FIELD(lang->GENERIC.ICON_ONLY, "Icon Only");
     GENERIC_FIELD(lang->GENERIC.TEXT_ONLY, "Text Only");
     GENERIC_FIELD(lang->GENERIC.TEXT_ICON, "Text + Icon");
+    GENERIC_FIELD(lang->GENERIC.UNSAVED, "Unsaved Changes");
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");
@@ -766,6 +769,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.EXPLORE, "Explore Content");
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHUTDOWN, "Shutdown");
     SPECIFIC_FIELD(lang->MUXLAUNCH.REBOOT, "Reboot");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.CONFIRM_REBOOT, "Confirm Reboot");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.CONFIRM_SHUTDOWN, "Confirm Shutdown");
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.APP, "Apps");
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.CONFIG, "Config");
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.INFO, "Info");
@@ -1362,6 +1367,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.MAXGPU, "GPU Performance Mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOREADY, "Audio Subsystem Wait");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOSWAP, "Audio Reverse");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTMODIFY, "Trust Modifications");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTPOWER, "Trust Power Choice");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACCELERATE, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEATDELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
@@ -1392,6 +1399,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.MAXGPU, "Push the onboard GPU to the maximum frequency at all times");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOREADY, "Toggle if the device will wait for the audio subsystem to initialise during boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOSWAP, "Toggle the swap of left and right channels of audio");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTMODIFY, "Skip the unsaved changes dialogue and save immediately when leaving a settings module");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTPOWER, "Skip the confirmation dialogue when choosing to reboot or shut down");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");

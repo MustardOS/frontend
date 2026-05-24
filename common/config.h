@@ -127,6 +127,8 @@ struct mux_config {
             int16_t AUDIOSWAP;
             int16_t SECONDPART;
             int16_t USBPART;
+            int16_t TRUSTMODIFY;
+            int16_t TRUSTPOWER;
         } ADVANCED;
         struct {
             int16_t TEMPERATURE;

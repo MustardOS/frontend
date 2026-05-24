@@ -114,11 +114,14 @@ struct mux_lang {
         char THURSDAY[MAX_BUFFER_SIZE];
         char FRIDAY[MAX_BUFFER_SIZE];
         char SATURDAY[MAX_BUFFER_SIZE];
+        char CANCEL[MAX_BUFFER_SIZE];
         char CLEAN[MAX_BUFFER_SIZE];
+        char DISCARD[MAX_BUFFER_SIZE];
         char MODIFIED[MAX_BUFFER_SIZE];
         char ICON_ONLY[MAX_BUFFER_SIZE];
         char TEXT_ONLY[MAX_BUFFER_SIZE];
         char TEXT_ICON[MAX_BUFFER_SIZE];
+        char UNSAVED[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -864,6 +867,8 @@ struct mux_lang {
         char EXPLORE[MAX_BUFFER_SIZE];
         char SHUTDOWN[MAX_BUFFER_SIZE];
         char REBOOT[MAX_BUFFER_SIZE];
+        char CONFIRM_REBOOT[MAX_BUFFER_SIZE];
+        char CONFIRM_SHUTDOWN[MAX_BUFFER_SIZE];
         struct {
             char APP[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
@@ -1582,7 +1587,6 @@ struct mux_lang {
             char RUMBLE[MAX_BUFFER_SIZE];
             char BRIGHTNESS[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];
-            char SWAP[MAX_BUFFER_SIZE];
             char STICKNAV[MAX_BUFFER_SIZE];
             char DISPSUSPEND[MAX_BUFFER_SIZE];
             char SECONDPART[MAX_BUFFER_SIZE];
@@ -1592,6 +1596,8 @@ struct mux_lang {
             char MAXGPU[MAX_BUFFER_SIZE];
             char AUDIOREADY[MAX_BUFFER_SIZE];
             char AUDIOSWAP[MAX_BUFFER_SIZE];
+            char TRUSTMODIFY[MAX_BUFFER_SIZE];
+            char TRUSTPOWER[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
 

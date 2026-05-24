@@ -54,6 +54,13 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
     lv_obj_set_style_radius(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_all(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
 
+    lv_obj_t *gap_top = lv_obj_create(dlg->panel);
+    lv_obj_set_size(gap_top, LV_PCT(100), 8);
+    lv_obj_clear_flag(gap_top, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(gap_top, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(gap_top, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(gap_top, 0, MU_OBJ_MAIN_DEFAULT);
+
     for (int i = 0; i < option_count; i++) {
         dlg->options[i] = lv_label_create(dlg->panel);
         lv_label_set_text(dlg->options[i], options[i]);
@@ -64,6 +71,13 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
         lv_obj_set_style_text_color(dlg->options[i], lv_color_hex(t->DIALOGUE.CONTENT), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(dlg->options[i], LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     }
+
+    lv_obj_t *gap_bot = lv_obj_create(dlg->panel);
+    lv_obj_set_size(gap_bot, LV_PCT(100), 8);
+    lv_obj_clear_flag(gap_bot, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(gap_bot, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(gap_bot, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(gap_bot, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_t *sep_bot = lv_obj_create(dlg->panel);
     lv_obj_set_size(sep_bot, LV_PCT(100), 1);
@@ -96,6 +110,20 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
 
     (void) glyph_a;
     (void) glyph_b;
+}
+
+void dialogue_init_unsaved(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                           const char *title, const char *save_label, const char *discard_label,
+                           const char *nav_a, const char *nav_b) {
+    const char *opts[MUX_UNSAVED_NOPE] = {save_label, discard_label};
+    dialogue_init(dlg, t, parent, title, opts, MUX_UNSAVED_NOPE, nav_a, nav_b);
+}
+
+void dialogue_init_confirm(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                           const char *title, const char *confirm_label, const char *cancel_label,
+                           const char *nav_a, const char *nav_b) {
+    const char *opts[MUX_CONFIRM_CNT] = {confirm_label, cancel_label};
+    dialogue_init(dlg, t, parent, title, opts, MUX_CONFIRM_CNT, nav_a, nav_b);
 }
 
 void dialogue_show(mux_dialogue *dlg) {

@@ -458,7 +458,9 @@
     TWEAKADV(IncVolume,   INCVOLUME,   "invvolume")   \
     TWEAKADV(MaxGpu,      MAXGPU,      "maxgpu")      \
     TWEAKADV(AudioReady,  AUDIOREADY,  "audioready")  \
-    TWEAKADV(AudioSwap,   AUDIOSWAP,   "audioswap")
+    TWEAKADV(AudioSwap,   AUDIOSWAP,   "audioswap")   \
+    TWEAKADV(TrustModify, TRUSTMODIFY, "trustmodify") \
+    TWEAKADV(TrustPower,  TRUSTPOWER,  "trustpower")
 
 #define TWEAKGEN_ELEMENTS                          \
     TWEAKGEN(Rtc,        RTC,        "clock")      \

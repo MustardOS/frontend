@@ -14,9 +14,29 @@ typedef struct {
     int selected;
 } mux_dialogue;
 
+typedef enum {
+    MUX_UNSAVED_SAVE = 0,
+    MUX_UNSAVED_DISCARD,
+    MUX_UNSAVED_NOPE
+} mux_unsaved_opt;
+
+typedef enum {
+    MUX_CONFIRM_YEP = 0,
+    MUX_CONFIRM_NAH,
+    MUX_CONFIRM_CNT
+} mux_confirm_opt;
+
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
                    const char *title, const char **options, int option_count,
                    const char *nav_a, const char *nav_b);
+
+void dialogue_init_unsaved(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                           const char *title, const char *save_label, const char *discard_label,
+                           const char *nav_a, const char *nav_b);
+
+void dialogue_init_confirm(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                           const char *title, const char *confirm_label, const char *cancel_label,
+                           const char *nav_a, const char *nav_b);
 
 void dialogue_show(mux_dialogue *dlg);
 

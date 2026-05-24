@@ -120,6 +120,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOSWAP, CONF_CONFIG_PATH "settings/advanced/audio_swap", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.USBPART, CONF_CONFIG_PATH "settings/advanced/part_external", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SECONDPART, CONF_CONFIG_PATH "settings/advanced/part_secondary", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.TRUSTMODIFY, CONF_CONFIG_PATH "settings/advanced/trust_modify", 0);
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.TRUSTPOWER, CONF_CONFIG_PATH "settings/advanced/trust_power", 1);
 
     CFG_INT_FIELD(config->SETTINGS.COLOUR.TEMPERATURE, CONF_CONFIG_PATH "settings/colour/temperature", DEFAULT_TEMPERATURE);
     CFG_INT_FIELD(config->SETTINGS.COLOUR.BRIGHTNESS, CONF_CONFIG_PATH "settings/colour/brightness", 0);

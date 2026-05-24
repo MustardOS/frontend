@@ -1,6 +1,23 @@
 #include "muxshare.h"
 #include "ui/ui_muxlaunch.h"
 
+static int confirm_mode = 0;
+static mux_dialogue confirm_dlg;
+static int pending_power_action = 0;
+
+static void show_confirm_dialog(const char *title) {
+    confirm_mode = 1;
+    confirm_dlg.selected = MUX_CONFIRM_NAH;
+    lv_label_set_text(confirm_dlg.title_label, title);
+    dialogue_show(&confirm_dlg);
+    dialogue_refresh(&confirm_dlg, &theme);
+}
+
+static void hide_confirm_dialog(void) {
+    confirm_mode = 0;
+    dialogue_hide(&confirm_dlg);
+}
+
 #define LAUNCH(NAME, ENUM, UDATA) 1,
 enum {
     UI_COUNT = E_SIZE(LAUNCH_ELEMENTS)
@@ -157,6 +174,25 @@ static void list_nav_next(int steps) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
+    if (confirm_mode) {
+        mux_confirm_opt opt = (mux_confirm_opt) confirm_dlg.selected;
+        hide_confirm_dialog();
+
+        if (opt == MUX_CONFIRM_YEP) {
+            if (pending_power_action == 1) {
+                toast_message(lang.GENERIC.REBOOTING, FOREVER);
+                load_mux("reboot");
+            } else {
+                toast_message(lang.GENERIC.SHUTTING_DOWN, FOREVER);
+                load_mux("shutdown");
+            }
+
+            mux_input_stop();
+        }
+
+        return;
+    }
+
     static int16_t KIOSK_PASS = 0;
 
     typedef enum {
@@ -195,9 +231,21 @@ static void handle_a(void) {
             play_sound(SND_CONFIRM);
             break;
         case MENU_REBOOT:
+            if (!config.SETTINGS.ADVANCED.TRUSTPOWER) {
+                pending_power_action = 1;
+                show_confirm_dialog(lang.MUXLAUNCH.CONFIRM_REBOOT);
+                return;
+            }
+
             toast_message(lang.GENERIC.REBOOTING, FOREVER);
             break;
         case MENU_SHUTDOWN:
+            if (!config.SETTINGS.ADVANCED.TRUSTPOWER) {
+                pending_power_action = 2;
+                show_confirm_dialog(lang.MUXLAUNCH.CONFIRM_SHUTDOWN);
+                return;
+            }
+
             toast_message(lang.GENERIC.SHUTTING_DOWN, FOREVER);
             break;
         default:
@@ -211,6 +259,11 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (confirm_mode) {
+        hide_confirm_dialog();
+        return;
+    }
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -227,7 +280,7 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || hold_call || confirm_mode) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -236,13 +289,19 @@ static void handle_help(void) {
 static void handle_up(void) {
     if (msgbox_active) return;
 
+    if (confirm_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&confirm_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     // Grid mode.  Wrap on Row.
     if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && !get_grid_column_index(current_item_index)) {
-        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ?
-                      grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
+        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ? grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
         // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 &&
-               (!current_item_index || current_item_index == 4)) {
+    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && (!current_item_index || current_item_index == 4)) {
         list_nav_next(3);
         // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
     } else if (theme.MISC.NAVIGATION_TYPE == 5 && !current_item_index) {
@@ -257,6 +316,14 @@ static void handle_up(void) {
 
 static void handle_down(void) {
     if (msgbox_active) return;
+
+    if (confirm_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&confirm_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
 
     // Grid Navigation.  Wrap on Row.
     if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -278,7 +345,7 @@ static void handle_down(void) {
 }
 
 static void handle_up_hold(void) {//prev
-    if (msgbox_active) return;
+    if (msgbox_active || confirm_mode) return;
 
     // Don't wrap around when scrolling on hold.
     if ((theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
@@ -294,7 +361,7 @@ static void handle_up_hold(void) {//prev
 }
 
 static void handle_down_hold(void) {//next
-    if (msgbox_active) return;
+    if (msgbox_active || confirm_mode) return;
 
     // Don't wrap around when scrolling on hold.
     if ((theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -313,6 +380,14 @@ static void handle_down_hold(void) {//next
 
 static void handle_left(void) {
     if (msgbox_active) return;
+
+    if (confirm_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&confirm_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
 
     // Horizontal Navigation with 2 rows of 4 items
     if (theme.GRID.ENABLED && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
@@ -348,6 +423,14 @@ static void handle_left(void) {
 
 static void handle_right(void) {
     if (msgbox_active) return;
+
+    if (confirm_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&confirm_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
 
     // Horizontal Navigation with 2 rows of 4 items
     if (theme.GRID.ENABLED && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
@@ -385,7 +468,7 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || confirm_mode) return;
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
@@ -396,7 +479,7 @@ static void handle_left_hold(void) {
 }
 
 static void handle_right_hold(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || confirm_mode) return;
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
@@ -445,6 +528,9 @@ int muxlaunch_main(void) {
 
     init_fonts();
     init_navigation_group();
+
+    dialogue_init_confirm(&confirm_dlg, &theme, ui_screen, lang.MUXLAUNCH.CONFIRM_REBOOT, lang.GENERIC.CONFIRM,
+                          lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
 
