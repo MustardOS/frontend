@@ -4,6 +4,11 @@
 static int save_mode = 0;
 static mux_dialogue save_dlg;
 
+static int pending_submenu = 0;
+static char pending_pdi[64];
+static char pending_pik[MAX_BUFFER_SIZE];
+static char pending_mux_load[32];
+
 static void show_save_dialog(void) {
     save_mode = 1;
     save_dlg.selected = 0;
@@ -433,6 +438,23 @@ static void handle_a(void) {
         mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
+        if (pending_submenu) {
+            pending_submenu = 0;
+
+            if (opt == MUX_UNSAVED_SAVE) save_custom_options();
+            play_sound(SND_CONFIRM);
+
+            toast_message(lang.GENERIC.LOADING, FOREVER);
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, pending_pdi);
+
+            if (pending_pik[0]) write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, pending_pik);
+
+            load_mux(pending_mux_load);
+            mux_input_stop();
+
+            return;
+        }
+
         if (opt == MUX_UNSAVED_SAVE) save_custom_options();
 
         play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
@@ -513,6 +535,17 @@ static void handle_a(void) {
                 return;
             }
 
+            if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_custom_modified()) {
+                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
+                snprintf(pending_pik, sizeof(pending_pik), "%s", entry->launch_path);
+                snprintf(pending_mux_load, sizeof(pending_mux_load), "%s", entry->action == MENU_THEME ? "theme" : "picker");
+
+                pending_submenu = 1;
+                show_save_dialog();
+
+                return;
+            }
+
             save_custom_options();
 
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
@@ -531,6 +564,18 @@ static void handle_a(void) {
                 return;
             }
 
+            if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_custom_modified()) {
+                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
+                pending_pik[0] = '\0';
+
+                snprintf(pending_mux_load, sizeof(pending_mux_load), "font");
+                pending_submenu = 1;
+
+                show_save_dialog();
+
+                return;
+            }
+
             save_custom_options();
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
 
@@ -544,6 +589,18 @@ static void handle_a(void) {
         case MENU_THEMEOPT:
             if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();
+                return;
+            }
+
+            if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_custom_modified()) {
+                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
+                pending_pik[0] = '\0';
+
+                snprintf(pending_mux_load, sizeof(pending_mux_load), "themeopt");
+                pending_submenu = 1;
+
+                show_save_dialog();
+
                 return;
             }
 

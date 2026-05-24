@@ -2,6 +2,8 @@
 #include "ui/ui_muxvisual.h"
 
 static int save_mode = 0;
+static int pending_sort = 0;
+
 static mux_dialogue save_dlg;
 
 static void show_save_dialog(void) {
@@ -49,8 +51,6 @@ static void init_dropdown_settings(void) {
 #define VISUAL(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
     VISUAL_ELEMENTS
 #undef VISUAL
-
-    OverlayTransparency_original = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
 }
 
 static void restore_visual_options(void) {
@@ -84,7 +84,15 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, ForwardHistory, "visual/forwardhistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
-    CHECK_AND_SAVE_PCT(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0, 255);
+
+    {
+        int ot_current = lv_dropdown_get_selected(ui_droOverlayTransparency_visual);
+        if (ot_current != OverlayTransparency_original) {
+            is_modified++;
+            write_text_to_file(CONF_CONFIG_PATH "visual/overlaytransparency", "w", INT,
+                               pct_to_int(ot_current, 0, 255));
+        }
+    }
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, FOREVER);
@@ -184,6 +192,18 @@ static void handle_a(void) {
         mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
+        if (pending_sort) {
+            pending_sort = 0;
+
+            if (opt == MUX_UNSAVED_SAVE) save_visual_options();
+            play_sound(SND_CONFIRM);
+
+            load_mux("sort");
+            mux_input_stop();
+
+            return;
+        }
+
         if (opt == MUX_UNSAVED_SAVE) save_visual_options();
 
         play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
@@ -196,6 +216,13 @@ static void handle_a(void) {
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lblSort_visual) {
+        if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_visual_modified()) {
+            pending_sort = 1;
+            show_save_dialog();
+
+            return;
+        }
+
         play_sound(SND_CONFIRM);
 
         save_visual_options();
