@@ -776,19 +776,19 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblNavLRGlyph = create_footer_glyph(ui_pnlFooter, theme, "lr", theme->NAV.LR, 1);
     ui_lblNavLR = create_footer_text(ui_pnlFooter, theme, theme->NAV.LR.TEXT, theme->NAV.LR.TEXT_ALPHA, 1);
 
-    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A, 1);
+    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.REMAP.LAYOUT) ? "b" : "a", theme->NAV.A, 1);
     ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 1);
 
-    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B, 1);
+    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.REMAP.LAYOUT) ? "a" : "b", theme->NAV.B, 1);
     ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 1);
 
     ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C, 1);
     ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA, 1);
 
-    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "y" : "x", theme->NAV.X, 1);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.REMAP.LAYOUT) ? "y" : "x", theme->NAV.X, 1);
     ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA, 1);
 
-    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "x" : "y", theme->NAV.Y, 1);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.REMAP.LAYOUT) ? "x" : "y", theme->NAV.Y, 1);
     ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA, 1);
 
     ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z, 1);
@@ -928,12 +928,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblHelpNavUD = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.UD.TEXT, theme->NAV.UD.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpNavUD, lang->GENERIC.SCROLL);
 
-    ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A, 0);
+    ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.REMAP.LAYOUT) ? "b" : "a", theme->NAV.A, 0);
 
     ui_lblPreviewHeader = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblPreviewHeader, lang->GENERIC.SWITCH_IMAGE);
 
-    ui_lblHelpNavBGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B, 0);
+    ui_lblHelpNavBGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.REMAP.LAYOUT) ? "a" : "b", theme->NAV.B, 0);
 
     ui_lblHelpNavB = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpNavB, lang->GENERIC.CLOSE);
@@ -998,12 +998,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
 
-    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A, 0);
+    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.REMAP.LAYOUT) ? "b" : "a", theme->NAV.A, 0);
 
     ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpPreviewInfoMessage, lang->GENERIC.SWITCH_INFO);
 
-    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B, 0);
+    ui_lblHelpPreviewNavBGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.REMAP.LAYOUT) ? "a" : "b", theme->NAV.B, 0);
 
     ui_lblHelpPreviewNavB = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA, 0);
     lv_label_set_text(ui_lblHelpPreviewNavB, lang->GENERIC.CLOSE);

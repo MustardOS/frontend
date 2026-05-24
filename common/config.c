@@ -90,7 +90,6 @@ void load_config(struct mux_config *config) {
 
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, CONF_CONFIG_PATH "settings/advanced/accelerate", 96);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.REPEATDELAY, CONF_CONFIG_PATH "settings/advanced/repeat_delay", 208);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAP, CONF_CONFIG_PATH "settings/advanced/swap", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.STICKNAV, CONF_CONFIG_PATH "settings/advanced/sticknav", 0);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 1);
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, CONF_CONFIG_PATH "settings/advanced/font", 0);
@@ -235,6 +234,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.THEMEOPT.HEADER_HEIGHT, CONF_CONFIG_PATH "settings/theme/header_height", -1);
     CFG_INT_FIELD(config->SETTINGS.THEMEOPT.FOOTER_HEIGHT, CONF_CONFIG_PATH "settings/theme/footer_height", -1);
     CFG_INT_FIELD(config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT, CONF_CONFIG_PATH "settings/theme/content_item_count", 0);
+
+    CFG_INT_FIELD(config->SETTINGS.REMAP.LAYOUT, CONF_CONFIG_PATH "settings/remap/layout", 0);
 
     CFG_INT_FIELD(config->SORT.DEFAULT, CONF_CONFIG_PATH "sort/default", 0);
     CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);

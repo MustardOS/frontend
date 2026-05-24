@@ -1060,13 +1060,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXREMAP.TITLE, "Input Remap");
     SPECIFIC_FIELD(lang->MUXREMAP.NONE, "No Controller Detected");
     SPECIFIC_FIELD(lang->MUXREMAP.WAITING, "Press Any Input…");
-    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_TITLE, "Save Mapping?");
-    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_USER, "Custom Profile");
-    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_MODERN, "Modern Profile");
-    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_RETRO, "Retro Profile");
-    SPECIFIC_FIELD(lang->MUXREMAP.SAVE_CANCEL, "Cancel Changes");
     SPECIFIC_FIELD(lang->MUXREMAP.SAVED, "Mapping Saved");
-    SPECIFIC_FIELD(lang->MUXREMAP.INPUT_LABEL, "Input");
+    SPECIFIC_FIELD(lang->MUXREMAP.INPUT_LABEL, "Controller");
+    SPECIFIC_FIELD(lang->MUXREMAP.LAYOUT_LABEL, "Active Layout");
+    SPECIFIC_FIELD(lang->MUXREMAP.LAYOUT_RETRO, "Retro");
+    SPECIFIC_FIELD(lang->MUXREMAP.LAYOUT_MODERN, "Modern");
 
     // muxrgb
     SPECIFIC_FIELD(lang->MUXRGB.TITLE, "RGB LIGHTS");
@@ -1333,9 +1331,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAPFILE, "System Swapfile");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.ZRAMFILE, "System ZRam");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LIDSWITCH, "Device Lid Switch");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.TITLE, "Button Swap");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.RETRO, "Retro");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.MODERN, "Modern");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.TITLE, "Menu Navigation");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.DPAD, "DPAD Only");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.STICKNAV.LS, "L Stick Only");
@@ -1388,7 +1383,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RUMBLE, "Toggle vibration for device startup, sleep, and shutdown");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHTNESS, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STICKNAV, "Change how you navigate using the DPAD and Analogue Sticks on the device");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DISPSUSPEND, "Toggle the device display suspend function, however some displays will not like this enabled");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SECONDPART, "Change the partition number requested upon secondary storage mount");

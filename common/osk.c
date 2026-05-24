@@ -235,7 +235,7 @@ static void set_osk_nav_hint_item(osk_nav_hint_t *item, const char *glyph_name, 
 static void update_nav_hint(void) {
     if (!nav_hint_container || !lv_obj_is_valid(nav_hint_container)) return;
 
-    const int swap = config.SETTINGS.ADVANCED.SWAP;
+    const int swap = config.SETTINGS.REMAP.LAYOUT;
 
     set_osk_nav_hint_item(&nav_hint_a, swap ? "B" : "A", theme.NAV.A, lang.GENERIC.TYPE);
     set_osk_nav_hint_item(&nav_hint_b, swap ? "A" : "B", theme.NAV.B, lang.GENERIC.BACKSPACE);

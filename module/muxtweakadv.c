@@ -59,7 +59,6 @@ static void normalise_overdrive(int overdrive_old, int overdrive_new) {
 static void save_tweak_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(tweakadv, Swap, "settings/advanced/swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, StickNav, "settings/advanced/sticknav", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Volume, "settings/advanced/volume", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Brightness, "settings/advanced/brightness", INT, 0);
@@ -146,11 +145,6 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *swap_options[] = {
-            lang.MUXTWEAKADV.SWAP.RETRO,
-            lang.MUXTWEAKADV.SWAP.MODERN
-    };
-
     char *sticknav_options[] = {
             lang.MUXTWEAKADV.STICKNAV.DPAD,
             lang.MUXTWEAKADV.STICKNAV.LS,
@@ -187,7 +181,6 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, tweakadv, Accelerate, lang.MUXTWEAKADV.ACCELERATE, "accelerate", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, RepeatDelay, lang.MUXTWEAKADV.REPEATDELAY, "repeat", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakadv, Swap, lang.MUXTWEAKADV.SWAP.TITLE, "swap", swap_options, 2);
     INIT_OPTION_ITEM(-1, tweakadv, StickNav, lang.MUXTWEAKADV.STICKNAV.TITLE, "sticknav", sticknav_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, Volume, lang.MUXTWEAKADV.VOLUME.TITLE, "volume", volume_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, Brightness, lang.MUXTWEAKADV.BRIGHTNESS.TITLE, "brightness", brightness_options, 4);

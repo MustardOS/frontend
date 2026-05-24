@@ -431,7 +431,6 @@
 #define TWEAKADV_ELEMENTS                             \
     TWEAKADV(Accelerate,  ACCELERATE,  "accelerate")  \
     TWEAKADV(RepeatDelay, REPEATDELAY, "repeat")      \
-    TWEAKADV(Swap,        SWAP,        "swap")        \
     TWEAKADV(StickNav,    STICKNAV,    "sticknav")    \
     TWEAKADV(Volume,      VOLUME,      "volume")      \
     TWEAKADV(Brightness,  BRIGHTNESS,  "brightness")  \

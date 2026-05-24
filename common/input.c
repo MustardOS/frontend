@@ -60,6 +60,7 @@ static tracked_device devices[MAX_INPUT_DEVICES];
 static int device_count = 0;
 
 static SDL_JoystickID primary_instance = -1;
+static int mappings_loaded = 0;
 
 static int find_device_by_instance(SDL_JoystickID id) {
     for (int i = 0; i < device_count; i++) {
@@ -195,21 +196,6 @@ static void init_input_maps(void) {
     input_init_done = 1;
 }
 
-static inline mux_input_type swap_button_type(mux_input_type t) {
-    switch (t) {
-        case MUX_INPUT_A:
-            return MUX_INPUT_B;
-        case MUX_INPUT_B:
-            return MUX_INPUT_A;
-        case MUX_INPUT_X:
-            return MUX_INPUT_Y;
-        case MUX_INPUT_Y:
-            return MUX_INPUT_X;
-        default:
-            return t;
-    }
-}
-
 static inline void apply_dir_pair(mux_input_type neg, mux_input_type pos, int direction) {
     uint64_t clear_mask = BIT(neg) | BIT(pos);
     pressed &= ~clear_mask;
@@ -221,7 +207,7 @@ static inline void apply_dir_pair(mux_input_type neg, mux_input_type pos, int di
     }
 }
 
-static void process_sdl_button(const mux_input_options *opts, SDL_GameControllerButton btn, int down) {
+static void process_sdl_button(SDL_GameControllerButton btn, int down) {
     if (input_is_suppressed() || btn >= SDL_CONTROLLER_BUTTON_MAX) return;
 
     mux_input_type t = controller_button_map[btn];
@@ -230,8 +216,6 @@ static void process_sdl_button(const mux_input_options *opts, SDL_GameController
         LOG_DEBUG("input", "Unmapped controller button %d", btn);
         return;
     }
-
-    if (opts->swap_btn) t = swap_button_type(t);
 
     // Wonky donkey input...
     if (swap_axis && !key_show) {
@@ -460,7 +444,7 @@ static void process_sdl_joy_axis(SDL_JoystickID which, uint8_t axis, int16_t val
     apply_axis_motion(raw_joystick_axis_map(axis), value);
 }
 
-static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEvent *key, int down) {
+static void process_sdl_key(const SDL_KeyboardEvent *key, int down) {
     if (input_is_suppressed()) return;
 
     SDL_Scancode sc = key->keysym.scancode;
@@ -473,7 +457,6 @@ static void process_sdl_key(const mux_input_options *opts, const SDL_KeyboardEve
     }
 
     if (key->repeat) return;
-    if (opts->swap_btn) t = swap_button_type(t);
 
     pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
 }
@@ -505,23 +488,18 @@ static void close_all_devices(void) {
 }
 
 static void open_all_input_devices(void) {
-    static int mappings_loaded = 0;
     static uint32_t last_no_device_log = UINT32_MAX;
     int was_empty = (device_count == 0);
 
     if (!mappings_loaded) {
-        int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
-        if (mappings < 0) LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
-
-        // This SDL specific map must in the "retro" format
-        // as we do our own internal key swapping mechanism
         if (device.BOARD.SDL_MAP[0] != '\0' && SDL_GameControllerAddMapping(device.BOARD.SDL_MAP) < 0) {
             LOG_WARN("input", "Failed to add mapping: %s", SDL_GetError());
         }
 
-        // User override mapping - loaded last so it
-        // takes final priority over all other sources
-        SDL_GameControllerAddMappingsFromFile(OPT_PATH "share/info/gamecontrollerdb/user.txt");
+        int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
+        if (mappings < 0) LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
+
+        if (config.SETTINGS.REMAP.LAYOUT == 1) SDL_GameControllerAddMappingsFromFile(OPT_PATH "share/info/gamecontrollerdb/modern.txt");
 
         mappings_loaded = 1;
     }
@@ -626,6 +604,13 @@ static void open_all_input_devices(void) {
         primary_instance = devices[0].instance;
         LOG_INFO("input", "Primary input device set (instance %d)", primary_instance);
     }
+}
+
+void mux_input_reload_mappings(void) {
+    close_all_devices();
+    primary_instance = -1;
+    mappings_loaded = 0;
+    open_all_input_devices();
 }
 
 static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
@@ -923,10 +908,10 @@ void mux_input_task(const mux_input_options *opts) {
         do {
             switch (ev.type) {
                 case SDL_CONTROLLERBUTTONDOWN:
-                    if (is_tracked_as_controller(ev.cbutton.which)) process_sdl_button(opts, ev.cbutton.button, 1);
+                    if (is_tracked_as_controller(ev.cbutton.which)) process_sdl_button(ev.cbutton.button, 1);
                     break;
                 case SDL_CONTROLLERBUTTONUP:
-                    if (is_tracked_as_controller(ev.cbutton.which)) process_sdl_button(opts, ev.cbutton.button, 0);
+                    if (is_tracked_as_controller(ev.cbutton.which)) process_sdl_button(ev.cbutton.button, 0);
                     break;
                 case SDL_CONTROLLERAXISMOTION:
                     if (is_tracked_as_controller(ev.caxis.which)) process_sdl_axis(ev.caxis.axis, ev.caxis.value);
@@ -977,10 +962,10 @@ void mux_input_task(const mux_input_options *opts) {
                     }
                     break;
                 case SDL_KEYDOWN:
-                    process_sdl_key(opts, &ev.key, 1);
+                    process_sdl_key(&ev.key, 1);
                     break;
                 case SDL_KEYUP:
-                    process_sdl_key(opts, &ev.key, 0);
+                    process_sdl_key(&ev.key, 0);
                     break;
                 default:
                     if (anim_tick_event != 0 && ev.type == anim_tick_event) {

@@ -128,9 +128,6 @@ typedef struct {
     // (The idle_handler may still be called more frequently at times.)
     uint32_t max_idle_ms;
 
-    // Whether to swap the A/B/X/Y buttons. False is the Japanese layout (A on the right) and true
-    // is the Western layout (A on the bottom).
-    int swap_btn;
     // Whether to swap the up/down and left/right axes on the D-pad and sticks.
     int swap_axis;
     int remap_to_dpad;
@@ -161,6 +158,8 @@ typedef struct {
 } mux_input_options;
 
 extern int swap_axis;
+
+void mux_input_reload_mappings(void);
 
 void mux_input_task(const mux_input_options *opts);
 

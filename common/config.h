@@ -97,7 +97,6 @@ struct mux_config {
         struct {
             int16_t ACCELERATE;
             int16_t REPEATDELAY;
-            int16_t SWAP;
             int16_t STICKNAV;
             int16_t THERMAL;
             int16_t FONT;
@@ -227,6 +226,9 @@ struct mux_config {
             int16_t FOOTER_HEIGHT;
             int16_t CONTENT_ITEM_COUNT;
         } THEMEOPT;
+        struct {
+            int16_t LAYOUT;
+        } REMAP;
     } SETTINGS;
 
     struct {

@@ -693,7 +693,7 @@ static void init_elements(void) {
     if (ui_pnlInputPreview) lv_obj_move_foreground(ui_pnlInputPreview);
     lv_obj_move_foreground(ui_imgButton);
 
-    lv_label_set_text(ui_lblMessage, config.SETTINGS.ADVANCED.SWAP ? lang.MUXTESTER.QUIT_ALT : lang.MUXTESTER.QUIT);
+    lv_label_set_text(ui_lblMessage, config.SETTINGS.REMAP.LAYOUT ? lang.MUXTESTER.QUIT_ALT : lang.MUXTESTER.QUIT);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_y(ui_pnlMessage, -12);
 
@@ -723,7 +723,7 @@ int muxtester_main(void) {
             .idle_handler = handle_idle,
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) | BIT(config.SETTINGS.ADVANCED.SWAP ? MUX_INPUT_A : MUX_INPUT_B),
+                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) | BIT(config.SETTINGS.REMAP.LAYOUT ? MUX_INPUT_A : MUX_INPUT_B),
                             .press_handler = handle_quit,
                             .hold_handler = handle_quit,
                     }

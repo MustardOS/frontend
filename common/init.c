@@ -237,7 +237,6 @@ void init_input(mux_input_options *opts, int def_combo) {
     board_init(device.BOARD.NAME);
 
     opts->max_idle_ms = IDLE_MS;
-    opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
     opts->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
     opts->remap_to_dpad = true;
 

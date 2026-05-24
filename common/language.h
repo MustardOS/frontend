@@ -1222,13 +1222,11 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char WAITING[MAX_BUFFER_SIZE];
-        char SAVE_TITLE[MAX_BUFFER_SIZE];
-        char SAVE_USER[MAX_BUFFER_SIZE];
-        char SAVE_MODERN[MAX_BUFFER_SIZE];
-        char SAVE_RETRO[MAX_BUFFER_SIZE];
-        char SAVE_CANCEL[MAX_BUFFER_SIZE];
         char SAVED[MAX_BUFFER_SIZE];
         char INPUT_LABEL[MAX_BUFFER_SIZE];
+        char LAYOUT_LABEL[MAX_BUFFER_SIZE];
+        char LAYOUT_RETRO[MAX_BUFFER_SIZE];
+        char LAYOUT_MODERN[MAX_BUFFER_SIZE];
     } MUXREMAP;
 
     struct {
@@ -1529,11 +1527,8 @@ struct mux_lang {
         char MAXGPU[MAX_BUFFER_SIZE];
         char AUDIOREADY[MAX_BUFFER_SIZE];
         char AUDIOSWAP[MAX_BUFFER_SIZE];
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            char RETRO[MAX_BUFFER_SIZE];
-            char MODERN[MAX_BUFFER_SIZE];
-        } SWAP;
+        char TRUSTMODIFY[MAX_BUFFER_SIZE];
+        char TRUSTPOWER[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char DPAD[MAX_BUFFER_SIZE];
