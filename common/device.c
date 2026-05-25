@@ -66,11 +66,11 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->MUX.WIDTH, "mux/width");
     DEV_INT_FIELD(device->MUX.HEIGHT, "mux/height");
 
-    DEV_MNT_FIELD(BOOT, "boot");
-    DEV_MNT_FIELD(ROM, "rom");
-    DEV_MNT_FIELD(ROOT, "root");
-    DEV_MNT_FIELD(SDCARD, "sdcard");
-    DEV_MNT_FIELD(USB, "usb");
+    DEV_MNT_FIELD(BOOT, "boot")
+    DEV_MNT_FIELD(ROM, "rom")
+    DEV_MNT_FIELD(ROOT, "root")
+    DEV_MNT_FIELD(SDCARD, "sdcard")
+    DEV_MNT_FIELD(USB, "usb")
 
     DEV_STR_FIELD(device->CPU.DEFAULT, "cpu/default");
     DEV_STR_FIELD(device->CPU.AVAILABLE, "cpu/available");
@@ -124,6 +124,11 @@ void load_device(struct mux_device *device) {
 #undef DEV_INT_FIELD
 #undef DEV_STR_FIELD
 #undef DEV_MNT_FIELD
+
+    if (!device->MUX.WIDTH) device->MUX.WIDTH = 640;
+    if (!device->MUX.HEIGHT) device->MUX.HEIGHT = 480;
+    if (!device->SCREEN.WIDTH) device->SCREEN.WIDTH = 640;
+    if (!device->SCREEN.HEIGHT) device->SCREEN.HEIGHT = 480;
 
     snprintf(mux_dim, sizeof(mux_dim), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 }
