@@ -162,6 +162,8 @@ void saver_stop_base(saver_state_t *s) {
 }
 
 void saver_shutdown_base(saver_state_t *s) {
+    if (!s->enabled) return;
+
     s->enabled = 0;
     s->suppress_until = 0;
 
