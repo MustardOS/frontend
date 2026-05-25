@@ -348,6 +348,70 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static int remove_mode = 0;
+static int skip_confirm = 0;
+static mux_dialogue remove_dlg;
+
+static void show_remove_dialog(void) {
+    remove_mode = 1;
+    remove_dlg.selected = 0;
+    dialogue_show(&remove_dlg);
+    dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void hide_remove_dialog(void) {
+    remove_mode = 0;
+    dialogue_hide(&remove_dlg);
+}
+
+static void do_remove(void) {
+    if (items[current_item_index].content_type == FOLDER) {
+        if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
+            play_sound(SND_ERROR);
+            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
+            return;
+        }
+
+        char collection_dir[MAX_BUFFER_SIZE];
+        snprintf(collection_dir, sizeof(collection_dir), "%s/%s",
+                 sys_dir, items[current_item_index].name);
+
+        if (!dir_exist(collection_dir)) {
+            play_sound(SND_ERROR);
+            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
+            return;
+        }
+
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+        play_sound(SND_MUOS);
+        remove(collection_dir);
+    } else {
+        char coll_name_no_ext[MAX_BUFFER_SIZE];
+        snprintf(coll_name_no_ext, sizeof(coll_name_no_ext), "%s",
+                 items[current_item_index].name);
+
+        char *coll_dot = strrchr(coll_name_no_ext, '.');
+        if (coll_dot) *coll_dot = '\0';
+
+        char collection_file[MAX_BUFFER_SIZE];
+        snprintf(collection_file, sizeof(collection_file), "%s/%s.cfg",
+                 sys_dir, coll_name_no_ext);
+
+        if (!file_exist(collection_file)) {
+            play_sound(SND_ERROR);
+            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_FILE, SHORT);
+            return;
+        }
+
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+        play_sound(SND_MUOS);
+        remove(collection_file);
+    }
+
+    load_mux("collection");
+    mux_input_stop();
+}
+
 static void handle_keyboard_OK_press(void) {
     key_show = 0;
 
@@ -540,6 +604,17 @@ static void process_load(int from_start) {
 }
 
 static void handle_a(void) {
+    if (remove_mode) {
+        mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
+        hide_remove_dialog();
+        if (opt == MUX_REMOVE_YEP) {
+            do_remove();
+        } else if (opt == MUX_REMOVE_SKIP) {
+            skip_confirm = 1;
+            do_remove();
+        }
+        return;
+    }
     if (hold_call) return;
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 0));
 }
@@ -556,6 +631,11 @@ static void handle_b(void) {
     }
 
     if (hold_call) return;
+
+    if (remove_mode) {
+        hide_remove_dialog();
+        return;
+    }
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -601,62 +681,15 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode || is_ksk(kiosk.COLLECT.REMOVE)) return;
+    if (msgbox_active || !ui_count || add_mode || is_ksk(kiosk.COLLECT.REMOVE) || remove_mode) return;
 
-    if (!hold_call) {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
+    if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
+        do_remove();
         return;
     }
 
-    if (items[current_item_index].content_type == FOLDER) {
-        if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
-            play_sound(SND_ERROR);
-            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
-            return;
-        } else {
-            char collection_dir[MAX_BUFFER_SIZE];
-            snprintf(collection_dir, sizeof(collection_dir), "%s/%s",
-                     sys_dir, items[current_item_index].name);
-
-            if (dir_exist(collection_dir)) {
-                write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
-
-                play_sound(SND_MUOS);
-                remove(collection_dir);
-            } else {
-                play_sound(SND_ERROR);
-                toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, SHORT);
-                return;
-            }
-        }
-    } else {
-        char coll_name_no_ext[MAX_BUFFER_SIZE];
-        snprintf(coll_name_no_ext, sizeof(coll_name_no_ext), "%s",
-                 items[current_item_index].name);
-
-        char *coll_dot = strrchr(coll_name_no_ext, '.');
-        if (coll_dot) *coll_dot = '\0';
-
-        char collection_file[MAX_BUFFER_SIZE];
-        snprintf(collection_file, sizeof(collection_file), "%s/%s.cfg",
-                 sys_dir, coll_name_no_ext);
-
-        if (file_exist(collection_file)) {
-            write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
-
-            play_sound(SND_MUOS);
-            remove(collection_file);
-        } else {
-            play_sound(SND_ERROR);
-            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_FILE, SHORT);
-            return;
-        }
-    }
-
-    load_mux("collection");
-
-    mux_input_stop();
+    play_sound(SND_CONFIRM);
+    show_remove_dialog();
 }
 
 static void handle_y(void) {
@@ -702,35 +735,115 @@ static void handle_random_select(void) {
 }
 
 static void handle_up(void) {
-    key_show ? key_up() : handle_list_nav_up();
+    if (key_show) {
+        key_up();
+        return;
+    }
+
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
 }
 
 static void handle_up_hold(void) {
-    key_show ? key_up() : handle_list_nav_up_hold();
+    if (key_show) {
+        key_up();
+        return;
+    }
+
+    if (remove_mode) return;
+
+    handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
-    key_show ? key_down() : handle_list_nav_down();
+    if (key_show) {
+        key_down();
+        return;
+    }
+
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
 }
 
 static void handle_down_hold(void) {
-    key_show ? key_down() : handle_list_nav_down_hold();
+    if (key_show) {
+        key_down();
+        return;
+    }
+
+    if (remove_mode) return;
+
+    handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
-    key_show ? key_left() : handle_list_nav_left();
+    if (key_show) {
+        key_left();
+        return;
+    }
+
+    if (remove_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_left();
 }
 
 static void handle_right(void) {
-    key_show ? key_right() : handle_list_nav_right();
+    if (key_show) {
+        key_right();
+        return;
+    }
+
+    if (remove_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_right();
 }
 
 static void handle_left_hold(void) {
-    key_show ? key_left() : handle_list_nav_left_hold();
+    if (key_show) {
+        key_left();
+        return;
+    }
+
+    if (remove_mode) return;
+
+    handle_list_nav_left_hold();
 }
 
 static void handle_right_hold(void) {
-    key_show ? key_right() : handle_list_nav_right_hold();
+    if (key_show) {
+        key_right();
+        return;
+    }
+
+    if (remove_mode) return;
+
+    handle_list_nav_right_hold();
 }
 
 static void handle_l1(void) {
@@ -953,6 +1066,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
         lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     update_file_counter(ui_lblCounter_collect, file_count);
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false, false, OSK_MAX);
 

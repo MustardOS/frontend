@@ -1,4 +1,5 @@
 #include "dialogue.h"
+#include "language.h"
 #include "ui_common.h"
 
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
@@ -124,6 +125,18 @@ void dialogue_init_confirm(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
                            const char *nav_a, const char *nav_b) {
     const char *opts[MUX_CONFIRM_CNT] = {confirm_label, cancel_label};
     dialogue_init(dlg, t, parent, title, opts, MUX_CONFIRM_CNT, nav_a, nav_b);
+}
+
+void dialogue_init_warn(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                        const char *nav_a, const char *nav_b) {
+    const char *opts[] = {lang.GENERIC.UNDERSTAND, lang.GENERIC.CANCEL};
+    dialogue_init(dlg, t, parent, lang.GENERIC.WARNING, opts, 2, nav_a, nav_b);
+}
+
+void dialogue_init_remove(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                          const char *nav_a, const char *nav_b) {
+    const char *opts[MUX_REMOVE_CNT] = {lang.GENERIC.REMOVE, lang.GENERIC.SKIP_CONFIRM, lang.GENERIC.CANCEL};
+    dialogue_init(dlg, t, parent, lang.GENERIC.CONFIRM, opts, MUX_REMOVE_CNT, nav_a, nav_b);
 }
 
 void dialogue_show(mux_dialogue *dlg) {

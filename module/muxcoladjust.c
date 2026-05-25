@@ -11,6 +11,30 @@ enum {
 COLADJUST_ELEMENTS
 #undef COLADJUST
 
+static int reset_mode = 0;
+static mux_dialogue reset_dlg;
+
+static void show_reset_dialog(void) {
+    reset_mode = 1;
+    reset_dlg.selected = 0;
+    dialogue_show(&reset_dlg);
+    dialogue_refresh(&reset_dlg, &theme);
+}
+
+static void hide_reset_dialog(void) {
+    reset_mode = 0;
+    dialogue_hide(&reset_dlg);
+}
+
+static void do_reset(void) {
+    set_setting_value("colour", DEFAULT_TEMPERATURE, 0);
+    remove_directory_recursive(CONF_CONFIG_PATH "settings/colour");
+    refresh_config = 1;
+    play_sound(SND_MUOS);
+    load_mux("colour");
+    mux_input_stop();
+}
+
 static void show_help(void) {
     struct help_msg help_messages[] = {
 #define COLADJUST(NAME, ENUM, UDATA) { UDATA, lang.MUXCOLADJUST.HELP.ENUM },
@@ -104,30 +128,89 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_option_prev(void) {
+    if (reset_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (msgbox_active) return;
 
     move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
+    if (reset_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (msgbox_active) return;
 
     move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
 static void handle_option_prev_multi(void) {
-    if (msgbox_active || block_input) return;
+    if (reset_mode || msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), -25);
 }
 
 static void handle_option_next_multi(void) {
-    if (msgbox_active || block_input) return;
+    if (reset_mode || msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), +25);
 }
 
+static void handle_dpad_up(void) {
+    if (reset_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (reset_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (reset_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (reset_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_a(void) {
+    if (reset_mode) {
+        mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
+        hide_reset_dialog();
+        if (opt == MUX_CONFIRM_YEP) do_reset();
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     handle_option_next();
@@ -135,6 +218,11 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (reset_mode) {
+        hide_reset_dialog();
+        return;
+    }
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -153,22 +241,15 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || reset_mode) return;
 
-    if (!hold_call) {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.HOLD_RESET, SHORT);
+    if (config.SETTINGS.ADVANCED.TRUSTREMOVE) {
+        do_reset();
         return;
     }
 
-    set_setting_value("colour", DEFAULT_TEMPERATURE, 0);
-    remove_directory_recursive(CONF_CONFIG_PATH "settings/colour");
-    refresh_config = 1;
-
-    play_sound(SND_MUOS);
-    load_mux("colour");
-
-    mux_input_stop();
+    play_sound(SND_CONFIRM);
+    show_reset_dialog();
 }
 
 static void handle_help(void) {
@@ -217,6 +298,7 @@ int muxcoladjust_main(void) {
     restore_coladjust_options();
     init_dropdown_settings();
 
+    dialogue_init_confirm(&reset_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.RESET, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
     list_nav_next(0);
 
@@ -228,8 +310,8 @@ int muxcoladjust_main(void) {
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = handle_option_prev_multi,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
@@ -242,8 +324,8 @@ int muxcoladjust_main(void) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

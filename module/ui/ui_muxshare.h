@@ -460,7 +460,8 @@
     TWEAKADV(AudioReady,  AUDIOREADY,  "audioready")  \
     TWEAKADV(AudioSwap,   AUDIOSWAP,   "audioswap")   \
     TWEAKADV(TrustModify, TRUSTMODIFY, "trustmodify") \
-    TWEAKADV(TrustPower,  TRUSTPOWER,  "trustpower")
+    TWEAKADV(TrustPower,  TRUSTPOWER,  "trustpower")  \
+    TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove")
 
 #define TWEAKGEN_ELEMENTS                          \
     TWEAKGEN(Rtc,        RTC,        "clock")      \

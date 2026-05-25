@@ -129,6 +129,7 @@ struct mux_config {
             int16_t USBPART;
             int16_t TRUSTMODIFY;
             int16_t TRUSTPOWER;
+            int16_t TRUSTREMOVE;
         } ADVANCED;
         struct {
             int16_t TEMPERATURE;

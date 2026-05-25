@@ -929,7 +929,7 @@ static void load_activity_items(void) {
 
                 char *last_slash = strrchr(full_path, '/');
                 if (last_slash) {
-                    size_t n = (size_t)(last_slash - full_path + 1);
+                    size_t n = (size_t) (last_slash - full_path + 1);
                     if (n >= sizeof(it->dir)) n = sizeof(it->dir) - 1;
 
                     memcpy(it->dir, full_path, n);
@@ -1700,6 +1700,41 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static int remove_mode = 0;
+static int skip_confirm = 0;
+static mux_dialogue remove_dlg;
+
+static void handle_b(void);
+
+static void show_remove_dialog(void) {
+    remove_mode = 1;
+    remove_dlg.selected = 0;
+    dialogue_show(&remove_dlg);
+    dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void hide_remove_dialog(void) {
+    remove_mode = 0;
+    dialogue_hide(&remove_dlg);
+}
+
+static void do_remove(void) {
+    if (overview_item_index < 0 || (size_t) overview_item_index >= activity_count) return;
+
+    LOG_INFO(mux_module, "Purging Playtime Entry: %s", activity_items[overview_item_index].path);
+
+    if (delete_activity_entry(activity_items[overview_item_index].path)) {
+        play_sound(SND_MUOS);
+        free_activity_items();
+        load_activity_items();
+        last_sort_mode = -1;
+        handle_b();
+    } else {
+        toast_message(lang.GENERIC.REMOVE_FAIL, SHORT);
+        play_sound(SND_ERROR);
+    }
+}
+
 static void hide_nav(void) {
     lv_obj_add_flag(ui_imgBox, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lblCounter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -1723,6 +1758,18 @@ static void show_nav(void) {
 }
 
 static void handle_a(void) {
+    if (remove_mode) {
+        mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
+        hide_remove_dialog();
+        if (opt == MUX_REMOVE_YEP) {
+            do_remove();
+        } else if (opt == MUX_REMOVE_SKIP) {
+            skip_confirm = 1;
+            do_remove();
+        }
+        return;
+    }
+
     if (msgbox_active || !ui_count || hold_call || in_global_view || in_detail_view) return;
 
     play_sound(SND_CONFIRM);
@@ -1738,6 +1785,13 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (remove_mode) {
+        hide_remove_dialog();
+        return;
+    }
+
+    if (in_detail_view) skip_confirm = 0;
+
     if (hold_call && !track_delete) return;
 
     if (msgbox_active) {
@@ -1790,35 +1844,18 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || !ui_count) return;
 
-    if (in_detail_view && overview_item_index >= 0 && (size_t) overview_item_index < activity_count) {
-        if (!hold_call) {
-            toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
-            play_sound(SND_ERROR);
+    if (in_detail_view) {
+        if (remove_mode || overview_item_index < 0 || (size_t) overview_item_index >= activity_count) return;
 
+        if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
+            do_remove();
             return;
         }
 
-        LOG_INFO(mux_module, "Purging Playtime Entry: %s", activity_items[overview_item_index].path);
-
-        if (delete_activity_entry(activity_items[overview_item_index].path)) {
-            play_sound(SND_MUOS);
-
-            free_activity_items();
-            load_activity_items();
-
-            last_sort_mode = -1;
-            handle_b();
-
-            return;
-        } else {
-            toast_message(lang.GENERIC.REMOVE_FAIL, SHORT);
-            play_sound(SND_ERROR);
-
-            return;
-        }
+        play_sound(SND_CONFIRM);
+        show_remove_dialog();
+        return;
     }
-
-    if (hold_call || in_detail_view) return;
 
     play_sound(SND_CONFIRM);
 
@@ -1851,6 +1888,42 @@ static void handle_y(void) {
 
     if (config.VISUAL.BOX_ART < 4) image_refresh();
     nav_moved = 1;
+}
+
+static void handle_dpad_up(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_down_hold();
 }
 
 static void handle_help(void) {
@@ -1948,6 +2021,7 @@ int muxactivity_main() {
         nav_moved = 1;
     }
 
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -1957,8 +2031,8 @@ int muxactivity_main() {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
@@ -1967,8 +2041,8 @@ int muxactivity_main() {
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

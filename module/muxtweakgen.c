@@ -18,6 +18,24 @@ static void hide_save_dialog(void) {
     pending_submenu[0] = '\0';
 }
 
+static int warn_mode = 0;
+static mux_dialogue warn_dlg;
+static char warn_pending[64] = "";
+
+static void show_warn_dialog(const char *target) {
+    warn_mode = 1;
+    warn_dlg.selected = 1;
+    snprintf(warn_pending, sizeof(warn_pending), "%s", target);
+    dialogue_show(&warn_dlg);
+    dialogue_refresh(&warn_dlg, &theme);
+}
+
+static void hide_warn_dialog(void) {
+    warn_mode = 0;
+    dialogue_hide(&warn_dlg);
+    warn_pending[0] = '\0';
+}
+
 #define TWEAKGEN(NAME, ENUM, UDATA) 1,
 enum {
     UI_COUNT = E_SIZE(TWEAKGEN_ELEMENTS)
@@ -351,6 +369,15 @@ static void update_option_values(void) {
 
 static void handle_option_prev(void) {
     if (msgbox_active || block_input) return;
+
+    if (warn_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&warn_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
@@ -364,6 +391,15 @@ static void handle_option_prev(void) {
 
 static void handle_option_next(void) {
     if (msgbox_active || block_input) return;
+
+    if (warn_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&warn_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
@@ -388,19 +424,59 @@ static int get_multi_count(void) {
 }
 
 static void handle_option_prev_multi(void) {
-    if (msgbox_active || block_input || save_mode) return;
+    if (msgbox_active || block_input || save_mode || warn_mode) return;
 
     move_option(lv_group_get_focused(ui_group_value), -get_multi_count());
 }
 
 static void handle_option_next_multi(void) {
-    if (msgbox_active || block_input || save_mode) return;
+    if (msgbox_active || block_input || save_mode || warn_mode) return;
 
     move_option(lv_group_get_focused(ui_group_value), +get_multi_count());
 }
 
 static void handle_a(void) {
     if (msgbox_active || block_input || hold_call) return;
+
+    if (warn_mode) {
+        int idx = warn_dlg.selected;
+        char target[64];
+        snprintf(target, sizeof(target), "%s", warn_pending);
+        hide_warn_dialog();
+
+        if (idx == 0) {
+            if (strcmp(target, "danger") == 0) {
+                char c_path[MAX_BUFFER_SIZE];
+                snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_danger");
+
+                create_directories(c_path, 1);
+
+                write_text_to_file(c_path, "w", INT, read_line_int_from(c_path, 1) + 1);
+                play_sound(SND_CONFIRM);
+
+                load_mux("danger");
+                mux_input_stop();
+            } else if (strcmp(target, "tweakadv") == 0) {
+                char c_path[MAX_BUFFER_SIZE];
+                snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_tweakadv");
+
+                create_directories(c_path, 1);
+                write_text_to_file(c_path, "w", INT, read_line_int_from(c_path, 1) + 1);
+
+                if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_tweakgen_modified()) {
+                    snprintf(pending_submenu, sizeof(pending_submenu), "%s", "tweakadv");
+                    show_save_dialog();
+                } else {
+                    play_sound(SND_CONFIRM);
+                    save_tweak_options();
+
+                    load_mux("tweakadv");
+                    mux_input_stop();
+                }
+            }
+        }
+        return;
+    }
 
     if (save_mode) {
         mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
@@ -473,7 +549,6 @@ static void handle_a(void) {
         case MENU_HDMI:
         case MENU_RGB:
         case MENU_REMAP:
-        case MENU_ADVANCED:
             if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();
                 return;
@@ -491,6 +566,13 @@ static void handle_a(void) {
 
             mux_input_stop();
             break;
+        case MENU_ADVANCED:
+            if (is_ksk(*entry->kiosk_flag)) {
+                kiosk_denied();
+                return;
+            }
+            show_warn_dialog("tweakadv");
+            break;
         case MENU_OPTION:
             update_option_values();
             break;
@@ -504,6 +586,11 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (block_input || hold_call) return;
+
+    if (warn_mode) {
+        hide_warn_dialog();
+        return;
+    }
 
     if (save_mode) {
         hide_save_dialog();
@@ -532,6 +619,14 @@ static void handle_b(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (warn_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&warn_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
@@ -544,6 +639,14 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (warn_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&warn_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
@@ -556,32 +659,28 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) return;
+    if (save_mode || warn_mode) return;
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) return;
+    if (save_mode || warn_mode) return;
 
     handle_list_nav_down_hold();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || block_input || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || block_input || hold_call || save_mode || warn_mode) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
 static void launch_danger(void) {
-    if (msgbox_active || hold_call || save_mode) return;
+    if (msgbox_active || hold_call || save_mode || warn_mode) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblAdvanced_tweakgen) {
-        load_mux("danger");
-
-        mux_input_stop();
-    }
+    if (lv_group_get_focused(ui_group) == ui_lblAdvanced_tweakgen) show_warn_dialog("danger");
 }
 
 static void init_elements(void) {
@@ -628,6 +727,8 @@ int muxtweakgen_main(void) {
     init_dropdown_settings();
 
     dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

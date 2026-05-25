@@ -454,7 +454,72 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static int warn_mode = 0;
+static mux_dialogue warn_dlg;
+
+static void show_warn_dialog(void) {
+    warn_mode = 1;
+    warn_dlg.selected = 1;
+    dialogue_show(&warn_dlg);
+    dialogue_refresh(&warn_dlg, &theme);
+}
+
+static void hide_warn_dialog(void) {
+    warn_mode = 0;
+    dialogue_hide(&warn_dlg);
+}
+
+static void handle_dpad_up(void) {
+    if (warn_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&warn_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (warn_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&warn_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (warn_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (warn_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_a(void) {
+    if (warn_mode) {
+        int idx = warn_dlg.selected;
+        hide_warn_dialog();
+        if (idx == 0) {
+            char cpath[MAX_BUFFER_SIZE];
+            snprintf(cpath, sizeof(cpath), "%scount/warn_device", CONF_CONFIG_PATH);
+            create_directories(cpath, 1);
+            write_text_to_file(cpath, "w", INT, read_line_int_from(cpath, 1) + 1);
+            load_mux("device");
+            mux_input_stop();
+        }
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -558,6 +623,11 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (warn_mode) {
+        hide_warn_dialog();
+        return;
+    }
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -573,20 +643,16 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || warn_mode) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
 static void launch_device(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || warn_mode) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblDevice_sysinfo) {
-        load_mux("device");
-
-        mux_input_stop();
-    }
+    if (lv_group_get_focused(ui_group) == ui_lblDevice_sysinfo) show_warn_dialog();
 }
 
 static void init_elements(void) {
@@ -623,6 +689,7 @@ int muxsysinfo_main(void) {
     init_fonts();
     init_navigation_group();
 
+    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, update_system_info);
     list_nav_next(0);
 
@@ -631,8 +698,8 @@ int muxsysinfo_main(void) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
@@ -641,8 +708,8 @@ int muxsysinfo_main(void) {
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

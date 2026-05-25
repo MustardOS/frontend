@@ -21,6 +21,21 @@ static lv_obj_t *ui_objects_panel[UI_COUNT];
 
 static void list_nav_move(int steps, int direction);
 
+static int reset_mode = 0;
+static mux_dialogue reset_dlg;
+
+static void show_reset_dialog(void) {
+    reset_mode = 1;
+    reset_dlg.selected = 0;
+    dialogue_show(&reset_dlg);
+    dialogue_refresh(&reset_dlg, &theme);
+}
+
+static void hide_reset_dialog(void) {
+    reset_mode = 0;
+    dialogue_hide(&reset_dlg);
+}
+
 static bool detect_language_type(void) {
     char dir[MAX_BUFFER_SIZE];
     snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", config.SETTINGS.GENERAL.LANGUAGE);
@@ -249,45 +264,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_option_prev(void) {
-    if (msgbox_active) return;
-
-    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-    move_option(focused, -1);
-    if (focused == ui_droType_font) {
-        populate_font_names();
-        refresh_navigation();
-    }
-    apply_current_font_settings();
-}
-
-static void handle_option_next(void) {
-    if (msgbox_active) return;
-
-    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-    move_option(focused, +1);
-    if (focused == ui_droType_font) {
-        populate_font_names();
-        refresh_navigation();
-    }
-    apply_current_font_settings();
-}
-
-static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
-
-    handle_option_next();
-}
-
-static void handle_x(void) {
-    if (msgbox_active) return;
-
-    if (!hold_call) {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.HOLD_RESET, SHORT);
-        return;
-    }
-
+static void do_reset(void) {
     lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(1));
     lv_dropdown_set_selected(ui_droListSize_font, 0);
     lv_dropdown_set_selected(ui_droHeaderSize_font, 0);
@@ -301,8 +278,118 @@ static void handle_x(void) {
     apply_current_font_settings();
 }
 
+static void handle_option_prev(void) {
+    if (reset_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    if (msgbox_active) return;
+
+    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
+    move_option(focused, -1);
+
+    if (focused == ui_droType_font) {
+        populate_font_names();
+        refresh_navigation();
+    }
+
+    apply_current_font_settings();
+}
+
+static void handle_option_next(void) {
+    if (reset_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    if (msgbox_active) return;
+
+    lv_obj_t *focused = lv_group_get_focused(ui_group_value);
+    move_option(focused, +1);
+
+    if (focused == ui_droType_font) {
+        populate_font_names();
+        refresh_navigation();
+    }
+
+    apply_current_font_settings();
+}
+
+static void handle_dpad_up(void) {
+    if (reset_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (reset_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&reset_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (reset_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (reset_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
+static void handle_a(void) {
+    if (reset_mode) {
+        mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
+        hide_reset_dialog();
+        if (opt == MUX_CONFIRM_YEP) do_reset();
+        return;
+    }
+
+    if (msgbox_active || hold_call) return;
+
+    handle_option_next();
+}
+
+static void handle_x(void) {
+    if (msgbox_active || reset_mode) return;
+
+    if (config.SETTINGS.ADVANCED.TRUSTREMOVE) {
+        do_reset();
+        return;
+    }
+
+    play_sound(SND_CONFIRM);
+    show_reset_dialog();
+}
+
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (reset_mode) {
+        hide_reset_dialog();
+        return;
+    }
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -368,6 +455,7 @@ int muxfont_main(void) {
     restore_font_options();
     init_dropdown_settings();
 
+    dialogue_init_confirm(&reset_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.RESET, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
     list_nav_next(0);
 
@@ -379,8 +467,8 @@ int muxfont_main(void) {
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
@@ -391,8 +479,8 @@ int muxfont_main(void) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

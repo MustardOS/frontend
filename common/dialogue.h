@@ -26,6 +26,13 @@ typedef enum {
     MUX_CONFIRM_CNT
 } mux_confirm_opt;
 
+typedef enum {
+    MUX_REMOVE_YEP = 0,
+    MUX_REMOVE_SKIP,
+    MUX_REMOVE_NAH,
+    MUX_REMOVE_CNT
+} mux_remove_opt;
+
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
                    const char *title, const char **options, int option_count,
                    const char *nav_a, const char *nav_b);
@@ -37,6 +44,12 @@ void dialogue_init_unsaved(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
 void dialogue_init_confirm(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
                            const char *title, const char *confirm_label, const char *cancel_label,
                            const char *nav_a, const char *nav_b);
+
+void dialogue_init_warn(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                        const char *nav_a, const char *nav_b);
+
+void dialogue_init_remove(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                          const char *nav_a, const char *nav_b);
 
 void dialogue_show(mux_dialogue *dlg);
 

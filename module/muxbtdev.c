@@ -120,6 +120,34 @@ static void check_focus(void) {
     }
 }
 
+static int forget_mode = 0;
+static int skip_confirm = 0;
+static mux_dialogue forget_dlg;
+
+static void show_forget_dialog(void) {
+    forget_mode = 1;
+    forget_dlg.selected = 0;
+    dialogue_show(&forget_dlg);
+    dialogue_refresh(&forget_dlg, &theme);
+}
+
+static void hide_forget_dialog(void) {
+    forget_mode = 0;
+    dialogue_hide(&forget_dlg);
+}
+
+static void do_forget(void) {
+    if (!*selected_mac) return;
+
+    play_sound(SND_CONFIRM);
+
+    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "forget", selected_mac, NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    load_mux("btall");
+    mux_input_stop();
+}
+
 static void list_nav_move(int steps, int direction) {
     gen_step_movement(steps, direction, false, -1);
     check_focus();
@@ -168,6 +196,18 @@ static void status_change(const char *method) {
 }
 
 static void handle_a(void) {
+    if (forget_mode) {
+        mux_remove_opt opt = (mux_remove_opt) forget_dlg.selected;
+        hide_forget_dialog();
+        if (opt == MUX_REMOVE_YEP) {
+            do_forget();
+        } else if (opt == MUX_REMOVE_SKIP) {
+            skip_confirm = 1;
+            do_forget();
+        }
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     if (key_show) {
@@ -202,13 +242,15 @@ static void handle_a(void) {
         }
         return;
     }
-
-    play_sound(SND_ERROR);
-    toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (forget_mode) {
+        hide_forget_dialog();
+        return;
+    }
 
     if (key_show) {
         key_backspace(ui_txtEntry_btdev);
@@ -242,24 +284,15 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || current_item_index != BTDEV_FRGT_IDX) return;
+    if (msgbox_active || current_item_index != BTDEV_FRGT_IDX || forget_mode) return;
 
-    if (!hold_call) {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
+    if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
+        do_forget();
         return;
     }
 
-    if (!*selected_mac) return;
-
     play_sound(SND_CONFIRM);
-
-    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "forget", selected_mac, NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-    hold_call = 0;
-    load_mux("btall");
-    mux_input_stop();
+    show_forget_dialog();
 }
 
 static void handle_y(void) {
@@ -267,24 +300,72 @@ static void handle_y(void) {
 }
 
 static void handle_up(void) {
-    key_show ? key_up() : handle_list_nav_up();
+    if (key_show) {
+        key_up();
+        return;
+    }
+
+    if (forget_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&forget_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
 }
 
 static void handle_up_hold(void) {
-    key_show ? key_up() : handle_list_nav_up_hold();
+    if (key_show) {
+        key_up();
+        return;
+    }
+
+    if (forget_mode) return;
+
+    handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
-    key_show ? key_down() : handle_list_nav_down();
+    if (key_show) {
+        key_down();
+        return;
+    }
+
+    if (forget_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&forget_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
 }
 
 static void handle_down_hold(void) {
-    key_show ? key_down() : handle_list_nav_down_hold();
+    if (key_show) {
+        key_down();
+        return;
+    }
+
+    if (forget_mode) return;
+
+    handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
     if (key_show) {
         key_left();
+        return;
+    }
+
+    if (forget_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&forget_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
         return;
     }
 
@@ -294,6 +375,14 @@ static void handle_left(void) {
 static void handle_right(void) {
     if (key_show) {
         key_right();
+        return;
+    }
+
+    if (forget_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&forget_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
         return;
     }
 
@@ -495,6 +584,8 @@ int muxbtdev_main(void) {
 
     init_osk(ui_pnlEntry_btdev, ui_txtEntry_btdev, true, false, OSK_MAX);
 
+    const char *forget_opts[MUX_REMOVE_CNT] = {lang.MUXBTDEV.FORGET, lang.GENERIC.SKIP_CONFIRM, lang.GENERIC.CANCEL};
+    dialogue_init(&forget_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, forget_opts, MUX_REMOVE_CNT, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

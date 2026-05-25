@@ -4,6 +4,22 @@
 static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
 
+static int remove_mode = 0;
+static int skip_confirm = 0;
+static mux_dialogue remove_dlg;
+
+static void show_remove_dialog(void) {
+    remove_mode = 1;
+    remove_dlg.selected = 0;
+    dialogue_show(&remove_dlg);
+    dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void hide_remove_dialog(void) {
+    remove_mode = 0;
+    dialogue_hide(&remove_dlg);
+}
+
 static int exit_status = 0;
 static int file_count = 0;
 static int starter_image = 0;
@@ -362,18 +378,130 @@ static void process_load(int from_start) {
     mux_input_stop();
 }
 
+static void do_remove(void) {
+    char name_no_ext[MAX_BUFFER_SIZE];
+    snprintf(name_no_ext, sizeof(name_no_ext), "%s", items[current_item_index].name);
+
+    char *dot = strrchr(name_no_ext, '.');
+    if (dot) *dot = '\0';
+
+    char history_file[MAX_BUFFER_SIZE];
+    snprintf(history_file, sizeof(history_file), INFO_HIS_PATH "/%s.cfg", name_no_ext);
+
+    if (file_exist(history_file)) {
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+        play_sound(SND_MUOS);
+        remove(history_file);
+        load_mux("history");
+        mux_input_stop();
+    } else {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
+    }
+}
+
+static void handle_dpad_up(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_left(void) {
+    if (remove_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_left();
+}
+
+static void handle_dpad_right(void) {
+    if (remove_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_right();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
+static void handle_dpad_left_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_left_hold();
+}
+
+static void handle_dpad_right_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_right_hold();
+}
+
 static void handle_a(void) {
     if (hold_call) return;
+
+    if (remove_mode) {
+        mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
+        hide_remove_dialog();
+        if (opt == MUX_REMOVE_YEP) {
+            do_remove();
+        } else if (opt == MUX_REMOVE_SKIP) {
+            skip_confirm = 1;
+            do_remove();
+        }
+        return;
+    }
+
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 0));
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || remove_mode) return;
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 1));
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (remove_mode) {
+        hide_remove_dialog();
+        return;
+    }
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -390,35 +518,15 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || is_ksk(kiosk.CONTENT.HISTORY)) return;
+    if (msgbox_active || !ui_count || is_ksk(kiosk.CONTENT.HISTORY) || remove_mode) return;
 
-    if (!hold_call) {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
+    if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
+        do_remove();
         return;
     }
 
-    char name_no_ext[MAX_BUFFER_SIZE];
-    snprintf(name_no_ext, sizeof(name_no_ext), "%s", items[current_item_index].name);
-
-    char *dot = strrchr(name_no_ext, '.');
-    if (dot) *dot = '\0';
-
-    char history_file[MAX_BUFFER_SIZE];
-    snprintf(history_file, sizeof(history_file), INFO_HIS_PATH "/%s.cfg", name_no_ext);
-
-    if (file_exist(history_file)) {
-        write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
-
-        play_sound(SND_MUOS);
-        remove(history_file);
-
-        load_mux("history");
-        mux_input_stop();
-    } else {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
-    }
+    play_sound(SND_CONFIRM);
+    show_remove_dialog();
 }
 
 static void handle_y(void) {
@@ -597,19 +705,19 @@ int muxhistory_main(int his_index) {
         remove(ADD_MODE_DONE);
     }
 
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
-                          (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 || (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .press_handler = {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
+                    [MUX_INPUT_DPAD_LEFT] = handle_dpad_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_dpad_right,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
@@ -621,10 +729,10 @@ int muxhistory_main(int his_index) {
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
+                    [MUX_INPUT_DPAD_LEFT] = handle_dpad_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_dpad_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

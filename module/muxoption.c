@@ -483,6 +483,49 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static int remove_mode = 0;
+static mux_dialogue remove_dlg;
+
+static void show_remove_dialog(void) {
+    remove_mode = 1;
+    remove_dlg.selected = 0;
+    dialogue_show(&remove_dlg);
+    dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void hide_remove_dialog(void) {
+    remove_mode = 0;
+    dialogue_hide(&remove_dlg);
+}
+
+static void do_remove(void) {
+    play_sound(SND_MUOS);
+
+    switch (rem_config) {
+        case 0:
+            if (is_dir) {
+                remove_dir_config(curr_dir, core_file);
+            } else {
+                remove_content_config(strip_ext(rom_name), core_file);
+            }
+            break;
+        case 1:
+            if (is_dir) {
+                remove_core_config(core_file);
+            } else {
+                remove_dir_config(curr_dir, core_file);
+            }
+            break;
+        case 2:
+            remove_core_config(core_file);
+            break;
+        default:
+            break;
+    }
+
+    refresh_option_view();
+}
+
 static char *change_config_opt(int steps) {
     char *remove_options_dir[] = {
             lang.MUXOPTION.FOLDER,
@@ -506,6 +549,14 @@ static char *change_config_opt(int steps) {
 }
 
 static void handle_option_prev(void) {
+    if (remove_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -516,6 +567,14 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
+    if (remove_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -525,7 +584,50 @@ static void handle_option_next(void) {
     }
 }
 
+static void handle_dpad_up(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (remove_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_a(void) {
+    if (remove_mode) {
+        mux_confirm_opt opt = (mux_confirm_opt) remove_dlg.selected;
+        hide_remove_dialog();
+        if (opt == MUX_CONFIRM_YEP) do_remove();
+        return;
+    }
+
     if (current_view != VIEW_OPTIONS || msgbox_active || hold_call) return;
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -577,6 +679,11 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (remove_mode) {
+        hide_remove_dialog();
+        return;
+    }
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -606,39 +713,15 @@ static void handle_x(void) {
     if (current_view != VIEW_OPTIONS) return;
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused == ui_lblRemConfig_option) {
-        if (!hold_call) {
-            play_sound(SND_ERROR);
-            toast_message(lang.GENERIC.HOLD_REMOVE, SHORT);
-            return;
-        }
+    if (e_focused != ui_lblRemConfig_option || remove_mode) return;
 
-        play_sound(SND_MUOS);
-
-        switch (rem_config) {
-            case 0:
-                if (is_dir) {
-                    remove_dir_config(curr_dir, core_file);
-                } else {
-                    remove_content_config(strip_ext(rom_name), core_file);
-                }
-                break;
-            case 1:
-                if (is_dir) {
-                    remove_core_config(core_file);
-                } else {
-                    remove_dir_config(curr_dir, core_file);
-                }
-                break;
-            case 2:
-                remove_core_config(core_file);
-                break;
-            default:
-                break;
-        }
-
-        refresh_option_view();
+    if (config.SETTINGS.ADVANCED.TRUSTREMOVE) {
+        do_remove();
+        return;
     }
+
+    play_sound(SND_CONFIRM);
+    show_remove_dialog();
 }
 
 static void handle_y(void) {
@@ -728,6 +811,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     nav_silent = 0;
 
+    dialogue_init_confirm(&remove_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.REMOVE,
+                          lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -739,8 +824,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
@@ -751,8 +836,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

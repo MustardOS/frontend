@@ -115,6 +115,9 @@ struct mux_lang {
         char FRIDAY[MAX_BUFFER_SIZE];
         char SATURDAY[MAX_BUFFER_SIZE];
         char CANCEL[MAX_BUFFER_SIZE];
+        char UNDERSTAND[MAX_BUFFER_SIZE];
+        char WARNING[MAX_BUFFER_SIZE];
+        char SKIP_CONFIRM[MAX_BUFFER_SIZE];
         char CLEAN[MAX_BUFFER_SIZE];
         char DISCARD[MAX_BUFFER_SIZE];
         char MODIFIED[MAX_BUFFER_SIZE];
@@ -1534,6 +1537,7 @@ struct mux_lang {
         char AUDIOSWAP[MAX_BUFFER_SIZE];
         char TRUSTMODIFY[MAX_BUFFER_SIZE];
         char TRUSTPOWER[MAX_BUFFER_SIZE];
+        char TRUSTREMOVE[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char DPAD[MAX_BUFFER_SIZE];
@@ -1598,6 +1602,7 @@ struct mux_lang {
             char AUDIOSWAP[MAX_BUFFER_SIZE];
             char TRUSTMODIFY[MAX_BUFFER_SIZE];
             char TRUSTPOWER[MAX_BUFFER_SIZE];
+            char TRUSTREMOVE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
 

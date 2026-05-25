@@ -131,6 +131,9 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.FRIDAY, "Friday");
     GENERIC_FIELD(lang->GENERIC.SATURDAY, "Saturday");
     GENERIC_FIELD(lang->GENERIC.CANCEL, "Cancel");
+    GENERIC_FIELD(lang->GENERIC.UNDERSTAND, "I Understand");
+    GENERIC_FIELD(lang->GENERIC.WARNING, "Warning");
+    GENERIC_FIELD(lang->GENERIC.SKIP_CONFIRM, "Skip Dialog");
     GENERIC_FIELD(lang->GENERIC.CLEAN, "Clean");
     GENERIC_FIELD(lang->GENERIC.DISCARD, "Discard");
     GENERIC_FIELD(lang->GENERIC.MODIFIED, "Modified");
@@ -1369,6 +1372,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOSWAP, "Audio Reverse");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTMODIFY, "Trust Modifications");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTPOWER, "Trust Power Choice");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTREMOVE, "Trust Removals");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACCELERATE, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEATDELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
@@ -1401,6 +1405,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOSWAP, "Toggle the swap of left and right channels of audio");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTMODIFY, "Skip the unsaved changes dialogue and save immediately when leaving a settings module");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTPOWER, "Skip the confirmation dialogue when choosing to reboot or shut down");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTREMOVE, "Skip the removal confirmation dialogue when using X to remove content or reset settings");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");

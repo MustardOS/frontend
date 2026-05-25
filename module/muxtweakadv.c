@@ -113,6 +113,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, AudioSwap, "settings/advanced/audio_swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, TrustModify, "settings/advanced/trust_modify", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, TrustPower, "settings/advanced/trust_power", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, TrustRemove, "settings/advanced/trust_remove", INT, 0);
 
     do {
         int sd2_current = lv_dropdown_get_selected(ui_droSecondPart_tweakadv);
@@ -235,6 +236,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, AudioSwap, lang.MUXTWEAKADV.AUDIOSWAP, "audioswap", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, TrustModify, lang.MUXTWEAKADV.TRUSTMODIFY, "trustmodify", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, TrustPower, lang.MUXTWEAKADV.TRUSTPOWER, "trustpower", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, TrustRemove, lang.MUXTWEAKADV.TRUSTREMOVE, "trustremove", disabled_enabled, 2);
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate_tweakadv, accelerate_values);
