@@ -3214,6 +3214,7 @@ const char *get_theme_base(void) {
 }
 
 int brightness_to_percent(int val) {
+    if (device.SCREEN.BRIGHT <= 0) return 0;
     return (val * 100) / device.SCREEN.BRIGHT;
 }
 
