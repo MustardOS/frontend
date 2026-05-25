@@ -892,9 +892,12 @@ void mux_input_task(const mux_input_options *opts) {
     const int accel_ms = config.SETTINGS.ADVANCED.ACCELERATE > 0 ? config.SETTINGS.ADVANCED.ACCELERATE : 1;
     const int timeout_hold = (opts->max_idle_ms > 0) ? ((int) opts->max_idle_ms < accel_ms ? (int) opts->max_idle_ms : accel_ms) : accel_ms;
 
-    const uint32_t retry_interval_ms = 750U;
+    const uint32_t retry_interval_fast_ms = 750U;
+    const uint32_t retry_interval_slow_ms = 5000U;
+    const int retry_fast_count = 5;
     const int no_device_wait_ms = 250;
     uint32_t next_retry_tick = 0;
+    int retry_count = 0;
 
     fade_in_screen();
 
@@ -902,7 +905,10 @@ void mux_input_task(const mux_input_options *opts) {
     while (!stop_flag) {
         int timeout = held ? timeout_hold : timeout_idle;
 
-        if (device_count == 0 && timeout > no_device_wait_ms) timeout = no_device_wait_ms;
+        if (device_count == 0) {
+            int poll_cap = (retry_count <= retry_fast_count) ? no_device_wait_ms : (int) retry_interval_slow_ms;
+            if (timeout > poll_cap) timeout = poll_cap;
+        }
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         do {
@@ -932,7 +938,8 @@ void mux_input_task(const mux_input_options *opts) {
                     if (device_count < MAX_INPUT_DEVICES) {
                         LOG_INFO("input", "Input device connected");
                         open_all_input_devices();
-                        next_retry_tick = tick + retry_interval_ms;
+                        retry_count = 0;
+                        next_retry_tick = tick + retry_interval_fast_ms;
                     }
                     break;
                 case SDL_CONTROLLERDEVICEREMOVED:
@@ -983,9 +990,12 @@ void mux_input_task(const mux_input_options *opts) {
         tick = (uint32_t) mux_tick();
 
         if (device_count == 0 && tick >= next_retry_tick) {
+            retry_count++;
+            uint32_t interval = (retry_count <= retry_fast_count) ? retry_interval_fast_ms : retry_interval_slow_ms;
             LOG_DEBUG("input", "Retrying input device detection...");
             open_all_input_devices();
-            next_retry_tick = tick + retry_interval_ms;
+            next_retry_tick = tick + interval;
+            if (device_count > 0) retry_count = 0;
         }
 
         if (input_is_suppressed()) {
