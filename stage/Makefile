@@ -29,5 +29,5 @@ $(TARGET): $(OBJ)
 	@echo "Compiling $<"
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-clean:
+clean: | $(TARGET)
 	rm -f $(OBJ)

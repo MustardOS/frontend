@@ -96,6 +96,35 @@ CHECK_TOOLS() {
 	export PKG_CONFIG
 }
 
+if [ "$DEVICE" = "NATIVE" ]; then
+	unset CC CXX AR LD STRIP CROSS_COMPILE
+	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
+	unset INC_DIR LIB_DIR
+	unset PKG_CONFIG_SYSROOT_DIR PKG_CONFIG_LIBDIR SYSROOT
+
+	export DEVICE BUILD
+
+	CMD=${1-}
+	case "$CMD" in
+		make)
+			shift
+			if command -v make >/dev/null 2>&1; then
+				exec make BUILD="$BUILD" "$@"
+			fi
+			printf '%s\n' "Error: 'make' not found on PATH." 1>&2
+			exit 1
+			;;
+		print)
+			printf 'Device:        %s\n' "$DEVICE"
+			printf 'Build:         %s\n' "$BUILD"
+			printf 'CC:            ccache gcc (native host)\n'
+			;;
+		*) USAGE ;;
+	esac
+
+	exit $?
+fi
+
 DETECT_HOST
 
 if [ -z "$XHOST" ]; then

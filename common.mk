@@ -40,7 +40,11 @@ else
     $(error Unsupported Device: $(DEVICE))
 endif
 
-CC = ccache $(CROSS_COMPILE)gcc
+ifeq ($(DEVICE), NATIVE)
+    CC = ccache gcc
+else
+    CC = ccache $(CROSS_COMPILE)gcc
+endif
 
 DEBUG  ?= 0
 VERBOSE = $(if $(filter 2,$(DEBUG)),, @)

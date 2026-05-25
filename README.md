@@ -1,6 +1,81 @@
 # MustardOS Frontend
 
-This is where all the magic of the user interface of MustardOS (muOS) comes to life:
+This is where all the magic of the user interface of MustardOS (muOS) comes to life.
+
+---
+
+## Building
+
+### Prerequisites
+
+You will need `make`, `ccache`, and a C compiler. Everything else depends on which target you are building for.
+
+**Cross-compiling for ARM devices (normal workflow)**
+
+A pre-built aarch64 toolchain is expected at `~/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be pointed to by setting the `XTOOL`
+environment variable. The toolchain must include `gcc`, `g++`, `ar`, `ld`, and `strip` for the target host tuple.
+
+**Native builds for x86 / x86-64**
+
+A system `gcc` and the following development packages are required:
+
+| Package      | Purpose           |
+|--------------|-------------------|
+| `SDL2`       | Display and input |
+| `SDL2_mixer` | Audio             |
+| `SDL2_ttf`   | Font rendering    |
+| `SDL2_image` | Image loading     |
+| `libcurl`    | Network requests  |
+| `libpng`     | PNG support       |
+
+On Fedora/RHEL: `sudo dnf install SDL2-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image-devel libcurl-devel libpng-devel`
+
+On Debian/Ubuntu: `sudo apt install libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev libsdl2-image-dev libcurl4-openssl-dev libpng-dev`
+
+---
+
+### Cross-Compile Build (ARM Devices)
+
+All cross-compile builds go through `xtool.sh`, which sets up the toolchain environment and then calls `make`.
+
+```sh
+# Standard release build (aarch64 Cortex-A53, the most common target)
+BUILD=release ./xtool.sh make -j$(nproc)
+
+# Verbose build (shows each compiler command and all error output)
+DEBUG=1 BUILD=release ./xtool.sh make -j$(nproc)
+```
+
+**DEVICE targets**
+
+| `DEVICE`           | Use for                         |
+|--------------------|---------------------------------|
+| `ARM64_A53`        | H700, A133P — default if unset  |
+| `ARM64_A53_CRYPTO` | A53 with hardware AES/CRC       |
+| `ARM64`            | Generic ARMv8-A                 |
+| `ARM32`            | Original 35x (ARMv7 hard-float) |
+| `ARM32_A9`         | Cortex-A9 with NEON             |
+
+```sh
+# Example: build for generic ARM64
+DEVICE=ARM64 BUILD=release ./xtool.sh make -j$(nproc)
+```
+
+`BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if unset.
+
+---
+
+### Native Build (x86 / x86-64)
+
+Use `DEVICE=NATIVE` to build and run directly on the host machine. This is useful for quick iteration and debugging without hardware.
+
+```sh
+DEVICE=NATIVE BUILD=release ./xtool.sh make -j$(nproc)
+```
+
+Binaries and shared libraries land in `bin/` just like a cross-compiled build.
+
+---
 
 ### Dependency
 
