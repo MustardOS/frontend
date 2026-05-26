@@ -133,7 +133,7 @@ static void handle_y(void) {
     char info_buf[512] = {0};
     FILE *f = fopen("/run/muos/bt_info", "r");
     if (f) {
-        fread(info_buf, 1, sizeof(info_buf) - 1, f);
+        __attribute__((unused)) size_t _r = fread(info_buf, 1, sizeof(info_buf) - 1, f);
         fclose(f);
     }
 

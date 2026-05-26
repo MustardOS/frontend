@@ -557,7 +557,7 @@ int muxbtdev_main(void) {
 
     FILE *f = fopen(CONF_CONFIG_PATH "bluetooth/selected", "r");
     if (f) {
-        fgets(selected_mac, sizeof(selected_mac), f);
+        __attribute__((unused)) char *_r = fgets(selected_mac, sizeof(selected_mac), f);
         fclose(f);
         str_remchar(selected_mac, '\n');
     }

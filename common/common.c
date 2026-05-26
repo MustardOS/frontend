@@ -892,10 +892,10 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 
     if (type == CHAR) { // type is general text!
         fprintf(file, "%s", va_arg(args,
-        const char *));
+                                   const char *));
     } else if (type == INT) { // type is a number!
         fprintf(file, "%d", va_arg(args,
-        int));
+                                   int));
     }
 
     va_end(args);
@@ -2101,8 +2101,8 @@ void hide_progress_bar() {
 static void *extraction_thread(void *arg) {
     extraction_args_t *args = (extraction_args_t *) arg;
 
-    extract_zip_to_dir(args->filename, args->output_path);
-    if (extraction_finish_cb) extraction_finish_cb(args->filename);
+    int rc = extract_zip_to_dir(args->filename, args->output_path);
+    if (extraction_finish_cb) extraction_finish_cb(rc == 0 ? args->filename : NULL);
 
     hide_progress_bar();
 
@@ -2126,6 +2126,24 @@ void extract_zip_to_dir_with_progress(const char *filename, const char *output, 
     pthread_detach(tid);
 }
 
+// This isn't fooling anybody but hey it's better than nothing!
+static int is_safe_zip_entry(const char *path) {
+    if (!path || path[0] == '\0') return 0;
+
+    if (path[0] == '/') return 0;
+
+    if (strcmp(path, "..") == 0) return 0;
+
+    if (strncmp(path, "../", 3) == 0) return 0;
+
+    if (strstr(path, "/../") != NULL) return 0;
+
+    size_t len = strlen(path);
+    if (len >= 3 && strcmp(path + len - 3, "/..") == 0) return 0;
+
+    return 1;
+}
+
 int extract_zip_to_dir(const char *filename, const char *output) {
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
@@ -2143,6 +2161,12 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
 
         const char *filename = file_stat.m_filename;
+
+        if (!is_safe_zip_entry(filename)) {
+            LOG_ERROR(mux_module, "Blocked unsafe path in ZIP: '%s'", filename);
+            mz_zip_reader_end(&zip);
+            return -1;
+        }
 
         char dest_file[MAX_BUFFER_SIZE];
         snprintf(dest_file, sizeof(dest_file), "%s/%s", output, filename);

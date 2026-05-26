@@ -118,6 +118,7 @@ struct mux_lang {
         char UNDERSTAND[MAX_BUFFER_SIZE];
         char WARNING[MAX_BUFFER_SIZE];
         char SKIP_CONFIRM[MAX_BUFFER_SIZE];
+        char UNSAFE_ARCHIVE[MAX_BUFFER_SIZE];
         char CLEAN[MAX_BUFFER_SIZE];
         char DISCARD[MAX_BUFFER_SIZE];
         char MODIFIED[MAX_BUFFER_SIZE];

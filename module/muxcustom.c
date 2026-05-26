@@ -4,6 +4,19 @@
 static int save_mode = 0;
 static mux_dialogue save_dlg;
 
+static int msg_mode = 0;
+static mux_dialogue msg_dlg;
+
+static void show_message_dialog(void) {
+    msg_mode = 1;
+    dialogue_show(&msg_dlg);
+}
+
+static void hide_message_dialog(void) {
+    msg_mode = 0;
+    dialogue_hide(&msg_dlg);
+}
+
 static int pending_submenu = 0;
 static char pending_pdi[64];
 static char pending_pik[MAX_BUFFER_SIZE];
@@ -337,7 +350,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droThemeScaling_custom, config.SETTINGS.GENERAL.THEME_SCALING);
 }
 
-static void save_custom_options() {
+static int save_custom_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
@@ -382,13 +395,13 @@ static void save_custom_options() {
             write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
-            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", theme_base,
-                     theme_alt);
+            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", theme_base, theme_alt);
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive);
-                extract_zip_to_dir(theme_alt_archive, theme_base);
+                if (extract_zip_to_dir(theme_alt_archive, theme_base) < 0) return -1;
             }
+
             write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
 
             if (config.SETTINGS.RGB.MODE == RGB_MODE_THEME_SUPPLIED) {
@@ -429,10 +442,11 @@ static void save_custom_options() {
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 
     if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);
+    return 0;
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (msg_mode || msgbox_active || hold_call) return;
 
     if (save_mode) {
         mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
@@ -441,7 +455,11 @@ static void handle_a(void) {
         if (pending_submenu) {
             pending_submenu = 0;
 
-            if (opt == MUX_UNSAVED_SAVE) save_custom_options();
+            if (opt == MUX_UNSAVED_SAVE && save_custom_options() < 0) {
+                show_message_dialog();
+                return;
+            }
+
             play_sound(SND_CONFIRM);
 
             toast_message(lang.GENERIC.LOADING, FOREVER);
@@ -455,7 +473,10 @@ static void handle_a(void) {
             return;
         }
 
-        if (opt == MUX_UNSAVED_SAVE) save_custom_options();
+        if (opt == MUX_UNSAVED_SAVE && save_custom_options() < 0) {
+            show_message_dialog();
+            return;
+        }
 
         play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
@@ -641,6 +662,12 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (msg_mode) {
+        play_sound(SND_BACK);
+        hide_message_dialog();
+        return;
+    }
+
     if (save_mode) {
         hide_save_dialog();
         return;
@@ -662,7 +689,11 @@ static void handle_b(void) {
     play_sound(SND_BACK);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
-    save_custom_options();
+
+    if (save_custom_options() < 0) {
+        show_message_dialog();
+        return;
+    }
 
     mux_input_stop();
 }
@@ -754,6 +785,7 @@ int muxcustom_main(void) {
     init_dropdown_settings();
 
     dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_message(&msg_dlg, &theme, ui_screen, lang.GENERIC.WARNING, lang.GENERIC.UNSAFE_ARCHIVE, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

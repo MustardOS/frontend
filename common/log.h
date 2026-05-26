@@ -61,7 +61,8 @@
                 ##__VA_ARGS__);                                         \
                                                                         \
             if (log_len > 0) {                                          \
-                write(fd, file_buffer, (size_t)log_len);                \
+                __attribute__((unused)) ssize_t _r =                    \
+                    write(fd, file_buffer, (size_t)log_len);            \
                 fsync(fd);                                              \
             }                                                           \
             close(fd);                                                  \

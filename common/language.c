@@ -134,6 +134,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.UNDERSTAND, "I Understand");
     GENERIC_FIELD(lang->GENERIC.WARNING, "Warning");
     GENERIC_FIELD(lang->GENERIC.SKIP_CONFIRM, "Skip Dialog");
+    GENERIC_FIELD(lang->GENERIC.UNSAFE_ARCHIVE, "Archive contains unsafe file paths and was not extracted");
     GENERIC_FIELD(lang->GENERIC.CLEAN, "Clean");
     GENERIC_FIELD(lang->GENERIC.DISCARD, "Discard");
     GENERIC_FIELD(lang->GENERIC.MODIFIED, "Modified");
