@@ -97,11 +97,11 @@ const char *key_number_map[] = {
 };
 
 const char *key_hex_map[] = {
+        "A", "B", "C", "\n",
+        "D", "E", "F", "\n",
         "7", "8", "9", "\n",
         "4", "5", "6", "\n",
         "1", "2", "3", "\n",
-        "A", "B", "C", "\n",
-        "D", "E", "F", "\n",
         "0", OSK_DONE, NULL
 };
 
