@@ -17,7 +17,9 @@ static void show_help(void) {
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, TEMP_CREDITS, "/tmp/" TEMP_CREDITS)) {
-        strcpy(credits, read_all_char_from("/tmp/" TEMP_CREDITS));
+        char *raw = read_all_char_from("/tmp/" TEMP_CREDITS);
+        snprintf(credits, sizeof(credits), "%s", raw ? raw : "");
+        free(raw);
     } else {
         strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     }

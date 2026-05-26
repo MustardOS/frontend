@@ -35,7 +35,9 @@ static void show_help(void) {
 
     char credits[MAX_BUFFER_SIZE];
     if (file_exist(credits_path)) {
-        strcpy(credits, read_all_char_from(credits_path));
+        char *raw = read_all_char_from(credits_path);
+        snprintf(credits, sizeof(credits), "%s", raw ? raw : "");
+        free(raw);
     } else {
         strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     }
