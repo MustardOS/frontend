@@ -86,7 +86,6 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, Volume, "settings/advanced/volume", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Brightness, "settings/advanced/brightness", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Thermal, "settings/advanced/thermal", INT, 0);
-    CHECK_AND_SAVE_STD(tweakadv, Passcode, "settings/advanced/passcode", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Led, "settings/advanced/led", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, RandomTheme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, RetroWait, "settings/advanced/retrowait", INT, 0);
@@ -218,7 +217,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, Volume, lang.MUXTWEAKADV.VOLUME.TITLE, "volume", volume_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, Brightness, lang.MUXTWEAKADV.BRIGHTNESS.TITLE, "brightness", brightness_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, Thermal, lang.MUXTWEAKADV.THERMAL, "thermal", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, Passcode, lang.MUXTWEAKADV.PASSCODE, "passcode", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Led, lang.MUXTWEAKADV.LED, "led", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, RandomTheme, lang.MUXTWEAKADV.RANDOMTHEME, "randomtheme", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, RetroWait, lang.MUXTWEAKADV.RETROWAIT, "retrowait", disabled_enabled, 2);

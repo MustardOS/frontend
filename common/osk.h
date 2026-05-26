@@ -12,13 +12,16 @@ extern int key_map;
 
 extern lv_obj_t *key_entry;
 extern lv_obj_t *num_entry;
+extern lv_obj_t *hex_entry;
 
 extern const char *key_lower_map[];
 extern const char *key_upper_map[];
 extern const char *key_special_map[];
 extern const char *key_number_map[];
+extern const char *key_hex_map[];
 
-void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, bool include_numkey, bool is_password, uint16_t max_len);
+// include_numpad: 0 = alpha only, 1 = w/numpad, 2 = w/hexpad
+void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, int include_numpad, bool is_password, uint16_t max_len);
 
 void osk_handler(lv_event_t *e);
 

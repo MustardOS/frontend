@@ -248,6 +248,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, InputRemap, lang.MUXTWEAKGEN.INPUTREMAP, "inputremap", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, PassCode, lang.MUXTWEAKGEN.PASSCODE, "lock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHTNESS, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, AudioSink, lang.MUXTWEAKGEN.AUDIOSINK, "audiosink", audio_sinks, audio_sink_count);
@@ -309,7 +310,8 @@ static void check_focus(void) {
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
     int is_module = (e_focused == ui_lblHdmi_tweakgen || e_focused == ui_lblRtc_tweakgen ||
-                     e_focused == ui_lblAdvanced_tweakgen || e_focused == ui_lblRgb_tweakgen);
+                     e_focused == ui_lblAdvanced_tweakgen || e_focused == ui_lblRgb_tweakgen ||
+                     e_focused == ui_lblPassCode_tweakgen);
     int is_set_opt = (e_focused == ui_lblBrightness_tweakgen || e_focused == ui_lblVolume_tweakgen);
 
     if (is_module) {
@@ -508,6 +510,7 @@ static void handle_a(void) {
         MENU_RGB,
         MENU_REMAP,
         MENU_ADVANCED,
+        MENU_PASSCODE,
     } menu_action;
 
     typedef int (*visible_fn)(void);
@@ -525,6 +528,7 @@ static void handle_a(void) {
             {"rgb",      &kiosk.SETTING.RGB,      MENU_RGB,    visible_rgb},
             {"remap",    &KIOSK_PASS,             MENU_REMAP,    NULL},
             {"tweakadv", &kiosk.SETTING.ADVANCED, MENU_ADVANCED, NULL},
+            {"passcfg",  &KIOSK_PASS,             MENU_PASSCODE, NULL},
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Brightness
             {NULL,       &KIOSK_PASS,             MENU_OPTION,   NULL}, // Volume
             {NULL,       &KIOSK_PASS,             MENU_TOGGLE, visible_audiosink},
@@ -549,6 +553,7 @@ static void handle_a(void) {
         case MENU_HDMI:
         case MENU_RGB:
         case MENU_REMAP:
+        case MENU_PASSCODE:
             if (is_ksk(*entry->kiosk_flag)) {
                 kiosk_denied();
                 return;

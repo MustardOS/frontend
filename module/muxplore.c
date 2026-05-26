@@ -940,7 +940,7 @@ static void process_load(int from_start) {
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
     if (load_content(0, items[current_item_index].extra_data)) {
-        if (config.SETTINGS.ADVANCED.PASSCODE) {
+        if (strcasecmp(passcode.CODE.LAUNCH, "000000") != 0) {
             int result = 0;
 
             while (result != 1) {

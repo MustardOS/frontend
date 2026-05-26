@@ -434,7 +434,6 @@
     TWEAKADV(Volume,      VOLUME,      "volume")      \
     TWEAKADV(Brightness,  BRIGHTNESS,  "brightness")  \
     TWEAKADV(Thermal,     THERMAL,     "thermal")     \
-    TWEAKADV(Passcode,    PASSCODE,    "lock")        \
     TWEAKADV(Led,         LED,         "led")         \
     TWEAKADV(RandomTheme, RANDOMTHEME, "randomtheme") \
     TWEAKADV(RetroWait,   RETROWAIT,   "retrowait")   \
@@ -463,12 +462,22 @@
     TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove") \
     TWEAKADV(UsbFunction, USBFUNCTION, "usbfunction")
 
+#define PASSCFG_ELEMENTS                        \
+    PASSCFG(BootCode,    BOOTCODE,    "lock")   \
+    PASSCFG(BootMsg,     BOOTMSG,     "info")   \
+    PASSCFG(LaunchCode,  LAUNCHCODE,  "lock")   \
+    PASSCFG(LaunchMsg,   LAUNCHMSG,   "info")   \
+    PASSCFG(SettingCode, SETTINGCODE, "lock")   \
+    PASSCFG(SettingMsg,  SETTINGMSG,  "info")   \
+    PASSCFG(SafetyCode,  SAFETYCODE,  "safety")
+
 #define TWEAKGEN_ELEMENTS                          \
     TWEAKGEN(Rtc,        RTC,        "clock")      \
     TWEAKGEN(Hdmi,       HDMI,       "hdmi")       \
     TWEAKGEN(Rgb,        RGB,        "rgb")        \
     TWEAKGEN(InputRemap, INPUTREMAP, "inputremap") \
     TWEAKGEN(Advanced,   ADVANCED,   "advanced")   \
+    TWEAKGEN(PassCode,   PASSCODE,   "lock")       \
     TWEAKGEN(Brightness, BRIGHTNESS, "brightness") \
     TWEAKGEN(Volume,     VOLUME,     "volume")     \
     TWEAKGEN(AudioSink,  AUDIOSINK,  "audiosink")  \

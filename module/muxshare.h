@@ -243,6 +243,8 @@ int muxoverlay_main();
 
 int muxpass_main(int auth_type);
 
+int muxpasscfg_main();
+
 int muxpicker_main(char *type, char *ex_dir);
 
 int muxtheme_main(char *ex_dir);

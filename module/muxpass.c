@@ -41,10 +41,12 @@ static void handle_a(void) {
     char try_code[13];
     sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
 
-    if (strcasecmp(try_code, p_code) == 0) {
+    int code_match = strcasecmp(try_code, p_code) == 0;
+    int safety_match = strcasecmp(passcode.CODE.SAFETY, "000000") != 0 && strcasecmp(try_code, passcode.CODE.SAFETY) == 0;
+
+    if (code_match || safety_match) {
         play_sound(SND_MUOS);
         exit_status_muxpass = 1;
-
         mux_input_stop();
     } else {
         play_sound(SND_ERROR);

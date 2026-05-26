@@ -412,7 +412,7 @@ static void module_appcon(void) {
 static void module_app(void) {
     int auth = 0; // no more fights about 's' vs 'z'...
 
-    if (config.SETTINGS.ADVANCED.PASSCODE) {
+    if (strcasecmp(passcode.CODE.LAUNCH, "000000") != 0) {
         load_mux("launcher");
 
         if (muxpass_main(PCT_LAUNCH) == 1) {
@@ -449,7 +449,7 @@ static void module_task(void) {
 }
 
 static void module_config(void) {
-    if (config.SETTINGS.ADVANCED.PASSCODE && strcmp(previous_module, "muxtweakgen") != 0) {
+    if (strcasecmp(passcode.CODE.SETTING, "000000") != 0 && strcmp(previous_module, "muxtweakgen") != 0) {
         load_mux("launcher");
 
         if (muxpass_main(PCT_CONFIG) == 1) {
@@ -491,6 +491,8 @@ static void module_start(void) {
 }
 
 static void module_refresh(void) {
+    load_passcode(&passcode);
+
     if (!(refresh_kiosk | refresh_config | refresh_device)) return;
 
     if (refresh_kiosk) load_kiosk(&kiosk);
@@ -551,6 +553,7 @@ static const ModuleEntry modules[] = {
         {"hdmi",        "tweakgen",  "muxhdmi",        muxhdmi_main,        NULL},
         {"rgb",         "tweakgen",  "muxrgb",         muxrgb_main,         NULL},
         {"remap",       "tweakgen",  "muxremap",       muxremap_main,       NULL},
+        {"passcfg",     "tweakgen",  "muxpasscfg",     muxpasscfg_main,     NULL},
         {"storage",     "config",    "muxstorage",     muxstorage_main,     NULL},
         {"backup",      "config",    "muxbackup",      muxbackup_main,      NULL},
         {"power",       "config",    "muxpower",       muxpower_main,       NULL},
@@ -653,7 +656,7 @@ static void init_audio(void) {
 
             if (!file_exist(CHIME_DONE) &&
                 config.SETTINGS.GENERAL.CHIME &&
-                !config.SETTINGS.ADVANCED.PASSCODE)
+                strcasecmp(passcode.CODE.BOOT, "000000") == 0)
                 play_sound(SND_STARTUP);
 
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
@@ -689,12 +692,13 @@ int main(void) {
     if (getppid() == 1) raise(SIGTERM);
 
     ParamLoader loaders[] = {
-            {(void (*)(void *)) load_device, &device},
-            {(void (*)(void *)) load_config, &config},
-            {(void (*)(void *)) load_kiosk,  &kiosk},
+            {(void (*)(void *)) load_device,   &device},
+            {(void (*)(void *)) load_config,   &config},
+            {(void (*)(void *)) load_kiosk,    &kiosk},
+            {(void (*)(void *)) load_passcode, &passcode},
     };
 
-    parallel_load(loaders, 3);
+    parallel_load(loaders, 4);
 
     LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build());
     if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
@@ -718,7 +722,7 @@ int main(void) {
     pthread_create(&t_audio, &attr, (void *(*)(void *)) init_audio, NULL);
     pthread_attr_destroy(&attr);
 
-    if (config.SETTINGS.ADVANCED.PASSCODE && !file_exist(MUX_BOOT_AUTH)) {
+    if (strcasecmp(passcode.CODE.BOOT, "000000") != 0 && !file_exist(MUX_BOOT_AUTH)) {
         int result = 0;
 
         while (result != 1) {

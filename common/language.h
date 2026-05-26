@@ -1120,6 +1120,28 @@ struct mux_lang {
     } MUXPASS;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char BOOTCODE[MAX_BUFFER_SIZE];
+        char BOOTMSG[MAX_BUFFER_SIZE];
+        char LAUNCHCODE[MAX_BUFFER_SIZE];
+        char LAUNCHMSG[MAX_BUFFER_SIZE];
+        char SETTINGCODE[MAX_BUFFER_SIZE];
+        char SETTINGMSG[MAX_BUFFER_SIZE];
+        char SAFETYCODE[MAX_BUFFER_SIZE];
+        char SAVED[MAX_BUFFER_SIZE];
+        char INVALID[MAX_BUFFER_SIZE];
+        struct {
+            char BOOTCODE[MAX_BUFFER_SIZE];
+            char BOOTMSG[MAX_BUFFER_SIZE];
+            char LAUNCHCODE[MAX_BUFFER_SIZE];
+            char LAUNCHMSG[MAX_BUFFER_SIZE];
+            char SETTINGCODE[MAX_BUFFER_SIZE];
+            char SETTINGMSG[MAX_BUFFER_SIZE];
+            char SAFETYCODE[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXPASSCFG;
+
+    struct {
         char CUSTOM[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
@@ -1509,7 +1531,6 @@ struct mux_lang {
         char ACCELERATE[MAX_BUFFER_SIZE];
         char REPEATDELAY[MAX_BUFFER_SIZE];
         char THERMAL[MAX_BUFFER_SIZE];
-        char PASSCODE[MAX_BUFFER_SIZE];
         char LED[MAX_BUFFER_SIZE];
         char RANDOMTHEME[MAX_BUFFER_SIZE];
         char RETROWAIT[MAX_BUFFER_SIZE];
@@ -1573,7 +1594,6 @@ struct mux_lang {
             char ACCELERATE[MAX_BUFFER_SIZE];
             char REPEATDELAY[MAX_BUFFER_SIZE];
             char THERMAL[MAX_BUFFER_SIZE];
-            char PASSCODE[MAX_BUFFER_SIZE];
             char LED[MAX_BUFFER_SIZE];
             char RANDOMTHEME[MAX_BUFFER_SIZE];
             char RETROWAIT[MAX_BUFFER_SIZE];
@@ -1630,6 +1650,7 @@ struct mux_lang {
             char RESUME[MAX_BUFFER_SIZE];
         } STARTUP;
         char INPUTREMAP[MAX_BUFFER_SIZE];
+        char PASSCODE[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char RTC[MAX_BUFFER_SIZE];
@@ -1643,6 +1664,7 @@ struct mux_lang {
             char HKSHOT[MAX_BUFFER_SIZE];
             char AUDIOSINK[MAX_BUFFER_SIZE];
             char INPUTREMAP[MAX_BUFFER_SIZE];
+            char PASSCODE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
 

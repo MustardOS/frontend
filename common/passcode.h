@@ -10,6 +10,7 @@ struct mux_passcode {
         char BOOT[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char SETTING[MAX_BUFFER_SIZE];
+        char SAFETY[MAX_BUFFER_SIZE];
     } CODE;
 
     struct {
@@ -20,3 +21,5 @@ struct mux_passcode {
 };
 
 void load_passcode(struct mux_passcode *passcode);
+
+void save_passcode(struct mux_passcode *passcode);

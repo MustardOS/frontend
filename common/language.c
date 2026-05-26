@@ -979,6 +979,25 @@ void load_lang(struct mux_lang *lang) {
     // muxpass
     SPECIFIC_FIELD(lang->MUXPASS.TITLE, "PASSCODE");
 
+    // muxpasscfg
+    SPECIFIC_FIELD(lang->MUXPASSCFG.TITLE, "PASSCODE SETTINGS");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.BOOTCODE, "Boot Code");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.BOOTMSG, "Boot Message");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.LAUNCHCODE, "Launch Code");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.LAUNCHMSG, "Launch Message");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.SETTINGCODE, "Settings Code");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.SETTINGMSG, "Settings Message");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.SAFETYCODE, "Safety Code");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.SAVED, "Passcode saved");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.INVALID, "Code must be up to 6 digits");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.BOOTCODE, "6 digit code required at boot - set to 000000 to disable");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.BOOTMSG, "Message shown when the device first boots");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.LAUNCHCODE, "6 digit code required before launching content - set to 000000 to disable");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.LAUNCHMSG, "Message shown when launching content");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.SETTINGCODE, "6 digit code required to access settings - set to 000000 to disable");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.SETTINGMSG, "Message shown when accessing settings");
+    SPECIFIC_FIELD(lang->MUXPASSCFG.HELP.SAFETYCODE, "Emergency recovery code that bypasses all locks - set to 000000 to disable");
+
     // muxpicker
     SPECIFIC_FIELD(lang->MUXPICKER.CUSTOM, "CUSTOM PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CATALOGUE, "CATALOGUE PICKER");
@@ -1321,7 +1340,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.ACCELERATE, "Menu Acceleration");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.REPEATDELAY, "Menu Repeat Delay");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.THERMAL, "Thermal Zone Control");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.PASSCODE, "Passcode Lock");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LED, "LED During Play");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RANDOMTHEME, "Random Theme on Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RETROWAIT, "RetroArch Network Wait");
@@ -1376,7 +1394,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACCELERATE, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEATDELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.PASSCODE, "Toggle the passcode lock - More information can be found on the MustardOS website");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LED, "Toggle the power LED during content launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOMTHEME, "Change the default theme used for the next device launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RETROWAIT, "Toggle a delayed start of RetroArch until a network connection is established");
@@ -1438,6 +1455,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKSHOT, "Switch between different hotkeys for taking a screenshot");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.AUDIOSINK, "Select the active Pipewire audio output sink");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.PASSCODE, "Passcode Settings");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.PASSCODE, "Configure boot, launch, and settings passcodes");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.INPUTREMAP, "Input Remap");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.INPUTREMAP, "Remap controller buttons and axes for the muOS frontend");
 

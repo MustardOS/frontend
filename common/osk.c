@@ -14,6 +14,7 @@ int key_map;
 
 lv_obj_t *key_entry;
 lv_obj_t *num_entry;
+lv_obj_t *hex_entry;
 
 typedef struct {
     lv_obj_t *box;
@@ -95,6 +96,15 @@ const char *key_number_map[] = {
         "0", ".", OSK_DONE, NULL
 };
 
+const char *key_hex_map[] = {
+        "7", "8", "9", "\n",
+        "4", "5", "6", "\n",
+        "1", "2", "3", "\n",
+        "A", "B", "C", "\n",
+        "D", "E", "F", "\n",
+        "0", OSK_DONE, NULL
+};
+
 typedef struct {
     uint16_t btn_count;
     uint16_t row_count;
@@ -167,6 +177,7 @@ static void osk_apply_selection(lv_obj_t *osk, uint16_t btn) {
 static void osk_dispatch(void) {
     lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
     if (num_entry && lv_obj_is_valid(num_entry)) lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
+    if (hex_entry && lv_obj_is_valid(hex_entry)) lv_event_send(hex_entry, LV_EVENT_SCROLL, &key_curr);
 }
 
 static void style_osk_nav_hint_box(lv_obj_t *box) {
@@ -243,7 +254,7 @@ static void update_nav_hint(void) {
     set_osk_nav_hint_item(&nav_hint_y, swap ? "X" : "Y", theme.NAV.Y, lang.GENERIC.SPACE);
 
     if (nav_hint_y.box && lv_obj_is_valid(nav_hint_y.box)) {
-        if (key_show == 2) {
+        if (key_show == 2 || key_show == 3) {
             lv_obj_add_flag(nav_hint_y.box, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_clear_flag(nav_hint_y.box, LV_OBJ_FLAG_HIDDEN);
@@ -510,7 +521,7 @@ void process_key_event(struct input_event *ev, lv_obj_t *entry) {
     }
 }
 
-void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, bool include_numpad, bool is_password, uint16_t max_len) {
+void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, int include_numpad, bool is_password, uint16_t max_len) {
     osk_max_len = max_len;
     shift_once = false;
     last_letter_btn = -1;
@@ -557,7 +568,10 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, bool include_numpad,
 
     apply_osk_theme(key_entry);
 
-    if (include_numpad) {
+    num_entry = NULL;
+    hex_entry = NULL;
+
+    if (include_numpad == 1) {
         num_entry = lv_btnmatrix_create(ui_pnlEntry);
 
         lv_obj_set_width(num_entry, device.MUX.WIDTH * 5 / 6);
@@ -572,8 +586,21 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, bool include_numpad,
         lv_obj_add_event_cb(num_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
 
         apply_osk_theme(num_entry);
-    } else {
-        num_entry = NULL;
+    } else if (include_numpad == 2) {
+        hex_entry = lv_btnmatrix_create(ui_pnlEntry);
+
+        lv_obj_set_width(hex_entry, device.MUX.WIDTH * 5 / 6);
+        lv_obj_set_height(hex_entry, matrix_h);
+
+        lv_btnmatrix_set_one_checked(hex_entry, 1);
+        lv_btnmatrix_set_map(hex_entry, key_hex_map);
+        osk_apply_selection(hex_entry, (uint16_t) key_curr);
+
+        lv_obj_align(hex_entry, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_add_event_cb(hex_entry, osk_handler, LV_EVENT_SCROLL, ui_txtEntry);
+        lv_obj_add_event_cb(hex_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
+
+        apply_osk_theme(hex_entry);
     }
 
     nav_hint_container = lv_obj_create(ui_pnlEntry);
@@ -644,6 +671,7 @@ void osk_hide(lv_obj_t *panel) {
 
 static lv_obj_t *active_osk(void) {
     if (key_show == 2 && num_entry && lv_obj_is_valid(num_entry)) return num_entry;
+    if (key_show == 3 && hex_entry && lv_obj_is_valid(hex_entry)) return hex_entry;
     return key_entry;
 }
 

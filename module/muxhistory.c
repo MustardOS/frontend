@@ -338,7 +338,7 @@ static void process_load(int from_start) {
     play_sound(SND_CONFIRM);
 
     if (load_content(0, resolved_path)) {
-        if (config.SETTINGS.ADVANCED.PASSCODE) {
+        if (strcasecmp(passcode.CODE.LAUNCH, "000000") != 0) {
             int result = 0;
 
             while (result != 1) {

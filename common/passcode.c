@@ -1,41 +1,50 @@
-#include <stdlib.h>
 #include "common.h"
 #include "options.h"
 #include "passcode.h"
-#include "log.h"
-#include "mini/mini.h"
+
+#define PASSCODE_CFG_PATH CONF_CONFIG_PATH "passcode/"
+
+static void load_code_file(char *dst, const char *filename, const char *fallback) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s%s", PASSCODE_CFG_PATH, filename);
+
+    const char *val = read_line_char_from(path, 1);
+    strncpy(dst, (val && val[0] != '\0') ? val : fallback, MAX_BUFFER_SIZE - 1);
+    dst[MAX_BUFFER_SIZE - 1] = '\0';
+}
 
 void load_passcode(struct mux_passcode *passcode) {
-    const char *pass_file = resolve_info_path("pass.ini");
+    load_code_file(passcode->CODE.BOOT, "code_boot", "000000");
+    load_code_file(passcode->CODE.LAUNCH, "code_launch", "000000");
+    load_code_file(passcode->CODE.SETTING, "code_setting", "000000");
+    load_code_file(passcode->CODE.SAFETY, "code_safety", "000000");
+    load_code_file(passcode->MESSAGE.BOOT, "message_boot", "");
+    load_code_file(passcode->MESSAGE.LAUNCH, "message_launch", "");
+    load_code_file(passcode->MESSAGE.SETTING, "message_setting", "");
+}
 
-    if (!pass_file) {
-        LOG_ERROR(mux_module, "Password configuration not found");
-        exit(1);
-    }
+void save_passcode(struct mux_passcode *passcode) {
+    char path[MAX_BUFFER_SIZE];
 
-    mini_t *muos_pass = mini_try_load(pass_file);
-    if (!muos_pass) {
-        LOG_ERROR(mux_module, "Password configuration could not be loaded: %s", pass_file);
-        exit(1);
-    }
+    snprintf(path, sizeof(path), "%scode_boot", PASSCODE_CFG_PATH);
+    create_directories(path, 1);
+    write_text_to_file(path, "w", CHAR, passcode->CODE.BOOT);
 
-    strncpy(passcode->CODE.BOOT, get_ini_string(muos_pass, "code", "boot", "000000"), MAX_BUFFER_SIZE - 1);
-    passcode->CODE.BOOT[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(path, sizeof(path), "%scode_launch", PASSCODE_CFG_PATH);
+    write_text_to_file(path, "w", CHAR, passcode->CODE.LAUNCH);
 
-    strncpy(passcode->CODE.LAUNCH, get_ini_string(muos_pass, "code", "launch", "000000"), MAX_BUFFER_SIZE - 1);
-    passcode->CODE.LAUNCH[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(path, sizeof(path), "%scode_setting", PASSCODE_CFG_PATH);
+    write_text_to_file(path, "w", CHAR, passcode->CODE.SETTING);
 
-    strncpy(passcode->CODE.SETTING, get_ini_string(muos_pass, "code", "setting", "000000"), MAX_BUFFER_SIZE - 1);
-    passcode->CODE.SETTING[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(path, sizeof(path), "%scode_safety", PASSCODE_CFG_PATH);
+    write_text_to_file(path, "w", CHAR, passcode->CODE.SAFETY);
 
-    strncpy(passcode->MESSAGE.BOOT, get_ini_string(muos_pass, "message", "boot", ""), MAX_BUFFER_SIZE - 1);
-    passcode->MESSAGE.BOOT[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(path, sizeof(path), "%smessage_boot", PASSCODE_CFG_PATH);
+    write_text_to_file(path, "w", CHAR, passcode->MESSAGE.BOOT);
 
-    strncpy(passcode->MESSAGE.LAUNCH, get_ini_string(muos_pass, "message", "launch", ""), MAX_BUFFER_SIZE - 1);
-    passcode->MESSAGE.LAUNCH[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(path, sizeof(path), "%smessage_launch", PASSCODE_CFG_PATH);
+    write_text_to_file(path, "w", CHAR, passcode->MESSAGE.LAUNCH);
 
-    strncpy(passcode->MESSAGE.SETTING, get_ini_string(muos_pass, "message", "setting", ""), MAX_BUFFER_SIZE - 1);
-    passcode->MESSAGE.SETTING[MAX_BUFFER_SIZE - 1] = '\0';
-
-    mini_free(muos_pass);
+    snprintf(path, sizeof(path), "%smessage_setting", PASSCODE_CFG_PATH);
+    write_text_to_file(path, "w", CHAR, passcode->MESSAGE.SETTING);
 }
