@@ -371,14 +371,10 @@ void load_lang(struct mux_lang *lang) {
     // muxconnect
     SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
     SPECIFIC_FIELD(lang->MUXCONNECT.BLUETOOTH, "Bluetooth");
-    SPECIFIC_FIELD(lang->MUXCONNECT.USBFUNCTION, "USB Function");
     SPECIFIC_FIELD(lang->MUXCONNECT.SERVICES, "Web Services");
     SPECIFIC_FIELD(lang->MUXCONNECT.NETWORK, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXCONNECT.NETADV, "Network Settings");
-    SPECIFIC_FIELD(lang->MUXCONNECT.ADB, "Android Debug Bridge");
-    SPECIFIC_FIELD(lang->MUXCONNECT.MTP, "Media Transfer Protocol");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.SERVICES, "Toggle a range of configurable services you can access via an active network");
-    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USBFUNCTION, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETWORK, "Connect to a Wi-Fi network manually or via a saved profile");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETADV, "Adjust network connectivity settings");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Manage Bluetooth devices and auto-connect settings");
@@ -1373,6 +1369,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTMODIFY, "Trust Modifications");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTPOWER, "Trust Power Choice");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTREMOVE, "Trust Removals");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.USBFUNCTION, "USB Function");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.ADB, "Android Debug Bridge");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.MTP, "Media Transfer Protocol");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ACCELERATE, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.REPEATDELAY, "Adjust amount of time button must be held before it begins to repeat the button action");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
@@ -1406,6 +1405,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTMODIFY, "Skip the unsaved changes dialogue and save immediately when leaving a settings module");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTPOWER, "Skip the confirmation dialogue when choosing to reboot or shut down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTREMOVE, "Skip the removal confirmation dialogue when using X to remove content or reset settings");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USBFUNCTION, "Toggle between ADB and MTP USB functionality");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");

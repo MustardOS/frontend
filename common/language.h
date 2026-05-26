@@ -391,15 +391,11 @@ struct mux_lang {
         char BLUETOOTH[MAX_BUFFER_SIZE];
         char NETADV[MAX_BUFFER_SIZE];
         char SERVICES[MAX_BUFFER_SIZE];
-        char USBFUNCTION[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
-        char ADB[MAX_BUFFER_SIZE];
-        char MTP[MAX_BUFFER_SIZE];
         struct {
             char BLUETOOTH[MAX_BUFFER_SIZE];
             char NETADV[MAX_BUFFER_SIZE];
             char SERVICES[MAX_BUFFER_SIZE];
-            char USBFUNCTION[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONNECT;
@@ -1538,6 +1534,9 @@ struct mux_lang {
         char TRUSTMODIFY[MAX_BUFFER_SIZE];
         char TRUSTPOWER[MAX_BUFFER_SIZE];
         char TRUSTREMOVE[MAX_BUFFER_SIZE];
+        char USBFUNCTION[MAX_BUFFER_SIZE];
+        char ADB[MAX_BUFFER_SIZE];
+        char MTP[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char DPAD[MAX_BUFFER_SIZE];
@@ -1603,6 +1602,7 @@ struct mux_lang {
             char TRUSTMODIFY[MAX_BUFFER_SIZE];
             char TRUSTPOWER[MAX_BUFFER_SIZE];
             char TRUSTREMOVE[MAX_BUFFER_SIZE];
+            char USBFUNCTION[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
 

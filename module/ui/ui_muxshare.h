@@ -133,8 +133,7 @@
     CONNECT(Network,     NETWORK,     "network")     \
     CONNECT(NetAdv,      NETADV,      "netadv")      \
     CONNECT(Services,    SERVICES,    "service")     \
-    CONNECT(Bluetooth,   BLUETOOTH,   "bluetooth")   \
-    CONNECT(UsbFunction, USBFUNCTION, "usbfunction")
+    CONNECT(Bluetooth,   BLUETOOTH,   "bluetooth")
 
 #define FONT_ELEMENTS                          \
     FONT(Type,       TYPE,       "type")       \
@@ -461,7 +460,8 @@
     TWEAKADV(AudioSwap,   AUDIOSWAP,   "audioswap")   \
     TWEAKADV(TrustModify, TRUSTMODIFY, "trustmodify") \
     TWEAKADV(TrustPower,  TRUSTPOWER,  "trustpower")  \
-    TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove")
+    TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove") \
+    TWEAKADV(UsbFunction, USBFUNCTION, "usbfunction")
 
 #define TWEAKGEN_ELEMENTS                          \
     TWEAKGEN(Rtc,        RTC,        "clock")      \
