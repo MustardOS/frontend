@@ -657,10 +657,15 @@ char *read_all_char_from(const char *filename) {
     long fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char *text = malloc(fileSize + 1);
+    if (fileSize < 0) {
+        fclose(file);
+        return strdup("");
+    }
+
+    char *text = malloc((size_t) fileSize + 1);
 
     if (text != NULL) {
-        size_t bytesRead = fread(text, 1, fileSize, file);
+        size_t bytesRead = fread(text, 1, (size_t) fileSize, file);
 
         if (bytesRead > 0 && text[bytesRead - 1] == '\n') {
             text[bytesRead - 1] = '\0';
@@ -669,6 +674,8 @@ char *read_all_char_from(const char *filename) {
         }
     } else {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        fclose(file);
+        return strdup("");
     }
 
     fclose(file);
