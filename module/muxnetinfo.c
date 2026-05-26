@@ -9,6 +9,17 @@ enum {
 
 static void list_nav_move(int steps, int direction);
 
+static int interface_valid = 0;
+
+static int is_valid_interface(const char *iface) {
+    if (!iface || !*iface) return 0;
+    for (const char *p = iface; *p; p++) {
+        char c = *p;
+        if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-')) return 0;
+    }
+    return 1;
+}
+
 static void show_help(void) {
     struct help_msg help_messages[] = {
 #define NETINFO(NAME, ENUM, UDATA) { UDATA, lang.MUXNETINFO.HELP.ENUM },
@@ -34,32 +45,38 @@ static const char *get_hostname(void) {
 }
 
 static const char *get_mac_address(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
+
     char path[128];
     snprintf(path, sizeof(path), "/sys/class/net/%s/address", device.NETWORK.INTERFACE);
 
-    if (!file_exist(path)) return lang.GENERIC.UNKNOWN;
-
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "cat %s", path);
-
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-
-        char *big_mac = (CONF_CONFIG_PATH "network/mac");
+    FILE *f = fopen(path, "r");
+    if (!f) {
+        const char *big_mac = CONF_CONFIG_PATH "network/mac";
         if (file_exist(big_mac)) return read_line_char_from(big_mac, 1);
 
         return lang.GENERIC.UNKNOWN;
     }
 
     static char mac[32];
-    snprintf(mac, sizeof(mac), "%s", result);
-    free(result);
+    if (!fgets(mac, sizeof(mac), f)) {
+        fclose(f);
+        const char *big_mac = CONF_CONFIG_PATH "network/mac";
+        if (file_exist(big_mac)) return read_line_char_from(big_mac, 1);
+
+        return lang.GENERIC.UNKNOWN;
+    }
+
+    fclose(f);
+
+    size_t len = strlen(mac);
+    if (len > 0 && mac[len - 1] == '\n') mac[len - 1] = '\0';
 
     return mac;
 }
 
 static const char *get_ip_address(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -79,6 +96,7 @@ static const char *get_ip_address(void) {
 }
 
 static const char *get_ssid(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -136,6 +154,7 @@ static const char *get_dns_servers(void) {
 }
 
 static const char *get_signal_strength(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -177,6 +196,7 @@ static const char *get_signal_strength(void) {
 }
 
 static const char *get_channel_info(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -256,6 +276,7 @@ static const char *get_channel_info(void) {
 }
 
 static const char *get_ac_traffic(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char rx_path[128], tx_path[128];
@@ -274,6 +295,7 @@ static const char *get_ac_traffic(void) {
 }
 
 static const char *get_tp_traffic(void) {
+    if (!interface_valid) return lang.GENERIC.UNKNOWN;
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     static unsigned long long last_rx = 0, last_tx = 0;
@@ -589,6 +611,10 @@ static void on_key_event(struct input_event ev) {
 
 int muxnetinfo_main(void) {
     init_module(__func__);
+
+    interface_valid = is_valid_interface(device.NETWORK.INTERFACE);
+    if (!interface_valid) LOG_ERROR(mux_module, "Invalid network interface name: '%s'", device.NETWORK.INTERFACE);
+
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETINFO.TITLE);

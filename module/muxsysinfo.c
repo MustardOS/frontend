@@ -75,101 +75,59 @@ const char *get_cpu_model(void) {
 
     if (cached_ok) return cached;
 
-    FILE *fp = popen("lscpu", "r");
-    if (!fp) return lang.GENERIC.UNKNOWN;
+    char model[64] = {0};
+    unsigned long long cpu_cores = 0;
 
-    char models[4][64] = {{0}};
-    int model_count = 0;
+    FILE *fp = fopen("/proc/cpuinfo", "r");
+    if (fp) {
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            char *trimmed = line;
+            while (*trimmed && isspace((unsigned char) *trimmed)) trimmed++;
 
-    char cpu_cores[16] = {0};
-    char line[256];
+            if (strncmp(trimmed, "processor", 9) == 0) {
+                cpu_cores++;
+            } else if (!model[0] && strncmp(trimmed, "model name", 10) == 0) {
+                char *colon = strchr(trimmed, ':');
+                if (!colon) continue;
+                char *value = colon + 1;
+                while (*value && isspace((unsigned char) *value)) value++;
+                char *end = value + strlen(value);
+                while (end > value && isspace((unsigned char) *(end - 1))) --end;
+                *end = '\0';
+                snprintf(model, sizeof(model), "%s", value);
+            }
+        }
+        fclose(fp);
+    }
 
-    while (fgets(line, sizeof(line), fp)) {
-        char *trimmed = line;
-        while (*trimmed && isspace((unsigned char) *trimmed)) trimmed++;
-
-        if (strncmp(trimmed, "CPU(s):", 7) == 0 && !cpu_cores[0]) {
-            char *value = trimmed + 7;
-            while (*value && isspace((unsigned char) *value)) value++;
-            char *end = value + strlen(value);
-            while (end > value && isspace((unsigned char) *(end - 1))) --end;
-            *end = '\0';
-            snprintf(cpu_cores, sizeof(cpu_cores), "%s", value);
-
-        } else if (strncmp(trimmed, "Model name:", 11) == 0) {
-            char *value = trimmed + 11;
-            while (*value && isspace((unsigned char) *value)) value++;
-            char *end = value + strlen(value);
-            while (end > value && isspace((unsigned char) *(end - 1))) --end;
-            *end = '\0';
-
-            int duplicate = 0;
-            for (int i = 0; i < model_count; i++) {
-                if (strcmp(models[i], value) == 0) {
-                    duplicate = 1;
+    if (!model[0]) {
+        FILE *lscpu = popen("lscpu", "r");
+        if (lscpu) {
+            char line[256];
+            while (fgets(line, sizeof(line), lscpu)) {
+                char *trimmed = line;
+                while (*trimmed && isspace((unsigned char) *trimmed)) trimmed++;
+                if (strncmp(trimmed, "Model name:", 11) == 0) {
+                    char *value = trimmed + 11;
+                    while (*value && isspace((unsigned char) *value)) value++;
+                    char *end = value + strlen(value);
+                    while (end > value && isspace((unsigned char) *(end - 1))) --end;
+                    *end = '\0';
+                    snprintf(model, sizeof(model), "%s", value);
                     break;
                 }
             }
-            if (!duplicate && model_count < 4) {
-                snprintf(models[model_count++], sizeof(models[0]), "%s", value);
-            }
+            pclose(lscpu);
         }
     }
 
-    pclose(fp);
+    if (!model[0]) return lang.GENERIC.UNKNOWN;
 
-    if (model_count == 0) return lang.GENERIC.UNKNOWN;
-    char joined[UI_BUFFER] = {0};
-
-    if (model_count == 1) {
-        snprintf(joined, sizeof(joined), "%s", models[0]);
-        for (char *p = joined; *p; p++) if (*p == '-') *p = ' ';
+    if (cpu_cores > 0) {
+        snprintf(cached, sizeof(cached), "%s (%llu)", model, cpu_cores);
     } else {
-
-        size_t prefix_len = strlen(models[0]);
-        for (int i = 1; i < model_count; i++) {
-            size_t j = 0;
-
-            while (j < prefix_len && models[i][j] == models[0][j]) j++;
-            prefix_len = j;
-        }
-
-        while (prefix_len > 0 && !isspace((unsigned char) models[0][prefix_len - 1])) prefix_len--;
-
-        if (prefix_len > 0) {
-            char prefix[64];
-            snprintf(prefix, sizeof(prefix), "%.*s", (int) prefix_len, models[0]);
-
-            char *end = prefix + strlen(prefix);
-            while (end > prefix && (isspace((unsigned char) end[-1]) || end[-1] == '-')) --end;
-
-            *end = '\0';
-
-            for (char *p = prefix; *p; p++) if (*p == '-') *p = ' ';
-
-            char suffixes[UI_BUFFER] = {0};
-            for (int i = 0; i < model_count; i++) {
-                if (i > 0) strncat(suffixes, "+", sizeof(suffixes) - strlen(suffixes) - 1);
-
-                const char *suffix = models[i] + prefix_len;
-                while (isspace((unsigned char) *suffix) || *suffix == '-') suffix++;
-
-                strncat(suffixes, suffix, sizeof(suffixes) - strlen(suffixes) - 1);
-            }
-
-            snprintf(joined, sizeof(joined), "%s %s", prefix, suffixes);
-        } else {
-            for (int i = 0; i < model_count; i++) {
-                if (i > 0) strncat(joined, " / ", sizeof(joined) - strlen(joined) - 1);
-                strncat(joined, models[i], sizeof(joined) - strlen(joined) - 1);
-            }
-        }
-    }
-
-    if (cpu_cores[0]) {
-        snprintf(cached, sizeof(cached), "%s (%s)", joined, cpu_cores);
-    } else {
-        snprintf(cached, sizeof(cached), "%s", joined);
+        snprintf(cached, sizeof(cached), "%s", model);
     }
 
     cached_ok = 1;
@@ -409,7 +367,7 @@ static void update_system_info() {
     lv_label_set_text(ui_lblSpeedValue_sysinfo, get_current_frequency());
     lv_label_set_text(ui_lblGovernorValue_sysinfo, get_scaling_governor());
     lv_label_set_text(ui_lblMemoryValue_sysinfo, get_memory_usage());
-    lv_label_set_text(ui_lblSwapValue_sysinfo, get_swap_usage());
+    if (sysinfo_cache.totalswap != 0) lv_label_set_text(ui_lblSwapValue_sysinfo, get_swap_usage());
     lv_label_set_text(ui_lblTempValue_sysinfo, get_temperature());
     lv_label_set_text(ui_lblCapacityValue_sysinfo, get_battery_cap());
     lv_label_set_text(ui_lblVoltageValue_sysinfo, battery_get_voltage());
@@ -440,6 +398,8 @@ static void init_navigation_group(void) {
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+
+    if (sysinfo_cache.totalswap == 0) HIDE_VALUE_ITEM(sysinfo, Swap);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -687,6 +647,7 @@ int muxsysinfo_main(void) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
+    sysinfo(&sysinfo_cache);
     init_navigation_group();
 
     dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
