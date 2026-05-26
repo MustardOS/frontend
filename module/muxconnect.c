@@ -37,35 +37,16 @@ static void init_dropdown_settings(void) {
 #undef CONNECT
 }
 
-static void restore_options(void) {
-    lv_dropdown_set_selected(ui_droUsbFunction_connect, config.SETTINGS.ADVANCED.USBFUNCTION);
-}
-
-static void save_options(void) {
-    int is_modified = 0;
-
-    CHECK_AND_SAVE_STD(connect, UsbFunction, "settings/advanced/usb_function", INT, 0);
-
-    if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
-}
-
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *usb_functions[] = {
-            lang.GENERIC.DISABLED,
-            lang.MUXCONNECT.ADB,
-            lang.MUXCONNECT.MTP
-    };
-
     INIT_OPTION_ITEM(-1, connect, Network, lang.MUXCONNECT.NETWORK, "network", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, NetAdv, lang.MUXCONNECT.NETADV, "netadv", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, Services, lang.MUXCONNECT.SERVICES, "service", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, Bluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, UsbFunction, lang.MUXCONNECT.USBFUNCTION, "usbfunction", usb_functions, 3);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, true);
@@ -130,8 +111,7 @@ static void handle_a(void) {
             {"network", &kiosk.CONFIG.NETWORK,      MENU_GENERAL, visible_network_opt},
             {"netadv",  &kiosk.CONFIG.NET_SETTINGS, MENU_GENERAL, visible_network_opt},
             {"webserv", &kiosk.CONFIG.WEB_SERVICES, MENU_GENERAL, visible_network_opt},
-            {"btall",   &KIOSK_PASS,                MENU_GENERAL, visible_bluetooth_opt},
-            {NULL,      &KIOSK_PASS,                MENU_OPTION, NULL}, // USB Function
+            {"btall",   &KIOSK_PASS,                MENU_GENERAL, visible_bluetooth_opt}
     };
 
     const menu_entry *visible_entries[UI_COUNT];
@@ -177,8 +157,6 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
-
-    save_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "connect");
 
@@ -226,7 +204,6 @@ int muxconnect_main(void) {
     init_fonts();
     init_navigation_group();
 
-    restore_options();
     init_dropdown_settings();
 
     init_timer(ui_gen_refresh_task, NULL);

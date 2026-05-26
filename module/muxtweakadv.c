@@ -58,6 +58,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droUsbPart_tweakadv, device.STORAGE.USB.PARTITION - 1);
     lv_dropdown_set_selected(ui_droIncBright_tweakadv, config.SETTINGS.ADVANCED.INCBRIGHT - 1);
     lv_dropdown_set_selected(ui_droIncVolume_tweakadv, config.SETTINGS.ADVANCED.INCVOLUME - 1);
+    lv_dropdown_set_selected(ui_droUsbFunction_tweakadv, config.SETTINGS.ADVANCED.USBFUNCTION);
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
     map_drop_down_to_index(ui_droRepeatDelay_tweakadv, config.SETTINGS.ADVANCED.REPEATDELAY, repeat_delay_values, 33, 13);
@@ -114,6 +115,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, TrustModify, "settings/advanced/trust_modify", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, TrustPower, "settings/advanced/trust_power", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, TrustRemove, "settings/advanced/trust_remove", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, UsbFunction, "settings/advanced/usb_function", INT, 0);
 
     do {
         int sd2_current = lv_dropdown_get_selected(ui_droSecondPart_tweakadv);
@@ -204,6 +206,12 @@ static void init_navigation_group(void) {
             lang.MUXTWEAKADV.RUMBLE.SHSL
     };
 
+    char *usb_functions[] = {
+            lang.GENERIC.DISABLED,
+            lang.MUXTWEAKADV.ADB,
+            lang.MUXTWEAKADV.MTP
+    };
+
     INIT_OPTION_ITEM(-1, tweakadv, Accelerate, lang.MUXTWEAKADV.ACCELERATE, "accelerate", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, RepeatDelay, lang.MUXTWEAKADV.REPEATDELAY, "repeat", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, StickNav, lang.MUXTWEAKADV.STICKNAV.TITLE, "sticknav", sticknav_options, 7);
@@ -237,6 +245,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, TrustModify, lang.MUXTWEAKADV.TRUSTMODIFY, "trustmodify", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, TrustPower, lang.MUXTWEAKADV.TRUSTPOWER, "trustpower", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, TrustRemove, lang.MUXTWEAKADV.TRUSTREMOVE, "trustremove", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, UsbFunction, lang.MUXTWEAKADV.USBFUNCTION, "usbfunction", usb_functions, 3);
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate_tweakadv, accelerate_values);
