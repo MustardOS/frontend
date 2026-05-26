@@ -56,12 +56,13 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -ffunction-sections -fdata-sections \
               -Wall -Wno-format-zero-length \
               -Wno-unused-function -fno-plt \
-              -fno-stack-protector -fno-ident \
+              -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
+              -fPIE -fno-ident \
               $(BUILD_FLAGS)
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm
 
-BIN_LDFLAGS  = -Wl,--gc-sections -s
+BIN_LDFLAGS  = -Wl,--gc-sections -pie -s
 LIB_LDFLAGS  = -Wl,-rpath,'./lib'
 
 SHARED_PIC = -shared -fPIC
