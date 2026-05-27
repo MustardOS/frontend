@@ -80,7 +80,6 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 ### Dependency
 
 * `common`: Common Libraries and Functions
-* `font`: Common binary compiled fonts with individual language support
 * `lookup`: Friendly name lookup table mainly for arcade content
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `module`: Frontend menu system modules
@@ -88,10 +87,15 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 
 ### Independent
 
+* `mubattery`: Background battery monitor daemon
 * `mucredits`: Supporter Credits
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
+* `mulog`: System log viewer
 * `mulookup`: Content Name Lookup
+* `muremap`: Background input remap daemon
+* `murgb`: RGB LED and MCU controller daemon
+* `musplash`: Standalone PNG splash screen
 * `muwarn`: First Install Disclaimer Message
 * `muxcharge`: Charging Information Screen
 * `muxfrontend`: Main Frontend Specific Runner
@@ -105,9 +109,12 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
 * `muxbackup`: Device Backup Menu
+* `muxbtall`: Bluetooth Device List
+* `muxbtcon`: Bluetooth Connection Manager
+* `muxbtdev`: Bluetooth Device Information
 * `muxchrony`: System Clock Information
 * `muxcoladjust`: Content Colour Adjustment Menu
-* `muxcoladjust`: Content Colour Filter Menu
+* `muxcolfilter`: Content Colour Filter Menu
 * `muxcollect`: Content Collection Manager
 * `muxconfig`: Configuration Menu
 * `muxconnect`: Connectivity Menu
@@ -116,6 +123,7 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 * `muxdanger`: Dangerous Settings
 * `muxdevice`: Device Settings
 * `muxdownload`: Archive Downloader
+* `muxfont`: Font Settings
 * `muxgov`: System Governor Selector
 * `muxhdmi`: HDMI Configuration
 * `muxhistory`: Content History Menu
@@ -124,7 +132,7 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 * `muxkiosk`: Kiosk Mode Management
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
-* `muxnetadv`: Advanced Settings for Network
+* `muxnetadv`: Advanced Network Settings
 * `muxnetinfo`: Network Information
 * `muxnetprofile`: Network Profile Manager
 * `muxnetscan`: Network SSID Scanner
@@ -133,12 +141,17 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 * `muxoption`: Content Explorer Options
 * `muxoverlay`: Content Overlay Settings
 * `muxpass`: Passcode Screen
+* `muxpasscfg`: Passcode Configuration
 * `muxpicker`: Customisation Package Selector
 * `muxplore`: Content Explorer
 * `muxpower`: Power Settings
+* `muxraopt`: RetroArch Options
+* `muxremap`: Button Remapping
+* `muxrgb`: RGB LED Settings
 * `muxrtc`: Date and Time
 * `muxsearch`: Content Search
-* `muxshare`: Shared Frontend Variables
+* `muxshader`: Shader Settings
+* `muxshare`: Shared Frontend Module State
 * `muxshot`: Screenshot Viewer
 * `muxsort`: Sorting Settings
 * `muxspace`: Disk Usage Information
@@ -152,6 +165,7 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 * `muxtheme`: Theme Picker
 * `muxthemedown`: Custom Theme Download
 * `muxthemefilter`: Custom Theme Filter
+* `muxthemeopt`: Theme Options
 * `muxtimezone`: Timezone Selector
 * `muxtweakadv`: Advanced Settings
 * `muxtweakgen`: General Settings
