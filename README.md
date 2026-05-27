@@ -157,3 +157,60 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 * `muxtweakgen`: General Settings
 * `muxvisual`: Interface Options
 * `muxwebserv`: Web Services
+
+---
+
+## Third Party Libraries
+
+The following third party libraries are bundled in this repository.
+
+### [LVGL](https://github.com/lvgl/lvgl)
+
+Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer which in turn
+embeds [stb_truetype](https://github.com/nothings/stb) for glyph rasterisation.
+
+- Version: 8.4.0
+- License: MIT
+- Location: `lvgl/`
+
+### [json.c](https://github.com/tidwall/json.c)
+
+Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration data, and API responses.
+
+- Author: Josh Baker
+- License: MIT
+- Location: `common/json/`
+
+### [minic](https://github.com/univrsal/minic)
+
+Minimal C INI file parser. Used for reading and writing `.ini` configuration files.
+
+- Author: univrsal
+- License: BSD 2-Clause
+- Location: `common/mini/`
+
+### [miniz](https://github.com/richgeldreich/miniz)
+
+Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP archive reading and writing. Used to extract downloaded ZIP archives.
+
+- Version: 11.3.0
+- License: MIT (portions also released as public domain / Unlicense)
+- Location: `common/miniz/`
+
+### [xxHash](https://github.com/Cyan4973/xxHash)
+
+Extremely fast non-cryptographic hash algorithm. Used to compute file checksums for content verification.
+
+- Version: 0.8.3
+- Author: Yann Collet
+- License: BSD 2-Clause
+- Location: `common/xxhash/`
+
+### [stb_image_write](https://github.com/nothings/stb)
+
+Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from the framebuffer.
+
+- Version: 1.16
+- Author: Sean Barrett
+- License: Public domain
+- Location: `common/png/stb_image_write.h`
