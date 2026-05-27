@@ -2667,12 +2667,11 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
         lv_obj_add_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
     } else {
-        lv_label_set_text(ui_lblItem, items[index].display_name);
-        if (items[index].glyph_icon != NULL) lv_obj_set_user_data(ui_lblItem, items[index].glyph_icon);
+        if (strcmp(lv_label_get_text(ui_lblItem), items[index].display_name) != 0) lv_label_set_text(ui_lblItem, items[index].display_name);
 
-        if (items[index].grid_image == NULL) {
-            update_grid_image_paths(index);
-        }
+        if (items[index].glyph_icon != NULL) lv_obj_set_user_data(ui_lblItem, items[index].glyph_icon);
+        if (items[index].grid_image == NULL) update_grid_image_paths(index);
+
         update_grid_image(cell_image, items[index].grid_image);
         update_grid_image(cell_image_focused, items[index].grid_image_focused);
 
