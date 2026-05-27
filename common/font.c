@@ -15,7 +15,9 @@
 
 // Glyph bitmap cache handed to TinyTTF. Larger = fewer re-rasterisations of the
 // same glyph, which matters most for CJK where each character is unique.
-#define TTF_GLYPH_CACHE_BYTES (256 * 1024)
+// At 30px each glyph slot is ~900 bytes... so 512 KB gives ~580 slots vs ~290 at
+// 256kb which enough headroom to keep a full Latin symbol set during scrolling.
+#define TTF_GLYPH_CACHE_BYTES (512 * 1024)
 
 int font_cache_count = 0;
 char last_font_key[256] = "";
