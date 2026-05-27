@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_muxpass(lv_obj_t *ui_pnlContent);
+void init_muxpass(lv_obj_t *ui_pnlContent, lv_font_t *roller_font);
 
 extern lv_obj_t *ui_rolComboOne;
 extern lv_obj_t *ui_rolComboTwo;

@@ -37,6 +37,7 @@ extern int nav_volume;
 extern int current_brightness;
 extern int current_volume;
 extern int is_blank;
+extern int config_auth;
 
 extern int idle_state_exists;
 extern int safe_quit_exists;

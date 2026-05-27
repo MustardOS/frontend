@@ -69,6 +69,7 @@ int nav_volume = 90;
 int current_brightness = 0;
 int current_volume = 0;
 int is_blank = 0;
+int config_auth = 0;
 int idle_state_exists = 0;
 int safe_quit_exists = 0;
 int hdmi_refresh_exists = 0;

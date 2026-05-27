@@ -138,7 +138,7 @@ int muxpass_main(int auth_type) {
     init_theme(0, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
-    init_muxpass(ui_pnlContent);
+    init_muxpass(ui_pnlContent, load_font_pass_roller());
     init_elements();
 
     if (strlen(p_msg) > 1) toast_message(p_msg, FOREVER);

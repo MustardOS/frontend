@@ -449,12 +449,12 @@ static void module_task(void) {
 }
 
 static void module_config(void) {
-    if (strcasecmp(passcode.CODE.SETTING, "000000") != 0 && strcmp(previous_module, "muxtweakgen") != 0) {
+    if (strcasecmp(passcode.CODE.SETTING, "000000") != 0 && !config_auth) {
         load_mux("launcher");
 
         if (muxpass_main(PCT_CONFIG) == 1) {
             cleanup_screen();
-
+            config_auth = 1;
             exec_mux("launcher", "muxconfig", muxconfig_main);
         }
     } else {
@@ -482,11 +482,16 @@ static void module_rtc(void) {
     }
 }
 
+static void module_launcher(void) {
+    config_auth = 0;
+    exec_mux("launcher", "muxlaunch", muxlaunch_main);
+}
+
 static void module_start(void) {
     if (config.BOOT.FACTORY_RESET) {
         exec_mux("installer", "muxinstall", muxinstall_main);
     } else {
-        exec_mux("launcher", "muxlaunch", muxlaunch_main);
+        module_launcher();
     }
 }
 

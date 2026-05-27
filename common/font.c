@@ -247,6 +247,19 @@ static lv_font_t *try_font_at(const char *base, char *resolved, int size) {
     return NULL;
 }
 
+lv_font_t *load_font_pass_roller(void) {
+    int size = (device.MUX.WIDTH >= 1280) ? 48 : 32;
+
+    if (config.SETTINGS.ADVANCED.FONT == 2 && config.SETTINGS.FONT.NAME[0]) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", config.SETTINGS.FONT.NAME);
+        lv_font_t * f = load_font_cached_ttf(path, size, false);
+        if (f) return f;
+    }
+
+    return create_language_font(size);
+}
+
 void load_font_text(lv_obj_t *screen) {
     int lang_size = (config.SETTINGS.ADVANCED.FONT == 0 && config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
     lv_font_t * language_font = create_language_font(lang_size);

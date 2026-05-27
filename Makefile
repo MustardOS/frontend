@@ -6,16 +6,15 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-DEPENDENCIES = common font lvgl lookup module
+DEPENDENCIES = common lvgl lookup module
 
 CFLAGS = $(BASE_CFLAGS)
 
-INCLUDES = -I./module/ui -I./font -I./lookup -I./common \
-           -I./common/img -I./common/input -I./common/json \
+INCLUDES = -I./module/ui -I./lookup -I./common \
+           -I./common/input -I./common/json \
            -I./common/mini -I./common/miniz
 
-LDLIBS = -L$(LIB_DIR) -lui -llookup -lmuxcom -lmuxmod \
-         -lnotosans_big -lnotosans_big_hd
+LDLIBS = -L$(LIB_DIR) -lui -llookup -lmuxcom -lmuxmod
 
 LDFLAGS = $(COMMON_LIBS) $(BIN_LDFLAGS) $(LIB_LDFLAGS)
 

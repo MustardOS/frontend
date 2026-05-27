@@ -1,5 +1,4 @@
 #include "ui_muxpass.h"
-#include "../../font/notosans_big.h"
 
 lv_obj_t *ui_rolComboOne;
 lv_obj_t *ui_rolComboTwo;
@@ -10,7 +9,7 @@ lv_obj_t *ui_rolComboSix;
 
 static const char *ROLLER_OPTS = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nA\nB\nC\nD\nE\nF";
 
-static lv_obj_t *make_pass_roller(lv_obj_t *parent) {
+static lv_obj_t *make_pass_roller(lv_obj_t *parent, lv_font_t *roller_font) {
     lv_obj_t * r = lv_roller_create(parent);
 
     lv_roller_set_options(r, ROLLER_OPTS, LV_ROLLER_MODE_INFINITE);
@@ -22,7 +21,7 @@ static lv_obj_t *make_pass_roller(lv_obj_t *parent) {
     lv_obj_set_style_text_letter_space(r, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(r, 24, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(r, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_font(r, &ui_font_NotoSansBig, MU_OBJ_MAIN_DEFAULT);
+    if (roller_font) lv_obj_set_style_text_font(r, roller_font, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(r, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(r, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(r, 0, MU_OBJ_MAIN_DEFAULT);
@@ -43,13 +42,13 @@ static lv_obj_t *make_pass_roller(lv_obj_t *parent) {
     return r;
 }
 
-void init_muxpass(lv_obj_t *ui_pnlContent) {
+void init_muxpass(lv_obj_t *ui_pnlContent, lv_font_t *roller_font) {
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t *rollers[6];
     for (int i = 0; i < 6; ++i) {
-        rollers[i] = make_pass_roller(ui_pnlContent);
+        rollers[i] = make_pass_roller(ui_pnlContent, roller_font);
     }
 
     ui_rolComboOne = rollers[0];

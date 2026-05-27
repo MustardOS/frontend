@@ -121,6 +121,8 @@ static void handle_b(void) {
         return;
     }
 
+    config_auth = 0;
+
     play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
 

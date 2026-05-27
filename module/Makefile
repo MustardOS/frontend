@@ -6,8 +6,7 @@ CFLAGS = $(BASE_CFLAGS) \
          -I../common/mini -I../common/miniz
 
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
-          -L../bin/lib -lui -llookup -lmuxcom \
-          -lnotosans_big -lnotosans_big_hd
+          -L../bin/lib -lui -llookup -lmuxcom
 
 MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxbtall \
           muxbtcon muxbtdev muxchrony muxcoladjust muxcolfilter muxcollect muxconfig \
