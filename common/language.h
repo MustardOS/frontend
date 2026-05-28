@@ -1511,11 +1511,15 @@ struct mux_lang {
         char HEADER_HEIGHT[MAX_BUFFER_SIZE];
         char FOOTER_HEIGHT[MAX_BUFFER_SIZE];
         char CONTENT_ITEM_COUNT[MAX_BUFFER_SIZE];
+        char GLYPH_SIZE[MAX_BUFFER_SIZE];
         char SIZE_DEFAULT[MAX_BUFFER_SIZE];
+        char GLYPH_AUTO[MAX_BUFFER_SIZE];
+        char GLYPH_NATIVE[MAX_BUFFER_SIZE];
         struct {
             char HEADERHEIGHT[MAX_BUFFER_SIZE];
             char FOOTERHEIGHT[MAX_BUFFER_SIZE];
             char CONTENTITEMCOUNT[MAX_BUFFER_SIZE];
+            char GLYPHSIZE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTHEMEOPT;
 

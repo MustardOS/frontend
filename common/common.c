@@ -2649,7 +2649,14 @@ void update_grid_image_paths(int index) {
 static void update_grid_image(lv_obj_t *cell, char *image_path) {
     if (file_exist(image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
-        snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
+        size_t plen = strlen(image_path);
+        if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
+            int hw = (theme.GRID.CELL.WIDTH * 3) / 4;
+            int hh = (theme.GRID.CELL.HEIGHT * 3) / 4;
+            snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, hw, hh);
+        } else {
+            snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
+        }
         lv_img_set_src(cell, grid_image);
     } else {
         lv_img_set_src(cell, &ui_img_blank);
@@ -3137,35 +3144,59 @@ uint32_t fnv1a_hash_file(FILE *file) {
 bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
-    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  theme_base, mux_dim, mux_module, glyph_name) >= 0 &&
-         file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  theme_base, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  INTERNAL_THEME, mux_dim, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  INTERNAL_THEME, mux_module, glyph_name) >= 0 &&
-         file_exist(glyph_image_path))) {
-        snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path);
-        return true;
-    }
 
-    return false;
+#define TRY_GLYPH_PATH(fmt, ...)                                                           \
+    do {                                                                                   \
+        snprintf(glyph_image_path, sizeof(glyph_image_path), fmt, ##__VA_ARGS__);          \
+        LOG_DEBUG(mux_module, "Glyph path check: %s", glyph_image_path);                   \
+        if (file_exist(glyph_image_path)) {                                                \
+            LOG_DEBUG(mux_module, "Glyph found at: %s", glyph_image_path);                 \
+            snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path); \
+            return 1;                                                                      \
+        }                                                                                  \
+    } while (0)
+
+    TRY_GLYPH_PATH("%s/%sglyph/%s/%s.svg", theme_base, mux_dim, mux_module, glyph_name);
+    TRY_GLYPH_PATH("%s/glyph/%s/%s.svg", theme_base, mux_module, glyph_name);
+    TRY_GLYPH_PATH("%s/%sglyph/%s/%s.svg", INTERNAL_THEME, mux_dim, mux_module, glyph_name);
+    TRY_GLYPH_PATH("%s/glyph/%s/%s.svg", INTERNAL_THEME, mux_module, glyph_name);
+
+    TRY_GLYPH_PATH("%s/%sglyph/%s/%s.png", theme_base, mux_dim, mux_module, glyph_name);
+    TRY_GLYPH_PATH("%s/glyph/%s/%s.png", theme_base, mux_module, glyph_name);
+    TRY_GLYPH_PATH("%s/%sglyph/%s/%s.png", INTERNAL_THEME, mux_dim, mux_module, glyph_name);
+    TRY_GLYPH_PATH("%s/glyph/%s/%s.png", INTERNAL_THEME, mux_module, glyph_name);
+
+#undef TRY_GLYPH_PATH
+
+    LOG_DEBUG(mux_module, "Glyph not found: %s/%s", mux_module, glyph_name);
+    return 0;
 }
 
 void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lblItemGlyph) {
     char glyph_image_path[MAX_BUFFER_SIZE];
-    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s%s.png", app_folder, mux_dim,
-                  glyph_name) >= 0 &&
-         file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s.png", app_folder, glyph_name) >= 0 &&
-         file_exist(glyph_image_path))
-            ) {
-        char glyph_image_embed[MAX_BUFFER_SIZE];
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
-        lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
-    }
+
+#define TRY_APP_GLYPH(fmt, ...)                                                               \
+    do {                                                                                      \
+        snprintf(glyph_image_path, sizeof(glyph_image_path), fmt, ##__VA_ARGS__);             \
+        LOG_DEBUG(mux_module, "Application glyph path check: %s", glyph_image_path);          \
+        if (file_exist(glyph_image_path)) {                                                   \
+            LOG_DEBUG(mux_module, "Application glyph found at: %s", glyph_image_path);        \
+            char glyph_image_embed[MAX_BUFFER_SIZE];                                          \
+            snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path); \
+            lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);                               \
+            return;                                                                           \
+        }                                                                                     \
+    } while (0)
+
+    TRY_APP_GLYPH("%s/glyph/%s%s.svg", app_folder, mux_dim, glyph_name);
+    TRY_APP_GLYPH("%s/glyph/%s.svg", app_folder, glyph_name);
+
+    TRY_APP_GLYPH("%s/glyph/%s%s.png", app_folder, mux_dim, glyph_name);
+    TRY_APP_GLYPH("%s/glyph/%s.png", app_folder, glyph_name);
+
+#undef TRY_APP_GLYPH
+
+    LOG_DEBUG(mux_module, "Application glyph not found: %s/%s", app_folder, glyph_name);
 }
 
 void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const char *fallback_name,
@@ -3173,13 +3204,27 @@ void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const ch
     if (file_exist(glyph_image_path) && strstr(glyph_image_path, fallback_name) == 0) return;
 
     char image_path[MAX_BUFFER_SIZE];
-    if ((snprintf(image_path, sizeof(image_path), "%s/grid/%s%s.png", app_folder, mux_dim, glyph_name) >= 0 &&
-         file_exist(image_path)) ||
-        (snprintf(image_path, sizeof(image_path), "%s/grid/%s.png", app_folder, glyph_name) >= 0 &&
-         file_exist(image_path))
-            ) {
-        snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path);
-    }
+
+#define TRY_GRID_GLYPH(fmt, ...)                                                 \
+    do {                                                                         \
+        snprintf(image_path, sizeof(image_path), fmt, ##__VA_ARGS__);            \
+        LOG_DEBUG(mux_module, "Grid glyph path check: %s", image_path);          \
+        if (file_exist(image_path)) {                                            \
+            LOG_DEBUG(mux_module, "Grid glyph found at: %s", image_path);        \
+            snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path); \
+            return;                                                              \
+        }                                                                        \
+    } while (0)
+
+    TRY_GRID_GLYPH("%s/grid/%s%s.svg", app_folder, mux_dim, glyph_name);
+    TRY_GRID_GLYPH("%s/grid/%s.svg", app_folder, glyph_name);
+
+    TRY_GRID_GLYPH("%s/grid/%s%s.png", app_folder, mux_dim, glyph_name);
+    TRY_GRID_GLYPH("%s/grid/%s.png", app_folder, glyph_name);
+
+#undef TRY_GRID_GLYPH
+
+    LOG_DEBUG(mux_module, "Grid glyph not found: %s/%s", app_folder, glyph_name);
 }
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {

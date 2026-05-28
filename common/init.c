@@ -20,6 +20,7 @@
 #include "battery.h"
 #include "board.h"
 #include "theme.h"
+#include "svg.h"
 
 static uint64_t start_ms = 0;
 static struct dt_task_param dt_par;
@@ -159,6 +160,7 @@ void init_display(void) {
     }
 
     lv_init();
+    svg_init();
     sdl_init();
 
     static lv_disp_drv_t disp_drv;

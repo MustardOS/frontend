@@ -33,10 +33,13 @@ static void hide_reset_dialog(void) {
     dialogue_hide(&reset_dlg);
 }
 
+static const int16_t glyph_size_values[] = {-2, 0, -1, 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128};
+
 static void do_reset(void) {
     lv_dropdown_set_selected(ui_droHeaderHeight_themeopt, 0);
     lv_dropdown_set_selected(ui_droFooterHeight_themeopt, 0);
     lv_dropdown_set_selected(ui_droContentItemCount_themeopt, 0);
+    lv_dropdown_set_selected(ui_droGlyphSize_themeopt, 0);
     play_sound(SND_MUOS);
 }
 
@@ -60,6 +63,13 @@ static void restore_themeopt_options(void) {
     lv_dropdown_set_selected(ui_droHeaderHeight_themeopt, (uint32_t) (config.SETTINGS.THEMEOPT.HEADER_HEIGHT + 1));
     lv_dropdown_set_selected(ui_droFooterHeight_themeopt, (uint32_t) (config.SETTINGS.THEMEOPT.FOOTER_HEIGHT + 1));
     lv_dropdown_set_selected(ui_droContentItemCount_themeopt, (uint32_t) config.SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT);
+
+    uint32_t glyph_idx = 0;
+    int16_t stored = config.SETTINGS.THEMEOPT.GLYPH_SIZE;
+    for (size_t i = 0; i < A_SIZE(glyph_size_values); i++) {
+        if (glyph_size_values[i] == stored) { glyph_idx = (uint32_t) i; break; }
+    }
+    lv_dropdown_set_selected(ui_droGlyphSize_themeopt, glyph_idx);
 }
 
 static void save_themeopt_options(void) {
@@ -69,6 +79,14 @@ static void save_themeopt_options(void) {
     CHECK_AND_SAVE_STD(themeopt, FooterHeight, "settings/theme/footer_height", INT, -1);
     CHECK_AND_SAVE_STD(themeopt, ContentItemCount, "settings/theme/content_item_count", INT, 0);
 
+    uint32_t glyph_sel = lv_dropdown_get_selected(ui_droGlyphSize_themeopt);
+    if ((int) glyph_sel != GlyphSize_original) {
+        int16_t val = (glyph_sel < A_SIZE(glyph_size_values)) ? glyph_size_values[glyph_sel] : -2;
+        write_text_to_file(CONF_CONFIG_PATH "settings/theme/glyph_size", "w", INT, (int) val);
+        config.SETTINGS.THEMEOPT.GLYPH_SIZE = val;
+        is_modified++;
+    }
+
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 }
 
@@ -76,13 +94,22 @@ static void init_navigation_group(void) {
     char *height_options = generate_number_string(0, 64, 1, lang.MUXTHEMEOPT.SIZE_DEFAULT, NULL, NULL, 0);
     char *count_options = generate_number_string(1, 64, 1, lang.MUXTHEMEOPT.SIZE_DEFAULT, NULL, NULL, 0);
 
+    char glyph_options[256];
+    snprintf(glyph_options, sizeof(glyph_options),
+             "%s\n%s\n%s\n8\n12\n16\n20\n24\n28\n32\n36\n40\n48\n56\n64\n80\n96\n128",
+             lang.MUXTHEMEOPT.SIZE_DEFAULT,
+             lang.MUXTHEMEOPT.GLYPH_AUTO,
+             lang.MUXTHEMEOPT.GLYPH_NATIVE);
+
     INIT_OPTION_ITEM(-1, themeopt, HeaderHeight, lang.MUXTHEMEOPT.HEADER_HEIGHT, "headerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, themeopt, FooterHeight, lang.MUXTHEMEOPT.FOOTER_HEIGHT, "footerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, themeopt, ContentItemCount, lang.MUXTHEMEOPT.CONTENT_ITEM_COUNT, "count", NULL, 0);
+    INIT_OPTION_ITEM(-1, themeopt, GlyphSize, lang.MUXTHEMEOPT.GLYPH_SIZE, "glyphsize", NULL, 0);
 
     apply_theme_list_drop_down(&theme, ui_droHeaderHeight_themeopt, height_options);
     apply_theme_list_drop_down(&theme, ui_droFooterHeight_themeopt, height_options);
     apply_theme_list_drop_down(&theme, ui_droContentItemCount_themeopt, count_options);
+    apply_theme_list_drop_down(&theme, ui_droGlyphSize_themeopt, glyph_options);
 
     free(height_options);
     free(count_options);

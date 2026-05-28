@@ -1404,12 +1404,26 @@ int load_glyph_icon(const char *mux_dim, const char *glyph_folder,
                     const char *glyph_name, char *image_path, size_t image_size) {
     if (!glyph_folder || !glyph_name || !image_path || image_size == 0) return 0;
 
-    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png", theme_base, mux_dim, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
-    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png", theme_base, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
+#define TRY_GLYPH(fmt, ...)                                                                                \
+    do {                                                                                                   \
+        snprintf(image_path, image_size, fmt, ##__VA_ARGS__);                                              \
+        LOG_DEBUG(mux_module, "Glyph path check: %s", image_path);                                         \
+        if (file_exist(image_path)) { LOG_DEBUG(mux_module, "Glyph found at: %s", image_path); return 1; } \
+    } while (0)
 
-    if (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
-    if (snprintf(image_path, image_size, "%s/glyph/%s/%s.png", INTERNAL_THEME, glyph_folder, glyph_name) > 0 && file_exist(image_path)) return 1;
+    TRY_GLYPH("%s/%sglyph/%s/%s.svg", theme_base, mux_dim, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/glyph/%s/%s.svg", theme_base, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/%sglyph/%s/%s.svg", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/glyph/%s/%s.svg", INTERNAL_THEME, glyph_folder, glyph_name);
 
+    TRY_GLYPH("%s/%sglyph/%s/%s.png", theme_base, mux_dim, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/glyph/%s/%s.png", theme_base, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/%sglyph/%s/%s.png", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/glyph/%s/%s.png", INTERNAL_THEME, glyph_folder, glyph_name);
+
+#undef TRY_GLYPH
+
+    LOG_DEBUG(mux_module, "Glyph not found: %s/%s", glyph_folder, glyph_name);
     image_path[0] = '\0';
     return 0;
 }
@@ -1820,9 +1834,17 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
         lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
     }
 
+    int grid_hint_w = (theme->GRID.CELL.WIDTH * 3) / 4;
+    int grid_hint_h = (theme->GRID.CELL.HEIGHT * 3) / 4;
+
     if (item_image_path && *item_image_path && file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
-        snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
+        size_t path_len = strlen(item_image_path);
+        if (path_len > 4 && strcmp(item_image_path + path_len - 4, ".svg") == 0) {
+            snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", item_image_path, grid_hint_w, grid_hint_h);
+        } else {
+            snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
+        }
         lv_img_set_src(cell_image, grid_image);
     } else {
         lv_img_set_src(cell_image, &ui_img_blank);
@@ -1834,7 +1856,12 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
     if (item_image_focused_path && *item_image_focused_path && file_exist(item_image_focused_path)) {
         char grid_image_focused[MAX_BUFFER_SIZE];
-        snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
+        size_t path_len = strlen(item_image_focused_path);
+        if (path_len > 4 && strcmp(item_image_focused_path + path_len - 4, ".svg") == 0) {
+            snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s?%dx%d", item_image_focused_path, grid_hint_w, grid_hint_h);
+        } else {
+            snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
+        }
         lv_img_set_src(cell_image_focused, grid_image_focused);
     } else {
         lv_img_set_src(cell_image_focused, &ui_img_blank);

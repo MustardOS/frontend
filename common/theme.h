@@ -445,6 +445,7 @@ struct theme_config {
             int16_t WIDTH;
         } CONTENT;
         int16_t ANTIALIASING;
+        int16_t GLYPH_SIZE;
     } MISC;
 
     struct {

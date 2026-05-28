@@ -1,14 +1,14 @@
 include ../common.mk
 
-CFLAGS = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -isystem miniz
-LDFLAGS = $(COMMON_LIBS) $(SHARED_PIC)
+CFLAGS   = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -isystem miniz \
+           -I../plutosvg/source -I../plutosvg/plutovg/include
+LDFLAGS  = $(COMMON_LIBS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
 SRC_DIRS = . saver input json mini miniz core xxhash png
-SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
+SRCS     = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
+OBJS     = $(SRCS:.c=.o)
 
-OBJS = $(SRCS:.c=.o)
-
-LIB_DIR = ${shell pwd}/../bin/lib
+LIB_DIR  = ${shell pwd}/../bin/lib
 LIB_FILE = libmuxcom.so
 
 all: $(LIB_DIR)/$(LIB_FILE)

@@ -227,6 +227,7 @@ struct mux_config {
             int16_t HEADER_HEIGHT;
             int16_t FOOTER_HEIGHT;
             int16_t CONTENT_ITEM_COUNT;
+            int16_t GLYPH_SIZE;
         } THEMEOPT;
         struct {
             int16_t LAYOUT;

@@ -6,7 +6,7 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-DEPENDENCIES = common lvgl lookup module
+DEPENDENCIES = plutosvg common lvgl lookup module
 
 CFLAGS = $(BASE_CFLAGS)
 
@@ -14,7 +14,7 @@ INCLUDES = -I./module/ui -I./lookup -I./common \
            -I./common/input -I./common/json \
            -I./common/mini -I./common/miniz
 
-LDLIBS = -L$(LIB_DIR) -lui -llookup -lmuxcom -lmuxmod
+LDLIBS = -L$(LIB_DIR) -lui -llookup -lmuxcom -lmuxmod -lplutosvg
 
 LDFLAGS = $(COMMON_LIBS) $(BIN_LDFLAGS) $(LIB_LDFLAGS)
 

@@ -1324,10 +1324,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HEADER_HEIGHT, "Header Height");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.FOOTER_HEIGHT, "Footer Height");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.CONTENT_ITEM_COUNT, "Item Count");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.GLYPH_SIZE, "Glyph Size");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.SIZE_DEFAULT, "Default");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.GLYPH_AUTO, "Auto");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.GLYPH_NATIVE, "Native");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.HEADERHEIGHT, "Override the theme header bar height in pixels (Default uses the theme value)");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.FOOTERHEIGHT, "Override the theme footer bar height in pixels (Default uses the theme value)");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.CONTENTITEMCOUNT, "Override the number of visible list items (0 uses the theme default)");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.GLYPHSIZE, "Override the SVG glyph render size in pixels (Default uses the theme value, Auto fits to item height, Native uses the actual size)");
 
     // muxtimezone
     SPECIFIC_FIELD(lang->MUXTIMEZONE.TITLE, "TIMEZONE");

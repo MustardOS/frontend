@@ -236,6 +236,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.THEMEOPT.HEADER_HEIGHT, CONF_CONFIG_PATH "settings/theme/header_height", -1);
     CFG_INT_FIELD(config->SETTINGS.THEMEOPT.FOOTER_HEIGHT, CONF_CONFIG_PATH "settings/theme/footer_height", -1);
     CFG_INT_FIELD(config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT, CONF_CONFIG_PATH "settings/theme/content_item_count", 0);
+    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.GLYPH_SIZE, CONF_CONFIG_PATH "settings/theme/glyph_size", -2);
 
     CFG_INT_FIELD(config->SETTINGS.REMAP.LAYOUT, CONF_CONFIG_PATH "settings/remap/layout", 0);
 

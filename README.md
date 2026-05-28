@@ -187,6 +187,16 @@ embeds [stb_truetype](https://github.com/nothings/stb) for glyph rasterisation.
 - License: MIT
 - Location: `lvgl/`
 
+### [PlutoSVG](https://github.com/sammycage/plutosvg)
+
+Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with scaling driven by the LVGL custom image decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser it is built on.
+
+- PlutoSVG Version: 0.0.8
+- PlutoVG Version: 1.3.3
+- Author: Samuel Ugochukwu
+- License: MIT
+- Location: `plutosvg/`
+
 ### [json.c](https://github.com/tidwall/json.c)
 
 Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration data, and API responses.

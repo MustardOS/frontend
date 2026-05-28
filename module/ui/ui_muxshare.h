@@ -146,7 +146,8 @@
 #define THEMEOPT_ELEMENTS                                          \
     THEMEOPT(HeaderHeight,      HEADERHEIGHT,      "headerheight") \
     THEMEOPT(FooterHeight,      FOOTERHEIGHT,      "footerheight") \
-    THEMEOPT(ContentItemCount,  CONTENTITEMCOUNT,  "count")
+    THEMEOPT(ContentItemCount,  CONTENTITEMCOUNT,  "count")        \
+    THEMEOPT(GlyphSize,         GLYPHSIZE,         "glyphsize")
 
 #define CUSTOM_ELEMENTS                                         \
     CUSTOM(Catalogue,       CATALOGUE,       "catalogue")       \

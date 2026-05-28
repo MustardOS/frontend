@@ -428,6 +428,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.IMAGE_OVERLAY = 0;
     theme->MISC.NAVIGATION_TYPE = 0;
     theme->MISC.ANTIALIASING = 1;
+    theme->MISC.GLYPH_SIZE = 0;
 
     strncpy(theme->TERMINAL.FONT_SIZE, "16", MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
@@ -1069,6 +1070,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", theme->MISC.IMAGE_OVERLAY);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
+    theme->MISC.GLYPH_SIZE = get_ini_int(muos_theme, "misc", "GLYPH_SIZE", theme->MISC.GLYPH_SIZE);
 
     strncpy(theme->TERMINAL.FONT_SIZE, get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE),
             MAX_BUFFER_SIZE - 1);
@@ -1260,6 +1262,25 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
         theme->MISC.CONTENT.HEIGHT = (int16_t) (theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT);
     }
+
+    // When auto SVG glyph size is active we scale to 75% height for breathing room.
+    // Then expand the LIST_PAD_LEFT value so there is at least 4px of gap the sides
+    // of the glyph, then center GLYPH_PADDING_LEFT in the column for equal space on
+    // either side of the glyph, just to make it nice looking
+    int16_t eff_glyph_size = config->SETTINGS.THEMEOPT.GLYPH_SIZE;
+    if (eff_glyph_size == -2) eff_glyph_size = theme->MISC.GLYPH_SIZE;
+
+    if (eff_glyph_size == 0 && theme->MUX.ITEM.HEIGHT > 0) {
+        int16_t auto_size = (int16_t) (theme->MUX.ITEM.HEIGHT * 3 / 4);
+        int16_t half_auto = (int16_t) (auto_size / 2);
+        int16_t needed = (int16_t) (auto_size + 6);
+
+        if (needed > theme->FONT.LIST_PAD_LEFT) theme->FONT.LIST_PAD_LEFT = needed;
+        int16_t glyph_center = (int16_t) (theme->FONT.LIST_PAD_LEFT / 2);
+
+        if (glyph_center < half_auto) glyph_center = half_auto;
+        theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = (int16_t) (glyph_center + 4);
+    }
 }
 
 void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem) {
@@ -1290,17 +1311,17 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
 
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
-        lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
-                                                      LV_TEXT_FLAG_EXPAND);
+
+        lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space, LV_TEXT_FLAG_EXPAND);
         int item_width = LV_MIN(theme->FONT.LIST_PAD_LEFT + act_line_length + theme->FONT.LIST_PAD_RIGHT,
                                 theme->MISC.CONTENT.WIDTH - (theme->LIST_DEFAULT.BORDER_WIDTH * 2));
+
         // When using size to content right padding needs to be zero to prevent text from wrapping.
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lblItem, 0, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_width(ui_lblItem, item_width);
-        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT -
-                                      (item_width / 2) -
-                                      theme->LIST_DEFAULT.BORDER_WIDTH);
+
+        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2) - theme->LIST_DEFAULT.BORDER_WIDTH);
     }
 }
 
