@@ -174,6 +174,9 @@ static void download_finished(int result) {
         snprintf(file_path, sizeof(file_path), "%s/%s/%s.muxzip",
                  device.STORAGE.ROM.MOUNT, MUOS_ARCH_PATH, items[current_item_index].name);
         extract_archive(file_path, "coredown");
+    } else {
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXDOWNLOAD.ERROR_GET_DATA, SHORT);
     }
 }
 
