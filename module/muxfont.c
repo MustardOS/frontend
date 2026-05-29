@@ -12,7 +12,8 @@ FONT_ELEMENTS
 #undef FONT
 
 static char name_original[MAX_BUFFER_SIZE];
-static bool has_language_type;
+static int has_language_type;
+static int has_theme_type;
 
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_value[UI_COUNT];
@@ -36,21 +37,22 @@ static void hide_reset_dialog(void) {
     dialogue_hide(&reset_dlg);
 }
 
-static bool detect_language_type(void) {
+static int detect_language_type(void) {
     char dir[MAX_BUFFER_SIZE];
     snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", config.SETTINGS.GENERAL.LANGUAGE);
 
     struct dirent **entries;
     int n = scandir(dir, &entries, NULL, alphasort);
-    if (n < 0) return false;
+    if (n < 0) return 0;
 
-    bool found = false;
+    int found = 0;
     for (int i = 0; i < n; i++) {
         const char *name = entries[i]->d_name;
         size_t len = strlen(name);
-        if (!found && len > 4 && strcasecmp(name + len - 4, ".ttf") == 0) found = true;
+        if (!found && len > 4 && strcasecmp(name + len - 4, ".ttf") == 0) found = 1;
         free(entries[i]);
     }
+
     free(entries);
     return found;
 }
@@ -65,13 +67,18 @@ static uint32_t type_to_dropdown(int canonical) {
 }
 
 static void refresh_navigation(void) {
+    SHOW_OPTION_ITEM(font, Type);
     SHOW_OPTION_ITEM(font, Name);
     SHOW_OPTION_ITEM(font, ListSize);
     SHOW_OPTION_ITEM(font, HeaderSize);
     SHOW_OPTION_ITEM(font, FooterSize);
     SHOW_OPTION_ITEM(font, PanelSize);
+
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+
+    if (!has_theme_type) HIDE_OPTION_ITEM(font, Type);
+
     if (type_to_canonical(lv_dropdown_get_selected(ui_droType_font)) == 1) {
         HIDE_OPTION_ITEM(font, Name);
         HIDE_OPTION_ITEM(font, ListSize);
@@ -79,6 +86,7 @@ static void refresh_navigation(void) {
         HIDE_OPTION_ITEM(font, FooterSize);
         HIDE_OPTION_ITEM(font, PanelSize);
     }
+
     list_nav_move(0, 1);
 }
 
@@ -88,16 +96,16 @@ static void apply_current_font_settings(void) {
     uint32_t idx;
 
     idx = lv_dropdown_get_selected(ui_droListSize_font);
-    config.SETTINGS.FONT.LIST_SIZE = (idx < (uint32_t) font_size_count) ? (int16_t) font_size_values[idx] : 0;
+    config.SETTINGS.FONT.LIST_SIZE = (int16_t) ((idx < (uint32_t) font_size_count) ? font_size_values[idx] : 0);
 
     idx = lv_dropdown_get_selected(ui_droHeaderSize_font);
-    config.SETTINGS.FONT.HEADER_SIZE = (idx < (uint32_t) font_size_count) ? (int16_t) font_size_values[idx] : 0;
+    config.SETTINGS.FONT.HEADER_SIZE = (int16_t) ((idx < (uint32_t) font_size_count) ? font_size_values[idx] : 0);
 
     idx = lv_dropdown_get_selected(ui_droFooterSize_font);
-    config.SETTINGS.FONT.FOOTER_SIZE = (idx < (uint32_t) font_size_count) ? (int16_t) font_size_values[idx] : 0;
+    config.SETTINGS.FONT.FOOTER_SIZE = (int16_t) ((idx < (uint32_t) font_size_count) ? font_size_values[idx] : 0);
 
     idx = lv_dropdown_get_selected(ui_droPanelSize_font);
-    config.SETTINGS.FONT.PANEL_SIZE = (idx < (uint32_t) font_size_count) ? (int16_t) font_size_values[idx] : 0;
+    config.SETTINGS.FONT.PANEL_SIZE = (int16_t) ((idx < (uint32_t) font_size_count) ? font_size_values[idx] : 0);
 
     lv_dropdown_get_selected_str(ui_droName_font, config.SETTINGS.FONT.NAME, sizeof(config.SETTINGS.FONT.NAME));
 
@@ -108,13 +116,12 @@ static void apply_current_font_settings(void) {
 
     init_fonts();
 
-#define FONT(NAME, ENUM, UDATA) do { \
+#define FONT(NAME, ENUM, UDATA) do {                                                         \
         const lv_font_t *_f = lv_obj_get_style_text_font(ui_dro##NAME##_font, LV_PART_MAIN); \
-        lv_coord_t _h = lv_font_get_line_height(_f); \
-        lv_obj_set_height(ui_dro##NAME##_font, _h); \
-        if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) { \
-            lv_obj_set_height(ui_lbl##NAME##_font, _h); \
-        } \
+        lv_coord_t _h = lv_font_get_line_height(_f);                                         \
+        lv_obj_set_height(ui_dro##NAME##_font, _h);                                          \
+        if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP)                        \
+            lv_obj_set_height(ui_lbl##NAME##_font, _h);                                      \
     } while (0);
     FONT_ELEMENTS
 #undef FONT
@@ -144,10 +151,10 @@ static void populate_font_names(void) {
 
     char dir[MAX_BUFFER_SIZE];
     int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_droType_font));
-    if (canonical_type == 2) {
-        snprintf(dir, sizeof(dir), "%s", INTERNAL_FONTS);
-    } else {
+    if (canonical_type == 0) {
         snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", config.SETTINGS.GENERAL.LANGUAGE);
+    } else {
+        snprintf(dir, sizeof(dir), "%s", INTERNAL_FONTS);
     }
 
     struct dirent **entries;
@@ -176,16 +183,17 @@ static void populate_font_names(void) {
 }
 
 static void restore_font_options(void) {
-    lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(config.SETTINGS.ADVANCED.FONT));
+    int canonical = config.SETTINGS.ADVANCED.FONT;
+    if (!has_theme_type && canonical == 1) canonical = 2;
+
+    config.SETTINGS.ADVANCED.FONT = (int16_t) canonical;
+    lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(canonical));
 
     populate_font_names();
 
     int32_t name_idx = lv_dropdown_get_option_index(ui_droName_font, config.SETTINGS.FONT.NAME);
-    if (name_idx >= 0) {
-        lv_dropdown_set_selected(ui_droName_font, (uint32_t) name_idx);
-    } else {
-        lv_dropdown_set_selected(ui_droName_font, 0);
-    }
+    if (name_idx < 0) name_idx = lv_dropdown_get_option_index(ui_droName_font, "Noto Sans");
+    lv_dropdown_set_selected(ui_droName_font, name_idx >= 0 ? (uint32_t) name_idx : 0);
 
     map_drop_down_to_index(ui_droListSize_font, config.SETTINGS.FONT.LIST_SIZE, font_size_values, font_size_count, 0);
     map_drop_down_to_index(ui_droHeaderSize_font, config.SETTINGS.FONT.HEADER_SIZE, font_size_values, font_size_count, 0);
@@ -207,11 +215,13 @@ static void save_font_options(void) {
     CHECK_AND_SAVE_VAL(font, FooterSize, "settings/font/footer_size", INT, font_size_values);
     CHECK_AND_SAVE_VAL(font, PanelSize, "settings/font/panel_size", INT, font_size_values);
 
-    char name_current[MAX_BUFFER_SIZE];
-    lv_dropdown_get_selected_str(ui_droName_font, name_current, sizeof(name_current));
-    if (strcasecmp(name_current, name_original) != 0) {
-        is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, name_current);
+    if (config.SETTINGS.ADVANCED.FONT != 1) {
+        char name_current[MAX_BUFFER_SIZE];
+        lv_dropdown_get_selected_str(ui_droName_font, name_current, sizeof(name_current));
+        if (strcasecmp(name_current, name_original) != 0) {
+            is_modified++;
+            write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, name_current);
+        }
     }
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
@@ -219,6 +229,7 @@ static void save_font_options(void) {
 
 static void init_navigation_group(void) {
     has_language_type = detect_language_type();
+    has_theme_type = theme_has_font();
 
     char *all_type_options[] = {
             lang.MUXFONT.TYPE_OPTIONS.LANGUAGE,
@@ -265,7 +276,7 @@ static void list_nav_next(int steps) {
 }
 
 static void do_reset(void) {
-    lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(1));
+    lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(has_theme_type ? 1 : 2));
     lv_dropdown_set_selected(ui_droListSize_font, 0);
     lv_dropdown_set_selected(ui_droHeaderSize_font, 0);
     lv_dropdown_set_selected(ui_droFooterSize_font, 0);

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
 #include "font.h"
 #include "common.h"
 #include "theme.h"
@@ -21,6 +22,7 @@
 
 int font_cache_count = 0;
 char last_font_key[256] = "";
+static int cached_has_theme_font = -1;
 
 typedef struct {
     char path[MAX_BUFFER_SIZE];
@@ -33,6 +35,73 @@ typedef struct {
 } font_cache_t;
 
 static font_cache_t font_cache[FONT_CACHE_MAX];
+
+int theme_has_font(void) {
+    if (cached_has_theme_font >= 0) return cached_has_theme_font;
+
+    const char *exts[] = {".ttf", ".bin"};
+    const char *dims[] = {mux_dim, "", NULL};
+
+    cached_has_theme_font = 0;
+    for (int d = 0; dims[d] != NULL; d++) {
+        char dir[MAX_BUFFER_SIZE];
+        snprintf(dir, sizeof(dir), "%s/%sfont", theme_base, dims[d]);
+
+        struct dirent **entries;
+        int n = scandir(dir, &entries, NULL, NULL);
+        if (n < 0) continue;
+
+        int found = 0;
+        for (int i = 0; i < n && !found; i++) {
+            const char *name = entries[i]->d_name;
+            size_t len = strlen(name);
+
+            for (int e = 0; e < 2; e++) {
+                if (len > 4 && strcasecmp(name + len - 4, exts[e]) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found && entries[i]->d_type == DT_DIR && name[0] != '.') {
+                char sub[MAX_BUFFER_SIZE];
+                snprintf(sub, sizeof(sub), "%s/%s", dir, name);
+
+                struct dirent **sub_entries;
+                int m = scandir(sub, &sub_entries, NULL, NULL);
+
+                if (m >= 0) {
+                    for (int j = 0; j < m && !found; j++) {
+                        const char *s_name = sub_entries[j]->d_name;
+                        size_t s_len = strlen(s_name);
+                        for (int e = 0; e < 2; e++) {
+                            if (s_len > 4 && strcasecmp(s_name + s_len - 4, exts[e]) == 0) {
+                                found = 1;
+                                break;
+                            }
+                        }
+                        free(sub_entries[j]);
+                    }
+                    free(sub_entries);
+                }
+            }
+            free(entries[i]);
+        }
+        free(entries);
+
+        if (found) {
+            cached_has_theme_font = 1;
+            break;
+        }
+    }
+
+    return cached_has_theme_font;
+}
+
+static int effective_type(void) {
+    if (config.SETTINGS.ADVANCED.FONT == 1 && !theme_has_font()) return 2;
+    return config.SETTINGS.ADVANCED.FONT;
+}
 
 int get_font_size(void) {
     switch (device.MUX.WIDTH) {
@@ -97,6 +166,7 @@ void font_cache_clear(void) {
     }
 
     font_cache_count = 0;
+    cached_has_theme_font = -1;
     LOG_SUCCESS(mux_module, "Font cache has been cleared");
 }
 
@@ -262,15 +332,24 @@ lv_font_t *load_font_pass_roller(void) {
 }
 
 void load_font_text(lv_obj_t *screen) {
-    int lang_size = (config.SETTINGS.ADVANCED.FONT == 0 && config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+    int eff_type = effective_type();
+
+    int lang_size = (eff_type == 0 && config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
     lv_font_t * language_font = create_language_font(lang_size);
 
-    if (config.SETTINGS.ADVANCED.FONT == 2 && config.SETTINGS.FONT.NAME[0]) {
+    if (eff_type == 2) {
+        const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : "Noto Sans";
+
         char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", config.SETTINGS.FONT.NAME);
+        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         int size = (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
         lv_font_t * font = load_font_cached_ttf(path, size, true);
+
+        if (!font && strcmp(name, "Noto Sans") != 0) {
+            snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
+            font = load_font_cached_ttf(path, size, true);
+        }
 
         if (font) {
             LOG_INFO(mux_module, "Loading Custom Font: %s", path);
@@ -279,7 +358,7 @@ void load_font_text(lv_obj_t *screen) {
         }
     }
 
-    if (config.SETTINGS.ADVANCED.FONT == 1) {
+    if (eff_type == 1) {
         const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
 
         char *dims[2] = {mux_dim, ""};
@@ -336,12 +415,20 @@ void load_font_text(lv_obj_t *screen) {
 }
 
 void load_font_section(const char *section, lv_obj_t *element) {
-    if (config.SETTINGS.ADVANCED.FONT == 2 && config.SETTINGS.FONT.NAME[0]) {
+    int eff_type = effective_type();
+
+    if (eff_type == 2) {
+        const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : "Noto Sans";
         char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", config.SETTINGS.FONT.NAME);
+        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         int size = get_custom_section_size(section);
         lv_font_t * font = load_font_cached_ttf(path, size, true);
+
+        if (!font && strcmp(name, "Noto Sans") != 0) {
+            snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
+            font = load_font_cached_ttf(path, size, true);
+        }
 
         if (font) {
             LOG_INFO(mux_module, "Loading Custom Section '%s' Font: %s", section, path);
@@ -350,7 +437,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
         }
 
         if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
-            apply_font(element, create_language_font(size));
+            apply_font(element, create_language_font(get_custom_section_size(section)));
         } else {
             lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
         }
@@ -358,7 +445,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
         return;
     }
 
-    if (!config.SETTINGS.ADVANCED.FONT) {
+    if (!eff_type) {
         int size = get_custom_section_size(section);
         if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
             apply_font(element, create_language_font(size));

@@ -381,9 +381,20 @@ void timer_destroy_all(void) {
     timer_action(2);
 }
 
+static char last_theme_name[MAX_BUFFER_SIZE] = "";
+
 void init_fonts(void) {
     int font_context = font_context_changed();
     if (font_context) font_cache_clear();
+
+    if (strcmp(last_theme_name, config.THEME.ACTIVE) != 0) {
+        snprintf(last_theme_name, sizeof(last_theme_name), "%s", config.THEME.ACTIVE);
+        if (theme_has_font()) {
+            config.SETTINGS.ADVANCED.FONT = 1;
+        } else if (config.SETTINGS.ADVANCED.FONT == 1) {
+            config.SETTINGS.ADVANCED.FONT = 2;
+        }
+    }
 
     load_font_text(ui_screen);
 

@@ -11,3 +11,5 @@ void load_font_section(const char *section, lv_obj_t *element);
 lv_font_t *load_font_pass_roller(void);
 
 int font_context_changed(void);
+
+int theme_has_font(void);
