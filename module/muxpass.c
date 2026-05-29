@@ -39,7 +39,7 @@ static void handle_a(void) {
     lv_roller_get_selected_str(ui_rolComboSix, b6, bs);
 
     char try_code[13];
-    sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
+    snprintf(try_code, sizeof(try_code), "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
 
     int code_match = strcasecmp(try_code, p_code) == 0;
     int safety_match = strcasecmp(passcode.CODE.SAFETY, "000000") != 0 && strcasecmp(try_code, passcode.CODE.SAFETY) == 0;

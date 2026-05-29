@@ -762,8 +762,7 @@ static void compute_global_stats(global_stats_t *gs) {
 
             if (!found && norm_core[0] != '\0') {
                 if (core_used < CORE_MAP_MAX) {
-                    strncpy(core_map[core_used].key, norm_core, sizeof(core_map[core_used].key) - 1);
-                    core_map[core_used].key[sizeof(core_map[core_used].key) - 1] = '\0';
+                    snprintf(core_map[core_used].key, sizeof(core_map[core_used].key), "%s", norm_core);
                     core_map[core_used].count = it->core_count;
                     core_used++;
                 } else {
@@ -787,8 +786,7 @@ static void compute_global_stats(global_stats_t *gs) {
 
             if (!found && norm_device[0] != '\0') {
                 if (device_used < DEVICE_MAP_MAX) {
-                    strncpy(device_map[device_used].key, norm_device, sizeof(device_map[device_used].key) - 1);
-                    device_map[device_used].key[sizeof(device_map[device_used].key) - 1] = '\0';
+                    snprintf(device_map[device_used].key, sizeof(device_map[device_used].key), "%s", norm_device);
                     device_map[device_used].count = it->device_count;
                     device_used++;
                 } else {
@@ -812,8 +810,7 @@ static void compute_global_stats(global_stats_t *gs) {
 
             if (!found && norm_mode[0] != '\0') {
                 if (mode_used < MODE_MAP_MAX) {
-                    strncpy(mode_map[mode_used].key, norm_mode, sizeof(mode_map[mode_used].key) - 1);
-                    mode_map[mode_used].key[sizeof(mode_map[mode_used].key) - 1] = '\0';
+                    snprintf(mode_map[mode_used].key, sizeof(mode_map[mode_used].key), "%s", norm_mode);
                     mode_map[mode_used].count = it->mode_count;
                     mode_used++;
                 } else {
@@ -828,8 +825,7 @@ static void compute_global_stats(global_stats_t *gs) {
         for (int i = 0; i < core_used; i++) {
             if (core_map[i].count > max) {
                 max = core_map[i].count;
-                strncpy(gs->core, core_map[i].key, sizeof(gs->core) - 1);
-                gs->core[sizeof(gs->core) - 1] = '\0';
+                snprintf(gs->core, sizeof(gs->core), "%s", core_map[i].key);
                 gs->core_count = core_map[i].count;
             }
         }
@@ -840,8 +836,7 @@ static void compute_global_stats(global_stats_t *gs) {
         for (int i = 0; i < device_used; i++) {
             if (device_map[i].count > max) {
                 max = device_map[i].count;
-                strncpy(gs->device, device_map[i].key, sizeof(gs->device) - 1);
-                gs->device[sizeof(gs->device) - 1] = '\0';
+                snprintf(gs->device, sizeof(gs->device), "%s", device_map[i].key);
                 gs->device_count = device_map[i].count;
             }
         }
@@ -852,8 +847,7 @@ static void compute_global_stats(global_stats_t *gs) {
         for (int i = 0; i < mode_used; i++) {
             if (mode_map[i].count > max) {
                 max = mode_map[i].count;
-                strncpy(gs->mode, mode_map[i].key, sizeof(gs->mode) - 1);
-                gs->mode[sizeof(gs->mode) - 1] = '\0';
+                snprintf(gs->mode, sizeof(gs->mode), "%s", mode_map[i].key);
                 gs->mode_count = mode_map[i].count;
             }
         }

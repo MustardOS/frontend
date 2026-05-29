@@ -105,8 +105,7 @@ int read_line_from_file(const char *filename, size_t line_number, char *out, siz
             size_t len = strlen(buf);
             if (len && buf[len - 1] == '\n') buf[len - 1] = '\0';
 
-            strncpy(out, buf, out_size - 1);
-            out[out_size - 1] = '\0';
+            snprintf(out, out_size, "%s", buf);
 
             fclose(f);
             return 1;

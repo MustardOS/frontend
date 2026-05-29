@@ -9,8 +9,7 @@ static void load_code_file(char *dst, const char *filename, const char *fallback
     snprintf(path, sizeof(path), "%s%s", PASSCODE_CFG_PATH, filename);
 
     const char *val = read_line_char_from(path, 1);
-    strncpy(dst, (val && val[0] != '\0') ? val : fallback, MAX_BUFFER_SIZE - 1);
-    dst[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(dst, MAX_BUFFER_SIZE, "%s", (val && val[0] != '\0') ? val : fallback);
 }
 
 void load_passcode(struct mux_passcode *passcode) {

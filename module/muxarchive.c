@@ -119,8 +119,7 @@ static void create_archive_items(void) {
         }
 
         char ext_upper[16];
-        strncpy(ext_upper, ext_type, sizeof(ext_upper) - 1);
-        ext_upper[sizeof(ext_upper) - 1] = '\0';
+        snprintf(ext_upper, sizeof(ext_upper), "%s", ext_type);
         str_toupper(ext_upper);
 
         for (size_t j = 0; j < A_SIZE(mount_points); ++j) {

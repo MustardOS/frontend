@@ -217,15 +217,15 @@ static void parse_index_json(const char *json_data) {
                 if (json_exists(slug) && json_type(slug) == JSON_STRING) {
                     json_string_copy(slug, tag_buf, sizeof(tag_buf));
                 } else {
-                    strcpy(tag_buf, "news");
+                    snprintf(tag_buf, sizeof(tag_buf), "%s", "news");
                 }
             } else if (json_type(t0) == JSON_STRING) {
                 json_string_copy(t0, tag_buf, sizeof(tag_buf));
             } else {
-                strcpy(tag_buf, "news");
+                snprintf(tag_buf, sizeof(tag_buf), "%s", "news");
             }
         } else {
-            strcpy(tag_buf, "news");
+            snprintf(tag_buf, sizeof(tag_buf), "%s", "news");
         }
 
         snprintf(key_buf, sizeof(key_buf), "topic_%d", id);

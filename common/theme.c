@@ -409,8 +409,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->COUNTER.TEXT = 0xFFFFFF;
     theme->COUNTER.TEXT_ALPHA = 0;
     theme->COUNTER.TEXT_FADE_TIME = 0;
-    strncpy(theme->COUNTER.TEXT_SEPARATOR, " / ", MAX_BUFFER_SIZE - 1);
-    theme->COUNTER.TEXT_SEPARATOR[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(theme->COUNTER.TEXT_SEPARATOR, MAX_BUFFER_SIZE, "%s", " / ");
 
     theme->MISC.STATIC_ALIGNMENT = 255;
     theme->MUX.ITEM.COUNT = 11;
@@ -430,14 +429,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.ANTIALIASING = 1;
     theme->MISC.GLYPH_SIZE = 0;
 
-    strncpy(theme->TERMINAL.FONT_SIZE, "16", MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.FONT_HINT, "mono", MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.FONT_HINT[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.FOREGROUND, "FFFFFF", MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.BACKGROUND, "000000", MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(theme->TERMINAL.FONT_SIZE, MAX_BUFFER_SIZE, "%s", "16");
+    snprintf(theme->TERMINAL.FONT_HINT, MAX_BUFFER_SIZE, "%s", "mono");
+    snprintf(theme->TERMINAL.FOREGROUND, MAX_BUFFER_SIZE, "%s", "FFFFFF");
+    snprintf(theme->TERMINAL.BACKGROUND, MAX_BUFFER_SIZE, "%s", "000000");
 
     theme->SDL.TEXTURE_BLEND_MODE = 1;
     theme->SDL.DRAW_BLEND_MODE = 0;
@@ -1046,10 +1041,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", theme->COUNTER.TEXT_ALPHA);
     theme->COUNTER.TEXT_FADE_TIME = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_FADE_TIME",
                                                 theme->COUNTER.TEXT_FADE_TIME);
-    strncpy(theme->COUNTER.TEXT_SEPARATOR,
-            get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->COUNTER.TEXT_SEPARATOR),
-            MAX_BUFFER_SIZE - 1);
-    theme->COUNTER.TEXT_SEPARATOR[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(theme->COUNTER.TEXT_SEPARATOR, MAX_BUFFER_SIZE, "%s",
+             get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->COUNTER.TEXT_SEPARATOR));
 
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", theme->MISC.STATIC_ALIGNMENT);
     theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_COUNT", theme->MUX.ITEM.COUNT);
@@ -1072,15 +1065,9 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
     theme->MISC.GLYPH_SIZE = get_ini_int(muos_theme, "misc", "GLYPH_SIZE", theme->MISC.GLYPH_SIZE);
 
-    strncpy(theme->TERMINAL.FONT_SIZE, get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE),
-            MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.FOREGROUND,
-            get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND), MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.BACKGROUND,
-            get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND), MAX_BUFFER_SIZE - 1);
-    theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(theme->TERMINAL.FONT_SIZE, MAX_BUFFER_SIZE, "%s", get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE));
+    snprintf(theme->TERMINAL.FOREGROUND, MAX_BUFFER_SIZE, "%s", get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND));
+    snprintf(theme->TERMINAL.BACKGROUND, MAX_BUFFER_SIZE, "%s", get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND));
 
     theme->SDL.TEXTURE_BLEND_MODE = get_ini_int(muos_theme, "sdl", "TEXTURE_BLEND_MODE", theme->SDL.TEXTURE_BLEND_MODE);
     theme->SDL.DRAW_BLEND_MODE = get_ini_int(muos_theme, "sdl", "DRAW_BLEND_MODE", theme->SDL.DRAW_BLEND_MODE);

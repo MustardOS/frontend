@@ -185,9 +185,8 @@ static void cache_store(const char *path, int size, lv_font_t *font, void *data,
         return;
     }
 
-    strncpy(font_cache[font_cache_count].path, path, MAX_BUFFER_SIZE - 1);
+    snprintf(font_cache[font_cache_count].path, MAX_BUFFER_SIZE, "%s", path);
 
-    font_cache[font_cache_count].path[MAX_BUFFER_SIZE - 1] = '\0';
     font_cache[font_cache_count].size = size;
     font_cache[font_cache_count].font = font;
     font_cache[font_cache_count].data = data;
@@ -440,8 +439,7 @@ int font_context_changed(void) {
              config.SETTINGS.FONT.PANEL_SIZE);
 
     if (strncmp(context, last_font_key, sizeof(last_font_key) - 1) != 0) {
-        strncpy(last_font_key, context, sizeof(last_font_key) - 1);
-        last_font_key[sizeof(last_font_key) - 1] = '\0';
+        snprintf(last_font_key, sizeof(last_font_key), "%s", context);
         LOG_INFO(mux_module, "Font context has changed");
         return 1;
     }

@@ -210,8 +210,7 @@ static void update_network_label(void) {
     *p = '\0';
 
     if (strcmp(status, last_status) != 0) {
-        strncpy(last_status, status, sizeof(last_status) - 1);
-        last_status[sizeof(last_status) - 1] = '\0';
+        snprintf(last_status, sizeof(last_status), "%s", status);
 
         int id = resolve_status_id(status);
 

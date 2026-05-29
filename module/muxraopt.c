@@ -289,33 +289,31 @@ int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
 
                 char assigned_global[MAX_BUFFER_SIZE];
-                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini",
-                         ass_config);
+                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
 
                 LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
 
                 mini_t *global_ini = mini_load(assigned_global);
 
                 static char def_rac[MAX_BUFFER_SIZE];
-                strcpy(def_rac, get_ini_string(global_ini, "global", "retroarch", "false"));
+                snprintf(def_rac, sizeof(def_rac), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
 
                 static char def_sys[MAX_BUFFER_SIZE];
-                strcpy(def_sys, get_ini_string(global_ini, "global", "default", "false"));
+                snprintf(def_sys, sizeof(def_sys), "%s", get_ini_string(global_ini, "global", "default", "false"));
 
                 if (strcmp(def_rac, "false") != 0) {
                     char default_core[MAX_BUFFER_SIZE];
-                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini",
-                             ass_config, def_sys);
+                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_sys);
 
                     static char core_retroarch[MAX_BUFFER_SIZE];
                     mini_t *local_ini = mini_load(default_core);
 
                     char *use_local_retroarch = get_ini_string(local_ini, def_sys, "retroarch", "false");
                     if (strcmp(use_local_retroarch, "false") != 0) {
-                        strcpy(core_retroarch, use_local_retroarch);
+                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
                         LOG_INFO(mux_module, "\t(LOCAL) Core RetroArch Config: %s", core_retroarch);
                     } else {
-                        strcpy(core_retroarch, get_ini_string(global_ini, "global", "retroarch", "false"));
+                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
                         LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
                     }
 

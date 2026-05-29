@@ -126,16 +126,16 @@ static void validate_and_save(void) {
 
         switch (edit_field) {
             case 0:
-                strncpy(passcfg.CODE.BOOT, code, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.CODE.BOOT, MAX_BUFFER_SIZE, "%s", code);
                 break;
             case 2:
-                strncpy(passcfg.CODE.LAUNCH, code, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.CODE.LAUNCH, MAX_BUFFER_SIZE, "%s", code);
                 break;
             case 4:
-                strncpy(passcfg.CODE.SETTING, code, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.CODE.SETTING, MAX_BUFFER_SIZE, "%s", code);
                 break;
             case 6:
-                strncpy(passcfg.CODE.SAFETY, code, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.CODE.SAFETY, MAX_BUFFER_SIZE, "%s", code);
                 break;
             default:
                 break;
@@ -143,13 +143,13 @@ static void validate_and_save(void) {
     } else {
         switch (edit_field) {
             case 1:
-                strncpy(passcfg.MESSAGE.BOOT, raw, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.MESSAGE.BOOT, MAX_BUFFER_SIZE, "%s", raw);
                 break;
             case 3:
-                strncpy(passcfg.MESSAGE.LAUNCH, raw, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.MESSAGE.LAUNCH, MAX_BUFFER_SIZE, "%s", raw);
                 break;
             case 5:
-                strncpy(passcfg.MESSAGE.SETTING, raw, MAX_BUFFER_SIZE - 1);
+                snprintf(passcfg.MESSAGE.SETTING, MAX_BUFFER_SIZE, "%s", raw);
                 break;
             default:
                 break;

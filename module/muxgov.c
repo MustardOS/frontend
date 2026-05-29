@@ -166,8 +166,7 @@ static void create_gov_items(const char *target) {
     }
 
     char default_governor[FILENAME_MAX];
-    strncpy(default_governor, use_governor, sizeof(default_governor));
-    default_governor[sizeof(default_governor) - 1] = '\0';
+    snprintf(default_governor, sizeof(default_governor), "%s", use_governor);
 
     mini_free(global_config);
     mini_free(local_config);
@@ -331,33 +330,31 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
 
                 char assigned_global[MAX_BUFFER_SIZE];
-                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini",
-                         ass_config);
+                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
 
                 LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
 
                 mini_t *global_ini = mini_load(assigned_global);
 
                 static char def_gov[MAX_BUFFER_SIZE];
-                strcpy(def_gov, get_ini_string(global_ini, "global", "governor", "none"));
+                snprintf(def_gov, sizeof(def_gov), "%s", get_ini_string(global_ini, "global", "governor", "none"));
 
                 static char def_sys[MAX_BUFFER_SIZE];
-                strcpy(def_sys, get_ini_string(global_ini, "global", "default", "none"));
+                snprintf(def_sys, sizeof(def_sys), "%s", get_ini_string(global_ini, "global", "default", "none"));
 
                 if (strcmp(def_gov, "none") != 0) {
                     char default_core[MAX_BUFFER_SIZE];
-                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini",
-                             ass_config, def_sys);
+                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_sys);
 
                     static char core_governor[MAX_BUFFER_SIZE];
                     mini_t *local_ini = mini_load(default_core);
 
                     char *use_local_governor = get_ini_string(local_ini, def_sys, "governor", "none");
                     if (strcmp(use_local_governor, "none") != 0) {
-                        strcpy(core_governor, use_local_governor);
+                        snprintf(core_governor, sizeof(core_governor), "%s", use_local_governor);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
                     } else {
-                        strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+                        snprintf(core_governor, sizeof(core_governor), "%s", get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
                     }
 

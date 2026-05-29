@@ -123,9 +123,7 @@ static void reload_background(const char *active_theme) {
         return;
     }
 
-    strncpy(monitor.theme_name, active_theme, sizeof(monitor.theme_name) - 1);
-    monitor.theme_name[sizeof(monitor.theme_name) - 1] = '\0';
-
+    snprintf(monitor.theme_name, sizeof(monitor.theme_name), "%s", active_theme);
     LOG_INFO("video", "Loaded theme background: %s", back_image);
 }
 
@@ -738,7 +736,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     SDL_Rect upd = {.x = x1, .y = y1, .w = copy_w, .h = copy_h};
 
     const uint8_t *src_base = (const uint8_t *) color_p;
-    const uint8_t *src_ptr = src_base + ((size_t)(src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
+    const uint8_t *src_ptr = src_base + ((size_t) (src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
 
     const int src_pitch = src_w * (int) sizeof(lv_color_t);
     const int dst_pitch = copy_w * (int) sizeof(lv_color_t);

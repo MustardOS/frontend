@@ -328,7 +328,7 @@ void str_split(char *text, char sep, char *p1, char *p2) {
 
     if (pos) {
         size_t len = pos - text;
-        strncpy(p1, text, len);
+        memcpy(p1, text, len);
         p1[len] = '\0';
         strcpy(p2, pos + 1);
     } else {
@@ -416,7 +416,7 @@ int str_replace_segment(const char *orig, const char *prefix, const char *suffix
     *replacement = (char *) malloc(total_len);
     if (!*replacement) return 0;
 
-    strncpy(*replacement, orig, len_front);
+    memcpy(*replacement, orig, len_front);
     strcpy(*replacement + len_front, with);
     strcpy(*replacement + len_front + len_with, end);
 
@@ -441,7 +441,7 @@ int str_extract(const char *orig, const char *prefix, const char *suffix, char *
     *extraction = (char *) malloc(len_dynamic + 1);
     if (!*extraction) return 0;
 
-    strncpy(*extraction, start, len_dynamic);
+    memcpy(*extraction, start, len_dynamic);
     (*extraction)[len_dynamic] = '\0';
 
     return 1;
@@ -474,8 +474,7 @@ char *str_rem_first_char(char *text, int count) {
     if (count <= 0) return text;
     if (count >= (int) len) return "";
 
-    strncpy(buffer, text + count, sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0';
+    snprintf(buffer, sizeof(buffer), "%s", text + count);
 
     return buffer;
 }
@@ -486,8 +485,7 @@ char *str_rem_last_char(char *text, int count) {
 
     if (count >= (int) len) return "";
 
-    strncpy(buffer, text, sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0';
+    snprintf(buffer, sizeof(buffer), "%s", text);
 
     while (count-- > 0 && len > 0) {
         len--;
@@ -874,8 +872,7 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
     static char meta[MAX_BUFFER_SIZE];
     const char *result = mini_get_string(ini_config, section, key, default_value);
 
-    strncpy(meta, result, MAX_BUFFER_SIZE - 1);
-    meta[MAX_BUFFER_SIZE - 1] = '\0';
+    snprintf(meta, MAX_BUFFER_SIZE, "%s", result);
 
     return meta;
 }
@@ -1529,7 +1526,7 @@ void build_image_array(char *base_image_path) {
         return;
     }
 
-    strncpy(base_path, base_image_path, base_len);
+    memcpy(base_path, base_image_path, base_len);
     base_path[base_len] = '\0';
 
     int index = 0;

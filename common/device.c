@@ -30,8 +30,7 @@ void load_device(struct mux_device *device) {
     do {                                                                  \
         snprintf(buffer, sizeof(buffer), (CONF_DEVICE_PATH "%s"), path);  \
         char *_s = read_all_char_from(buffer);                            \
-        strncpy(field, _s, MAX_BUFFER_SIZE - 1);                          \
-        field[MAX_BUFFER_SIZE - 1] = '\0';                                \
+        snprintf(field, MAX_BUFFER_SIZE, "%s", _s);                       \
         free(_s);                                                         \
     } while (0)
 

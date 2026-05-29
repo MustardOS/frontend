@@ -196,8 +196,7 @@ static void load_impl(const char *base_path, int frame_delay_ms, int foreground,
         return;
     }
 
-    strncpy(anim.base_path, base_path, sizeof(anim.base_path) - 1);
-    anim.base_path[sizeof(anim.base_path) - 1] = '\0';
+    snprintf(anim.base_path, sizeof(anim.base_path), "%s", base_path);
 
     anim.frame_delay_ms = frame_delay_ms > 0 ? frame_delay_ms : 100;
     anim.foreground = foreground;

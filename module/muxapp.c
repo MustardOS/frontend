@@ -78,10 +78,7 @@ static void show_help(void) {
             LOG_SUCCESS(mux_module, "Loading Application Translation: %s", app_lang_file);
 
             mini_t *app_lang = mini_load(app_lang_file);
-
-            strncpy(app_help, get_ini_string(app_lang, "help", config.SETTINGS.GENERAL.LANGUAGE,
-                                             TRS(lang.GENERIC.NO_HELP)), sizeof(app_help));
-            app_help[sizeof(app_help) - 1] = '\0';
+            snprintf(app_help, sizeof(app_help), "%s", get_ini_string(app_lang, "help", config.SETTINGS.GENERAL.LANGUAGE, TRS(lang.GENERIC.NO_HELP)));
 
             mini_free(app_lang);
         } else {

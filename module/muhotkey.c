@@ -497,7 +497,7 @@ static int open_raw_event_index(int idx, struct pollfd *pfd, const char *label) 
     }
 
     char name[128] = {0};
-    if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) strcpy(name, "unknown");
+    if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) snprintf(name, sizeof(name), "%s", "unknown");
 
     LOG_DEBUG("input", "Raw %s device: %s (%s)", label, path, name);
 

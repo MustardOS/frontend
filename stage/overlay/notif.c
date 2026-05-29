@@ -184,8 +184,7 @@ static int parse_notif_file(void) {
             }
         } else {
             if (notif_cfg.text_line_count < NOTIF_MAX_TEXT_LINES) {
-                strncpy(notif_cfg.text_lines[notif_cfg.text_line_count], line, NOTIF_TEXT_LINE_LEN - 1);
-                notif_cfg.text_lines[notif_cfg.text_line_count][NOTIF_TEXT_LINE_LEN - 1] = '\0';
+                snprintf(notif_cfg.text_lines[notif_cfg.text_line_count], NOTIF_TEXT_LINE_LEN, "%s", line);
                 notif_cfg.text_line_count++;
             }
         }
@@ -221,7 +220,7 @@ static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][
 
         if (wi == 0) {
             if (at_newline) {
-                strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
+                snprintf(lines[line_count++], WW_LINE_LEN, "%s", cur);
                 cur[0] = '\0';
             }
             continue;
@@ -235,19 +234,19 @@ static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][
         TTF_SizeUTF8(font, trial, &tw, &th);
 
         if (tw > max_px && cur[0]) {
-            strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
-            strncpy(cur, word, sizeof(cur) - 1);
+            snprintf(lines[line_count++], WW_LINE_LEN, "%s", cur);
+            snprintf(cur, sizeof(cur), "%s", word);
         } else {
-            strncpy(cur, trial, sizeof(cur) - 1);
+            snprintf(cur, sizeof(cur), "%s", trial);
         }
 
         if (at_newline) {
-            strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
+            snprintf(lines[line_count++], WW_LINE_LEN, "%s", cur);
             cur[0] = '\0';
         }
     }
 
-    if (line_count < max_lines) strncpy(lines[line_count++], cur, WW_LINE_LEN - 1);
+    if (line_count < max_lines) snprintf(lines[line_count++], WW_LINE_LEN, "%s", cur);
     return line_count;
 }
 

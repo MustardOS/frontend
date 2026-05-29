@@ -271,20 +271,20 @@ static int find_recursive_core_file(const char *start_path, char *recursive_core
     while (1) {
         snprintf(current_dir, sizeof(current_dir), "%s", strip_dir(current_dir));
 
-        snprintf(recursive_core_file, MAX_BUFFER_SIZE, INFO_CON_PATH "/%s/core_recursive.cfg",
-                get_last_subdir(current_dir, '/', 4));
+        snprintf(recursive_core_file, MAX_BUFFER_SIZE, INFO_CON_PATH "/%s/core_recursive.cfg", get_last_subdir(current_dir, '/', 4));
         remove_double_slashes(recursive_core_file);
 
         if (file_exist(recursive_core_file)) return 1;
         if (strcasecmp(root_core_file, recursive_core_file) == 0) return 0;
     }
+
     return 0;
 }
 
 bool automatic_assign_core(char *rom_dir) {
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.cfg",
-             get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.cfg", get_last_subdir(rom_dir, '/', 4));
+
     remove_double_slashes(core_file);
 
     if (file_exist(core_file)) return true;
@@ -318,7 +318,7 @@ bool automatic_assign_core(char *rom_dir) {
             mini_t *global_ini = mini_load(assigned_core_global);
 
             static char def_core[MAX_BUFFER_SIZE];
-            strcpy(def_core, get_ini_string(global_ini, "global", "default", "none"));
+            snprintf(def_core, sizeof(def_core), "%s", get_ini_string(global_ini, "global", "default", "none"));
 
             LOG_INFO(mux_module, "\tDefault Core: %s", def_core);
 
@@ -330,7 +330,7 @@ bool automatic_assign_core(char *rom_dir) {
                 mini_t *core_ini = mini_load(default_core);
 
                 static char auto_core[MAX_BUFFER_SIZE];
-                strcpy(auto_core, get_ini_string(core_ini, def_core, "core", "none"));
+                snprintf(auto_core, sizeof(auto_core), "%s", get_ini_string(core_ini, def_core, "core", "none"));
 
                 if (strcmp(auto_core, "none") != 0) {
                     LOG_INFO(mux_module, "\tAssigned Core To: %s", auto_core);
@@ -344,37 +344,37 @@ bool automatic_assign_core(char *rom_dir) {
 
                     char *use_local_catalogue = get_ini_string(core_ini, def_core, "catalogue", "none");
                     if (strcmp(use_local_catalogue, "none") != 0) {
-                        strcpy(core_catalogue, use_local_catalogue);
+                        snprintf(core_catalogue, sizeof(core_catalogue), "%s", use_local_catalogue);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Catalogue: %s", core_catalogue);
                     } else {
-                        strcpy(core_catalogue, get_ini_string(global_ini, "global", "catalogue", "none"));
+                        snprintf(core_catalogue, sizeof(core_catalogue), "%s", get_ini_string(global_ini, "global", "catalogue", "none"));
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue);
                     }
 
                     char *use_local_governor = get_ini_string(core_ini, def_core, "governor", "none");
                     if (strcmp(use_local_governor, "none") != 0) {
-                        strcpy(core_governor, use_local_governor);
+                        snprintf(core_governor, sizeof(core_governor), "%s", use_local_governor);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
                     } else {
-                        strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+                        snprintf(core_governor, sizeof(core_governor), "%s", get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
                     }
 
                     char *use_local_control = get_ini_string(core_ini, def_core, "control", "none");
                     if (strcmp(use_local_control, "none") != 0) {
-                        strcpy(core_control, use_local_control);
+                        snprintf(core_control, sizeof(core_control), "%s", use_local_control);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
                     } else {
-                        strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
+                        snprintf(core_control, sizeof(core_control), "%s", get_ini_string(global_ini, "global", "control", "system"));
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control);
                     }
 
                     char *use_local_retroarch = get_ini_string(core_ini, def_core, "retroarch", "false");
                     if (strcmp(use_local_retroarch, "false") != 0) {
-                        strcpy(core_retroarch, use_local_retroarch);
+                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
                         LOG_INFO(mux_module, "\t(LOCAL) Core RetroArch Config: %s", core_retroarch);
                     } else {
-                        strcpy(core_retroarch, get_ini_string(global_ini, "global", "retroarch", "false"));
+                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
                         LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
                     }
 
@@ -402,8 +402,7 @@ bool automatic_assign_core(char *rom_dir) {
             }
 
             mini_free(global_ini);
-        }
-        else {
+        } else {
             if (!file_exist(core_file)) {
                 char recursive_core_file[MAX_BUFFER_SIZE];
                 if (find_recursive_core_file(rom_dir, recursive_core_file)) {
@@ -422,8 +421,7 @@ static const char *format_retroarch_core(const char *ra_core) {
     static char out[CORE_BUFFER];
     char tmp[CORE_BUFFER];
 
-    strncpy(tmp, ra_core, sizeof(tmp));
-    tmp[sizeof(tmp) - 1] = 0;
+    snprintf(tmp, sizeof(tmp), "%s", ra_core);
 
     char *ra_so = strstr(tmp, "_libretro.so");
     if (ra_so) *ra_so = 0;

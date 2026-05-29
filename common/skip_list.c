@@ -126,7 +126,8 @@ void process_cue_file(char *dir, const char *filename, SkipList *sl) {
                 fclose(f);
                 exit(EXIT_FAILURE);
             }
-            strncpy(name, start, len);
+
+            memcpy(name, start, len);
             name[len] = '\0';
 
             add_to_skiplist(sl, dir, name);
@@ -164,7 +165,8 @@ void process_gdi_file(char *dir, const char *filename, SkipList *sl) {
                 fclose(f);
                 exit(EXIT_FAILURE);
             }
-            strncpy(name, start, len);
+
+            memcpy(name, start, len);
             name[len] = '\0';
 
             add_to_skiplist(sl, dir, name);
