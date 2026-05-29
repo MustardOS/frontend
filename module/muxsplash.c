@@ -11,7 +11,13 @@ int muxsplash_main(char *splash_image, bool apply_recolour) {
     char init_wall[MAX_BUFFER_SIZE];
     snprintf(init_wall, sizeof(init_wall), "M:%s", splash_image);
 
-    lv_img_set_src(ui_imgWall, init_wall);
+    lv_img_header_t wall_hdr;
+    if (lv_img_decoder_get_info(init_wall, &wall_hdr) == LV_RES_OK) {
+        lv_img_set_src(ui_imgWall, init_wall);
+    } else {
+        lv_img_set_src(ui_imgWall, &ui_img_blank);
+    }
+
     if (apply_recolour && theme.IMAGE_LIST.RECOLOUR_ALPHA > 0) {
         lv_obj_set_style_img_recolor(ui_imgWall, lv_color_hex(theme.IMAGE_LIST.RECOLOUR), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_imgWall, theme.IMAGE_LIST.RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);

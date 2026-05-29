@@ -1583,7 +1583,12 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", theme_base, mux_dim);
-        lv_img_set_src(ui_imgWall, init_wall);
+        lv_img_header_t wall_hdr;
+        if (lv_img_decoder_get_info(init_wall, &wall_hdr) == LV_RES_OK) {
+            lv_img_set_src(ui_imgWall, init_wall);
+        } else {
+            lv_img_set_src(ui_imgWall, &ui_img_blank);
+        }
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, wall_type);
     }

@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         char lv_wall[MAX_BUFFER_SIZE];
         snprintf(lv_wall, sizeof(lv_wall), "M:%s", init_wall);
 
-        lv_img_set_src(ui_imgWall, strdup(lv_wall));
+        lv_img_set_src(ui_imgWall, lv_wall);
     } else {
         load_wallpaper(ui_scrMessage, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
     }
