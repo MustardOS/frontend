@@ -3316,7 +3316,8 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
 
     if (mode == PARSE_TOKENS) {
         if (fgets(line, sizeof(line), file)) {
-            char *token = strtok(line, " \t\r\n");
+            char *saveptr;
+            char *token = strtok_r(line, " \t\r\n", &saveptr);
             while (token && *count < MAX_BUFFER_SIZE) {
                 list[*count] = strdup(token);
 
@@ -3326,7 +3327,7 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
                 }
 
                 (*count)++;
-                token = strtok(NULL, " \t\r\n");
+                token = strtok_r(NULL, " \t\r\n", &saveptr);
             }
         }
     } else {
