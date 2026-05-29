@@ -1,6 +1,19 @@
 #include "muxshare.h"
 #include "ui/ui_muxpass.h"
 
+#define PASSCODE_LEN 6
+#define PASSCODE_NOP "000000"
+
+static int passcode_eq(const char *a, const char *b) {
+    unsigned char diff = 0;
+
+    for (size_t i = 0; i < PASSCODE_LEN; i++) {
+        diff |= (unsigned char) a[i] ^ (unsigned char) b[i];
+    }
+
+    return diff == 0;
+}
+
 static int exit_status_muxpass = 0;
 
 struct mux_passcode passcode;
@@ -41,8 +54,8 @@ static void handle_a(void) {
     char try_code[13];
     snprintf(try_code, sizeof(try_code), "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
 
-    int code_match = strcasecmp(try_code, p_code) == 0;
-    int safety_match = strcasecmp(passcode.CODE.SAFETY, "000000") != 0 && strcasecmp(try_code, passcode.CODE.SAFETY) == 0;
+    int code_match = passcode_eq(try_code, p_code);
+    int safety_match = strcasecmp(passcode.CODE.SAFETY, PASSCODE_NOP) != 0 && passcode_eq(try_code, passcode.CODE.SAFETY);
 
     if (code_match || safety_match) {
         play_sound(SND_MUOS);
@@ -64,18 +77,14 @@ static void handle_up(void) {
     play_sound(SND_NAVIGATE);
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    lv_roller_set_selected(e_focused,
-                           lv_roller_get_selected(e_focused) - 1,
-                           LV_ANIM_ON);
+    lv_roller_set_selected(e_focused, lv_roller_get_selected(e_focused) - 1, LV_ANIM_ON);
 }
 
 static void handle_down(void) {
     play_sound(SND_NAVIGATE);
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    lv_roller_set_selected(e_focused,
-                           lv_roller_get_selected(e_focused) + 1,
-                           LV_ANIM_ON);
+    lv_roller_set_selected(e_focused, lv_roller_get_selected(e_focused) + 1, LV_ANIM_ON);
 }
 
 static void handle_left(void) {
@@ -133,7 +142,7 @@ int muxpass_main(int auth_type) {
         return 2;
     }
 
-    if (strcasecmp(p_code, "000000") == 0) return 1;
+    if (strcasecmp(p_code, PASSCODE_NOP) == 0) return 1;
 
     init_theme(0, 0);
 
@@ -146,8 +155,7 @@ int muxpass_main(int auth_type) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree,
-                     ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
+    apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree, ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
     load_font_text(ui_screen);
