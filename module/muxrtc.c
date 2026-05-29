@@ -309,11 +309,25 @@ static void adjust_option(int direction) {
     check_rtc_state(&rtc, &old_rtc);
 }
 
-static void save_and_exit(char *message) {
-    toast_message(message, FOREVER);
+static int is_valid_date(void) {
+    if (rtc.year < MIN_YEAR || rtc.year > MAX_YEAR) return 0;
+    if (rtc.month < 1 || rtc.month > MONTHS_IN_YEAR) return 0;
+    if (rtc.day < 1 || rtc.day > days_in_month(rtc.year, rtc.month)) return 0;
+    if (rtc.hour < 0 || rtc.hour >= HOURS_IN_DAY) return 0;
+    if (rtc.minute < 0 || rtc.minute >= MINUTES_IN_HOUR) return 0;
 
-    // Validate the final RTC state before saving
+    return 1;
+}
+
+static void save_and_exit(char *message) {
     validate_year();
+
+    if (!is_valid_date()) {
+        toast_message(lang.GENERIC.INVALID_TIME, MEDIUM);
+        return;
+    }
+
+    toast_message(message, FOREVER);
     save_clock_settings(rtc.year, rtc.month, rtc.day, rtc.hour, rtc.minute, rtc.notation);
 
     mux_input_stop();
