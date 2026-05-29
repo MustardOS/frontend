@@ -1098,6 +1098,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
         return;
     }
 
+    int dfd = dirfd(dir);
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL) {
@@ -1108,7 +1109,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 
         if (entry->d_type == DT_DIR || entry->d_type == DT_UNKNOWN) {
             struct stat st;
-            if (stat(full_path, &st) == 0 && S_ISDIR(st.st_mode)) {
+            if (fstatat(dfd, entry->d_name, &st, AT_SYMLINK_NOFOLLOW) == 0 && S_ISDIR(st.st_mode)) {
                 delete_files_of_name(full_path, filename);
                 continue;
             }
@@ -3063,12 +3064,14 @@ void populate_items(const char *base_path, char ***items, int *item_count) {
         return;
     }
 
+    int dfd = dirfd(dir);
+
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
         snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
 
         struct stat st;
-        if (stat(full_path, &st) == -1) {
+        if (fstatat(dfd, entry->d_name, &st, AT_SYMLINK_NOFOLLOW) == -1) {
             LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_STAT);
             continue;
         }
@@ -3492,6 +3495,8 @@ int remove_directory_recursive(const char *path) {
         return -1;
     }
 
+    int dfd = dirfd(dp);
+
     while ((entry = readdir(dp)) != NULL) {
         char fullpath[4096];
         struct stat statbuf;
@@ -3504,8 +3509,8 @@ int remove_directory_recursive(const char *path) {
 
         snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
 
-        if (lstat(fullpath, &statbuf) == -1) {
-            perror("lstat");
+        if (fstatat(dfd, entry->d_name, &statbuf, AT_SYMLINK_NOFOLLOW) == -1) {
+            perror("fstatat");
             closedir(dp);
             return -1;
         }
