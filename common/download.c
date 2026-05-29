@@ -161,10 +161,10 @@ void initiate_download(const char *url, const char *output_path, bool showProgre
 
     if (showProgress) show_progress_bar(message);
 
-    download_args_t *args = malloc(sizeof(*args));
+    download_args_t *args = mux_malloc(sizeof(*args));
 
-    args->url = strdup(url);
-    args->save_path = strdup(output_path);
+    args->url = mux_strdup(url);
+    args->save_path = mux_strdup(output_path);
 
     pthread_t tid;
     pthread_create(&tid, NULL, download_thread, args);

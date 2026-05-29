@@ -570,3 +570,21 @@ int get_index_on_delete(int current_index, int post_delete_count);
 char *get_storage_label(const char *path);
 
 const char *resolve_info_path(const char *rel);
+
+static inline void *mux_malloc(size_t n) {
+    void *p = malloc(n);
+    if (!p && n) {
+        fprintf(stderr, "mux_malloc: OOM (%zu bytes)\n", n);
+        abort();
+    }
+    return p;
+}
+
+static inline char *mux_strdup(const char *s) {
+    char *p = strdup(s);
+    if (!p) {
+        fprintf(stderr, "mux_strdup: OOM\n");
+        abort();
+    }
+    return p;
+}

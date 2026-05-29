@@ -46,7 +46,7 @@ enum lookup_mode {
 };
 
 static void results_reserve(struct results *r) {
-    r->items = malloc(MAX_BUFFER_SIZE * sizeof(struct result_item));
+    r->items = mux_malloc(MAX_BUFFER_SIZE * sizeof(struct result_item));
     r->cap = MAX_BUFFER_SIZE;
     r->count = 0;
 }

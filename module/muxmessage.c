@@ -78,7 +78,7 @@ static void load_messages(const char *filename) {
     while (fgets(line, sizeof(line), file)) {
         size_t len = strlen(line);
         if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0';
-        messages[index++] = strdup(line);
+        messages[index++] = mux_strdup(line);
     }
 
     message_count = count;

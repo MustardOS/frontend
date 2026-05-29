@@ -846,7 +846,7 @@ static void parse_combos_file(const char *filename) {
         }
 
         size_t len = json_string_length(key) + 1;
-        char *name = malloc(len);
+        char *name = mux_malloc(len);
         json_string_copy(key, name, len);
 
         if (combo_name_exists(name)) {
@@ -887,7 +887,7 @@ static void parse_combos_file(const char *filename) {
 
         if (json_exists(exec_json)) {
             size_t l = json_string_length(exec_json) + 1;
-            c->exec_cmd = malloc(l);
+            c->exec_cmd = mux_malloc(l);
             json_string_copy(exec_json, c->exec_cmd, l);
             c->exec_argv = split_command(c->exec_cmd, &c->exec_argc);
         }

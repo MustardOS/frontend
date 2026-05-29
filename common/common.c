@@ -253,7 +253,7 @@ char *str_nonew(char *text) {
 }
 
 char *str_tolower(char *text) {
-    char *result = strdup(text);
+    char *result = mux_strdup(text);
     char *ptr = result;
 
     while (*ptr) {
@@ -265,7 +265,7 @@ char *str_tolower(char *text) {
 }
 
 char *str_toupper(char *text) {
-    char *result = strdup(text);
+    char *result = mux_strdup(text);
     char *ptr = result;
 
     while (*ptr) {
@@ -573,7 +573,7 @@ char *get_content_name(char *path) {
 }
 
 char *strip_dir(char *text) {
-    char *result = strdup(text);
+    char *result = mux_strdup(text);
     char *last_slash = strrchr(result, '/');
 
     if (last_slash != NULL) *last_slash = '\0';
@@ -582,7 +582,7 @@ char *strip_dir(char *text) {
 }
 
 char *strip_ext(char *text) {
-    char *result = strdup(text);
+    char *result = mux_strdup(text);
     char *ext = strrchr(result, '.');
 
     if (ext != NULL) *ext = '\0';
@@ -593,9 +593,9 @@ char *strip_ext(char *text) {
 char *grab_ext(char *text) {
     char *ext = strrchr(text, '.');
 
-    if (ext != NULL && *(ext + 1) != '\0') return strdup(ext + 1);
+    if (ext != NULL && *(ext + 1) != '\0') return mux_strdup(ext + 1);
 
-    return strdup("");
+    return mux_strdup("");
 }
 
 // Just so nobody is confused in the future...
@@ -1703,7 +1703,7 @@ void load_skip_patterns(void) {
             skip_pattern_list.capacity = newcap;
         }
 
-        skip_pattern_list.patterns[skip_pattern_list.count++] = strdup(line);
+        skip_pattern_list.patterns[skip_pattern_list.count++] = mux_strdup(line);
     }
 
     fclose(file);
@@ -1956,7 +1956,7 @@ char *translate_generic(char *key) {
     if (json_exists(translation_generic_json)) {
         char translation[MAX_BUFFER_SIZE];
         json_string_copy(translation_generic_json, translation, sizeof(translation));
-        return strdup(translation);
+        return mux_strdup(translation);
     }
 
     return key;
@@ -1968,7 +1968,7 @@ char *translate_specific(char *key) {
     if (json_exists(translation_specific_json)) {
         char translation[MAX_BUFFER_SIZE];
         json_string_copy(translation_specific_json, translation, sizeof(translation));
-        return strdup(translation);
+        return mux_strdup(translation);
     }
 
     return key;
@@ -2115,10 +2115,10 @@ void extract_zip_to_dir_with_progress(const char *filename, const char *output, 
     extraction_finish_cb = callback;
     show_progress_bar(lang.GENERIC.EXTRACTING_ARCHIVE);
 
-    extraction_args_t *args = malloc(sizeof(*args));
+    extraction_args_t *args = mux_malloc(sizeof(*args));
 
-    args->filename = strdup(filename);
-    args->output_path = strdup(output);
+    args->filename = mux_strdup(filename);
+    args->output_path = mux_strdup(output);
 
     pthread_t tid;
     pthread_create(&tid, NULL, extraction_thread, args);

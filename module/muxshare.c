@@ -345,7 +345,7 @@ void update_file_counter(lv_obj_t *counter, int file_count) {
 }
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
-    char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
+    char *friendly_folder_name = mux_malloc(MAX_BUFFER_SIZE);
     snprintf(friendly_folder_name, MAX_BUFFER_SIZE, "%s", folder_name);
 
     if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
