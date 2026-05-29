@@ -223,7 +223,7 @@ static void init_navigation_group(void) {
     char *all_type_options[] = {
             lang.MUXFONT.TYPE_OPTIONS.LANGUAGE,
             lang.MUXFONT.TYPE_OPTIONS.THEME,
-            lang.MUXFONT.TYPE_OPTIONS.CUSTOM
+            lang.MUXFONT.TYPE_OPTIONS.INTERNAL
     };
     char **type_options = has_language_type ? all_type_options : all_type_options + 1;
     int type_count = has_language_type ? 3 : 2;

@@ -578,7 +578,7 @@ struct mux_lang {
         struct {
             char LANGUAGE[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
-            char CUSTOM[MAX_BUFFER_SIZE];
+            char INTERNAL[MAX_BUFFER_SIZE];
         } TYPE_OPTIONS;
         struct {
             char TYPE[MAX_BUFFER_SIZE];

@@ -523,7 +523,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXFONT.NONE, "No Fonts Available");
     SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.THEME, "Theme");
-    SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.CUSTOM, "Custom");
+    SPECIFIC_FIELD(lang->MUXFONT.TYPE_OPTIONS.INTERNAL, "Internal");
     SPECIFIC_FIELD(lang->MUXFONT.HELP.TYPE, "Select the font type: Language uses the built-in language font, Theme uses fonts provided by the active theme, Custom lets you pick a specific TTF font");
     SPECIFIC_FIELD(lang->MUXFONT.HELP.NAME, "Select the custom TTF font to use (only applies when Font Type is Custom)");
     SPECIFIC_FIELD(lang->MUXFONT.HELP.LISTSIZE, "Set the font size for list items (0 uses the device default)");
