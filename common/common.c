@@ -1242,7 +1242,6 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
         CAT_THEME, CAT_INFO
     };
 
-    const char *path_format = "%s/%s/%s/%s%s.png";
     const bool skip_theme_catalogue =
             !dir_exist(config.THEME.THEME_CAT_PATH) || !is_supported_theme_catalogue(catalogue_name, image_type);
 
@@ -1266,16 +1265,24 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             {CAT_INFO, INFO_CAT_PATH,                "",      program_default},
     };
 
-    for (size_t i = 0; i < A_SIZE(args); i++) {
-        if ((args[i].kind == CAT_THEME && skip_theme_catalogue) ||
-            args[i].program[0] == '\0') {
-            continue;
-        }
 
-        int written;
-        written = snprintf(image_path, path_size, path_format, args[i].catalogue_path, catalogue_name,
-                           image_type, args[i].dimension, args[i].program);
-        if (written >= 0 && file_exist(image_path)) return 1;
+    const char *path_formats[] = {
+        "%s/%s/%s/%s%s.jpg",
+        "%s/%s/%s/%s%s.png"
+    };
+
+    for (size_t j = 0; j < A_SIZE(path_formats); ++j) {
+        for (size_t i = 0; i < A_SIZE(args); i++) {
+            if ((args[i].kind == CAT_THEME && skip_theme_catalogue) ||
+                args[i].program[0] == '\0') {
+                continue;
+            }
+
+            int written;
+            written = snprintf(image_path, path_size, path_formats[j], args[i].catalogue_path, catalogue_name,
+                            image_type, args[i].dimension, args[i].program);
+            if (written >= 0 && file_exist(image_path)) return 1;
+        }
     }
 
     return 0;
