@@ -345,6 +345,15 @@
     OVERLAY(BriAnchor, BRIANCHOR, "bri_anchor") \
     OVERLAY(BriScale,  BRISCALE,  "bri_scale")
 
+#define PASSCFG_ELEMENTS                              \
+    PASSCFG(BootCode,    BOOTCODE,    "boot_lock")    \
+    PASSCFG(BootMsg,     BOOTMSG,     "boot_info")    \
+    PASSCFG(LaunchCode,  LAUNCHCODE,  "launch_lock")  \
+    PASSCFG(LaunchMsg,   LAUNCHMSG,   "launch_info")  \
+    PASSCFG(SettingCode, SETTINGCODE, "setting_lock") \
+    PASSCFG(SettingMsg,  SETTINGMSG,  "setting_info") \
+    PASSCFG(SafetyCode,  SAFETYCODE,  "safety")
+
 #define POWER_ELEMENTS                              \
     POWER(Shutdown,    SHUTDOWN,    "shutdown")     \
     POWER(Battery,     BATTERY,     "battery")      \
@@ -462,15 +471,6 @@
     TWEAKADV(TrustPower,  TRUSTPOWER,  "trustpower")  \
     TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove") \
     TWEAKADV(UsbFunction, USBFUNCTION, "usbfunction")
-
-#define PASSCFG_ELEMENTS                        \
-    PASSCFG(BootCode,    BOOTCODE,    "lock")   \
-    PASSCFG(BootMsg,     BOOTMSG,     "info")   \
-    PASSCFG(LaunchCode,  LAUNCHCODE,  "lock")   \
-    PASSCFG(LaunchMsg,   LAUNCHMSG,   "info")   \
-    PASSCFG(SettingCode, SETTINGCODE, "lock")   \
-    PASSCFG(SettingMsg,  SETTINGMSG,  "info")   \
-    PASSCFG(SafetyCode,  SAFETYCODE,  "safety")
 
 #define TWEAKGEN_ELEMENTS                          \
     TWEAKGEN(Rtc,        RTC,        "clock")      \

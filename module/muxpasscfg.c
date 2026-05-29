@@ -305,12 +305,12 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, passcfg, BootCode, lang.MUXPASSCFG.BOOTCODE, "lock", code_display(passcfg.CODE.BOOT));
-    INIT_VALUE_ITEM(-1, passcfg, BootMsg, lang.MUXPASSCFG.BOOTMSG, "info", msg_display(passcfg.MESSAGE.BOOT));
-    INIT_VALUE_ITEM(-1, passcfg, LaunchCode, lang.MUXPASSCFG.LAUNCHCODE, "lock", code_display(passcfg.CODE.LAUNCH));
-    INIT_VALUE_ITEM(-1, passcfg, LaunchMsg, lang.MUXPASSCFG.LAUNCHMSG, "info", msg_display(passcfg.MESSAGE.LAUNCH));
-    INIT_VALUE_ITEM(-1, passcfg, SettingCode, lang.MUXPASSCFG.SETTINGCODE, "lock", code_display(passcfg.CODE.SETTING));
-    INIT_VALUE_ITEM(-1, passcfg, SettingMsg, lang.MUXPASSCFG.SETTINGMSG, "info", msg_display(passcfg.MESSAGE.SETTING));
+    INIT_VALUE_ITEM(-1, passcfg, BootCode, lang.MUXPASSCFG.BOOTCODE, "boot_lock", code_display(passcfg.CODE.BOOT));
+    INIT_VALUE_ITEM(-1, passcfg, BootMsg, lang.MUXPASSCFG.BOOTMSG, "boot_info", msg_display(passcfg.MESSAGE.BOOT));
+    INIT_VALUE_ITEM(-1, passcfg, LaunchCode, lang.MUXPASSCFG.LAUNCHCODE, "launch_lock", code_display(passcfg.CODE.LAUNCH));
+    INIT_VALUE_ITEM(-1, passcfg, LaunchMsg, lang.MUXPASSCFG.LAUNCHMSG, "launch_info", msg_display(passcfg.MESSAGE.LAUNCH));
+    INIT_VALUE_ITEM(-1, passcfg, SettingCode, lang.MUXPASSCFG.SETTINGCODE, "setting_lock", code_display(passcfg.CODE.SETTING));
+    INIT_VALUE_ITEM(-1, passcfg, SettingMsg, lang.MUXPASSCFG.SETTINGMSG, "setting_info", msg_display(passcfg.MESSAGE.SETTING));
     INIT_VALUE_ITEM(-1, passcfg, SafetyCode, lang.MUXPASSCFG.SAFETYCODE, "safety", code_display(passcfg.CODE.SAFETY));
 
     reset_ui_groups();
