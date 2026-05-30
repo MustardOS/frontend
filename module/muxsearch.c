@@ -712,7 +712,7 @@ static void ui_refresh_task() {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, WALL_GENERAL);
         adjust_panels();
-        lv_obj_move_foreground(overlay_image);
+        if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
     }

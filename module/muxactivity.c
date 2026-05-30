@@ -1968,7 +1968,7 @@ static void ui_refresh_task() {
         adjust_panels();
 
         if (!in_detail_view && !in_global_view) update_file_counter(ui_lblCounter_activity, ui_count);
-        lv_obj_move_foreground(overlay_image);
+        if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;

@@ -357,7 +357,7 @@ static void ui_refresh_task() {
         }
         adjust_gen_panel();
 
-        lv_obj_move_foreground(overlay_image);
+        if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;

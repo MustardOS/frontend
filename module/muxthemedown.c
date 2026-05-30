@@ -492,7 +492,7 @@ static void ui_refresh_task() {
         }
 
         update_file_counter(ui_lblCounter_explore, ui_count);
-        lv_obj_move_foreground(overlay_image);
+        if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
     }

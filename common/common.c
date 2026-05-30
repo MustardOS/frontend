@@ -1611,7 +1611,10 @@ void unload_image_animation(void) {
                                                ? theme.SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
         }
     }
+
     if (lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
+    wall_img = NULL;
+
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 

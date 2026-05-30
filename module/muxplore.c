@@ -801,7 +801,7 @@ static void show_splash() {
         if (splash_valid) {
             lv_obj_center(ui_imgSplash);
             lv_obj_move_foreground(ui_imgSplash);
-            lv_obj_move_foreground(overlay_image);
+            if (overlay_image) lv_obj_move_foreground(overlay_image);
 
             for (unsigned int i = 0; i <= 255; i += 15) {
                 lv_obj_set_style_img_opa(ui_imgSplash, i, MU_OBJ_MAIN_DEFAULT);
@@ -1227,7 +1227,7 @@ static void ui_refresh_task() {
         }
 
         update_file_counter(ui_lblCounter_explore, file_count);
-        lv_obj_move_foreground(overlay_image);
+        if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         refresh_nav_items();
 

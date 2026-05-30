@@ -310,7 +310,7 @@ static void ui_refresh_task() {
             lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         }
 
-        lv_obj_move_foreground(overlay_image);
+        if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
     }
