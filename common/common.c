@@ -2171,24 +2171,6 @@ void extract_zip_to_dir_with_progress(const char *filename, const char *output, 
     pthread_detach(tid);
 }
 
-// This isn't fooling anybody but hey it's better than nothing!
-static int is_safe_zip_entry(const char *path) {
-    if (!path || path[0] == '\0') return 0;
-
-    if (path[0] == '/') return 0;
-
-    if (strcmp(path, "..") == 0) return 0;
-
-    if (strncmp(path, "../", 3) == 0) return 0;
-
-    if (strstr(path, "/../") != NULL) return 0;
-
-    size_t len = strlen(path);
-    if (len >= 3 && strcmp(path + len - 3, "/..") == 0) return 0;
-
-    return 1;
-}
-
 int extract_zip_to_dir(const char *filename, const char *output) {
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
@@ -2199,22 +2181,39 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         return 0;
     }
 
+    create_directories(output, 0);
+
+    char resolved_output[PATH_MAX];
+    if (!realpath(output, resolved_output)) {
+        LOG_ERROR(mux_module, "Cannot resolve output path: '%s'", output);
+        mz_zip_reader_end(&zip);
+        return 0;
+    }
+    size_t resolved_len = strlen(resolved_output);
+
     mz_uint zip_file_count = mz_zip_reader_get_num_files(&zip);
 
     for (mz_uint i = 0; i < zip_file_count; i++) {
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
 
-        const char *filename = file_stat.m_filename;
+        const char *entry_name = file_stat.m_filename;
 
-        if (!is_safe_zip_entry(filename)) {
-            LOG_ERROR(mux_module, "Blocked unsafe path in ZIP: '%s'", filename);
+        if (entry_name[0] == '/' || strstr(entry_name, "..")) {
+            LOG_ERROR(mux_module, "Blocked unsafe path in ZIP: '%s'", entry_name);
             mz_zip_reader_end(&zip);
             return -1;
         }
 
-        char dest_file[MAX_BUFFER_SIZE];
-        snprintf(dest_file, sizeof(dest_file), "%s/%s", output, filename);
+        char dest_file[PATH_MAX];
+        snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, entry_name);
+
+        if (strncmp(dest_file, resolved_output, resolved_len) != 0 ||
+            (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
+            LOG_ERROR(mux_module, "Blocked path escape in ZIP: '%s'", entry_name);
+            mz_zip_reader_end(&zip);
+            return -1;
+        }
 
         if (file_stat.m_is_directory) {
             create_directories(dest_file, 0);
