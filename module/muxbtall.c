@@ -43,14 +43,17 @@ static void save_btall_options(void) {
     }
 }
 
-static void create_paired_device_items(void) {
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXBTALL.LOADING);
-    lv_obj_invalidate(ui_screen);
-    lv_refr_now(NULL);
+static void check_focus(void);
 
-    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "list", NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+static void list_nav_next(int steps);
 
+static void cancel_bt_poll(void);
+
+static int bt_list_pending = 0;
+static time_t bt_list_start = 0;
+static lv_timer_t *bt_poll_timer = NULL;
+
+static void populate_paired_device_list(void) {
     FILE *file = fopen(CONF_CONFIG_PATH "bluetooth/paired", "r");
     if (!file) return;
 
@@ -105,6 +108,49 @@ static void create_paired_device_items(void) {
     fclose(file);
 
     if (ui_count > UI_COUNT) lv_obj_update_layout(ui_pnlContent);
+}
+
+static void bt_poll_task(lv_timer_t *t) {
+    if (!bt_list_pending) {
+        lv_timer_del(t);
+        bt_poll_timer = NULL;
+        return;
+    }
+
+    struct stat st;
+    int file_ready = (stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0);
+    int timed_out = (time(NULL) - bt_list_start >= 10);
+
+    if (!file_ready && !timed_out) return;
+
+    bt_list_pending = 0;
+    lv_timer_del(t);
+    bt_poll_timer = NULL;
+
+    populate_paired_device_list();
+
+    lv_label_set_text(ui_lblScreenMessage, ui_count <= UI_COUNT ? lang.MUXBTALL.NONE : "");
+
+    if (ui_count > UI_COUNT) {
+        nav_silent = 1;
+        list_nav_next(0);
+        nav_silent = 0;
+        check_focus();
+    }
+}
+
+static void create_paired_device_items(void) {
+    lv_label_set_text(ui_lblScreenMessage, lang.MUXBTALL.LOADING);
+    lv_obj_invalidate(ui_screen);
+    lv_refr_now(NULL);
+
+    remove(CONF_CONFIG_PATH "bluetooth/paired");
+
+    bt_list_start = time(NULL);
+    bt_list_pending = 1;
+
+    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "list", NULL};
+    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 }
 
 static const char *get_focused_device_mac(void) {
@@ -199,6 +245,7 @@ static void handle_a(void) {
         const menu_entry *entry = &entries[current_item_index];
         if (entry->action == MENU_GENERAL) {
             play_sound(SND_CONFIRM);
+            cancel_bt_poll();
             save_btall_options();
             load_mux(entry->mux_name);
             mux_input_stop();
@@ -212,6 +259,7 @@ static void handle_a(void) {
     if (!mac) return;
 
     play_sound(SND_CONFIRM);
+    cancel_bt_poll();
 
     char mac_copy[18];
     snprintf(mac_copy, sizeof(mac_copy), "%s", mac);
@@ -224,12 +272,23 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
+static void cancel_bt_poll(void) {
+    if (bt_poll_timer) {
+        lv_timer_del(bt_poll_timer);
+        bt_poll_timer = NULL;
+    }
+
+    bt_list_pending = 0;
+}
+
 static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
+    cancel_bt_poll();
     save_btall_options();
     load_mux("btcon");
+
     mux_input_stop();
 }
 
@@ -242,6 +301,7 @@ static void handle_b(void) {
     }
 
     play_sound(SND_BACK);
+    cancel_bt_poll();
     save_btall_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "bluetooth");
@@ -274,8 +334,6 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, true);
 
     create_paired_device_items();
-
-    if (ui_count > UI_COUNT) lv_obj_update_layout(ui_pnlContent);
     list_nav_next(0);
 }
 
@@ -322,9 +380,8 @@ int muxbtall_main(void) {
     restore_btall_options();
     init_dropdown_settings();
 
-    lv_label_set_text(ui_lblScreenMessage, ui_count <= UI_COUNT ? lang.MUXBTALL.NONE : "");
-
     init_timer(ui_gen_refresh_task, NULL);
+    bt_poll_timer = lv_timer_create(bt_poll_task, 300, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
