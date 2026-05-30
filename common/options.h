@@ -196,7 +196,7 @@
     do {                                              \
         snprintf(buffer, sizeof(buffer), "%s", PATH); \
         cfg_write_def_int(buffer, DEFAULT);           \
-        FIELD = read_line_int_from(buffer, 1);        \
+        FIELD = cfg_read_int(buffer, DEFAULT);        \
     } while(0)
 
 #define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                     \

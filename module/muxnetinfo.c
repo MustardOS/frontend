@@ -166,7 +166,7 @@ static const char *get_signal_strength(void) {
         return lang.GENERIC.UNKNOWN;
     }
 
-    int dbm = safe_atoi(result);
+    int dbm = safe_atoi(result, 0);
     free(result);
 
     int index = dbm <= -100 ? 0 : (dbm >= 0 ? 100 : -dbm);
@@ -208,7 +208,7 @@ static const char *get_channel_info(void) {
         return lang.GENERIC.UNKNOWN;
     }
 
-    int freq = safe_atoi(result);
+    int freq = safe_atoi(result, 0);
     free(result);
 
     static const struct {

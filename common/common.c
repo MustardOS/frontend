@@ -733,8 +733,7 @@ int read_all_int_from(const char *filename, size_t buffer) {
     }
 
     fclose(file);
-    long value = strtol(line, NULL, 10);
-    return (value > INT_MAX || value < INT_MIN) ? 0 : (int) value;
+    return safe_atoi(line, 0);
 }
 
 int read_line_int_from(const char *filename, size_t line_number) {
@@ -745,10 +744,8 @@ int read_line_int_from(const char *filename, size_t line_number) {
     for (size_t i = 1; i <= line_number && fgets(line, sizeof(line), file); i++) {
         if (i == line_number) {
             line[strcspn(line, "\n")] = '\0';
-            errno = 0;
-            long value = strtol(line, NULL, 10);
             fclose(file);
-            return (errno == ERANGE) ? 0 : (int) value;
+            return safe_atoi(line, 0);
         }
     }
 
@@ -811,15 +808,13 @@ const char *get_random_hex(void) {
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
-    uint32_t result;
-    if (strcmp(meta, "NOT FOUND") == 0) {
-        result = default_value;
-    } else {
-        result = (uint32_t)
-                strtoul(meta, NULL, 16);
-    }
+    if (strcmp(meta, "NOT FOUND") == 0) return default_value;
 
-    return result;
+    char *end = NULL;
+    errno = 0;
+    unsigned long hex_val = strtoul(meta, &end, 16);
+    if (errno || end == meta || *end != '\0' || hex_val > UINT32_MAX) return default_value;
+    return (uint32_t) hex_val;
 }
 
 uint16_t get_ini_uint(mini_t *ini_config, const char *section, const char *key, uint16_t default_value) {
@@ -2572,18 +2567,18 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     }
 }
 
-int safe_atoi(const char *str) {
-    if (str == NULL) return 0;
+int cfg_read_int(const char *path, int fallback) {
+    FILE *f = fopen(path, "r");
+    if (!f) return fallback;
 
-    errno = 0;
-    char *str_ptr;
-    long val = strtol(str, &str_ptr, 10);
+    char buf[32];
+    int ok = (fgets(buf, sizeof(buf), f) != NULL);
+    fclose(f);
 
-    if (str_ptr == str) return 0;
-    if (*str_ptr != '\0') return 0;
-    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || (val > INT_MAX || val < INT_MIN)) return 0;
+    if (!ok) return fallback;
+    buf[strcspn(buf, "\n")] = '\0';
 
-    return (int) val;
+    return safe_atoi(buf, fallback);
 }
 
 void init_grid_info(int item_count, int column_count) {

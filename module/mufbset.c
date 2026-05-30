@@ -213,22 +213,22 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt_long(argc, argv, "w:h:d:x:y:r:imscg:M:vH", long_options, NULL)) != -1) {
         switch (opt) {
             case 'w':
-                width = safe_atoi(optarg);
+                width = safe_atoi(optarg, 0);
                 break;
             case 'h':
-                height = safe_atoi(optarg);
+                height = safe_atoi(optarg, 0);
                 break;
             case 'd':
-                depth = safe_atoi(optarg);
+                depth = safe_atoi(optarg, 0);
                 break;
             case 'x':
-                hsync_len = safe_atoi(optarg);
+                hsync_len = safe_atoi(optarg, 0);
                 break;
             case 'y':
-                vsync_len = safe_atoi(optarg);
+                vsync_len = safe_atoi(optarg, 0);
                 break;
             case 'r':
-                rotation = safe_atoi(optarg);
+                rotation = safe_atoi(optarg, 0);
                 break;
             case 'i':
                 ignore_dh = 1;

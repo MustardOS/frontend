@@ -5,6 +5,9 @@
 #include "mini/mini.h"
 #include "options.h"
 #include <pthread.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdlib.h>
 
 #define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define E_SIZE(LIST) A_SIZE(((int[]){ LIST }))
@@ -437,7 +440,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init);
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init);
 
-int safe_atoi(const char *str);
+int cfg_read_int(const char *path, int fallback);
 
 void init_grid_info(int item_count, int column_count);
 
@@ -589,4 +592,13 @@ static inline char *mux_strdup(const char *s) {
         abort();
     }
     return p;
+}
+
+static inline int safe_atoi(const char *s, int fallback) {
+    if (!s || !*s) return fallback;
+    char *end;
+    errno = 0;
+    long v = strtol(s, &end, 10);
+    if (errno || end == s || *end != '\0' || v < INT_MIN || v > INT_MAX) return fallback;
+    return (int) v;
 }

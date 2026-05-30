@@ -178,7 +178,7 @@ void last_index_check(void) {
 
     if (!index_path) return;
 
-    last_index = safe_atoi(read_line_char_from(index_path, 1));
+    last_index = safe_atoi(read_line_char_from(index_path, 1), 0);
     remove(index_path);
 }
 
