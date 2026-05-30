@@ -94,7 +94,16 @@ int muxtext_main(void) {
     init_fonts();
     init_timer(ui_gen_refresh_task, NULL);
 
-    lv_textarea_set_text(ui_txtDocument_text, read_all_char_from(read_line_char_from(TEXT_FILE, 2)));
+    char *raw_text_path = read_line_char_from(TEXT_FILE, 2);
+    char text_path[PATH_MAX];
+    if (!raw_text_path || !realpath(raw_text_path, text_path)) {
+        free(raw_text_path);
+        return 1;
+    }
+
+    free(raw_text_path);
+
+    lv_textarea_set_text(ui_txtDocument_text, read_all_char_from(text_path));
     handle_x();
 
     mux_input_options input_opts = {

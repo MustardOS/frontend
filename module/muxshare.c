@@ -554,6 +554,21 @@ void handle_msgbox_dismiss(void) {
     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
 }
 
+int build_safe_path(char *dst, size_t n, const char *base, const char *name) {
+    int len = snprintf(dst, n, "%s/%s", base, name);
+    if (len < 0 || (size_t) len >= n) return -1;
+
+    char resolved[PATH_MAX];
+    if (!realpath(dst, resolved)) return -1;
+
+    size_t base_len = strlen(base);
+    if (strncmp(resolved, base, base_len) != 0) return -1;
+    if (resolved[base_len] != '/' && resolved[base_len] != '\0') return -1;
+
+    snprintf(dst, n, "%s", resolved);
+    return 0;
+}
+
 void resolve_friendly_name(char *dir, char *raw_name, char *out) {
     char stripped[MAX_BUFFER_SIZE];
     char lowered[MAX_BUFFER_SIZE];

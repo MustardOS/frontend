@@ -69,7 +69,11 @@ static void create_archive_items(void) {
 
     for (size_t i = 0, k = 0; i < A_SIZE(mount_points); ++i) {
         for (size_t j = 0; j < A_SIZE(subdirs); ++j, ++k) {
-            snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
+            int len = snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
+            if (len < 0 || (size_t) len >= sizeof(archive_directories[k])) {
+                LOG_WARN(mux_module, "Archive path truncated: %s%s", mount_points[i], subdirs[j]);
+                archive_directories[k][0] = '\0';
+            }
         }
     }
 
@@ -138,10 +142,10 @@ static void create_archive_items(void) {
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
         char install_check[MAX_BUFFER_SIZE];
-        snprintf(install_check, sizeof(install_check), OPT_PATH "update/installed/%s.done",
-                 archive_name);
+        int ic_len = snprintf(install_check, sizeof(install_check),
+                              OPT_PATH "update/installed/%s.done", archive_name);
 
-        int is_installed = file_exist(install_check);
+        int is_installed = (ic_len >= 0 && (size_t) ic_len < sizeof(install_check)) && file_exist(install_check);
 
         char archive_store[MAX_BUFFER_SIZE];
         snprintf(archive_store, sizeof(archive_store), "%s %s", prefix, archive_name);

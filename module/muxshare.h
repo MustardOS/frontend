@@ -161,6 +161,8 @@ void list_nav_cb_next_nowrap(int steps);
 
 void handle_msgbox_dismiss(void);
 
+int build_safe_path(char *dst, size_t n, const char *base, const char *name);
+
 void resolve_friendly_name(char *dir, char *raw_name, char *out);
 
 void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value);

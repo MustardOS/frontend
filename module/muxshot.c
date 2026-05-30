@@ -27,17 +27,28 @@ static void image_refresh(void) {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgScreenshot));
 
-    char screenshot_file[PATH_MAX];
-    snprintf(screenshot_file, sizeof(screenshot_file), "%s/%s.png",
-             STORAGE_SHOTS, lv_label_get_text(lv_group_get_focused(ui_group)));
-
-    if (file_exist(screenshot_file)) {
-        char screenshot_image[PATH_MAX];
-        snprintf(screenshot_image, sizeof(screenshot_image), "M:%s", screenshot_file);
-        lv_img_set_src(ui_imgScreenshot, screenshot_image);
-    } else {
+    char shot_name[PATH_MAX];
+    int n_name = snprintf(shot_name, sizeof(shot_name), "%s.png",
+                          lv_label_get_text(lv_group_get_focused(ui_group)));
+    if (n_name < 0 || (size_t) n_name >= sizeof(shot_name)) {
         lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
+        return;
     }
+
+    char screenshot_file[PATH_MAX];
+    if (build_safe_path(screenshot_file, sizeof(screenshot_file), STORAGE_SHOTS, shot_name) != 0) {
+        lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
+        return;
+    }
+
+    char screenshot_image[PATH_MAX];
+    int n_img = snprintf(screenshot_image, sizeof(screenshot_image), "M:%s", screenshot_file);
+    if (n_img < 0 || (size_t) n_img >= sizeof(screenshot_image)) {
+        lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
+        return;
+    }
+
+    lv_img_set_src(ui_imgScreenshot, screenshot_image);
 }
 
 static void create_screenshot_items(void) {
@@ -95,11 +106,12 @@ static void create_screenshot_items(void) {
 
 
 static void do_remove(void) {
-    char screenshot_file[PATH_MAX];
-    snprintf(screenshot_file, sizeof(screenshot_file), "%s/%s.png",
-             STORAGE_SHOTS, lv_label_get_text(lv_group_get_focused(ui_group)));
+    char shot_name[PATH_MAX];
+    int n_name = snprintf(shot_name, sizeof(shot_name), "%s.png", lv_label_get_text(lv_group_get_focused(ui_group)));
 
-    if (!file_exist(screenshot_file)) {
+    char screenshot_file[PATH_MAX];
+    if (n_name < 0 || (size_t) n_name >= sizeof(shot_name) ||
+        build_safe_path(screenshot_file, sizeof(screenshot_file), STORAGE_SHOTS, shot_name) != 0) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
         return;

@@ -241,7 +241,7 @@ static void remove_match_items(const char *filter_name, int mode, char ***filter
     for (int c = 0; c < *filter_count; c++) {
         for (size_t i = 0; i < *item_count; i++) {
             char item_path[PATH_MAX];
-            snprintf(item_path, sizeof(item_path), "%s/%s", sys_dir, (*items)[i].name);
+            if (build_safe_path(item_path, sizeof(item_path), sys_dir, (*items)[i].name) != 0) continue;
 
             if (strcasecmp(item_path, (*filter_list)[c]) == 0) {
                 LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
@@ -1234,7 +1234,32 @@ static void ui_refresh_task() {
 
 static void navigate_to_dir(const char *new_dir, int restore_index) {
     char dest[PATH_MAX];
-    snprintf(dest, sizeof(dest), "%s", new_dir);
+    if (!realpath(new_dir, dest)) {
+        LOG_ERROR(mux_module, "Invalid navigation path: %s", new_dir);
+        return;
+    }
+
+    const char *mounts[] = {
+            device.STORAGE.ROM.MOUNT,
+            device.STORAGE.SDCARD.MOUNT,
+            device.STORAGE.USB.MOUNT,
+            NULL
+    };
+
+    int valid = 0;
+    for (int i = 0; mounts[i] && !valid; i++) {
+        size_t mount_len = strlen(mounts[i]);
+        if (mount_len > 0 && strncmp(dest, mounts[i], mount_len) == 0 &&
+            (dest[mount_len] == '/' || dest[mount_len] == '\0')) {
+            valid = 1;
+        }
+    }
+
+    if (!valid) {
+        LOG_ERROR(mux_module, "Path escapes content root: %s", dest);
+        return;
+    }
+
     snprintf(prev_dir, sizeof(prev_dir), "%s", sys_dir);
 
     free_items(&items, &item_count);
