@@ -312,6 +312,8 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
+void write_text_to_file_atomic(const char *filename, int type, ...);
+
 void create_directories(const char *path, int parent_only);
 
 void show_info_box(const char *title, const char *content, int is_content);

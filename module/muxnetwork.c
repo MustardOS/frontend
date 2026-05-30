@@ -262,19 +262,19 @@ static void save_network_config(void) {
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) idx_type = 1;
     if (strcasecmp(lv_label_get_text(ui_lblHiddenValue_network), lang.GENERIC.ENABLED) == 0) idx_hidden = 1;
 
-    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT, idx_type);
-    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
-    write_text_to_file(CONF_CONFIG_PATH "network/hidden", "w", INT, idx_hidden);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/hidden", INT, idx_hidden);
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue_network), PASS_ENCODE) != 0) {
-        write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue_network));
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, lv_label_get_text(ui_lblPasswordValue_network));
     }
 
     if (config.NETWORK.TYPE) {
-        write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR, lv_label_get_text(ui_lblAddressValue_network));
-        write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR, lv_label_get_text(ui_lblSubnetValue_network));
-        write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR, lv_label_get_text(ui_lblGatewayValue_network));
-        write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR, lv_label_get_text(ui_lblDnsValue_network));
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, lv_label_get_text(ui_lblAddressValue_network));
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, lv_label_get_text(ui_lblSubnetValue_network));
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, lv_label_get_text(ui_lblGatewayValue_network));
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR, lv_label_get_text(ui_lblDnsValue_network));
     }
 
     refresh_config = 1;
@@ -394,7 +394,7 @@ static void toggle_option(lv_obj_t *element, const char *config_path) {
     const char *current = lv_label_get_text(element);
     int is_enabled = strcasecmp(current, lang.GENERIC.ENABLED) == 0;
 
-    write_text_to_file(config_path, "w", INT, is_enabled ? 0 : 1);
+    write_text_to_file_atomic(config_path, INT, is_enabled ? 0 : 1);
     lv_label_set_text(element, is_enabled ? lang.GENERIC.DISABLED : lang.GENERIC.ENABLED);
 }
 
@@ -434,7 +434,7 @@ static void handle_confirm(void) {
     if (e_focused == ui_lblConnect_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_CONFIRM);
-            write_text_to_file(address_file, "w", CHAR, "");
+            write_text_to_file_atomic(address_file, CHAR, "");
             run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
             can_scan_check(1);
         } else {

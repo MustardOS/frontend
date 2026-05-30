@@ -9,13 +9,12 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(SND_CONFIRM);
-    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR,
-                       lv_label_get_text(lv_group_get_focused(ui_group)));
-    write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR, "");
-    write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR, "");
-    write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR, "");
-    write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR, "");
-    write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR, "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, lv_label_get_text(lv_group_get_focused(ui_group)));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR, "");
 
     refresh_config = 1;
 

@@ -37,31 +37,31 @@ static void load_profile(char *name) {
 
     int is_static = (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0);
 
-    write_text_to_file(CONF_CONFIG_PATH "network/type", "w", INT, is_static ? 1 : 0);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, is_static ? 1 : 0);
 
-    write_text_to_file(CONF_CONFIG_PATH "network/ssid", "w", CHAR,
-                       mini_get_string(net_profile, "network", "ssid", ""));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR,
+                              mini_get_string(net_profile, "network", "ssid", ""));
 
-    write_text_to_file(CONF_CONFIG_PATH "network/hidden", "w", INT,
-                       mini_get_int(net_profile, "network", "hidden", 0));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/hidden", INT,
+                              mini_get_int(net_profile, "network", "hidden", 0));
 
-    write_text_to_file(CONF_CONFIG_PATH "network/pass", "w", CHAR,
-                       mini_get_string(net_profile, "network", "pass", ""));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR,
+                              mini_get_string(net_profile, "network", "pass", ""));
 
-    write_text_to_file(CONF_CONFIG_PATH "network/address", "w", CHAR,
-                       is_static ? mini_get_string(net_profile, "network", "address", "") : "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR,
+                              is_static ? mini_get_string(net_profile, "network", "address", "") : "");
 
-    write_text_to_file(CONF_CONFIG_PATH "network/subnet", "w", CHAR,
-                       is_static ? mini_get_string(net_profile, "network", "subnet", "") : "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR,
+                              is_static ? mini_get_string(net_profile, "network", "subnet", "") : "");
 
-    write_text_to_file(CONF_CONFIG_PATH "network/gateway", "w", CHAR,
-                       is_static ? mini_get_string(net_profile, "network", "gateway", "") : "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR,
+                              is_static ? mini_get_string(net_profile, "network", "gateway", "") : "");
 
-    write_text_to_file(CONF_CONFIG_PATH "network/dns", "w", CHAR,
-                       is_static ? mini_get_string(net_profile, "network", "dns", "") : "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR,
+                              is_static ? mini_get_string(net_profile, "network", "dns", "") : "");
 
-    write_text_to_file(CONF_CONFIG_PATH "network/hostname", "w", CHAR,
-                       mini_get_string(net_profile, "network", "hostname", read_line_char_from("/etc/hostname", 1)));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/hostname", CHAR,
+                              mini_get_string(net_profile, "network", "hostname", read_line_char_from("/etc/hostname", 1)));
 
     mini_free(net_profile);
 }

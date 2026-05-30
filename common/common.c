@@ -900,6 +900,43 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     fclose(file);
 }
 
+void write_text_to_file_atomic(const char *filename, int type, ...) {
+    char tmp[PATH_MAX];
+    int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp", filename);
+
+    if (tmp_len < 0 || (size_t) tmp_len >= sizeof(tmp)) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+        return;
+    }
+
+    FILE *f = fopen(tmp, "w");
+    if (!f) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+        return;
+    }
+
+    va_list args;
+    va_start(args, type);
+
+    int ok = 1;
+    if (type == CHAR) {
+        if (fputs(va_arg(args, const char *), f) < 0) ok = 0;
+    } else if (type == INT) {
+        if (fprintf(f, "%d", va_arg(args, int)) < 0) ok = 0;
+    }
+
+    va_end(args);
+
+    if (fflush(f) != 0) ok = 0;
+    if (fsync(fileno(f)) != 0) ok = 0;
+    fclose(f);
+
+    if (!ok || rename(tmp, filename) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+    }
+}
+
 void create_directories(const char *path, int parent_only) {
     struct stat st;
     char tmp_path[MAX_BUFFER_SIZE];

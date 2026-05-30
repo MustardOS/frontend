@@ -27,23 +27,23 @@ void save_passcode(struct mux_passcode *passcode) {
 
     snprintf(path, sizeof(path), "%scode_boot", PASSCODE_CFG_PATH);
     create_directories(path, 1);
-    write_text_to_file(path, "w", CHAR, passcode->CODE.BOOT);
+    write_text_to_file_atomic(path, CHAR, passcode->CODE.BOOT);
 
     snprintf(path, sizeof(path), "%scode_launch", PASSCODE_CFG_PATH);
-    write_text_to_file(path, "w", CHAR, passcode->CODE.LAUNCH);
+    write_text_to_file_atomic(path, CHAR, passcode->CODE.LAUNCH);
 
     snprintf(path, sizeof(path), "%scode_setting", PASSCODE_CFG_PATH);
-    write_text_to_file(path, "w", CHAR, passcode->CODE.SETTING);
+    write_text_to_file_atomic(path, CHAR, passcode->CODE.SETTING);
 
     snprintf(path, sizeof(path), "%scode_safety", PASSCODE_CFG_PATH);
-    write_text_to_file(path, "w", CHAR, passcode->CODE.SAFETY);
+    write_text_to_file_atomic(path, CHAR, passcode->CODE.SAFETY);
 
     snprintf(path, sizeof(path), "%smessage_boot", PASSCODE_CFG_PATH);
-    write_text_to_file(path, "w", CHAR, passcode->MESSAGE.BOOT);
+    write_text_to_file_atomic(path, CHAR, passcode->MESSAGE.BOOT);
 
     snprintf(path, sizeof(path), "%smessage_launch", PASSCODE_CFG_PATH);
-    write_text_to_file(path, "w", CHAR, passcode->MESSAGE.LAUNCH);
+    write_text_to_file_atomic(path, CHAR, passcode->MESSAGE.LAUNCH);
 
     snprintf(path, sizeof(path), "%smessage_setting", PASSCODE_CFG_PATH);
-    write_text_to_file(path, "w", CHAR, passcode->MESSAGE.SETTING);
+    write_text_to_file_atomic(path, CHAR, passcode->MESSAGE.SETTING);
 }
