@@ -74,4 +74,4 @@
 #define LOG_WARN(mux_module, msg, ...)    do { LOG(WARN,    WARN_SYMBOL,    mux_module, msg, ##__VA_ARGS__); } while (0)
 #define LOG_ERROR(mux_module, msg, ...)   do { LOG(ERROR,   ERROR_SYMBOL,   mux_module, msg, ##__VA_ARGS__); } while (0)
 #define LOG_SUCCESS(mux_module, msg, ...) do { LOG(SUCCESS, SUCCESS_SYMBOL, mux_module, msg, ##__VA_ARGS__); } while (0)
-#define LOG_DEBUG(mux_module, msg, ...)   do { LOG(DEBUG,   DEBUG_SYMBOL,   mux_module, msg, ##__VA_ARGS__); } while (0)
+#define LOG_DEBUG(mux_module, msg, ...)   do { if (is_debug_mode()) { LOG(DEBUG, DEBUG_SYMBOL, mux_module, msg, ##__VA_ARGS__); } } while (0)
