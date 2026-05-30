@@ -56,7 +56,11 @@ static void create_network_items(void) {
 
     char *scan_file = "/tmp/net_scan";
     FILE *file = fopen(scan_file, "r");
-    if (!file || strcmp(read_line_char_from(scan_file, 1), "[!]") == 0) return;
+    if (!file) return;
+    if (strcmp(read_line_char_from(scan_file, 1), "[!]") == 0) {
+        fclose(file);
+        return;
+    }
 
     char ssid[40];
     while (fgets(ssid, sizeof(ssid), file)) {
