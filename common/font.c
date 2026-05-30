@@ -14,11 +14,18 @@
 // giant file and exhausting RAM before we've had a chance to log anything useful.
 #define TTF_MAX_FILE_BYTES (64 * 1024 * 1024)
 
-// Glyph bitmap cache handed to TinyTTF. Larger = fewer re-rasterisations of the
-// same glyph, which matters most for CJK where each character is unique.
-// At 30px each glyph slot is ~900 bytes... so 512 KB gives ~580 slots vs ~290 at
-// 256kb which enough headroom to keep a full Latin symbol set during scrolling.
-#define TTF_GLYPH_CACHE_BYTES (512 * 1024)
+// Glyph bitmap cache handed to TinyTTF
+// ------------------------------------------------------------
+// INTERNAL: Theme and custom TTFs that use a Latin-subset; 512 KB gives
+// ~1300 slots at 20 px, which comfortably covers the full ASCII+Latin-1
+// range. The cache warms up fully on first scroll and stays in memory.
+// ------------------------------------------------------------
+// LANGUAGE: User selected languages can have CJK fonts where every filename
+// contributes unique glyphs that will never repeat. 1 MB doubles the slot
+// count (~2600 slots at 20 px), cutting miss rate noticeably on long lists
+// without being reckless with LVGL heap on low memory targets.
+#define TTF_GLYPH_CACHE_BYTES      (512 * 1024)
+#define TTF_GLYPH_CACHE_BYTES_LANG (1024 * 1024)
 
 int font_cache_count = 0;
 char last_font_key[256] = "";
@@ -134,7 +141,7 @@ static int get_custom_section_size(const char *section) {
     return (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
 }
 
-static lv_font_t *load_font_cached_ttf(const char *path, int size, bool set_fallback);
+static lv_font_t *load_font_cached_ttf_lang(const char *path, int size);
 
 static lv_font_t *create_language_font(int size) {
     const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
@@ -143,7 +150,7 @@ static lv_font_t *create_language_font(int size) {
     if (config.SETTINGS.ADVANCED.FONT == 0 && curr_lang[0] && name[0]) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s/%s.ttf", curr_lang, name);
-        lv_font_t * font = load_font_cached_ttf(path, size, false);
+        lv_font_t * font = load_font_cached_ttf_lang(path, size);
         if (font) return font;
     }
 
@@ -158,11 +165,10 @@ void font_cache_clear(void) {
     for (int i = 0; i < font_cache_count; i++) {
         if (font_cache[i].is_ttf) {
             lv_tiny_ttf_destroy(font_cache[i].font);
+            free(font_cache[i].data);
         } else {
             lv_font_free(font_cache[i].font);
         }
-
-        free(font_cache[i].data);
     }
 
     font_cache_count = 0;
@@ -187,51 +193,14 @@ static lv_font_t *load_font_from_bin(const char *filepath) {
     return font;
 }
 
-static lv_font_t *load_font_from_ttf(const char *filepath, int size, void **out_data) {
-    *out_data = NULL;
-
-    FILE *f = fopen(filepath, "rb");
-    if (!f) {
-        LOG_WARN(mux_module, "Cannot open TTF font: %s", filepath);
-        return NULL;
+static void prewarm_ascii(lv_font_t *font) {
+    if (!font || !font->get_glyph_dsc || !font->get_glyph_bitmap) return;
+    lv_font_glyph_dsc_t dsc;
+    for (uint32_t cp = 0x0020; cp <= 0x007E; cp++) {
+        if (!font->get_glyph_dsc(font, &dsc, cp, 0)) continue;
+        if (!dsc.adv_w || !dsc.box_w || !dsc.box_h) continue;
+        font->get_glyph_bitmap(font, cp);
     }
-
-    fseek(f, 0, SEEK_END);
-    long file_size = ftell(f);
-    rewind(f);
-
-    if (file_size <= 0 || file_size > TTF_MAX_FILE_BYTES) {
-        LOG_WARN(mux_module, "TTF font %s has unexpected size (%ld bytes)", filepath, file_size);
-        fclose(f);
-        return NULL;
-    }
-
-    void *data = malloc((size_t) file_size);
-    if (!data) {
-        LOG_ERROR(mux_module, "Out of memory loading TTF font (%ld bytes): %s", file_size, filepath);
-        fclose(f);
-        return NULL;
-    }
-
-    if ((long) fread(data, 1, (size_t) file_size, f) != file_size) {
-        LOG_WARN(mux_module, "Short read on TTF font: %s", filepath);
-        free(data);
-        fclose(f);
-        return NULL;
-    }
-    fclose(f);
-
-    lv_font_t * font = lv_tiny_ttf_create_data_ex(data, (size_t) file_size, (lv_coord_t) size, TTF_GLYPH_CACHE_BYTES);
-    if (!font) {
-        LOG_WARN(mux_module, "TinyTTF failed to parse: %s", filepath);
-        free(data);
-        return NULL;
-    }
-
-    LOG_INFO(mux_module, "TTF font loaded into memory (%ld KB): %s", file_size / 1024, filepath);
-
-    *out_data = data;
-    return font;
 }
 
 static lv_font_t *cache_lookup(const char *path, int size) {
@@ -278,39 +247,96 @@ static lv_font_t *load_font_cached_bin(const char *path) {
     return font;
 }
 
-static lv_font_t *load_font_cached_ttf(const char *path, int size, bool set_fallback) {
+static lv_font_t *load_ttf_impl(const char *path, int size, int set_fallback) {
     lv_font_t * hit = cache_lookup(path, size);
     if (hit) return hit;
 
-    void *data = NULL;
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        LOG_WARN(mux_module, "Cannot open TTF font: %s", path);
+        return NULL;
+    }
 
-    lv_font_t * font = load_font_from_ttf(path, size, &data);
-    if (!font) return NULL;
+    fseek(f, 0, SEEK_END);
+    long file_size = ftell(f);
+    rewind(f);
+
+    if (file_size <= 0 || file_size > TTF_MAX_FILE_BYTES) {
+        LOG_WARN(mux_module, "TTF font %s has unexpected size (%ld bytes)", path, file_size);
+        fclose(f);
+        return NULL;
+    }
+
+    void *data = malloc((size_t) file_size);
+    if (!data) {
+        LOG_ERROR(mux_module, "Out of memory loading TTF font (%ld bytes): %s", file_size, path);
+        fclose(f);
+        return NULL;
+    }
+
+    if ((long) fread(data, 1, (size_t) file_size, f) != file_size) {
+        LOG_WARN(mux_module, "Short read on TTF font: %s", path);
+        free(data);
+        fclose(f);
+        return NULL;
+    }
+    fclose(f);
+
+    lv_font_t * font = lv_tiny_ttf_create_data_ex(data, (size_t) file_size, (lv_coord_t) size, 524288);
+    if (!font) {
+        LOG_WARN(mux_module, "TinyTTF failed to parse: %s", path);
+        free(data);
+        return NULL;
+    }
+
+    LOG_INFO(mux_module, "TTF font loaded (%ld KB, glyph cache %d KB): %s", file_size / 1024, 524288 / 1024, path);
 
     cache_store(path, size, font, data, 1);
+    prewarm_ascii(font);
 
     if (set_fallback) font->fallback = get_language_font();
 
     return font;
 }
 
+static lv_font_t *load_font_cached_ttf(const char *path, int size, int set_fallback) {
+    return load_ttf_impl(path, size, set_fallback);
+}
+
+static lv_font_t *load_font_cached_ttf_lang(const char *path, int size) {
+    return load_ttf_impl(path, size, 0);
+}
+
 static lv_font_t *try_font_at(const char *base, char *resolved, int size) {
     char path[MAX_BUFFER_SIZE];
+    lv_font_t * f;
 
     snprintf(path, sizeof(path), "%s.ttf", base);
+    f = cache_lookup(path, size);
+    if (f) {
+        snprintf(resolved, MAX_BUFFER_SIZE, "%s", path);
+        return f;
+    }
+
     if (file_exist(path)) {
-        lv_font_t * f = load_font_cached_ttf(path, size, true);
+        f = load_font_cached_ttf(path, size, 1);
         if (f) {
-            snprintf(resolved, 1024, "%s", path);
+            snprintf(resolved, MAX_BUFFER_SIZE, "%s", path);
             return f;
         }
     }
 
     snprintf(path, sizeof(path), "%s.bin", base);
+    f = cache_lookup(path, 0);
+    if (f) {
+        snprintf(resolved, MAX_BUFFER_SIZE, "%s", path);
+        return f;
+    }
+
     if (file_exist(path)) {
-        lv_font_t * f = load_font_cached_bin(path);
+        f = load_font_cached_bin(path);
         if (f) {
-            snprintf(resolved, 1024, "%s", path);
+            snprintf(resolved, MAX_BUFFER_SIZE, "%s", path);
             return f;
         }
     }
@@ -324,7 +350,7 @@ lv_font_t *load_font_pass_roller(void) {
     if (config.SETTINGS.ADVANCED.FONT == 2 && config.SETTINGS.FONT.NAME[0]) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", config.SETTINGS.FONT.NAME);
-        lv_font_t * f = load_font_cached_ttf(path, size, false);
+        lv_font_t * f = load_font_cached_ttf(path, size, 0);
         if (f) return f;
     }
 
@@ -344,11 +370,11 @@ void load_font_text(lv_obj_t *screen) {
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         int size = (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
-        lv_font_t * font = load_font_cached_ttf(path, size, true);
+        lv_font_t * font = load_font_cached_ttf(path, size, 1);
 
         if (!font && strcmp(name, "Noto Sans") != 0) {
             snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
-            font = load_font_cached_ttf(path, size, true);
+            font = load_font_cached_ttf(path, size, 1);
         }
 
         if (font) {
@@ -423,11 +449,11 @@ void load_font_section(const char *section, lv_obj_t *element) {
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         int size = get_custom_section_size(section);
-        lv_font_t * font = load_font_cached_ttf(path, size, true);
+        lv_font_t * font = load_font_cached_ttf(path, size, 1);
 
         if (!font && strcmp(name, "Noto Sans") != 0) {
             snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
-            font = load_font_cached_ttf(path, size, true);
+            font = load_font_cached_ttf(path, size, 1);
         }
 
         if (font) {
