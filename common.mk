@@ -52,17 +52,20 @@ QUIET   = $(if $(filter 1,$(DEBUG)),,>/dev/null 2>&1)
 
 OPT_LEVEL ?= 2
 
+DEBUGSYM ?= 0
+
 BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -ffunction-sections -fdata-sections \
               -Wall -Wno-format-zero-length \
               -Wno-unused-function -fno-plt \
               -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
               -fPIE -fno-ident \
+              $(if $(filter 1,$(DEBUGSYM)),-g) \
               $(BUILD_FLAGS)
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm
 
-BIN_LDFLAGS  = -Wl,--gc-sections -pie -s
+BIN_LDFLAGS  = -Wl,--gc-sections -pie $(if $(filter 1,$(DEBUGSYM)),,-s)
 LIB_LDFLAGS  = -Wl,-rpath,'./lib'
 
 SHARED_PIC = -shared -fPIC
