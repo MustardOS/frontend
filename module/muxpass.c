@@ -67,7 +67,7 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (!PCT_BOOT) play_sound(SND_BACK);
+    if (p_type != PCT_BOOT) play_sound(SND_BACK);
 
     exit_status_muxpass = 2;
     mux_input_stop();
@@ -158,7 +158,6 @@ int muxpass_main(int auth_type) {
     apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree, ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
-    load_font_text(ui_screen);
 
     init_fonts();
     init_navigation_group();
