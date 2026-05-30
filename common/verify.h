@@ -39,7 +39,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/init/sysinit",             "5d415216e8ea19be"},
         {"/opt/muos/script/mux/audio_sink.sh",        "9886062acc6fd4ae"},
         {"/opt/muos/script/mux/backup.sh",            "64154019e9b032e2"},
-        {"/opt/muos/script/mux/bt_device.sh",         "76aaaf585f451f8a"},
+        {"/opt/muos/script/mux/bt_device.sh",         "47194ce3b71214f3"},
         {"/opt/muos/script/mux/bt_scan.sh",           "c9342869a9932785"},
         {"/opt/muos/script/mux/extract.sh",           "164341e0cb9bfaa3"},
         {"/opt/muos/script/mux/find.sh",              "2878f130940d5671"},
@@ -86,7 +86,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/var/zip.sh",               "7facce804a5d99c1"},
         {"/opt/muos/script/web/keepalive.sh",         "2c3a9d6cecccb043"},
         {"/opt/muos/script/web/macchange.sh",         "b461780da9c36809"},
-        {"/opt/muos/script/web/password.sh",          "210264ef4e7797d1"},
+        {"/opt/muos/script/web/password.sh",          "ed21d4a38464da35"},
         {"/opt/muos/script/web/service.sh",           "a67d564059d232ef"},
         {"/opt/muos/script/web/ssid.sh",              "e28282c36d9d84ea"},
 };
