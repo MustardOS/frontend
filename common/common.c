@@ -1314,8 +1314,8 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             }
 
             int written;
-            written = snprintf(image_path, path_size, path_formats[j], args[i].catalogue_path, catalogue_name,
-                               image_type, args[i].dimension, args[i].program);
+            written = snprintf(image_path, path_size, path_formats[j], args[i].catalogue_path, catalogue_name, image_type, args[i].dimension, args[i].program);
+
             if (written >= 0 && file_exist(image_path)) return 1;
         }
     }
@@ -1329,59 +1329,80 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     static char wall_image_path[MAX_BUFFER_SIZE];
     static char wall_image_embed[MAX_BUFFER_SIZE];
 
-    const char *wall_extension = random ? "0.png" : (animated == 1 ? "gif" : (animated == 2 ? "0.png" : "png"));
-
+    const char *element = "";
     if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
         struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-        const char *element = e_focused == NULL ? "" : lv_obj_get_user_data(e_focused);
+        if (e_focused != NULL) {
+            const char *ud = lv_obj_get_user_data(e_focused);
+            if (ud) element = ud;
+        }
+    }
+
+    static const char *cached_theme_base;
+    static int cached_animated = -1, cached_random = -1, cached_wall_type = -1;
+    static char cached_program[MAX_BUFFER_SIZE];
+    static char cached_element[MAX_BUFFER_SIZE];
+
+    if (theme_base == cached_theme_base &&
+        animated == cached_animated &&
+        random == cached_random &&
+        wall_type == cached_wall_type &&
+        strcmp(program, cached_program) == 0 &&
+        strcmp(element, cached_element) == 0) {
+        return wall_image_embed;
+    }
+
+    cached_theme_base = theme_base;
+    cached_animated = animated;
+    cached_random = random;
+    cached_wall_type = wall_type;
+    snprintf(cached_program, sizeof(cached_program), "%s", program);
+    snprintf(cached_element, sizeof(cached_element), "%s", element);
+    wall_image_embed[0] = '\0';
+
+    const char *wall_extension = random ? "0.png" : (animated == 1 ? "gif" : (animated == 2 ? "0.png" : "png"));
+
+#define TRY_EMBED(path_buf)                                                                \
+    do {                                                                                   \
+        int _w = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", (path_buf)); \
+        if (_w < 0 || (size_t)_w >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0';  \
+    } while (0)
+
+    if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
+        const char *catalogue = NULL;
         switch (wall_type) {
             case WALL_APPLICATION:
-                if (load_image_catalogue("Application", element, "", "default", mux_dim, "wall",
-                                         wall_image_path, sizeof(wall_image_path))) {
-                    int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                    if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                    return wall_image_embed;
-                }
+                catalogue = "Application";
                 break;
             case WALL_ARCHIVE:
-                if (load_image_catalogue("Archive", element, "", "default", mux_dim, "wall",
-                                         wall_image_path, sizeof(wall_image_path))) {
-                    int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                    if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                    return wall_image_embed;
-                }
+                catalogue = "Archive";
                 break;
             case WALL_TASK:
-                if (load_image_catalogue("Task", element, "", "default", mux_dim, "wall",
-                                         wall_image_path, sizeof(wall_image_path))) {
-                    int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                    if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                    return wall_image_embed;
-                }
+                catalogue = "Task";
                 break;
-            case WALL_GENERAL:
             default:
                 break;
         }
-        if (load_element_image_specifics(mux_dim, program, "wall",
-                                         strcmp(program, "muxlaunch") == 0 ? element : "default",
+        if (catalogue && load_image_catalogue(catalogue, element, "", "default", mux_dim, "wall", wall_image_path, sizeof(wall_image_path))) {
+            TRY_EMBED(wall_image_path);
+            return wall_image_embed;
+        }
+
+        if (load_element_image_specifics(mux_dim, program, "wall", strcmp(program, "muxlaunch") == 0 ? element : "default",
                                          "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
-            int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-            if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
+            TRY_EMBED(wall_image_path);
             return wall_image_embed;
         }
     }
 
-    if (load_image_specifics(mux_dim, program, "wall",
-                             wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-        load_image_specifics("", program, "wall",
-                             wall_extension, wall_image_path, sizeof(wall_image_path))) {
-        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-        return wall_image_embed;
+    if (load_image_specifics(mux_dim, program, "wall", wall_extension, wall_image_path, sizeof(wall_image_path)) ||
+        load_image_specifics("", program, "wall", wall_extension, wall_image_path, sizeof(wall_image_path))) {
+        TRY_EMBED(wall_image_path);
     }
 
-    return "";
+#undef TRY_EMBED
+
+    return wall_image_embed;
 }
 
 void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall,
