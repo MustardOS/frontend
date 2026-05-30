@@ -444,6 +444,8 @@ int muxfont_main(void) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
 
+    nav_silent = 1;
+
     init_fonts();
     init_elements();
     init_navigation_group();
@@ -482,6 +484,8 @@ int muxfont_main(void) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+
+    nav_silent = 0;
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);

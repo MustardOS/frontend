@@ -274,6 +274,7 @@ int muxthemeopt_main(void) {
     init_fonts();
     init_elements();
     init_navigation_group();
+    first_open = 1;
 
     restore_themeopt_options();
     init_dropdown_settings();
