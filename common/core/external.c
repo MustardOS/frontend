@@ -48,6 +48,7 @@ const struct ext_core_name ext_core_names[] = {
         {"pico8-scale",               "PICO-8 Scaled"},
 
         // Misc
+        {"azahar",                    "Azahar"},
         {"scummvm",                   "ScummVM"},
         {"flycast",                   "Flycast"},
         {"ppsspp",                    "PPSSPP"},
