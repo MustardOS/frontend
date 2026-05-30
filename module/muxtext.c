@@ -2,6 +2,7 @@
 #include "ui/ui_muxtext.h"
 
 #define TEXT_FILE "/tmp/mux_text_read"
+#define TEXT_MAX_SZ (2 * 1024 * 1024)
 
 static void scroll_textarea(int step) {
     lv_coord_t y = lv_obj_get_scroll_y(ui_txtDocument_text);
@@ -96,14 +97,46 @@ int muxtext_main(void) {
 
     char *raw_text_path = read_line_char_from(TEXT_FILE, 2);
     char text_path[PATH_MAX];
-    if (!raw_text_path || !realpath(raw_text_path, text_path)) {
-        free(raw_text_path);
+    int path_ok = *raw_text_path && realpath(raw_text_path, text_path);
+
+    if (*raw_text_path) free(raw_text_path);
+    if (!path_ok) return 1;
+
+    FILE *tf = fopen(text_path, "r");
+    if (!tf) return 1;
+
+    struct stat tst;
+    size_t read_size = TEXT_MAX_SZ;
+    int truncated = 0;
+
+    if (fstat(fileno(tf), &tst) == 0) {
+        if ((size_t) tst.st_size > TEXT_MAX_SZ) {
+            truncated = 1;
+        } else {
+            read_size = (size_t) tst.st_size;
+        }
+    }
+
+    char *text = malloc(read_size + 1);
+    if (!text) {
+        fclose(tf);
         return 1;
     }
 
-    free(raw_text_path);
+    size_t bytes_read = fread(text, 1, read_size, tf);
+    text[bytes_read] = '\0';
+    fclose(tf);
 
-    lv_textarea_set_text(ui_txtDocument_text, read_all_char_from(text_path));
+    if (truncated) {
+        LOG_WARN(mux_module, "File exceeds %d MB; showing first %d MB: %s",
+                 TEXT_MAX_SZ / (1024 * 1024),
+                 TEXT_MAX_SZ / (1024 * 1024),
+                 text_path);
+        toast_message(lang.GENERIC.WARNING, SHORT);
+    }
+
+    lv_textarea_set_text(ui_txtDocument_text, text);
+    free(text);
     handle_x();
 
     mux_input_options input_opts = {
@@ -129,7 +162,7 @@ int muxtext_main(void) {
 
     };
 
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;
