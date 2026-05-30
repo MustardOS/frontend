@@ -138,10 +138,31 @@ static int get_section_ttf_size(const char *section) {
 }
 
 static int get_custom_section_size(const char *section) {
-    if (strcmp(section, FONT_HEADER_DIR) == 0 && config.SETTINGS.FONT.HEADER_SIZE > 0) return config.SETTINGS.FONT.HEADER_SIZE;
-    if (strcmp(section, FONT_FOOTER_DIR) == 0 && config.SETTINGS.FONT.FOOTER_SIZE > 0) return config.SETTINGS.FONT.FOOTER_SIZE;
-    if (strcmp(section, FONT_PANEL_DIR) == 0 && grid_mode_enabled && config.SETTINGS.FONT.PANEL_SIZE > 0) return config.SETTINGS.FONT.PANEL_SIZE;
-    return (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+    if (strcmp(section, FONT_HEADER_DIR) == 0) {
+        if (config.SETTINGS.FONT.HEADER_SIZE > 0) return config.SETTINGS.FONT.HEADER_SIZE;
+        if (theme.FONT.FONT_HEADER_SIZE > 0) return (int) theme.FONT.FONT_HEADER_SIZE;
+
+        return get_font_size();
+    }
+
+    if (strcmp(section, FONT_FOOTER_DIR) == 0) {
+        if (config.SETTINGS.FONT.FOOTER_SIZE > 0) return config.SETTINGS.FONT.FOOTER_SIZE;
+        if (theme.FONT.FONT_FOOTER_SIZE > 0) return (int) theme.FONT.FONT_FOOTER_SIZE;
+
+        return get_font_size();
+    }
+
+    if (strcmp(section, FONT_PANEL_DIR) == 0 && grid_mode_enabled) {
+        if (config.SETTINGS.FONT.PANEL_SIZE > 0) return config.SETTINGS.FONT.PANEL_SIZE;
+        if (theme.FONT.FONT_PANEL_SIZE > 0) return (int) theme.FONT.FONT_PANEL_SIZE;
+
+        return get_font_size();
+    }
+
+    if (config.SETTINGS.FONT.LIST_SIZE > 0) return config.SETTINGS.FONT.LIST_SIZE;
+    if (theme.FONT.FONT_LIST_SIZE > 0) return (int) theme.FONT.FONT_LIST_SIZE;
+
+    return get_font_size();
 }
 
 static lv_font_t *load_font_cached_ttf_lang(const char *path, int size);
@@ -363,7 +384,15 @@ lv_font_t *load_font_pass_roller(void) {
 void load_font_text(lv_obj_t *screen) {
     int eff_type = effective_type();
 
-    int lang_size = (eff_type == 0 && config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+    int lang_size;
+    if (eff_type == 0 && config.SETTINGS.FONT.LIST_SIZE > 0) {
+        lang_size = config.SETTINGS.FONT.LIST_SIZE;
+    } else if (theme.FONT.FONT_LIST_SIZE > 0) {
+        lang_size = (int) theme.FONT.FONT_LIST_SIZE;
+    } else {
+        lang_size = get_font_size();
+    }
+
     lv_font_t * language_font = create_language_font(lang_size);
 
     if (eff_type == 2) {
@@ -372,7 +401,15 @@ void load_font_text(lv_obj_t *screen) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
-        int size = (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
+        int size;
+        if (config.SETTINGS.FONT.LIST_SIZE > 0) {
+            size = config.SETTINGS.FONT.LIST_SIZE;
+        } else if (theme.FONT.FONT_LIST_SIZE > 0) {
+            size = (int) theme.FONT.FONT_LIST_SIZE;
+        } else {
+            size = get_font_size();
+        }
+
         lv_font_t * font = load_font_cached_ttf(path, size, 1);
 
         if (!font && strcmp(name, DEFAULT_NAME) != 0) {
