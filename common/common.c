@@ -37,6 +37,8 @@
 #include "mini/mini.h"
 #include "../module/muxshare.h"
 
+static void free_line_if_needed(char *line);
+
 char mux_module[MAX_BUFFER_SIZE];
 char mux_dim[15];
 int msgbox_active;
@@ -46,6 +48,7 @@ int fe_bgm;
 int last_idle = -1;
 struct json translation_generic;
 struct json translation_specific;
+static char *language_json = NULL;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int skip_patterns_loaded = 0;
 lv_anim_t animation;
@@ -1979,10 +1982,18 @@ void load_language_file(const char *module) {
     snprintf(language_file, sizeof(language_file), STORAGE_LANG "/%s.json",
              config.SETTINGS.GENERAL.LANGUAGE);
 
-    if (json_valid(read_all_char_from(language_file))) {
-        translation_specific = json_object_get(json_parse(read_all_char_from(language_file)), module);
-        translation_generic = json_object_get(json_parse(read_all_char_from(language_file)), "generic");
+    char *content = read_all_char_from(language_file);
+    if (!json_valid(content)) {
+        free(content);
+        return;
     }
+
+    free(language_json);
+    language_json = content;
+
+    struct json root = json_parse(language_json);
+    translation_specific = json_object_get(root, module);
+    translation_generic = json_object_get(root, "generic");
 }
 
 char *translate_generic(char *key) {
@@ -3114,7 +3125,9 @@ void populate_items(const char *base_path, char ***items, int *item_count) {
         if (S_ISREG(st.st_mode)) {
             if (strstr(entry->d_name, ".cfg")) {
                 *items = realloc(*items, ((*item_count) + 1) * sizeof(char *));
-                (*items)[*item_count] = strdup(read_line_char_from(full_path, 1));
+                char *raw = read_line_char_from(full_path, 1);
+                (*items)[*item_count] = strdup(raw);
+                free_line_if_needed(raw);
                 (*item_count)++;
             }
         } else if (S_ISDIR(st.st_mode)) {
@@ -3577,12 +3590,8 @@ int remove_directory_recursive(const char *path) {
     return 0;
 }
 
-static int line_needs_free(const char *line) {
-    return line && *line;
-}
-
 static void free_line_if_needed(char *line) {
-    if (line_needs_free(line)) free(line);
+    if (line && *line) free(line);
 }
 
 static int path_uses_union(const char *path) {
@@ -3785,10 +3794,7 @@ int load_content(int add_collection, char *file_path) {
                 if (strcmp(old_file, new_history) == 0) continue;
 
                 char *line1 = read_line_char_from(old_file, 1);
-                if (!line1 || !*line1) {
-                    free(line1);
-                    continue;
-                }
+                if (!*line1) continue;
 
                 char resolved_old[PATH_MAX];
                 if (union_resolve_to_real(line1, resolved_old, sizeof(resolved_old)) &&
@@ -3950,25 +3956,18 @@ void rewrite_launch_file(const char *file, const char *new_path) {
     char *line2 = read_line_char_from(file, 2);
     char *line3 = read_line_char_from(file, 3);
 
-    if (!line1 || !line2 || !line3) {
-        free(line1);
-        free(line2);
-        free(line3);
-        return;
-    }
-
-    if (strcmp(line1, new_path) == 0) {
-        free(line1);
-        free(line2);
-        free(line3);
+    if (!*line1 || strcmp(line1, new_path) == 0) {
+        free_line_if_needed(line1);
+        free_line_if_needed(line2);
+        free_line_if_needed(line3);
         return;
     }
 
     FILE *fp = fopen(file, "w");
     if (!fp) {
-        free(line1);
-        free(line2);
-        free(line3);
+        free_line_if_needed(line1);
+        free_line_if_needed(line2);
+        free_line_if_needed(line3);
         return;
     }
 
@@ -3977,8 +3976,8 @@ void rewrite_launch_file(const char *file, const char *new_path) {
     fsync(fileno(fp));
     fclose(fp);
 
-    free(line1);
-    free(line2);
+    free_line_if_needed(line1);
+    free_line_if_needed(line2);
     free(line3);
 }
 

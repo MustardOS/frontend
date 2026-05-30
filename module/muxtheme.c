@@ -26,6 +26,7 @@ static void hide_remove_dialog(void) {
 #define TEMP_CREDITS "credits.txt"
 
 char *theme_version_compat = "";
+static char *theme_version_buf = NULL;
 
 static void show_help(void) {
     if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) return;
@@ -53,7 +54,9 @@ static int version_check(void) {
     char *theme_version = read_line_char_from(theme_version_file, 1);
     if (!theme_version || !*theme_version) return 0;
 
-    theme_version_compat = theme_version;
+    free(theme_version_buf);
+    theme_version_buf = theme_version;
+    theme_version_compat = theme_version_buf;
 
     for (size_t i = 0; i < THEME_COMPAT; i++) {
         const char *compat = theme_back_compat[i];

@@ -146,15 +146,9 @@ static void gen_result(char *item_glyph, char *item_text, char *item_data, char 
         if (file_exist(FRIENDLY_RESULT)) {
             LOG_INFO(mux_module, "Reading Friendly Name Set: %s", FRIENDLY_RESULT);
 
-            int fn_valid = 0;
-            struct json fn_json;
-
-            if (json_valid(read_all_char_from(FRIENDLY_RESULT))) {
-                fn_valid = 1;
-                fn_json = json_parse(read_all_char_from(FRIENDLY_RESULT));
-            }
-
-            if (fn_valid) {
+            char *fn_raw = read_all_char_from(FRIENDLY_RESULT);
+            if (json_valid(fn_raw)) {
+                struct json fn_json = json_parse(fn_raw);
                 char fn_name[MAX_BUFFER_SIZE];
                 struct json good_name_json = json_object_get(fn_json, strip_ext(item_text));
 
@@ -163,6 +157,8 @@ static void gen_result(char *item_glyph, char *item_text, char *item_data, char 
                     lv_label_set_text(ui_lblResultItem, fn_name);
                 }
             }
+
+            free(fn_raw);
         }
 
         lv_group_add_obj(ui_group, ui_lblResultItem);

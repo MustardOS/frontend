@@ -122,16 +122,19 @@ static void load_daemon_battery_config(void) {
     daemon_capacity_path[0] = '\0';
     daemon_voltage_path[0] = '\0';
 
-    const char *battery_file;
+    char *battery_file;
 
     battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/charger", 1);
-    if (battery_file) snprintf(daemon_charger_path, sizeof(daemon_charger_path), "%s", battery_file);
+    if (*battery_file) snprintf(daemon_charger_path, sizeof(daemon_charger_path), "%s", battery_file);
+    if (*battery_file) free(battery_file);
 
     battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/capacity", 1);
-    if (battery_file) snprintf(daemon_capacity_path, sizeof(daemon_capacity_path), "%s", battery_file);
+    if (*battery_file) snprintf(daemon_capacity_path, sizeof(daemon_capacity_path), "%s", battery_file);
+    if (*battery_file) free(battery_file);
 
     battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/voltage", 1);
-    if (battery_file) snprintf(daemon_voltage_path, sizeof(daemon_voltage_path), "%s", battery_file);
+    if (*battery_file) snprintf(daemon_voltage_path, sizeof(daemon_voltage_path), "%s", battery_file);
+    if (*battery_file) free(battery_file);
 }
 
 static void write_capacity_file(int percent) {
