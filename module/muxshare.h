@@ -151,6 +151,16 @@ void ui_gen_refresh_task();
 
 void gen_step_movement(int steps, int direction, int long_dot, int count_offset);
 
+void list_nav_cb_prev(int steps);
+
+void list_nav_cb_next(int steps);
+
+void list_nav_cb_prev_nowrap(int steps);
+
+void list_nav_cb_next_nowrap(int steps);
+
+void handle_msgbox_dismiss(void);
+
 void resolve_friendly_name(char *dir, char *raw_name, char *out);
 
 void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value);

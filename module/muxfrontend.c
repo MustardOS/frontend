@@ -731,6 +731,7 @@ int main(void) {
         int result = 0;
 
         while (result != 1) {
+            screen_clean = 0;
             result = muxpass_main(PCT_BOOT);
 
             if (result == 2) {

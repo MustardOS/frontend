@@ -20,7 +20,6 @@ static lv_obj_t *ui_objects_value[UI_COUNT];
 static lv_obj_t *ui_objects_glyph[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-static void list_nav_move(int steps, int direction);
 
 static int reset_mode = 0;
 static mux_dialogue reset_dlg;
@@ -87,7 +86,7 @@ static void refresh_navigation(void) {
         HIDE_OPTION_ITEM(font, PanelSize);
     }
 
-    list_nav_move(0, 1);
+    gen_step_movement(0, 1, 0, 0);
 }
 
 static void apply_current_font_settings(void) {
@@ -260,20 +259,9 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
+    gen_step_movement(direct_to_previous(ui_objects, ui_count, &nav_moved), +1, 0, 0);
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void do_reset(void) {
     lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(has_theme_type ? 1 : 2));
@@ -403,10 +391,7 @@ static void handle_b(void) {
     }
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -468,7 +453,7 @@ int muxfont_main(void) {
 
     dialogue_init_confirm(&reset_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.RESET, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
-    list_nav_next(0);
+    gen_step_movement(0, +1, 0, 0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -498,7 +483,7 @@ int muxfont_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

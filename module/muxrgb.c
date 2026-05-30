@@ -87,7 +87,6 @@ static int mode_dropdown_from_enum(int enum_val);
 
 static int colour_palette_idx(void);
 
-static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
@@ -725,20 +724,9 @@ static void init_navigation_group(void) {
     apply_mode_visibility(initial_mode);
     last_applied_mode = initial_mode;
 
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
+    gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 0, 0);
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void handle_option_prev(void) {
     if (msgbox_active || block_input) return;
@@ -764,10 +752,7 @@ static void handle_b(void) {
     if (block_input || hold_call) return;
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -836,7 +821,7 @@ int muxrgb_main(void) {
     rgb_focus();
 
     init_timer(ui_gen_refresh_task, NULL);
-    list_nav_next(0);
+    gen_step_movement(0, +1, 0, 0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -866,7 +851,7 @@ int muxrgb_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

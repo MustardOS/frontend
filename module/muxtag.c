@@ -132,17 +132,6 @@ static void generate_available_tags(void) {
     }
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, true, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void handle_a(void) {
     if (msgbox_active || !ui_count || hold_call) return;
@@ -160,10 +149,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -248,7 +234,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     if (ui_count > 0) {
         LOG_SUCCESS(mux_module, "%d Tag%s Detected", ui_count, ui_count == 1 ? "" : "s");
-        list_nav_next(0);
+        gen_step_movement(0, +1, 1, 0);
     } else {
         LOG_ERROR(mux_module, "No Tags Detected!");
         lv_label_set_text(ui_lblScreenMessage, lang.MUXTAG.NONE);
@@ -281,7 +267,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

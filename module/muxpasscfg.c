@@ -33,7 +33,6 @@ static void update_value_labels(void) {
     lv_label_set_text(ui_lblSafetyCodeValue_passcfg, code_display(passcfg.CODE.SAFETY));
 }
 
-static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
@@ -203,10 +202,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -287,17 +283,6 @@ static void handle_r1(void) {
     handle_list_nav_page_down();
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, 0, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
@@ -366,7 +351,7 @@ int muxpasscfg_main(void) {
     }
 
     init_timer(NULL, NULL);
-    list_nav_next(0);
+    gen_step_movement(0, +1, 0, 0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -397,7 +382,7 @@ int muxpasscfg_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);

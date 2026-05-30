@@ -175,17 +175,6 @@ static void create_archive_items(void) {
     free_array(files, file_count);
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, true, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static int remove_mode = 0;
 static int skip_confirm = 0;
@@ -307,10 +296,7 @@ static void handle_b(void) {
     }
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -388,7 +374,7 @@ int muxarchive_main(void) {
     int nav_hidden = 0;
     if (ui_count > 0) {
         nav_hidden = 1;
-        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) list_nav_move(arc_index, +1);
+        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) gen_step_movement(arc_index, +1, 1, 0);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXARCHIVE.NONE);
     }
@@ -426,7 +412,7 @@ int muxarchive_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

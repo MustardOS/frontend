@@ -93,17 +93,6 @@ static void create_screenshot_items(void) {
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, true, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void do_remove(void) {
     char screenshot_file[PATH_MAX];
@@ -200,10 +189,7 @@ static void handle_b(void) {
     }
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -301,7 +287,7 @@ int muxshot_main(void) {
     };
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
-    if (ui_count > 0 && sys_index <= ui_count && current_item_index < ui_count) list_nav_move(sys_index, +1);
+    if (ui_count > 0 && sys_index <= ui_count && current_item_index < ui_count) gen_step_movement(sys_index, +1, 1, 0);
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
@@ -330,7 +316,7 @@ int muxshot_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

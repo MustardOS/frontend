@@ -210,17 +210,6 @@ static void create_timezone_items(void) {
     }
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, true, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
@@ -240,7 +229,7 @@ static void handle_a(void) {
         if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
 
         first_open = 1;
-        list_nav_next(0);
+        gen_step_movement(0, +1, 1, 0);
 
         return;
     }
@@ -281,10 +270,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -294,7 +280,7 @@ static void handle_b(void) {
         zone_selected_region[0] = '\0';
         create_region_items();
         first_open = 1;
-        list_nav_next(zone_region_index);
+        gen_step_movement(zone_region_index, +1, 1, 0);
         return;
     }
 
@@ -342,7 +328,7 @@ int muxtimezone_main(void) {
     if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
 
     init_timer(ui_gen_refresh_task, NULL);
-    list_nav_next(0);
+    gen_step_movement(0, +1, 1, 0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -367,7 +353,7 @@ int muxtimezone_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

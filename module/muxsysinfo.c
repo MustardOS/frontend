@@ -402,17 +402,6 @@ static void init_navigation_group(void) {
     if (sysinfo_cache.totalswap == 0) HIDE_VALUE_ITEM(sysinfo, Swap);
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static int warn_mode = 0;
 static mux_dialogue warn_dlg;
@@ -589,10 +578,7 @@ static void handle_b(void) {
     }
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -652,7 +638,7 @@ int muxsysinfo_main(void) {
 
     dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, update_system_info);
-    list_nav_next(0);
+    gen_step_movement(0, +1, 0, 0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -685,7 +671,7 @@ int muxsysinfo_main(void) {
             .combo_count = 1
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

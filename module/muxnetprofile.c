@@ -132,17 +132,6 @@ static int save_profile(void) {
     return 1;
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, true, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void create_profile_items(void) {
     const char *dirs[] = {RUN_STORAGE_PATH "network"};
@@ -216,10 +205,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (msgbox_active) {
-        play_sound(SND_INFO_CLOSE);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -298,7 +284,7 @@ int muxnetprofile_main(void) {
 
         lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        list_nav_move(0, +1);
+        gen_step_movement(0, +1, 1, 0);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
     }
@@ -330,7 +316,7 @@ int muxnetprofile_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

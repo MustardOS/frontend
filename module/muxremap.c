@@ -657,13 +657,6 @@ static void handle_page_down(void) {
     check_focus();
 }
 
-static void list_nav_prev(int steps) {
-    gen_step_movement(steps, -1, false, 0);
-}
-
-static void list_nav_next(int steps) {
-    gen_step_movement(steps, +1, false, 0);
-}
 
 static void init_navigation_group(void) {
     reset_ui_groups();
@@ -753,7 +746,7 @@ static void init_navigation_group(void) {
     ui_count = REMAP_SLOT_COUNT + 2;
 
     lv_obj_update_layout(ui_pnlContent);
-    list_nav_next(0);
+    gen_step_movement(0, +1, 0, 0);
     check_focus();
 }
 
@@ -839,7 +832,7 @@ int muxremap_main(void) {
             .raw_event_handler = raw_event_capture,
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

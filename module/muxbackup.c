@@ -12,7 +12,6 @@ enum {
 BACKUP_ELEMENTS
 #undef BACKUP
 
-static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
@@ -109,21 +108,10 @@ static void init_navigation_group(void) {
     }
 
     if (ui_count > 0 && dbi_index >= 0 && dbi_index < ui_count && current_item_index < ui_count) {
-        list_nav_move(dbi_index, 1);
+        gen_step_movement(dbi_index, 1, 0, 0);
     }
 }
 
-static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
-}
-
-static void list_nav_prev(int steps) {
-    list_nav_move(steps, -1);
-}
-
-static void list_nav_next(int steps) {
-    list_nav_move(steps, +1);
-}
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
@@ -343,7 +331,7 @@ int muxbackup_main(void) {
             }
     };
 
-    list_nav_set_callbacks(list_nav_prev, list_nav_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

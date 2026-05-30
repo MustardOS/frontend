@@ -531,6 +531,29 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset)
     nav_moved = 1;
 }
 
+void list_nav_cb_prev(int steps) {
+    gen_step_movement(steps, -1, 1, 0);
+}
+
+void list_nav_cb_next(int steps) {
+    gen_step_movement(steps, +1, 1, 0);
+}
+
+void list_nav_cb_prev_nowrap(int steps) {
+    gen_step_movement(steps, -1, 0, 0);
+}
+
+void list_nav_cb_next_nowrap(int steps) {
+    gen_step_movement(steps, +1, 0, 0);
+}
+
+void handle_msgbox_dismiss(void) {
+    play_sound(SND_INFO_CLOSE);
+    msgbox_active = 0;
+    progress_onscreen = 0;
+    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+}
+
 void resolve_friendly_name(char *dir, char *raw_name, char *out) {
     char stripped[MAX_BUFFER_SIZE];
     char lowered[MAX_BUFFER_SIZE];
