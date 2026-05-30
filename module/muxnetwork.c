@@ -26,6 +26,10 @@ int ui_network_locked = 0;
 static char last_status[IP_OCTET] = "";
 static char address_file[MAX_BUFFER_SIZE];
 static unsigned connect_grace_ticks = 0;
+static int fields_modified = 0;
+static int network_saved = 0;
+static mux_dialogue save_dlg;
+static int save_dlg_active = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -216,6 +220,7 @@ static void update_network_label(void) {
 
         if (id == STATUS_CONNECTED) {
             connecting_phase = 0;
+            ui_network_locked = 0;
             connect_grace_ticks = 0;
             get_current_ip();
             return;
@@ -223,6 +228,7 @@ static void update_network_label(void) {
 
         if (id == STATUS_FAILED || id >= STATUS_INVALID_PASSWORD) {
             connecting_phase = 0;
+            ui_network_locked = 0;
             connect_grace_ticks = 0;
         }
 
@@ -373,6 +379,7 @@ static void handle_keyboard_OK_press(void) {
     lv_group_set_focus_cb(ui_group, NULL);
 
     osk_hide(ui_pnlEntry_network);
+    fields_modified = 1;
 }
 
 static void handle_keyboard_press(void) {
@@ -409,6 +416,7 @@ static void toggle_option(lv_obj_t *element, const char *config_path) {
 
     write_text_to_file_atomic(config_path, INT, is_enabled ? 0 : 1);
     lv_label_set_text(element, is_enabled ? lang.GENERIC.DISABLED : lang.GENERIC.ENABLED);
+    fields_modified = 1;
 }
 
 int handle_navigate(void) {
@@ -479,6 +487,7 @@ static void handle_confirm(void) {
             if (valid_info) {
                 play_sound(SND_CONFIRM);
                 save_network_config();
+                network_saved = 1;
 
                 if (cv_pass_len > 0) {
                     if (strcasecmp(password_buf, PASS_ENCODE) != 0 && strcasecmp(password_buf, "") != 0) {
@@ -554,13 +563,16 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
-    if (ui_network_locked) return;
+    if (fields_modified && !network_saved) {
+        play_sound(SND_CONFIRM);
+        save_dlg_active = 1;
+        save_dlg.selected = 0;
+        dialogue_show(&save_dlg);
+        dialogue_refresh(&save_dlg, &theme);
+        return;
+    }
 
     play_sound(SND_BACK);
-
-    toast_message(lang.GENERIC.SAVING, FOREVER);
-
-    save_network_config();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
 
     mux_input_stop();
@@ -597,13 +609,35 @@ static void handle_profiles(void) {
 }
 
 static void handle_a(void) {
+    if (save_dlg_active) {
+        mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
+        save_dlg_active = 0;
+        dialogue_hide(&save_dlg);
+
+        if (opt == MUX_CONFIRM_YEP) save_network_config();
+
+        play_sound(SND_BACK);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
+
+        mux_input_stop();
+
+        return;
+    }
+
     if (msgbox_active || hold_call || ui_network_locked) return;
 
     key_show ? handle_keyboard_press() : handle_confirm();
 }
 
 static void handle_b(void) {
-    if (hold_call || ui_network_locked) return;
+    if (hold_call) return;
+
+    if (save_dlg_active) {
+        save_dlg_active = 0;
+        dialogue_hide(&save_dlg);
+        play_sound(SND_BACK);
+        return;
+    }
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -619,7 +653,8 @@ static void handle_b(void) {
 }
 
 static void handle_b_hold(void) {
-    if (ui_network_locked) return;
+    if (save_dlg_active) return;
+
     if (key_show) key_backspace(ui_txtEntry_network);
 }
 
@@ -655,41 +690,76 @@ static void handle_help(void) {
 }
 
 static void handle_up(void) {
+    if (save_dlg_active) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     key_show ? key_up() : handle_list_nav_up();
 }
 
 static void handle_up_hold(void) {
+    if (save_dlg_active) return;
+
     key_show ? key_up() : handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
+    if (save_dlg_active) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     key_show ? key_down() : handle_list_nav_down();
 }
 
 static void handle_down_hold(void) {
+    if (save_dlg_active) return;
     key_show ? key_down() : handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
+    if (save_dlg_active) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (ui_network_locked) return;
 
     key_show ? key_left() : handle_navigate();
 }
 
 static void handle_right(void) {
+    if (save_dlg_active) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (ui_network_locked) return;
 
     key_show ? key_right() : handle_navigate();
 }
 
 static void handle_left_hold(void) {
-    if (ui_network_locked) return;
+    if (save_dlg_active || ui_network_locked) return;
 
     if (key_show) key_left();
 }
 
 static void handle_right_hold(void) {
-    if (ui_network_locked) return;
+    if (save_dlg_active || ui_network_locked) return;
 
     if (key_show) key_right();
 }
@@ -710,6 +780,27 @@ static void handle_r1(void) {
     }
 
     if (!key_show) handle_list_nav_page_down();
+}
+
+static void check_connecting_state(void) {
+    FILE *f = fopen(NET_STATUS_FILE, "r");
+    if (!f) return;
+
+    char status[64] = {0};
+    int ok = (fgets(status, sizeof(status), f) != NULL);
+    fclose(f);
+
+    if (!ok) return;
+
+    char *p = status;
+    while (*p && *p != '\n' && *p != '\r') p++;
+    *p = '\0';
+
+    int id = resolve_status_id(status);
+    if (id == STATUS_ASSOCIATING || id == STATUS_AUTHENTICATING || id == STATUS_WAITING_IP || id == STATUS_VALIDATING) {
+        ui_network_locked = 1;
+        connecting_phase = 1;
+    }
 }
 
 static void adjust_panels(void) {
@@ -801,9 +892,12 @@ int muxnetwork_main(void) {
     init_navigation_group();
 
     restore_network_values();
+    check_connecting_state();
 
     init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1, 1, OSK_MAX);
     can_scan_check(0);
+
+    dialogue_init_confirm(&save_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.SAVE, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     init_timer(ui_refresh_task, NULL);
 
