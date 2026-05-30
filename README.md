@@ -225,6 +225,8 @@ Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP 
 
 Extremely fast non-cryptographic hash algorithm. Used to compute file checksums for content verification.
 
+> **Note:** xxHash is non-cryptographic and is not resistant to deliberate collision attacks. It is suited for detecting accidental data corruption (content verification) but must not be used for tamper detection or cryptographic integrity verification.
+
 - Version: 0.8.3
 - Author: Yann Collet
 - License: BSD 2-Clause
