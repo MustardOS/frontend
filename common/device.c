@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "config_reader.h"
 #include "device.h"
 #include "options.h"

@@ -399,6 +399,10 @@ char *translate_help(char *key);
 
 char *translate_specific(char *key);
 
+void fill_generic(const char *key, char *field, size_t size);
+
+void fill_specific(const char *key, char *field, size_t size);
+
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
 
 char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,

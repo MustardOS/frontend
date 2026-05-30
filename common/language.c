@@ -3,20 +3,11 @@
 #include "language.h"
 
 void load_lang(struct mux_lang *lang) {
-    char buffer[MAX_BUFFER_SIZE];
     load_language_file(mux_module);
 
-#define SYSTEM_FIELD(field, string)                     \
-        snprintf(buffer, sizeof(buffer), "%s", string), \
-        snprintf(field, MAX_BUFFER_SIZE, "%s", buffer)
-
-#define GENERIC_FIELD(field, string)                                      \
-        snprintf(buffer, sizeof(buffer), "%s", string),                   \
-        snprintf(field, MAX_BUFFER_SIZE, "%s", translate_generic(buffer))
-
-#define SPECIFIC_FIELD(field, string)                                      \
-        snprintf(buffer, sizeof(buffer), "%s", string),                    \
-        snprintf(field, MAX_BUFFER_SIZE, "%s", translate_specific(buffer))
+#define SYSTEM_FIELD(field, string)   snprintf((field), MAX_BUFFER_SIZE, "%s", (string))
+#define GENERIC_FIELD(field, string)  fill_generic((string),  (field), MAX_BUFFER_SIZE)
+#define SPECIFIC_FIELD(field, string) fill_specific((string), (field), MAX_BUFFER_SIZE)
 
     // system language
     SYSTEM_FIELD(lang->SYSTEM.NO_JOY_GENERAL, "Failed to open GENERAL joystick device");

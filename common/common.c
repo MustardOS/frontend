@@ -1301,10 +1301,9 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             {CAT_INFO, INFO_CAT_PATH,                "",      program_default},
     };
 
-
     const char *path_formats[] = {
-        "%s/%s/%s/%s%s.jpg",
-        "%s/%s/%s/%s%s.png"
+            "%s/%s/%s/%s%s.jpg",
+            "%s/%s/%s/%s%s.png"
     };
 
     for (size_t j = 0; j < A_SIZE(path_formats); ++j) {
@@ -1316,7 +1315,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
             int written;
             written = snprintf(image_path, path_size, path_formats[j], args[i].catalogue_path, catalogue_name,
-                            image_type, args[i].dimension, args[i].program);
+                               image_type, args[i].dimension, args[i].program);
             if (written >= 0 && file_exist(image_path)) return 1;
         }
     }
@@ -2025,6 +2024,24 @@ char *translate_specific(char *key) {
     }
 
     return key;
+}
+
+void fill_generic(const char *key, char *field, size_t size) {
+    struct json j = json_object_get(translation_generic, key);
+    if (json_exists(j)) {
+        json_string_copy(j, field, size);
+    } else {
+        snprintf(field, size, "%s", key);
+    }
+}
+
+void fill_specific(const char *key, char *field, size_t size) {
+    struct json j = json_object_get(translation_specific, key);
+    if (json_exists(j)) {
+        json_string_copy(j, field, size);
+    } else {
+        snprintf(field, size, "%s", key);
+    }
 }
 
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count) {
