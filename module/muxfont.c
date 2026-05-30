@@ -20,6 +20,8 @@ static lv_obj_t *ui_objects_value[UI_COUNT];
 static lv_obj_t *ui_objects_glyph[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
 
+static int dropdown_to_canonical[3];
+static int num_type_options;
 
 static int reset_mode = 0;
 static mux_dialogue reset_dlg;
@@ -57,12 +59,17 @@ static int detect_language_type(void) {
 }
 
 static int type_to_canonical(uint32_t dropdown_idx) {
-    return has_language_type ? (int) dropdown_idx : (int) dropdown_idx + 1;
+    if (dropdown_idx < (uint32_t) num_type_options) return dropdown_to_canonical[dropdown_idx];
+
+    return dropdown_to_canonical[num_type_options - 1];
 }
 
 static uint32_t type_to_dropdown(int canonical) {
-    if (!has_language_type) return (canonical > 0) ? (uint32_t) (canonical - 1) : 0;
-    return (uint32_t) canonical;
+    for (int i = 0; i < num_type_options; i++) {
+        if (dropdown_to_canonical[i] == canonical) return (uint32_t) i;
+    }
+
+    return (uint32_t) (num_type_options - 1);
 }
 
 static void refresh_navigation(void) {
@@ -76,7 +83,7 @@ static void refresh_navigation(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    if (!has_theme_type) HIDE_OPTION_ITEM(font, Type);
+    if (num_type_options <= 1) HIDE_OPTION_ITEM(font, Type);
 
     if (type_to_canonical(lv_dropdown_get_selected(ui_droType_font)) == 1) {
         HIDE_OPTION_ITEM(font, Name);
@@ -184,6 +191,7 @@ static void populate_font_names(void) {
 static void restore_font_options(void) {
     int canonical = config.SETTINGS.ADVANCED.FONT;
     if (!has_theme_type && canonical == 1) canonical = 2;
+    if (!has_language_type && canonical == 0) canonical = has_theme_type ? 1 : 2;
 
     config.SETTINGS.ADVANCED.FONT = (int16_t) canonical;
     lv_dropdown_set_selected(ui_droType_font, type_to_dropdown(canonical));
@@ -235,12 +243,20 @@ static void init_navigation_group(void) {
             lang.MUXFONT.TYPE_OPTIONS.THEME,
             lang.MUXFONT.TYPE_OPTIONS.INTERNAL
     };
-    char **type_options = has_language_type ? all_type_options : all_type_options + 1;
-    int type_count = has_language_type ? 3 : 2;
+
+    num_type_options = 0;
+    if (has_language_type) dropdown_to_canonical[num_type_options++] = 0;
+    if (has_theme_type) dropdown_to_canonical[num_type_options++] = 1;
+    dropdown_to_canonical[num_type_options++] = 2;
+
+    char *type_options[3];
+    for (int i = 0; i < num_type_options; i++) {
+        type_options[i] = all_type_options[dropdown_to_canonical[i]];
+    }
 
     char *size_options = generate_number_string(6, 64, 2, lang.MUXFONT.SIZE_DEFAULT, NULL, NULL, 0);
 
-    INIT_OPTION_ITEM(-1, font, Type, lang.MUXFONT.TYPE, "type", type_options, type_count);
+    INIT_OPTION_ITEM(-1, font, Type, lang.MUXFONT.TYPE, "type", type_options, num_type_options);
     INIT_OPTION_ITEM(-1, font, Name, lang.MUXFONT.NAME, "name", NULL, 0);
     INIT_OPTION_ITEM(-1, font, ListSize, lang.MUXFONT.LIST_SIZE, "listsize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, HeaderSize, lang.MUXFONT.HEADER_SIZE, "headersize", NULL, 0);
