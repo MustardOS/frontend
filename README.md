@@ -50,7 +50,7 @@ DEBUG=1 BUILD=release ./xtool.sh make -j$(nproc)
 
 | `DEVICE`           | Use for                         |
 |--------------------|---------------------------------|
-| `ARM64_A53`        | H700, A133P — default if unset  |
+| `ARM64_A53`        | H700, A133P - default if unset  |
 | `ARM64_A53_CRYPTO` | A53 with hardware AES/CRC       |
 | `ARM64`            | Generic ARMv8-A                 |
 | `ARM32`            | Original 35x (ARMv7 hard-float) |
@@ -189,7 +189,8 @@ embeds [stb_truetype](https://github.com/nothings/stb) for glyph rasterisation.
 
 ### [PlutoSVG](https://github.com/sammycage/plutosvg)
 
-Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with scaling driven by the LVGL custom image decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser it is built on.
+Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with scaling driven by the LVGL custom image
+decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser it is built on.
 
 - PlutoSVG Version: 0.0.8
 - PlutoVG Version: 1.3.3
@@ -225,7 +226,8 @@ Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP 
 
 Extremely fast non-cryptographic hash algorithm. Used to compute file checksums for content verification.
 
-> **Note:** xxHash is non-cryptographic and is not resistant to deliberate collision attacks. It is suited for detecting accidental data corruption (content verification) but must not be used for tamper detection or cryptographic integrity verification.
+> **Note:** xxHash is non-cryptographic and is not resistant to deliberate collision attacks. It is suited for detecting accidental data corruption (content
+> verification) but must not be used for tamper detection or cryptographic integrity verification.
 
 - Version: 0.8.3
 - Author: Yann Collet

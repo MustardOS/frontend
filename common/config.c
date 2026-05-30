@@ -1,75 +1,105 @@
 #include "common.h"
 #include "options.h"
 #include "config.h"
+#include "config_reader.h"
+
+
+#define CFG_STR(field, d, name, fallback)          \
+    do {                                           \
+        const char *_v = cfg_dir_get((d), (name)); \
+        snprintf((field), sizeof(field), "%s",     \
+            (_v && *_v) ? _v : (fallback));        \
+    } while (0)
+
+#define CFG_INT(field, d, name, fallback)                         \
+    do {                                                          \
+        (field) = (int16_t) cfg_dir_int((d), (name), (fallback)); \
+    } while (0)
 
 void load_config(struct mux_config *config) {
-    char buffer[MAX_BUFFER_SIZE];
+    cfg_dir_t d;
 
-    CFG_STR_FIELD(config->SYSTEM.BUILD, CONF_CONFIG_PATH "system/build", "Unknown");
-    CFG_STR_FIELD(config->SYSTEM.VERSION, CONF_CONFIG_PATH "system/version", "Edge");
+    // system/ - build, version, debug_mode
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "system");
+    CFG_STR(config->SYSTEM.BUILD, &d, "build", "Unknown");
+    CFG_STR(config->SYSTEM.VERSION, &d, "version", "Edge");
+    CFG_INT(config->SETTINGS.ADVANCED.DEBUGLOG, &d, "debug_mode", 0);
 
-    CFG_INT_FIELD(config->BACKUP.APPS, CONF_CONFIG_PATH "backup/application", 1);
-    CFG_INT_FIELD(config->BACKUP.BIOS, CONF_CONFIG_PATH "backup/bios", 1);
-    CFG_INT_FIELD(config->BACKUP.CATALOGUE, CONF_CONFIG_PATH "backup/catalogue", 1);
-    CFG_INT_FIELD(config->BACKUP.CHEATS, CONF_CONFIG_PATH "backup/cheats", 1);
-    CFG_INT_FIELD(config->BACKUP.COLLECTION, CONF_CONFIG_PATH "backup/collection", 1);
-    CFG_INT_FIELD(config->BACKUP.CONFIG, CONF_CONFIG_PATH "backup/config", 1);
-    CFG_INT_FIELD(config->BACKUP.CONTENT, CONF_CONFIG_PATH "backup/content", 1);
-    CFG_INT_FIELD(config->BACKUP.HISTORY, CONF_CONFIG_PATH "backup/history", 1);
-    CFG_INT_FIELD(config->BACKUP.INIT, CONF_CONFIG_PATH "backup/init", 1);
-    CFG_INT_FIELD(config->BACKUP.MERGE, CONF_CONFIG_PATH "backup/merge", 1);
-    CFG_INT_FIELD(config->BACKUP.MUSIC, CONF_CONFIG_PATH "backup/music", 1);
-    CFG_INT_FIELD(config->BACKUP.NAME, CONF_CONFIG_PATH "backup/name", 1);
-    CFG_INT_FIELD(config->BACKUP.NETWORK, CONF_CONFIG_PATH "backup/network", 1);
-    CFG_INT_FIELD(config->BACKUP.OVERLAYS, CONF_CONFIG_PATH "backup/overlays", 1);
-    CFG_INT_FIELD(config->BACKUP.OVERRIDE, CONF_CONFIG_PATH "backup/override", 1);
-    CFG_INT_FIELD(config->BACKUP.PACKAGE, CONF_CONFIG_PATH "backup/package", 1);
-    CFG_INT_FIELD(config->BACKUP.SAVE, CONF_CONFIG_PATH "backup/save", 1);
-    CFG_INT_FIELD(config->BACKUP.SCREENSHOT, CONF_CONFIG_PATH "backup/screenshot", 1);
-    CFG_INT_FIELD(config->BACKUP.SHADERS, CONF_CONFIG_PATH "backup/shaders", 1);
-    CFG_INT_FIELD(config->BACKUP.SYNCTHING, CONF_CONFIG_PATH "backup/syncthing", 1);
-    CFG_INT_FIELD(config->BACKUP.THEME, CONF_CONFIG_PATH "backup/theme", 1);
-    CFG_INT_FIELD(config->BACKUP.TRACK, CONF_CONFIG_PATH "backup/track", 1);
-    CFG_INT_FIELD(config->BACKUP.START, CONF_CONFIG_PATH "backup/start", 0);
-    CFG_INT_FIELD(config->BACKUP.TARGET, CONF_CONFIG_PATH "backup/target", 0);
+    // backup/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "backup");
+    CFG_INT(config->BACKUP.APPS, &d, "application", 1);
+    CFG_INT(config->BACKUP.BIOS, &d, "bios", 1);
+    CFG_INT(config->BACKUP.CATALOGUE, &d, "catalogue", 1);
+    CFG_INT(config->BACKUP.CHEATS, &d, "cheats", 1);
+    CFG_INT(config->BACKUP.COLLECTION, &d, "collection", 1);
+    CFG_INT(config->BACKUP.CONFIG, &d, "config", 1);
+    CFG_INT(config->BACKUP.CONTENT, &d, "content", 1);
+    CFG_INT(config->BACKUP.HISTORY, &d, "history", 1);
+    CFG_INT(config->BACKUP.INIT, &d, "init", 1);
+    CFG_INT(config->BACKUP.MERGE, &d, "merge", 1);
+    CFG_INT(config->BACKUP.MUSIC, &d, "music", 1);
+    CFG_INT(config->BACKUP.NAME, &d, "name", 1);
+    CFG_INT(config->BACKUP.NETWORK, &d, "network", 1);
+    CFG_INT(config->BACKUP.OVERLAYS, &d, "overlays", 1);
+    CFG_INT(config->BACKUP.OVERRIDE, &d, "override", 1);
+    CFG_INT(config->BACKUP.PACKAGE, &d, "package", 1);
+    CFG_INT(config->BACKUP.SAVE, &d, "save", 1);
+    CFG_INT(config->BACKUP.SCREENSHOT, &d, "screenshot", 1);
+    CFG_INT(config->BACKUP.SHADERS, &d, "shaders", 1);
+    CFG_INT(config->BACKUP.SYNCTHING, &d, "syncthing", 1);
+    CFG_INT(config->BACKUP.THEME, &d, "theme", 1);
+    CFG_INT(config->BACKUP.TRACK, &d, "track", 1);
+    CFG_INT(config->BACKUP.START, &d, "start", 0);
+    CFG_INT(config->BACKUP.TARGET, &d, "target", 0);
 
-    CFG_INT_FIELD(config->BOOT.FACTORY_RESET, CONF_CONFIG_PATH "boot/factory_reset", 0);
-    CFG_INT_FIELD(config->BOOT.DEVICE_MODE, CONF_CONFIG_PATH "boot/device_mode", 0);
+    // boot/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "boot");
+    CFG_INT(config->BOOT.FACTORY_RESET, &d, "factory_reset", 0);
+    CFG_INT(config->BOOT.DEVICE_MODE, &d, "device_mode", 0);
 
-    CFG_INT_FIELD(config->CLOCK.NOTATION, CONF_CONFIG_PATH "clock/notation", 0);
-    CFG_STR_FIELD(config->CLOCK.POOL, CONF_CONFIG_PATH "clock/pool", "pool.ntp.org");
+    // clock/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "clock");
+    CFG_INT(config->CLOCK.NOTATION, &d, "notation", 0);
+    CFG_STR(config->CLOCK.POOL, &d, "pool", "pool.ntp.org");
 
-    CFG_INT_FIELD(config->NETWORK.TYPE, CONF_CONFIG_PATH "network/type", 0);
-    CFG_STR_FIELD(config->NETWORK.INTERFACE, CONF_CONFIG_PATH "network/interface", "wlan0");
-    CFG_STR_FIELD(config->NETWORK.SSID, CONF_CONFIG_PATH "network/ssid", "");
-    CFG_STR_FIELD(config->NETWORK.PASS, CONF_CONFIG_PATH "network/pass", "");
-    CFG_INT_FIELD(config->NETWORK.HIDDEN, CONF_CONFIG_PATH "network/hidden", 0);
-    CFG_STR_FIELD(config->NETWORK.ADDRESS, CONF_CONFIG_PATH "network/address", "192.168.0.123");
-    CFG_STR_FIELD(config->NETWORK.GATEWAY, CONF_CONFIG_PATH "network/gateway", "192.168.0.1");
-    CFG_STR_FIELD(config->NETWORK.SUBNET, CONF_CONFIG_PATH "network/subnet", "24");
-    CFG_STR_FIELD(config->NETWORK.DNS, CONF_CONFIG_PATH "network/dns", "1.1.1.1");
+    // network/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "network");
+    CFG_INT(config->NETWORK.TYPE, &d, "type", 0);
+    CFG_INT(config->NETWORK.HIDDEN, &d, "hidden", 0);
+    CFG_STR(config->NETWORK.INTERFACE, &d, "interface", "wlan0");
+    CFG_STR(config->NETWORK.SSID, &d, "ssid", "");
+    CFG_STR(config->NETWORK.PASS, &d, "pass", "");
+    CFG_STR(config->NETWORK.ADDRESS, &d, "address", "192.168.0.123");
+    CFG_STR(config->NETWORK.GATEWAY, &d, "gateway", "192.168.0.1");
+    CFG_STR(config->NETWORK.SUBNET, &d, "subnet", "24");
+    CFG_STR(config->NETWORK.DNS, &d, "dns", "1.1.1.1");
 
-    CFG_INT_FIELD(config->THEME.FILTER.ALLTHEMES, CONF_CONFIG_PATH "theme/filter/allthemes", 0);
-    CFG_INT_FIELD(config->THEME.FILTER.GRID, CONF_CONFIG_PATH "theme/filter/grid", 0);
-    CFG_INT_FIELD(config->THEME.FILTER.HDMI, CONF_CONFIG_PATH "theme/filter/hdmi", 0);
-    CFG_INT_FIELD(config->THEME.FILTER.LANGUAGE, CONF_CONFIG_PATH "theme/filter/language", 0);
-    CFG_STR_FIELD(config->THEME.FILTER.LOOKUP, CONF_CONFIG_PATH "theme/filter/lookup", "");
+    // theme/ (top level - contains the "active" file; subdirs handled separately)
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "theme");
+    CFG_STR(config->THEME.ACTIVE, &d, "active", "MustardOS");
+    snprintf(config->THEME.STORAGE_THEME, sizeof(config->THEME.STORAGE_THEME),
+             RUN_STORAGE_PATH "theme/%s", config->THEME.ACTIVE);
+    snprintf(config->THEME.THEME_CAT_PATH, sizeof(config->THEME.THEME_CAT_PATH),
+             "%s/catalogue", config->THEME.STORAGE_THEME);
+
+    // theme/filter/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "theme/filter");
+    CFG_INT(config->THEME.FILTER.ALLTHEMES, &d, "allthemes", 0);
+    CFG_INT(config->THEME.FILTER.GRID, &d, "grid", 0);
+    CFG_INT(config->THEME.FILTER.HDMI, &d, "hdmi", 0);
+    CFG_INT(config->THEME.FILTER.LANGUAGE, &d, "language", 0);
+    CFG_STR(config->THEME.FILTER.LOOKUP, &d, "lookup", "");
+
     if (!config->THEME.FILTER.ALLTHEMES) {
-        int width = read_line_int_from((CONF_DEVICE_PATH "mux/width"), 1);
-        int height = read_line_int_from((CONF_DEVICE_PATH "mux/height"), 1);
-        if (width == 640 && height == 480) {
-            config->THEME.FILTER.RESOLUTION_640x480 = 1;
-        } else if (width == 720 && height == 480) {
-            config->THEME.FILTER.RESOLUTION_720x480 = 1;
-        } else if (width == 720 && height == 720) {
-            config->THEME.FILTER.RESOLUTION_720x720 = 1;
-        } else if (width == 1024 && height == 768) {
-            config->THEME.FILTER.RESOLUTION_1024x768 = 1;
-        } else if (width == 1280 && height == 720) {
-            config->THEME.FILTER.RESOLUTION_1280x720 = 1;
-        } else if (width == 1920 && height == 1080) {
-            config->THEME.FILTER.RESOLUTION_1920x1080 = 1;
-        }
+        cfg_dir_scan(&d, CONF_DEVICE_PATH "mux");
+        int width = cfg_dir_int(&d, "width", 0);
+        int height = cfg_dir_int(&d, "height", 0);
+        config->THEME.FILTER.RESOLUTION_640x480 = (width == 640 && height == 480) ? 1 : 0;
+        config->THEME.FILTER.RESOLUTION_720x480 = (width == 720 && height == 480) ? 1 : 0;
+        config->THEME.FILTER.RESOLUTION_720x720 = (width == 720 && height == 720) ? 1 : 0;
+        config->THEME.FILTER.RESOLUTION_1024x768 = (width == 1024 && height == 768) ? 1 : 0;
+        config->THEME.FILTER.RESOLUTION_1280x720 = (width == 1280 && height == 720) ? 1 : 0;
+        config->THEME.FILTER.RESOLUTION_1920x1080 = (width == 1920 && height == 1080) ? 1 : 0;
     } else {
         config->THEME.FILTER.RESOLUTION_640x480 = 0;
         config->THEME.FILTER.RESOLUTION_720x480 = 0;
@@ -79,73 +109,87 @@ void load_config(struct mux_config *config) {
         config->THEME.FILTER.RESOLUTION_1920x1080 = 0;
     }
 
-    CFG_STR_FIELD(config->EXTRA.DOWNLOAD.DATA, CONF_CONFIG_PATH "extra/download/data", "");
-    CFG_STR_FIELD(config->EXTRA.LANGUAGE.DATA, CONF_CONFIG_PATH "extra/language/data", "");
+    // theme/download/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "theme/download");
+    CFG_STR(config->THEME.DOWNLOAD.DATA, &d, "data", "");
+    CFG_STR(config->THEME.DOWNLOAD.PREVIEW, &d, "preview", "");
 
-    CFG_STR_FIELD(config->THEME.DOWNLOAD.DATA, CONF_CONFIG_PATH "theme/download/data", "");
-    CFG_STR_FIELD(config->THEME.DOWNLOAD.PREVIEW, CONF_CONFIG_PATH "theme/download/preview", "");
-    CFG_STR_FIELD(config->THEME.ACTIVE, CONF_CONFIG_PATH "theme/active", "MustardOS");
-    snprintf(config->THEME.STORAGE_THEME, MAX_BUFFER_SIZE, RUN_STORAGE_PATH "theme/%s", config->THEME.ACTIVE);
-    snprintf(config->THEME.THEME_CAT_PATH, MAX_BUFFER_SIZE, "%s/catalogue", config->THEME.STORAGE_THEME);
+    // extra/download/ and extra/language/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "extra/download");
+    CFG_STR(config->EXTRA.DOWNLOAD.DATA, &d, "data", "");
 
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, CONF_CONFIG_PATH "settings/advanced/accelerate", 96);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.REPEATDELAY, CONF_CONFIG_PATH "settings/advanced/repeat_delay", 208);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.STICKNAV, CONF_CONFIG_PATH "settings/advanced/sticknav", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 1);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, CONF_CONFIG_PATH "settings/advanced/font", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.LED, CONF_CONFIG_PATH "settings/advanced/led", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RANDOMTHEME, CONF_CONFIG_PATH "settings/advanced/random_theme", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROWAIT, CONF_CONFIG_PATH "settings/advanced/retrowait", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROFREE, CONF_CONFIG_PATH "settings/advanced/retrofree", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROCACHE, CONF_CONFIG_PATH "settings/advanced/retrocache", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACTIVITY, CONF_CONFIG_PATH "settings/advanced/activity", 1);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, CONF_CONFIG_PATH "settings/advanced/usb_function", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.VERBOSE, CONF_CONFIG_PATH "settings/advanced/verbose", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.DEBUGLOG, CONF_CONFIG_PATH "system/debug_mode", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, CONF_CONFIG_PATH "settings/advanced/rumble", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.VOLUME, CONF_CONFIG_PATH "settings/advanced/volume", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, CONF_CONFIG_PATH "settings/advanced/brightness", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.USERINIT, CONF_CONFIG_PATH "settings/advanced/user_init", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.DPADSWAP, CONF_CONFIG_PATH "settings/advanced/dpad_swap", 1);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.OVERDRIVE, CONF_CONFIG_PATH "settings/advanced/overdrive", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAPFILE, CONF_CONFIG_PATH "settings/advanced/swapfile", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.ZRAMFILE, CONF_CONFIG_PATH "settings/advanced/zramfile", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.LIDSWITCH, CONF_CONFIG_PATH "settings/advanced/lidswitch", 1);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.DISPSUSPEND, CONF_CONFIG_PATH "settings/advanced/disp_suspend", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.INCBRIGHT, CONF_CONFIG_PATH "settings/advanced/incbright", 16);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.INCVOLUME, CONF_CONFIG_PATH "settings/advanced/incvolume", 8);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.MAXGPU, CONF_CONFIG_PATH "settings/advanced/maxgpu", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOREADY, CONF_CONFIG_PATH "settings/advanced/audio_ready", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.AUDIOSWAP, CONF_CONFIG_PATH "settings/advanced/audio_swap", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.USBPART, CONF_CONFIG_PATH "settings/advanced/part_external", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.SECONDPART, CONF_CONFIG_PATH "settings/advanced/part_secondary", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.TRUSTMODIFY, CONF_CONFIG_PATH "settings/advanced/trust_modify", 0);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.TRUSTPOWER, CONF_CONFIG_PATH "settings/advanced/trust_power", 1);
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.TRUSTREMOVE, CONF_CONFIG_PATH "settings/advanced/trust_remove", 0);
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "extra/language");
+    CFG_STR(config->EXTRA.LANGUAGE.DATA, &d, "data", "");
 
-    CFG_INT_FIELD(config->SETTINGS.COLOUR.TEMPERATURE, CONF_CONFIG_PATH "settings/colour/temperature", DEFAULT_TEMPERATURE);
-    CFG_INT_FIELD(config->SETTINGS.COLOUR.BRIGHTNESS, CONF_CONFIG_PATH "settings/colour/brightness", 0);
-    CFG_INT_FIELD(config->SETTINGS.COLOUR.CONTRAST, CONF_CONFIG_PATH "settings/colour/contrast", 100);
-    CFG_INT_FIELD(config->SETTINGS.COLOUR.SATURATION, CONF_CONFIG_PATH "settings/colour/saturation", 100);
-    CFG_INT_FIELD(config->SETTINGS.COLOUR.HUESHIFT, CONF_CONFIG_PATH "settings/colour/hueshift", 0);
-    CFG_INT_FIELD(config->SETTINGS.COLOUR.GAMMA, CONF_CONFIG_PATH "settings/colour/gamma", 100);
+    // settings/advanced/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/advanced");
+    CFG_INT(config->SETTINGS.ADVANCED.ACCELERATE, &d, "accelerate", 96);
+    CFG_INT(config->SETTINGS.ADVANCED.REPEATDELAY, &d, "repeat_delay", 208);
+    CFG_INT(config->SETTINGS.ADVANCED.STICKNAV, &d, "sticknav", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.THERMAL, &d, "thermal", 1);
+    CFG_INT(config->SETTINGS.ADVANCED.FONT, &d, "font", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.LED, &d, "led", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.RANDOMTHEME, &d, "random_theme", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.RETROWAIT, &d, "retrowait", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.RETROFREE, &d, "retrofree", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.RETROCACHE, &d, "retrocache", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.ACTIVITY, &d, "activity", 1);
+    CFG_INT(config->SETTINGS.ADVANCED.USBFUNCTION, &d, "usb_function", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.VERBOSE, &d, "verbose", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.RUMBLE, &d, "rumble", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.VOLUME, &d, "volume", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.BRIGHTNESS, &d, "brightness", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.USERINIT, &d, "user_init", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.DPADSWAP, &d, "dpad_swap", 1);
+    CFG_INT(config->SETTINGS.ADVANCED.OVERDRIVE, &d, "overdrive", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.SWAPFILE, &d, "swapfile", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.ZRAMFILE, &d, "zramfile", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.LIDSWITCH, &d, "lidswitch", 1);
+    CFG_INT(config->SETTINGS.ADVANCED.DISPSUSPEND, &d, "disp_suspend", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.INCBRIGHT, &d, "incbright", 16);
+    CFG_INT(config->SETTINGS.ADVANCED.INCVOLUME, &d, "incvolume", 8);
+    CFG_INT(config->SETTINGS.ADVANCED.MAXGPU, &d, "maxgpu", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.AUDIOREADY, &d, "audio_ready", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.AUDIOSWAP, &d, "audio_swap", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.USBPART, &d, "part_external", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.SECONDPART, &d, "part_secondary", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.TRUSTMODIFY, &d, "trust_modify", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.TRUSTPOWER, &d, "trust_power", 1);
+    CFG_INT(config->SETTINGS.ADVANCED.TRUSTREMOVE, &d, "trust_remove", 0);
 
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, CONF_CONFIG_PATH "settings/general/sound", 0);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUNDVOL, CONF_CONFIG_PATH "settings/general/soundvol", 100);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.CHIME, CONF_CONFIG_PATH "settings/general/chime", 0);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.BGM, CONF_CONFIG_PATH "settings/general/bgm", 0);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.BGMVOL, CONF_CONFIG_PATH "settings/general/bgmvol", 35);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.RGB, CONF_CONFIG_PATH "settings/general/rgb", 0);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.HKDPAD, CONF_CONFIG_PATH "settings/hotkey/dpad_toggle", 1);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.HKSHOT, CONF_CONFIG_PATH "settings/hotkey/screenshot", 0);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.AUDIOSINK, CONF_CONFIG_PATH "settings/general/audiosink", 0);
-    CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, CONF_CONFIG_PATH "settings/general/startup", "launcher");
-    CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, CONF_CONFIG_PATH "settings/general/language", "English");
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_RESOLUTION, CONF_CONFIG_PATH "settings/general/theme_resolution", 0);
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_SCALING, CONF_CONFIG_PATH "settings/general/theme_scaling", 1);
+    // settings/colour/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/colour");
+    CFG_INT(config->SETTINGS.COLOUR.TEMPERATURE, &d, "temperature", DEFAULT_TEMPERATURE);
+    CFG_INT(config->SETTINGS.COLOUR.BRIGHTNESS, &d, "brightness", 0);
+    CFG_INT(config->SETTINGS.COLOUR.CONTRAST, &d, "contrast", 100);
+    CFG_INT(config->SETTINGS.COLOUR.SATURATION, &d, "saturation", 100);
+    CFG_INT(config->SETTINGS.COLOUR.HUESHIFT, &d, "hueshift", 0);
+    CFG_INT(config->SETTINGS.COLOUR.GAMMA, &d, "gamma", 100);
 
+    // settings/general/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/general");
+    CFG_INT(config->SETTINGS.GENERAL.SOUND, &d, "sound", 0);
+    CFG_INT(config->SETTINGS.GENERAL.SOUNDVOL, &d, "soundvol", 100);
+    CFG_INT(config->SETTINGS.GENERAL.CHIME, &d, "chime", 0);
+    CFG_INT(config->SETTINGS.GENERAL.BGM, &d, "bgm", 0);
+    CFG_INT(config->SETTINGS.GENERAL.BGMVOL, &d, "bgmvol", 35);
+    CFG_INT(config->SETTINGS.GENERAL.BRIGHTNESS, &d, "brightness", 90);
+    CFG_INT(config->SETTINGS.GENERAL.VOLUME, &d, "volume", 75);
+    CFG_INT(config->SETTINGS.GENERAL.RGB, &d, "rgb", 0);
+    CFG_INT(config->SETTINGS.GENERAL.AUDIOSINK, &d, "audiosink", 0);
+    CFG_INT(config->SETTINGS.GENERAL.THEME_RESOLUTION, &d, "theme_resolution", 0);
+    CFG_INT(config->SETTINGS.GENERAL.THEME_SCALING, &d, "theme_scaling", 1);
+    CFG_STR(config->SETTINGS.GENERAL.STARTUP, &d, "startup", "launcher");
+    CFG_STR(config->SETTINGS.GENERAL.LANGUAGE, &d, "language", "English");
+
+    // settings/hotkey/ (fields logically grouped under SETTINGS.GENERAL)
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/hotkey");
+    CFG_INT(config->SETTINGS.GENERAL.HKDPAD, &d, "dpad_toggle", 1);
+    CFG_INT(config->SETTINGS.GENERAL.HKSHOT, &d, "screenshot", 0);
+
+    // Compute theme resolution dimensions
+    config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 0;
+    config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 0;
     switch (config->SETTINGS.GENERAL.THEME_RESOLUTION) {
         case 1:
             config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 640;
@@ -177,126 +221,158 @@ void load_config(struct mux_config *config) {
             break;
     }
 
-    CFG_INT_FIELD(config->SETTINGS.HDMI.RESOLUTION, CONF_CONFIG_PATH "settings/hdmi/resolution", 0);
-    CFG_INT_FIELD(config->SETTINGS.HDMI.SPACE, CONF_CONFIG_PATH "settings/hdmi/space", 0);
-    CFG_INT_FIELD(config->SETTINGS.HDMI.DEPTH, CONF_CONFIG_PATH "settings/hdmi/depth", 0);
-    CFG_INT_FIELD(config->SETTINGS.HDMI.RANGE, CONF_CONFIG_PATH "settings/hdmi/range", 0);
-    CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, CONF_CONFIG_PATH "settings/hdmi/scan", 0);
-    CFG_INT_FIELD(config->SETTINGS.HDMI.AUDIO, CONF_CONFIG_PATH "settings/hdmi/audio", 0);
+    // settings/hdmi/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/hdmi");
+    CFG_INT(config->SETTINGS.HDMI.RESOLUTION, &d, "resolution", 0);
+    CFG_INT(config->SETTINGS.HDMI.SPACE, &d, "space", 0);
+    CFG_INT(config->SETTINGS.HDMI.DEPTH, &d, "depth", 0);
+    CFG_INT(config->SETTINGS.HDMI.RANGE, &d, "range", 0);
+    CFG_INT(config->SETTINGS.HDMI.SCAN, &d, "scan", 0);
+    CFG_INT(config->SETTINGS.HDMI.AUDIO, &d, "audio", 0);
 
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.MONITOR, CONF_CONFIG_PATH "settings/network/monitor", 0);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.BOOT, CONF_CONFIG_PATH "settings/network/boot", 1);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.WAKE, CONF_CONFIG_PATH "settings/network/wake", 1);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.COMPAT, CONF_CONFIG_PATH "settings/network/compat", 0);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.ASYNCLOAD, CONF_CONFIG_PATH "settings/network/async_load", 1);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.CONRETRY, CONF_CONFIG_PATH "settings/network/con_retry", 1);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.WAIT, CONF_CONFIG_PATH "settings/network/wait_timer", 5);
-    CFG_INT_FIELD(config->SETTINGS.NETWORK.MODRETRY, CONF_CONFIG_PATH "settings/network/mod_retry", 1);
+    // settings/network/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/network");
+    CFG_INT(config->SETTINGS.NETWORK.MONITOR, &d, "monitor", 0);
+    CFG_INT(config->SETTINGS.NETWORK.BOOT, &d, "boot", 1);
+    CFG_INT(config->SETTINGS.NETWORK.WAKE, &d, "wake", 1);
+    CFG_INT(config->SETTINGS.NETWORK.COMPAT, &d, "compat", 0);
+    CFG_INT(config->SETTINGS.NETWORK.ASYNCLOAD, &d, "async_load", 1);
+    CFG_INT(config->SETTINGS.NETWORK.CONRETRY, &d, "con_retry", 1);
+    CFG_INT(config->SETTINGS.NETWORK.WAIT, &d, "wait_timer", 5);
+    CFG_INT(config->SETTINGS.NETWORK.MODRETRY, &d, "mod_retry", 1);
 
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENALPHA, CONF_CONFIG_PATH "settings/overlay/gen_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENANCHOR, CONF_CONFIG_PATH "settings/overlay/gen_anchor", 4);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.GENSCALE, CONF_CONFIG_PATH "settings/overlay/gen_scale", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATALPHA, CONF_CONFIG_PATH "settings/overlay/bat_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATANCHOR, CONF_CONFIG_PATH "settings/overlay/bat_anchor", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BATSCALE, CONF_CONFIG_PATH "settings/overlay/bat_scale", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLALPHA, CONF_CONFIG_PATH "settings/overlay/vol_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLANCHOR, CONF_CONFIG_PATH "settings/overlay/vol_anchor", 2);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.VOLSCALE, CONF_CONFIG_PATH "settings/overlay/vol_scale", 0);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIALPHA, CONF_CONFIG_PATH "settings/overlay/bri_alpha", 255);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRIANCHOR, CONF_CONFIG_PATH "settings/overlay/bri_anchor", 2);
-    CFG_INT_FIELD(config->SETTINGS.OVERLAY.BRISCALE, CONF_CONFIG_PATH "settings/overlay/bri_scale", 0);
+    // settings/overlay/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/overlay");
+    CFG_INT(config->SETTINGS.OVERLAY.GENALPHA, &d, "gen_alpha", 255);
+    CFG_INT(config->SETTINGS.OVERLAY.GENANCHOR, &d, "gen_anchor", 4);
+    CFG_INT(config->SETTINGS.OVERLAY.GENSCALE, &d, "gen_scale", 0);
+    CFG_INT(config->SETTINGS.OVERLAY.BATALPHA, &d, "bat_alpha", 255);
+    CFG_INT(config->SETTINGS.OVERLAY.BATANCHOR, &d, "bat_anchor", 0);
+    CFG_INT(config->SETTINGS.OVERLAY.BATSCALE, &d, "bat_scale", 0);
+    CFG_INT(config->SETTINGS.OVERLAY.VOLALPHA, &d, "vol_alpha", 255);
+    CFG_INT(config->SETTINGS.OVERLAY.VOLANCHOR, &d, "vol_anchor", 2);
+    CFG_INT(config->SETTINGS.OVERLAY.VOLSCALE, &d, "vol_scale", 0);
+    CFG_INT(config->SETTINGS.OVERLAY.BRIALPHA, &d, "bri_alpha", 255);
+    CFG_INT(config->SETTINGS.OVERLAY.BRIANCHOR, &d, "bri_anchor", 2);
+    CFG_INT(config->SETTINGS.OVERLAY.BRISCALE, &d, "bri_scale", 0);
 
-    CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, CONF_CONFIG_PATH "settings/power/low_battery", 0);
-    CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, CONF_CONFIG_PATH "settings/power/shutdown", 0);
-    CFG_INT_FIELD(config->SETTINGS.POWER.IDLE.DISPLAY, CONF_CONFIG_PATH "settings/power/idle_display", 0);
-    CFG_INT_FIELD(config->SETTINGS.POWER.IDLE.SLEEP, CONF_CONFIG_PATH "settings/power/idle_sleep", 0);
-    CFG_INT_FIELD(config->SETTINGS.POWER.IDLE.MUTE, CONF_CONFIG_PATH "settings/power/idle_mute", 1);
-    CFG_STR_FIELD(config->SETTINGS.POWER.GOV.DEFAULT, CONF_DEVICE_PATH "cpu/default", "ondemand");
-    CFG_STR_FIELD(config->SETTINGS.POWER.GOV.IDLE, CONF_CONFIG_PATH "settings/power/gov_idle", "powersave");
-    CFG_INT_FIELD(config->SETTINGS.POWER.SAVERTYPE, CONF_CONFIG_PATH "settings/power/saver_type", 0);
-    CFG_INT_FIELD(config->SETTINGS.POWER.SAVERSPEED, CONF_CONFIG_PATH "settings/power/saver_speed", 0);
+    // settings/power/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/power");
+    CFG_INT(config->SETTINGS.POWER.LOW_BATTERY, &d, "low_battery", 0);
+    CFG_INT(config->SETTINGS.POWER.SHUTDOWN, &d, "shutdown", 0);
+    CFG_INT(config->SETTINGS.POWER.IDLE.DISPLAY, &d, "idle_display", 0);
+    CFG_INT(config->SETTINGS.POWER.IDLE.SLEEP, &d, "idle_sleep", 0);
+    CFG_INT(config->SETTINGS.POWER.IDLE.MUTE, &d, "idle_mute", 1);
+    CFG_INT(config->SETTINGS.POWER.SAVERTYPE, &d, "saver_type", 0);
+    CFG_INT(config->SETTINGS.POWER.SAVERSPEED, &d, "saver_speed", 0);
+    CFG_STR(config->SETTINGS.POWER.GOV.IDLE, &d, "gov_idle", "powersave");
 
-    CFG_INT_FIELD(config->SETTINGS.RGB.MODE, CONF_CONFIG_PATH "settings/rgb/mode", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.BRIGHT, CONF_CONFIG_PATH "settings/rgb/bright", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.BREATH_SPEED, CONF_CONFIG_PATH "settings/rgb/breath_speed", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURL, CONF_CONFIG_PATH "settings/rgb/colour_l", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURR, CONF_CONFIG_PATH "settings/rgb/colour_r", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURM, CONF_CONFIG_PATH "settings/rgb/colour_m", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURF1, CONF_CONFIG_PATH "settings/rgb/colour_f1", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.COLOURF2, CONF_CONFIG_PATH "settings/rgb/colour_f2", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.COMBO, CONF_CONFIG_PATH "settings/rgb/combo", 0);
-    CFG_INT_FIELD(config->SETTINGS.RGB.BACKEND, CONF_CONFIG_PATH "settings/rgb/backend", 0);
+    // SETTINGS.POWER.GOV.DEFAULT lives in the device config, not user config
+    cfg_dir_scan(&d, CONF_DEVICE_PATH "cpu");
+    CFG_STR(config->SETTINGS.POWER.GOV.DEFAULT, &d, "default", "ondemand");
 
-    CFG_STR_FIELD(config->SETTINGS.FONT.NAME, CONF_CONFIG_PATH "settings/font/name", "");
-    CFG_INT_FIELD(config->SETTINGS.FONT.LIST_SIZE, CONF_CONFIG_PATH "settings/font/list_size", 0);
-    CFG_INT_FIELD(config->SETTINGS.FONT.HEADER_SIZE, CONF_CONFIG_PATH "settings/font/header_size", 0);
-    CFG_INT_FIELD(config->SETTINGS.FONT.FOOTER_SIZE, CONF_CONFIG_PATH "settings/font/footer_size", 0);
-    CFG_INT_FIELD(config->SETTINGS.FONT.PANEL_SIZE, CONF_CONFIG_PATH "settings/font/panel_size", 0);
+    // settings/rgb/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/rgb");
+    CFG_INT(config->SETTINGS.RGB.MODE, &d, "mode", 0);
+    CFG_INT(config->SETTINGS.RGB.BRIGHT, &d, "bright", 0);
+    CFG_INT(config->SETTINGS.RGB.BREATH_SPEED, &d, "breath_speed", 0);
+    CFG_INT(config->SETTINGS.RGB.COLOURL, &d, "colour_l", 0);
+    CFG_INT(config->SETTINGS.RGB.COLOURR, &d, "colour_r", 0);
+    CFG_INT(config->SETTINGS.RGB.COLOURM, &d, "colour_m", 0);
+    CFG_INT(config->SETTINGS.RGB.COLOURF1, &d, "colour_f1", 0);
+    CFG_INT(config->SETTINGS.RGB.COLOURF2, &d, "colour_f2", 0);
+    CFG_INT(config->SETTINGS.RGB.COMBO, &d, "combo", 0);
+    CFG_INT(config->SETTINGS.RGB.BACKEND, &d, "backend", 0);
 
-    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.HEADER_HEIGHT, CONF_CONFIG_PATH "settings/theme/header_height", -1);
-    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.FOOTER_HEIGHT, CONF_CONFIG_PATH "settings/theme/footer_height", -1);
-    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT, CONF_CONFIG_PATH "settings/theme/content_item_count", 0);
-    CFG_INT_FIELD(config->SETTINGS.THEMEOPT.GLYPH_SIZE, CONF_CONFIG_PATH "settings/theme/glyph_size", -2);
+    // settings/font/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/font");
+    CFG_INT(config->SETTINGS.FONT.LIST_SIZE, &d, "list_size", 0);
+    CFG_INT(config->SETTINGS.FONT.HEADER_SIZE, &d, "header_size", 0);
+    CFG_INT(config->SETTINGS.FONT.FOOTER_SIZE, &d, "footer_size", 0);
+    CFG_INT(config->SETTINGS.FONT.PANEL_SIZE, &d, "panel_size", 0);
+    CFG_STR(config->SETTINGS.FONT.NAME, &d, "name", "");
 
-    CFG_INT_FIELD(config->SETTINGS.REMAP.LAYOUT, CONF_CONFIG_PATH "settings/remap/layout", 0);
+    // settings/theme/ (theme option overrides - distinct from theme/filter/)
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/theme");
+    CFG_INT(config->SETTINGS.THEMEOPT.HEADER_HEIGHT, &d, "header_height", -1);
+    CFG_INT(config->SETTINGS.THEMEOPT.FOOTER_HEIGHT, &d, "footer_height", -1);
+    CFG_INT(config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT, &d, "content_item_count", 0);
+    CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE, &d, "glyph_size", -2);
 
-    CFG_INT_FIELD(config->SORT.DEFAULT, CONF_CONFIG_PATH "sort/default", 0);
-    CFG_INT_FIELD(config->SORT.COLLECTION, CONF_CONFIG_PATH "sort/collection", 0);
-    CFG_INT_FIELD(config->SORT.HISTORY, CONF_CONFIG_PATH "sort/history", 0);
+    // settings/remap/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/remap");
+    CFG_INT(config->SETTINGS.REMAP.LAYOUT, &d, "layout", 0);
 
-    CFG_INT_FIELD(config->VISUAL.BATTERY, CONF_CONFIG_PATH "visual/battery", 0);
-    CFG_INT_FIELD(config->VISUAL.NETWORK, CONF_CONFIG_PATH "visual/network", 0);
-    CFG_INT_FIELD(config->VISUAL.HEADERTITLE, CONF_CONFIG_PATH "visual/headertitle", 0);
-    CFG_INT_FIELD(config->VISUAL.BLUETOOTH, CONF_CONFIG_PATH "visual/bluetooth", 0);
-    CFG_INT_FIELD(config->VISUAL.CLOCK, CONF_CONFIG_PATH "visual/clock", 1);
-    CFG_INT_FIELD(config->VISUAL.OVERLAYIMAGE, CONF_CONFIG_PATH "visual/overlayimage", 1);
-    CFG_INT_FIELD(config->VISUAL.OVERLAYTRANSPARENCY, CONF_CONFIG_PATH "visual/overlaytransparency", 85);
-    CFG_INT_FIELD(config->VISUAL.GRID_MODE_CONTENT, CONF_CONFIG_PATH "visual/gridmodecontent", 0);
-    CFG_INT_FIELD(config->VISUAL.BOX_ART, CONF_CONFIG_PATH "visual/boxart", 0);
-    CFG_INT_FIELD(config->VISUAL.BOX_ART_ALIGN, CONF_CONFIG_PATH "visual/boxartalign", 0);
-    CFG_INT_FIELD(config->VISUAL.BOX_ART_HIDE, CONF_CONFIG_PATH "visual/boxarthide", 0);
-    CFG_INT_FIELD(config->VISUAL.CONTENT_WIDTH, CONF_CONFIG_PATH "visual/contentwidth", 0);
-    CFG_INT_FIELD(config->VISUAL.NAME, CONF_CONFIG_PATH "visual/name", 0);
-    CFG_INT_FIELD(config->VISUAL.DASH, CONF_CONFIG_PATH "visual/dash", 0);
-    CFG_INT_FIELD(config->VISUAL.LAUNCH_SWAP, CONF_CONFIG_PATH "visual/launch_swap", 0);
-    CFG_INT_FIELD(config->VISUAL.HIDDEN, CONF_CONFIG_PATH "visual/hidden", 0);
-    CFG_INT_FIELD(config->VISUAL.SHUFFLE, CONF_CONFIG_PATH "visual/shuffle", 1);
-    CFG_INT_FIELD(config->VISUAL.FRIENDLYFOLDER, CONF_CONFIG_PATH "visual/friendlyfolder", 1);
-    CFG_INT_FIELD(config->VISUAL.THETITLEFORMAT, CONF_CONFIG_PATH "visual/thetitleformat", 0);
-    CFG_INT_FIELD(config->VISUAL.TITLEINCLUDEROOTDRIVE, CONF_CONFIG_PATH "visual/titleincluderootdrive", 0);
-    CFG_INT_FIELD(config->VISUAL.FOLDERITEMCOUNT, CONF_CONFIG_PATH "visual/folderitemcount", 0);
-    CFG_INT_FIELD(config->VISUAL.DISPLAYEMPTYFOLDER, CONF_CONFIG_PATH "visual/folderempty", 0);
-    CFG_INT_FIELD(config->VISUAL.MENUCOUNTERFOLDER, CONF_CONFIG_PATH "visual/counterfolder", 1);
-    CFG_INT_FIELD(config->VISUAL.MENUCOUNTERFILE, CONF_CONFIG_PATH "visual/counterfile", 1);
-    CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, CONF_CONFIG_PATH "visual/backgroundanimation", 0);
-    CFG_INT_FIELD(config->VISUAL.LAUNCHSPLASH, CONF_CONFIG_PATH "visual/launchsplash", 0);
-    CFG_INT_FIELD(config->VISUAL.BLACKFADE, CONF_CONFIG_PATH "visual/blackfade", 1);
-    CFG_INT_FIELD(config->VISUAL.CONTENTCOLLECT, CONF_CONFIG_PATH "visual/contentcollect", 0);
-    CFG_INT_FIELD(config->VISUAL.CONTENTHISTORY, CONF_CONFIG_PATH "visual/contenthistory", 0);
-    CFG_INT_FIELD(config->VISUAL.MIXEDCONTENT, CONF_CONFIG_PATH "visual/mixedcontent", 0);
-    CFG_INT_FIELD(config->VISUAL.FORWARDHISTORY, CONF_CONFIG_PATH "visual/forwardhistory", 1);
+    // sort/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "sort");
+    CFG_INT(config->SORT.DEFAULT, &d, "default", 0);
+    CFG_INT(config->SORT.COLLECTION, &d, "collection", 0);
+    CFG_INT(config->SORT.HISTORY, &d, "history", 0);
 
-    CFG_INT_FIELD(config->BLUETOOTH.AUTOCONNECT, CONF_CONFIG_PATH "bluetooth/autoconnect", 0);
+    // visual/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "visual");
+    CFG_INT(config->VISUAL.BATTERY, &d, "battery", 0);
+    CFG_INT(config->VISUAL.NETWORK, &d, "network", 0);
+    CFG_INT(config->VISUAL.HEADERTITLE, &d, "headertitle", 0);
+    CFG_INT(config->VISUAL.BLUETOOTH, &d, "bluetooth", 0);
+    CFG_INT(config->VISUAL.CLOCK, &d, "clock", 1);
+    CFG_INT(config->VISUAL.OVERLAYIMAGE, &d, "overlayimage", 1);
+    CFG_INT(config->VISUAL.OVERLAYTRANSPARENCY, &d, "overlaytransparency", 85);
+    CFG_INT(config->VISUAL.GRID_MODE_CONTENT, &d, "gridmodecontent", 0);
+    CFG_INT(config->VISUAL.BOX_ART, &d, "boxart", 0);
+    CFG_INT(config->VISUAL.BOX_ART_ALIGN, &d, "boxartalign", 0);
+    CFG_INT(config->VISUAL.BOX_ART_HIDE, &d, "boxarthide", 0);
+    CFG_INT(config->VISUAL.CONTENT_WIDTH, &d, "contentwidth", 0);
+    CFG_INT(config->VISUAL.NAME, &d, "name", 0);
+    CFG_INT(config->VISUAL.DASH, &d, "dash", 0);
+    CFG_INT(config->VISUAL.LAUNCH_SWAP, &d, "launch_swap", 0);
+    CFG_INT(config->VISUAL.HIDDEN, &d, "hidden", 0);
+    CFG_INT(config->VISUAL.SHUFFLE, &d, "shuffle", 1);
+    CFG_INT(config->VISUAL.FRIENDLYFOLDER, &d, "friendlyfolder", 1);
+    CFG_INT(config->VISUAL.THETITLEFORMAT, &d, "thetitleformat", 0);
+    CFG_INT(config->VISUAL.TITLEINCLUDEROOTDRIVE, &d, "titleincluderootdrive", 0);
+    CFG_INT(config->VISUAL.FOLDERITEMCOUNT, &d, "folderitemcount", 0);
+    CFG_INT(config->VISUAL.DISPLAYEMPTYFOLDER, &d, "folderempty", 0);
+    CFG_INT(config->VISUAL.MENUCOUNTERFOLDER, &d, "counterfolder", 1);
+    CFG_INT(config->VISUAL.MENUCOUNTERFILE, &d, "counterfile", 1);
+    CFG_INT(config->VISUAL.BACKGROUNDANIMATION, &d, "backgroundanimation", 0);
+    CFG_INT(config->VISUAL.LAUNCHSPLASH, &d, "launchsplash", 0);
+    CFG_INT(config->VISUAL.BLACKFADE, &d, "blackfade", 1);
+    CFG_INT(config->VISUAL.CONTENTCOLLECT, &d, "contentcollect", 0);
+    CFG_INT(config->VISUAL.CONTENTHISTORY, &d, "contenthistory", 0);
+    CFG_INT(config->VISUAL.MIXEDCONTENT, &d, "mixedcontent", 0);
+    CFG_INT(config->VISUAL.FORWARDHISTORY, &d, "forwardhistory", 1);
 
-    CFG_INT_FIELD(config->WEB.SSHD, CONF_CONFIG_PATH "web/sshd", 0);
-    CFG_INT_FIELD(config->WEB.SFTPGO, CONF_CONFIG_PATH "web/sftpgo", 0);
-    CFG_INT_FIELD(config->WEB.TTYD, CONF_CONFIG_PATH "web/ttyd", 0);
-    CFG_INT_FIELD(config->WEB.SYNCTHING, CONF_CONFIG_PATH "web/syncthing", 0);
-    CFG_INT_FIELD(config->WEB.TAILSCALED, CONF_CONFIG_PATH "web/tailscaled", 0);
+    // bluetooth/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "bluetooth");
+    CFG_INT(config->BLUETOOTH.AUTOCONNECT, &d, "autoconnect", 0);
 
-    CFG_INT_FIELD(config->DANGER.VMSWAP, CONF_CONFIG_PATH "danger/vmswap", 8);
-    CFG_INT_FIELD(config->DANGER.DIRTYRATIO, CONF_CONFIG_PATH "danger/dirty_ratio", 16);
-    CFG_INT_FIELD(config->DANGER.DIRTYBACK, CONF_CONFIG_PATH "danger/dirty_back_ratio", 4);
-    CFG_INT_FIELD(config->DANGER.CACHE, CONF_CONFIG_PATH "danger/cache_pressure", 64);
-    CFG_INT_FIELD(config->DANGER.MERGE, CONF_CONFIG_PATH "danger/nomerges", 0);
-    CFG_INT_FIELD(config->DANGER.REQUESTS, CONF_CONFIG_PATH "danger/nr_requests", 128);
-    CFG_INT_FIELD(config->DANGER.READAHEAD, CONF_CONFIG_PATH "danger/read_ahead", 4096);
-    CFG_INT_FIELD(config->DANGER.PAGECLUSTER, CONF_CONFIG_PATH "danger/page_cluster", 3);
-    CFG_INT_FIELD(config->DANGER.TIMESLICE, CONF_CONFIG_PATH "danger/time_slice", 10);
-    CFG_INT_FIELD(config->DANGER.IOSTATS, CONF_CONFIG_PATH "danger/iostats", 0);
-    CFG_INT_FIELD(config->DANGER.IDLEFLUSH, CONF_CONFIG_PATH "danger/idle_flush", 0);
-    CFG_INT_FIELD(config->DANGER.CHILDFIRST, CONF_CONFIG_PATH "danger/child_first", 0);
-    CFG_INT_FIELD(config->DANGER.TUNESCALE, CONF_CONFIG_PATH "danger/tune_scale", 1);
-    CFG_STR_FIELD(config->DANGER.CARDMODE, CONF_CONFIG_PATH "danger/cardmode", "noop");
-    CFG_STR_FIELD(config->DANGER.STATE, CONF_CONFIG_PATH "danger/state", "mem");
+    // web/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "web");
+    CFG_INT(config->WEB.SSHD, &d, "sshd", 0);
+    CFG_INT(config->WEB.SFTPGO, &d, "sftpgo", 0);
+    CFG_INT(config->WEB.TTYD, &d, "ttyd", 0);
+    CFG_INT(config->WEB.SYNCTHING, &d, "syncthing", 0);
+    CFG_INT(config->WEB.TAILSCALED, &d, "tailscaled", 0);
+
+    // danger/
+    cfg_dir_scan(&d, CONF_CONFIG_PATH "danger");
+    CFG_INT(config->DANGER.VMSWAP, &d, "vmswap", 8);
+    CFG_INT(config->DANGER.DIRTYRATIO, &d, "dirty_ratio", 16);
+    CFG_INT(config->DANGER.DIRTYBACK, &d, "dirty_back_ratio", 4);
+    CFG_INT(config->DANGER.CACHE, &d, "cache_pressure", 64);
+    CFG_INT(config->DANGER.MERGE, &d, "nomerges", 0);
+    CFG_INT(config->DANGER.REQUESTS, &d, "nr_requests", 128);
+    CFG_INT(config->DANGER.READAHEAD, &d, "read_ahead", 4096);
+    CFG_INT(config->DANGER.PAGECLUSTER, &d, "page_cluster", 3);
+    CFG_INT(config->DANGER.TIMESLICE, &d, "time_slice", 10);
+    CFG_INT(config->DANGER.IOSTATS, &d, "iostats", 0);
+    CFG_INT(config->DANGER.IDLEFLUSH, &d, "idle_flush", 0);
+    CFG_INT(config->DANGER.CHILDFIRST, &d, "child_first", 0);
+    CFG_INT(config->DANGER.TUNESCALE, &d, "tune_scale", 1);
+    CFG_STR(config->DANGER.CARDMODE, &d, "cardmode", "noop");
+    CFG_STR(config->DANGER.STATE, &d, "state", "mem");
 }
+
+#undef CFG_STR
+#undef CFG_INT

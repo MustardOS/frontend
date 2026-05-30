@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
     const char *name = SDL_JoystickName(joy);
     if (!name) name = "Unknown";
 
-    printf("muremap — MustardOS Input Remap Tool\n");
+    printf("muremap - MustardOS Input Remap Tool\n");
     printf("================================\n");
     printf("Device : %s\n", name);
     printf("GUID   : %s\n", guid);
