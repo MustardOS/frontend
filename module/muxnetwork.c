@@ -20,8 +20,8 @@ const char *net_d_args[] = {(OPT_PATH NET_SCRIPT), "stop", NULL};
 #define NET_STATUS_FILE "/run/muos/network.status"
 #define IP_OCTET 64
 
-bool connecting_phase = false;
-bool ui_network_locked = false;
+int connecting_phase = 0;
+int ui_network_locked = 0;
 
 static char last_status[IP_OCTET] = "";
 static char address_file[MAX_BUFFER_SIZE];
@@ -181,7 +181,7 @@ static void get_current_ip(void) {
         return;
     }
 
-    connecting_phase = false;
+    connecting_phase = 0;
 
     set_connect_value(config.NETWORK.TYPE ? lang.MUXNETWORK.CONNECTED : ip);
     lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
@@ -215,14 +215,14 @@ static void update_network_label(void) {
         int id = resolve_status_id(status);
 
         if (id == STATUS_CONNECTED) {
-            connecting_phase = false;
+            connecting_phase = 0;
             connect_grace_ticks = 0;
             get_current_ip();
             return;
         }
 
         if (id == STATUS_FAILED || id >= STATUS_INVALID_PASSWORD) {
-            connecting_phase = false;
+            connecting_phase = 0;
             connect_grace_ticks = 0;
         }
 
@@ -231,8 +231,8 @@ static void update_network_label(void) {
 }
 
 static void net_connect_check() {
-    ui_network_locked = false;
-    connecting_phase = false;
+    ui_network_locked = 0;
+    connecting_phase = 0;
     connect_grace_ticks = 0;
     last_status[0] = '\0';
     get_current_ip();
@@ -255,6 +255,15 @@ static void restore_network_values(void) {
     get_current_ip();
 }
 
+static void escape_wpa_string(const char *src, char *dst) {
+    size_t di = 0;
+    for (const char *p = src; *p && di + 2 < MAX_BUFFER_SIZE; p++) {
+        if (*p == '"' || *p == '\\') dst[di++] = '\\';
+        dst[di++] = *p;
+    }
+    dst[di] = '\0';
+}
+
 static void save_network_config(void) {
     int idx_type = 0;
     int idx_hidden = 0;
@@ -262,8 +271,12 @@ static void save_network_config(void) {
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) idx_type = 1;
     if (strcasecmp(lv_label_get_text(ui_lblHiddenValue_network), lang.GENERIC.ENABLED) == 0) idx_hidden = 1;
 
+    char esc_ssid[MAX_BUFFER_SIZE];
+    escape_wpa_string(lv_label_get_text(ui_lblIdentifierValue_network), esc_ssid);
+
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type);
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid);
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/hidden", INT, idx_hidden);
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue_network), PASS_ENCODE) != 0) {
@@ -297,7 +310,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, network, Connect, lang.MUXNETWORK.CONNECT, "connect", "");
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
@@ -320,7 +333,7 @@ static void check_focus() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
+    gen_step_movement(steps, direction, 0, 0);
     check_focus();
 }
 
@@ -440,10 +453,13 @@ static void handle_confirm(void) {
         } else {
             int valid_info = 0;
             const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue_network);
-            const char *cv_pass = lv_label_get_text(ui_lblPasswordValue_network);
+
+            char password_buf[MAX_BUFFER_SIZE];
+            snprintf(password_buf, sizeof(password_buf), "%s", lv_label_get_text(ui_lblPasswordValue_network));
+            size_t cv_pass_len = strlen(password_buf);
 
             // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
-            int cv_pass_ok = (strlen(cv_pass) == 0 || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
+            int cv_pass_ok = (cv_pass_len == 0 || (cv_pass_len >= 8 && cv_pass_len <= 63));
 
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue_network);
@@ -464,8 +480,8 @@ static void handle_confirm(void) {
                 play_sound(SND_CONFIRM);
                 save_network_config();
 
-                if (strlen(cv_pass) > 0) {
-                    if (strcasecmp(cv_pass, PASS_ENCODE) != 0 && strcasecmp(cv_pass, "") != 0) {
+                if (cv_pass_len > 0) {
+                    if (strcasecmp(password_buf, PASS_ENCODE) != 0 && strcasecmp(password_buf, "") != 0) {
                         lv_label_set_text(ui_lblConnectValue_network, lang.MUXNETWORK.ENCRYPT_PASSWORD);
                     }
                 } else {
@@ -476,11 +492,15 @@ static void handle_confirm(void) {
                 set_connect_value(lang.MUXNETWORK.CONNECT_TRY);
                 lv_task_handler();
 
-                connecting_phase = true;
+                connecting_phase = 1;
                 connect_grace_ticks = 0;
 
-                ui_network_locked = true;
+                ui_network_locked = 1;
                 run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
+
+                memset(password_buf, 0, sizeof(password_buf));
+                lv_textarea_set_text(ui_txtEntry_network, "");
+
                 lv_task_handler();
 
                 last_status[0] = '\0';
@@ -510,7 +530,7 @@ static void handle_confirm(void) {
 
                     key_show = 1;
                 } else {
-                    lv_textarea_set_password_mode(ui_txtEntry_network, false);
+                    lv_textarea_set_password_mode(ui_txtEntry_network, 0);
 
                     lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
@@ -782,7 +802,7 @@ int muxnetwork_main(void) {
 
     restore_network_values();
 
-    init_osk(ui_pnlEntry_network, ui_txtEntry_network, true, true, OSK_MAX);
+    init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1, 1, OSK_MAX);
     can_scan_check(0);
 
     init_timer(ui_refresh_task, NULL);
@@ -818,7 +838,7 @@ int muxnetwork_main(void) {
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 

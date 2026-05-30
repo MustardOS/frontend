@@ -86,7 +86,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/var/zip.sh",               "7facce804a5d99c1"},
         {"/opt/muos/script/web/keepalive.sh",         "2c3a9d6cecccb043"},
         {"/opt/muos/script/web/macchange.sh",         "b461780da9c36809"},
-        {"/opt/muos/script/web/password.sh",          "6b38cf47b6be5405"},
+        {"/opt/muos/script/web/password.sh",          "210264ef4e7797d1"},
         {"/opt/muos/script/web/service.sh",           "a67d564059d232ef"},
         {"/opt/muos/script/web/ssid.sh",              "e28282c36d9d84ea"},
 };
