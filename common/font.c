@@ -10,6 +10,9 @@
 #include "device.h"
 #include "input/list_nav.h"
 
+#define DEFAULT_NAME "Noto Sans"
+#define DEFAULT_FONT INTERNAL_FONTS "/" DEFAULT_NAME ".ttf"
+
 // Max TTF file size accepted (64 MB). Protects against accidentally pointing at a
 // giant file and exhausting RAM before we've had a chance to log anything useful.
 #define TTF_MAX_FILE_BYTES (64 * 1024 * 1024)
@@ -364,7 +367,7 @@ void load_font_text(lv_obj_t *screen) {
     lv_font_t * language_font = create_language_font(lang_size);
 
     if (eff_type == 2) {
-        const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : "Noto Sans";
+        const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : DEFAULT_NAME;
 
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
@@ -372,8 +375,8 @@ void load_font_text(lv_obj_t *screen) {
         int size = (config.SETTINGS.FONT.LIST_SIZE > 0) ? config.SETTINGS.FONT.LIST_SIZE : get_font_size();
         lv_font_t * font = load_font_cached_ttf(path, size, 1);
 
-        if (!font && strcmp(name, "Noto Sans") != 0) {
-            snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
+        if (!font && strcmp(name, DEFAULT_NAME) != 0) {
+            snprintf(path, sizeof(path), DEFAULT_FONT);
             font = load_font_cached_ttf(path, size, 1);
         }
 
@@ -444,15 +447,15 @@ void load_font_section(const char *section, lv_obj_t *element) {
     int eff_type = effective_type();
 
     if (eff_type == 2) {
-        const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : "Noto Sans";
+        const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : DEFAULT_NAME;
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         int size = get_custom_section_size(section);
         lv_font_t * font = load_font_cached_ttf(path, size, 1);
 
-        if (!font && strcmp(name, "Noto Sans") != 0) {
-            snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
+        if (!font && strcmp(name, DEFAULT_NAME) != 0) {
+            snprintf(path, sizeof(path), DEFAULT_FONT);
             font = load_font_cached_ttf(path, size, 1);
         }
 
