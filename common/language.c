@@ -275,6 +275,27 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MERGE, "Merge all backup targets to a single archive");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.START, "Start the backup process for the selected items");
 
+    // muxbatinfo
+    SPECIFIC_FIELD(lang->MUXBATINFO.TITLE, "BATTERY DETAILS");
+    SPECIFIC_FIELD(lang->MUXBATINFO.CAPACITY, "Capacity");
+    SPECIFIC_FIELD(lang->MUXBATINFO.VOLTAGE, "Voltage");
+    SPECIFIC_FIELD(lang->MUXBATINFO.STATUS, "Status");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HEALTH, "Health");
+    SPECIFIC_FIELD(lang->MUXBATINFO.DESIGN_CAP, "Design Capacity");
+    SPECIFIC_FIELD(lang->MUXBATINFO.LAST_CHARGED, "Last Charged");
+    SPECIFIC_FIELD(lang->MUXBATINFO.TIME_ON_BATTERY, "Time on Battery");
+    SPECIFIC_FIELD(lang->MUXBATINFO.BATTERY_USED, "Battery Used");
+    SPECIFIC_FIELD(lang->MUXBATINFO.CHARGER, "Charger");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.CAPACITY, "The current detected battery capacity");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.VOLTAGE, "The current detected battery voltage");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.STATUS, "The current charging status reported by the battery");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.HEALTH, "The health status reported by the battery");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.DESIGN_CAP, "The original design capacity of the battery in milliamp-hours");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.LAST_CHARGED, "The last time the charger was unplugged after being connected to power");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.TIME_ON_BATTERY, "Total wall-clock time since the charger was last unplugged, including suspend");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.BATTERY_USED, "Battery percentage used since the charger was last unplugged");
+    SPECIFIC_FIELD(lang->MUXBATINFO.HELP.CHARGER, "Detection of the charger cable");
+
     // muxcharge
     SPECIFIC_FIELD(lang->MUXCHARGE.BOOT, "Booting System - Please Wait…");
     SPECIFIC_FIELD(lang->MUXCHARGE.CAPACITY, "Capacity");
@@ -614,6 +635,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.TITLE, "INFORMATION");
     SPECIFIC_FIELD(lang->MUXINFO.NEWS, "Community News");
     SPECIFIC_FIELD(lang->MUXINFO.SYSINFO, "System Details");
+    SPECIFIC_FIELD(lang->MUXINFO.BATINFO, "Battery Details");
     SPECIFIC_FIELD(lang->MUXINFO.NETINFO, "Network Details");
     SPECIFIC_FIELD(lang->MUXINFO.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
@@ -623,6 +645,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters and Credits");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NEWS, "Read various community news and other live information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSINFO, "Access version information and system details");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.BATINFO, "Access detailed battery information and battery usage statistics");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NETINFO, "Access network information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.ACTIVITY, "View all tracked play time data");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
@@ -1237,14 +1260,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.BUILD, "Build ID");
     SPECIFIC_FIELD(lang->MUXSYSINFO.DEVICE, "Device Type");
     SPECIFIC_FIELD(lang->MUXSYSINFO.KERNEL, "Linux Kernel");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.ARCH, "Architecture");
     SPECIFIC_FIELD(lang->MUXSYSINFO.UPTIME, "System Uptime");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.BOOT_TIME, "Boot Time");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.LOAD_AVG, "Load Average");
     SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY.INFO, "System Memory");
     SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY.DROP, "Memory Cache Dropped");
     SPECIFIC_FIELD(lang->MUXSYSINFO.SWAP, "Swap Memory");
     SPECIFIC_FIELD(lang->MUXSYSINFO.TEMP, "Temperature");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.CAPACITY, "Battery Capacity");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.VOLTAGE, "Battery Voltage");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.CHARGER, "Charger");
     SPECIFIC_FIELD(lang->MUXSYSINFO.RELOAD, "Reload Frontend");
     SPECIFIC_FIELD(lang->MUXSYSINFO.RELOAD_RUN, "Reloading Frontend…");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.INFO, "CPU Information");
@@ -1254,13 +1277,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.BUILD, "The current build ID of MustardOS running on the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.DEVICE, "The current device type detected and configured");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.KERNEL, "The current Linux kernel");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.ARCH, "The CPU instruction set architecture reported by the kernel");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.UPTIME, "The current running time of the system");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.BOOT_TIME, "The date and time the system was last booted");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.LOAD_AVG, "Average number of runnable processes over the last 1, 5, and 15 minutes");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.MEMORY, "The current, and total, device memory usage of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.SWAP, "The current, and total, swap memory usage of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.TEMP, "The current detected temperature of the device");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CAPACITY, "The current detected battery capacity");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VOLTAGE, "The current detected battery voltage");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CHARGER, "Detection of the charger cable");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.RELOAD, "Reload the current frontend configuration values if changed elsewhere");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU, "The detected CPU type of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.SPEED, "The current CPU frequency of the device");

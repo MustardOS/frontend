@@ -37,6 +37,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space", 0);
     INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.TESTER, "tester", 0);
     INIT_STATIC_ITEM(-1, info, SysInfo, lang.MUXINFO.SYSINFO, "sysinfo", 0);
+    INIT_STATIC_ITEM(-1, info, BatInfo, lang.MUXINFO.BATINFO, "batinfo", 0);
     INIT_STATIC_ITEM(-1, info, NetInfo, lang.MUXINFO.NETINFO, "netinfo", 0);
     INIT_STATIC_ITEM(-1, info, Chrony, lang.MUXINFO.CHRONY, "chrony", 0);
     INIT_STATIC_ITEM(-1, info, Credit, lang.MUXINFO.CREDIT, "credit", 0);
@@ -50,7 +51,7 @@ static void init_navigation_group(void) {
     }
 
     // Hide until further notice or future development
-    if (!visible_chrony_opt()) HIDE_STATIC_ITEM(info, Chrony);
+    HIDE_STATIC_ITEM(info, Chrony);
 
     gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 1, 0);
 }
@@ -80,6 +81,7 @@ static void handle_a(void) {
             {"space",      MENU_GENERAL, NULL},
             {"tester",     MENU_GENERAL, NULL},
             {"sysinfo",    MENU_GENERAL, NULL},
+            {"batinfo",    MENU_GENERAL, NULL},
             {"netinfo",    MENU_GENERAL, visible_network_opt},
             {"chrony",     MENU_GENERAL, visible_chrony_opt},
             {"credits",    MENU_CREDITS, NULL},

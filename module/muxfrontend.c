@@ -581,6 +581,7 @@ static const ModuleEntry modules[] = {
         {"themeopt",    "custom",    "muxthemeopt",    muxthemeopt_main,    NULL},
         {"tester",      "info",      "muxtester",      muxtester_main,      NULL},
         {"sysinfo",     "info",      "muxsysinfo",     muxsysinfo_main,     NULL},
+        {"batinfo",     "info",      "muxbatinfo",     muxbatinfo_main,     NULL},
         {"netinfo",     "info",      "muxnetinfo",     muxnetinfo_main,     NULL},
         {"chrony",      "info",      "muxchrony",      muxchrony_main,      NULL},
         {"text",        "info",      "muxtext",        muxtext_main,        NULL},

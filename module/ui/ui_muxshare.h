@@ -75,6 +75,17 @@
     BACKUP(Merge,      MERGE,      "merge")       \
     BACKUP(Start,      START,      "start")
 
+#define BATINFO_ELEMENTS                                     \
+    BATINFO(Capacity,      CAPACITY,        "capacity")      \
+    BATINFO(Voltage,       VOLTAGE,         "voltage")       \
+    BATINFO(Status,        STATUS,          "status")        \
+    BATINFO(Health,        HEALTH,          "health")        \
+    BATINFO(DesignCap,     DESIGN_CAP,      "designcap")     \
+    BATINFO(LastCharged,   LAST_CHARGED,    "lastcharged")   \
+    BATINFO(TimeOnBattery, TIME_ON_BATTERY, "timeonbattery") \
+    BATINFO(BatteryUsed,   BATTERY_USED,    "batteryused")   \
+    BATINFO(Charger,       CHARGER,         "charger")
+
 #define BTALL_ELEMENTS                             \
     BTALL(AutoConnect, AUTOCONNECT, "autoconnect")
 
@@ -215,6 +226,7 @@
     INFO(Space,      SPACE,      "space")      \
     INFO(Tester,     TESTER,     "tester")     \
     INFO(SysInfo,    SYSINFO,    "sysinfo")    \
+    INFO(BatInfo,    BATINFO,    "batinfo")    \
     INFO(NetInfo,    NETINFO,    "netinfo")    \
     INFO(Chrony,     CHRONY,     "chrony")     \
     INFO(Credit,     CREDIT,     "credit")
@@ -414,22 +426,22 @@
     STORAGE(Theme,      THEME,      "theme")      \
     STORAGE(Track,      TRACK,      "track")
 
-#define SYSINFO_ELEMENTS                    \
-    SYSINFO(Version,  VERSION,  "version")  \
-    SYSINFO(Build,    BUILD,    "build")    \
-    SYSINFO(Device,   DEVICE,   "device")   \
-    SYSINFO(Kernel,   KERNEL,   "kernel")   \
-    SYSINFO(Uptime,   UPTIME,   "uptime")   \
-    SYSINFO(Cpu,      CPU,      "cpu")      \
-    SYSINFO(Speed,    SPEED,    "speed")    \
-    SYSINFO(Governor, GOVERNOR, "governor") \
-    SYSINFO(Memory,   MEMORY,   "memory")   \
-    SYSINFO(Swap,     SWAP,     "swap")     \
-    SYSINFO(Temp,     TEMP,     "temp")     \
-    SYSINFO(Capacity, CAPACITY, "capacity") \
-    SYSINFO(Voltage,  VOLTAGE,  "voltage")  \
-    SYSINFO(Charger,  CHARGER,  "charger")  \
-    SYSINFO(Reload,   RELOAD,   "reload")
+#define SYSINFO_ELEMENTS                     \
+    SYSINFO(Version,  VERSION,   "version")  \
+    SYSINFO(Build,    BUILD,     "build")    \
+    SYSINFO(Device,   DEVICE,    "device")   \
+    SYSINFO(Kernel,   KERNEL,    "kernel")   \
+    SYSINFO(Arch,     ARCH,      "arch")     \
+    SYSINFO(Uptime,   UPTIME,    "uptime")   \
+    SYSINFO(BootTime, BOOT_TIME, "boottime") \
+    SYSINFO(LoadAvg,  LOAD_AVG,  "loadavg")  \
+    SYSINFO(Cpu,      CPU,       "cpu")      \
+    SYSINFO(Speed,    SPEED,     "speed")    \
+    SYSINFO(Governor, GOVERNOR,  "governor") \
+    SYSINFO(Memory,   MEMORY,    "memory")   \
+    SYSINFO(Swap,     SWAP,      "swap")     \
+    SYSINFO(Temp,     TEMP,      "temp")     \
+    SYSINFO(Reload,   RELOAD,    "reload")
 
 #define THEMEFILTER_ELEMENTS                      \
     THEMEFILTER(AllThemes, ALLTHEMES, "theme")    \

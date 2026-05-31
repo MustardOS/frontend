@@ -1,6 +1,5 @@
 #include "muxshare.h"
 #include "ui/ui_muxsysinfo.h"
-#include "../common/battery.h"
 
 #define SYSINFO(NAME, ENUM, UDATA) 1,
 enum {
@@ -303,14 +302,6 @@ static const char *get_system_uptime(void) {
     return buffer;
 }
 
-const char *get_battery_cap(void) {
-    static char battery_cap[UI_BUFFER];
-    snprintf(battery_cap, sizeof(battery_cap), "%d%%",
-             battery_get_capacity());
-
-    return battery_cap;
-}
-
 const char *get_device_info(void) {
     static char device_info[UI_BUFFER];
     snprintf(device_info, sizeof(device_info), "%s",
@@ -319,59 +310,82 @@ const char *get_device_info(void) {
     return device_info;
 }
 
-const char *get_kernel_version(void) {
-    static char cached[UI_BUFFER];
-    static int cached_ok = 0;
+static char uname_kernel[UI_BUFFER];
+static char uname_arch[UI_BUFFER];
+static int uname_ready = 0;
 
-    if (cached_ok) return cached;
+static void ensure_uname(void) {
+    if (uname_ready) return;
 
-    struct utsname sys_info;
-
-    if (uname(&sys_info) == 0) {
-        snprintf(cached, sizeof(cached), "%s %s (%s)",
-                 sys_info.sysname, sys_info.release, sys_info.machine);
-
-        snprintf(hostname, sizeof(hostname), "%s", sys_info.nodename);
-        cached_ok = 1;
+    struct utsname u;
+    if (uname(&u) == 0) {
+        snprintf(uname_kernel, sizeof(uname_kernel), "%s %s", u.sysname, u.release);
+        snprintf(uname_arch, sizeof(uname_arch), "%s", u.machine);
+        snprintf(hostname, sizeof(hostname), "%s", u.nodename);
     } else {
-        snprintf(cached, sizeof(cached), "%s", lang.GENERIC.UNKNOWN);
+        snprintf(uname_kernel, sizeof(uname_kernel), "%s", lang.GENERIC.UNKNOWN);
+        snprintf(uname_arch, sizeof(uname_arch), "%s", lang.GENERIC.UNKNOWN);
     }
 
-    return cached;
+    uname_ready = 1;
 }
 
-const char *get_charger_status(void) {
+const char *get_kernel_version(void) {
+    ensure_uname();
+    return uname_kernel;
+}
+
+const char *get_cpu_arch(void) {
+    ensure_uname();
+    return uname_arch;
+}
+
+static const char *get_boot_time(void) {
     static char buffer[UI_BUFFER];
 
-    snprintf(buffer, sizeof(buffer), "%s",
-             battery_is_charging() ? lang.GENERIC.ONLINE : lang.GENERIC.OFFLINE);
+    time_t boot_ts = time(NULL) - (time_t) sysinfo_cache.uptime;
+    struct tm *tm_info = localtime(&boot_ts);
+    if (!tm_info) {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        return buffer;
+    }
 
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", tm_info);
+    return buffer;
+}
+
+static const char *get_load_average(void) {
+    static char buffer[UI_BUFFER];
+
+    double load1  = (double) sysinfo_cache.loads[0] / 65536.0;
+    double load5  = (double) sysinfo_cache.loads[1] / 65536.0;
+    double load15 = (double) sysinfo_cache.loads[2] / 65536.0;
+
+    snprintf(buffer, sizeof(buffer), "%.2f / %.2f / %.2f", load1, load5, load15);
     return buffer;
 }
 
 static void update_system_info() {
     if (sysinfo(&sysinfo_cache) != 0) {
         lv_label_set_text(ui_lblUptimeValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblBootTimeValue_sysinfo, lang.GENERIC.UNKNOWN);
+        lv_label_set_text(ui_lblLoadAvgValue_sysinfo, lang.GENERIC.UNKNOWN);
         lv_label_set_text(ui_lblSpeedValue_sysinfo, lang.GENERIC.UNKNOWN);
         lv_label_set_text(ui_lblGovernorValue_sysinfo, lang.GENERIC.UNKNOWN);
         lv_label_set_text(ui_lblMemoryValue_sysinfo, lang.GENERIC.UNKNOWN);
         lv_label_set_text(ui_lblSwapValue_sysinfo, lang.GENERIC.UNKNOWN);
         lv_label_set_text(ui_lblTempValue_sysinfo, lang.GENERIC.UNKNOWN);
-        lv_label_set_text(ui_lblCapacityValue_sysinfo, lang.GENERIC.UNKNOWN);
-        lv_label_set_text(ui_lblVoltageValue_sysinfo, lang.GENERIC.UNKNOWN);
-        lv_label_set_text(ui_lblChargerValue_sysinfo, lang.GENERIC.UNKNOWN);
         return;
     }
 
     lv_label_set_text(ui_lblUptimeValue_sysinfo, get_system_uptime());
+    lv_label_set_text(ui_lblBootTimeValue_sysinfo, get_boot_time());
+    lv_label_set_text(ui_lblLoadAvgValue_sysinfo, get_load_average());
     lv_label_set_text(ui_lblSpeedValue_sysinfo, get_current_frequency());
     lv_label_set_text(ui_lblGovernorValue_sysinfo, get_scaling_governor());
     lv_label_set_text(ui_lblMemoryValue_sysinfo, get_memory_usage());
     if (sysinfo_cache.totalswap != 0) lv_label_set_text(ui_lblSwapValue_sysinfo, get_swap_usage());
     lv_label_set_text(ui_lblTempValue_sysinfo, get_temperature());
-    lv_label_set_text(ui_lblCapacityValue_sysinfo, get_battery_cap());
-    lv_label_set_text(ui_lblVoltageValue_sysinfo, battery_get_voltage());
-    lv_label_set_text(ui_lblChargerValue_sysinfo, get_charger_status());
 }
 
 static void init_navigation_group(void) {
@@ -383,17 +397,17 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_version(verify_check));
     INIT_VALUE_ITEM(-1, sysinfo, Build, lang.MUXSYSINFO.BUILD, "build", get_build());
     INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
-    INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
-    INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_system_uptime());
+    INIT_VALUE_ITEM(-1, sysinfo, Kernel,   lang.MUXSYSINFO.KERNEL,    "kernel",   get_kernel_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Arch,     lang.MUXSYSINFO.ARCH,      "arch",     get_cpu_arch());
+    INIT_VALUE_ITEM(-1, sysinfo, Uptime,   lang.MUXSYSINFO.UPTIME,    "uptime",   get_system_uptime());
+    INIT_VALUE_ITEM(-1, sysinfo, BootTime, lang.MUXSYSINFO.BOOT_TIME, "boottime", get_boot_time());
+    INIT_VALUE_ITEM(-1, sysinfo, LoadAvg,  lang.MUXSYSINFO.LOAD_AVG,  "loadavg",  get_load_average());
     INIT_VALUE_ITEM(-1, sysinfo, Cpu, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
     INIT_VALUE_ITEM(-1, sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
     INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOVERNOR, "governor", get_scaling_governor());
     INIT_VALUE_ITEM(-1, sysinfo, Memory, lang.MUXSYSINFO.MEMORY.INFO, "memory", get_memory_usage());
     INIT_VALUE_ITEM(-1, sysinfo, Swap, lang.MUXSYSINFO.SWAP, "swap", get_swap_usage());
     INIT_VALUE_ITEM(-1, sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
-    INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
-    INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", battery_get_voltage());
-    INIT_VALUE_ITEM(-1, sysinfo, Charger, lang.MUXSYSINFO.CHARGER, "charger", get_charger_status());
     INIT_VALUE_ITEM(-1, sysinfo, Reload, lang.MUXSYSINFO.RELOAD, "reload", "");
 
     reset_ui_groups();

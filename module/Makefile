@@ -8,7 +8,7 @@ CFLAGS = $(BASE_CFLAGS) \
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
           -L../bin/lib -lui -llookup -lmuxcom -lplutosvg
 
-MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxbtall \
+MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxbatinfo muxbtall \
           muxbtcon muxbtdev muxchrony muxcoladjust muxcolfilter muxcollect muxconfig \
           muxconnect muxcontrol muxcustom muxdanger muxdevice muxdownload \
           muxfont muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk \

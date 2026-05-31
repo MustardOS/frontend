@@ -293,6 +293,30 @@ struct mux_lang {
     } MUXBACKUP;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char CAPACITY[MAX_BUFFER_SIZE];
+        char VOLTAGE[MAX_BUFFER_SIZE];
+        char STATUS[MAX_BUFFER_SIZE];
+        char HEALTH[MAX_BUFFER_SIZE];
+        char DESIGN_CAP[MAX_BUFFER_SIZE];
+        char LAST_CHARGED[MAX_BUFFER_SIZE];
+        char TIME_ON_BATTERY[MAX_BUFFER_SIZE];
+        char BATTERY_USED[MAX_BUFFER_SIZE];
+        char CHARGER[MAX_BUFFER_SIZE];
+        struct {
+            char CAPACITY[MAX_BUFFER_SIZE];
+            char VOLTAGE[MAX_BUFFER_SIZE];
+            char STATUS[MAX_BUFFER_SIZE];
+            char HEALTH[MAX_BUFFER_SIZE];
+            char DESIGN_CAP[MAX_BUFFER_SIZE];
+            char LAST_CHARGED[MAX_BUFFER_SIZE];
+            char TIME_ON_BATTERY[MAX_BUFFER_SIZE];
+            char BATTERY_USED[MAX_BUFFER_SIZE];
+            char CHARGER[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXBATINFO;
+
+    struct {
         char BOOT[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
         char START[MAX_BUFFER_SIZE];
@@ -706,6 +730,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char NEWS[MAX_BUFFER_SIZE];
         char SYSINFO[MAX_BUFFER_SIZE];
+        char BATINFO[MAX_BUFFER_SIZE];
         char NETINFO[MAX_BUFFER_SIZE];
         char ACTIVITY[MAX_BUFFER_SIZE];
         char SCREENSHOT[MAX_BUFFER_SIZE];
@@ -716,6 +741,7 @@ struct mux_lang {
         struct {
             char NEWS[MAX_BUFFER_SIZE];
             char SYSINFO[MAX_BUFFER_SIZE];
+            char BATINFO[MAX_BUFFER_SIZE];
             char NETINFO[MAX_BUFFER_SIZE];
             char ACTIVITY[MAX_BUFFER_SIZE];
             char SCREENSHOT[MAX_BUFFER_SIZE];
@@ -1418,16 +1444,16 @@ struct mux_lang {
         char BUILD[MAX_BUFFER_SIZE];
         char DEVICE[MAX_BUFFER_SIZE];
         char KERNEL[MAX_BUFFER_SIZE];
+        char ARCH[MAX_BUFFER_SIZE];
         char UPTIME[MAX_BUFFER_SIZE];
+        char BOOT_TIME[MAX_BUFFER_SIZE];
+        char LOAD_AVG[MAX_BUFFER_SIZE];
         struct {
             char INFO[MAX_BUFFER_SIZE];
             char DROP[MAX_BUFFER_SIZE];
         } MEMORY;
         char SWAP[MAX_BUFFER_SIZE];
         char TEMP[MAX_BUFFER_SIZE];
-        char CAPACITY[MAX_BUFFER_SIZE];
-        char VOLTAGE[MAX_BUFFER_SIZE];
-        char CHARGER[MAX_BUFFER_SIZE];
         char RELOAD[MAX_BUFFER_SIZE];
         char RELOAD_RUN[MAX_BUFFER_SIZE];
         struct {
@@ -1440,14 +1466,14 @@ struct mux_lang {
             char BUILD[MAX_BUFFER_SIZE];
             char DEVICE[MAX_BUFFER_SIZE];
             char KERNEL[MAX_BUFFER_SIZE];
+            char ARCH[MAX_BUFFER_SIZE];
             char UPTIME[MAX_BUFFER_SIZE];
+            char BOOT_TIME[MAX_BUFFER_SIZE];
+            char LOAD_AVG[MAX_BUFFER_SIZE];
             char MEMORY[MAX_BUFFER_SIZE];
             char SWAP[MAX_BUFFER_SIZE];
             char TEMP[MAX_BUFFER_SIZE];
             char SERVICE[MAX_BUFFER_SIZE];
-            char CAPACITY[MAX_BUFFER_SIZE];
-            char VOLTAGE[MAX_BUFFER_SIZE];
-            char CHARGER[MAX_BUFFER_SIZE];
             char RELOAD[MAX_BUFFER_SIZE];
             char CPU[MAX_BUFFER_SIZE];
             char SPEED[MAX_BUFFER_SIZE];
