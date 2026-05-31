@@ -186,6 +186,9 @@ static void init_input_maps(void) {
     input_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
 
     switch (board_special()) {
+        case BOARD_SPECIAL_TUI_SPOON:
+            map_vol_buttons(joy_button_map, 11, 12);
+            break;
         case BOARD_SPECIAL_TUI_BRICK:
             map_vol_buttons(joy_button_map, 0, 1);
             break;
