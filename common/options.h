@@ -55,6 +55,9 @@
 #define OPT_PATH "/opt/muos/"
 #define RUN_PATH "/run/muos/"
 
+#define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
+#define CONTROL_RETRO OPT_PATH "share/info/gamecontrollerdb/retro.txt"
+
 #define IDLE_STATE   RUN_PATH "idle_state"
 #define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
 

@@ -103,6 +103,20 @@ static void map_vol_buttons(mux_input_type *map, int down_idx, int up_idx) {
     map[up_idx] = MUX_INPUT_VOL_UP;
 }
 
+static void apply_face_button_layout(void) {
+    if (config.SETTINGS.REMAP.LAYOUT == 1) {
+        controller_button_map[SDL_CONTROLLER_BUTTON_A] = MUX_INPUT_B;
+        controller_button_map[SDL_CONTROLLER_BUTTON_B] = MUX_INPUT_A;
+        controller_button_map[SDL_CONTROLLER_BUTTON_X] = MUX_INPUT_Y;
+        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = MUX_INPUT_X;
+    } else {
+        controller_button_map[SDL_CONTROLLER_BUTTON_A] = MUX_INPUT_A;
+        controller_button_map[SDL_CONTROLLER_BUTTON_B] = MUX_INPUT_B;
+        controller_button_map[SDL_CONTROLLER_BUTTON_X] = MUX_INPUT_X;
+        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = MUX_INPUT_Y;
+    }
+}
+
 static void init_input_maps(void) {
     if (input_init_done) return;
 
@@ -117,12 +131,10 @@ static void init_input_maps(void) {
         axis_map[i].pos = MUX_INPUT_COUNT;
     }
 
+    apply_face_button_layout();
+
     // TODO: Work out what C and Z would eventually map to,
     // TODO: as well as the TrimUI Switch fella!
-    controller_button_map[SDL_CONTROLLER_BUTTON_A] = MUX_INPUT_A;
-    controller_button_map[SDL_CONTROLLER_BUTTON_B] = MUX_INPUT_B;
-    controller_button_map[SDL_CONTROLLER_BUTTON_X] = MUX_INPUT_X;
-    controller_button_map[SDL_CONTROLLER_BUTTON_Y] = MUX_INPUT_Y;
     controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = MUX_INPUT_L1;
     controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = MUX_INPUT_R1;
     controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSTICK] = MUX_INPUT_L3;
@@ -493,13 +505,17 @@ static void open_all_input_devices(void) {
 
     if (!mappings_loaded) {
         if (device.BOARD.SDL_MAP[0] != '\0' && SDL_GameControllerAddMapping(device.BOARD.SDL_MAP) < 0) {
-            LOG_WARN("input", "Failed to add mapping: %s", SDL_GetError());
+            LOG_WARN("input", "Failed to add device SDL_MAP: %s", SDL_GetError());
         }
 
-        int mappings = SDL_GameControllerAddMappingsFromFile("/usr/lib/gamecontrollerdb.txt");
-        if (mappings < 0) LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
+        const char *info_map = (config.SETTINGS.REMAP.LAYOUT == 1) ? CONTROL_MODERN : CONTROL_RETRO;
 
-        if (config.SETTINGS.REMAP.LAYOUT == 1) SDL_GameControllerAddMappingsFromFile(OPT_PATH "share/info/gamecontrollerdb/modern.txt");
+        int mappings = SDL_GameControllerAddMappingsFromFile(info_map);
+        if (mappings < 0) {
+            LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
+        } else {
+            LOG_INFO("input", "Loaded %d controller mappings", mappings);
+        }
 
         mappings_loaded = 1;
     }
@@ -611,6 +627,7 @@ void mux_input_reload_mappings(void) {
     primary_instance = -1;
     mappings_loaded = 0;
     open_all_input_devices();
+    apply_face_button_layout();
 }
 
 static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
