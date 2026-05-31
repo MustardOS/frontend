@@ -1628,7 +1628,15 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
                 break;
         }
 
-        lv_img_set_src(ui_imgBox, static_image);
+        size_t slen = strlen(static_image);
+        if (slen > 4 && strcmp(static_image + slen - 4, ".svg") == 0) {
+            char svg_path[MAX_BUFFER_SIZE];
+            snprintf(svg_path, sizeof(svg_path), "%s?%dx%d", static_image, lv_obj_get_width(ui_imgBox), lv_obj_get_height(ui_imgBox));
+
+            lv_img_set_src(ui_imgBox, svg_path);
+        } else {
+            lv_img_set_src(ui_imgBox, static_image);
+        }
         return 1;
     }
 

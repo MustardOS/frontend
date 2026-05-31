@@ -1302,6 +1302,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     };
 
     const char *path_formats[] = {
+            "%s/%s/%s/%s%s.svg",
             "%s/%s/%s/%s%s.jpg",
             "%s/%s/%s/%s%s.png"
     };
@@ -1398,6 +1399,11 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     if (load_image_specifics(mux_dim, program, "wall", wall_extension, wall_image_path, sizeof(wall_image_path)) ||
         load_image_specifics("", program, "wall", wall_extension, wall_image_path, sizeof(wall_image_path))) {
         TRY_EMBED(wall_image_path);
+    } else if (animated == 0 && !random) {
+        if (load_image_specifics(mux_dim, program, "wall", "svg", wall_image_path, sizeof(wall_image_path)) ||
+            load_image_specifics("", program, "wall", "svg", wall_image_path, sizeof(wall_image_path))) {
+            TRY_EMBED(wall_image_path);
+        }
     }
 
 #undef TRY_EMBED
@@ -1435,12 +1441,27 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
                                 set_gradient_visible(0);
                             }
                         } else {
+                            size_t wlen2 = strlen(new_wall);
+                            if (wlen2 > 4 && strcmp(new_wall + wlen2 - 4, ".svg") == 0) {
+                                char svg_wall[MAX_BUFFER_SIZE];
+                                snprintf(svg_wall, sizeof(svg_wall), "%s?%dx%d", new_wall, device.MUX.WIDTH, device.MUX.HEIGHT);
+                                lv_img_set_src(ui_imgWall, svg_wall);
+                            } else {
+                                lv_img_set_src(ui_imgWall, new_wall);
+                            }
+                        }
+                        break;
+                    default: {
+                        size_t wlen = strlen(new_wall);
+                        if (wlen > 4 && strcmp(new_wall + wlen - 4, ".svg") == 0) {
+                            char svg_wall[MAX_BUFFER_SIZE];
+                            snprintf(svg_wall, sizeof(svg_wall), "%s?%dx%d", new_wall, device.MUX.WIDTH, device.MUX.HEIGHT);
+                            lv_img_set_src(ui_imgWall, svg_wall);
+                        } else {
                             lv_img_set_src(ui_imgWall, new_wall);
                         }
                         break;
-                    default:
-                        lv_img_set_src(ui_imgWall, new_wall);
-                        break;
+                    }
                 }
             }
         } else {
@@ -1921,20 +1942,27 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
 void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
     if (file_exist(image_settings.image_path)) {
         char image_path[MAX_BUFFER_SIZE];
-        snprintf(image_path, sizeof(image_path), "M:%s", image_settings.image_path);
+        size_t plen = strlen(image_settings.image_path);
+        int is_svg = plen > 4 && strcmp(image_settings.image_path + plen - 4, ".svg") == 0;
 
-        if (image_settings.max_height > 0 && image_settings.max_width > 0) {
-            lv_img_header_t img_header;
-            lv_img_decoder_get_info(image_path, &img_header);
+        if (is_svg && image_settings.max_width > 0 && image_settings.max_height > 0) {
+            snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image_settings.image_path, image_settings.max_width, image_settings.max_height);
+        } else {
+            snprintf(image_path, sizeof(image_path), "M:%s", image_settings.image_path);
 
-            float width_ratio = (float) image_settings.max_width / (float) img_header.w;
-            float height_ratio = (float) image_settings.max_height / (float) img_header.h;
-            float zoom_ratio = (width_ratio < height_ratio) ? width_ratio : height_ratio;
+            if (image_settings.max_height > 0 && image_settings.max_width > 0) {
+                lv_img_header_t img_header;
+                lv_img_decoder_get_info(image_path, &img_header);
 
-            int zoom_factor = (int) (zoom_ratio * 256);
+                float width_ratio = (float) image_settings.max_width / (float) img_header.w;
+                float height_ratio = (float) image_settings.max_height / (float) img_header.h;
+                float zoom_ratio = (width_ratio < height_ratio) ? width_ratio : height_ratio;
 
-            lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_REAL);
-            lv_img_set_zoom(ui_imgobj, zoom_factor);
+                int zoom_factor = (int) (zoom_ratio * 256);
+
+                lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_REAL);
+                lv_img_set_zoom(ui_imgobj, zoom_factor);
+            }
         }
 
         lv_obj_set_align(ui_imgobj, image_settings.align);

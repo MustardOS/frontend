@@ -715,7 +715,16 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                 if (file_exist(image)) {
                     *starter_image = 1;
 
-                    snprintf(image_path, sizeof(image_path), "M:%s", image);
+                    size_t ilen = strlen(image);
+                    if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {
+                        int box_w = device.MUX.WIDTH;
+                        int box_h = device.MUX.HEIGHT - theme.HEADER.HEIGHT - theme.FOOTER.HEIGHT - 4;
+                        if (box_h <= 0) box_h = device.MUX.HEIGHT;
+                        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, box_w, box_h);
+                    } else {
+                        snprintf(image_path, sizeof(image_path), "M:%s", image);
+                    }
+
                     lv_img_set_src(ui_imgBox, image_path);
 
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
