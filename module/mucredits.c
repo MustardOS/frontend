@@ -849,7 +849,7 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     int avail = g_screen_w - 2 * page_pad;
     if (avail < 1) goto cleanup;
 
-    int gutter = sx(28);
+    int cell_inset = sx(8);
     int line_h = TTF_FontHeight(g_font_sml) + sx(4) + text_shadow_offset();
     if (line_h < 1) line_h = 1;
 
@@ -857,7 +857,7 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     if (force_cols > 0) {
         cols = force_cols;
     } else {
-        cols = avail / (max_name_w + gutter);
+        cols = avail / (max_name_w + cell_inset);
         if (cols < 1) cols = 1;
         if (cols > 4) cols = 4;
     }
@@ -865,7 +865,6 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     if (cols < 1) cols = 1;
 
     int cell_w = avail / cols;
-    int cell_inset = sx(8);
     int cell_budget = cell_w - cell_inset;
     if (cell_budget < 1) cell_budget = 1;
 
@@ -1086,7 +1085,7 @@ static void build_reel(void) {
 
     add_title(g_font_big, "Heroes", C_HERO, "heroes");
     add_spacer(sml_gap, "heroes");
-    add_names(heroes, C_HERO, "heroes", 0);
+    add_names(heroes, C_HERO, "heroes", 2);
     add_spacer(big_gap, "heroes");
 
     add_title(g_font_big, "Knights", C_KNT, "knights");
