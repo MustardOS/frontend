@@ -55,7 +55,7 @@ static const int saver_speed_values[SAVER_SPEED_COUNT] = {
         SAVER_SPEED_TURBO
 };
 
-#define SAVER_TYPE_COUNT 11
+#define SAVER_TYPE_COUNT 12
 enum saver_type {
     SAVER_TYPE_DISABLED = 0,
     SAVER_TYPE_DVD = 1,
@@ -68,6 +68,7 @@ enum saver_type {
     SAVER_TYPE_MYSTIFY = 8,
     SAVER_TYPE_MAZE = 9,
     SAVER_TYPE_BLOCKFALL = 10,
+    SAVER_TYPE_DATETIME = 11,
 };
 
 static const int saver_type_values[SAVER_TYPE_COUNT] = {
@@ -82,6 +83,7 @@ static const int saver_type_values[SAVER_TYPE_COUNT] = {
         SAVER_TYPE_MYSTIFY,
         SAVER_TYPE_MAZE,
         SAVER_TYPE_BLOCKFALL,
+        SAVER_TYPE_DATETIME,
 };
 
 char **gov_values_lower = NULL;
@@ -398,6 +400,7 @@ static void init_navigation_group(void) {
             lang.MUXPOWER.SAVER.TYPE.MYSTIFY,
             lang.MUXPOWER.SAVER.TYPE.MAZE,
             lang.MUXPOWER.SAVER.TYPE.BLOCKFALL,
+            lang.MUXPOWER.SAVER.TYPE.DATETIME,
     };
 
     INIT_OPTION_ITEM(-1, power, Shutdown, lang.MUXPOWER.SLEEP.TITLE, "shutdown", sleep_timer, SHUTDOWN_COUNT);

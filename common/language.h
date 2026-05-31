@@ -1185,6 +1185,7 @@ struct mux_lang {
                 char MYSTIFY[MAX_BUFFER_SIZE];
                 char MAZE[MAX_BUFFER_SIZE];
                 char BLOCKFALL[MAX_BUFFER_SIZE];
+                char DATETIME[MAX_BUFFER_SIZE];
             } TYPE;
             struct {
                 char TITLE[MAX_BUFFER_SIZE];
