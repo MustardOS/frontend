@@ -575,6 +575,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.TUNESCALE, "Automatically adjusts scheduler behaviour based on CPU count\n\nDisable for consistent tuning on devices");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.CARDMODE, "Switch between different storage tuning options\n\nMay improve performance on certain mSD cards");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.STATE, "Switch between system sleep suspend states\n\nChanges how the device reacts to sleep mode and wake locks");
+    SPECIFIC_FIELD(lang->MUXDANGER.WARN, "These are low level kernel parameters.\n\nIncorrect values can cause system instability or data loss!");
 
     // muxdevice
     SPECIFIC_FIELD(lang->MUXDEVICE.TITLE, "DEVICE SETTINGS");
@@ -1273,6 +1274,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.INFO, "CPU Information");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.SPEED, "CPU Speed");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.GOVERNOR, "CPU Governor");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.WARN, "Changing your device functions may cause unexpected behaviour or prevent the system from booting!");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VERSION, "The current version of MustardOS running on the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.BUILD, "The current build ID of MustardOS running on the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.DEVICE, "The current device type detected and configured");
@@ -1474,6 +1476,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.PASSCODE, "Configure boot, launch, and settings passcodes");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.INPUTREMAP, "Input Remap");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.INPUTREMAP, "Remap controller buttons and axes for the muOS frontend");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.WARN, "These settings are intended for advanced users.\n\nChanging them incorrectly may cause unexpected behaviour!");
 
     // muxvisual
     SPECIFIC_FIELD(lang->MUXVISUAL.SORT, "Sorting Priority");

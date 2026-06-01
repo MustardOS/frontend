@@ -703,7 +703,7 @@ int muxhistory_main(int his_index) {
         remove(ADD_MODE_DONE);
     }
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

@@ -26,6 +26,12 @@ static void show_warn_dialog(const char *target) {
     warn_mode = 1;
     warn_dlg.selected = 1;
     snprintf(warn_pending, sizeof(warn_pending), "%s", target);
+
+    if (warn_dlg.description_label) {
+        const char *desc = strcmp(target, "danger") == 0 ? lang.MUXDANGER.WARN : lang.MUXTWEAKGEN.WARN;
+        lv_label_set_text(warn_dlg.description_label, desc);
+    }
+
     dialogue_show(&warn_dlg);
     dialogue_refresh(&warn_dlg, &theme);
 }
@@ -728,8 +734,9 @@ int muxtweakgen_main(void) {
     restore_tweak_options();
     init_dropdown_settings();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
-    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
+                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.MUXTWEAKGEN.WARN, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     init_timer(ui_gen_refresh_task, NULL);
 

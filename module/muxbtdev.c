@@ -582,7 +582,7 @@ int muxbtdev_main(void) {
     init_osk(ui_pnlEntry_btdev, ui_txtEntry_btdev, true, false, OSK_MAX);
 
     const char *forget_opts[MUX_REMOVE_CNT] = {lang.MUXBTDEV.FORGET, lang.GENERIC.SKIP_CONFIRM, lang.GENERIC.CANCEL};
-    dialogue_init(&forget_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, forget_opts, MUX_REMOVE_CNT, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init(&forget_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, NULL, forget_opts, MUX_REMOVE_CNT, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

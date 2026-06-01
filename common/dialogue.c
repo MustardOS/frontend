@@ -3,7 +3,7 @@
 #include "ui_common.h"
 
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                   const char *title, const char **options, int option_count,
+                   const char *title, const char *description, const char **options, int option_count,
                    const char *nav_a, const char *nav_b) {
     if (option_count > MUX_DIALOGUE_MAX_OPTIONS) option_count = MUX_DIALOGUE_MAX_OPTIONS;
 
@@ -45,6 +45,19 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
     lv_obj_set_style_pad_all(dlg->title_label, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+
+    dlg->description_label = NULL;
+    if (description) {
+        dlg->description_label = lv_label_create(dlg->panel);
+        lv_label_set_text(dlg->description_label, description);
+        lv_obj_set_width(dlg->description_label, (LV_HOR_RES * 60 / 100) - 32);
+        lv_obj_set_style_text_align(dlg->description_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_color(dlg->description_label, lv_color_hex(t->DIALOGUE.CONTENT), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(dlg->description_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_all(dlg->description_label, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
+        lv_label_set_long_mode(dlg->description_label, LV_LABEL_LONG_WRAP);
+    }
 
     lv_obj_t *sep_top = lv_obj_create(dlg->panel);
     lv_obj_set_size(sep_top, LV_PCT(100), 1);
@@ -114,33 +127,33 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
 }
 
 void dialogue_init_unsaved(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *save_label, const char *discard_label,
+                           const char *title, const char *description, const char *save_label, const char *discard_label,
                            const char *nav_a, const char *nav_b) {
     const char *opts[MUX_UNSAVED_NOPE] = {save_label, discard_label};
-    dialogue_init(dlg, t, parent, title, opts, MUX_UNSAVED_NOPE, nav_a, nav_b);
+    dialogue_init(dlg, t, parent, title, description, opts, MUX_UNSAVED_NOPE, nav_a, nav_b);
 }
 
 void dialogue_init_confirm(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *confirm_label, const char *cancel_label,
+                           const char *title, const char *description, const char *confirm_label, const char *cancel_label,
                            const char *nav_a, const char *nav_b) {
     const char *opts[MUX_CONFIRM_CNT] = {confirm_label, cancel_label};
-    dialogue_init(dlg, t, parent, title, opts, MUX_CONFIRM_CNT, nav_a, nav_b);
+    dialogue_init(dlg, t, parent, title, description, opts, MUX_CONFIRM_CNT, nav_a, nav_b);
 }
 
 void dialogue_init_warn(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                        const char *nav_a, const char *nav_b) {
+                        const char *description, const char *nav_a, const char *nav_b) {
     const char *opts[] = {lang.GENERIC.UNDERSTAND, lang.GENERIC.CANCEL};
-    dialogue_init(dlg, t, parent, lang.GENERIC.WARNING, opts, 2, nav_a, nav_b);
+    dialogue_init(dlg, t, parent, lang.GENERIC.WARNING, description, opts, 2, nav_a, nav_b);
 }
 
 void dialogue_init_remove(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                          const char *nav_a, const char *nav_b) {
+                          const char *description, const char *nav_a, const char *nav_b) {
     const char *opts[MUX_REMOVE_CNT] = {lang.GENERIC.REMOVE, lang.GENERIC.SKIP_CONFIRM, lang.GENERIC.CANCEL};
-    dialogue_init(dlg, t, parent, lang.GENERIC.CONFIRM, opts, MUX_REMOVE_CNT, nav_a, nav_b);
+    dialogue_init(dlg, t, parent, lang.GENERIC.CONFIRM, description, opts, MUX_REMOVE_CNT, nav_a, nav_b);
 }
 
 void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *message, const char *nav_b) {
+                           const char *title, const char *description, const char *message, const char *nav_b) {
     dlg->option_count = 0;
     dlg->selected = 0;
 
@@ -179,6 +192,19 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
     lv_obj_set_style_pad_all(dlg->title_label, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+
+    dlg->description_label = NULL;
+    if (description) {
+        dlg->description_label = lv_label_create(dlg->panel);
+        lv_label_set_text(dlg->description_label, description);
+        lv_obj_set_width(dlg->description_label, (LV_HOR_RES * 60 / 100) - 32);
+        lv_obj_set_style_text_align(dlg->description_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_color(dlg->description_label, lv_color_hex(t->DIALOGUE.CONTENT), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(dlg->description_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_all(dlg->description_label, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
+        lv_label_set_long_mode(dlg->description_label, LV_LABEL_LONG_WRAP);
+    }
 
     lv_obj_t *sep_top = lv_obj_create(dlg->panel);
     lv_obj_set_size(sep_top, LV_PCT(100), 1);

@@ -544,7 +544,7 @@ int muxthemedown_main(void) {
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
-    dialogue_init_message(&msg_dlg, &theme, ui_screen, lang.GENERIC.WARNING, lang.GENERIC.UNSAFE_ARCHIVE, lang.GENERIC.BACK);
+    dialogue_init_message(&msg_dlg, &theme, ui_screen, lang.GENERIC.WARNING, NULL, lang.GENERIC.UNSAFE_ARCHIVE, lang.GENERIC.BACK);
 
     if (ui_count > 0) list_nav_move(theme_down_index, 1);
     theme_down_index = 0;

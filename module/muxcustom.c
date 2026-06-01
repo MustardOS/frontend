@@ -783,8 +783,10 @@ int muxcustom_main(void) {
     restore_custom_options();
     init_dropdown_settings();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
-    dialogue_init_message(&msg_dlg, &theme, ui_screen, lang.GENERIC.WARNING, lang.GENERIC.UNSAFE_ARCHIVE, lang.GENERIC.BACK);
+    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
+                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_message(&msg_dlg, &theme, ui_screen, lang.GENERIC.WARNING, NULL,
+                          lang.GENERIC.UNSAFE_ARCHIVE, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

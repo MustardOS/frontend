@@ -390,7 +390,7 @@ int muxarchive_main(void) {
     };
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

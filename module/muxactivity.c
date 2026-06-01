@@ -2013,7 +2013,7 @@ int muxactivity_main() {
         nav_moved = 1;
     }
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

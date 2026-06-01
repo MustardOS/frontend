@@ -897,7 +897,8 @@ int muxnetwork_main(void) {
     init_osk(ui_pnlEntry_network, ui_txtEntry_network, 1, 1, OSK_MAX);
     can_scan_check(0);
 
-    dialogue_init_confirm(&save_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.SAVE, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_confirm(&save_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, NULL,
+                          lang.GENERIC.SAVE, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     init_timer(ui_refresh_task, NULL);
 

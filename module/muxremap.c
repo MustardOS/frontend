@@ -770,8 +770,6 @@ static void init_elements(void) {
     lv_label_set_text(ui_lblScreenMessage, "");
 
     overlay_display();
-
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 }
 
 int muxremap_main(void) {
@@ -802,6 +800,9 @@ int muxremap_main(void) {
 
     init_fonts();
     init_navigation_group();
+
+    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
+                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     init_timer(ui_gen_refresh_task, NULL);
 

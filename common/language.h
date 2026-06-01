@@ -631,6 +631,7 @@ struct mux_lang {
         char TUNESCALE[MAX_BUFFER_SIZE];
         char CARDMODE[MAX_BUFFER_SIZE];
         char STATE[MAX_BUFFER_SIZE];
+        char WARN[MAX_BUFFER_SIZE];
         struct {
             char VMSWAP[MAX_BUFFER_SIZE];
             char DIRTYRATIO[MAX_BUFFER_SIZE];
@@ -1461,6 +1462,7 @@ struct mux_lang {
             char SPEED[MAX_BUFFER_SIZE];
             char GOVERNOR[MAX_BUFFER_SIZE];
         } CPU;
+        char WARN[MAX_BUFFER_SIZE];
         struct {
             char VERSION[MAX_BUFFER_SIZE];
             char BUILD[MAX_BUFFER_SIZE];
@@ -1682,6 +1684,7 @@ struct mux_lang {
         } STARTUP;
         char INPUTREMAP[MAX_BUFFER_SIZE];
         char PASSCODE[MAX_BUFFER_SIZE];
+        char WARN[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char RTC[MAX_BUFFER_SIZE];

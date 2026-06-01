@@ -808,8 +808,8 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
 
     nav_silent = 0;
 
-    dialogue_init_confirm(&remove_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.REMOVE,
-                          lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_confirm(&remove_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, NULL,
+                          lang.GENERIC.REMOVE, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

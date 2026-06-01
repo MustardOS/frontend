@@ -1064,7 +1064,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
         lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     update_file_counter(ui_lblCounter_collect, file_count);
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false, false, OSK_MAX);
 

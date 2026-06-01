@@ -9,6 +9,7 @@ typedef struct {
     lv_obj_t *dim;
     lv_obj_t *panel;
     lv_obj_t *title_label;
+    lv_obj_t *description_label;
     lv_obj_t *options[MUX_DIALOGUE_MAX_OPTIONS];
     int option_count;
     int selected;
@@ -34,25 +35,25 @@ typedef enum {
 } mux_remove_opt;
 
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                   const char *title, const char **options, int option_count,
+                   const char *title, const char *description, const char **options, int option_count,
                    const char *nav_a, const char *nav_b);
 
 void dialogue_init_unsaved(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *save_label, const char *discard_label,
+                           const char *title, const char *description, const char *save_label, const char *discard_label,
                            const char *nav_a, const char *nav_b);
 
 void dialogue_init_confirm(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *confirm_label, const char *cancel_label,
+                           const char *title, const char *description, const char *confirm_label, const char *cancel_label,
                            const char *nav_a, const char *nav_b);
 
 void dialogue_init_warn(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                        const char *nav_a, const char *nav_b);
+                        const char *description, const char *nav_a, const char *nav_b);
 
 void dialogue_init_remove(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                          const char *nav_a, const char *nav_b);
+                          const char *description, const char *nav_a, const char *nav_b);
 
 void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *message, const char *nav_b);
+                           const char *title, const char *description, const char *message, const char *nav_b);
 
 void dialogue_show(mux_dialogue *dlg);
 

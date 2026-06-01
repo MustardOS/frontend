@@ -521,8 +521,8 @@ int muxlaunch_main(void) {
     init_fonts();
     init_navigation_group();
 
-    dialogue_init_confirm(&confirm_dlg, &theme, ui_screen, lang.MUXLAUNCH.CONFIRM_REBOOT, lang.GENERIC.CONFIRM,
-                          lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_confirm(&confirm_dlg, &theme, ui_screen, lang.MUXLAUNCH.CONFIRM_REBOOT, NULL,
+                          lang.GENERIC.CONFIRM, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
 
