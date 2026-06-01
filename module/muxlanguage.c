@@ -170,6 +170,10 @@ static void handle_help(void) {
     show_help();
 }
 
+static void ui_refresh_task() {
+    download_poll();
+}
+
 static void init_elements(void) {
     header_and_footer_setup();
 
@@ -214,7 +218,7 @@ int muxlanguage_main(void) {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXLANGUAGE.NONE);
     }
 
-    init_timer(ui_gen_refresh_task, NULL);
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
