@@ -262,6 +262,7 @@ static void ui_refresh_task() {
 }
 
 int muxshot_main(void) {
+    skip_confirm = 0;
     is_fullscreen = 0;
 
     init_module(__func__);

@@ -638,10 +638,12 @@ static void handle_a(void) {
         case MENU_MUSIC_VOLUME:
             toast_message(lang.MUXCUSTOM.MUSIC.SET, SHORT);
             set_bgm_volume(pct_to_int(lv_dropdown_get_selected(ui_droMusicVolume_custom), 0, 100));
+            MusicVolume_original = pct_to_int(lv_dropdown_get_selected(ui_droMusicVolume_custom), 0, 100);
             break;
         case MENU_SOUND_VOLUME:
             toast_message(lang.MUXCUSTOM.SOUND.SET, SHORT);
             set_nav_volume(pct_to_int(lv_dropdown_get_selected(ui_droSoundVolume_custom), 0, 100));
+            SoundVolume_original = pct_to_int(lv_dropdown_get_selected(ui_droSoundVolume_custom), 0, 100);
             break;
         case MENU_THEME_ALTERNATE:
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");

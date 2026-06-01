@@ -933,6 +933,7 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxcollect_main(int add, char *dir, int last_index) {
+    skip_confirm = 0;
     exit_status = 0;
     add_mode = add;
     sys_index = last_index;

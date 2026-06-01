@@ -728,7 +728,47 @@ static void init_navigation_group(void) {
 }
 
 
+static int save_mode = 0;
+static mux_dialogue save_dlg;
+
+static void show_save_dialog(void) {
+    save_mode = 1;
+    save_dlg.selected = 0;
+    dialogue_show(&save_dlg);
+    dialogue_refresh(&save_dlg, &theme);
+}
+
+static void hide_save_dialog(void) {
+    save_mode = 0;
+    dialogue_hide(&save_dlg);
+}
+
+static int any_rgb_modified(void) {
+    if ((int) lv_dropdown_get_selected(ui_droMode_rgb) != Mode_original) return 1;
+    if (pct_to_int(lv_dropdown_get_selected(ui_droBright_rgb), 0, 255) != Bright_original) return 1;
+
+    if ((int) lv_dropdown_get_selected(ui_droBreathSpeed_rgb) != BreathSpeed_original) return 1;
+    if (colour_palette_idx() != ColourL_original) return 1;
+
+    if ((int) lv_dropdown_get_selected(ui_droColourR_rgb) != ColourR_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_droColourM_rgb) != ColourM_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_droColourF1_rgb) != ColourF1_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_droColourF2_rgb) != ColourF2_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_droCombo_rgb) != Combo_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_droBackend_rgb) != Backend_original) return 1;
+
+    return 0;
+}
+
 static void handle_option_prev(void) {
+    if (save_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), -1);
@@ -736,13 +776,70 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
+    if (save_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), +1);
     rgb_focus();
 }
 
+static void handle_dpad_up(void) {
+    if (save_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (save_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (save_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (save_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_a(void) {
+    if (save_mode) {
+        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        hide_save_dialog();
+
+        if (opt == MUX_UNSAVED_SAVE) save_rgb_options(FOREVER);
+
+        play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "rgb");
+
+        mux_input_stop();
+        return;
+    }
+
     if (msgbox_active || block_input || hold_call) return;
 
     handle_option_next();
@@ -751,8 +848,18 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (block_input || hold_call) return;
 
+    if (save_mode) {
+        hide_save_dialog();
+        return;
+    }
+
     if (msgbox_active) {
         handle_msgbox_dismiss();
+        return;
+    }
+
+    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_rgb_modified()) {
+        show_save_dialog();
         return;
     }
 
@@ -765,13 +872,14 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || block_input || hold_call) return;
+    if (msgbox_active || save_mode || block_input || hold_call) return;
 
     save_rgb_options(MEDIUM);
+    init_dropdown_settings();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || block_input || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || block_input || hold_call || save_mode) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -820,6 +928,7 @@ int muxrgb_main(void) {
 
     rgb_focus();
 
+    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 0, 0);
 
@@ -831,8 +940,8 @@ int muxrgb_main(void) {
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
@@ -843,8 +952,8 @@ int muxrgb_main(void) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,

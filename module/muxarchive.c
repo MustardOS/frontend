@@ -355,6 +355,7 @@ static void ui_refresh_task() {
 }
 
 int muxarchive_main(void) {
+    skip_confirm = 0;
     init_module(__func__);
     init_theme(1, 1);
 

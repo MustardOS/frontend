@@ -550,6 +550,7 @@ static void init_elements(void) {
 }
 
 int muxbtdev_main(void) {
+    skip_confirm = 0;
     selected_mac[0] = '\0';
 
     FILE *f = fopen(CONF_CONFIG_PATH "bluetooth/selected", "r");

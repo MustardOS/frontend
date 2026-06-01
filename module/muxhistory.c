@@ -615,6 +615,7 @@ static void ui_refresh_task() {
 }
 
 int muxhistory_main(int his_index) {
+    skip_confirm = 0;
     exit_status = 0;
     file_count = 0;
     starter_image = 0;

@@ -1973,6 +1973,7 @@ static void ui_refresh_task() {
 }
 
 int muxactivity_main() {
+    skip_confirm = 0;
     starter_image = 0;
 
     init_module(__func__);

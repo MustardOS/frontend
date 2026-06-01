@@ -17,6 +17,28 @@ static lv_obj_t *ui_objects_glyph[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
 
 
+static int save_mode = 0;
+static mux_dialogue save_dlg;
+
+static void show_save_dialog(void) {
+    save_mode = 1;
+    save_dlg.selected = 0;
+    dialogue_show(&save_dlg);
+    dialogue_refresh(&save_dlg, &theme);
+}
+
+static void hide_save_dialog(void) {
+    save_mode = 0;
+    dialogue_hide(&save_dlg);
+}
+
+static int any_themeopt_modified(void) {
+#define THEMEOPT(NAME, ENUM, UDATA) if ((int) lv_dropdown_get_selected(ui_dro##NAME##_themeopt) != NAME##_original) return 1;
+    THEMEOPT_ELEMENTS
+#undef THEMEOPT
+    return 0;
+}
+
 static int reset_mode = 0;
 static mux_dialogue reset_dlg;
 
@@ -66,7 +88,10 @@ static void restore_themeopt_options(void) {
     uint32_t glyph_idx = 0;
     int16_t stored = config.SETTINGS.THEMEOPT.GLYPH_SIZE;
     for (size_t i = 0; i < A_SIZE(glyph_size_values); i++) {
-        if (glyph_size_values[i] == stored) { glyph_idx = (uint32_t) i; break; }
+        if (glyph_size_values[i] == stored) {
+            glyph_idx = (uint32_t) i;
+            break;
+        }
     }
     lv_dropdown_set_selected(ui_droGlyphSize_themeopt, glyph_idx);
 }
@@ -121,6 +146,14 @@ static void init_navigation_group(void) {
 
 
 static void handle_option_prev(void) {
+    if (save_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (reset_mode) {
         if (swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, -1);
@@ -136,6 +169,14 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
+    if (save_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (reset_mode) {
         if (swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, +1);
@@ -151,6 +192,14 @@ static void handle_option_next(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (save_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (reset_mode) {
         if (!swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, -1);
@@ -163,6 +212,14 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (save_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     if (reset_mode) {
         if (!swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, +1);
@@ -175,18 +232,31 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (reset_mode) return;
+    if (save_mode || reset_mode) return;
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (reset_mode) return;
+    if (save_mode || reset_mode) return;
 
     handle_list_nav_down_hold();
 }
 
 static void handle_a(void) {
+    if (save_mode) {
+        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        hide_save_dialog();
+
+        if (opt == MUX_UNSAVED_SAVE) save_themeopt_options();
+
+        play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themeopt");
+
+        mux_input_stop();
+        return;
+    }
+
     if (reset_mode) {
         mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
         hide_reset_dialog();
@@ -200,7 +270,7 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || reset_mode) return;
+    if (msgbox_active || save_mode || reset_mode) return;
 
     if (config.SETTINGS.ADVANCED.TRUSTREMOVE) {
         do_reset();
@@ -214,6 +284,11 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (save_mode) {
+        hide_save_dialog();
+        return;
+    }
+
     if (reset_mode) {
         hide_reset_dialog();
         return;
@@ -221,6 +296,11 @@ static void handle_b(void) {
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
+        return;
+    }
+
+    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_themeopt_modified()) {
+        show_save_dialog();
         return;
     }
 
@@ -233,7 +313,7 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode || reset_mode) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -279,6 +359,7 @@ int muxthemeopt_main(void) {
     restore_themeopt_options();
     init_dropdown_settings();
 
+    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     dialogue_init_confirm(&reset_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, lang.GENERIC.RESET, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 0, 0);

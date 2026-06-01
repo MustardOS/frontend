@@ -23,8 +23,33 @@ typedef struct {
 } rtc_state_t;
 
 static rtc_state_t rtc = {2025, 1, 1, 0, 0, 0};
+static rtc_state_t rtc_original;
 
 const char *notation[] = {NULL, NULL};
+
+static int save_mode = 0;
+static mux_dialogue save_dlg;
+
+static void show_save_dialog(void) {
+    save_mode = 1;
+    save_dlg.selected = 0;
+    dialogue_show(&save_dlg);
+    dialogue_refresh(&save_dlg, &theme);
+}
+
+static void hide_save_dialog(void) {
+    save_mode = 0;
+    dialogue_hide(&save_dlg);
+}
+
+static int any_rtc_modified(void) {
+    return rtc.year != rtc_original.year ||
+           rtc.month != rtc_original.month ||
+           rtc.day != rtc_original.day ||
+           rtc.hour != rtc_original.hour ||
+           rtc.minute != rtc_original.minute ||
+           rtc.notation != rtc_original.notation;
+}
 
 static void list_nav_move(int steps, int direction);
 
@@ -334,6 +359,29 @@ static void save_and_exit(char *message) {
 }
 
 static void handle_a(void) {
+    if (save_mode) {
+        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        hide_save_dialog();
+
+        if (opt == MUX_UNSAVED_SAVE) {
+            if (config.BOOT.FACTORY_RESET) {
+                write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
+            } else {
+                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
+            }
+            save_and_exit(lang.GENERIC.SAVING);
+        } else {
+            play_sound(SND_BACK);
+            if (config.BOOT.FACTORY_RESET) {
+                write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
+            } else {
+                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
+            }
+            mux_input_stop();
+        }
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblTimezone_rtc) {
@@ -351,8 +399,18 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (save_mode) {
+        hide_save_dialog();
+        return;
+    }
+
     if (msgbox_active) {
         handle_msgbox_dismiss();
+        return;
+    }
+
+    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_rtc_modified()) {
+        show_save_dialog();
         return;
     }
 
@@ -368,15 +426,67 @@ static void handle_b(void) {
 }
 
 static void handle_left(void) {
+    if (save_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     adjust_option(-1);
 }
 
 static void handle_right(void) {
+    if (save_mode) {
+        if (swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
     adjust_option(+1);
 }
 
+static void handle_dpad_up(void) {
+    if (save_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (save_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(SND_NAVIGATE);
+        }
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (save_mode) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (save_mode) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
@@ -391,7 +501,7 @@ static void init_elements(void) {
             {ui_lblNavAGlyph,  "",                  0},
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.SAVE,   0},
+            {ui_lblNavB,       lang.GENERIC.BACK,   0},
             {NULL, NULL,                            0}
     });
 
@@ -422,7 +532,9 @@ int muxrtc_main(void) {
 
     init_navigation_group();
     restore_clock_settings();
+    rtc_original = rtc;
 
+    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -432,8 +544,8 @@ int muxrtc_main(void) {
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
@@ -444,8 +556,8 @@ int muxrtc_main(void) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
