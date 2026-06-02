@@ -581,7 +581,7 @@ void resolve_friendly_name(char *dir, char *raw_name, char *out) {
     char base[MAX_BUFFER_SIZE];
     snprintf(base, sizeof(base), "%s", strip_dir(dir));
 
-    char *name_only = get_last_dir(base);
+    char *name_only = get_last_dir(dir);
 
     char specific_rel[MAX_BUFFER_SIZE];
     snprintf(specific_rel, sizeof(specific_rel), "name/%s.json", name_only);
