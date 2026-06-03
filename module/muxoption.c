@@ -257,7 +257,7 @@ static void populate_info_values(void) {
 
     if (!is_dir) {
         char friendly_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(sys_dir, strip_ext(file_name), friendly_name);
+        resolve_friendly_name(file_path, friendly_name);
         adjust_visual_label(friendly_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         lv_label_set_text(ui_lblNameValue_option, friendly_name);

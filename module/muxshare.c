@@ -363,7 +363,7 @@ int folder_has_launch_file_with_extension(char *base_dir, char *dir_name, char *
         char item_name[MAX_BUFFER_SIZE];
         snprintf(item_name, sizeof(item_name), "%s/%s.%s", dir_name, dir_name, ext);
         char fn_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(base_dir, dir_name, fn_name);
+        resolve_friendly_name(file_path, fn_name);
         add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
         return 1;
     }
@@ -383,7 +383,7 @@ int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
         char item_name[MAX_BUFFER_SIZE];
         snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, dir_name);
         char fn_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(base_dir, strip_ext(dir_name), fn_name);
+        resolve_friendly_name(file_path, fn_name);
         add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
         return 1;
     }
@@ -569,18 +569,16 @@ int build_safe_path(char *dst, size_t n, const char *base, const char *name) {
     return 0;
 }
 
-void resolve_friendly_name(char *dir, char *raw_name, char *out) {
+void resolve_friendly_name(char *file_path, char *out) {
     char stripped[MAX_BUFFER_SIZE];
     char lowered[MAX_BUFFER_SIZE];
 
-    snprintf(stripped, sizeof(stripped), "%s", get_file_name(raw_name));
-
+    snprintf(stripped, sizeof(stripped), "%s", get_file_name(strip_ext(file_path)));
     snprintf(lowered, sizeof(lowered), "%s", str_tolower(stripped));
+
     int has_custom = 0;
 
-    char base[MAX_BUFFER_SIZE];
-    snprintf(base, sizeof(base), "%s", strip_dir(dir));
-
+    char *base = get_content_path(file_path);
     char *name_only = get_last_dir(base);
 
     char specific_rel[MAX_BUFFER_SIZE];

@@ -932,7 +932,7 @@ static void load_activity_items(void) {
 
                 char raw_name[MAX_BUFFER_SIZE];
                 json_string_copy(name_json, raw_name, sizeof(raw_name));
-                resolve_friendly_name(it->dir, raw_name, it->name);
+                resolve_friendly_name(full_path, it->name);
                 adjust_visual_label(it->name, config.VISUAL.NAME, config.VISUAL.DASH);
 
                 it->total_time = json_size_positive(time_json);
