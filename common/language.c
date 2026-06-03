@@ -50,6 +50,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.DOWNLOAD, "Download");
     GENERIC_FIELD(lang->GENERIC.EDIT, "Edit");
+    GENERIC_FIELD(lang->GENERIC.OUTPUT, "Export");
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
     GENERIC_FIELD(lang->GENERIC.EXCLUDED, "Excluded");
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
@@ -846,6 +847,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.CHANGE, "Cannot change if network is active!");
     SPECIFIC_FIELD(lang->MUXNETINFO.SAVE.HOST, "Saving Hostname");
     SPECIFIC_FIELD(lang->MUXNETINFO.SAVE.MAC, "Changing MAC Address");
+    SPECIFIC_FIELD(lang->MUXNETINFO.REPORT.SUCCESS, "Network diagnostics exported");
+    SPECIFIC_FIELD(lang->MUXNETINFO.REPORT.FAIL, "Error exporting network diagnostics");
 
     // muxnetprofile
     SPECIFIC_FIELD(lang->MUXNETPROFILE.TITLE, "NETWORK PROFILE");
@@ -880,7 +883,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.ADDRESS, "Device IP");
     SPECIFIC_FIELD(lang->MUXNETWORK.ENCRYPT_PASSWORD, "Encrypting Password…");
     SPECIFIC_FIELD(lang->MUXNETWORK.GATEWAY, "Gateway IP");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HIDDEN, "Hidden Network");
     SPECIFIC_FIELD(lang->MUXNETWORK.IDENTIFIER, "Identifier");
     SPECIFIC_FIELD(lang->MUXNETWORK.DISABLED, "Network Disabled");
     SPECIFIC_FIELD(lang->MUXNETWORK.TYPE, "Network Type");
@@ -896,7 +898,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.LINK_TIMEOUT, "Link Timeout");
     SPECIFIC_FIELD(lang->MUXNETWORK.STATUS.WPA_START_FAILED, "AP Connect Error");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.TYPE, "Toggle between DHCP and Static network types");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.HIDDEN, "Toggle whether or not to try and connect to a hidden SSID broadcast");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.PASSWORD, "Enter the network password here (optional)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.IDENTIFIER, "Enter the network identifier (SSID) here");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.GATEWAY, "Enter the network gateway address here (Static only)");

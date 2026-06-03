@@ -248,7 +248,6 @@ static void restore_network_values(void) {
     lv_label_set_text(ui_lblTypeValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.STATIC : lang.MUXNETWORK.DHCP);
     ui_count = config.NETWORK.TYPE ? UI_STATIC : UI_DHCP;
 
-    lv_label_set_text(ui_lblHiddenValue_network, config.NETWORK.HIDDEN ? lang.GENERIC.ENABLED : lang.GENERIC.DISABLED);
     lv_label_set_text(ui_lblIdentifierValue_network, config.NETWORK.SSID);
     lv_label_set_text(ui_lblPasswordValue_network, config.NETWORK.PASS);
     lv_label_set_text(ui_lblAddressValue_network, config.NETWORK.ADDRESS);
@@ -272,10 +271,8 @@ static void escape_wpa_string(const char *src, char *dst) {
 
 static void save_network_config(void) {
     int idx_type = 0;
-    int idx_hidden = 0;
 
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0) idx_type = 1;
-    if (strcasecmp(lv_label_get_text(ui_lblHiddenValue_network), lang.GENERIC.ENABLED) == 0) idx_hidden = 1;
 
     char esc_ssid[MAX_BUFFER_SIZE];
     escape_wpa_string(lv_label_get_text(ui_lblIdentifierValue_network), esc_ssid);
@@ -283,7 +280,6 @@ static void save_network_config(void) {
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type);
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, lv_label_get_text(ui_lblIdentifierValue_network));
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid);
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/hidden", INT, idx_hidden);
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue_network), PASS_ENCODE) != 0) {
         write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, lv_label_get_text(ui_lblPasswordValue_network));
@@ -307,7 +303,6 @@ static void init_navigation_group(void) {
 
     INIT_VALUE_ITEM(-1, network, Identifier, lang.MUXNETWORK.IDENTIFIER, "identifier", "");
     INIT_VALUE_ITEM(-1, network, Password, lang.MUXNETWORK.PASSWORD, "password", "");
-    INIT_VALUE_ITEM(-1, network, Hidden, lang.MUXNETWORK.HIDDEN, "hidden", "");
     INIT_VALUE_ITEM(-1, network, Type, lang.MUXNETWORK.TYPE, "type", "");
     INIT_VALUE_ITEM(-1, network, Address, lang.MUXNETWORK.ADDRESS, "address", "");
     INIT_VALUE_ITEM(-1, network, Subnet, lang.MUXNETWORK.SUBNET, "subnet", "");
@@ -422,8 +417,7 @@ static void toggle_option(lv_obj_t *element, const char *config_path) {
 int handle_navigate(void) {
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (e_focused == ui_lblHidden_network ||
-        e_focused == ui_lblType_network) {
+    if (e_focused == ui_lblType_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXNETWORK.DENY_MODIFY, SHORT);
@@ -433,14 +427,10 @@ int handle_navigate(void) {
 
         play_sound(SND_OPTION);
 
-        if (e_focused == ui_lblHidden_network) {
-            toggle_option(ui_lblHiddenValue_network, CONF_CONFIG_PATH "network/hidden");
-        } else if (e_focused == ui_lblType_network) {
-            int is_static = strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0;
-            lv_label_set_text(ui_lblTypeValue_network, is_static ? lang.MUXNETWORK.DHCP : lang.MUXNETWORK.STATIC);
-            ui_count = is_static ? UI_DHCP : UI_STATIC;
-            toggle_static_panels(is_static);
-        }
+        int is_static = strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETWORK.STATIC) == 0;
+        lv_label_set_text(ui_lblTypeValue_network, is_static ? lang.MUXNETWORK.DHCP : lang.MUXNETWORK.STATIC);
+        ui_count = is_static ? UI_DHCP : UI_STATIC;
+        toggle_static_panels(is_static);
 
         return 1;
     }
@@ -523,38 +513,33 @@ static void handle_confirm(void) {
     } else {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_CONFIRM);
-            if (e_focused == ui_lblHidden_network) {
-                toggle_option(ui_lblHiddenValue_network, CONF_CONFIG_PATH "network/hidden");
+            key_curr = 0;
+            if (e_focused == ui_lblIdentifier_network || e_focused == ui_lblPassword_network) {
+                lv_textarea_set_password_mode(ui_txtEntry_network, e_focused == ui_lblPassword_network);
+
+                lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+
+                lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_state(num_entry, LV_STATE_DISABLED);
+
+                key_show = 1;
             } else {
-                key_curr = 0;
-                if (e_focused == ui_lblIdentifier_network ||
-                    e_focused == ui_lblPassword_network) {
-                    lv_textarea_set_password_mode(ui_txtEntry_network, e_focused == ui_lblPassword_network);
+                lv_textarea_set_password_mode(ui_txtEntry_network, 0);
 
-                    lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+                lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
 
-                    lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_add_state(num_entry, LV_STATE_DISABLED);
+                lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_state(key_entry, LV_STATE_DISABLED);
 
-                    key_show = 1;
-                } else {
-                    lv_textarea_set_password_mode(ui_txtEntry_network, 0);
-
-                    lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
-
-                    lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_add_state(key_entry, LV_STATE_DISABLED);
-
-                    key_show = 2;
-                }
-
-                osk_show(ui_pnlEntry_network);
-                osk_refresh_labels();
-
-                lv_textarea_set_text(ui_txtEntry_network, e_focused == ui_lblPassword_network ? "" : lv_label_get_text(lv_group_get_focused(ui_group_value)));
+                key_show = 2;
             }
+
+            osk_show(ui_pnlEntry_network);
+            osk_refresh_labels();
+
+            lv_textarea_set_text(ui_txtEntry_network, e_focused == ui_lblPassword_network ? "" : lv_label_get_text(lv_group_get_focused(ui_group_value)));
         } else {
             play_sound(SND_ERROR);
             toast_message(lang.MUXNETWORK.DENY_MODIFY, SHORT);
@@ -835,7 +820,6 @@ static void init_elements(void) {
     lv_obj_t *connect_items[] = {
             ui_pnlIdentifier_network,
             ui_pnlPassword_network,
-            ui_pnlHidden_network,
             ui_pnlType_network,
             ui_pnlConnect_network,
             NULL

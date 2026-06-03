@@ -65,7 +65,6 @@ void load_config(struct mux_config *config) {
     // network/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "network");
     CFG_INT(config->NETWORK.TYPE, &d, "type", 0);
-    CFG_INT(config->NETWORK.HIDDEN, &d, "hidden", 0);
     CFG_STR(config->NETWORK.INTERFACE, &d, "interface", "wlan0");
     CFG_STR(config->NETWORK.SSID, &d, "ssid", "");
     CFG_STR(config->NETWORK.PASS, &d, "pass", "");

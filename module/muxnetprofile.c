@@ -42,9 +42,6 @@ static void load_profile(char *name) {
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR,
                               mini_get_string(net_profile, "network", "ssid", ""));
 
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/hidden", INT,
-                              mini_get_int(net_profile, "network", "hidden", 0));
-
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR,
                               mini_get_string(net_profile, "network", "pass", ""));
 
@@ -72,7 +69,6 @@ static int save_profile(void) {
     const char *p_type = read_all_char_from((CONF_CONFIG_PATH "network/type"));
     const char *p_ssid = read_all_char_from((CONF_CONFIG_PATH "network/ssid"));
     const char *p_pass = read_all_char_from((CONF_CONFIG_PATH "network/pass"));
-    const char *p_hidden = read_all_char_from((CONF_CONFIG_PATH "network/hidden"));
     const char *p_address = read_all_char_from((CONF_CONFIG_PATH "network/address"));
     const char *p_subnet = read_all_char_from((CONF_CONFIG_PATH "network/subnet"));
     const char *p_gateway = read_all_char_from((CONF_CONFIG_PATH "network/gateway"));
@@ -118,7 +114,6 @@ static int save_profile(void) {
 
     mini_set_string(net_profile, "network", "ssid", p_ssid);
     mini_set_string(net_profile, "network", "pass", p_pass);
-    mini_set_string(net_profile, "network", "hidden", p_hidden);
     mini_set_string(net_profile, "network", "type", (!type) ? "dhcp" : "static");
     mini_set_string(net_profile, "network", "address", (!type) ? "" : p_address);
     mini_set_string(net_profile, "network", "subnet", (!type) ? "" : p_subnet);

@@ -320,7 +320,6 @@
 #define NETWORK_ELEMENTS                          \
     NETWORK(Identifier, IDENTIFIER, "identifier") \
     NETWORK(Password,   PASSWORD,   "password")   \
-    NETWORK(Hidden,     HIDDEN,     "hidden")     \
     NETWORK(Type,       TYPE,       "type")       \
     NETWORK(Address,    ADDRESS,    "address")    \
     NETWORK(Subnet,     SUBNET,     "subnet")     \

@@ -47,6 +47,7 @@ struct mux_lang {
         char DISABLED[MAX_BUFFER_SIZE];
         char DOWNLOAD[MAX_BUFFER_SIZE];
         char EDIT[MAX_BUFFER_SIZE];
+        char OUTPUT[MAX_BUFFER_SIZE];
         char ENABLED[MAX_BUFFER_SIZE];
         char EXCLUDED[MAX_BUFFER_SIZE];
         char EXTRACT[MAX_BUFFER_SIZE];
@@ -976,6 +977,10 @@ struct mux_lang {
             char HOST[MAX_BUFFER_SIZE];
             char MAC[MAX_BUFFER_SIZE];
         } SAVE;
+        struct {
+            char SUCCESS[MAX_BUFFER_SIZE];
+            char FAIL[MAX_BUFFER_SIZE];
+        } REPORT;
     } MUXNETINFO;
 
     struct {
@@ -1013,7 +1018,6 @@ struct mux_lang {
         char ADDRESS[MAX_BUFFER_SIZE];
         char ENCRYPT_PASSWORD[MAX_BUFFER_SIZE];
         char GATEWAY[MAX_BUFFER_SIZE];
-        char HIDDEN[MAX_BUFFER_SIZE];
         char IDENTIFIER[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
@@ -1032,7 +1036,6 @@ struct mux_lang {
         } STATUS;
         struct {
             char TYPE[MAX_BUFFER_SIZE];
-            char HIDDEN[MAX_BUFFER_SIZE];
             char PASSWORD[MAX_BUFFER_SIZE];
             char IDENTIFIER[MAX_BUFFER_SIZE];
             char GATEWAY[MAX_BUFFER_SIZE];
