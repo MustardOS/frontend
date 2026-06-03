@@ -2,7 +2,7 @@
 #include "external.h"
 
 const struct ext_core_name ext_core_names[] = {
-        {"external",                  "Portmaster"},
+        {"external",                  "PortMaster"},
 
         // With the exception of above all the following use the
         // core name without "ext-" as we go past those characters...
@@ -57,7 +57,7 @@ const struct ext_core_name ext_core_names[] = {
         {"crisp",                     "Crisp Game Lib"},
         {"terminal",                  "Linux Script"},
         {"frotz",                     "Frotz - Z-Machine"},
-        {"gen-overlay",               "PortMaster w/ Stage Overlay"},
+        {"gen-overlay",               "PortMaster + Overlay"},
 
         {NULL, NULL}
 };
