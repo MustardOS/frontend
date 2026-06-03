@@ -330,6 +330,31 @@ static const char *get_tp_traffic(void) {
     return tp_traffic;
 }
 
+static void export_diagnostics(void) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/netdiag.txt", device.STORAGE.ROM.MOUNT);
+
+    FILE *f = fopen(path, "w");
+    if (!f) {
+        toast_message(lang.MUXNETINFO.REPORT.FAIL, MEDIUM);
+        return;
+    }
+
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.HOSTNAME, get_hostname());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.MAC, get_mac_address());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.IP, get_ip_address());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.SSID, get_ssid());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.GATEWAY, get_gateway());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.DNS, get_dns_servers());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.SIGNAL, get_signal_strength());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.CHANNEL, get_channel_info());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.ACTRAFFIC, get_ac_traffic());
+    fprintf(f, "%s: %s\n", lang.MUXNETINFO.TPTRAFFIC, get_tp_traffic());
+
+    fclose(f);
+    toast_message(lang.MUXNETINFO.REPORT.SUCCESS, MEDIUM);
+}
+
 static void update_network_info() {
     lv_label_set_text(ui_lblSignalValue_netinfo, get_signal_strength());
     lv_label_set_text(ui_lblChannelValue_netinfo, get_channel_info());
@@ -511,7 +536,13 @@ static void handle_b_hold(void) {
 static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
-    if (key_show) close_osk(key_entry, ui_group, ui_txtEntry_netinfo, ui_pnlEntry_netinfo);
+    if (key_show) {
+        close_osk(key_entry, ui_group, ui_txtEntry_netinfo, ui_pnlEntry_netinfo);
+        return;
+    }
+
+    play_sound(SND_CONFIRM);
+    export_diagnostics();
 }
 
 static void handle_y(void) {
@@ -581,11 +612,13 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                0},
-            {ui_lblNavA,      lang.GENERIC.EDIT, 0},
-            {ui_lblNavBGlyph, "",                0},
-            {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL, NULL,                         0}
+            {ui_lblNavAGlyph, "",                  0},
+            {ui_lblNavA,      lang.GENERIC.EDIT,   0},
+            {ui_lblNavBGlyph, "",                  0},
+            {ui_lblNavB,      lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph, "",                  0},
+            {ui_lblNavX,      lang.GENERIC.OUTPUT, 0},
+            {NULL, NULL,                           0}
     });
 
 #define NETINFO(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netinfo, UDATA);
