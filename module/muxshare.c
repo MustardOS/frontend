@@ -740,23 +740,16 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
 void resolve_grid_item_images(const char *mux_dim, const char *mux_module, const char *glyph_name,
                               char *grid_img, size_t img_size,
                               char *grid_img_foc, size_t foc_size) {
-    grid_img[0] = '\0';
-    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size) &&
-        !load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size)) {
-        char embed[MAX_BUFFER_SIZE];
-        if (get_glyph_path(mux_module, glyph_name, embed, sizeof(embed)))
-            snprintf(grid_img, img_size, "%s", embed + 2);
+    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)) {
+        load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size);
     }
 
     char glyph_name_focused[MAX_BUFFER_SIZE];
     snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);
 
     grid_img_foc[0] = '\0';
-    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name_focused, "default_focused", "svg", grid_img_foc, foc_size) &&
-        !load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name_focused, "default_focused", "png", grid_img_foc, foc_size)) {
-        char embed[MAX_BUFFER_SIZE];
-        if (get_glyph_path(mux_module, glyph_name, embed, sizeof(embed)))
-            snprintf(grid_img_foc, foc_size, "%s", embed + 2);
+    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name_focused, "default_focused", "svg", grid_img_foc, foc_size)) {
+        load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name_focused, "default_focused", "png", grid_img_foc, foc_size);
     }
 }
 
