@@ -165,7 +165,7 @@ static void gen_item(int file_count, char **file_names) {
         snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
         create_directories(init_meta_dir, 0);
 
-        resolve_friendly_name(file_path, stripped_name, fn_name);
+        resolve_friendly_name(file_path, fn_name);
         add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
 
         ui_count++;

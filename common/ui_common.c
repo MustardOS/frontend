@@ -1413,11 +1413,11 @@ int load_glyph_icon(const char *mux_dim, const char *glyph_folder,
 
     TRY_GLYPH("%s/%sglyph/%s/%s.svg", theme_base, mux_dim, glyph_folder, glyph_name);
     TRY_GLYPH("%s/glyph/%s/%s.svg", theme_base, glyph_folder, glyph_name);
-    TRY_GLYPH("%s/%sglyph/%s/%s.svg", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
-    TRY_GLYPH("%s/glyph/%s/%s.svg", INTERNAL_THEME, glyph_folder, glyph_name);
-
     TRY_GLYPH("%s/%sglyph/%s/%s.png", theme_base, mux_dim, glyph_folder, glyph_name);
     TRY_GLYPH("%s/glyph/%s/%s.png", theme_base, glyph_folder, glyph_name);
+    
+    TRY_GLYPH("%s/%sglyph/%s/%s.svg", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
+    TRY_GLYPH("%s/glyph/%s/%s.svg", INTERNAL_THEME, glyph_folder, glyph_name);
     TRY_GLYPH("%s/%sglyph/%s/%s.png", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
     TRY_GLYPH("%s/glyph/%s/%s.png", INTERNAL_THEME, glyph_folder, glyph_name);
 

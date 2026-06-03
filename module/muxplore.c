@@ -325,7 +325,7 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
         char *dot = strrchr(base, '.');
         if (dot) *dot = '\0';
 
-        resolve_friendly_name(sys_dir, base, tmp[tmp_count].display);
+        resolve_friendly_name(full_path, tmp[tmp_count].display);
 
         tmp[tmp_count].name = name;
         tmp[tmp_count].full_path = full_path;
