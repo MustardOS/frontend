@@ -108,6 +108,7 @@
 #define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
 #define STORAGE_FILTER  OPT_SHARE_PATH "filter"
 #define STORAGE_SHADER  OPT_SHARE_PATH "shader"
+#define STORAGE_NETWORK OPT_SHARE_PATH "network"
 
 #define FWD_HIST_FILE OPT_SHARE_PATH "info/fwd_hist.txt"
 

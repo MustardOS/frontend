@@ -11,7 +11,6 @@ enum {
 CONNECT_ELEMENTS
 #undef CONNECT
 
-
 static void show_help(void) {
     struct help_msg help_messages[] = {
 #define CONNECT(NAME, ENUM, UDATA) { UDATA, lang.MUXCONNECT.HELP.ENUM },
@@ -63,7 +62,6 @@ static void init_navigation_group(void) {
     gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 1, 0);
 }
 
-
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
@@ -96,10 +94,10 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[UI_COUNT] = {
-            {"network", &kiosk.CONFIG.NETWORK,      MENU_GENERAL, visible_network_opt},
-            {"netadv",  &kiosk.CONFIG.NET_SETTINGS, MENU_GENERAL, visible_network_opt},
-            {"webserv", &kiosk.CONFIG.WEB_SERVICES, MENU_GENERAL, visible_network_opt},
-            {"btall",   &KIOSK_PASS,                MENU_GENERAL, visible_bluetooth_opt}
+            {"net_profile", &kiosk.CONFIG.NETWORK,      MENU_GENERAL, visible_network_opt},
+            {"netadv",      &kiosk.CONFIG.NET_SETTINGS, MENU_GENERAL, visible_network_opt},
+            {"webserv",     &kiosk.CONFIG.WEB_SERVICES, MENU_GENERAL, visible_network_opt},
+            {"btall",       &KIOSK_PASS,                MENU_GENERAL, visible_bluetooth_opt}
     };
 
     const menu_entry *visible_entries[UI_COUNT];

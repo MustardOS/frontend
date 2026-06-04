@@ -1,5 +1,5 @@
 #include "ui_muxshare.h"
-#include "ui_muxnetwork.h"
+#include "ui_muxnetprofile.h"
 #include "../../common/device.h"
 
 #define NETWORK(NAME, ENUM, UDATA)         \

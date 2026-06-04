@@ -985,27 +985,12 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char LOAD[MAX_BUFFER_SIZE];
-        char NONE[MAX_BUFFER_SIZE];
-        char HELP[MAX_BUFFER_SIZE];
-        char INVALID_SSID[MAX_BUFFER_SIZE];
-        char INVALID_NETWORK[MAX_BUFFER_SIZE];
-    } MUXNETPROFILE;
-
-    struct {
-        char TITLE[MAX_BUFFER_SIZE];
-        char SCAN[MAX_BUFFER_SIZE];
-        char NONE[MAX_BUFFER_SIZE];
-        char HELP[MAX_BUFFER_SIZE];
-    } MUXNETSCAN;
-
-    struct {
-        char TITLE[MAX_BUFFER_SIZE];
         char CONNECT[MAX_BUFFER_SIZE];
         char DISCONNECT[MAX_BUFFER_SIZE];
         char CONNECTED[MAX_BUFFER_SIZE];
         char NOT_CONNECTED[MAX_BUFFER_SIZE];
         char DENY_MODIFY[MAX_BUFFER_SIZE];
+        char DENY_FORGET[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
         char DHCP[MAX_BUFFER_SIZE];
         char STATIC[MAX_BUFFER_SIZE];
@@ -1019,9 +1004,13 @@ struct mux_lang {
         char ENCRYPT_PASSWORD[MAX_BUFFER_SIZE];
         char GATEWAY[MAX_BUFFER_SIZE];
         char IDENTIFIER[MAX_BUFFER_SIZE];
+        char PROFILE_NAME[MAX_BUFFER_SIZE];
+        char PRIORITY[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
         char CHECK[MAX_BUFFER_SIZE];
+        char FORGET[MAX_BUFFER_SIZE];
+        char FORGET_CONFIRM[MAX_BUFFER_SIZE];
         struct {
             char ASSOCIATING[MAX_BUFFER_SIZE];
             char AUTHENTICATING[MAX_BUFFER_SIZE];
@@ -1038,12 +1027,30 @@ struct mux_lang {
             char TYPE[MAX_BUFFER_SIZE];
             char PASSWORD[MAX_BUFFER_SIZE];
             char IDENTIFIER[MAX_BUFFER_SIZE];
+            char PROFILE_NAME[MAX_BUFFER_SIZE];
+            char PRIORITY[MAX_BUFFER_SIZE];
             char GATEWAY[MAX_BUFFER_SIZE];
             char SUBNET[MAX_BUFFER_SIZE];
             char DNS[MAX_BUFFER_SIZE];
             char ADDRESS[MAX_BUFFER_SIZE];
             char CONNECT[MAX_BUFFER_SIZE];
         } HELP;
+    } MUXNETPROFILE;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char SCAN[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+    } MUXNETSCAN;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char CONNECTED[MAX_BUFFER_SIZE];
+        char AUTO[MAX_BUFFER_SIZE];
+        char MANUAL[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
     } MUXNETWORK;
 
     struct {

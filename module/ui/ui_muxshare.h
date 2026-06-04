@@ -317,15 +317,17 @@
     NETINFO(AcTraffic, ACTRAFFIC, "actraffic") \
     NETINFO(TpTraffic, TPTRAFFIC, "tptraffic")
 
-#define NETWORK_ELEMENTS                          \
-    NETWORK(Identifier, IDENTIFIER, "identifier") \
-    NETWORK(Password,   PASSWORD,   "password")   \
-    NETWORK(Type,       TYPE,       "type")       \
-    NETWORK(Address,    ADDRESS,    "address")    \
-    NETWORK(Subnet,     SUBNET,     "subnet")     \
-    NETWORK(Gateway,    GATEWAY,    "gateway")    \
-    NETWORK(Dns,        DNS,        "dns")        \
-    NETWORK(Connect,    CONNECT,    "connect")
+#define NETWORK_ELEMENTS                               \
+    NETWORK(ProfileName, PROFILE_NAME, "profile_name") \
+    NETWORK(Identifier,  IDENTIFIER,   "identifier")   \
+    NETWORK(Password,    PASSWORD,     "password")     \
+    NETWORK(Type,        TYPE,         "type")         \
+    NETWORK(Priority,    PRIORITY,     "priority")     \
+    NETWORK(Address,     ADDRESS,      "address")      \
+    NETWORK(Subnet,      SUBNET,       "subnet")       \
+    NETWORK(Gateway,     GATEWAY,      "gateway")      \
+    NETWORK(Dns,         DNS,          "dns")          \
+    NETWORK(Connect,     CONNECT,      "connect")
 
 #define OPTION_ELEMENTS                       \
     OPTION(Core,      CORE,      "core")      \

@@ -114,8 +114,10 @@ static void handle_a(void) {
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, "");
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, "");
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR, "");
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/profile_name", CHAR, "");
 
     refresh_config = 1;
+    load_mux("network");
 
     mux_input_stop();
 }
