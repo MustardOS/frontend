@@ -127,9 +127,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, content, GridMode, lang.MUXCONTENT.GRIDMODE, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, GridModeArt, lang.MUXCONTENT.GRIDMODEART, "boxarthide", disabled_enabled, 2);
 
-    char *boxart_scale_values = generate_number_string(1, 100, 1, NULL, "%", NULL, 1);
+    char boxart_scale_values[MAX_BUFFER_SIZE];
+    snprintf(boxart_scale_values, sizeof(boxart_scale_values), "%s\n%s", lang.GENERIC.DISABLED, generate_number_string(1, 100, 1, NULL, "%", NULL, 1));
     apply_theme_list_drop_down(&theme, ui_droBoxArtScale_content, boxart_scale_values);
-    free(boxart_scale_values);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);

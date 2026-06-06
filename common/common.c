@@ -2253,8 +2253,10 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
             snprintf(image_path, sizeof(image_path), "M:%s", image_settings.image_path);
         }
 
-        lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_VIRTUAL);
-        lv_img_set_zoom(ui_imgobj, LV_IMG_ZOOM_NONE);
+        if (image_settings.max_width > 0 && image_settings.max_height > 0) {
+            lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_VIRTUAL);
+            lv_img_set_zoom(ui_imgobj, LV_IMG_ZOOM_NONE);
+        }
 
         if (image_settings.align >= 0) lv_obj_set_align(ui_imgobj, image_settings.align);
         lv_obj_set_style_pad_left(ui_imgobj, image_settings.pad_left, MU_OBJ_MAIN_DEFAULT);
