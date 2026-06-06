@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
 #include <SDL2/SDL.h>
 #include "log.h"
 #include "common.h"
+#include "inotify.h"
+#include "options.h"
 #include "saver.h"
 
 const uint8_t saver_pastel_r[SAVER_PASTEL_COUNT] = {
@@ -118,7 +119,15 @@ int saver_poll_idle(saver_state_t *s, uint32_t now) {
         return 0;
     }
 
-    if (now - s->last_idle_poll >= TIMER_IDLE) {
+    int should_poll;
+    if (ino_proc) {
+        should_poll = (idle_state_changes != s->last_idle_changes);
+        if (should_poll) s->last_idle_changes = idle_state_changes;
+    } else {
+        should_poll = (now - s->last_idle_poll >= TIMER_IDLE);
+    }
+
+    if (should_poll) {
         s->was_idle_active = s->idle_active;
         s->idle_active = read_line_int_from(IDLE_STATE, 1);
         s->last_idle_poll = now;

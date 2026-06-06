@@ -46,6 +46,8 @@ extern int idle_state_exists;
 extern int safe_quit_exists;
 extern int hdmi_refresh_exists;
 extern int blank_exists;
+extern unsigned idle_state_changes;
+extern unsigned saver_type_changes;
 
 extern int hdmi_mode;
 extern int g350_menu_pressed;

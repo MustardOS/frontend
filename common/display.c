@@ -12,6 +12,7 @@
 #include "theme.h"
 #include "display.h"
 #include "ui_common.h"
+#include "inotify.h"
 #include "saver.h"
 #include "saver/dvd.h"
 #include "saver/star.h"
@@ -793,9 +794,20 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     }
 
     {
-        uint32_t now = SDL_GetTicks();
+        static unsigned last_saver_type_seen = 0;
         static uint32_t last_type_poll = 0;
-        if (now - last_type_poll >= TIMER_IDLE) {
+        uint32_t now = SDL_GetTicks();
+
+        int should_check;
+        if (ino_proc) {
+            should_check = (saver_type_changes != last_saver_type_seen);
+            if (should_check) last_saver_type_seen = saver_type_changes;
+        } else {
+            should_check = (now - last_type_poll >= TIMER_IDLE);
+            if (should_check) last_type_poll = now;
+        }
+
+        if (should_check) {
             int wanted_type = read_line_int_from(CONF_CONFIG_PATH "settings/power/saver_type", 1);
             if (wanted_type < 0) wanted_type = 0;
 
@@ -803,8 +815,6 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
                 config.SETTINGS.POWER.SAVERTYPE = (int16_t) wanted_type;
                 reload_saver();
             }
-
-            last_type_poll = now;
         }
     }
 

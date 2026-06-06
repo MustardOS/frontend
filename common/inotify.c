@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include "inotify.h"
 
-// We'll probably do more in the future but this will do for now!
-#define INOTIFY_MAX_TRACKED 4
+#define INOTIFY_MAX_TRACKED 8
 
 inotify_status *ino_proc = NULL;
 

@@ -61,10 +61,13 @@ void inotify_init(void) {
     ino_proc = inotify_create();
     if (!ino_proc) return;
 
-    inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, &idle_state_changes);
     inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists, 0);
     inotify_track(ino_proc, "/run/muos", "hdmi_refresh", &hdmi_refresh_exists, 0);
     inotify_track(ino_proc, "/run/muos", "blank", &blank_exists, 0);
+
+    static int saver_type_exists;
+    inotify_track(ino_proc, "/opt/muos/config/settings/power", "saver_type", &saver_type_exists, &saver_type_changes);
 }
 
 void detach_parent_process(void) {
@@ -89,6 +92,10 @@ lv_timer_t *mux_get_refresh_timer(void) {
 
 static void mux_idle_poll(lv_timer_t *timer) {
     LV_UNUSED(timer);
+
+    static unsigned last_idle_changes_seen = 0;
+    if (ino_proc && idle_state_changes == last_idle_changes_seen) return;
+    if (ino_proc) last_idle_changes_seen = idle_state_changes;
 
     int idle = read_line_int_from(IDLE_STATE, 1);
     if (idle < 0 || idle == last_idle) return;

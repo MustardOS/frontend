@@ -38,6 +38,7 @@ struct saver_state {
     uint32_t last_idle_poll;
     uint32_t suppress_until;
     int was_idle_active;
+    unsigned last_idle_changes;
 
     const char *log_tag;
 
