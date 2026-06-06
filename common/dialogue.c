@@ -2,6 +2,25 @@
 #include "language.h"
 #include "ui_common.h"
 
+static void panel_anim_y_cb(void *obj, int32_t y) {
+    lv_obj_set_y((lv_obj_t *) obj, (lv_coord_t) y);
+}
+
+static void panel_anim_opa_cb(void *obj, int32_t opa) {
+    lv_obj_set_style_opa((lv_obj_t *) obj, (lv_opa_t) opa, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void dim_anim_opa_cb(void *obj, int32_t opa) {
+    lv_obj_set_style_bg_opa((lv_obj_t *) obj, (lv_opa_t) opa, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void hide_anim_ready_cb(lv_anim_t *a) {
+    mux_dialogue *dlg = (mux_dialogue *) lv_anim_get_user_data(a);
+    lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+}
+
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
                    const char *title, const char *description, const char **options, int option_count,
                    const char *nav_a, const char *nav_b) {
@@ -18,6 +37,7 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
     lv_obj_set_style_border_width(dlg->dim, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(dlg->dim, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+    dlg->dim_alpha = t->DIALOGUE.DIM_ALPHA;
 
     dlg->panel = lv_obj_create(parent);
     lv_obj_set_size(dlg->panel, lv_pct(60), LV_SIZE_CONTENT);
@@ -165,6 +185,7 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
     lv_obj_set_style_border_width(dlg->dim, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(dlg->dim, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+    dlg->dim_alpha = t->DIALOGUE.DIM_ALPHA;
 
     dlg->panel = lv_obj_create(parent);
     lv_obj_set_size(dlg->panel, lv_pct(60), LV_SIZE_CONTENT);
@@ -268,16 +289,68 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
 }
 
 void dialogue_show(mux_dialogue *dlg) {
+    lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_y_cb);
+    lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
+    lv_anim_del(dlg->dim, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
+    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+
     lv_obj_move_foreground(dlg->dim);
     lv_obj_move_foreground(dlg->panel);
 
+    lv_obj_set_style_bg_opa(dlg->dim, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+
     lv_obj_clear_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_update_layout(dlg->panel);
+    lv_coord_t panel_h = lv_obj_get_height(dlg->panel);
+    lv_coord_t target_y = (LV_VER_RES - panel_h) / 2;
+
+    lv_obj_set_style_align(dlg->panel, LV_ALIGN_TOP_MID, 0);
+    lv_obj_set_y(dlg->panel, LV_VER_RES);
+
+    lv_anim_t ap;
+    lv_anim_init(&ap);
+    lv_anim_set_var(&ap, dlg->panel);
+    lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_y_cb);
+    lv_anim_set_values(&ap, LV_VER_RES, target_y);
+    lv_anim_set_time(&ap, 350);
+    lv_anim_set_path_cb(&ap, lv_anim_path_overshoot);
+    lv_anim_start(&ap);
+
+    lv_anim_t ad;
+    lv_anim_init(&ad);
+    lv_anim_set_var(&ad, dlg->dim);
+    lv_anim_set_exec_cb(&ad, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
+    lv_anim_set_values(&ad, LV_OPA_TRANSP, dlg->dim_alpha);
+    lv_anim_set_time(&ad, 200);
+    lv_anim_set_path_cb(&ad, lv_anim_path_linear);
+    lv_anim_start(&ad);
 }
 
 void dialogue_hide(mux_dialogue *dlg) {
-    lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_y_cb);
+    lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
+    lv_anim_del(dlg->dim, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
+
+    lv_anim_t ap;
+    lv_anim_init(&ap);
+    lv_anim_set_var(&ap, dlg->panel);
+    lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
+    lv_anim_set_values(&ap, LV_OPA_COVER, LV_OPA_TRANSP);
+    lv_anim_set_time(&ap, 150);
+    lv_anim_set_path_cb(&ap, lv_anim_path_linear);
+    lv_anim_start(&ap);
+
+    lv_anim_t ad;
+    lv_anim_init(&ad);
+    lv_anim_set_var(&ad, dlg->dim);
+    lv_anim_set_exec_cb(&ad, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
+    lv_anim_set_values(&ad, dlg->dim_alpha, LV_OPA_TRANSP);
+    lv_anim_set_time(&ad, 150);
+    lv_anim_set_path_cb(&ad, lv_anim_path_linear);
+    lv_anim_set_ready_cb(&ad, hide_anim_ready_cb);
+    lv_anim_set_user_data(&ad, dlg);
+    lv_anim_start(&ad);
 }
 
 void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, int delta) {

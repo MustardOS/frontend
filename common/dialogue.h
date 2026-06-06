@@ -13,6 +13,7 @@ typedef struct {
     lv_obj_t *options[MUX_DIALOGUE_MAX_OPTIONS];
     int option_count;
     int selected;
+    lv_opa_t dim_alpha;
 } mux_dialogue;
 
 typedef enum {
