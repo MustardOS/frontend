@@ -1,21 +1,130 @@
 #include "muxshare.h"
 
-static char rom_name[PATH_MAX];
 static char explore_dir[PATH_MAX];
+
+static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
-static bool is_dir = false;
+
+static int is_dir = 0;
 
 static lv_obj_t *ui_lblCoreDownloader;
+
+static int find_assigned_system(char *out_system) {
+    // File Spec CFG: line 3 = sys
+    // Directory CFG: line 2 = sys
+
+    const char *sys = get_content_line(rom_dir, rom_name, "cfg", 3);
+    if (!sys || !*sys || strcasecmp(sys, "none") == 0) {
+        sys = get_content_line(rom_dir, NULL, "cfg", 2);
+    }
+
+    if (!sys || !*sys || strcasecmp(sys, "none") == 0) return 0;
+
+    char sys_dir[PATH_MAX];
+    snprintf(sys_dir, sizeof(sys_dir), STORE_LOC_ASIN "/%s", sys);
+    if (!dir_exist(sys_dir)) return 0;
+
+    snprintf(out_system, 4096, "%s", sys);
+    return 1;
+}
+
+static int find_system_item_index(const char *system_name) {
+    content_item *tmp_items = NULL;
+    size_t tmp_count = 0;
+
+    if (device.BOARD.HASNETWORK) add_item(&tmp_items, &tmp_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
+
+    DIR *ad = opendir(STORE_LOC_ASIN);
+    if (ad) {
+        struct dirent *af;
+        while ((af = readdir(ad))) {
+            if (af->d_type == DT_DIR &&
+                strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
+                add_item(&tmp_items, &tmp_count, af->d_name, af->d_name, "", FOLDER);
+            }
+        }
+        closedir(ad);
+    }
+
+    sort_items(tmp_items, tmp_count);
+
+    int idx = get_item_index_by_name(tmp_items, tmp_count, system_name, FOLDER);
+    if (idx < 0) idx = 0;
+
+    free_items(&tmp_items, &tmp_count);
+    return idx;
+}
+
+static int find_core_item_index(const char *system) {
+    const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
+    const char *dir_core = get_content_line(rom_dir, NULL, "cfg", 1);
+    const char *target = (file_core && *file_core) ? file_core : dir_core;
+
+    if (!target || !*target) return 0;
+
+    char assign_dir[PATH_MAX];
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", system);
+
+    char global_assign[FILENAME_MAX];
+    snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
+
+    mini_t *global_config = mini_load(global_assign);
+
+    const char *default_assign = get_ini_string(global_config, "global", "default", "none");
+    int has_default = strcmp(default_assign, "none") != 0;
+
+    mini_free(global_config);
+
+    if (!has_default) return 0;
+
+    content_item *tmp_items = NULL;
+    size_t tmp_count = 0;
+
+    DIR *ad = opendir(assign_dir);
+    if (!ad) return 0;
+
+    struct dirent *af;
+    while ((af = readdir(ad))) {
+        if (af->d_type != DT_REG) continue;
+        if (strcasecmp(af->d_name, "global.ini") == 0) continue;
+
+        char *last_dot = strrchr(af->d_name, '.');
+        if (!last_dot || strcasecmp(last_dot, ".ini") != 0) continue;
+
+        char core_file[FILENAME_MAX];
+        snprintf(core_file, sizeof(core_file), "%s/%s", assign_dir, af->d_name);
+
+        *last_dot = '\0';
+        mini_t *core_config = mini_load(core_file);
+
+        char assign_name[FILENAME_MAX];
+        snprintf(assign_name, sizeof(assign_name), "%s", get_ini_string(core_config, af->d_name, "name", "none"));
+
+        char assign_core[FILENAME_MAX];
+        snprintf(assign_core, sizeof(assign_core), "%s", get_ini_string(core_config, af->d_name, "core", "none"));
+
+        mini_free(core_config);
+
+        if (strcmp(assign_core, "none") != 0) add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, ITEM);
+    }
+    closedir(ad);
+
+    sort_items(tmp_items, tmp_count);
+
+    int idx = get_item_index_by_extra_data(tmp_items, tmp_count, target);
+    if (idx < 0) idx = 0;
+
+    free_items(&tmp_items, &tmp_count);
+    return idx;
+}
 
 static void show_help(void) {
     show_info_box(lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP, 0);
 }
 
 static void create_system_items(void) {
-    if (device.BOARD.HASNETWORK) {
-        add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
-    }
+    if (device.BOARD.HASNETWORK) add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
 
     DIR *ad;
     struct dirent *af;
@@ -189,6 +298,7 @@ static void handle_b(void) {
         fclose(file);
         load_return_module();
     } else {
+        write_text_to_file(MUOS_ASS_SYSP, "w", CHAR, rom_system);
         load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, "none", 0, 0);
     }
 
@@ -206,18 +316,15 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, item_data);
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
-             rom_system);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", rom_system);
 
     char global_core[FILENAME_MAX];
-    snprintf(global_core, sizeof(global_core), "%s/global.ini",
-             assign_dir);
+    snprintf(global_core, sizeof(global_core), "%s/global.ini", assign_dir);
     mini_t *global_ini = mini_load(global_core);
     LOG_INFO(mux_module, "Global Core Path: %s", global_core);
 
     char local_core[FILENAME_MAX];
-    snprintf(local_core, sizeof(local_core), "%s/%s.ini",
-             assign_dir, selected_item);
+    snprintf(local_core, sizeof(local_core), "%s/%s.ini", assign_dir, selected_item);
     mini_t *local_ini = mini_load(local_core);
     LOG_INFO(mux_module, "Local Core Path: %s", local_core);
 
@@ -334,13 +441,16 @@ static void init_elements(void) {
 
     struct nav_bar nav_items[7];
     int i = 0;
+
     if (!is_dir) {
         nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
         nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.SELECT, 1};
     }
+
     nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
     nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
     nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
+
     setup_nav(nav_items);
 
     if (strcasecmp(rom_system, "none") != 0) {
@@ -368,6 +478,7 @@ static void init_elements(void) {
 
 int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+
     is_dir = dir_exist(rom_dir);
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
@@ -401,14 +512,32 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     int ass_index = 0;
 
     if (strcasecmp(rom_system, "none") == 0) {
-        create_system_items();
+        char force_sys_name[PATH_MAX] = "";
+        int force_sys_picker = file_exist(MUOS_ASS_SYSP);
+        if (force_sys_picker) {
+            snprintf(force_sys_name, sizeof(force_sys_name), "%s", read_line_char_from(MUOS_ASS_SYSP, 1));
+            remove(MUOS_ASS_SYSP);
+        }
 
-        if (file_exist(MUOS_AIX_LOAD)) {
-            ass_index = read_line_int_from(MUOS_AIX_LOAD, 1);
-            remove(MUOS_AIX_LOAD);
+        char detected_system[PATH_MAX];
+        if (!force_sys_picker && find_assigned_system(detected_system)) {
+            LOG_INFO(mux_module, "Detected assigned system: '%s'... skipping system picker!", detected_system);
+            snprintf(rom_system, sizeof(rom_system), "%s", detected_system);
+            create_core_items(rom_system);
+            ass_index = find_core_item_index(rom_system);
+        } else {
+            create_system_items();
+
+            if (*force_sys_name) {
+                ass_index = find_system_item_index(force_sys_name);
+            } else if (file_exist(MUOS_AIX_LOAD)) {
+                ass_index = read_line_int_from(MUOS_AIX_LOAD, 1);
+                remove(MUOS_AIX_LOAD);
+            }
         }
     } else {
         create_core_items(rom_system);
+        ass_index = find_core_item_index(rom_system);
     }
 
     init_elements();

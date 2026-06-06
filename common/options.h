@@ -162,6 +162,7 @@
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_ASS_SYSP "/tmp/ass_sp" // Core/System Assignment Force System Picker
 #define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 #define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
