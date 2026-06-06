@@ -277,14 +277,11 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config, char
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
         if (!file_exist(image)) snprintf(image, sizeof(image), "%s/%s/%s/default.png", INFO_CAT_PATH, catalogue_folder, folder_name);
 
-        int16_t img_max_w = (int16_t) (viewport_width * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
-        int16_t img_max_h = (int16_t) (viewport_height * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
-
         struct ImageSettings image_settings = {
                 image,
                 get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
-                img_max_w,
-                img_max_h,
+                get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
+                get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
                 get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
                 get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
                 get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
@@ -712,14 +709,16 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                 char image_path[MAX_BUFFER_SIZE];
 
                 if (file_exist(image)) {
+                    
                     *starter_image = 1;
 
                     int box_w = device.MUX.WIDTH;
-                    int box_h = device.MUX.HEIGHT - theme.HEADER.HEIGHT - theme.FOOTER.HEIGHT - 4;
+                    bool fullscreen = config.VISUAL.BOX_ART == 2 || config.VISUAL.BOX_ART ==3;
+                    int box_h = fullscreen ? device.MUX.HEIGHT : device.MUX.HEIGHT - theme.HEADER.HEIGHT - theme.FOOTER.HEIGHT - 4;
                     if (box_h <= 0) box_h = device.MUX.HEIGHT;
 
-                    int16_t max_w = (int16_t) (box_w * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
-                    int16_t max_h = (int16_t) (box_h * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
+                    int16_t max_w = config.VISUAL.BOX_ART_SCALE > 0 ? (int16_t) (box_w * config.VISUAL.BOX_ART_SCALE / 100) : 0;
+                    int16_t max_h = config.VISUAL.BOX_ART_SCALE > 0 ? (int16_t) (box_h * config.VISUAL.BOX_ART_SCALE / 100) : 0;
 
                     size_t ilen = strlen(image);
                     if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {

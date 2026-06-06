@@ -322,7 +322,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->VISUAL.BOX_ART, &d, "boxart", 0);
     CFG_INT(config->VISUAL.BOX_ART_ALIGN, &d, "boxartalign", 0);
     CFG_INT(config->VISUAL.BOX_ART_HIDE, &d, "boxarthide", 0);
-    CFG_INT(config->VISUAL.BOX_ART_SCALE, &d, "boxartscale", 99);
+    CFG_INT(config->VISUAL.BOX_ART_SCALE, &d, "boxartscale", 100);
     CFG_INT(config->VISUAL.CONTENT_WIDTH, &d, "contentwidth", 0);
     CFG_INT(config->VISUAL.NAME, &d, "name", 0);
     CFG_INT(config->VISUAL.DASH, &d, "dash", 0);
