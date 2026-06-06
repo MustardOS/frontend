@@ -474,7 +474,7 @@ int load_scheme(const char *theme_base, const char *mux_dim, const char *file_na
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device);
 
-void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem);
+void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, int scroll_mode);
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem);
 

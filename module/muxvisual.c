@@ -83,6 +83,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, ForwardHistory, "visual/forwardhistory", INT, 0);
+    CHECK_AND_SAVE_STD(visual, NameScroll, "visual/namescroll", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
 
     {
@@ -113,12 +114,19 @@ static void init_navigation_group(void) {
             lang.MUXVISUAL.NAME.REM_SQPA
     };
 
+    char *scroll_mode[] = {
+            lang.MUXVISUAL.SCROLL_MODE.DISABLED,
+            lang.MUXVISUAL.SCROLL_MODE.CONTINUOUS,
+            lang.MUXVISUAL.SCROLL_MODE.BOUNCE
+    };
+
     INIT_OPTION_ITEM(-1, visual, Sort, lang.MUXVISUAL.SORT, "sort", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", battery_display, 3);
     INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
+    INIT_OPTION_ITEM(-1, visual, NameScroll, lang.MUXVISUAL.NAMESCROLL, "namescroll", scroll_mode, 3);
     INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLYFOLDER, "friendlyfolder", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.THETITLEFORMAT, "thetitleformat", disabled_enabled, 2);

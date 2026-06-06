@@ -26,7 +26,8 @@
 #define MY_CLASS &lv_label_class
 
 #define LV_LABEL_DEF_SCROLL_SPEED   (lv_disp_get_dpi(lv_obj_get_disp(obj)) / 3)
-#define LV_LABEL_SCROLL_DELAY       300
+#define LV_LABEL_SCROLL_DELAY       768
+#define LV_LABEL_BOUNCE_PADDING     24
 #define LV_LABEL_DOT_END_INV 0xFFFFFFFF
 #define LV_LABEL_HINT_HEIGHT_LIMIT 1024 /*Enable "hint" to buffer info about labels larger than this. (Speed up drawing)*/
 
@@ -917,16 +918,16 @@ static void lv_label_refr_text(lv_obj_t *obj) {
                 base_dir = _lv_bidi_detect_base_dir(label->text);
 
             if (base_dir == LV_BASE_DIR_RTL) {
-                start = lv_area_get_width(&txt_coords) - size.x;
+                start = lv_area_get_width(&txt_coords) - size.x - LV_LABEL_BOUNCE_PADDING;
                 end = 0;
             } else {
                 start = 0;
-                end = lv_area_get_width(&txt_coords) - size.x;
+                end = lv_area_get_width(&txt_coords) - size.x - LV_LABEL_BOUNCE_PADDING;
             }
 
             lv_anim_set_values(&a, start, end);
 #else
-            lv_anim_set_values(&a, 0, lv_area_get_width(&txt_coords) - size.x);
+            lv_anim_set_values(&a, 0, lv_area_get_width(&txt_coords) - size.x - LV_LABEL_BOUNCE_PADDING);
             lv_anim_set_exec_cb(&a, set_ofs_x_anim);
 #endif
             lv_anim_set_exec_cb(&a, set_ofs_x_anim);

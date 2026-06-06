@@ -356,7 +356,7 @@ static void list_nav_move(int steps, int direction) {
                                ui_count, current_item_index, ui_pnlContent);
     }
 
-    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     lv_label_set_text(ui_lblGridCurrentItem, TRS(items[current_item_index].name));
 
     nav_moved = 1;

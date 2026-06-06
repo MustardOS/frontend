@@ -1764,6 +1764,12 @@ struct mux_lang {
         char CONTENTHISTORY[MAX_BUFFER_SIZE];
         char MIXEDCONTENT[MAX_BUFFER_SIZE];
         char FORWARDHISTORY[MAX_BUFFER_SIZE];
+        char NAMESCROLL[MAX_BUFFER_SIZE];
+        struct {
+            char DISABLED[MAX_BUFFER_SIZE];
+            char CONTINUOUS[MAX_BUFFER_SIZE];
+            char BOUNCE[MAX_BUFFER_SIZE];
+        } SCROLL_MODE;
         struct {
             char IMAGE[MAX_BUFFER_SIZE];
             char TRANSPARENCY[MAX_BUFFER_SIZE];
@@ -1819,6 +1825,7 @@ struct mux_lang {
             char CONTENTHISTORY[MAX_BUFFER_SIZE];
             char MIXEDCONTENT[MAX_BUFFER_SIZE];
             char FORWARDHISTORY[MAX_BUFFER_SIZE];
+            char NAMESCROLL[MAX_BUFFER_SIZE];
             char OVERLAYIMAGE[MAX_BUFFER_SIZE];
             char OVERLAYTRANSPARENCY[MAX_BUFFER_SIZE];
         } HELP;

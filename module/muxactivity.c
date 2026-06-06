@@ -1678,7 +1678,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
 
     update_label_scroll();
 

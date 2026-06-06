@@ -202,7 +202,7 @@ static void list_nav_move(int steps, int direction) {
 
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
         if (config.VISUAL.BOX_ART < 4) image_refresh();
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     } else {
         lv_img_set_src(ui_imgBox, &ui_img_blank);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");

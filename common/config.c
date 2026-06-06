@@ -342,6 +342,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->VISUAL.CONTENTHISTORY, &d, "contenthistory", 0);
     CFG_INT(config->VISUAL.MIXEDCONTENT, &d, "mixedcontent", 0);
     CFG_INT(config->VISUAL.FORWARDHISTORY, &d, "forwardhistory", 1);
+    CFG_INT(config->VISUAL.NAMESCROLL, &d, "namescroll", 1);
 
     // bluetooth/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "bluetooth");

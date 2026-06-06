@@ -224,7 +224,7 @@ static void list_nav_move(int steps, int direction) {
         }
     }
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE : lang.MUXTHEMEDOWN.DOWNLOAD);
 
     nav_moved = 1;

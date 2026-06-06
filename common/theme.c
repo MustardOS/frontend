@@ -1270,17 +1270,11 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 }
 
-void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem) {
+void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, int scroll_mode) {
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
+    if (scroll_mode == 0) return;
 
-    char *content_label = lv_label_get_text(ui_lblItem);
-
-    size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
-
-    if (ends_with_ellipse) {
-        lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    }
+    lv_label_set_long_mode(ui_lblItem, scroll_mode == 2 ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
 }
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem) {
@@ -1363,7 +1357,7 @@ void init_item_animation(void) {
     lv_anim_init(&style_list_item_animation);
     lv_anim_set_delay(&style_list_item_animation, 250);
     lv_style_set_anim(&style_list_item_default, &style_list_item_animation);
-    lv_style_set_anim_speed(&style_list_item_default, 70);
+    lv_style_set_anim_speed(&style_list_item_default, 60);
 }
 
 void init_item_style(struct theme_config *theme) {

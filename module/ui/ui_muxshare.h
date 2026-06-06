@@ -378,27 +378,27 @@
     POWER(SaverType,   SAVERTYPE,   "saver_type")   \
     POWER(SaverSpeed,  SAVERSPEED,  "saver_speed")
 
-#define RGB_ELEMENTS                              \
-    RGB(Mode,        MODE,        "mode")         \
-    RGB(Bright,      BRIGHT,      "bright")       \
-    RGB(BreathSpeed, BREATH_SPEED,"breath_speed") \
-    RGB(ColourL,     COLOURL,     "colour_l")     \
-    RGB(ColourR,     COLOURR,     "colour_r")     \
-    RGB(ColourM,     COLOURM,     "colour_m")     \
-    RGB(ColourF1,    COLOURF1,    "colour_f1")    \
-    RGB(ColourF2,    COLOURF2,    "colour_f2")    \
-    RGB(Combo,       COMBO,       "combo")        \
-    RGB(Backend,     BACKEND,     "backend")
+#define RGB_ELEMENTS                               \
+    RGB(Mode,        MODE,         "mode")         \
+    RGB(Bright,      BRIGHT,       "bright")       \
+    RGB(BreathSpeed, BREATH_SPEED, "breath_speed") \
+    RGB(ColourL,     COLOURL,      "colour_l")     \
+    RGB(ColourR,     COLOURR,      "colour_r")     \
+    RGB(ColourM,     COLOURM,      "colour_m")     \
+    RGB(ColourF1,    COLOURF1,     "colour_f1")    \
+    RGB(ColourF2,    COLOURF2,     "colour_f2")    \
+    RGB(Combo,       COMBO,        "combo")        \
+    RGB(Backend,     BACKEND,      "backend")
 
-#define RTC_ELEMENTS                            \
-    RTC(Timezone,     TIMEZONE,     "timezone") \
-    RTC(Year,         YEAR,         "year")     \
-    RTC(Month,        MONTH,        "month")    \
-    RTC(Day,          DAY,          "day")      \
-    RTC(Hour,         HOUR,         "hour")     \
-    RTC(Minute,       MINUTE,       "minute")   \
-    RTC(Notation,     NOTATION,     "notation") \
-    RTC(Custom,       CUSTOM,       "custom")
+#define RTC_ELEMENTS                    \
+    RTC(Timezone, TIMEZONE, "timezone") \
+    RTC(Year,     YEAR,     "year")     \
+    RTC(Month,    MONTH,    "month")    \
+    RTC(Day,      DAY,      "day")      \
+    RTC(Hour,     HOUR,     "hour")     \
+    RTC(Minute,   MINUTE,   "minute")   \
+    RTC(Notation, NOTATION, "notation") \
+    RTC(Custom,   CUSTOM,   "custom")
 
 #define SEARCH_ELEMENTS                          \
     SEARCH(Lookup,       LOOKUP,       "lookup") \
@@ -507,6 +507,7 @@
     VISUAL(Network,               NETWORK,               "network")               \
     VISUAL(HeaderTitle,           HEADERTITLE,           "headertitle")           \
     VISUAL(Name,                  NAME,                  "name")                  \
+    VISUAL(NameScroll,            NAMESCROLL,            "namescroll")            \
     VISUAL(Dash,                  DASH,                  "dash")                  \
     VISUAL(FriendlyFolder,        FRIENDLYFOLDER,        "friendlyfolder")        \
     VISUAL(TheTitleFormat,        THETITLEFORMAT,        "thetitleformat")        \

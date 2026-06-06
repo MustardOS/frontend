@@ -526,7 +526,10 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset)
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT + count_offset, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    if (long_dot) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (long_dot) {
+        lv_obj_update_layout(ui_pnlContent);
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
+    }
 
     nav_moved = 1;
 }
@@ -632,7 +635,7 @@ void adjust_label_value_width(lv_obj_t *panel, lv_obj_t *label, lv_obj_t *value)
 
 void update_label_scroll() {
     if (lv_group_get_focused(ui_group_value)) {
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group_value));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group_value), config.VISUAL.NAMESCROLL);
     }
 }
 

@@ -273,6 +273,7 @@ struct mux_config {
         int16_t CONTENTHISTORY;
         int16_t MIXEDCONTENT;
         int16_t FORWARDHISTORY;
+        int16_t NAMESCROLL;
     } VISUAL;
 
     struct {

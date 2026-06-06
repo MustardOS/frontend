@@ -735,7 +735,7 @@ static void list_nav_move(int steps, int direction) {
         }
         focus_group(current_item_index);
 
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
         lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
         if (config.VISUAL.BOX_ART < 4) image_refresh("box");
@@ -780,7 +780,7 @@ static void list_nav_move(int steps, int direction) {
         if (!grid_mode_enabled) focus_group(focus_list_index());
     }
 
-    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     if (config.VISUAL.BOX_ART < 4) image_refresh("box");
@@ -1314,7 +1314,7 @@ static void navigate_to_dir(const char *new_dir, int restore_index) {
         focus_initial();
         first_open = 0;
 
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
 
         nav_moved = 1;
     } else {
@@ -1464,7 +1464,7 @@ int muxplore_main(int index, char *dir) {
 
     init_timer(ui_refresh_task, NULL);
 
-    if (ui_count > 0) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (ui_count > 0) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||

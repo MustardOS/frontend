@@ -159,7 +159,7 @@ static void create_region_items(void) {
 
     if (ui_count > 0) {
         lv_obj_update_layout(ui_pnlContent);
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     }
 }
 
@@ -206,7 +206,7 @@ static void create_timezone_items(void) {
 
     if (ui_count > 0) {
         lv_obj_update_layout(ui_pnlContent);
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     }
 }
 
