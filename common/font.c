@@ -27,14 +27,19 @@
 // contributes unique glyphs that will never repeat. 1 MB doubles the slot
 // count (~2600 slots at 20 px), cutting miss rate noticeably on long lists
 // without being reckless with LVGL heap on low memory targets.
-#define TTF_GLYPH_CACHE_BYTES      (512 * 1024)
-#define TTF_GLYPH_CACHE_BYTES_LANG (1024 * 1024)
 
-int font_cache_count = 0;
-char last_font_key[256] = "";
+static int font_cache_count = 0;
+static uint32_t last_font_key_hash = 0;
 static int cached_has_theme_font = -1;
 
+// Open address hash table for the font cache
+// Must be a power-of-2 and at least 2× FONT_CACHE_MAX so load factor stays ≤ 50%
+#define FONT_CACHE_SLOTS 512
+_Static_assert(FONT_CACHE_SLOTS >= FONT_CACHE_MAX * 2, "FONT_CACHE_SLOTS must be >= 2 * FONT_CACHE_MAX");
+_Static_assert((FONT_CACHE_SLOTS & (FONT_CACHE_SLOTS - 1)) == 0, "FONT_CACHE_SLOTS must be a power of 2");
+
 typedef struct {
+    uint32_t hash;
     char path[MAX_BUFFER_SIZE];
     int size;
 
@@ -44,7 +49,7 @@ typedef struct {
     int is_ttf;
 } font_cache_t;
 
-static font_cache_t font_cache[FONT_CACHE_MAX];
+static font_cache_t font_cache[FONT_CACHE_SLOTS];
 
 int theme_has_font(void) {
     if (cached_has_theme_font >= 0) return cached_has_theme_font;
@@ -186,7 +191,9 @@ lv_font_t *get_language_font(void) {
 }
 
 void font_cache_clear(void) {
-    for (int i = 0; i < font_cache_count; i++) {
+    for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
+        if (font_cache[i].path[0] == '\0') continue;
+
         if (font_cache[i].is_ttf) {
             lv_tiny_ttf_destroy(font_cache[i].font);
             free(font_cache[i].data);
@@ -195,6 +202,7 @@ void font_cache_clear(void) {
         }
     }
 
+    memset(font_cache, 0, sizeof(font_cache));
     font_cache_count = 0;
     cached_has_theme_font = -1;
     LOG_SUCCESS(mux_module, "Font cache has been cleared");
@@ -227,9 +235,22 @@ static void prewarm_ascii(lv_font_t *font) {
     }
 }
 
+static uint32_t font_key_hash(const char *path, int size) {
+    uint32_t h = fnv1a_hash_str(path);
+    h ^= (uint32_t) size;
+    h *= 16777619u;
+
+    return h;
+}
+
 static lv_font_t *cache_lookup(const char *path, int size) {
-    for (int i = 0; i < font_cache_count; i++) {
-        if (font_cache[i].size == size && strcmp(font_cache[i].path, path) == 0) return font_cache[i].font;
+    uint32_t h = font_key_hash(path, size);
+    uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
+
+    for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
+        font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
+        if (e->path[0] == '\0') return NULL;
+        if (e->hash == h && e->size == size && strcmp(e->path, path) == 0) return e->font;
     }
 
     return NULL;
@@ -243,19 +264,38 @@ static void cache_store(const char *path, int size, lv_font_t *font, void *data,
         } else {
             lv_font_free(font);
         }
-
         LOG_WARN(mux_module, "Font cache full; discarding: %s", path);
         return;
     }
 
-    snprintf(font_cache[font_cache_count].path, MAX_BUFFER_SIZE, "%s", path);
+    uint32_t h = font_key_hash(path, size);
+    uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
 
-    font_cache[font_cache_count].size = size;
-    font_cache[font_cache_count].font = font;
-    font_cache[font_cache_count].data = data;
-    font_cache[font_cache_count].is_ttf = is_ttf;
+    for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
+        font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
 
-    font_cache_count++;
+        if (e->path[0] != '\0') continue;
+        e->hash = h;
+
+        snprintf(e->path, MAX_BUFFER_SIZE, "%s", path);
+
+        e->size = size;
+        e->font = font;
+        e->data = data;
+
+        e->is_ttf = is_ttf;
+        font_cache_count++;
+
+        return;
+    }
+
+    LOG_WARN(mux_module, "Font hash table unexpectedly full; discarding: %s", path);
+    if (is_ttf) {
+        lv_tiny_ttf_destroy(font);
+        free(data);
+    } else {
+        lv_font_free(font);
+    }
 }
 
 static lv_font_t *load_font_cached_bin(const char *path) {
@@ -580,22 +620,32 @@ void load_font_section(const char *section, lv_obj_t *element) {
 }
 
 int font_context_changed(void) {
-    char context[MAX_BUFFER_SIZE];
-    snprintf(context, sizeof(context), "%s|%s|%d|%s|%d|%d|%d|%d",
-             config.THEME.ACTIVE,
-             config.SETTINGS.GENERAL.LANGUAGE,
-             config.SETTINGS.ADVANCED.FONT,
-             config.SETTINGS.FONT.NAME,
-             config.SETTINGS.FONT.LIST_SIZE,
-             config.SETTINGS.FONT.HEADER_SIZE,
-             config.SETTINGS.FONT.FOOTER_SIZE,
-             config.SETTINGS.FONT.PANEL_SIZE);
+    uint32_t h = fnv1a_hash_str(config.THEME.ACTIVE);
 
-    if (strncmp(context, last_font_key, sizeof(last_font_key) - 1) != 0) {
-        snprintf(last_font_key, sizeof(last_font_key), "%s", context);
-        LOG_INFO(mux_module, "Font context has changed");
-        return 1;
-    }
+    h ^= fnv1a_hash_str(config.SETTINGS.GENERAL.LANGUAGE);
+    h *= 16777619u;
 
-    return 0;
+    h ^= fnv1a_hash_str(config.SETTINGS.FONT.NAME);
+    h *= 16777619u;
+
+    h ^= (uint32_t) config.SETTINGS.ADVANCED.FONT;
+    h *= 16777619u;
+
+    h ^= (uint32_t) config.SETTINGS.FONT.LIST_SIZE;
+    h *= 16777619u;
+
+    h ^= (uint32_t) config.SETTINGS.FONT.HEADER_SIZE;
+    h *= 16777619u;
+
+    h ^= (uint32_t) config.SETTINGS.FONT.FOOTER_SIZE;
+    h *= 16777619u;
+
+    h ^= (uint32_t) config.SETTINGS.FONT.PANEL_SIZE;
+    h *= 16777619u;
+
+    if (h == last_font_key_hash) return 0;
+    last_font_key_hash = h;
+
+    LOG_INFO(mux_module, "Font context has changed");
+    return 1;
 }
