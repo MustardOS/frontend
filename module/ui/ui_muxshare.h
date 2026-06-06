@@ -140,49 +140,39 @@
     CONFIG(Storage,   STORAGE,   "storage")   \
     CONFIG(Backup,    BACKUP,    "backup")
 
-#define CONNECT_ELEMENTS                             \
-    CONNECT(Network,     NETWORK,     "network")     \
-    CONNECT(NetAdv,      NETADV,      "netadv")      \
-    CONNECT(Services,    SERVICES,    "service")     \
-    CONNECT(Bluetooth,   BLUETOOTH,   "bluetooth")
+#define CONNECT_ELEMENTS                       \
+    CONNECT(Network,   NETWORK,   "network")   \
+    CONNECT(NetAdv,    NETADV,    "netadv")    \
+    CONNECT(Services,  SERVICES,  "service")   \
+    CONNECT(Bluetooth, BLUETOOTH, "bluetooth")
 
-#define FONT_ELEMENTS                          \
-    FONT(Type,       TYPE,       "type")       \
-    FONT(Name,       NAME,       "name")       \
-    FONT(ListSize,   LISTSIZE,   "listsize")   \
-    FONT(HeaderSize, HEADERSIZE, "headersize") \
-    FONT(FooterSize, FOOTERSIZE, "footersize") \
-    FONT(PanelSize,  PANELSIZE,  "panelsize")
+#define CONTENT_ELEMENTS                                   \
+    CONTENT(LaunchSwap,   LAUNCHSWAP,   "launch_swap")     \
+    CONTENT(Shuffle,      SHUFFLE,      "shuffle")         \
+    CONTENT(BoxArtImage,  BOXARTIMAGE,  "boxart")          \
+    CONTENT(BoxArtAlign,  BOXARTALIGN,  "align")           \
+    CONTENT(BoxArtScale,  BOXARTSCALE,  "boxartscale")     \
+    CONTENT(FullWidth,    WIDTH,        "width")           \
+    CONTENT(LaunchSplash, LAUNCHSPLASH, "splash")          \
+    CONTENT(GridMode,     GRIDMODE,     "gridmodecontent") \
+    CONTENT(GridModeArt,  GRIDMODEART,  "boxarthide")
 
-#define THEMEOPT_ELEMENTS                                          \
-    THEMEOPT(HeaderHeight,      HEADERHEIGHT,      "headerheight") \
-    THEMEOPT(FooterHeight,      FOOTERHEIGHT,      "footerheight") \
-    THEMEOPT(ContentItemCount,  CONTENTITEMCOUNT,  "count")        \
-    THEMEOPT(GlyphSize,         GLYPHSIZE,         "glyphsize")
-
-#define CUSTOM_ELEMENTS                                         \
-    CUSTOM(Catalogue,       CATALOGUE,       "catalogue")       \
-    CUSTOM(Config,          CONFIG,          "config")          \
-    CUSTOM(Font,            FONT,            "font")            \
-    CUSTOM(ThemeOpt,        THEMEOPT,        "themeopt")        \
-    CUSTOM(Theme,           THEME,           "theme")           \
-    CUSTOM(ThemeResolution, THEMERESOLUTION, "resolution")      \
-    CUSTOM(ThemeScaling,    THEMESCALING,    "scaling")         \
-    CUSTOM(ThemeAlternate,  THEMEALTERNATE,  "alternate")       \
-    CUSTOM(Animation,       ANIMATION,       "animation")       \
-    CUSTOM(Music,           MUSIC,           "music")           \
-    CUSTOM(MusicVolume,     MUSICVOLUME,     "musicvolume")     \
-    CUSTOM(BlackFade,       BLACKFADE,       "blackfade")       \
-    CUSTOM(LaunchSwap,      LAUNCHSWAP,      "launch_swap")     \
-    CUSTOM(Shuffle,         SHUFFLE,         "shuffle")         \
-    CUSTOM(BoxArtImage,     BOXARTIMAGE,     "boxart")          \
-    CUSTOM(BoxArtAlign,     BOXARTALIGN,     "align")           \
-    CUSTOM(ContentWidth,    CONTENTWIDTH,    "width")           \
-    CUSTOM(LaunchSplash,    LAUNCHSPLASH,    "splash")          \
-    CUSTOM(GridModeContent, GRIDMODECONTENT, "gridmodecontent") \
-    CUSTOM(BoxArtHide,      BOXARTHIDE,      "boxarthide")      \
-    CUSTOM(Sound,           SOUND,           "sound")           \
-    CUSTOM(SoundVolume,     SOUNDVOLUME,     "soundvolume")     \
+#define CUSTOM_ELEMENTS                                     \
+    CUSTOM(Catalogue,       CATALOGUE,       "catalogue")   \
+    CUSTOM(Config,          CONFIG,          "config")      \
+    CUSTOM(ContentOptions,  CONTENT,         "content")     \
+    CUSTOM(Font,            FONT,            "font")        \
+    CUSTOM(ThemeOpt,        THEMEOPT,        "themeopt")    \
+    CUSTOM(Theme,           THEME,           "theme")       \
+    CUSTOM(ThemeResolution, THEMERESOLUTION, "resolution")  \
+    CUSTOM(ThemeScaling,    THEMESCALING,    "scaling")     \
+    CUSTOM(ThemeAlternate,  THEMEALTERNATE,  "alternate")   \
+    CUSTOM(Animation,       ANIMATION,       "animation")   \
+    CUSTOM(Music,           MUSIC,           "music")       \
+    CUSTOM(MusicVolume,     MUSICVOLUME,     "musicvolume") \
+    CUSTOM(BlackFade,       BLACKFADE,       "blackfade")   \
+    CUSTOM(Sound,           SOUND,           "sound")       \
+    CUSTOM(SoundVolume,     SOUNDVOLUME,     "soundvolume") \
     CUSTOM(Chime,           CHIME,           "chime")
 
 #define DANGER_ELEMENTS                                 \
@@ -210,6 +200,14 @@
     DEVICE(HasLid,        HASLID,        "lid")        \
     DEVICE(HasNetwork,    HASNETWORK,    "network")    \
     DEVICE(HasPortmaster, HASPORTMASTER, "portmaster")
+
+#define FONT_ELEMENTS                          \
+    FONT(Type,       TYPE,       "type")       \
+    FONT(Name,       NAME,       "name")       \
+    FONT(ListSize,   LISTSIZE,   "listsize")   \
+    FONT(HeaderSize, HEADERSIZE, "headersize") \
+    FONT(FooterSize, FOOTERSIZE, "footersize") \
+    FONT(PanelSize,  PANELSIZE,  "panelsize")
 
 #define HDMI_ELEMENTS                          \
     HDMI(Resolution, RESOLUTION, "resolution") \
@@ -450,6 +448,12 @@
     THEMEFILTER(Grid,      GRID,      "grid")     \
     THEMEFILTER(Hdmi,      HDMI,      "hdmi")     \
     THEMEFILTER(Language,  LANGUAGE,  "language")
+
+#define THEMEOPT_ELEMENTS                                        \
+    THEMEOPT(HeaderHeight,     HEADERHEIGHT,     "headerheight") \
+    THEMEOPT(FooterHeight,     FOOTERHEIGHT,     "footerheight") \
+    THEMEOPT(ContentItemCount, CONTENTITEMCOUNT, "count")        \
+    THEMEOPT(GlyphSize,        GLYPHSIZE,        "glyphsize")
 
 #define TWEAKADV_ELEMENTS                             \
     TWEAKADV(Accelerate,  ACCELERATE,  "accelerate")  \

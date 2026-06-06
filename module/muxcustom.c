@@ -171,33 +171,6 @@ static void init_navigation_group(void) {
             lang.MUXCUSTOM.SOUND.THEME
     };
 
-    char *boxart_image[] = {
-            lang.MUXCUSTOM.BOX_ART.BEHIND,
-            lang.MUXCUSTOM.BOX_ART.FRONT,
-            lang.MUXCUSTOM.BOX_ART.FS_BEHIND,
-            lang.MUXCUSTOM.BOX_ART.FS_FRONT,
-            lang.GENERIC.DISABLED
-    };
-
-    char *boxart_align[] = {
-            lang.MUXCUSTOM.BOX_ART.ALIGN.T_LEFT,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.T_MID,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.B_LEFT,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.B_MID,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.B_RIGHT,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.M_LEFT,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.M_RIGHT,
-            lang.MUXCUSTOM.BOX_ART.ALIGN.M_MID
-    };
-
-    char *launch_swap_options[] = {
-            lang.MUXCUSTOM.LAUNCH_SWAP.PRESS_A,
-            lang.MUXCUSTOM.LAUNCH_SWAP.HOLD_A,
-            lang.MUXCUSTOM.LAUNCH_SWAP.LOAD_STATE,
-            lang.MUXCUSTOM.LAUNCH_SWAP.START_FRESH
-    };
-
     char *theme_scaling_options[] = {
             lang.MUXCUSTOM.SCALING.NO_SCALE,
             lang.MUXCUSTOM.SCALING.SCALE,
@@ -206,6 +179,7 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, ContentOptions, lang.MUXCUSTOM.CONTENT, "content", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeOpt, lang.MUXCUSTOM.THEMEOPT, "themeopt", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
@@ -222,14 +196,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, MusicVolume, lang.MUXCUSTOM.MUSIC.VOLUME, "musicvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.BLACKFADE, "blackfade", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, LaunchSwap, lang.MUXCUSTOM.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 4);
-    INIT_OPTION_ITEM(-1, custom, Shuffle, lang.MUXCUSTOM.SHUFFLE, "shuffle", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
-    INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
-    INIT_OPTION_ITEM(-1, custom, ContentWidth, lang.MUXCUSTOM.CONTENTWIDTH, "width", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.LAUNCHSPLASH, "splash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, GridModeContent, lang.MUXCUSTOM.GRIDMODECONTENT, "gridmodecontent", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, BoxArtHide, lang.MUXCUSTOM.BOX_ART.HIDE_GRID_MODE, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, SoundVolume, lang.MUXCUSTOM.SOUND.VOLUME, "soundvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
@@ -244,16 +210,12 @@ static void init_navigation_group(void) {
 
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
-                 theme_base, theme_resolutions[i].resolution);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", theme_base, theme_resolutions[i].resolution);
         if (dir_exist(theme_device_folder)) lv_dropdown_add_option(ui_droThemeResolution_custom, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
     }
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, true);
-
-    // Temporary removal of elements
-    HIDE_OPTION_ITEM(custom, Animation);
 
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
@@ -262,6 +224,7 @@ static void check_focus(void) {
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lblCatalogue_custom ||
         e_focused == ui_lblConfig_custom ||
+        e_focused == ui_lblContentOptions_custom ||
         e_focused == ui_lblFont_custom ||
         e_focused == ui_lblThemeOpt_custom ||
         e_focused == ui_lblTheme_custom) {
@@ -332,16 +295,8 @@ static void restore_custom_options(void) {
     if (option_index > 0) lv_dropdown_set_selected(ui_droThemeAlternate_custom, option_index);
 
     restore_theme_resolution();
-    lv_dropdown_set_selected(ui_droBoxArtImage_custom, config.VISUAL.BOX_ART);
-    lv_dropdown_set_selected(ui_droBoxArtAlign_custom, config.VISUAL.BOX_ART_ALIGN - 1);
-    lv_dropdown_set_selected(ui_droContentWidth_custom, config.VISUAL.CONTENT_WIDTH);
     lv_dropdown_set_selected(ui_droAnimation_custom, config.VISUAL.BACKGROUNDANIMATION);
-    lv_dropdown_set_selected(ui_droLaunchSplash_custom, config.VISUAL.LAUNCHSPLASH);
-    lv_dropdown_set_selected(ui_droBoxArtHide_custom, config.VISUAL.BOX_ART_HIDE);
     lv_dropdown_set_selected(ui_droBlackFade_custom, config.VISUAL.BLACKFADE);
-    lv_dropdown_set_selected(ui_droLaunchSwap_custom, config.VISUAL.LAUNCH_SWAP);
-    lv_dropdown_set_selected(ui_droShuffle_custom, config.VISUAL.SHUFFLE);
-    lv_dropdown_set_selected(ui_droGridModeContent_custom, config.VISUAL.GRID_MODE_CONTENT);
     lv_dropdown_set_selected(ui_droMusic_custom, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droMusicVolume_custom, int_to_pct(config.SETTINGS.GENERAL.BGMVOL, 0, 100));
     lv_dropdown_set_selected(ui_droSound_custom, config.SETTINGS.GENERAL.SOUND);
@@ -357,14 +312,6 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, Music, "settings/general/bgm", INT, 0);
     CHECK_AND_SAVE_PCT(custom, MusicVolume, "settings/general/bgmvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, BlackFade, "visual/blackfade", INT, 0);
-    CHECK_AND_SAVE_STD(custom, LaunchSwap, "visual/launch_swap", INT, 0);
-    CHECK_AND_SAVE_STD(custom, Shuffle, "visual/shuffle", INT, 0);
-    CHECK_AND_SAVE_STD(custom, BoxArtImage, "visual/boxart", INT, 0);
-    CHECK_AND_SAVE_STD(custom, BoxArtAlign, "visual/boxartalign", INT, 1);
-    CHECK_AND_SAVE_STD(custom, ContentWidth, "visual/contentwidth", INT, 0);
-    CHECK_AND_SAVE_STD(custom, LaunchSplash, "visual/launchsplash", INT, 0);
-    CHECK_AND_SAVE_STD(custom, GridModeContent, "visual/gridmodecontent", INT, 0);
-    CHECK_AND_SAVE_STD(custom, BoxArtHide, "visual/boxarthide", INT, 0);
     CHECK_AND_SAVE_STD(custom, Sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_PCT(custom, SoundVolume, "settings/general/soundvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, Chime, "settings/general/chime", INT, 0);
@@ -493,6 +440,7 @@ static void handle_a(void) {
         MENU_THEME,
         MENU_CATALOGUE,
         MENU_CONFIG,
+        MENU_CONTENT,
         MENU_FONT,
         MENU_THEMEOPT,
         MENU_MUSIC_VOLUME,
@@ -513,6 +461,7 @@ static void handle_a(void) {
     static const menu_entry entries[UI_COUNT] = {
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE, MENU_CATALOGUE,    NULL},
             {"config",    "package/config",    &kiosk.CUSTOM.RACONFIG,  MENU_CONFIG,       NULL},
+            {"content",  NULL,                 &KIOSK_PASS,             MENU_CONTENT,      NULL}, // Content Options
             {"font",     NULL,                 &KIOSK_PASS,             MENU_FONT,         NULL}, // Font Settings
             {"themeopt", NULL,                 &KIOSK_PASS,             MENU_THEMEOPT,     NULL}, // Theme Options
             {"theme",     "/theme",            &kiosk.CUSTOM.THEME,     MENU_THEME,        NULL},
@@ -523,14 +472,6 @@ static void handle_a(void) {
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Background Music
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_MUSIC_VOLUME, NULL},
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Black Fade Animation
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Save State Launch
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Shuffle
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Box Art Alignment
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Full Width
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Launch Splash
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Content Grid Mode
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Hide Grid Mode Box Art
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Navigation Sound
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_SOUND_VOLUME, NULL},
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Startup Chime
@@ -576,6 +517,34 @@ static void handle_a(void) {
             toast_message(lang.GENERIC.LOADING, FOREVER);
 
             load_mux(entry->action == MENU_THEME ? "theme" : "picker");
+
+            mux_input_stop();
+            break;
+        case MENU_CONTENT:
+            if (is_ksk(*entry->kiosk_flag)) {
+                kiosk_denied();
+                return;
+            }
+
+            if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_custom_modified()) {
+                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
+                pending_pik[0] = '\0';
+
+                snprintf(pending_mux_load, sizeof(pending_mux_load), "content");
+                pending_submenu = 1;
+
+                show_save_dialog();
+
+                return;
+            }
+
+            save_custom_options();
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
+
+            play_sound(SND_CONFIRM);
+            toast_message(lang.GENERIC.LOADING, FOREVER);
+
+            load_mux("content");
 
             mux_input_stop();
             break;

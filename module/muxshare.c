@@ -274,19 +274,17 @@ void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config, char
         char *folder_name = str_trim(get_ini_string(artwork_config_ini, section_name, "FOLDER", ""));
 
         char image[MAX_BUFFER_SIZE];
-        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
+        snprintf(image, sizeof(image), "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
+        if (!file_exist(image)) snprintf(image, sizeof(image), "%s/%s/%s/default.png", INFO_CAT_PATH, catalogue_folder, folder_name);
 
-        if (!file_exist(image)) {
-            snprintf(image, sizeof(image), "%s/%s/%s/default.png",
-                     INFO_CAT_PATH, catalogue_folder, folder_name);
-        }
+        int16_t img_max_w = (int16_t) (viewport_width * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
+        int16_t img_max_h = (int16_t) (viewport_height * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
 
         struct ImageSettings image_settings = {
                 image,
                 get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
-                get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
-                get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
+                img_max_w,
+                img_max_h,
                 get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
                 get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
                 get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
@@ -716,17 +714,25 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                 if (file_exist(image)) {
                     *starter_image = 1;
 
+                    int box_w = device.MUX.WIDTH;
+                    int box_h = device.MUX.HEIGHT - theme.HEADER.HEIGHT - theme.FOOTER.HEIGHT - 4;
+                    if (box_h <= 0) box_h = device.MUX.HEIGHT;
+
+                    int16_t max_w = (int16_t) (box_w * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
+                    int16_t max_h = (int16_t) (box_h * (config.VISUAL.BOX_ART_SCALE + 1) / 100);
+
                     size_t ilen = strlen(image);
                     if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {
-                        int box_w = device.MUX.WIDTH;
-                        int box_h = device.MUX.HEIGHT - theme.HEADER.HEIGHT - theme.FOOTER.HEIGHT - 4;
-                        if (box_h <= 0) box_h = device.MUX.HEIGHT;
-                        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, box_w, box_h);
+                        int svg_w = max_w > 0 ? max_w : box_w;
+                        int svg_h = max_h > 0 ? max_h : box_h;
+                        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, svg_w, svg_h);
+                        lv_img_set_size_mode(ui_imgBox, LV_IMG_SIZE_MODE_VIRTUAL);
+                        lv_img_set_zoom(ui_imgBox, LV_IMG_ZOOM_NONE);
+                        lv_img_set_src(ui_imgBox, image_path);
                     } else {
-                        snprintf(image_path, sizeof(image_path), "M:%s", image);
+                        struct ImageSettings image_settings = {image, -1, max_w, max_h, 0, 0, 0, 0};
+                        update_image(ui_imgBox, image_settings);
                     }
-
-                    lv_img_set_src(ui_imgBox, image_path);
 
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
                 } else {

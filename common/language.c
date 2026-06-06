@@ -443,6 +443,45 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.STATUS, "Connect or disconnect this device");
     SPECIFIC_FIELD(lang->MUXBTDEV.HELP.FORGET, "Remove this device from the paired list");
 
+    // muxcontent
+    SPECIFIC_FIELD(lang->MUXCONTENT.TITLE, "CONTENT OPTIONS");
+    SPECIFIC_FIELD(lang->MUXCONTENT.SHUFFLE, "Shuffle Function");
+    SPECIFIC_FIELD(lang->MUXCONTENT.WIDTH, "Full Width Selection");
+    SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCHSPLASH, "Launch Splash");
+    SPECIFIC_FIELD(lang->MUXCONTENT.GRIDMODE, "Grid Mode Content");
+    SPECIFIC_FIELD(lang->MUXCONTENT.GRIDMODEART, "Grid Mode Box Art");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TITLE, "Box Art");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.BEHIND, "Behind");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.FRONT, "Front");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.FS_BEHIND, "Fullscreen + Behind");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.FS_FRONT, "Fullscreen + Front");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ORIGINAL, "Original");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.SCALE, "Box Art Scale");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.TITLE, "Box Art Alignment");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.B_LEFT, "Bottom Left");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.B_MID, "Bottom Middle");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.B_RIGHT, "Bottom Right");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.M_LEFT, "Middle Left");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.M_MID, "Center");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.M_RIGHT, "Middle Right");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.T_LEFT, "Top Left");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.T_MID, "Top Middle");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.T_RIGHT, "Top Right");
+    SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.TITLE, "Save State Launch");
+    SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.PRESS_A, "Press A");
+    SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.HOLD_A, "Hold A");
+    SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.LOAD_STATE, "Load State");
+    SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.START_FRESH, "Start Fresh");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.LAUNCHSWAP, "Switch between pressing A or holding A to launch content save state automatically");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTIMAGE, "Change the display priority of the content images");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTALIGN, "Change the screen alignment of the content images");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.WIDTH, "Toggle if content highlight uses full width of device screen");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.LAUNCHSPLASH, "Toggle the splash image on content launching");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.GRIDMODE, "Allow grid mode for content");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.GRIDMODEART, "Show or hide system box art images in Content Explorer when theme uses grid mode");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTSCALE, "Scale box art to a percentage of the available display area");
+
     // muxcontrol
     SPECIFIC_FIELD(lang->MUXCONTROL.TITLE, "CONTROL");
     SPECIFIC_FIELD(lang->MUXCONTROL.HELP, "Change the control scheme of your current selected content");
@@ -515,6 +554,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTALIGN, "Change the screen alignment of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENTWIDTH, "Toggle if content highlight uses full width of device screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTHIDE, "Hide system box art images in Content Explorer when theme uses grid mode");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENT, "Configure content display, box art, and launch behaviour");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.CONTENT, "Content Options");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Open font settings to configure font type, custom TTF font, and size overrides for most sections");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSICVOLUME, "The volume of the background music currently playing, press A to set current value");

@@ -1422,7 +1422,7 @@ int load_glyph_icon(const char *mux_dim, const char *glyph_folder,
     TRY_GLYPH("%s/glyph/%s/%s.svg", theme_base, glyph_folder, glyph_name);
     TRY_GLYPH("%s/%sglyph/%s/%s.png", theme_base, mux_dim, glyph_folder, glyph_name);
     TRY_GLYPH("%s/glyph/%s/%s.png", theme_base, glyph_folder, glyph_name);
-    
+
     TRY_GLYPH("%s/%sglyph/%s/%s.svg", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
     TRY_GLYPH("%s/glyph/%s/%s.svg", INTERNAL_THEME, glyph_folder, glyph_name);
     TRY_GLYPH("%s/%sglyph/%s/%s.png", INTERNAL_THEME, mux_dim, glyph_folder, glyph_name);
@@ -1810,6 +1810,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CELL.HEIGHT);
 
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_clip_corner(cell_pnl, 1, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_style(cell_pnl, &grid_cell_shadow_style, 0);
 

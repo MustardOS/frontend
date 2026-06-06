@@ -10,7 +10,7 @@ LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
 
 MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxbatinfo muxbtall \
           muxbtcon muxbtdev muxchrony muxcoladjust muxcolfilter muxcollect muxconfig \
-          muxconnect muxcontrol muxcustom muxdanger muxdevice muxdownload \
+          muxconnect muxcontent muxcontrol muxcustom muxdanger muxdevice muxdownload \
           muxfont muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk \
           muxlanguage muxlaunch muxnetadv muxnetinfo muxnetprofile muxnetscan \
           muxnetwork muxnews muxoption muxoverlay muxpass muxpasscfg muxpicker muxplore \

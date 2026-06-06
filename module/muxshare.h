@@ -297,6 +297,8 @@ int muxthemedown_main();
 
 int muxthemefilter_main();
 
+int muxcontent_main();
+
 int muxthemeopt_main();
 
 int muxtester_main();

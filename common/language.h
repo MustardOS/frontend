@@ -490,6 +490,54 @@ struct mux_lang {
     } MUXBTDEV;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char SHUFFLE[MAX_BUFFER_SIZE];
+        char WIDTH[MAX_BUFFER_SIZE];
+        char LAUNCHSPLASH[MAX_BUFFER_SIZE];
+        char GRIDMODE[MAX_BUFFER_SIZE];
+        char GRIDMODEART[MAX_BUFFER_SIZE];
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char BEHIND[MAX_BUFFER_SIZE];
+            char FRONT[MAX_BUFFER_SIZE];
+            char FS_BEHIND[MAX_BUFFER_SIZE];
+            char FS_FRONT[MAX_BUFFER_SIZE];
+            char ORIGINAL[MAX_BUFFER_SIZE];
+            char SCALE[MAX_BUFFER_SIZE];
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char B_LEFT[MAX_BUFFER_SIZE];
+                char B_MID[MAX_BUFFER_SIZE];
+                char B_RIGHT[MAX_BUFFER_SIZE];
+                char M_LEFT[MAX_BUFFER_SIZE];
+                char M_MID[MAX_BUFFER_SIZE];
+                char M_RIGHT[MAX_BUFFER_SIZE];
+                char T_LEFT[MAX_BUFFER_SIZE];
+                char T_MID[MAX_BUFFER_SIZE];
+                char T_RIGHT[MAX_BUFFER_SIZE];
+            } ALIGN;
+        } BOX_ART;
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char PRESS_A[MAX_BUFFER_SIZE];
+            char HOLD_A[MAX_BUFFER_SIZE];
+            char LOAD_STATE[MAX_BUFFER_SIZE];
+            char START_FRESH[MAX_BUFFER_SIZE];
+        } LAUNCH_SWAP;
+        struct {
+            char LAUNCHSWAP[MAX_BUFFER_SIZE];
+            char SHUFFLE[MAX_BUFFER_SIZE];
+            char BOXARTIMAGE[MAX_BUFFER_SIZE];
+            char BOXARTALIGN[MAX_BUFFER_SIZE];
+            char WIDTH[MAX_BUFFER_SIZE];
+            char LAUNCHSPLASH[MAX_BUFFER_SIZE];
+            char GRIDMODE[MAX_BUFFER_SIZE];
+            char GRIDMODEART[MAX_BUFFER_SIZE];
+            char BOXARTSCALE[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXCONTENT;
+
+    struct {
         char HELP[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
@@ -512,6 +560,7 @@ struct mux_lang {
         char SHUFFLE[MAX_BUFFER_SIZE];
         char CHIME[MAX_BUFFER_SIZE];
         char CONTENTWIDTH[MAX_BUFFER_SIZE];
+        char CONTENT[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char BEHIND[MAX_BUFFER_SIZE];
@@ -587,6 +636,7 @@ struct mux_lang {
             char SOUND[MAX_BUFFER_SIZE];
             char SOUNDVOLUME[MAX_BUFFER_SIZE];
             char CHIME[MAX_BUFFER_SIZE];
+            char CONTENT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;
 
