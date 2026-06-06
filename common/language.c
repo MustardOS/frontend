@@ -1165,6 +1165,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXRTC.NOTATION, "Time Notation");
     SPECIFIC_FIELD(lang->MUXRTC.F_12HR, "12 Hour");
     SPECIFIC_FIELD(lang->MUXRTC.F_24HR, "24 Hour");
+    SPECIFIC_FIELD(lang->MUXRTC.F_DD_MM_12, "DD/MM 12 Hour");
+    SPECIFIC_FIELD(lang->MUXRTC.F_DD_MM_24, "DD/MM 24 Hour");
+    SPECIFIC_FIELD(lang->MUXRTC.F_MM_DD_12, "MM/DD 12 Hour");
+    SPECIFIC_FIELD(lang->MUXRTC.F_MM_DD_24, "MM/DD 24 Hour");
+    SPECIFIC_FIELD(lang->MUXRTC.F_CUSTOM, "Custom");
+    SPECIFIC_FIELD(lang->MUXRTC.CUSTOM, "Custom Format");
     SPECIFIC_FIELD(lang->MUXRTC.HELP, "Change your current date, time, and timezone");
 
     // muxsearch

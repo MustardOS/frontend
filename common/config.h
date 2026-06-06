@@ -45,6 +45,7 @@ struct mux_config {
     struct {
         int16_t NOTATION;
         char POOL[MAX_BUFFER_SIZE];
+        char CUSTOM[MAX_BUFFER_SIZE];
     } CLOCK;
 
     struct {

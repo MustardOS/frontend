@@ -61,6 +61,7 @@ void load_config(struct mux_config *config) {
     cfg_dir_scan(&d, CONF_CONFIG_PATH "clock");
     CFG_INT(config->CLOCK.NOTATION, &d, "notation", 0);
     CFG_STR(config->CLOCK.POOL, &d, "pool", "pool.ntp.org");
+    CFG_STR(config->CLOCK.CUSTOM, &d, "custom", "%H%P %Z");
 
     // network/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "network");

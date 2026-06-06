@@ -662,6 +662,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_label_set_long_mode(ui_lblDatetime, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblDatetime, "");
     lv_obj_clear_flag(ui_lblDatetime, LV_OBJ_FLAG_SCROLLABLE);
+    if (!config.VISUAL.CLOCK) lv_obj_add_flag(ui_lblDatetime, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_set_style_text_align(ui_lblDatetime, theme->DATETIME.ALIGN, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_color(ui_lblDatetime, lv_color_hex(theme->DATETIME.TEXT), MU_OBJ_MAIN_DEFAULT);
@@ -681,6 +682,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     lv_label_set_long_mode(ui_lblTitle, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblTitle, title);
+    if (!config.VISUAL.HEADERTITLE) lv_obj_add_flag(ui_lblTitle, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(theme->HEADER.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblTitle, theme->HEADER.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(ui_lblTitle, theme->HEADER.TEXT_ALIGN, MU_OBJ_MAIN_DEFAULT);
@@ -706,6 +708,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
     //update_bluetooth_status(ui_staBluetooth, theme);
+    if (!config.VISUAL.BLUETOOTH) lv_obj_add_flag(ui_staBluetooth, LV_OBJ_FLAG_HIDDEN);
 
     ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
     update_network_status(ui_staNetwork, theme, 0);
@@ -725,6 +728,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     battery_update();
     update_battery_capacity(ui_staCapacity, theme);
     update_battery_percent_label(ui_lblBatteryPercent, theme);
+    if (config.VISUAL.BATTERY == 1) {
+        lv_obj_add_flag(ui_staCapacity, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblBatteryPercent, LV_OBJ_FLAG_HIDDEN);
+    }
 
     ui_pnlFooter = lv_obj_create(ui_screen);
 

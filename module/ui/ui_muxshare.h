@@ -390,14 +390,15 @@
     RGB(Combo,       COMBO,       "combo")        \
     RGB(Backend,     BACKEND,     "backend")
 
-#define RTC_ELEMENTS                    \
-    RTC(Timezone, TIMEZONE, "timezone") \
-    RTC(Year,     YEAR,     "year")     \
-    RTC(Month,    MONTH,    "month")    \
-    RTC(Day,      DAY,      "day")      \
-    RTC(Hour,     HOUR,     "hour")     \
-    RTC(Minute,   MINUTE,   "minute")   \
-    RTC(Notation, NOTATION, "notation")
+#define RTC_ELEMENTS                            \
+    RTC(Timezone,     TIMEZONE,     "timezone") \
+    RTC(Year,         YEAR,         "year")     \
+    RTC(Month,        MONTH,        "month")    \
+    RTC(Day,          DAY,          "day")      \
+    RTC(Hour,         HOUR,         "hour")     \
+    RTC(Minute,       MINUTE,       "minute")   \
+    RTC(Notation,     NOTATION,     "notation") \
+    RTC(Custom,       CUSTOM,       "custom")
 
 #define SEARCH_ELEMENTS                          \
     SEARCH(Lookup,       LOOKUP,       "lookup") \

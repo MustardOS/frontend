@@ -1360,6 +1360,12 @@ struct mux_lang {
         char NOTATION[MAX_BUFFER_SIZE];
         char F_12HR[MAX_BUFFER_SIZE];
         char F_24HR[MAX_BUFFER_SIZE];
+        char F_DD_MM_12[MAX_BUFFER_SIZE];
+        char F_DD_MM_24[MAX_BUFFER_SIZE];
+        char F_MM_DD_12[MAX_BUFFER_SIZE];
+        char F_MM_DD_24[MAX_BUFFER_SIZE];
+        char F_CUSTOM[MAX_BUFFER_SIZE];
+        char CUSTOM[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
     } MUXRTC;
 

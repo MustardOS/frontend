@@ -50,6 +50,11 @@
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"
 
+#define TIME_STRING_DD_MM_12 "%d/%m %I:%M %p"
+#define TIME_STRING_DD_MM_24 "%d/%m %H:%M"
+#define TIME_STRING_MM_DD_12 "%m/%d %I:%M %p"
+#define TIME_STRING_MM_DD_24 "%m/%d %H:%M"
+
 #define LOCAL_TIME "/etc/localtime"
 
 #define OPT_PATH "/opt/muos/"
