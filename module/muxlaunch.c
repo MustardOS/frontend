@@ -191,7 +191,8 @@ static void handle_a(void) {
     static int16_t KIOSK_PASS = 0;
 
     typedef enum {
-        MENU_GENERAL = 0,
+        MENU_GENERAL,
+        MENU_CONTENT,
         MENU_REBOOT,
         MENU_SHUTDOWN,
     } menu_action;
@@ -203,9 +204,9 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[UI_COUNT] = {
-            {"explore",    &kiosk.LAUNCH.EXPLORE,       MENU_GENERAL},
-            {"collection", &kiosk.LAUNCH.COLLECTION,    MENU_GENERAL},
-            {"history",    &kiosk.LAUNCH.HISTORY,       MENU_GENERAL},
+            {"explore",    &kiosk.LAUNCH.EXPLORE,       MENU_CONTENT},
+            {"collection", &kiosk.LAUNCH.COLLECTION,    MENU_CONTENT},
+            {"history",    &kiosk.LAUNCH.HISTORY,       MENU_CONTENT},
             {"app",        &kiosk.LAUNCH.APPLICATION,   MENU_GENERAL},
             {"info",       &kiosk.LAUNCH.INFORMATION,   MENU_GENERAL},
             {"config",     &kiosk.LAUNCH.CONFIGURATION, MENU_GENERAL},
@@ -225,13 +226,16 @@ static void handle_a(void) {
         case MENU_GENERAL:
             play_sound(SND_CONFIRM);
             break;
+        case MENU_CONTENT:
+            invalidate_catalogue_cache();
+            play_sound(SND_CONFIRM);
+            break;
         case MENU_REBOOT:
             if (!config.SETTINGS.ADVANCED.TRUSTPOWER) {
                 pending_power_action = 1;
                 show_confirm_dialog(lang.MUXLAUNCH.CONFIRM_REBOOT);
                 return;
             }
-
             toast_message(lang.GENERIC.REBOOTING, FOREVER);
             break;
         case MENU_SHUTDOWN:
@@ -240,7 +244,6 @@ static void handle_a(void) {
                 show_confirm_dialog(lang.MUXLAUNCH.CONFIRM_SHUTDOWN);
                 return;
             }
-
             toast_message(lang.GENERIC.SHUTTING_DOWN, FOREVER);
             break;
         default:
