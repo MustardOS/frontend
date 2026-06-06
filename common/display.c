@@ -756,11 +756,19 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     const int src_pitch = src_w * (int) sizeof(lv_color_t);
     const int dst_pitch = copy_w * (int) sizeof(lv_color_t);
 
-    uint8_t *stage = malloc((size_t) copy_h * dst_pitch);
-    if (!stage) {
-        LOG_ERROR("video", "Failed to allocate staging buffer for partial flush");
-        lv_disp_flush_ready(disp_drv);
-        return;
+    static uint8_t *stage = NULL;
+    static size_t stage_cap = 0;
+
+    size_t stage_needed = (size_t) copy_h * dst_pitch;
+    if (stage_needed > stage_cap) {
+        uint8_t *new_stage = realloc(stage, stage_needed);
+        if (!new_stage) {
+            LOG_ERROR("video", "Failed to reallocate staging buffer");
+            lv_disp_flush_ready(disp_drv);
+            return;
+        }
+        stage = new_stage;
+        stage_cap = stage_needed;
     }
 
     uint8_t *dst = stage;
@@ -774,12 +782,9 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 
     if (SDL_UpdateTexture(monitor.texture, &upd, stage, dst_pitch) != 0) {
         LOG_ERROR("video", "SDL_UpdateTexture staged upload failed: %s", SDL_GetError());
-        free(stage);
         lv_disp_flush_ready(disp_drv);
         return;
     }
-
-    free(stage);
     accumulate_pending_rect(&upd);
 
     if (!lv_disp_flush_is_last(disp_drv)) {
