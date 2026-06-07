@@ -2232,16 +2232,14 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
                 float wr = (float) image_settings.max_width / (float) iw;
                 float hr = (float) image_settings.max_height / (float) ih;
                 float zr = wr < hr ? wr : hr;
-                if (zr < 1.0f) {
-                    int tw = (int) ((float) iw * zr);
-                    int th = (int) ((float) ih * zr);
-                    if (tw > 0 && th > 0) {
-                        scale_and_set_raster(ui_imgobj, image_settings.image_path,
-                                             tw, th, image_settings.align,
-                                             image_settings.pad_left, image_settings.pad_right,
-                                             image_settings.pad_top, image_settings.pad_bottom);
-                        return;
-                    }
+                int tw = (int) ((float) iw * zr);
+                int th = (int) ((float) ih * zr);
+                if (tw > 0 && th > 0) {
+                    scale_and_set_raster(ui_imgobj, image_settings.image_path,
+                                            tw, th, image_settings.align,
+                                            image_settings.pad_left, image_settings.pad_right,
+                                            image_settings.pad_top, image_settings.pad_bottom);
+                    return;
                 }
             }
         }
@@ -2253,10 +2251,8 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
             snprintf(image_path, sizeof(image_path), "M:%s", image_settings.image_path);
         }
 
-        if (image_settings.max_width > 0 && image_settings.max_height > 0) {
-            lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_VIRTUAL);
-            lv_img_set_zoom(ui_imgobj, LV_IMG_ZOOM_NONE);
-        }
+        lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_VIRTUAL);
+        lv_img_set_zoom(ui_imgobj, LV_IMG_ZOOM_NONE);
 
         if (image_settings.align >= 0) lv_obj_set_align(ui_imgobj, image_settings.align);
         lv_obj_set_style_pad_left(ui_imgobj, image_settings.pad_left, MU_OBJ_MAIN_DEFAULT);
