@@ -743,6 +743,11 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
     }
 }
 
+void clear_box_image() {
+    lv_img_set_src(ui_imgBox, &ui_img_blank);
+    snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");    
+}
+
 void resolve_grid_item_images(const char *mux_dim, const char *mux_module, const char *glyph_name,
                               char *grid_img, size_t img_size,
                               char *grid_img_foc, size_t foc_size) {

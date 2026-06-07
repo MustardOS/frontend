@@ -1324,6 +1324,8 @@ static void navigate_to_dir(const char *new_dir, int restore_index) {
         current_content_label[0] = '\0';
         lv_obj_add_flag(ui_lblGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
 
+        clear_box_image();
+
         nav_moved = 0;
     }
 
@@ -1425,6 +1427,7 @@ int muxplore_main(int index, char *dir) {
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPLORE.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+        clear_box_image();
     }
 
     struct nav_flag nav_e[] = {
