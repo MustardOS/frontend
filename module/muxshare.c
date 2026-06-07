@@ -729,7 +729,12 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                         lv_img_set_zoom(ui_imgBox, LV_IMG_ZOOM_NONE);
                         lv_img_set_src(ui_imgBox, image_path);
                     } else {
-                        struct ImageSettings image_settings = {image, -1, max_w, max_h, 0, 0, 0, 0};
+                        struct ImageSettings image_settings = {
+                            image, -1, 
+                            max_w, max_h, 
+                            theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, 
+                            theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
+                        };
                         update_image(ui_imgBox, image_settings);
                     }
 
