@@ -718,18 +718,22 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                     if (box_h <= 0) box_h = device.MUX.HEIGHT;
 
                     int16_t max_w = config.VISUAL.BOX_ART_SCALE > 0 ? (int16_t) (box_w * config.VISUAL.BOX_ART_SCALE / 100) : 0;
-                    int16_t max_h = config.VISUAL.BOX_ART_SCALE > 0 ? (int16_t) (box_h * config.VISUAL.BOX_ART_SCALE / 100) : 0;
 
                     size_t ilen = strlen(image);
                     if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {
                         int svg_w = max_w > 0 ? max_w : box_w;
-                        int svg_h = max_h > 0 ? max_h : box_h;
+                        int svg_h = box_h;
                         snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, svg_w, svg_h);
                         lv_img_set_size_mode(ui_imgBox, LV_IMG_SIZE_MODE_VIRTUAL);
                         lv_img_set_zoom(ui_imgBox, LV_IMG_ZOOM_NONE);
                         lv_img_set_src(ui_imgBox, image_path);
                     } else {
-                        struct ImageSettings image_settings = {image, -1, max_w, max_h, 0, 0, 0, 0};
+                        struct ImageSettings image_settings = {
+                            image, -1, 
+                            max_w, box_h, 
+                            theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, 
+                            theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
+                        };
                         update_image(ui_imgBox, image_settings);
                     }
 
@@ -741,6 +745,11 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
             }
         }
     }
+}
+
+void clear_box_image() {
+    lv_img_set_src(ui_imgBox, &ui_img_blank);
+    snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");    
 }
 
 void resolve_grid_item_images(const char *mux_dim, const char *mux_module, const char *glyph_name,

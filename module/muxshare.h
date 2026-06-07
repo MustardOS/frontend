@@ -173,6 +173,8 @@ void render_image_refresh(const char *image_type, char *h_core_artwork, char *h_
                           lv_obj_t *ui_imgSplash, lv_obj_t *ui_viewport_objects[],
                           int *starter_image, int *splash_valid);
 
+void clear_box_image();
+
 char *read_shader_info(const char *shader_store, const char *key);
 
 int muxactivity_main();

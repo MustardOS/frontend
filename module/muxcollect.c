@@ -994,6 +994,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
         nav_moved = 1;
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXCOLLECT.NONE);
+        clear_box_image();
     }
 
     struct nav_flag nav_e[] = {
