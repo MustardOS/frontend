@@ -37,6 +37,7 @@
 #include "../common/board.h"
 #include "../common/union.h"
 #include "../common/ui_common.h"
+#include "../common/transition.h"
 #include "../common/font.h"
 #include "../common/osk.h"
 #include "../common/overlay.h"

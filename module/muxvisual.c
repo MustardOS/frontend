@@ -69,6 +69,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT, 0);
     CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT, 0);
     CHECK_AND_SAVE_STD(visual, HeaderTitle, "visual/headertitle", INT, 0);
+    CHECK_AND_SAVE_STD(visual, DialogueTransition, "visual/dialoguetransition", INT, 0);
     CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT, 0);
     CHECK_AND_SAVE_STD(visual, Dash, "visual/dash", INT, 0);
     CHECK_AND_SAVE_STD(visual, FriendlyFolder, "visual/friendlyfolder", INT, 0);
@@ -125,6 +126,25 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
+
+    char *dialogue_transition[] = {
+            lang.MUXCONTENT.BOX_ART.TRANSITION.FADE_IN,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_RIGHT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_LEFT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_UP,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_DOWN,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_RIGHT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_LEFT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_UP,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_DOWN,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_RIGHT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_LEFT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_UP,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_DOWN,
+            lang.GENERIC.DISABLED
+    };
+
+    INIT_OPTION_ITEM(-1, visual, DialogueTransition, lang.MUXVISUAL.DIALOGUETRANSITION, "dialoguetransition", dialogue_transition, 14);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, NameScroll, lang.MUXVISUAL.NAMESCROLL, "namescroll", scroll_mode, 3);
     INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);

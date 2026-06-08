@@ -245,6 +245,7 @@ struct mux_config {
         int16_t BATTERY;
         int16_t NETWORK;
         int16_t HEADERTITLE;
+        int16_t DIALOGUETRANSITION;
         int16_t BLUETOOTH;
         int16_t CLOCK;
         int16_t OVERLAYIMAGE;
@@ -254,6 +255,7 @@ struct mux_config {
         int16_t BOX_ART_ALIGN;
         int16_t BOX_ART_HIDE;
         int16_t BOX_ART_SCALE;
+        int16_t BOX_ART_TRANSITION;
         int16_t CONTENT_WIDTH;
         int16_t NAME;
         int16_t DASH;

@@ -457,6 +457,20 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.FS_FRONT, "Fullscreen + Front");
     SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ORIGINAL, "Original");
     SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.SCALE, "Box Art Scale");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.TITLE, "Box Art Transition");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.FADE_IN, "Fade In");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SLIDE_RIGHT, "Slide From Right");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SLIDE_LEFT, "Slide From Left");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SLIDE_UP, "Slide From Bottom");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SLIDE_DOWN, "Slide From Top");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_RIGHT, "Bounce From Right");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_LEFT, "Bounce From Left");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_UP, "Bounce From Bottom");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_DOWN, "Bounce From Top");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SHOOT_RIGHT, "Shoot From Right");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SHOOT_LEFT, "Shoot From Left");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SHOOT_UP, "Shoot From Bottom");
+    SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.TRANSITION.SHOOT_DOWN, "Shoot From Top");
     SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.TITLE, "Box Art Alignment");
     SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.B_LEFT, "Bottom Left");
     SPECIFIC_FIELD(lang->MUXCONTENT.BOX_ART.ALIGN.B_MID, "Bottom Middle");
@@ -481,6 +495,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.GRIDMODE, "Allow grid mode for content");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.GRIDMODEART, "Show or hide system box art images in Content Explorer when theme uses grid mode");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTSCALE, "Scale box art to a percentage of the available display area");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTTRANSITION, "Select the animation for box art when navigating content");
 
     // muxcontrol
     SPECIFIC_FIELD(lang->MUXCONTROL.TITLE, "CONTROL");
@@ -1539,6 +1554,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.BATTERY, "Battery");
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
     SPECIFIC_FIELD(lang->MUXVISUAL.HEADERTITLE, "Header Title");
+    SPECIFIC_FIELD(lang->MUXVISUAL.DIALOGUETRANSITION, "Dialogue Transition");
     SPECIFIC_FIELD(lang->MUXVISUAL.CLOCK, "Clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.DASH, "Content Dash Replacement");
     SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLYFOLDER, "Friendly Folder Names");
@@ -1582,6 +1598,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HEADERTITLE, "Toggle the visibility of the header title");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DIALOGUETRANSITION, "Select the animation used when dialogue boxes appear");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAYIMAGE, "Switch between different overlay styles for the frontend only");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.OVERLAYTRANSPARENCY, "Changes the transparency of the overlay image for the frontend only");

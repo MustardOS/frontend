@@ -516,6 +516,22 @@ struct mux_lang {
                 char T_MID[MAX_BUFFER_SIZE];
                 char T_RIGHT[MAX_BUFFER_SIZE];
             } ALIGN;
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char FADE_IN[MAX_BUFFER_SIZE];
+                char SLIDE_RIGHT[MAX_BUFFER_SIZE];
+                char SLIDE_LEFT[MAX_BUFFER_SIZE];
+                char SLIDE_UP[MAX_BUFFER_SIZE];
+                char SLIDE_DOWN[MAX_BUFFER_SIZE];
+                char BOUNCE_RIGHT[MAX_BUFFER_SIZE];
+                char BOUNCE_LEFT[MAX_BUFFER_SIZE];
+                char BOUNCE_UP[MAX_BUFFER_SIZE];
+                char BOUNCE_DOWN[MAX_BUFFER_SIZE];
+                char SHOOT_RIGHT[MAX_BUFFER_SIZE];
+                char SHOOT_LEFT[MAX_BUFFER_SIZE];
+                char SHOOT_UP[MAX_BUFFER_SIZE];
+                char SHOOT_DOWN[MAX_BUFFER_SIZE];
+            } TRANSITION;
         } BOX_ART;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
@@ -534,6 +550,7 @@ struct mux_lang {
             char GRIDMODE[MAX_BUFFER_SIZE];
             char GRIDMODEART[MAX_BUFFER_SIZE];
             char BOXARTSCALE[MAX_BUFFER_SIZE];
+            char BOXARTTRANSITION[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONTENT;
 
@@ -1801,6 +1818,7 @@ struct mux_lang {
         char CLOCK[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
         char HEADERTITLE[MAX_BUFFER_SIZE];
+        char DIALOGUETRANSITION[MAX_BUFFER_SIZE];
         char DASH[MAX_BUFFER_SIZE];
         char FRIENDLYFOLDER[MAX_BUFFER_SIZE];
         char THETITLEFORMAT[MAX_BUFFER_SIZE];
@@ -1861,6 +1879,7 @@ struct mux_lang {
             char CLOCK[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
             char HEADERTITLE[MAX_BUFFER_SIZE];
+            char DIALOGUETRANSITION[MAX_BUFFER_SIZE];
             char DASH[MAX_BUFFER_SIZE];
             char FRIENDLYFOLDER[MAX_BUFFER_SIZE];
             char THETITLEFORMAT[MAX_BUFFER_SIZE];

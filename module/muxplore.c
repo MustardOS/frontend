@@ -114,6 +114,11 @@ static void image_refresh(char *image_type) {
     render_image_refresh(image_type, h_core_artwork, file_name_no_ext, ui_imgSplash, ui_viewport_objects, &starter_image, &splash_valid);
 }
 
+static void image_refresh_transition(void) {
+    image_refresh("box");
+    transition_box_art_apply_in(config.VISUAL.BOX_ART_TRANSITION);
+}
+
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***dir_paths, char ***file_names, char ***file_paths) {
     char **all_dir_names = NULL;
     char **all_dir_paths = NULL;
@@ -738,7 +743,14 @@ static void list_nav_move(int steps, int direction) {
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
         lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
-        if (config.VISUAL.BOX_ART < 4) image_refresh("box");
+        if (config.VISUAL.BOX_ART < 4) {
+            if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
+                transition_box_art_nav_activity();
+            } else {
+                image_refresh("box");
+            }
+        }
+
         nav_moved = 1;
 
         return;
@@ -783,7 +795,14 @@ static void list_nav_move(int steps, int direction) {
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
-    if (config.VISUAL.BOX_ART < 4) image_refresh("box");
+    if (config.VISUAL.BOX_ART < 4) {
+        if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
+            transition_box_art_nav_activity();
+        } else {
+            image_refresh("box");
+        }
+    }
+
     nav_moved = 1;
 }
 
@@ -1149,6 +1168,12 @@ static void handle_random_select(void) {
     }
 }
 
+static void handle_nav_key_released(void) {
+    if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
+        transition_box_art_key_released();
+    }
+}
+
 static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
@@ -1427,6 +1452,7 @@ int muxplore_main(int index, char *dir) {
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPLORE.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+
         clear_box_image();
     }
 
@@ -1466,6 +1492,7 @@ int muxplore_main(int index, char *dir) {
     }
 
     init_timer(ui_refresh_task, NULL);
+    transition_box_art_init(image_refresh_transition);
 
     if (ui_count > 0) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
 
@@ -1490,6 +1517,12 @@ int muxplore_main(int index, char *dir) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
+                    [MUX_INPUT_DPAD_UP] = handle_nav_key_released,
+                    [MUX_INPUT_DPAD_DOWN] = handle_nav_key_released,
+                    [MUX_INPUT_DPAD_LEFT] = handle_nav_key_released,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_nav_key_released,
+                    [MUX_INPUT_L1] = handle_nav_key_released,
+                    [MUX_INPUT_R1] = handle_nav_key_released,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,
@@ -1508,6 +1541,7 @@ int muxplore_main(int index, char *dir) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
+    transition_box_art_destroy();
     free_items(&items, &item_count);
     free_tag_items(&tag_items, &tag_item_count);
 

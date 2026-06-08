@@ -76,6 +76,11 @@ static void image_refresh(char *image_type) {
     render_image_refresh(image_type, h_core_artwork, h_file_name, ui_imgSplash, ui_viewport_objects, &starter_image, &splash_valid);
 }
 
+static void image_refresh_transition(void) {
+    image_refresh("box");
+    transition_box_art_apply_in(config.VISUAL.BOX_ART_TRANSITION);
+}
+
 static void add_file_names(const char *base_dir, char ***file_names) {
     DIR *dir = opendir(base_dir);
 
@@ -156,11 +161,7 @@ static void gen_item(int file_count, char **file_names) {
         }
 
         char *file_path = file_path_raw;
-        char *file_name = get_last_dir(strdup(file_path));
-        char *stripped_name = read_line_char_from(history_file, CACHE_CORE_NAME);
         char *sub_path = read_line_char_from(history_file, CACHE_CORE_DIR);
-
-        if (stripped_name && stripped_name[0] == '\0') stripped_name = strip_ext(file_name);
 
         snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
         create_directories(init_meta_dir, 0);
@@ -260,7 +261,14 @@ static void list_nav_move(int steps, int direction) {
     }
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
-    if (config.VISUAL.BOX_ART < 4) image_refresh("box");
+    if (config.VISUAL.BOX_ART < 4) {
+        if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
+            transition_box_art_nav_activity();
+        } else {
+            image_refresh("box");
+        }
+    }
+
     nav_moved = 1;
 }
 
@@ -555,6 +563,12 @@ static void handle_random_select(void) {
     list_nav_move(target, dir);
 }
 
+static void handle_nav_key_released(void) {
+    if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
+        transition_box_art_key_released();
+    }
+}
+
 static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
@@ -705,6 +719,7 @@ int muxhistory_main(int his_index) {
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
+    transition_box_art_init(image_refresh_transition);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 || (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
@@ -724,6 +739,12 @@ int muxhistory_main(int his_index) {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
+                    [MUX_INPUT_DPAD_UP] = handle_nav_key_released,
+                    [MUX_INPUT_DPAD_DOWN] = handle_nav_key_released,
+                    [MUX_INPUT_DPAD_LEFT] = handle_nav_key_released,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_nav_key_released,
+                    [MUX_INPUT_L1] = handle_nav_key_released,
+                    [MUX_INPUT_R1] = handle_nav_key_released,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_hold,
@@ -742,6 +763,7 @@ int muxhistory_main(int his_index) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
+    transition_box_art_destroy();
     free_items(&items, &item_count);
 
     return exit_status;

@@ -64,6 +64,7 @@ static void restore_content_options(void) {
     lv_dropdown_set_selected(ui_droGridMode_content, config.VISUAL.GRID_MODE_CONTENT);
     lv_dropdown_set_selected(ui_droGridModeArt_content, 1 - config.VISUAL.BOX_ART_HIDE);
     lv_dropdown_set_selected(ui_droBoxArtScale_content, config.VISUAL.BOX_ART_SCALE);
+    lv_dropdown_set_selected(ui_droBoxArtTransition_content, config.VISUAL.BOX_ART_TRANSITION);
 }
 
 static int save_content_options(void) {
@@ -83,6 +84,7 @@ static int save_content_options(void) {
     }
 
     CHECK_AND_SAVE_STD(content, BoxArtScale, "visual/boxartscale", INT, 0);
+    CHECK_AND_SAVE_STD(content, BoxArtTransition, "visual/boxarttransition", INT, 0);
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 
@@ -117,11 +119,29 @@ static void init_navigation_group(void) {
             lang.MUXCONTENT.LAUNCH_SWAP.START_FRESH
     };
 
+    char *boxart_transition[] = {
+            lang.MUXCONTENT.BOX_ART.TRANSITION.FADE_IN,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_RIGHT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_LEFT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_UP,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_DOWN,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_RIGHT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_LEFT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_UP,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_DOWN,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_RIGHT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_LEFT,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_UP,
+            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_DOWN,
+            lang.GENERIC.DISABLED
+    };
+
     INIT_OPTION_ITEM(-1, content, LaunchSwap, lang.MUXCONTENT.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 4);
     INIT_OPTION_ITEM(-1, content, Shuffle, lang.MUXCONTENT.SHUFFLE, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, BoxArtImage, lang.MUXCONTENT.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, content, BoxArtAlign, lang.MUXCONTENT.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
     INIT_OPTION_ITEM(-1, content, BoxArtScale, lang.MUXCONTENT.BOX_ART.SCALE, "boxartscale", NULL, 0);
+    INIT_OPTION_ITEM(-1, content, BoxArtTransition, lang.MUXCONTENT.BOX_ART.TRANSITION.TITLE, "boxarttransition", boxart_transition, 14);
     INIT_OPTION_ITEM(-1, content, FullWidth, lang.MUXCONTENT.WIDTH, "width", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, LaunchSplash, lang.MUXCONTENT.LAUNCHSPLASH, "splash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, GridMode, lang.MUXCONTENT.GRIDMODE, "gridmodecontent", disabled_enabled, 2);

@@ -146,16 +146,17 @@
     CONNECT(Services,  SERVICES,  "service")   \
     CONNECT(Bluetooth, BLUETOOTH, "bluetooth")
 
-#define CONTENT_ELEMENTS                                   \
-    CONTENT(LaunchSwap,   LAUNCHSWAP,   "launch_swap")     \
-    CONTENT(Shuffle,      SHUFFLE,      "shuffle")         \
-    CONTENT(BoxArtImage,  BOXARTIMAGE,  "boxart")          \
-    CONTENT(BoxArtAlign,  BOXARTALIGN,  "align")           \
-    CONTENT(BoxArtScale,  BOXARTSCALE,  "boxartscale")     \
-    CONTENT(FullWidth,    WIDTH,        "width")           \
-    CONTENT(LaunchSplash, LAUNCHSPLASH, "splash")          \
-    CONTENT(GridMode,     GRIDMODE,     "gridmodecontent") \
-    CONTENT(GridModeArt,  GRIDMODEART,  "boxarthide")
+#define CONTENT_ELEMENTS                                              \
+    CONTENT(LaunchSwap,        LAUNCHSWAP,        "launch_swap")      \
+    CONTENT(Shuffle,           SHUFFLE,           "shuffle")          \
+    CONTENT(BoxArtImage,       BOXARTIMAGE,       "boxart")           \
+    CONTENT(BoxArtAlign,       BOXARTALIGN,       "align")            \
+    CONTENT(BoxArtScale,       BOXARTSCALE,       "boxartscale")      \
+    CONTENT(BoxArtTransition,  BOXARTTRANSITION,  "boxarttransition") \
+    CONTENT(FullWidth,         WIDTH,             "width")            \
+    CONTENT(LaunchSplash,      LAUNCHSPLASH,      "splash")           \
+    CONTENT(GridMode,          GRIDMODE,          "gridmodecontent")  \
+    CONTENT(GridModeArt,       GRIDMODEART,       "boxarthide")
 
 #define CUSTOM_ELEMENTS                                     \
     CUSTOM(Catalogue,       CATALOGUE,       "catalogue")   \
@@ -510,6 +511,7 @@
     VISUAL(Clock,                 CLOCK,                 "clock")                 \
     VISUAL(Network,               NETWORK,               "network")               \
     VISUAL(HeaderTitle,           HEADERTITLE,           "headertitle")           \
+    VISUAL(DialogueTransition,    DIALOGUETRANSITION,    "dialoguetransition")    \
     VISUAL(Name,                  NAME,                  "name")                  \
     VISUAL(NameScroll,            NAMESCROLL,            "namescroll")            \
     VISUAL(Dash,                  DASH,                  "dash")                  \
