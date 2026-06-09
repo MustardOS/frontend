@@ -887,6 +887,9 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_opa(ui_pnlHelpMessage, theme->HELP.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlHelpMessage, 2, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpMessage, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_layout(ui_pnlHelpMessage, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(ui_pnlHelpMessage, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(ui_pnlHelpMessage, (int32_t) round(device->MUX.HEIGHT * .03), 0);
 
     ui_lblHelpHeader = lv_label_create(ui_pnlHelpMessage);
     lv_obj_set_width(ui_lblHelpHeader, (int) round(device->MUX.WIDTH * .9) - 60);
@@ -897,10 +900,10 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_color(ui_lblHelpHeader, lv_color_hex(theme->HELP.TITLE), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpHeader, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
-    ui_pnlHelpContent = lv_obj_create(ui_pnlHelp);
+    ui_pnlHelpContent = lv_obj_create(ui_pnlHelpMessage);
     lv_obj_set_align(ui_pnlHelpContent, LV_ALIGN_CENTER);
     lv_obj_set_width(ui_pnlHelpContent, (int) round(device->MUX.WIDTH * .9) - 60);
-    lv_obj_set_height(ui_pnlHelpContent, (int) round(device->MUX.HEIGHT * .9) - 120);
+    lv_obj_set_flex_grow(ui_pnlHelpContent, 1);
     lv_obj_clear_flag(ui_pnlHelpContent, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(ui_pnlHelpContent, LV_DIR_VER);
     lv_obj_set_scroll_snap_y(ui_pnlHelpContent, LV_SCROLL_SNAP_NONE);
