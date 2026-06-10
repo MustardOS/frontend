@@ -65,7 +65,8 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm
 
-BIN_LDFLAGS  = -Wl,--gc-sections -pie $(if $(filter 1,$(DEBUGSYM)),,-s)
-LIB_LDFLAGS  = -Wl,-rpath,'./lib'
+BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
+               $(if $(filter 1,$(DEBUGSYM)),,-s)
+LIB_LDFLAGS  = -Wl,-rpath,'./lib' -Wl,-z,relro,-z,now
 
 SHARED_PIC = -shared -fPIC
