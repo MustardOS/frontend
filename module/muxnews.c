@@ -181,6 +181,10 @@ static void parse_index_json(const char *json_data) {
 
     size_t count = json_array_count(topics);
     if (count == 0) return;
+    if (count > MAX_MANIFEST_ITEMS) {
+        LOG_WARN(mux_module, "News index has %zu items, capping at %d", count, MAX_MANIFEST_ITEMS);
+        count = MAX_MANIFEST_ITEMS;
+    }
 
     topic_ids = calloc(count, sizeof(int));
     if (!topic_ids) return;
@@ -330,6 +334,13 @@ static void load_index_finished(int result) {
 
     char *json_data = read_all_char_from(NEWS_INDEX_PATH);
     if (!json_data) return;
+
+    if (strlen(json_data) > MAX_MANIFEST_BYTES) {
+        LOG_ERROR(mux_module, "News index exceeds size limit, rejecting");
+        free(json_data);
+        pending_error = 1;
+        return;
+    }
 
     if (pending_index_json) {
         free(pending_index_json);

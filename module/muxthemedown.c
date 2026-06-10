@@ -118,9 +118,19 @@ static void create_content_items(void) {
     char *json_str = read_all_char_from(theme_data_local_path);
     if (!json_valid(json_str)) return;
 
+    if (strlen(json_str) > MAX_MANIFEST_BYTES) {
+        LOG_ERROR(mux_module, "Theme catalogue exceeds size limit, rejecting");
+        free(json_str);
+        return;
+    }
+
     struct json fn_json = json_parse(json_str);
 
     size_t theme_count = json_array_count(fn_json);
+    if (theme_count > MAX_MANIFEST_ITEMS) {
+        LOG_WARN(mux_module, "Theme catalogue has %zu items, capping at %d", theme_count, MAX_MANIFEST_ITEMS);
+        theme_count = MAX_MANIFEST_ITEMS;
+    }
 
     for (int i = 0; i < theme_count; i++) {
         struct json theme_item = json_array_get(fn_json, i);

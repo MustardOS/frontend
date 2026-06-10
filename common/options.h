@@ -8,6 +8,9 @@
 
 #define MAX_BUFFER_SIZE 1024
 
+#define MAX_MANIFEST_ITEMS 2048
+#define MAX_MANIFEST_BYTES (8 * 1024 * 1024)
+
 // The rough calculation is as follows if a theme uses
 // a unique font for each individual module and panel...
 // module_count * (screen + content section + header + footer)
