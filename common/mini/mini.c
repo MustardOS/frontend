@@ -28,8 +28,10 @@
  **/
 
 #include "mini.h"
+#include <limits.h>
 #include <malloc.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <string.h>
 #include <inttypes.h>
 #include <errno.h>
@@ -426,27 +428,35 @@ mini_t *mini_loadf_ex(FILE *f, int *err) {
 }
 
 int mini_save(const mini_t *mini, int flags) {
-    int result;
+    if (!mini->path || strlen(mini->path) < 1) return MINI_INVALID_PATH;
 
-    if (!mini->path || strlen(mini->path) < 1) {
-        result = MINI_INVALID_PATH;
-    } else {
-        FILE *fp = NULL;
 #if WIN32
-        _wfopen_s(&fp, mini_utf8_to_wide_char(mini->path), L"w");
+    FILE *fp = NULL;
+    _wfopen_s(&fp, mini_utf8_to_wide_char(mini->path), L"w");
+    if (!fp) return MINI_ACCESS_DENIED;
+    int result = mini_savef(mini, fp, flags);
+    fclose(fp);
+    return result;
 #else
-        fp = fopen(mini->path, "w");
-#endif
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", mini->path) >= (int) sizeof(tmp))
+        return MINI_INVALID_PATH;
 
-        if (fp) {
-            result = mini_savef(mini, fp, flags);
-            fclose(fp);
-        } else {
-            result = MINI_ACCESS_DENIED;
-        }
+    FILE *fp = fopen(tmp, "w");
+    if (!fp) return MINI_ACCESS_DENIED;
+
+    int result = mini_savef(mini, fp, flags);
+
+    if (fflush(fp) != 0 || fsync(fileno(fp)) != 0) result = MINI_ACCESS_DENIED;
+    fclose(fp);
+
+    if (result != MINI_OK || rename(tmp, mini->path) != 0) {
+        remove(tmp);
+        return MINI_ACCESS_DENIED;
     }
 
-    return result;
+    return MINI_OK;
+#endif
 }
 
 int mini_savef(const mini_t *mini, FILE *f, int flags) {

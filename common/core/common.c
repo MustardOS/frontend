@@ -56,7 +56,13 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
 
 static void write_cfg_file(char *def_core, char *path, char *core, char *sys, char *cat, int lookup,
                            char *rom_name, char *rom_mount, char *rom_base, char *rom_full) {
-    FILE *f = fopen(path, "w");
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        return;
+    }
+
+    FILE *f = fopen(tmp, "w");
     if (!f) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
@@ -72,61 +78,100 @@ static void write_cfg_file(char *def_core, char *path, char *core, char *sys, ch
         LOG_INFO(mux_module, "Assign Content: %s|%s|%s|%d|%s", core, sys, cat, lookup, def_core);
     }
 
+    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
     fclose(f);
+
+    if (!ok || rename(tmp, path) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+    }
 }
 
 static void write_gov_file(char *path, char *gov, const char *rom_name) {
-    FILE *f = fopen(path, "w");
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        return;
+    }
+
+    FILE *f = fopen(tmp, "w");
     if (!f) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
+    fprintf(f, "%s", gov);
     if (rom_name) {
-        fprintf(f, "%s", gov);
         LOG_INFO(mux_module, "Assign Governor (Single): %s", gov);
     } else {
-        fprintf(f, "%s", gov);
         LOG_INFO(mux_module, "Assign Governor: %s", gov);
     }
 
+    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
     fclose(f);
+
+    if (!ok || rename(tmp, path) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+    }
 }
 
 static void write_con_file(char *path, char *con, const char *rom_name) {
-    FILE *f = fopen(path, "w");
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        return;
+    }
+
+    FILE *f = fopen(tmp, "w");
     if (!f) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
+    fprintf(f, "%s", con);
     if (rom_name) {
-        fprintf(f, "%s", con);
         LOG_INFO(mux_module, "Assign Control (Single): %s", con);
     } else {
-        fprintf(f, "%s", con);
         LOG_INFO(mux_module, "Assign Control: %s", con);
     }
 
+    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
     fclose(f);
+
+    if (!ok || rename(tmp, path) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+    }
 }
 
 static void write_rac_file(char *path, char *rac, const char *rom_name) {
-    FILE *f = fopen(path, "w");
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        return;
+    }
+
+    FILE *f = fopen(tmp, "w");
     if (!f) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
         return;
     }
 
+    fprintf(f, "%s", rac);
     if (rom_name) {
-        fprintf(f, "%s", rac);
         LOG_INFO(mux_module, "Assign RetroArch Config (Single): %s", rac);
     } else {
-        fprintf(f, "%s", rac);
         LOG_INFO(mux_module, "Assign RetroArch Config: %s", rac);
     }
 
+    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
     fclose(f);
+
+    if (!ok || rename(tmp, path) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+    }
 }
 
 static void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *core,

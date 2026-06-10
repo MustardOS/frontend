@@ -7,10 +7,16 @@
 
 void create_controller_profile(char *controller_profile_path) {
     LOG_WARN(mux_module, "Controller profile missing: %s", controller_profile_path);
-    FILE *file = fopen(controller_profile_path, "w");
 
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", controller_profile_path) >= (int) sizeof(tmp)) {
+        LOG_ERROR(mux_module, "Failed to write controller profile: %s", controller_profile_path);
+        return;
+    }
+
+    FILE *file = fopen(tmp, "w");
     if (file == NULL) {
-        perror("Error opening file for writing");
+        LOG_ERROR(mux_module, "Failed to write controller profile: %s", controller_profile_path);
         return;
     }
 
@@ -53,7 +59,13 @@ void create_controller_profile(char *controller_profile_path) {
     fprintf(file, "LEFT=2\n");
     fprintf(file, "UP=3\n");
 
+    int ok = (fflush(file) == 0 && fsync(fileno(file)) == 0);
     fclose(file);
+
+    if (!ok || rename(tmp, controller_profile_path) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "Failed to write controller profile: %s", controller_profile_path);
+    }
 }
 
 void load_controller_profile(struct controller_profile *controller, char *controller_name) {

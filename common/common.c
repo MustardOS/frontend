@@ -4056,7 +4056,13 @@ static int content_loader_needs_rebuild(const char *content_loader_file, const c
 
 static int write_content_loader_file(const char *content_loader_file, const char *content_name, const char *core, const char *sys1, const char *sys2,
                                      const char *zero, const char *launch, const char *roms_path, const char *system_sub, const char *file_name) {
-    FILE *fp = fopen(content_loader_file, "w");
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", content_loader_file) >= (int) sizeof(tmp)) {
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, content_loader_file);
+        return 0;
+    }
+
+    FILE *fp = fopen(tmp, "w");
     if (!fp) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, content_loader_file);
         return 0;
@@ -4072,9 +4078,14 @@ static int write_content_loader_file(const char *content_loader_file, const char
     fprintf(fp, "%s\n", system_sub);
     fprintf(fp, "%s\n", file_name);
 
-    fflush(fp);
-    fsync(fileno(fp));
+    int ok = (fflush(fp) == 0 && fsync(fileno(fp)) == 0);
     fclose(fp);
+
+    if (!ok || rename(tmp, content_loader_file) != 0) {
+        remove(tmp);
+        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, content_loader_file);
+        return 0;
+    }
 
     return 1;
 }
@@ -4365,7 +4376,15 @@ void rewrite_launch_file(const char *file, const char *new_path) {
         return;
     }
 
-    FILE *fp = fopen(file, "w");
+    char tmp[PATH_MAX];
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", file) >= (int) sizeof(tmp)) {
+        free_line_if_needed(line1);
+        free_line_if_needed(line2);
+        free_line_if_needed(line3);
+        return;
+    }
+
+    FILE *fp = fopen(tmp, "w");
     if (!fp) {
         free_line_if_needed(line1);
         free_line_if_needed(line2);
@@ -4374,9 +4393,10 @@ void rewrite_launch_file(const char *file, const char *new_path) {
     }
 
     fprintf(fp, "%s\n%s\n%s", new_path, line2, line3);
-    fflush(fp);
-    fsync(fileno(fp));
+    int ok = (fflush(fp) == 0 && fsync(fileno(fp)) == 0);
     fclose(fp);
+
+    if (!ok || rename(tmp, file) != 0) remove(tmp);
 
     free_line_if_needed(line1);
     free_line_if_needed(line2);

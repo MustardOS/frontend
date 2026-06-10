@@ -748,12 +748,14 @@ int union_rewrite_file_paths(const char *file) {
     }
 
     if (modified) {
-        FILE *fp = fopen(file, "w");
-        if (fp) {
-            fwrite(data, 1, strlen(data), fp);
-            fflush(fp);
-            fsync(fileno(fp));
-            fclose(fp);
+        char tmp[PATH_MAX];
+        if (snprintf(tmp, sizeof(tmp), "%s.tmp", file) < (int) sizeof(tmp)) {
+            FILE *fp = fopen(tmp, "w");
+            if (fp) {
+                int ok = (fwrite(data, 1, strlen(data), fp) == strlen(data) && fflush(fp) == 0 && fsync(fileno(fp)) == 0);
+                fclose(fp);
+                if (!ok || rename(tmp, file) != 0) remove(tmp);
+            }
         }
     }
 
