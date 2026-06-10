@@ -37,8 +37,6 @@
 #include "mini/mini.h"
 #include "../module/muxshare.h"
 
-static void free_line_if_needed(char *line);
-
 char mux_module[MAX_BUFFER_SIZE];
 char mux_dim[15];
 int msgbox_active;
@@ -697,20 +695,20 @@ char *read_all_char_from(const char *filename) {
 char *read_line_char_from(const char *filename, size_t line_number) {
     if (!filename || line_number == 0) {
         LOG_ERROR(mux_module, "Invalid filename or line number...");
-        return "";
+        return strdup("");
     }
 
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename);
-        return "";
+        return strdup("");
     }
 
     char *line = (char *) malloc(MAX_BUFFER_SIZE);
     if (!line) {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
-        return "";
+        return strdup("");
     }
 
     size_t current_line = 0;
@@ -729,7 +727,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
     free(line);
     fclose(file);
 
-    return "";
+    return strdup("");
 }
 
 int read_all_int_from(const char *filename, size_t buffer) {
@@ -1287,7 +1285,7 @@ int load_image_specifics(const char *mux_dim, const char *program, const char *i
     return 0;
 }
 
-#define CAT_DIR_CACHE_MAX 64
+#define CAT_DIR_CACHE_MAX 256
 
 struct cat_dir_entry {
     char path[MAX_BUFFER_SIZE];
@@ -1395,7 +1393,7 @@ void load_splash_image_fallback(const char *mux_dim, char *image, size_t image_s
     snprintf(image, image_size, "%s/image/splash.png", theme_base);
 }
 
-bool is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
+int is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
     return (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "box") == 0) ||
            (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "grid") == 0) ||
            (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "box") == 0) ||
@@ -2316,7 +2314,7 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
     double scroll_multiplier = (current_item_index > item_distribution) ? (current_item_index - item_distribution)
                                                                         : 0;
     // max scroll value
-    bool isAtBottom = (current_item_index >= ui_count - item_distribution - 1);
+    int isAtBottom = (current_item_index >= ui_count - item_distribution - 1);
     if (isAtBottom) scroll_multiplier = ui_count - mux_item_count;
 
     if (mux_item_count % 2 == 0 && current_item_index > item_distribution && !isAtBottom) {
@@ -3538,7 +3536,7 @@ void populate_items(const char *base_path, char ***items, int *item_count) {
                 *items = realloc(*items, ((*item_count) + 1) * sizeof(char *));
                 char *raw = read_line_char_from(full_path, 1);
                 (*items)[*item_count] = strdup(raw);
-                free_line_if_needed(raw);
+                free(raw);
                 (*item_count)++;
             }
         } else if (S_ISDIR(st.st_mode)) {
@@ -3600,8 +3598,8 @@ uint32_t fnv1a_hash_file(FILE *file) {
     return hash;
 }
 
-bool get_glyph_path(const char *mux_module, const char *glyph_name,
-                    char *glyph_image_embed, size_t glyph_image_embed_size) {
+int get_glyph_path(const char *mux_module, const char *glyph_name,
+                   char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
 
 #define TRY_GLYPH_PATH(fmt, ...)                                                           \
@@ -3694,7 +3692,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 
     int text_hit = 0;
     for (size_t i = 0; i < ui_count; i++) {
-        const bool item_hidden = lv_obj_has_flag(ui_objects[i], LV_OBJ_FLAG_HIDDEN);
+        int item_hidden = lv_obj_has_flag(ui_objects[i], LV_OBJ_FLAG_HIDDEN);
         if (!item_hidden && strcasecmp(lv_obj_get_user_data(ui_objects[i]), prev) == 0) break;
         if (!item_hidden) text_hit++;
     }
@@ -4001,10 +3999,6 @@ int remove_directory_recursive(const char *path) {
     return 0;
 }
 
-static void free_line_if_needed(char *line) {
-    if (line && *line) free(line);
-}
-
 static int path_uses_union(const char *path) {
     return path && strncmp(path, "/mnt/union", 10) == 0;
 }
@@ -4050,15 +4044,15 @@ static int content_loader_needs_rebuild(const char *content_loader_file, const c
     }
 
     done:
-    free_line_if_needed(line1);
-    free_line_if_needed(line2);
-    free_line_if_needed(line3);
-    free_line_if_needed(line4);
-    free_line_if_needed(line5);
-    free_line_if_needed(line6);
-    free_line_if_needed(line7);
-    free_line_if_needed(line8);
-    free_line_if_needed(line9);
+    free(line1);
+    free(line2);
+    free(line3);
+    free(line4);
+    free(line5);
+    free(line6);
+    free(line7);
+    free(line8);
+    free(line9);
 
     return rebuild;
 }
@@ -4351,22 +4345,22 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_system
     char *b_core = malloc(required_size);
     if (!b_core) {
         LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
-        free_line_if_needed(core_line);
-        free_line_if_needed(system_line);
-        free_line_if_needed(catalogue_line);
-        free_line_if_needed(lookup_line);
-        free_line_if_needed(launch_line);
+        free(core_line);
+        free(system_line);
+        free(catalogue_line);
+        free(lookup_line);
+        free(launch_line);
         return NULL;
     }
 
     snprintf(b_core, required_size, "%s\n%s\n%s\n%s\n%s",
              core_val, system_val, catalogue_val, lookup_val, launch_val);
 
-    free_line_if_needed(core_line);
-    free_line_if_needed(system_line);
-    free_line_if_needed(catalogue_line);
-    free_line_if_needed(lookup_line);
-    free_line_if_needed(launch_line);
+    free(core_line);
+    free(system_line);
+    free(catalogue_line);
+    free(lookup_line);
+    free(launch_line);
 
     return b_core;
 }
@@ -4379,25 +4373,25 @@ void rewrite_launch_file(const char *file, const char *new_path) {
     char *line3 = read_line_char_from(file, 3);
 
     if (!*line1 || strcmp(line1, new_path) == 0) {
-        free_line_if_needed(line1);
-        free_line_if_needed(line2);
-        free_line_if_needed(line3);
+        free(line1);
+        free(line2);
+        free(line3);
         return;
     }
 
     char tmp[PATH_MAX];
     if (snprintf(tmp, sizeof(tmp), "%s.tmp", file) >= (int) sizeof(tmp)) {
-        free_line_if_needed(line1);
-        free_line_if_needed(line2);
-        free_line_if_needed(line3);
+        free(line1);
+        free(line2);
+        free(line3);
         return;
     }
 
     FILE *fp = fopen(tmp, "w");
     if (!fp) {
-        free_line_if_needed(line1);
-        free_line_if_needed(line2);
-        free_line_if_needed(line3);
+        free(line1);
+        free(line2);
+        free(line3);
         return;
     }
 
@@ -4407,8 +4401,8 @@ void rewrite_launch_file(const char *file, const char *new_path) {
 
     if (!ok || rename(tmp, file) != 0) remove(tmp);
 
-    free_line_if_needed(line1);
-    free_line_if_needed(line2);
+    free(line1);
+    free(line2);
     free(line3);
 }
 
@@ -4551,7 +4545,7 @@ char **split_command(const char *cmd, size_t *argc_out) {
 
         char buf[MAX_BUFFER_SIZE];
         size_t len = 0;
-        bool in_quote = false;
+        int in_quote = 0;
         char quote_char = 0;
 
         while (*p && (in_quote || (*p != ' ' && *p != '\t'))) {
@@ -4559,10 +4553,10 @@ char **split_command(const char *cmd, size_t *argc_out) {
                 p++;
                 if (*p) buf[len++] = *p++;
             } else if (!in_quote && (*p == '\'' || *p == '"')) {
-                in_quote = true;
+                in_quote = 1;
                 quote_char = *p++;
             } else if (in_quote && *p == quote_char) {
-                in_quote = false;
+                in_quote = 0;
                 p++;
             } else {
                 buf[len++] = *p++;

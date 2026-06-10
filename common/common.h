@@ -506,8 +506,8 @@ uint32_t fnv1a_hash_str(const char *str);
 
 uint32_t fnv1a_hash_file(FILE *fp);
 
-bool get_glyph_path(const char *mux_module, const char *glyph_name,
-                    char *glyph_image_embed, size_t glyph_image_embed_size);
+int get_glyph_path(const char *mux_module, const char *glyph_name,
+                   char *glyph_image_embed, size_t glyph_image_embed_size);
 
 void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lblItemGlyph);
 
