@@ -81,6 +81,7 @@ static char *load_content_description(void) {
 }
 
 static void image_refresh(char *image_type) {
+    if (!ui_count) return;
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
     char *file_name = get_file_name(items[current_item_index].name);
