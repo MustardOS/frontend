@@ -2510,7 +2510,7 @@ static void *extraction_thread(void *arg) {
     extraction_args_t *args = (extraction_args_t *) arg;
 
     int rc = extract_zip_to_dir(args->filename, args->output_path);
-    if (extraction_finish_cb) extraction_finish_cb(rc == 0 ? args->filename : NULL);
+    if (extraction_finish_cb) extraction_finish_cb(rc == MUX_EXTRACT_OK ? args->filename : NULL);
 
     hide_progress_bar();
 
@@ -2541,7 +2541,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
     if (!mz_zip_reader_init_file(&zip, filename, 0)) {
         LOG_ERROR(mux_module, "Failed to open ZIP archive!");
         hide_progress_bar();
-        return 0;
+        return MUX_EXTRACT_ERR;
     }
 
     create_directories(output, 0);
@@ -2550,7 +2550,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
     if (!realpath(output, resolved_output)) {
         LOG_ERROR(mux_module, "Cannot resolve output path: '%s'", output);
         mz_zip_reader_end(&zip);
-        return 0;
+        return MUX_EXTRACT_ERR;
     }
     size_t resolved_len = strlen(resolved_output);
 
@@ -2565,7 +2565,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         if (entry_name[0] == '/' || strstr(entry_name, "..")) {
             LOG_ERROR(mux_module, "Blocked unsafe path in ZIP: '%s'", entry_name);
             mz_zip_reader_end(&zip);
-            return -1;
+            return MUX_EXTRACT_BLOCKED;
         }
 
         char dest_file[PATH_MAX];
@@ -2575,7 +2575,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
             LOG_ERROR(mux_module, "Blocked path escape in ZIP: '%s'", entry_name);
             mz_zip_reader_end(&zip);
-            return -1;
+            return MUX_EXTRACT_BLOCKED;
         }
 
         if (file_stat.m_is_directory) {
@@ -2590,7 +2590,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file);
             mz_zip_reader_end(&zip);
-            return 0;
+            return MUX_EXTRACT_ERR;
         } else {
             if (ends_with(dest_file, ".png")) {
                 char img_source[MAX_BUFFER_SIZE];

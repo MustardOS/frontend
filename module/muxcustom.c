@@ -346,7 +346,7 @@ static int save_custom_options(void) {
 
             if (file_exist(theme_alt_archive)) {
                 LOG_INFO(mux_module, "Extracting Alternative Theme: %s", theme_alt_archive);
-                if (extract_zip_to_dir(theme_alt_archive, theme_base) < 0) return -1;
+                if (extract_zip_to_dir(theme_alt_archive, theme_base) != MUX_EXTRACT_OK) return -1;
             }
 
             write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);

@@ -420,6 +420,10 @@ void update_progress_bar();
 
 void hide_progress_bar();
 
+#define MUX_EXTRACT_OK      0
+#define MUX_EXTRACT_ERR     1
+#define MUX_EXTRACT_BLOCKED 2
+
 int extract_zip_to_dir(const char *filename, const char *output);
 
 void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result));
