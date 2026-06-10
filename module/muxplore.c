@@ -257,6 +257,14 @@ static void remove_match_items(const char *filter_name, int mode, char ***filter
     }
 }
 
+static int tag_name_sort(const void *a, const void *b) {
+    return strcasecmp(*(const char **) a, *(const char **) b);
+}
+
+static int tag_name_search(const void *key, const void *elem) {
+    return strcasecmp((const char *) key, *(const char **) elem);
+}
+
 static void gen_item(char **file_names, char **file_paths, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
     char sub_path[PATH_MAX];
@@ -366,6 +374,47 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
     remove_match_items("Collected", config.VISUAL.CONTENTCOLLECT, &collection_items, &collection_item_count,
                        populate_collection_items, &items, &item_count, sys_dir);
 
+    char tag_dir[PATH_MAX];
+    snprintf(tag_dir, sizeof(tag_dir), INFO_CON_PATH "/%s", sub_path);
+    remove_double_slashes(tag_dir);
+
+    char **tagged_names = NULL;
+    int tagged_count = 0;
+
+    DIR *td = opendir(tag_dir);
+    if (td) {
+        int cap = 64;
+        tagged_names = malloc((size_t) cap * sizeof(char *));
+
+        if (tagged_names) {
+            struct dirent *de;
+            while ((de = readdir(td)) != NULL) {
+                if (!ends_with(de->d_name, ".tag")) continue;
+
+                char *nm = strdup(de->d_name);
+                if (!nm) continue;
+
+                char *dot = strrchr(nm, '.');
+                if (dot) *dot = '\0';
+
+                if (tagged_count >= cap) {
+                    cap *= 2;
+                    char **tmp = realloc(tagged_names, (size_t) cap * sizeof(char *));
+                    if (!tmp) {
+                        free(nm);
+                        break;
+                    }
+                    tagged_names = tmp;
+                }
+
+                tagged_names[tagged_count++] = nm;
+            }
+        }
+
+        closedir(td);
+        qsort(tagged_names, (size_t) tagged_count, sizeof(char *), tag_name_sort);
+    }
+
     char content_tag[PATH_MAX];
 
     for (size_t i = 0; i < item_count; ++i) {
@@ -377,10 +426,10 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
         char *dot = strrchr(basename, '.');
         if (dot) *dot = '\0';
 
-        snprintf(content_tag, sizeof(content_tag), INFO_CON_PATH "/%s/%s.tag", sub_path, basename);
-        remove_double_slashes(content_tag);
+        if (tagged_count > 0 && bsearch(basename, tagged_names, (size_t) tagged_count, sizeof(char *), tag_name_search) != NULL) {
+            snprintf(content_tag, sizeof(content_tag), INFO_CON_PATH "/%s/%s.tag", sub_path, basename);
+            remove_double_slashes(content_tag);
 
-        if (file_exist(content_tag)) {
             char *line = read_line_char_from(content_tag, 1);
 
             if (line && *line) {
@@ -397,6 +446,12 @@ static void gen_item(char **file_names, char **file_paths, int file_count) {
             items[i].use_module = mux_module;
         }
     }
+
+    for (int i = 0; i < tagged_count; i++) {
+        free(tagged_names[i]);
+    }
+
+    free(tagged_names);
 }
 
 static void init_navigation_group_grid(void) {
@@ -513,6 +568,7 @@ static void create_content_items(void) {
 
         if (new_item) {
             new_item->glyph_icon = "folder";
+            new_item->folder_item_count = cnt;
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
             if (config.VISUAL.FOLDERITEMCOUNT) {
@@ -947,7 +1003,7 @@ static void process_load(int from_start) {
         char folder_path[PATH_MAX];
         snprintf(folder_path, sizeof(folder_path), "%s", items[current_item_index].extra_data);
 
-        if (union_get_directory_item_count(sys_dir, items[current_item_index].name, COUNT_BOTH) >= LARGE_CONTENT_LOAD) {
+        if (items[current_item_index].folder_item_count >= LARGE_CONTENT_LOAD) {
             toast_message(lang.GENERIC.LOADING, FOREVER);
         }
 

@@ -576,6 +576,11 @@ void resolve_friendly_name(char *file_path, char *out) {
 
     int has_custom = 0;
 
+    static char cache_path[PATH_MAX];
+    static char *cache_str = NULL;
+    static struct json cache_root;
+    static int cache_valid = 0;
+
     char *base = get_content_path(file_path);
     char *name_only = get_last_dir(base);
 
@@ -586,17 +591,21 @@ void resolve_friendly_name(char *file_path, char *out) {
     if (!lookup_path) lookup_path = resolve_info_path("name/global.json");
 
     if (lookup_path) {
-        char *json_str = read_all_char_from(lookup_path);
-        if (json_str && json_valid(json_str)) {
-            struct json root = json_parse(json_str);
-            struct json j = json_object_get(root, lowered);
+        if (strcmp(cache_path, lookup_path) != 0) {
+            free(cache_str);
+            cache_str = read_all_char_from(lookup_path);
+            cache_valid = (cache_str != NULL && json_valid(cache_str));
+            if (cache_valid) cache_root = json_parse(cache_str);
+            snprintf(cache_path, sizeof(cache_path), "%s", lookup_path);
+        }
+
+        if (cache_valid) {
+            struct json j = json_object_get(cache_root, lowered);
             if (json_exists(j)) {
                 json_string_copy(j, out, MAX_BUFFER_SIZE);
                 has_custom = 1;
             }
         }
-
-        free(json_str);
     }
 
     if (!has_custom) {

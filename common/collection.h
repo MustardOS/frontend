@@ -20,6 +20,7 @@ typedef struct {
     char *grid_image_focused;
     char *use_module;
     int sort_bucket;
+    int folder_item_count;
     char group_tag[64];
 } content_item;
 

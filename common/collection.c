@@ -43,8 +43,8 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
                        const char *extra_data, content_type content_type) {
     if (*content_items == NULL) {
         *content_items = malloc(sizeof(content_item));
-    } else {
-        *content_items = realloc(*content_items, (*count + 1) * sizeof(content_item));
+    } else if (*count > 0 && (*count & (*count - 1)) == 0) {
+        *content_items = realloc(*content_items, (*count * 2) * sizeof(content_item));
     }
 
     (*content_items)[*count].name = strdup(name);
@@ -56,6 +56,7 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
     (*content_items)[*count].glyph_icon = NULL;
     (*content_items)[*count].grid_image = NULL;
     (*content_items)[*count].grid_image_focused = NULL;
+    (*content_items)[*count].folder_item_count = 0;
 
     if (config.VISUAL.THETITLEFORMAT) {
         reformat_display_name((*content_items)[*count].display_name);
@@ -90,8 +91,6 @@ void remove_item(content_item **content_items, size_t *count, size_t index) {
     if (*count == 0) {
         free(*content_items);
         *content_items = NULL;
-    } else {
-        *content_items = realloc(*content_items, (*count) * sizeof(content_item));
     }
 }
 
