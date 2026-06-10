@@ -2418,18 +2418,20 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
     if (!number_string) return NULL;
 
     char *ptr = number_string;
-    if (prefix) ptr += sprintf(ptr, "%s\n", prefix);
+    char *end = number_string + buffer_size + 1;
+
+    if (prefix) ptr += snprintf(ptr, (size_t) (end - ptr), "%s\n", prefix);
 
     for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
-        if (infix && infix_position == 0) ptr += sprintf(ptr, "%s", infix);
+        if (infix && infix_position == 0) ptr += snprintf(ptr, (size_t) (end - ptr), "%s", infix);
 
-        ptr += sprintf(ptr, "%d", i);
+        ptr += snprintf(ptr, (size_t) (end - ptr), "%d", i);
 
-        if (infix && infix_position == 1) ptr += sprintf(ptr, "%s", infix);
-        if ((increment > 0 ? i + increment <= max : i + increment >= max)) *ptr++ = '\n';
+        if (infix && infix_position == 1) ptr += snprintf(ptr, (size_t) (end - ptr), "%s", infix);
+        if ((increment > 0 ? i + increment <= max : i + increment >= max) && ptr < end - 1) *ptr++ = '\n';
     }
 
-    if (suffix) ptr += sprintf(ptr, "%s", suffix);
+    if (suffix) ptr += snprintf(ptr, (size_t) (end - ptr), "%s", suffix);
 
     *ptr = '\0';
 
