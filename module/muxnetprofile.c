@@ -99,6 +99,21 @@ static inline void nav_scan_hide(int hide) {
     }
 }
 
+static int is_safe_iface(const char *iface) {
+    if (!iface || !*iface) return 0;
+
+    size_t len = strlen(iface);
+    if (len >= 16) return 0;
+
+    for (const char *p = iface; *p; p++) {
+        if (!isalnum((unsigned char) *p) && *p != '_' && *p != '-' && *p != '.' && *p != ':') {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 static int read_ip(char *buf) {
     FILE *f = fopen(address_file, "r");
 
@@ -112,6 +127,8 @@ static int read_ip(char *buf) {
             if (*buf && strcasecmp(buf, "0.0.0.0") != 0) return 1;
         }
     }
+
+    if (!is_safe_iface(device.NETWORK.INTERFACE)) return 0;
 
     char cmd[MAX_BUFFER_SIZE];
     snprintf(cmd, sizeof(cmd), "ip addr show %s 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1", device.NETWORK.INTERFACE);
@@ -342,7 +359,7 @@ static void restore_network_values(void) {
     if (profile_ssid && *profile_ssid && is_network_connected()) {
         if (active_ssid && *active_ssid) viewing_active_profile = (strcmp(profile_ssid, active_ssid) == 0);
 
-        if (!viewing_active_profile) {
+        if (!viewing_active_profile && is_safe_iface(device.NETWORK.INTERFACE)) {
             char cmd[MAX_BUFFER_SIZE];
             snprintf(cmd, sizeof(cmd), "iw dev %s link 2>/dev/null | awk -F': ' '/SSID/ {print $2}'", device.NETWORK.INTERFACE);
             FILE *iw_pipe = popen(cmd, "r");
