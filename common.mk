@@ -58,8 +58,8 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -ffunction-sections -fdata-sections \
               -Wall -Wno-format-zero-length \
               -Wno-unused-function -fno-plt \
-              -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
-              -fPIE -fno-ident \
+              -fstack-protector-strong -fstack-clash-protection \
+              -D_FORTIFY_SOURCE=3 -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
               $(BUILD_FLAGS)
 
