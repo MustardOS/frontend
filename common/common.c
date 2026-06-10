@@ -98,6 +98,11 @@ char *battery_display[3];
 
 static void (*extraction_finish_cb)(char *result) = NULL;
 
+static void (*extraction_finish_pending_cb)(char *result) = NULL;
+
+static volatile int extraction_finish_result = INT_MIN;
+static char *extraction_pending_filename = NULL;
+
 typedef struct {
     char *filename;
     char *output_path;
@@ -2236,9 +2241,9 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
                 int th = (int) ((float) ih * zr);
                 if (tw > 0 && th > 0) {
                     scale_and_set_raster(ui_imgobj, image_settings.image_path,
-                                            tw, th, image_settings.align,
-                                            image_settings.pad_left, image_settings.pad_right,
-                                            image_settings.pad_top, image_settings.pad_bottom);
+                                         tw, th, image_settings.align,
+                                         image_settings.pad_left, image_settings.pad_right,
+                                         image_settings.pad_top, image_settings.pad_bottom);
                     return;
                 }
             }
@@ -2510,14 +2515,35 @@ static void *extraction_thread(void *arg) {
     extraction_args_t *args = (extraction_args_t *) arg;
 
     int rc = extract_zip_to_dir(args->filename, args->output_path);
-    if (extraction_finish_cb) extraction_finish_cb(rc == MUX_EXTRACT_OK ? args->filename : NULL);
 
-    hide_progress_bar();
+    extraction_finish_pending_cb = extraction_finish_cb;
+    extraction_finish_cb = NULL;
+    extraction_pending_filename = args->filename;
+    args->filename = NULL;
+    extraction_finish_result = rc;
 
-    free(args->filename);
     free(args->output_path);
     free(args);
     return NULL;
+}
+
+void extraction_poll(void) {
+    if (extraction_finish_result == INT_MIN) return;
+
+    int result = extraction_finish_result;
+    extraction_finish_result = INT_MIN;
+
+    void (*cb)(char *) = extraction_finish_pending_cb;
+    extraction_finish_pending_cb = NULL;
+
+    char *filename = extraction_pending_filename;
+    extraction_pending_filename = NULL;
+
+    hide_progress_bar();
+
+    if (cb) cb(result == MUX_EXTRACT_OK ? filename : NULL);
+
+    free(filename);
 }
 
 void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result)) {
@@ -2540,7 +2566,6 @@ int extract_zip_to_dir(const char *filename, const char *output) {
 
     if (!mz_zip_reader_init_file(&zip, filename, 0)) {
         LOG_ERROR(mux_module, "Failed to open ZIP archive!");
-        hide_progress_bar();
         return MUX_EXTRACT_ERR;
     }
 

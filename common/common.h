@@ -428,6 +428,8 @@ int extract_zip_to_dir(const char *filename, const char *output);
 
 void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result));
 
+void extraction_poll(void);
+
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
 
 char **get_subdirectories(const char *base_dir);

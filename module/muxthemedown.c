@@ -437,6 +437,7 @@ static void init_elements(void) {
 
 static void ui_refresh_task() {
     download_poll();
+    extraction_poll();
 
     if (theme_extract_done) {
         theme_extract_done = 0;
