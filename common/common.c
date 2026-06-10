@@ -340,9 +340,11 @@ void str_split(char *text, char sep, char *p1, char *p2) {
         size_t len = pos - text;
         memcpy(p1, text, len);
         p1[len] = '\0';
-        strcpy(p2, pos + 1);
+        size_t tail = strlen(pos + 1);
+        memcpy(p2, pos + 1, tail + 1);
     } else {
-        strcpy(p1, text);
+        size_t tlen = strlen(text);
+        memcpy(p1, text, tlen + 1);
         p2[0] = '\0';
     }
 }
@@ -400,7 +402,8 @@ char *str_replace(const char *orig, const char *rep, const char *with) {
         ins = tmp + len_rep;
     }
 
-    strcpy(out, ins);
+    size_t tail = strlen(ins);
+    memcpy(out, ins, tail + 1);
     return result;
 }
 
@@ -427,8 +430,8 @@ int str_replace_segment(const char *orig, const char *prefix, const char *suffix
     if (!*replacement) return 0;
 
     memcpy(*replacement, orig, len_front);
-    strcpy(*replacement + len_front, with);
-    strcpy(*replacement + len_front + len_with, end);
+    memcpy(*replacement + len_front, with, len_with);
+    memcpy(*replacement + len_front + len_with, end, len_suffix + 1);
 
     return 1;
 }

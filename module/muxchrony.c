@@ -30,12 +30,12 @@ static void chrony_normalise(char *output) {
     }
 
     if ((mod = strstr(output, " fast of NTP time"))) {
-        strcpy(mod, " fast");
+        memcpy(mod, " fast", sizeof(" fast"));
         return;
     }
 
     if ((mod = strstr(output, " slow of NTP time"))) {
-        strcpy(mod, " slow");
+        memcpy(mod, " slow", sizeof(" slow"));
         return;
     }
 }
