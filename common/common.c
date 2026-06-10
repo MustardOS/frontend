@@ -3309,7 +3309,9 @@ static pid_t pending_exec_pid = -1;
 static exec_callback pending_exec_cb = NULL;
 
 void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file, exec_callback cb) {
-    const char *san[size];
+    if (!args || size == 0) return;
+
+    const char *san[size + 1];
 
     if (turbo) turbo_time(1, 0);
 
@@ -3317,6 +3319,8 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
     for (size_t i = 0; i < size; ++i) {
         if (args[i]) san[j++] = args[i];
     }
+
+    if (j == 0) return;
     san[j] = NULL;
 
 /*
