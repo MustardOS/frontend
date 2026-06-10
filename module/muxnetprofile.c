@@ -63,13 +63,33 @@ enum connect_status {
     STATUS_WPA_START_FAILED
 };
 
-static void sanitise_ssid_name(char *dest, const char *src) {
+static int sanitise_ssid_name(char *dest, const char *src) {
     size_t j = 0;
-    while (*src && j < MAX_BUFFER_SIZE - 1) {
-        dest[j++] = (*src == '/' || *src == '\\') ? '_' : *src;
-        src++;
+
+    for (; *src && j < MAX_BUFFER_SIZE - 1; src++) {
+        unsigned char c = (unsigned char) *src;
+        char out;
+
+        if (isalnum(c) || c == ' ' || c == '_' || c == '-' || c == '.' ||
+            c == '(' || c == ')') {
+            out = (char) c;
+        } else {
+            out = '_';
+        }
+
+        if (out == '_' && j > 0 && dest[j - 1] == '_') continue;
+
+        dest[j++] = out;
     }
     dest[j] = '\0';
+
+    while (j > 0 && (dest[j - 1] == ' ' || dest[j - 1] == '.')) dest[--j] = '\0';
+
+    size_t start = 0;
+    while (dest[start] == ' ' || dest[start] == '.') start++;
+    if (start > 0) memmove(dest, dest + start, j - start + 1);
+
+    return dest[0] != '\0';
 }
 
 static void show_help(void) {
@@ -307,7 +327,8 @@ static void restore_network_values(void) {
         snprintf(profile_name_buf, sizeof(profile_name_buf), "%s", profile_name_raw);
 
         char profile_file[MAX_BUFFER_SIZE];
-        snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name_buf);
+        int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name_buf);
+        if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return;
 
         mini_t *net = mini_try_load(profile_file);
         int is_static = (strcasecmp(mini_get_string(net, "network", "type", "dhcp"), "static") == 0);
@@ -737,7 +758,8 @@ static void do_forget_profile(void) {
     if (!profile_name_raw || !*profile_name_raw) return;
 
     char profile_file[MAX_BUFFER_SIZE];
-    snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name_raw);
+    int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name_raw);
+    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return;
 
     remove(profile_file);
 
@@ -815,13 +837,14 @@ static void save_profile_ini(void) {
     const char *profile_name_raw = lv_label_get_text(ui_lblProfileNameValue_network);
     char profile_name[MAX_BUFFER_SIZE];
 
+    int name_ok;
     if (profile_name_raw && *profile_name_raw) {
-        sanitise_ssid_name(profile_name, profile_name_raw);
+        name_ok = sanitise_ssid_name(profile_name, profile_name_raw);
     } else {
-        sanitise_ssid_name(profile_name, ssid);
+        name_ok = sanitise_ssid_name(profile_name, ssid);
     }
 
-    if (!*profile_name) return;
+    if (!name_ok) return;
 
     mkdir(STORAGE_NETWORK, 0755);
 
@@ -829,13 +852,14 @@ static void save_profile_ini(void) {
         char *old_name = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
         if (old_name && *old_name && strcmp(old_name, profile_name) != 0) {
             char old_file[MAX_BUFFER_SIZE];
-            snprintf(old_file, sizeof(old_file), STORAGE_NETWORK "/%s.ini", old_name);
-            remove(old_file);
+            int of_len = snprintf(old_file, sizeof(old_file), STORAGE_NETWORK "/%s.ini", old_name);
+            if (of_len >= 0 && (size_t) of_len < sizeof(old_file)) remove(old_file);
         }
     }
 
     char profile_file[MAX_BUFFER_SIZE];
-    snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name);
+    int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name);
+    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return;
 
     int is_static = (strcasecmp(lv_label_get_text(ui_lblTypeValue_network), lang.MUXNETPROFILE.STATIC) == 0);
 
