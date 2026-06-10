@@ -28,6 +28,7 @@
  **/
 
 #include "mini.h"
+#include <fcntl.h>
 #include <limits.h>
 #include <malloc.h>
 #include <sys/stat.h>
@@ -453,6 +454,22 @@ int mini_save(const mini_t *mini, int flags) {
     if (result != MINI_OK || rename(tmp, mini->path) != 0) {
         remove(tmp);
         return MINI_ACCESS_DENIED;
+    }
+
+    const char *slash = strrchr(mini->path, '/');
+    char dir[PATH_MAX];
+    if (slash && slash != mini->path) {
+        size_t dir_len = (size_t) (slash - mini->path);
+        memcpy(dir, mini->path, dir_len);
+        dir[dir_len] = '\0';
+    } else {
+        dir[0] = '.';
+        dir[1] = '\0';
+    }
+    int dir_fd = open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dir_fd >= 0) {
+        fsync(dir_fd);
+        close(dir_fd);
     }
 
     return MINI_OK;
