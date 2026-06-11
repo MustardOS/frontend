@@ -27,7 +27,7 @@ static const board_info_t board_table[] = {
         {"Anbernic RGCUBE-H",  "rgcubexx-h",  BOARD_SPECIAL_NONE,      NOP, EV0, NOP, NO_EVENT_OFFSET},
         {"Anbernic Vita Pro",  "rg-vita-pro", BOARD_SPECIAL_VITA_PRO,  EV7, EV0, NOP, TOUCH_EVENT_OFFSET(EV7, 1)},
 
-        {"Batlexp G350",       "rk-g350-v",   BOARD_SPECIAL_G350,      NOP, NOP, NOP, NO_EVENT_OFFSET},
+        {"Batlexp G350",       "rk-g350-v",   BOARD_SPECIAL_G350,      EV3, EV0, NOP, NO_EVENT_OFFSET},
         {"GKD Pixel 2",        "rk-pixel-2",  BOARD_SPECIAL_NONE,      NOP, NOP, NOP, NO_EVENT_OFFSET},
 
         {"TrimUI Brick",       "tui-brick",   BOARD_SPECIAL_TUI_BRICK, NOP, EV1, NOP, NO_EVENT_OFFSET},
