@@ -169,6 +169,7 @@
 #define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 #define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
+#define MUOS_CRS_LOAD "/tmp/crs_go" // Crash Module Information
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_FLT_LOAD "/tmp/flt_go" // Colour Filter Name
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader

@@ -6,7 +6,7 @@ A53_FIX = -mfix-cortex-a53-835769 -mfix-cortex-a53-843419
 BUILD ?= test
 
 ifeq ($(BUILD),release)
-    BUILD_FLAGS = -DTEST_IMAGE=0
+    BUILD_FLAGS = -DTEST_IMAGE=0 -DMUOS_RELEASE
 else
     BUILD_FLAGS = -DTEST_IMAGE=1
 endif

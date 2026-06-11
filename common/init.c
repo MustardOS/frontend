@@ -21,6 +21,7 @@
 #include "board.h"
 #include "theme.h"
 #include "svg.h"
+#include "crash.h"
 
 static uint64_t start_ms = 0;
 static struct dt_task_param dt_par;
@@ -129,18 +130,11 @@ void safe_quit(int exit_status) {
     write_text_to_file(SAFE_QUIT, "w", INT, exit_status);
 }
 
-static void close_fd(int *fd) {
-    if (*fd >= 0) {
-        close(*fd);
-        *fd = -1;
-    }
-}
-
 void init_module(const char *module) {
     snprintf(mux_module, sizeof(mux_module), "%s", module_from_func(module));
     set_process_name(mux_module);
-
     load_lang(&lang);
+    crash_init(mux_module);
     common_var_init();
 }
 
@@ -408,6 +402,8 @@ void init_fonts(void) {
     load_font_section(FONT_PANEL_DIR, ui_pnlContent);
     load_font_section(FONT_HEADER_DIR, ui_pnlHeader);
     load_font_section(FONT_FOOTER_DIR, ui_pnlFooter);
+
+    crash_ui_apply_font(ui_screen);
 }
 
 void init_theme(int panel_init, int long_mode) {

@@ -127,6 +127,10 @@ struct mux_lang {
         char TEXT_ONLY[MAX_BUFFER_SIZE];
         char TEXT_ICON[MAX_BUFFER_SIZE];
         char UNSAVED[MAX_BUFFER_SIZE];
+        char CRASH_TITLE[MAX_BUFFER_SIZE];
+        char CRASH_MESSAGE[MAX_BUFFER_SIZE];
+        char CRASH_MODULE[MAX_BUFFER_SIZE];
+        char CRASH_FAULT[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {

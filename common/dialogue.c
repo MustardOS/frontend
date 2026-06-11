@@ -308,9 +308,17 @@ void dialogue_show(mux_dialogue *dlg) {
 
     lv_obj_set_style_bg_opa(dlg->dim, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
-
     lv_obj_clear_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_update_layout(dlg->panel);
+
+    if (dlg->description_label) {
+        lv_label_set_text(dlg->description_label, lv_label_get_text(dlg->description_label));
+    }
+
+    if (dlg->option_count == 0 && dlg->options[0]) {
+        lv_label_set_text(dlg->options[0], lv_label_get_text(dlg->options[0]));
+    }
+
+    lv_obj_update_layout(lv_obj_get_parent(dlg->panel));
     lv_coord_t panel_h = lv_obj_get_height(dlg->panel);
     lv_coord_t target_y = (LV_VER_RES - panel_h) / 2;
 

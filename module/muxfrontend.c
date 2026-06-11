@@ -749,6 +749,8 @@ int main(void) {
         write_text_to_file(MUX_BOOT_AUTH, "w", CHAR, "");
     }
 
+    if (file_exist(SAFE_QUIT)) remove(SAFE_QUIT);
+
     while (1) {
         if (file_exist(SAFE_QUIT)) {
             LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!");

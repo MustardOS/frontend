@@ -147,6 +147,8 @@ void header_and_footer_setup(void) {
     process_visual_element(VIS_HEADERTITLE, ui_lblTitle);
 
     lv_label_set_text(ui_lblMessage, "");
+
+    crash_ui_check(&theme, &lang, lv_layer_top(), &msgbox_active);
 }
 
 void overlay_display(void) {
@@ -546,9 +548,15 @@ void list_nav_cb_next_nowrap(int steps) {
 }
 
 void handle_msgbox_dismiss(void) {
-    play_sound(SND_INFO_CLOSE);
     msgbox_active = 0;
     progress_onscreen = 0;
+
+    if (crash_ui_dismiss()) {
+        play_sound(SND_CONFIRM);
+        return;
+    }
+
+    play_sound(SND_INFO_CLOSE);
     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
 }
 

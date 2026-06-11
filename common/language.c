@@ -130,6 +130,10 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.TEXT_ONLY, "Text Only");
     GENERIC_FIELD(lang->GENERIC.TEXT_ICON, "Text + Icon");
     GENERIC_FIELD(lang->GENERIC.UNSAVED, "Unsaved Changes");
+    GENERIC_FIELD(lang->GENERIC.CRASH_TITLE, "Guru Meditation Error");
+    GENERIC_FIELD(lang->GENERIC.CRASH_MESSAGE, "If this continues, please report it to the MustardOS team!");
+    GENERIC_FIELD(lang->GENERIC.CRASH_MODULE, "Module");
+    GENERIC_FIELD(lang->GENERIC.CRASH_FAULT, "Fault");
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");
