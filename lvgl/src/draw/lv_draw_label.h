@@ -74,6 +74,10 @@ struct _lv_draw_ctx_t;
  * GLOBAL PROTOTYPES
  **********************/
 
+void lv_shadow_set(int enabled,
+                   lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y,
+                   lv_color_t focus_colour, lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y);
+
 void /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_label_dsc_init(lv_draw_label_dsc_t *dsc);
 
 /**

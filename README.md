@@ -180,8 +180,7 @@ The following third party libraries are bundled in this repository.
 
 ### [LVGL](https://github.com/lvgl/lvgl)
 
-Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer which in turn
-embeds [stb_truetype](https://github.com/nothings/stb) for glyph rasterisation.
+Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for glyph rasterisation.
 
 - Version: 8.4.0
 - License: MIT
@@ -234,6 +233,24 @@ Extremely fast non-cryptographic hash algorithm. Used to compute file checksums 
 - License: BSD 2-Clause
 - Location: `common/xxhash/`
 
+### [stb_truetype](https://github.com/nothings/stb)
+
+Single-header C library for TrueType font parsing and glyph rasterisation. Used by the LVGL TinyTTF renderer to load and render custom TTF fonts at runtime.
+
+- Version: 1.26
+- Author: Sean Barrett
+- License: Public domain
+- Location: `common/stb/stb_truetype.h`
+
+### [stb_rect_pack](https://github.com/nothings/stb)
+
+Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer to pack glyph bitmaps into atlas textures.
+
+- Version: 1.01
+- Author: Sean Barrett
+- License: Public domain
+- Location: `common/stb/stb_rect_pack.h`
+
 ### [stb_image_write](https://github.com/nothings/stb)
 
 Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from the framebuffer.
@@ -241,4 +258,4 @@ Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Us
 - Version: 1.16
 - Author: Sean Barrett
 - License: Public domain
-- Location: `common/png/stb_image_write.h`
+- Location: `common/stb/stb_image_write.h`

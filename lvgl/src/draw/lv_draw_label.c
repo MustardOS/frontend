@@ -13,7 +13,6 @@
 #include "../core/lv_refr.h"
 #include "../misc/lv_bidi.h"
 #include "../misc/lv_assert.h"
-#include "../../../common/font.h"
 
 /*********************
  *      DEFINES
@@ -45,6 +44,16 @@ static uint8_t hex_char_to_num(char hex);
  *  GLOBAL VARIABLES
  **********************/
 
+int g_font_shadow_enabled = 0;
+lv_color_t g_shadow_colour_default;
+lv_opa_t g_shadow_alpha_default = LV_OPA_COVER;
+int16_t g_shadow_x_offset_default = 2;
+int16_t g_shadow_y_offset_default = 2;
+lv_color_t g_shadow_colour_focus;
+lv_opa_t g_shadow_alpha_focus = LV_OPA_50;
+int16_t g_shadow_x_offset_focus = 2;
+int16_t g_shadow_y_offset_focus = 2;
+
 /**********************
  *      MACROS
  **********************/
@@ -52,6 +61,20 @@ static uint8_t hex_char_to_num(char hex);
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
+
+void lv_shadow_set(int enabled,
+                   lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y,
+                   lv_color_t focus_colour, lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y) {
+    g_font_shadow_enabled = enabled;
+    g_shadow_colour_default = def_colour;
+    g_shadow_alpha_default = def_alpha;
+    g_shadow_x_offset_default = def_x;
+    g_shadow_y_offset_default = def_y;
+    g_shadow_colour_focus = focus_colour;
+    g_shadow_alpha_focus = focus_alpha;
+    g_shadow_x_offset_focus = focus_x;
+    g_shadow_y_offset_focus = focus_y;
+}
 
 void LV_ATTRIBUTE_FAST_MEM lv_draw_label_dsc_init(lv_draw_label_dsc_t *dsc) {
     lv_memset_00(dsc, sizeof(lv_draw_label_dsc_t));

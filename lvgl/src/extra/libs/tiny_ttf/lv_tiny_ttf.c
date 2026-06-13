@@ -9,9 +9,6 @@
 #define STBRP_STATIC
 #define STBTT_STATIC
 #define STB_TRUETYPE_IMPLEMENTATION
-#define STBTT_HEAP_FACTOR_SIZE_32 50
-#define STBTT_HEAP_FACTOR_SIZE_128 20
-#define STBTT_HEAP_FACTOR_SIZE_DEFAULT 10
 #define STBTT_malloc(x, u) ((void)(u), lv_mem_alloc(x))
 #define STBTT_free(x, u) ((void)(u), lv_mem_free(x))
 #define TTF_MALLOC(x) (lv_mem_alloc(x))
@@ -61,8 +58,8 @@ static void ttf_cb_stream_seek(ttf_cb_stream_t * stream, size_t position)
 #define STBTT_STREAM_READ(s, x, y) ttf_cb_stream_read(s, x, y);
 #endif /*LV_TINY_TTF_FILE_SUPPORT*/
 
-#include "stb_rect_pack.h"
-#include "stb_truetype_htcw.h"
+#include "../../../../../common/stb/stb_rect_pack.h"
+#include "../../../../../common/stb/stb_truetype.h"
 
 typedef struct ttf_font_desc {
     lv_fs_file_t file;
@@ -112,7 +109,7 @@ static bool ttf_get_glyph_dsc_cb(const lv_font_t *font, lv_font_glyph_dsc_t *dsc
     }
     int advw, lsb;
     stbtt_GetGlyphHMetrics(&dsc->info, g1, &advw, &lsb);
-    int k = stbtt_GetGlyphKernAdvance(&dsc->info, g1, g2);
+    int k = (g2 > 0) ? stbtt_GetGlyphKernAdvance(&dsc->info, g1, g2) : 0;
     dsc_out->adv_w = (uint16_t) floor((((float) advw + (float) k) * dsc->scale) +
                                       0.5f); /*Horizontal space required by the glyph in [px]*/
 
@@ -215,7 +212,7 @@ static lv_font_t *lv_tiny_ttf_create(const char *path, const void *data, size_t 
         goto err_after_dsc;
     }
 
-    lv_font_t *out_font = (lv_font_t *) TTF_MALLOC(sizeof(lv_font_t));
+    lv_font_t * out_font = (lv_font_t *) TTF_MALLOC(sizeof(lv_font_t));
     if (out_font == NULL) {
         LV_LOG_ERROR("tiny_ttf: out of memory\n");
         goto err_after_bitmap_cache;
