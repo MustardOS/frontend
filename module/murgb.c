@@ -8,9 +8,9 @@
 #include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
-#include <../common/colour.h>
+#include "../common/colour.h"
 #include "../common/config.h"
-#include <../common/common.h>
+#include "../common/common.h"
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 
@@ -35,7 +35,6 @@ typedef struct {
     int cyc_all, cyc_l, cyc_r, cyc_m, cyc_f1, cyc_f2;
 } flags_t;
 
-static int g_debug = 0;
 
 static void die(const char *fmt, ...) {
     va_list ap;
@@ -69,19 +68,16 @@ static int parse_int(const char *s, const char *what) {
 
 static int dir_exists(const char *path) {
     struct stat st;
-
     return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
 static int char_dev_exists(const char *path) {
     struct stat st;
-
     return stat(path, &st) == 0 && S_ISCHR(st.st_mode);
 }
 
 static int write_string(const char *path, const char *value) {
     FILE *f = fopen(path, "w");
-
     if (!f) return -1;
 
     int n = fputs(value, f);
@@ -92,7 +88,6 @@ static int write_string(const char *path, const char *value) {
 
 static int sysfs_writable(const char *leaf) {
     char path[512];
-
     snprintf(path, sizeof path, "%s/%s", LED_SYS, leaf);
 
     return access(path, W_OK) == 0;
@@ -100,8 +95,8 @@ static int sysfs_writable(const char *leaf) {
 
 static int sysfs_write(const char *leaf, const char *value) {
     char path[512];
-
     snprintf(path, sizeof path, "%s/%s", LED_SYS, leaf);
+
     if (access(path, W_OK) != 0) return -1;
 
     return write_string(path, value);
@@ -114,18 +109,17 @@ static int sysfs_write_int(const char *leaf, int v) {
     return sysfs_write(leaf, buf);
 }
 
-static int joypad_writable(const char *leaf) {
+static int joypad_writable() {
     char path[512];
-
-    snprintf(path, sizeof path, "%s/%s", JOY_SYS, leaf);
+    snprintf(path, sizeof path, "%s/%s", JOY_SYS, "led_set");
 
     return access(path, W_OK) == 0;
 }
 
 static int joypad_write(const char *leaf, const char *value) {
     char path[512];
-
     snprintf(path, sizeof path, "%s/%s", JOY_SYS, leaf);
+
     if (access(path, W_OK) != 0) return -1;
 
     return write_string(path, value);
@@ -133,7 +127,6 @@ static int joypad_write(const char *leaf, const char *value) {
 
 static int joypad_write_int(const char *leaf, int v) {
     char buf[32];
-
     snprintf(buf, sizeof buf, "%d\n", v);
 
     return joypad_write(leaf, buf);
@@ -166,12 +159,14 @@ static int joypad_mode_from_protocol(int mode) {
 static int joypad_speed_pct_to_reg(int pct) {
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
+
     return pct;
 }
 
 static int joypad_breathing_speed_invert(int ui_pct) {
     if (ui_pct < 0) ui_pct = 0;
     if (ui_pct > 100) ui_pct = 100;
+
     return 100 - ui_pct;
 }
 
@@ -189,15 +184,45 @@ static int joypad_breathing_speed_pct_for_protocol(int mode) {
 }
 
 static int joypad_commit(void) {
-    if (joypad_writable("led_set")) joypad_write_int("led_set", 1);
+    if (joypad_writable()) joypad_write_int("led_set", 1);
 
     return 0;
+}
+
+static backend_t detect_device_backend(void) {
+    static const struct {
+        const char *code;
+        backend_t backend;
+    } map[] = {
+            {"gcs-h36s",    BE_SERIAL},
+            {"rg40xx-h",    BE_SERIAL},
+            {"rg40xx-v",    BE_SERIAL},
+            {"rgcubexx-h",  BE_SERIAL},
+            {"rg-vita-pro", BE_JOYPAD},
+            {"tui-brick",   BE_SYSFS},
+            {"tui-spoon",   BE_SYSFS},
+    };
+
+    const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    if (!board || !*board) return BE_AUTO;
+
+    for (size_t i = 0; i < sizeof map / sizeof map[0]; i++) {
+        if (strcmp(board, map[i].code) == 0) return map[i].backend;
+    }
+
+    return BE_AUTO;
 }
 
 static backend_t detect_backend(backend_t requested) {
     if (requested != BE_AUTO) return requested;
 
-    if (dir_exists(JOY_SYS)) return BE_JOYPAD;
+    backend_t from_device = detect_device_backend();
+
+    if (from_device == BE_JOYPAD && dir_exists(JOY_SYS)) return BE_JOYPAD;
+    if (from_device == BE_SYSFS && dir_exists(LED_SYS)) return BE_SYSFS;
+    if (from_device == BE_SERIAL && char_dev_exists(SER_DEV)) return BE_SERIAL;
+
+    if (dir_exists(JOY_SYS) && joypad_writable()) return BE_JOYPAD;
     if (dir_exists(LED_SYS)) return BE_SYSFS;
     if (char_dev_exists(SER_DEV)) return BE_SERIAL;
 
@@ -239,12 +264,6 @@ static uint8_t checksum_u8(const uint8_t *bytes, size_t n) {
 }
 
 static void serial_write_bytes(const uint8_t *bytes, size_t n) {
-    if (g_debug) {
-        fputs("TX:", stderr);
-        for (size_t i = 0; i < n; i++) fprintf(stderr, " %02X", bytes[i]);
-        fputc('\n', stderr);
-    }
-
     if (serial_fd < 0) return;
 
     ssize_t w = write(serial_fd, bytes, n);
@@ -467,29 +486,30 @@ static int restore_brightness_to_byte(int b) {
     return clamp(b, MCU_BRI);
 }
 
-static int get_rgb_path(char *rgb_path, size_t rgb_path_size) {
+static int get_rgb_path(char *rgb_path) {
     theme_base = get_theme_base();
     char active_path[MAX_BUFFER_SIZE];
     snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
     if (file_exist(active_path)) {
-        snprintf(rgb_path, rgb_path_size, "%s/alternate/rgb/%s/", theme_base,
+        snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", theme_base,
                  str_replace(read_line_char_from(active_path, 1), "\r", ""));
         return dir_exist(rgb_path);
     }
-    snprintf(rgb_path, rgb_path_size, "%s/rgb/", theme_base);
+    snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/rgb/", theme_base);
     return dir_exist(rgb_path);
 }
 
 static int dispatch_restore(void) {
     int saved_mode = read_config_int("settings/rgb/mode", 0);
     int saved_backend = read_config_int("settings/rgb/backend", 0);
-    int saved_bright_raw = 6;
+    int saved_bright_raw;
     rgb_colour_t col_l, col_r, col_m, col_f1, col_f2;
 
     if (saved_mode == 4) {
-        char base_path[MAX_BUFFER_SIZE];
-        get_rgb_path(base_path, sizeof(base_path));
         char settings_path[MAX_BUFFER_SIZE];
+
+        char base_path[MAX_BUFFER_SIZE];
+        get_rgb_path(base_path);
 
         snprintf(settings_path, sizeof(settings_path), "%smode", base_path);
         saved_mode = read_line_int_from(settings_path, 1);
@@ -502,7 +522,7 @@ static int dispatch_restore(void) {
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_l", base_path);
         read_rgb_colour_from_file(settings_path, &col_l, &RGB_COLOURS[0]);
-        
+
         snprintf(settings_path, sizeof(settings_path), "%scolour_r", base_path);
         read_rgb_colour_from_file(settings_path, &col_r, &col_l);
 
@@ -517,8 +537,8 @@ static int dispatch_restore(void) {
     } else {
         saved_bright_raw = read_config_int("settings/rgb/bright", 6);
         read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &col_l, &RGB_COLOURS[0]);
-        col_r  = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r",  0), &col_l);
-        col_m  = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m",  0), &col_l);
+        col_r = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r", 0), &col_l);
+        col_m = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m", 0), &col_l);
         col_f1 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f1", 0), &col_l);
         col_f2 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f2", 0), &col_r);
     }
@@ -566,9 +586,9 @@ static int dispatch_restore(void) {
             // if (idx_r <= 0) {
             //     sec_r = sec_g = sec_b = 0;
             // } else {
-                sec_r = col_r.r;
-                sec_g = col_r.g;
-                sec_b = col_r.b;
+            sec_r = col_r.r;
+            sec_g = col_r.g;
+            sec_b = col_r.b;
             // }
 
             wire_mode = 8;
@@ -640,17 +660,13 @@ static int dispatch_restore(void) {
             PUSH(col_f2.r);
             PUSH(col_f2.g);
             PUSH(col_f2.b);
-        } else if (use == BE_JOYPAD) {
+        } else {
             PUSH(col_l.r);
             PUSH(col_l.g);
             PUSH(col_l.b);
-        } else {
             PUSH(col_r.r);
             PUSH(col_r.g);
             PUSH(col_r.b);
-            PUSH(col_l.r);
-            PUSH(col_l.g);
-            PUSH(col_l.b);
         }
     }
 
@@ -916,26 +932,24 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
 
     joypad_write_int("led_switch", 1);
     joypad_write_int("led_level", level);
-    joypad_write_int("led_sync_colour", 1);
+    joypad_write_int("led_sync_colour", mode == 1 ? 0 : 1);
 
     if (mode >= 2 && mode <= 4) {
         int ui_pct = joypad_breathing_speed_pct_for_protocol(mode);
         joypad_write_int("led_speed", joypad_breathing_speed_invert(ui_pct));
     }
 
-    if (mode == 1) {
-        joypad_write_int("custum_rgb_r", lr);
-        joypad_write_int("custum_rgb_g", lg);
-        joypad_write_int("custum_rgb_b", lb);
-    } else {
-        joypad_write_int("Led_rgb_r1", lr);
-        joypad_write_int("Led_rgb_g1", lg);
-        joypad_write_int("Led_rgb_b1", lb);
+    joypad_write_int("Led_rgb_r1", lr);
+    joypad_write_int("Led_rgb_g1", lg);
+    joypad_write_int("Led_rgb_b1", lb);
 
-        joypad_write_int("Led_rgb_r2", 0);
-        joypad_write_int("Led_rgb_g2", 0);
-        joypad_write_int("Led_rgb_b2", 0);
-    }
+    int lr2 = argc >= 6 ? clamp(parse_int(argv[3], "R2"), MCU_BRI) : lr;
+    int lg2 = argc >= 6 ? clamp(parse_int(argv[4], "G2"), MCU_BRI) : lg;
+    int lb2 = argc >= 6 ? clamp(parse_int(argv[5], "B2"), MCU_BRI) : lb;
+
+    joypad_write_int("Led_rgb_r2", lr2);
+    joypad_write_int("Led_rgb_g2", lg2);
+    joypad_write_int("Led_rgb_b2", lb2);
 
     joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
     joypad_commit();
@@ -1038,9 +1052,6 @@ static backend_t parse_backend(const char *s) {
 
 int main(int argc, char **argv) {
     load_config(&config);
-
-    const char *dbg = getenv("RGB_DEBUG");
-    g_debug = (dbg && *dbg && strcmp(dbg, "0") != 0);
 
     if (argc >= 2 && (strcmp(argv[1], "off") == 0 || strcmp(argv[1], "restore") == 0)) {
         if (argc != 2) {

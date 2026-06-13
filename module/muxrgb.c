@@ -927,11 +927,14 @@ int muxrgb_main(void) {
     init_dropdown_settings();
 
     rgb_focus();
+    nav_silent = 1;
 
     dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
                           lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 0, 0);
+    nav_silent = 0;
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
