@@ -82,7 +82,7 @@ static const char *wizards[] = {
         "joyrider3774", ".cebion", "irilivibi", "vagueparade", "shengy.",
         "siliconexarch", "shauninman", "johnnyonflame", "snowram", "habbening",
         "trngaje", "skorpy", "stanley_00", "ajmandourah", "bcat24",
-        "xanxic", "midwan", "arkun_", "mikhailzrick", "retrogfx_",
+        "xanxic", "arkun_", "mikhailzrick", "retrogfx_",
         "aeverdyn", "kitfox618", "spycat88", "sundownersport",
         NULL
 };
@@ -90,33 +90,29 @@ static const char *wizards[] = {
 static const char *heroes[] = {
         "romus85", "x_tremis", "lmarcomiranda", "timecarp", "intelliaim",
         "kentonftw", "bazkart", "msx6011", "btreecat", "teggydave",
-        "zazouboy", "robbiet480", "luzfcb", "brohsnbluffs", "zaka1w3",
-        "superzu", "nico_linber_36894", "pr0j3kt2501", "rosemelody254",
-        "bigbossman0816", "meowman_", "kaeltis", "raouldook.", "paletochen",
-        "benjaminbercy", "snesfan1", "asiaclonk", "jimmycrackedcorn_4711",
+        "zazouboy", "robbiet480", "luzfcb", "brohsnbluffs",
+        "superzu", "pr0j3kt2501", "rosemelody254", "bigbossman0816",
+        "warlordwossman", "meowman_", "kaeltis", "paletochen",
+        "benjaminbercy", "snesfan1", "suribii", "asiaclonk", "jimmycrackedcorn_4711",
         "hueykablooey", "mrwhistles", "losermatic",
         "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla",
         "amos_06286", "techagent", "meanagar", "roundpi", "chiefwally_73445",
         "scy0n", "luckyphil", "nahck", "mach5682", "foamygames",
         "xraygoggles", "hybrid_sith", "mxdamp", "ownedmumbles", "exe0237",
-        "kernelkritic", "verctexius", "misfitsorbet", "izzythefool",
+        "kernelkritic", "verctexius", "misfitsorbet",
         "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.",
-        "kularose", ".rayman30",
+        "turner74.", "jmtn070", "izzythefool", "nahck",
         NULL
 };
 
 static const char *knights[] = {
         "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc",
-        "_maxwellsdemon", "status.quo.exile", "phyrex", "kiko_lake", "arkholt",
-        "julas8799", "fibroidjames", "allepac", "pakwan8234", "drisc",
+        "_maxwellsdemon", "kiko_lake", "arkholt", "julas8799", "allepac", "drisc",
         "clempurp9868", "aj15", "retrogamecorps", "rbndr_", "sanelessone",
-        "hanswurstsenior",
-        "billynaing", "nuke_67641", "zauberpony", "frickinfrogs",
-        "smittywerbenjaegermanjensen9250",
-        "wizardfights", "_wizdude", "stin87", "surge_84306", "phlurblepoot",
-        "mrcee1503", "splendid88_98891", "yomama78", "admiralthrawn_1",
-        "penpen2crayon", "jupyter.", "bburbank", "crownlessk", "johnunsc",
-        "obitomatheus",
+        "billynaing", "nuke_67641", "zauberpony", "smittywerbenjaegermanjensen9250",
+        "wizardfights", "_wizdude", "stin87", "surge_84306",
+        "mrcee1503", "admiralthrawn_1", "penpen2crayon", "jupyter.", "bburbank",
+        "crownlessk", "johnunsc", "crusader4hope3222",
         NULL
 };
 
