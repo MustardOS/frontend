@@ -515,7 +515,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
 
 static void handle_analog(int16_t ls_x, int16_t ls_y, int16_t rs_x, int16_t rs_y) {
     update_stick_canvas(&stick_l, ls_x, ls_y);
-    update_stick_canvas(&stick_r, rs_x, rs_y);
+    if (device.BOARD.HASSTICK >= 2) update_stick_canvas(&stick_r, rs_x, rs_y);
 }
 
 static void handle_idle(void) {
@@ -559,7 +559,7 @@ static void create_input_preview_panel(lv_obj_t *parent, int shorter) {
 }
 
 static int alloc_stick_buffers(stick_state_t *stick) {
-    size_t buf_size = (size_t)LV_CANVAS_BUF_SIZE_TRUE_COLOR_ALPHA(stick_target_px, stick_target_px);
+    size_t buf_size = (size_t) LV_CANVAS_BUF_SIZE_TRUE_COLOR_ALPHA(stick_target_px, stick_target_px);
 
     stick->static_buf = lv_mem_alloc(buf_size);
     stick->dynamic_buf = lv_mem_alloc(buf_size);
@@ -679,7 +679,13 @@ static void init_elements(void) {
     lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
 
-    if (device.BOARD.HASSTICK) {
+    if (device.BOARD.HASSTICK == 1) {
+        reset_stick_state(&stick_l);
+
+        ui_pnlStickL = create_stick_target(ui_screen, LV_ALIGN_LEFT_MID, stick_edge_gap_px, &stick_l);
+
+        if (ui_pnlStickL) lv_obj_move_foreground(ui_pnlStickL);
+    } else if (device.BOARD.HASSTICK >= 2) {
         reset_stick_state(&stick_l);
         reset_stick_state(&stick_r);
 
