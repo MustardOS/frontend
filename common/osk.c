@@ -567,6 +567,15 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, int include_numpad, 
     lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
 
     apply_osk_theme(key_entry);
+    lv_shadow_zone_register(key_entry,
+                            lv_color_hex(theme.OSK.ITEM.SHADOW_COLOUR),
+                            (lv_opa_t) theme.OSK.ITEM.SHADOW_ALPHA,
+                            (int8_t) theme.OSK.ITEM.SHADOW_X_OFFSET,
+                            (int8_t) theme.OSK.ITEM.SHADOW_Y_OFFSET,
+                            lv_color_hex(theme.OSK.ITEM.SHADOW_COLOUR_FOCUS),
+                            (lv_opa_t) theme.OSK.ITEM.SHADOW_ALPHA_FOCUS,
+                            (int8_t) theme.OSK.ITEM.SHADOW_X_OFFSET_FOCUS,
+                            (int8_t) theme.OSK.ITEM.SHADOW_Y_OFFSET_FOCUS);
 
     num_entry = NULL;
     hex_entry = NULL;
@@ -586,6 +595,15 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, int include_numpad, 
         lv_obj_add_event_cb(num_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
 
         apply_osk_theme(num_entry);
+        lv_shadow_zone_register(num_entry,
+                                lv_color_hex(theme.OSK.ITEM.SHADOW_COLOUR),
+                                (lv_opa_t) theme.OSK.ITEM.SHADOW_ALPHA,
+                                (int8_t) theme.OSK.ITEM.SHADOW_X_OFFSET,
+                                (int8_t) theme.OSK.ITEM.SHADOW_Y_OFFSET,
+                                lv_color_hex(theme.OSK.ITEM.SHADOW_COLOUR_FOCUS),
+                                (lv_opa_t) theme.OSK.ITEM.SHADOW_ALPHA_FOCUS,
+                                (int8_t) theme.OSK.ITEM.SHADOW_X_OFFSET_FOCUS,
+                                (int8_t) theme.OSK.ITEM.SHADOW_Y_OFFSET_FOCUS);
     } else if (include_numpad == 2) {
         hex_entry = lv_btnmatrix_create(ui_pnlEntry);
 
@@ -601,6 +619,15 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, int include_numpad, 
         lv_obj_add_event_cb(hex_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
 
         apply_osk_theme(hex_entry);
+        lv_shadow_zone_register(hex_entry,
+                                lv_color_hex(theme.OSK.ITEM.SHADOW_COLOUR),
+                                (lv_opa_t) theme.OSK.ITEM.SHADOW_ALPHA,
+                                (int8_t) theme.OSK.ITEM.SHADOW_X_OFFSET,
+                                (int8_t) theme.OSK.ITEM.SHADOW_Y_OFFSET,
+                                lv_color_hex(theme.OSK.ITEM.SHADOW_COLOUR_FOCUS),
+                                (lv_opa_t) theme.OSK.ITEM.SHADOW_ALPHA_FOCUS,
+                                (int8_t) theme.OSK.ITEM.SHADOW_X_OFFSET_FOCUS,
+                                (int8_t) theme.OSK.ITEM.SHADOW_Y_OFFSET_FOCUS);
     }
 
     nav_hint_container = lv_obj_create(ui_pnlEntry);

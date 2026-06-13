@@ -126,6 +126,14 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->DIALOGUE.SELECTION_ALPHA = 255;
     theme->DIALOGUE.RADIUS.MAIN = 3;
     theme->DIALOGUE.RADIUS.SELECTED = 0;
+    theme->DIALOGUE.SHADOW_COLOUR = 0x000000;
+    theme->DIALOGUE.SHADOW_ALPHA = 255;
+    theme->DIALOGUE.SHADOW_X_OFFSET = 2;
+    theme->DIALOGUE.SHADOW_Y_OFFSET = 2;
+    theme->DIALOGUE.SHADOW_COLOUR_FOCUS = 0x333333;
+    theme->DIALOGUE.SHADOW_ALPHA_FOCUS = 128;
+    theme->DIALOGUE.SHADOW_X_OFFSET_FOCUS = 2;
+    theme->DIALOGUE.SHADOW_Y_OFFSET_FOCUS = 2;
 
     theme->NAV.ALIGNMENT = 255;
     theme->NAV.SPACING = 5;
@@ -363,6 +371,14 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->OSK.ITEM.BORDER_FOCUS = 0xF7E318;
     theme->OSK.ITEM.BORDER_FOCUS_ALPHA = 255;
     theme->OSK.ITEM.RADIUS = 3;
+    theme->OSK.ITEM.SHADOW_COLOUR = 0x000000;
+    theme->OSK.ITEM.SHADOW_ALPHA = 255;
+    theme->OSK.ITEM.SHADOW_X_OFFSET = 2;
+    theme->OSK.ITEM.SHADOW_Y_OFFSET = 2;
+    theme->OSK.ITEM.SHADOW_COLOUR_FOCUS = 0x333333;
+    theme->OSK.ITEM.SHADOW_ALPHA_FOCUS = 128;
+    theme->OSK.ITEM.SHADOW_X_OFFSET_FOCUS = 2;
+    theme->OSK.ITEM.SHADOW_Y_OFFSET_FOCUS = 2;
 
     theme->MESSAGE.BACKGROUND = 0x100808;
     theme->MESSAGE.BACKGROUND_ALPHA = 255;
@@ -605,6 +621,26 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
                                               theme->DIALOGUE.RADIUS.MAIN);
     theme->DIALOGUE.RADIUS.SELECTED = get_ini_int(muos_theme, "dialogue", "DIALOGUE_RADIUS_SELECTED",
                                                   theme->DIALOGUE.RADIUS.SELECTED);
+    theme->DIALOGUE.SHADOW_COLOUR = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_SHADOW_COLOUR",
+                                                theme->DIALOGUE.SHADOW_COLOUR);
+    theme->DIALOGUE.SHADOW_ALPHA = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_ALPHA",
+                                               theme->DIALOGUE.SHADOW_ALPHA);
+    if (theme->DIALOGUE.SHADOW_ALPHA < 0) theme->DIALOGUE.SHADOW_ALPHA = 0;
+    if (theme->DIALOGUE.SHADOW_ALPHA > 255) theme->DIALOGUE.SHADOW_ALPHA = 255;
+    theme->DIALOGUE.SHADOW_X_OFFSET = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_X_OFFSET",
+                                                  theme->DIALOGUE.SHADOW_X_OFFSET);
+    theme->DIALOGUE.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_Y_OFFSET",
+                                                  theme->DIALOGUE.SHADOW_Y_OFFSET);
+    theme->DIALOGUE.SHADOW_COLOUR_FOCUS = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_SHADOW_COLOUR_FOCUS",
+                                                      theme->DIALOGUE.SHADOW_COLOUR_FOCUS);
+    theme->DIALOGUE.SHADOW_ALPHA_FOCUS = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_ALPHA_FOCUS",
+                                                     theme->DIALOGUE.SHADOW_ALPHA_FOCUS);
+    if (theme->DIALOGUE.SHADOW_ALPHA_FOCUS < 0) theme->DIALOGUE.SHADOW_ALPHA_FOCUS = 0;
+    if (theme->DIALOGUE.SHADOW_ALPHA_FOCUS > 255) theme->DIALOGUE.SHADOW_ALPHA_FOCUS = 255;
+    theme->DIALOGUE.SHADOW_X_OFFSET_FOCUS = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_X_OFFSET_FOCUS",
+                                                        theme->DIALOGUE.SHADOW_X_OFFSET_FOCUS);
+    theme->DIALOGUE.SHADOW_Y_OFFSET_FOCUS = get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_Y_OFFSET_FOCUS",
+                                                        theme->DIALOGUE.SHADOW_Y_OFFSET_FOCUS);
 
     theme->NAV.ALIGNMENT = get_ini_uint(muos_theme, "navigation", "ALIGNMENT", theme->NAV.ALIGNMENT);
     theme->NAV.SPACING = get_ini_uint(muos_theme, "navigation", "SPACING", theme->NAV.SPACING);
@@ -997,6 +1033,26 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->OSK.ITEM.BORDER_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS_ALPHA",
                                                      theme->OSK.ITEM.BORDER_FOCUS_ALPHA);
     theme->OSK.ITEM.RADIUS = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_RADIUS", theme->OSK.ITEM.RADIUS);
+    theme->OSK.ITEM.SHADOW_COLOUR = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_SHADOW_COLOUR",
+                                                theme->OSK.ITEM.SHADOW_COLOUR);
+    theme->OSK.ITEM.SHADOW_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_ALPHA",
+                                               theme->OSK.ITEM.SHADOW_ALPHA);
+    if (theme->OSK.ITEM.SHADOW_ALPHA < 0) theme->OSK.ITEM.SHADOW_ALPHA = 0;
+    if (theme->OSK.ITEM.SHADOW_ALPHA > 255) theme->OSK.ITEM.SHADOW_ALPHA = 255;
+    theme->OSK.ITEM.SHADOW_X_OFFSET = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_X_OFFSET",
+                                                  theme->OSK.ITEM.SHADOW_X_OFFSET);
+    theme->OSK.ITEM.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_Y_OFFSET",
+                                                  theme->OSK.ITEM.SHADOW_Y_OFFSET);
+    theme->OSK.ITEM.SHADOW_COLOUR_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_SHADOW_COLOUR_FOCUS",
+                                                      theme->OSK.ITEM.SHADOW_COLOUR_FOCUS);
+    theme->OSK.ITEM.SHADOW_ALPHA_FOCUS = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_ALPHA_FOCUS",
+                                                     theme->OSK.ITEM.SHADOW_ALPHA_FOCUS);
+    if (theme->OSK.ITEM.SHADOW_ALPHA_FOCUS < 0) theme->OSK.ITEM.SHADOW_ALPHA_FOCUS = 0;
+    if (theme->OSK.ITEM.SHADOW_ALPHA_FOCUS > 255) theme->OSK.ITEM.SHADOW_ALPHA_FOCUS = 255;
+    theme->OSK.ITEM.SHADOW_X_OFFSET_FOCUS = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_X_OFFSET_FOCUS",
+                                                        theme->OSK.ITEM.SHADOW_X_OFFSET_FOCUS);
+    theme->OSK.ITEM.SHADOW_Y_OFFSET_FOCUS = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_Y_OFFSET_FOCUS",
+                                                        theme->OSK.ITEM.SHADOW_Y_OFFSET_FOCUS);
 
     theme->MESSAGE.BACKGROUND = get_ini_hex(muos_theme, "notification", "MSG_BACKGROUND", theme->MESSAGE.BACKGROUND);
     theme->MESSAGE.BACKGROUND_ALPHA = get_ini_int(muos_theme, "notification", "MSG_BACKGROUND_ALPHA",

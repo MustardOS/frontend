@@ -155,6 +155,14 @@ struct theme_config {
             int16_t MAIN;
             int16_t SELECTED;
         } RADIUS;
+        uint32_t SHADOW_COLOUR;
+        int16_t SHADOW_ALPHA;
+        int16_t SHADOW_X_OFFSET;
+        int16_t SHADOW_Y_OFFSET;
+        uint32_t SHADOW_COLOUR_FOCUS;
+        int16_t SHADOW_ALPHA_FOCUS;
+        int16_t SHADOW_X_OFFSET_FOCUS;
+        int16_t SHADOW_Y_OFFSET_FOCUS;
     } DIALOGUE;
 
     struct {
@@ -371,6 +379,14 @@ struct theme_config {
             uint32_t BORDER_FOCUS;
             int16_t BORDER_FOCUS_ALPHA;
             int16_t RADIUS;
+            uint32_t SHADOW_COLOUR;
+            int16_t SHADOW_ALPHA;
+            int16_t SHADOW_X_OFFSET;
+            int16_t SHADOW_Y_OFFSET;
+            uint32_t SHADOW_COLOUR_FOCUS;
+            int16_t SHADOW_ALPHA_FOCUS;
+            int16_t SHADOW_X_OFFSET_FOCUS;
+            int16_t SHADOW_Y_OFFSET_FOCUS;
         } ITEM;
     } OSK;
 

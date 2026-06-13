@@ -62,6 +62,15 @@ void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
     lv_obj_set_style_flex_main_place(dlg->panel, LV_FLEX_ALIGN_START, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(dlg->panel, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_shadow_zone_register(dlg->panel,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR),
+                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET,
+                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR_FOCUS),
+                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET_FOCUS);
 
     dlg->title_label = lv_label_create(dlg->panel);
     lv_label_set_text(dlg->title_label, title);
@@ -210,6 +219,15 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
     lv_obj_set_style_flex_main_place(dlg->panel, LV_FLEX_ALIGN_START, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(dlg->panel, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_shadow_zone_register(dlg->panel,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR),
+                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET,
+                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR_FOCUS),
+                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET_FOCUS);
 
     dlg->title_label = lv_label_create(dlg->panel);
     lv_label_set_text(dlg->title_label, title);
@@ -449,5 +467,10 @@ void dialogue_refresh(mux_dialogue *dlg, struct theme_config *t) {
         lv_obj_set_style_text_color(dlg->options[i], lv_color_hex(sel ? t->DIALOGUE.OPTION : t->DIALOGUE.CONTENT), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_color(dlg->options[i], lv_color_hex(t->DIALOGUE.SELECTION), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(dlg->options[i], sel ? t->DIALOGUE.SELECTION_ALPHA : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+        if (sel) {
+            lv_obj_add_state(dlg->options[i], LV_STATE_CHECKED);
+        } else {
+            lv_obj_clear_state(dlg->options[i], LV_STATE_CHECKED);
+        }
     }
 }

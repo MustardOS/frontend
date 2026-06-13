@@ -39,6 +39,11 @@ extern int16_t g_shadow_y_offset_focus;
  *  STATIC VARIABLES
  **********************/
 
+#define LV_SHADOW_ZONE_MAX 16
+
+static lv_shadow_zone_t g_shadow_zones[LV_SHADOW_ZONE_MAX];
+static int g_shadow_zone_count = 0;
+
 /**********************
  *      MACROS
  **********************/
@@ -46,6 +51,57 @@ extern int16_t g_shadow_y_offset_focus;
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
+
+void lv_shadow_zone_register(lv_obj_t *container,
+                             lv_color_t colour, lv_opa_t alpha, int8_t x, int8_t y,
+                             lv_color_t colour_focus, lv_opa_t alpha_focus, int8_t x_focus, int8_t y_focus) {
+    for (int i = 0; i < g_shadow_zone_count; i++) {
+        if (g_shadow_zones[i].container == container) {
+            g_shadow_zones[i].colour = colour;
+            g_shadow_zones[i].alpha = alpha;
+            g_shadow_zones[i].x_offset = x;
+            g_shadow_zones[i].y_offset = y;
+            g_shadow_zones[i].colour_focus = colour_focus;
+            g_shadow_zones[i].alpha_focus = alpha_focus;
+            g_shadow_zones[i].x_offset_focus = x_focus;
+            g_shadow_zones[i].y_offset_focus = y_focus;
+            return;
+        }
+    }
+    if (g_shadow_zone_count < LV_SHADOW_ZONE_MAX) {
+        g_shadow_zones[g_shadow_zone_count].container = container;
+        g_shadow_zones[g_shadow_zone_count].colour = colour;
+        g_shadow_zones[g_shadow_zone_count].alpha = alpha;
+        g_shadow_zones[g_shadow_zone_count].x_offset = x;
+        g_shadow_zones[g_shadow_zone_count].y_offset = y;
+        g_shadow_zones[g_shadow_zone_count].colour_focus = colour_focus;
+        g_shadow_zones[g_shadow_zone_count].alpha_focus = alpha_focus;
+        g_shadow_zones[g_shadow_zone_count].x_offset_focus = x_focus;
+        g_shadow_zones[g_shadow_zone_count].y_offset_focus = y_focus;
+        g_shadow_zone_count++;
+    }
+}
+
+void lv_shadow_zone_unregister(lv_obj_t *container) {
+    for (int i = 0; i < g_shadow_zone_count; i++) {
+        if (g_shadow_zones[i].container == container) {
+            g_shadow_zones[i] = g_shadow_zones[g_shadow_zone_count - 1];
+            g_shadow_zone_count--;
+            return;
+        }
+    }
+}
+
+const lv_shadow_zone_t *lv_shadow_zone_find(lv_obj_t *obj) {
+    lv_obj_t *cur = obj;
+    while (cur) {
+        for (int i = 0; i < g_shadow_zone_count; i++) {
+            if (g_shadow_zones[i].container == cur) return &g_shadow_zones[i];
+        }
+        cur = lv_obj_get_parent(cur);
+    }
+    return NULL;
+}
 
 void lv_obj_init_draw_rect_dsc(lv_obj_t *obj, uint32_t part, lv_draw_rect_dsc_t *draw_dsc) {
     lv_opa_t opa = lv_obj_get_style_opa_recursive(obj, part);
@@ -244,6 +300,21 @@ void lv_obj_init_draw_label_dsc(lv_obj_t *obj, uint32_t part, lv_draw_label_dsc_
         draw_dsc->effect_opa = g_shadow_alpha_default;
         draw_dsc->effect_x_offset = (int8_t) g_shadow_x_offset_default;
         draw_dsc->effect_y_offset = (int8_t) g_shadow_y_offset_default;
+    }
+
+    const lv_shadow_zone_t *zone = lv_shadow_zone_find(obj);
+    if (zone) {
+        if (lv_obj_get_state(obj) & LV_STATE_CHECKED) {
+            draw_dsc->effect_color = zone->colour_focus;
+            draw_dsc->effect_opa = zone->alpha_focus;
+            draw_dsc->effect_x_offset = zone->x_offset_focus;
+            draw_dsc->effect_y_offset = zone->y_offset_focus;
+        } else {
+            draw_dsc->effect_color = zone->colour;
+            draw_dsc->effect_opa = zone->alpha;
+            draw_dsc->effect_x_offset = zone->x_offset;
+            draw_dsc->effect_y_offset = zone->y_offset;
+        }
     }
 }
 
