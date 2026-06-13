@@ -130,8 +130,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->DIALOGUE.SHADOW_ALPHA = 255;
     theme->DIALOGUE.SHADOW_X_OFFSET = 2;
     theme->DIALOGUE.SHADOW_Y_OFFSET = 2;
-    theme->DIALOGUE.SHADOW_COLOUR_FOCUS = 0x333333;
-    theme->DIALOGUE.SHADOW_ALPHA_FOCUS = 128;
+    theme->DIALOGUE.SHADOW_COLOUR_FOCUS = 0x222222;
+    theme->DIALOGUE.SHADOW_ALPHA_FOCUS = 96;
     theme->DIALOGUE.SHADOW_X_OFFSET_FOCUS = 2;
     theme->DIALOGUE.SHADOW_Y_OFFSET_FOCUS = 2;
 
@@ -322,8 +322,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->LIST_FOCUS.GLYPH_ALPHA = 255;
     theme->LIST_FOCUS.GLYPH_RECOLOUR = 0x100808;
     theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = 0;
-    theme->LIST_FOCUS.SHADOW_COLOUR = 0x333333;
-    theme->LIST_FOCUS.SHADOW_ALPHA = 128;
+    theme->LIST_FOCUS.SHADOW_COLOUR = 0x222222;
+    theme->LIST_FOCUS.SHADOW_ALPHA = 96;
     theme->LIST_FOCUS.SHADOW_X_OFFSET = 2;
     theme->LIST_FOCUS.SHADOW_Y_OFFSET = 2;
 
@@ -375,8 +375,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->OSK.ITEM.SHADOW_ALPHA = 255;
     theme->OSK.ITEM.SHADOW_X_OFFSET = 2;
     theme->OSK.ITEM.SHADOW_Y_OFFSET = 2;
-    theme->OSK.ITEM.SHADOW_COLOUR_FOCUS = 0x333333;
-    theme->OSK.ITEM.SHADOW_ALPHA_FOCUS = 128;
+    theme->OSK.ITEM.SHADOW_COLOUR_FOCUS = 0x222222;
+    theme->OSK.ITEM.SHADOW_ALPHA_FOCUS = 96;
     theme->OSK.ITEM.SHADOW_X_OFFSET_FOCUS = 2;
     theme->OSK.ITEM.SHADOW_Y_OFFSET_FOCUS = 2;
 
