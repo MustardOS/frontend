@@ -152,7 +152,7 @@ void header_and_footer_setup(void) {
 }
 
 void overlay_display(void) {
-    display_testing_message(ui_screen);
+    watermark(ui_screen);
 
     if (kiosk.ENABLE) {
         kiosk_image = lv_img_create(ui_screen);

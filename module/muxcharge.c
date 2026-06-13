@@ -157,7 +157,7 @@ int main(void) {
     }
     load_font_text(ui_scrCharge_charge);
 
-    display_testing_message(ui_scrCharge_charge);
+    watermark(ui_scrCharge_charge);
 
     overlay_image = lv_img_create(ui_scrCharge_charge);
     load_overlay_image(ui_scrCharge_charge, overlay_image);

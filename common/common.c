@@ -1966,47 +1966,42 @@ int should_skip(const char *name, int is_dir) {
     return 0;
 }
 
-void display_testing_message(lv_obj_t *screen) {
+void watermark(lv_obj_t *screen) {
     if (!TEST_IMAGE) return;
 
-    struct screen_dimension dims = get_device_dimensions();
-    int spec = 48;
+    static const uint8_t enc[] = {
+            0xF1, 0xED, 0xEC, 0xF6, 0x85, 0xEC, 0xF6, 0x85, 0xE4, 0x85, 0xF1, 0xE0,
+            0xF6, 0xF1, 0x85, 0xEC, 0xE8, 0xE4, 0xE2, 0xE0, 0x84, 0x85, 0x88, 0x85,
+            0xF5, 0xE9, 0xE0, 0xE4, 0xF6, 0xE0, 0x85, 0xF7, 0xE0, 0xF5, 0xEA, 0xF7,
+            0xF1, 0x85, 0xE4, 0xEB, 0xFC, 0x85, 0xEC, 0xF6, 0xF6, 0xF0, 0xE0, 0xF6,
+            0x85, 0xF7, 0xE0, 0xF6, 0xF5, 0xEA, 0xEB, 0xF6, 0xEC, 0xE7, 0xE9, 0xFC
+    };
 
-    char *test_message = "This is a test image! This is a test image! This is a test image! This is a test image!\n"
-                         "is a test image! This is a test image! This is a test image! This is a test image! This\n"
-                         "a test image! This is a test image! This is a test image! This is a test image! This is\n"
-                         "test image! This is a test image! This is a test image! This is a test image! This is a\n"
-                         "image! This is a test image! This is a test image! This is a test image! This is a test\n";
+    char msg[sizeof(enc) + 1];
+    for (size_t i = 0; i < sizeof(enc); i++) msg[i] = (char) (enc[i] ^ 0xA5);
+    msg[sizeof(enc)] = '\0';
 
     lv_obj_t *ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);
-    lv_obj_set_width(ui_conTest, dims.WIDTH);
-    lv_obj_set_height(ui_conTest, dims.HEIGHT);
-
+    lv_obj_set_size(ui_conTest, LV_PCT(100), LV_PCT(100));
     lv_obj_set_align(ui_conTest, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_conTest, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_conTest, lv_color_hex(0x808080), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_conTest, spec, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_conTest, 0, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
-    lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblTestBottom, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblTestBottom, 0);
-    lv_obj_set_y(ui_lblTestBottom, spec * -1);
-    lv_obj_set_align(ui_lblTestBottom, LV_ALIGN_BOTTOM_MID);
-    lv_label_set_text(ui_lblTestBottom, test_message);
-    lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
+    lv_obj_set_style_text_color(ui_conTest, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_font(ui_conTest, &lv_font_unscii_8, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_t *ui_lblTestTop = lv_label_create(ui_conTest);
-    lv_obj_set_width(ui_lblTestTop, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblTestTop, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblTestTop, 0);
-    lv_obj_set_y(ui_lblTestTop, spec);
+    lv_obj_set_size(ui_lblTestTop, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblTestTop, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblTestTop, test_message);
+    lv_obj_set_y(ui_lblTestTop, 4);
+    lv_label_set_text(ui_lblTestTop, msg);
     lv_obj_add_flag(ui_lblTestTop, LV_OBJ_FLAG_FLOATING);
+
+    lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
+    lv_obj_set_size(ui_lblTestBottom, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_align(ui_lblTestBottom, LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_y(ui_lblTestBottom, -4);
+    lv_label_set_text(ui_lblTestBottom, msg);
+    lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
 
     lv_obj_move_foreground(ui_conTest);
 }

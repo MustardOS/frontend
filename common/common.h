@@ -379,7 +379,7 @@ void load_skip_patterns();
 
 int should_skip(const char *name, int is_dir);
 
-void display_testing_message(lv_obj_t *screen);
+void watermark(lv_obj_t *screen);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
 
