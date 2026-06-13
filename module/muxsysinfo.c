@@ -357,8 +357,8 @@ static const char *get_boot_time(void) {
 static const char *get_load_average(void) {
     static char buffer[UI_BUFFER];
 
-    double load1  = (double) sysinfo_cache.loads[0] / 65536.0;
-    double load5  = (double) sysinfo_cache.loads[1] / 65536.0;
+    double load1 = (double) sysinfo_cache.loads[0] / 65536.0;
+    double load5 = (double) sysinfo_cache.loads[1] / 65536.0;
     double load15 = (double) sysinfo_cache.loads[2] / 65536.0;
 
     snprintf(buffer, sizeof(buffer), "%.2f / %.2f / %.2f", load1, load5, load15);
@@ -397,11 +397,11 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_version(verify_check));
     INIT_VALUE_ITEM(-1, sysinfo, Build, lang.MUXSYSINFO.BUILD, "build", get_build());
     INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
-    INIT_VALUE_ITEM(-1, sysinfo, Kernel,   lang.MUXSYSINFO.KERNEL,    "kernel",   get_kernel_version());
-    INIT_VALUE_ITEM(-1, sysinfo, Arch,     lang.MUXSYSINFO.ARCH,      "arch",     get_cpu_arch());
-    INIT_VALUE_ITEM(-1, sysinfo, Uptime,   lang.MUXSYSINFO.UPTIME,    "uptime",   get_system_uptime());
+    INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Arch, lang.MUXSYSINFO.ARCH, "arch", get_cpu_arch());
+    INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_system_uptime());
     INIT_VALUE_ITEM(-1, sysinfo, BootTime, lang.MUXSYSINFO.BOOT_TIME, "boottime", get_boot_time());
-    INIT_VALUE_ITEM(-1, sysinfo, LoadAvg,  lang.MUXSYSINFO.LOAD_AVG,  "loadavg",  get_load_average());
+    INIT_VALUE_ITEM(-1, sysinfo, LoadAvg, lang.MUXSYSINFO.LOAD_AVG, "loadavg", get_load_average());
     INIT_VALUE_ITEM(-1, sysinfo, Cpu, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
     INIT_VALUE_ITEM(-1, sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
     INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOVERNOR, "governor", get_scaling_governor());
