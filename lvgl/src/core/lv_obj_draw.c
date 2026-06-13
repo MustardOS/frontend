@@ -10,6 +10,7 @@
 #include "lv_obj.h"
 #include "lv_disp.h"
 #include "lv_indev.h"
+#include "../../../common/font.h"
 
 /*********************
  *      DEFINES
@@ -218,6 +219,26 @@ void lv_obj_init_draw_label_dsc(lv_obj_t * obj, uint32_t part, lv_draw_label_dsc
 #endif
 
     draw_dsc->align = lv_obj_get_style_text_align(obj, part);
+
+    draw_dsc->effect_type = (int8_t) g_font_shadow_enabled;
+    lv_state_t shadow_state = lv_obj_get_state(obj);
+
+    if (!(shadow_state & LV_STATE_FOCUSED)) {
+        lv_obj_t *shadow_parent = lv_obj_get_parent(obj);
+        if (shadow_parent) shadow_state = lv_obj_get_state(shadow_parent);
+    }
+
+    if (shadow_state & LV_STATE_FOCUSED) {
+        draw_dsc->effect_color = g_shadow_colour_focus;
+        draw_dsc->effect_opa = g_shadow_alpha_focus;
+        draw_dsc->effect_x_offset = (int8_t) g_shadow_x_offset_focus;
+        draw_dsc->effect_y_offset = (int8_t) g_shadow_y_offset_focus;
+    } else {
+        draw_dsc->effect_color = g_shadow_colour_default;
+        draw_dsc->effect_opa = g_shadow_alpha_default;
+        draw_dsc->effect_x_offset = (int8_t) g_shadow_x_offset_default;
+        draw_dsc->effect_y_offset = (int8_t) g_shadow_y_offset_default;
+    }
 }
 
 void lv_obj_init_draw_img_dsc(lv_obj_t * obj, uint32_t part, lv_draw_img_dsc_t * draw_dsc)

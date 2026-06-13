@@ -291,6 +291,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->LIST_DEFAULT.GLYPH_RECOLOUR = 0xFFFFFF;
     theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = 0;
     theme->LIST_DEFAULT.LABEL_LONG_MODE = LV_LABEL_LONG_SCROLL_CIRCULAR;
+    theme->LIST_DEFAULT.SHADOW_COLOUR = 0x000000;
+    theme->LIST_DEFAULT.SHADOW_ALPHA = 255;
+    theme->LIST_DEFAULT.SHADOW_X_OFFSET = 2;
+    theme->LIST_DEFAULT.SHADOW_Y_OFFSET = 2;
 
     theme->LIST_DISABLED.TEXT = 0x808080;
     theme->LIST_DISABLED.TEXT_ALPHA = 255;
@@ -310,6 +314,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->LIST_FOCUS.GLYPH_ALPHA = 255;
     theme->LIST_FOCUS.GLYPH_RECOLOUR = 0x100808;
     theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = 0;
+    theme->LIST_FOCUS.SHADOW_COLOUR = 0x333333;
+    theme->LIST_FOCUS.SHADOW_ALPHA = 128;
+    theme->LIST_FOCUS.SHADOW_X_OFFSET = 2;
+    theme->LIST_FOCUS.SHADOW_Y_OFFSET = 2;
 
     theme->IMAGE_LIST.ALPHA = 255;
     theme->IMAGE_LIST.RADIUS = 3;
@@ -870,6 +878,16 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
                                                            theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA);
     theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE",
                                                       theme->LIST_DEFAULT.LABEL_LONG_MODE);
+    theme->LIST_DEFAULT.SHADOW_COLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_SHADOW_COLOUR",
+                                                    theme->LIST_DEFAULT.SHADOW_COLOUR);
+    theme->LIST_DEFAULT.SHADOW_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_SHADOW_ALPHA",
+                                                   theme->LIST_DEFAULT.SHADOW_ALPHA);
+    if (theme->LIST_DEFAULT.SHADOW_ALPHA < 0) theme->LIST_DEFAULT.SHADOW_ALPHA = 0;
+    if (theme->LIST_DEFAULT.SHADOW_ALPHA > 255) theme->LIST_DEFAULT.SHADOW_ALPHA = 255;
+    theme->LIST_DEFAULT.SHADOW_X_OFFSET = get_ini_int(muos_theme, "list", "LIST_DEFAULT_SHADOW_X_OFFSET",
+                                                      theme->LIST_DEFAULT.SHADOW_X_OFFSET);
+    theme->LIST_DEFAULT.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "list", "LIST_DEFAULT_SHADOW_Y_OFFSET",
+                                                      theme->LIST_DEFAULT.SHADOW_Y_OFFSET);
 
     theme->LIST_DISABLED.TEXT = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT", theme->LIST_DISABLED.TEXT);
     theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA",
@@ -903,6 +921,16 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
                                                    theme->LIST_FOCUS.GLYPH_RECOLOUR);
     theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA",
                                                          theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA);
+    theme->LIST_FOCUS.SHADOW_COLOUR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_SHADOW_COLOUR",
+                                                  theme->LIST_FOCUS.SHADOW_COLOUR);
+    theme->LIST_FOCUS.SHADOW_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_SHADOW_ALPHA",
+                                                 theme->LIST_FOCUS.SHADOW_ALPHA);
+    if (theme->LIST_FOCUS.SHADOW_ALPHA < 0) theme->LIST_FOCUS.SHADOW_ALPHA = 0;
+    if (theme->LIST_FOCUS.SHADOW_ALPHA > 255) theme->LIST_FOCUS.SHADOW_ALPHA = 255;
+    theme->LIST_FOCUS.SHADOW_X_OFFSET = get_ini_int(muos_theme, "list", "LIST_FOCUS_SHADOW_X_OFFSET",
+                                                    theme->LIST_FOCUS.SHADOW_X_OFFSET);
+    theme->LIST_FOCUS.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "list", "LIST_FOCUS_SHADOW_Y_OFFSET",
+                                                    theme->LIST_FOCUS.SHADOW_Y_OFFSET);
 
     theme->IMAGE_LIST.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_ALPHA", theme->IMAGE_LIST.ALPHA);
     theme->IMAGE_LIST.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RADIUS", theme->IMAGE_LIST.RADIUS);

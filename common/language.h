@@ -580,6 +580,7 @@ struct mux_lang {
         char LAUNCHSPLASH[MAX_BUFFER_SIZE];
         char SHUFFLE[MAX_BUFFER_SIZE];
         char CHIME[MAX_BUFFER_SIZE];
+        char FONTSHADOW[MAX_BUFFER_SIZE];
         char CONTENTWIDTH[MAX_BUFFER_SIZE];
         char CONTENT[MAX_BUFFER_SIZE];
         struct {
@@ -657,6 +658,7 @@ struct mux_lang {
             char SOUND[MAX_BUFFER_SIZE];
             char SOUNDVOLUME[MAX_BUFFER_SIZE];
             char CHIME[MAX_BUFFER_SIZE];
+            char FONTSHADOW[MAX_BUFFER_SIZE];
             char CONTENT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;

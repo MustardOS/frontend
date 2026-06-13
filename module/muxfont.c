@@ -150,6 +150,7 @@ static void apply_current_font_settings(void) {
     lv_obj_remove_local_style_prop(ui_pnlFooter, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
 
     init_fonts();
+    lv_obj_invalidate(ui_screen);
 
 #define FONT(NAME, ENUM, UDATA) do {                                                         \
         const lv_font_t *_f = lv_obj_get_style_text_font(ui_dro##NAME##_font, LV_PART_MAIN); \

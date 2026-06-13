@@ -394,6 +394,17 @@ void init_fonts(void) {
         }
     }
 
+    int prev_shadow = g_font_shadow_enabled;
+    g_font_shadow_enabled = config.SETTINGS.FONT.SHADOW;
+    g_shadow_colour_default = lv_color_hex(theme.LIST_DEFAULT.SHADOW_COLOUR);
+    g_shadow_alpha_default = (lv_opa_t) theme.LIST_DEFAULT.SHADOW_ALPHA;
+    g_shadow_x_offset_default = theme.LIST_DEFAULT.SHADOW_X_OFFSET;
+    g_shadow_y_offset_default = theme.LIST_DEFAULT.SHADOW_Y_OFFSET;
+    g_shadow_colour_focus = lv_color_hex(theme.LIST_FOCUS.SHADOW_COLOUR);
+    g_shadow_alpha_focus = (lv_opa_t) theme.LIST_FOCUS.SHADOW_ALPHA;
+    g_shadow_x_offset_focus = theme.LIST_FOCUS.SHADOW_X_OFFSET;
+    g_shadow_y_offset_focus = theme.LIST_FOCUS.SHADOW_Y_OFFSET;
+
     int font_context = font_context_changed();
     if (font_context) font_cache_clear();
 
@@ -404,6 +415,8 @@ void init_fonts(void) {
     load_font_section(FONT_FOOTER_DIR, ui_pnlFooter);
 
     crash_ui_apply_font(ui_screen);
+
+    if (prev_shadow != g_font_shadow_enabled) lv_obj_invalidate(ui_screen);
 }
 
 void init_theme(int panel_init, int long_mode) {

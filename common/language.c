@@ -558,6 +558,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.SCALE, "Scale");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.STRETCH, "Stretch");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONTSHADOW, "Font Shadow");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.GRIDMODECONTENT, "Allow grid mode for content");
@@ -581,6 +582,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUNDVOLUME, "The volume of the navigation sounds, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONTSHADOW, "Toggle a subtle drop shadow rendered behind all text");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSWAP, "Switch between pressing A or holding A to launch content save state automatically");
 

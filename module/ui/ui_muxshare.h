@@ -174,7 +174,8 @@
     CUSTOM(BlackFade,       BLACKFADE,       "blackfade")   \
     CUSTOM(Sound,           SOUND,           "sound")       \
     CUSTOM(SoundVolume,     SOUNDVOLUME,     "soundvolume") \
-    CUSTOM(Chime,           CHIME,           "chime")
+    CUSTOM(Chime,           CHIME,           "chime")       \
+    CUSTOM(FontShadow,      FONTSHADOW,      "fontshadow")
 
 #define DANGER_ELEMENTS                                 \
     DANGER(VmSwap,        VMSWAP,        "vmswap")      \

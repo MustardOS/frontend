@@ -28,6 +28,16 @@
 // count (~2600 slots at 20 px), cutting miss rate noticeably on long lists
 // without being reckless with LVGL heap on low memory targets.
 
+int g_font_shadow_enabled = 0;
+lv_color_t g_shadow_colour_default;
+lv_opa_t g_shadow_alpha_default = LV_OPA_COVER;
+int16_t g_shadow_x_offset_default = 2;
+int16_t g_shadow_y_offset_default = 2;
+lv_color_t g_shadow_colour_focus;
+lv_opa_t g_shadow_alpha_focus = LV_OPA_50;
+int16_t g_shadow_x_offset_focus = 2;
+int16_t g_shadow_y_offset_focus = 2;
+
 static int font_cache_count = 0;
 static uint32_t last_font_key_hash = 0;
 static int cached_has_theme_font = -1;

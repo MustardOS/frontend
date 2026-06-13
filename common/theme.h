@@ -190,6 +190,10 @@ struct theme_config {
         uint32_t GLYPH_RECOLOUR;
         int16_t GLYPH_RECOLOUR_ALPHA;
         int16_t LABEL_LONG_MODE;
+        uint32_t SHADOW_COLOUR;
+        int16_t SHADOW_ALPHA;
+        int16_t SHADOW_X_OFFSET;
+        int16_t SHADOW_Y_OFFSET;
     } LIST_DEFAULT;
 
     struct {
@@ -208,6 +212,10 @@ struct theme_config {
         int16_t GLYPH_ALPHA;
         uint32_t GLYPH_RECOLOUR;
         int16_t GLYPH_RECOLOUR_ALPHA;
+        uint32_t SHADOW_COLOUR;
+        int16_t SHADOW_ALPHA;
+        int16_t SHADOW_X_OFFSET;
+        int16_t SHADOW_Y_OFFSET;
     } LIST_FOCUS;
 
     struct {

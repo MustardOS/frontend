@@ -13,6 +13,7 @@
 #include "../core/lv_refr.h"
 #include "../misc/lv_bidi.h"
 #include "../misc/lv_assert.h"
+#include "../../../common/font.h"
 
 /*********************
  *      DEFINES
@@ -62,6 +63,11 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label_dsc_init(lv_draw_label_dsc_t *dsc) {
     dsc->sel_color = lv_color_black();
     dsc->sel_bg_color = lv_palette_main(LV_PALETTE_BLUE);
     dsc->bidi_dir = LV_BASE_DIR_LTR;
+    dsc->effect_type = (int8_t) g_font_shadow_enabled;
+    dsc->effect_color = g_shadow_colour_default;
+    dsc->effect_opa = g_shadow_alpha_default;
+    dsc->effect_x_offset = (int8_t) g_shadow_x_offset_default;
+    dsc->effect_y_offset = (int8_t) g_shadow_y_offset_default;
 }
 
 /**
@@ -300,6 +306,14 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
                     lv_draw_rect(draw_ctx, &draw_dsc_sel, &sel_coords);
                     color = dsc->sel_color;
                 }
+            }
+
+            if (dsc->effect_type > 0) {
+                lv_draw_label_dsc_t eff = dsc_mod;
+                eff.color = dsc->effect_color;
+                eff.opa = dsc->effect_opa;
+                lv_point_t sp = {pos.x + dsc->effect_x_offset, pos.y + dsc->effect_y_offset};
+                lv_draw_letter(draw_ctx, &eff, &sp, letter);
             }
 
             dsc_mod.color = color;
