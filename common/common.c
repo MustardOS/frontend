@@ -1474,7 +1474,7 @@ int load_video_catalogue(const char *catalogue_name, const char *program,
             {"",      program_alt},
     };
 
-    const char *extensions[] = {"mp4", "mkv", "webm"};
+    const char *extensions[] = {"mp4"}; // Just MP4 for now...
 
     for (size_t j = 0; j < A_SIZE(extensions); j++) {
         for (size_t i = 0; i < A_SIZE(args); i++) {
