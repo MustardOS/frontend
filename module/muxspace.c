@@ -27,6 +27,7 @@ struct mount {
     lv_obj_t *bar;
     lv_obj_t *title;
     const char *partition;
+    int show_msd;
 };
 
 struct detail_ui {
@@ -84,9 +85,7 @@ static void resolve_mount(const char *mount_point, char *dev_out, char *fs_out) 
 
 static int extract_kv(const char *line, const char *key, char *out, size_t out_len) {
     const char *p = line;
-    if (strncmp(p, "INFO: ", 6) == 0) {
-        p += 6;
-    } else if (strncmp(p, "WARN: ", 6) == 0) {
+    if (strncmp(p, "INFO: ", 6) == 0 || strncmp(p, "WARN: ", 6) == 0) {
         p += 6;
     } else {
         return 0;
@@ -209,7 +208,7 @@ static void build_detail_ui(struct detail_ui *du, lv_obj_t *bar_panel) {
     lv_obj_add_flag(du->container, LV_OBJ_FLAG_HIDDEN);
 
     uint32_t bar_idx = lv_obj_get_index(bar_panel);
-    lv_obj_move_to_index(du->container, bar_idx + 1);
+    lv_obj_move_to_index(du->container, (int16_t) bar_idx + 1);
 
     for (int i = 0; i < SPACE_DETAIL_ROWS; i++) {
         du->row[i] = lv_obj_create(du->container);
@@ -268,28 +267,32 @@ static void update_storage_info() {
                     ui_lblPrimaryValue_space,
                     ui_barPrimary_space,
                     ui_lblPrimary_space,
-                    device.STORAGE.ROM.MOUNT},
+                    device.STORAGE.ROM.MOUNT,
+                    1},
 
             {ui_pnlSecondary_space,
                     ui_pnlSecondaryBar_space,
                     ui_lblSecondaryValue_space,
                     ui_barSecondary_space,
                     ui_lblSecondary_space,
-                    device.STORAGE.SDCARD.MOUNT},
+                    device.STORAGE.SDCARD.MOUNT,
+                    1},
 
             {ui_pnlExternal_space,
                     ui_pnlExternalBar_space,
                     ui_lblExternalValue_space,
                     ui_barExternal_space,
                     ui_lblExternal_space,
-                    device.STORAGE.USB.MOUNT},
+                    device.STORAGE.USB.MOUNT,
+                    0},
 
             {ui_pnlSystem_space,
                     ui_pnlSystemBar_space,
                     ui_lblSystemValue_space,
                     ui_barSystem_space,
                     ui_lblSystem_space,
-                    device.STORAGE.ROOT.MOUNT},
+                    device.STORAGE.ROOT.MOUNT,
+                    0},
     };
 
     int selected = -1;
@@ -327,10 +330,10 @@ static void update_storage_info() {
 
             if (show_for_this) {
                 char dev_src[128], fs_type[32];
-                struct msd_info msd;
+                struct msd_info msd = {0};
 
                 resolve_mount(storage_info[i].partition, dev_src, fs_type);
-                read_msd_info(dev_src, &msd);
+                if (storage_info[i].show_msd) read_msd_info(dev_src, &msd);
 
                 set_detail_row(&details_ui[i], 0, lang.MUXSPACE.DETAIL.FILESYSTEM, fs_type);
                 set_detail_row(&details_ui[i], 1, lang.MUXSPACE.DETAIL.MANUFACTURER, msd.manufacturer);
