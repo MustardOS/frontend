@@ -1634,7 +1634,10 @@ struct mux_lang {
         char HEADER_HEIGHT[MAX_BUFFER_SIZE];
         char FOOTER_HEIGHT[MAX_BUFFER_SIZE];
         char CONTENT_ITEM_COUNT[MAX_BUFFER_SIZE];
-        char GLYPH_SIZE[MAX_BUFFER_SIZE];
+        char GLYPH_LIST[MAX_BUFFER_SIZE];
+        char GLYPH_FOOTER[MAX_BUFFER_SIZE];
+        char GLYPH_HEADER[MAX_BUFFER_SIZE];
+        char GLYPH_GRID[MAX_BUFFER_SIZE];
         char SIZE_DEFAULT[MAX_BUFFER_SIZE];
         char GLYPH_AUTO[MAX_BUFFER_SIZE];
         char GLYPH_NATIVE[MAX_BUFFER_SIZE];
@@ -1642,7 +1645,10 @@ struct mux_lang {
             char HEADERHEIGHT[MAX_BUFFER_SIZE];
             char FOOTERHEIGHT[MAX_BUFFER_SIZE];
             char CONTENTITEMCOUNT[MAX_BUFFER_SIZE];
-            char GLYPHSIZE[MAX_BUFFER_SIZE];
+            char GLYPHLIST[MAX_BUFFER_SIZE];
+            char GLYPHFOOTER[MAX_BUFFER_SIZE];
+            char GLYPHHEADER[MAX_BUFFER_SIZE];
+            char GLYPHGRID[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTHEMEOPT;
 

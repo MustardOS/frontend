@@ -297,7 +297,10 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->SETTINGS.THEMEOPT.HEADER_HEIGHT, &d, "header_height", -1);
     CFG_INT(config->SETTINGS.THEMEOPT.FOOTER_HEIGHT, &d, "footer_height", -1);
     CFG_INT(config->SETTINGS.THEMEOPT.CONTENT_ITEM_COUNT, &d, "content_item_count", 0);
-    CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE, &d, "glyph_size", -2);
+    CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_LIST, &d, "glyph_size_list", 0);
+    CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_FOOTER, &d, "glyph_size_footer", 0);
+    CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_HEADER, &d, "glyph_size_header", 0);
+    CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_GRID, &d, "glyph_size_grid", 0);
 
     // settings/remap/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/remap");

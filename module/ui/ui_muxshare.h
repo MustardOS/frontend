@@ -455,7 +455,10 @@
     THEMEOPT(HeaderHeight,     HEADERHEIGHT,     "headerheight") \
     THEMEOPT(FooterHeight,     FOOTERHEIGHT,     "footerheight") \
     THEMEOPT(ContentItemCount, CONTENTITEMCOUNT, "count")        \
-    THEMEOPT(GlyphSize,        GLYPHSIZE,        "glyphsize")
+    THEMEOPT(GlyphList,        GLYPHLIST,        "glyphlist")    \
+    THEMEOPT(GlyphFooter,      GLYPHFOOTER,      "glyphfooter")  \
+    THEMEOPT(GlyphHeader,      GLYPHHEADER,      "glyphheader")  \
+    THEMEOPT(GlyphGrid,        GLYPHGRID,        "glyphgrid")
 
 #define TWEAKADV_ELEMENTS                             \
     TWEAKADV(Accelerate,  ACCELERATE,  "accelerate")  \

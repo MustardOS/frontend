@@ -3629,6 +3629,59 @@ uint32_t fnv1a_hash_file(FILE *file) {
     return hash;
 }
 
+int resolve_glyph_size(int16_t runtime_size, int16_t section_size, int auto_px) {
+    int size = (runtime_size == -2) ? section_size : runtime_size;
+
+    if (size < 0) return -1; // native
+    if (size == 0) return auto_px;
+
+    return size;
+}
+
+void append_glyph_size_hint(char *embed, size_t embed_size, int size) {
+    if (size == 0 || !embed) return;
+
+    const char *dot = strrchr(embed, '.');
+    if (!dot || strncasecmp(dot, ".svg", 4) != 0) return;
+
+    size_t n = strlen(embed);
+    snprintf(embed + n, embed_size - n, "?%dx%d", size, size);
+}
+
+void apply_glyph_scale(lv_obj_t *img, const char *embed, int box_w, int box_h) {
+    lv_img_set_zoom(img, LV_IMG_ZOOM_NONE);
+    if (!embed || box_w <= 0 || box_h <= 0) return;
+
+    const char *q = strchr(embed, '?');
+    size_t len = q ? (size_t) (q - embed) : strlen(embed);
+    if (len >= 4 && strncasecmp(embed + len - 4, ".svg", 4) == 0) return;
+
+    lv_img_header_t header;
+    if (lv_img_decoder_get_info(embed, &header) != LV_RES_OK) return;
+    if (header.w <= 0 || header.h <= 0) return;
+
+    long zoom_w = (long) box_w * LV_IMG_ZOOM_NONE / header.w;
+    long zoom_h = (long) box_h * LV_IMG_ZOOM_NONE / header.h;
+    long zoom = (zoom_w < zoom_h) ? zoom_w : zoom_h;
+
+    if (zoom < 1) zoom = 1;
+    if (zoom > 0xFFFF) zoom = 0xFFFF;
+
+    lv_img_set_zoom(img, (uint16_t) zoom);
+}
+
+int glyph_explicit_px(int16_t runtime_size, int16_t section_size) {
+    int size = (runtime_size == -2) ? section_size : runtime_size;
+
+    return size > 0 ? size : 0;
+}
+
+void set_list_glyph_image(lv_obj_t *img, const char *embed) {
+    lv_img_set_src(img, embed);
+    int px = glyph_explicit_px(config.SETTINGS.THEMEOPT.GLYPH_SIZE_LIST, theme.GLYPH.LIST);
+    apply_glyph_scale(img, embed, px, px);
+}
+
 int get_glyph_path(const char *mux_module, const char *glyph_name,
                    char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
@@ -3640,6 +3693,9 @@ int get_glyph_path(const char *mux_module, const char *glyph_name,
         if (file_exist(glyph_image_path)) {                                                \
             LOG_DEBUG(mux_module, "Glyph found at: %s", glyph_image_path);                 \
             snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path); \
+            append_glyph_size_hint(glyph_image_embed, glyph_image_embed_size,              \
+                resolve_glyph_size(config.SETTINGS.THEMEOPT.GLYPH_SIZE_LIST,               \
+                                   theme.GLYPH.LIST, theme.MUX.ITEM.HEIGHT * 3 / 4));      \
             return 1;                                                                      \
         }                                                                                  \
     } while (0)
@@ -3671,7 +3727,10 @@ void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *u
             LOG_DEBUG(mux_module, "Application glyph found at: %s", glyph_image_path);        \
             char glyph_image_embed[MAX_BUFFER_SIZE];                                          \
             snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path); \
-            lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);                               \
+            append_glyph_size_hint(glyph_image_embed, sizeof(glyph_image_embed),              \
+                resolve_glyph_size(config.SETTINGS.THEMEOPT.GLYPH_SIZE_LIST,                  \
+                                   theme.GLYPH.LIST, theme.MUX.ITEM.HEIGHT * 3 / 4));         \
+            set_list_glyph_image(ui_lblItemGlyph, glyph_image_embed);                         \
             return;                                                                           \
         }                                                                                     \
     } while (0)

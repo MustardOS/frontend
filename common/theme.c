@@ -451,7 +451,11 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.IMAGE_OVERLAY = 0;
     theme->MISC.NAVIGATION_TYPE = 0;
     theme->MISC.ANTIALIASING = 1;
-    theme->MISC.GLYPH_SIZE = 0;
+
+    theme->GLYPH.LIST = 0;
+    theme->GLYPH.FOOTER = 0;
+    theme->GLYPH.HEADER = 0;
+    theme->GLYPH.GRID = 0;
 
     snprintf(theme->TERMINAL.FONT_SIZE, MAX_BUFFER_SIZE, "%s", "16");
     snprintf(theme->TERMINAL.FONT_HINT, MAX_BUFFER_SIZE, "%s", "mono");
@@ -1147,7 +1151,11 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", theme->MISC.IMAGE_OVERLAY);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
-    theme->MISC.GLYPH_SIZE = get_ini_int(muos_theme, "misc", "GLYPH_SIZE", theme->MISC.GLYPH_SIZE);
+
+    theme->GLYPH.LIST = get_ini_int(muos_theme, "glyph", "LIST", theme->GLYPH.LIST);
+    theme->GLYPH.FOOTER = get_ini_int(muos_theme, "glyph", "FOOTER", theme->GLYPH.FOOTER);
+    theme->GLYPH.HEADER = get_ini_int(muos_theme, "glyph", "HEADER", theme->GLYPH.HEADER);
+    theme->GLYPH.GRID = get_ini_int(muos_theme, "glyph", "GRID", theme->GLYPH.GRID);
 
     snprintf(theme->TERMINAL.FONT_SIZE, MAX_BUFFER_SIZE, "%s", get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE));
     snprintf(theme->TERMINAL.FOREGROUND, MAX_BUFFER_SIZE, "%s", get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND));
@@ -1338,8 +1346,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     // Then expand the LIST_PAD_LEFT value so there is at least 4px of gap the sides
     // of the glyph, then center GLYPH_PADDING_LEFT in the column for equal space on
     // either side of the glyph, just to make it nice looking
-    int16_t eff_glyph_size = config->SETTINGS.THEMEOPT.GLYPH_SIZE;
-    if (eff_glyph_size == -2) eff_glyph_size = theme->MISC.GLYPH_SIZE;
+    int16_t eff_glyph_size = config->SETTINGS.THEMEOPT.GLYPH_SIZE_LIST;
+    if (eff_glyph_size == -2) eff_glyph_size = theme->GLYPH.LIST;
 
     if (eff_glyph_size == 0 && theme->MUX.ITEM.HEIGHT > 0) {
         int16_t auto_size = (int16_t) (theme->MUX.ITEM.HEIGHT * 3 / 4);
@@ -1506,7 +1514,7 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (get_glyph_path(screen_name, item_glyph, glyph_image_embed, MAX_BUFFER_SIZE)) {
-        lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
+        set_list_glyph_image(ui_lblItemGlyph, glyph_image_embed);
     }
 
     lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_default, MU_OBJ_MAIN_DEFAULT);

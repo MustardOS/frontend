@@ -207,7 +207,7 @@ static void set_osk_nav_hint_glyph(lv_obj_t *glyph, const char *glyph_name, stru
     char image_embed[MAX_BUFFER_SIZE];
 
     if (nav_glyph.GLYPH_ALPHA > 0 && generate_image_embed(mux_dim, "footer", glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
-        lv_img_set_src(glyph, image_embed);
+        set_list_glyph_image(glyph, image_embed);
         lv_obj_clear_flag(glyph, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_add_flag(glyph, LV_OBJ_FLAG_HIDDEN);

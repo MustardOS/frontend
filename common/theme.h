@@ -469,8 +469,14 @@ struct theme_config {
             int16_t WIDTH;
         } CONTENT;
         int16_t ANTIALIASING;
-        int16_t GLYPH_SIZE;
     } MISC;
+
+    struct {
+        int16_t LIST;
+        int16_t FOOTER;
+        int16_t HEADER;
+        int16_t GRID;
+    } GLYPH;
 
     struct {
         char FONT_SIZE[MAX_BUFFER_SIZE];

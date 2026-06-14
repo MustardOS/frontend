@@ -6,7 +6,6 @@
 #include "../lvgl/lvgl.h"
 #include "svg.h"
 #include "theme.h"
-#include "config.h"
 
 #define SVG_PATH_MAX 4096
 
@@ -71,6 +70,12 @@ static void svg_parse_src(const void *src, char *file_path, int *hint_w, int *hi
 // to fit within that box. Otherwise uses the config/theme glyph size
 // -1 = native SVG size, 0 = auto-fit to item height, positive = explicit px etc.
 static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, int *out_w, int *out_h) {
+    if (hint_w < 0 || hint_h < 0) {
+        *out_w = native_w;
+        *out_h = native_h;
+        return;
+    }
+
     if (hint_w > 0 || hint_h > 0) {
         if (native_w <= 0 || native_h <= 0) {
             *out_w = hint_w > 0 ? hint_w : native_w;
@@ -97,16 +102,7 @@ static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, 
         return;
     }
 
-    int16_t size = config.SETTINGS.THEMEOPT.GLYPH_SIZE;
-    if (size == -2) size = theme.MISC.GLYPH_SIZE;
-
-    if (size < 0) {
-        *out_w = native_w;
-        *out_h = native_h;
-        return;
-    }
-
-    int target = (size == 0) ? (int) theme.MUX.ITEM.HEIGHT * 3 / 4 : (int) size;
+    int target = (int) theme.MUX.ITEM.HEIGHT * 3 / 4;
     if (target <= 0 || native_w <= 0 || native_h <= 0) {
         *out_w = native_w;
         *out_h = native_h;

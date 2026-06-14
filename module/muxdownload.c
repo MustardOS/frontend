@@ -83,7 +83,7 @@ static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, in
     if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
         get_glyph_path(mux_module, is_downloaded(index) ? "downloaded" : "download",
                        glyph_image_embed, MAX_BUFFER_SIZE);
-        lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
+        set_list_glyph_image(ui_lblItemGlyph, glyph_image_embed);
     }
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblItem, ui_lblItemGlyph, items[index].name);
