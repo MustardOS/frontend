@@ -85,6 +85,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, ForwardHistory, "visual/forwardhistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, NameScroll, "visual/namescroll", INT, 0);
+    CHECK_AND_SAVE_STD(visual, RenderShadows, "visual/shadow", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
 
     {
@@ -121,12 +122,6 @@ static void init_navigation_group(void) {
             lang.MUXVISUAL.SCROLL_MODE.BOUNCE
     };
 
-    INIT_OPTION_ITEM(-1, visual, Sort, lang.MUXVISUAL.SORT, "sort", NULL, 0);
-    INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", battery_display, 3);
-    INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
-
     char *dialogue_transition[] = {
             lang.MUXCONTENT.BOX_ART.TRANSITION.FADE_IN,
             lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_RIGHT,
@@ -144,6 +139,11 @@ static void init_navigation_group(void) {
             lang.GENERIC.DISABLED
     };
 
+    INIT_OPTION_ITEM(-1, visual, Sort, lang.MUXVISUAL.SORT, "sort", NULL, 0);
+    INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", battery_display, 3);
+    INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, DialogueTransition, lang.MUXVISUAL.DIALOGUETRANSITION, "dialoguetransition", dialogue_transition, 14);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, NameScroll, lang.MUXVISUAL.NAMESCROLL, "namescroll", scroll_mode, 3);
@@ -162,6 +162,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, ForwardHistory, lang.MUXVISUAL.FORWARDHISTORY, "forwardhistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
+    INIT_OPTION_ITEM(-1, visual, RenderShadows, lang.MUXVISUAL.RENDERSHADOWS, "shadow", disabled_enabled, 2);
 
     overlay_count = load_overlay_set(ui_droOverlayImage_visual);
 

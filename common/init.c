@@ -395,7 +395,7 @@ void init_fonts(void) {
     }
 
     static int prev_shadow = -1;
-    int new_shadow = config.SETTINGS.FONT.SHADOW;
+    int new_shadow = config.VISUAL.RENDERSHADOWS;
     lv_shadow_set(new_shadow,
                   lv_color_hex(theme.LIST_DEFAULT.SHADOW_COLOUR),
                   (lv_opa_t) theme.LIST_DEFAULT.SHADOW_ALPHA,
@@ -405,6 +405,15 @@ void init_fonts(void) {
                   (lv_opa_t) theme.LIST_FOCUS.SHADOW_ALPHA,
                   theme.LIST_FOCUS.SHADOW_X_OFFSET,
                   theme.LIST_FOCUS.SHADOW_Y_OFFSET);
+    lv_glyph_shadow_set(new_shadow,
+                        lv_color_hex(theme.LIST_DEFAULT.SHADOW_COLOUR),
+                        (lv_opa_t) theme.LIST_DEFAULT.SHADOW_ALPHA,
+                        theme.LIST_DEFAULT.SHADOW_X_OFFSET,
+                        theme.LIST_DEFAULT.SHADOW_Y_OFFSET,
+                        lv_color_hex(theme.LIST_FOCUS.SHADOW_COLOUR),
+                        (lv_opa_t) theme.LIST_FOCUS.SHADOW_ALPHA,
+                        theme.LIST_FOCUS.SHADOW_X_OFFSET,
+                        theme.LIST_FOCUS.SHADOW_Y_OFFSET);
 
     int font_context = font_context_changed();
     if (font_context) font_cache_clear();

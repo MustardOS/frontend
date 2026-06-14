@@ -291,7 +291,6 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->SETTINGS.FONT.FOOTER_SIZE, &d, "footer_size", 0);
     CFG_INT(config->SETTINGS.FONT.PANEL_SIZE, &d, "panel_size", 0);
     CFG_STR(config->SETTINGS.FONT.NAME, &d, "name", "");
-    CFG_INT(config->SETTINGS.FONT.SHADOW, &d, "shadow", 1);
 
     // settings/theme/ (theme option overrides - distinct from theme/filter/)
     cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/theme");
@@ -347,6 +346,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->VISUAL.MIXEDCONTENT, &d, "mixedcontent", 0);
     CFG_INT(config->VISUAL.FORWARDHISTORY, &d, "forwardhistory", 1);
     CFG_INT(config->VISUAL.NAMESCROLL, &d, "namescroll", 1);
+    CFG_INT(config->VISUAL.RENDERSHADOWS, &d, "shadow", 1);
 
     // bluetooth/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "bluetooth");

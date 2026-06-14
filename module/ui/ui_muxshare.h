@@ -174,8 +174,7 @@
     CUSTOM(BlackFade,       BLACKFADE,       "blackfade")   \
     CUSTOM(Sound,           SOUND,           "sound")       \
     CUSTOM(SoundVolume,     SOUNDVOLUME,     "soundvolume") \
-    CUSTOM(Chime,           CHIME,           "chime")       \
-    CUSTOM(FontShadow,      FONTSHADOW,      "fontshadow")
+    CUSTOM(Chime,           CHIME,           "chime")
 
 #define DANGER_ELEMENTS                                 \
     DANGER(VmSwap,        VMSWAP,        "vmswap")      \
@@ -529,7 +528,8 @@
     VISUAL(MixedContent,          MIXEDCONTENT,          "mixedcontent")          \
     VISUAL(ForwardHistory,        FORWARDHISTORY,        "forwardhistory")        \
     VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
-    VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")
+    VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")   \
+    VISUAL(RenderShadows,         RENDERSHADOWS,         "rendershadows")
 
 #define WEBSERV_ELEMENTS                          \
     WEBSERV(Sshd,       SSHD,       "sshd")       \

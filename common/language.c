@@ -558,7 +558,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.SCALE, "Scale");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCALING.STRETCH, "Stretch");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.FONTSHADOW, "Font Shadow");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.GRIDMODECONTENT, "Allow grid mode for content");
@@ -582,7 +581,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUNDVOLUME, "The volume of the navigation sounds, press A to set current value");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONTSHADOW, "Toggle a subtle drop shadow rendered behind all text");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSWAP, "Switch between pressing A or holding A to launch content save state automatically");
 
@@ -1581,6 +1579,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.MIXEDCONTENT, "Mixed Folder Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.FORWARDHISTORY, "Forward History");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAMESCROLL, "Name Scroll Style");
+    SPECIFIC_FIELD(lang->MUXVISUAL.RENDERSHADOWS, "Shadow Rendering");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.DISABLED, "Disabled");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.CONTINUOUS, "Continuous");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.BOUNCE, "Bounce");
@@ -1623,6 +1622,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.MIXEDCONTENT, "If enabled folders within content explorer will be mixed in with other content alphabetically");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FORWARDHISTORY, "Toggle remembering last selected item when returning to folders in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAMESCROLL, "Controls how long content names scroll when they exceed the display width - Disabled stops all scrolling, Continuous loops indefinitely, Bounce scrolls to the end then returns");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.RENDERSHADOWS, "Toggle a subtle drop shadow rendered behind list text and glyphs");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");

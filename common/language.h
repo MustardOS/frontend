@@ -580,7 +580,6 @@ struct mux_lang {
         char LAUNCHSPLASH[MAX_BUFFER_SIZE];
         char SHUFFLE[MAX_BUFFER_SIZE];
         char CHIME[MAX_BUFFER_SIZE];
-        char FONTSHADOW[MAX_BUFFER_SIZE];
         char CONTENTWIDTH[MAX_BUFFER_SIZE];
         char CONTENT[MAX_BUFFER_SIZE];
         struct {
@@ -658,7 +657,6 @@ struct mux_lang {
             char SOUND[MAX_BUFFER_SIZE];
             char SOUNDVOLUME[MAX_BUFFER_SIZE];
             char CHIME[MAX_BUFFER_SIZE];
-            char FONTSHADOW[MAX_BUFFER_SIZE];
             char CONTENT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;
@@ -1839,6 +1837,7 @@ struct mux_lang {
         char MIXEDCONTENT[MAX_BUFFER_SIZE];
         char FORWARDHISTORY[MAX_BUFFER_SIZE];
         char NAMESCROLL[MAX_BUFFER_SIZE];
+        char RENDERSHADOWS[MAX_BUFFER_SIZE];
         struct {
             char DISABLED[MAX_BUFFER_SIZE];
             char CONTINUOUS[MAX_BUFFER_SIZE];
@@ -1901,6 +1900,7 @@ struct mux_lang {
             char MIXEDCONTENT[MAX_BUFFER_SIZE];
             char FORWARDHISTORY[MAX_BUFFER_SIZE];
             char NAMESCROLL[MAX_BUFFER_SIZE];
+            char RENDERSHADOWS[MAX_BUFFER_SIZE];
             char OVERLAYIMAGE[MAX_BUFFER_SIZE];
             char OVERLAYTRANSPARENCY[MAX_BUFFER_SIZE];
         } HELP;

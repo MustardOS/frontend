@@ -199,7 +199,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, SoundVolume, lang.MUXCUSTOM.SOUND.VOLUME, "soundvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, custom, FontShadow, lang.MUXCUSTOM.FONTSHADOW, "fontshadow", disabled_enabled, 2);
 
     char *pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droMusicVolume_custom, pct_values);
@@ -303,7 +302,6 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_droSound_custom, config.SETTINGS.GENERAL.SOUND);
     lv_dropdown_set_selected(ui_droSoundVolume_custom, int_to_pct(config.SETTINGS.GENERAL.SOUNDVOL, 0, 100));
     lv_dropdown_set_selected(ui_droChime_custom, config.SETTINGS.GENERAL.CHIME);
-    lv_dropdown_set_selected(ui_droFontShadow_custom, config.SETTINGS.FONT.SHADOW);
     lv_dropdown_set_selected(ui_droThemeScaling_custom, config.SETTINGS.GENERAL.THEME_SCALING);
 }
 
@@ -317,7 +315,6 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, Sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_PCT(custom, SoundVolume, "settings/general/soundvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, Chime, "settings/general/chime", INT, 0);
-    CHECK_AND_SAVE_STD(custom, FontShadow, "settings/font/shadow", INT, 0);
     CHECK_AND_SAVE_STD(custom, ThemeScaling, "settings/general/theme_scaling", INT, 0);
 
     char theme_resolution[MAX_BUFFER_SIZE];

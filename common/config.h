@@ -222,7 +222,6 @@ struct mux_config {
             int16_t HEADER_SIZE;
             int16_t FOOTER_SIZE;
             int16_t PANEL_SIZE;
-            int16_t SHADOW;
         } FONT;
         struct {
             int16_t HEADER_HEIGHT;
@@ -278,6 +277,7 @@ struct mux_config {
         int16_t MIXEDCONTENT;
         int16_t FORWARDHISTORY;
         int16_t NAMESCROLL;
+        int16_t RENDERSHADOWS;
     } VISUAL;
 
     struct {
