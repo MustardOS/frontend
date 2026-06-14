@@ -90,9 +90,37 @@ static void image_refresh(char *image_type) {
     render_image_refresh(image_type, h_core_artwork, (char *) h_file_name_ptr, ui_imgSplash, ui_viewport_objects, &starter_image, &splash_valid);
 }
 
+static void video_refresh(void) {
+    if (!ui_count || items[current_item_index].content_type == FOLDER) return;
+
+    char *item_dir = get_content_path(items[current_item_index].extra_data);
+
+    char item_file_name_buf[MAX_BUFFER_SIZE];
+    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s",
+             get_last_dir(items[current_item_index].extra_data));
+
+    char core_desc[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name_buf, core_desc, sizeof(core_desc));
+
+    char item_no_ext[MAX_BUFFER_SIZE];
+    snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
+    char *dot = strrchr(item_no_ext, '.');
+    if (dot) *dot = '\0';
+
+    char mux_dim[MAX_BUFFER_SIZE];
+    snprintf(mux_dim, sizeof(mux_dim), "%dx%d", device.MUX.WIDTH, device.MUX.HEIGHT);
+
+    char vpath[MAX_BUFFER_SIZE];
+    if (!load_video_catalogue(core_desc, item_no_ext, item_no_ext, mux_dim, vpath, sizeof(vpath))) return;
+
+    int delay_ms = config.VISUAL.VIDEO_PREVIEW == 3 ? 10000 : config.VISUAL.VIDEO_PREVIEW == 2 ? 5000 : 3000;
+    video_preview_arm(vpath, delay_ms, ui_pnlBox, ui_imgBox);
+}
+
 static void image_refresh_transition(void) {
     image_refresh("box");
     transition_box_art_apply_in(config.VISUAL.BOX_ART_TRANSITION);
+    if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
@@ -336,11 +364,14 @@ static void list_nav_move(int steps, int direction) {
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
+    video_preview_cancel();
+
     if (config.VISUAL.BOX_ART < 4) {
         if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
             transition_box_art_nav_activity();
         } else {
             image_refresh("box");
+            if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
         }
     }
 
@@ -623,12 +654,13 @@ static void handle_a(void) {
         }
         return;
     }
-    if (hold_call) return;
+    if (hold_call || video_preview_active()) return;
+    video_preview_cancel();
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 0));
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 1));
 }
 
@@ -650,6 +682,13 @@ static void handle_b(void) {
         return;
     }
 
+    if (video_preview_active()) {
+        video_preview_cancel();
+        play_sound(SND_BACK);
+        return;
+    }
+
+    video_preview_cancel();
     play_sound(SND_BACK);
 
     if (at_base(sys_dir, access_mode)) {
@@ -686,7 +725,8 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode || is_ksk(kiosk.COLLECT.REMOVE) || remove_mode) return;
+    if (msgbox_active || !ui_count || add_mode || is_ksk(kiosk.COLLECT.REMOVE) || remove_mode || video_preview_active())
+        return;
 
     if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
         do_remove();
@@ -703,7 +743,7 @@ static void handle_y(void) {
         return;
     }
 
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
 
     if (!is_ksk(kiosk.COLLECT.NEW_DIR) && at_base(sys_dir, access_mode)) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
@@ -716,7 +756,7 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || video_preview_active()) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -725,7 +765,7 @@ static void handle_help(void) {
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE) return;
+    if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE || video_preview_active()) return;
 
     int dir, target;
     shuffle_index(current_item_index, &dir, &target);
@@ -1003,7 +1043,10 @@ int muxcollect_main(int add, char *dir, int last_index) {
             current_item_index < ui_count) {
             list_nav_move(sys_index, +1);
         } else {
-            if (config.VISUAL.BOX_ART < 4) image_refresh("box");
+            if (config.VISUAL.BOX_ART < 4) {
+                image_refresh("box");
+                if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
+            }
         }
         nav_moved = 1;
     } else {
@@ -1134,6 +1177,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     mux_input_task(&input_opts);
 
     transition_box_art_destroy();
+    video_preview_destroy();
     free_items(&items, &item_count);
 
     return exit_status;

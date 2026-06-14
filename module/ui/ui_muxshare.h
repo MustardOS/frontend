@@ -153,6 +153,7 @@
     CONTENT(BoxArtAlign,       BOXARTALIGN,       "align")            \
     CONTENT(BoxArtScale,       BOXARTSCALE,       "boxartscale")      \
     CONTENT(BoxArtTransition,  BOXARTTRANSITION,  "boxarttransition") \
+    CONTENT(VideoPreview,      VIDEOPREVIEW,      "videopreview")     \
     CONTENT(FullWidth,         WIDTH,             "width")            \
     CONTENT(LaunchSplash,      LAUNCHSPLASH,      "splash")           \
     CONTENT(GridMode,          GRIDMODE,          "gridmodecontent")  \

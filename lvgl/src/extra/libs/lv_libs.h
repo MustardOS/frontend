@@ -19,9 +19,6 @@ extern "C" {
 #include "gif/lv_gif.h"
 #include "qrcode/lv_qrcode.h"
 #include "sjpg/lv_sjpg.h"
-#include "freetype/lv_freetype.h"
-#include "rlottie/lv_rlottie.h"
-#include "ffmpeg/lv_ffmpeg.h"
 #include "tiny_ttf/lv_tiny_ttf.h"
 
 /*********************

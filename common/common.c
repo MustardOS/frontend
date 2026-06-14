@@ -1461,6 +1461,42 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     return 0;
 }
 
+int load_video_catalogue(const char *catalogue_name, const char *program,
+                         const char *program_alt, const char *mux_dim,
+                         char *video_path, size_t path_size) {
+    struct {
+        const char *dimension;
+        const char *program;
+    } args[] = {
+            {mux_dim, program},
+            {mux_dim, program_alt},
+            {"",      program},
+            {"",      program_alt},
+    };
+
+    const char *extensions[] = {"mp4", "mkv", "webm"};
+
+    for (size_t j = 0; j < A_SIZE(extensions); j++) {
+        for (size_t i = 0; i < A_SIZE(args); i++) {
+            if (!args[i].program || args[i].program[0] == '\0') continue;
+
+            char dir[MAX_BUFFER_SIZE];
+            int dw = snprintf(dir, sizeof(dir), "%s/%s/video", INFO_CAT_PATH, catalogue_name);
+            if (dw < 0 || (size_t) dw >= sizeof(dir)) continue;
+
+            char filename[MAX_BUFFER_SIZE];
+            int fw = snprintf(filename, sizeof(filename), "%s%s.%s",
+                              args[i].dimension, args[i].program, extensions[j]);
+            if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
+
+            int pw = snprintf(video_path, path_size, "%s/%s", dir, filename);
+            if (pw >= 0 && (size_t) pw < path_size && file_exist(video_path)) return 1;
+        }
+    }
+
+    return 0;
+}
+
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random, int wall_type) {
     const char *program = lv_obj_get_user_data(ui_screen);
 

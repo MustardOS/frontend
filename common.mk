@@ -63,7 +63,8 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
               $(BUILD_FLAGS)
 
-COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm
+COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm \
+              -lavformat -lavcodec -lavutil -lavdevice -lswscale -lswresample
 
 BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
                $(if $(filter 1,$(DEBUGSYM)),,-s)

@@ -34,6 +34,7 @@
 #include "../common/debug.h"
 #include "../common/display.h"
 #include "../common/dialogue.h"
+#include "../common/video_preview.h"
 #include "../common/crash.h"
 #include "../common/board.h"
 #include "../common/union.h"

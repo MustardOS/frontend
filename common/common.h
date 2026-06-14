@@ -490,6 +490,10 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
                          const char *program_default, const char *mux_dim, const char *image_type,
                          char *image_path, size_t path_size);
 
+int load_video_catalogue(const char *catalogue_name, const char *program,
+                         const char *program_alt, const char *mux_dim,
+                         char *video_path, size_t path_size);
+
 void invalidate_catalogue_cache(void);
 
 struct screen_dimension get_device_dimensions();

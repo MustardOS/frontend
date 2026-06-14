@@ -490,6 +490,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.HOLD_A, "Hold A");
     SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.LOAD_STATE, "Load State");
     SPECIFIC_FIELD(lang->MUXCONTENT.LAUNCH_SWAP.START_FRESH, "Start Fresh");
+    SPECIFIC_FIELD(lang->MUXCONTENT.VIDEO_PREVIEW.TITLE, "Video Preview");
+    SPECIFIC_FIELD(lang->MUXCONTENT.VIDEO_PREVIEW.DELAY_3, "3 Second Delay");
+    SPECIFIC_FIELD(lang->MUXCONTENT.VIDEO_PREVIEW.DELAY_5, "5 Second Delay");
+    SPECIFIC_FIELD(lang->MUXCONTENT.VIDEO_PREVIEW.DELAY_10, "10 Second Delay");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.LAUNCHSWAP, "Switch between pressing A or holding A to launch content save state automatically");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTIMAGE, "Change the display priority of the content images");
@@ -500,6 +504,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.GRIDMODEART, "Show or hide system box art images in Content Explorer when theme uses grid mode");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTSCALE, "Scale box art to a percentage of the available display area");
     SPECIFIC_FIELD(lang->MUXCONTENT.HELP.BOXARTTRANSITION, "Select the animation for box art when navigating content");
+    SPECIFIC_FIELD(lang->MUXCONTENT.HELP.VIDEOPREVIEW, "Play a video preview after staying on content for a set duration");
 
     // muxcontrol
     SPECIFIC_FIELD(lang->MUXCONTROL.TITLE, "CONTROL");

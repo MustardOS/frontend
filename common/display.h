@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL2/SDL.h>
 #include "../lvgl/lvgl.h"
 #include "../lvgl/lv_drv_conf.h"
 
@@ -18,5 +19,13 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);
+
+SDL_Renderer *display_get_renderer(void);
+
+typedef void (*display_overlay_fn)(SDL_Renderer *r);
+
+void display_set_video_overlay(display_overlay_fn fn);
+
+void display_clear_video_overlay(void);
 
 extern uint32_t anim_tick_event;

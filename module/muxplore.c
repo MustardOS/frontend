@@ -115,9 +115,34 @@ static void image_refresh(char *image_type) {
     render_image_refresh(image_type, h_core_artwork, file_name_no_ext, ui_imgSplash, ui_viewport_objects, &starter_image, &splash_valid);
 }
 
+static void video_refresh(void) {
+    if (!ui_count || union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR)) return;
+    if (items[current_item_index].content_type == FOLDER) return;
+
+    char *file_name = get_file_name(items[current_item_index].name);
+
+    char file_name_no_ext[MAX_BUFFER_SIZE];
+    snprintf(file_name_no_ext, sizeof(file_name_no_ext), "%s", file_name);
+    char *dot = strrchr(file_name_no_ext, '.');
+    if (dot) *dot = '\0';
+
+    char core_artwork[MAX_BUFFER_SIZE];
+    get_catalogue_name(sys_dir, file_name, core_artwork, sizeof(core_artwork));
+
+    char mux_dim[MAX_BUFFER_SIZE];
+    snprintf(mux_dim, sizeof(mux_dim), "%dx%d", device.MUX.WIDTH, device.MUX.HEIGHT);
+
+    char vpath[MAX_BUFFER_SIZE];
+    if (!load_video_catalogue(core_artwork, file_name_no_ext, file_name_no_ext, mux_dim, vpath, sizeof(vpath))) return;
+
+    int delay_ms = config.VISUAL.VIDEO_PREVIEW == 3 ? 10000 : config.VISUAL.VIDEO_PREVIEW == 2 ? 5000 : 3000;
+    video_preview_arm(vpath, delay_ms, ui_pnlBox, ui_imgBox);
+}
+
 static void image_refresh_transition(void) {
     image_refresh("box");
     transition_box_art_apply_in(config.VISUAL.BOX_ART_TRANSITION);
+    if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***dir_paths, char ***file_names, char ***file_paths) {
@@ -731,6 +756,7 @@ static int focus_list_index(void) {
 static void focus_initial(void) {
     if (grid_mode_enabled) {
         focus_grid_index(current_item_index);
+        if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
         return;
     }
 
@@ -739,7 +765,10 @@ static void focus_initial(void) {
     if (item_count <= (size_t) count) {
         focus_group(current_item_index);
 
-        if (config.VISUAL.BOX_ART < 4) image_refresh("box");
+        if (config.VISUAL.BOX_ART < 4) {
+            image_refresh("box");
+            if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
+        }
         nav_moved = 1;
 
         return;
@@ -765,7 +794,10 @@ static void focus_initial(void) {
 
     focus_group(new_item_index);
 
-    if (config.VISUAL.BOX_ART < 4) image_refresh("box");
+    if (config.VISUAL.BOX_ART < 4) {
+        image_refresh("box");
+        if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
+    }
     nav_moved = 1;
 }
 
@@ -800,11 +832,14 @@ static void list_nav_move(int steps, int direction) {
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
         lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
+        video_preview_cancel();
+
         if (config.VISUAL.BOX_ART < 4) {
             if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
                 transition_box_art_nav_activity();
             } else {
                 image_refresh("box");
+                if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
             }
         }
 
@@ -852,11 +887,14 @@ static void list_nav_move(int steps, int direction) {
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
+    video_preview_cancel();
+
     if (config.VISUAL.BOX_ART < 4) {
         if (config.VISUAL.BOX_ART_TRANSITION != TSN_DISABLED) {
             transition_box_art_nav_activity();
         } else {
             image_refresh("box");
+            if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();
         }
     }
 
@@ -1066,12 +1104,13 @@ static void process_load(int from_start) {
 }
 
 static void handle_a(void) {
-    if (hold_call) return;
+    if (hold_call || video_preview_active()) return;
+    video_preview_cancel();
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 0));
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
     process_load(launch_flag(config.VISUAL.LAUNCH_SWAP, 1));
 }
 
@@ -1089,6 +1128,13 @@ static void handle_b(void) {
         return;
     }
 
+    if (video_preview_active()) {
+        video_preview_cancel();
+        play_sound(SND_BACK);
+        return;
+    }
+
+    video_preview_cancel();
     play_sound(SND_BACK);
 
     if (at_base(sys_dir, MAIN_ROM_DIR)) {
@@ -1112,7 +1158,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || hold_call || video_preview_active()) return;
 
     play_sound(SND_CONFIRM);
 
@@ -1143,7 +1189,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || hold_call || video_preview_active()) return;
 
     if (items[current_item_index].content_type == FOLDER) {
         play_sound(SND_ERROR);
@@ -1163,7 +1209,7 @@ static void handle_y(void) {
 }
 
 static void handle_start(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count || hold_call || video_preview_active()) return;
 
     play_sound(SND_CONFIRM);
 
@@ -1176,7 +1222,7 @@ static void handle_start(void) {
 }
 
 static void handle_select(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
 
     if (is_ksk(kiosk.CONTENT.SEARCH)) {
         kiosk_denied();
@@ -1196,7 +1242,7 @@ static void handle_select(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || video_preview_active()) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -1205,7 +1251,7 @@ static void handle_help(void) {
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE) return;
+    if (msgbox_active || ui_count < 2 || hold_call || !config.VISUAL.SHUFFLE || video_preview_active()) return;
 
     int dir = +1;
     int target = current_item_index;
@@ -1599,6 +1645,7 @@ int muxplore_main(int index, char *dir) {
     mux_input_task(&input_opts);
 
     transition_box_art_destroy();
+    video_preview_destroy();
     free_items(&items, &item_count);
     free_tag_items(&tag_items, &tag_item_count);
 

@@ -13,6 +13,7 @@
 #include "display.h"
 #include "ui_common.h"
 #include "inotify.h"
+#include "video_preview.h"
 #include "saver.h"
 #include "saver/dvd.h"
 #include "saver/star.h"
@@ -57,6 +58,14 @@ static bool pending_rect_valid = false;
 static uint32_t last_saver_exit = 0;
 static uint8_t display_fade_alpha = 0;
 static bool gradient_captured = false;
+static display_overlay_fn video_overlay_fn_ptr = NULL;
+
+SDL_Renderer *display_get_renderer(void) { return monitor.renderer; }
+
+void display_set_video_overlay(display_overlay_fn fn) { video_overlay_fn_ptr = fn; }
+
+void display_clear_video_overlay(void) { video_overlay_fn_ptr = NULL; }
+
 uint32_t anim_tick_event = 0;
 
 void display_set_fade_alpha(uint8_t alpha) {
@@ -712,6 +721,8 @@ void display_composite_frame(void) {
 
     if (anim_fg) anim_tick(monitor.renderer);
 
+    if (video_overlay_fn_ptr) video_overlay_fn_ptr(monitor.renderer);
+
     if (display_fade_alpha > 0) {
         SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, display_fade_alpha);
@@ -824,6 +835,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
         if (now - last_saver_exit > SAVER_DELAY) {
             saver_update();
             if (saver_active()) {
+                video_preview_cancel();
                 pending_rect_valid = false;
                 run_saver_loop(0);
                 last_saver_exit = SDL_GetTicks();

@@ -65,6 +65,7 @@ static void restore_content_options(void) {
     lv_dropdown_set_selected(ui_droGridModeArt_content, 1 - config.VISUAL.BOX_ART_HIDE);
     lv_dropdown_set_selected(ui_droBoxArtScale_content, config.VISUAL.BOX_ART_SCALE);
     lv_dropdown_set_selected(ui_droBoxArtTransition_content, config.VISUAL.BOX_ART_TRANSITION);
+    lv_dropdown_set_selected(ui_droVideoPreview_content, config.VISUAL.VIDEO_PREVIEW);
 }
 
 static int save_content_options(void) {
@@ -85,6 +86,7 @@ static int save_content_options(void) {
 
     CHECK_AND_SAVE_STD(content, BoxArtScale, "visual/boxartscale", INT, 0);
     CHECK_AND_SAVE_STD(content, BoxArtTransition, "visual/boxarttransition", INT, 0);
+    CHECK_AND_SAVE_STD(content, VideoPreview, "visual/videopreview", INT, 0);
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 
@@ -136,12 +138,20 @@ static void init_navigation_group(void) {
             lang.GENERIC.DISABLED
     };
 
+    char *video_preview_options[] = {
+            lang.GENERIC.DISABLED,
+            lang.MUXCONTENT.VIDEO_PREVIEW.DELAY_3,
+            lang.MUXCONTENT.VIDEO_PREVIEW.DELAY_5,
+            lang.MUXCONTENT.VIDEO_PREVIEW.DELAY_10
+    };
+
     INIT_OPTION_ITEM(-1, content, LaunchSwap, lang.MUXCONTENT.LAUNCH_SWAP.TITLE, "launch_swap", launch_swap_options, 4);
     INIT_OPTION_ITEM(-1, content, Shuffle, lang.MUXCONTENT.SHUFFLE, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, BoxArtImage, lang.MUXCONTENT.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, content, BoxArtAlign, lang.MUXCONTENT.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
     INIT_OPTION_ITEM(-1, content, BoxArtScale, lang.MUXCONTENT.BOX_ART.SCALE, "boxartscale", NULL, 0);
     INIT_OPTION_ITEM(-1, content, BoxArtTransition, lang.MUXCONTENT.BOX_ART.TRANSITION.TITLE, "boxarttransition", boxart_transition, 14);
+    INIT_OPTION_ITEM(-1, content, VideoPreview, lang.MUXCONTENT.VIDEO_PREVIEW.TITLE, "videopreview", video_preview_options, 4);
     INIT_OPTION_ITEM(-1, content, FullWidth, lang.MUXCONTENT.WIDTH, "width", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, LaunchSplash, lang.MUXCONTENT.LAUNCHSPLASH, "splash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, GridMode, lang.MUXCONTENT.GRIDMODE, "gridmodecontent", disabled_enabled, 2);

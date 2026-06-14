@@ -545,6 +545,12 @@ struct mux_lang {
             char START_FRESH[MAX_BUFFER_SIZE];
         } LAUNCH_SWAP;
         struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char DELAY_3[MAX_BUFFER_SIZE];
+            char DELAY_5[MAX_BUFFER_SIZE];
+            char DELAY_10[MAX_BUFFER_SIZE];
+        } VIDEO_PREVIEW;
+        struct {
             char LAUNCHSWAP[MAX_BUFFER_SIZE];
             char SHUFFLE[MAX_BUFFER_SIZE];
             char BOXARTIMAGE[MAX_BUFFER_SIZE];
@@ -555,6 +561,7 @@ struct mux_lang {
             char GRIDMODEART[MAX_BUFFER_SIZE];
             char BOXARTSCALE[MAX_BUFFER_SIZE];
             char BOXARTTRANSITION[MAX_BUFFER_SIZE];
+            char VIDEOPREVIEW[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONTENT;
 
