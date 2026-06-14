@@ -17,6 +17,19 @@ static const char *svg_real_path(const void *src) {
     return (path[1] == ':') ? path + 2 : path;
 }
 
+// Are we really who we say we are?
+// Only claim genuine .svg file sources so the SVG decoder doesn't intercept
+// PNG (or other) images, which would otherwise fail to render and show nothing!
+static int svg_src_is_svg(const void *src) {
+    if (lv_img_src_get_type(src) != LV_IMG_SRC_FILE) return 0;
+
+    const char *path = svg_real_path(src);
+    const char *q = strchr(path, '?');
+    size_t len = q ? (size_t) (q - path) : strlen(path);
+
+    return len >= 4 && strncasecmp(path + len - 4, ".svg", 4) == 0;
+}
+
 // Parse an SVG decoder string into a file path and optional hint dims.
 // Handles "M:/path/to/file.svg" or "M:/path/to/file.svg?WxH"
 // The file_path receives the path without the drive prefix and without
@@ -117,6 +130,8 @@ static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, 
 static lv_res_t svg_info_cb(lv_img_decoder_t *decoder, const void *src, lv_img_header_t *header) {
     LV_UNUSED(decoder);
 
+    if (!svg_src_is_svg(src)) return LV_RES_INV;
+
     char file_path[SVG_PATH_MAX];
     int hint_w, hint_h;
     svg_parse_src(src, file_path, &hint_w, &hint_h);
@@ -143,6 +158,8 @@ static lv_res_t svg_info_cb(lv_img_decoder_t *decoder, const void *src, lv_img_h
 
 static lv_res_t svg_open_cb(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *dsc) {
     LV_UNUSED(decoder);
+
+    if (!svg_src_is_svg(dsc->src)) return LV_RES_INV;
 
     char file_path[SVG_PATH_MAX];
     int hint_w, hint_h;

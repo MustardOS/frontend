@@ -1478,7 +1478,12 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 
     if (generate_image_embed(mux_dim, "header", battery_glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
         size_t n = strlen(image_embed);
-        snprintf(image_embed + n, sizeof(image_embed) - n, "?%dx%d", theme->HEADER.HEIGHT, theme->HEADER.HEIGHT);
+        size_t plen = strlen(image_path);
+
+        if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
+            snprintf(image_embed + n, sizeof(image_embed) - n, "?%dx%d", theme->HEADER.HEIGHT, theme->HEADER.HEIGHT);
+        }
+
         lv_img_set_src(ui_staCapacity, image_embed);
     }
 }
@@ -1509,7 +1514,12 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
 
     if (generate_image_embed(mux_dim, "header", "bluetooth", image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
         size_t n = strlen(image_embed);
-        snprintf(image_embed + n, sizeof(image_embed) - n, "?%dx%d", theme->HEADER.HEIGHT, theme->HEADER.HEIGHT);
+        size_t plen = strlen(image_path);
+
+        if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
+            snprintf(image_embed + n, sizeof(image_embed) - n, "?%dx%d", theme->HEADER.HEIGHT, theme->HEADER.HEIGHT);
+        }
+
         lv_img_set_src(ui_staBluetooth, image_embed);
     }
 }
@@ -1541,7 +1551,12 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
 
     if (generate_image_embed(mux_dim, "header", network_status_filename, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
         size_t n = strlen(image_embed);
-        snprintf(image_embed + n, sizeof(image_embed) - n, "?%dx%d", theme->HEADER.HEIGHT, theme->HEADER.HEIGHT);
+        size_t plen = strlen(image_path);
+
+        if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
+            snprintf(image_embed + n, sizeof(image_embed) - n, "?%dx%d", theme->HEADER.HEIGHT, theme->HEADER.HEIGHT);
+        }
+
         lv_img_set_src(ui_staNetwork, image_embed);
     }
 }
