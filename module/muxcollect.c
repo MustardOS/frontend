@@ -1038,6 +1038,8 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
 
+    transition_box_art_init(image_refresh_transition);
+
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count &&
             current_item_index < ui_count) {
@@ -1129,7 +1131,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
     update_footer_glyph();
 
     init_timer(ui_refresh_task, NULL);
-    transition_box_art_init(image_refresh_transition);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||

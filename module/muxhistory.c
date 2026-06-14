@@ -704,6 +704,8 @@ int muxhistory_main(int his_index) {
     create_history_items();
     init_elements();
 
+    transition_box_art_init(image_refresh_transition);
+
     int nav_vis = 0;
     if (ui_count > 0) {
         nav_vis = 1;
@@ -762,7 +764,6 @@ int muxhistory_main(int his_index) {
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);
-    transition_box_art_init(image_refresh_transition);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 || (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
