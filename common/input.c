@@ -195,6 +195,8 @@ static void init_input_maps(void) {
         case BOARD_SPECIAL_VITA_PRO:
             map_vol_buttons(joy_button_map, 13, 14);
             break;
+        case BOARD_SPECIAL_G350:
+            break;
         default:
             map_vol_buttons(joy_button_map, 1, 2);
             break;
