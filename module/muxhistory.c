@@ -220,20 +220,25 @@ static void gen_item(int file_count, char **file_names) {
 
 static void init_navigation_group_grid(void) {
     grid_mode_enabled = 1;
+
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
+
     load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
     load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
+    if (item_count == 0) return;
 
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
-    } else {
-        for (int i = 0; i < item_count; i++) {
-            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-                gen_grid_item(i);
-            }
-        }
+        return;
+    }
+
+    int visible_count = theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT;
+    if (visible_count <= 0) return;
+
+    for (int i = 0; i < (int) item_count && i < visible_count; i++) {
+        gen_grid_item(i);
     }
 }
 

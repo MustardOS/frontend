@@ -1406,7 +1406,8 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
                          const char *program_default, const char *mux_dim, const char *image_type,
                          char *image_path, size_t path_size) {
     enum catalogue_kind {
-        CAT_THEME, CAT_INFO
+        CAT_THEME,
+        CAT_INFO
     };
 
     struct {
@@ -1419,12 +1420,15 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program_alt},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program_alt},
+
             {CAT_INFO, INFO_CAT_PATH,                mux_dim, program},
             {CAT_INFO, INFO_CAT_PATH,                mux_dim, program_alt},
             {CAT_INFO, INFO_CAT_PATH,                "",      program},
             {CAT_INFO, INFO_CAT_PATH,                "",      program_alt},
+
             {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program_default},
             {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program_default},
+
             {CAT_INFO, INFO_CAT_PATH,                mux_dim, program_default},
             {CAT_INFO, INFO_CAT_PATH,                "",      program_default},
     };
@@ -1432,29 +1436,64 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     const char *extensions[] = {"svg", "jpg", "png"};
     const int skip_theme = !is_supported_theme_catalogue(catalogue_name, image_type);
 
+    if (image_path && path_size > 0) image_path[0] = '\0';
+
+    if (!catalogue_name || !catalogue_name[0] ||
+        !image_type || !image_type[0] ||
+        !image_path || path_size == 0) {
+        return 0;
+    }
+
     for (size_t j = 0; j < A_SIZE(extensions); j++) {
         for (size_t i = 0; i < A_SIZE(args); i++) {
-            if ((args[i].kind == CAT_THEME && skip_theme) || args[i].program[0] == '\0') continue;
+            if ((args[i].kind == CAT_THEME && skip_theme) ||
+                !args[i].catalogue_path || !args[i].catalogue_path[0] ||
+                !args[i].program || !args[i].program[0]) {
+                continue;
+            }
+
+            char base_dir[MAX_BUFFER_SIZE];
+            int bw = snprintf(base_dir, sizeof(base_dir), "%s/%s/%s",
+                              args[i].catalogue_path, catalogue_name, image_type);
+            if (bw < 0 || (size_t) bw >= sizeof(base_dir)) continue;
+
+            char dim_clean[MAX_BUFFER_SIZE];
+            dim_clean[0] = '\0';
+
+            if (args[i].dimension && args[i].dimension[0]) {
+                snprintf(dim_clean, sizeof(dim_clean), "%s", args[i].dimension);
+
+                size_t len = strlen(dim_clean);
+                while (len > 0 && dim_clean[len - 1] == '/') {
+                    dim_clean[--len] = '\0';
+                }
+            }
 
             char dir[MAX_BUFFER_SIZE];
-            int dw = snprintf(dir, sizeof(dir), "%s/%s/%s", args[i].catalogue_path, catalogue_name, image_type);
+            int dw = dim_clean[0]
+                     ? snprintf(dir, sizeof(dir), "%s/%s", base_dir, dim_clean)
+                     : snprintf(dir, sizeof(dir), "%s", base_dir);
+
             if (dw < 0 || (size_t) dw >= sizeof(dir)) continue;
 
             char filename[MAX_BUFFER_SIZE];
-            int fw = snprintf(filename, sizeof(filename), "%s%s.%s", args[i].dimension, args[i].program, extensions[j]);
+            int fw = snprintf(filename, sizeof(filename), "%s.%s", args[i].program, extensions[j]);
             if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
+
+            char full_path[MAX_BUFFER_SIZE];
+            int pw = snprintf(full_path, sizeof(full_path), "%s/%s", dir, filename);
+            if (pw < 0 || (size_t) pw >= sizeof(full_path)) continue;
 
             struct cat_dir_entry *e = cat_dir_lookup(dir);
             if (e) {
                 if (!cat_dir_has_file(e, filename)) continue;
-            } else {
-                int pw = snprintf(image_path, path_size, "%s/%s", dir, filename);
-                if (pw >= 0 && (size_t) pw < path_size && file_exist(image_path)) return 1;
+            } else if (!file_exist(full_path)) {
                 continue;
             }
 
-            int pw = snprintf(image_path, path_size, "%s/%s", dir, filename);
-            if (pw >= 0 && (size_t) pw < path_size) return 1;
+            snprintf(image_path, path_size, "%s", full_path);
+            LOG_DEBUG(mux_module, "Catalogue image found: %s", image_path);
+            return 1;
         }
     }
 
@@ -3048,116 +3087,208 @@ int get_grid_row_item_count(int current_item_index) {
 
 static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, size_t catalogue_name_size,
                                                 char *program, size_t program_size) {
+    if (!catalogue_name || catalogue_name_size == 0 || !program || program_size == 0) return;
+
+    catalogue_name[0] = '\0';
+    program[0] = '\0';
+
+    if (index < 0 || (size_t) index >= item_count) return;
+
     if (strcmp(mux_module, "muxapp") == 0) {
         snprintf(catalogue_name, catalogue_name_size, "Application");
-        snprintf(program, program_size, "%s", items[index].glyph_icon);
+        snprintf(program, program_size, "%s",
+                 items[index].glyph_icon && items[index].glyph_icon[0] ? items[index].glyph_icon : "app");
         return;
     }
 
     if (items[index].content_type == ITEM) {
         if (strcmp(mux_module, "muxcollect") == 0 || strcmp(mux_module, "muxhistory") == 0) {
             char *item_dir = strip_dir(items[index].extra_data);
-            char *file_path = strdup(items[index].extra_data);
+
+            char file_path[MAX_BUFFER_SIZE];
+            snprintf(file_path, sizeof(file_path), "%s", items[index].extra_data);
+
             char *item_file = get_last_dir(file_path);
-            if (item_dir && item_file) {
+
+            if (item_dir && item_file && item_file[0]) {
                 get_catalogue_name(item_dir, item_file, catalogue_name, catalogue_name_size);
-                snprintf(program, program_size, "%s", strip_ext(item_file));
+
+                char *item_no_ext = strip_ext(item_file);
+                snprintf(program, program_size, "%s", item_no_ext ? item_no_ext : item_file);
+                free(item_no_ext);
             }
+
             free(item_dir);
-            free(file_path);
         } else {
-            get_catalogue_name(strdup(sys_dir), items[index].name, catalogue_name, catalogue_name_size);
-            snprintf(program, program_size, "%s", strip_ext(items[index].name));
+            char sys_dir_copy[MAX_BUFFER_SIZE];
+            snprintf(sys_dir_copy, sizeof(sys_dir_copy), "%s", sys_dir);
+
+            get_catalogue_name(sys_dir_copy, items[index].name, catalogue_name, catalogue_name_size);
+
+            char *item_no_ext = strip_ext(items[index].name);
+            snprintf(program, program_size, "%s", item_no_ext ? item_no_ext : items[index].name);
+            free(item_no_ext);
         }
+
         return;
     }
 
-    const char *cat_label = strcmp(mux_module, "muxplore") == 0 ? "Folder" : "Collection";
-    snprintf(catalogue_name, catalogue_name_size, "%s", cat_label);
-    snprintf(program, program_size, "%s", strip_ext(items[index].name));
+    snprintf(catalogue_name, catalogue_name_size, "%s",
+             strcmp(mux_module, "muxplore") == 0 ? "Folder" : "Collection");
+
+    char *item_no_ext = strip_ext(items[index].name);
+    snprintf(program, program_size, "%s", item_no_ext ? item_no_ext : items[index].name);
+    free(item_no_ext);
 }
 
 void update_grid_image_paths(int index) {
-    char catalogue_name[MAX_BUFFER_SIZE];
+    if (index < 0 || (size_t) index >= item_count) return;
 
+    char catalogue_name[MAX_BUFFER_SIZE];
     char program[MAX_BUFFER_SIZE];
+
     set_grid_catalogue_and_program_name(index, catalogue_name, sizeof(catalogue_name), program, sizeof(program));
 
-    char alt_name[MAX_BUFFER_SIZE];
-    snprintf(alt_name, sizeof(alt_name), "%s",
-             strcmp(mux_module, "muxplore") == 0 ? get_catalogue_name_from_rom_path(sys_dir, items[index].name) : "");
+    if (!catalogue_name[0] || !program[0]) {
+        free(items[index].grid_image);
+        free(items[index].grid_image_focused);
 
-    char grid_image[MAX_BUFFER_SIZE];
-    grid_image[0] = '\0';
-    load_image_catalogue(catalogue_name, program, alt_name, "default",
-                         mux_dim, "grid", grid_image, sizeof(grid_image));
+        items[index].grid_image = strdup("");
+        items[index].grid_image_focused = strdup("");
+
+        if (!items[index].grid_image || !items[index].grid_image_focused) {
+            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        }
+
+        return;
+    }
+
+    char alt_name[MAX_BUFFER_SIZE];
+    alt_name[0] = '\0';
+
+    if (strcmp(mux_module, "muxplore") == 0) {
+        const char *rom_cat = get_catalogue_name_from_rom_path(sys_dir, items[index].name);
+        if (rom_cat && rom_cat[0]) snprintf(alt_name, sizeof(alt_name), "%s", rom_cat);
+    }
 
     char glyph_name_focused[MAX_BUFFER_SIZE];
     snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", program);
 
     char alt_name_focused[MAX_BUFFER_SIZE];
-    snprintf(alt_name_focused, sizeof(alt_name_focused), "%s_focused", alt_name);
+    alt_name_focused[0] = '\0';
 
+    if (alt_name[0]) {
+        snprintf(alt_name_focused, sizeof(alt_name_focused), "%s_focused", alt_name);
+    }
+
+    char grid_image[MAX_BUFFER_SIZE];
     char grid_image_focused[MAX_BUFFER_SIZE];
+
+    grid_image[0] = '\0';
     grid_image_focused[0] = '\0';
-    load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
-                         mux_dim, "grid", grid_image_focused, sizeof(grid_image_focused));
 
     if (strcmp(mux_module, "muxapp") == 0) {
-        get_app_grid_glyph(items[index].extra_data, program, "default", grid_image, sizeof(grid_image));
-        get_app_grid_glyph(items[index].extra_data, glyph_name_focused, "default_focused", grid_image_focused,
-                           sizeof(grid_image_focused));
+        get_app_grid_glyph(items[index].extra_data, program, "default",
+                           grid_image, sizeof(grid_image));
+
+        if (!grid_image[0] || !file_exist(grid_image)) {
+            load_image_catalogue(catalogue_name, program, alt_name, "default",
+                                 mux_dim, "grid", grid_image, sizeof(grid_image));
+        }
+
+        get_app_grid_glyph(items[index].extra_data, glyph_name_focused, "default_focused",
+                           grid_image_focused, sizeof(grid_image_focused));
+
+        if (!grid_image_focused[0] || !file_exist(grid_image_focused)) {
+            load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
+                                 mux_dim, "grid", grid_image_focused, sizeof(grid_image_focused));
+        }
+    } else {
+        load_image_catalogue(catalogue_name, program, alt_name, "default",
+                             mux_dim, "grid", grid_image, sizeof(grid_image));
+
+        load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
+                             mux_dim, "grid", grid_image_focused, sizeof(grid_image_focused));
     }
+
+    if ((!grid_image_focused[0] || !file_exist(grid_image_focused)) &&
+        grid_image[0] && file_exist(grid_image)) {
+        snprintf(grid_image_focused, sizeof(grid_image_focused), "%s", grid_image);
+    }
+
+    free(items[index].grid_image);
+    free(items[index].grid_image_focused);
 
     items[index].grid_image = strdup(grid_image);
     items[index].grid_image_focused = strdup(grid_image_focused);
+
+    if (!items[index].grid_image || !items[index].grid_image_focused) LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
 }
 
 static void update_grid_image(lv_obj_t *cell, char *image_path) {
-    if (file_exist(image_path)) {
-        char grid_image[MAX_BUFFER_SIZE];
-        size_t plen = strlen(image_path);
-        if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
-            int hw = (theme.GRID.CELL.WIDTH * 3) / 4;
-            int hh = (theme.GRID.CELL.HEIGHT * 3) / 4;
-            snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, hw, hh);
-        } else {
-            snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
-        }
-        lv_img_set_src(cell, grid_image);
-    } else {
+    if (!cell) return;
+
+    if (!image_path || !image_path[0] || !file_exist(image_path)) {
         lv_img_set_src(cell, &ui_img_blank);
+        return;
     }
+
+    char grid_image[MAX_BUFFER_SIZE];
+    size_t plen = strlen(image_path);
+
+    if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
+        int hw = (theme.GRID.CELL.WIDTH * 3) / 4;
+        int hh = (theme.GRID.CELL.HEIGHT * 3) / 4;
+
+        snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, hw, hh);
+    } else {
+        snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
+    }
+
+    lv_img_set_src(cell, grid_image);
 }
 
 static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
+    if (!ui_pnlItem) return;
+
     lv_obj_set_user_data(ui_pnlItem, UFI(index));
-    lv_obj_t *ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
+
     lv_obj_t *cell_image = lv_obj_get_child(ui_pnlItem, 0);
+    lv_obj_t *ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
     lv_obj_t *cell_image_focused = lv_obj_get_child(ui_pnlItem, 2);
 
-    if (index >= item_count) {
+    if (index < 0 || (size_t) index >= item_count) {
         lv_obj_add_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        if (strcmp(lv_label_get_text(ui_lblItem), items[index].display_name) != 0) lv_label_set_text(ui_lblItem, items[index].display_name);
 
-        if (items[index].glyph_icon != NULL) lv_obj_set_user_data(ui_lblItem, items[index].glyph_icon);
-        if (items[index].grid_image == NULL) update_grid_image_paths(index);
+        if (ui_lblItem) lv_obj_add_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
+        if (cell_image) lv_obj_add_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
+        if (cell_image_focused) lv_obj_add_flag(cell_image_focused, LV_OBJ_FLAG_HIDDEN);
 
-        update_grid_image(cell_image, items[index].grid_image);
-        update_grid_image(cell_image_focused, items[index].grid_image_focused);
+        return;
+    }
 
-        lv_obj_clear_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
+    if (ui_lblItem && strcmp(lv_label_get_text(ui_lblItem), items[index].display_name) != 0) lv_label_set_text(ui_lblItem, items[index].display_name);
+    if (ui_lblItem && items[index].glyph_icon) lv_obj_set_user_data(ui_lblItem, items[index].glyph_icon);
 
-        if (current_item_index == index && !is_carousel_grid_mode()) {
-            lv_group_focus_obj(ui_pnlItem);
-            lv_group_focus_obj(ui_lblItem);
-            lv_group_focus_obj(cell_image);
-        }
+    if (!items[index].grid_image || !items[index].grid_image[0] ||
+        !items[index].grid_image_focused || !items[index].grid_image_focused[0]) {
+        update_grid_image_paths(index);
+    }
+
+    update_grid_image(cell_image, items[index].grid_image);
+    update_grid_image(cell_image_focused, items[index].grid_image_focused);
+
+    lv_obj_clear_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
+
+    if (ui_lblItem) lv_obj_clear_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
+    if (cell_image) lv_obj_clear_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
+    if (cell_image_focused) lv_obj_clear_flag(cell_image_focused, LV_OBJ_FLAG_HIDDEN);
+
+    if (current_item_index == index && !is_carousel_grid_mode()) {
+        lv_group_focus_obj(ui_pnlItem);
+
+        if (ui_lblItem) lv_group_focus_obj(ui_lblItem);
+        if (cell_image) lv_group_focus_obj(cell_image);
     }
 }
 
@@ -3261,36 +3392,49 @@ void update_grid(int direction) {
 }
 
 static void gen_grid_item_common(int item_index, int panel_index, int focus_index) {
-    if (items[item_index].grid_image == NULL) update_grid_image_paths(item_index);
+    if (item_index < 0 || (size_t) item_index >= item_count) return;
 
-    uint8_t col, row;
+    if (!items[item_index].grid_image || !items[item_index].grid_image[0] ||
+        !items[item_index].grid_image_focused || !items[item_index].grid_image_focused[0]) {
+        update_grid_image_paths(item_index);
+    }
+
+    uint8_t col;
+    uint8_t row;
+
     if (is_carousel_grid_mode()) {
-        col = (theme.GRID.COLUMN_COUNT == 1) ? 0 : panel_index;
-        row = (theme.GRID.ROW_COUNT == 1) ? 0 : panel_index;
+        col = (theme.GRID.COLUMN_COUNT == 1) ? 0 : (uint8_t) panel_index;
+        row = (theme.GRID.ROW_COUNT == 1) ? 0 : (uint8_t) panel_index;
     } else {
-        col = item_index % theme.GRID.COLUMN_COUNT;
-        row = item_index / theme.GRID.COLUMN_COUNT;
+        col = (uint8_t) (item_index % theme.GRID.COLUMN_COUNT);
+        row = (uint8_t) (item_index / theme.GRID.COLUMN_COUNT);
     }
 
     lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+    if (!cell_panel) return;
+
     lv_obj_set_user_data(cell_panel, UFI(item_index));
 
     lv_obj_t *cell_image = lv_img_create(cell_panel);
     lv_obj_t *cell_label = lv_label_create(cell_panel);
-    if (items[item_index].glyph_icon != NULL) lv_obj_set_user_data(cell_label, items[item_index].glyph_icon);
+
+    if (cell_label && items[item_index].glyph_icon) lv_obj_set_user_data(cell_label, items[item_index].glyph_icon);
 
     create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                     items[item_index].grid_image, items[item_index].grid_image_focused,
+                     items[item_index].grid_image,
+                     items[item_index].grid_image_focused,
                      items[item_index].display_name);
 
-    lv_group_add_obj(ui_group, cell_label);
-    lv_group_add_obj(ui_group_glyph, cell_image);
+    if (cell_label) lv_group_add_obj(ui_group, cell_label);
+    if (cell_image) lv_group_add_obj(ui_group_glyph, cell_image);
+
     lv_group_add_obj(ui_group_panel, cell_panel);
 
     if (is_carousel_grid_mode() && focus_index == panel_index) {
         lv_group_focus_obj(cell_panel);
-        lv_group_focus_obj(cell_label);
-        lv_group_focus_obj(cell_image);
+
+        if (cell_label) lv_group_focus_obj(cell_label);
+        if (cell_image) lv_group_focus_obj(cell_image);
     }
 }
 
@@ -3305,20 +3449,21 @@ static void gen_carousel_grid_item(int item_index, int panel_index, int focus_in
 int disable_grid_file_exists(char *item_curr_dir) {
     char no_grid_path[PATH_MAX];
     snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
+
     return file_exist(no_grid_path);
 }
 
 void create_carousel_grid(void) {
-    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT)
-                              ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+    if (item_count == 0) return;
+
+    int carousel_item_count = theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+    if (carousel_item_count <= 0) return;
 
     int middle_index = carousel_item_count / 2;
 
     for (int i = 0; i < carousel_item_count; i++) {
-        int offset = i - (carousel_item_count / 2);
-
-        size_t raw_index = ((size_t) current_item_index + offset + (size_t) item_count) % (size_t) item_count;
-        int item_index = (int) raw_index;
+        int offset = i - middle_index;
+        int item_index = (current_item_index + offset + (int) item_count) % (int) item_count;
 
         gen_carousel_grid_item(item_index, i, middle_index);
     }
@@ -3748,30 +3893,44 @@ void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *u
 
 void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const char *fallback_name,
                         char *glyph_image_path, size_t glyph_image_path_size) {
-    if (file_exist(glyph_image_path) && strstr(glyph_image_path, fallback_name) == 0) return;
+    (void) fallback_name;
+
+    if (!glyph_image_path || glyph_image_path_size == 0) return;
+    if (!app_folder || !app_folder[0] || !glyph_name || !glyph_name[0]) return;
+
+    char dim_clean[MAX_BUFFER_SIZE];
+    dim_clean[0] = '\0';
+
+    if (mux_dim[0]) {
+        snprintf(dim_clean, sizeof(dim_clean), "%s", mux_dim);
+
+        size_t len = strlen(dim_clean);
+        while (len > 0 && dim_clean[len - 1] == '/') {
+            dim_clean[--len] = '\0';
+        }
+    }
 
     char image_path[MAX_BUFFER_SIZE];
 
-#define TRY_GRID_GLYPH(fmt, ...)                                                 \
-    do {                                                                         \
-        snprintf(image_path, sizeof(image_path), fmt, ##__VA_ARGS__);            \
-        LOG_DEBUG(mux_module, "Grid glyph path check: %s", image_path);          \
-        if (file_exist(image_path)) {                                            \
-            LOG_DEBUG(mux_module, "Grid glyph found at: %s", image_path);        \
-            snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path); \
-            return;                                                              \
-        }                                                                        \
+#define TRY_APP_GRID(fmt, ...)                                                       \
+    do {                                                                             \
+        int _written = snprintf(image_path, sizeof(image_path), fmt, ##__VA_ARGS__); \
+        if (_written < 0 || (size_t) _written >= sizeof(image_path)) break;          \
+        LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);       \
+        if (file_exist(image_path)) {                                                \
+            LOG_DEBUG(mux_module, "Application grid image found: %s", image_path);   \
+            snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path);     \
+            return;                                                                  \
+        }                                                                            \
     } while (0)
 
-    TRY_GRID_GLYPH("%s/grid/%s%s.svg", app_folder, mux_dim, glyph_name);
-    TRY_GRID_GLYPH("%s/grid/%s.svg", app_folder, glyph_name);
+    if (dim_clean[0]) TRY_APP_GRID("%s/grid/%s/%s.svg", app_folder, dim_clean, glyph_name);
+    TRY_APP_GRID("%s/grid/%s.svg", app_folder, glyph_name);
 
-    TRY_GRID_GLYPH("%s/grid/%s%s.png", app_folder, mux_dim, glyph_name);
-    TRY_GRID_GLYPH("%s/grid/%s.png", app_folder, glyph_name);
+    if (dim_clean[0]) TRY_APP_GRID("%s/grid/%s/%s.png", app_folder, dim_clean, glyph_name);
+    TRY_APP_GRID("%s/grid/%s.png", app_folder, glyph_name);
 
-#undef TRY_GRID_GLYPH
-
-    LOG_DEBUG(mux_module, "Grid glyph not found: %s/%s", app_folder, glyph_name);
+#undef TRY_APP_GRID
 }
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {

@@ -489,15 +489,23 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
     load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
+    if (item_count == 0) return;
+
     if (is_carousel_grid_mode()) {
         create_carousel_grid();
+
         int prev_dir_index = get_item_index_by_extra_data(items, item_count, prev_dir);
         if (prev_dir_index > -1) sys_index = prev_dir_index;
-    } else {
-        for (int i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = (int) i;
-            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) gen_grid_item(i);
-        }
+
+        return;
+    }
+
+    int visible_count = theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT;
+    if (visible_count <= 0) return;
+
+    for (int i = 0; i < (int) item_count; i++) {
+        if (items[i].extra_data && strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = i;
+        if (i < visible_count) gen_grid_item(i);
     }
 }
 

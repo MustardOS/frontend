@@ -100,29 +100,17 @@ static void init_navigation_group_grid(void) {
     load_font_section(FONT_PANEL_DIR, ui_pnlGrid);
     load_font_section(FONT_PANEL_DIR, ui_lblGridCurrentItem);
 
-    for (int i = 0; i < item_count; i++) {
-        if (!is_carousel_grid_mode()) {
-            if (i < theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-                update_grid_image_paths(i);
+    if (item_count == 0) return;
 
-                uint8_t col = i % theme.GRID.COLUMN_COUNT;
-                uint8_t row = i / theme.GRID.COLUMN_COUNT;
-
-                lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-                lv_obj_set_user_data(cell_panel, UFI(i));
-                lv_obj_t *cell_image = lv_img_create(cell_panel);
-                lv_obj_t *cell_label = lv_label_create(cell_panel);
-
-                create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                                 items[i].grid_image, items[i].grid_image_focused, items[i].display_name);
-
-                lv_group_add_obj(ui_group, cell_label);
-                lv_group_add_obj(ui_group_glyph, cell_image);
-                lv_group_add_obj(ui_group_panel, cell_panel);
-            }
-        }
+    if (is_carousel_grid_mode()) {
+        create_carousel_grid();
+        return;
     }
-    if (is_carousel_grid_mode()) create_carousel_grid();
+
+    int visible_count = theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT;
+    if (visible_count <= 0) return;
+
+    for (int i = 0; i < (int) item_count && i < visible_count; i++) gen_grid_item(i);
 }
 
 static int append_mux_app(char ***arr, size_t *count, const char *name) {
