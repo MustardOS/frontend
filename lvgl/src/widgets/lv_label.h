@@ -172,6 +172,13 @@ lv_label_long_mode_t lv_label_get_long_mode(const lv_obj_t * obj);
 bool lv_label_get_recolor(const lv_obj_t * obj);
 
 /**
+ * Check whether the label is currently truncated with dots (the "..." is shown)
+ * @param obj       pointer to a label object
+ * @return          true: the text is dotted/truncated, false: the full text fits
+ */
+bool lv_label_is_text_dotted(const lv_obj_t * obj);
+
+/**
  * Get the relative x and y coordinates of a letter
  * @param obj       pointer to a label object
  * @param index     index of the character [0 ... text length - 1].

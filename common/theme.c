@@ -1366,6 +1366,11 @@ void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, int s
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
     if (scroll_mode == 0) return;
 
+    // Only do the scroll animation if the label is dotted
+    lv_obj_update_layout(ui_lblItem);
+    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
+    if (!lv_label_is_text_dotted(ui_lblItem)) return;
+
     lv_label_set_long_mode(ui_lblItem, scroll_mode == 2 ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
 }
 

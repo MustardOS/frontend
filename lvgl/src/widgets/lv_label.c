@@ -283,6 +283,13 @@ bool lv_label_get_recolor(const lv_obj_t *obj) {
     return label->recolor == 0 ? false : true;
 }
 
+bool lv_label_is_text_dotted(const lv_obj_t *obj) {
+    LV_ASSERT_OBJ(obj, MY_CLASS);
+
+    lv_label_t *label = (lv_label_t *) obj;
+    return label->long_mode == LV_LABEL_LONG_DOT && label->dot_end != LV_LABEL_DOT_END_INV;
+}
+
 void lv_label_get_letter_pos(const lv_obj_t *obj, uint32_t char_id, lv_point_t *pos) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
     LV_ASSERT_NULL(pos);
