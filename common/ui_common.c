@@ -1935,6 +1935,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     }
 
     lv_obj_set_style_img_opa(cell_image_focused, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor(cell_image_focused, lv_color_hex(theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(cell_image_focused, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
 

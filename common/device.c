@@ -119,6 +119,11 @@ void load_device(struct mux_device *device) {
     DEV_INT(device->SDL.SCALER, "scaler");
     DEV_INT(device->SDL.ROTATE, "rotate");
 
+    cfg_dir_scan(&d, CONF_DEVICE_PATH "colour");
+    DEV_INT(device->COLOUR.RED, "red");
+    DEV_INT(device->COLOUR.GREEN, "green");
+    DEV_INT(device->COLOUR.BLUE, "blue");
+
     cfg_dir_scan(&d, CONF_DEVICE_PATH "battery");
     DEV_STR(device->BATTERY.CAPACITY, "capacity");
     DEV_STR(device->BATTERY.HEALTH, "health");

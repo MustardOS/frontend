@@ -269,7 +269,13 @@ int main(int argc, char *argv[]) {
     load_config(&config);
 
     if (grab_path) {
-        if (screenshot_save(grab_path, grab_mode) < 0) {
+        screenshot_hue hue = {
+                .red = device.COLOUR.RED,
+                .green = device.COLOUR.GREEN,
+                .blue = device.COLOUR.BLUE,
+        };
+
+        if (screenshot_save(grab_path, grab_mode, hue) < 0) {
             LOG_ERROR(module, "Failed to capture screenshot");
             return 1;
         }

@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <linux/fb.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,8 +115,80 @@ static int buffer_is_blank(const uint8_t *buf, size_t len) {
     return 1;
 }
 
-static int png_write(const char *path, const uint8_t *rgb, uint32_t width, uint32_t height) {
+static int hue_red = 0;
+static int hue_green = 0;
+static int hue_blue = 0;
+
+static float range_weight(float hue, float centre) {
+    float diff = fabsf(hue - centre);
+    if (diff > 180.0f) diff = 360.0f - diff;
+    if (diff >= 120.0f) return 0.0f;
+
+    return 1.0f - (diff / 120.0f);
+}
+
+static void hue_adjust(uint8_t *rgb, size_t pixels) {
+    if (!hue_red && !hue_green && !hue_blue) return;
+
+    for (size_t i = 0; i < pixels; i++) {
+        uint8_t *p = rgb + i * 3U;
+
+        float r = (float) p[0] / 255.0f, g = (float) p[1] / 255.0f, b = (float) p[2] / 255.0f;
+        float mx = fmaxf(r, fmaxf(g, b));
+        float mn = fminf(r, fminf(g, b));
+        float c = mx - mn;
+
+        if (c <= 0.0f) continue;
+
+        float h;
+        if (mx == r) h = fmodf((g - b) / c, 6.0f);
+        else if (mx == g) h = (b - r) / c + 2.0f;
+        else h = (r - g) / c + 4.0f;
+
+        h *= 60.0f;
+        if (h < 0.0f) h += 360.0f;
+
+        h += range_weight(h, 0.0f) * (float) hue_red +
+             range_weight(h, 120.0f) * (float) hue_green +
+             range_weight(h, 240.0f) * (float) hue_blue;
+
+        h = fmodf(h, 360.0f);
+        if (h < 0.0f) h += 360.0f;
+
+        float k = h / 60.0f;
+        float x = c * (1.0f - fabsf(fmodf(k, 2.0f) - 1.0f));
+        float r1 = 0.0f, g1 = 0.0f, b1 = 0.0f;
+
+        if (k < 1.0f) {
+            r1 = c;
+            g1 = x;
+        } else if (k < 2.0f) {
+            r1 = x;
+            g1 = c;
+        } else if (k < 3.0f) {
+            g1 = c;
+            b1 = x;
+        } else if (k < 4.0f) {
+            g1 = x;
+            b1 = c;
+        } else if (k < 5.0f) {
+            r1 = x;
+            b1 = c;
+        } else {
+            r1 = c;
+            b1 = x;
+        }
+
+        p[0] = (uint8_t) lroundf((r1 + mn) * 255.0f);
+        p[1] = (uint8_t) lroundf((g1 + mn) * 255.0f);
+        p[2] = (uint8_t) lroundf((b1 + mn) * 255.0f);
+    }
+}
+
+static int png_write(const char *path, uint8_t *rgb, uint32_t width, uint32_t height) {
     if (!width || !height) return -1;
+
+    hue_adjust(rgb, (size_t) width * height);
 
     stbi_write_png_compression_level = 1;
     stbi_write_force_png_filter = 0;
@@ -487,8 +560,12 @@ static int capture_drm(const char *path) {
     return -1;
 }
 
-int screenshot_save(const char *path, screenshot_mode mode) {
+int screenshot_save(const char *path, screenshot_mode mode, screenshot_hue hue) {
     if (!path || !*path) return -1;
+
+    hue_red = hue.red;
+    hue_green = hue.green;
+    hue_blue = hue.blue;
 
     switch (mode) {
         case SCREENSHOT_FBDEV:

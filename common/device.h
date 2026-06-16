@@ -124,6 +124,12 @@ struct mux_device {
     } SDL;
 
     struct {
+        int16_t RED;
+        int16_t GREEN;
+        int16_t BLUE;
+    } COLOUR;
+
+    struct {
         char CAPACITY[MAX_BUFFER_SIZE];
         char HEALTH[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
