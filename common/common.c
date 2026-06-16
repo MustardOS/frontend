@@ -3233,19 +3233,34 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         return;
     }
 
+    int16_t grid_glyph = config.SETTINGS.THEMEOPT.GLYPH_SIZE_GRID;
+    if (grid_glyph == -2) grid_glyph = theme.GLYPH.GRID;
+
+    int grid_hint_w;
+    int grid_hint_h;
+
+    if (grid_glyph < 0) {
+        grid_hint_w = grid_hint_h = -1;
+    } else if (grid_glyph == 0) {
+        grid_hint_w = (theme.GRID.CELL.WIDTH * 3) / 4;
+        grid_hint_h = (theme.GRID.CELL.HEIGHT * 3) / 4;
+    } else {
+        grid_hint_w = grid_hint_h = grid_glyph;
+    }
+
+    int grid_px = (grid_glyph > 0) ? grid_glyph : 0;
+
     char grid_image[MAX_BUFFER_SIZE];
     size_t plen = strlen(image_path);
 
     if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
-        int hw = (theme.GRID.CELL.WIDTH * 3) / 4;
-        int hh = (theme.GRID.CELL.HEIGHT * 3) / 4;
-
-        snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, hw, hh);
+        snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, grid_hint_w, grid_hint_h);
     } else {
         snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
     }
 
     lv_img_set_src(cell, grid_image);
+    apply_glyph_scale(cell, grid_image, grid_px, grid_px);
 }
 
 static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
