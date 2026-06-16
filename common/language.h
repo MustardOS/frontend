@@ -1834,6 +1834,7 @@ struct mux_lang {
         char BATTERY[MAX_BUFFER_SIZE];
         char CLOCK[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
+        char BLUETOOTH[MAX_BUFFER_SIZE];
         char HEADERTITLE[MAX_BUFFER_SIZE];
         char DIALOGUETRANSITION[MAX_BUFFER_SIZE];
         char DASH[MAX_BUFFER_SIZE];
@@ -1896,6 +1897,7 @@ struct mux_lang {
             char BATTERY[MAX_BUFFER_SIZE];
             char CLOCK[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
+            char BLUETOOTH[MAX_BUFFER_SIZE];
             char HEADERTITLE[MAX_BUFFER_SIZE];
             char DIALOGUETRANSITION[MAX_BUFFER_SIZE];
             char DASH[MAX_BUFFER_SIZE];

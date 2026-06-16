@@ -68,6 +68,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT, 0);
     CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT, 0);
     CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Bluetooth, "visual/bluetooth", INT, 0);
     CHECK_AND_SAVE_STD(visual, HeaderTitle, "visual/headertitle", INT, 0);
     CHECK_AND_SAVE_STD(visual, DialogueTransition, "visual/dialoguetransition", INT, 0);
     CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT, 0);
@@ -143,6 +144,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", battery_display, 3);
     INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, Bluetooth, lang.MUXVISUAL.BLUETOOTH, "bluetooth", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, DialogueTransition, lang.MUXVISUAL.DIALOGUETRANSITION, "dialoguetransition", dialogue_transition, 14);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
@@ -174,6 +176,7 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     if (!device.BOARD.HASNETWORK) HIDE_OPTION_ITEM(visual, Network);
+    if (!device.BOARD.HASBLUETOOTH) HIDE_OPTION_ITEM(visual, Bluetooth);
 }
 
 

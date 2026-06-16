@@ -707,8 +707,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_conGlyphs, theme->FONT.HEADER_PAD_BOTTOM * 2, MU_OBJ_MAIN_DEFAULT);
 
     ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
-    //update_bluetooth_status(ui_staBluetooth, theme);
-    if (!config.VISUAL.BLUETOOTH) lv_obj_add_flag(ui_staBluetooth, LV_OBJ_FLAG_HIDDEN);
+    update_bluetooth_status(ui_staBluetooth, theme);
+    if (!config.VISUAL.BLUETOOTH || !device->BOARD.HASBLUETOOTH) lv_obj_add_flag(ui_staBluetooth, LV_OBJ_FLAG_HIDDEN);
 
     ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
     update_network_status(ui_staNetwork, theme, 0);
@@ -1520,10 +1520,31 @@ void update_battery_percent_label(lv_obj_t *ui_label, struct theme_config *theme
 }
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
+    struct {
+        lv_color_t color;
+        lv_opa_t alpha;
+        const char *status;
+    } status_style;
+
+    if (device.BOARD.HASBLUETOOTH && is_bluetooth_connected()) {
+        status_style.color = lv_color_hex(theme->STATUS.BLUETOOTH.ACTIVE);
+        status_style.alpha = theme->STATUS.BLUETOOTH.ACTIVE_ALPHA;
+        status_style.status = "active";
+    } else {
+        status_style.color = lv_color_hex(theme->STATUS.BLUETOOTH.NORMAL);
+        status_style.alpha = theme->STATUS.BLUETOOTH.NORMAL_ALPHA;
+        status_style.status = "normal";
+    }
+
+    lv_obj_set_style_img_recolor(ui_staBluetooth, status_style.color, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_staBluetooth, status_style.alpha, MU_OBJ_MAIN_DEFAULT);
+
+    const char *bluetooth_status_filename = (status_style.status[0] == 'a') ? "bluetooth_active" : "bluetooth_normal";
+
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
 
-    if (generate_image_embed(mux_dim, "header", "bluetooth", image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
+    if (generate_image_embed(mux_dim, "header", bluetooth_status_filename, image_path, sizeof(image_path), image_embed, sizeof(image_embed))) {
         int header_target = resolve_glyph_size(config.SETTINGS.THEMEOPT.GLYPH_SIZE_HEADER, theme->GLYPH.HEADER, theme->HEADER.HEIGHT);
         int header_px = glyph_explicit_px(config.SETTINGS.THEMEOPT.GLYPH_SIZE_HEADER, theme->GLYPH.HEADER);
 

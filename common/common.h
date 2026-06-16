@@ -374,6 +374,8 @@ void unload_image_animation();
 
 int is_network_connected();
 
+int is_bluetooth_connected(void);
+
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
 void load_skip_patterns();

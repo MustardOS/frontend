@@ -1922,6 +1922,25 @@ int is_network_connected(void) {
     return 0;
 }
 
+int is_bluetooth_connected(void) {
+    FILE *paired = fopen(CONF_CONFIG_PATH "bluetooth/paired", "r");
+    if (!paired) return 0;
+
+    char line[160];
+    int connected = 0;
+
+    while (fgets(line, sizeof(line), paired)) {
+        char *space = strchr(line, ' ');
+        if (space && strtol(space + 1, NULL, 10) == 1) {
+            connected = 1;
+            break;
+        }
+    }
+
+    fclose(paired);
+    return connected;
+}
+
 void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     switch (visual) {
         case VIS_CLOCK:

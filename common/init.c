@@ -474,12 +474,9 @@ void status_task(lv_timer_t *timer) {
 void bluetooth_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
 
-//    TODO: Yeah one day...
-//    update_bluetooth_status(ui_staBluetooth, &theme);
-//    if (!bluetooth_period_set) {
-//        bluetooth_period_set = 1;
-//        lv_timer_set_period(bluetooth_timer, TIMER_BLUETOOTH);
-//    }
+    if (!ui_staBluetooth || !lv_obj_is_valid(ui_staBluetooth)) return;
+
+    update_bluetooth_status(ui_staBluetooth, &theme);
 }
 
 void network_task(lv_timer_t *timer) {

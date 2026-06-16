@@ -1568,6 +1568,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
     SPECIFIC_FIELD(lang->MUXVISUAL.BATTERY, "Battery");
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
+    SPECIFIC_FIELD(lang->MUXVISUAL.BLUETOOTH, "Bluetooth");
     SPECIFIC_FIELD(lang->MUXVISUAL.HEADERTITLE, "Header Title");
     SPECIFIC_FIELD(lang->MUXVISUAL.DIALOGUETRANSITION, "Dialogue Transition");
     SPECIFIC_FIELD(lang->MUXVISUAL.CLOCK, "Clock");
@@ -1613,6 +1614,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.SORT, "Set sorting priority levels for content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HEADERTITLE, "Toggle the visibility of the header title");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DIALOGUETRANSITION, "Select the animation used when dialogue boxes appear");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");

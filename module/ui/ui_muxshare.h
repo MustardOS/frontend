@@ -514,6 +514,7 @@
     VISUAL(Battery,               BATTERY,               "battery")               \
     VISUAL(Clock,                 CLOCK,                 "clock")                 \
     VISUAL(Network,               NETWORK,               "network")               \
+    VISUAL(Bluetooth,             BLUETOOTH,             "bluetooth")             \
     VISUAL(HeaderTitle,           HEADERTITLE,           "headertitle")           \
     VISUAL(DialogueTransition,    DIALOGUETRANSITION,    "dialoguetransition")    \
     VISUAL(Name,                  NAME,                  "name")                  \
