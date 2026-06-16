@@ -317,7 +317,7 @@ static void check_focus(void) {
 
     int is_module = (e_focused == ui_lblHdmi_tweakgen || e_focused == ui_lblRtc_tweakgen ||
                      e_focused == ui_lblAdvanced_tweakgen || e_focused == ui_lblRgb_tweakgen ||
-                     e_focused == ui_lblPassCode_tweakgen);
+                     e_focused == ui_lblPassCode_tweakgen || e_focused == ui_lblInputRemap_tweakgen);
     int is_set_opt = (e_focused == ui_lblBrightness_tweakgen || e_focused == ui_lblVolume_tweakgen);
 
     if (is_module) {
