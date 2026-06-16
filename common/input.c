@@ -35,6 +35,16 @@ static volatile uint64_t pressed = 0;
 // Bitmask of input mux_types that were active during the previous iteration of the event loop.
 static volatile uint64_t held = 0;
 
+// Set while the alt ("hold") modifier is held.
+int hold_call = 0;
+
+// Whether the alt modifier was active at the start of the current poll cycle.
+static int hold_active = 0;
+
+// Bitmask of inputs whose press was dispatched through the alt layer, so their hold and
+// release are routed through the same layer regardless of the modifier's current state.
+static uint64_t alt_keys = 0;
+
 // Suppress any input during screensaver runs
 static volatile uint32_t suppress_until_tick = 0;
 
@@ -674,21 +684,57 @@ static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_typ
 }
 
 // Invokes the relevant handler(s) for a particular input mux_type and action.
+// The alt ("hold") modifier input for this screen, or MUX_INPUT_COUNT when disabled.
+static mux_input_type hold_modifier(const mux_input_options *opts) {
+    if (opts->hold_disabled) return MUX_INPUT_COUNT;
+    return opts->hold_input ? opts->hold_input : MUX_INPUT_L2;
+}
+
+// Sample the modifier's raw pressed state at the start of the poll cycle, before any other
+// input is dispatched, so a button pressed in the same instant as the modifier is reliably
+// treated as held. Updates hold_call on the edge.
+static void update_hold_modifier(const mux_input_options *opts) {
+    mux_input_type mod = hold_modifier(opts);
+    if (mod >= MUX_INPUT_COUNT) {
+        hold_active = 0;
+        return;
+    }
+
+    hold_active = mux_input_pressed(mod) ? 1 : 0;
+    hold_call = hold_active;
+}
+
 static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, mux_input_action action) {
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
 
+    // Route through the alt layer for inputs whose press happened while the modifier was held,
+    // so press/hold/release stay on the same layer even if the modifier is released mid-gesture.
+    uint64_t bit = BIT(mux_type);
+    int use_alt;
+    if (action == MUX_INPUT_PRESS) {
+        use_alt = hold_active;
+        if (use_alt) alt_keys |= bit; else alt_keys &= ~bit;
+    } else {
+        use_alt = (alt_keys & bit) != 0;
+        if (action == MUX_INPUT_RELEASE) alt_keys &= ~bit;
+    }
+
+    const mux_input_handler *press = use_alt ? opts->alt_press_handler : opts->press_handler;
+    const mux_input_handler *hold = use_alt ? opts->alt_hold_handler : opts->hold_handler;
+    const mux_input_handler *release = use_alt ? opts->alt_release_handler : opts->release_handler;
+
     mux_input_handler handler = NULL;
     switch (action) {
         case MUX_INPUT_PRESS:
-            handler = opts->press_handler[mux_type];
+            handler = press[mux_type];
             break;
         case MUX_INPUT_HOLD:
-            handler = opts->hold_handler[mux_type];
+            handler = hold[mux_type];
             break;
         case MUX_INPUT_RELEASE:
-            handler = opts->release_handler[mux_type];
+            handler = release[mux_type];
             break;
     }
 
@@ -741,6 +787,9 @@ static void handle_inputs(const mux_input_options *opts) {
             blocked |= mask;
         }
     }
+
+    mux_input_type mod = hold_modifier(opts);
+    if (mod < MUX_INPUT_COUNT) blocked |= BIT(mod);
 
     uint64_t pressed_filtered = pressed & ~blocked;
     uint64_t held_filtered = held & ~blocked;
@@ -900,6 +949,8 @@ void mux_input_task(const mux_input_options *opts) {
     stop_flag = 0;
     pressed = 0;
     held = 0;
+    hold_active = 0;
+    alt_keys = 0;
     suppress_until_tick = 0;
     primary_instance = -1;
 
@@ -1027,6 +1078,8 @@ void mux_input_task(const mux_input_options *opts) {
             if (opts->idle_handler) opts->idle_handler();
             continue;
         }
+
+        update_hold_modifier(opts);
 
         handle_inputs(opts);
         handle_combos(opts);

@@ -231,25 +231,23 @@ int muxbtcon_main(void) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_A]         = handle_a,
-                    [MUX_INPUT_B]         = handle_b,
-                    [MUX_INPUT_X]         = handle_rescan,
-                    [MUX_INPUT_Y]         = handle_y,
-                    [MUX_INPUT_DPAD_UP]   = handle_list_nav_up,
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_rescan,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1]        = handle_list_nav_page_up,
-                    [MUX_INPUT_R1]        = handle_list_nav_page_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .release_handler = {
-                    [MUX_INPUT_L2]   = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
-                    [MUX_INPUT_DPAD_UP]   = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1]        = handle_list_nav_page_up,
-                    [MUX_INPUT_L2]        = hold_call_set,
-                    [MUX_INPUT_R1]        = handle_list_nav_page_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
 

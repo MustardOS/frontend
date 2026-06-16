@@ -403,7 +403,6 @@ int muxinstall_main(void) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
             },
             .release_handler = {
-                    [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
@@ -411,7 +410,6 @@ int muxinstall_main(void) {
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
-                    [MUX_INPUT_L2] = hold_call_set,
             }
     };
 

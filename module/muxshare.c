@@ -24,7 +24,6 @@ int current_item_index = 0;
 int first_open = 1;
 int nav_silent = 0;
 int ui_count = 0;
-int hold_call = 0;
 
 int theme_down_index = 0;
 int last_shuffle = -1;

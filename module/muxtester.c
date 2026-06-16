@@ -725,6 +725,7 @@ int muxtester_main(void) {
     init_timer(NULL, NULL);
 
     mux_input_options input_opts = {
+            .hold_disabled = 1,
             .input_handler = handle_input,
             .idle_handler = handle_idle,
             .combo = {

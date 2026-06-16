@@ -2029,14 +2029,12 @@ int muxactivity_main() {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .release_handler = {
-                    [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };

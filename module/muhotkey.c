@@ -146,6 +146,7 @@ static const char *action_name[] = {
 };
 
 static mux_input_options input_opts = {
+        .hold_disabled = 1,
         .max_idle_ms = IDLE_MS,
         .input_handler = handle_input,
         .combo_handler = handle_combo,

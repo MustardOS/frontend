@@ -176,14 +176,12 @@ int muxpass_main(int auth_type) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
             },
             .release_handler = {
-                    [MUX_INPUT_L2] = hold_call_release,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_L2] = hold_call_set,
             }
     };
 

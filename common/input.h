@@ -142,6 +142,22 @@ typedef struct {
     mux_input_handler hold_handler[MUX_INPUT_COUNT];
     mux_input_handler release_handler[MUX_INPUT_COUNT];
 
+    // Alt ("hold") modifier. By default the core treats hold_input (which defaults to
+    // MUX_INPUT_L2 when left as 0) as a modifier rather than an ordinary input: its raw
+    // pressed state is sampled at the start of every poll cycle, before any other input is
+    // dispatched, so timing and ordering are deterministic regardless of which buttons are
+    // pressed together. While the modifier is held the global hold_call is set and every
+    // other input is routed through the alt_* tables below instead of the normal ones. A NULL
+    // alt handler means that input does nothing while the modifier is held (i.e. it is halted),
+    // which is the common case. Populate alt_* to give buttons a different action while held.
+    //
+    // Set hold_disabled to keep the modifier as an ordinary input.
+    int hold_disabled;
+    mux_input_type hold_input;
+    mux_input_handler alt_press_handler[MUX_INPUT_COUNT];
+    mux_input_handler alt_hold_handler[MUX_INPUT_COUNT];
+    mux_input_handler alt_release_handler[MUX_INPUT_COUNT];
+
     mux_input_generic_handler input_handler;
     mux_input_combo_handler combo_handler;
 
@@ -158,6 +174,10 @@ typedef struct {
 } mux_input_options;
 
 extern int swap_axis;
+
+// Set by the input core while the alt ("hold") modifier is held.
+// This gates actions or swap the on-screen nav items whenever implemented.
+extern int hold_call;
 
 void mux_input_reload_mappings(void);
 

@@ -1157,7 +1157,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
             },
             .release_handler = {
                     [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_nav_key_released,
                     [MUX_INPUT_DPAD_DOWN] = handle_nav_key_released,
@@ -1174,7 +1173,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_r1,
                     [MUX_INPUT_R2] = handle_random_select,
             }

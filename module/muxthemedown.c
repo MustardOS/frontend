@@ -584,7 +584,6 @@ int muxthemedown_main(void) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .release_handler = {
-                    [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
@@ -593,7 +592,6 @@ int muxthemedown_main(void) {
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
     };

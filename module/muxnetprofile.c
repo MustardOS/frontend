@@ -1339,7 +1339,6 @@ int muxnetprofile_main(void) {
                     [MUX_INPUT_R1] = handle_r1,
             },
             .release_handler = {
-                    [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
@@ -1349,7 +1348,6 @@ int muxnetprofile_main(void) {
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_r1,
             }
     };
