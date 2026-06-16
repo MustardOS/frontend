@@ -1311,6 +1311,14 @@ void ui_common_handle_idle(void) {
         need_update = 1;
     }
 
+    static unsigned last_charging_changes = 0;
+    if (charging_changes != last_charging_changes) {
+        last_charging_changes = charging_changes;
+
+        battery_capacity_task(NULL);
+        need_update = 1;
+    }
+
     if (hdmi_refresh_exists) {
         remove(HDMI_REFRESH);
         hdmi_refresh_exists = 0;

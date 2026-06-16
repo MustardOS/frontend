@@ -69,6 +69,9 @@ void inotify_init(void) {
 
     static int saver_type_exists;
     inotify_track(ino_proc, "/opt/muos/config/settings/power", "saver_type", &saver_type_exists, &saver_type_changes);
+
+    static int charging_exists;
+    inotify_track(ino_proc, "/run/muos/battery", "charging", &charging_exists, &charging_changes);
 }
 
 void detach_parent_process(void) {
