@@ -94,7 +94,7 @@ static const char *heroes[] = {
         "superzu", "pr0j3kt2501", "rosemelody254", "bigbossman0816",
         "warlordwossman", "meowman_", "kaeltis", "paletochen",
         "benjaminbercy", "snesfan1", "suribii", "asiaclonk", "jimmycrackedcorn_4711",
-        "hueykablooey", "mrwhistles", "losermatic",
+        "rabite890", "hueykablooey", "mrwhistles", "losermatic",
         "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla",
         "amos_06286", "techagent", "meanagar", "roundpi", "chiefwally_73445",
         "scy0n", "luckyphil", "nahck", "mach5682", "foamygames",
@@ -117,8 +117,8 @@ static const char *knights[] = {
 };
 
 static const char *contributors[] = {
-        "antikk", "bitter_bizarro", "corey", "imcokeman",
-        "key777", "mugwomp93", "xonglebongle",
+        "antikk", "artur_ditu", "bitter_bizarro", "corey", "imcokeman",
+        "key777", "mugwomp93", "thewalruzz", "xonglebongle",
         NULL
 };
 
@@ -161,8 +161,8 @@ static const char *contributors[] = {
 #define LANG_QRCODE "Scan the QR code below to visit the Ko-fi page!"
 
 #define SONG_TITLE   "Supporter Music"
-#define SONG_TRACK   "Embers"
-#define SONG_ARTIST  "???"
+#define SONG_TRACK   "Andromeda"
+#define SONG_ARTIST  "Selfmademusic"
 #define SONG_REBOOT  "Please wait while we reboot…"
 #define SONG_BLESSED "Have a blessed day…"
 
