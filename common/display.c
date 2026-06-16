@@ -66,8 +66,6 @@ void display_set_video_overlay(display_overlay_fn fn) { video_overlay_fn_ptr = f
 
 void display_clear_video_overlay(void) { video_overlay_fn_ptr = NULL; }
 
-uint32_t anim_tick_event = 0;
-
 void display_set_fade_alpha(uint8_t alpha) {
     display_fade_alpha = alpha;
 }
@@ -393,19 +391,6 @@ static void update_render_state(void) {
             (underscan > 0);
 }
 
-static Uint32 anim_timer_cb(Uint32 interval, void *param) {
-    (void) param;
-
-    if (anim_is_active() && anim_tick_event != 0) {
-        SDL_Event e;
-        SDL_memset(&e, 0, sizeof(e));
-        e.type = anim_tick_event;
-        SDL_PushEvent(&e);
-    }
-
-    return interval;
-}
-
 void sdl_init(void) {
     SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
     SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE, "1");
@@ -420,7 +405,7 @@ void sdl_init(void) {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
         LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
@@ -493,14 +478,6 @@ void sdl_init(void) {
 
     reload_background(config.THEME.ACTIVE);
     reload_saver();
-
-    anim_tick_event = SDL_RegisterEvents(1);
-    if (anim_tick_event == (uint32_t) -1) {
-        LOG_WARN("video", "SDL_RegisterEvents failed; animation timer disabled");
-        anim_tick_event = 0;
-    } else {
-        SDL_AddTimer(IDLE_MS, anim_timer_cb, NULL);
-    }
 }
 
 void sdl_cleanup(void) {

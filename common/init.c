@@ -24,28 +24,18 @@
 #include "crash.h"
 
 static uint64_t start_ms = 0;
-static struct dt_task_param dt_par;
-static struct bat_task_param bat_par;
 static lv_timer_t *mux_refresh_timer = NULL;
 
+static void (*status_sysinfo_cb)(lv_timer_t *) = NULL;
+
 lv_timer_t *timer_ui_refresh;
-lv_timer_t *timer_datetime;
-lv_timer_t *timer_capacity;
 lv_timer_t *timer_status;
 lv_timer_t *timer_idle;
-lv_timer_t *timer_bluetooth;
-lv_timer_t *timer_network;
-lv_timer_t *timer_update_system_info;
 
 static lv_timer_t **const timers[] = {
         &timer_ui_refresh,
-        &timer_datetime,
-        &timer_capacity,
         &timer_status,
         &timer_idle,
-        &timer_bluetooth,
-        &timer_network,
-        &timer_update_system_info,
 };
 
 uint64_t mux_tick(void) {
@@ -282,9 +272,9 @@ void init_input(mux_input_options *opts, int def_combo) {
     if (opts->idle_handler == NULL) opts->idle_handler = ui_common_handle_idle;
 }
 
-static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t period, void *user_data) {
+static lv_timer_t *timer_ensure(lv_timer_t **timer, lv_timer_cb_t cb, uint32_t period) {
     if (*timer == NULL) {
-        *timer = lv_timer_create(cb, period, user_data);
+        *timer = lv_timer_create(cb, period, NULL);
         return *timer;
     }
 
@@ -332,43 +322,30 @@ void timer_action(int action) {
     }
 }
 
+static void status_tick(lv_timer_t *timer) {
+    static unsigned ticks = 0;
+    ticks++;
+
+    status_task(timer);
+    if (status_sysinfo_cb && (ticks % 2u) == 0) status_sysinfo_cb(timer);
+
+    if ((ticks % 4u) == 0) {
+        if (device.BOARD.HASNETWORK && config.VISUAL.NETWORK) network_task(timer);
+        if (device.BOARD.HASBLUETOOTH && config.VISUAL.BLUETOOTH) bluetooth_task(timer);
+    }
+
+    if ((ticks % 8u) == 0) {
+        if (config.VISUAL.CLOCK) datetime_task(timer);
+        if (config.VISUAL.BATTERY) battery_capacity_task(timer);
+    }
+}
+
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *)) {
-    dt_par.lblDatetime = ui_lblDatetime;
-    bat_par.staCapacity = ui_staCapacity;
+    status_sysinfo_cb = update_system_info;
 
-    timer_ensure(&timer_ui_refresh, ui_refresh_task, TIMER_REFRESH, NULL);
-    timer_ensure(&timer_status, status_task, TIMER_STATUS, NULL);
-    timer_ensure(&timer_idle, mux_idle_poll, TIMER_IDLE, NULL);
-
-    if (config.VISUAL.CLOCK) {
-        timer_ensure(&timer_datetime, datetime_task, TIMER_DATETIME, &dt_par);
-    } else {
-        timer_suspend(&timer_datetime);
-    }
-
-    if (config.VISUAL.BATTERY) {
-        timer_ensure(&timer_capacity, battery_capacity_task, TIMER_CAPACITY, &bat_par);
-    } else {
-        timer_suspend(&timer_capacity);
-    }
-
-    if (device.BOARD.HASBLUETOOTH && config.VISUAL.BLUETOOTH) {
-        timer_ensure(&timer_bluetooth, bluetooth_task, TIMER_BLUETOOTH, NULL);
-    } else {
-        timer_suspend(&timer_bluetooth);
-    }
-
-    if (device.BOARD.HASNETWORK && config.VISUAL.NETWORK) {
-        timer_ensure(&timer_network, network_task, TIMER_NETWORK, NULL);
-    } else {
-        timer_suspend(&timer_network);
-    }
-
-    if (update_system_info) {
-        timer_ensure(&timer_update_system_info, update_system_info, TIMER_SYSINFO, NULL);
-    } else {
-        timer_suspend(&timer_update_system_info);
-    }
+    timer_ensure(&timer_ui_refresh, ui_refresh_task, TIMER_REFRESH);
+    timer_ensure(&timer_status, status_tick, TIMER_STATUS);
+    timer_ensure(&timer_idle, mux_idle_poll, TIMER_IDLE);
 
     lv_refr_now(NULL);
 }

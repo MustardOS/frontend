@@ -27,5 +27,3 @@ typedef void (*display_overlay_fn)(SDL_Renderer *r);
 void display_set_video_overlay(display_overlay_fn fn);
 
 void display_clear_video_overlay(void);
-
-extern uint32_t anim_tick_event;

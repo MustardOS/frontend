@@ -1039,8 +1039,8 @@ char *get_datetime(void) {
 }
 
 void datetime_task(lv_timer_t *timer) {
-    struct dt_task_param *dt_par = timer->user_data;
-    lv_label_set_text(dt_par->lblDatetime, get_datetime());
+    LV_UNUSED(timer);
+    lv_label_set_text(ui_lblDatetime, get_datetime());
 }
 
 void move_option(lv_obj_t *element, int count) {

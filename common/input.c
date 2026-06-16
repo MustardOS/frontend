@@ -10,6 +10,7 @@
 #include "osk.h"
 #include "log.h"
 #include "display.h"
+#include "anim.h"
 
 #define INPUT_COOLDOWN          256
 #define AXIS_THRESHOLD_FRACTION 0.80f
@@ -982,6 +983,8 @@ void mux_input_task(const mux_input_options *opts) {
             int poll_cap = (retry_count <= retry_fast_count) ? no_device_wait_ms : (int) retry_interval_slow_ms;
             if (timeout > poll_cap) timeout = poll_cap;
         }
+
+        if (anim_is_active() && timeout > (int) IDLE_MS) timeout = (int) IDLE_MS;
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         do {
@@ -1048,15 +1051,12 @@ void mux_input_task(const mux_input_options *opts) {
                     process_sdl_key(&ev.key, 0);
                     break;
                 default:
-                    if (anim_tick_event != 0 && ev.type == anim_tick_event) {
-                        display_composite_frame();
-                        SDL_Event drain;
-                        while (SDL_PeepEvents(&drain, 1, SDL_GETEVENT, anim_tick_event, anim_tick_event) > 0);
-                    }
                     break;
             }
             if (opts->raw_event_handler) opts->raw_event_handler(&ev);
         } while (!stop_flag && SDL_PollEvent(&ev));
+
+        if (anim_is_active()) display_composite_frame();
 
         if (stop_flag) break;
 
