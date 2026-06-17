@@ -327,17 +327,12 @@ static void status_tick(lv_timer_t *timer) {
     ticks++;
 
     status_task(timer);
-    if (status_sysinfo_cb && (ticks % 2u) == 0) status_sysinfo_cb(timer);
+    if (status_sysinfo_cb && (ticks % 2u) == 1) status_sysinfo_cb(timer);
 
-    if ((ticks % 4u) == 0) {
-        if (device.BOARD.HASNETWORK && config.VISUAL.NETWORK) network_task(timer);
-        if (device.BOARD.HASBLUETOOTH && config.VISUAL.BLUETOOTH) bluetooth_task(timer);
-    }
-
-    if ((ticks % 8u) == 0) {
-        if (config.VISUAL.CLOCK) datetime_task(timer);
-        if (config.VISUAL.BATTERY) battery_capacity_task(timer);
-    }
+    if ((ticks % 4u) == 0 && device.BOARD.HASNETWORK && config.VISUAL.NETWORK) network_task(timer);
+    if ((ticks % 4u) == 2 && device.BOARD.HASBLUETOOTH && config.VISUAL.BLUETOOTH) bluetooth_task(timer);
+    if ((ticks % 8u) == 3 && config.VISUAL.CLOCK) datetime_task(timer);
+    if ((ticks % 8u) == 7 && config.VISUAL.BATTERY) battery_capacity_task(timer);
 }
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *)) {
