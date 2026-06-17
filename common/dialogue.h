@@ -14,6 +14,7 @@ typedef struct {
     int option_count;
     int selected;
     lv_opa_t dim_alpha;
+    struct theme_config *theme;
 } mux_dialogue;
 
 typedef enum {
