@@ -8,9 +8,6 @@
  *********************/
 #include "lv_obj_draw.h"
 #include "lv_obj.h"
-#include "lv_disp.h"
-#include "lv_indev.h"
-#include "../draw/lv_draw_label.h"
 
 extern int g_font_shadow_enabled;
 extern lv_color_t g_shadow_colour_default;
@@ -62,6 +59,10 @@ static int g_shadow_zone_count = 0;
  *   GLOBAL FUNCTIONS
  **********************/
 
+static void shadow_zone_delete_cb(lv_event_t *e) {
+    lv_shadow_zone_unregister(lv_event_get_target(e));
+}
+
 void lv_shadow_zone_register(lv_obj_t *container,
                              lv_color_t colour, lv_opa_t alpha, int8_t x, int8_t y,
                              lv_color_t colour_focus, lv_opa_t alpha_focus, int8_t x_focus, int8_t y_focus) {
@@ -89,6 +90,8 @@ void lv_shadow_zone_register(lv_obj_t *container,
         g_shadow_zones[g_shadow_zone_count].x_offset_focus = x_focus;
         g_shadow_zones[g_shadow_zone_count].y_offset_focus = y_focus;
         g_shadow_zone_count++;
+
+        lv_obj_add_event_cb(container, shadow_zone_delete_cb, LV_EVENT_DELETE, NULL);
     }
 }
 
