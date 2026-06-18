@@ -184,8 +184,7 @@ void init_display(void) {
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
 
-    uint32_t disp_buf_lines = 64;
-    if (disp_buf_lines > (uint32_t) device.MUX.HEIGHT) disp_buf_lines = (uint32_t) device.MUX.HEIGHT;
+    uint32_t disp_buf_lines = (uint32_t) device.MUX.HEIGHT;
 
     uint32_t disp_buf_size = (uint32_t) device.MUX.WIDTH * disp_buf_lines;
     size_t disp_buf_bytes = (size_t) disp_buf_size * sizeof(lv_color_t);

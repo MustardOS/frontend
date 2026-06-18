@@ -277,6 +277,7 @@ static void ui_refresh_task() {
             lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         }
+        footer_nav_check_scroll();
 
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;

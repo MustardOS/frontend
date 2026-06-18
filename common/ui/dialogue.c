@@ -5,6 +5,18 @@
 #include "../language.h"
 #include "../init.h"
 
+static void dialogue_force_redraw(mux_dialogue *dlg) {
+    lv_obj_t *parent;
+    if (!dlg || !dlg->panel) return;
+
+    lv_obj_update_layout(dlg->panel);
+
+    parent = lv_obj_get_parent(dlg->panel);
+    lv_obj_invalidate(parent ? parent : dlg->panel);
+
+    lv_refr_now(NULL);
+}
+
 static void panel_anim_y_cb(void *obj, int32_t y) {
     lv_obj_set_y((lv_obj_t *) obj, (lv_coord_t) y);
 }
@@ -28,6 +40,16 @@ static void hide_anim_ready_cb(lv_anim_t *a) {
     lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
     timer_resume_all();
+}
+
+static void show_anim_ready_cb(lv_anim_t *a) {
+    mux_dialogue *dlg = (mux_dialogue *) lv_anim_get_user_data(a);
+    if (!dlg) return;
+
+    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
+
+    dialogue_force_redraw(dlg);
 }
 
 void dialogue_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
@@ -322,7 +344,7 @@ void dialogue_show(mux_dialogue *dlg) {
     lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_x_cb);
     lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
     lv_anim_del(dlg->dim, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
-    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_opa(dlg->panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_move_foreground(dlg->dim);
@@ -331,14 +353,6 @@ void dialogue_show(mux_dialogue *dlg) {
     lv_obj_set_style_bg_opa(dlg->dim, dlg->dim_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
-
-    if (dlg->description_label) {
-        lv_label_set_text(dlg->description_label, lv_label_get_text(dlg->description_label));
-    }
-
-    if (dlg->option_count == 0 && dlg->options[0]) {
-        lv_label_set_text(dlg->options[0], lv_label_get_text(dlg->options[0]));
-    }
 
     if (dlg->theme) dialogue_refresh(dlg, dlg->theme);
 
@@ -390,13 +404,13 @@ void dialogue_show(mux_dialogue *dlg) {
     switch (diag_transition) {
         case TSN_FADE_IN:
             lv_obj_set_y(dlg->panel, target_y);
-            lv_obj_set_style_opa(dlg->panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
             lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
             lv_anim_set_values(&ap, LV_OPA_TRANSP, LV_OPA_COVER);
             break;
         case TSN_SLIDE_RIGHT:
         case TSN_BOUNCE_RIGHT:
         case TSN_SHOOT_RIGHT:
+            lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, target_y);
             lv_obj_set_style_translate_x(dlg->panel, LV_HOR_RES, MU_OBJ_MAIN_DEFAULT);
             lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_x_cb);
@@ -405,6 +419,7 @@ void dialogue_show(mux_dialogue *dlg) {
         case TSN_SLIDE_LEFT:
         case TSN_BOUNCE_LEFT:
         case TSN_SHOOT_LEFT:
+            lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, target_y);
             lv_obj_set_style_translate_x(dlg->panel, -LV_HOR_RES, MU_OBJ_MAIN_DEFAULT);
             lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_x_cb);
@@ -413,24 +428,30 @@ void dialogue_show(mux_dialogue *dlg) {
         case TSN_SLIDE_DOWN:
         case TSN_BOUNCE_DOWN:
         case TSN_SHOOT_DOWN:
+            lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, -panel_h);
             lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_y_cb);
             lv_anim_set_values(&ap, -panel_h, target_y);
             break;
         case TSN_DISABLED:
+            lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, target_y);
+            dialogue_force_redraw(dlg);
             goto skip_panel_anim;
         default:
+            lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, LV_VER_RES);
             lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_y_cb);
             lv_anim_set_values(&ap, LV_VER_RES, target_y);
             break;
     }
 
+    lv_anim_set_user_data(&ap, dlg);
+    lv_anim_set_ready_cb(&ap, show_anim_ready_cb);
     lv_anim_set_time(&ap, duration);
     lv_anim_set_path_cb(&ap, path);
-    lv_anim_start(&ap);
 
+    lv_anim_start(&ap);
     skip_panel_anim:;
 }
 
