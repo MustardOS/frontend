@@ -1,7 +1,6 @@
 #include "../../lvgl/lvgl.h"
 #include "../config.h"
 #include "../device.h"
-#include "../options.h"
 #include "../theme.h"
 #include "../language.h"
 #include "../init.h"
@@ -9,7 +8,6 @@
 #include "osk.h"
 #include "common.h"
 #include "glyph.h"
-#include "image.h"
 
 int key_show;
 int key_curr;

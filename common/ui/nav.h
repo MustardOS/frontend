@@ -63,4 +63,6 @@ void hide_progress_bar(void);
 
 void set_nav_flags(struct nav_flag *nav_flags, size_t count);
 
+void footer_nav_check_scroll(void);
+
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);

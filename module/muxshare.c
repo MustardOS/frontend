@@ -124,6 +124,8 @@ void setup_nav(struct nav_bar *nav_items) {
         lv_obj_clear_flag(nav_items[i].item, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_move_foreground(nav_items[i].item);
     }
+
+    footer_nav_check_scroll();
 }
 
 void header_and_footer_setup(void) {
@@ -593,8 +595,16 @@ void resolve_friendly_name(char *file_path, char *out) {
     char specific_rel[MAX_BUFFER_SIZE];
     snprintf(specific_rel, sizeof(specific_rel), "name/%s.json", name_only);
 
-    const char *lookup_path = resolve_info_path(specific_rel);
-    if (!lookup_path) lookup_path = resolve_info_path("name/global.json");
+    static char last_specific_rel[MAX_BUFFER_SIZE];
+    static const char *last_lookup_path = NULL;
+
+    if (strcmp(last_specific_rel, specific_rel) != 0) {
+        last_lookup_path = resolve_info_path(specific_rel);
+        if (!last_lookup_path) last_lookup_path = resolve_info_path("name/global.json");
+        snprintf(last_specific_rel, sizeof(last_specific_rel), "%s", specific_rel);
+    }
+
+    const char *lookup_path = last_lookup_path;
 
     if (lookup_path) {
         if (strcmp(cache_path, lookup_path) != 0) {

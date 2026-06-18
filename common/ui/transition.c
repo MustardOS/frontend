@@ -1,7 +1,5 @@
 #include "transition.h"
 #include "common.h"
-#include "../init.h"
-#include "../options.h"
 #include "../device.h"
 
 #define SCROLL_STOP_MS 350

@@ -1,4 +1,3 @@
-#include "init.h"
 #include "options.h"
 #include "fileio.h"
 #include "passcode.h"

@@ -8,7 +8,6 @@
 
 #include "../theme.h"
 #include "../log.h"
-#include "../options.h"
 #include "../config.h"
 #include "../device.h"
 #include "../input/list_nav.h"

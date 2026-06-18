@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-
 #include "init.h"
 #include "log.h"
 #include "language.h"

@@ -8,16 +8,66 @@
 #include "grid.h"
 #include "../audio.h"
 #include "../fileio.h"
-#include "../log.h"
 #include "../language.h"
-#include "../theme.h"
 #include "../config.h"
-#include "../init.h"
-#include "../kiosk.h"
 
 char progress_bar_message[MAX_BUFFER_SIZE];
 volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
+
+#define FOOTER_SCROLL_PAUSE_MS   1500
+#define FOOTER_SCROLL_PX_PER_SEC 60
+#define FOOTER_SCROLL_PAD_RIGHT  16
+
+static void footer_scroll_anim_cb(void *obj, int32_t x) {
+    lv_obj_t *panel = (lv_obj_t *) obj;
+    lv_coord_t delta = lv_obj_get_scroll_x(panel) - (lv_coord_t) x;
+    if (delta != 0) lv_obj_scroll_by(panel, delta, 0, LV_ANIM_OFF);
+}
+
+void footer_nav_check_scroll(void) {
+    if (!ui_pnlFooter) return;
+
+    lv_anim_del(ui_pnlFooter, footer_scroll_anim_cb);
+
+    lv_coord_t cur = lv_obj_get_scroll_x(ui_pnlFooter);
+    if (cur != 0) lv_obj_scroll_by(ui_pnlFooter, cur, 0, LV_ANIM_OFF);
+
+    lv_obj_update_layout(ui_pnlFooter);
+
+    lv_coord_t content_w = 0;
+    uint32_t n = lv_obj_get_child_cnt(ui_pnlFooter);
+    for (uint32_t i = 0; i < n; i++) {
+        lv_obj_t *c = lv_obj_get_child(ui_pnlFooter, (int32_t) i);
+        if (!c) continue;
+        if (lv_obj_has_flag_any(c, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
+        content_w += lv_obj_get_width(c);
+    }
+
+    lv_coord_t pad_left = lv_obj_get_style_pad_left(ui_pnlFooter, LV_PART_MAIN);
+    lv_coord_t pad_right = lv_obj_get_style_pad_right(ui_pnlFooter, LV_PART_MAIN);
+    lv_coord_t inner_w = lv_obj_get_width(ui_pnlFooter) - pad_left - pad_right;
+    lv_coord_t overflow = content_w - inner_w + FOOTER_SCROLL_PAD_RIGHT;
+
+    if (overflow <= 4) return;
+
+    uint32_t scroll_ms = (uint32_t) ((overflow * 1000) / FOOTER_SCROLL_PX_PER_SEC);
+    if (scroll_ms < 400) scroll_ms = 400;
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, ui_pnlFooter);
+    lv_anim_set_exec_cb(&a, footer_scroll_anim_cb);
+    lv_anim_set_values(&a, 0, (int32_t) overflow);
+    lv_anim_set_time(&a, scroll_ms);
+    lv_anim_set_delay(&a, FOOTER_SCROLL_PAUSE_MS);
+    lv_anim_set_playback_time(&a, scroll_ms);
+    lv_anim_set_playback_delay(&a, FOOTER_SCROLL_PAUSE_MS);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_set_repeat_delay(&a, FOOTER_SCROLL_PAUSE_MS);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+    lv_anim_start(&a);
+}
 
 void show_info_box(const char *title, const char *content, int is_content) {
     if (msgbox_active == 0) {
@@ -263,6 +313,8 @@ void set_nav_flags(struct nav_flag *nav_flags, size_t count) {
             lv_obj_add_flag(nav_flags[i].element, MU_OBJ_FLAG_HIDE_FLOAT);
         }
     }
+
+    footer_nav_check_scroll();
 }
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
