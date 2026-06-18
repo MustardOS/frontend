@@ -1403,7 +1403,7 @@ static void navigate_to_dir(const char *new_dir, int restore_index) {
 
     if (grid_mode_enabled) {
         lv_obj_clean(ui_pnlGrid);
-        lv_obj_add_flag(ui_lblGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
         grid_mode_enabled = 0;
     }
 
@@ -1458,7 +1458,7 @@ static void navigate_to_dir(const char *new_dir, int restore_index) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
         current_content_label[0] = '\0';
-        lv_obj_add_flag(ui_lblGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
 
         clear_box_image();
 

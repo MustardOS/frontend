@@ -106,6 +106,7 @@ extern lv_obj_t *ui_staNetwork;
 extern lv_obj_t *ui_staCapacity;
 extern lv_obj_t *ui_lblBatteryPercent;
 extern lv_obj_t *ui_pnlFooter;
+extern lv_obj_t *ui_pnlGridCurrentItem;
 extern lv_obj_t *ui_lblGridCurrentItem;
 extern lv_obj_t *ui_lblNavLRGlyph;
 extern lv_obj_t *ui_lblNavLR;

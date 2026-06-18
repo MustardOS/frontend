@@ -49,6 +49,7 @@ lv_obj_t *ui_staNetwork;
 lv_obj_t *ui_lblBatteryPercent;
 lv_obj_t *ui_staCapacity;
 lv_obj_t *ui_pnlFooter;
+lv_obj_t *ui_pnlGridCurrentItem;
 lv_obj_t *ui_lblGridCurrentItem;
 lv_obj_t *ui_lblNavLRGlyph;
 lv_obj_t *ui_lblNavLR;
@@ -547,9 +548,16 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_pnlGrid = lv_obj_create(ui_screen);
-    ui_lblGridCurrentItem = lv_label_create(ui_screen);
+
+    ui_pnlGridCurrentItem = lv_obj_create(ui_screen);
+    lv_obj_remove_style_all(ui_pnlGridCurrentItem);
+    lv_obj_clear_flag(ui_pnlGridCurrentItem, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(ui_pnlGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    ui_lblGridCurrentItem = lv_label_create(ui_pnlGridCurrentItem);
     lv_label_set_text(ui_lblGridCurrentItem, "");
-    lv_obj_add_flag(ui_lblGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblGridCurrentItem, 0, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);
@@ -1755,43 +1763,48 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_style_pad_row(ui_pnlGrid, theme->GRID.ROW_PADDING, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlGrid, theme->GRID.COLUMN_PADDING, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_clear_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
+    lv_obj_clear_flag(ui_pnlGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_align(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
                  theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X,
                  theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
 
-    lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
-    lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
+    lv_obj_set_width(ui_pnlGridCurrentItem,
+                     theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
+    lv_obj_set_height(ui_pnlGridCurrentItem,
+                      theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
 
-    lv_label_set_long_mode(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.LABEL_LONG_MODE);
+    lv_obj_set_style_radius(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_bg_color(ui_pnlGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_pnlGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_shadow_width(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_pnlGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_x(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_ofs_y(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_border_color(ui_pnlGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_pad_left(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_width(ui_lblGridCurrentItem, LV_PCT(100));
+    lv_obj_set_height(ui_lblGridCurrentItem, LV_SIZE_CONTENT);
+    lv_obj_align(ui_lblGridCurrentItem, LV_ALIGN_CENTER, 0, -2);
+
+    lv_label_set_long_mode(ui_lblGridCurrentItem, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_bg_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_COLOR), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_START, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_STOP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_GRADIENT_DIRECTION, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_shadow_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_WIDTH, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.SHADOW), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_ofs_x(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_X_OFFSET, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_ofs_y(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.SHADOW_Y_OFFSET, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
-
     lv_obj_set_style_text_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.TEXT), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM, MU_OBJ_MAIN_DEFAULT);
 }
 
 void grid_item_focus_event_cb(lv_event_t *e) {
