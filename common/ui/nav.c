@@ -6,6 +6,7 @@
 #include "common.h"
 #include "nav.h"
 #include "grid.h"
+#include "transition.h"
 #include "../audio.h"
 #include "../fileio.h"
 #include "../language.h"
@@ -23,6 +24,32 @@ static void footer_scroll_anim_cb(void *obj, int32_t x) {
     lv_obj_t *panel = (lv_obj_t *) obj;
     lv_coord_t delta = lv_obj_get_scroll_x(panel) - (lv_coord_t) x;
     if (delta != 0) lv_obj_scroll_by(panel, delta, 0, LV_ANIM_OFF);
+}
+
+static void help_panel_y_cb(void *obj, int32_t y) {
+    lv_obj_set_style_translate_y((lv_obj_t *) obj, (lv_coord_t) y, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void help_panel_x_cb(void *obj, int32_t x) {
+    lv_obj_set_style_translate_x((lv_obj_t *) obj, (lv_coord_t) x, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void help_panel_opa_cb(void *obj, int32_t opa) {
+    lv_obj_set_style_opa((lv_obj_t *) obj, (lv_opa_t) opa, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void help_dim_opa_cb(void *obj, int32_t opa) {
+    lv_obj_set_style_bg_opa((lv_obj_t *) obj, (lv_opa_t) opa, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void help_hide_ready_cb(lv_anim_t *a) {
+    (void) a;
+    lv_obj_add_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(ui_pnlHelp, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHelp, 155, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_x(ui_pnlHelpMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_y(ui_pnlHelpMessage, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_opa(ui_pnlHelpMessage, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 }
 
 void footer_nav_check_scroll(void) {
@@ -71,6 +98,17 @@ void footer_nav_check_scroll(void) {
 
 void show_info_box(const char *title, const char *content, int is_content) {
     if (msgbox_active == 0) {
+        lv_anim_del(ui_pnlHelp, help_dim_opa_cb);
+        lv_anim_del(ui_pnlHelp, help_panel_opa_cb);
+        lv_anim_del(ui_pnlHelpMessage, help_panel_y_cb);
+        lv_anim_del(ui_pnlHelpMessage, help_panel_x_cb);
+        lv_anim_del(ui_pnlHelpMessage, help_panel_opa_cb);
+
+        lv_obj_set_style_opa(ui_pnlHelp, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_translate_x(ui_pnlHelpMessage, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_translate_y(ui_pnlHelpMessage, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_opa(ui_pnlHelpMessage, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+
         lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
 
         if (is_content) {
@@ -88,7 +126,116 @@ void show_info_box(const char *title, const char *content, int is_content) {
 
         lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
         lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
+
+        int trans = config.VISUAL.DIALOGUETRANSITION;
+
+        lv_anim_path_cb_t path;
+        uint32_t duration;
+        switch (trans) {
+            case TSN_BOUNCE_RIGHT:
+            case TSN_BOUNCE_LEFT:
+            case TSN_BOUNCE_UP:
+            case TSN_BOUNCE_DOWN:
+                path = lv_anim_path_bounce;
+                duration = 450;
+                break;
+            case TSN_SHOOT_RIGHT:
+            case TSN_SHOOT_LEFT:
+            case TSN_SHOOT_UP:
+            case TSN_SHOOT_DOWN:
+                path = lv_anim_path_overshoot;
+                duration = 350;
+                break;
+            default:
+                path = lv_anim_path_ease_out;
+                duration = 250;
+                break;
+        }
+
+        lv_anim_t ad;
+        lv_anim_init(&ad);
+        lv_anim_set_var(&ad, ui_pnlHelp);
+        lv_anim_set_exec_cb(&ad, help_dim_opa_cb);
+        lv_anim_set_values(&ad, LV_OPA_TRANSP, 155);
+        lv_anim_set_time(&ad, 200);
+        lv_anim_set_path_cb(&ad, lv_anim_path_ease_out);
+        lv_anim_start(&ad);
+
+        if (trans == TSN_DISABLED) return;
+
+        lv_anim_t ap;
+        lv_anim_init(&ap);
+        lv_anim_set_var(&ap, ui_pnlHelpMessage);
+        lv_anim_set_time(&ap, duration);
+        lv_anim_set_path_cb(&ap, path);
+
+        lv_coord_t w = (lv_coord_t) LV_HOR_RES;
+        lv_coord_t h = (lv_coord_t) LV_VER_RES;
+
+        switch (trans) {
+            case TSN_FADE_IN:
+                lv_obj_set_style_opa(ui_pnlHelpMessage, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                lv_anim_set_exec_cb(&ap, help_panel_opa_cb);
+                lv_anim_set_values(&ap, LV_OPA_TRANSP, LV_OPA_COVER);
+                break;
+            case TSN_SLIDE_RIGHT:
+            case TSN_BOUNCE_RIGHT:
+            case TSN_SHOOT_RIGHT:
+                lv_obj_set_style_translate_x(ui_pnlHelpMessage, w, MU_OBJ_MAIN_DEFAULT);
+                lv_anim_set_exec_cb(&ap, help_panel_x_cb);
+                lv_anim_set_values(&ap, w, 0);
+                break;
+            case TSN_SLIDE_LEFT:
+            case TSN_BOUNCE_LEFT:
+            case TSN_SHOOT_LEFT:
+                lv_obj_set_style_translate_x(ui_pnlHelpMessage, -w, MU_OBJ_MAIN_DEFAULT);
+                lv_anim_set_exec_cb(&ap, help_panel_x_cb);
+                lv_anim_set_values(&ap, -w, 0);
+                break;
+            case TSN_SLIDE_DOWN:
+            case TSN_BOUNCE_DOWN:
+            case TSN_SHOOT_DOWN:
+                lv_obj_set_style_translate_y(ui_pnlHelpMessage, -h, MU_OBJ_MAIN_DEFAULT);
+                lv_anim_set_exec_cb(&ap, help_panel_y_cb);
+                lv_anim_set_values(&ap, -h, 0);
+                break;
+            default:
+                lv_obj_set_style_translate_y(ui_pnlHelpMessage, h, MU_OBJ_MAIN_DEFAULT);
+                lv_anim_set_exec_cb(&ap, help_panel_y_cb);
+                lv_anim_set_values(&ap, h, 0);
+                break;
+        }
+
+        lv_anim_start(&ap);
     }
+}
+
+void hide_info_box(void) {
+    if (!ui_pnlHelp) return;
+
+    lv_anim_del(ui_pnlHelp, help_dim_opa_cb);
+    lv_anim_del(ui_pnlHelpMessage, help_panel_y_cb);
+    lv_anim_del(ui_pnlHelpMessage, help_panel_x_cb);
+    lv_anim_del(ui_pnlHelpMessage, help_panel_opa_cb);
+
+    lv_anim_t ap;
+    lv_anim_init(&ap);
+    lv_anim_set_var(&ap, ui_pnlHelpMessage);
+    lv_anim_set_exec_cb(&ap, help_panel_opa_cb);
+    lv_anim_set_values(&ap, LV_OPA_COVER, LV_OPA_TRANSP);
+    lv_anim_set_time(&ap, 150);
+    lv_anim_set_path_cb(&ap, lv_anim_path_linear);
+    lv_anim_start(&ap);
+
+    lv_anim_t ad;
+    lv_anim_init(&ad);
+    lv_anim_set_var(&ad, ui_pnlHelp);
+    lv_anim_set_exec_cb(&ad, help_dim_opa_cb);
+    lv_anim_set_values(&ad, 155, LV_OPA_TRANSP);
+    lv_anim_set_time(&ad, 150);
+    lv_anim_set_path_cb(&ad, lv_anim_path_linear);
+    lv_anim_set_ready_cb(&ad, help_hide_ready_cb);
+    lv_anim_start(&ad);
 }
 
 void nav_move(lv_group_t *group, int direction) {

@@ -557,7 +557,11 @@ void handle_msgbox_dismiss(void) {
     }
 
     play_sound(SND_INFO_CLOSE);
-    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+    if (msgbox_element == ui_pnlHelp) {
+        hide_info_box();
+    } else {
+        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 int build_safe_path(char *dst, size_t n, const char *base, const char *name) {
