@@ -1,12 +1,18 @@
+#include <limits.h>
 #include "common.h"
+#include "../init.h"
 #include "retroarch.h"
 #include "external.h"
 #include "../json/json.h"
-#include "../common.h"
-#include "../ui_common.h"
+#include "../ui/common.h"
+#include "../ui/nav.h"
 #include "../device.h"
 #include "../language.h"
 #include "../log.h"
+#include "../fileio.h"
+#include "../content.h"
+#include "../strutil.h"
+#include "../ini.h"
 
 #define CORE_BUFFER 256
 

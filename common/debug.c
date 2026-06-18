@@ -1,6 +1,6 @@
 #include "debug.h"
 #include "options.h"
-#include "common.h"
+#include "fileio.h"
 
 static int debug_cached = -1;
 

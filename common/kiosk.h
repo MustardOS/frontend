@@ -79,3 +79,5 @@ struct mux_kiosk {
 };
 
 void load_kiosk(struct mux_kiosk *kiosk);
+
+void kiosk_denied(void);

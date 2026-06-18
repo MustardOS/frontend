@@ -1,6 +1,7 @@
-#include "common.h"
 #include "options.h"
 #include "kiosk.h"
+#include "init.h"
+#include "../module/muxshare.h"
 
 void load_kiosk(struct mux_kiosk *kiosk) {
     char buffer[MAX_BUFFER_SIZE];
@@ -59,4 +60,12 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->SETTING.VISUAL, CONF_KIOSK_PATH "setting/visual", 0);
     CFG_INT_FIELD(kiosk->SETTING.OVERLAY, CONF_KIOSK_PATH "setting/overlay", 0);
     CFG_INT_FIELD(kiosk->SETTING.COLOUR, CONF_KIOSK_PATH "setting/colour", 0);
+}
+
+void kiosk_denied(void) {
+    if (is_ksk(kiosk.MESSAGE)) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.KIOSK_DISABLE, MEDIUM);
+        refresh_screen(ui_screen, 1);
+    }
 }

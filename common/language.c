@@ -1,6 +1,108 @@
-#include "common.h"
+#include "init.h"
 #include "options.h"
 #include "language.h"
+#include "config.h"
+#include "json/json.h"
+#include "fileio.h"
+#include "util.h"
+
+struct json translation_generic;
+struct json translation_specific;
+static char *language_json = NULL;
+
+char *disabled_enabled[2];
+char *excluded_included[2];
+char *allowed_restricted[2];
+char *hidden_visible[2];
+char *toggle_icon_visible[3];
+char *battery_display[3];
+
+void load_language_file(const char *module) {
+    char language_file[MAX_BUFFER_SIZE];
+    snprintf(language_file, sizeof(language_file), STORAGE_LANG "/%s.json",
+             config.SETTINGS.GENERAL.LANGUAGE);
+
+    char *content = read_all_char_from(language_file);
+    if (!json_valid(content)) {
+        free(content);
+        return;
+    }
+
+    free(language_json);
+    language_json = content;
+
+    struct json root = json_parse(language_json);
+    translation_specific = json_object_get(root, module);
+    translation_generic = json_object_get(root, "generic");
+}
+
+char *translate_generic(char *key) {
+    struct json translation_generic_json = json_object_get(translation_generic, key);
+
+    if (json_exists(translation_generic_json)) {
+        char translation[MAX_BUFFER_SIZE];
+        json_string_copy(translation_generic_json, translation, sizeof(translation));
+        return mux_strdup(translation);
+    }
+
+    return key;
+}
+
+char *translate_help(char *key) {
+    return translate_generic(key);
+}
+
+char *translate_specific(char *key) {
+    struct json translation_specific_json = json_object_get(translation_specific, key);
+
+    if (json_exists(translation_specific_json)) {
+        char translation[MAX_BUFFER_SIZE];
+        json_string_copy(translation_specific_json, translation, sizeof(translation));
+        return mux_strdup(translation);
+    }
+
+    return key;
+}
+
+void fill_generic(const char *key, char *field, size_t size) {
+    struct json j = json_object_get(translation_generic, key);
+    if (json_exists(j)) {
+        json_string_copy(j, field, size);
+    } else {
+        snprintf(field, size, "%s", key);
+    }
+}
+
+void fill_specific(const char *key, char *field, size_t size) {
+    struct json j = json_object_get(translation_specific, key);
+    if (json_exists(j)) {
+        json_string_copy(j, field, size);
+    } else {
+        snprintf(field, size, "%s", key);
+    }
+}
+
+void common_var_init(void) {
+    disabled_enabled[0] = lang.GENERIC.DISABLED;
+    disabled_enabled[1] = lang.GENERIC.ENABLED;
+
+    excluded_included[0] = lang.GENERIC.EXCLUDED;
+    excluded_included[1] = lang.GENERIC.INCLUDED;
+
+    allowed_restricted[0] = lang.GENERIC.ALLOWED;
+    allowed_restricted[1] = lang.GENERIC.RESTRICTED;
+
+    hidden_visible[0] = lang.GENERIC.HIDDEN;
+    hidden_visible[1] = lang.GENERIC.VISIBLE;
+
+    toggle_icon_visible[0] = lang.GENERIC.VISIBLE;
+    toggle_icon_visible[1] = lang.GENERIC.NOGLYPH;
+    toggle_icon_visible[2] = lang.GENERIC.HIDDEN;
+
+    battery_display[0] = lang.GENERIC.ICON_ONLY;
+    battery_display[1] = lang.GENERIC.TEXT_ONLY;
+    battery_display[2] = lang.GENERIC.TEXT_ICON;
+}
 
 void load_lang(struct mux_lang *lang) {
     load_language_file(mux_module);

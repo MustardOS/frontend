@@ -1,5 +1,4 @@
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,12 +11,15 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include "../common/init.h"
-#include "../common/common.h"
+#include "../common/fileio.h"
 #include "../common/log.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/board.h"
 #include "../common/theme.h"
+#include "../common/strutil.h"
+#include "../common/exec.h"
+#include "../common/util.h"
 #include "../common/json/json.h"
 
 #define SEQ_BUF_SIZE 32
@@ -146,7 +148,6 @@ static const char *action_name[] = {
 };
 
 static mux_input_options input_opts = {
-        .hold_disabled = 1,
         .max_idle_ms = IDLE_MS,
         .input_handler = handle_input,
         .combo_handler = handle_combo,
@@ -532,7 +533,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
         set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
 
         write_text_to_file(IDLE_STATE, "w", INT, 1);
-        timer->idle = true;
+        timer->idle = 1;
     } else if (idle_ms < timeout_ms && timer->idle) {
         if (verbose) LOG_INFO("input", "Device is now ACTIVE");
         if (timer->active_name) printf("%s\n", timer->active_name);
@@ -547,7 +548,7 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
 
         if (file_exist(IDLE_STATE)) remove(IDLE_STATE);
 
-        timer->idle = false;
+        timer->idle = 0;
         timer->tick = global_tick;
     }
 }
@@ -1018,7 +1019,7 @@ int main(int argc, char *argv[]) {
     for (int opt; (opt = getopt(argc, argv, "vlh")) != -1;) {
         switch (opt) {
             case 'v':
-                verbose = true;
+                verbose = 1;
                 break;
 
             case 'l':

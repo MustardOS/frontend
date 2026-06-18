@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #ifndef TEST_IMAGE
 #define TEST_IMAGE 1
 #endif
@@ -7,6 +9,13 @@
 #define MUX_CALLER "MustardOS FE Spectacular"
 
 #define MAX_BUFFER_SIZE 1024
+
+#define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define E_SIZE(LIST) A_SIZE(((int[]){ LIST }))
+
+#define TRS(s) translate_specific(s)
+#define UFI(i) ((void *)(uintptr_t)(i))
+#define IFU(p) ((size_t)(uintptr_t)(p))
 
 #define MAX_MANIFEST_ITEMS 2048
 #define MAX_MANIFEST_BYTES (8 * 1024 * 1024)

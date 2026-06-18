@@ -4,8 +4,11 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <linux/limits.h>
-
-#include "../common/common.h"
+#include "../common/options.h"
+#include "../common/fileio.h"
+#include "../common/strutil.h"
+#include "../common/sysinfo.h"
+#include "../common/util.h"
 #include "../lookup/lookup.h"
 #include "../common/json/json.h"
 

@@ -1,5 +1,8 @@
 #include <unistd.h>
-#include "common.h"
+#include "init.h"
+#include "fileio.h"
+#include "util.h"
+#include "ui/nav.h"
 #include "download.h"
 #include "log.h"
 

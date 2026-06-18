@@ -1,5 +1,9 @@
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include "colour.h"
-#include "common.h"
+#include "options.h"
+#include "fileio.h"
 
 const rgb_colour_t RGB_COLOURS[] = {
         {"Off",           0,   0,   0},
@@ -96,7 +100,7 @@ const rgb_colour_combo_t RGB_COLOUR_COMBOS[] = {
 const size_t RGB_COLOUR_COMBO_COUNT = sizeof(RGB_COLOUR_COMBOS) / sizeof(RGB_COLOUR_COMBOS[0]);
 
 static int hex_to_byte(const char *hex, uint8_t *out) {
-    char buf[3] = { hex[0], hex[1], '\0' };
+    char buf[3] = {hex[0], hex[1], '\0'};
 
     char *endptr;
     long val = strtol(buf, &endptr, 16);
@@ -105,7 +109,7 @@ static int hex_to_byte(const char *hex, uint8_t *out) {
         return 0;
     }
 
-    *out = (uint8_t)val;
+    *out = (uint8_t) val;
     return 1;
 }
 
@@ -142,7 +146,7 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
 
         size_t count = sizeof(RGB_COLOURS) / sizeof(RGB_COLOURS[0]);
 
-        if (idx >= 0 && (size_t)idx < count) {
+        if (idx >= 0 && (size_t) idx < count) {
             *out = RGB_COLOURS[idx];
             return 1;
         } else {
@@ -164,7 +168,7 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
     }
 
     for (int i = 0; i < 6; i++) {
-        if (!isxdigit((unsigned char)hex[i])) {
+        if (!isxdigit((unsigned char) hex[i])) {
             *out = *fallback;
             return 0;
         }

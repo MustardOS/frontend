@@ -6,9 +6,8 @@
 #include <linux/fb.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-
 #include "../common/png/screenshot.h"
-#include "../common/common.h"
+#include "../common/util.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/theme.h"

@@ -33,8 +33,6 @@
 #define OVERLAY_TRY "Trying '%s' overlay at: %s"
 #define OVERLAY_NOP "overlay not found (core=%s system=%s content=%s dim=%s step=%d)"
 
-#define A_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
 extern SDL_Window *render_window;
 
 extern char dimension[32];

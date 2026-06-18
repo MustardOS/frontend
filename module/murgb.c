@@ -10,7 +10,9 @@
 #include <unistd.h>
 #include "../common/colour.h"
 #include "../common/config.h"
-#include "../common/common.h"
+#include "../common/fileio.h"
+#include "../common/strutil.h"
+#include "../common/theme.h"
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 

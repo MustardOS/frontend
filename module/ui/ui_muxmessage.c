@@ -1,7 +1,7 @@
 #include "ui_muxmessage.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../common/ui_common.h"
+#include "../../common/ui/common.h"
 
 lv_obj_t *ui_scrMessage;
 

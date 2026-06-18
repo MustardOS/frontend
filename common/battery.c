@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "battery.h"
-#include "common.h"
-#include "ui_common.h"
+#include "fileio.h"
+#include "ui/common.h"
 #include "init.h"
 #include "config.h"
 #include "device.h"

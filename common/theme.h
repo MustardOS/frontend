@@ -1,10 +1,25 @@
 #pragma once
 
+#include "../lvgl/lvgl.h"
 #include "options.h"
+
+enum {
+    THEME_COMPAT = 8
+};
+
+enum time_type {
+    TIME_12H,
+    TIME_24H
+};
+
+extern const char *theme_base;
+extern char *theme_back_compat[];
 
 extern struct theme_config theme;
 extern struct mux_config config;
 extern struct mux_device device;
+
+const char *get_theme_base(void);
 
 struct pt_big {
     lv_obj_t *e;
@@ -233,7 +248,7 @@ struct theme_config {
 
     struct {
         int16_t NAVIGATION_TYPE;
-        bool ENABLED;
+        int ENABLED;
         int16_t ALIGNMENT;
         int16_t ALIGNMENT_X_OFFSET;
         int16_t ALIGNMENT_Y_OFFSET;

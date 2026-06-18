@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dialogue.h"
+#include "ui/dialogue.h"
 #include "language.h"
 
 void crash_init(const char *module_name);

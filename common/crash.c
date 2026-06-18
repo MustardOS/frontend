@@ -9,8 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "common.h"
+#include "init.h"
 #include "options.h"
+#include "fileio.h"
 
 static char crash_module_name[MAX_BUFFER_SIZE];
 static char crash_label_module[MAX_BUFFER_SIZE];

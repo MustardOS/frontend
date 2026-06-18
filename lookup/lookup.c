@@ -1,4 +1,4 @@
-#include "../common/common.h"
+#include "../common/options.h"
 #include "lookup.h"
 
 const char *lookup(const char *name) {

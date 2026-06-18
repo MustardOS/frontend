@@ -7,11 +7,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
-#include "common.h"
+#include "init.h"
 #include "config.h"
 #include "options.h"
+#include "fileio.h"
+#include "strutil.h"
 #include "device.h"
-#include "collection.h"
+#include "collection/common.h"
 #include "union.h"
 
 #define UNION_SET_INIT_BIT 8

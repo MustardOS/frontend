@@ -9,10 +9,9 @@
 #include "init.h"
 #include "input.h"
 #include "inotify.h"
-#include "common.h"
-#include "font.h"
+#include "ui/font.h"
 #include "log.h"
-#include "ui_common.h"
+#include "ui/common.h"
 #include "language.h"
 #include "options.h"
 #include "config.h"
@@ -22,6 +21,9 @@
 #include "theme.h"
 #include "svg.h"
 #include "crash.h"
+#include "fileio.h"
+#include "exec.h"
+#include "datetime.h"
 
 static uint64_t start_ms = 0;
 static lv_timer_t *mux_refresh_timer = NULL;
@@ -31,6 +33,28 @@ static void (*status_sysinfo_cb)(lv_timer_t *) = NULL;
 lv_timer_t *timer_ui_refresh;
 lv_timer_t *timer_status;
 lv_timer_t *timer_idle;
+
+char mux_module[MAX_BUFFER_SIZE];
+char mux_dim[15];
+int msgbox_active;
+lv_obj_t *msgbox_element;
+int progress_onscreen = -1;
+int block_input;
+int page_nav_blocked;
+int last_idle = -1;
+int current_brightness = 0;
+int current_volume = 0;
+int is_blank = 0;
+int config_auth = 0;
+int idle_state_exists = 0;
+int safe_quit_exists = 0;
+int hdmi_refresh_exists = 0;
+int blank_exists = 0;
+unsigned idle_state_changes = 0;
+unsigned saver_type_changes = 0;
+unsigned charging_changes = 0;
+int hdmi_mode = 0;
+int g350_menu_pressed = 0;
 
 static lv_timer_t **const timers[] = {
         &timer_ui_refresh,

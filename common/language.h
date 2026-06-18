@@ -1,8 +1,16 @@
 #pragma once
 
+#include <stddef.h>
 #include "options.h"
 
 extern struct mux_lang lang;
+
+extern char *disabled_enabled[];
+extern char *excluded_included[];
+extern char *allowed_restricted[];
+extern char *hidden_visible[];
+extern char *toggle_icon_visible[];
+extern char *battery_display[];
 
 struct mux_lang {
     struct {
@@ -1939,3 +1947,17 @@ struct mux_lang {
 };
 
 void load_lang(struct mux_lang *lang);
+
+void common_var_init(void);
+
+void load_language_file(const char *module);
+
+char *translate_generic(char *key);
+
+char *translate_help(char *key);
+
+char *translate_specific(char *key);
+
+void fill_generic(const char *key, char *field, size_t size);
+
+void fill_specific(const char *key, char *field, size_t size);

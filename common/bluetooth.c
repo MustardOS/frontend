@@ -2,8 +2,8 @@
 #include <string.h>
 #include <strings.h>
 #include "bluetooth.h"
-#include "common.h"
 #include "language.h"
+#include "strutil.h"
 
 #define UUID_DUN          "00001103"
 #define UUID_HSP          "00001108"

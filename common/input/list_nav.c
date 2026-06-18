@@ -1,7 +1,7 @@
 #include "list_nav.h"
-#include "../common.h"
-#include "../ui_common.h"
-#include "../input.h"
+#include "../init.h"
+#include "../ui/common.h"
+#include "../ui/grid.h"
 #include "../theme.h"
 
 static void (*list_nav_prev_cb)(int) = NULL;
@@ -176,7 +176,7 @@ void handle_list_nav_page_up(void) {
         scroll_help_content(1, true);
         return;
     }
-    if (ui_count < 2 || block_input) return;
+    if (ui_count < 2 || block_input || page_nav_blocked) return;
 
     // Don't wrap around when scrolling by page.
     int steps;
@@ -195,7 +195,7 @@ void handle_list_nav_page_down(void) {
         scroll_help_content(-1, true);
         return;
     }
-    if (ui_count < 2 || block_input) return;
+    if (ui_count < 2 || block_input || page_nav_blocked) return;
 
     // Don't wrap around when scrolling by page.
     int steps;

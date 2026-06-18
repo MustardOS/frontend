@@ -6,7 +6,7 @@
 #include <curl/curl.h>
 #include <pthread.h>
 #include "../lvgl/lvgl.h"
-#include "ui_common.h"
+#include "ui/common.h"
 
 extern int cancel_download;
 extern int download_in_progress;

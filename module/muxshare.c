@@ -28,11 +28,8 @@ int ui_count = 0;
 int theme_down_index = 0;
 int last_shuffle = -1;
 
-lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
 lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
@@ -158,7 +155,9 @@ void overlay_display(void) {
         load_kiosk_image(ui_screen, kiosk_image);
     }
 
-    overlay_image = lv_img_create(ui_screen);
+    overlay_image = lv_obj_create(ui_screen);
+    lv_obj_remove_style_all(overlay_image);
+    lv_obj_clear_flag(overlay_image, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     load_overlay_image(ui_screen, overlay_image);
 }
 

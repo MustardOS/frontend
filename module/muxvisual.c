@@ -180,6 +180,32 @@ static void init_navigation_group(void) {
 }
 
 
+static void refresh_overlay_preview(void) {
+    struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
+
+    if (focused == ui_lblOverlayImage_visual) {
+        if (overlay_image) {
+            lv_obj_del(overlay_image);
+            overlay_image = NULL;
+        }
+
+        int16_t saved = config.VISUAL.OVERLAYIMAGE;
+        config.VISUAL.OVERLAYIMAGE = (int16_t) lv_dropdown_get_selected(ui_droOverlayImage_visual);
+
+        overlay_image = lv_obj_create(ui_screen);
+        lv_obj_remove_style_all(overlay_image);
+        lv_obj_clear_flag(overlay_image, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        load_overlay_image(ui_screen, overlay_image);
+
+        config.VISUAL.OVERLAYIMAGE = saved;
+    }
+
+    if (overlay_image) {
+        int opa = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
+        lv_obj_set_style_bg_img_opa(overlay_image, opa, MU_OBJ_MAIN_DEFAULT);
+    }
+}
+
 static void handle_option_prev(void) {
     if (msgbox_active) return;
     if (save_mode) {
@@ -191,6 +217,7 @@ static void handle_option_prev(void) {
     }
 
     move_option(lv_group_get_focused(ui_group_value), -1);
+    refresh_overlay_preview();
 }
 
 static void handle_option_next(void) {
@@ -204,6 +231,7 @@ static void handle_option_next(void) {
     }
 
     move_option(lv_group_get_focused(ui_group_value), +1);
+    refresh_overlay_preview();
 }
 
 static void handle_a(void) {

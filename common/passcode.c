@@ -1,5 +1,6 @@
-#include "common.h"
+#include "init.h"
 #include "options.h"
+#include "fileio.h"
 #include "passcode.h"
 
 #define PASSCODE_CFG_PATH CONF_CONFIG_PATH "passcode/"

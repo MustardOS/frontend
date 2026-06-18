@@ -1,13 +1,13 @@
 #include <stdint.h>
 #include <signal.h>
 #include <SDL2/SDL.h>
-#include "common.h"
-#include "ui_common.h"
+#include "init.h"
+#include "ui/common.h"
 #include "config.h"
 #include "device.h"
 #include "board.h"
 #include "input.h"
-#include "osk.h"
+#include "ui/osk.h"
 #include "log.h"
 #include "display.h"
 #include "anim.h"

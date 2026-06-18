@@ -1,6 +1,6 @@
 #include "ui_muxcharge.h"
-#include "../../common/common.h"
-#include "../../common/ui_common.h"
+#include "../../common/init.h"
+#include "../../common/ui/common.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
 

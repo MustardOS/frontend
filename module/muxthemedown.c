@@ -1,8 +1,8 @@
 #include "muxshare.h"
-#include "../common/collection_theme.h"
+#include "../common/collection/theme.h"
 #include "../common/download.h"
 
-static bool theme_extracting = false;
+static int theme_extracting = 0;
 static char theme_data_local_path[MAX_BUFFER_SIZE];
 static theme_item *theme_items = NULL;
 static size_t theme_item_count = 0;
@@ -49,7 +49,7 @@ static void show_help(void) {
     show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), TRS(credits), 0);
 }
 
-static bool is_downloaded(int index) {
+static int is_downloaded(int index) {
     char theme_path[MAX_BUFFER_SIZE];
     snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s",
              theme_items[index].name);
@@ -90,9 +90,9 @@ static void image_refresh() {
     preview_displayTime = 0;
 }
 
-static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabled, bool language_enabled,
-                            bool resolution640x480, bool resolution720x480, bool resolution720x720,
-                            bool resolution1024x768, bool resolution1280x720, bool resolution1920x1080) {
+static int skip_theme_item(const char *name, int grid_enabled, int hdmi_enabled, int language_enabled,
+                           int resolution640x480, int resolution720x480, int resolution720x720,
+                           int resolution1024x768, int resolution1280x720, int resolution1920x1080) {
     return (
             (config.THEME.FILTER.RESOLUTION_640x480 && !resolution640x480) ||
             (config.THEME.FILTER.RESOLUTION_720x480 && !resolution720x480) ||
@@ -135,16 +135,16 @@ static void create_content_items(void) {
     for (int i = 0; i < theme_count; i++) {
         struct json theme_item = json_array_get(fn_json, i);
 
-        bool grid_enabled = json_bool(json_object_get(theme_item, "grid"));
-        bool hdmi = json_bool(json_object_get(theme_item, "hdmi"));
-        bool language = json_bool(json_object_get(theme_item, "language"));
+        int grid_enabled = json_bool(json_object_get(theme_item, "grid"));
+        int hdmi = json_bool(json_object_get(theme_item, "hdmi"));
+        int language = json_bool(json_object_get(theme_item, "language"));
 
-        bool resolution640x480 = json_bool(json_object_get(theme_item, "resolution640x480"));
-        bool resolution720x480 = json_bool(json_object_get(theme_item, "resolution720x480"));
-        bool resolution720x720 = json_bool(json_object_get(theme_item, "resolution720x720"));
-        bool resolution1024x768 = json_bool(json_object_get(theme_item, "resolution1024x768"));
-        bool resolution1280x720 = json_bool(json_object_get(theme_item, "resolution1280x720"));
-        bool resolution1920x1080 = json_bool(json_object_get(theme_item, "resolution1920x1080"));
+        int resolution640x480 = json_bool(json_object_get(theme_item, "resolution640x480"));
+        int resolution720x480 = json_bool(json_object_get(theme_item, "resolution720x480"));
+        int resolution720x720 = json_bool(json_object_get(theme_item, "resolution720x720"));
+        int resolution1024x768 = json_bool(json_object_get(theme_item, "resolution1024x768"));
+        int resolution1280x720 = json_bool(json_object_get(theme_item, "resolution1280x720"));
+        int resolution1920x1080 = json_bool(json_object_get(theme_item, "resolution1920x1080"));
 
         char theme_name[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "name"), theme_name, sizeof(theme_name));
@@ -290,7 +290,7 @@ static void theme_download_finished(int result) {
     snprintf(output_path, sizeof(output_path), RUN_STORAGE_PATH "theme/%s",
              theme_items[current_item_index].name);
 
-    theme_extracting = true;
+    theme_extracting = 1;
     block_input = 1;
 
     extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
@@ -310,7 +310,7 @@ static void refresh_theme_data_finished(int result) {
     if (result == 0) {
         if (file_exist(preview_zip_path)) remove(preview_zip_path);
         set_download_callbacks(refresh_theme_previews_finished);
-        initiate_download(config.THEME.DOWNLOAD.PREVIEW, preview_zip_path, true,
+        initiate_download(config.THEME.DOWNLOAD.PREVIEW, preview_zip_path, 1,
                           lang.MUXTHEMEDOWN.DOWN.PREVIEW);
     } else {
         play_sound(SND_ERROR);
@@ -321,7 +321,7 @@ static void refresh_theme_data_finished(int result) {
 static void update_theme_data(void) {
     if (file_exist(theme_data_local_path)) remove(theme_data_local_path);
     set_download_callbacks(refresh_theme_data_finished);
-    initiate_download(config.THEME.DOWNLOAD.DATA, theme_data_local_path, true,
+    initiate_download(config.THEME.DOWNLOAD.DATA, theme_data_local_path, 1,
                       lang.MUXTHEMEDOWN.DOWN.DATA);
 }
 
@@ -346,7 +346,7 @@ static void handle_a(void) {
         set_download_callbacks(theme_download_finished);
         snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
                  theme_items[current_item_index].name);
-        initiate_download(theme_items[current_item_index].url, theme_path, true,
+        initiate_download(theme_items[current_item_index].url, theme_path, 1,
                           lang.MUXTHEMEDOWN.DOWN.THEME);
     }
 }
@@ -373,7 +373,7 @@ static void handle_b(void) {
     play_sound(SND_CONFIRM);
 
     if (download_in_progress) {
-        cancel_download = true;
+        cancel_download = 1;
         char theme_path[MAX_BUFFER_SIZE];
         snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
                  theme_items[current_item_index].name);
@@ -457,7 +457,7 @@ static void ui_refresh_task() {
         }
 
         block_input = 0;
-        theme_extracting = false;
+        theme_extracting = 0;
 
         msgbox_active = 0;
         progress_onscreen = 0;
@@ -584,6 +584,7 @@ int muxthemedown_main(void) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .release_handler = {
+                    [MUX_INPUT_L2] = hold_call_release,
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
@@ -592,12 +593,13 @@ int muxthemedown_main(void) {
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = hold_call_set,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     if (ui_count > 0) free_theme_items(&theme_items, &theme_item_count);

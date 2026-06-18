@@ -4,9 +4,10 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include "log.h"
-#include "common.h"
 #include "inotify.h"
+#include "init.h"
 #include "options.h"
+#include "fileio.h"
 #include "saver.h"
 
 const uint8_t saver_pastel_r[SAVER_PASTEL_COUNT] = {

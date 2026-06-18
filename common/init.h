@@ -2,23 +2,38 @@
 
 #include "../lvgl/lvgl.h"
 #include "input.h"
+#include "options.h"
 
 extern lv_obj_t *ui_lblDatetime;
 extern lv_obj_t *ui_staCapacity;
 extern lv_obj_t *ui_lblMessage;
 extern lv_obj_t *ui_pnlMessage;
 
+extern char mux_module[MAX_BUFFER_SIZE];
+extern char mux_dim[15];
+extern int msgbox_active;
+extern lv_obj_t *msgbox_element;
+extern int progress_onscreen;
+extern int block_input;
+extern int page_nav_blocked;
+extern int last_idle;
+extern int current_brightness;
+extern int current_volume;
+extern int is_blank;
+extern int config_auth;
+extern int idle_state_exists;
+extern int safe_quit_exists;
+extern int hdmi_refresh_exists;
+extern int blank_exists;
+extern unsigned idle_state_changes;
+extern unsigned saver_type_changes;
+extern unsigned charging_changes;
+extern int hdmi_mode;
+extern int g350_menu_pressed;
+
 struct screen_dimension {
     int WIDTH;
     int HEIGHT;
-};
-
-struct dt_task_param {
-    lv_obj_t *lblDatetime;
-};
-
-struct bat_task_param {
-    lv_obj_t *staCapacity;
 };
 
 void detach_parent_process(void);
