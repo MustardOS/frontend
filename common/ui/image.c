@@ -256,14 +256,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
     static char static_image_embed[MAX_BUFFER_SIZE];
 
     if (lv_group_get_obj_count(ui_group) > 0) {
-        const char *element = "";
-        lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-
-        if (e_focused) {
-            const char *ud = lv_obj_get_user_data(e_focused);
-            if (ud) element = ud;
-        }
-
+        const char *element = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         switch (wall_type) {
             case WALL_APPLICATION:
                 if (grid_mode_enabled && config.VISUAL.BOX_ART_HIDE) {

@@ -92,14 +92,10 @@ static void cleanup_screen(void) {
 
     timer_suspend_all();
 
-    if (ui_group) lv_group_remove_all_objs(ui_group);
-    if (ui_group_value) lv_group_remove_all_objs(ui_group_value);
-    if (ui_group_glyph) lv_group_remove_all_objs(ui_group_glyph);
-    if (ui_group_panel) lv_group_remove_all_objs(ui_group_panel);
+    lv_disp_load_scr(ui_screen_temp);
 
-    SAFE_DELETE(overlay_image, lv_obj_del);
-    SAFE_DELETE(kiosk_image, lv_obj_del);
-    SAFE_DELETE(ui_lblCounter_explore, lv_obj_del);
+    if (lv_obj_is_valid(ui_screen_container)) lv_obj_del(ui_screen_container);
+    ui_screen_container = NULL;
 
     current_item_index = 0;
     first_open = 1;
@@ -109,22 +105,15 @@ static void cleanup_screen(void) {
     ui_count = 0;
     grid_mode_enabled = 0;
 
-    current_wall[0] = '\0';
-    box_image_previous_path[0] = '\0';
-    preview_image_previous_path[0] = '\0';
-    splash_image_previous_path[0] = '\0';
+    RESET_PATH(current_wall);
+    RESET_PATH(box_image_previous_path);
+    RESET_PATH(preview_image_previous_path);
+    RESET_PATH(splash_image_previous_path);
 }
 
 static void cleanup_all(void) {
-    cleanup_screen();
     timer_destroy_all();
-
-    if (ui_screen_container) {
-        if (ui_screen_temp) lv_disp_load_scr(ui_screen_temp);
-        lv_obj_del(ui_screen_container);
-        ui_screen_container = NULL;
-    }
-
+    cleanup_screen();
     fade_reset();
     sdl_cleanup();
 }

@@ -453,26 +453,6 @@ int launch_flag(int mode, int held) {
 }
 
 void reset_ui_groups(void) {
-    if (ui_group) {
-        lv_group_del(ui_group);
-        ui_group = NULL;
-    }
-
-    if (ui_group_value) {
-        lv_group_del(ui_group_value);
-        ui_group_value = NULL;
-    }
-
-    if (ui_group_glyph) {
-        lv_group_del(ui_group_glyph);
-        ui_group_glyph = NULL;
-    }
-
-    if (ui_group_panel) {
-        lv_group_del(ui_group_panel);
-        ui_group_panel = NULL;
-    }
-
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
