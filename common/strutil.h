@@ -72,6 +72,8 @@ void adjust_visual_label(char *text, int method, int rep_dash);
 char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
                              const char *suffix, int infix_position);
 
+char *generate_time_string(int minute_offset);
+
 char **split_command(const char *cmd, size_t *argc_out);
 
 void free_array(char **array, size_t count);

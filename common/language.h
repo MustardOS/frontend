@@ -366,15 +366,19 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char SCHEDULE[MAX_BUFFER_SIZE];
         char SUNRISE_TEMP[MAX_BUFFER_SIZE];
         char SUNSET_TEMP[MAX_BUFFER_SIZE];
         char SUNRISE_TIME[MAX_BUFFER_SIZE];
         char SUNSET_TIME[MAX_BUFFER_SIZE];
+        char TEMPERATURE[MAX_BUFFER_SIZE];
         struct {
+            char SCHEDULE[MAX_BUFFER_SIZE];
             char SUNRISE_TEMP[MAX_BUFFER_SIZE];
             char SUNSET_TEMP[MAX_BUFFER_SIZE];
             char SUNRISE_TIME[MAX_BUFFER_SIZE];
             char SUNSET_TIME[MAX_BUFFER_SIZE];
+            char TEMPERATURE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXDISTEMP;
 

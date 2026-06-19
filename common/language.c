@@ -436,14 +436,18 @@ void load_lang(struct mux_lang *lang) {
 
     // muxdistemp
     SPECIFIC_FIELD(lang->MUXDISTEMP.TITLE, "DISPLAY TEMPERATURE");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.SCHEDULE, "Schedule");
     SPECIFIC_FIELD(lang->MUXDISTEMP.SUNRISE_TEMP, "Sunrise Temperature");
     SPECIFIC_FIELD(lang->MUXDISTEMP.SUNSET_TEMP, "Sunset Temperature");
     SPECIFIC_FIELD(lang->MUXDISTEMP.SUNRISE_TIME, "Sunrise Time");
     SPECIFIC_FIELD(lang->MUXDISTEMP.SUNSET_TIME, "Sunset Time");
-    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TEMP, "Colour temperature applied during sunrise hours - higher values are warmer");
-    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TEMP, "Colour temperature applied during sunset hours - higher values are warmer");
-    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TIME, "Time of day when the sunrise temperature takes effect (15 minute increments)");
-    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TIME, "Time of day when the sunset temperature takes effect (15 minute increments)");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.TEMPERATURE, "Temperature");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SCHEDULE, "Enable or disable the sunrise and sunset colour temperature schedule");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TEMP, "Colour temperature applied during sunrise hours");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TEMP, "Colour temperature applied during sunset hours");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TIME, "Time of day when the sunrise temperature takes effect");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TIME, "Time of day when the sunset temperature takes effect");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.TEMPERATURE, "Colour temperature applied to the display");
 
     // muxcolfilter
     SPECIFIC_FIELD(lang->MUXCOLFILTER.TITLE, "COLOUR FILTER");

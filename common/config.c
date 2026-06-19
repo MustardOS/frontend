@@ -161,6 +161,7 @@ void load_config(struct mux_config *config) {
 
     // settings/colour/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/colour");
+    CFG_INT(config->SETTINGS.COLOUR.SCHEDULE_MODE, &d, "schedule_mode", 0);
     CFG_INT(config->SETTINGS.COLOUR.SUNRISE_TEMP, &d, "sunrise_temp", DEFAULT_TEMPERATURE);
     CFG_INT(config->SETTINGS.COLOUR.SUNSET_TEMP, &d, "sunset_temp", DEFAULT_TEMPERATURE);
     CFG_INT(config->SETTINGS.COLOUR.SUNRISE_TIME, &d, "sunrise_time", 24);

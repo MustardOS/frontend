@@ -155,6 +155,7 @@ struct mux_config {
             int16_t TRUSTREMOVE;
         } ADVANCED;
         struct {
+            int16_t SCHEDULE_MODE;
             int16_t SUNRISE_TEMP;
             int16_t SUNSET_TEMP;
             int16_t SUNRISE_TIME;

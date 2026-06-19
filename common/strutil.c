@@ -592,6 +592,24 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
     return number_string;
 }
 
+char *generate_time_string(int minute_offset) {
+    if (minute_offset <= 0) minute_offset = 15;
+
+    int slots = 1440 / minute_offset;
+    char *buf = malloc((size_t) slots * 6 + 1);
+    if (!buf) return NULL;
+
+    char *ptr = buf;
+    for (int i = 0; i < slots; i++) {
+        int total = i * minute_offset;
+        ptr += sprintf(ptr, "%02d:%02d", total / 60, total % 60);
+        if (i < slots - 1) *ptr++ = '\n';
+    }
+
+    *ptr = '\0';
+    return buf;
+}
+
 char **split_command(const char *cmd, size_t *argc_out) {
 #define FREE_ARGV                                        \
     do {                                                 \

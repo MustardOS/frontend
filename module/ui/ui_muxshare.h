@@ -194,11 +194,13 @@
     DEVICE(HasNetwork,    HASNETWORK,    "network")    \
     DEVICE(HasPortmaster, HASPORTMASTER, "portmaster")
 
-#define DISTEMP_ELEMENTS                              \
-    DISTEMP(SunriseTemp, SUNRISE_TEMP, "sunrisetemp") \
-    DISTEMP(SunsetTemp,  SUNSET_TEMP,  "sunsettemp")  \
-    DISTEMP(SunriseTime, SUNRISE_TIME, "sunrisetime") \
-    DISTEMP(SunsetTime,  SUNSET_TIME,  "sunsettime")
+#define DISTEMP_ELEMENTS                               \
+    DISTEMP(Schedule,    SCHEDULE,     "schedule")     \
+    DISTEMP(SunriseTemp, SUNRISE_TEMP, "sunrisetemp")  \
+    DISTEMP(SunsetTemp,  SUNSET_TEMP,  "sunsettemp")   \
+    DISTEMP(SunriseTime, SUNRISE_TIME, "sunrisetime")  \
+    DISTEMP(SunsetTime,  SUNSET_TIME,  "sunsettime")   \
+    DISTEMP(Temp,        TEMPERATURE,  "temp")
 
 #define FONT_ELEMENTS                          \
     FONT(Type,       TYPE,       "type")       \
