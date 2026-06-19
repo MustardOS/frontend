@@ -122,7 +122,7 @@ static void refresh_navigation(void) {
         HIDE_OPTION_ITEM(font, PanelSize);
     }
 
-    gen_step_movement(0, 1, 0, 0);
+    gen_step_movement(0, 1, 0, 0, 1);
 }
 
 static void apply_current_font_settings(void) {
@@ -305,7 +305,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
-    gen_step_movement(direct_to_previous(ui_objects, ui_count, &nav_moved), +1, 0, 0);
+    gen_step_movement(direct_to_previous(ui_objects, ui_count, &nav_moved), +1, 0, 0, 1);
 }
 
 
@@ -562,7 +562,7 @@ int muxfont_main(void) {
     dialogue_init_confirm(&reset_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, NULL,
                           lang.GENERIC.RESET, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(0, +1, 0, 0);
+    gen_step_movement(0, +1, 0, 0, 1);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

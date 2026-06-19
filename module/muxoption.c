@@ -447,7 +447,7 @@ static void list_nav_move(int steps, int direction) {
         if (lv_group_get_focused(ui_group_value)) {
             apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group_value));
         }
-        gen_step_movement(1, direction, false, 0);
+        gen_step_movement(1, direction, 0, 0, 1);
     }
 
     if (!nav_silent) {

@@ -72,11 +72,7 @@ static void net_scan_poll_task(lv_timer_t *t) {
 
     lv_label_set_text(ui_lblScreenMessage, !ui_count ? lang.MUXNETSCAN.NONE : "");
 
-    if (ui_count > 0) {
-        nav_silent = 1;
-        gen_step_movement(0, +1, 1, 0);
-        nav_silent = 0;
-    }
+    if (ui_count > 0) gen_step_movement(0, +1, 1, 0, 0);
 }
 
 static void create_network_items(void) {

@@ -205,7 +205,7 @@ int muxdanger_main(void) {
     init_dropdown_settings();
 
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(0, +1, 0, 0);
+    gen_step_movement(0, +1, 0, 0, 1);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

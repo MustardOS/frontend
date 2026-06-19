@@ -170,7 +170,7 @@ void adjust_gen_panel(void);
 
 void ui_gen_refresh_task();
 
-void gen_step_movement(int steps, int direction, int long_dot, int count_offset);
+void gen_step_movement(int steps, int direction, int long_dot, int count_offset, int sound);
 
 void list_nav_cb_prev(int steps);
 

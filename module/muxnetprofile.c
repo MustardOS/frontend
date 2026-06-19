@@ -457,7 +457,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    gen_step_movement(0, +1, 1, 0);
+    gen_step_movement(0, +1, 1, 0, 1);
     nav_moved = 1;
 
     check_focus();
@@ -477,7 +477,7 @@ static void check_focus() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, 0, 0);
+    gen_step_movement(steps, direction, 0, 0, 1);
     check_focus();
 }
 

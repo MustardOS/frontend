@@ -379,7 +379,7 @@ int muxarchive_main(void) {
     int nav_hidden = 0;
     if (ui_count > 0) {
         nav_hidden = 1;
-        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) gen_step_movement(arc_index, +1, 1, 0);
+        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) gen_step_movement(arc_index, +1, 1, 0, 1);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXARCHIVE.NONE);
     }

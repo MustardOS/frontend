@@ -145,7 +145,7 @@ static void refresh_navigation(void) {
     }
 
     current_item_index = 0;
-    gen_step_movement(0, +1, 0, 0);
+    gen_step_movement(0, +1, 0, 0, 0);
 }
 
 static void init_navigation_group(void) {
@@ -382,7 +382,7 @@ int muxdistemp_main(void) {
                           lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(0, +1, 0, 0);
+    gen_step_movement(0, +1, 0, 0, 0);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

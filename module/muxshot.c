@@ -300,7 +300,7 @@ int muxshot_main(void) {
     };
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
-    if (ui_count > 0 && sys_index <= ui_count && current_item_index < ui_count) gen_step_movement(sys_index, +1, 1, 0);
+    if (ui_count > 0 && sys_index <= ui_count && current_item_index < ui_count) gen_step_movement(sys_index, +1, 1, 0, 1);
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_refresh_task, NULL);

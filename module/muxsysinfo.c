@@ -652,7 +652,7 @@ int muxsysinfo_main(void) {
 
     dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.MUXSYSINFO.WARN, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, update_system_info);
-    gen_step_movement(0, +1, 0, 0);
+    gen_step_movement(0, +1, 0, 0, 1);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

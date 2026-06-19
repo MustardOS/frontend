@@ -386,7 +386,7 @@ static void init_navigation_group(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
+    gen_step_movement(steps, direction, 0, 0, 1);
     if (show_details) update_storage_info();
 }
 

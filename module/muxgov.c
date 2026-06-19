@@ -404,7 +404,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
     if (ui_count > 0) {
         LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s");
-        gen_step_movement(0, +1, 1, 0);
+        gen_step_movement(0, +1, 1, 0, 1);
     } else {
         LOG_ERROR(mux_module, "No Governors Detected!");
         lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);

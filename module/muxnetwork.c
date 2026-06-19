@@ -278,7 +278,7 @@ static void init_navigation_group(void) {
                 }
             }
         }
-        gen_step_movement(target, +1, 1, 0);
+        gen_step_movement(target, +1, 1, 0, 1);
     }
 }
 

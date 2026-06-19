@@ -550,7 +550,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
         }
 
         if (ui_count > 0 && ass_index > -1 && ass_index <= ui_count && current_item_index < ui_count) {
-            gen_step_movement(ass_index, +1, 1, 0);
+            gen_step_movement(ass_index, +1, 1, 0, 1);
         }
     } else {
         LOG_ERROR(mux_module, "No Cores Detected - Check Directory!");

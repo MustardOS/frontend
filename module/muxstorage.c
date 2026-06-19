@@ -98,7 +98,7 @@ static void init_navigation_group(void) {
     }
 
     if (ui_count > 0 && sin_index >= 0 && sin_index < ui_count && current_item_index < ui_count) {
-        gen_step_movement(sin_index, 1, 0, 0);
+        gen_step_movement(sin_index, 1, 0, 0, 1);
     }
 }
 

@@ -498,13 +498,13 @@ void ui_gen_refresh_task() {
     }
 }
 
-void gen_step_movement(int steps, int direction, int long_dot, int count_offset) {
+void gen_step_movement(int steps, int direction, int long_dot, int count_offset, int sound) {
     if (!ui_count) return;
 
     if (first_open) {
         first_open = 0;
     } else if (!nav_silent) {
-        play_sound(SND_NAVIGATE);
+        if (sound) play_sound(SND_NAVIGATE);
     }
 
     for (int step = 0; step < steps; ++step) {
@@ -532,19 +532,19 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset)
 }
 
 void list_nav_cb_prev(int steps) {
-    gen_step_movement(steps, -1, 1, 0);
+    gen_step_movement(steps, -1, 1, 0, 1);
 }
 
 void list_nav_cb_next(int steps) {
-    gen_step_movement(steps, +1, 1, 0);
+    gen_step_movement(steps, +1, 1, 0, 1);
 }
 
 void list_nav_cb_prev_nowrap(int steps) {
-    gen_step_movement(steps, -1, 0, 0);
+    gen_step_movement(steps, -1, 0, 0, 1);
 }
 
 void list_nav_cb_next_nowrap(int steps) {
-    gen_step_movement(steps, +1, 0, 0);
+    gen_step_movement(steps, +1, 0, 0, 1);
 }
 
 void handle_msgbox_dismiss(void) {

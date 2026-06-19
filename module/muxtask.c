@@ -198,7 +198,7 @@ int muxtask_main(char *ex_dir) {
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
 
     if (ui_count > 0) {
-        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) gen_step_movement(tin_index, +1, 1, 0);
+        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) gen_step_movement(tin_index, +1, 1, 0, 1);
     } else {
         lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);

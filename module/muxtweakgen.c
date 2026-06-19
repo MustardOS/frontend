@@ -336,7 +336,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    gen_step_movement(steps, direction, false, 0);
+    gen_step_movement(steps, direction, 0, 0, 1);
     check_focus();
 }
 

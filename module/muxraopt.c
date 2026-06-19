@@ -337,7 +337,7 @@ int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     create_rac_items();
     init_elements();
 
-    gen_step_movement(0, +1, 1, 0);
+    gen_step_movement(0, +1, 1, 0, 1);
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {

@@ -43,7 +43,7 @@ static void init_navigation_group(void) {
     if (!storage_available()) HIDE_STATIC_ITEM(config, Storage);
     if (hdmi_mode) HIDE_STATIC_ITEM(config, Overlay);
 
-    gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 1, 0);
+    gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 1, 0, 1);
 }
 
 

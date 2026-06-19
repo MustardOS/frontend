@@ -74,7 +74,7 @@ static void bt_scan_poll_task(lv_timer_t *t) {
 
     if (ui_count > 0) {
         nav_silent = 1;
-        gen_step_movement(0, +1, 1, 0);
+        gen_step_movement(0, +1, 1, 0, 1);
         nav_silent = 0;
     }
 }
