@@ -348,11 +348,6 @@ void resolve_grid_item_images(const char *mux_dim, const char *mux_module, const
         }                              \
     } while (0)
 
-#define RESET_PATH(ELEMENT)                     \
-    do {                                        \
-        snprintf(ELEMENT, sizeof(ELEMENT), ""); \
-    } while (0)
-
 #define INIT_OPTION_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)          \
     do {                                                                            \
         int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                 \

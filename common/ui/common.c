@@ -483,6 +483,61 @@ void fade_out_screen(void) {
 
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
+    if (ui_screen_container && lv_obj_is_valid(ui_screen_container)) {
+        if (ui_lblCounter_explore && lv_obj_is_valid(ui_lblCounter_explore)) {
+            lv_obj_del(ui_lblCounter_explore);
+            ui_lblCounter_explore = NULL;
+        }
+
+        lv_obj_clean(ui_pnlContent);
+        lv_obj_clean(ui_pnlGrid);
+
+        lv_label_set_text(ui_lblTitle, title);
+
+        lv_img_set_src(ui_imgWall, &ui_img_blank);
+        lv_img_set_src(ui_imgBox, &ui_img_blank);
+
+        lv_obj_set_y(ui_pnlBox, theme->HEADER.HEIGHT + 2);
+        lv_obj_set_height(ui_pnlBox, device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4);
+        lv_obj_clear_flag(ui_pnlBox, MU_OBJ_FLAG_HIDE_FLOAT);
+
+        lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
+
+        lv_obj_t *nav_elems[] = {
+                ui_lblNavLRGlyph, ui_lblNavLR,
+                ui_lblNavAGlyph, ui_lblNavA,
+                ui_lblNavBGlyph, ui_lblNavB,
+                ui_lblNavCGlyph, ui_lblNavC,
+                ui_lblNavXGlyph, ui_lblNavX,
+                ui_lblNavYGlyph, ui_lblNavY,
+                ui_lblNavZGlyph, ui_lblNavZ,
+                ui_lblNavMenuGlyph, ui_lblNavMenu,
+        };
+
+        for (size_t i = 0; i < A_SIZE(nav_elems); i++) {
+            if (nav_elems[i]) lv_obj_add_flag(nav_elems[i], LV_OBJ_FLAG_HIDDEN);
+        }
+
+        lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlProgressBrightness, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlProgressVolume, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlGrid, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(ui_lblMessage, "");
+        lv_label_set_text(ui_lblScreenMessage, "");
+
+        if (ui_black && lv_obj_is_valid(ui_black)) {
+            lv_obj_del(ui_black);
+            ui_black = NULL;
+        }
+
+        return;
+    }
+
     ui_screen_container = lv_obj_create(NULL);
 
     if (ui_screen_temp == NULL) ui_screen_temp = lv_obj_create(NULL);
@@ -1763,6 +1818,7 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_style_pad_row(ui_pnlGrid, theme->GRID.ROW_PADDING, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlGrid, theme->GRID.COLUMN_PADDING, MU_OBJ_MAIN_DEFAULT);
 
+    lv_obj_clear_flag(ui_pnlGrid, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align(ui_pnlGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
                  theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X,
