@@ -561,6 +561,10 @@ static int saver_event_should_stop(const SDL_Event *ev) {
         case SDL_MOUSEBUTTONDOWN:
         case SDL_QUIT:
             return 1;
+        case SDL_CONTROLLERAXISMOTION:
+            return abs(ev->caxis.value) >= 16384;
+        case SDL_JOYAXISMOTION:
+            return abs(ev->jaxis.value) >= 16384;
         default:
             return 0;
     }
