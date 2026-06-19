@@ -122,7 +122,7 @@ static void refresh_navigation(void) {
         HIDE_OPTION_ITEM(font, PanelSize);
     }
 
-    gen_step_movement(0, 1, 0, 0, 1);
+    gen_step_movement(0, 1, 0, 0, 0);
 }
 
 static void apply_current_font_settings(void) {
