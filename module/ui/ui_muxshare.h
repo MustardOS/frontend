@@ -120,20 +120,11 @@
     CHRONY(UpdateInt,  UPDATEINT,  "update")    \
     CHRONY(Leap,       LEAP,       "leap")
 
-#define COLADJUST_ELEMENTS                             \
-    COLADJUST(Temperature, TEMPERATURE, "temperature") \
-    COLADJUST(Brightness,  BRIGHTNESS,  "brightness")  \
-    COLADJUST(Contrast,    CONTRAST,    "contrast")    \
-    COLADJUST(Saturation,  SATURATION,  "saturation")  \
-    COLADJUST(HueShift,    HUESHIFT,    "hueshift")    \
-    COLADJUST(Gamma,       GAMMA,       "gamma")
-
 #define CONFIG_ELEMENTS                       \
     CONFIG(General,   GENERAL,   "general")   \
     CONFIG(Connect,   CONNECT,   "connect")   \
     CONFIG(Custom,    CUSTOM,    "custom")    \
     CONFIG(Interface, INTERFACE, "interface") \
-    CONFIG(Colour,    COLOUR,    "colour")    \
     CONFIG(Overlay,   OVERLAY,   "overlay")   \
     CONFIG(Language,  LANGUAGE,  "language")  \
     CONFIG(Power,     POWER,     "power")     \
@@ -202,6 +193,12 @@
     DEVICE(HasLid,        HASLID,        "lid")        \
     DEVICE(HasNetwork,    HASNETWORK,    "network")    \
     DEVICE(HasPortmaster, HASPORTMASTER, "portmaster")
+
+#define DISTEMP_ELEMENTS                              \
+    DISTEMP(SunriseTemp, SUNRISE_TEMP, "sunrisetemp") \
+    DISTEMP(SunsetTemp,  SUNSET_TEMP,  "sunsettemp")  \
+    DISTEMP(SunriseTime, SUNRISE_TIME, "sunrisetime") \
+    DISTEMP(SunsetTime,  SUNSET_TIME,  "sunsettime")
 
 #define FONT_ELEMENTS                          \
     FONT(Type,       TYPE,       "type")       \
@@ -282,8 +279,7 @@
     KIOSK(Hdmi,       HDMI,       "hdmi")       \
     KIOSK(Power,      POWER,      "power")      \
     KIOSK(Visual,     VISUAL,     "visual")     \
-    KIOSK(Overlay,    OVERLAY,    "overlay")    \
-    KIOSK(Colour,     COLOUR,     "colour")
+    KIOSK(Overlay,    OVERLAY,    "overlay")
 
 #define LAUNCH_ELEMENTS                          \
     LAUNCH(Explore,    EXPLORE,    "explore")    \
@@ -495,19 +491,20 @@
     TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove") \
     TWEAKADV(UsbFunction, USBFUNCTION, "usbfunction")
 
-#define TWEAKGEN_ELEMENTS                          \
-    TWEAKGEN(Rtc,        RTC,        "clock")      \
-    TWEAKGEN(Hdmi,       HDMI,       "hdmi")       \
-    TWEAKGEN(Rgb,        RGB,        "rgb")        \
-    TWEAKGEN(InputRemap, INPUTREMAP, "inputremap") \
-    TWEAKGEN(Advanced,   ADVANCED,   "advanced")   \
-    TWEAKGEN(PassCode,   PASSCODE,   "lock")       \
-    TWEAKGEN(Brightness, BRIGHTNESS, "brightness") \
-    TWEAKGEN(Volume,     VOLUME,     "volume")     \
-    TWEAKGEN(AudioSink,  AUDIOSINK,  "audiosink")  \
-    TWEAKGEN(HkDpad,     HKDPAD,     "hkdpad")     \
-    TWEAKGEN(HkShot,     HKSHOT,     "hkshot")     \
-    TWEAKGEN(Startup,    STARTUP,    "startup")
+#define TWEAKGEN_ELEMENTS                             \
+    TWEAKGEN(Rtc,         RTC,         "clock")       \
+    TWEAKGEN(Hdmi,        HDMI,        "hdmi")        \
+    TWEAKGEN(Rgb,         RGB,         "rgb")         \
+    TWEAKGEN(InputRemap,  INPUTREMAP,  "inputremap")  \
+    TWEAKGEN(Advanced,    ADVANCED,    "advanced")    \
+    TWEAKGEN(PassCode,    PASSCODE,    "lock")        \
+    TWEAKGEN(DisplayTemp, DISPLAYTEMP, "displaytemp") \
+    TWEAKGEN(Brightness,  BRIGHTNESS,  "brightness")  \
+    TWEAKGEN(Volume,      VOLUME,      "volume")      \
+    TWEAKGEN(AudioSink,   AUDIOSINK,   "audiosink")   \
+    TWEAKGEN(HkDpad,      HKDPAD,      "hkdpad")      \
+    TWEAKGEN(HkShot,      HKSHOT,      "hkshot")      \
+    TWEAKGEN(Startup,     STARTUP,     "startup")
 
 #define VISUAL_ELEMENTS                                                           \
     VISUAL(Sort,                  SORT,                  "sort")                  \

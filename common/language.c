@@ -434,20 +434,16 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHRONY.HELP.UPDATEINT, "Interval between time updates");
     SPECIFIC_FIELD(lang->MUXCHRONY.HELP.LEAP, "Current synchronisation status of the system clock");
 
-    // muxcoladjust
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.TITLE, "COLOUR OPTIONS");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.TEMPERATURE, "Temperature");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.BRIGHTNESS, "Brightness");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.CONTRAST, "Contrast");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.SATURATION, "Saturation");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HUESHIFT, "Hue Shift");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.GAMMA, "Gamma");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.TEMPERATURE, "Adjusts the overall warmth or coolness of the display by shifting colour balance");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.BRIGHTNESS, "Controls the overall lightness or darkness of content");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.CONTRAST, "Adjusts the difference between light and dark areas of content");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.SATURATION, "Controls the intensity and richness of colours");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.HUESHIFT, "Rotates colours around the colour wheel without changing brightness");
-    SPECIFIC_FIELD(lang->MUXCOLADJUST.HELP.GAMMA, "Adjusts midtone brightness without affecting pure black or white");
+    // muxdistemp
+    SPECIFIC_FIELD(lang->MUXDISTEMP.TITLE, "DISPLAY TEMPERATURE");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.SUNRISE_TEMP, "Sunrise Temperature");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.SUNSET_TEMP, "Sunset Temperature");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.SUNRISE_TIME, "Sunrise Time");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.SUNSET_TIME, "Sunset Time");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TEMP, "Colour temperature applied during sunrise hours - higher values are warmer");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TEMP, "Colour temperature applied during sunset hours - higher values are warmer");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TIME, "Time of day when the sunrise temperature takes effect (15 minute increments)");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TIME, "Time of day when the sunset temperature takes effect (15 minute increments)");
 
     // muxcolfilter
     SPECIFIC_FIELD(lang->MUXCOLFILTER.TITLE, "COLOUR FILTER");
@@ -468,7 +464,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.INTERFACE, "Interface Options");
-    SPECIFIC_FIELD(lang->MUXCONFIG.COLOUR, "Colour Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.OVERLAY, "Overlay Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage Options");
@@ -481,7 +476,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.BACKUP, "Back up your content to a restorable archive for your device or others");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.INTERFACE, "Settings to change the visual aspects of the frontend");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.COLOUR, "Settings to change the colour settings of content");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.OVERLAY, "Settings to change the hardware overlays of content");
 
     // muxconnect
@@ -877,7 +871,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXKIOSK.OVERLAY, "Overlay Options");
-    SPECIFIC_FIELD(lang->MUXKIOSK.COLOUR, "Colour Options");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.MAIN, "Collection Viewing");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.ADD_CONTENT, "Collection Adding Content");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.NEW_DIR, "Collection Folder Creation");
@@ -921,7 +914,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.POWER, "Permit power options such as shutdown or sleep");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.VISUAL, "Allow changes to interface visuals");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.OVERLAY, "Allow changes to content overlays");
-    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLOUR, "Allow changes to content colour adjustments");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTMOD, "Enable viewing of content collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTADD, "Permit adding content to collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTNEW, "Allow creation of new collection folders");
@@ -1638,6 +1630,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.VOLUME_SET, "Setting Device Volume");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.ADVANCED, "Advanced Settings");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.PASSCODE, "Passcode Settings");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.INPUTREMAP, "Input Remap");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.DISPLAYTEMP, "Display Temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.RGB, "Device RGB Lights");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HKDPAD, "DPAD Swap Hotkey");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HKSHOT, "Screenshot Hotkey");
@@ -1659,10 +1654,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HKSHOT, "Switch between different hotkeys for taking a screenshot");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.AUDIOSINK, "Select the active Pipewire audio output sink");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.PASSCODE, "Passcode Settings");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.PASSCODE, "Configure boot, launch, and settings passcodes");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.INPUTREMAP, "Input Remap");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.INPUTREMAP, "Remap controller buttons and axes for the muOS frontend");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.DISPLAYTEMP, "Configure sunrise and sunset display colour temperature and schedule");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.WARN, "These settings are intended for advanced users.\n\nChanging them incorrectly may cause unexpected behaviour!");
 
     // muxvisual

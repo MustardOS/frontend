@@ -366,21 +366,17 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char TEMPERATURE[MAX_BUFFER_SIZE];
-        char BRIGHTNESS[MAX_BUFFER_SIZE];
-        char CONTRAST[MAX_BUFFER_SIZE];
-        char SATURATION[MAX_BUFFER_SIZE];
-        char HUESHIFT[MAX_BUFFER_SIZE];
-        char GAMMA[MAX_BUFFER_SIZE];
+        char SUNRISE_TEMP[MAX_BUFFER_SIZE];
+        char SUNSET_TEMP[MAX_BUFFER_SIZE];
+        char SUNRISE_TIME[MAX_BUFFER_SIZE];
+        char SUNSET_TIME[MAX_BUFFER_SIZE];
         struct {
-            char TEMPERATURE[MAX_BUFFER_SIZE];
-            char BRIGHTNESS[MAX_BUFFER_SIZE];
-            char CONTRAST[MAX_BUFFER_SIZE];
-            char SATURATION[MAX_BUFFER_SIZE];
-            char HUESHIFT[MAX_BUFFER_SIZE];
-            char GAMMA[MAX_BUFFER_SIZE];
+            char SUNRISE_TEMP[MAX_BUFFER_SIZE];
+            char SUNSET_TEMP[MAX_BUFFER_SIZE];
+            char SUNRISE_TIME[MAX_BUFFER_SIZE];
+            char SUNSET_TIME[MAX_BUFFER_SIZE];
         } HELP;
-    } MUXCOLADJUST;
+    } MUXDISTEMP;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
@@ -407,7 +403,6 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char POWER[MAX_BUFFER_SIZE];
         char INTERFACE[MAX_BUFFER_SIZE];
-        char COLOUR[MAX_BUFFER_SIZE];
         char OVERLAY[MAX_BUFFER_SIZE];
         char BACKUP[MAX_BUFFER_SIZE];
         struct {
@@ -418,7 +413,6 @@ struct mux_lang {
             char STORAGE[MAX_BUFFER_SIZE];
             char POWER[MAX_BUFFER_SIZE];
             char INTERFACE[MAX_BUFFER_SIZE];
-            char COLOUR[MAX_BUFFER_SIZE];
             char OVERLAY[MAX_BUFFER_SIZE];
             char BACKUP[MAX_BUFFER_SIZE];
         } HELP;
@@ -900,7 +894,6 @@ struct mux_lang {
         char POWER[MAX_BUFFER_SIZE];
         char VISUAL[MAX_BUFFER_SIZE];
         char OVERLAY[MAX_BUFFER_SIZE];
-        char COLOUR[MAX_BUFFER_SIZE];
         struct {
             char MAIN[MAX_BUFFER_SIZE];
             char ADD_CONTENT[MAX_BUFFER_SIZE];
@@ -951,7 +944,6 @@ struct mux_lang {
             char POWER[MAX_BUFFER_SIZE];
             char VISUAL[MAX_BUFFER_SIZE];
             char OVERLAY[MAX_BUFFER_SIZE];
-            char COLOUR[MAX_BUFFER_SIZE];
             char COLLECTMOD[MAX_BUFFER_SIZE];
             char COLLECTADD[MAX_BUFFER_SIZE];
             char COLLECTNEW[MAX_BUFFER_SIZE];
@@ -1792,6 +1784,7 @@ struct mux_lang {
         } STARTUP;
         char INPUTREMAP[MAX_BUFFER_SIZE];
         char PASSCODE[MAX_BUFFER_SIZE];
+        char DISPLAYTEMP[MAX_BUFFER_SIZE];
         char WARN[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
@@ -1807,6 +1800,7 @@ struct mux_lang {
             char AUDIOSINK[MAX_BUFFER_SIZE];
             char INPUTREMAP[MAX_BUFFER_SIZE];
             char PASSCODE[MAX_BUFFER_SIZE];
+            char DISPLAYTEMP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
 

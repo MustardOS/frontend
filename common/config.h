@@ -155,12 +155,10 @@ struct mux_config {
             int16_t TRUSTREMOVE;
         } ADVANCED;
         struct {
-            int16_t TEMPERATURE;
-            int16_t BRIGHTNESS;
-            int16_t CONTRAST;
-            int16_t SATURATION;
-            int16_t HUESHIFT;
-            int16_t GAMMA;
+            int16_t SUNRISE_TEMP;
+            int16_t SUNSET_TEMP;
+            int16_t SUNRISE_TIME;
+            int16_t SUNSET_TIME;
         } COLOUR;
         struct {
             int16_t SOUND;

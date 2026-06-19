@@ -94,7 +94,6 @@ extern int current_item_index;
 extern int first_open;
 extern int nav_silent;
 extern int ui_count;
-extern int hold_call;
 
 extern int theme_down_index;
 
@@ -213,21 +212,19 @@ int muxbackup_main();
 
 int muxbatinfo_main();
 
-int muxchrony_main();
+int muxbtall_main();
 
-int muxcoladjust_main();
+int muxbtcon_main();
+
+int muxbtdev_main();
+
+int muxchrony_main();
 
 int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app);
 
 int muxcollect_main(int add, char *dir, int last_index);
 
 int muxconfig_main();
-
-int muxbtall_main();
-
-int muxbtcon_main();
-
-int muxbtdev_main();
 
 int muxconnect_main();
 
@@ -237,9 +234,9 @@ int muxcustom_main();
 
 int muxdanger_main();
 
-int muxremap_main();
-
 int muxdevice_main();
+
+int muxdistemp_main();
 
 int muxdownload_main(char *type);
 
@@ -282,6 +279,8 @@ int muxpass_main(int auth_type);
 int muxpasscfg_main();
 
 int muxpicker_main(char *type, char *ex_dir);
+
+int muxremap_main();
 
 int muxtheme_main(char *ex_dir);
 

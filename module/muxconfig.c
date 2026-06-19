@@ -31,7 +31,6 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECT, "connect", 0);
     INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom", 0);
     INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.INTERFACE, "interface", 0);
-    INIT_STATIC_ITEM(-1, config, Colour, lang.MUXCONFIG.COLOUR, "colour", 0);
     INIT_STATIC_ITEM(-1, config, Overlay, lang.MUXCONFIG.OVERLAY, "overlay", 0);
     INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language", 0);
     INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power", 0);
@@ -42,11 +41,7 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, false);
 
     if (!storage_available()) HIDE_STATIC_ITEM(config, Storage);
-
-    if (hdmi_mode) {
-        HIDE_STATIC_ITEM(config, Colour);
-        HIDE_STATIC_ITEM(config, Overlay);
-    }
+    if (hdmi_mode) HIDE_STATIC_ITEM(config, Overlay);
 
     gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 1, 0);
 }
@@ -68,7 +63,6 @@ static void handle_a(void) {
             {"connect",  &kiosk.CONFIG.CONNECTIVITY,  NULL},
             {"custom",   &kiosk.CONFIG.CUSTOMISATION, NULL},
             {"visual",   &kiosk.SETTING.VISUAL,       NULL},
-            {"colour",   &kiosk.SETTING.COLOUR,       NULL},
             {"overlay",  &kiosk.SETTING.OVERLAY,      NULL},
             {"language", &kiosk.CONFIG.LANGUAGE,      NULL},
             {"power",    &kiosk.SETTING.POWER,        NULL},
