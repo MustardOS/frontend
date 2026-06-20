@@ -274,6 +274,17 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_x(void) {
+    if (msgbox_active || hold_call) return;
+
+    if (current_item_index == 5) {
+        play_sound(SND_CONFIRM);
+
+        load_mux("kiosk");
+        mux_input_stop();
+    }
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || hold_call || confirm_mode) return;
 
@@ -548,19 +559,12 @@ int muxlaunch_main(void) {
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
+                    [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
-            },
-            .combo = {
-                    {
-                            .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_Y),
-                            .press_handler = launch_kiosk,
-                            .hold_handler = launch_kiosk,
-                    },
-            },
-            .combo_count = 1
+            }
     };
 
     init_input(&input_opts, true);
