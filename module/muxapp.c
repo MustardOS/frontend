@@ -288,7 +288,7 @@ static void create_app_items(void) {
             lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
             if (ui_lblAppItemGlyph) {
                 apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, items[i].glyph_icon);
-                if (lv_img_get_src(ui_lblAppItemGlyph) == NULL) apply_app_glyph(items[i].extra_data, items[i].glyph_icon, ui_lblAppItemGlyph);
+                if (config.VISUAL.LISTGLYPH && lv_img_get_src(ui_lblAppItemGlyph) == NULL) apply_app_glyph(items[i].extra_data, items[i].glyph_icon, ui_lblAppItemGlyph);
                 lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
             }
 
