@@ -381,15 +381,19 @@ void timer_destroy_all(void) {
 }
 
 static char last_theme_name[MAX_BUFFER_SIZE] = "";
+static int init_fonts_first_call = 1;
 
 void init_fonts(void) {
     if (strcmp(last_theme_name, config.THEME.ACTIVE) != 0) {
         snprintf(last_theme_name, sizeof(last_theme_name), "%s", config.THEME.ACTIVE);
-        if (theme_has_font()) {
-            config.SETTINGS.ADVANCED.FONT = 1;
-        } else if (config.SETTINGS.ADVANCED.FONT == 1) {
-            config.SETTINGS.ADVANCED.FONT = 2;
+        if (!init_fonts_first_call) {
+            if (theme_has_font()) {
+                config.SETTINGS.ADVANCED.FONT = 1;
+            } else if (config.SETTINGS.ADVANCED.FONT == 1) {
+                config.SETTINGS.ADVANCED.FONT = 2;
+            }
         }
+        init_fonts_first_call = 0;
     }
 
     static int prev_shadow = -1;
