@@ -82,6 +82,21 @@ static void save_glyph_dropdown(lv_obj_t *dropdown, int original, const char *ke
     (*is_modified)++;
 }
 
+static void restore_width_dropdown(lv_obj_t *dropdown, int16_t stored) {
+    uint32_t idx = 0;
+    if (stored >= 10 && stored <= 100) idx = (uint32_t)(stored - 9);
+    lv_dropdown_set_selected(dropdown, idx);
+}
+
+static void save_width_dropdown(lv_obj_t *dropdown, int original, const char *key, int16_t *cfg, int *is_modified) {
+    uint32_t sel = lv_dropdown_get_selected(dropdown);
+    if ((int) sel == original) return;
+    int16_t val = (sel >= 1) ? (int16_t)(sel + 9) : 0;
+    write_text_to_file(key, "w", INT, (int) val);
+    *cfg = val;
+    (*is_modified)++;
+}
+
 static void do_reset(void) {
     lv_dropdown_set_selected(ui_droHeaderHeight_themeopt, 0);
     lv_dropdown_set_selected(ui_droFooterHeight_themeopt, 0);
@@ -90,6 +105,7 @@ static void do_reset(void) {
     lv_dropdown_set_selected(ui_droGlyphFooter_themeopt, 0);
     lv_dropdown_set_selected(ui_droGlyphHeader_themeopt, 0);
     lv_dropdown_set_selected(ui_droGlyphGrid_themeopt, 0);
+    lv_dropdown_set_selected(ui_droLabelWidth_themeopt, 0);
     play_sound(SND_MUOS);
 }
 
@@ -118,6 +134,7 @@ static void restore_themeopt_options(void) {
     restore_glyph_dropdown(ui_droGlyphFooter_themeopt, config.SETTINGS.THEMEOPT.GLYPH_SIZE_FOOTER);
     restore_glyph_dropdown(ui_droGlyphHeader_themeopt, config.SETTINGS.THEMEOPT.GLYPH_SIZE_HEADER);
     restore_glyph_dropdown(ui_droGlyphGrid_themeopt, config.SETTINGS.THEMEOPT.GLYPH_SIZE_GRID);
+    restore_width_dropdown(ui_droLabelWidth_themeopt, config.SETTINGS.THEMEOPT.LABEL_WIDTH);
 }
 
 static void save_themeopt_options(void) {
@@ -139,6 +156,9 @@ static void save_themeopt_options(void) {
     save_glyph_dropdown(ui_droGlyphGrid_themeopt, GlyphGrid_original,
                         CONF_CONFIG_PATH "settings/theme/glyph_size_grid",
                         &config.SETTINGS.THEMEOPT.GLYPH_SIZE_GRID, &is_modified);
+    save_width_dropdown(ui_droLabelWidth_themeopt, LabelWidth_original,
+                        CONF_CONFIG_PATH "settings/theme/label_width",
+                        &config.SETTINGS.THEMEOPT.LABEL_WIDTH, &is_modified);
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 }
@@ -146,6 +166,7 @@ static void save_themeopt_options(void) {
 static void init_navigation_group(void) {
     char *height_options = generate_number_string(0, 64, 1, lang.MUXTHEMEOPT.SIZE_DEFAULT, NULL, NULL, 0);
     char *count_options = generate_number_string(1, 64, 1, lang.MUXTHEMEOPT.SIZE_DEFAULT, NULL, NULL, 0);
+    char *width_options = generate_number_string(10, 100, 1, lang.MUXTHEMEOPT.SIZE_DEFAULT, "%", NULL, 1);
 
     char glyph_options[256];
     snprintf(glyph_options, sizeof(glyph_options),
@@ -161,6 +182,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, themeopt, GlyphFooter, lang.MUXTHEMEOPT.GLYPH_FOOTER, "glyphfooter", NULL, 0);
     INIT_OPTION_ITEM(-1, themeopt, GlyphHeader, lang.MUXTHEMEOPT.GLYPH_HEADER, "glyphheader", NULL, 0);
     INIT_OPTION_ITEM(-1, themeopt, GlyphGrid, lang.MUXTHEMEOPT.GLYPH_GRID, "glyphgrid", NULL, 0);
+    INIT_OPTION_ITEM(-1, themeopt, LabelWidth, lang.MUXTHEMEOPT.LABEL_WIDTH, "labelwidth", NULL, 0);
 
     apply_theme_list_drop_down(&theme, ui_droHeaderHeight_themeopt, height_options);
     apply_theme_list_drop_down(&theme, ui_droFooterHeight_themeopt, height_options);
@@ -169,9 +191,11 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droGlyphFooter_themeopt, glyph_options);
     apply_theme_list_drop_down(&theme, ui_droGlyphHeader_themeopt, glyph_options);
     apply_theme_list_drop_down(&theme, ui_droGlyphGrid_themeopt, glyph_options);
+    apply_theme_list_drop_down(&theme, ui_droLabelWidth_themeopt, width_options);
 
     free(height_options);
     free(count_options);
+    free(width_options);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);

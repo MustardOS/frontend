@@ -302,6 +302,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_FOOTER, &d, "glyph_size_footer", -2);
     CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_HEADER, &d, "glyph_size_header", -2);
     CFG_INT(config->SETTINGS.THEMEOPT.GLYPH_SIZE_GRID, &d, "glyph_size_grid", -2);
+    CFG_INT(config->SETTINGS.THEMEOPT.LABEL_WIDTH, &d, "label_width", 0);
 
     // settings/remap/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/remap");
@@ -351,6 +352,8 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->VISUAL.MIXEDCONTENT, &d, "mixedcontent", 0);
     CFG_INT(config->VISUAL.FORWARDHISTORY, &d, "forwardhistory", 1);
     CFG_INT(config->VISUAL.NAMESCROLL, &d, "namescroll", 1);
+    CFG_INT(config->VISUAL.LABELSCROLLSPEED, &d, "labelscrollspeed", 2);
+    CFG_INT(config->VISUAL.LISTGLYPH, &d, "listglyph", 1);
     CFG_INT(config->VISUAL.RENDERSHADOWS, &d, "shadow", 1);
 
     // bluetooth/

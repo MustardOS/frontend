@@ -12,6 +12,7 @@ extern char *hidden_visible[];
 extern char *toggle_icon_visible[];
 extern char *battery_display[];
 extern char *debug_log_mode[];
+extern char *scroll_speed[];
 
 struct mux_lang {
     struct {
@@ -137,6 +138,9 @@ struct mux_lang {
         char TEXT_ICON[MAX_BUFFER_SIZE];
         char STANDARD[MAX_BUFFER_SIZE];
         char VERBOSE[MAX_BUFFER_SIZE];
+        char SLOW[MAX_BUFFER_SIZE];
+        char MEDIUM[MAX_BUFFER_SIZE];
+        char FAST[MAX_BUFFER_SIZE];
         char UNSAVED[MAX_BUFFER_SIZE];
         char CRASH_TITLE[MAX_BUFFER_SIZE];
         char CRASH_MESSAGE[MAX_BUFFER_SIZE];
@@ -1648,6 +1652,7 @@ struct mux_lang {
         char SIZE_DEFAULT[MAX_BUFFER_SIZE];
         char GLYPH_AUTO[MAX_BUFFER_SIZE];
         char GLYPH_NATIVE[MAX_BUFFER_SIZE];
+        char LABEL_WIDTH[MAX_BUFFER_SIZE];
         struct {
             char HEADERHEIGHT[MAX_BUFFER_SIZE];
             char FOOTERHEIGHT[MAX_BUFFER_SIZE];
@@ -1656,6 +1661,7 @@ struct mux_lang {
             char GLYPHFOOTER[MAX_BUFFER_SIZE];
             char GLYPHHEADER[MAX_BUFFER_SIZE];
             char GLYPHGRID[MAX_BUFFER_SIZE];
+            char LABELWIDTH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTHEMEOPT;
 
@@ -1860,6 +1866,8 @@ struct mux_lang {
         char MIXEDCONTENT[MAX_BUFFER_SIZE];
         char FORWARDHISTORY[MAX_BUFFER_SIZE];
         char NAMESCROLL[MAX_BUFFER_SIZE];
+        char LABELSCROLLSPEED[MAX_BUFFER_SIZE];
+        char LISTGLYPH[MAX_BUFFER_SIZE];
         char RENDERSHADOWS[MAX_BUFFER_SIZE];
         struct {
             char DISABLED[MAX_BUFFER_SIZE];
@@ -1924,6 +1932,8 @@ struct mux_lang {
             char MIXEDCONTENT[MAX_BUFFER_SIZE];
             char FORWARDHISTORY[MAX_BUFFER_SIZE];
             char NAMESCROLL[MAX_BUFFER_SIZE];
+            char LABELSCROLLSPEED[MAX_BUFFER_SIZE];
+            char LISTGLYPH[MAX_BUFFER_SIZE];
             char RENDERSHADOWS[MAX_BUFFER_SIZE];
             char OVERLAYIMAGE[MAX_BUFFER_SIZE];
             char OVERLAYTRANSPARENCY[MAX_BUFFER_SIZE];

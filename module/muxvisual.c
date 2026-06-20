@@ -86,6 +86,8 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, ForwardHistory, "visual/forwardhistory", INT, 0);
     CHECK_AND_SAVE_STD(visual, NameScroll, "visual/namescroll", INT, 0);
+    CHECK_AND_SAVE_STD(visual, LabelScrollSpeed, "visual/labelscrollspeed", INT, 0);
+    CHECK_AND_SAVE_STD(visual, ListGlyph, "visual/listglyph", INT, 0);
     CHECK_AND_SAVE_STD(visual, RenderShadows, "visual/shadow", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
 
@@ -123,6 +125,13 @@ static void init_navigation_group(void) {
             lang.MUXVISUAL.SCROLL_MODE.BOUNCE
     };
 
+    char *label_scroll_speed[] = {
+            scroll_speed[0],
+            scroll_speed[1],
+            scroll_speed[2],
+            scroll_speed[3]
+    };
+
     char *dialogue_transition[] = {
             lang.MUXCONTENT.BOX_ART.TRANSITION.FADE_IN,
             lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_RIGHT,
@@ -149,6 +158,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, DialogueTransition, lang.MUXVISUAL.DIALOGUETRANSITION, "dialoguetransition", dialogue_transition, 14);
     INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, NameScroll, lang.MUXVISUAL.NAMESCROLL, "namescroll", scroll_mode, 3);
+    INIT_OPTION_ITEM(-1, visual, LabelScrollSpeed, lang.MUXVISUAL.LABELSCROLLSPEED, "labelscrollspeed", label_scroll_speed, 4);
+    INIT_OPTION_ITEM(-1, visual, ListGlyph, lang.MUXVISUAL.LISTGLYPH, "listglyph", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLYFOLDER, "friendlyfolder", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.THETITLEFORMAT, "thetitleformat", disabled_enabled, 2);

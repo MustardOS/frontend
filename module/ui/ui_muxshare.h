@@ -456,7 +456,8 @@
     THEMEOPT(GlyphList,        GLYPHLIST,        "glyphlist")    \
     THEMEOPT(GlyphFooter,      GLYPHFOOTER,      "glyphfooter")  \
     THEMEOPT(GlyphHeader,      GLYPHHEADER,      "glyphheader")  \
-    THEMEOPT(GlyphGrid,        GLYPHGRID,        "glyphgrid")
+    THEMEOPT(GlyphGrid,        GLYPHGRID,        "glyphgrid")    \
+    THEMEOPT(LabelWidth,       LABELWIDTH,       "labelwidth")
 
 #define TWEAKADV_ELEMENTS                             \
     TWEAKADV(Accelerate,  ACCELERATE,  "accelerate")  \
@@ -518,6 +519,8 @@
     VISUAL(DialogueTransition,    DIALOGUETRANSITION,    "dialoguetransition")    \
     VISUAL(Name,                  NAME,                  "name")                  \
     VISUAL(NameScroll,            NAMESCROLL,            "namescroll")            \
+    VISUAL(LabelScrollSpeed,      LABELSCROLLSPEED,      "labelscrollspeed")      \
+    VISUAL(ListGlyph,             LISTGLYPH,             "listglyph")             \
     VISUAL(Dash,                  DASH,                  "dash")                  \
     VISUAL(FriendlyFolder,        FRIENDLYFOLDER,        "friendlyfolder")        \
     VISUAL(TheTitleFormat,        THETITLEFORMAT,        "thetitleformat")        \

@@ -17,6 +17,7 @@ char *hidden_visible[2];
 char *toggle_icon_visible[3];
 char *battery_display[3];
 char *debug_log_mode[3];
+char *scroll_speed[4];
 
 void load_language_file(const char *module) {
     char language_file[MAX_BUFFER_SIZE];
@@ -107,6 +108,11 @@ void common_var_init(void) {
     debug_log_mode[0] = lang.GENERIC.DISABLED;
     debug_log_mode[1] = lang.GENERIC.STANDARD;
     debug_log_mode[2] = lang.GENERIC.VERBOSE;
+
+    scroll_speed[0] = lang.GENERIC.DISABLED;
+    scroll_speed[1] = lang.GENERIC.SLOW;
+    scroll_speed[2] = lang.GENERIC.MEDIUM;
+    scroll_speed[3] = lang.GENERIC.FAST;
 }
 
 void load_lang(struct mux_lang *lang) {
@@ -238,6 +244,9 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.TEXT_ICON, "Text + Icon");
     GENERIC_FIELD(lang->GENERIC.STANDARD, "Standard");
     GENERIC_FIELD(lang->GENERIC.VERBOSE, "Verbose");
+    GENERIC_FIELD(lang->GENERIC.SLOW, "Slow");
+    GENERIC_FIELD(lang->GENERIC.MEDIUM, "Medium");
+    GENERIC_FIELD(lang->GENERIC.FAST, "Fast");
     GENERIC_FIELD(lang->GENERIC.UNSAVED, "Unsaved Changes");
     GENERIC_FIELD(lang->GENERIC.CRASH_TITLE, "Guru Meditation Error");
     GENERIC_FIELD(lang->GENERIC.CRASH_MESSAGE, "If this continues, please report it to the MustardOS team!");
@@ -1528,6 +1537,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.SIZE_DEFAULT, "Default");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.GLYPH_AUTO, "Auto");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.GLYPH_NATIVE, "Native");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.LABEL_WIDTH, "Label Width");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.HEADERHEIGHT, "Override the theme header bar height in pixels (Default uses the theme value)");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.FOOTERHEIGHT, "Override the theme footer bar height in pixels (Default uses the theme value)");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.CONTENTITEMCOUNT, "Override the number of visible list items (0 uses the theme default)");
@@ -1535,6 +1545,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.GLYPHFOOTER, "Override the footer glyph render size in pixels (Default uses the theme value, Auto fits to item height, Native uses the actual size)");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.GLYPHHEADER, "Override the header glyph render size in pixels (Default uses the theme value, Auto fits to header height, Native uses the actual size)");
     SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.GLYPHGRID, "Override the grid glyph render size in pixels (Default uses the theme value, Auto fits to the cell, Native uses the actual size)");
+    SPECIFIC_FIELD(lang->MUXTHEMEOPT.HELP.LABELWIDTH, "Override the maximum width of the left side option label as a percentage of content width (Default uses the theme value)");
 
     // muxtimezone
     SPECIFIC_FIELD(lang->MUXTIMEZONE.TITLE, "TIMEZONE");
@@ -1697,7 +1708,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.CONTENTHISTORY, "History In Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.MIXEDCONTENT, "Mixed Folder Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.FORWARDHISTORY, "Forward History");
-    SPECIFIC_FIELD(lang->MUXVISUAL.NAMESCROLL, "Name Scroll Style");
+    SPECIFIC_FIELD(lang->MUXVISUAL.NAMESCROLL, "Label Scroll Style");
+    SPECIFIC_FIELD(lang->MUXVISUAL.LABELSCROLLSPEED, "Label Scroll Speed");
+    SPECIFIC_FIELD(lang->MUXVISUAL.LISTGLYPH, "List Glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.RENDERSHADOWS, "Shadow Rendering");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.DISABLED, "Disabled");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.CONTINUOUS, "Continuous");
@@ -1741,7 +1754,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CONTENTHISTORY, "Toggle the history visibility within Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.MIXEDCONTENT, "If enabled folders within content explorer will be mixed in with other content alphabetically");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FORWARDHISTORY, "Toggle remembering last selected item when returning to folders in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAMESCROLL, "Controls how long content names scroll when they exceed the display width - Disabled stops all scrolling, Continuous loops indefinitely, Bounce scrolls to the end then returns");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAMESCROLL, "Controls how labels scroll when they exceed half the display width - Disabled stops all scrolling, Continuous loops indefinitely, Bounce scrolls to the end then returns");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.LABELSCROLLSPEED, "Controls the scroll speed for labels - Disabled turns off all scrolling, Slow and Fast adjust the animation speed with proportional pause durations");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.LISTGLYPH, "Toggle icon glyphs for menu and content list items - does not affect header, footer, grid, or carousel glyphs");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.RENDERSHADOWS, "Toggle a subtle drop shadow rendered behind list text and glyphs");
 
     // muxwebserv

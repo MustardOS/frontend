@@ -484,6 +484,7 @@ struct theme_config {
             int16_t WIDTH;
         } CONTENT;
         int16_t ANTIALIASING;
+        int16_t LABEL_WIDTH;
     } MISC;
 
     struct {
@@ -529,6 +530,12 @@ void apply_size_to_content(struct theme_config *c_theme, lv_obj_t *ui_pnlContent
 void apply_theme_list_panel(lv_obj_t *ui_pnlList);
 
 void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text);
+
+void apply_theme_option_item_label(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text);
+
+void apply_option_label_long_dot(lv_obj_t *ui_lblItem);
+
+void set_option_label_scroll_mode(lv_obj_t *ui_lblItem);
 
 void apply_theme_list_value(struct theme_config *lv_theme, lv_obj_t *ui_lblItemValue, const char *item_text);
 

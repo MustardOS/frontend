@@ -506,6 +506,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.IMAGE_OVERLAY = 0;
     theme->MISC.NAVIGATION_TYPE = 0;
     theme->MISC.ANTIALIASING = 1;
+    theme->MISC.LABEL_WIDTH = 57;
 
     theme->GLYPH.LIST = 0;
     theme->GLYPH.FOOTER = 0;
@@ -1206,6 +1207,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", theme->MISC.IMAGE_OVERLAY);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
+    theme->MISC.LABEL_WIDTH = (int16_t) get_ini_int(muos_theme, "misc", "LABEL_WIDTH", theme->MISC.LABEL_WIDTH);
 
     theme->GLYPH.LIST = get_ini_int(muos_theme, "glyph", "LIST", theme->GLYPH.LIST);
     theme->GLYPH.FOOTER = get_ini_int(muos_theme, "glyph", "FOOTER", theme->GLYPH.FOOTER);
@@ -1417,16 +1419,43 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 }
 
+static void apply_label_scroll_speed(lv_obj_t *ui_lblItem, int is_bounce) {
+    static int inited = 0;
+    static lv_anim_t tpl[3][2]; // [speed_idx][is_bounce]
+
+    if (!inited) {
+        static const uint32_t delays_cont[3] = {2000, 1000, 500};
+        static const uint32_t delays_bounce[3] = {3000, 2000, 1000};
+        for (int s = 0; s < 3; s++) {
+            lv_anim_init(&tpl[s][0]);
+            lv_anim_set_delay(&tpl[s][0], delays_cont[s]);
+            lv_anim_init(&tpl[s][1]);
+            lv_anim_set_delay(&tpl[s][1], delays_bounce[s]);
+        }
+        inited = 1;
+    }
+
+    int speed_level = config.VISUAL.LABELSCROLLSPEED;
+    if (speed_level < 1 || speed_level > 3) speed_level = 2;
+    int idx = speed_level - 1;
+
+    static const uint32_t px_per_sec[3] = {25, 60, 100};
+    lv_obj_set_style_anim(ui_lblItem, &tpl[idx][is_bounce ? 1 : 0], 0);
+    lv_obj_set_style_anim_speed(ui_lblItem, px_per_sec[idx], 0);
+}
+
 void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, int scroll_mode) {
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
-    if (scroll_mode == 0) return;
+    if (scroll_mode == 0 || config.VISUAL.LABELSCROLLSPEED == 0) return;
 
     // Only do the scroll animation if the label is dotted
     lv_obj_update_layout(ui_lblItem);
     lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
     if (!lv_label_is_text_dotted(ui_lblItem)) return;
 
-    lv_label_set_long_mode(ui_lblItem, scroll_mode == 2 ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
+    int is_bounce = (scroll_mode == 2);
+    apply_label_scroll_speed(ui_lblItem, is_bounce);
+    lv_label_set_long_mode(ui_lblItem, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
 }
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem) {
@@ -1513,6 +1542,8 @@ void init_item_animation(void) {
 }
 
 void init_item_style(struct theme_config *theme) {
+    if (!config.VISUAL.LISTGLYPH) theme->FONT.LIST_PAD_LEFT = 6;
+
     lv_style_init(&style_list_item_default);
     lv_style_init(&style_list_item_focused);
 
@@ -1568,8 +1599,38 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, con
     }
 }
 
+void apply_theme_option_item_label(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text) {
+    apply_theme_list_item(theme, ui_lblItem, item_text);
+
+    int label_pct = (config.SETTINGS.THEMEOPT.LABEL_WIDTH > 0)
+        ? config.SETTINGS.THEMEOPT.LABEL_WIDTH : theme->MISC.LABEL_WIDTH;
+    lv_coord_t max_w = (lv_coord_t) (theme->MISC.CONTENT.WIDTH * label_pct / 100);
+    lv_obj_set_style_max_width(ui_lblItem, max_w, MU_OBJ_MAIN_DEFAULT);
+
+    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
+    lv_obj_set_height(ui_lblItem, lv_font_get_line_height(lv_obj_get_style_text_font(ui_lblItem, LV_PART_MAIN)));
+}
+
+void apply_option_label_long_dot(lv_obj_t *ui_lblItem) {
+    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
+}
+
+void set_option_label_scroll_mode(lv_obj_t *ui_lblItem) {
+    int scroll_mode = config.VISUAL.NAMESCROLL;
+    if (scroll_mode == 0 || config.VISUAL.LABELSCROLLSPEED == 0) return;
+
+    lv_obj_update_layout(ui_lblItem);
+    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
+    if (!lv_label_is_text_dotted(ui_lblItem)) return;
+
+    int is_bounce = (scroll_mode == 2);
+    apply_label_scroll_speed(ui_lblItem, is_bounce);
+    lv_label_set_long_mode(ui_lblItem, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
+}
+
 void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyph,
                             const char *screen_name, const char *item_glyph) {
+    if (!config.VISUAL.LISTGLYPH) return;
     if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0 && theme->LIST_FOCUS.GLYPH_ALPHA == 0) return;
 
     char glyph_image_embed[MAX_BUFFER_SIZE];

@@ -353,14 +353,14 @@ void resolve_grid_item_images(const char *mux_dim, const char *mux_module, const
         snprintf(ELEMENT, sizeof(ELEMENT), ""); \
     } while (0)
 
-#define INIT_OPTION_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)          \
-    do {                                                                            \
-        int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                 \
-                                                                                    \
-        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
-        apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
-        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
-        apply_theme_list_drop_down(&theme, ui_dro##NAME##_##MODULE, NULL);          \
+#define INIT_OPTION_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)                \
+    do {                                                                                  \
+        int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                       \
+                                                                                          \
+        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                                  \
+        apply_theme_option_item_label(&theme, ui_lbl##NAME##_##MODULE, LABEL);            \
+        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH);       \
+        apply_theme_list_drop_down(&theme, ui_dro##NAME##_##MODULE, NULL);                \
                                                                                     \
         if ((OPTION) != NULL && (COUNT) > 0) {                                      \
             add_drop_down_options(ui_dro##NAME##_##MODULE, OPTION, COUNT);          \
@@ -430,14 +430,14 @@ void resolve_grid_item_images(const char *mux_dim, const char *mux_module, const
         ui_count--;                                                       \
     } while (0)
 
-#define INIT_VALUE_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, VALUE)                   \
-    do {                                                                            \
-        int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                 \
-                                                                                    \
-        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
-        apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
-        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
-        apply_theme_list_value(&theme, ui_lbl##NAME##Value_##MODULE, VALUE);        \
+#define INIT_VALUE_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, VALUE)                         \
+    do {                                                                                  \
+        int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                       \
+                                                                                          \
+        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                                  \
+        apply_theme_option_item_label(&theme, ui_lbl##NAME##_##MODULE, LABEL);            \
+        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH);       \
+        apply_theme_list_value(&theme, ui_lbl##NAME##Value_##MODULE, VALUE);              \
                                                                                     \
         ui_objects[_idx] = ui_lbl##NAME##_##MODULE;                                 \
         ui_objects_value[_idx] = ui_lbl##NAME##Value_##MODULE;                      \

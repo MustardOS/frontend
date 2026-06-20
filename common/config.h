@@ -254,6 +254,7 @@ struct mux_config {
             int16_t GLYPH_SIZE_FOOTER;
             int16_t GLYPH_SIZE_HEADER;
             int16_t GLYPH_SIZE_GRID;
+            int16_t LABEL_WIDTH;
         } THEMEOPT;
         struct {
             int16_t LAYOUT;
@@ -304,6 +305,8 @@ struct mux_config {
         int16_t MIXEDCONTENT;
         int16_t FORWARDHISTORY;
         int16_t NAMESCROLL;
+        int16_t LABELSCROLLSPEED;
+        int16_t LISTGLYPH;
         int16_t RENDERSHADOWS;
     } VISUAL;
 

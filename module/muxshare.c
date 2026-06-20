@@ -157,7 +157,7 @@ void overlay_display(void) {
         load_kiosk_image(ui_screen, kiosk_image);
     }
 
-    overlay_image = lv_obj_create(ui_screen);
+    overlay_image = lv_obj_create(ui_screen_container);
     lv_obj_remove_style_all(overlay_image);
     lv_obj_clear_flag(overlay_image, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     load_overlay_image(ui_screen, overlay_image);
@@ -508,7 +508,8 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset,
     }
 
     for (int step = 0; step < steps; ++step) {
-        if (long_dot) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        if (long_dot == 1) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        else if (long_dot == 2) apply_option_label_long_dot(lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -523,9 +524,11 @@ void gen_step_movement(int steps, int direction, int long_dot, int count_offset,
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT + count_offset, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    if (long_dot) {
+    if (long_dot == 1) {
         lv_obj_update_layout(ui_pnlContent);
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
+    } else if (long_dot == 2) {
+        set_option_label_scroll_mode(lv_group_get_focused(ui_group));
     }
 
     nav_moved = 1;
@@ -540,11 +543,11 @@ void list_nav_cb_next(int steps) {
 }
 
 void list_nav_cb_prev_nowrap(int steps) {
-    gen_step_movement(steps, -1, 0, 0, 1);
+    gen_step_movement(steps, -1, 2, 0, 1);
 }
 
 void list_nav_cb_next_nowrap(int steps) {
-    gen_step_movement(steps, +1, 0, 0, 1);
+    gen_step_movement(steps, +1, 2, 0, 1);
 }
 
 void handle_msgbox_dismiss(void) {

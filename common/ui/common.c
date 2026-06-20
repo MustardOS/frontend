@@ -484,6 +484,8 @@ void fade_out_screen(void) {
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
     ui_screen_container = lv_obj_create(NULL);
+    lv_obj_set_style_border_width(ui_screen_container, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_screen_container, 0, MU_OBJ_MAIN_DEFAULT);
 
     if (ui_screen_temp == NULL) ui_screen_temp = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
@@ -500,6 +502,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     ui_screen = lv_obj_create(ui_screen_container);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_border_width(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
                                        ? theme->SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
