@@ -307,6 +307,8 @@ struct mux_config {
         int16_t NAMESCROLL;
         int16_t LABELSCROLLSPEED;
         int16_t LISTGLYPH;
+        int16_t BOUNCEANIMATION;
+        int16_t BOUNCEDIRECTION;
         int16_t RENDERSHADOWS;
     } VISUAL;
 

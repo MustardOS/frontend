@@ -68,3 +68,9 @@ void footer_nav_check_scroll(void);
 void hide_info_box(void);
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);
+
+void nav_suppress_next_bounce(void);
+
+void nav_unsuppress_bounce(void);
+
+void nav_focus_bounce_cb(lv_group_t *group);

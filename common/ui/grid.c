@@ -47,18 +47,15 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, size_t catalogue_name_size,
-                                                char *program, size_t program_size) {
-    if (!catalogue_name || catalogue_name_size == 0 || !program || program_size == 0) return;
-
+static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, char *program) {
     catalogue_name[0] = '\0';
     program[0] = '\0';
 
-    if (index < 0 || (size_t) index >= item_count) return;
+    if ((size_t) index >= item_count) return;
 
     if (strcmp(mux_module, "muxapp") == 0) {
-        snprintf(catalogue_name, catalogue_name_size, "Application");
-        snprintf(program, program_size, "%s",
+        snprintf(catalogue_name, MAX_BUFFER_SIZE, "Application");
+        snprintf(program, MAX_BUFFER_SIZE, "%s",
                  items[index].glyph_icon && items[index].glyph_icon[0] ? items[index].glyph_icon : "app");
         return;
     }
@@ -73,10 +70,10 @@ static void set_grid_catalogue_and_program_name(int index, char *catalogue_name,
             char *item_file = get_last_dir(file_path);
 
             if (item_dir && item_file && item_file[0]) {
-                get_catalogue_name(item_dir, item_file, catalogue_name, catalogue_name_size);
+                get_catalogue_name(item_dir, item_file, catalogue_name, MAX_BUFFER_SIZE);
 
                 char *item_no_ext = strip_ext(item_file);
-                snprintf(program, program_size, "%s", item_no_ext ? item_no_ext : item_file);
+                snprintf(program, MAX_BUFFER_SIZE, "%s", item_no_ext ? item_no_ext : item_file);
                 free(item_no_ext);
             }
 
@@ -85,21 +82,21 @@ static void set_grid_catalogue_and_program_name(int index, char *catalogue_name,
             char sys_dir_copy[MAX_BUFFER_SIZE];
             snprintf(sys_dir_copy, sizeof(sys_dir_copy), "%s", sys_dir);
 
-            get_catalogue_name(sys_dir_copy, items[index].name, catalogue_name, catalogue_name_size);
+            get_catalogue_name(sys_dir_copy, items[index].name, catalogue_name, MAX_BUFFER_SIZE);
 
             char *item_no_ext = strip_ext(items[index].name);
-            snprintf(program, program_size, "%s", item_no_ext ? item_no_ext : items[index].name);
+            snprintf(program, MAX_BUFFER_SIZE, "%s", item_no_ext ? item_no_ext : items[index].name);
             free(item_no_ext);
         }
 
         return;
     }
 
-    snprintf(catalogue_name, catalogue_name_size, "%s",
+    snprintf(catalogue_name, MAX_BUFFER_SIZE, "%s",
              strcmp(mux_module, "muxplore") == 0 ? "Folder" : "Collection");
 
     char *item_no_ext = strip_ext(items[index].name);
-    snprintf(program, program_size, "%s", item_no_ext ? item_no_ext : items[index].name);
+    snprintf(program, MAX_BUFFER_SIZE, "%s", item_no_ext ? item_no_ext : items[index].name);
     free(item_no_ext);
 }
 
@@ -109,7 +106,7 @@ void update_grid_image_paths(int index) {
     char catalogue_name[MAX_BUFFER_SIZE];
     char program[MAX_BUFFER_SIZE];
 
-    set_grid_catalogue_and_program_name(index, catalogue_name, sizeof(catalogue_name), program, sizeof(program));
+    set_grid_catalogue_and_program_name(index, catalogue_name, program);
 
     if (!catalogue_name[0] || !program[0]) {
         free(items[index].grid_image);
@@ -261,11 +258,13 @@ static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
     if (cell_image) lv_obj_clear_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
     if (cell_image_focused) lv_obj_clear_flag(cell_image_focused, LV_OBJ_FLAG_HIDDEN);
 
-    if (current_item_index == index && !is_carousel_grid_mode()) {
+    if (current_item_index == index) {
         lv_group_focus_obj(ui_pnlItem);
 
-        if (ui_lblItem) lv_group_focus_obj(ui_lblItem);
-        if (cell_image) lv_group_focus_obj(cell_image);
+        if (!is_carousel_grid_mode()) {
+            if (ui_lblItem) lv_group_focus_obj(ui_lblItem);
+            if (cell_image) lv_group_focus_obj(cell_image);
+        }
     }
 }
 

@@ -184,7 +184,7 @@ static int find_governor(char *governor) {
 
 static void set_saver(void) {
     const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power);
-    if (cnt <= SAVER_SPEED_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
+    if (cnt <= SAVER_SPEED_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.GENERIC.LUDICROUS, LV_DROPDOWN_POS_LAST);
 
     lv_dropdown_set_selected(ui_droSaverSpeed_power, SAVER_SPEED_COUNT);
     play_sound(SND_MUOS);
@@ -249,7 +249,7 @@ static void restore_power_options(void) {
 
     if (config.SETTINGS.POWER.SAVERSPEED == SAVER_SPEED_LUDICROUS) {
         const uint16_t cnt = lv_dropdown_get_option_cnt(ui_droSaverSpeed_power); // heh...
-        if (cnt <= SAVER_SPEED_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.MUXPOWER.SAVER.SPEED.LUDICROUS, LV_DROPDOWN_POS_LAST);
+        if (cnt <= SAVER_SPEED_COUNT) lv_dropdown_add_option(ui_droSaverSpeed_power, lang.GENERIC.LUDICROUS, LV_DROPDOWN_POS_LAST);
         lv_dropdown_set_selected(ui_droSaverSpeed_power, SAVER_SPEED_COUNT);
     } else {
         map_drop_down_to_index(ui_droSaverSpeed_power, config.SETTINGS.POWER.SAVERSPEED, saver_speed_values, SAVER_SPEED_COUNT, 0);

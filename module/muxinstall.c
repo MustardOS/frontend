@@ -101,7 +101,12 @@ static void init_navigation_group(void) {
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        nav_unsuppress_bounce();
+        play_sound(SND_NAVIGATE);
+    }
 
     for (int step = 0; step < steps; ++step) {
         if (!grid_mode_enabled) apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));

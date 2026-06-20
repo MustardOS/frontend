@@ -488,3 +488,92 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 
     return nav_next_return;
 }
+
+static lv_obj_t *bounce_prev_focused = NULL;
+static int bounce_suppress = 0;
+static lv_anim_exec_xcb_t bounce_prev_exec_cb = NULL;
+
+void nav_suppress_next_bounce(void) {
+    bounce_suppress = 1;
+    bounce_prev_focused = NULL;
+}
+
+void nav_unsuppress_bounce(void) {
+    bounce_suppress = 0;
+}
+
+static void focus_bounce_y_cb(void *obj, int32_t v) {
+    lv_obj_set_style_translate_y((lv_obj_t *) obj, (lv_coord_t) v, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void focus_bounce_x_cb(void *obj, int32_t v) {
+    lv_obj_set_style_translate_x((lv_obj_t *) obj, (lv_coord_t) v, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void focus_bounce_zoom_cb(void *obj, int32_t v) {
+    lv_obj_set_style_transform_zoom((lv_obj_t *) obj, (lv_coord_t) (256 + v), MU_OBJ_MAIN_DEFAULT);
+}
+
+static void reset_bounce_styles(lv_obj_t *obj) {
+    lv_obj_set_style_translate_y(obj, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_x(obj, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_transform_zoom(obj, 256, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_transform_pivot_x(obj, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_transform_pivot_y(obj, 0, MU_OBJ_MAIN_DEFAULT);
+}
+
+void nav_focus_bounce_cb(lv_group_t *group) {
+    if (bounce_prev_focused && lv_obj_is_valid(bounce_prev_focused)) {
+        lv_anim_del(bounce_prev_focused, bounce_prev_exec_cb);
+        reset_bounce_styles(bounce_prev_focused);
+    }
+
+    lv_obj_t *focused = lv_group_get_focused(group);
+    bounce_prev_focused = focused;
+
+    static const int bounce_travel[] = {0, 2, 4, 6, 8, 10, 30};
+    static const int zoom_travel[] = {0, 1, 3, 6, 9, 12, 32};
+
+    int level = config.VISUAL.BOUNCEANIMATION;
+    if (bounce_suppress || level <= 0 || level > 6) return;
+
+    if (!focused || !lv_obj_is_valid(focused)) return;
+
+    lv_anim_exec_xcb_t exec_cb;
+    switch (config.VISUAL.BOUNCEDIRECTION) {
+        case 1:
+            exec_cb = focus_bounce_y_cb;
+            break;
+        case 2:
+            exec_cb = focus_bounce_x_cb;
+            break;
+        default:
+            exec_cb = focus_bounce_zoom_cb;
+            break;
+    }
+
+    bounce_prev_exec_cb = exec_cb;
+
+    lv_anim_del(focused, exec_cb);
+    reset_bounce_styles(focused);
+
+    int travel;
+    if (exec_cb == focus_bounce_zoom_cb) {
+        lv_obj_set_style_transform_pivot_x(focused, lv_obj_get_width(focused) / 2, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_transform_pivot_y(focused, lv_obj_get_height(focused) / 2, MU_OBJ_MAIN_DEFAULT);
+        travel = zoom_travel[level];
+    } else {
+        travel = bounce_travel[level];
+    }
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, focused);
+    lv_anim_set_exec_cb(&a, exec_cb);
+    lv_anim_set_values(&a, 0, travel);
+    lv_anim_set_time(&a, 80);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+    lv_anim_set_playback_delay(&a, 20);
+    lv_anim_set_playback_time(&a, 130);
+    lv_anim_start(&a);
+}

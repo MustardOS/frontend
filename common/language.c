@@ -247,6 +247,14 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SLOW, "Slow");
     GENERIC_FIELD(lang->GENERIC.MEDIUM, "Medium");
     GENERIC_FIELD(lang->GENERIC.FAST, "Fast");
+    GENERIC_FIELD(lang->GENERIC.LOW, "Low");
+    GENERIC_FIELD(lang->GENERIC.HIGH, "High");
+    GENERIC_FIELD(lang->GENERIC.MINIMAL, "Minimal");
+    GENERIC_FIELD(lang->GENERIC.MAXIMUM, "Maximum");
+    GENERIC_FIELD(lang->GENERIC.HORIZONTAL, "Horizontal");
+    GENERIC_FIELD(lang->GENERIC.VERTICAL, "Vertical");
+    GENERIC_FIELD(lang->GENERIC.OUTWARD, "Outward");
+    GENERIC_FIELD(lang->GENERIC.LUDICROUS, "Ludicrous");
     GENERIC_FIELD(lang->GENERIC.UNSAVED, "Unsaved Changes");
     GENERIC_FIELD(lang->GENERIC.CRASH_TITLE, "Guru Meditation Error");
     GENERIC_FIELD(lang->GENERIC.CRASH_MESSAGE, "If this continues, please report it to the MustardOS team!");
@@ -1238,7 +1246,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SAVER.SPEED.CRUISE, "Cruise");
     SPECIFIC_FIELD(lang->MUXPOWER.SAVER.SPEED.FAST, "Fast");
     SPECIFIC_FIELD(lang->MUXPOWER.SAVER.SPEED.TURBO, "Turbo");
-    SPECIFIC_FIELD(lang->MUXPOWER.SAVER.SPEED.LUDICROUS, "Ludicrous");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.ERROR, "Idle Display must be less than Idle Sleep");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.DISPLAY, "Idle Input Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.SLEEP, "Idle Input Sleep Timeout");
@@ -1711,6 +1718,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.NAMESCROLL, "Label Scroll Style");
     SPECIFIC_FIELD(lang->MUXVISUAL.LABELSCROLLSPEED, "Label Scroll Speed");
     SPECIFIC_FIELD(lang->MUXVISUAL.LISTGLYPH, "List Glyph");
+    SPECIFIC_FIELD(lang->MUXVISUAL.BOUNCEANIMATION, "Bounce Animation");
+    SPECIFIC_FIELD(lang->MUXVISUAL.BOUNCEDIRECTION, "Bounce Direction");
     SPECIFIC_FIELD(lang->MUXVISUAL.RENDERSHADOWS, "Shadow Rendering");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.DISABLED, "Disabled");
     SPECIFIC_FIELD(lang->MUXVISUAL.SCROLL_MODE.CONTINUOUS, "Continuous");
@@ -1757,6 +1766,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAMESCROLL, "Controls how labels scroll when they exceed half the display width - Disabled stops all scrolling, Continuous loops indefinitely, Bounce scrolls to the end then returns");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.LABELSCROLLSPEED, "Controls the scroll speed for labels - Disabled turns off all scrolling, Slow and Fast adjust the animation speed with proportional pause durations");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.LISTGLYPH, "Toggle icon glyphs for menu and content list items - does not affect header, footer, grid, or carousel glyphs");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOUNCEANIMATION, "Controls the travel distance of the bounce animation when navigating between list and grid items");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOUNCEDIRECTION, "Controls whether the bounce animation moves vertically or horizontally when navigating between items");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.RENDERSHADOWS, "Toggle a subtle drop shadow rendered behind list text and glyphs");
 
     // muxwebserv

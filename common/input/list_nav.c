@@ -2,6 +2,7 @@
 #include "../init.h"
 #include "../ui/common.h"
 #include "../ui/grid.h"
+#include "../ui/nav.h"
 #include "../theme.h"
 
 static void (*list_nav_prev_cb)(int) = NULL;
@@ -14,10 +15,12 @@ void list_nav_set_callbacks(void (*prev)(int), void (*next)(int)) {
 }
 
 void handle_list_nav_prev(int steps) {
+    nav_unsuppress_bounce();
     if (list_nav_prev_cb) list_nav_prev_cb(steps);
 }
 
 void handle_list_nav_next(int steps) {
+    nav_unsuppress_bounce();
     if (list_nav_next_cb) list_nav_next_cb(steps);
 }
 

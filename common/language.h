@@ -141,6 +141,14 @@ struct mux_lang {
         char SLOW[MAX_BUFFER_SIZE];
         char MEDIUM[MAX_BUFFER_SIZE];
         char FAST[MAX_BUFFER_SIZE];
+        char LOW[MAX_BUFFER_SIZE];
+        char HIGH[MAX_BUFFER_SIZE];
+        char MINIMAL[MAX_BUFFER_SIZE];
+        char MAXIMUM[MAX_BUFFER_SIZE];
+        char HORIZONTAL[MAX_BUFFER_SIZE];
+        char VERTICAL[MAX_BUFFER_SIZE];
+        char OUTWARD[MAX_BUFFER_SIZE];
+        char LUDICROUS[MAX_BUFFER_SIZE];
         char UNSAVED[MAX_BUFFER_SIZE];
         char CRASH_TITLE[MAX_BUFFER_SIZE];
         char CRASH_MESSAGE[MAX_BUFFER_SIZE];
@@ -1319,7 +1327,6 @@ struct mux_lang {
                 char CRUISE[MAX_BUFFER_SIZE];
                 char FAST[MAX_BUFFER_SIZE];
                 char TURBO[MAX_BUFFER_SIZE];
-                char LUDICROUS[MAX_BUFFER_SIZE];
             } SPEED;
         } SAVER;
         struct {
@@ -1868,6 +1875,8 @@ struct mux_lang {
         char NAMESCROLL[MAX_BUFFER_SIZE];
         char LABELSCROLLSPEED[MAX_BUFFER_SIZE];
         char LISTGLYPH[MAX_BUFFER_SIZE];
+        char BOUNCEANIMATION[MAX_BUFFER_SIZE];
+        char BOUNCEDIRECTION[MAX_BUFFER_SIZE];
         char RENDERSHADOWS[MAX_BUFFER_SIZE];
         struct {
             char DISABLED[MAX_BUFFER_SIZE];
@@ -1934,6 +1943,8 @@ struct mux_lang {
             char NAMESCROLL[MAX_BUFFER_SIZE];
             char LABELSCROLLSPEED[MAX_BUFFER_SIZE];
             char LISTGLYPH[MAX_BUFFER_SIZE];
+            char BOUNCEANIMATION[MAX_BUFFER_SIZE];
+            char BOUNCEDIRECTION[MAX_BUFFER_SIZE];
             char RENDERSHADOWS[MAX_BUFFER_SIZE];
             char OVERLAYIMAGE[MAX_BUFFER_SIZE];
             char OVERLAYTRANSPARENCY[MAX_BUFFER_SIZE];

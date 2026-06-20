@@ -454,6 +454,9 @@ void reset_ui_groups(void) {
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
+
+    lv_group_set_focus_cb(ui_group_panel, nav_focus_bounce_cb);
+    nav_suppress_next_bounce();
 }
 
 void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_obj_t **panels, int long_dot) {

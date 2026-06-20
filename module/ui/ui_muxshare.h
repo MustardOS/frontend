@@ -521,6 +521,8 @@
     VISUAL(NameScroll,            NAMESCROLL,            "namescroll")            \
     VISUAL(LabelScrollSpeed,      LABELSCROLLSPEED,      "labelscrollspeed")      \
     VISUAL(ListGlyph,             LISTGLYPH,             "listglyph")             \
+    VISUAL(BounceAnimation,       BOUNCEANIMATION,       "bounceanimation")       \
+    VISUAL(BounceDirection,       BOUNCEDIRECTION,       "bouncedirection")       \
     VISUAL(Dash,                  DASH,                  "dash")                  \
     VISUAL(FriendlyFolder,        FRIENDLYFOLDER,        "friendlyfolder")        \
     VISUAL(TheTitleFormat,        THETITLEFORMAT,        "thetitleformat")        \
