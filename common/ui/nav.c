@@ -510,14 +510,29 @@ static void focus_bounce_x_cb(void *obj, int32_t v) {
     lv_obj_set_style_translate_x((lv_obj_t *) obj, (lv_coord_t) v, MU_OBJ_MAIN_DEFAULT);
 }
 
-static void focus_bounce_zoom_cb(void *obj, int32_t v) {
-    lv_obj_set_style_transform_zoom((lv_obj_t *) obj, (lv_coord_t) (256 + v), MU_OBJ_MAIN_DEFAULT);
+static void focus_outward_cb(void *obj, int32_t v) {
+    lv_obj_t *o = (lv_obj_t *) obj;
+    lv_obj_set_style_transform_zoom(o, (lv_coord_t) (256 + v), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_invalidate(lv_obj_get_parent(o));
+}
+
+static void focus_wobble_cb(void *obj, int32_t v) {
+    lv_obj_t *o = (lv_obj_t *) obj;
+    lv_obj_set_style_transform_angle(o, (lv_coord_t) v, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_invalidate(lv_obj_get_parent(o));
+}
+
+static void focus_shrink_cb(void *obj, int32_t v) {
+    lv_obj_t *o = (lv_obj_t *) obj;
+    lv_obj_set_style_transform_zoom(o, (lv_coord_t) (256 - v), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_invalidate(lv_obj_get_parent(o));
 }
 
 static void reset_bounce_styles(lv_obj_t *obj) {
     lv_obj_set_style_translate_y(obj, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_translate_x(obj, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_transform_zoom(obj, 256, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_transform_angle(obj, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_transform_pivot_x(obj, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_transform_pivot_y(obj, 0, MU_OBJ_MAIN_DEFAULT);
 }
@@ -532,23 +547,31 @@ void nav_focus_bounce_cb(lv_group_t *group) {
     bounce_prev_focused = focused;
 
     static const int bounce_travel[] = {0, 2, 4, 6, 8, 10, 30};
-    static const int zoom_travel[] = {0, 1, 3, 6, 9, 12, 32};
+    static const int outward_travel[] = {0, 1, 3, 6, 9, 12, 32};
+    static const int wobble_travel[] = {0, 15, 30, 45, 60, 75, 160};
+    static const int shrink_travel[] = {0, 1, 4, 8, 16, 24, 64};
 
-    int level = config.VISUAL.BOUNCEANIMATION;
+    int level = config.VISUAL.SELECTIONANIMATION;
     if (bounce_suppress || level <= 0 || level > 6) return;
 
     if (!focused || !lv_obj_is_valid(focused)) return;
 
     lv_anim_exec_xcb_t exec_cb;
-    switch (config.VISUAL.BOUNCEDIRECTION) {
+    switch (config.VISUAL.SELECTIONSTYLE) {
         case 1:
             exec_cb = focus_bounce_y_cb;
             break;
         case 2:
             exec_cb = focus_bounce_x_cb;
             break;
+        case 3:
+            exec_cb = focus_wobble_cb;
+            break;
+        case 4:
+            exec_cb = focus_shrink_cb;
+            break;
         default:
-            exec_cb = focus_bounce_zoom_cb;
+            exec_cb = focus_outward_cb;
             break;
     }
 
@@ -558,10 +581,17 @@ void nav_focus_bounce_cb(lv_group_t *group) {
     reset_bounce_styles(focused);
 
     int travel;
-    if (exec_cb == focus_bounce_zoom_cb) {
+    if (exec_cb == focus_outward_cb || exec_cb == focus_wobble_cb || exec_cb == focus_shrink_cb) {
         lv_obj_set_style_transform_pivot_x(focused, lv_obj_get_width(focused) / 2, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_transform_pivot_y(focused, lv_obj_get_height(focused) / 2, MU_OBJ_MAIN_DEFAULT);
-        travel = zoom_travel[level];
+    }
+
+    if (exec_cb == focus_outward_cb) {
+        travel = outward_travel[level];
+    } else if (exec_cb == focus_wobble_cb) {
+        travel = wobble_travel[level];
+    } else if (exec_cb == focus_shrink_cb) {
+        travel = shrink_travel[level];
     } else {
         travel = bounce_travel[level];
     }

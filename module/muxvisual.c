@@ -88,8 +88,8 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, NameScroll, "visual/namescroll", INT, 0);
     CHECK_AND_SAVE_STD(visual, LabelScrollSpeed, "visual/labelscrollspeed", INT, 0);
     CHECK_AND_SAVE_STD(visual, ListGlyph, "visual/listglyph", INT, 0);
-    CHECK_AND_SAVE_STD(visual, BounceAnimation, "visual/bounceanimation", INT, 0);
-    CHECK_AND_SAVE_STD(visual, BounceDirection, "visual/bouncedirection", INT, 0);
+    CHECK_AND_SAVE_STD(visual, SelectionAnimation, "visual/selectionanimation", INT, 0);
+    CHECK_AND_SAVE_STD(visual, SelectionStyle, "visual/selectionstyle", INT, 0);
     CHECK_AND_SAVE_STD(visual, RenderShadows, "visual/shadow", INT, 0);
     CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
 
@@ -163,7 +163,9 @@ static void init_navigation_group(void) {
     char *bounce_direction[] = {
             lang.GENERIC.OUTWARD,
             lang.GENERIC.VERTICAL,
-            lang.GENERIC.HORIZONTAL
+            lang.GENERIC.HORIZONTAL,
+            lang.GENERIC.WOBBLE,
+            lang.GENERIC.SHRINK
     };
 
     INIT_OPTION_ITEM(-1, visual, Sort, lang.MUXVISUAL.SORT, "sort", NULL, 0);
@@ -177,8 +179,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, NameScroll, lang.MUXVISUAL.NAMESCROLL, "namescroll", scroll_mode, 3);
     INIT_OPTION_ITEM(-1, visual, LabelScrollSpeed, lang.MUXVISUAL.LABELSCROLLSPEED, "labelscrollspeed", label_scroll_speed, 4);
     INIT_OPTION_ITEM(-1, visual, ListGlyph, lang.MUXVISUAL.LISTGLYPH, "listglyph", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, BounceAnimation, lang.MUXVISUAL.BOUNCEANIMATION, "bounceanimation", selection_animation, 6);
-    INIT_OPTION_ITEM(-1, visual, BounceDirection, lang.MUXVISUAL.BOUNCEDIRECTION, "bouncedirection", bounce_direction, 3);
+    INIT_OPTION_ITEM(-1, visual, SelectionAnimation, lang.MUXVISUAL.SELECTIONANIMATION, "selectionanimation", selection_animation, 6);
+    INIT_OPTION_ITEM(-1, visual, SelectionStyle, lang.MUXVISUAL.SELECTIONSTYLE, "selectionstyle", bounce_direction, 5);
     INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLYFOLDER, "friendlyfolder", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.THETITLEFORMAT, "thetitleformat", disabled_enabled, 2);
@@ -196,13 +198,13 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, RenderShadows, lang.MUXVISUAL.RENDERSHADOWS, "shadow", disabled_enabled, 2);
 
-    if (config.VISUAL.BOUNCEANIMATION == 6) {
+    if (config.VISUAL.SELECTIONANIMATION == 6) {
         char *ludicrous_options[] = {
                 lang.GENERIC.DISABLED, lang.GENERIC.MINIMAL, lang.GENERIC.LOW,
                 lang.GENERIC.MEDIUM, lang.GENERIC.HIGH, lang.GENERIC.MAXIMUM,
                 lang.GENERIC.LUDICROUS
         };
-        add_drop_down_options(ui_droBounceAnimation_visual, ludicrous_options, 7);
+        add_drop_down_options(ui_droSelectionAnimation_visual, ludicrous_options, 7);
     }
 
     overlay_count = load_overlay_set(ui_droOverlayImage_visual);
@@ -277,7 +279,7 @@ static void handle_x(void) {
     if (msgbox_active || save_mode) return;
 
     const char *focused_key = lv_obj_get_user_data(lv_group_get_focused(ui_group));
-    if (!focused_key || strcmp(focused_key, "bounceanimation") != 0) return;
+    if (!focused_key || strcmp(focused_key, "selectionanimation") != 0) return;
 
     char *ludicrous_options[] = {
             lang.GENERIC.DISABLED,
@@ -288,8 +290,8 @@ static void handle_x(void) {
             lang.GENERIC.MAXIMUM,
             lang.GENERIC.LUDICROUS
     };
-    add_drop_down_options(ui_droBounceAnimation_visual, ludicrous_options, 7);
-    lv_dropdown_set_selected(ui_droBounceAnimation_visual, 6);
+    add_drop_down_options(ui_droSelectionAnimation_visual, ludicrous_options, 7);
+    lv_dropdown_set_selected(ui_droSelectionAnimation_visual, 6);
     play_sound(SND_MUOS);
 }
 
