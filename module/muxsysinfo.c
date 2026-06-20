@@ -668,19 +668,12 @@ int muxsysinfo_main(void) {
                     [MUX_INPUT_MENU] = handle_help,
             },
             .hold_handler = {
+                    [MUX_INPUT_X] = launch_device,
                     [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
-            },
-            .combo = {
-                    {
-                            .type_mask = BIT(MUX_INPUT_L2) | BIT(MUX_INPUT_X),
-                            .press_handler = launch_device,
-                            .hold_handler = launch_device,
-                    },
-            },
-            .combo_count = 1
+            }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
