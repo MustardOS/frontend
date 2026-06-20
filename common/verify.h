@@ -36,7 +36,7 @@ static const struct int_script_hash int_scripts[] = {
         {"/opt/muos/script/init/async/S05device.sh",  "805217bfbc885938"},
         {"/opt/muos/script/init/async/S06mount.sh",   "20db39c543d0223e"},
         {"/opt/muos/script/init/async/S07battery.sh", "31ff46128d2c1ee7"},
-        {"/opt/muos/script/init/async/S08sunrise.sh", "10c5d21af2d5f0f1"},
+        {"/opt/muos/script/init/async/S08sunrise.sh", "b7752fa5b8872bf0"},
         {"/opt/muos/script/init/shutdown",            "501e1e3209d1bcc8"},
         {"/opt/muos/script/init/sysinit",             "729df0b8d3c604c8"},
         {"/opt/muos/script/mux/audio_sink.sh",        "9886062acc6fd4ae"},
