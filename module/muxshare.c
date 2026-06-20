@@ -578,25 +578,101 @@ int build_safe_path(char *dst, size_t n, const char *base, const char *name) {
     return 0;
 }
 
+typedef struct {
+    char *key;
+    char *val;
+} fn_entry_t;
+
+static fn_entry_t *fn_name_table = NULL;
+static int fn_name_table_count = 0;
+
+static int fn_entry_cmp(const void *a, const void *b) {
+    return strcmp(((const fn_entry_t *) a)->key, ((const fn_entry_t *) b)->key);
+}
+
+static void fn_build_table(struct json root) {
+    for (int i = 0; i < fn_name_table_count; i++) {
+        free(fn_name_table[i].key);
+        free(fn_name_table[i].val);
+    }
+
+    free(fn_name_table);
+    fn_name_table = NULL;
+    fn_name_table_count = 0;
+
+    int cap = 64;
+    int count = 0;
+
+    fn_entry_t *tbl = malloc((size_t) cap * sizeof(fn_entry_t));
+    if (!tbl) return;
+
+    struct json key = json_first(root);
+    while (json_exists(key)) {
+        struct json val = json_next(key);
+
+        char kbuf[MAX_BUFFER_SIZE], vbuf[MAX_BUFFER_SIZE];
+        json_string_copy(key, kbuf, sizeof(kbuf));
+        json_string_copy(val, vbuf, sizeof(vbuf));
+
+        if (count >= cap) {
+            cap *= 2;
+            fn_entry_t *tmp = realloc(tbl, (size_t) cap * sizeof(fn_entry_t));
+            if (!tmp) break;
+            tbl = tmp;
+        }
+
+        tbl[count].key = strdup(kbuf);
+        tbl[count].val = strdup(vbuf);
+        count++;
+
+        key = json_next(val);
+    }
+
+    if (count > 1) qsort(tbl, (size_t) count, sizeof(fn_entry_t), fn_entry_cmp);
+
+    fn_name_table = tbl;
+    fn_name_table_count = count;
+}
+
 void resolve_friendly_name(char *file_path, char *out) {
     char stripped[MAX_BUFFER_SIZE];
-    char lowered[MAX_BUFFER_SIZE];
+    const char *base = strrchr(file_path, '/');
 
-    snprintf(stripped, sizeof(stripped), "%s", get_file_name(strip_ext(file_path)));
-    snprintf(lowered, sizeof(lowered), "%s", str_tolower(stripped));
+    base = base ? base + 1 : file_path;
+    snprintf(stripped, sizeof(stripped), "%s", base);
+
+    char *dot = strrchr(stripped, '.');
+    if (dot) *dot = '\0';
+
+    char lowered[MAX_BUFFER_SIZE];
+    size_t idx = 0;
+    for (; stripped[idx]; idx++) lowered[idx] = (char) tolower((unsigned char) stripped[idx]);
+    lowered[idx] = '\0';
 
     int has_custom = 0;
 
-    static char cache_path[PATH_MAX];
-    static char *cache_str = NULL;
-    static struct json cache_root;
-    static int cache_valid = 0;
+    static char cached_file_parent[PATH_MAX];
+    static char cached_name_only[MAX_BUFFER_SIZE];
 
-    char *base = get_content_path(file_path);
-    char *name_only = get_last_dir(base);
+    const char *slash = strrchr(file_path, '/');
+    size_t parent_len = slash ? (size_t) (slash - file_path) : 0;
+
+    if (strncmp(file_path, cached_file_parent, parent_len) != 0 ||
+        cached_file_parent[parent_len] != '\0') {
+
+        if (parent_len < sizeof(cached_file_parent)) {
+            memcpy(cached_file_parent, file_path, parent_len);
+            cached_file_parent[parent_len] = '\0';
+        } else {
+            cached_file_parent[0] = '\0';
+        }
+
+        const char *last = strrchr(cached_file_parent, '/');
+        snprintf(cached_name_only, sizeof(cached_name_only), "%s", last ? last + 1 : cached_file_parent);
+    }
 
     char specific_rel[MAX_BUFFER_SIZE];
-    snprintf(specific_rel, sizeof(specific_rel), "name/%s.json", name_only);
+    snprintf(specific_rel, sizeof(specific_rel), "name/%s.json", cached_name_only);
 
     static char last_specific_rel[MAX_BUFFER_SIZE];
     static const char *last_lookup_path = NULL;
@@ -607,6 +683,11 @@ void resolve_friendly_name(char *file_path, char *out) {
         snprintf(last_specific_rel, sizeof(last_specific_rel), "%s", specific_rel);
     }
 
+    static char cache_path[PATH_MAX];
+    static char *cache_str = NULL;
+    static struct json cache_root;
+    static int cache_valid = 0;
+
     const char *lookup_path = last_lookup_path;
 
     if (lookup_path) {
@@ -614,14 +695,23 @@ void resolve_friendly_name(char *file_path, char *out) {
             free(cache_str);
             cache_str = read_all_char_from(lookup_path);
             cache_valid = (cache_str != NULL && json_valid(cache_str));
-            if (cache_valid) cache_root = json_parse(cache_str);
+
+            if (cache_valid) {
+                cache_root = json_parse(cache_str);
+                fn_build_table(cache_root);
+            } else {
+                fn_build_table((struct json) {0});
+            }
+
             snprintf(cache_path, sizeof(cache_path), "%s", lookup_path);
         }
 
-        if (cache_valid) {
-            struct json j = json_object_get(cache_root, lowered);
-            if (json_exists(j)) {
-                json_string_copy(j, out, MAX_BUFFER_SIZE);
+        if (cache_valid && fn_name_table_count > 0) {
+            fn_entry_t needle = {(char *) lowered, NULL};
+            fn_entry_t *found = bsearch(&needle, fn_name_table, (size_t) fn_name_table_count, sizeof(fn_entry_t), fn_entry_cmp);
+
+            if (found) {
+                snprintf(out, MAX_BUFFER_SIZE, "%s", found->val);
                 has_custom = 1;
             }
         }
