@@ -41,6 +41,8 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
 
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image);
 
+void load_overlay_image_sdl(void);
+
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size);

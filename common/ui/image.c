@@ -354,6 +354,38 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
     lv_obj_move_foreground(overlay_image);
 }
 
+void load_overlay_image_sdl(void) {
+    if (config.VISUAL.OVERLAYIMAGE == 0) {
+        display_clear_theme_overlay();
+        return;
+    }
+
+    const char *program = lv_obj_get_user_data(ui_screen);
+    char image_path[MAX_BUFFER_SIZE];
+
+    switch (config.VISUAL.OVERLAYIMAGE) {
+        case 1:
+            if (!load_image_specifics(mux_dim, program, "overlay", "png", image_path, sizeof(image_path)) &&
+                !load_image_specifics("", program, "overlay", "png", image_path, sizeof(image_path))) {
+                return;
+            }
+            break;
+        default:
+            snprintf(image_path, sizeof(image_path), "%s/%s%d.png",
+                     STORAGE_OVERLAY, mux_dim, config.VISUAL.OVERLAYIMAGE);
+            if (!file_exist(image_path)) {
+                snprintf(image_path, sizeof(image_path), "%s/standard/%d.png",
+                         STORAGE_OVERLAY, config.VISUAL.OVERLAYIMAGE);
+            }
+            break;
+    }
+
+    if (!file_exist(image_path)) return;
+
+    SDL_Texture *tex = display_load_png_texture(image_path);
+    if (tex) display_set_theme_overlay(tex, (uint8_t) config.VISUAL.OVERLAYTRANSPARENCY);
+}
+
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
     const char *program = lv_obj_get_user_data(ui_screen);
 

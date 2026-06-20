@@ -50,6 +50,10 @@ typedef struct {
     SDL_Texture *background_image;
     SDL_Color background_colour;
     char theme_name[256];
+
+    // Theme overlay image
+    SDL_Texture *theme_overlay;
+    uint8_t theme_overlay_opacity;
 } monitor_t;
 
 static monitor_t monitor;
@@ -92,6 +96,26 @@ static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
 
     if (!tex) LOG_ERROR("video", "Texture creation failure: %s", SDL_GetError());
     return tex;
+}
+
+SDL_Texture *display_load_png_texture(const char *path) {
+    return load_png(monitor.renderer, path);
+}
+
+void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity) {
+    if (monitor.theme_overlay) SDL_DestroyTexture(monitor.theme_overlay);
+
+    monitor.theme_overlay = tex;
+    monitor.theme_overlay_opacity = opacity;
+}
+
+void display_clear_theme_overlay(void) {
+    if (monitor.theme_overlay) {
+        SDL_DestroyTexture(monitor.theme_overlay);
+        monitor.theme_overlay = NULL;
+    }
+
+    monitor.theme_overlay_opacity = 0;
 }
 
 static void reload_background(const char *active_theme) {
@@ -499,6 +523,7 @@ void sdl_cleanup(void) {
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
     if (monitor.window) SDL_DestroyWindow(monitor.window);
     if (monitor.background_image) SDL_DestroyTexture(monitor.background_image);
+    if (monitor.theme_overlay) SDL_DestroyTexture(monitor.theme_overlay);
 
     IMG_Quit();
     SDL_Quit();
@@ -702,6 +727,13 @@ void display_composite_frame(void) {
     }
 
     if (anim_fg) anim_tick(monitor.renderer);
+
+    if (monitor.theme_overlay) {
+        SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+        SDL_SetTextureBlendMode(monitor.theme_overlay, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(monitor.theme_overlay, monitor.theme_overlay_opacity);
+        SDL_RenderCopy(monitor.renderer, monitor.theme_overlay, NULL, &full);
+    }
 
     if (video_overlay_fn_ptr) video_overlay_fn_ptr(monitor.renderer);
 

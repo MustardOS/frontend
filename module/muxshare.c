@@ -157,10 +157,7 @@ void overlay_display(void) {
         load_kiosk_image(ui_screen, kiosk_image);
     }
 
-    overlay_image = lv_obj_create(ui_screen_container);
-    lv_obj_remove_style_all(overlay_image);
-    lv_obj_clear_flag(overlay_image, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-    load_overlay_image(ui_screen, overlay_image);
+    load_overlay_image_sdl();
 }
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
@@ -491,7 +488,6 @@ void ui_gen_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
         adjust_gen_panel();
 
-        if (overlay_image) lv_obj_move_foreground(overlay_image);
         lv_obj_invalidate(ui_pnlContent);
 
         nav_moved = 0;
