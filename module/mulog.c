@@ -68,9 +68,11 @@ static uint64_t now_ms(void) {
     return ((uint64_t) ts.tv_sec * 1000ULL) + ((uint64_t) ts.tv_nsec / 1000000ULL);
 }
 
-static int read_flag_file(const char *path) {
+static int read_mode_file(const char *path) {
     FILE *fp;
-    char buf[8];
+    char buf[16];
+    char *end = NULL;
+    long val;
 
     fp = fopen(path, "r");
     if (!fp) return 0;
@@ -81,19 +83,51 @@ static int read_flag_file(const char *path) {
     }
 
     fclose(fp);
-    return buf[0] == '1';
+
+    buf[strcspn(buf, "\r\n")] = '\0';
+
+    errno = 0;
+    val = strtol(buf, &end, 10);
+
+    if (end == buf) return 0;
+
+    while (*end) {
+        if (!isspace((unsigned char) *end)) return 0;
+        end++;
+    }
+
+    if (errno == ERANGE || val < 0 || val > INT_MAX) return 0;
+
+    return (int) val;
+}
+
+static int debug_mode(void) {
+    return read_mode_file(SYS_DEBUG_FILE);
+}
+
+static int verbose_mode(void) {
+    return read_mode_file(VERBOSE_FILE);
 }
 
 static int debug_enabled(void) {
-    return read_flag_file(SYS_DEBUG_FILE);
+    return debug_mode() > 0;
 }
 
 static int verbose_enabled(void) {
-    return read_flag_file(VERBOSE_FILE);
+    return verbose_mode() > 0;
 }
 
 static int mode_enabled(void) {
     return debug_enabled() || verbose_enabled();
+}
+
+static int log_level_enabled(log_level_t level) {
+    int mode = debug_mode();
+
+    if (mode <= 0) return 0;
+    if (level == LVL_DEBUG && mode < 2) return 0;
+
+    return 1;
 }
 
 static int parse_int_strict(const char *str, int *out) {
@@ -762,6 +796,8 @@ int main(int argc, char *argv[]) {
     if (!mode_enabled()) return 0;
 
     if (build_packet_from_args(argc, argv, &pkt) < 0) return 1;
+
+    if (!log_level_enabled((log_level_t) pkt.level)) return 0;
 
     if (ensure_daemon_running(argv[0]) == 0) {
         if (send_packet(&pkt) == 0) return 0;
