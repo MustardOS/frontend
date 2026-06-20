@@ -11,6 +11,7 @@ extern char *allowed_restricted[];
 extern char *hidden_visible[];
 extern char *toggle_icon_visible[];
 extern char *battery_display[];
+extern char *debug_log_mode[];
 
 struct mux_lang {
     struct {
@@ -134,6 +135,8 @@ struct mux_lang {
         char ICON_ONLY[MAX_BUFFER_SIZE];
         char TEXT_ONLY[MAX_BUFFER_SIZE];
         char TEXT_ICON[MAX_BUFFER_SIZE];
+        char STANDARD[MAX_BUFFER_SIZE];
+        char VERBOSE[MAX_BUFFER_SIZE];
         char UNSAVED[MAX_BUFFER_SIZE];
         char CRASH_TITLE[MAX_BUFFER_SIZE];
         char CRASH_MESSAGE[MAX_BUFFER_SIZE];

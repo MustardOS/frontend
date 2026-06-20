@@ -224,7 +224,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, RetroCache, lang.MUXTWEAKADV.RETROCACHE, "retrocache", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Activity, lang.MUXTWEAKADV.ACTIVITY, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Verbose, lang.MUXTWEAKADV.VERBOSE, "verbose", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, DebugLog, lang.MUXTWEAKADV.DEBUGLOG, "debuglog", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, DebugLog, lang.MUXTWEAKADV.DEBUGLOG, "debuglog", debug_log_mode, 3);
     INIT_OPTION_ITEM(-1, tweakadv, Rumble, lang.MUXTWEAKADV.RUMBLE.TITLE, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, UserInit, lang.MUXTWEAKADV.USERINIT, "userinit", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, DpadSwap, lang.MUXTWEAKADV.DPADSWAP, "dpadswap", disabled_enabled, 2);

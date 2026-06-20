@@ -16,6 +16,7 @@ char *allowed_restricted[2];
 char *hidden_visible[2];
 char *toggle_icon_visible[3];
 char *battery_display[3];
+char *debug_log_mode[3];
 
 void load_language_file(const char *module) {
     char language_file[MAX_BUFFER_SIZE];
@@ -102,6 +103,10 @@ void common_var_init(void) {
     battery_display[0] = lang.GENERIC.ICON_ONLY;
     battery_display[1] = lang.GENERIC.TEXT_ONLY;
     battery_display[2] = lang.GENERIC.TEXT_ICON;
+
+    debug_log_mode[0] = lang.GENERIC.DISABLED;
+    debug_log_mode[1] = lang.GENERIC.STANDARD;
+    debug_log_mode[2] = lang.GENERIC.VERBOSE;
 }
 
 void load_lang(struct mux_lang *lang) {
@@ -231,6 +236,8 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.ICON_ONLY, "Icon Only");
     GENERIC_FIELD(lang->GENERIC.TEXT_ONLY, "Text Only");
     GENERIC_FIELD(lang->GENERIC.TEXT_ICON, "Text + Icon");
+    GENERIC_FIELD(lang->GENERIC.STANDARD, "Standard");
+    GENERIC_FIELD(lang->GENERIC.VERBOSE, "Verbose");
     GENERIC_FIELD(lang->GENERIC.UNSAVED, "Unsaved Changes");
     GENERIC_FIELD(lang->GENERIC.CRASH_TITLE, "Guru Meditation Error");
     GENERIC_FIELD(lang->GENERIC.CRASH_MESSAGE, "If this continues, please report it to the MustardOS team!");
