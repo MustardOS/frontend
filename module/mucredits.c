@@ -101,7 +101,7 @@ static const char *heroes[] = {
         "xraygoggles", "hybrid_sith", "mxdamp", "ownedmumbles", "exe0237",
         "kernelkritic", "verctexius", "misfitsorbet",
         "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.",
-        "turner74.", "jmtn070", "izzythefool", "nahck",
+        "turner74.", "jmtn070", "izzythefool", "nahck", "cjiiio",
         NULL
 };
 
@@ -118,7 +118,7 @@ static const char *knights[] = {
 
 static const char *contributors[] = {
         "antikk", "artur_ditu", "bitter_bizarro", "corey", "imcokeman",
-        "key777", "mugwomp93", "thewalruzz", "xonglebongle",
+        "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xonglebongle",
         NULL
 };
 
