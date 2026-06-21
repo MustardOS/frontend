@@ -33,14 +33,6 @@ static void dim_anim_opa_cb(void *obj, int32_t opa) {
     lv_obj_set_style_bg_opa((lv_obj_t *) obj, (lv_opa_t) opa, MU_OBJ_MAIN_DEFAULT);
 }
 
-static void hide_anim_ready_cb(lv_anim_t *a) {
-    mux_dialogue *dlg = (mux_dialogue *) lv_anim_get_user_data(a);
-    lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
-    timer_resume_all();
-}
 
 static void show_anim_ready_cb(lv_anim_t *a) {
     mux_dialogue *dlg = (mux_dialogue *) lv_anim_get_user_data(a);
@@ -462,25 +454,12 @@ void dialogue_hide(mux_dialogue *dlg) {
     lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
     lv_anim_del(dlg->dim, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
 
-    lv_anim_t ap;
-    lv_anim_init(&ap);
-    lv_anim_set_var(&ap, dlg->panel);
-    lv_anim_set_exec_cb(&ap, (lv_anim_exec_xcb_t) panel_anim_opa_cb);
-    lv_anim_set_values(&ap, LV_OPA_COVER, LV_OPA_TRANSP);
-    lv_anim_set_time(&ap, 150);
-    lv_anim_set_path_cb(&ap, lv_anim_path_linear);
-    lv_anim_start(&ap);
-
-    lv_anim_t ad;
-    lv_anim_init(&ad);
-    lv_anim_set_var(&ad, dlg->dim);
-    lv_anim_set_exec_cb(&ad, (lv_anim_exec_xcb_t) dim_anim_opa_cb);
-    lv_anim_set_values(&ad, dlg->dim_alpha, LV_OPA_TRANSP);
-    lv_anim_set_time(&ad, 150);
-    lv_anim_set_path_cb(&ad, lv_anim_path_linear);
-    lv_anim_set_ready_cb(&ad, hide_anim_ready_cb);
-    lv_anim_set_user_data(&ad, dlg);
-    lv_anim_start(&ad);
+    lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_refr_now(NULL);
+    timer_resume_all();
 }
 
 void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, int delta) {
