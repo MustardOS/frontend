@@ -43,6 +43,7 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, connect, Network, lang.MUXCONNECT.NETWORK, "network", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, NetAdv, lang.MUXCONNECT.NETADV, "netadv", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, Proxy, lang.MUXCONNECT.PROXY, "proxy", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, Services, lang.MUXCONNECT.SERVICES, "service", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, Bluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth", NULL, 0);
 
@@ -52,6 +53,7 @@ static void init_navigation_group(void) {
     if (!visible_network_opt()) {
         HIDE_OPTION_ITEM(connect, Network);
         HIDE_OPTION_ITEM(connect, NetAdv);
+        HIDE_OPTION_ITEM(connect, Proxy);
         HIDE_OPTION_ITEM(connect, Services);
     }
 
@@ -96,6 +98,7 @@ static void handle_a(void) {
     static const menu_entry entries[UI_COUNT] = {
             {"net_profile", &kiosk.CONFIG.NETWORK,      MENU_GENERAL, visible_network_opt},
             {"netadv",      &kiosk.CONFIG.NET_SETTINGS, MENU_GENERAL, visible_network_opt},
+            {"net_proxy",   &kiosk.CONFIG.PROXY,        MENU_GENERAL, visible_network_opt},
             {"webserv",     &kiosk.CONFIG.WEB_SERVICES, MENU_GENERAL, visible_network_opt},
             {"btall",       &KIOSK_PASS,                MENU_GENERAL, visible_bluetooth_opt}
     };

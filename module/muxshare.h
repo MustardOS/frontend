@@ -264,6 +264,8 @@ int muxnetinfo_main();
 
 int muxnetprofile_main();
 
+int muxnetproxy_main();
+
 int muxnetscan_main();
 
 int muxnetwork_main();

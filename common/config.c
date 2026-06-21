@@ -241,6 +241,10 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->SETTINGS.NETWORK.CONRETRY, &d, "con_retry", 1);
     CFG_INT(config->SETTINGS.NETWORK.WAIT, &d, "wait_timer", 5);
     CFG_INT(config->SETTINGS.NETWORK.MODRETRY, &d, "mod_retry", 1);
+    CFG_INT(config->SETTINGS.NETWORK.PROXY_ENABLED, &d, "proxy_enabled", 0);
+    CFG_INT(config->SETTINGS.NETWORK.PROXY_TYPE, &d, "proxy_type", 0);
+    CFG_STR(config->SETTINGS.NETWORK.PROXY_SERVER, &d, "proxy_server", "");
+    CFG_STR(config->SETTINGS.NETWORK.PROXY_NOPROXY, &d, "proxy_noproxy", "localhost,127.0.0.1,::1");
 
     // settings/overlay/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/overlay");

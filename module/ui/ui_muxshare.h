@@ -134,6 +134,7 @@
 #define CONNECT_ELEMENTS                       \
     CONNECT(Network,   NETWORK,   "network")   \
     CONNECT(NetAdv,    NETADV,    "netadv")    \
+    CONNECT(Proxy,     PROXY,     "net_proxy") \
     CONNECT(Services,  SERVICES,  "service")   \
     CONNECT(Bluetooth, BLUETOOTH, "bluetooth")
 
@@ -375,6 +376,13 @@
     POWER(GovDefault,  GOVDEFAULT,  "gov_default")  \
     POWER(SaverType,   SAVERTYPE,   "saver_type")   \
     POWER(SaverSpeed,  SAVERSPEED,  "saver_speed")
+
+#define PROXY_ELEMENTS                 \
+    PROXY(Enabled, ENABLED, "enabled") \
+    PROXY(Type,    TYPE,    "type")    \
+    PROXY(Server,  SERVER,  "server")  \
+    PROXY(NoProxy, NOPROXY, "noproxy") \
+    PROXY(Test,    TEST,    "test")
 
 #define RGB_ELEMENTS                               \
     RGB(Mode,        MODE,         "mode")         \

@@ -197,6 +197,10 @@ struct mux_config {
             int16_t CONRETRY;
             int16_t WAIT;
             int16_t MODRETRY;
+            int16_t PROXY_ENABLED;
+            int16_t PROXY_TYPE;
+            char PROXY_SERVER[MAX_BUFFER_SIZE];
+            char PROXY_NOPROXY[MAX_BUFFER_SIZE];
         } NETWORK;
         struct {
             int16_t GENALPHA;

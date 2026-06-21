@@ -515,9 +515,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONNECT.SERVICES, "Web Services");
     SPECIFIC_FIELD(lang->MUXCONNECT.NETWORK, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXCONNECT.NETADV, "Network Settings");
+    SPECIFIC_FIELD(lang->MUXCONNECT.PROXY, "Proxy Settings");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.SERVICES, "Toggle a range of configurable services you can access via an active network");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETWORK, "Connect to a Wi-Fi network manually or via a saved profile");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.NETADV, "Adjust network connectivity settings");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.PROXY, "Configure an HTTP, HTTPS, or SOCKS5 proxy for outbound network traffic");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Manage Bluetooth devices and auto-connect settings");
 
     // muxbtall
@@ -1010,6 +1012,28 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.CONRETRY, "Adjusts how many retries the network connection script goes through before giving up");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.WAIT, "Adjusts the maximum amount of time waiting for the network interface to appear.\n\nWARNING:\nIf you enable Module Compatibility, it is not advisable to increase this setting as it will increase boot times!");
     SPECIFIC_FIELD(lang->MUXNETADV.HELP.MODRETRY, "Adjusts the maximum amount of attempts at loading the network module with Module Compatibility enabled. Increase this setting if you are still unable to connect to wifi.\n\nIncreasing this setting may increase boot times importantly.");
+
+    // muxnetproxy
+    SPECIFIC_FIELD(lang->MUXNETPROXY.TITLE, "PROXY SETTINGS");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.ENABLED, "Proxy Enabled");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.TYPE, "Proxy Type");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.SERVER, "Proxy Server");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.NOPROXY, "No Proxy");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.TEST, "Test Proxy");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HTTP, "HTTP");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HTTPS, "HTTPS");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.SOCKS5, "SOCKS5");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.TESTING, "Testing…");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.TEST_OK, "Proxy reachable");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.TEST_FAIL, "Proxy unreachable");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.NO_SERVER, "No proxy server configured");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.SAVED, "Proxy settings saved. Reboot to apply!");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.REBOOT, "Reboot required to apply changes");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.ENABLED, "Enable or disable proxy routing for all outbound network traffic");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.TYPE, "Select the proxy protocol type of either HTTP, HTTPS, or SOCKS5");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.SERVER, "Enter the proxy server address in host:port format (e.g. 62.133.62.17:1082)");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.NOPROXY, "Comma separated list of hosts that bypass the proxy (e.g. localhost,127.0.0.1,::1)");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.TEST, "Test connectivity through the configured proxy server using a live HTTP request");
 
     // muxnetinfo
     SPECIFIC_FIELD(lang->MUXNETINFO.TITLE, "NETWORK DETAILS");

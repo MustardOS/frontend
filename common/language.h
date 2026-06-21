@@ -444,15 +444,42 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char BLUETOOTH[MAX_BUFFER_SIZE];
         char NETADV[MAX_BUFFER_SIZE];
+        char PROXY[MAX_BUFFER_SIZE];
         char SERVICES[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
         struct {
             char BLUETOOTH[MAX_BUFFER_SIZE];
             char NETADV[MAX_BUFFER_SIZE];
+            char PROXY[MAX_BUFFER_SIZE];
             char SERVICES[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONNECT;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char ENABLED[MAX_BUFFER_SIZE];
+        char TYPE[MAX_BUFFER_SIZE];
+        char SERVER[MAX_BUFFER_SIZE];
+        char NOPROXY[MAX_BUFFER_SIZE];
+        char TEST[MAX_BUFFER_SIZE];
+        char HTTP[MAX_BUFFER_SIZE];
+        char HTTPS[MAX_BUFFER_SIZE];
+        char SOCKS5[MAX_BUFFER_SIZE];
+        char TESTING[MAX_BUFFER_SIZE];
+        char TEST_OK[MAX_BUFFER_SIZE];
+        char TEST_FAIL[MAX_BUFFER_SIZE];
+        char NO_SERVER[MAX_BUFFER_SIZE];
+        char SAVED[MAX_BUFFER_SIZE];
+        char REBOOT[MAX_BUFFER_SIZE];
+        struct {
+            char ENABLED[MAX_BUFFER_SIZE];
+            char TYPE[MAX_BUFFER_SIZE];
+            char SERVER[MAX_BUFFER_SIZE];
+            char NOPROXY[MAX_BUFFER_SIZE];
+            char TEST[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXNETPROXY;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

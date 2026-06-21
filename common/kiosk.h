@@ -21,6 +21,7 @@ struct mux_kiosk {
         int16_t STORAGE;
         int16_t WEB_SERVICES;
         int16_t NET_SETTINGS;
+        int16_t PROXY;
         int16_t BACKUP;
     } CONFIG;
 
