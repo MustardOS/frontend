@@ -109,6 +109,10 @@ void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity) {
     monitor.theme_overlay_opacity = opacity;
 }
 
+void display_update_overlay_opacity(uint8_t opacity) {
+    monitor.theme_overlay_opacity = opacity;
+}
+
 void display_clear_theme_overlay(void) {
     if (monitor.theme_overlay) {
         SDL_DestroyTexture(monitor.theme_overlay);
@@ -729,10 +733,17 @@ void display_composite_frame(void) {
     if (anim_fg) anim_tick(monitor.renderer);
 
     if (monitor.theme_overlay) {
-        SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+        int tex_w, tex_h;
+        SDL_QueryTexture(monitor.theme_overlay, NULL, NULL, &tex_w, &tex_h);
+        SDL_Rect dst = {
+                (device.SCREEN.WIDTH - tex_w) / 2,
+                (device.SCREEN.HEIGHT - tex_h) / 2,
+                tex_w,
+                tex_h
+        };
         SDL_SetTextureBlendMode(monitor.theme_overlay, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(monitor.theme_overlay, monitor.theme_overlay_opacity);
-        SDL_RenderCopy(monitor.renderer, monitor.theme_overlay, NULL, &full);
+        SDL_RenderCopy(monitor.renderer, monitor.theme_overlay, NULL, &dst);
     }
 
     if (video_overlay_fn_ptr) video_overlay_fn_ptr(monitor.renderer);

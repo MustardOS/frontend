@@ -32,4 +32,6 @@ SDL_Texture *display_load_png_texture(const char *path);
 
 void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity);
 
+void display_update_overlay_opacity(uint8_t opacity);
+
 void display_clear_theme_overlay(void);

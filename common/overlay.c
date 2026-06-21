@@ -65,10 +65,8 @@ static char **merge_overlays(char **standard, char **extra, size_t extra_size, s
     return merged;
 }
 
-int load_overlay_set(lv_obj_t *overlay_element) {
-    char *overlay_standard[] = {
-            lang.GENERIC.DISABLED,
-            lang.MUXVISUAL.OVERLAY.THEME,
+int load_overlay_set(lv_obj_t *overlay_element, int include_theme) {
+    char *overlay_patterns[] = {
             lang.MUXVISUAL.OVERLAY.CHECKERBOARD.T1,
             lang.MUXVISUAL.OVERLAY.CHECKERBOARD.T4,
             lang.MUXVISUAL.OVERLAY.DIAGONAL.T1,
@@ -85,24 +83,39 @@ int load_overlay_set(lv_obj_t *overlay_element) {
     };
 
     char **selected_overlay = NULL;
-    size_t overlay_count = 0;
+    size_t res_overlay_count = 0;
 
     for (size_t i = 0; i < A_SIZE(overlay_map); i++) {
         if (overlay_map[i].width == device.SCREEN.WIDTH && overlay_map[i].height == device.SCREEN.HEIGHT) {
             selected_overlay = overlay_map[i].overlay_list;
-            overlay_count = overlay_map[i].overlay_count;
+            res_overlay_count = overlay_map[i].overlay_count;
             break;
         }
     }
 
-    overlay_size = A_SIZE(overlay_standard);
+    lv_dropdown_clear_options(overlay_element);
 
-    size_t merged_count;
-    char **merged_overlay = merge_overlays(overlay_standard, selected_overlay, overlay_count, &merged_count);
+    int total = 0;
 
-    if (!merged_overlay) return -1;
-    add_drop_down_options(overlay_element, merged_overlay, (int) merged_count);
+    lv_dropdown_add_option(overlay_element, lang.GENERIC.DISABLED, LV_DROPDOWN_POS_LAST);
+    total++;
 
-    free(merged_overlay);
-    return (int) merged_count;
+    if (include_theme) {
+        lv_dropdown_add_option(overlay_element, lang.MUXVISUAL.OVERLAY.THEME, LV_DROPDOWN_POS_LAST);
+        total++;
+    }
+
+    for (size_t i = 0; i < A_SIZE(overlay_patterns); i++) {
+        lv_dropdown_add_option(overlay_element, overlay_patterns[i], LV_DROPDOWN_POS_LAST);
+        total++;
+    }
+
+    for (size_t i = 0; i < res_overlay_count; i++) {
+        lv_dropdown_add_option(overlay_element, selected_overlay[i], LV_DROPDOWN_POS_LAST);
+        total++;
+    }
+
+    overlay_size = (int) A_SIZE(overlay_patterns) + (include_theme ? 1 : 0) + 1;
+
+    return total;
 }

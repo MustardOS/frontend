@@ -36,6 +36,20 @@ static int any_visual_modified(void) {
 }
 
 static int overlay_count;
+static int has_theme_overlay;
+
+static int overlay_config_to_dropdown(int config_val) {
+    if (!has_theme_overlay) {
+        if (config_val == 1) return 0;
+        if (config_val >= 2) return config_val - 1;
+    }
+    return config_val;
+}
+
+static int overlay_dropdown_to_config(int dropdown_idx) {
+    if (!has_theme_overlay && dropdown_idx >= 1) return dropdown_idx + 1;
+    return dropdown_idx;
+}
 
 static void show_help(void) {
     struct help_msg help_messages[] = {
@@ -58,7 +72,11 @@ static void restore_visual_options(void) {
     VISUAL_ELEMENTS
 #undef VISUAL
 
-    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAYIMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAYIMAGE);
+    {
+        int ddr = overlay_config_to_dropdown(config.VISUAL.OVERLAYIMAGE);
+        lv_dropdown_set_selected(ui_droOverlayImage_visual, (ddr < 0 || ddr >= overlay_count) ? 0 : ddr);
+    }
+
     lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAYTRANSPARENCY, 0, 255));
 }
 
@@ -91,7 +109,14 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, SelectionAnimation, "visual/selectionanimation", INT, 0);
     CHECK_AND_SAVE_STD(visual, SelectionStyle, "visual/selectionstyle", INT, 0);
     CHECK_AND_SAVE_STD(visual, RenderShadows, "visual/shadow", INT, 0);
-    CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
+
+    {
+        int current = lv_dropdown_get_selected(ui_droOverlayImage_visual);
+        if (current != OverlayImage_original) {
+            is_modified++;
+            write_text_to_file(CONF_CONFIG_PATH "visual/overlayimage", "w", INT, overlay_dropdown_to_config(current));
+        }
+    }
 
     {
         int ot_current = lv_dropdown_get_selected(ui_droOverlayTransparency_visual);
@@ -207,7 +232,11 @@ static void init_navigation_group(void) {
         add_drop_down_options(ui_droSelectionAnimation_visual, ludicrous_options, 7);
     }
 
-    overlay_count = load_overlay_set(ui_droOverlayImage_visual);
+    const char *program = lv_obj_get_user_data(ui_screen);
+    char tmp_path[MAX_BUFFER_SIZE];
+    has_theme_overlay = load_image_specifics(mux_dim, program, "overlay", "png", tmp_path, sizeof(tmp_path)) ||
+                        load_image_specifics("", program, "overlay", "png", tmp_path, sizeof(tmp_path));
+    overlay_count = load_overlay_set(ui_droOverlayImage_visual, has_theme_overlay);
 
     char *pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_droOverlayTransparency_visual, pct_values);
@@ -225,25 +254,20 @@ static void refresh_overlay_preview(void) {
     struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
 
     if (focused == ui_lblOverlayImage_visual) {
-        if (overlay_image) {
-            lv_obj_del(overlay_image);
-            overlay_image = NULL;
-        }
+        int16_t saved_image = config.VISUAL.OVERLAYIMAGE;
+        int16_t saved_opa = config.VISUAL.OVERLAYTRANSPARENCY;
 
-        int16_t saved = config.VISUAL.OVERLAYIMAGE;
-        config.VISUAL.OVERLAYIMAGE = (int16_t) lv_dropdown_get_selected(ui_droOverlayImage_visual);
+        config.VISUAL.OVERLAYIMAGE = (int16_t) overlay_dropdown_to_config(lv_dropdown_get_selected(ui_droOverlayImage_visual));
+        config.VISUAL.OVERLAYTRANSPARENCY = (int16_t) pct_to_int(
+                lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
 
-        overlay_image = lv_obj_create(ui_screen);
-        lv_obj_remove_style_all(overlay_image);
-        lv_obj_clear_flag(overlay_image, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-        load_overlay_image(ui_screen, overlay_image);
+        load_overlay_image_sdl();
 
-        config.VISUAL.OVERLAYIMAGE = saved;
-    }
-
-    if (overlay_image) {
+        config.VISUAL.OVERLAYIMAGE = saved_image;
+        config.VISUAL.OVERLAYTRANSPARENCY = saved_opa;
+    } else if (focused == ui_lblOverlayTransparency_visual) {
         int opa = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
-        lv_obj_set_style_bg_img_opa(overlay_image, opa, MU_OBJ_MAIN_DEFAULT);
+        display_update_overlay_opacity((uint8_t) opa);
     }
 }
 
