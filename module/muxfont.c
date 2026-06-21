@@ -163,6 +163,23 @@ static void apply_current_font_settings(void) {
 #undef FONT
 }
 
+static void revert_font_settings(void) {
+    config.SETTINGS.ADVANCED.FONT = (int16_t) Type_original;
+    config.SETTINGS.FONT.LIST_SIZE = (int16_t) (ListSize_original < font_size_count ? font_size_values[ListSize_original] : 0);
+    config.SETTINGS.FONT.HEADER_SIZE = (int16_t) (HeaderSize_original < font_size_count ? font_size_values[HeaderSize_original] : 0);
+    config.SETTINGS.FONT.FOOTER_SIZE = (int16_t) (FooterSize_original < font_size_count ? font_size_values[FooterSize_original] : 0);
+    config.SETTINGS.FONT.PANEL_SIZE = (int16_t) (PanelSize_original < font_size_count ? font_size_values[PanelSize_original] : 0);
+    snprintf(config.SETTINGS.FONT.NAME, sizeof(config.SETTINGS.FONT.NAME), "%s", name_original);
+
+    lv_obj_remove_local_style_prop(ui_screen, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_remove_local_style_prop(ui_pnlContent, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_remove_local_style_prop(ui_pnlHeader, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_remove_local_style_prop(ui_pnlFooter, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
+
+    init_fonts();
+    lv_obj_invalidate(ui_screen);
+}
+
 static void show_help(void) {
     struct help_msg help_messages[] = {
 #define FONT(NAME, ENUM, UDATA) { UDATA, lang.MUXFONT.HELP.ENUM },
@@ -443,6 +460,8 @@ static void handle_a(void) {
         if (opt == MUX_UNSAVED_SAVE) {
             save_font_options();
             apply_current_font_settings();
+        } else {
+            revert_font_settings();
         }
 
         play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
