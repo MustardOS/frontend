@@ -111,6 +111,10 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droDepth_hdmi, depth_string);
     free(depth_string);
 
+    // Hide audio control since we can change it from the audio sink in
+    // general settings.  However this will stay for compatibility...
+    HIDE_OPTION_ITEM(hdmi, Audio);
+
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 }
