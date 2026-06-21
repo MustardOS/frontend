@@ -468,6 +468,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDISTEMP.SUNRISE_TIME, "Sunrise Time");
     SPECIFIC_FIELD(lang->MUXDISTEMP.SUNSET_TIME, "Sunset Time");
     SPECIFIC_FIELD(lang->MUXDISTEMP.TEMPERATURE, "Temperature");
+    SPECIFIC_FIELD(lang->MUXDISTEMP.INVALID_TIME, "Sunrise Time must be before Sunset Time");
     SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SCHEDULE, "Enable or disable the sunrise and sunset colour temperature schedule");
     SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNRISE_TEMP, "Colour temperature applied during sunrise hours");
     SPECIFIC_FIELD(lang->MUXDISTEMP.HELP.SUNSET_TEMP, "Colour temperature applied during sunset hours");

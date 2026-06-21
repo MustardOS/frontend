@@ -389,6 +389,7 @@ struct mux_lang {
         char SUNRISE_TIME[MAX_BUFFER_SIZE];
         char SUNSET_TIME[MAX_BUFFER_SIZE];
         char TEMPERATURE[MAX_BUFFER_SIZE];
+        char INVALID_TIME[MAX_BUFFER_SIZE];
         struct {
             char SCHEDULE[MAX_BUFFER_SIZE];
             char SUNRISE_TEMP[MAX_BUFFER_SIZE];

@@ -42,6 +42,17 @@ static int schedule_enabled(void) {
     return (int) lv_dropdown_get_selected(ui_droSchedule_distemp) == 0;
 }
 
+static int schedule_times_valid(void) {
+    if (!schedule_enabled()) return 1;
+    int sunrise = (int) lv_dropdown_get_selected(ui_droSunriseTime_distemp);
+    int sunset = (int) lv_dropdown_get_selected(ui_droSunsetTime_distemp);
+    if (sunrise >= sunset) {
+        toast_message(lang.MUXDISTEMP.INVALID_TIME, MEDIUM);
+        return 0;
+    }
+    return 1;
+}
+
 static void show_help(void) {
     struct help_msg help_messages[UI_COUNT];
     int count = 0;
@@ -279,7 +290,13 @@ static void handle_a(void) {
         mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
-        if (opt == MUX_UNSAVED_SAVE) save_distemp_options();
+        if (opt == MUX_UNSAVED_SAVE) {
+            if (!schedule_times_valid()) {
+                play_sound(SND_ERROR);
+                return;
+            }
+            save_distemp_options();
+        }
 
         play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "displaytemp");
@@ -308,6 +325,11 @@ static void handle_b(void) {
 
     if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_distemp_modified()) {
         show_save_dialog();
+        return;
+    }
+
+    if (any_distemp_modified() && !schedule_times_valid()) {
+        play_sound(SND_ERROR);
         return;
     }
 
