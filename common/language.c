@@ -1027,7 +1027,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETPROXY.TEST_OK, "Proxy reachable");
     SPECIFIC_FIELD(lang->MUXNETPROXY.TEST_FAIL, "Proxy unreachable");
     SPECIFIC_FIELD(lang->MUXNETPROXY.NO_SERVER, "No proxy server configured");
-    SPECIFIC_FIELD(lang->MUXNETPROXY.SAVED, "Proxy settings saved. Reboot to apply!");
+    SPECIFIC_FIELD(lang->MUXNETPROXY.SAVED, "Proxy settings saved");
     SPECIFIC_FIELD(lang->MUXNETPROXY.REBOOT, "Reboot required to apply changes");
     SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.ENABLED, "Enable or disable proxy routing for all outbound network traffic");
     SPECIFIC_FIELD(lang->MUXNETPROXY.HELP.TYPE, "Select the proxy protocol type of either HTTP, HTTPS, or SOCKS5");

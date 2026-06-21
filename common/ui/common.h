@@ -65,6 +65,7 @@ int generate_image_embed(const char *dimension, const char *glyph_folder, const 
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
 
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme);
+
 void update_battery_percent_label(lv_obj_t *ui_label, struct theme_config *theme);
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme);
@@ -87,6 +88,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 void scroll_help_content(int direction, bool page_down);
 
 void gen_help(int current_index, const struct help_msg *help_messages, size_t msg_count, lv_group_t *group, content_item *items);
+
+void mu_img_no_shadow(lv_obj_t *img);
 
 extern lv_obj_t *ui_screen_container;
 extern lv_obj_t *ui_screen_temp;

@@ -551,6 +551,8 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
+    mu_img_no_shadow(ui_imgWall);
+
     ui_pnlGrid = lv_obj_create(ui_screen);
 
     ui_pnlGridCurrentItem = lv_obj_create(ui_screen);
@@ -2033,4 +2035,8 @@ void gen_help(int current_index, const struct help_msg *help_messages, size_t ms
 
     const char *msg = help_lookup_message(help_messages, msg_count, key);
     show_info_box(title, msg, 0);
+}
+
+void mu_img_no_shadow(lv_obj_t *img) {
+    lv_obj_add_flag(img, LV_OBJ_FLAG_USER_1);
 }

@@ -357,6 +357,7 @@ static void draw_bg_img(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dsc
         if(res == LV_RES_OK) {
             lv_draw_img_dsc_t img_dsc;
             lv_draw_img_dsc_init(&img_dsc);
+            img_dsc.effect_type = 0;
             img_dsc.blend_mode = dsc->blend_mode;
             img_dsc.recolor = dsc->bg_img_recolor;
             img_dsc.recolor_opa = dsc->bg_img_recolor_opa;

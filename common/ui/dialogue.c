@@ -331,6 +331,105 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
     (void) glyph_b;
 }
 
+void dialogue_init_accept(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                          const char *title, const char *description, const char *nav_a) {
+    dlg->option_count = 0;
+    dlg->selected = 0;
+    dlg->theme = t;
+
+    dlg->dim = lv_obj_create(parent);
+    lv_obj_set_size(dlg->dim, LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_pos(dlg->dim, 0, 0);
+    lv_obj_set_style_bg_color(dlg->dim, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(dlg->dim, t->DIALOGUE.DIM_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(dlg->dim, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(dlg->dim, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+    dlg->dim_alpha = t->DIALOGUE.DIM_ALPHA;
+
+    dlg->panel = lv_obj_create(parent);
+    lv_obj_set_size(dlg->panel, lv_pct(60), LV_SIZE_CONTENT);
+    lv_obj_align(dlg->panel, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_bg_color(dlg->panel, lv_color_hex(t->DIALOGUE.BACKGROUND), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(dlg->panel, t->DIALOGUE.BACKGROUND_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(dlg->panel, 1, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(dlg->panel, lv_color_hex(t->DIALOGUE.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(dlg->panel, t->DIALOGUE.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(dlg->panel, t->DIALOGUE.RADIUS.MAIN, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(dlg->panel, 16, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(dlg->panel, 16, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_flex_flow(dlg->panel, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_flex_main_place(dlg->panel, LV_FLEX_ALIGN_START, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(dlg->panel, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_shadow_zone_register(dlg->panel,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR),
+                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET,
+                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR_FOCUS),
+                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET_FOCUS);
+
+    dlg->title_label = lv_label_create(dlg->panel);
+    lv_label_set_text(dlg->title_label, title);
+    lv_obj_set_width(dlg->title_label, LV_PCT(100));
+    lv_obj_set_style_text_align(dlg->title_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(dlg->title_label, lv_color_hex(t->DIALOGUE.TITLE), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(dlg->title_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(dlg->title_label, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+
+    dlg->description_label = NULL;
+    if (description) {
+        dlg->description_label = lv_label_create(dlg->panel);
+        lv_label_set_text(dlg->description_label, description);
+        lv_obj_set_width(dlg->description_label, LV_PCT(100));
+        lv_obj_set_style_text_align(dlg->description_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_color(dlg->description_label, lv_color_hex(t->DIALOGUE.CONTENT), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(dlg->description_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_all(dlg->description_label, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
+        lv_label_set_long_mode(dlg->description_label, LV_LABEL_LONG_WRAP);
+    }
+
+    lv_obj_t *sep = lv_obj_create(dlg->panel);
+    lv_obj_set_size(sep, LV_PCT(100), 1);
+    lv_obj_clear_flag(sep, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(sep, lv_color_hex(t->DIALOGUE.BORDER), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(sep, t->DIALOGUE.BORDER_ALPHA, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(sep, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(sep, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(sep, 0, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_t *gap = lv_obj_create(dlg->panel);
+    lv_obj_set_size(gap, LV_PCT(100), 8);
+    lv_obj_clear_flag(gap, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(gap, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(gap, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(gap, 0, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_t *footer_row = lv_obj_create(dlg->panel);
+    lv_obj_set_size(footer_row, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_clear_flag(footer_row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(footer_row, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(footer_row, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(footer_row, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(footer_row, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(footer_row, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_flex_flow(footer_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_style_flex_main_place(footer_row, LV_FLEX_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_flex_cross_place(footer_row, LV_FLEX_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_t *glyph_a = create_footer_glyph(footer_row, t, "a", t->NAV.A, 0);
+    lv_obj_t *label_a = create_footer_text(footer_row, t, t->NAV.A.TEXT, t->NAV.A.TEXT_ALPHA, 0);
+    lv_label_set_text(label_a, nav_a);
+    (void) glyph_a;
+}
+
 void dialogue_show(mux_dialogue *dlg) {
     lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_y_cb);
     lv_anim_del(dlg->panel, (lv_anim_exec_xcb_t) panel_anim_x_cb);

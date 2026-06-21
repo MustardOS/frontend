@@ -57,6 +57,9 @@ void dialogue_init_remove(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *p
 void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
                            const char *title, const char *description, const char *message, const char *nav_b);
 
+void dialogue_init_accept(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
+                          const char *title, const char *description, const char *nav_a);
+
 void dialogue_show(mux_dialogue *dlg);
 
 void dialogue_hide(mux_dialogue *dlg);

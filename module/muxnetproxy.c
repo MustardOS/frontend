@@ -13,6 +13,9 @@ static int test_running = 0;
 static mux_dialogue save_dlg;
 static int save_dlg_active = 0;
 
+static mux_dialogue reboot_dlg;
+static int reboot_dlg_active = 0;
+
 static const char *proxy_schemes[] = {"http://", "https://", "socks5://"};
 
 #define PROXY_SCHEME_COUNT 3
@@ -111,7 +114,7 @@ static void write_environment_file(void) {
     }
 }
 
-static void save_proxy_options(void) {
+static int save_proxy_options(void) {
     const char *server = lv_label_get_text(ui_lblServerValue_proxy);
     const char *noproxy = lv_label_get_text(ui_lblNoProxyValue_proxy);
 
@@ -125,7 +128,15 @@ static void save_proxy_options(void) {
     refresh_config = 1;
     fields_modified = 0;
 
-    toast_message(lang.MUXNETPROXY.SAVED, LONG);
+    if (current_enabled()) {
+        dialogue_init_accept(&reboot_dlg, &theme, ui_screen, lang.MUXNETPROXY.SAVED, lang.MUXNETPROXY.REBOOT, lang.GENERIC.CONFIRM);
+        dialogue_show(&reboot_dlg);
+        reboot_dlg_active = 1;
+        msgbox_active = 1;
+        return 0;
+    }
+
+    return 1;
 }
 
 static void restore_proxy_values(void) {
@@ -254,12 +265,22 @@ static void handle_back(void) {
 }
 
 static void handle_a(void) {
+    if (reboot_dlg_active) {
+        reboot_dlg_active = 0;
+        msgbox_active = 0;
+        dialogue_hide(&reboot_dlg);
+        play_sound(SND_CONFIRM);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_proxy");
+        mux_input_stop();
+        return;
+    }
+
     if (save_dlg_active) {
         mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
         save_dlg_active = 0;
         dialogue_hide(&save_dlg);
 
-        if (opt == MUX_CONFIRM_YEP) save_proxy_options();
+        if (opt == MUX_CONFIRM_YEP && !save_proxy_options()) return;
 
         play_sound(SND_BACK);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_proxy");
@@ -274,6 +295,8 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
         save_dlg_active = 0;
@@ -296,21 +319,16 @@ static void handle_b(void) {
 }
 
 static void handle_b_hold(void) {
-    if (save_dlg_active) return;
+    if (save_dlg_active || reboot_dlg_active) return;
     if (key_show) key_backspace(ui_txtEntry_proxy);
 }
 
 static void handle_x(void) {
-    if (save_dlg_active || msgbox_active || hold_call) return;
+    if (save_dlg_active || reboot_dlg_active || msgbox_active || hold_call) return;
 
     if (key_show) {
         close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry : key_entry, ui_group, ui_txtEntry_proxy, ui_pnlEntry_proxy);
-        return;
     }
-
-    if (!fields_modified) return;
-    play_sound(SND_CONFIRM);
-    save_proxy_options();
 }
 
 static void handle_y(void) {
@@ -323,6 +341,8 @@ static void handle_y(void) {
 }
 
 static void handle_up(void) {
+    if (reboot_dlg_active) return;
+
     if (save_dlg_active) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
@@ -335,11 +355,13 @@ static void handle_up(void) {
 }
 
 static void handle_up_hold(void) {
-    if (save_dlg_active) return;
+    if (save_dlg_active || reboot_dlg_active) return;
     key_show ? key_up() : handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
+    if (reboot_dlg_active) return;
+
     if (save_dlg_active) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
@@ -352,11 +374,13 @@ static void handle_down(void) {
 }
 
 static void handle_down_hold(void) {
-    if (save_dlg_active) return;
+    if (save_dlg_active || reboot_dlg_active) return;
     key_show ? key_down() : handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
+    if (reboot_dlg_active) return;
+
     if (save_dlg_active) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
@@ -381,6 +405,8 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
+    if (reboot_dlg_active) return;
+
     if (save_dlg_active) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
@@ -405,7 +431,7 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (save_dlg_active) return;
+    if (save_dlg_active || reboot_dlg_active) return;
 
     if (!key_show) {
         struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
@@ -423,7 +449,7 @@ static void handle_left_hold(void) {
 }
 
 static void handle_right_hold(void) {
-    if (save_dlg_active) return;
+    if (save_dlg_active || reboot_dlg_active) return;
 
     if (!key_show) {
         struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
@@ -508,8 +534,6 @@ static void init_elements(void) {
             {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph,  "",                  0},
-            {ui_lblNavX,       lang.GENERIC.SAVE,   0},
             {NULL, NULL,                            0}
     });
 
@@ -560,6 +584,7 @@ int muxnetproxy_main(void) {
     fields_modified = 0;
     test_running = 0;
     save_dlg_active = 0;
+    reboot_dlg_active = 0;
 
     remove(PROXY_TEST_RESULT);
 

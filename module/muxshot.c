@@ -181,14 +181,18 @@ static void handle_a(void) {
 
     if (is_fullscreen) {
         is_fullscreen = 0;
-        lv_obj_set_style_img_opa(ui_imgScreenshot, 25, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_opa(ui_imgScreenshot, 64, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_to_index(ui_imgScreenshot, (int16_t) (lv_obj_get_index(ui_pnlWall) + 1));
         lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
     } else {
         is_fullscreen = 1;
         lv_obj_set_style_img_opa(ui_imgScreenshot, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_foreground(ui_imgScreenshot);
         lv_obj_add_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -244,9 +248,20 @@ static void init_elements(void) {
     });
 
     ui_imgScreenshot = lv_img_create(ui_screen);
-    lv_img_set_pivot(ui_imgScreenshot, 0, 0);
+
     lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
-    lv_obj_set_style_img_opa(ui_imgScreenshot, 25, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_width(ui_imgScreenshot, device.MUX.WIDTH);
+    lv_obj_set_height(ui_imgScreenshot, device.MUX.HEIGHT);
+    lv_obj_set_align(ui_imgScreenshot, LV_ALIGN_CENTER);
+
+    lv_obj_set_style_img_opa(ui_imgScreenshot, 64, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_imgScreenshot, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_imgScreenshot, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_width(ui_imgScreenshot, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_imgScreenshot, 0, MU_OBJ_MAIN_DEFAULT);
+
+    mu_img_no_shadow(ui_imgScreenshot);
+    lv_obj_move_to_index(ui_imgScreenshot, (int16_t) (lv_obj_get_index(ui_pnlWall) + 1));
 
     overlay_display();
 }

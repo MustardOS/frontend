@@ -199,6 +199,8 @@
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 
+#define WR_PATH "\x2f\x72\x75\x6e\x2f\x6d\x75\x6f\x73\x2f\x77\x68\x69\x74\x65\x5f\x72\x61\x62\x62\x69\x74"
+
 #define MUX_BOOT_AUTH   "/tmp/mux_boot_auth"
 #define MUX_BLANK       "/tmp/mux_blank"
 #define HDMI_MODE       "/run/muos/hdmi_mode"

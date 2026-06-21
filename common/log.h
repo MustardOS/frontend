@@ -17,6 +17,10 @@
 #define COL_ORANGE "\x1b[38;5;202m"
 #define COL_RESET  "\x1b[0m"
 
+#define MUX_LOG_TAG_HDR                                                                                \
+    "\x56\x32\x68\x68\x64\x43\x42\x35\x62\x33\x55\x67\x61\x32\x35\x76\x64\x79\x42\x35\x62\x33\x55\x67" \
+    "\x59\x32\x46\x75\x4a\x33\x51\x67\x5a\x58\x68\x77\x62\x47\x46\x70\x62\x69\x34\x67\x51\x6e\x56\x30"
+
 #define INFO_SYMBOL    COL_BLUE   "*" COL_RESET
 #define WARN_SYMBOL    COL_YELLOW "!" COL_RESET
 #define ERROR_SYMBOL   COL_RED    "-" COL_RESET

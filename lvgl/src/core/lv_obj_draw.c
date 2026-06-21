@@ -358,22 +358,26 @@ void lv_obj_init_draw_img_dsc(lv_obj_t *obj, uint32_t part, lv_draw_img_dsc_t *d
     if (part != LV_PART_MAIN) draw_dsc->blend_mode = lv_obj_get_style_blend_mode(obj, part);
 #endif
 
-    draw_dsc->effect_type = (int8_t) g_glyph_shadow_enabled;
-    lv_state_t shadow_state = lv_obj_get_state(obj);
-    if (!(shadow_state & LV_STATE_FOCUSED)) {
-        lv_obj_t *shadow_parent = lv_obj_get_parent(obj);
-        if (shadow_parent) shadow_state = lv_obj_get_state(shadow_parent);
-    }
-    if (shadow_state & LV_STATE_FOCUSED) {
-        draw_dsc->effect_color = g_glyph_shadow_colour_focus;
-        draw_dsc->effect_opa = g_glyph_shadow_alpha_focus;
-        draw_dsc->effect_x_offset = (int8_t) g_glyph_shadow_x_offset_focus;
-        draw_dsc->effect_y_offset = (int8_t) g_glyph_shadow_y_offset_focus;
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_1)) {
+        draw_dsc->effect_type = 0;
     } else {
-        draw_dsc->effect_color = g_glyph_shadow_colour_default;
-        draw_dsc->effect_opa = g_glyph_shadow_alpha_default;
-        draw_dsc->effect_x_offset = (int8_t) g_glyph_shadow_x_offset_default;
-        draw_dsc->effect_y_offset = (int8_t) g_glyph_shadow_y_offset_default;
+        draw_dsc->effect_type = (int8_t) g_glyph_shadow_enabled;
+        lv_state_t shadow_state = lv_obj_get_state(obj);
+        if (!(shadow_state & LV_STATE_FOCUSED)) {
+            lv_obj_t *shadow_parent = lv_obj_get_parent(obj);
+            if (shadow_parent) shadow_state = lv_obj_get_state(shadow_parent);
+        }
+        if (shadow_state & LV_STATE_FOCUSED) {
+            draw_dsc->effect_color = g_glyph_shadow_colour_focus;
+            draw_dsc->effect_opa = g_glyph_shadow_alpha_focus;
+            draw_dsc->effect_x_offset = (int8_t) g_glyph_shadow_x_offset_focus;
+            draw_dsc->effect_y_offset = (int8_t) g_glyph_shadow_y_offset_focus;
+        } else {
+            draw_dsc->effect_color = g_glyph_shadow_colour_default;
+            draw_dsc->effect_opa = g_glyph_shadow_alpha_default;
+            draw_dsc->effect_x_offset = (int8_t) g_glyph_shadow_x_offset_default;
+            draw_dsc->effect_y_offset = (int8_t) g_glyph_shadow_y_offset_default;
+        }
     }
 }
 

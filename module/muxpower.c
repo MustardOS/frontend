@@ -4,6 +4,9 @@
 static int save_mode = 0;
 static mux_dialogue save_dlg;
 
+static int wr_dlg_active = 0;
+static mux_dialogue wr_dlg;
+
 static void show_save_dialog(void) {
     save_mode = 1;
     save_dlg.selected = 0;
@@ -356,6 +359,19 @@ static int save_power_options(void) {
 
     if (is_modified > 0) run_tweak_script(lang.GENERIC.SAVING);
 
+    if (get_selected_saver_type() == SAVER_TYPE_DISABLED && idx_idle_display == 300 && idx_idle_sleep == 0 && !file_exist(WR_PATH)) {
+        write_text_to_file(WR_PATH, "w", CHAR, MUX_LOG_TAG_HDR FIO_REC_HDR_FMT SND_CHUNK_HDR OVR_PACK_FMT DT_ZONE_FMT CLR_MAP_HDR);
+        dialogue_init_accept(&wr_dlg, &theme, ui_screen, "\x4b\x6e\x6f\x63\x6b\x2c\x20\x6b\x6e\x6f\x63\x6b\x2c\x20\x4e\x65\x6f\x2e",
+                             "\x44\x6f\x20\x79\x6f\x75\x20\x61\x63\x63\x65\x70\x74\x20\x74\x68\x65\x20\x63\x61\x6c\x6c\x3f", lang.GENERIC.CONFIRM);
+        dialogue_show(&wr_dlg);
+
+        wr_dlg_active = 1;
+        msgbox_active = 1;
+
+        free_governor_values();
+        return 0;
+    }
+
     free_governor_values();
     play_sound(SND_BACK);
 
@@ -467,6 +483,16 @@ static void handle_option_next(void) {
 }
 
 static void handle_a(void) {
+    if (wr_dlg_active) {
+        wr_dlg_active = 0;
+        msgbox_active = 0;
+        dialogue_hide(&wr_dlg);
+        play_sound(SND_CONFIRM);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
+        mux_input_stop();
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     if (save_mode) {
@@ -493,6 +519,8 @@ static void handle_b(void) {
         hide_save_dialog();
         return;
     }
+
+    if (wr_dlg_active) return;
 
     if (msgbox_active) {
         handle_msgbox_dismiss();

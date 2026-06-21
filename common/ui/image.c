@@ -347,10 +347,12 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
     lv_obj_set_pos(overlay_image, 0, 0);
     lv_obj_set_style_bg_opa(overlay_image, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(overlay_image, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_width(overlay_image, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_all(overlay_image, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_img_src(overlay_image, static_image_embed, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_img_tiled(overlay_image, true, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_img_opa(overlay_image, config.VISUAL.OVERLAYTRANSPARENCY, MU_OBJ_MAIN_DEFAULT);
+    mu_img_no_shadow(overlay_image);
     lv_obj_move_foreground(overlay_image);
 }
 
@@ -401,6 +403,7 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
         if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
 
         lv_img_set_src(kiosk_image, static_image_embed);
+        mu_img_no_shadow(kiosk_image);
         lv_obj_move_foreground(kiosk_image);
     }
 }
