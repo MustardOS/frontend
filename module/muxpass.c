@@ -157,7 +157,7 @@ int muxpass_main(int auth_type) {
 
     apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree, ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_navigation_group();

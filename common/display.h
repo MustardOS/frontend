@@ -28,6 +28,10 @@ void display_set_video_overlay(display_overlay_fn fn);
 
 void display_clear_video_overlay(void);
 
+void display_set_video_background(display_overlay_fn fn);
+
+void display_clear_video_background(void);
+
 SDL_Texture *display_load_png_texture(const char *path);
 
 void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity);

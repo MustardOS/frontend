@@ -348,7 +348,8 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->VISUAL.DISPLAYEMPTYFOLDER, &d, "folderempty", 0);
     CFG_INT(config->VISUAL.MENUCOUNTERFOLDER, &d, "counterfolder", 1);
     CFG_INT(config->VISUAL.MENUCOUNTERFILE, &d, "counterfile", 1);
-    CFG_INT(config->VISUAL.BACKGROUNDANIMATION, &d, "backgroundanimation", 0);
+    CFG_INT(config->VISUAL.VIDEO_WALLPAPER, &d, "video_wallpaper", 0);
+    CFG_INT(config->VISUAL.BACKGROUND_SCALE, &d, "background_scale", 2);
     CFG_INT(config->VISUAL.LAUNCHSPLASH, &d, "launchsplash", 0);
     CFG_INT(config->VISUAL.BLACKFADE, &d, "blackfade", 1);
     CFG_INT(config->VISUAL.CONTENTCOLLECT, &d, "contentcollect", 0);

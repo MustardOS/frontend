@@ -301,7 +301,8 @@ struct mux_config {
         int16_t DISPLAYEMPTYFOLDER;
         int16_t MENUCOUNTERFOLDER;
         int16_t MENUCOUNTERFILE;
-        int16_t BACKGROUNDANIMATION;
+        int16_t VIDEO_WALLPAPER;
+        int16_t BACKGROUND_SCALE;
         int16_t LAUNCHSPLASH;
         int16_t BLACKFADE;
         int16_t CONTENTCOLLECT;

@@ -84,14 +84,14 @@ static void save_glyph_dropdown(lv_obj_t *dropdown, int original, const char *ke
 
 static void restore_width_dropdown(lv_obj_t *dropdown, int16_t stored) {
     uint32_t idx = 0;
-    if (stored >= 10 && stored <= 100) idx = (uint32_t)(stored - 9);
+    if (stored >= 10 && stored <= 100) idx = (uint32_t) (stored - 9);
     lv_dropdown_set_selected(dropdown, idx);
 }
 
 static void save_width_dropdown(lv_obj_t *dropdown, int original, const char *key, int16_t *cfg, int *is_modified) {
     uint32_t sel = lv_dropdown_get_selected(dropdown);
     if ((int) sel == original) return;
-    int16_t val = (sel >= 1) ? (int16_t)(sel + 9) : 0;
+    int16_t val = (sel >= 1) ? (int16_t) (sel + 9) : 0;
     write_text_to_file(key, "w", INT, (int) val);
     *cfg = val;
     (*is_modified)++;
@@ -408,7 +408,7 @@ int muxthemeopt_main(void) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
     init_elements();

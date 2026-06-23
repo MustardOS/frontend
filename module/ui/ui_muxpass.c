@@ -10,7 +10,7 @@ lv_obj_t *ui_rolComboSix;
 static const char *ROLLER_OPTS = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nA\nB\nC\nD\nE\nF";
 
 static lv_obj_t *make_pass_roller(lv_obj_t *parent, lv_font_t *roller_font) {
-    lv_obj_t * r = lv_roller_create(parent);
+    lv_obj_t *r = lv_roller_create(parent);
 
     lv_roller_set_options(r, ROLLER_OPTS, LV_ROLLER_MODE_INFINITE);
     lv_obj_set_size(r, 80, 320);

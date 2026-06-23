@@ -702,7 +702,7 @@ int muxhistory_main(int his_index) {
 
     init_fonts();
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
 
     reset_ui_groups();
 

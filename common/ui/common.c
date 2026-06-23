@@ -1636,7 +1636,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
             lv_img_set_src(ui_imgWall, &ui_img_blank);
         }
     } else {
-        load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, wall_type);
+        load_wallpaper(ui_screen, ui_group, ui_imgWall, wall_type);
     }
 
     static char static_image[MAX_BUFFER_SIZE];

@@ -1,11 +1,10 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include "../init.h"
 #include "common.h"
 #include "image.h"
-#include "../anim.h"
+#include "../video.h"
 #include "../log.h"
 #include "../config.h"
 #include "../device.h"
@@ -14,11 +13,7 @@
 
 char current_wall[MAX_BUFFER_SIZE];
 
-static lv_obj_t *img_obj;
-static char **img_paths = NULL;
-static int img_paths_count = 0;
-static lv_obj_t *wall_img = NULL;
-static lv_anim_t animation;
+static void read_image_dims(const char *path, int *w, int *h);
 
 int load_element_image_specifics(const char *mux_dim, const char *program, const char *image_type,
                                  const char *element, const char *element_fallback,
@@ -102,7 +97,7 @@ int load_image_specifics(const char *mux_dim, const char *program, const char *i
     return 0;
 }
 
-char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random, int wall_type) {
+char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
     static char wall_image_path[MAX_BUFFER_SIZE];
@@ -118,34 +113,57 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     }
 
     static const char *cached_theme_base;
-    static int cached_animated = -1, cached_random = -1, cached_wall_type = -1;
+    static int cached_wall_type = -1;
+    static int cached_video_wallpaper = -1;
     static char cached_program[MAX_BUFFER_SIZE];
     static char cached_element[MAX_BUFFER_SIZE];
 
     if (theme_base == cached_theme_base &&
-        animated == cached_animated &&
-        random == cached_random &&
         wall_type == cached_wall_type &&
+        config.VISUAL.VIDEO_WALLPAPER == cached_video_wallpaper &&
         strcmp(program, cached_program) == 0 &&
         strcmp(element, cached_element) == 0) {
         return wall_image_embed;
     }
 
     cached_theme_base = theme_base;
-    cached_animated = animated;
-    cached_random = random;
     cached_wall_type = wall_type;
+    cached_video_wallpaper = config.VISUAL.VIDEO_WALLPAPER;
     snprintf(cached_program, sizeof(cached_program), "%s", program);
     snprintf(cached_element, sizeof(cached_element), "%s", element);
     wall_image_embed[0] = '\0';
 
-    const char *wall_extension = random ? "0.png" : (animated == 1 ? "gif" : (animated == 2 ? "0.png" : "png"));
-
-#define TRY_EMBED(path_buf)                                                                \
-    do {                                                                                   \
-        int _w = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", (path_buf)); \
-        if (_w < 0 || (size_t)_w >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0';  \
+#define TRY_EMBED(path_buf)                                                                    \
+    do {                                                                                       \
+        int embed_len = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", (path_buf)); \
+        if (embed_len < 0 || (size_t)embed_len >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0'; \
     } while (0)
+
+    if (config.VISUAL.VIDEO_WALLPAPER) {
+        const char *wall_bases[] = {theme_base, INTERNAL_THEME};
+        const char *ad_dims[] = {mux_dim, ""};
+        for (size_t base_idx = 0; base_idx < 2; base_idx++) {
+            if (!wall_bases[base_idx]) continue;
+            if (base_idx == 1 && wall_bases[1] == wall_bases[0]) continue;
+            for (size_t dim_idx = 0; dim_idx < 2; dim_idx++) {
+                int mp4_w;
+                if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
+                    mp4_w = snprintf(wall_image_path, sizeof(wall_image_path),
+                                     "%s/%simage/wall/%s.mp4", wall_bases[base_idx], ad_dims[dim_idx], program);
+                    if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path) && file_exist(wall_image_path)) {
+                        TRY_EMBED(wall_image_path);
+                        return wall_image_embed;
+                    }
+                }
+                mp4_w = snprintf(wall_image_path, sizeof(wall_image_path),
+                                 "%s/%simage/background.mp4", wall_bases[base_idx], ad_dims[dim_idx]);
+                if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path) && file_exist(wall_image_path)) {
+                    TRY_EMBED(wall_image_path);
+                    return wall_image_embed;
+                }
+            }
+        }
+    }
 
     if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
         const char *catalogue = NULL;
@@ -162,22 +180,24 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             default:
                 break;
         }
-        if (catalogue && load_image_catalogue(catalogue, element, "", "default", mux_dim, "wall", wall_image_path, sizeof(wall_image_path))) {
+        if (catalogue && load_image_catalogue(catalogue, element, "", "default", mux_dim, "wall",
+                                              wall_image_path, sizeof(wall_image_path))) {
             TRY_EMBED(wall_image_path);
             return wall_image_embed;
         }
 
-        if (load_element_image_specifics(mux_dim, program, "wall", strcmp(program, "muxlaunch") == 0 ? element : "default",
-                                         "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
+        if (load_element_image_specifics(mux_dim, program, "wall",
+                                         strcmp(program, "muxlaunch") == 0 ? element : "default",
+                                         "default", "png", wall_image_path, sizeof(wall_image_path))) {
             TRY_EMBED(wall_image_path);
             return wall_image_embed;
         }
     }
 
-    if (load_image_specifics(mux_dim, program, "wall", wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-        load_image_specifics("", program, "wall", wall_extension, wall_image_path, sizeof(wall_image_path))) {
+    if (load_image_specifics(mux_dim, program, "wall", "png", wall_image_path, sizeof(wall_image_path)) ||
+        load_image_specifics("", program, "wall", "png", wall_image_path, sizeof(wall_image_path))) {
         TRY_EMBED(wall_image_path);
-    } else if (animated == 0 && !random) {
+    } else {
         if (load_image_specifics(mux_dim, program, "wall", "svg", wall_image_path, sizeof(wall_image_path)) ||
             load_image_specifics("", program, "wall", "svg", wall_image_path, sizeof(wall_image_path))) {
             TRY_EMBED(wall_image_path);
@@ -189,61 +209,64 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     return wall_image_embed;
 }
 
-void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall,
-                    lv_obj_t *ui_imgWall, int wall_type) {
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_imgWall, int wall_type) {
     static char new_wall[MAX_BUFFER_SIZE];
-    snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(
-            ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND, wall_type));
+    snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(ui_screen, ui_group, wall_type));
 
     if (strcasecmp(new_wall, current_wall) != 0) {
         snprintf(current_wall, sizeof(current_wall), "%s", new_wall);
         if (strlen(new_wall) > 3) {
-            if (theme.MISC.RANDOM_BACKGROUND) {
-                load_image_random(ui_imgWall, new_wall);
+            size_t wall_len = strlen(new_wall);
+            int wall_is_mp4 = wall_len > 6 && strcasecmp(new_wall + wall_len - 4, ".mp4") == 0;
+            if (wall_is_mp4) {
+                const char *mp4_path = new_wall + 2;
+                video_wallpaper_play(mp4_path);
+                lv_img_set_src(ui_imgWall, &ui_img_blank);
+                lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                set_gradient_visible(0);
             } else {
-                switch (theme.MISC.ANIMATED_BACKGROUND) {
-                    case 1:
-                        wall_img = lv_gif_create(ui_pnlWall);
-                        lv_gif_set_src(wall_img, new_wall);
-                        break;
-                    case 2:
-                        if (config.VISUAL.BACKGROUNDANIMATION) {
-                            int fg = theme.ANIMATION.ANIMATION_FOREGROUND;
-                            int pos = theme.ANIMATION.ANIMATION_POSITION;
-                            int alpha = theme.ANIMATION.ANIMATION_ALPHA;
-                            anim_request(new_wall, theme.ANIMATION.ANIMATION_DELAY, fg, pos, alpha);
-                            lv_img_set_src(ui_imgWall, &ui_img_blank);
-                            if (!fg) {
-                                lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-                                lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-                                set_gradient_visible(0);
-                            }
-                        } else {
-                            size_t wlen2 = strlen(new_wall);
-                            if (wlen2 > 4 && strcmp(new_wall + wlen2 - 4, ".svg") == 0) {
-                                char svg_wall[MAX_BUFFER_SIZE];
-                                snprintf(svg_wall, sizeof(svg_wall), "%s?%dx%d", new_wall, device.MUX.WIDTH, device.MUX.HEIGHT);
-                                lv_img_set_src(ui_imgWall, svg_wall);
-                            } else {
-                                lv_img_set_src(ui_imgWall, new_wall);
-                            }
+                if (video_wallpaper_active()) {
+                    video_wallpaper_stop();
+                    set_gradient_visible(1);
+                    lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+                    lv_obj_set_style_bg_opa(ui_screen, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
+                                                       ? theme.SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
+                }
+                size_t wlen = strlen(new_wall);
+                if (wlen > 4 && strcmp(new_wall + wlen - 4, ".svg") == 0) {
+                    char svg_wall[MAX_BUFFER_SIZE];
+                    snprintf(svg_wall, sizeof(svg_wall), "%s?%dx%d", new_wall, device.MUX.WIDTH, device.MUX.HEIGHT);
+                    lv_img_set_src(ui_imgWall, svg_wall);
+                } else {
+                    lv_img_set_zoom(ui_imgWall, LV_IMG_ZOOM_NONE);
+                    lv_img_set_src(ui_imgWall, new_wall);
+                    if (config.VISUAL.BACKGROUND_SCALE > 0) {
+                        int iw = 0, ih = 0;
+                        read_image_dims(new_wall + 2, &iw, &ih);
+                        if (iw > 0 && ih > 0) {
+                            float wr = (float) device.MUX.WIDTH / (float) iw;
+                            float hr = (float) device.MUX.HEIGHT / (float) ih;
+                            float zr = (config.VISUAL.BACKGROUND_SCALE == 2)
+                                       ? (wr > hr ? wr : hr)
+                                       : (wr < hr ? wr : hr);
+                            uint16_t zoom = (uint16_t) (zr * (float) LV_IMG_ZOOM_NONE);
+                            if (zoom < 1) zoom = 1;
+                            lv_img_set_zoom(ui_imgWall, zoom);
+                            lv_img_set_pivot(ui_imgWall, (lv_coord_t) (iw / 2), (lv_coord_t) (ih / 2));
+                            lv_obj_align(ui_imgWall, LV_ALIGN_CENTER, 0, 0);
                         }
-                        break;
-                    default: {
-                        size_t wlen = strlen(new_wall);
-                        if (wlen > 4 && strcmp(new_wall + wlen - 4, ".svg") == 0) {
-                            char svg_wall[MAX_BUFFER_SIZE];
-                            snprintf(svg_wall, sizeof(svg_wall), "%s?%dx%d", new_wall, device.MUX.WIDTH, device.MUX.HEIGHT);
-                            lv_img_set_src(ui_imgWall, svg_wall);
-                        } else {
-                            lv_img_set_src(ui_imgWall, new_wall);
-                        }
-                        break;
                     }
                 }
             }
         } else {
-            unload_image_animation();
+            if (video_wallpaper_active()) {
+                video_wallpaper_stop();
+                set_gradient_visible(1);
+                lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+                lv_obj_set_style_bg_opa(ui_screen, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
+                                                   ? theme.SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
+            }
             lv_img_set_src(ui_imgWall, &ui_img_blank);
         }
     }
@@ -419,109 +442,14 @@ int load_terminal_resource(const char *resource, const char *extension, char *bu
     return 0;
 }
 
-static void image_anim_cb(void *var, int32_t img_idx) {
-    lv_img_set_src(img_obj, img_paths[img_idx]);
-}
-
-void build_image_array(char *base_image_path) {
-    char base_path[PATH_MAX];
-    char path[PATH_MAX];
-    size_t base_len = strlen(base_image_path) - 6;
-
-    if (base_len >= PATH_MAX) {
-        LOG_ERROR("image", "Base path exceeds maximum allowed length: %s", base_image_path);
-        return;
-    }
-
-    memcpy(base_path, base_image_path, base_len);
-    base_path[base_len] = '\0';
-
-    int index = 0;
-    int file_exists = 1;
-
-    while (file_exists) {
-        snprintf(path, sizeof(path), "%s.%d.png", base_path + 2, index);
-        file_exists = file_exist(path);
-
-        if (file_exists) {
-            size_t needed_size = snprintf(NULL, 0, "%s.%d.png", base_path, index) + 1;
-            char *path_embed = malloc(needed_size);
-            if (!path_embed) {
-                LOG_ERROR("image", "Failed to allocate memory for image: %s.%d.png", base_path, index);
-                break;
-            }
-
-            snprintf(path_embed, needed_size, "%s.%d.png", base_path, index);
-
-            char **img_temp = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
-            if (!img_temp) {
-                LOG_ERROR("image", "Failed to reallocate image path array");
-                free(path_embed);
-                break;
-            }
-
-            img_paths = img_temp;
-            img_paths[img_paths_count] = path_embed;
-            img_paths_count++;
-        }
-
-        index++;
-    }
-}
-
-void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path) {
-    LOG_INFO(mux_module, "Load Image Random: %s", base_image_path);
-    img_paths_count = 0;
-    build_image_array(base_image_path);
-
-    img_obj = ui_imgWall;
-
-    if (img_paths_count > 0) {
-        lv_img_set_src(ui_imgWall, img_paths[random() % img_paths_count]);
-    } else {
-        lv_img_set_src(ui_imgWall, &ui_img_blank);
-    }
-}
-
-void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_count, char *base_image_path) {
-    LOG_INFO(mux_module, "Load Image Animation: %s", base_image_path);
-    img_paths_count = 0;
-    build_image_array(base_image_path);
-
-    img_obj = ui_imgWall;
-
-    if (img_paths_count > 1 && config.VISUAL.BACKGROUNDANIMATION) {
-        lv_obj_center(img_obj);
-
-        lv_anim_init(&animation);
-        lv_anim_set_var(&animation, img_obj);
-        lv_anim_set_values(&animation, 0, img_paths_count - 1);
-        lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t) image_anim_cb);
-        lv_anim_set_time(&animation, animation_time * img_paths_count);
-        lv_anim_set_repeat_count(&animation, repeat_count);
-
-        lv_anim_start(&animation);
-    } else {
-        image_anim_cb(NULL, 0);
-    }
-}
-
 void unload_image_animation(void) {
-    if (anim_is_active()) {
-        int was_background = !anim_is_foreground();
-        anim_unload();
-        if (was_background) {
-            set_gradient_visible(1);
-            lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
-            lv_obj_set_style_bg_opa(ui_screen, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
-                                               ? theme.SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
-        }
+    if (video_wallpaper_active()) {
+        video_wallpaper_stop();
+        set_gradient_visible(1);
+        lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(ui_screen, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
+                                           ? theme.SYSTEM.BACKGROUND_ALPHA : 0, MU_OBJ_MAIN_DEFAULT);
     }
-
-    if (lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
-    wall_img = NULL;
-
-    if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
 static void read_image_dims(const char *path, int *w, int *h) {

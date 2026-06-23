@@ -262,6 +262,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.CRASH_MESSAGE, "If this continues, please report it to the MustardOS team!");
     GENERIC_FIELD(lang->GENERIC.CRASH_MODULE, "Module");
     GENERIC_FIELD(lang->GENERIC.CRASH_FAULT, "Fault");
+    GENERIC_FIELD(lang->GENERIC.RANDOM, "Random");
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");
@@ -653,7 +654,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEMEALTERNATE, "Alternative Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCHSPLASH, "Content Launch Splash");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BLACKFADE, "Black Fade Animation");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.VIDEOWALLPAPER,  "Video Wallpaper");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BACKGROUNDSCALE, "Background Scale");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SHUFFLE, "Content Shuffle");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONTENTWIDTH, "Content Full Width");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.TITLE, "Content Box Art");
@@ -702,7 +704,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMEALTERNATE, "Switch between different theme alternatives");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSPLASH, "Toggle the splash image on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BLACKFADE, "Toggle the fade to black animation on content launching");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.VIDEOWALLPAPER,  "Enable background video wallpaper from the active theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BACKGROUNDSCALE, "Controls how the background image or video wallpaper is scaled to fit the screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTIMAGE, "Change the display priority of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTALIGN, "Change the screen alignment of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONTENTWIDTH, "Toggle if content highlight uses full width of device screen");

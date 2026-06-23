@@ -288,7 +288,8 @@ static void create_app_items(void) {
             lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
             if (ui_lblAppItemGlyph) {
                 apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, items[i].glyph_icon);
-                if (config.VISUAL.LISTGLYPH && lv_img_get_src(ui_lblAppItemGlyph) == NULL) apply_app_glyph(items[i].extra_data, items[i].glyph_icon, ui_lblAppItemGlyph);
+                if (config.VISUAL.LISTGLYPH && lv_img_get_src(ui_lblAppItemGlyph) == NULL)
+                    apply_app_glyph(items[i].extra_data, items[i].glyph_icon, ui_lblAppItemGlyph);
                 lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
             }
 
@@ -503,7 +504,7 @@ int muxapp_main(void) {
 
     char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
     lv_obj_set_user_data(lv_group_get_focused(ui_group), item_name);
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_APPLICATION);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_APPLICATION);
 
     if (ui_count > 0) {
         if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) list_nav_move(ain_index, +1);

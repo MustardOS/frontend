@@ -161,7 +161,8 @@
     CUSTOM(ThemeResolution, THEMERESOLUTION, "resolution")  \
     CUSTOM(ThemeScaling,    THEMESCALING,    "scaling")     \
     CUSTOM(ThemeAlternate,  THEMEALTERNATE,  "alternate")   \
-    CUSTOM(Animation,       ANIMATION,       "animation")   \
+    CUSTOM(VideoWallpaper,  VIDEOWALLPAPER,  "videowallpaper")  \
+    CUSTOM(BackgroundScale, BACKGROUNDSCALE, "backgroundscale") \
     CUSTOM(Music,           MUSIC,           "music")       \
     CUSTOM(MusicVolume,     MUSICVOLUME,     "musicvolume") \
     CUSTOM(BlackFade,       BLACKFADE,       "blackfade")   \

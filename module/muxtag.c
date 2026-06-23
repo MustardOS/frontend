@@ -194,15 +194,15 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                      1},
-            {ui_lblNavA,      lang.GENERIC.CONTENT, 1},
-            {ui_lblNavBGlyph, "",                      0},
-            {ui_lblNavB,      lang.GENERIC.BACK,       0},
-            {ui_lblNavXGlyph, "",                      1},
-            {ui_lblNavX,      lang.GENERIC.DIRECTORY,  1},
-            {ui_lblNavYGlyph, "",                      1},
-            {ui_lblNavY,      lang.GENERIC.RECURSIVE,  1},
-            {NULL, NULL,                               0}
+            {ui_lblNavAGlyph, "",                     1},
+            {ui_lblNavA,      lang.GENERIC.CONTENT,   1},
+            {ui_lblNavBGlyph, "",                     0},
+            {ui_lblNavB,      lang.GENERIC.BACK,      0},
+            {ui_lblNavXGlyph, "",                     1},
+            {ui_lblNavX,      lang.GENERIC.DIRECTORY, 1},
+            {ui_lblNavYGlyph, "",                     1},
+            {ui_lblNavY,      lang.GENERIC.RECURSIVE, 1},
+            {NULL, NULL,                              0}
     });
 
     overlay_display();
@@ -227,7 +227,7 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
     init_fonts();
 
     generate_available_tags();

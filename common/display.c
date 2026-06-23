@@ -13,7 +13,6 @@
 #include "display.h"
 #include "ui/common.h"
 #include "inotify.h"
-#include "video.h"
 #include "fileio.h"
 #include "saver.h"
 #include "saver/dvd.h"
@@ -64,12 +63,17 @@ static uint32_t last_saver_exit = 0;
 static uint8_t display_fade_alpha = 0;
 static bool gradient_captured = false;
 static display_overlay_fn video_overlay_fn_ptr = NULL;
+static display_overlay_fn video_bg_fn_ptr = NULL;
 
 SDL_Renderer *display_get_renderer(void) { return monitor.renderer; }
 
 void display_set_video_overlay(display_overlay_fn fn) { video_overlay_fn_ptr = fn; }
 
 void display_clear_video_overlay(void) { video_overlay_fn_ptr = NULL; }
+
+void display_set_video_background(display_overlay_fn fn) { video_bg_fn_ptr = fn; }
+
+void display_clear_video_background(void) { video_bg_fn_ptr = NULL; }
 
 void display_set_fade_alpha(uint8_t alpha) {
     display_fade_alpha = alpha;
@@ -719,6 +723,10 @@ void display_composite_frame(void) {
         }
         anim_tick(monitor.renderer);
         SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
+    } else if (video_bg_fn_ptr) {
+        gradient_captured = false;
+        video_bg_fn_ptr(monitor.renderer);
+        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     } else {
         gradient_captured = false;
         SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_NONE);
@@ -860,7 +868,6 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
         if (now - last_saver_exit > SAVER_DELAY) {
             saver_update();
             if (saver_active()) {
-                video_preview_cancel();
                 pending_rect_valid = false;
                 run_saver_loop(0);
                 last_saver_exit = SDL_GetTicks();

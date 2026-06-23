@@ -156,6 +156,7 @@ struct mux_lang {
         char CRASH_MESSAGE[MAX_BUFFER_SIZE];
         char CRASH_MODULE[MAX_BUFFER_SIZE];
         char CRASH_FAULT[MAX_BUFFER_SIZE];
+        char RANDOM[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -633,7 +634,8 @@ struct mux_lang {
         char SCREEN[MAX_BUFFER_SIZE];
         char THEMEALTERNATE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
-        char ANIMATION[MAX_BUFFER_SIZE];
+        char VIDEOWALLPAPER[MAX_BUFFER_SIZE];
+        char BACKGROUNDSCALE[MAX_BUFFER_SIZE];
         char BLACKFADE[MAX_BUFFER_SIZE];
         char LAUNCHSPLASH[MAX_BUFFER_SIZE];
         char SHUFFLE[MAX_BUFFER_SIZE];
@@ -700,7 +702,8 @@ struct mux_lang {
             char THEMESCALING[MAX_BUFFER_SIZE];
             char THEMERESOLUTION[MAX_BUFFER_SIZE];
             char THEMEALTERNATE[MAX_BUFFER_SIZE];
-            char ANIMATION[MAX_BUFFER_SIZE];
+            char VIDEOWALLPAPER[MAX_BUFFER_SIZE];
+            char BACKGROUNDSCALE[MAX_BUFFER_SIZE];
             char BOXARTIMAGE[MAX_BUFFER_SIZE];
             char BOXARTALIGN[MAX_BUFFER_SIZE];
             char BOXARTHIDE[MAX_BUFFER_SIZE];

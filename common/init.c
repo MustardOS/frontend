@@ -21,6 +21,7 @@
 #include "theme.h"
 #include "svg.h"
 #include "crash.h"
+#include "image.h"
 #include "fileio.h"
 #include "exec.h"
 #include "datetime.h"
@@ -178,6 +179,7 @@ void init_display(void) {
     }
 
     lv_init();
+    img_init();
     svg_init();
     sdl_init();
 
@@ -239,6 +241,7 @@ void init_display(void) {
     disp_drv.antialiasing = theme.MISC.ANTIALIASING;
     disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     disp_drv.clear_cb = clear_cb;
+    disp_drv.screen_transp = 1;
 
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
 

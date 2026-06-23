@@ -32,10 +32,9 @@ int load_element_image_specifics(const char *mux_dim, const char *program, const
 int load_image_specifics(const char *mux_dim, const char *program, const char *image_type,
                          const char *image_extension, char *image_path, size_t path_size);
 
-char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random, int wall_type);
+char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type);
 
-void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall,
-                    lv_obj_t *ui_imgWall, int wall_type);
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_imgWall, int wall_type);
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type);
 
@@ -46,12 +45,6 @@ void load_overlay_image_sdl(void);
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size);
-
-void build_image_array(char *base_image_path);
-
-void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
-
-void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_count, char *current_wall);
 
 void unload_image_animation(void);
 

@@ -104,10 +104,6 @@ static int visible_theme_alternate(void) {
     return alt_theme_count > 0 && !lv_obj_has_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
 }
 
-static int visible_animation(void) {
-    return !lv_obj_has_flag(ui_pnlAnimation_custom, LV_OBJ_FLAG_HIDDEN);
-}
-
 static void populate_theme_alternates(void) {
     lv_dropdown_clear_options(ui_droThemeAlternate_custom);
 
@@ -177,6 +173,12 @@ static void init_navigation_group(void) {
             lang.MUXCUSTOM.SCALING.STRETCH
     };
 
+    char *background_scale_options[] = {
+            lang.MUXCUSTOM.SCALING.NO_SCALE,
+            lang.MUXCUSTOM.SCALING.SCALE,
+            lang.MUXCUSTOM.SCALING.STRETCH
+    };
+
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ContentOptions, lang.MUXCUSTOM.CONTENT, "content", NULL, 0);
@@ -192,7 +194,8 @@ static void init_navigation_group(void) {
         lv_obj_add_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
     }
 
-    INIT_OPTION_ITEM(-1, custom, Animation, lang.MUXCUSTOM.ANIMATION, "animation", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, VideoWallpaper, lang.MUXCUSTOM.VIDEOWALLPAPER, "videowallpaper", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, BackgroundScale, lang.MUXCUSTOM.BACKGROUNDSCALE, "backgroundscale", background_scale_options, 3);
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, MusicVolume, lang.MUXCUSTOM.MUSIC.VOLUME, "musicvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.BLACKFADE, "blackfade", disabled_enabled, 2);
@@ -295,7 +298,8 @@ static void restore_custom_options(void) {
     if (option_index > 0) lv_dropdown_set_selected(ui_droThemeAlternate_custom, option_index);
 
     restore_theme_resolution();
-    lv_dropdown_set_selected(ui_droAnimation_custom, config.VISUAL.BACKGROUNDANIMATION);
+    lv_dropdown_set_selected(ui_droVideoWallpaper_custom, config.VISUAL.VIDEO_WALLPAPER);
+    lv_dropdown_set_selected(ui_droBackgroundScale_custom, config.VISUAL.BACKGROUND_SCALE);
     lv_dropdown_set_selected(ui_droBlackFade_custom, config.VISUAL.BLACKFADE);
     lv_dropdown_set_selected(ui_droMusic_custom, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droMusicVolume_custom, int_to_pct(config.SETTINGS.GENERAL.BGMVOL, 0, 100));
@@ -308,7 +312,8 @@ static void restore_custom_options(void) {
 static int save_custom_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
+    CHECK_AND_SAVE_STD(custom, VideoWallpaper, "visual/video_wallpaper", INT, 0);
+    CHECK_AND_SAVE_STD(custom, BackgroundScale, "visual/background_scale", INT, 0);
     CHECK_AND_SAVE_STD(custom, Music, "settings/general/bgm", INT, 0);
     CHECK_AND_SAVE_PCT(custom, MusicVolume, "settings/general/bgmvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, BlackFade, "visual/blackfade", INT, 0);
@@ -468,7 +473,8 @@ static void handle_a(void) {
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Resolution
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Theme Scaling
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_THEME_ALTERNATE, visible_theme_alternate},
-            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,          visible_animation},
+            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Video Wallpaper
+            {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Background Scale
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Background Music
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_MUSIC_VOLUME, NULL},
             {NULL,       NULL,                 &KIOSK_PASS,             MENU_OPTION,       NULL}, // Black Fade Animation
@@ -742,7 +748,7 @@ int muxcustom_main(void) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
 
     init_fonts();
 

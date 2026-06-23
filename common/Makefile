@@ -4,7 +4,7 @@ CFLAGS   = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Ico
            -I../plutosvg/source -I../plutosvg/plutovg/include
 LDFLAGS  = $(COMMON_LIBS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
-SRC_DIRS = . saver input json mini miniz core xxhash png ui collection
+SRC_DIRS = . saver input json mini miniz core xxhash ui collection
 SRCS     = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
 OBJS     = $(SRCS:.c=.o)
 

@@ -332,7 +332,7 @@ int muxdownload_main(char *type) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     init_fonts();
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
 
     reset_ui_groups();
 

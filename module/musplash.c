@@ -242,7 +242,7 @@ static int parse_gradient(const char *value, gradient_t *grad) {
     colon = strchr(value, ':');
     if (!colon || colon == value) return -1;
 
-    top_len = (size_t)(colon - value);
+    top_len = (size_t) (colon - value);
     if (top_len >= sizeof(top)) return -1;
 
     memcpy(top, value, top_len);

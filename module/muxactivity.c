@@ -1996,7 +1996,7 @@ int muxactivity_main() {
 
     init_fonts();
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
 
     generate_activity_items();
     init_elements();
