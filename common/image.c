@@ -12,6 +12,21 @@ static void decoder_close(lv_img_decoder_t *, lv_img_decoder_dsc_t *);
 
 static const uint8_t PNG_SIG[8] = {0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
 
+static const char *IMAGE_EXTS[] = {"svg", "png", "jpg", "jpeg", "webp", "qoi", "tga", "gif", "bmp", "pcx"};
+static const int IMAGE_EXTS_N = (int) (sizeof(IMAGE_EXTS) / sizeof(IMAGE_EXTS[0]));
+
+int is_image_ext(const char *ext) {
+    for (int i = 0; i < IMAGE_EXTS_N; i++) {
+        if (strcmp(ext, IMAGE_EXTS[i]) == 0) return 1;
+    }
+    return 0;
+}
+
+const char **image_ext_list(int *count) {
+    *count = IMAGE_EXTS_N;
+    return IMAGE_EXTS;
+}
+
 void img_init(void) {
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG | IMG_INIT_WEBP);
 

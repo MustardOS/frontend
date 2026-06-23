@@ -7,6 +7,7 @@
 #include "config.h"
 #include "theme.h"
 #include "fileio.h"
+#include "image.h"
 
 #define CAT_DIR_CACHE_MAX 256
 
@@ -80,7 +81,7 @@ static struct cat_dir_entry *cat_dir_lookup(const char *dir_path) {
         if (!dot) continue;
         const char *ext = dot + 1;
 
-        if (strcmp(ext, "svg") != 0 && strcmp(ext, "jpg") != 0 && strcmp(ext, "png") != 0) continue;
+        if (!is_image_ext(ext)) continue;
 
         if (e->count >= cap) {
             int new_cap = cap * 2;
@@ -156,7 +157,8 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             {CAT_INFO, INFO_CAT_PATH,                "",      program_default},
     };
 
-    const char *extensions[] = {"svg", "jpg", "png"};
+    int ext_count;
+    const char **extensions = image_ext_list(&ext_count);
     const int skip_theme = !is_supported_theme_catalogue(catalogue_name, image_type);
 
     if (image_path && path_size > 0) image_path[0] = '\0';
@@ -167,7 +169,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
         return 0;
     }
 
-    for (size_t j = 0; j < A_SIZE(extensions); j++) {
+    for (int j = 0; j < ext_count; j++) {
         for (size_t i = 0; i < A_SIZE(args); i++) {
             if ((args[i].kind == CAT_THEME && skip_theme) ||
                 !args[i].catalogue_path || !args[i].catalogue_path[0] ||
