@@ -22,6 +22,7 @@ static void hide_remove_dialog(void) {
 
 static int exit_status = 0;
 static int file_count = 0;
+static int file_cap = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
 
@@ -120,6 +121,7 @@ static void add_file_names(const char *base_dir, char ***file_names) {
 
     struct dirent *entry;
     file_count = 0;
+    file_cap = 0;
 
     while ((entry = readdir(dir))) {
         const char *name = entry->d_name;
@@ -142,10 +144,15 @@ static void add_file_names(const char *base_dir, char ***file_names) {
         if (type != DT_REG) continue;
         if (strcmp(name, ".nogrid") == 0) continue;
 
-        char **tmp = realloc(*file_names, (file_count + 1) * sizeof(char *));
-        if (!tmp) continue;
+        if (file_count >= file_cap) {
+            int new_cap = file_cap ? file_cap * 2 : 16;
+            char **tmp = realloc(*file_names, (size_t) new_cap * sizeof(char *));
 
-        *file_names = tmp;
+            if (!tmp) continue;
+
+            *file_names = tmp;
+            file_cap = new_cap;
+        }
         (*file_names)[file_count++] = strdup(name);
     }
 

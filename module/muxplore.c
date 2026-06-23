@@ -533,6 +533,7 @@ static void create_content_items(void) {
 
     int fn_valid = 0;
     struct json fn_json = {0};
+    char *fn_json_buf = NULL;
 
     turbo_time(1, 1);
 
@@ -544,7 +545,10 @@ static void create_content_items(void) {
 
             if (file_content && json_valid(file_content)) {
                 fn_valid = 1;
-                fn_json = json_parse(strdup(file_content));
+
+                fn_json_buf = strdup(file_content);
+                fn_json = json_parse(fn_json_buf);
+
                 LOG_SUCCESS(mux_module, "Using Friendly Folder: %s", folder_name_file);
             } else {
                 LOG_WARN(mux_module, "Invalid Friendly Folder: %s", folder_name_file);
@@ -620,6 +624,9 @@ static void create_content_items(void) {
         dir_names[i] = NULL;
         dir_paths[i] = NULL;
     }
+
+    free(fn_json_buf);
+    fn_json_buf = NULL;
 
     free(union_dir_item_count);
     union_dir_item_count = NULL;

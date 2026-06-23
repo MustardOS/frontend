@@ -91,7 +91,7 @@ static void restore_width_dropdown(lv_obj_t *dropdown, int16_t stored) {
 static void save_width_dropdown(lv_obj_t *dropdown, int original, const char *key, int16_t *cfg, int *is_modified) {
     uint32_t sel = lv_dropdown_get_selected(dropdown);
     if ((int) sel == original) return;
-    int16_t val = (sel >= 1) ? (int16_t) (sel + 9) : 0;
+    int16_t val = (int16_t) ((sel >= 1) ? (int) sel + 9 : 0);
     write_text_to_file(key, "w", INT, (int) val);
     *cfg = val;
     (*is_modified)++;

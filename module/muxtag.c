@@ -25,7 +25,10 @@ static void write_tag_file(char *path, char *tag, char *log) {
 
 static void assign_tag_single(char *core_dir, char *tag, char *rom) {
     char tag_path[MAX_BUFFER_SIZE];
-    snprintf(tag_path, sizeof(tag_path), "%s/%s.tag", core_dir, strip_ext(rom));
+    char *rom_no_ext = strip_ext(rom);
+
+    snprintf(tag_path, sizeof(tag_path), "%s/%s.tag", core_dir, rom_no_ext);
+    free(rom_no_ext);
 
     if (file_exist(tag_path)) remove(tag_path);
     write_tag_file(tag_path, tag, "Assign Tag (Single)");
@@ -56,7 +59,9 @@ static void assign_tag_parent(char *core_dir, char *tag) {
         char tag_path[MAX_BUFFER_SIZE];
         snprintf(tag_path, sizeof(tag_path), "%s%s/core.tag", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(tag_path), 0);
+        char *tag_parent = strip_dir(tag_path);
+        create_directories(tag_parent, 0);
+        free(tag_parent);
         write_tag_file(tag_path, tag, "Assign Tag (Recursive)");
     }
 
@@ -71,19 +76,12 @@ static void create_tag_assignment(char *tag, char *rom, enum gen_type method) {
 
     create_directories(core_dir, 0);
 
-    switch (method) {
-        case SINGLE:
-            assign_tag_single(core_dir, tag, rom);
-            break;
-        case PARENT:
-            assign_tag_parent(core_dir, tag);
-            break;
-        case DIRECTORY:
-            assign_tag_directory(core_dir, tag, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-            assign_tag_directory(core_dir, tag, 0);
-            break;
+    if (method == SINGLE) {
+        assign_tag_single(core_dir, tag, rom);
+    } else if (method == PARENT) {
+        assign_tag_parent(core_dir, tag);
+    } else {
+        assign_tag_directory(core_dir, tag, 1);
     }
 }
 
@@ -208,7 +206,10 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
+void muxtag_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    (void) auto_assign;
+    (void) app;
+
     snprintf(rom_name, sizeof(rom_name), "%s", get_file_name(name));
     snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
@@ -270,5 +271,4 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys, int app) {
     mux_input_task(&input_opts);
 
     nav_silent = 1;
-    return 0;
 }

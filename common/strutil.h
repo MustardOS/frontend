@@ -30,8 +30,6 @@ char *str_remchar(char *text, char c);
 
 char *str_remchars(char *text, char *c);
 
-void str_split(char *text, char sep, char *p1, char *p2);
-
 char *str_trim(char *text);
 
 char *str_replace(const char *orig, const char *rep, const char *with);
@@ -55,11 +53,9 @@ void remove_double_slashes(char *str);
 
 char *get_last_dir(char *text);
 
-char *get_file_name(char *text);
+char *get_file_name(const char *text);
 
 char *get_content_path(char *path);
-
-char *get_content_name(char *path);
 
 char *strip_dir(char *text);
 

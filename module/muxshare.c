@@ -344,7 +344,10 @@ char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_j
 
     if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
 
-    struct json good_name_json = json_object_get(fn_json, str_tolower(strdup(folder_name)));
+    char *folder_lower = str_tolower(folder_name);
+    struct json good_name_json = json_object_get(fn_json, folder_lower);
+    free(folder_lower);
+
     if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
 
     return friendly_folder_name;

@@ -231,8 +231,6 @@ void pulse_render(SDL_Renderer *renderer) {
 
         int radius = r->radius >> SAVER_FRAME_SHF;
         int outer = radius + ring_width;
-        int inner = radius - ring_width;
-        if (inner < 0) inner = 0;
 
         int x0 = r->origin_x - outer;
         int y0 = r->origin_y - outer;

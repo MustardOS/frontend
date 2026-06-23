@@ -101,12 +101,10 @@ extern lv_obj_t *ui_pnlGrid;
 extern lv_obj_t *ui_pnlBox;
 extern lv_obj_t *ui_imgBox;
 extern lv_obj_t *ui_pnlHeader;
-extern lv_obj_t *ui_lblDatetime;
 extern lv_obj_t *ui_lblTitle;
 extern lv_obj_t *ui_conGlyphs;
 extern lv_obj_t *ui_staBluetooth;
 extern lv_obj_t *ui_staNetwork;
-extern lv_obj_t *ui_staCapacity;
 extern lv_obj_t *ui_lblBatteryPercent;
 extern lv_obj_t *ui_pnlFooter;
 extern lv_obj_t *ui_pnlGridCurrentItem;
@@ -128,8 +126,6 @@ extern lv_obj_t *ui_lblNavZ;
 extern lv_obj_t *ui_lblNavMenuGlyph;
 extern lv_obj_t *ui_lblNavMenu;
 extern lv_obj_t *ui_lblScreenMessage;
-extern lv_obj_t *ui_pnlMessage;
-extern lv_obj_t *ui_lblMessage;
 extern lv_obj_t *ui_pnlHelp;
 extern lv_obj_t *ui_pnlHelpMessage;
 extern lv_obj_t *ui_lblHelpHeader;
@@ -162,5 +158,3 @@ extern lv_obj_t *ui_barProgress;
 extern lv_obj_t *ui_lblProgress;
 extern lv_obj_t *ui_lblCounter_explore;
 
-LV_IMG_DECLARE(ui_img_nothing_png)
-LV_IMG_DECLARE(ui_img_muoskofi_png)

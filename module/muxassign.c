@@ -476,7 +476,9 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
+void muxassign_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    (void) app;
+
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
 
     is_dir = dir_exist(rom_dir);
@@ -494,9 +496,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system);
 
     if (auto_assign && !file_exist(MUOS_SAA_LOAD)) {
-        if (automatic_assign_core(rom_dir) || strcmp(rom_system, "none") == 0) {
-            return 0;
-        }
+        if (automatic_assign_core(rom_dir) || strcmp(rom_system, "none") == 0) return;
     }
 
     init_theme(1, 0);
@@ -587,5 +587,4 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     mux_input_task(&input_opts);
 
     nav_silent = 1;
-    return 0;
 }

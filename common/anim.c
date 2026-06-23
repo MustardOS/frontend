@@ -234,39 +234,6 @@ void anim_set_gradient(SDL_Texture *tex) {
     anim.gradient_tex = tex;
 }
 
-void anim_request(const char *embed_path, int frame_delay_ms, int foreground, int position, int alpha) {
-    LOG_INFO("anim", "anim_request: embed_path=%s delay=%dms foreground=%d position=%d alpha=%d", embed_path, frame_delay_ms, foreground, position, alpha);
-    const char *raw = (embed_path[0] == 'M' && embed_path[1] == ':') ? embed_path + 2 : embed_path;
-
-    size_t len = strlen(raw);
-    static const char suffix[] = ".0.png";
-    const size_t suffix_len = sizeof(suffix) - 1;
-    if (len > suffix_len && strcmp(raw + len - suffix_len, suffix) == 0) len -= suffix_len;
-
-    if (len >= sizeof(pending.base_path)) {
-        LOG_ERROR("anim", "anim_request: path too long: %s", raw);
-        return;
-    }
-
-    memcpy(pending.base_path, raw, len);
-    pending.base_path[len] = '\0';
-
-    if (anim.mutex && strcmp(pending.base_path, anim.base_path) == 0) {
-        LOG_INFO("anim", "anim_request: same path already active, skipping");
-        pending.pending = 0;
-        return;
-    }
-
-    pending.frame_delay_ms = frame_delay_ms > 0 ? frame_delay_ms : 100;
-    pending.foreground = foreground;
-    pending.position = position < 0 ? 0 : position > 8 ? 8 : position;
-    pending.alpha = alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
-    pending.pending = 1;
-    pending.request_tick = SDL_GetTicks();
-
-    LOG_INFO("anim", "anim_request: pending load for %s (debounce %dms)", pending.base_path, ANIM_DEBOUNCE_MS);
-}
-
 void anim_process(void) {
     if (!pending.pending) return;
 

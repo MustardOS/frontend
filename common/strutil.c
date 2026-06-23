@@ -60,7 +60,10 @@ void load_skip_patterns(void) {
             skip_pattern_list.capacity = newcap;
         }
 
-        skip_pattern_list.patterns[skip_pattern_list.count++] = mux_strdup(line);
+        char *stored = mux_strdup(line);
+        for (char *p = stored; *p; p++) *p = (char) tolower((unsigned char) *p);
+
+        skip_pattern_list.patterns[skip_pattern_list.count++] = stored;
     }
 
     fclose(file);
@@ -86,11 +89,7 @@ int should_skip(const char *name, int is_dir) {
         }
 
         if (dir_only && !is_dir) continue;
-
-        char pat_l[MAX_BUFFER_SIZE];
-        snprintf(pat_l, sizeof(pat_l), "%s", pat);
-        for (char *p = pat_l; *p; p++) *p = (char) tolower((unsigned char) *p);
-        if (fnmatch(pat_l, name_l, 0) == 0) return 1;
+        if (fnmatch(pat, name_l, 0) == 0) return 1;
     }
 
     return 0;
@@ -205,22 +204,6 @@ char *str_remchars(char *text, char *c) {
 
     *w_ptr = '\0';
     return text;
-}
-
-void str_split(char *text, char sep, char *p1, char *p2) {
-    const char *pos = strchr(text, sep);
-
-    if (pos) {
-        size_t len = pos - text;
-        memcpy(p1, text, len);
-        p1[len] = '\0';
-        size_t tail = strlen(pos + 1);
-        memcpy(p2, pos + 1, tail + 1);
-    } else {
-        size_t tlen = strlen(text);
-        memcpy(p1, text, tlen + 1);
-        p2[0] = '\0';
-    }
 }
 
 char *str_trim(char *text) {
@@ -426,12 +409,12 @@ char *get_last_dir(char *text) {
     return "";
 }
 
-char *get_file_name(char *text) {
+char *get_file_name(const char *text) {
     char *last_slash = strrchr(text, '/');
 
     if (last_slash != NULL) return last_slash + 1;
 
-    return text;
+    return (char *) text;
 }
 
 char *get_content_path(char *path) {
@@ -439,24 +422,12 @@ char *get_content_path(char *path) {
     if (dir_exist(path)) return directory_path;
 
     char *directory_name = get_last_dir(directory_path);
-    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0) {
-        return strip_dir(directory_path);
-    }
 
-    if (!ends_with(path, ".scummvm") && !ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) {
-        return directory_path;
-    }
+    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0) return strip_dir(directory_path);
+    if (!ends_with(path, ".scummvm") && !ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) return directory_path;
+
     char *path_no_ext = strip_ext(get_file_name(path));
-
     return strcasecmp(directory_name, path_no_ext) == 0 ? strip_dir(directory_path) : directory_path;
-}
-
-char *get_content_name(char *path) {
-    char *directory_path = get_content_path(path);
-    char *sub_path = strdup(path);
-    sub_path = path + strlen(directory_path);
-    while (*sub_path == '/') sub_path++;
-    return sub_path;
 }
 
 char *strip_dir(char *text) {

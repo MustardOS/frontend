@@ -12,19 +12,15 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
 #include <linux/limits.h>
-
 #include <sys/inotify.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/sysinfo.h>
 #include <sys/time.h>
 #include <sys/utsname.h>
-
 #include <SDL2/SDL_mixer.h>
 #include <pthread.h>
-
 #include "../lvgl/lvgl.h"
 #include "../common/mini/mini.h"
 #include "../common/init.h"
@@ -202,11 +198,11 @@ int muxactivity_main();
 
 int muxapp_main();
 
-int muxappcon_main(int auto_assign, char *name, char *dir, char *sys, int app);
+void muxappcon_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxarchive_main();
 
-int muxassign_main(int auto_assign, char *name, char *dir, char *sys, int app);
+void muxassign_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxbackup_main();
 
@@ -220,7 +216,7 @@ int muxbtdev_main();
 
 int muxchrony_main();
 
-int muxcolfilter_main(int nothing, char *name, char *dir, char *sys, int app);
+void muxcolfilter_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxcollect_main(int add, char *dir, int last_index);
 
@@ -228,7 +224,7 @@ int muxconfig_main();
 
 int muxconnect_main();
 
-int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app);
+void muxcontrol_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxcustom_main();
 
@@ -242,7 +238,7 @@ int muxdownload_main(char *type);
 
 int muxfont_main();
 
-int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app);
+void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxhdmi_main();
 
@@ -272,7 +268,7 @@ int muxnetwork_main();
 
 int muxnews_main();
 
-int muxoption_main(int nothing, char *name, char *dir, char *sys, int app);
+void muxoption_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxoverlay_main();
 
@@ -290,7 +286,7 @@ int muxplore_main(int index, char *dir);
 
 int muxpower_main();
 
-int muxraopt_main(int auto_assign, char *name, char *dir, char *sys, int app);
+void muxraopt_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxrgb_main();
 
@@ -298,7 +294,7 @@ int muxrtc_main();
 
 int muxsearch_main(char *dir);
 
-int muxshader_main(int nothing, char *name, char *dir, char *sys, int app);
+void muxshader_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxshot_main();
 
@@ -314,7 +310,7 @@ int muxsysinfo_main();
 
 int muxtext_main();
 
-int muxtag_main(int nothing, char *name, char *dir, char *sys, int app);
+void muxtag_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxtask_main(char *ex_dir);
 

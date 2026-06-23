@@ -15,22 +15,28 @@ void load_tag_items(tag_item **tag_items, size_t *count) {
     char **tags = str_parse_file(tag_path, &tag_count, PARSE_LINES);
     if (!tags) return;
 
+    size_t cap = 0;
+
     for (int i = 0; i < tag_count; ++i) {
         if (strcasecmp(tags[i], "None") == 0) continue;
 
-        if (*tag_items == NULL) {
-            *tag_items = malloc(sizeof(tag_item));
-        } else {
-            *tag_items = realloc(*tag_items, (*count + 1) * sizeof(tag_item));
+        if (*count >= cap) {
+            size_t new_cap = cap ? cap * 2 : 16;
+            tag_item *tmp = realloc(*tag_items, new_cap * sizeof(tag_item));
+
+            if (!tmp) break;
+
+            *tag_items = tmp;
+            cap = new_cap;
         }
 
-        char *glpyh_name = str_tolower(str_remchar(str_trim(strdup(tags[i])), ' '));
+        char *glyph_name = str_tolower(str_remchar(str_trim(strdup(tags[i])), ' '));
 
         (*tag_items)[*count].name = str_capital(strdup(tags[i]));
-        (*tag_items)[*count].glyph = glpyh_name;
+        (*tag_items)[*count].glyph = glyph_name;
 
         char sorting_config_path[MAX_BUFFER_SIZE];
-        snprintf(sorting_config_path, sizeof(sorting_config_path), SORTING_CONFIG_PATH "%s", glpyh_name);
+        snprintf(sorting_config_path, sizeof(sorting_config_path), SORTING_CONFIG_PATH "%s", glyph_name);
 
         (*tag_items)[*count].sort_bucket = (file_exist(sorting_config_path)) ? read_line_int_from(sorting_config_path, 1) : 0;
 
@@ -42,6 +48,7 @@ int get_tag_sort_bucket(tag_item *tag_items, size_t count, char *glyph) {
     for (int i = 0; i < count; i++) {
         if (strcasecmp(tag_items[i].glyph, glyph) == 0) return tag_items[i].sort_bucket;
     }
+
     return 0;
 }
 
@@ -64,6 +71,7 @@ void free_tag_items(tag_item **tag_items, size_t *count) {
         free((*tag_items)[i].name);
         free((*tag_items)[i].glyph);
     }
+
     free(*tag_items); // Free the array itself
     *tag_items = NULL; // Set the pointer to NULL
     *count = 0; // Set the count to 0

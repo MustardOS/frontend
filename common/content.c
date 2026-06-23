@@ -13,10 +13,64 @@
 
 char **history_items = NULL;
 int history_item_count = 0;
+
 char **collection_items = NULL;
 int collection_item_count = 0;
 
-static void populate_items(const char *base_path, char ***items, int *item_count) {
+typedef struct {
+    const char **slots;
+    int cap;
+} path_set_t;
+
+static path_set_t collection_set;
+static path_set_t history_set;
+
+static uint32_t path_hash(const char *s) {
+    uint32_t h = 2166136261U;
+    for (; *s; s++) {
+        h ^= (uint8_t) *s;
+        h *= 16777619U;
+    }
+
+    return h;
+}
+
+static void path_set_build(path_set_t *s, char **items, int count) {
+    free(s->slots);
+
+    s->slots = NULL;
+    s->cap = 0;
+
+    if (count <= 0) return;
+
+    int cap = 16;
+    while (cap < count * 2) cap <<= 1;
+
+    s->slots = calloc((size_t) cap, sizeof(const char *));
+
+    if (!s->slots) return;
+    s->cap = cap;
+
+    for (int i = 0; i < count; i++) {
+        int h = (int) (path_hash(items[i]) & (uint32_t) (cap - 1));
+        while (s->slots[h]) h = (h + 1) & (cap - 1);
+        s->slots[h] = items[i];
+    }
+}
+
+static int path_set_contains(const path_set_t *s, const char *path) {
+    if (!s->slots) return 0;
+
+    int h = (int) (path_hash(path) & (uint32_t) (s->cap - 1));
+    while (s->slots[h]) {
+        if (strcmp(s->slots[h], path) == 0) return 1;
+        h = (h + 1) & (s->cap - 1);
+    }
+
+    return 0;
+}
+
+static void populate_items(const char *base_path, char ***items, int *item_count, int *cap) {
     struct dirent *entry;
     char full_path[PATH_MAX];
     DIR *dir = opendir(base_path);
@@ -40,14 +94,23 @@ static void populate_items(const char *base_path, char ***items, int *item_count
 
         if (S_ISREG(st.st_mode)) {
             if (strstr(entry->d_name, ".cfg")) {
-                *items = realloc(*items, ((*item_count) + 1) * sizeof(char *));
+                if (*item_count >= *cap) {
+                    int new_cap = *cap ? *cap * 2 : 16;
+                    char **tmp = realloc(*items, (size_t) new_cap * sizeof(char *));
+
+                    if (!tmp) continue;
+
+                    *items = tmp;
+                    *cap = new_cap;
+                }
+
                 char *raw = read_line_char_from(full_path, 1);
                 (*items)[*item_count] = strdup(raw);
                 free(raw);
                 (*item_count)++;
             }
         } else if (S_ISDIR(st.st_mode)) {
-            populate_items(full_path, items, item_count);
+            populate_items(full_path, items, item_count, cap);
         }
     }
 
@@ -130,7 +193,7 @@ static int write_content_loader_file(const char *content_loader_file, const char
     fprintf(fp, "%s\n", core);
     fprintf(fp, "%s\n", sys1);
     fprintf(fp, "%s\n", sys2);
-    fprintf(fp, "%s\n", (zero && *zero) ? zero : "0");
+    fprintf(fp, "%s\n", *zero ? zero : "0");
     fprintf(fp, "%s\n", launch);
     fprintf(fp, "%s\n", roms_path);
     fprintf(fp, "%s\n", system_sub);
@@ -177,25 +240,22 @@ char *get_application_line(char *dir, char *ext, size_t line) {
 }
 
 void populate_history_items(void) {
-    populate_items(INFO_HIS_PATH, &history_items, &history_item_count);
+    int cap = 0;
+
+    populate_items(INFO_HIS_PATH, &history_items, &history_item_count, &cap);
+    path_set_build(&history_set, history_items, history_item_count);
 }
 
 void populate_collection_items(void) {
-    populate_items(INFO_COL_PATH, &collection_items, &collection_item_count);
+    int cap = 0;
+
+    populate_items(INFO_COL_PATH, &collection_items, &collection_item_count, &cap);
+    path_set_build(&collection_set, collection_items, collection_item_count);
 }
 
 char *get_content_explorer_glyph_name(char *file_path) {
-    if (config.VISUAL.CONTENTCOLLECT == 0) {
-        for (int i = 0; i < collection_item_count; i++) {
-            if (strcmp(collection_items[i], file_path) == 0) return "collection";
-        }
-    }
-
-    if (config.VISUAL.CONTENTHISTORY == 0) {
-        for (int i = 0; i < history_item_count; i++) {
-            if (strcmp(history_items[i], file_path) == 0) return "history";
-        }
-    }
+    if (config.VISUAL.CONTENTCOLLECT == 0 && path_set_contains(&collection_set, file_path)) return "collection";
+    if (config.VISUAL.CONTENTHISTORY == 0 && path_set_contains(&history_set, file_path)) return "history";
 
     return "rom";
 }
@@ -236,15 +296,17 @@ int load_content(int add_collection, char *file_path) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.NO_LOAD, MEDIUM);
 
-        LOG_ERROR(mux_module, "Could not launch content: %s",
-                  resolved_path[0] ? resolved_path : file_path);
+        LOG_ERROR(mux_module, "Could not launch content: %s", resolved_path[0] ? resolved_path : file_path);
         return 0;
     }
 
     file_path = resolved_path;
 
     char *assigned_core = load_content_core(0, !add_collection, file_path);
-    if (!assigned_core || strcasestr(assigned_core, "(null)")) return 0;
+    if (!assigned_core || strcasestr(assigned_core, "(null)")) {
+        free(assigned_core);
+        return 0;
+    }
 
     char *content_path = get_content_path(file_path);
     char *file_name = get_file_name(file_path);

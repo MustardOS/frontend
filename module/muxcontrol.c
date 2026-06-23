@@ -286,7 +286,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) {
+void muxcontrol_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
@@ -315,7 +315,7 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
                  get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
-        if (file_exist(core_file)) return 0;
+        if (file_exist(core_file)) return;
 
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
@@ -376,12 +376,12 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
 
                 mini_free(global_ini);
 
-                return 0;
+                return;
             } else {
                 LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
                 create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
 
-                return 0;
+                return;
             }
         }
     }
@@ -461,5 +461,4 @@ int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys, int app) 
     mux_input_task(&input_opts);
 
     nav_silent = 1;
-    return 0;
 }

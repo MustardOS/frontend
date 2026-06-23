@@ -366,7 +366,7 @@ static void module_theme(void) {
     muxtheme_main(read_line_char_from(EXPLORE_DIR, 1));
 }
 
-void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *, int)) {
+void module_run(const char *mux, void (*func_to_exec)(int, const char *, const char *, const char *, int)) {
     load_mux(mux);
     func_to_exec(0, rom_name, rom_dir, rom_sys, is_app);
 }

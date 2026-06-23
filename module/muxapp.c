@@ -113,14 +113,20 @@ static void init_navigation_group_grid(void) {
     for (int i = 0; i < (int) item_count && i < visible_count; i++) gen_grid_item(i);
 }
 
-static int append_mux_app(char ***arr, size_t *count, const char *name) {
+static int append_mux_app(char ***arr, size_t *count, size_t *cap, const char *name) {
     for (size_t i = 0; i < *count; i++) {
         if ((*arr)[i] && strcmp((*arr)[i], name) == 0) return 0;
     }
 
-    char **tmp = realloc(*arr, (*count + 1) * sizeof(char *));
-    if (!tmp) return -1;
-    *arr = tmp;
+    if (*count >= *cap) {
+        size_t new_cap = *cap ? *cap * 2 : 16;
+        char **tmp = realloc(*arr, new_cap * sizeof(char *));
+
+        if (!tmp) return -1;
+
+        *arr = tmp;
+        *cap = new_cap;
+    }
 
     (*arr)[*count] = strdup(name);
     if (!(*arr)[*count]) return -1;
@@ -134,6 +140,7 @@ static void create_app_items(void) {
 
     char **dir_names = NULL;
     size_t dir_count = 0;
+    size_t dir_cap = 0;
 
     app_paths[0] = OPT_SHARE_PATH "application";
     app_paths[1] = device.STORAGE.SDCARD.MOUNT;
@@ -161,7 +168,7 @@ static void create_app_items(void) {
 
             if (access(launch_script, F_OK) != 0) continue;
 
-            if (append_mux_app(&dir_names, &dir_count, entry->d_name) < 0) {
+            if (append_mux_app(&dir_names, &dir_count, &dir_cap, entry->d_name) < 0) {
                 LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
                 closedir(app_dir);
                 goto clean_up;
@@ -172,7 +179,7 @@ static void create_app_items(void) {
     }
 
     for (size_t i = 0; i < A_SIZE(app); i++) {
-        if (append_mux_app(&dir_names, &dir_count, app[i].name) < 0) {
+        if (append_mux_app(&dir_names, &dir_count, &dir_cap, app[i].name) < 0) {
             LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
             goto clean_up;
         }

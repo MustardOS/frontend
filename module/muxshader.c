@@ -72,7 +72,10 @@ static void write_shader_file(char *path, char *shader, char *log) {
 
 static void assign_shader_single(char *core_dir, char *shader, char *rom) {
     char shader_path[MAX_BUFFER_SIZE];
-    snprintf(shader_path, sizeof(shader_path), "%s/%s.shd", core_dir, strip_ext(rom));
+    char *rom_no_ext = strip_ext(rom);
+
+    snprintf(shader_path, sizeof(shader_path), "%s/%s.shd", core_dir, rom_no_ext);
+    free(rom_no_ext);
 
     if (file_exist(shader_path)) remove(shader_path);
     write_shader_file(shader_path, shader, "Assign Shader (Single)");
@@ -103,7 +106,9 @@ static void assign_shader_parent(char *core_dir, char *shader) {
         char shader_path[MAX_BUFFER_SIZE];
         snprintf(shader_path, sizeof(shader_path), "%s%s/core.shd", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(shader_path), 0);
+        char *shader_parent = strip_dir(shader_path);
+        create_directories(shader_parent, 0);
+        free(shader_parent);
         write_shader_file(shader_path, shader, "Assign Shader (Recursive)");
     }
 
@@ -118,19 +123,12 @@ static void create_shader_assignment(char *shader, char *rom, enum gen_type meth
 
     create_directories(core_dir, 0);
 
-    switch (method) {
-        case SINGLE:
-            assign_shader_single(core_dir, shader, rom);
-            break;
-        case PARENT:
-            assign_shader_parent(core_dir, shader);
-            break;
-        case DIRECTORY:
-            assign_shader_directory(core_dir, shader, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-            assign_shader_directory(core_dir, shader, 0);
-            break;
+    if (method == SINGLE) {
+        assign_shader_single(core_dir, shader, rom);
+    } else if (method == PARENT) {
+        assign_shader_parent(core_dir, shader);
+    } else {
+        assign_shader_directory(core_dir, shader, 1);
     }
 }
 
@@ -160,12 +158,19 @@ static void generate_available_shaders(void) {
         char *base_filename = files[i];
 
         char shader_name[MAX_BUFFER_SIZE];
-        snprintf(shader_name, sizeof(shader_name), "%s",
-                 str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
+
+        char *bf_dir = strip_dir(base_filename);
+        char *bf_rel = str_replace(base_filename, bf_dir, "");
+
+        free(bf_dir);
+        str_remchar(bf_rel, '/');
+        snprintf(shader_name, sizeof(shader_name), "%s", bf_rel);
+        free(bf_rel);
 
         char shader_store[MAX_BUFFER_SIZE];
-        snprintf(shader_store, sizeof(shader_store), "%s",
-                 strip_ext(shader_name));
+        char *shd_no_ext = strip_ext(shader_name);
+        snprintf(shader_store, sizeof(shader_store), "%s", shd_no_ext);
+        free(shd_no_ext);
 
         char *meta_name = read_shader_info(shader_store, "Name");
 
@@ -173,8 +178,9 @@ static void generate_available_shaders(void) {
         if (meta_name && *meta_name) {
             snprintf(shader_display, sizeof(shader_display), "%s", meta_name);
         } else {
-            snprintf(shader_display, sizeof(shader_display), "%s",
-                     str_capital_all(str_replace(shader_store, "_", " ")));
+            char *shd_spaced = str_replace(shader_store, "_", " ");
+            snprintf(shader_display, sizeof(shader_display), "%s", str_capital_all(shd_spaced));
+            free(shd_spaced);
         }
 
         if (meta_name) free(meta_name);
@@ -296,7 +302,9 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxshader_main(int nothing, char *name, char *dir, char *sys, int app) {
+void muxshader_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    (void) auto_assign;
+
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
@@ -369,5 +377,4 @@ int muxshader_main(int nothing, char *name, char *dir, char *sys, int app) {
     free_items(&items, &item_count);
 
     nav_silent = 1;
-    return 0;
 }

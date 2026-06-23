@@ -19,6 +19,7 @@ extern const uint8_t saver_pastel_b[SAVER_PASTEL_COUNT];
 typedef struct saver_state saver_state_t;
 
 typedef void (*saver_speed_changed_cb)(void *user);
+
 typedef void (*saver_idle_enter_cb)(void *user);
 
 struct saver_state {

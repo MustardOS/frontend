@@ -5,7 +5,12 @@ CFLAGS   = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Ico
 LDFLAGS  = $(COMMON_LIBS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
 SRC_DIRS = . saver input json mini miniz core xxhash ui collection
-SRCS     = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
+
+ifeq ($(BUILD),release)
+    SRCS = $(filter-out %crash_stub.c, $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c)))
+else
+    SRCS = $(filter-out %crash.c, $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c)))
+endif
 OBJS     = $(SRCS:.c=.o)
 
 LIB_DIR  = ${shell pwd}/../bin/lib

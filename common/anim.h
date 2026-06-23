@@ -2,8 +2,6 @@
 
 #include <SDL2/SDL.h>
 
-void anim_request(const char *embed_path, int frame_delay_ms, int foreground, int position, int alpha);
-
 void anim_process(void);
 
 void anim_unload(void);

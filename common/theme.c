@@ -1602,8 +1602,7 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, con
 void apply_theme_option_item_label(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text) {
     apply_theme_list_item(theme, ui_lblItem, item_text);
 
-    int label_pct = (config.SETTINGS.THEMEOPT.LABEL_WIDTH > 0)
-        ? config.SETTINGS.THEMEOPT.LABEL_WIDTH : theme->MISC.LABEL_WIDTH;
+    int label_pct = (config.SETTINGS.THEMEOPT.LABEL_WIDTH > 0) ? config.SETTINGS.THEMEOPT.LABEL_WIDTH : theme->MISC.LABEL_WIDTH;
     lv_coord_t max_w = (lv_coord_t) (theme->MISC.CONTENT.WIDTH * label_pct / 100);
     lv_obj_set_style_max_width(ui_lblItem, max_w, MU_OBJ_MAIN_DEFAULT);
 

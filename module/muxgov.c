@@ -26,7 +26,9 @@ static void write_gov_file(char *path, const char *gov, char *log) {
 
 static void assign_gov_single(char *core_dir, const char *gov, char *rom) {
     char gov_path[MAX_BUFFER_SIZE];
-    snprintf(gov_path, sizeof(gov_path), "%s/%s.gov", core_dir, strip_ext(rom));
+    char *rom_no_ext = strip_ext(rom);
+    snprintf(gov_path, sizeof(gov_path), "%s/%s.gov", core_dir, rom_no_ext);
+    free(rom_no_ext);
 
     if (file_exist(gov_path)) remove(gov_path);
 
@@ -55,7 +57,10 @@ static void assign_gov_parent(char *core_dir, const char *gov) {
         char gov_path[MAX_BUFFER_SIZE];
         snprintf(gov_path, sizeof(gov_path), "%s%s/core.gov", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(gov_path), 0);
+        char *gov_parent = strip_dir(gov_path);
+        create_directories(gov_parent, 0);
+        free(gov_parent);
+
         write_gov_file(gov_path, gov, "Assign Governor (Recursive)");
     }
 
@@ -266,7 +271,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
+void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
@@ -294,15 +299,16 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                  get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
-        if (file_exist(core_file)) return 0;
+        if (file_exist(core_file)) return;
 
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
         if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
-            snprintf(assign_check, sizeof(assign_check), "%s",
-                     str_tolower(get_last_dir(rom_dir)));
+            char *last_dir_lower = str_tolower(get_last_dir(rom_dir));
+            snprintf(assign_check, sizeof(assign_check), "%s", last_dir_lower);
+            free(last_dir_lower);
             str_remchars(assign_check, " -_+");
 
             struct json auto_assign_config = json_object_get(
@@ -355,12 +361,12 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
                 mini_free(global_ini);
 
-                return 0;
+                return;
             } else {
                 LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.CPU.DEFAULT);
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
 
-                return 0;
+                return;
             }
         }
     }
@@ -381,8 +387,9 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
 
         if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
-            snprintf(assign_check, sizeof(assign_check), "%s",
-                     str_tolower(get_last_dir(rom_dir)));
+            char *last_dir_lower2 = str_tolower(get_last_dir(rom_dir));
+            snprintf(assign_check, sizeof(assign_check), "%s", last_dir_lower2);
+            free(last_dir_lower2);
             str_remchars(assign_check, " -_+");
 
             struct json auto_assign_config = json_object_get(
@@ -394,7 +401,9 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
                 LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config);
-                snprintf(rom_system, sizeof(rom_system), "%s", strip_ext(ass_config));
+                char *sys_no_ext = strip_ext(ass_config);
+                snprintf(rom_system, sizeof(rom_system), "%s", sys_no_ext);
+                free(sys_no_ext);
             }
         }
     }
@@ -440,5 +449,4 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys, int app) {
     mux_input_task(&input_opts);
 
     nav_silent = 1;
-    return 0;
 }

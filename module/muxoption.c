@@ -757,7 +757,10 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
+void muxoption_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    (void) auto_assign;
+    (void) app;
+
     rem_config = 0;
     current_view = VIEW_OPTIONS;
 
@@ -784,7 +787,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
         remove(MUOS_SYS_LOAD);
         LOG_INFO(mux_module, "Skipping Options Module - Not Required...");
 
-        return 0;
+        return;
     }
 
     init_theme(1, 0);
@@ -843,5 +846,4 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys, int app) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    return 0;
 }

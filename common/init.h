@@ -62,6 +62,8 @@ void init_theme(int panel_init, int long_mode);
 
 void status_task(lv_timer_t *timer);
 
+void status_poll(void);
+
 void bluetooth_task(lv_timer_t *timer);
 
 void network_task(lv_timer_t *timer);

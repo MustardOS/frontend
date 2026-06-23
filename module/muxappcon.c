@@ -181,7 +181,11 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
+void muxappcon_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    (void) auto_assign;
+    (void) sys;
+    (void) app;
+
     group_index = 0;
 
     snprintf(app_name, sizeof(app_name), "%s", name);
@@ -229,5 +233,4 @@ int muxappcon_main(int nothing, char *name, char *dir, char *sys, int app) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    return 0;
 }

@@ -654,7 +654,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEMEALTERNATE, "Alternative Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCHSPLASH, "Content Launch Splash");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BLACKFADE, "Black Fade Animation");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.VIDEOWALLPAPER,  "Video Wallpaper");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.VIDEOWALLPAPER, "Video Wallpaper");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BACKGROUNDSCALE, "Background Scale");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SHUFFLE, "Content Shuffle");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONTENTWIDTH, "Content Full Width");
@@ -704,7 +704,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEMEALTERNATE, "Switch between different theme alternatives");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCHSPLASH, "Toggle the splash image on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BLACKFADE, "Toggle the fade to black animation on content launching");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.VIDEOWALLPAPER,  "Enable background video wallpaper from the active theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.VIDEOWALLPAPER, "Enable background video wallpaper from the active theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BACKGROUNDSCALE, "Controls how the background image or video wallpaper is scaled to fit the screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTIMAGE, "Change the display priority of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOXARTALIGN, "Change the screen alignment of the content images");

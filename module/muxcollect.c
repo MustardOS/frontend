@@ -12,6 +12,8 @@ static int add_mode = 0;
 static int sys_index = -1;
 static int file_count = 0;
 static int dir_count = 0;
+static int file_cap = 0;
+static int dir_cap = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
 
@@ -134,6 +136,8 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     struct dirent *entry;
     file_count = 0;
     dir_count = 0;
+    file_cap = 0;
+    dir_cap = 0;
 
     while ((entry = readdir(dir))) {
         const char *name = entry->d_name;
@@ -161,19 +165,31 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
             if (!at_base(sys_dir, access_mode)) continue;
             if (strcmp(name, "kiosk") == 0) continue;
 
-            char **tmp = realloc(*dir_names, (dir_count + 1) * sizeof(char *));
-            if (!tmp) continue;
+            if (dir_count >= dir_cap) {
+                int new_cap = dir_cap ? dir_cap * 2 : 16;
+                char **tmp = realloc(*dir_names, (size_t) new_cap * sizeof(char *));
 
-            *dir_names = tmp;
+                if (!tmp) continue;
+
+                *dir_names = tmp;
+                dir_cap = new_cap;
+            }
+
             (*dir_names)[dir_count++] = strdup(name);
 
         } else if (type == DT_REG) {
             if (strcmp(name, ".nogrid") == 0) continue;
 
-            char **tmp = realloc(*file_names, (file_count + 1) * sizeof(char *));
-            if (!tmp) continue;
+            if (file_count >= file_cap) {
+                int new_cap = file_cap ? file_cap * 2 : 16;
+                char **tmp = realloc(*file_names, (size_t) new_cap * sizeof(char *));
 
-            *file_names = tmp;
+                if (!tmp) continue;
+
+                *file_names = tmp;
+                file_cap = new_cap;
+            }
+
             (*file_names)[file_count++] = strdup(name);
         }
     }
@@ -261,6 +277,7 @@ static void create_collection_items(void) {
 
     int fn_valid = 0;
     struct json fn_json = {0};
+    char *fn_json_buf = NULL;
 
     turbo_time(1, 1);
 
@@ -272,7 +289,10 @@ static void create_collection_items(void) {
 
             if (file_content && json_valid(file_content)) {
                 fn_valid = 1;
-                fn_json = json_parse(strdup(file_content));
+
+                fn_json_buf = strdup(file_content);
+                fn_json = json_parse(fn_json_buf);
+
                 LOG_SUCCESS(mux_module, "Using Friendly Folder: %s", folder_name_file);
             } else {
                 LOG_WARN(mux_module, "Invalid Friendly Folder: %s", folder_name_file);
@@ -332,6 +352,9 @@ static void create_collection_items(void) {
         free(file_names);
         free(dir_names);
     }
+
+    free(fn_json_buf);
+    fn_json_buf = NULL;
 
     turbo_time(0, 1);
 }

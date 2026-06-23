@@ -473,6 +473,11 @@ void status_task(lv_timer_t *timer) {
     if (!msgbox_active) progress_onscreen = -1;
 }
 
+void status_poll(void) {
+    if (config.VISUAL.CLOCK) datetime_task(NULL);
+    if (config.VISUAL.BATTERY) battery_capacity_task(NULL);
+}
+
 void bluetooth_task(lv_timer_t *timer) {
     LV_UNUSED(timer);
 

@@ -611,6 +611,7 @@ static void run_saver_loop(int preview) {
     SDL_Event ev;
     const uint32_t frame_ms = IDLE_MS;
     uint32_t next = SDL_GetTicks();
+    uint32_t last_status = SDL_GetTicks();
 
     while (preview || saver_active()) {
         uint32_t now = SDL_GetTicks();
@@ -636,6 +637,11 @@ static void run_saver_loop(int preview) {
         next += frame_ms;
 
         now = SDL_GetTicks();
+        if (now - last_status >= TIMER_STATUS) {
+            status_poll();
+            last_status = now;
+        }
+
         if (next <= now) next = now + frame_ms;
     }
 
