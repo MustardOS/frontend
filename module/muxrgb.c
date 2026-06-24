@@ -724,7 +724,7 @@ static void init_navigation_group(void) {
     apply_mode_visibility(initial_mode);
     last_applied_mode = initial_mode;
 
-    gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 0, 0, 1);
+    gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 2, 0, 1);
 }
 
 
@@ -933,7 +933,7 @@ int muxrgb_main(void) {
                           lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
 
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(0, +1, 0, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
     nav_silent = 0;
 
     mux_input_options input_opts = {

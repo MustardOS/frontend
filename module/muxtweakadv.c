@@ -58,6 +58,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droUsbPart_tweakadv, device.STORAGE.USB.PARTITION - 1);
     lv_dropdown_set_selected(ui_droIncBright_tweakadv, config.SETTINGS.ADVANCED.INCBRIGHT - 1);
     lv_dropdown_set_selected(ui_droIncVolume_tweakadv, config.SETTINGS.ADVANCED.INCVOLUME - 1);
+    lv_dropdown_set_selected(ui_droBtScanTimeout_tweakadv, config.SETTINGS.ADVANCED.BTSCANTIMEOUT / 5 - 1);
     lv_dropdown_set_selected(ui_droUsbFunction_tweakadv, config.SETTINGS.ADVANCED.USBFUNCTION);
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
@@ -108,9 +109,20 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, DpadSwap, "settings/advanced/dpad_swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, LidSwitch, "settings/advanced/lidswitch", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DispSuspend, "settings/advanced/disp_suspend", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, StageOverlay, "settings/advanced/stage_overlay", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, MaxGpu, "settings/advanced/maxgpu", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, AudioReady, "settings/advanced/audio_ready", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, AudioSwap, "settings/advanced/audio_swap", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, AudioSuspend, "settings/advanced/audio_suspend", INT, 0);
+
+    do {
+        int bt_scan_current = lv_dropdown_get_selected(ui_droBtScanTimeout_tweakadv);
+        if (bt_scan_current != BtScanTimeout_original) {
+            is_modified++;
+            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/bt_scan_timeout", "w", INT, (bt_scan_current + 1) * 5);
+        }
+    } while (0);
+
     CHECK_AND_SAVE_STD(tweakadv, TrustModify, "settings/advanced/trust_modify", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, TrustPower, "settings/advanced/trust_power", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, TrustRemove, "settings/advanced/trust_remove", INT, 0);
@@ -231,6 +243,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, Overdrive, lang.MUXTWEAKADV.OVERDRIVE, "overdrive", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, LidSwitch, lang.MUXTWEAKADV.LIDSWITCH, "lidswitch", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, DispSuspend, lang.MUXTWEAKADV.DISPSUSPEND, "dispsuspend", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, StageOverlay, lang.MUXTWEAKADV.STAGEOVERLAY, "stageoverlay", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Swapfile, lang.MUXTWEAKADV.SWAPFILE, "swapfile", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Zramfile, lang.MUXTWEAKADV.ZRAMFILE, "zramfile", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, SecondPart, lang.MUXTWEAKADV.SECONDPART, "secondpart", NULL, 0);
@@ -240,6 +253,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, MaxGpu, lang.MUXTWEAKADV.MAXGPU, "maxgpu", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, AudioReady, lang.MUXTWEAKADV.AUDIOREADY, "audioready", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, AudioSwap, lang.MUXTWEAKADV.AUDIOSWAP, "audioswap", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, AudioSuspend, lang.MUXTWEAKADV.AUDIOSUSPEND, "audiosuspend", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, BtScanTimeout, lang.MUXTWEAKADV.BTSCANTIMEOUT, "btscan", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, TrustModify, lang.MUXTWEAKADV.TRUSTMODIFY, "trustmodify", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, TrustPower, lang.MUXTWEAKADV.TRUSTPOWER, "trustpower", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, TrustRemove, lang.MUXTWEAKADV.TRUSTREMOVE, "trustremove", disabled_enabled, 2);
@@ -268,12 +283,20 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_droIncVolume_tweakadv, increment_values);
     free(increment_values);
 
+    char bt_scan_seconds[MAX_BUFFER_SIZE];
+    snprintf(bt_scan_seconds, sizeof(bt_scan_seconds), " %s", lang.MUXTWEAKADV.SECONDS);
+
+    char *bt_scan_timeout_values = generate_number_string(5, 30, 5, NULL, bt_scan_seconds, NULL, 1);
+    apply_theme_list_drop_down(&theme, ui_droBtScanTimeout_tweakadv, bt_scan_timeout_values);
+    free(bt_scan_timeout_values);
+
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
 
     if (!device.BOARD.HASNETWORK) HIDE_OPTION_ITEM(tweakadv, RetroWait);
     if (!device.BOARD.HASLID) HIDE_OPTION_ITEM(tweakadv, LidSwitch);
     if (!device.BOARD.HASSTICK) HIDE_OPTION_ITEM(tweakadv, StickNav);
+    if (!device.BOARD.HASBLUETOOTH) HIDE_OPTION_ITEM(tweakadv, BtScanTimeout);
 
     // Removal of verbose messages due to changes to muterm not playing ball
     HIDE_OPTION_ITEM(tweakadv, Verbose);
@@ -429,7 +452,7 @@ int muxtweakadv_main(void) {
     dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
                           lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(0, +1, 0, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

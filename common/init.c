@@ -430,6 +430,7 @@ void init_fonts(void) {
     load_font_section(FONT_FOOTER_DIR, ui_pnlFooter);
 
     crash_ui_apply_font(ui_screen);
+    power_loss_ui_apply_font(ui_screen);
 
     if (prev_shadow != new_shadow) lv_obj_invalidate(ui_screen);
     prev_shadow = new_shadow;

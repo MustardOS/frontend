@@ -12,7 +12,7 @@
 int cancel_download = 0;
 int download_in_progress = 0;
 
-volatile int download_finish_result = 0;
+volatile int download_finish_result = INT_MIN;
 
 typedef struct {
     char *url;
@@ -92,8 +92,9 @@ int download_file(const char *url, const char *output_path) {
 
     const char *base = strrchr(output_path, '/');
     base = base ? base + 1 : output_path;
-    char *tmp_path = mux_malloc(sizeof(TEMP_DL_DIR) + strlen(base) + 6);
-    sprintf(tmp_path, "%s/%s.part", TEMP_DL_DIR, base);
+    size_t tmp_path_size = sizeof(TEMP_DL_DIR) + strlen(base) + 6;
+    char *tmp_path = mux_malloc(tmp_path_size);
+    snprintf(tmp_path, tmp_path_size, "%s/%s.part", TEMP_DL_DIR, base);
 
     fp = fopen(tmp_path, "wb");
     if (!fp) {
@@ -122,6 +123,8 @@ int download_file(const char *url, const char *output_path) {
 
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 10000L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 300000L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 100L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 15L);
 
     // Optional: follow redirects
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

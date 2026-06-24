@@ -143,11 +143,14 @@ struct mux_config {
             int16_t ZRAMFILE;
             int16_t LIDSWITCH;
             int16_t DISPSUSPEND;
+            int16_t STAGEOVERLAY;
             int16_t INCBRIGHT;
             int16_t INCVOLUME;
             int16_t MAXGPU;
             int16_t AUDIOREADY;
             int16_t AUDIOSWAP;
+            int16_t AUDIOSUSPEND;
+            int16_t BTSCANTIMEOUT;
             int16_t SECONDPART;
             int16_t USBPART;
             int16_t TRUSTMODIFY;

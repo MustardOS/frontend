@@ -54,6 +54,8 @@ void extraction_poll(void) {
 
     hide_progress_bar();
 
+    if (result == MUX_EXTRACT_OK) lv_img_cache_invalidate_src(NULL);
+
     if (cb) cb(result == MUX_EXTRACT_OK ? filename : NULL);
 
     free(filename);
@@ -129,12 +131,6 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file);
             mz_zip_reader_end(&zip);
             return MUX_EXTRACT_ERR;
-        } else {
-            if (ends_with(dest_file, ".png")) {
-                char img_source[MAX_BUFFER_SIZE];
-                snprintf(img_source, sizeof(img_source), "M:%s", dest_file);
-                lv_img_cache_invalidate_src(img_source);
-            }
         }
 
         progress_bar_value = (int) (((i + 1) * 100) / zip_file_count);

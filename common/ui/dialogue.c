@@ -206,7 +206,7 @@ void dialogue_init_remove(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *p
 }
 
 void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,
-                           const char *title, const char *description, const char *message, const char *nav_b) {
+                           const char *title, const char *description, const char *message, const char *nav_a) {
     dlg->option_count = 0;
     dlg->selected = 0;
     dlg->theme = t;
@@ -237,15 +237,10 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
     lv_obj_set_style_flex_main_place(dlg->panel, LV_FLEX_ALIGN_START, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(dlg->panel, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_shadow_zone_register(dlg->panel,
-                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR),
-                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA,
-                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET,
-                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET,
-                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR_FOCUS),
-                            (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA_FOCUS,
-                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET_FOCUS,
-                            (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET_FOCUS);
+    lv_shadow_zone_register(dlg->panel, lv_color_hex(t->DIALOGUE.SHADOW_COLOUR), (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET, (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET,
+                            lv_color_hex(t->DIALOGUE.SHADOW_COLOUR_FOCUS), (lv_opa_t) t->DIALOGUE.SHADOW_ALPHA_FOCUS,
+                            (int8_t) t->DIALOGUE.SHADOW_X_OFFSET_FOCUS, (int8_t) t->DIALOGUE.SHADOW_Y_OFFSET_FOCUS);
 
     dlg->title_label = lv_label_create(dlg->panel);
     lv_label_set_text(dlg->title_label, title);
@@ -324,11 +319,11 @@ void dialogue_init_message(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *
     lv_obj_set_style_flex_main_place(footer_row, LV_FLEX_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_flex_cross_place(footer_row, LV_FLEX_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_t *glyph_b = create_footer_glyph(footer_row, t, "b", t->NAV.B, 0);
-    lv_obj_t *label_b = create_footer_text(footer_row, t, t->NAV.B.TEXT, t->NAV.B.TEXT_ALPHA, 0);
-    lv_label_set_text(label_b, nav_b);
+    lv_obj_t *glyph_a = create_footer_glyph(footer_row, t, "a", t->NAV.A, 0);
+    lv_obj_t *label_a = create_footer_text(footer_row, t, t->NAV.A.TEXT, t->NAV.A.TEXT_ALPHA, 0);
+    lv_label_set_text(label_a, nav_a);
 
-    (void) glyph_b;
+    (void) glyph_a;
 }
 
 void dialogue_init_accept(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent,

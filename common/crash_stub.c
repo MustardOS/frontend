@@ -12,3 +12,14 @@ void crash_ui_check(struct theme_config *t, struct mux_lang *l, lv_obj_t *layer,
 void crash_ui_apply_font(lv_obj_t *source) { (void) source; }
 
 int crash_ui_dismiss(void) { return 0; }
+
+void power_loss_ui_apply_font(lv_obj_t *source) { (void) source; }
+
+void power_loss_ui_check(struct theme_config *t, struct mux_lang *l, lv_obj_t *layer, int *msgbox_active) {
+    (void) t;
+    (void) l;
+    (void) layer;
+    (void) msgbox_active;
+}
+
+int power_loss_ui_dismiss(void) { return 0; }

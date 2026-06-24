@@ -147,6 +147,7 @@ void header_and_footer_setup(void) {
     lv_label_set_text(ui_lblMessage, "");
 
     crash_ui_check(&theme, &lang, lv_layer_top(), &msgbox_active);
+    power_loss_ui_check(&theme, &lang, lv_layer_top(), &msgbox_active);
 }
 
 void overlay_display(void) {
@@ -557,6 +558,11 @@ void handle_msgbox_dismiss(void) {
     progress_onscreen = 0;
 
     if (crash_ui_dismiss()) {
+        play_sound(SND_CONFIRM);
+        return;
+    }
+
+    if (power_loss_ui_dismiss()) {
         play_sound(SND_CONFIRM);
         return;
     }

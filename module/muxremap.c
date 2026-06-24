@@ -746,7 +746,7 @@ static void init_navigation_group(void) {
     ui_count = REMAP_SLOT_COUNT + 2;
 
     lv_obj_update_layout(ui_pnlContent);
-    gen_step_movement(0, +1, 0, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
     check_focus();
 }
 

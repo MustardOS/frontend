@@ -23,7 +23,6 @@ static char rom_sys[PATH_MAX];
 
 static char previous_module[MAX_BUFFER_SIZE];
 static char splash_image_path[MAX_BUFFER_SIZE];
-static char alert_image_path[MAX_BUFFER_SIZE];
 
 /*
  * Sometimes only executed functions (shutdown / reboot / install)
@@ -105,7 +104,7 @@ static void cleanup_screen(void) {
     ui_count = 0;
     grid_mode_enabled = 0;
 
-    RESET_PATH(current_wall);
+    if (!video_wallpaper_active()) RESET_PATH(current_wall);
     RESET_PATH(box_image_previous_path);
     RESET_PATH(preview_image_previous_path);
     RESET_PATH(splash_image_previous_path);
@@ -225,13 +224,6 @@ int set_splash_image_path(char *splash_image_name) {
     }
 
     return 0;
-}
-
-static int set_alert_image_path(void) {
-    snprintf(alert_image_path, sizeof(alert_image_path), OPT_PATH "share/media/alert_%s.png",
-             device.SCREEN.HEIGHT < 720 ? "small" : "big");
-
-    return file_exist(alert_image_path);
 }
 
 static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
@@ -650,9 +642,8 @@ static void reset_alert(void) {
     write_text_to_file(USED_RESET, "w", INT, 1);
     write_text_to_file(DONE_RESET, "w", INT, 1);
 
-    if (show_alert && set_alert_image_path()) {
-        muxsplash_main(alert_image_path, false);
-        sleep(3);
+    if (show_alert) {
+        write_text_to_file(MUOS_PWR_LOSS, "w", CHAR, "");
     }
 }
 

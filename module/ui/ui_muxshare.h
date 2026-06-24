@@ -468,40 +468,43 @@
     THEMEOPT(GlyphGrid,        GLYPHGRID,        "glyphgrid")    \
     THEMEOPT(LabelWidth,       LABELWIDTH,       "labelwidth")
 
-#define TWEAKADV_ELEMENTS                             \
-    TWEAKADV(Accelerate,  ACCELERATE,  "accelerate")  \
-    TWEAKADV(RepeatDelay, REPEATDELAY, "repeat")      \
-    TWEAKADV(StickNav,    STICKNAV,    "sticknav")    \
-    TWEAKADV(Volume,      VOLUME,      "volume")      \
-    TWEAKADV(Brightness,  BRIGHTNESS,  "brightness")  \
-    TWEAKADV(Thermal,     THERMAL,     "thermal")     \
-    TWEAKADV(Led,         LED,         "led")         \
-    TWEAKADV(RandomTheme, RANDOMTHEME, "randomtheme") \
-    TWEAKADV(RetroWait,   RETROWAIT,   "retrowait")   \
-    TWEAKADV(RetroFree,   RETROFREE,   "retrofree")   \
-    TWEAKADV(RetroCache,  RETROCACHE,  "retrocache")  \
-    TWEAKADV(Activity,    ACTIVITY,    "activity")    \
-    TWEAKADV(Verbose,     VERBOSE,     "verbose")     \
-    TWEAKADV(DebugLog,    DEBUGLOG,    "debuglog")    \
-    TWEAKADV(Rumble,      RUMBLE,      "rumble")      \
-    TWEAKADV(UserInit,    USERINIT,    "userinit")    \
-    TWEAKADV(DpadSwap,    DPADSWAP,    "dpadswap")    \
-    TWEAKADV(Overdrive,   OVERDRIVE,   "overdrive")   \
-    TWEAKADV(LidSwitch,   LIDSWITCH,   "lidswitch")   \
-    TWEAKADV(DispSuspend, DISPSUSPEND, "dispsuspend") \
-    TWEAKADV(Swapfile,    SWAPFILE,    "swapfile")    \
-    TWEAKADV(Zramfile,    ZRAMFILE,    "zramfile")    \
-    TWEAKADV(SecondPart,  SECONDPART,  "secondpart")  \
-    TWEAKADV(UsbPart,     USBPART,     "usbpart")     \
-    TWEAKADV(IncBright,   INCBRIGHT,   "incbright")   \
-    TWEAKADV(IncVolume,   INCVOLUME,   "invvolume")   \
-    TWEAKADV(MaxGpu,      MAXGPU,      "maxgpu")      \
-    TWEAKADV(AudioReady,  AUDIOREADY,  "audioready")  \
-    TWEAKADV(AudioSwap,   AUDIOSWAP,   "audioswap")   \
-    TWEAKADV(TrustModify, TRUSTMODIFY, "trustmodify") \
-    TWEAKADV(TrustPower,  TRUSTPOWER,  "trustpower")  \
-    TWEAKADV(TrustRemove, TRUSTREMOVE, "trustremove") \
-    TWEAKADV(UsbFunction, USBFUNCTION, "usbfunction")
+#define TWEAKADV_ELEMENTS                                  \
+    TWEAKADV(Accelerate,    ACCELERATE,    "accelerate")   \
+    TWEAKADV(RepeatDelay,   REPEATDELAY,   "repeat")       \
+    TWEAKADV(StickNav,      STICKNAV,      "sticknav")     \
+    TWEAKADV(Volume,        VOLUME,        "volume")       \
+    TWEAKADV(Brightness,    BRIGHTNESS,    "brightness")   \
+    TWEAKADV(Thermal,       THERMAL,       "thermal")      \
+    TWEAKADV(Led,           LED,           "led")          \
+    TWEAKADV(RandomTheme,   RANDOMTHEME,   "randomtheme")  \
+    TWEAKADV(RetroWait,     RETROWAIT,     "retrowait")    \
+    TWEAKADV(RetroFree,     RETROFREE,     "retrofree")    \
+    TWEAKADV(RetroCache,    RETROCACHE,    "retrocache")   \
+    TWEAKADV(Activity,      ACTIVITY,      "activity")     \
+    TWEAKADV(Verbose,       VERBOSE,       "verbose")      \
+    TWEAKADV(DebugLog,      DEBUGLOG,      "debuglog")     \
+    TWEAKADV(Rumble,        RUMBLE,        "rumble")       \
+    TWEAKADV(UserInit,      USERINIT,      "userinit")     \
+    TWEAKADV(DpadSwap,      DPADSWAP,      "dpadswap")     \
+    TWEAKADV(Overdrive,     OVERDRIVE,     "overdrive")    \
+    TWEAKADV(LidSwitch,     LIDSWITCH,     "lidswitch")    \
+    TWEAKADV(DispSuspend,   DISPSUSPEND,   "dispsuspend")  \
+    TWEAKADV(StageOverlay,  STAGEOVERLAY,  "stageoverlay") \
+    TWEAKADV(Swapfile,      SWAPFILE,      "swapfile")     \
+    TWEAKADV(Zramfile,      ZRAMFILE,      "zramfile")     \
+    TWEAKADV(SecondPart,    SECONDPART,    "secondpart")   \
+    TWEAKADV(UsbPart,       USBPART,       "usbpart")      \
+    TWEAKADV(IncBright,     INCBRIGHT,     "incbright")    \
+    TWEAKADV(IncVolume,     INCVOLUME,     "invvolume")    \
+    TWEAKADV(MaxGpu,        MAXGPU,        "maxgpu")       \
+    TWEAKADV(AudioReady,    AUDIOREADY,    "audioready")   \
+    TWEAKADV(AudioSwap,     AUDIOSWAP,     "audioswap")    \
+    TWEAKADV(AudioSuspend,  AUDIOSUSPEND,  "audiosuspend") \
+    TWEAKADV(BtScanTimeout, BTSCANTIMEOUT, "btscan")       \
+    TWEAKADV(TrustModify,   TRUSTMODIFY,   "trustmodify")  \
+    TWEAKADV(TrustPower,    TRUSTPOWER,    "trustpower")   \
+    TWEAKADV(TrustRemove,   TRUSTREMOVE,   "trustremove")  \
+    TWEAKADV(UsbFunction,   USBFUNCTION,   "usbfunction")
 
 #define TWEAKGEN_ELEMENTS                             \
     TWEAKGEN(Rtc,         RTC,         "clock")       \

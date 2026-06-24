@@ -351,7 +351,7 @@ int muxpasscfg_main(void) {
     }
 
     init_timer(NULL, NULL);
-    gen_step_movement(0, +1, 0, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

@@ -148,11 +148,14 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->SETTINGS.ADVANCED.ZRAMFILE, &d, "zramfile", 0);
     CFG_INT(config->SETTINGS.ADVANCED.LIDSWITCH, &d, "lidswitch", 1);
     CFG_INT(config->SETTINGS.ADVANCED.DISPSUSPEND, &d, "disp_suspend", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.STAGEOVERLAY, &d, "stage_overlay", 1);
     CFG_INT(config->SETTINGS.ADVANCED.INCBRIGHT, &d, "incbright", 16);
     CFG_INT(config->SETTINGS.ADVANCED.INCVOLUME, &d, "incvolume", 8);
     CFG_INT(config->SETTINGS.ADVANCED.MAXGPU, &d, "maxgpu", 0);
     CFG_INT(config->SETTINGS.ADVANCED.AUDIOREADY, &d, "audio_ready", 0);
     CFG_INT(config->SETTINGS.ADVANCED.AUDIOSWAP, &d, "audio_swap", 0);
+    CFG_INT(config->SETTINGS.ADVANCED.AUDIOSUSPEND, &d, "audio_suspend", 1);
+    CFG_INT(config->SETTINGS.ADVANCED.BTSCANTIMEOUT, &d, "bt_scan_timeout", 20);
     CFG_INT(config->SETTINGS.ADVANCED.USBPART, &d, "part_external", 0);
     CFG_INT(config->SETTINGS.ADVANCED.SECONDPART, &d, "part_secondary", 0);
     CFG_INT(config->SETTINGS.ADVANCED.TRUSTMODIFY, &d, "trust_modify", 0);

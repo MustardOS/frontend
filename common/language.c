@@ -263,6 +263,8 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.CRASH_MODULE, "Module");
     GENERIC_FIELD(lang->GENERIC.CRASH_FAULT, "Fault");
     GENERIC_FIELD(lang->GENERIC.RANDOM, "Random");
+    GENERIC_FIELD(lang->GENERIC.POWER_LOSS_TITLE, "Unexpected Power Loss");
+    GENERIC_FIELD(lang->GENERIC.POWER_LOSS_MESSAGE, "An unexpected power loss was detected during the previous session. Please ensure your device is fully charged before use and do not use the reset button!");
 
     // muxactivity
     SPECIFIC_FIELD(lang->MUXACTIVITY.TITLE, "ACTIVITY TRACKER");
@@ -1633,6 +1635,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.STSL, "Startup + Sleep");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.SHSL, "Shutdown + Sleep");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.DISPSUSPEND, "Display Suspend");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.STAGEOVERLAY, "Stage Overlay");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SECONDPART, "Secondary Partition");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.USBPART, "External Partition");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.INCBRIGHT, "Brightness Increment");
@@ -1640,6 +1643,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.MAXGPU, "GPU Performance Mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOREADY, "Audio Subsystem Wait");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOSWAP, "Audio Reverse");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.AUDIOSUSPEND, "Audio Suspend");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.BTSCANTIMEOUT, "Bluetooth Scan Timeout");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.SECONDS, "Seconds");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTMODIFY, "Trust Modifications");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTPOWER, "Trust Power Choice");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TRUSTREMOVE, "Trust Removals");
@@ -1668,6 +1674,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STICKNAV, "Change how you navigate using the DPAD and Analogue Sticks on the device");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DISPSUSPEND, "Toggle the device display suspend function, however some displays will not like this enabled");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STAGEOVERLAY, "Toggle the stage overlay system used to display brightness, volume, and battery notifications");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SECONDPART, "Change the partition number requested upon secondary storage mount");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USBPART, "Change the partition number requested upon external storage mount");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.INCBRIGHT, "Change the level of brightness incrementation when adjusting");
@@ -1675,6 +1682,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.MAXGPU, "Push the onboard GPU to the maximum frequency at all times");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOREADY, "Toggle if the device will wait for the audio subsystem to initialise during boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOSWAP, "Toggle the swap of left and right channels of audio");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.AUDIOSUSPEND, "Toggle if PipeWire will suspend the audio device when idle to reduce power consumption");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BTSCANTIMEOUT, "Adjust the duration the device will scan for nearby Bluetooth devices");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTMODIFY, "Skip the unsaved changes dialogue and save immediately when leaving a settings module");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTPOWER, "Skip the confirmation dialogue when choosing to reboot or shut down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TRUSTREMOVE, "Skip the removal confirmation dialogue when using X to remove content or reset settings");

@@ -41,7 +41,7 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, false);
 
     if (!storage_available()) HIDE_STATIC_ITEM(config, Storage);
-    if (hdmi_mode) HIDE_STATIC_ITEM(config, Overlay);
+    if (hdmi_mode || !config.SETTINGS.ADVANCED.STAGEOVERLAY) HIDE_STATIC_ITEM(config, Overlay);
 
     gen_step_movement(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1, 1, 0, 1);
 }

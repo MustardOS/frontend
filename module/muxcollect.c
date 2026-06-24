@@ -1076,6 +1076,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
             current_item_index < ui_count) {
             list_nav_move(sys_index, +1);
         } else {
+            if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
             if (config.VISUAL.BOX_ART < 4) {
                 image_refresh("box");
                 if (config.VISUAL.VIDEO_PREVIEW > 0) video_refresh();

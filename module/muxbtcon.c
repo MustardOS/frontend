@@ -60,7 +60,7 @@ static void bt_scan_poll_task(lv_timer_t *t) {
 
     struct stat st;
     int file_ready = (stat(CONF_CONFIG_PATH "bluetooth/scan", &st) == 0);
-    int timed_out = (time(NULL) - scan_start >= 30);
+    int timed_out = (time(NULL) - scan_start >= 60);
 
     if (!file_ready && !timed_out) return;
 

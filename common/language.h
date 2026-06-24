@@ -157,6 +157,8 @@ struct mux_lang {
         char CRASH_MODULE[MAX_BUFFER_SIZE];
         char CRASH_FAULT[MAX_BUFFER_SIZE];
         char RANDOM[MAX_BUFFER_SIZE];
+        char POWER_LOSS_TITLE[MAX_BUFFER_SIZE];
+        char POWER_LOSS_MESSAGE[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -1732,6 +1734,7 @@ struct mux_lang {
         char ZRAMFILE[MAX_BUFFER_SIZE];
         char LIDSWITCH[MAX_BUFFER_SIZE];
         char DISPSUSPEND[MAX_BUFFER_SIZE];
+        char STAGEOVERLAY[MAX_BUFFER_SIZE];
         char SECONDPART[MAX_BUFFER_SIZE];
         char USBPART[MAX_BUFFER_SIZE];
         char INCBRIGHT[MAX_BUFFER_SIZE];
@@ -1739,6 +1742,9 @@ struct mux_lang {
         char MAXGPU[MAX_BUFFER_SIZE];
         char AUDIOREADY[MAX_BUFFER_SIZE];
         char AUDIOSWAP[MAX_BUFFER_SIZE];
+        char AUDIOSUSPEND[MAX_BUFFER_SIZE];
+        char BTSCANTIMEOUT[MAX_BUFFER_SIZE];
+        char SECONDS[MAX_BUFFER_SIZE];
         char TRUSTMODIFY[MAX_BUFFER_SIZE];
         char TRUSTPOWER[MAX_BUFFER_SIZE];
         char TRUSTREMOVE[MAX_BUFFER_SIZE];
@@ -1799,6 +1805,7 @@ struct mux_lang {
             char VOLUME[MAX_BUFFER_SIZE];
             char STICKNAV[MAX_BUFFER_SIZE];
             char DISPSUSPEND[MAX_BUFFER_SIZE];
+            char STAGEOVERLAY[MAX_BUFFER_SIZE];
             char SECONDPART[MAX_BUFFER_SIZE];
             char USBPART[MAX_BUFFER_SIZE];
             char INCBRIGHT[MAX_BUFFER_SIZE];
@@ -1806,6 +1813,8 @@ struct mux_lang {
             char MAXGPU[MAX_BUFFER_SIZE];
             char AUDIOREADY[MAX_BUFFER_SIZE];
             char AUDIOSWAP[MAX_BUFFER_SIZE];
+            char AUDIOSUSPEND[MAX_BUFFER_SIZE];
+            char BTSCANTIMEOUT[MAX_BUFFER_SIZE];
             char TRUSTMODIFY[MAX_BUFFER_SIZE];
             char TRUSTPOWER[MAX_BUFFER_SIZE];
             char TRUSTREMOVE[MAX_BUFFER_SIZE];

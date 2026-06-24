@@ -573,7 +573,7 @@ char *generate_time_string(int minute_offset) {
     char *ptr = buf;
     for (int i = 0; i < slots; i++) {
         int total = i * minute_offset;
-        ptr += sprintf(ptr, "%02d:%02d", total / 60, total % 60);
+        ptr += snprintf(ptr, 6, "%02d:%02d", total / 60, total % 60);
         if (i < slots - 1) *ptr++ = '\n';
     }
 

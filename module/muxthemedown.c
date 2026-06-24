@@ -149,6 +149,11 @@ static void create_content_items(void) {
         char theme_name[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "name"), theme_name, sizeof(theme_name));
 
+        if (strchr(theme_name, '/') || strstr(theme_name, "..")) {
+            LOG_WARN(mux_module, "Skipping theme with unsafe name: %s", theme_name);
+            continue;
+        }
+
         char theme_url[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "url"), theme_url, sizeof(theme_url));
 
@@ -374,11 +379,11 @@ static void handle_b(void) {
 
     if (download_in_progress) {
         cancel_download = 1;
-        char theme_path[MAX_BUFFER_SIZE];
-        snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
-                 theme_items[current_item_index].name);
-        if (file_exist(theme_path)) {
-            remove(theme_path);
+        if (theme_items && ui_count > 0) {
+            char theme_path[MAX_BUFFER_SIZE];
+            snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
+                     theme_items[current_item_index].name);
+            if (file_exist(theme_path)) remove(theme_path);
         }
     } else {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
