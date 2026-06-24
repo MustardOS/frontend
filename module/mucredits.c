@@ -117,8 +117,9 @@ static const char *knights[] = {
 };
 
 static const char *contributors[] = {
-        "antikk", "artur_ditu", "bitter_bizarro", "corey", "imcokeman",
-        "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xonglebongle",
+        "0xada.3", "antikk", "artur_ditu", "bitter_bizarro", "corey",
+        "imcokeman", "key777", "mugwomp93", "saitamasahil", "thewalruzz",
+        "xikteny", "xonglebongle",
         NULL
 };
 
