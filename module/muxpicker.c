@@ -4,6 +4,22 @@ static char base_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
 
+static int remove_mode = 0;
+static int skip_confirm = 0;
+static mux_dialogue remove_dlg;
+
+static void show_remove_dialog(void) {
+    remove_mode = 1;
+    remove_dlg.selected = 0;
+    dialogue_show(&remove_dlg);
+    dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void hide_remove_dialog(void) {
+    remove_mode = 0;
+    dialogue_hide(&remove_dlg);
+}
+
 #define TEMP_VERSION "version.txt"
 #define TEMP_CREDITS "credits.txt"
 
@@ -86,8 +102,52 @@ static void create_picker_items(void) {
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 }
 
+static void do_remove(void) {
+    char zip_path[PATH_MAX];
+    const char *label = lv_label_get_text(lv_group_get_focused(ui_group));
+
+    if (strcasecmp(picker_extension, "muxcat") == 0) {
+        snprintf(
+            zip_path, sizeof(zip_path), "%s/%s/%s.%s", device.storage.rom.mount, STORE_LOC_PCAT, label, picker_extension
+        );
+    } else if (strcasecmp(picker_extension, "muxcfg") == 0) {
+        snprintf(
+            zip_path, sizeof(zip_path), "%s/%s/%s.%s", device.storage.rom.mount, STORE_LOC_PCON, label, picker_extension
+        );
+    } else {
+        return;
+    }
+
+    if (!file_exist(zip_path)) {
+        play_sound(snd_error);
+        toast_message(lang.generic.remove_fail, tst_wait_m);
+        return;
+    }
+
+    remove(zip_path);
+    sync();
+
+    play_sound(snd_muos);
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
+
+    load_mux("picker");
+    mux_input_stop();
+}
+
 static void handle_a(void) {
     if (msgbox_active || !ui_count_static || hold_call) return;
+
+    if (remove_mode) {
+        const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
+        hide_remove_dialog();
+        if (opt == mux_remove_yep) {
+            do_remove();
+        } else if (opt == mux_remove_skip) {
+            skip_confirm = 1;
+            do_remove();
+        }
+        return;
+    }
 
     play_sound(snd_confirm);
 
@@ -133,52 +193,31 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || items[current_item_index].content_type == FOLDER
+    if (msgbox_active || !ui_count_static || remove_mode || items[current_item_index].content_type == FOLDER
         || items[current_item_index].content_type == menu) {
         return;
     }
 
-    char relative_zip_path[PATH_MAX];
-    if (strcasecmp(picker_extension, "muxcat") == 0) {
-        snprintf(
-            relative_zip_path, sizeof(relative_zip_path), "%s/%s/%s.%s", device.storage.rom.mount, STORE_LOC_PCAT,
-            lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension
-        );
-    } else if (strcasecmp(picker_extension, "muxcfg") == 0) {
-        snprintf(
-            relative_zip_path, sizeof(relative_zip_path), "%s/%s/%s.%s", device.storage.rom.mount, STORE_LOC_PCON,
-            lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension
-        );
-    } else {
+    if (strcasecmp(picker_extension, "muxcat") != 0 && strcasecmp(picker_extension, "muxcfg") != 0) {
         return;
     }
 
-    if (!hold_call) {
-        play_sound(snd_error);
-        toast_message(lang.generic.hold_remove, tst_wait_s);
+    if (config.settings.advanced.trust_remove || skip_confirm) {
+        do_remove();
         return;
     }
 
-    if (!file_exist(relative_zip_path)) {
-        play_sound(snd_error);
-        toast_message(lang.generic.remove_fail, tst_wait_m);
-        return;
-    }
-
-    remove(relative_zip_path);
-    sync();
-
-    play_sound(snd_muos);
-    write_text_to_file(MUOS_PIN_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
-
-    hold_call = 0;
-    load_mux("picker");
-
-    mux_input_stop();
+    play_sound(snd_confirm);
+    show_remove_dialog();
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (remove_mode) {
+        hide_remove_dialog();
+        return;
+    }
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -228,6 +267,38 @@ static void handle_y(void) {
     load_mux("picker");
 
     mux_input_stop();
+}
+
+static void handle_dpad_up(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (remove_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(&remove_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (remove_mode) return;
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (remove_mode) return;
+    handle_list_nav_down_hold();
 }
 
 static void handle_help(void) {
@@ -334,6 +405,7 @@ int muxpicker_main(char *type, char *ex_dir) {
         lv_label_set_text(ui_lbl_screen_message, message_text);
     }
 
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.back);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -344,8 +416,8 @@ int muxpicker_main(char *type, char *ex_dir) {
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
                 [mux_input_y] = handle_y,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
             },
@@ -354,8 +426,8 @@ int muxpicker_main(char *type, char *ex_dir) {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
             [mux_input_l1] = handle_list_nav_page_up,
             [mux_input_r1] = handle_list_nav_page_down,
         }
