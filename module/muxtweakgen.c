@@ -90,6 +90,18 @@ static int visible_rgb(void) {
     return !lv_obj_has_flag(ui_pnl_rgb_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
+static int visible_distemp(void) {
+    return !lv_obj_has_flag(ui_pnl_display_temp_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_brightness(void) {
+    return !lv_obj_has_flag(ui_pnl_brightness_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int visible_volume(void) {
+    return !lv_obj_has_flag(ui_pnl_volume_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
 static void init_dropdown_settings(void) {
 #define TWEAKGEN(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
@@ -539,9 +551,9 @@ static void handle_a(void) {
         {"remap", &kiosk_pass, menu_remap, NULL},
         {"tweakadv", &kiosk.setting.advanced, menu_advanced, NULL},
         {"passcfg", &kiosk_pass, menu_passcode, NULL},
-        {"distemp", &kiosk_pass, menu_display, NULL}, // Display Temperature
-        {NULL, &kiosk_pass, menu_option, NULL},       // Brightness
-        {NULL, &kiosk_pass, menu_option, NULL},       // Volume
+        {"distemp", &kiosk_pass, menu_display, visible_distemp}, // Display Temperature
+        {NULL, &kiosk_pass, menu_option, visible_brightness},    // Brightness
+        {NULL, &kiosk_pass, menu_option, visible_volume},        // Volume
         {NULL, &kiosk_pass, menu_toggle, visible_audiosink},
         {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey DPAD
         {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey Screenshot
