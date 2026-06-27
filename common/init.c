@@ -174,7 +174,10 @@ void init_display(void) {
             LOG_INFO("video", "Overriding MUX resolution for HDMI: %dx%d", ext_w, ext_h);
             device.mux.width = (int16_t) ext_w;
             device.mux.height = (int16_t) ext_h;
-            device.mux.buffer = device.mux.height <= 480 ? device.mux.height : device.mux.height / 2;
+            int lines = (int) (1024 * 1024 / ((uint32_t) device.mux.width * sizeof(lv_color_t)));
+            if (lines < 10) lines = 10;
+            if (lines > device.mux.height) lines = device.mux.height;
+            device.mux.buffer = (int16_t) lines;
         } else {
             LOG_WARN("video", "Failed to read HDMI external resolution, using default MUX size");
         }

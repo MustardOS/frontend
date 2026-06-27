@@ -144,7 +144,10 @@ void load_device(struct mux_device *device) {
     if (!device->mux.width) device->mux.width = 640;
     if (!device->mux.height) device->mux.height = 480;
     if (!device->mux.buffer) {
-        device->mux.buffer = device->mux.height <= 480 ? device->mux.height : device->mux.height / 2;
+        int lines = 1024 * 1024 / (device->mux.width * 4);
+        if (lines < 10) lines = 10;
+        if (lines > device->mux.height) lines = device->mux.height;
+        device->mux.buffer = (int16_t) lines;
     }
     if (!device->screen.width) device->screen.width = 640;
     if (!device->screen.height) device->screen.height = 480;
