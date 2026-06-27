@@ -76,8 +76,10 @@ lv_indev_t *lv_indev_drv_register(lv_indev_drv_t *driver) {
     if (driver->disp == NULL) driver->disp = lv_disp_get_default();
 
     if (driver->disp == NULL) {
-        LV_LOG_WARN("lv_indev_drv_register: no display registered hence can't attach the indev to "
-                    "a display");
+        LV_LOG_WARN(
+            "lv_indev_drv_register: no display registered hence can't attach the indev to "
+            "a display"
+        );
         return NULL;
     }
 
@@ -112,9 +114,11 @@ void lv_indev_drv_update(lv_indev_t *indev, lv_indev_drv_t *new_drv) {
         new_drv->disp = lv_disp_get_default();
     }
     if (new_drv->disp == NULL) {
-        LV_LOG_WARN("lv_indev_drv_register: no display registered hence can't attach the indev to "
-                    "a display");
-        indev->proc.disabled = true;
+        LV_LOG_WARN(
+            "lv_indev_drv_register: no display registered hence can't attach the indev to "
+            "a display"
+        );
+        indev->proc.disabled = 1;
         return;
     }
 
@@ -124,9 +128,9 @@ void lv_indev_drv_update(lv_indev_t *indev, lv_indev_drv_t *new_drv) {
 }
 
 /**
-* Remove the provided input device. Make sure not to use the provided input device afterwards anymore.
-* @param indev pointer to delete
-*/
+ * Remove the provided input device. Make sure not to use the provided input device afterwards anymore.
+ * @param indev pointer to delete
+ */
 void lv_indev_delete(lv_indev_t *indev) {
     LV_ASSERT_NULL(indev);
     LV_ASSERT_NULL(indev->driver);
@@ -166,11 +170,11 @@ void _lv_indev_read(lv_indev_t *indev, lv_indev_data_t *data) {
         data->point.x = indev->proc.types.pointer.last_raw_point.x;
         data->point.y = indev->proc.types.pointer.last_raw_point.y;
     }
-        /*Similarly set at least the last key in case of the user doesn't set it on release*/
+    /*Similarly set at least the last key in case of the user doesn't set it on release*/
     else if (indev->driver->type == LV_INDEV_TYPE_KEYPAD) {
         data->key = indev->proc.types.keypad.last_key;
     }
-        /*For compatibility assume that used button was enter (encoder push)*/
+    /*For compatibility assume that used button was enter (encoder push)*/
     else if (indev->driver->type == LV_INDEV_TYPE_ENCODER) {
         data->key = LV_KEY_ENTER;
     }

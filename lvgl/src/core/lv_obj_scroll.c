@@ -15,10 +15,10 @@
 /*********************
  *      DEFINES
  *********************/
-#define MY_CLASS &lv_obj_class
-#define SCROLL_ANIM_TIME_MIN    200    /*ms*/
-#define SCROLL_ANIM_TIME_MAX    400    /*ms*/
-#define SCROLLBAR_MIN_SIZE      (LV_DPX(10))
+#define MY_CLASS             &lv_obj_class
+#define SCROLL_ANIM_TIME_MIN 200 /*ms*/
+#define SCROLL_ANIM_TIME_MAX 400 /*ms*/
+#define SCROLLBAR_MIN_SIZE   (LV_DPX(10))
 
 /**********************
  *      TYPEDEFS
@@ -37,8 +37,8 @@ static void scroll_y_anim(void *obj, int32_t v);
 
 static void scroll_anim_ready_cb(lv_anim_t *a);
 
-static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_point_t *scroll_value,
-                                  lv_anim_enable_t anim_en);
+static void
+scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_point_t *scroll_value, lv_anim_enable_t anim_en);
 
 /**********************
  *  STATIC VARIABLES
@@ -89,23 +89,31 @@ void lv_obj_set_scroll_snap_y(lv_obj_t *obj, lv_scroll_snap_t align) {
  *====================*/
 
 lv_scrollbar_mode_t lv_obj_get_scrollbar_mode(const lv_obj_t *obj) {
-    if (obj->spec_attr) return obj->spec_attr->scrollbar_mode;
-    else return LV_SCROLLBAR_MODE_AUTO;
+    if (obj->spec_attr)
+        return obj->spec_attr->scrollbar_mode;
+    else
+        return LV_SCROLLBAR_MODE_AUTO;
 }
 
 lv_dir_t lv_obj_get_scroll_dir(const lv_obj_t *obj) {
-    if (obj->spec_attr) return obj->spec_attr->scroll_dir;
-    else return LV_DIR_ALL;
+    if (obj->spec_attr)
+        return obj->spec_attr->scroll_dir;
+    else
+        return LV_DIR_ALL;
 }
 
 lv_scroll_snap_t lv_obj_get_scroll_snap_x(const lv_obj_t *obj) {
-    if (obj->spec_attr) return obj->spec_attr->scroll_snap_x;
-    else return LV_SCROLL_SNAP_NONE;
+    if (obj->spec_attr)
+        return obj->spec_attr->scroll_snap_x;
+    else
+        return LV_SCROLL_SNAP_NONE;
 }
 
 lv_scroll_snap_t lv_obj_get_scroll_snap_y(const lv_obj_t *obj) {
-    if (obj->spec_attr) return obj->spec_attr->scroll_snap_y;
-    else return LV_SCROLL_SNAP_NONE;
+    if (obj->spec_attr)
+        return obj->spec_attr->scroll_snap_y;
+    else
+        return LV_SCROLL_SNAP_NONE;
 }
 
 lv_coord_t lv_obj_get_scroll_x(const lv_obj_t *obj) {
@@ -173,7 +181,6 @@ lv_coord_t lv_obj_get_scroll_left(lv_obj_t *obj) {
         lv_obj_t *child = obj->spec_attr->children[i];
         if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
         x1 = LV_MIN(x1, child->coords.x1);
-
     }
 
     if (x1 != LV_COORD_MAX) {
@@ -394,21 +401,21 @@ lv_res_t _lv_obj_scroll_by_raw(lv_obj_t *obj, lv_coord_t x, lv_coord_t y) {
     obj->spec_attr->scroll.x += x;
     obj->spec_attr->scroll.y += y;
 
-    lv_obj_move_children_by(obj, x, y, true);
+    lv_obj_move_children_by(obj, x, y, 1);
     lv_res_t res = lv_event_send(obj, LV_EVENT_SCROLL, NULL);
     if (res != LV_RES_OK) return res;
     lv_obj_invalidate(obj);
     return LV_RES_OK;
 }
 
-bool lv_obj_is_scrolling(const lv_obj_t *obj) {
+int lv_obj_is_scrolling(const lv_obj_t *obj) {
     lv_indev_t *indev = lv_indev_get_next(NULL);
     while (indev) {
-        if (lv_indev_get_scroll_obj(indev) == obj) return true;
+        if (lv_indev_get_scroll_obj(indev) == obj) return 1;
         indev = lv_indev_get_next(indev);
     }
 
-    return false;
+    return 0;
 }
 
 void lv_obj_update_snap(lv_obj_t *obj, lv_anim_enable_t anim_en) {
@@ -422,7 +429,7 @@ void lv_obj_get_scrollbar_area(lv_obj_t *obj, lv_area_t *hor_area, lv_area_t *ve
     lv_area_set(hor_area, 0, 0, -1, -1);
     lv_area_set(ver_area, 0, 0, -1, -1);
 
-    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_SCROLLABLE) == false) return;
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_SCROLLABLE) == 0) return;
 
     lv_dir_t sm = lv_obj_get_scrollbar_mode(obj);
     if (sm == LV_SCROLLBAR_MODE_OFF) return;
@@ -444,25 +451,23 @@ void lv_obj_get_scrollbar_area(lv_obj_t *obj, lv_area_t *hor_area, lv_area_t *ve
 
     lv_dir_t dir = lv_obj_get_scroll_dir(obj);
 
-    bool ver_draw = false;
-    if ((dir & LV_DIR_VER) &&
-        ((sm == LV_SCROLLBAR_MODE_ON) ||
-         (sm == LV_SCROLLBAR_MODE_AUTO && (st > 0 || sb > 0)) ||
-         (sm == LV_SCROLLBAR_MODE_ACTIVE && lv_indev_get_scroll_dir(indev) == LV_DIR_VER))) {
-        ver_draw = true;
+    int ver_draw = 0;
+    if ((dir & LV_DIR_VER)
+        && ((sm == LV_SCROLLBAR_MODE_ON) || (sm == LV_SCROLLBAR_MODE_AUTO && (st > 0 || sb > 0))
+            || (sm == LV_SCROLLBAR_MODE_ACTIVE && lv_indev_get_scroll_dir(indev) == LV_DIR_VER))) {
+        ver_draw = 1;
     }
 
-    bool hor_draw = false;
-    if ((dir & LV_DIR_HOR) &&
-        ((sm == LV_SCROLLBAR_MODE_ON) ||
-         (sm == LV_SCROLLBAR_MODE_AUTO && (sl > 0 || sr > 0)) ||
-         (sm == LV_SCROLLBAR_MODE_ACTIVE && lv_indev_get_scroll_dir(indev) == LV_DIR_HOR))) {
-        hor_draw = true;
+    int hor_draw = 0;
+    if ((dir & LV_DIR_HOR)
+        && ((sm == LV_SCROLLBAR_MODE_ON) || (sm == LV_SCROLLBAR_MODE_AUTO && (sl > 0 || sr > 0))
+            || (sm == LV_SCROLLBAR_MODE_ACTIVE && lv_indev_get_scroll_dir(indev) == LV_DIR_HOR))) {
+        hor_draw = 1;
     }
 
     if (!hor_draw && !ver_draw) return;
 
-    bool rtl = lv_obj_get_style_base_dir(obj, LV_PART_SCROLLBAR) == LV_BASE_DIR_RTL ? true : false;
+    int rtl = lv_obj_get_style_base_dir(obj, LV_PART_SCROLLBAR) == LV_BASE_DIR_RTL ? 1 : 0;
 
     lv_coord_t top_space = lv_obj_get_style_pad_top(obj, LV_PART_SCROLLBAR);
     lv_coord_t bottom_space = lv_obj_get_style_pad_bottom(obj, LV_PART_SCROLLBAR);
@@ -478,8 +483,8 @@ void lv_obj_get_scrollbar_area(lv_obj_t *obj, lv_area_t *hor_area, lv_area_t *ve
     lv_coord_t hor_req_space = hor_draw ? tickness : 0;
     lv_coord_t rem;
 
-    if (lv_obj_get_style_bg_opa(obj, LV_PART_SCROLLBAR) < LV_OPA_MIN &&
-        lv_obj_get_style_border_opa(obj, LV_PART_SCROLLBAR) < LV_OPA_MIN) {
+    if (lv_obj_get_style_bg_opa(obj, LV_PART_SCROLLBAR) < LV_OPA_MIN
+        && lv_obj_get_style_border_opa(obj, LV_PART_SCROLLBAR) < LV_OPA_MIN) {
         return;
     }
 
@@ -498,8 +503,8 @@ void lv_obj_get_scrollbar_area(lv_obj_t *obj, lv_area_t *hor_area, lv_area_t *ve
 
         lv_coord_t sb_h = ((obj_h - top_space - bottom_space - hor_req_space) * obj_h) / content_h;
         sb_h = LV_MAX(sb_h, SCROLLBAR_MIN_SIZE);
-        rem = (obj_h - top_space - bottom_space - hor_req_space) -
-              sb_h;  /*Remaining size from the scrollbar track that is not the scrollbar itself*/
+        rem = (obj_h - top_space - bottom_space - hor_req_space)
+              - sb_h; /*Remaining size from the scrollbar track that is not the scrollbar itself*/
         lv_coord_t scroll_h = content_h - obj_h; /*The size of the content which can be really scrolled*/
         if (scroll_h <= 0) {
             ver_area->y1 = obj->coords.y1 + top_space;
@@ -535,8 +540,8 @@ void lv_obj_get_scrollbar_area(lv_obj_t *obj, lv_area_t *hor_area, lv_area_t *ve
 
         lv_coord_t sb_w = ((obj_w - left_space - right_space - ver_reg_space) * obj_w) / content_w;
         sb_w = LV_MAX(sb_w, SCROLLBAR_MIN_SIZE);
-        rem = (obj_w - left_space - right_space - ver_reg_space) -
-              sb_w;  /*Remaining size from the scrollbar track that is not the scrollbar itself*/
+        rem = (obj_w - left_space - right_space - ver_reg_space)
+              - sb_w; /*Remaining size from the scrollbar track that is not the scrollbar itself*/
         lv_coord_t scroll_w = content_w - obj_w; /*The size of the content which can be really scrolled*/
         if (scroll_w <= 0) {
             if (rtl) {
@@ -643,8 +648,8 @@ static void scroll_anim_ready_cb(lv_anim_t *a) {
     lv_event_send(a->var, LV_EVENT_SCROLL_END, NULL);
 }
 
-static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_point_t *scroll_value,
-                                  lv_anim_enable_t anim_en) {
+static void
+scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_point_t *scroll_value, lv_anim_enable_t anim_en) {
     lv_obj_t *parent = lv_obj_get_parent(child);
     if (!lv_obj_has_flag(parent, LV_OBJ_FLAG_SCROLLABLE)) return;
 
@@ -655,8 +660,10 @@ static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_poi
 
     lv_coord_t y_scroll = 0;
     lv_scroll_snap_t snap_y = lv_obj_get_scroll_snap_y(parent);
-    if (snap_y != LV_SCROLL_SNAP_NONE) area_tmp = &child->coords;
-    else area_tmp = area;
+    if (snap_y != LV_SCROLL_SNAP_NONE)
+        area_tmp = &child->coords;
+    else
+        area_tmp = area;
 
     lv_coord_t border_width = lv_obj_get_style_border_width(parent, LV_PART_MAIN);
     lv_coord_t ptop = lv_obj_get_style_pad_top(parent, LV_PART_MAIN) + border_width;
@@ -664,7 +671,8 @@ static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_poi
     lv_coord_t top_diff = parent->coords.y1 + ptop - area_tmp->y1 - scroll_value->y;
     lv_coord_t bottom_diff = -(parent->coords.y2 - pbottom - area_tmp->y2 - scroll_value->y);
     lv_coord_t parent_h = lv_obj_get_height(parent) - ptop - pbottom;
-    if ((top_diff >= 0 && bottom_diff >= 0)) y_scroll = 0;
+    if ((top_diff >= 0 && bottom_diff >= 0))
+        y_scroll = 0;
     else if (top_diff > 0) {
         y_scroll = top_diff;
         /*Do not let scrolling in*/
@@ -697,14 +705,17 @@ static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_poi
 
     lv_coord_t x_scroll = 0;
     lv_scroll_snap_t snap_x = lv_obj_get_scroll_snap_x(parent);
-    if (snap_x != LV_SCROLL_SNAP_NONE) area_tmp = &child->coords;
-    else area_tmp = area;
+    if (snap_x != LV_SCROLL_SNAP_NONE)
+        area_tmp = &child->coords;
+    else
+        area_tmp = area;
 
     lv_coord_t pleft = lv_obj_get_style_pad_left(parent, LV_PART_MAIN) + border_width;
     lv_coord_t pright = lv_obj_get_style_pad_right(parent, LV_PART_MAIN) + border_width;
     lv_coord_t left_diff = parent->coords.x1 + pleft - area_tmp->x1 - scroll_value->x;
     lv_coord_t right_diff = -(parent->coords.x2 - pright - area_tmp->x2 - scroll_value->x);
-    if ((left_diff >= 0 && right_diff >= 0)) x_scroll = 0;
+    if ((left_diff >= 0 && right_diff >= 0))
+        x_scroll = 0;
     else if (left_diff > 0) {
         x_scroll = left_diff;
         /*Do not let scrolling in*/
@@ -737,8 +748,8 @@ static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_poi
     }
 
     /*Remove any pending scroll animations.*/
-    bool y_del = lv_anim_del(parent, scroll_y_anim);
-    bool x_del = lv_anim_del(parent, scroll_x_anim);
+    int y_del = lv_anim_del(parent, scroll_y_anim);
+    int x_del = lv_anim_del(parent, scroll_x_anim);
     if (y_del || x_del) {
         lv_res_t res;
         res = lv_event_send(parent, LV_EVENT_SCROLL_END, NULL);

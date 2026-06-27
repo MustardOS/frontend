@@ -203,13 +203,8 @@ static inline int content_pass_needed(int rot) {
     const struct colour_state *a = colour_adjust_get();
     const colour_filter_matrix_t *f = colour_filter_get();
 
-    if (rot == ROTATE_0 &&
-        a->brightness == 0.0f &&
-        a->contrast == 1.0f &&
-        a->saturation == 1.0f &&
-        a->hueshift == 0.0f &&
-        a->gamma == 1.0f &&
-        !f->enabled) {
+    if (rot == rotate_0 && a->brightness == 0.0f && a->contrast == 1.0f && a->saturation == 1.0f && a->hueshift == 0.0f
+        && a->gamma == 1.0f && !f->enabled) {
         return 0;
     }
 
@@ -223,60 +218,60 @@ static struct {
     int valid;
 } content_uniform_cache;
 
-static const char *vs_src =
-        "attribute vec2 a_pos;"
-        "attribute vec2 a_uv;"
-        "varying vec2 v_uv;"
+static const char *vs_src = "attribute vec2 a_pos;"
+                            "attribute vec2 a_uv;"
+                            "varying vec2 v_uv;"
 
-        "void main(){"
-        "    gl_Position = vec4(a_pos, 0.0, 1.0);"
-        "    v_uv = a_uv;"
-        "}";
+                            "void main(){"
+                            "    gl_Position = vec4(a_pos, 0.0, 1.0);"
+                            "    v_uv = a_uv;"
+                            "}";
 
-static const char *fs_overlay_src =
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "uniform float u_alpha;"
-        "varying vec2 v_uv;"
+static const char *fs_overlay_src = "precision mediump float;"
+                                    "uniform sampler2D u_tex;"
+                                    "uniform float u_alpha;"
+                                    "varying vec2 v_uv;"
 
-        "void main(){"
-        "    gl_FragColor = texture2D(u_tex, v_uv) * vec4(1.0, 1.0, 1.0, u_alpha);"
-        "}";
+                                    "void main(){"
+                                    "    gl_FragColor = texture2D(u_tex, v_uv) * vec4(1.0, 1.0, 1.0, u_alpha);"
+                                    "}";
 
-static const char *fs_content_src =
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "uniform float u_brightness;"
-        "uniform float u_contrast;"
-        "uniform float u_saturation;"
-        "uniform float u_cosH;"
-        "uniform float u_sinH;"
-        "uniform float u_gamma;"
-        "uniform mat3 u_filter;"
-        "uniform int u_filter_enabled;"
-        "varying vec2 v_uv;"
+static const char *fs_content_src = "precision mediump float;"
+                                    "uniform sampler2D u_tex;"
+                                    "uniform float u_brightness;"
+                                    "uniform float u_contrast;"
+                                    "uniform float u_saturation;"
+                                    "uniform float u_cosH;"
+                                    "uniform float u_sinH;"
+                                    "uniform float u_gamma;"
+                                    "uniform mat3 u_filter;"
+                                    "uniform int u_filter_enabled;"
+                                    "varying vec2 v_uv;"
 
-        "vec3 apply_colour(vec3 c) {"
-        "    c += u_brightness;"
-        "    c = (c - 0.5) * u_contrast + 0.5;"
-        "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
-        "    c = mix(vec3(l), c, u_saturation);"
-        "    mat3 hueMat = mat3("
-        "        0.299 + 0.701*u_cosH + 0.168*u_sinH, 0.587 - 0.587*u_cosH + 0.330*u_sinH, 0.114 - 0.114*u_cosH - 0.497*u_sinH,"
-        "        0.299 - 0.299*u_cosH - 0.328*u_sinH, 0.587 + 0.413*u_cosH + 0.035*u_sinH, 0.114 - 0.114*u_cosH + 0.292*u_sinH,"
-        "        0.299 - 0.300*u_cosH + 1.250*u_sinH, 0.587 - 0.588*u_cosH - 1.050*u_sinH, 0.114 + 0.886*u_cosH - 0.203*u_sinH"
-        "    );"
-        "    c = clamp(hueMat * c, 0.0, 1.0);"
-        "    if (u_filter_enabled != 0) { c = clamp(u_filter * c, 0.0, 1.0); }"
-        "    c = pow(c, vec3(1.0 / u_gamma));"
-        "    return c;"
-        "}"
+                                    "vec3 apply_colour(vec3 c) {"
+                                    "    c += u_brightness;"
+                                    "    c = (c - 0.5) * u_contrast + 0.5;"
+                                    "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
+                                    "    c = mix(vec3(l), c, u_saturation);"
+                                    "    mat3 hueMat = mat3("
+                                    "        0.299 + 0.701*u_cosH + 0.168*u_sinH, 0.587 - 0.587*u_cosH + 0.330*u_sinH, "
+                                    "0.114 - 0.114*u_cosH - 0.497*u_sinH,"
+                                    "        0.299 - 0.299*u_cosH - 0.328*u_sinH, 0.587 + 0.413*u_cosH + 0.035*u_sinH, "
+                                    "0.114 - 0.114*u_cosH + 0.292*u_sinH,"
+                                    "        0.299 - 0.300*u_cosH + 1.250*u_sinH, 0.587 - 0.588*u_cosH - 1.050*u_sinH, "
+                                    "0.114 + 0.886*u_cosH - 0.203*u_sinH"
+                                    "    );"
+                                    "    c = clamp(hueMat * c, 0.0, 1.0);"
+                                    "    if (u_filter_enabled != 0) { c = clamp(u_filter * c, 0.0, 1.0); }"
+                                    "    c = pow(c, vec3(1.0 / u_gamma));"
+                                    "    return c;"
+                                    "}"
 
-        "void main(){"
-        "    vec4 t = texture2D(u_tex, v_uv);"
-        "    vec3 rgb = apply_colour(t.rgb);"
-        "    gl_FragColor = vec4(rgb, t.a);"
-        "}";
+                                    "void main(){"
+                                    "    vec4 t = texture2D(u_tex, v_uv);"
+                                    "    vec3 rgb = apply_colour(t.rgb);"
+                                    "    gl_FragColor = vec4(rgb, t.a);"
+                                    "}";
 
 static GLuint shader_work_tex = 0;
 static GLuint shader_work_fbo = 0;
@@ -513,7 +508,7 @@ static void rotate_uv(gl_vtx_t out[4], int rot) {
     float u2 = 1.0f, v2 = 0.0f;
     float u3 = 1.0f, v3 = 1.0f;
 
-    if (rot == ROTATE_90) {
+    if (rot == rotate_90) {
         out[0].u = u1;
         out[0].v = v1;
         out[1].u = u3;
@@ -525,7 +520,7 @@ static void rotate_uv(gl_vtx_t out[4], int rot) {
         return;
     }
 
-    if (rot == ROTATE_180) {
+    if (rot == rotate_180) {
         out[0].u = u3;
         out[0].v = v3;
         out[1].u = u2;
@@ -537,7 +532,7 @@ static void rotate_uv(gl_vtx_t out[4], int rot) {
         return;
     }
 
-    if (rot == ROTATE_270) {
+    if (rot == rotate_270) {
         out[0].u = u2;
         out[0].v = v2;
         out[1].u = u0;
@@ -570,7 +565,7 @@ static void build_fullscreen_quad(gl_vtx_t out[4], int rot) {
     out[3].y = -1.0f;
 
     switch (rot) {
-        case ROTATE_90:
+        case rotate_90:
             out[0].u = 0.0f;
             out[0].v = 0.0f;
             out[1].u = 1.0f;
@@ -581,7 +576,7 @@ static void build_fullscreen_quad(gl_vtx_t out[4], int rot) {
             out[3].v = 1.0f;
             break;
 
-        case ROTATE_180:
+        case rotate_180:
             out[0].u = 1.0f;
             out[0].v = 0.0f;
             out[1].u = 1.0f;
@@ -592,7 +587,7 @@ static void build_fullscreen_quad(gl_vtx_t out[4], int rot) {
             out[3].v = 1.0f;
             break;
 
-        case ROTATE_270:
+        case rotate_270:
             out[0].u = 1.0f;
             out[0].v = 1.0f;
             out[1].u = 0.0f;
@@ -856,8 +851,14 @@ static void restore_gles_state(const gles_state_t *st) {
 
     glViewport(st->viewport[0], st->viewport[1], st->viewport[2], st->viewport[3]);
 
-    if (st->depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
-    if (st->scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
+    if (st->depth_test)
+        glEnable(GL_DEPTH_TEST);
+    else
+        glDisable(GL_DEPTH_TEST);
+    if (st->scissor_test)
+        glEnable(GL_SCISSOR_TEST);
+    else
+        glDisable(GL_SCISSOR_TEST);
 
     glScissor(st->scissor_box[0], st->scissor_box[1], st->scissor_box[2], st->scissor_box[3]);
 
@@ -878,8 +879,10 @@ static void restore_gles_state(const gles_state_t *st) {
         glBindBuffer(GL_ARRAY_BUFFER, (GLuint) st->attrib[i].buffer);
 
         if (st->attrib[i].size > 0) {
-            glVertexAttribPointer((GLuint) i, st->attrib[i].size, st->attrib[i].type, (GLboolean) st->attrib[i].normal,
-                                  st->attrib[i].stride, st->attrib[i].pointer);
+            glVertexAttribPointer(
+                (GLuint) i, st->attrib[i].size, st->attrib[i].type, (GLboolean) st->attrib[i].normal,
+                st->attrib[i].stride, st->attrib[i].pointer
+            );
         }
 
         if (st->attrib[i].enabled) {
@@ -1032,7 +1035,10 @@ static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
     glEnableVertexAttribArray((GLuint) gles_content_a_uv);
 
     glVertexAttribPointer((GLuint) gles_content_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), base);
-    glVertexAttribPointer((GLuint) gles_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), (const char *) base + offsetof(gl_vtx_t, u));
+    glVertexAttribPointer(
+        (GLuint) gles_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t),
+        (const char *) base + offsetof(gl_vtx_t, u)
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1041,48 +1047,47 @@ static void draw_quad_content(GLuint tex, const gl_vtx_t vtx[4]) {
 }
 
 static const float fullscreen_quad[4][4] = {
-        {-1.0f, 1.0f,  0.0f, 1.0f},
-        {-1.0f, -1.0f, 0.0f, 0.0f},
-        {1.0f,  1.0f,  1.0f, 1.0f},
-        {1.0f,  -1.0f, 1.0f, 0.0f},
+    {-1.0f, 1.0f, 0.0f, 1.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1.0f, -1.0f, 1.0f, 0.0f},
 };
 
 static const gl_vtx_t fullscreen_vtx[4] = {
-        {-1.0f, 1.0f,  0.0f, 1.0f},
-        {-1.0f, -1.0f, 0.0f, 0.0f},
-        {1.0f,  1.0f,  1.0f, 1.0f},
-        {1.0f,  -1.0f, 1.0f, 0.0f},
+    {-1.0f, 1.0f, 0.0f, 1.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1.0f, -1.0f, 1.0f, 0.0f},
 };
 
-static const char *fs_smooth_src =
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "uniform vec2 u_texel;"
-        "uniform float u_strength;"
-        "varying vec2 v_uv;"
-        "void main(){"
-        "    vec4 c;"
-        "    vec4 s;"
-        "    vec2 dx;"
-        "    vec2 dy;"
-        "    c = texture2D(u_tex, v_uv);"
-        "    if (u_strength <= 0.0001) {"
-        "        gl_FragColor = c;"
-        "        return;"
-        "    }"
-        "    dx = vec2(u_texel.x, 0.0);"
-        "    dy = vec2(0.0, u_texel.y);"
-        "    s = c * 0.25;"
-        "    s += texture2D(u_tex, v_uv - dx) * 0.125;"
-        "    s += texture2D(u_tex, v_uv + dx) * 0.125;"
-        "    s += texture2D(u_tex, v_uv - dy) * 0.125;"
-        "    s += texture2D(u_tex, v_uv + dy) * 0.125;"
-        "    s += texture2D(u_tex, v_uv - dx - dy) * 0.0625;"
-        "    s += texture2D(u_tex, v_uv + dx - dy) * 0.0625;"
-        "    s += texture2D(u_tex, v_uv - dx + dy) * 0.0625;"
-        "    s += texture2D(u_tex, v_uv + dx + dy) * 0.0625;"
-        "    gl_FragColor = mix(c, s, u_strength);"
-        "}";
+static const char *fs_smooth_src = "precision mediump float;"
+                                   "uniform sampler2D u_tex;"
+                                   "uniform vec2 u_texel;"
+                                   "uniform float u_strength;"
+                                   "varying vec2 v_uv;"
+                                   "void main(){"
+                                   "    vec4 c;"
+                                   "    vec4 s;"
+                                   "    vec2 dx;"
+                                   "    vec2 dy;"
+                                   "    c = texture2D(u_tex, v_uv);"
+                                   "    if (u_strength <= 0.0001) {"
+                                   "        gl_FragColor = c;"
+                                   "        return;"
+                                   "    }"
+                                   "    dx = vec2(u_texel.x, 0.0);"
+                                   "    dy = vec2(0.0, u_texel.y);"
+                                   "    s = c * 0.25;"
+                                   "    s += texture2D(u_tex, v_uv - dx) * 0.125;"
+                                   "    s += texture2D(u_tex, v_uv + dx) * 0.125;"
+                                   "    s += texture2D(u_tex, v_uv - dy) * 0.125;"
+                                   "    s += texture2D(u_tex, v_uv + dy) * 0.125;"
+                                   "    s += texture2D(u_tex, v_uv - dx - dy) * 0.0625;"
+                                   "    s += texture2D(u_tex, v_uv + dx - dy) * 0.0625;"
+                                   "    s += texture2D(u_tex, v_uv - dx + dy) * 0.0625;"
+                                   "    s += texture2D(u_tex, v_uv + dx + dy) * 0.0625;"
+                                   "    gl_FragColor = mix(c, s, u_strength);"
+                                   "}";
 
 static float get_shader_smooth_strength(int src_w, int src_h, int dst_w, int dst_h) {
     float scale_x;
@@ -1164,7 +1169,10 @@ static void draw_quad_overlay(GLuint tex, const gl_vtx_t vtx[4], float alpha) {
     glEnableVertexAttribArray((GLuint) gles_a_uv);
 
     glVertexAttribPointer((GLuint) gles_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), base);
-    glVertexAttribPointer((GLuint) gles_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t), (const char *) base + offsetof(gl_vtx_t, u));
+    glVertexAttribPointer(
+        (GLuint) gles_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(gl_vtx_t),
+        (const char *) base + offsetof(gl_vtx_t, u)
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1193,9 +1201,7 @@ static void draw_quad_smooth(GLuint tex, int src_w, int src_h, int dst_w, int ds
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    glUniform2f(smooth_u_texel,
-                1.0f / (float) src_w,
-                1.0f / (float) src_h);
+    glUniform2f(smooth_u_texel, 1.0f / (float) src_w, 1.0f / (float) src_h);
 
     glUniform1f(smooth_u_strength, strength);
 
@@ -1204,19 +1210,13 @@ static void draw_quad_smooth(GLuint tex, int src_w, int src_h, int dst_w, int ds
     glEnableVertexAttribArray((GLuint) smooth_a_pos);
     glEnableVertexAttribArray((GLuint) smooth_a_uv);
 
-    glVertexAttribPointer((GLuint) smooth_a_pos,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &fullscreen_quad[0][0]);
+    glVertexAttribPointer(
+        (GLuint) smooth_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &fullscreen_quad[0][0]
+    );
 
-    glVertexAttribPointer((GLuint) smooth_a_uv,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &fullscreen_quad[0][2]);
+    glVertexAttribPointer(
+        (GLuint) smooth_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &fullscreen_quad[0][2]
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1239,8 +1239,7 @@ static void draw_quad_shader(GLuint tex) {
     get_shader_work_size(fb_cached_w, fb_cached_h, &pass_w, &pass_h);
     get_shader_native_resolution(pass_w, pass_h, &native_w, &native_h);
 
-    if ((pass_w != fb_cached_w || pass_h != fb_cached_h) &&
-        ensure_shader_work_target(pass_w, pass_h)) {
+    if ((pass_w != fb_cached_w || pass_h != fb_cached_h) && ensure_shader_work_target(pass_w, pass_h)) {
         glBindFramebuffer(GL_FRAMEBUFFER, shader_work_fbo);
         glViewport(0, 0, pass_w, pass_h);
 
@@ -1264,19 +1263,13 @@ static void draw_quad_shader(GLuint tex) {
         glEnableVertexAttribArray((GLuint) shader->a_pos);
         glEnableVertexAttribArray((GLuint) shader->a_uv);
 
-        glVertexAttribPointer((GLuint) shader->a_pos,
-                              2,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              (GLsizei) (sizeof(float) * 4),
-                              &fullscreen_quad[0][0]);
+        glVertexAttribPointer(
+            (GLuint) shader->a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &fullscreen_quad[0][0]
+        );
 
-        glVertexAttribPointer((GLuint) shader->a_uv,
-                              2,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              (GLsizei) (sizeof(float) * 4),
-                              &fullscreen_quad[0][2]);
+        glVertexAttribPointer(
+            (GLuint) shader->a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &fullscreen_quad[0][2]
+        );
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1320,19 +1313,13 @@ static void draw_quad_shader(GLuint tex) {
     glEnableVertexAttribArray((GLuint) shader->a_pos);
     glEnableVertexAttribArray((GLuint) shader->a_uv);
 
-    glVertexAttribPointer((GLuint) shader->a_pos,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &fullscreen_quad[0][0]);
+    glVertexAttribPointer(
+        (GLuint) shader->a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &fullscreen_quad[0][0]
+    );
 
-    glVertexAttribPointer((GLuint) shader->a_uv,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &fullscreen_quad[0][2]);
+    glVertexAttribPointer(
+        (GLuint) shader->a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &fullscreen_quad[0][2]
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1458,12 +1445,16 @@ static overlay_state_t build_overlay_state(int fb_w, int fb_h, int base_disabled
 
     st.bright_visible = bright_is_visible() ? 1 : 0;
     st.bright_step = bright_last_step;
-    st.bright_tex = (st.bright_visible && st.bright_step >= 0 && st.bright_step < INDICATOR_STEPS) ? bright_gles_tex[st.bright_step] : 0;
+    st.bright_tex = (st.bright_visible && st.bright_step >= 0 && st.bright_step < INDICATOR_STEPS)
+                        ? bright_gles_tex[st.bright_step]
+                        : 0;
     st.bright_alpha = st.bright_tex ? get_alpha_cached(&bright_alpha_cache) : 0.0f;
 
     st.volume_visible = volume_is_visible() ? 1 : 0;
     st.volume_step = volume_last_step;
-    st.volume_tex = (st.volume_visible && st.volume_step >= 0 && st.volume_step < INDICATOR_STEPS) ? volume_gles_tex[st.volume_step] : 0;
+    st.volume_tex = (st.volume_visible && st.volume_step >= 0 && st.volume_step < INDICATOR_STEPS)
+                        ? volume_gles_tex[st.volume_step]
+                        : 0;
     st.volume_alpha = st.volume_tex ? get_alpha_cached(&volume_alpha_cache) : 0.0f;
 
     return st;
@@ -1519,7 +1510,8 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot, GLint dst_fbo) {
 
     // This may looking fucking stupid but it does correct some colour filter
     // support for some content like: Chromium BSU - Honestly I don't get it.
-    while (glGetError() != GL_NO_ERROR) {}
+    while (glGetError() != GL_NO_ERROR) {
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
     glActiveTexture(GL_TEXTURE0);
@@ -1597,13 +1589,13 @@ static int draw_rotated_content(int fb_w, int fb_h, int rot, GLint dst_fbo) {
     return 1;
 }
 
-#define UPDATE_GEOM_CACHE(LAYER, TYPE)                           \
-    do {                                                         \
-        int gc = get_##TYPE##_cached(&(LAYER##_##TYPE##_cache)); \
-        if (gc != LAYER##_##TYPE##_cached) {                     \
-            LAYER##_##TYPE##_cached = gc;                        \
-            vtx_##LAYER##_valid = 0;                             \
-        }                                                        \
+#define UPDATE_GEOM_CACHE(LAYER, TYPE)                                                                                 \
+    do {                                                                                                               \
+        int gc = get_##TYPE##_cached(&(LAYER##_##TYPE##_cache));                                                       \
+        if (gc != LAYER##_##TYPE##_cached) {                                                                           \
+            LAYER##_##TYPE##_cached = gc;                                                                              \
+            vtx_##LAYER##_valid = 0;                                                                                   \
+        }                                                                                                              \
     } while (0)
 
 static void update_geometry_caches(void) {
@@ -1682,16 +1674,17 @@ static void stage_draw(int fb_w, int fb_h) {
     update_geometry_caches();
 
     if (!base_disabled && base_gles_ready && !vtx_base_valid) {
-        build_quad_ndc(vtx_base, base_gles_w, base_gles_h,
-                       fb_w, fb_h, base_anchor_cached, base_scale_cached);
+        build_quad_ndc(vtx_base, base_gles_w, base_gles_h, fb_w, fb_h, base_anchor_cached, base_scale_cached);
         vtx_base_valid = 1;
         overlay_valid = 0;
     }
 
     int battery_step = battery_last_step;
     if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_gles_tex[battery_step] && !vtx_battery_valid) {
-        build_quad_ndc(vtx_battery, battery_gles_w[battery_step], battery_gles_h[battery_step],
-                       fb_w, fb_h, battery_anchor_cached, battery_scale_cached);
+        build_quad_ndc(
+            vtx_battery, battery_gles_w[battery_step], battery_gles_h[battery_step], fb_w, fb_h, battery_anchor_cached,
+            battery_scale_cached
+        );
         vtx_battery_valid = 1;
         overlay_valid = 0;
     }
@@ -1700,8 +1693,10 @@ static void stage_draw(int fb_w, int fb_h) {
         gl_bright_overlay_init();
         int step = bright_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && bright_gles_tex[step] && !vtx_bright_valid) {
-            build_quad_ndc(vtx_bright, bright_gles_w[step], bright_gles_h[step],
-                           fb_w, fb_h, bright_anchor_cached, bright_scale_cached);
+            build_quad_ndc(
+                vtx_bright, bright_gles_w[step], bright_gles_h[step], fb_w, fb_h, bright_anchor_cached,
+                bright_scale_cached
+            );
             vtx_bright_valid = 1;
             overlay_valid = 0;
         }
@@ -1711,8 +1706,10 @@ static void stage_draw(int fb_w, int fb_h) {
         gl_volume_overlay_init();
         int step = volume_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && volume_gles_tex[step] && !vtx_volume_valid) {
-            build_quad_ndc(vtx_volume, volume_gles_w[step], volume_gles_h[step],
-                           fb_w, fb_h, volume_anchor_cached, volume_scale_cached);
+            build_quad_ndc(
+                vtx_volume, volume_gles_w[step], volume_gles_h[step], fb_w, fb_h, volume_anchor_cached,
+                volume_scale_cached
+            );
             vtx_volume_valid = 1;
             overlay_valid = 0;
         }
@@ -1748,7 +1745,8 @@ static void stage_draw(int fb_w, int fb_h) {
         if (!content_copy && content_copy_supported) {
             ensure_content_tex(fb_w, fb_h);
             if (content_tex) {
-                while (glGetError() != GL_NO_ERROR) {}
+                while (glGetError() != GL_NO_ERROR) {
+                }
 
                 glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
                 glActiveTexture(GL_TEXTURE0);
@@ -1801,11 +1799,11 @@ static void stage_draw(int fb_w, int fb_h) {
 
 void SDL_GL_SwapWindow(SDL_Window *window) {
     if (is_overlay_disabled()) {
-        if (real_SDL_GL_SwapWindow) real_SDL_GL_SwapWindow(window);
+        if (real_sdl_gl_swap_window) real_sdl_gl_swap_window(window);
         return;
     }
 
-    if (!real_SDL_GL_SwapWindow) return;
+    if (!real_sdl_gl_swap_window) return;
 
     base_inotify_check();
     if (ino_proc) inotify_check(ino_proc);
@@ -1830,7 +1828,7 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &app_fbo);
     detect_render_path(app_fbo);
 
-    static int last_rot = ROTATE_0;
+    static int last_rot = rotate_0;
     const int r = rotate_read_cached();
 
     int invalidate = 0;
@@ -1857,5 +1855,5 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     if (fb_cached_w > 0 && fb_cached_h > 0) stage_draw(fb_cached_w, fb_cached_h);
     shader_frame_count = (shader_frame_count + 1) & 0xFFFF;
 
-    real_SDL_GL_SwapWindow(window);
+    real_sdl_gl_swap_window(window);
 }

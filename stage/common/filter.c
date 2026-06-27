@@ -3,14 +3,10 @@
 #include "common.h"
 #include "filter.h"
 
-#define FILTER_DIR INTERNAL_SHARE "/filter/"
+#define FILTER_DIR       INTERNAL_SHARE "/filter/"
 #define FILTER_NAME_PATH OVERLAY_RUNNER "filter"
 
-typedef enum {
-    SECTION_NONE,
-    SECTION_PROFILE,
-    SECTION_MATRIX
-} filter_section_t;
+typedef enum { section_none, section_profile, section_matrix } filter_section_t;
 
 const colour_filter_matrix_t filter_none;
 
@@ -25,11 +21,7 @@ static struct {
 //  | Rb Gb Bb |
 
 const colour_filter_matrix_t filter_none = {
-        .enabled = 0,
-        .matrix = {
-                1.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 1.0f}
+    .enabled = 0, .matrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f}
 };
 
 static int parse_float3(const char *line, float *a, float *b, float *c) {
@@ -55,7 +47,8 @@ static int parse_enabled(const char *line, int *out) {
     if (!ptr) return 0;
 
     ptr++;
-    while (*ptr == ' ' || *ptr == '\t') ptr++;
+    while (*ptr == ' ' || *ptr == '\t')
+        ptr++;
 
     errno = 0;
     char *end;
@@ -78,7 +71,7 @@ static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
     memset(out, 0, sizeof(*out));
     out->enabled = 1;
 
-    filter_section_t section = SECTION_NONE;
+    filter_section_t section = section_none;
     int row = 0;
     char line[128];
 
@@ -90,17 +83,17 @@ static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
 
         if (line[0] == '[') {
             if (!strcmp(line, "[profile]")) {
-                section = SECTION_PROFILE;
+                section = section_profile;
             } else if (!strcmp(line, "[matrix]")) {
-                section = SECTION_MATRIX;
+                section = section_matrix;
                 seen_matrix = 1;
             } else {
-                section = SECTION_NONE;
+                section = section_none;
             }
             continue;
         }
 
-        if (section == SECTION_PROFILE) {
+        if (section == section_profile) {
             if (!strncmp(line, "enabled", 7)) {
                 int v;
                 if (parse_enabled(line, &v)) out->enabled = v;
@@ -108,7 +101,7 @@ static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
             continue;
         }
 
-        if (section == SECTION_MATRIX && row < 3) {
+        if (section == section_matrix && row < 3) {
             float a, b, c;
             if (!parse_float3(line, &a, &b, &c)) {
                 fclose(f);
@@ -120,7 +113,6 @@ static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
             out->matrix[row * 3 + 2] = c;
 
             row++;
-            continue;
         }
     }
 

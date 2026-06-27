@@ -80,7 +80,7 @@ typedef struct mini_group_s {
     char *id;                  /* The id of this group                 */
     struct mini_group_s *next; /* The next group on the same level     */
     struct mini_group_s *prev;
-    mini_value_t *head;        /* The first value for this group       */
+    mini_value_t *head; /* The first value for this group       */
     mini_value_t *tail;
 } mini_group_t;
 
@@ -164,7 +164,7 @@ EXPORT long long mini_get_int_ex(mini_t *mini, const char *group, const char *id
 
 EXPORT double mini_get_double_ex(mini_t *mini, const char *group, const char *id, double fallback, int *err);
 
-#define mini_get_bool(m, g, i, v) mini_get_int(m, g, i, v)
+#define mini_get_bool(m, g, i, v)       mini_get_int(m, g, i, v)
 #define mini_get_bool_ex(m, g, i, v, e) mini_get_int_ex(m, g, i, v, e)
 
 static inline const char *mini_get_string(mini_t *mini, const char *group, const char *id, const char *fallback) {

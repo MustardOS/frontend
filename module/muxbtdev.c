@@ -1,104 +1,100 @@
 #include "muxshare.h"
 #include "ui/ui_muxbtdev.h"
 
-#define BTDEV(NAME, ENUM, UDATA) 1,
-enum {
-    BTDEV_COUNT = E_SIZE(BTDEV_ELEMENTS)
-};
+#define BTDEV(NAME, UDATA) 1,
+enum { btdev_count = E_SIZE(BTDEV_ELEMENTS) };
 #undef BTDEV
 
-#define BTDEV_INFO(NAME, ENUM, UDATA) 1,
-enum {
-    BTDEV_INFO_COUNT = E_SIZE(BTDEV_INFO_ELEMENTS)
-};
+#define BTDEV_INFO(NAME, UDATA) 1,
+enum { btdev_info_count = E_SIZE(BTDEV_INFO_ELEMENTS) };
 #undef BTDEV_INFO
 
 #define BTDEV_FRIENDLYNAME_IDX 0
 
-#define BTDEV_TYPE_IDX BTDEV_INFO_COUNT
-#define BTDEV_STAT_IDX (BTDEV_INFO_COUNT + 1)
-#define BTDEV_FRGT_IDX (BTDEV_INFO_COUNT + 2)
+#define BTDEV_TYPE_IDX btdev_info_count
+#define BTDEV_STAT_IDX (btdev_info_count + 1)
+#define BTDEV_FRGT_IDX (btdev_info_count + 2)
 
 static char selected_mac[18];
 static int is_connected;
 static int type_original;
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define BTDEV(NAME, ENUM, UDATA) { UDATA, lang.MUXBTDEV.HELP.ENUM },
-            BTDEV_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define BTDEV(NAME, UDATA) {UDATA, lang.muxbtdev.help.NAME},
+        BTDEV_ELEMENTS
 #undef BTDEV
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
-static void handle_keyboard_OK_press(void) {
+static void handle_keyboard_ok_press(void) {
     key_show = 0;
-    const char *new_text = lv_textarea_get_text(ui_txtEntry_btdev);
+    const char *new_text = lv_textarea_get_text(ui_txt_entry_btdev);
 
     if (current_item_index == BTDEV_FRIENDLYNAME_IDX) {
-        lv_label_set_text(ui_lblFriendlyNameValue_btdev, new_text);
+        lv_label_set_text(ui_val_friendly_name_btdev, new_text);
         if (*selected_mac) {
-            const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "alias", selected_mac, new_text, NULL};
+            const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "alias", selected_mac, new_text, NULL};
             run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
         }
     }
 
     reset_osk(key_entry);
 
-    lv_textarea_set_text(ui_txtEntry_btdev, "");
+    lv_textarea_set_text(ui_txt_entry_btdev, "");
     lv_group_set_focus_cb(ui_group, NULL);
 
-    osk_hide(ui_pnlEntry_btdev);
+    osk_hide(ui_pnl_entry_btdev);
 }
 
 static void handle_keyboard_press(void) {
-    play_sound(SND_KEYPRESS);
+    play_sound(snd_keypress);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
-        handle_keyboard_OK_press();
+        handle_keyboard_ok_press();
     } else {
         lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
     }
 }
 
-static void nav_show_a(int show, const char *text) {
+static void nav_show_a(const int show, const char *text) {
     if (show) {
-        lv_label_set_text(ui_lblNavA, text);
-        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_label_set_text(ui_lbl_nav_a, text);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
-static void nav_show_lr(int show) {
+static void nav_show_lr(const int show) {
     if (show) {
-        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
-static void nav_show_x(int show, const char *text) {
+static void nav_show_x(const int show, const char *text) {
     if (show) {
-        lv_label_set_text(ui_lblNavX, text);
-        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_label_set_text(ui_lbl_nav_x, text);
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
 static void check_focus(void) {
     if (current_item_index == BTDEV_FRIENDLYNAME_IDX) {
-        nav_show_a(1, lang.GENERIC.EDIT);
+        nav_show_a(1, lang.generic.edit);
         nav_show_lr(0);
         nav_show_x(0, NULL);
     } else if (current_item_index < BTDEV_TYPE_IDX) {
@@ -110,13 +106,13 @@ static void check_focus(void) {
         nav_show_lr(1);
         nav_show_x(0, NULL);
     } else if (current_item_index == BTDEV_STAT_IDX) {
-        nav_show_a(1, is_connected ? lang.MUXBTALL.DISCONNECT : lang.MUXBTALL.CONNECT);
+        nav_show_a(1, is_connected ? lang.muxbtall.disconnect : lang.muxbtall.connect);
         nav_show_lr(0);
         nav_show_x(0, NULL);
     } else {
         nav_show_a(0, NULL);
         nav_show_lr(0);
-        nav_show_x(1, lang.GENERIC.REMOVE);
+        nav_show_x(1, lang.generic.remove);
     }
 }
 
@@ -139,46 +135,48 @@ static void hide_forget_dialog(void) {
 static void do_forget(void) {
     if (!*selected_mac) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
-    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "forget", selected_mac, NULL};
+    const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "forget", selected_mac, NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     load_mux("btall");
     mux_input_stop();
 }
 
-static void list_nav_move(int steps, int direction) {
+static void list_nav_move(const int steps, const int direction) {
     gen_step_movement(steps, direction, 0, -1, 1);
     check_focus();
 }
 
-static void list_nav_prev(int steps) {
+static void list_nav_prev(const int steps) {
     list_nav_move(steps, -1);
 }
 
-static void list_nav_next(int steps) {
+static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
 static void handle_option_prev(void) {
     if (msgbox_active || current_item_index != BTDEV_TYPE_IDX) return;
-    move_option(ui_droType_btdev, -1);
+    move_option(ui_dro_type_btdev, -1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active || current_item_index != BTDEV_TYPE_IDX) return;
-    move_option(ui_droType_btdev, +1);
+    move_option(ui_dro_type_btdev, +1);
 }
 
 static void save_btdev_options(void) {
-    int current_type = (int) lv_dropdown_get_selected(ui_droType_btdev);
+    const int current_type = lv_dropdown_get_selected(ui_dro_type_btdev);
 
     if (!*selected_mac || current_type == type_original) return;
 
     char mac_clean[18];
     snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
-    for (char *p = mac_clean; *p; p++) { if (*p == ':') *p = '_'; }
+    for (char *p = mac_clean; *p; p++) {
+        if (*p == ':') *p = '_';
+    }
 
     char override_path[MAX_BUFFER_SIZE];
     snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
@@ -188,7 +186,7 @@ static void save_btdev_options(void) {
 static void status_change(const char *method) {
     lv_refr_now(NULL);
 
-    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), method, selected_mac, NULL};
+    const char *args[] = {OPT_PATH "script/mux/bt_device.sh", method, selected_mac, NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     load_mux("btall");
@@ -197,11 +195,11 @@ static void status_change(const char *method) {
 
 static void handle_a(void) {
     if (forget_mode) {
-        mux_remove_opt opt = (mux_remove_opt) forget_dlg.selected;
+        const mux_remove_opt opt = (mux_remove_opt) forget_dlg.selected;
         hide_forget_dialog();
-        if (opt == MUX_REMOVE_YEP) {
+        if (opt == mux_remove_yep) {
             do_forget();
-        } else if (opt == MUX_REMOVE_SKIP) {
+        } else if (opt == mux_remove_skip) {
             skip_confirm = 1;
             do_forget();
         }
@@ -223,9 +221,9 @@ static void handle_a(void) {
         lv_obj_add_state(num_entry, LV_STATE_DISABLED);
         key_show = 1;
 
-        osk_show(ui_pnlEntry_btdev);
+        osk_show(ui_pnl_entry_btdev);
         osk_refresh_labels();
-        lv_textarea_set_text(ui_txtEntry_btdev, lv_label_get_text(ui_lblFriendlyNameValue_btdev));
+        lv_textarea_set_text(ui_txt_entry_btdev, lv_label_get_text(ui_val_friendly_name_btdev));
         return;
     }
 
@@ -234,13 +232,12 @@ static void handle_a(void) {
     if (current_item_index == BTDEV_STAT_IDX) {
         if (!*selected_mac) return;
         if (is_connected) {
-            toast_message(lang.MUXBTCON.DISCONNECT, FOREVER);
+            toast_message(lang.muxbtcon.disconnect, tst_wait_f);
             status_change("disconnect");
         } else {
-            toast_message(lang.MUXBTCON.CONNECT, FOREVER);
+            toast_message(lang.muxbtcon.connect, tst_wait_f);
             status_change("connect");
         }
-        return;
     }
 }
 
@@ -253,7 +250,7 @@ static void handle_b(void) {
     }
 
     if (key_show) {
-        key_backspace(ui_txtEntry_btdev);
+        key_backspace(ui_txt_entry_btdev);
         return;
     }
 
@@ -262,7 +259,7 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
 
     save_btdev_options();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "btall");
@@ -271,29 +268,29 @@ static void handle_b(void) {
 }
 
 static void handle_b_hold(void) {
-    if (key_show) key_backspace(ui_txtEntry_btdev);
+    if (key_show) key_backspace(ui_txt_entry_btdev);
 }
 
 static void handle_x(void) {
     if (key_show) {
         key_show = 0;
-        close_osk(key_entry, ui_group, ui_txtEntry_btdev, ui_pnlEntry_btdev);
+        close_osk(key_entry, ui_group, ui_txt_entry_btdev, ui_pnl_entry_btdev);
         return;
     }
 
     if (msgbox_active || current_item_index != BTDEV_FRGT_IDX || forget_mode) return;
 
-    if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
+    if (config.settings.advanced.trust_remove || skip_confirm) {
         do_forget();
         return;
     }
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
     show_forget_dialog();
 }
 
 static void handle_y(void) {
-    if (key_show == 1) key_space(ui_txtEntry_btdev);
+    if (key_show == 1) key_space(ui_txt_entry_btdev);
 }
 
 static void handle_up(void) {
@@ -305,7 +302,7 @@ static void handle_up(void) {
     if (forget_mode) {
         if (!swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -333,7 +330,7 @@ static void handle_down(void) {
     if (forget_mode) {
         if (!swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -361,7 +358,7 @@ static void handle_left(void) {
     if (forget_mode) {
         if (swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -378,7 +375,7 @@ static void handle_right(void) {
     if (forget_mode) {
         if (swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -404,14 +401,14 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void on_key_event(struct input_event ev) {
-    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_OK_press();
-    ev.code == KEY_ESC && ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txtEntry_btdev);
+static void on_key_event(const struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_ok_press();
+    ev.code == KEY_ESC &&ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txt_entry_btdev);
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
-    play_sound(SND_INFO_OPEN);
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    play_sound(snd_info_open);
     show_help();
 }
 
@@ -422,11 +419,12 @@ static void read_device_info_field(const char *key, char *dest) {
     if (!f) return;
 
     char line[256];
-    size_t key_len = strlen(key);
+    const size_t key_len = strlen(key);
     while (fgets(line, sizeof(line), f)) {
         if (strncmp(line, key, key_len) == 0 && line[key_len] == ':') {
             const char *val = line + key_len + 1;
-            while (*val == ' ') val++;
+            while (*val == ' ')
+                val++;
             snprintf(dest, 1024, "%s", val);
             str_remchar(dest, '\n');
             break;
@@ -436,10 +434,10 @@ static void read_device_info_field(const char *key, char *dest) {
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[BTDEV_COUNT];
-    static lv_obj_t *ui_objects_value[BTDEV_COUNT];
-    static lv_obj_t *ui_objects_glyph[BTDEV_COUNT];
-    static lv_obj_t *ui_objects_panel[BTDEV_COUNT];
+    static lv_obj_t *ui_objects[btdev_count];
+    static lv_obj_t *ui_objects_value[btdev_count];
+    static lv_obj_t *ui_objects_glyph[btdev_count];
+    static lv_obj_t *ui_objects_panel[btdev_count];
 
     char val_name[MAX_BUFFER_SIZE];
     char val_battery[MAX_BUFFER_SIZE];
@@ -455,11 +453,11 @@ static void init_navigation_group(void) {
     read_device_info_field("UUIDs", val_uuids);
     read_device_info_field("Connected", val_conn);
 
-    int connected = (strcmp(val_conn, "yes") == 0);
+    const int connected = strcmp(val_conn, "yes") == 0;
     is_connected = connected;
 
-    const char *name = *val_name ? val_name : lang.GENERIC.UNKNOWN;
-    const char *battery = *val_battery ? val_battery : lang.GENERIC.UNKNOWN;
+    const char *name = *val_name ? val_name : lang.generic.unknown;
+    const char *battery = *val_battery ? val_battery : lang.generic.unknown;
 
     bt_type_t type;
 
@@ -467,7 +465,9 @@ static void init_navigation_group(void) {
         char mac_clean[18];
 
         snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
-        for (char *p = mac_clean; *p; p++) { if (*p == ':') *p = '_'; }
+        for (char *p = mac_clean; *p; p++) {
+            if (*p == ':') *p = '_';
+        }
 
         char override_path[MAX_BUFFER_SIZE];
         snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
@@ -480,48 +480,44 @@ static void init_navigation_group(void) {
             fclose(of);
         }
 
-        type = *override_key ? bt_type_from_string(override_key) : bt_type_derive(val_icon, val_class, val_uuids, val_name);
+        type = *override_key ? bt_type_from_string(override_key)
+                             : bt_type_derive(val_icon, val_class, val_uuids, val_name);
     } else {
         type = bt_type_derive(val_icon, val_class, val_uuids, val_name);
     }
 
-    INIT_VALUE_ITEM(-1, btdev, FriendlyName, lang.MUXBTDEV.FRIENDLYNAME, "friendlyname", name);
-    INIT_VALUE_ITEM(-1, btdev, Battery, lang.MUXBTDEV.BATTERY, "battery", battery);
-    INIT_VALUE_ITEM(-1, btdev, Address, lang.MUXBTDEV.ADDRESS, "address", *selected_mac ? selected_mac : lang.GENERIC.UNKNOWN);
+    INIT_VALUE_ITEM(-1, btdev, friendly_name, lang.muxbtdev.friendly_name, "friendlyname", name);
+    INIT_VALUE_ITEM(-1, btdev, battery, lang.muxbtdev.battery, "battery", battery);
+    INIT_VALUE_ITEM(
+        -1, btdev, address, lang.muxbtdev.address, "address", *selected_mac ? selected_mac : lang.generic.unknown
+    );
 
     char *type_options[] = {
-            lang.MUXBTDEV.TYPE_NAME.AUDIO_HEADSET,
-            lang.MUXBTDEV.TYPE_NAME.AUDIO_HEADPHONES,
-            lang.MUXBTDEV.TYPE_NAME.AUDIO_SPEAKER,
-            lang.MUXBTDEV.TYPE_NAME.AUDIO_MICROPHONE,
-            lang.MUXBTDEV.TYPE_NAME.AUDIO_CARD,
-            lang.MUXBTDEV.TYPE_NAME.INPUT_GAMEPAD,
-            lang.MUXBTDEV.TYPE_NAME.INPUT_KEYBOARD,
-            lang.MUXBTDEV.TYPE_NAME.INPUT_MOUSE,
-            lang.MUXBTDEV.TYPE_NAME.INPUT_COMBO,
-            lang.MUXBTDEV.TYPE_NAME.INPUT_REMOTE,
-            lang.MUXBTDEV.TYPE_NAME.PHONE,
-            lang.MUXBTDEV.TYPE_NAME.COMPUTER,
-            lang.MUXBTDEV.TYPE_NAME.NETWORK,
-            lang.MUXBTDEV.TYPE_NAME.UNKNOWN,
+        lang.muxbtdev.type_name.audio_headset,  lang.muxbtdev.type_name.audio_headphones,
+        lang.muxbtdev.type_name.audio_speaker,  lang.muxbtdev.type_name.audio_microphone,
+        lang.muxbtdev.type_name.audio_card,     lang.muxbtdev.type_name.input_gamepad,
+        lang.muxbtdev.type_name.input_keyboard, lang.muxbtdev.type_name.input_mouse,
+        lang.muxbtdev.type_name.input_combo,    lang.muxbtdev.type_name.input_remote,
+        lang.muxbtdev.type_name.phone,          lang.muxbtdev.type_name.computer,
+        lang.muxbtdev.type_name.network,        lang.muxbtdev.type_name.unknown,
     };
 
-    INIT_OPTION_ITEM(-1, btdev, Type, lang.MUXBTDEV.TYPE, "type", type_options, BT_TYPE_COUNT);
-    lv_dropdown_set_selected(ui_droType_btdev, (int) type);
-    type_original = (int) lv_dropdown_get_selected(ui_droType_btdev);
+    INIT_OPTION_ITEM(-1, btdev, type, lang.muxbtdev.type, "type", type_options, bt_type_count);
+    lv_dropdown_set_selected(ui_dro_type_btdev, type);
+    type_original = (int) lv_dropdown_get_selected(ui_dro_type_btdev);
 
     char *status_options[] = {
-            lang.MUXBTDEV.DISCONNECTED,
-            lang.MUXBTDEV.CONNECTED,
+        lang.muxbtdev.disconnected,
+        lang.muxbtdev.connected,
     };
 
-    INIT_OPTION_ITEM(-1, btdev, Status, lang.MUXBTDEV.STATUS, "status", status_options, 2);
-    lv_dropdown_set_selected(ui_droStatus_btdev, connected ? 1 : 0);
+    INIT_OPTION_ITEM(-1, btdev, status, lang.muxbtdev.status, "status", status_options, 2);
+    lv_dropdown_set_selected(ui_dro_status_btdev, connected ? 1 : 0);
 
-    INIT_OPTION_ITEM(-1, btdev, Forget, lang.MUXBTDEV.FORGET, "forget", NULL, 0);
+    INIT_OPTION_ITEM(-1, btdev, forget, lang.muxbtdev.forget, "forget", NULL, 0);
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
     list_nav_next(0);
 }
@@ -529,19 +525,17 @@ static void init_navigation_group(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavAGlyph,  "",                  0},
-            {ui_lblNavA,       lang.GENERIC.EDIT,   0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph,  "",                  0},
-            {ui_lblNavX,       lang.GENERIC.REMOVE, 0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.edit, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.remove, 0},
+                                  {NULL, NULL, 0}});
 
-#define BTDEV(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_btdev, UDATA);
+#define BTDEV(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_btdev, UDATA);
     BTDEV_ELEMENTS
 #undef BTDEV
 
@@ -560,61 +554,66 @@ int muxbtdev_main(void) {
     }
 
     if (*selected_mac) {
-        const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "info", selected_mac, NULL};
+        const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "info", selected_mac, NULL};
         run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
     }
 
     init_module(__func__);
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXBTDEV.TITLE);
-    init_muxbtdev(ui_screen, ui_pnlContent, &theme);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxbtdev.title);
+    init_muxbtdev(ui_screen, ui_pnl_content, &theme);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
 
-    init_osk(ui_pnlEntry_btdev, ui_txtEntry_btdev, true, false, OSK_MAX);
+    init_osk(ui_pnl_entry_btdev, ui_txt_entry_btdev, 1, 0, OSK_MAX);
 
-    const char *forget_opts[MUX_REMOVE_CNT] = {lang.MUXBTDEV.FORGET, lang.GENERIC.SKIP_CONFIRM, lang.GENERIC.CANCEL};
-    dialogue_init(&forget_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, NULL, forget_opts, MUX_REMOVE_CNT, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    const char *forget_opts[mux_remove_cnt] = {lang.muxbtdev.forget, lang.generic.skip_confirm, lang.generic.cancel};
+    dialogue_init(
+        &forget_dlg, &theme, ui_screen, lang.generic.confirm, NULL, forget_opts, mux_remove_cnt, lang.generic.select,
+        lang.generic.back
+    );
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_DPAD_UP] = handle_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_down,
-                    [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_R1] = handle_r1,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_left] = handle_left,
+                [mux_input_dpad_right] = handle_right,
+                [mux_input_dpad_up] = handle_up,
+                [mux_input_dpad_down] = handle_down,
+                [mux_input_l1] = handle_l1,
+                [mux_input_r1] = handle_r1,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_B] = handle_b_hold,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
-                    [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_R1] = handle_r1,
-            },
+        .hold_handler = {
+            [mux_input_b] = handle_b_hold,
+            [mux_input_dpad_left] = handle_left,
+            [mux_input_dpad_right] = handle_right,
+            [mux_input_dpad_up] = handle_up_hold,
+            [mux_input_dpad_down] = handle_down_hold,
+            [mux_input_l1] = handle_l1,
+            [mux_input_r1] = handle_r1,
+        },
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 

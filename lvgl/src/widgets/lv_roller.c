@@ -19,7 +19,7 @@
 /*********************
  *      DEFINES
  *********************/
-#define MY_CLASS &lv_roller_class
+#define MY_CLASS       &lv_roller_class
 #define MY_CLASS_LABEL &lv_roller_label_class
 
 /**********************
@@ -59,20 +59,18 @@ static void set_y_anim(void *obj, int32_t v);
  *  STATIC VARIABLES
  **********************/
 const lv_obj_class_t lv_roller_class = {
-        .constructor_cb = lv_roller_constructor,
-        .event_cb = lv_roller_event,
-        .width_def = LV_SIZE_CONTENT,
-        .height_def = LV_DPI_DEF,
-        .instance_size = sizeof(lv_roller_t),
-        .editable = LV_OBJ_CLASS_EDITABLE_TRUE,
-        .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
-        .base_class = &lv_obj_class
+    .constructor_cb = lv_roller_constructor,
+    .event_cb = lv_roller_event,
+    .width_def = LV_SIZE_CONTENT,
+    .height_def = LV_DPI_DEF,
+    .instance_size = sizeof(lv_roller_t),
+    .editable = LV_OBJ_CLASS_EDITABLE_TRUE,
+    .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
+    .base_class = &lv_obj_class
 };
 
 const lv_obj_class_t lv_roller_label_class = {
-        .event_cb = lv_roller_label_event,
-        .instance_size = sizeof(lv_label_t),
-        .base_class = &lv_label_class
+    .event_cb = lv_roller_label_event, .instance_size = sizeof(lv_label_t), .base_class = &lv_label_class
 };
 
 /**********************
@@ -150,7 +148,6 @@ void lv_roller_set_options(lv_obj_t *obj, const char *options, lv_roller_mode_t 
 
     /*If the selected text has larger font the label needs some extra draw padding to draw it.*/
     lv_obj_refresh_ext_draw_size(label);
-
 }
 
 /**
@@ -163,8 +160,8 @@ void lv_roller_set_selected(lv_obj_t *obj, uint16_t sel_opt, lv_anim_enable_t an
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     /*Set the value even if it's the same as the current value because
-     *if moving to the next option with an animation which was just deleted in the PRESS Call the ancestor's event handler
-     *nothing will continue the animation.*/
+     *if moving to the next option with an animation which was just deleted in the PRESS Call the ancestor's event
+     *handler nothing will continue the animation.*/
 
     lv_roller_t *roller = (lv_roller_t *) obj;
 
@@ -179,8 +176,10 @@ void lv_roller_set_selected(lv_obj_t *obj, uint16_t sel_opt, lv_anim_enable_t an
             int32_t sel_opt_signed = sel_opt;
             /*Huge jump? Probably from last to first or first to last option.*/
             if (LV_ABS((int16_t) act_opt - sel_opt) > real_option_cnt / 2) {
-                if (act_opt > sel_opt) sel_opt_signed += real_option_cnt;
-                else sel_opt_signed -= real_option_cnt;
+                if (act_opt > sel_opt)
+                    sel_opt_signed += real_option_cnt;
+                else
+                    sel_opt_signed -= real_option_cnt;
             }
             sel_opt = sel_opt_signed + real_option_cnt * current_page;
         }
@@ -350,7 +349,7 @@ static void lv_roller_event(const lv_obj_class_t *class_p, lv_event_t *e) {
         release_handler(obj);
     } else if (code == LV_EVENT_FOCUSED) {
         lv_group_t *g = lv_obj_get_group(obj);
-        bool editing = lv_group_get_editing(g);
+        int editing = lv_group_get_editing(g);
         lv_indev_type_t indev_type = lv_indev_get_type(lv_indev_get_act());
 
         /*Encoders need special handling*/
@@ -362,7 +361,7 @@ static void lv_roller_event(const lv_obj_class_t *class_p, lv_event_t *e) {
                     refr_position(obj, LV_ANIM_ON);
                 }
             }
-                /*Save the current state when entered to edit mode*/
+            /*Save the current state when entered to edit mode*/
             else {
                 roller->sel_opt_id_ori = roller->sel_opt_id;
             }
@@ -441,7 +440,7 @@ static void draw_main(lv_event_t *e) {
         lv_obj_init_draw_rect_dsc(obj, LV_PART_SELECTED, &sel_dsc);
         lv_draw_rect(draw_ctx, &sel_dsc, &sel_area);
     }
-        /*Post draw when the children are drawn*/
+    /*Post draw when the children are drawn*/
     else if (code == LV_EVENT_DRAW_POST) {
         lv_draw_ctx_t *draw_ctx = lv_event_get_draw_ctx(e);
 
@@ -453,7 +452,7 @@ static void draw_main(lv_event_t *e) {
         lv_area_t sel_area;
         get_sel_area(obj, &sel_area);
         lv_area_t mask_sel;
-        bool area_ok;
+        int area_ok;
         area_ok = _lv_area_intersect(&mask_sel, draw_ctx->clip_area, &sel_area);
         if (area_ok) {
             lv_obj_t *label = get_label(obj);
@@ -461,16 +460,18 @@ static void draw_main(lv_event_t *e) {
 
             /*Get the size of the "selected text"*/
             lv_point_t res_p;
-            lv_txt_get_size(&res_p, lv_label_get_text(label), label_dsc.font, label_dsc.letter_space,
-                            label_dsc.line_space,
-                            lv_obj_get_width(obj), LV_TEXT_FLAG_EXPAND);
+            lv_txt_get_size(
+                &res_p, lv_label_get_text(label), label_dsc.font, label_dsc.letter_space, label_dsc.line_space,
+                lv_obj_get_width(obj), LV_TEXT_FLAG_EXPAND
+            );
 
             /*Move the selected label proportionally with the background label*/
             lv_coord_t roller_h = lv_obj_get_height(obj);
-            int32_t label_y_prop = label->coords.y1 - (roller_h / 2 +
-                                                       obj->coords.y1); /*label offset from the middle line of the roller*/
-            label_y_prop = (label_y_prop * 16384) / lv_obj_get_height(
-                    label); /*Proportional position from the middle line (upscaled by << 14)*/
+            int32_t label_y_prop =
+                label->coords.y1 - (roller_h / 2 + obj->coords.y1); /*label offset from the middle line of the roller*/
+            label_y_prop =
+                (label_y_prop * 16384)
+                / lv_obj_get_height(label); /*Proportional position from the middle line (upscaled by << 14)*/
 
             /*Apply a correction with different line heights*/
             const lv_font_t *normal_label_font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
@@ -566,7 +567,6 @@ static void get_sel_area(lv_obj_t *obj, lv_area_t *sel_area) {
 
     sel_area->x1 = roller_coords.x1;
     sel_area->x2 = roller_coords.x2;
-
 }
 
 /**
@@ -642,7 +642,7 @@ static lv_res_t release_handler(lv_obj_t *obj) {
         if (indev_type == LV_INDEV_TYPE_ENCODER) {
             lv_group_t *g = lv_obj_get_group(obj);
             if (lv_group_get_editing(g)) {
-                lv_group_set_editing(g, false);
+                lv_group_set_editing(g, 0);
             }
         }
     }

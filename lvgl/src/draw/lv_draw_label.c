@@ -18,7 +18,7 @@
  *      DEFINES
  *********************/
 #define LABEL_RECOLOR_PAR_LENGTH 6
-#define LV_LABEL_HINT_UPDATE_TH 1024 /*Update the "hint" if the label's y coordinates have changed more then this*/
+#define LV_LABEL_HINT_UPDATE_TH  1024 /*Update the "hint" if the label's y coordinates have changed more then this*/
 
 /**********************
  *      TYPEDEFS
@@ -62,9 +62,10 @@ int16_t g_shadow_y_offset_focus = 2;
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_shadow_set(int enabled,
-                   lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y,
-                   lv_color_t focus_colour, lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y) {
+void lv_shadow_set(
+    int enabled, lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y, lv_color_t focus_colour,
+    lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y
+) {
     g_font_shadow_enabled = enabled;
     g_shadow_colour_default = def_colour;
     g_shadow_alpha_default = def_alpha;
@@ -102,8 +103,10 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label_dsc_init(lv_draw_label_dsc_t *dsc) {
  * @param hint pointer to a `lv_draw_label_hint_t` variable.
  * It is managed by the draw to speed up the drawing of very long texts (thousands of lines).
  */
-void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *dsc,
-                                         const lv_area_t *coords, const char *txt, lv_draw_label_hint_t *hint) {
+void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
+    lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *dsc, const lv_area_t *coords, const char *txt,
+    lv_draw_label_hint_t *hint
+) {
     if (dsc->opa <= LV_OPA_MIN) return;
     if (dsc->font == NULL) {
         LV_LOG_WARN("dsc->font == NULL");
@@ -121,11 +124,10 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
     int32_t w;
 
     /*No need to waste processor time if string is empty*/
-    if (txt == NULL || txt[0] == '\0')
-        return;
+    if (txt == NULL || txt[0] == '\0') return;
 
     lv_area_t clipped_area;
-    bool clip_ok = _lv_area_intersect(&clipped_area, coords, draw_ctx->clip_area);
+    int clip_ok = _lv_area_intersect(&clipped_area, coords, draw_ctx->clip_area);
     if (!clip_ok) return;
 
     lv_text_align_t align = dsc->align;
@@ -139,8 +141,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
     } else {
         /*If EXPAND is enabled then not limit the text's width to the object's width*/
         lv_point_t p;
-        lv_txt_get_size(&p, txt, dsc->font, dsc->letter_space, dsc->line_space, LV_COORD_MAX,
-                        dsc->flag);
+        lv_txt_get_size(&p, txt, dsc->font, dsc->letter_space, dsc->line_space, LV_COORD_MAX, dsc->flag);
         w = p.x;
     }
 
@@ -178,7 +179,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
     }
 
     uint32_t line_end =
-            line_start + _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w, NULL, dsc->flag);
+        line_start + _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w, NULL, dsc->flag);
 
     /*Go the first visible line*/
     while (pos.y + line_height_font < draw_ctx->clip_area->y1) {
@@ -213,7 +214,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
         pos.x += (lv_area_get_width(coords) - line_width) / 2;
 
     }
-        /*Align to the right*/
+    /*Align to the right*/
     else if (align == LV_TEXT_ALIGN_RIGHT) {
         line_width = lv_txt_get_width(&txt[line_start], trim_line_end - line_start, font, dsc->letter_space, dsc->flag);
         pos.x += lv_area_get_width(coords) - line_width;
@@ -258,7 +259,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
         char *bidi_txt = lv_mem_buf_get(line_end - line_start + 1);
         _lv_bidi_process_paragraph(txt + line_start, bidi_txt, line_end - line_start, base_dir, NULL, 0);
 #else
-        const char * bidi_txt = txt + line_start;
+        const char *bidi_txt = txt + line_start;
 #endif
 
         while (i < line_end - line_start) {
@@ -283,9 +284,9 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
                         par_start = i;
                         cmd_state = CMD_STATE_PAR;
                         continue;
-                    } else if (cmd_state == CMD_STATE_PAR) {   /*Other start char in parameter escaped cmd. char*/
+                    } else if (cmd_state == CMD_STATE_PAR) { /*Other start char in parameter escaped cmd. char*/
                         cmd_state = CMD_STATE_WAIT;
-                    } else if (cmd_state == CMD_STATE_IN) {   /*Command end*/
+                    } else if (cmd_state == CMD_STATE_IN) { /*Command end*/
                         cmd_state = CMD_STATE_WAIT;
                         continue;
                     }
@@ -380,16 +381,14 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
         pos.x = coords->x1;
         /*Align to middle*/
         if (align == LV_TEXT_ALIGN_CENTER) {
-            line_width =
-                    lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
+            line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
 
             pos.x += (lv_area_get_width(coords) - line_width) / 2;
 
         }
-            /*Align to the right*/
+        /*Align to the right*/
         else if (align == LV_TEXT_ALIGN_RIGHT) {
-            line_width =
-                    lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
+            line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
             pos.x += lv_area_get_width(coords) - line_width;
         }
 
@@ -402,8 +401,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
     LV_ASSERT_MEM_INTEGRITY();
 }
 
-void lv_draw_letter(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *dsc, const lv_point_t *pos_p,
-                    uint32_t letter) {
+void lv_draw_letter(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *dsc, const lv_point_t *pos_p, uint32_t letter) {
     draw_ctx->draw_letter(draw_ctx, dsc, pos_p, letter);
 }
 

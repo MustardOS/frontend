@@ -15,8 +15,8 @@
 #define INPUT_COOLDOWN          256
 #define AXIS_THRESHOLD_FRACTION 0.80f
 #define AXIS_MAX                32767
-#define AXIS_THRESHOLD          ((int16_t)((float)AXIS_MAX * AXIS_THRESHOLD_FRACTION))
-#define TRIGGER_THRESHOLD       ((int16_t)((float)AXIS_MAX * AXIS_THRESHOLD_FRACTION))
+#define AXIS_THRESHOLD          ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
+#define TRIGGER_THRESHOLD       ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
 
 int swap_axis = 0;
 int input_init_done = 0;
@@ -73,7 +73,7 @@ static int device_count = 0;
 static SDL_JoystickID primary_instance = -1;
 static int mappings_loaded = 0;
 
-static int find_device_by_instance(SDL_JoystickID id) {
+static int find_device_by_instance(const SDL_JoystickID id) {
     for (int i = 0; i < device_count; i++) {
         if (devices[i].instance == id) return i;
     }
@@ -81,16 +81,16 @@ static int find_device_by_instance(SDL_JoystickID id) {
     return -1;
 }
 
-static int is_tracked_instance(SDL_JoystickID id) {
+static int is_tracked_instance(const SDL_JoystickID id) {
     return find_device_by_instance(id) >= 0;
 }
 
-static int is_tracked_as_controller(SDL_JoystickID id) {
-    int idx = find_device_by_instance(id);
+static int is_tracked_as_controller(const SDL_JoystickID id) {
+    const int idx = find_device_by_instance(id);
     return idx >= 0 && devices[idx].controller != NULL;
 }
 
-static inline int input_is_suppressed(void) {
+static int input_is_suppressed(void) {
     return mux_tick() < suppress_until_tick;
 }
 
@@ -109,123 +109,126 @@ typedef struct {
 static axis_map_entry axis_map[SDL_CONTROLLER_AXIS_MAX];
 static mux_input_type input_map[SDL_NUM_SCANCODES];
 
-static void map_vol_buttons(mux_input_type *map, int down_idx, int up_idx) {
-    map[down_idx] = MUX_INPUT_VOL_DOWN;
-    map[up_idx] = MUX_INPUT_VOL_UP;
+static void map_vol_buttons(mux_input_type *map, const int down_idx, const int up_idx) {
+    map[down_idx] = mux_input_vol_down;
+    map[up_idx] = mux_input_vol_up;
 }
 
 static void apply_face_button_layout(void) {
-    if (config.SETTINGS.REMAP.LAYOUT == 1) {
-        controller_button_map[SDL_CONTROLLER_BUTTON_A] = MUX_INPUT_B;
-        controller_button_map[SDL_CONTROLLER_BUTTON_B] = MUX_INPUT_A;
-        controller_button_map[SDL_CONTROLLER_BUTTON_X] = MUX_INPUT_Y;
-        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = MUX_INPUT_X;
+    if (config.settings.remap.layout == 1) {
+        controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_b;
+        controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_a;
+        controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_y;
+        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_x;
     } else {
-        controller_button_map[SDL_CONTROLLER_BUTTON_A] = MUX_INPUT_A;
-        controller_button_map[SDL_CONTROLLER_BUTTON_B] = MUX_INPUT_B;
-        controller_button_map[SDL_CONTROLLER_BUTTON_X] = MUX_INPUT_X;
-        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = MUX_INPUT_Y;
+        controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_a;
+        controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_b;
+        controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_x;
+        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_y;
     }
 }
 
 static void init_input_maps(void) {
     if (input_init_done) return;
 
-    for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++) controller_button_map[i] = MUX_INPUT_COUNT;
+    for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
+        controller_button_map[i] = mux_input_count;
 
-    for (int i = 0; i < 32; i++) joy_button_map[i] = MUX_INPUT_COUNT;
+    for (int i = 0; i < 32; i++)
+        joy_button_map[i] = mux_input_count;
 
-    for (int i = 0; i < SDL_NUM_SCANCODES; i++) input_map[i] = MUX_INPUT_COUNT;
+    for (int i = 0; i < SDL_NUM_SCANCODES; i++)
+        input_map[i] = mux_input_count;
 
     for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; i++) {
-        axis_map[i].neg = MUX_INPUT_COUNT;
-        axis_map[i].pos = MUX_INPUT_COUNT;
+        axis_map[i].neg = mux_input_count;
+        axis_map[i].pos = mux_input_count;
     }
 
     apply_face_button_layout();
 
     // TODO: Work out what C and Z would eventually map to,
     // TODO: as well as the TrimUI Switch fella!
-    controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = MUX_INPUT_L1;
-    controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = MUX_INPUT_R1;
-    controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSTICK] = MUX_INPUT_L3;
-    controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSTICK] = MUX_INPUT_R3;
-    controller_button_map[SDL_CONTROLLER_BUTTON_BACK] = MUX_INPUT_SELECT;
-    controller_button_map[SDL_CONTROLLER_BUTTON_START] = MUX_INPUT_START;
-    controller_button_map[SDL_CONTROLLER_BUTTON_GUIDE] = MUX_INPUT_MENU;
-    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_UP] = MUX_INPUT_DPAD_UP;
-    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = MUX_INPUT_DPAD_DOWN;
-    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = MUX_INPUT_DPAD_LEFT;
-    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = MUX_INPUT_DPAD_RIGHT;
+    controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = mux_input_l1;
+    controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = mux_input_r1;
+    controller_button_map[SDL_CONTROLLER_BUTTON_LEFTSTICK] = mux_input_l3;
+    controller_button_map[SDL_CONTROLLER_BUTTON_RIGHTSTICK] = mux_input_r3;
+    controller_button_map[SDL_CONTROLLER_BUTTON_BACK] = mux_input_select;
+    controller_button_map[SDL_CONTROLLER_BUTTON_START] = mux_input_start;
+    controller_button_map[SDL_CONTROLLER_BUTTON_GUIDE] = mux_input_menu;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_UP] = mux_input_dpad_up;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = mux_input_dpad_down;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = mux_input_dpad_left;
+    controller_button_map[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = mux_input_dpad_right;
 
-    axis_map[SDL_CONTROLLER_AXIS_LEFTX].neg = MUX_INPUT_LS_LEFT;
-    axis_map[SDL_CONTROLLER_AXIS_LEFTX].pos = MUX_INPUT_LS_RIGHT;
-    axis_map[SDL_CONTROLLER_AXIS_LEFTY].neg = MUX_INPUT_LS_UP;
-    axis_map[SDL_CONTROLLER_AXIS_LEFTY].pos = MUX_INPUT_LS_DOWN;
-    axis_map[SDL_CONTROLLER_AXIS_RIGHTX].neg = MUX_INPUT_RS_LEFT;
-    axis_map[SDL_CONTROLLER_AXIS_RIGHTX].pos = MUX_INPUT_RS_RIGHT;
-    axis_map[SDL_CONTROLLER_AXIS_RIGHTY].neg = MUX_INPUT_RS_UP;
-    axis_map[SDL_CONTROLLER_AXIS_RIGHTY].pos = MUX_INPUT_RS_DOWN;
-    axis_map[SDL_CONTROLLER_AXIS_TRIGGERLEFT].neg = MUX_INPUT_COUNT;
-    axis_map[SDL_CONTROLLER_AXIS_TRIGGERLEFT].pos = MUX_INPUT_L2;
-    axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].neg = MUX_INPUT_COUNT;
-    axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].pos = MUX_INPUT_R2;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTX].neg = mux_input_ls_left;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTX].pos = mux_input_ls_right;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTY].neg = mux_input_ls_up;
+    axis_map[SDL_CONTROLLER_AXIS_LEFTY].pos = mux_input_ls_down;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTX].neg = mux_input_rs_left;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTX].pos = mux_input_rs_right;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTY].neg = mux_input_rs_up;
+    axis_map[SDL_CONTROLLER_AXIS_RIGHTY].pos = mux_input_rs_down;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERLEFT].neg = mux_input_count;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERLEFT].pos = mux_input_l2;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].neg = mux_input_count;
+    axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].pos = mux_input_r2;
 
-    input_map[SDL_SCANCODE_SPACE] = MUX_INPUT_A;
-    input_map[SDL_SCANCODE_BACKSPACE] = MUX_INPUT_B;
-    input_map[SDL_SCANCODE_R] = MUX_INPUT_X;
-    input_map[SDL_SCANCODE_F] = MUX_INPUT_Y;
+    input_map[SDL_SCANCODE_SPACE] = mux_input_a;
+    input_map[SDL_SCANCODE_BACKSPACE] = mux_input_b;
+    input_map[SDL_SCANCODE_R] = mux_input_x;
+    input_map[SDL_SCANCODE_F] = mux_input_y;
 
-    input_map[SDL_SCANCODE_Q] = MUX_INPUT_L1;
-    input_map[SDL_SCANCODE_E] = MUX_INPUT_R1;
-    input_map[SDL_SCANCODE_Z] = MUX_INPUT_L2;
-    input_map[SDL_SCANCODE_C] = MUX_INPUT_R2;
+    input_map[SDL_SCANCODE_Q] = mux_input_l1;
+    input_map[SDL_SCANCODE_E] = mux_input_r1;
+    input_map[SDL_SCANCODE_Z] = mux_input_l2;
+    input_map[SDL_SCANCODE_C] = mux_input_r2;
 
-    input_map[SDL_SCANCODE_LCTRL] = MUX_INPUT_SELECT;
-    input_map[SDL_SCANCODE_LSHIFT] = MUX_INPUT_START;
+    input_map[SDL_SCANCODE_LCTRL] = mux_input_select;
+    input_map[SDL_SCANCODE_LSHIFT] = mux_input_start;
 
-    input_map[SDL_SCANCODE_F1] = MUX_INPUT_MENU;
+    input_map[SDL_SCANCODE_F1] = mux_input_menu;
 
-    input_map[SDL_SCANCODE_UP] = MUX_INPUT_DPAD_UP;
-    input_map[SDL_SCANCODE_DOWN] = MUX_INPUT_DPAD_DOWN;
-    input_map[SDL_SCANCODE_LEFT] = MUX_INPUT_DPAD_LEFT;
-    input_map[SDL_SCANCODE_RIGHT] = MUX_INPUT_DPAD_RIGHT;
+    input_map[SDL_SCANCODE_UP] = mux_input_dpad_up;
+    input_map[SDL_SCANCODE_DOWN] = mux_input_dpad_down;
+    input_map[SDL_SCANCODE_LEFT] = mux_input_dpad_left;
+    input_map[SDL_SCANCODE_RIGHT] = mux_input_dpad_right;
 
-    input_map[SDL_SCANCODE_W] = MUX_INPUT_DPAD_UP;
-    input_map[SDL_SCANCODE_S] = MUX_INPUT_DPAD_DOWN;
-    input_map[SDL_SCANCODE_A] = MUX_INPUT_DPAD_LEFT;
-    input_map[SDL_SCANCODE_D] = MUX_INPUT_DPAD_RIGHT;
+    input_map[SDL_SCANCODE_W] = mux_input_dpad_up;
+    input_map[SDL_SCANCODE_S] = mux_input_dpad_down;
+    input_map[SDL_SCANCODE_A] = mux_input_dpad_left;
+    input_map[SDL_SCANCODE_D] = mux_input_dpad_right;
 
     switch (board_special()) {
-        case BOARD_SPECIAL_TUI_SPOON:
+        case board_special_tui_spoon:
             map_vol_buttons(joy_button_map, 11, 12);
             break;
-        case BOARD_SPECIAL_TUI_BRICK:
+        case board_special_tui_brick:
             map_vol_buttons(joy_button_map, 0, 1);
             break;
-        case BOARD_SPECIAL_VITA_PRO:
+        case board_special_vita_pro:
             map_vol_buttons(joy_button_map, 13, 14);
             break;
-        case BOARD_SPECIAL_G350:
+        case board_special_g350:
             break;
         default:
             map_vol_buttons(joy_button_map, 1, 2);
             break;
     }
 
-    input_map[SDL_SCANCODE_PAGEUP] = MUX_INPUT_VOL_UP;
-    input_map[SDL_SCANCODE_VOLUMEUP] = MUX_INPUT_VOL_UP;
+    input_map[SDL_SCANCODE_PAGEUP] = mux_input_vol_up;
+    input_map[SDL_SCANCODE_VOLUMEUP] = mux_input_vol_up;
 
-    input_map[SDL_SCANCODE_PAGEDOWN] = MUX_INPUT_VOL_DOWN;
-    input_map[SDL_SCANCODE_VOLUMEDOWN] = MUX_INPUT_VOL_DOWN;
+    input_map[SDL_SCANCODE_PAGEDOWN] = mux_input_vol_down;
+    input_map[SDL_SCANCODE_VOLUMEDOWN] = mux_input_vol_down;
 
     // input_map[SDL_SCANCODE_AC_BACK] = ??????????
 
     input_init_done = 1;
 }
 
-static inline void apply_dir_pair(mux_input_type neg, mux_input_type pos, int direction) {
-    uint64_t clear_mask = BIT(neg) | BIT(pos);
+static void apply_dir_pair(const mux_input_type neg, const mux_input_type pos, const int direction) {
+    const uint64_t clear_mask = BIT(neg) | BIT(pos);
     pressed &= ~clear_mask;
 
     if (direction < 0) {
@@ -235,12 +238,12 @@ static inline void apply_dir_pair(mux_input_type neg, mux_input_type pos, int di
     }
 }
 
-static void process_sdl_button(SDL_GameControllerButton btn, int down) {
+static void process_sdl_button(const SDL_GameControllerButton btn, const int down) {
     if (input_is_suppressed() || btn >= SDL_CONTROLLER_BUTTON_MAX) return;
 
     mux_input_type t = controller_button_map[btn];
 
-    if (t == MUX_INPUT_COUNT) {
+    if (t == mux_input_count) {
         LOG_DEBUG("input", "Unmapped controller button %d", btn);
         return;
     }
@@ -248,24 +251,24 @@ static void process_sdl_button(SDL_GameControllerButton btn, int down) {
     // Wonky donkey input...
     if (swap_axis && !key_show) {
         switch (t) {
-            case MUX_INPUT_DPAD_UP:
-                t = MUX_INPUT_DPAD_LEFT;
+            case mux_input_dpad_up:
+                t = mux_input_dpad_left;
                 break;
-            case MUX_INPUT_DPAD_DOWN:
-                t = MUX_INPUT_DPAD_RIGHT;
+            case mux_input_dpad_down:
+                t = mux_input_dpad_right;
                 break;
-            case MUX_INPUT_DPAD_LEFT:
-                t = MUX_INPUT_DPAD_UP;
+            case mux_input_dpad_left:
+                t = mux_input_dpad_up;
                 break;
-            case MUX_INPUT_DPAD_RIGHT:
-                t = MUX_INPUT_DPAD_DOWN;
+            case mux_input_dpad_right:
+                t = mux_input_dpad_down;
                 break;
             default:
                 break;
         }
     }
 
-    if (t == MUX_INPUT_MENU) {
+    if (t == mux_input_menu) {
         if (down) {
             menu_short_pressed = 1;
             menu_short_consumed = 0;
@@ -275,30 +278,30 @@ static void process_sdl_button(SDL_GameControllerButton btn, int down) {
         }
     }
 
-    if (menu_short_pressed && (t == MUX_INPUT_VOL_UP || t == MUX_INPUT_VOL_DOWN) && down) menu_short_consumed = 1;
+    if (menu_short_pressed && (t == mux_input_vol_up || t == mux_input_vol_down) && down) menu_short_consumed = 1;
 
-    pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
+    pressed = down ? pressed | BIT(t) : pressed & ~BIT(t);
 }
 
-static void process_sdl_joy_button(uint8_t button, int down) {
+static void process_sdl_joy_button(const uint8_t button, const int down) {
     if (button >= 32) return;
 
-    mux_input_type t = joy_button_map[button];
-    if (t == MUX_INPUT_COUNT) {
+    const mux_input_type t = joy_button_map[button];
+    if (t == mux_input_count) {
         LOG_DEBUG("input", "Unmapped joystick button %d", button);
         return;
     }
 
-    pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
+    pressed = down ? pressed | BIT(t) : pressed & ~BIT(t);
 }
 
-static inline int axis_magnitude(int16_t value) {
+static int axis_magnitude(const int16_t value) {
     return value < 0 ? -(int) value : (int) value;
 }
 
-static void log_axis_once(const char *source, uint8_t axis, int16_t value, uint32_t *mask) {
+static void log_axis_once(const char *source, const uint8_t axis, const int16_t value, uint32_t *mask) {
     if (axis >= 32) return;
-    if (*mask & (UINT32_C(1) << axis)) return;
+    if (*mask & UINT32_C(1) << axis) return;
     if (axis_magnitude(value) < 4096) return;
 
     *mask |= UINT32_C(1) << axis;
@@ -306,7 +309,7 @@ static void log_axis_once(const char *source, uint8_t axis, int16_t value, uint3
     LOG_INFO("input", "%s axis %u active: %d", source, axis, value);
 }
 
-static inline void reset_raw_analog(void) {
+static void reset_raw_analog(void) {
     raw_ls_x = 0;
     raw_ls_y = 0;
     raw_rs_x = 0;
@@ -316,7 +319,7 @@ static inline void reset_raw_analog(void) {
     raw_axis_log_mask = 0;
 }
 
-static inline void cache_controller_axis(SDL_GameControllerAxis axis, int16_t value) {
+static void cache_controller_axis(const SDL_GameControllerAxis axis, const int16_t value) {
     switch (axis) {
         case SDL_CONTROLLER_AXIS_LEFTX:
             raw_ls_x = value;
@@ -335,7 +338,7 @@ static inline void cache_controller_axis(SDL_GameControllerAxis axis, int16_t va
     }
 }
 
-static int raw_axis_to_controller_axis(uint8_t axis, SDL_GameControllerAxis *out_axis) {
+static int raw_axis_to_controller_axis(const uint8_t axis, SDL_GameControllerAxis *out_axis) {
     switch (axis) {
         case 0:
             *out_axis = SDL_CONTROLLER_AXIS_LEFTX;
@@ -356,28 +359,28 @@ static int raw_axis_to_controller_axis(uint8_t axis, SDL_GameControllerAxis *out
     return 0;
 }
 
-static axis_map_entry raw_joystick_axis_map(uint8_t axis) {
+static axis_map_entry raw_joystick_axis_map(const uint8_t axis) {
     axis_map_entry m = {
-            .neg = MUX_INPUT_COUNT,
-            .pos = MUX_INPUT_COUNT,
+        .neg = mux_input_count,
+        .pos = mux_input_count,
     };
 
     switch (axis) {
         case 0:
-            m.neg = MUX_INPUT_LS_LEFT;
-            m.pos = MUX_INPUT_LS_RIGHT;
+            m.neg = mux_input_ls_left;
+            m.pos = mux_input_ls_right;
             break;
         case 1:
-            m.neg = MUX_INPUT_LS_UP;
-            m.pos = MUX_INPUT_LS_DOWN;
+            m.neg = mux_input_ls_up;
+            m.pos = mux_input_ls_down;
             break;
         case 2:
-            m.neg = MUX_INPUT_RS_LEFT;
-            m.pos = MUX_INPUT_RS_RIGHT;
+            m.neg = mux_input_rs_left;
+            m.pos = mux_input_rs_right;
             break;
         case 3:
-            m.neg = MUX_INPUT_RS_UP;
-            m.pos = MUX_INPUT_RS_DOWN;
+            m.neg = mux_input_rs_up;
+            m.pos = mux_input_rs_down;
             break;
         default:
             break;
@@ -386,7 +389,7 @@ static axis_map_entry raw_joystick_axis_map(uint8_t axis) {
     return m;
 }
 
-static inline void cache_raw_joystick_axis(uint8_t axis, int16_t value) {
+static void cache_raw_joystick_axis(const uint8_t axis, const int16_t value) {
     switch (axis) {
         case 0:
             raw_ls_x = value;
@@ -405,10 +408,10 @@ static inline void cache_raw_joystick_axis(uint8_t axis, int16_t value) {
     }
 }
 
-static void apply_axis_motion(axis_map_entry m, int16_t value) {
-    if (m.pos == MUX_INPUT_COUNT && m.neg == MUX_INPUT_COUNT) return;
+static void apply_axis_motion(const axis_map_entry m, const int16_t value) {
+    if (m.pos == mux_input_count && m.neg == mux_input_count) return;
 
-    if (m.neg == MUX_INPUT_COUNT) {
+    if (m.neg == mux_input_count) {
         if (value >= TRIGGER_THRESHOLD) {
             pressed |= BIT(m.pos);
         } else {
@@ -422,24 +425,24 @@ static void apply_axis_motion(axis_map_entry m, int16_t value) {
     mux_input_type pos = m.pos;
 
     if (swap_axis && !key_show) {
-        if (neg == MUX_INPUT_DPAD_UP) {
-            neg = MUX_INPUT_DPAD_LEFT;
-            pos = MUX_INPUT_DPAD_RIGHT;
-        } else if (neg == MUX_INPUT_DPAD_LEFT) {
-            neg = MUX_INPUT_DPAD_UP;
-            pos = MUX_INPUT_DPAD_DOWN;
-        } else if (neg == MUX_INPUT_LS_UP) {
-            neg = MUX_INPUT_LS_LEFT;
-            pos = MUX_INPUT_LS_RIGHT;
-        } else if (neg == MUX_INPUT_LS_LEFT) {
-            neg = MUX_INPUT_LS_UP;
-            pos = MUX_INPUT_LS_DOWN;
-        } else if (neg == MUX_INPUT_RS_UP) {
-            neg = MUX_INPUT_RS_LEFT;
-            pos = MUX_INPUT_RS_RIGHT;
-        } else if (neg == MUX_INPUT_RS_LEFT) {
-            neg = MUX_INPUT_RS_UP;
-            pos = MUX_INPUT_RS_DOWN;
+        if (neg == mux_input_dpad_up) {
+            neg = mux_input_dpad_left;
+            pos = mux_input_dpad_right;
+        } else if (neg == mux_input_dpad_left) {
+            neg = mux_input_dpad_up;
+            pos = mux_input_dpad_down;
+        } else if (neg == mux_input_ls_up) {
+            neg = mux_input_ls_left;
+            pos = mux_input_ls_right;
+        } else if (neg == mux_input_ls_left) {
+            neg = mux_input_ls_up;
+            pos = mux_input_ls_down;
+        } else if (neg == mux_input_rs_up) {
+            neg = mux_input_rs_left;
+            pos = mux_input_rs_right;
+        } else if (neg == mux_input_rs_left) {
+            neg = mux_input_rs_up;
+            pos = mux_input_rs_down;
         }
     }
 
@@ -454,7 +457,7 @@ static void apply_axis_motion(axis_map_entry m, int16_t value) {
     apply_dir_pair(neg, pos, direction);
 }
 
-static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
+static void process_sdl_axis(const SDL_GameControllerAxis axis, const int16_t value) {
     if (axis >= SDL_CONTROLLER_AXIS_MAX || input_is_suppressed()) return;
 
     log_axis_once("Controller", (uint8_t) axis, value, &controller_axis_log_mask);
@@ -463,7 +466,7 @@ static void process_sdl_axis(SDL_GameControllerAxis axis, int16_t value) {
     apply_axis_motion(axis_map[axis], value);
 }
 
-static void process_sdl_joy_axis(SDL_JoystickID which, uint8_t axis, int16_t value) {
+static void process_sdl_joy_axis(const SDL_JoystickID which, const uint8_t axis, const int16_t value) {
     if (input_is_suppressed() || is_tracked_as_controller(which)) return;
 
     log_axis_once("Raw joystick", axis, value, &raw_axis_log_mask);
@@ -472,25 +475,25 @@ static void process_sdl_joy_axis(SDL_JoystickID which, uint8_t axis, int16_t val
     apply_axis_motion(raw_joystick_axis_map(axis), value);
 }
 
-static void process_sdl_key(const SDL_KeyboardEvent *key, int down) {
+static void process_sdl_key(const SDL_KeyboardEvent *key, const int down) {
     if (input_is_suppressed()) return;
 
-    SDL_Scancode sc = key->keysym.scancode;
+    const SDL_Scancode sc = key->keysym.scancode;
     if (sc >= SDL_NUM_SCANCODES) return;
 
-    mux_input_type t = input_map[sc];
-    if (t == MUX_INPUT_COUNT) {
+    const mux_input_type t = input_map[sc];
+    if (t == mux_input_count) {
         LOG_DEBUG("input", "Unmapped key %s (%d)", SDL_GetScancodeName(sc), sc);
         return;
     }
 
     if (key->repeat) return;
 
-    pressed = down ? (pressed | BIT(t)) : (pressed & ~BIT(t));
+    pressed = down ? pressed | BIT(t) : pressed & ~BIT(t);
 }
 
-static void close_device_by_instance(SDL_JoystickID id) {
-    int idx = find_device_by_instance(id);
+static void close_device_by_instance(const SDL_JoystickID id) {
+    const int idx = find_device_by_instance(id);
     if (idx < 0) return;
 
     if (devices[idx].controller) {
@@ -517,14 +520,14 @@ static void close_all_devices(void) {
 
 static void open_all_input_devices(void) {
     static uint32_t last_no_device_log = UINT32_MAX;
-    int was_empty = (device_count == 0);
+    int was_empty = device_count == 0;
 
     if (!mappings_loaded) {
-        if (device.BOARD.SDL_MAP[0] != '\0' && SDL_GameControllerAddMapping(device.BOARD.SDL_MAP) < 0) {
+        if (device.board.sdl_map[0] != '\0' && SDL_GameControllerAddMapping(device.board.sdl_map) < 0) {
             LOG_WARN("input", "Failed to add device SDL_MAP: %s", SDL_GetError());
         }
 
-        const char *info_map = (config.SETTINGS.REMAP.LAYOUT == 1) ? CONTROL_MODERN : CONTROL_RETRO;
+        const char *info_map = config.settings.remap.layout == 1 ? CONTROL_MODERN : CONTROL_RETRO;
 
         int mappings = SDL_GameControllerAddMappingsFromFile(info_map);
         if (mappings < 0) {
@@ -545,14 +548,14 @@ static void open_all_input_devices(void) {
     int num_joy = SDL_NumJoysticks();
 
     if (num_joy <= 0) {
-        uint32_t now = (uint32_t) mux_tick();
+        uint32_t j_now = (uint32_t) mux_tick();
 
         // Avoid log spam during retry loops...
-        if (last_no_device_log == UINT32_MAX || now - last_no_device_log >= 2000U) {
+        if (last_no_device_log == UINT32_MAX || j_now - last_no_device_log >= 2000U) {
             LOG_INFO("input", "SDL video driver: %s", video_driver ? video_driver : "unknown");
             LOG_INFO("input", "Detected %d joystick(s)", num_joy);
             LOG_WARN("input", "No controllers detected");
-            last_no_device_log = now;
+            last_no_device_log = j_now;
         }
 
         return;
@@ -646,19 +649,19 @@ void mux_input_reload_mappings(void) {
     apply_face_button_layout();
 }
 
-static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_type mux_type) {
+static mux_input_type remap_stick_to_dpad(const mux_nav_type nav, const mux_input_type mux_type) {
     if (nav & NAV_LEFT_STICK) {
         switch (mux_type) {
-            case MUX_INPUT_LS_UP:
-                return MUX_INPUT_DPAD_UP;
-            case MUX_INPUT_LS_DOWN:
-                return MUX_INPUT_DPAD_DOWN;
-            case MUX_INPUT_LS_LEFT:
-                return MUX_INPUT_DPAD_LEFT;
-            case MUX_INPUT_LS_RIGHT:
-                return MUX_INPUT_DPAD_RIGHT;
-            case MUX_INPUT_L3:
-                return MUX_INPUT_A;
+            case mux_input_ls_up:
+                return mux_input_dpad_up;
+            case mux_input_ls_down:
+                return mux_input_dpad_down;
+            case mux_input_ls_left:
+                return mux_input_dpad_left;
+            case mux_input_ls_right:
+                return mux_input_dpad_right;
+            case mux_input_l3:
+                return mux_input_a;
             default:
                 break;
         }
@@ -666,16 +669,16 @@ static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_typ
 
     if (nav & NAV_RIGHT_STICK) {
         switch (mux_type) {
-            case MUX_INPUT_RS_UP:
-                return MUX_INPUT_DPAD_UP;
-            case MUX_INPUT_RS_DOWN:
-                return MUX_INPUT_DPAD_DOWN;
-            case MUX_INPUT_RS_LEFT:
-                return MUX_INPUT_DPAD_LEFT;
-            case MUX_INPUT_RS_RIGHT:
-                return MUX_INPUT_DPAD_RIGHT;
-            case MUX_INPUT_R3:
-                return MUX_INPUT_A;
+            case mux_input_rs_up:
+                return mux_input_dpad_up;
+            case mux_input_rs_down:
+                return mux_input_dpad_down;
+            case mux_input_rs_left:
+                return mux_input_dpad_left;
+            case mux_input_rs_right:
+                return mux_input_dpad_right;
+            case mux_input_r3:
+                return mux_input_a;
             default:
                 break;
         }
@@ -685,18 +688,18 @@ static inline mux_input_type remap_stick_to_dpad(mux_nav_type nav, mux_input_typ
 }
 
 // Invokes the relevant handler(s) for a particular input mux_type and action.
-// The alt ("hold") modifier input for this screen, or MUX_INPUT_COUNT when disabled.
+// The alt ("hold") modifier input for this screen, or mux_input_cOUNT when disabled.
 static mux_input_type hold_modifier(const mux_input_options *opts) {
-    if (opts->hold_disabled) return MUX_INPUT_COUNT;
-    return opts->hold_input ? opts->hold_input : MUX_INPUT_L2;
+    if (opts->hold_disabled) return mux_input_count;
+    return opts->hold_input ? opts->hold_input : mux_input_l2;
 }
 
 // Sample the modifier's raw pressed state at the start of the poll cycle, before any other
 // input is dispatched, so a button pressed in the same instant as the modifier is reliably
 // treated as held. Updates hold_call on the edge.
 static void update_hold_modifier(const mux_input_options *opts) {
-    mux_input_type mod = hold_modifier(opts);
-    if (mod >= MUX_INPUT_COUNT) {
+    const mux_input_type mod = hold_modifier(opts);
+    if (mod >= mux_input_count) {
         hold_active = 0;
         return;
     }
@@ -705,21 +708,24 @@ static void update_hold_modifier(const mux_input_options *opts) {
     hold_call = hold_active;
 }
 
-static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, mux_input_action action) {
+static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, const mux_input_action action) {
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
 
     // Route through the alt layer for inputs whose press happened while the modifier was held,
     // so press/hold/release stay on the same layer even if the modifier is released mid-gesture.
-    uint64_t bit = BIT(mux_type);
+    const uint64_t bit = BIT(mux_type);
     int use_alt;
-    if (action == MUX_INPUT_PRESS) {
+    if (action == mux_input_press) {
         use_alt = hold_active;
-        if (use_alt) alt_keys |= bit; else alt_keys &= ~bit;
+        if (use_alt)
+            alt_keys |= bit;
+        else
+            alt_keys &= ~bit;
     } else {
         use_alt = (alt_keys & bit) != 0;
-        if (action == MUX_INPUT_RELEASE) alt_keys &= ~bit;
+        if (action == mux_input_release) alt_keys &= ~bit;
     }
 
     const mux_input_handler *press = use_alt ? opts->alt_press_handler : opts->press_handler;
@@ -728,13 +734,13 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
 
     mux_input_handler handler = NULL;
     switch (action) {
-        case MUX_INPUT_PRESS:
+        case mux_input_press:
             handler = press[mux_type];
             break;
-        case MUX_INPUT_HOLD:
+        case mux_input_hold:
             handler = hold[mux_type];
             break;
-        case MUX_INPUT_RELEASE:
+        case mux_input_release:
             handler = release[mux_type];
             break;
     }
@@ -747,16 +753,16 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
 }
 
 // Invokes the relevant handler(s) for a particular input combo number and action.
-static void dispatch_combo(const mux_input_options *opts, int num, mux_input_action action) {
+static void dispatch_combo(const mux_input_options *opts, const int num, const mux_input_action action) {
     mux_input_handler handler = NULL;
     switch (action) {
-        case MUX_INPUT_PRESS:
+        case mux_input_press:
             handler = opts->combo[num].press_handler;
             break;
-        case MUX_INPUT_HOLD:
+        case mux_input_hold:
             handler = opts->combo[num].hold_handler;
             break;
-        case MUX_INPUT_RELEASE:
+        case mux_input_release:
             handler = opts->combo[num].release_handler;
             break;
     }
@@ -771,13 +777,13 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
 static void handle_inputs(const mux_input_options *opts) {
     if (input_is_suppressed()) return;
 
-    static uint32_t hold_delay[MUX_INPUT_COUNT] = {};
-    static uint32_t hold_tick[MUX_INPUT_COUNT] = {};
+    static uint32_t hold_delay[mux_input_count] = {};
+    static uint32_t hold_tick[mux_input_count] = {};
 
     uint64_t blocked = 0;
 
     for (int i = 0; i < opts->combo_count; i++) {
-        uint64_t mask = opts->combo[i].type_mask;
+        const uint64_t mask = opts->combo[i].type_mask;
 
         if (!mask) continue;
 
@@ -789,35 +795,35 @@ static void handle_inputs(const mux_input_options *opts) {
         }
     }
 
-    mux_input_type mod = hold_modifier(opts);
-    if (mod < MUX_INPUT_COUNT) blocked |= BIT(mod);
+    const mux_input_type mod = hold_modifier(opts);
+    if (mod < mux_input_count) blocked |= BIT(mod);
 
-    uint64_t pressed_filtered = pressed & ~blocked;
-    uint64_t held_filtered = held & ~blocked;
+    const uint64_t pressed_filtered = pressed & ~blocked;
+    const uint64_t held_filtered = held & ~blocked;
 
-    uint64_t changed = pressed_filtered ^ held_filtered;
+    const uint64_t changed = pressed_filtered ^ held_filtered;
     uint64_t active = pressed_filtered | held_filtered;
 
     while (active) {
-        int i = __builtin_ctzll(active);
+        const int i = __builtin_ctzll(active);
         active &= active - 1;
 
-        uint64_t bit = BIT(i);
+        const uint64_t bit = BIT(i);
 
         if (pressed_filtered & bit) {
             if (changed & bit) {
-                dispatch_input(opts, i, MUX_INPUT_PRESS);
+                dispatch_input(opts, i, mux_input_press);
 
-                hold_delay[i] = config.SETTINGS.ADVANCED.REPEATDELAY;
+                hold_delay[i] = config.settings.advanced.repeat_delay;
                 hold_tick[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
-                dispatch_input(opts, i, MUX_INPUT_HOLD);
+                dispatch_input(opts, i, mux_input_hold);
 
-                hold_delay[i] = config.SETTINGS.ADVANCED.ACCELERATE;
+                hold_delay[i] = config.settings.advanced.accelerate;
                 hold_tick[i] = tick;
             }
         } else {
-            dispatch_input(opts, i, MUX_INPUT_RELEASE);
+            dispatch_input(opts, i, mux_input_release);
         }
     }
 }
@@ -830,11 +836,11 @@ static void handle_combos(const mux_input_options *opts) {
     static uint32_t hold_tick = 0;
 
     // Combo number that was active during the previous iteration of the event loop, or
-    // MUX_INPUT_COMBO_COUNT when no combo is held.
+    // mux_input_combo_count when no combo is held.
     static int active_combo = MUX_INPUT_COMBO_COUNT;
 
-    uint64_t active_pressed = pressed;
-    uint64_t active_held = held;
+    const uint64_t active_pressed = pressed;
+    const uint64_t active_held = held;
 
     if (!active_pressed) {
         active_combo = MUX_INPUT_COMBO_COUNT;
@@ -843,22 +849,22 @@ static void handle_combos(const mux_input_options *opts) {
 
     if (active_combo != MUX_INPUT_COMBO_COUNT) {
         // Active combo; check if it's still held or was released.
-        uint64_t mask = opts->combo[active_combo].type_mask;
+        const uint64_t mask = opts->combo[active_combo].type_mask;
 
         if ((active_pressed & mask) == mask) {
             if (tick - hold_tick >= hold_delay) {
                 // Single hold
-                dispatch_combo(opts, active_combo, MUX_INPUT_HOLD);
+                dispatch_combo(opts, active_combo, mux_input_hold);
 
                 // Single delay for each subsequent repeat.
-                hold_delay = config.SETTINGS.ADVANCED.ACCELERATE;
+                hold_delay = config.settings.advanced.accelerate;
                 hold_tick = tick;
             }
             return;
         }
 
         // Held & not pressed: Invoke release handler.
-        dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
+        dispatch_combo(opts, active_combo, mux_input_release);
         active_combo = MUX_INPUT_COMBO_COUNT;
     }
 
@@ -869,11 +875,11 @@ static void handle_combos(const mux_input_options *opts) {
     // (e.g., when transitioning from POWER_SHORT to POWER_LONG), so we have to check this even
     // if a combo was previously active at the start of the function.
     for (int i = 0; i < opts->combo_count; i++) {
-        uint64_t mask = opts->combo[i].type_mask;
+        const uint64_t mask = opts->combo[i].type_mask;
         if (!mask) continue;
         if ((active_pressed & mask) != mask) continue;
 
-        int bits = __builtin_popcountll(mask);
+        const int bits = __builtin_popcountll(mask);
         if (bits > best_bits) {
             best_bits = bits;
             best_combo = i;
@@ -883,10 +889,10 @@ static void handle_combos(const mux_input_options *opts) {
     if (best_combo != MUX_INPUT_COMBO_COUNT) {
         if (active_pressed & ~active_held) {
             // Pressed & not held: Invoke "press" handler.
-            dispatch_combo(opts, best_combo, MUX_INPUT_PRESS);
+            dispatch_combo(opts, best_combo, mux_input_press);
 
             // Initial repeat delay
-            hold_delay = config.SETTINGS.ADVANCED.REPEATDELAY;
+            hold_delay = config.settings.advanced.repeat_delay;
             hold_tick = tick;
             active_combo = best_combo;
         }
@@ -894,18 +900,17 @@ static void handle_combos(const mux_input_options *opts) {
 }
 
 static const mux_nav_type nav_map[] = {
-        NAV_DPAD,
-        NAV_LEFT_STICK,
-        NAV_RIGHT_STICK,
-        NAV_DPAD | NAV_LEFT_STICK,
-        NAV_DPAD | NAV_RIGHT_STICK,
-        NAV_DPAD | NAV_LEFT_STICK | NAV_RIGHT_STICK,
-        NAV_LEFT_STICK | NAV_RIGHT_STICK,
+    NAV_DPAD,
+    NAV_LEFT_STICK,
+    NAV_RIGHT_STICK,
+    NAV_DPAD | NAV_LEFT_STICK,
+    NAV_DPAD | NAV_RIGHT_STICK,
+    NAV_DPAD | NAV_LEFT_STICK | NAV_RIGHT_STICK,
+    NAV_LEFT_STICK | NAV_RIGHT_STICK,
 };
 
-mux_nav_type get_sticknav_mask(int sticknav_setting) {
-    if (sticknav_setting < 0 ||
-        sticknav_setting >= (int) (sizeof nav_map / sizeof nav_map[0])) {
+mux_nav_type get_sticknav_mask(const int sticknav_setting) {
+    if (sticknav_setting < 0 || sticknav_setting >= (int) (sizeof nav_map / sizeof nav_map[0])) {
         return NAV_NONE;
     }
 
@@ -935,11 +940,11 @@ uint32_t mux_input_tick(void) {
     return tick;
 }
 
-void register_key_event_callback(key_event_callback cb) {
+void register_key_event_callback(const key_event_callback cb) {
     event_handler = cb;
 }
 
-void append_combo(mux_input_options *opts, mux_input_combo combo) {
+void append_combo(mux_input_options *opts, const mux_input_combo combo) {
     if (opts->combo_count >= MUX_INPUT_COMBO_COUNT) return;
     opts->combo[opts->combo_count++] = combo;
 }
@@ -958,18 +963,15 @@ void mux_input_task(const mux_input_options *opts) {
     reset_raw_analog();
 
     swap_axis = opts->swap_axis;
-    ((mux_input_options *) opts)->nav = get_sticknav_mask(config.SETTINGS.ADVANCED.STICKNAV);
+    ((mux_input_options *) opts)->nav = get_sticknav_mask(config.settings.advanced.stick_nav);
 
     open_all_input_devices();
 
-    const int timeout_idle = (opts->max_idle_ms > 0) ? (int) opts->max_idle_ms : (int) IDLE_MS;
-    const int accel_ms = config.SETTINGS.ADVANCED.ACCELERATE > 0 ? config.SETTINGS.ADVANCED.ACCELERATE : 1;
-    const int timeout_hold = (opts->max_idle_ms > 0) ? ((int) opts->max_idle_ms < accel_ms ? (int) opts->max_idle_ms : accel_ms) : accel_ms;
+    const int timeout_idle = opts->max_idle_ms > 0 ? (int) opts->max_idle_ms : IDLE_MS;
+    const int accel_ms = config.settings.advanced.accelerate > 0 ? config.settings.advanced.accelerate : 1;
+    const int timeout_hold =
+        opts->max_idle_ms > 0 ? ((int) opts->max_idle_ms < accel_ms ? (int) opts->max_idle_ms : accel_ms) : accel_ms;
 
-    const uint32_t retry_interval_fast_ms = 750U;
-    const uint32_t retry_interval_slow_ms = 5000U;
-    const int retry_fast_count = 5;
-    const int no_device_wait_ms = 250;
     uint32_t next_retry_tick = 0;
     int retry_count = 0;
 
@@ -977,14 +979,18 @@ void mux_input_task(const mux_input_options *opts) {
 
     SDL_Event ev;
     while (!stop_flag) {
+        const uint32_t retry_interval_fast_ms = 750U;
+        const uint32_t retry_interval_slow_ms = 5000U;
+        const int retry_fast_count = 5;
         int timeout = held ? timeout_hold : timeout_idle;
 
         if (device_count == 0) {
-            int poll_cap = (retry_count <= retry_fast_count) ? no_device_wait_ms : (int) retry_interval_slow_ms;
+            const int no_device_wait_ms = 250;
+            const int poll_cap = retry_count <= retry_fast_count ? no_device_wait_ms : (int) retry_interval_slow_ms;
             if (timeout > poll_cap) timeout = poll_cap;
         }
 
-        if (anim_is_active() && timeout > (int) IDLE_MS) timeout = (int) IDLE_MS;
+        if (anim_is_active() && timeout > IDLE_MS) timeout = IDLE_MS;
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         do {
@@ -1064,7 +1070,7 @@ void mux_input_task(const mux_input_options *opts) {
 
         if (device_count == 0 && tick >= next_retry_tick) {
             retry_count++;
-            uint32_t interval = (retry_count <= retry_fast_count) ? retry_interval_fast_ms : retry_interval_slow_ms;
+            const uint32_t interval = retry_count <= retry_fast_count ? retry_interval_fast_ms : retry_interval_slow_ms;
             LOG_DEBUG("input", "Retrying input device detection...");
             open_all_input_devices();
             next_retry_tick = tick + interval;
@@ -1094,13 +1100,13 @@ void mux_input_task(const mux_input_options *opts) {
     close_all_devices();
 }
 
-int mux_input_pressed_any(uint64_t mask) {
+int mux_input_pressed_any(const uint64_t mask) {
     return (pressed & mask) != 0;
 }
 
-int mux_input_pressed(mux_input_type mux_type) {
+int mux_input_pressed(const mux_input_type mux_type) {
     if (pressed & BIT(mux_type)) return 1;
-    if (board_is(BOARD_SPECIAL_G350) && mux_type == MUX_INPUT_MENU && g350_menu_pressed) return 1;
+    if (board_is(board_special_g350) && mux_type == mux_input_menu && g350_menu_pressed) return 1;
 
     return 0;
 }

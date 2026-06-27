@@ -11,33 +11,32 @@ typedef struct {
     const char *gc_key;
     const char *label;
     int is_axis;
-    int is_half_axis;
 } remap_slot_def;
 
 static const remap_slot_def slot_defs[REMAP_SLOT_COUNT] = {
-        {"a",             "A",          0, 0},
-        {"b",             "B",          0, 0},
-        {"c",             "C",          0, 0},
-        {"x",             "X",          0, 0},
-        {"y",             "Y",          0, 0},
-        {"z",             "Z",          0, 0},
-        {"leftshoulder",  "L1",         0, 0},
-        {"rightshoulder", "R1",         0, 0},
-        {"lefttrigger",   "L2",         0, 1},
-        {"righttrigger",  "R2",         0, 1},
-        {"leftstick",     "L3",         0, 0},
-        {"rightstick",    "R3",         0, 0},
-        {"start",         "Start",      0, 0},
-        {"back",          "Select",     0, 0},
-        {"guide",         "Menu",       0, 0},
-        {"dpup",          "DPAD Up",    0, 0},
-        {"dpdown",        "DPAD Down",  0, 0},
-        {"dpleft",        "DPAD Left",  0, 0},
-        {"dpright",       "DPAD Right", 0, 0},
-        {"leftx",         "Left X",     1, 0},
-        {"lefty",         "Left Y",     1, 0},
-        {"rightx",        "Right X",    1, 0},
-        {"righty",        "Right Y",    1, 0},
+    {"a", "A", 0},
+    {"b", "B", 0},
+    {"c", "C", 0},
+    {"x", "X", 0},
+    {"y", "Y", 0},
+    {"z", "Z", 0},
+    {"leftshoulder", "L1", 0},
+    {"rightshoulder", "R1", 0},
+    {"lefttrigger", "L2", 0},
+    {"righttrigger", "R2", 0},
+    {"leftstick", "L3", 0},
+    {"rightstick", "R3", 0},
+    {"start", "Start", 0},
+    {"back", "Select", 0},
+    {"guide", "Menu", 0},
+    {"dpup", "DPAD Up", 0},
+    {"dpdown", "DPAD Down", 0},
+    {"dpleft", "DPAD Left", 0},
+    {"dpright", "DPAD Right", 0},
+    {"leftx", "Left X", 1},
+    {"lefty", "Left Y", 1},
+    {"rightx", "Right X", 1},
+    {"righty", "Right Y", 1},
 };
 
 static char phys[REMAP_SLOT_COUNT][32];
@@ -80,17 +79,17 @@ static int save_mode = 0;
 static int mapping_modified = 0;
 static mux_dialogue save_dlg;
 
-static void detect_device_at(int idx) {
+static void detect_device_at(const int idx) {
     ctrl_guid[0] = '\0';
     ctrl_name[0] = '\0';
 
     // Pull GUID from the board SDL map for the primary device if available
-    if (idx == 0 && device.BOARD.SDL_MAP[0] != '\0') {
-        const char *c1 = strchr(device.BOARD.SDL_MAP, ',');
+    if (idx == 0 && device.board.sdl_map[0] != '\0') {
+        const char *c1 = strchr(device.board.sdl_map, ',');
         if (c1) {
-            size_t gl = (size_t) (c1 - device.BOARD.SDL_MAP);
+            const size_t gl = (size_t) (c1 - device.board.sdl_map);
             if (gl > 0 && gl < sizeof(ctrl_guid)) {
-                memcpy(ctrl_guid, device.BOARD.SDL_MAP, gl);
+                memcpy(ctrl_guid, device.board.sdl_map, gl);
                 ctrl_guid[gl] = '\0';
             }
         }
@@ -104,7 +103,7 @@ static void detect_device_at(int idx) {
     if (idx >= SDL_NumJoysticks()) return;
 
     if (ctrl_guid[0] == '\0') {
-        SDL_JoystickGUID guid = SDL_JoystickGetDeviceGUID(idx);
+        const SDL_JoystickGUID guid = SDL_JoystickGetDeviceGUID(idx);
         SDL_JoystickGetGUIDString(guid, ctrl_guid, sizeof(ctrl_guid));
     }
 
@@ -113,7 +112,7 @@ static void detect_device_at(int idx) {
     if (name) snprintf(ctrl_name, sizeof(ctrl_name), "%s", name);
 }
 
-static void parse_gcdb_slot(const char *line, int idx) {
+static void parse_gcdb_slot(const char *line, const int idx) {
     char search[48];
     snprintf(search, sizeof(search), ",%s:", slot_defs[idx].gc_key);
 
@@ -168,10 +167,10 @@ static void phys_to_label(const char *p, char out[PHYS_LABEL_SIZE]) {
     }
 
     if (p[0] == 'h') {
-        long hat = strtol(p + 1, &ep, 10);
+        const long hat = strtol(p + 1, &ep, 10);
         if (ep != p + 1 && *ep == '.') {
             char *ep2;
-            long val = strtol(ep + 1, &ep2, 10);
+            const long val = strtol(ep + 1, &ep2, 10);
             if (ep2 != ep + 1) {
                 const char *dir;
                 switch (val) {
@@ -221,7 +220,8 @@ static int load_from_file(const char *path, const char *guid) {
     while (fgets(line, sizeof(line), f)) {
         str_remchar(line, '\n');
         if (strncmp(line, guid, 32) == 0) {
-            for (int i = 0; i < REMAP_SLOT_COUNT; i++) parse_gcdb_slot(line, i);
+            for (int i = 0; i < REMAP_SLOT_COUNT; i++)
+                parse_gcdb_slot(line, i);
             found = 1;
             break;
         }
@@ -237,20 +237,26 @@ static void load_current_mapping(void) {
         snprintf(phys[i], sizeof(phys[0]), "---");
     }
 
-    const char *layout_file = (remap_layout == 1) ? OPT_PATH "share/info/gamecontrollerdb/modern.txt" : OPT_PATH "share/info/gamecontrollerdb/retro.txt";
+    const char *layout_file = remap_layout == 1 ? OPT_PATH "share/info/gamecontrollerdb/modern.txt"
+                                                : OPT_PATH "share/info/gamecontrollerdb/retro.txt";
     if (ctrl_guid[0] && load_from_file(layout_file, ctrl_guid)) return;
 
-    if (remap_dev_idx == 0 && device.BOARD.SDL_MAP[0]) {
-        for (int i = 0; i < REMAP_SLOT_COUNT; i++) parse_gcdb_slot(device.BOARD.SDL_MAP, i);
+    if (remap_dev_idx == 0 && device.board.sdl_map[0]) {
+        for (int i = 0; i < REMAP_SLOT_COUNT; i++)
+            parse_gcdb_slot(device.board.sdl_map, i);
     }
 }
 
 static void build_mapping_line(char *buf) {
     char tmp[4096];
-    int n = snprintf(tmp, sizeof(tmp), "%s,%s", ctrl_guid[0] ? ctrl_guid : "00000000000000000000000000000000", ctrl_name[0] ? ctrl_name : "muOS-Keys");
+    int n = snprintf(
+        tmp, sizeof(tmp), "%s,%s", ctrl_guid[0] ? ctrl_guid : "00000000000000000000000000000000",
+        ctrl_name[0] ? ctrl_name : "muOS-Keys"
+    );
 
     for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
-        if (phys[i][0] && strcmp(phys[i], "---") != 0) n += snprintf(tmp + n, sizeof(tmp) - (size_t) n, ",%s:%s", slot_defs[i].gc_key, phys[i]);
+        if (phys[i][0] && strcmp(phys[i], "---") != 0)
+            n += snprintf(tmp + n, sizeof(tmp) - (size_t) n, ",%s:%s", slot_defs[i].gc_key, phys[i]);
     }
 
     snprintf(tmp + n, sizeof(tmp) - (size_t) n, ",platform:Linux,");
@@ -261,7 +267,7 @@ static void do_save(void) {
     char mapping[4096];
     build_mapping_line(mapping);
 
-    const char *target = (remap_layout == 1) ? "modern" : "retro";
+    const char *target = remap_layout == 1 ? "modern" : "retro";
     const char *args[] = {OPT_PATH "script/mux/sdl_remap.sh", target, mapping, NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
@@ -284,55 +290,55 @@ static void refresh_slot_labels(void) {
 }
 
 static void check_focus(void) {
-    int slot = focused_slot();
+    const int slot = focused_slot();
 
-    lv_label_set_text(ui_lblNavB, mapping_modified ? lang.GENERIC.SAVE : lang.GENERIC.BACK);
-    lv_obj_clear_flag(ui_lblNavB, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_clear_flag(ui_lblNavBGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_label_set_text(ui_lbl_nav_b, mapping_modified ? lang.generic.save : lang.generic.back);
+    lv_obj_clear_flag(ui_lbl_nav_b, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lbl_nav_b_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
 
     if (slot == REMAP_DEVICE_ITEM) {
         if (has_device_item) {
-            lv_label_set_text(ui_lblNavA, lang.GENERIC.CHANGE);
-            lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_label_set_text(ui_lbl_nav_a, lang.generic.change);
+            lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
         } else {
-            lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-            lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
         }
-        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else if (slot == REMAP_LAYOUT_ITEM) {
-        lv_label_set_text(ui_lblNavA, lang.GENERIC.CHANGE);
-        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_label_set_text(ui_lbl_nav_a, lang.generic.change);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
-        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_label_set_text(ui_lbl_nav_a, lang.generic.select);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
-static void apply_layout(int layout) {
+static void apply_layout(const int layout) {
     remap_layout = layout;
-    config.SETTINGS.REMAP.LAYOUT = (int16_t) layout;
+    config.settings.remap.layout = (int16_t) layout;
     mux_input_reload_mappings();
 
     load_current_mapping();
@@ -340,19 +346,20 @@ static void apply_layout(int layout) {
     mapping_modified = 0;
     check_focus();
 
-    if (layout_value) lv_label_set_text(layout_value, remap_layout == 1 ? lang.MUXREMAP.LAYOUT_MODERN : lang.MUXREMAP.LAYOUT_RETRO);
+    if (layout_value)
+        lv_label_set_text(layout_value, remap_layout == 1 ? lang.muxremap.layout_modern : lang.muxremap.layout_retro);
 
-    update_glyph(ui_lblNavAGlyph, "footer", remap_layout ? "b" : "a");
-    update_glyph(ui_lblNavBGlyph, "footer", remap_layout ? "a" : "b");
-    update_glyph(ui_lblNavXGlyph, "footer", remap_layout ? "y" : "x");
-    update_glyph(ui_lblNavYGlyph, "footer", remap_layout ? "x" : "y");
+    update_glyph(ui_lbl_nav_a_glyph, "footer", remap_layout ? "b" : "a");
+    update_glyph(ui_lbl_nav_b_glyph, "footer", remap_layout ? "a" : "b");
+    update_glyph(ui_lbl_nav_x_glyph, "footer", remap_layout ? "y" : "x");
+    update_glyph(ui_lbl_nav_y_glyph, "footer", remap_layout ? "x" : "y");
 }
 
 static void cycle_to_next_device(void) {
     SDL_PumpEvents();
     SDL_JoystickUpdate();
 
-    int num = SDL_NumJoysticks();
+    const int num = SDL_NumJoysticks();
     if (num <= 1) return;
 
     remap_dev_idx = (remap_dev_idx + 1) % num;
@@ -364,11 +371,11 @@ static void cycle_to_next_device(void) {
     mapping_modified = 0;
     check_focus();
 
-    if (device_value) lv_label_set_text(device_value, ctrl_name[0] ? ctrl_name : lang.GENERIC.UNKNOWN);
+    if (device_value) lv_label_set_text(device_value, ctrl_name[0] ? ctrl_name : lang.generic.unknown);
 
-    lv_label_set_text(ui_lblTitle, ctrl_name[0] ? ctrl_name : lang.MUXREMAP.TITLE);
+    lv_label_set_text(ui_lbl_title, ctrl_name[0] ? ctrl_name : lang.muxremap.title);
 
-    play_sound(SND_NAVIGATE);
+    play_sound(snd_navigate);
 }
 
 static void show_save_dialog(void) {
@@ -415,9 +422,9 @@ static void raw_event_capture(const SDL_Event *ev) {
             snprintf(phys_str, sizeof(phys_str), "h%d.%d", ev->jhat.hat, ev->jhat.value);
             break;
         case SDL_JOYAXISMOTION: {
-            int16_t val = ev->jaxis.value;
+            const int16_t val = ev->jaxis.value;
             if (val < -AXIS_CAPTURE_THRESHOLD || val > AXIS_CAPTURE_THRESHOLD) {
-                int axis = ev->jaxis.axis;
+                const int axis = ev->jaxis.axis;
                 if (slot_defs[capture_target].is_axis) {
                     snprintf(phys_str, sizeof(phys_str), "a%d", axis);
                 } else {
@@ -444,26 +451,26 @@ static void raw_event_capture(const SDL_Event *ev) {
 }
 
 static void cycle_layout(void) {
-    int new_layout = 1 - remap_layout;
+    const int new_layout = 1 - remap_layout;
     if (mapping_modified) {
         pending_layout = new_layout;
-        play_sound(SND_INFO_OPEN);
+        play_sound(snd_info_open);
         show_save_dialog();
         return;
     }
 
     apply_layout(new_layout);
-    play_sound(SND_NAVIGATE);
+    play_sound(snd_navigate);
 }
 
 static void handle_a(void) {
     if (hold_call) return;
 
     if (save_mode) {
-        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
-        if (opt == MUX_UNSAVED_SAVE) {
+        if (opt == mux_unsaved_save) {
             do_save();
             entry_layout = remap_layout;
         }
@@ -471,10 +478,10 @@ static void handle_a(void) {
         if (pending_layout >= 0) {
             apply_layout(pending_layout);
             pending_layout = -1;
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         } else {
-            if (opt == MUX_UNSAVED_DISCARD) apply_layout(entry_layout);
-            play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+            if (opt == mux_unsaved_discard) apply_layout(entry_layout);
+            play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
             close_remap_module();
         }
         return;
@@ -482,7 +489,7 @@ static void handle_a(void) {
 
     if (capture_active) return;
 
-    int slot = focused_slot();
+    const int slot = focused_slot();
 
     if (slot == REMAP_DEVICE_ITEM) {
         if (has_device_item) cycle_to_next_device();
@@ -501,8 +508,8 @@ static void handle_a(void) {
     capture_target = slot;
     capture_active = 1;
 
-    lv_label_set_text(item_values[slot], lang.MUXREMAP.WAITING);
-    play_sound(SND_CONFIRM);
+    lv_label_set_text(item_values[slot], lang.muxremap.waiting);
+    play_sound(snd_confirm);
 }
 
 static void handle_b(void) {
@@ -521,7 +528,7 @@ static void handle_b(void) {
         check_focus();
         clear_capture_state();
 
-        play_sound(SND_BACK);
+        play_sound(snd_back);
 
         return;
     }
@@ -534,7 +541,7 @@ static void handle_b(void) {
         }
 
         clear_capture_state();
-        play_sound(SND_BACK);
+        play_sound(snd_back);
         return;
     }
 
@@ -545,22 +552,22 @@ static void handle_b(void) {
 
     if (mapping_modified) {
         pending_layout = -1;
-        play_sound(SND_INFO_OPEN);
+        play_sound(snd_info_open);
         show_save_dialog();
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     close_remap_module();
 }
 
 static void handle_x(void) {
     if (hold_call || capture_active || save_mode) return;
 
-    int slot = focused_slot();
+    const int slot = focused_slot();
     if (slot < 0 || slot >= REMAP_SLOT_COUNT) return;
 
-    play_sound(SND_INFO_CLOSE);
+    play_sound(snd_info_close);
 
     snprintf(phys[slot], sizeof(phys[0]), "---");
     lv_label_set_text(item_values[slot], phys[slot]);
@@ -572,7 +579,7 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (hold_call || capture_active || save_mode) return;
 
-    play_sound(SND_INFO_CLOSE);
+    play_sound(snd_info_close);
 
     load_current_mapping();
     refresh_slot_labels();
@@ -583,7 +590,7 @@ static void handle_y(void) {
 
 static void handle_dpad_left(void) {
     if (capture_active || save_mode) return;
-    int slot = focused_slot();
+    const int slot = focused_slot();
 
     if (slot == REMAP_DEVICE_ITEM && has_device_item) {
         cycle_to_next_device();
@@ -594,7 +601,7 @@ static void handle_dpad_left(void) {
 
 static void handle_dpad_right(void) {
     if (capture_active || save_mode) return;
-    int slot = focused_slot();
+    const int slot = focused_slot();
 
     if (slot == REMAP_DEVICE_ITEM && has_device_item) {
         cycle_to_next_device();
@@ -608,7 +615,7 @@ static void handle_dpad_up(void) {
 
     if (save_mode) {
         dialogue_navigate(&save_dlg, &theme, -1);
-        play_sound(SND_NAVIGATE);
+        play_sound(snd_navigate);
         return;
     }
 
@@ -621,7 +628,7 @@ static void handle_dpad_down(void) {
 
     if (save_mode) {
         dialogue_navigate(&save_dlg, &theme, +1);
-        play_sound(SND_NAVIGATE);
+        play_sound(snd_navigate);
         return;
     }
 
@@ -657,30 +664,29 @@ static void handle_page_down(void) {
     check_focus();
 }
 
-
 static void init_navigation_group(void) {
     reset_ui_groups();
 
-    int num_joy = SDL_NumJoysticks();
-    has_device_item = (num_joy > 1);
+    const int num_joy = SDL_NumJoysticks();
+    has_device_item = num_joy > 1;
 
     {
-        device_panel = lv_obj_create(ui_pnlContent);
+        device_panel = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(device_panel);
 
         device_label = lv_label_create(device_panel);
-        apply_theme_list_item(&theme, device_label, lang.MUXREMAP.INPUT_LABEL);
+        apply_theme_list_item(&theme, device_label, lang.muxremap.input_label);
 
         device_value = lv_label_create(device_panel);
-        apply_theme_list_value(&theme, device_value, ctrl_name[0] ? ctrl_name : lang.GENERIC.UNKNOWN);
+        apply_theme_list_value(&theme, device_value, ctrl_name[0] ? ctrl_name : lang.generic.unknown);
 
         device_glyph = lv_img_create(device_panel);
         apply_theme_list_glyph(&theme, device_glyph, mux_module, "input");
 
         lv_obj_set_user_data(device_panel, (void *) (intptr_t) REMAP_DEVICE_ITEM);
 
-        apply_size_to_content(&theme, ui_pnlContent, device_label, device_glyph, lang.MUXREMAP.INPUT_LABEL);
-        apply_text_long_dot(&theme, ui_pnlContent, device_label);
+        apply_size_to_content(&theme, ui_pnl_content, device_label, device_glyph, lang.muxremap.input_label);
+        apply_text_long_dot(&theme, device_label);
 
         lv_group_add_obj(ui_group, device_label);
         lv_group_add_obj(ui_group_value, device_value);
@@ -689,14 +695,16 @@ static void init_navigation_group(void) {
     }
 
     {
-        layout_panel = lv_obj_create(ui_pnlContent);
+        layout_panel = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(layout_panel);
 
         layout_label = lv_label_create(layout_panel);
-        apply_theme_list_item(&theme, layout_label, lang.MUXREMAP.LAYOUT_LABEL);
+        apply_theme_list_item(&theme, layout_label, lang.muxremap.layout_label);
 
         layout_value = lv_label_create(layout_panel);
-        apply_theme_list_value(&theme, layout_value, remap_layout == 1 ? lang.MUXREMAP.LAYOUT_MODERN : lang.MUXREMAP.LAYOUT_RETRO);
+        apply_theme_list_value(
+            &theme, layout_value, remap_layout == 1 ? lang.muxremap.layout_modern : lang.muxremap.layout_retro
+        );
 
         layout_glyph = lv_img_create(layout_panel);
         apply_theme_list_glyph(&theme, layout_glyph, mux_module, "layout");
@@ -708,12 +716,12 @@ static void init_navigation_group(void) {
 
         lv_obj_set_user_data(layout_panel, (void *) (intptr_t) REMAP_LAYOUT_ITEM);
 
-        apply_size_to_content(&theme, ui_pnlContent, layout_label, layout_glyph, lang.MUXREMAP.LAYOUT_LABEL);
-        apply_text_long_dot(&theme, ui_pnlContent, layout_label);
+        apply_size_to_content(&theme, ui_pnl_content, layout_label, layout_glyph, lang.muxremap.layout_label);
+        apply_text_long_dot(&theme, layout_label);
     }
 
     for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
-        lv_obj_t *panel = lv_obj_create(ui_pnlContent);
+        lv_obj_t *panel = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(panel);
 
         lv_obj_t *label = lv_label_create(panel);
@@ -734,8 +742,8 @@ static void init_navigation_group(void) {
 
         lv_obj_set_user_data(panel, (void *) (intptr_t) i);
 
-        apply_size_to_content(&theme, ui_pnlContent, label, glyph, slot_defs[i].label);
-        apply_text_long_dot(&theme, ui_pnlContent, label);
+        apply_size_to_content(&theme, ui_pnl_content, label, glyph, slot_defs[i].label);
+        apply_text_long_dot(&theme, label);
 
         item_panels[i] = panel;
         item_labels[i] = label;
@@ -743,9 +751,9 @@ static void init_navigation_group(void) {
         item_glyphs[i] = glyph;
     }
 
-    ui_count = REMAP_SLOT_COUNT + 2;
+    ui_count_static = REMAP_SLOT_COUNT + 2;
 
-    lv_obj_update_layout(ui_pnlContent);
+    lv_obj_update_layout(ui_pnl_content);
     gen_step_movement(0, +1, 2, 0, 1);
     check_focus();
 }
@@ -753,21 +761,19 @@ static void init_navigation_group(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph,  "",                  0},
-            {ui_lblNavA,       lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph,  "",                  0},
-            {ui_lblNavX,       lang.GENERIC.CLEAR,  0},
-            {ui_lblNavYGlyph,  "",                  0},
-            {ui_lblNavY,       lang.GENERIC.RESET,  0},
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.clear, 0},
+                                  {ui_lbl_nav_y_glyph, "", 0},
+                                  {ui_lbl_nav_y, lang.generic.reset, 0},
+                                  {ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {NULL, NULL, 0}});
 
-    lv_label_set_text(ui_lblScreenMessage, "");
+    lv_label_set_text(ui_lbl_screen_message, "");
 
     overlay_display();
 }
@@ -776,7 +782,7 @@ int muxremap_main(void) {
     init_module(__func__);
     init_theme(1, 1);
 
-    remap_layout = (config.SETTINGS.REMAP.LAYOUT == 1) ? 1 : 0;
+    remap_layout = config.settings.remap.layout == 1 ? 1 : 0;
     entry_layout = remap_layout;
     pending_layout = -1;
     mapping_modified = 0;
@@ -785,7 +791,7 @@ int muxremap_main(void) {
     capture_target = -1;
     capture_pending_clear = 0;
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXREMAP.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxremap.title);
 
     remap_dev_idx = 0;
     detect_device_at(0);
@@ -794,43 +800,47 @@ int muxremap_main(void) {
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
-                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(
+        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
+        lang.generic.select, lang.generic.back
+    );
 
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_LEFT] = handle_dpad_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_dpad_right,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_page_up,
-                    [MUX_INPUT_R1] = handle_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_left] = handle_dpad_left,
+                [mux_input_dpad_right] = handle_dpad_right,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_page_up,
-                    [MUX_INPUT_R1] = handle_page_down,
+        .hold_handler =
+            {
+                [mux_input_dpad_up] = handle_dpad_up_hold,
+                [mux_input_dpad_down] = handle_dpad_down_hold,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
-            .raw_event_handler = raw_event_capture,
+        .raw_event_handler = raw_event_capture,
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

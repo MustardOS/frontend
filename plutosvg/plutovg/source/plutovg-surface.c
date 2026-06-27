@@ -12,11 +12,11 @@
 static plutovg_surface_t* plutovg_surface_create_uninitialized(size_t width, size_t height)
 {
     static const size_t kMaxSize = 1 << 15;
-    if(width <= 0 || height <= 0 || width >= kMaxSize || height >= kMaxSize)
+    if (width <= 0 || height <= 0 || width >= kMaxSize || height >= kMaxSize)
         return NULL;
     const size_t size = width * height * 4;
     plutovg_surface_t* surface = malloc(size + sizeof(plutovg_surface_t));
-    if(surface == NULL)
+    if (surface == NULL)
         return NULL;
     plutovg_init_reference(surface);
     surface->width = width;
@@ -29,7 +29,7 @@ static plutovg_surface_t* plutovg_surface_create_uninitialized(size_t width, siz
 plutovg_surface_t* plutovg_surface_create(int width, int height)
 {
     plutovg_surface_t* surface = plutovg_surface_create_uninitialized(width, height);
-    if(surface)
+    if (surface)
         memset(surface->data, 0, surface->height * surface->stride);
     return surface;
 }
@@ -48,7 +48,7 @@ plutovg_surface_t* plutovg_surface_create_for_data(unsigned char* data, int widt
 static plutovg_surface_t* plutovg_surface_load_from_image(stbi_uc* image, int width, int height)
 {
     plutovg_surface_t* surface = plutovg_surface_create_uninitialized(width, height);
-    if(surface)
+    if (surface)
         plutovg_convert_rgba_to_argb(surface->data, image, surface->width, surface->height, surface->stride);
     stbi_image_free(image);
     return surface;
@@ -58,7 +58,7 @@ plutovg_surface_t* plutovg_surface_load_from_image_file(const char* filename)
 {
     int width, height, channels;
     stbi_uc* image = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
-    if(image == NULL)
+    if (image == NULL)
         return NULL;
     return plutovg_surface_load_from_image(image, width, height);
 }
@@ -67,7 +67,7 @@ plutovg_surface_t* plutovg_surface_load_from_image_data(const void* data, int le
 {
     int width, height, channels;
     stbi_uc* image = stbi_load_from_memory(data, length, &width, &height, &channels, STBI_rgb_alpha);
-    if(image == NULL)
+    if (image == NULL)
         return NULL;
     return plutovg_surface_load_from_image(image, width, height);
 }
@@ -101,33 +101,42 @@ plutovg_surface_t* plutovg_surface_load_from_image_base64(const char* data, int 
     size_t sidx = 0;
     size_t didx = 0;
 
-    if(length == -1)
+    if (length == -1)
         length = strlen(data);
     output_data = malloc(length);
-    if(output_data == NULL)
+    if (output_data == NULL)
         return NULL;
-    for(int i = 0; i < length; ++i) {
+    for (int i = 0; i < length; ++i)
+    {
         uint8_t cc = data[i];
-        if(cc == '=') {
+        if (cc == '=')
+        {
             ++equals_sign_count;
-        } else if(cc == '+' || cc == '/' || PLUTOVG_IS_ALNUM(cc)) {
-            if(equals_sign_count > 0)
+        }
+        else if (cc == '+' || cc == '/' || PLUTOVG_IS_ALNUM(cc))
+        {
+            if (equals_sign_count > 0)
                 goto cleanup;
             output_data[output_length++] = base64_table[cc];
-        } else if(!PLUTOVG_IS_WS(cc)) {
+        }
+        else if (!PLUTOVG_IS_WS(cc))
+        {
             goto cleanup;
         }
     }
 
-    if(output_length == 0 || equals_sign_count > 2 || (output_length % 4) == 1)
+    if (output_length == 0 || equals_sign_count > 2 || (output_length % 4) == 1)
         goto cleanup;
     output_length -= (output_length + 3) / 4;
-    if(output_length == 0) {
+    if (output_length == 0)
+    {
         goto cleanup;
     }
 
-    if(output_length > 1) {
-        while(didx < output_length - 2) {
+    if (output_length > 1)
+    {
+        while (didx < output_length - 2)
+        {
             output_data[didx + 0] = (((output_data[sidx + 0] << 2) & 255) | ((output_data[sidx + 1] >> 4) & 003));
             output_data[didx + 1] = (((output_data[sidx + 1] << 4) & 255) | ((output_data[sidx + 2] >> 2) & 017));
             output_data[didx + 2] = (((output_data[sidx + 2] << 6) & 255) | ((output_data[sidx + 3] >> 0) & 077));
@@ -136,9 +145,10 @@ plutovg_surface_t* plutovg_surface_load_from_image_base64(const char* data, int 
         }
     }
 
-    if(didx < output_length)
+    if (didx < output_length)
         output_data[didx] = (((output_data[sidx + 0] << 2) & 255) | ((output_data[sidx + 1] >> 4) & 003));
-    if(++didx < output_length) {
+    if (++didx < output_length)
+    {
         output_data[didx] = (((output_data[sidx + 1] << 4) & 255) | ((output_data[sidx + 2] >> 2) & 017));
     }
 
@@ -156,7 +166,8 @@ plutovg_surface_t* plutovg_surface_reference(plutovg_surface_t* surface)
 
 void plutovg_surface_destroy(plutovg_surface_t* surface)
 {
-    if(plutovg_destroy_reference(surface)) {
+    if (plutovg_destroy_reference(surface))
+    {
         free(surface);
     }
 }
@@ -189,7 +200,8 @@ int plutovg_surface_get_stride(const plutovg_surface_t* surface)
 void plutovg_surface_clear(plutovg_surface_t* surface, const plutovg_color_t* color)
 {
     uint32_t pixel = plutovg_premultiply_argb(plutovg_color_to_argb32(color));
-    for(int y = 0; y < surface->height; y++) {
+    for (int y = 0; y < surface->height; y++)
+    {
         uint32_t* pixels = (uint32_t*)(surface->data + surface->stride * y);
         plutovg_memfill32(pixels, surface->width, pixel);
     }
@@ -239,22 +251,28 @@ bool plutovg_surface_write_to_jpg_stream(const plutovg_surface_t* surface, pluto
 
 void plutovg_convert_argb_to_rgba(unsigned char* dst, const unsigned char* src, int width, int height, int stride)
 {
-    for(int y = 0; y < height; y++) {
+    for (int y = 0; y < height; y++)
+    {
         const uint32_t* src_row = (const uint32_t*)(src + stride * y);
         unsigned char* dst_row = dst + stride * y;
-        for(int x = 0; x < width; x++) {
+        for (int x = 0; x < width; x++)
+        {
             uint32_t pixel = src_row[x];
             uint32_t a = (pixel >> 24) & 0xFF;
-            if(a == 0) {
+            if (a == 0)
+            {
                 *dst_row++ = 0;
                 *dst_row++ = 0;
                 *dst_row++ = 0;
                 *dst_row++ = 0;
-            } else {
+            }
+            else
+            {
                 uint32_t r = (pixel >> 16) & 0xFF;
                 uint32_t g = (pixel >> 8) & 0xFF;
                 uint32_t b = (pixel >> 0) & 0xFF;
-                if(a != 255) {
+                if (a != 255)
+                {
                     r = (r * 255) / a;
                     g = (g * 255) / a;
                     b = (b * 255) / a;
@@ -271,18 +289,24 @@ void plutovg_convert_argb_to_rgba(unsigned char* dst, const unsigned char* src, 
 
 void plutovg_convert_rgba_to_argb(unsigned char* dst, const unsigned char* src, int width, int height, int stride)
 {
-    for(int y = 0; y < height; y++) {
+    for (int y = 0; y < height; y++)
+    {
         const unsigned char* src_row = src + stride * y;
         uint32_t* dst_row = (uint32_t*)(dst + stride * y);
-        for(int x = 0; x < width; x++) {
+        for (int x = 0; x < width; x++)
+        {
             uint32_t a = src_row[4 * x + 3];
-            if(a == 0) {
+            if (a == 0)
+            {
                 dst_row[x] = 0x00000000;
-            } else {
+            }
+            else
+            {
                 uint32_t r = src_row[4 * x + 0];
                 uint32_t g = src_row[4 * x + 1];
                 uint32_t b = src_row[4 * x + 2];
-                if(a != 255) {
+                if (a != 255)
+                {
                     r = (r * a) / 255;
                     g = (g * a) / 255;
                     b = (b * a) / 255;

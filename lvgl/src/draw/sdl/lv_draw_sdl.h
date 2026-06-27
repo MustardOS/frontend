@@ -42,29 +42,30 @@ typedef struct {
     /**
      * Render for display driver
      */
-    SDL_Renderer * renderer;
-    void * user_data;
+    SDL_Renderer *renderer;
+    void *user_data;
 } lv_draw_sdl_drv_param_t;
 
 typedef struct {
     lv_draw_ctx_t base_draw;
-    SDL_Renderer * renderer;
-    struct lv_draw_sdl_context_internals_t * internals;
+    SDL_Renderer *renderer;
+    struct lv_draw_sdl_context_internals_t *internals;
+    SDL_Texture *shadow_layer;
 } lv_draw_sdl_ctx_t;
 
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
 
-void lv_draw_sdl_init_ctx(lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx);
+void lv_draw_sdl_init_ctx(lv_disp_drv_t *disp_drv, lv_draw_ctx_t *draw_ctx);
 
 /**
  * @brief Free caches
  *
  */
-void lv_draw_sdl_deinit_ctx(lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx);
+void lv_draw_sdl_deinit_ctx(lv_disp_drv_t *disp_drv, lv_draw_ctx_t *draw_ctx);
 
-SDL_Texture * lv_draw_sdl_create_screen_texture(SDL_Renderer * renderer, lv_coord_t hor, lv_coord_t ver);
+SDL_Texture *lv_draw_sdl_create_screen_texture(SDL_Renderer *renderer, lv_coord_t hor, lv_coord_t ver);
 
 /*======================
  * Add/remove functions

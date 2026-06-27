@@ -95,7 +95,9 @@ int dvd_init(SDL_Renderer *renderer, const char *png_path, int screen_w, int scr
 
     SDL_QueryTexture(mod.tex, NULL, NULL, &mod.rect.w, &mod.rect.h);
 
-    saver_init_base(&mod.base, screen_w, screen_h, "DVD Bounce", 255, 255, 255, dvd_on_speed_changed, dvd_on_idle_enter, &mod);
+    saver_init_base(
+        &mod.base, screen_w, screen_h, "DVD Bounce", 255, 255, 255, dvd_on_speed_changed, dvd_on_idle_enter, &mod
+    );
 
     dvd_on_speed_changed(NULL);
     dvd_recompute_layout();
@@ -115,8 +117,7 @@ int dvd_init(SDL_Renderer *renderer, const char *png_path, int screen_w, int scr
 
     SDL_SetTextureColorMod(mod.tex, 255, 255, 255);
 
-    LOG_INFO("saver", "DVD Bounce Initialised (%dx%d), speed=%d",
-             mod.rect.w, mod.rect.h, mod.base.speed);
+    LOG_INFO("saver", "DVD Bounce Initialised (%dx%d), speed=%d", mod.rect.w, mod.rect.h, mod.base.speed);
 
     return 1;
 }

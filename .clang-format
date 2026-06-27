@@ -1,0 +1,17 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 120
+PointerAlignment: Right
+BreakBeforeBraces: Attach
+AlignAfterOpenBracket: BlockIndent
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: WithoutElse
+SortIncludes: Never
+SpaceAfterCStyleCast: true
+BreakBeforeBinaryOperators: NonAssignment
+IndentCaseLabels: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false

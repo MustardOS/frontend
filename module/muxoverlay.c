@@ -1,13 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxoverlay.h"
 
-#define OVERLAY(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(OVERLAY_ELEMENTS)
-};
+#define OVERLAY(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(OVERLAY_ELEMENTS) };
 #undef OVERLAY
 
-#define OVERLAY(NAME, ENUM, UDATA) static int NAME##_original;
+#define OVERLAY(NAME, UDATA) static int NAME##_original;
 OVERLAY_ELEMENTS
 #undef OVERLAY
 
@@ -27,21 +25,21 @@ static void hide_save_dialog(void) {
 }
 
 static int any_overlay_modified(void) {
-    if (pct_to_int(lv_dropdown_get_selected(ui_droGenAlpha_overlay), 0, 255) != GenAlpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droGenAnchor_overlay) != GenAnchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droGenScale_overlay) != GenScale_original) return 1;
+    if (pct_to_int(lv_dropdown_get_selected(ui_dro_gen_alpha_overlay), 0, 255) != gen_alpha_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_gen_anchor_overlay) != gen_anchor_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_gen_scale_overlay) != gen_scale_original) return 1;
 
-    if (pct_to_int(lv_dropdown_get_selected(ui_droBatAlpha_overlay), 0, 255) != BatAlpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droBatAnchor_overlay) != BatAnchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droBatScale_overlay) != BatScale_original) return 1;
+    if (pct_to_int(lv_dropdown_get_selected(ui_dro_bat_alpha_overlay), 0, 255) != bat_alpha_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_bat_anchor_overlay) != bat_anchor_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_bat_scale_overlay) != bat_scale_original) return 1;
 
-    if (pct_to_int(lv_dropdown_get_selected(ui_droVolAlpha_overlay), 0, 255) != VolAlpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droVolAnchor_overlay) != VolAnchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droVolScale_overlay) != VolScale_original) return 1;
+    if (pct_to_int(lv_dropdown_get_selected(ui_dro_vol_alpha_overlay), 0, 255) != vol_alpha_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_vol_anchor_overlay) != vol_anchor_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_vol_scale_overlay) != vol_scale_original) return 1;
 
-    if (pct_to_int(lv_dropdown_get_selected(ui_droBriAlpha_overlay), 0, 255) != BriAlpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droBriAnchor_overlay) != BriAnchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_droBriScale_overlay) != BriScale_original) return 1;
+    if (pct_to_int(lv_dropdown_get_selected(ui_dro_bri_alpha_overlay), 0, 255) != bri_alpha_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_bri_anchor_overlay) != bri_anchor_original) return 1;
+    if ((int) lv_dropdown_get_selected(ui_dro_bri_scale_overlay) != bri_scale_original) return 1;
 
     return 0;
 }
@@ -64,15 +62,15 @@ static void hide_reset_dialog(void) {
 static void do_reset(void) {
     remove_directory_recursive(CONF_CONFIG_PATH "settings/overlay");
     refresh_config = 1;
-    play_sound(SND_MUOS);
+    play_sound(snd_muos);
     load_mux("overlay");
     mux_input_stop();
 }
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define OVERLAY(NAME, ENUM, UDATA) { UDATA, lang.MUXOVERLAY.HELP.ENUM },
-            OVERLAY_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define OVERLAY(NAME, UDATA) {UDATA, lang.muxoverlay.help.NAME},
+        OVERLAY_ELEMENTS
 #undef OVERLAY
     };
 
@@ -80,106 +78,95 @@ static void show_help(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define OVERLAY(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_overlay);
+#define OVERLAY(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_overlay);
     OVERLAY_ELEMENTS
 #undef OVERLAY
 
-    GenAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droGenAlpha_overlay), 0, 255);
-    BatAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droBatAlpha_overlay), 0, 255);
-    VolAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droVolAlpha_overlay), 0, 255);
-    BriAlpha_original = pct_to_int(lv_dropdown_get_selected(ui_droBriAlpha_overlay), 0, 255);
+    gen_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_gen_alpha_overlay), 0, 255);
+    bat_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_bat_alpha_overlay), 0, 255);
+    vol_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_vol_alpha_overlay), 0, 255);
+    bri_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_bri_alpha_overlay), 0, 255);
 }
 
 static void restore_tweak_options(void) {
-#define OVERLAY(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_overlay, config.SETTINGS.OVERLAY.ENUM);
+#define OVERLAY(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_overlay, config.settings.overlay.NAME);
     OVERLAY_ELEMENTS
 #undef OVERLAY
 
-    lv_dropdown_set_selected(ui_droGenAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.GENALPHA, 0, 255));
-    lv_dropdown_set_selected(ui_droBatAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.BATALPHA, 0, 255));
-    lv_dropdown_set_selected(ui_droVolAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.VOLALPHA, 0, 255));
-    lv_dropdown_set_selected(ui_droBriAlpha_overlay, int_to_pct(config.SETTINGS.OVERLAY.BRIALPHA, 0, 255));
+    lv_dropdown_set_selected(ui_dro_gen_alpha_overlay, int_to_pct(config.settings.overlay.gen_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_bat_alpha_overlay, int_to_pct(config.settings.overlay.bat_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_vol_alpha_overlay, int_to_pct(config.settings.overlay.vol_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_bri_alpha_overlay, int_to_pct(config.settings.overlay.bri_alpha, 0, 255));
 }
 
 static void save_tweak_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_PCT(overlay, GenAlpha, "settings/overlay/gen_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, GenAnchor, "settings/overlay/gen_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, GenScale, "settings/overlay/gen_scale", INT, 0);
+    CHECK_AND_SAVE_PCT(overlay, gen_alpha, "settings/overlay/gen_alpha", INT, 0, 255);
+    CHECK_AND_SAVE_STD(overlay, gen_anchor, "settings/overlay/gen_anchor", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, gen_scale, "settings/overlay/gen_scale", INT, 0);
 
-    CHECK_AND_SAVE_PCT(overlay, BatAlpha, "settings/overlay/bat_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, BatAnchor, "settings/overlay/bat_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, BatScale, "settings/overlay/bat_scale", INT, 0);
+    CHECK_AND_SAVE_PCT(overlay, bat_alpha, "settings/overlay/bat_alpha", INT, 0, 255);
+    CHECK_AND_SAVE_STD(overlay, bat_anchor, "settings/overlay/bat_anchor", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, bat_scale, "settings/overlay/bat_scale", INT, 0);
 
-    CHECK_AND_SAVE_PCT(overlay, VolAlpha, "settings/overlay/vol_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, VolAnchor, "settings/overlay/vol_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, VolScale, "settings/overlay/vol_scale", INT, 0);
+    CHECK_AND_SAVE_PCT(overlay, vol_alpha, "settings/overlay/vol_alpha", INT, 0, 255);
+    CHECK_AND_SAVE_STD(overlay, vol_anchor, "settings/overlay/vol_anchor", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, vol_scale, "settings/overlay/vol_scale", INT, 0);
 
-    CHECK_AND_SAVE_PCT(overlay, BriAlpha, "settings/overlay/bri_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, BriAnchor, "settings/overlay/bri_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, BriScale, "settings/overlay/bri_scale", INT, 0);
+    CHECK_AND_SAVE_PCT(overlay, bri_alpha, "settings/overlay/bri_alpha", INT, 0, 255);
+    CHECK_AND_SAVE_STD(overlay, bri_anchor, "settings/overlay/bri_anchor", INT, 0);
+    CHECK_AND_SAVE_STD(overlay, bri_scale, "settings/overlay/bri_scale", INT, 0);
 
     if (is_modified > 0) refresh_config = 1;
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
     char *anchor_options[] = {
-            lang.MUXOVERLAY.ANCHOR.TOP.LEFT,
-            lang.MUXOVERLAY.ANCHOR.TOP.MIDDLE,
-            lang.MUXOVERLAY.ANCHOR.TOP.RIGHT,
-            lang.MUXOVERLAY.ANCHOR.CENTRE.LEFT,
-            lang.MUXOVERLAY.ANCHOR.CENTRE.MIDDLE,
-            lang.MUXOVERLAY.ANCHOR.CENTRE.RIGHT,
-            lang.MUXOVERLAY.ANCHOR.BOTTOM.LEFT,
-            lang.MUXOVERLAY.ANCHOR.BOTTOM.MIDDLE,
-            lang.MUXOVERLAY.ANCHOR.BOTTOM.RIGHT,
+        lang.muxoverlay.anchor.top.left,    lang.muxoverlay.anchor.top.middle,    lang.muxoverlay.anchor.top.right,
+        lang.muxoverlay.anchor.centre.left, lang.muxoverlay.anchor.centre.middle, lang.muxoverlay.anchor.centre.right,
+        lang.muxoverlay.anchor.bottom.left, lang.muxoverlay.anchor.bottom.middle, lang.muxoverlay.anchor.bottom.right,
     };
 
-    char *scale_options[] = {
-            lang.MUXOVERLAY.SCALE.ORIGINAL,
-            lang.MUXOVERLAY.SCALE.FIT,
-            lang.MUXOVERLAY.SCALE.STRETCH
-    };
+    char *scale_options[] = {lang.muxoverlay.scale.original, lang.muxoverlay.scale.fit, lang.muxoverlay.scale.stretch};
 
-    INIT_OPTION_ITEM(-1, overlay, GenAlpha, lang.MUXOVERLAY.GENALPHA, "gen_alpha", NULL, 0);
-    INIT_OPTION_ITEM(-1, overlay, GenAnchor, lang.MUXOVERLAY.GENANCHOR, "gen_anchor", anchor_options, 9);
-    INIT_OPTION_ITEM(-1, overlay, GenScale, lang.MUXOVERLAY.GENSCALE, "gen_scale", scale_options, 3);
+    INIT_OPTION_ITEM(-1, overlay, gen_alpha, lang.muxoverlay.genalpha, "gen_alpha", NULL, 0);
+    INIT_OPTION_ITEM(-1, overlay, gen_anchor, lang.muxoverlay.genanchor, "gen_anchor", anchor_options, 9);
+    INIT_OPTION_ITEM(-1, overlay, gen_scale, lang.muxoverlay.genscale, "gen_scale", scale_options, 3);
 
-    INIT_OPTION_ITEM(-1, overlay, BatAlpha, lang.MUXOVERLAY.BATALPHA, "bat_alpha", NULL, 0);
-    INIT_OPTION_ITEM(-1, overlay, BatAnchor, lang.MUXOVERLAY.BATANCHOR, "bat_anchor", anchor_options, 9);
-    INIT_OPTION_ITEM(-1, overlay, BatScale, lang.MUXOVERLAY.BATSCALE, "bat_scale", scale_options, 3);
+    INIT_OPTION_ITEM(-1, overlay, bat_alpha, lang.muxoverlay.batalpha, "bat_alpha", NULL, 0);
+    INIT_OPTION_ITEM(-1, overlay, bat_anchor, lang.muxoverlay.batanchor, "bat_anchor", anchor_options, 9);
+    INIT_OPTION_ITEM(-1, overlay, bat_scale, lang.muxoverlay.batscale, "bat_scale", scale_options, 3);
 
-    INIT_OPTION_ITEM(-1, overlay, VolAlpha, lang.MUXOVERLAY.VOLALPHA, "vol_alpha", NULL, 0);
-    INIT_OPTION_ITEM(-1, overlay, VolAnchor, lang.MUXOVERLAY.VOLANCHOR, "vol_anchor", anchor_options, 9);
-    INIT_OPTION_ITEM(-1, overlay, VolScale, lang.MUXOVERLAY.VOLSCALE, "vol_scale", scale_options, 3);
+    INIT_OPTION_ITEM(-1, overlay, vol_alpha, lang.muxoverlay.volalpha, "vol_alpha", NULL, 0);
+    INIT_OPTION_ITEM(-1, overlay, vol_anchor, lang.muxoverlay.volanchor, "vol_anchor", anchor_options, 9);
+    INIT_OPTION_ITEM(-1, overlay, vol_scale, lang.muxoverlay.volscale, "vol_scale", scale_options, 3);
 
-    INIT_OPTION_ITEM(-1, overlay, BriAlpha, lang.MUXOVERLAY.BRIALPHA, "bri_alpha", NULL, 0);
-    INIT_OPTION_ITEM(-1, overlay, BriAnchor, lang.MUXOVERLAY.BRIANCHOR, "bri_anchor", anchor_options, 9);
-    INIT_OPTION_ITEM(-1, overlay, BriScale, lang.MUXOVERLAY.BRISCALE, "bri_scale", scale_options, 3);
+    INIT_OPTION_ITEM(-1, overlay, bri_alpha, lang.muxoverlay.brialpha, "bri_alpha", NULL, 0);
+    INIT_OPTION_ITEM(-1, overlay, bri_anchor, lang.muxoverlay.brianchor, "bri_anchor", anchor_options, 9);
+    INIT_OPTION_ITEM(-1, overlay, bri_scale, lang.muxoverlay.briscale, "bri_scale", scale_options, 3);
 
     char *alpha_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_droGenAlpha_overlay, alpha_values);
-    apply_theme_list_drop_down(&theme, ui_droBatAlpha_overlay, alpha_values);
-    apply_theme_list_drop_down(&theme, ui_droVolAlpha_overlay, alpha_values);
-    apply_theme_list_drop_down(&theme, ui_droBriAlpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_dro_gen_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_dro_bat_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_dro_vol_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_dro_bri_alpha_overlay, alpha_values);
     free(alpha_values);
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 }
-
 
 static void handle_option_prev(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -187,7 +174,7 @@ static void handle_option_prev(void) {
     if (reset_mode) {
         if (swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -201,7 +188,7 @@ static void handle_option_next(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -209,7 +196,7 @@ static void handle_option_next(void) {
     if (reset_mode) {
         if (swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -223,7 +210,7 @@ static void handle_dpad_up(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -231,7 +218,7 @@ static void handle_dpad_up(void) {
     if (reset_mode) {
         if (!swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -243,7 +230,7 @@ static void handle_dpad_down(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -251,7 +238,7 @@ static void handle_dpad_down(void) {
     if (reset_mode) {
         if (!swap_axis) {
             dialogue_navigate(&reset_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -273,12 +260,12 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_a(void) {
     if (save_mode) {
-        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
-        if (opt == MUX_UNSAVED_SAVE) save_tweak_options();
+        if (opt == mux_unsaved_save) save_tweak_options();
 
-        play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "overlay");
 
         mux_input_stop();
@@ -286,9 +273,9 @@ static void handle_a(void) {
     }
 
     if (reset_mode) {
-        mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
+        const mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
         hide_reset_dialog();
-        if (opt == MUX_CONFIRM_YEP) do_reset();
+        if (opt == mux_confirm_yep) do_reset();
         return;
     }
 
@@ -315,12 +302,12 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_overlay_modified()) {
+    if (!config.settings.advanced.trust_modify && any_overlay_modified()) {
         show_save_dialog();
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     save_tweak_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "overlay");
@@ -331,36 +318,34 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active || save_mode || reset_mode) return;
 
-    if (config.SETTINGS.ADVANCED.TRUSTREMOVE) {
+    if (config.settings.advanced.trust_remove) {
         do_reset();
         return;
     }
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
     show_reset_dialog();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode || reset_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode || reset_mode) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph,  "",                  0},
-            {ui_lblNavX,       lang.GENERIC.RESET,  0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.reset, 0},
+                                  {NULL, NULL, 0}});
 
-#define OVERLAY(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_overlay, UDATA);
+#define OVERLAY(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_overlay, UDATA);
     OVERLAY_ELEMENTS
 #undef OVERLAY
 
@@ -371,13 +356,13 @@ int muxoverlay_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXOVERLAY.TITLE);
-    init_muxoverlay(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxoverlay.title);
+    init_muxoverlay(ui_pnl_content);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -386,41 +371,47 @@ int muxoverlay_main(void) {
     restore_tweak_options();
     init_dropdown_settings();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
-                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
-    dialogue_init_confirm(&reset_dlg, &theme, ui_screen, lang.GENERIC.CONFIRM, NULL,
-                          lang.GENERIC.RESET, lang.GENERIC.CANCEL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(
+        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
+        lang.generic.select, lang.generic.back
+    );
+    dialogue_init_confirm(
+        &reset_dlg, &theme, ui_screen, lang.generic.confirm, NULL, lang.generic.reset, lang.generic.cancel,
+        lang.generic.select, lang.generic.back
+    );
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

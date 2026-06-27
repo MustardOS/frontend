@@ -3,18 +3,18 @@
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
-static bool is_dir = false;
+static int is_dir = 0;
 
 static int is_app = 0;
 
 static void show_help(void) {
-    show_info_box(lang.MUXCONTROL.TITLE, lang.MUXCONTROL.HELP, 0);
+    show_info_box(lang.muxcontrol.title, lang.muxcontrol.help, 0);
 }
 
 static void write_control_file(char *path, const char *control, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
@@ -24,7 +24,7 @@ static void write_control_file(char *path, const char *control, char *log) {
     fclose(file);
 }
 
-static void assign_control_single(char *core_dir, const char *control, char *rom) {
+static void assign_control_single(char *core_dir, const char *control, const char *rom) {
     char control_path[MAX_BUFFER_SIZE];
     snprintf(control_path, sizeof(control_path), "%s/%s.con", core_dir, strip_ext(rom));
 
@@ -33,12 +33,11 @@ static void assign_control_single(char *core_dir, const char *control, char *rom
     write_control_file(control_path, control, "Assign Control (Single)");
 }
 
-static void assign_control_directory(char *core_dir, const char *control, int purge) {
+static void assign_control_directory(const char *core_dir, const char *control, const int purge) {
     if (purge) delete_files_of_type(core_dir, ".con", NULL, 0);
 
     char control_path[MAX_BUFFER_SIZE];
-    snprintf(control_path, sizeof(control_path), INFO_CON_PATH "/%s/core.con",
-             get_last_subdir(rom_dir, '/', 4));
+    snprintf(control_path, sizeof(control_path), INFO_CON_PATH "/%s/core.con", get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(control_path);
 
     write_control_file(control_path, control, "Assign Control (Directory)");
@@ -62,15 +61,13 @@ static void assign_control_parent(char *core_dir, const char *control) {
     free_subdirectories(subdirs);
 }
 
-static void create_control_assignment(const char *control, char *rom, enum gen_type method) {
+static void create_control_assignment(const char *control, const char *rom, const enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
 
     if (is_app) {
-        snprintf(core_dir, sizeof(core_dir), "%s/",
-                 rom_dir);
+        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
     } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
-                 get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
     }
 
     remove_double_slashes(core_dir);
@@ -96,13 +93,12 @@ static void create_control_assignment(const char *control, char *rom, enum gen_t
 }
 
 static void generate_available_controls(const char *default_control) {
-    DIR *cd;
     struct dirent *cf;
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), INFO_GCD_PATH);
 
-    cd = opendir(assign_dir);
+    DIR *cd = opendir(assign_dir);
     if (!cd) return;
 
     while ((cf = readdir(cd))) {
@@ -121,39 +117,38 @@ static void generate_available_controls(const char *default_control) {
     reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
-        ui_count++;
+        ui_count_static++;
 
-        char *cap_name = str_capital_all(items[i].display_name);
+        const char *cap_name = str_capital_all(items[i].display_name);
         char *raw_name = str_tolower(str_trim(strdup(items[i].display_name)));
 
-        lv_obj_t *ui_pnlControl = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlControl);
+        lv_obj_t *ui_pnl_control = lv_obj_create(ui_pnl_content);
+        apply_theme_list_panel(ui_pnl_control);
 
-        lv_obj_set_user_data(ui_pnlControl, raw_name);
+        lv_obj_set_user_data(ui_pnl_control, raw_name);
 
-        lv_obj_t *ui_lblControlItem = lv_label_create(ui_pnlControl);
-        apply_theme_list_item(&theme, ui_lblControlItem, cap_name);
+        lv_obj_t *ui_lbl_control_item = lv_label_create(ui_pnl_control);
+        apply_theme_list_item(&theme, ui_lbl_control_item, cap_name);
 
-        lv_obj_t *ui_lblControlItemGlyph = lv_img_create(ui_pnlControl);
+        lv_obj_t *ui_lbl_control_item_glyph = lv_img_create(ui_pnl_control);
 
-        const char *glyph =
-                strcasecmp(raw_name, default_control) == 0 ? "system" :
-                strcasecmp(raw_name, "system") == 0 ? "system" :
-                strcasecmp(raw_name, "retro") == 0 ? "retro" :
-                strcasecmp(raw_name, "modern") == 0 ? "modern" :
-                "default";
-        apply_theme_list_glyph(&theme, ui_lblControlItemGlyph, mux_module, glyph);
+        const char *glyph = strcasecmp(raw_name, default_control) == 0 ? "system"
+                            : strcasecmp(raw_name, "system") == 0      ? "system"
+                            : strcasecmp(raw_name, "retro") == 0       ? "retro"
+                            : strcasecmp(raw_name, "modern") == 0      ? "modern"
+                                                                       : "default";
+        apply_theme_list_glyph(&theme, ui_lbl_control_item_glyph, mux_module, glyph);
 
-        lv_group_add_obj(ui_group, ui_lblControlItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblControlItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlControl);
+        lv_group_add_obj(ui_group, ui_lbl_control_item);
+        lv_group_add_obj(ui_group_glyph, ui_lbl_control_item_glyph);
+        lv_group_add_obj(ui_group_panel, ui_pnl_control);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblControlItem, ui_lblControlItemGlyph, cap_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblControlItem);
+        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_control_item, ui_lbl_control_item_glyph, cap_name);
+        apply_text_long_dot(&theme, ui_lbl_control_item);
     }
 
-    if (ui_count > 0) {
-        lv_obj_update_layout(ui_pnlContent);
+    if (ui_count_static > 0) {
+        lv_obj_update_layout(ui_pnl_content);
         free_items(&items, &item_count);
     }
 }
@@ -162,8 +157,7 @@ static void create_control_items(const char *target) {
     if (strcmp(target, "none") == 0) generate_available_controls(target);
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
-             target);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", target);
 
     char global_assign[FILENAME_MAX];
     snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
@@ -194,12 +188,11 @@ static void create_control_items(const char *target) {
     generate_available_controls(default_control);
 }
 
-
 static void handle_a(void) {
     if (msgbox_active || hold_call || is_dir) return;
 
     LOG_INFO(mux_module, "Single Control Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_control_assignment(selected, is_app ? "mux_option" : rom_name, SINGLE);
@@ -217,7 +210,7 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     remove(MUOS_SAG_LOAD);
 
     if (is_app) load_mux("appcon");
@@ -229,7 +222,7 @@ static void handle_x(void) {
     if (msgbox_active || is_app || hold_call) return;
 
     LOG_INFO(mux_module, "Directory Control Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_control_assignment(selected, rom_name, DIRECTORY);
@@ -241,7 +234,7 @@ static void handle_y(void) {
     if (msgbox_active || is_app || at_base(rom_dir, MAIN_ROM_DIR) || hold_call) return;
 
     LOG_INFO(mux_module, "Parent Control Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_control_assignment(selected, rom_name, PARENT);
@@ -250,9 +243,9 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
@@ -263,23 +256,23 @@ static void init_elements(void) {
     int i = 0;
 
     if (!is_dir) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.CONTENT, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
     }
-    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
-    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b_glyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b, lang.generic.back, 0};
 
     if (!is_app) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
 
         if (!at_base(rom_dir, MAIN_ROM_DIR)) {
-            nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
         }
     }
 
-    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};  // Null-terminate
+    nav_items[i] = (struct nav_bar) {NULL, NULL, 0}; // Null-terminate
 
     setup_nav(nav_items);
 
@@ -311,8 +304,7 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
         LOG_INFO(mux_module, "Automatic Assign Control Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.con",
-                 get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.con", get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
         if (file_exist(core_file)) return;
@@ -322,13 +314,10 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
 
         if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
-            snprintf(assign_check, sizeof(assign_check), "%s",
-                     str_tolower(get_last_dir(rom_dir)));
+            snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(
-                    json_parse(read_all_char_from(assign_file)),
-                    assign_check);
+            struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -344,7 +333,9 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
                 mini_t *global_ini = mini_load(assigned_global);
 
                 static char def_control[MAX_BUFFER_SIZE];
-                snprintf(def_control, sizeof(def_control), "%s", get_ini_string(global_ini, "global", "control", "none"));
+                snprintf(
+                    def_control, sizeof(def_control), "%s", get_ini_string(global_ini, "global", "control", "none")
+                );
 
                 static char def_sys[MAX_BUFFER_SIZE];
                 snprintf(def_sys, sizeof(def_sys), "%s", get_ini_string(global_ini, "global", "default", "none"));
@@ -361,7 +352,10 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
                         snprintf(core_control, sizeof(core_control), "%s", use_local_control);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
                     } else {
-                        snprintf(core_control, sizeof(core_control), "%s", get_ini_string(global_ini, "global", "control", "system"));
+                        snprintf(
+                            core_control, sizeof(core_control), "%s",
+                            get_ini_string(global_ini, "global", "control", "system")
+                        );
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control);
                     }
 
@@ -377,23 +371,22 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
                 mini_free(global_ini);
 
                 return;
-            } else {
-                LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
-                create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
-
-                return;
             }
+            LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
+            create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
+
+            return;
         }
     }
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXCONTROL.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxcontrol.title);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
     init_fonts();
 
     if (strcasecmp(rom_system, "none") == 0 && !is_app) {
@@ -402,13 +395,10 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
 
         if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
-            snprintf(assign_check, sizeof(assign_check), "%s",
-                     str_tolower(get_last_dir(rom_dir)));
+            snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(
-                    json_parse(read_all_char_from(assign_file)),
-                    assign_check);
+            struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -423,41 +413,43 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
     create_control_items(rom_system);
     init_elements();
 
-    if (ui_count > 0) {
-        LOG_SUCCESS(mux_module, "%d Control%s Detected", ui_count, ui_count == 1 ? "" : "s");
+    if (ui_count_static > 0) {
+        LOG_SUCCESS(mux_module, "%d Control%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         gen_step_movement(0, +1, 1, 0, 1);
     } else {
         LOG_ERROR(mux_module, "No Controls Detected!");
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXCONTROL.NONE);
+        lv_label_set_text(ui_lbl_screen_message, lang.muxcontrol.none);
     }
 
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     nav_silent = 1;

@@ -14,13 +14,15 @@ int get_saver_speed(int fallback);
 
 void preview_saver(int type, int speed);
 
-void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
+void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, const lv_color_t *color_p);
 
 void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);
 
 SDL_Renderer *display_get_renderer(void);
+
+SDL_Texture *display_get_shadow_layer(void);
 
 typedef void (*display_overlay_fn)(SDL_Renderer *r);
 
@@ -39,3 +41,5 @@ void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity);
 void display_update_overlay_opacity(uint8_t opacity);
 
 void display_clear_theme_overlay(void);
+
+void canvas_invalidate_gpu_texture(lv_obj_t *canvas);

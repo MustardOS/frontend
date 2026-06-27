@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stddef.h>
 #include <time.h>
 #include <GLES2/gl2.h>
@@ -45,10 +44,7 @@ typedef struct {
     GLfloat u, v;
 } gl_vtx_t;
 
-enum render_method {
-    RENDER_SDL = 1,
-    RENDER_GLES = 2
-};
+enum render_method { render_sdl = 1, render_gles = 2 };
 
 struct flag_cache {
     const char *path;
@@ -88,10 +84,12 @@ int read_line_from_file(const char *filename, size_t line_number, char *out, siz
 
 int read_line_int_from(const char *filename, size_t line_number);
 
-int load_stage_image(const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path);
+int load_stage_image(
+    const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path
+);
 
 void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz);
 
 int parse_hex_colour(const char *hex, SDL_Color *out);
 
-void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex);
+void upload_texture_rgba(const SDL_Surface *rgba, GLuint *out_tex);

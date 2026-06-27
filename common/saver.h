@@ -1,8 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
 
 #define SAVER_FRAME_SHF 16
 #define SAVER_FRAME_ONE (1 << SAVER_FRAME_SHF)
@@ -62,8 +60,10 @@ void saver_clear_speed_override(void);
 
 int saver_read_speed(void);
 
-void saver_init_base(saver_state_t *s, int screen_w, int screen_h, const char *log_tag, uint8_t default_r, uint8_t default_g, uint8_t default_b,
-                     saver_speed_changed_cb on_speed_changed, saver_idle_enter_cb on_idle_enter, void *user);
+void saver_init_base(
+    saver_state_t *s, int screen_w, int screen_h, const char *log_tag, uint8_t default_r, uint8_t default_g,
+    uint8_t default_b, saver_speed_changed_cb on_speed_changed, saver_idle_enter_cb on_idle_enter, void *user
+);
 
 int saver_poll_idle(saver_state_t *s, uint32_t now);
 

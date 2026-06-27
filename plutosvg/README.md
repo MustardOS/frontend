@@ -2,7 +2,10 @@
 
 # PlutoSVG
 
-PlutoSVG is a compact and efficient SVG rendering library written in C. It is specifically designed for parsing and rendering SVG documents embedded in OpenType fonts, providing an optimal balance between speed and minimal memory usage. It is also suitable for rendering scalable icons.
+PlutoSVG is a compact and efficient SVG rendering library written in C. It is specifically designed for parsing and
+rendering SVG documents embedded in OpenType
+fonts, providing an optimal balance between speed and minimal memory usage. It is also suitable for rendering scalable
+icons.
 
 ## Basic Usage
 

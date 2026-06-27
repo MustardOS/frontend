@@ -5,17 +5,19 @@
 typedef struct {
     const char *name;
     const char *value;
-} LookupName;
+} lookup_internal_name;
 
-#define DECLARE_LOOKUP_BLOCK(X)                                                \
-    extern const LookupName lookup_##X##_table[];                              \
-    extern const size_t lookup_##X##_count;                                    \
-    const char *lookup_##X(const char *name);                                  \
-    const char *r_lookup_##X(const char *value);                               \
-    void lookup_##X##_multi(const char *term, void (*emit)(const char *name,   \
-                            const char *value, void *udata), void *udata);     \
-    void r_lookup_##X##_multi(const char *term, void (*emit)(const char *name, \
-                              const char *value, void *udata), void *udata);
+#define DECLARE_LOOKUP_BLOCK(X)                                                                                        \
+    extern const lookup_internal_name lookup_##X##_table[];                                                            \
+    extern const size_t lookup_##X##_count;                                                                            \
+    const char *lookup_##X(const char *name);                                                                          \
+    const char *r_lookup_##X(const char *value);                                                                       \
+    void lookup_##X##_multi(                                                                                           \
+        const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata                  \
+    );                                                                                                                 \
+    void r_lookup_##X##_multi(                                                                                         \
+        const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata                  \
+    );
 
 DECLARE_LOOKUP_BLOCK(0)
 

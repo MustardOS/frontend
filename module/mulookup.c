@@ -12,7 +12,8 @@
 #include "../lookup/lookup.h"
 #include "../common/json/json.h"
 
-#define LOOKUP_DIR_PATH OPT_SHARE_PATH  "lookup/"
+#define LOOKUP_DIR_PATH OPT_SHARE_PATH "lookup/"
+
 #define LOOKUP_INTERNAL LOOKUP_DIR_PATH "internal.txt"
 #define LOOKUP_GLOBAL   LOOKUP_DIR_PATH "global.txt"
 
@@ -32,30 +33,27 @@ static int gen_global = 0;
 static int gen_folder = 0;
 static int gen_all = 0;
 
-struct result_item {
+typedef struct {
     char *name;
     char *value;
-};
+} result_item;
 
-struct results {
-    struct result_item *items;
+typedef struct {
+    result_item *items;
     size_t count;
     size_t cap;
-};
+} results;
 
-enum lookup_mode {
-    LOOKUP_KEY,
-    LOOKUP_VALUE
-};
+enum lookup_mode { lookup_by_key, lookup_by_value };
 
-static void results_reserve(struct results *r) {
-    r->items = mux_malloc(MAX_BUFFER_SIZE * sizeof(struct result_item));
+static void results_reserve(results *r) {
+    r->items = mux_malloc(MAX_BUFFER_SIZE * sizeof(result_item));
     r->cap = MAX_BUFFER_SIZE;
     r->count = 0;
 }
 
 static char *dup_fast(const char *s) {
-    size_t len = strlen(s) + 1;
+    const size_t len = strlen(s) + 1;
     char *m = malloc(len);
 
     if (!m) return NULL;
@@ -64,10 +62,10 @@ static char *dup_fast(const char *s) {
     return m;
 }
 
-static void results_push(struct results *r, const char *name, const char *value) {
+static void results_push(results *r, const char *name, const char *value) {
     if (r->count == r->cap) {
-        size_t new_cap = r->cap * 2;
-        struct result_item *new = realloc(r->items, new_cap * sizeof(struct result_item));
+        const size_t new_cap = r->cap * 2;
+        result_item *new = realloc(r->items, new_cap * sizeof(result_item));
 
         if (!new) return;
 
@@ -102,7 +100,7 @@ static int load_json_cache(const char *path) {
 
 static int casefold_match(const char *h_stack) {
     if (term_lower[0] == '\0') return 1;
-    unsigned char first = term_lower[0];
+    const unsigned char first = term_lower[0];
 
     while (*h_stack) {
         if (tolower((unsigned char) *h_stack) == first) {
@@ -122,12 +120,12 @@ static int casefold_match(const char *h_stack) {
     return 0;
 }
 
-static void lookup_common(struct results *out, enum lookup_mode mode) {
+static void lookup_common(results *out, const enum lookup_mode mode) {
     if (!json_cache_data) return;
 
     struct json key = json_first(json_cache_root);
     while (json_exists(key)) {
-        struct json val = json_next(key);
+        const struct json val = json_next(key);
 
         char k_buf[MAX_BUFFER_SIZE];
         char v_buf[MAX_BUFFER_SIZE];
@@ -135,48 +133,49 @@ static void lookup_common(struct results *out, enum lookup_mode mode) {
         json_string_copy(key, k_buf, sizeof(k_buf));
         json_string_copy(val, v_buf, sizeof(v_buf));
 
-        const char *match = (mode == LOOKUP_KEY) ? k_buf : v_buf;
+        const char *match = mode == lookup_by_key ? k_buf : v_buf;
         if (casefold_match(match)) results_push(out, k_buf, v_buf);
 
         key = json_next(val);
     }
 }
 
-static inline void lookup_key(struct results *out) {
-    lookup_common(out, LOOKUP_KEY);
+static void lookup_key(results *out) {
+    lookup_common(out, lookup_by_key);
 }
 
-static inline void lookup_value(struct results *out) {
-    lookup_common(out, LOOKUP_VALUE);
+static void lookup_value(results *out) {
+    lookup_common(out, lookup_by_value);
 }
 
 static int cmp_items(const void *a, const void *b) {
-    const struct result_item *A = a;
-    const struct result_item *B = b;
+    const result_item *a_item = a;
+    const result_item *b_item = b;
 
-    int ap = str_startswith(A->value, term);
-    int bp = str_startswith(B->value, term);
+    const int ap = str_startswith(a_item->value, term);
+    const int bp = str_startswith(b_item->value, term);
 
-    if (ap != bp) return (bp - ap);
+    if (ap != bp) return bp - ap;
 
-    const char *v1 = A->value;
-    const char *v2 = B->value;
+    const char *v1 = a_item->value;
+    const char *v2 = b_item->value;
 
-    int rc = str_compare(&v1, &v2);
+    const int rc = str_compare(&v1, &v2);
     if (rc != 0) return rc;
 
-    const char *n1 = A->name;
-    const char *n2 = B->name;
+    const char *n1 = a_item->name;
+    const char *n2 = b_item->name;
 
     return str_compare(&n1, &n2);
 }
 
-static void dedupe_results(struct results *r) {
+static void dedupe_results(results *r) {
     if (r->count < 2) return;
 
     size_t w = 0;
     for (size_t i = 1; i < r->count; i++) {
-        int same = !strcasecmp(r->items[w].name, r->items[i].name) && !strcasecmp(r->items[w].value, r->items[i].value);
+        const int same =
+            !strcasecmp(r->items[w].name, r->items[i].name) && !strcasecmp(r->items[w].value, r->items[i].value);
 
         if (!same) {
             r->items[++w] = r->items[i];
@@ -194,54 +193,30 @@ static struct {
 
     void (*reverse_multi)(const char *, void (*emit)(const char *, const char *, void *), void *);
 } multi_table[] = {
-        {lookup_0_multi, r_lookup_0_multi},
-        {lookup_1_multi, r_lookup_1_multi},
-        {lookup_2_multi, r_lookup_2_multi},
-        {lookup_3_multi, r_lookup_3_multi},
-        {lookup_4_multi, r_lookup_4_multi},
-        {lookup_5_multi, r_lookup_5_multi},
-        {lookup_6_multi, r_lookup_6_multi},
-        {lookup_7_multi, r_lookup_7_multi},
-        {lookup_8_multi, r_lookup_8_multi},
-        {lookup_9_multi, r_lookup_9_multi},
-        {lookup_a_multi, r_lookup_a_multi},
-        {lookup_b_multi, r_lookup_b_multi},
-        {lookup_c_multi, r_lookup_c_multi},
-        {lookup_d_multi, r_lookup_d_multi},
-        {lookup_e_multi, r_lookup_e_multi},
-        {lookup_f_multi, r_lookup_f_multi},
-        {lookup_g_multi, r_lookup_g_multi},
-        {lookup_h_multi, r_lookup_h_multi},
-        {lookup_i_multi, r_lookup_i_multi},
-        {lookup_j_multi, r_lookup_j_multi},
-        {lookup_k_multi, r_lookup_k_multi},
-        {lookup_l_multi, r_lookup_l_multi},
-        {lookup_m_multi, r_lookup_m_multi},
-        {lookup_n_multi, r_lookup_n_multi},
-        {lookup_o_multi, r_lookup_o_multi},
-        {lookup_p_multi, r_lookup_p_multi},
-        {lookup_q_multi, r_lookup_q_multi},
-        {lookup_r_multi, r_lookup_r_multi},
-        {lookup_s_multi, r_lookup_s_multi},
-        {lookup_t_multi, r_lookup_t_multi},
-        {lookup_u_multi, r_lookup_u_multi},
-        {lookup_v_multi, r_lookup_v_multi},
-        {lookup_w_multi, r_lookup_w_multi},
-        {lookup_x_multi, r_lookup_x_multi},
-        {lookup_y_multi, r_lookup_y_multi},
-        {lookup_z_multi, r_lookup_z_multi},
+    {lookup_0_multi, r_lookup_0_multi}, {lookup_1_multi, r_lookup_1_multi}, {lookup_2_multi, r_lookup_2_multi},
+    {lookup_3_multi, r_lookup_3_multi}, {lookup_4_multi, r_lookup_4_multi}, {lookup_5_multi, r_lookup_5_multi},
+    {lookup_6_multi, r_lookup_6_multi}, {lookup_7_multi, r_lookup_7_multi}, {lookup_8_multi, r_lookup_8_multi},
+    {lookup_9_multi, r_lookup_9_multi}, {lookup_a_multi, r_lookup_a_multi}, {lookup_b_multi, r_lookup_b_multi},
+    {lookup_c_multi, r_lookup_c_multi}, {lookup_d_multi, r_lookup_d_multi}, {lookup_e_multi, r_lookup_e_multi},
+    {lookup_f_multi, r_lookup_f_multi}, {lookup_g_multi, r_lookup_g_multi}, {lookup_h_multi, r_lookup_h_multi},
+    {lookup_i_multi, r_lookup_i_multi}, {lookup_j_multi, r_lookup_j_multi}, {lookup_k_multi, r_lookup_k_multi},
+    {lookup_l_multi, r_lookup_l_multi}, {lookup_m_multi, r_lookup_m_multi}, {lookup_n_multi, r_lookup_n_multi},
+    {lookup_o_multi, r_lookup_o_multi}, {lookup_p_multi, r_lookup_p_multi}, {lookup_q_multi, r_lookup_q_multi},
+    {lookup_r_multi, r_lookup_r_multi}, {lookup_s_multi, r_lookup_s_multi}, {lookup_t_multi, r_lookup_t_multi},
+    {lookup_u_multi, r_lookup_u_multi}, {lookup_v_multi, r_lookup_v_multi}, {lookup_w_multi, r_lookup_w_multi},
+    {lookup_x_multi, r_lookup_x_multi}, {lookup_y_multi, r_lookup_y_multi}, {lookup_z_multi, r_lookup_z_multi},
 };
 
 static void emit_pair(const char *name, const char *value, void *ud) {
-    results_push((struct results *) ud, name, value);
+    results_push(ud, name, value);
 }
 
-static void write_results_to_file(struct results *r, const char *path) {
+static void write_results_to_file(results *r, const char *path) {
     FILE *fp = fopen(path, "w");
     if (!fp) return;
 
     term = "";
-    qsort(r->items, r->count, sizeof(struct result_item), cmp_items);
+    qsort(r->items, r->count, sizeof(result_item), cmp_items);
     dedupe_results(r);
 
     for (size_t i = 0; i < r->count; i++) {
@@ -262,7 +237,7 @@ static void write_results_to_file(struct results *r, const char *path) {
 }
 
 static void generate_internal(void) {
-    struct results r;
+    results r;
     results_reserve(&r);
 
     for (size_t j = 0; j < A_SIZE(multi_table); j++) {
@@ -274,7 +249,7 @@ static void generate_internal(void) {
 }
 
 static void generate_global(void) {
-    struct results r;
+    results r;
     results_reserve(&r);
 
     if (load_json_cache(GLOBAL_JSON)) {
@@ -292,7 +267,7 @@ static void generate_folder(const char *folder_name) {
     char j_path[PATH_MAX];
     snprintf(j_path, sizeof(j_path), FOLDER_JSON, folder_name);
 
-    struct results r;
+    results r;
     results_reserve(&r);
 
     if (load_json_cache(j_path)) {
@@ -322,7 +297,7 @@ static void generate_all(void) {
         char folder_name[MAX_BUFFER_SIZE];
         snprintf(folder_name, sizeof(folder_name), "%s", e->d_name);
 
-        size_t len = strlen(folder_name);
+        const size_t len = strlen(folder_name);
         if (len > 5) folder_name[len - 5] = '\0';
 
         generate_folder(folder_name);
@@ -331,12 +306,14 @@ static void generate_all(void) {
     closedir(d);
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr,
-                "Usage: %s [--gen-all] [--gen-internal] [--gen-global]\n"
-                "          [--gen-folder <folder>] [--folder <folder>] <term>\n",
-                argv[0]);
+        fprintf(
+            stderr,
+            "Usage: %s [--gen-all] [--gen-internal] [--gen-global]\n"
+            "          [--gen-folder <folder>] [--folder <folder>] <term>\n",
+            argv[0]
+        );
         return 1;
     }
 
@@ -368,7 +345,8 @@ int main(int argc, char **argv) {
             continue;
         }
         if (!strcmp(argv[i], "--folder") || !strcmp(argv[i], "-f")) {
-            if (i + 1 < argc) folder = argv[++i];
+            if (i + 1 < argc)
+                folder = argv[++i];
             else {
                 fprintf(stderr, "Error: missing argument for --folder\n");
                 return 1;
@@ -404,7 +382,8 @@ int main(int argc, char **argv) {
     }
 
     size_t i = 0;
-    for (; term[i]; i++) term_lower[i] = tolower((unsigned char) term[i]);
+    for (; term[i]; i++)
+        term_lower[i] = tolower((unsigned char) term[i]);
     term_lower[i] = 0;
 
     char json_path[PATH_MAX];
@@ -417,10 +396,10 @@ int main(int argc, char **argv) {
 
     load_json_cache(json_path);
 
-    struct results out;
+    results out;
     results_reserve(&out);
 
-    unsigned char f0 = tolower((unsigned char) term[0]);
+    const unsigned char f0 = tolower((unsigned char) term[0]);
     int forward_start = 0, forward_end = A_SIZE(multi_table);
 
     if (isalnum(f0)) {
@@ -444,7 +423,7 @@ int main(int argc, char **argv) {
     lookup_key(&out);
     lookup_value(&out);
 
-    qsort(out.items, out.count, sizeof(struct result_item), cmp_items);
+    qsort(out.items, out.count, sizeof(result_item), cmp_items);
     dedupe_results(&out);
 
     if (out.count == 0) return 0;

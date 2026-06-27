@@ -1,4 +1,5 @@
 .buildcount
+.clangd
 .idea/
 bin/
 interface/autosave/

@@ -1,22 +1,18 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define BACKUP(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(BACKUP_ELEMENTS),
-    STORAGE_COUNT = (UI_COUNT - 3)
-};
+#define BACKUP(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(BACKUP_ELEMENTS), storage_count = ui_count_dynamic - 3 };
 #undef BACKUP
 
-#define BACKUP(NAME, ENUM, UDATA) static int NAME##_original;
+#define BACKUP(NAME, UDATA) static int NAME##_original;
 BACKUP_ELEMENTS
 #undef BACKUP
 
-
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define BACKUP(NAME, ENUM, UDATA) { UDATA, lang.MUXBACKUP.HELP.ENUM },
-            BACKUP_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define BACKUP(NAME, UDATA) {UDATA, lang.muxbackup.help.NAME},
+        BACKUP_ELEMENTS
 #undef BACKUP
     };
 
@@ -24,82 +20,82 @@ static void show_help(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define BACKUP(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_backup);
+#define BACKUP(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_backup);
     BACKUP_ELEMENTS
 #undef BACKUP
 }
 
-static void set_all_options(int value) {
-#define BACKUP(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_backup, value);
+static void set_all_options(const int value) {
+#define BACKUP(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_backup, value);
     BACKUP_ELEMENTS
 #undef BACKUP
 }
 
 static void restore_backup_options(void) {
-#define BACKUP(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_backup, config.BACKUP.ENUM);
+#define BACKUP(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_backup, config.backup.NAME);
     BACKUP_ELEMENTS
 #undef BACKUP
 
-    lv_dropdown_set_selected(ui_droTarget_backup, lv_dropdown_get_option_cnt(ui_droTarget_backup) - 1);
+    lv_dropdown_set_selected(ui_dro_target_backup, lv_dropdown_get_option_cnt(ui_dro_target_backup) - 1);
 }
 
 static void save_backup_options(void) {
     int is_modified = 0;
 
-#define BACKUP(NAME, ENUM, UDATA) CHECK_AND_SAVE_STD(backup, NAME, "backup/"UDATA, INT, 0);
+#define BACKUP(NAME, UDATA) CHECK_AND_SAVE_STD(backup, NAME, "backup/" UDATA, INT, 0);
     BACKUP_ELEMENTS
 #undef BACKUP
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
+        toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_OPTION_ITEM(-1, backup, Track, lang.MUXBACKUP.TRACK, "track", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Apps, lang.MUXBACKUP.APPS, "application", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Music, lang.MUXBACKUP.MUSIC, "music", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Content, lang.MUXBACKUP.CONTENT, "content", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Override, lang.MUXBACKUP.OVERRIDE, "override", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Package, lang.MUXBACKUP.PACKAGE, "package", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Name, lang.MUXBACKUP.NAME, "name", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Network, lang.MUXBACKUP.NETWORK, "network", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Cheats, lang.MUXBACKUP.CHEATS, "cheats", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Config, lang.MUXBACKUP.CONFIG, "config", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Overlays, lang.MUXBACKUP.OVERLAYS, "overlays", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Shaders, lang.MUXBACKUP.SHADERS, "shaders", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Save, lang.MUXBACKUP.SAVE, "save", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Screenshot, lang.MUXBACKUP.SCREENSHOT, "screenshot", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Syncthing, lang.MUXBACKUP.SYNCTHING, "syncthing", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Theme, lang.MUXBACKUP.THEME, "theme", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Init, lang.MUXBACKUP.INIT, "init", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, Target, lang.MUXBACKUP.TARGET, "target", NULL, 0);
-    INIT_OPTION_ITEM(-1, backup, Merge, lang.MUXBACKUP.MERGE, "merge", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, backup, Start, lang.MUXBACKUP.START, "start", NULL, 0);
+    INIT_OPTION_ITEM(-1, backup, track, lang.muxbackup.track, "track", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, apps, lang.muxbackup.apps, "application", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, music, lang.muxbackup.music, "music", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, collection, lang.muxbackup.collection, "collection", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, name, lang.muxbackup.name, "name", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, history, lang.muxbackup.history, "history", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, catalogue, lang.muxbackup.catalogue, "catalogue", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, network, lang.muxbackup.network, "network", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, cheats, lang.muxbackup.cheats, "cheats", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, config, lang.muxbackup.config, "config", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, overlays, lang.muxbackup.overlays, "overlays", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, shaders, lang.muxbackup.shaders, "shaders", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, save, lang.muxbackup.save, "save", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, screenshot, lang.muxbackup.screenshot, "screenshot", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, syncthing, lang.muxbackup.syncthing, "syncthing", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, bios, lang.muxbackup.bios, "bios", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, init, lang.muxbackup.init, "init", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);
+    INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);
 
-    lv_dropdown_clear_options(ui_droTarget_backup);
-    lv_dropdown_add_option(ui_droTarget_backup, "SD1", LV_DROPDOWN_POS_LAST);
+    lv_dropdown_clear_options(ui_dro_target_backup);
+    lv_dropdown_add_option(ui_dro_target_backup, "SD1", LV_DROPDOWN_POS_LAST);
 
-    if (is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
-        lv_dropdown_add_option(ui_droTarget_backup, "SD2", LV_DROPDOWN_POS_LAST);
+    if (is_partition_mounted(device.storage.sdcard.mount)) {
+        lv_dropdown_add_option(ui_dro_target_backup, "SD2", LV_DROPDOWN_POS_LAST);
     }
 
-    if (is_partition_mounted(device.STORAGE.USB.MOUNT)) {
-        lv_dropdown_add_option(ui_droTarget_backup, "USB", LV_DROPDOWN_POS_LAST);
+    if (is_partition_mounted(device.storage.usb.mount)) {
+        lv_dropdown_add_option(ui_dro_target_backup, "USB", LV_DROPDOWN_POS_LAST);
     }
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
     int dbi_index = 0;
     if (file_exist(MUOS_DBI_LOAD)) {
@@ -107,11 +103,10 @@ static void init_navigation_group(void) {
         remove(MUOS_DBI_LOAD);
     }
 
-    if (ui_count > 0 && dbi_index >= 0 && dbi_index < ui_count && current_item_index < ui_count) {
+    if (ui_count_static > 0 && dbi_index >= 0 && dbi_index < ui_count_static && current_item_index < ui_count_static) {
         gen_step_movement(dbi_index, 1, 0, 0, 1);
     }
 }
-
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
@@ -129,14 +124,14 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (msgbox_active) {
-        play_sound(SND_CONFIRM);
+        play_sound(snd_confirm);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
 
     save_backup_options();
 
@@ -151,25 +146,23 @@ static void handle_a(void) {
     lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
     // Return if backup set to Excluded or if on Toggle Target Storage
-    if (e_focused == ui_lblMerge_backup ||
-        e_focused == ui_lblTarget_backup ||
-        (e_focused != ui_lblStart_backup && lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) == 0))
+    if (e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup
+        || (e_focused != ui_lbl_start_backup && lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) == 0))
         return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     save_backup_options();
 
     char target_value[MAX_BUFFER_SIZE];
-    lv_dropdown_get_selected_str(ui_droTarget_backup, target_value, sizeof(target_value));
+    lv_dropdown_get_selected_str(ui_dro_target_backup, target_value, sizeof(target_value));
 
     char datetime[64];
     snprintf(datetime, sizeof(datetime), "%s", get_datetime());
 
     char *manifest_file = "/tmp/muxbackup_manifest.txt";
 
-    FILE *fp;
-    fp = fopen(manifest_file, "w");
+    FILE *fp = fopen(manifest_file, "w");
     if (!fp) {
         LOG_ERROR(mux_module, "Failed to open '%s' for writing", manifest_file);
         return;
@@ -177,19 +170,19 @@ static void handle_a(void) {
 
     // Write for batch backup
     char do_merge[4];
-    if (e_focused == ui_lblStart_backup) {
-        snprintf(do_merge, sizeof(do_merge), "%d", lv_dropdown_get_selected(ui_droMerge_backup));
+    if (e_focused == ui_lbl_start_backup) {
+        snprintf(do_merge, sizeof(do_merge), "%d", lv_dropdown_get_selected(ui_dro_merge_backup));
 
         fprintf(fp, "%s %s\n", "BATCH", target_value);
 
-        for (int i = 0; i < STORAGE_COUNT; i++) {
-            lv_obj_t *ui_pnlItem = lv_obj_get_child(ui_pnlContent, i);
-            lv_obj_t *ui_lblItem = lv_obj_get_child(ui_pnlItem, 0);
-            lv_obj_t *ui_droItem = lv_obj_get_child(ui_pnlItem, 2);
-            int value = lv_dropdown_get_selected(ui_droItem);
+        for (int i = 0; i < storage_count; i++) {
+            const lv_obj_t *ui_pnl_item = lv_obj_get_child(ui_pnl_content, i);
+            lv_obj_t *ui_lbl_item = lv_obj_get_child(ui_pnl_item, 0);
+            const lv_obj_t *ui_dro_item = lv_obj_get_child(ui_pnl_item, 2);
+            const int value = lv_dropdown_get_selected(ui_dro_item);
             // Skip if set to NONE
             if (value == 0) continue;
-            char *runner = lv_obj_get_user_data(ui_lblItem);
+            char *runner = lv_obj_get_user_data(ui_lbl_item);
             fprintf(fp, "%s %s\n", target_value, runner);
         }
     } else { // For other backup paths, write the focused label and its path suffix
@@ -224,9 +217,9 @@ static void handle_a(void) {
 static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
-    int value = lv_dropdown_get_selected(ui_droApps_backup);
+    const int value = lv_dropdown_get_selected(ui_dro_apps_backup);
     set_all_options(value == 0 ? 1 : 0);
 
     nav_moved = 1;
@@ -236,7 +229,7 @@ static void handle_help(void) {
     if (msgbox_active || hold_call) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM);
+        play_sound(snd_confirm);
         show_help();
     }
 }
@@ -244,42 +237,40 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                      0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE,     0},
-            {ui_lblNavAGlyph,  "",                      0},
-            {ui_lblNavA,       lang.GENERIC.LAUNCH,     0},
-            {ui_lblNavBGlyph,  "",                      0},
-            {ui_lblNavB,       lang.GENERIC.BACK,       0},
-            {ui_lblNavXGlyph,  "",                      0},
-            {ui_lblNavX,       lang.GENERIC.TOGGLE_ALL, 0},
-            {NULL, NULL,                                0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.launch, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.toggle_all, 0},
+                                  {NULL, NULL, 0}});
 
-#define BACKUP(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_backup, UDATA);
+#define BACKUP(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_backup, UDATA);
     BACKUP_ELEMENTS
 #undef BACKUP
 
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();
 
-        struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+        const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-        if (e_focused == ui_lblMerge_backup || e_focused == ui_lblTarget_backup) {
-            lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        if (e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup) {
+            lv_obj_add_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
         } else {
-            lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
         }
         footer_nav_check_scroll();
 
-        lv_obj_invalidate(ui_pnlContent);
+        lv_obj_invalidate(ui_pnl_content);
         nav_moved = 0;
     }
 }
@@ -288,14 +279,14 @@ int muxbackup_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXBACKUP.TITLE);
-    init_muxbackup(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxbackup.title);
+    init_muxbackup(ui_pnl_content);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -305,33 +296,35 @@ int muxbackup_main(void) {
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_a] = handle_a,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

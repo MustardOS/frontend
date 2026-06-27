@@ -36,7 +36,8 @@ typedef int plutovg_ref_count_t;
 
 #endif
 
-struct plutovg_surface {
+struct plutovg_surface
+{
     plutovg_ref_count_t ref_count;
     int width;
     int height;
@@ -44,41 +45,49 @@ struct plutovg_surface {
     unsigned char* data;
 };
 
-struct plutovg_path {
+struct plutovg_path
+{
     plutovg_ref_count_t ref_count;
     int num_points;
     int num_contours;
     int num_curves;
     plutovg_point_t start_point;
-    struct {
+
+    struct
+    {
         plutovg_path_element_t* data;
         int size;
         int capacity;
     } elements;
 };
 
-typedef enum {
+typedef enum
+{
     PLUTOVG_PAINT_TYPE_COLOR,
     PLUTOVG_PAINT_TYPE_GRADIENT,
     PLUTOVG_PAINT_TYPE_TEXTURE
 } plutovg_paint_type_t;
 
-struct plutovg_paint {
+struct plutovg_paint
+{
     plutovg_ref_count_t ref_count;
     plutovg_paint_type_t type;
 };
 
-typedef struct {
+typedef struct
+{
     plutovg_paint_t base;
     plutovg_color_t color;
 } plutovg_solid_paint_t;
 
-typedef enum {
+typedef enum
+{
     PLUTOVG_GRADIENT_TYPE_LINEAR,
     PLUTOVG_GRADIENT_TYPE_RADIAL
 } plutovg_gradient_type_t;
 
-typedef struct {
+typedef struct
+{
     plutovg_paint_t base;
     plutovg_gradient_type_t type;
     plutovg_spread_method_t spread;
@@ -88,7 +97,8 @@ typedef struct {
     float values[6];
 } plutovg_gradient_paint_t;
 
-typedef struct {
+typedef struct
+{
     plutovg_paint_t base;
     plutovg_texture_type_t type;
     float opacity;
@@ -96,15 +106,18 @@ typedef struct {
     plutovg_surface_t* surface;
 } plutovg_texture_paint_t;
 
-typedef struct {
+typedef struct
+{
     int x;
     int len;
     int y;
     unsigned char coverage;
 } plutovg_span_t;
 
-typedef struct {
-    struct {
+typedef struct
+{
+    struct
+    {
         plutovg_span_t* data;
         int size;
         int capacity;
@@ -116,28 +129,34 @@ typedef struct {
     int h;
 } plutovg_span_buffer_t;
 
-typedef struct {
+typedef struct
+{
     float offset;
-    struct {
+
+    struct
+    {
         float* data;
         int size;
         int capacity;
     } array;
 } plutovg_stroke_dash_t;
 
-typedef struct {
+typedef struct
+{
     float width;
     plutovg_line_cap_t cap;
     plutovg_line_join_t join;
     float miter_limit;
 } plutovg_stroke_style_t;
 
-typedef struct {
+typedef struct
+{
     plutovg_stroke_style_t style;
     plutovg_stroke_dash_t dash;
 } plutovg_stroke_data_t;
 
-typedef struct plutovg_state {
+typedef struct plutovg_state
+{
     plutovg_paint_t* paint;
     plutovg_font_face_t* font_face;
     plutovg_color_t color;
@@ -152,7 +171,8 @@ typedef struct plutovg_state {
     struct plutovg_state* next;
 } plutovg_state_t;
 
-struct plutovg_canvas {
+struct plutovg_canvas
+{
     plutovg_ref_count_t ref_count;
     plutovg_surface_t* surface;
     plutovg_path_t* path;
@@ -170,10 +190,11 @@ void plutovg_span_buffer_reset(plutovg_span_buffer_t* span_buffer);
 void plutovg_span_buffer_destroy(plutovg_span_buffer_t* span_buffer);
 void plutovg_span_buffer_copy(plutovg_span_buffer_t* span_buffer, const plutovg_span_buffer_t* source);
 bool plutovg_span_buffer_contains(const plutovg_span_buffer_t* span_buffer, float x, float y);
-void plutovg_span_buffer_extents(plutovg_span_buffer_t* span_buffer, plutovg_rect_t* extents);
+void plutovg_span_buffer_extents(plutovg_span_buffer_t * span_buffer, plutovg_rect_t * extents);
 void plutovg_span_buffer_intersect(plutovg_span_buffer_t* span_buffer, const plutovg_span_buffer_t* a, const plutovg_span_buffer_t* b);
 
-void plutovg_rasterize(plutovg_span_buffer_t* span_buffer, const plutovg_path_t* path, const plutovg_matrix_t* matrix, const plutovg_rect_t* clip_rect, const plutovg_stroke_data_t* stroke_data, plutovg_fill_rule_t winding);
+void plutovg_rasterize(plutovg_span_buffer_t* span_buffer, const plutovg_path_t* path, const plutovg_matrix_t* matrix, const plutovg_rect_t* clip_rect,
+                       const plutovg_stroke_data_t* stroke_data, plutovg_fill_rule_t winding);
 void plutovg_blend(plutovg_canvas_t* canvas, const plutovg_span_buffer_t* span_buffer);
 void plutovg_memfill32(unsigned int* dest, int length, unsigned int value);
 

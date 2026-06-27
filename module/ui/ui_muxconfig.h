@@ -3,12 +3,12 @@
 #include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
-void init_muxconfig(lv_obj_t *ui_pnlContent);
+void init_muxconfig(lv_obj_t *ui_pnl_content);
 
-#define CONFIG(NAME, ENUM, UDATA)           \
-    extern lv_obj_t *ui_pnl##NAME##_config; \
-    extern lv_obj_t *ui_lbl##NAME##_config; \
-    extern lv_obj_t *ui_ico##NAME##_config;
+#define CONFIG(NAME, UDATA)                                                                                            \
+    extern lv_obj_t *ui_pnl_##NAME##_config;                                                                           \
+    extern lv_obj_t *ui_lbl_##NAME##_config;                                                                           \
+    extern lv_obj_t *ui_ico_##NAME##_config;
 
 CONFIG_ELEMENTS
 #undef CONFIG

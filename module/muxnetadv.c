@@ -1,13 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxnetadv.h"
 
-#define NETADV(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(NETADV_ELEMENTS)
-};
+#define NETADV(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(NETADV_ELEMENTS) };
 #undef NETADV
 
-#define NETADV(NAME, ENUM, UDATA) static int NAME##_original;
+#define NETADV(NAME, UDATA) static int NAME##_original;
 NETADV_ELEMENTS
 #undef NETADV
 
@@ -27,16 +25,17 @@ static void hide_save_dialog(void) {
 }
 
 static int any_netadv_modified(void) {
-#define NETADV(NAME, ENUM, UDATA) if ((int) lv_dropdown_get_selected(ui_dro##NAME##_netadv) != NAME##_original) return 1;
+#define NETADV(NAME, UDATA)                                                                                            \
+    if ((int) lv_dropdown_get_selected(ui_dro_##NAME##_netadv) != NAME##_original) return 1;
     NETADV_ELEMENTS
 #undef NETADV
     return 0;
 }
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define NETADV(NAME, ENUM, UDATA) { UDATA, lang.MUXNETADV.HELP.ENUM },
-            NETADV_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define NETADV(NAME, UDATA) {UDATA, lang.muxnetadv.help.NAME},
+        NETADV_ELEMENTS
 #undef NETADV
     };
 
@@ -44,65 +43,64 @@ static void show_help(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define NETADV(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_netadv);
+#define NETADV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_netadv);
     NETADV_ELEMENTS
 #undef NETADV
 }
 
 static void restore_netadv_options(void) {
-#define NETADV(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_netadv, config.SETTINGS.NETWORK.ENUM);
+#define NETADV(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_netadv, config.settings.network.NAME);
     NETADV_ELEMENTS
 #undef NETADV
 
-    map_drop_down_to_index(ui_droConRetry_netadv, config.SETTINGS.NETWORK.CONRETRY, wait_retry_int, 9, 0);
-    map_drop_down_to_index(ui_droWait_netadv, config.SETTINGS.NETWORK.WAIT, wait_retry_int, 9, 0);
-    map_drop_down_to_index(ui_droModRetry_netadv, config.SETTINGS.NETWORK.MODRETRY, wait_retry_int, 9, 0);
+    map_drop_down_to_index(ui_dro_con_retry_netadv, config.settings.network.con_retry, wait_retry_int, 9, 0);
+    map_drop_down_to_index(ui_dro_wait_netadv, config.settings.network.wait, wait_retry_int, 9, 0);
+    map_drop_down_to_index(ui_dro_mod_retry_netadv, config.settings.network.mod_retry, wait_retry_int, 9, 0);
 }
 
 static void save_netadv_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(netadv, Monitor, "settings/network/monitor", INT, 0);
-    CHECK_AND_SAVE_STD(netadv, Boot, "settings/network/boot", INT, 0);
-    CHECK_AND_SAVE_STD(netadv, Wake, "settings/network/wake", INT, 0);
-    CHECK_AND_SAVE_STD(netadv, Compat, "settings/network/compat", INT, 0);
-    CHECK_AND_SAVE_STD(netadv, AsyncLoad, "settings/network/async_load", INT, 0);
-    CHECK_AND_SAVE_MAP(netadv, ConRetry, "settings/network/con_retry", wait_retry_int, 9, 0);
+    CHECK_AND_SAVE_STD(netadv, monitor, "settings/network/monitor", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, boot, "settings/network/boot", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, wake, "settings/network/wake", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, compat, "settings/network/compat", INT, 0);
+    CHECK_AND_SAVE_STD(netadv, async_load, "settings/network/async_load", INT, 0);
+    CHECK_AND_SAVE_MAP(netadv, con_retry, "settings/network/con_retry", wait_retry_int, 9, 0);
 
-    CHECK_AND_SAVE_MAP(netadv, Wait, "settings/network/wait_timer", wait_retry_int, 9, 0);
-    CHECK_AND_SAVE_MAP(netadv, ModRetry, "settings/network/mod_retry", wait_retry_int, 9, 0);
+    CHECK_AND_SAVE_MAP(netadv, wait, "settings/network/wait_timer", wait_retry_int, 9, 0);
+    CHECK_AND_SAVE_MAP(netadv, mod_retry, "settings/network/mod_retry", wait_retry_int, 9, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
+        toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_OPTION_ITEM(-1, netadv, Monitor, lang.MUXNETADV.MONITOR, "monitor", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, netadv, Boot, lang.MUXNETADV.BOOT, "boot", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, netadv, Wake, lang.MUXNETADV.WAKE, "wake", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, netadv, Compat, lang.MUXNETADV.COMPAT, "compat", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, netadv, AsyncLoad, lang.MUXNETADV.ASYNCLOAD, "asyncload", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, netadv, ConRetry, lang.MUXNETADV.CONRETRY, "conretry", wait_retry_str, 9);
-    INIT_OPTION_ITEM(-1, netadv, Wait, lang.MUXNETADV.WAIT, "wait", wait_retry_str, 9);
-    INIT_OPTION_ITEM(-1, netadv, ModRetry, lang.MUXNETADV.MODRETRY, "modretry", wait_retry_str, 9);
+    INIT_OPTION_ITEM(-1, netadv, monitor, lang.muxnetadv.monitor, "monitor", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, boot, lang.muxnetadv.boot, "boot", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, wake, lang.muxnetadv.wake, "wake", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, compat, lang.muxnetadv.compat, "compat", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, async_load, lang.muxnetadv.asyncload, "asyncload", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, netadv, con_retry, lang.muxnetadv.conretry, "conretry", wait_retry_str, 9);
+    INIT_OPTION_ITEM(-1, netadv, wait, lang.muxnetadv.wait, "wait", wait_retry_str, 9);
+    INIT_OPTION_ITEM(-1, netadv, mod_retry, lang.muxnetadv.modretry, "modretry", wait_retry_str, 9);
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 }
-
 
 static void handle_option_prev(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -116,7 +114,7 @@ static void handle_option_next(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -128,12 +126,12 @@ static void handle_option_next(void) {
 
 static void handle_a(void) {
     if (save_mode) {
-        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
-        if (opt == MUX_UNSAVED_SAVE) save_netadv_options();
+        if (opt == mux_unsaved_save) save_netadv_options();
 
-        play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netadv");
 
         mux_input_stop();
@@ -158,12 +156,12 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_netadv_modified()) {
+    if (!config.settings.advanced.trust_modify && any_netadv_modified()) {
         show_save_dialog();
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     save_netadv_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netadv");
@@ -175,7 +173,7 @@ static void handle_dpad_up(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -187,7 +185,7 @@ static void handle_dpad_down(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -208,24 +206,22 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
-#define NETADV(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netadv, UDATA);
+#define NETADV(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_netadv, UDATA);
     NETADV_ELEMENTS
 #undef NETADV
 
@@ -236,13 +232,13 @@ int muxnetadv_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXNETADV.TITLE);
-    init_muxnetadv(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxnetadv.title);
+    init_muxnetadv(ui_pnl_content);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -251,38 +247,42 @@ int muxnetadv_main(void) {
     restore_netadv_options();
     init_dropdown_settings();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
-                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(
+        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
+        lang.generic.select, lang.generic.back
+    );
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

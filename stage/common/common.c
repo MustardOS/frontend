@@ -14,15 +14,12 @@ char overlay_path[PATH_MAX];
 
 int disable_hw_overlay = -1;
 
-struct overlay_go_cache ovl_go_cache = {
-        .mtime = 0,
-        .valid = 0
-};
+struct overlay_go_cache ovl_go_cache = {.mtime = 0, .valid = 0};
 
 int is_overlay_disabled(void) {
     if (disable_hw_overlay < 0) {
         const char *v = getenv("DISABLE_HW_OVERLAY");
-        disable_hw_overlay = (v && (v[0] == '1' || v[0] == 'y' || v[0] == 'Y'));
+        disable_hw_overlay = v && (v[0] == '1' || v[0] == 'y' || v[0] == 'Y');
     }
 
     return disable_hw_overlay;
@@ -33,11 +30,11 @@ int safe_atoi(const char *str) {
 
     errno = 0;
     char *str_ptr;
-    long val = strtol(str, &str_ptr, 10);
+    const long val = strtol(str, &str_ptr, 10);
 
     if (str_ptr == str) return 0;
     if (*str_ptr != '\0') return 0;
-    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || (val > INT_MAX || val < INT_MIN)) return 0;
+    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || val > INT_MAX || val < INT_MIN) return 0;
 
     return (int) val;
 }
@@ -58,25 +55,24 @@ uint64_t now_ms(void) {
     return (uint64_t) ts.tv_sec * 1000ULL + (uint64_t) ts.tv_nsec / 1000000ULL;
 }
 
-int read_percent(const char *path, int max, int *out) {
+int read_percent(const char *path, const int max_pct, int *out) {
     char buf[32];
     char *end;
-    long raw;
 
-    if (max <= 0) return 0;
+    if (max_pct <= 0) return 0;
     if (!read_line_from_file(path, 1, buf, sizeof(buf))) return 0;
 
-    raw = strtol(buf, &end, 10);
+    long raw = strtol(buf, &end, 10);
     if (end == buf) return 0;
 
     if (raw < 0) raw = 0;
-    if (raw > max) raw = max;
+    if (raw > max_pct) raw = max_pct;
 
-    *out = (int) ((raw * 100L) / max);
+    *out = (int) (raw * 100L / max_pct);
     return 1;
 }
 
-float clamp_float(float v, float low, float high) {
+float clamp_float(const float v, const float low, const float high) {
     if (v < low) return low;
     if (v > high) return high;
 
@@ -92,7 +88,7 @@ int read_float(const char *path, float *out) {
     return 1;
 }
 
-int read_line_from_file(const char *filename, size_t line_number, char *out, size_t out_size) {
+int read_line_from_file(const char *filename, const size_t line_number, char *out, const size_t out_size) {
     FILE *f = fopen(filename, "r");
     if (!f) return 0;
 
@@ -102,7 +98,7 @@ int read_line_from_file(const char *filename, size_t line_number, char *out, siz
     while (fgets(buf, sizeof(buf), f)) {
         cur++;
         if (cur == line_number) {
-            size_t len = strlen(buf);
+            const size_t len = strlen(buf);
             if (len && buf[len - 1] == '\n') buf[len - 1] = '\0';
 
             snprintf(out, out_size, "%s", buf);
@@ -116,7 +112,7 @@ int read_line_from_file(const char *filename, size_t line_number, char *out, siz
     return 0;
 }
 
-int read_line_int_from(const char *filename, size_t line_number) {
+int read_line_int_from(const char *filename, const size_t line_number) {
     char line[MAX_BUFFER_SIZE];
     FILE *file = fopen(filename, "r");
     if (!file) return 0;
@@ -125,9 +121,9 @@ int read_line_int_from(const char *filename, size_t line_number) {
         if (i == line_number) {
             line[strcspn(line, "\n")] = '\0';
             errno = 0;
-            long value = strtol(line, NULL, 10);
+            const long value = strtol(line, NULL, 10);
             fclose(file);
-            return (errno == ERANGE) ? 0 : (int) value;
+            return errno == ERANGE ? 0 : (int) value;
         }
     }
 
@@ -161,12 +157,14 @@ static void remove_double_slashes(char *str) {
     *new_str = '\0';
 }
 
-static void strip_libretro(char *str) {
+static void strip_libretro(const char *str) {
     char *new_str = strstr(str, "_libretro.so");
     if (new_str) *new_str = '\0';
 }
 
-int load_stage_image(const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path) {
+int load_stage_image(
+    const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path
+) {
     static int have_theme;
     static char theme_path[MAX_BUFFER_SIZE];
 
@@ -183,7 +181,7 @@ int load_stage_image(const char *type, const char *core, const char *sys, const 
 
     const char *files[] = {file, core, "default", NULL};
 
-    const char *dim_safe = (dim && dim[0]) ? dim : "";
+    const char *dim_safe = dim && dim[0] ? dim : "";
     const char *dims[] = {dim_safe, ""};
 
     char file_strip[MAX_BUFFER_SIZE];
@@ -194,8 +192,10 @@ int load_stage_image(const char *type, const char *core, const char *sys, const 
             strlcpy(file_strip, files[f], sizeof(file_strip));
             strip_libretro(file_strip);
 
-            int n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s%s.png",
-                             CATALOGUE_PATH, sys, type, dims[d], file_strip);
+            const int n = snprintf(
+                img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s%s.png", CATALOGUE_PATH, sys, type, dims[d],
+                file_strip
+            );
 
             if (n > 0 && (size_t) n < sizeof(overlay_path)) {
                 remove_double_slashes(img_path);
@@ -219,11 +219,15 @@ int load_stage_image(const char *type, const char *core, const char *sys, const 
 
                     int n;
                     if (use_system) {
-                        n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s/%s.png",
-                                     theme_path, theme_prefix, sys, type, file_strip);
+                        n = snprintf(
+                            img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s/%s.png", theme_path, theme_prefix, sys,
+                            type, file_strip
+                        );
                     } else {
-                        n = snprintf(img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s.png",
-                                     theme_path, theme_prefix, type, file_strip);
+                        n = snprintf(
+                            img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s.png", theme_path, theme_prefix, type,
+                            file_strip
+                        );
                     }
 
                     if (n > 0 && (size_t) n < sizeof(overlay_path)) {
@@ -246,11 +250,11 @@ int load_stage_image(const char *type, const char *core, const char *sys, const 
 
             int n;
             if (use_system) {
-                n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s/%s.png",
-                             INTERNAL_SHARE, sys, type, file_strip);
+                n = snprintf(
+                    img_path, sizeof(overlay_path), "%s/overlay/%s/%s/%s.png", INTERNAL_SHARE, sys, type, file_strip
+                );
             } else {
-                n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s.png",
-                             INTERNAL_SHARE, type, file_strip);
+                n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s.png", INTERNAL_SHARE, type, file_strip);
             }
 
             if (n > 0 && (size_t) n < sizeof(overlay_path)) {
@@ -264,19 +268,19 @@ int load_stage_image(const char *type, const char *core, const char *sys, const 
     return 0;
 }
 
-void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz) {
+void get_dimension(const enum render_method type, void *ctx, char *out, const size_t out_sz) {
     int w = 0;
     int h = 0;
 
     if (!out || out_sz == 0) return;
 
     switch (type) {
-        case RENDER_SDL: {
+        case render_sdl: {
             SDL_Renderer *r = ctx;
             if (r) SDL_GetRendererOutputSize(r, &w, &h);
             break;
         }
-        case RENDER_GLES: {
+        case render_gles: {
             SDL_Window *win = ctx;
             if (win) SDL_GL_GetDrawableSize(win, &w, &h);
             break;
@@ -293,10 +297,12 @@ void get_dimension(enum render_method type, void *ctx, char *out, size_t out_sz)
 int parse_hex_colour(const char *hex, SDL_Color *out) {
     if (!hex) return 0;
 
-    while (*hex && isspace((unsigned char) *hex)) hex++;
+    while (*hex && isspace((unsigned char) *hex))
+        hex++;
 
     if (*hex == '#') hex++;
-    while (*hex && isspace((unsigned char) *hex)) hex++;
+    while (*hex && isspace((unsigned char) *hex))
+        hex++;
 
     if (strlen(hex) < 6) return 0;
 
@@ -305,17 +311,17 @@ int parse_hex_colour(const char *hex, SDL_Color *out) {
 
     buf[0] = hex[0];
     buf[1] = hex[1];
-    unsigned long r = strtoul(buf, &end, 16);
+    const unsigned long r = strtoul(buf, &end, 16);
     if (end != buf + 2) return 0;
 
     buf[0] = hex[2];
     buf[1] = hex[3];
-    unsigned long g = strtoul(buf, &end, 16);
+    const unsigned long g = strtoul(buf, &end, 16);
     if (end != buf + 2) return 0;
 
     buf[0] = hex[4];
     buf[1] = hex[5];
-    unsigned long b = strtoul(buf, &end, 16);
+    const unsigned long b = strtoul(buf, &end, 16);
     if (end != buf + 2) return 0;
 
     out->r = (Uint8) r;
@@ -326,7 +332,7 @@ int parse_hex_colour(const char *hex, SDL_Color *out) {
     return 1;
 }
 
-void upload_texture_rgba(SDL_Surface *rgba, GLuint *out_tex) {
+void upload_texture_rgba(const SDL_Surface *rgba, GLuint *out_tex) {
     GLuint t = 0;
 
     glGenTextures(1, &t);

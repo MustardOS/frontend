@@ -4,10 +4,10 @@
 #include "input.h"
 #include "options.h"
 
-extern lv_obj_t *ui_lblDatetime;
-extern lv_obj_t *ui_staCapacity;
-extern lv_obj_t *ui_lblMessage;
-extern lv_obj_t *ui_pnlMessage;
+extern lv_obj_t *ui_lbl_datetime;
+extern lv_obj_t *ui_sta_capacity;
+extern lv_obj_t *ui_lbl_message;
+extern lv_obj_t *ui_pnl_message;
 
 extern char mux_module[MAX_BUFFER_SIZE];
 extern char mux_dim[15];
@@ -32,13 +32,13 @@ extern int hdmi_mode;
 extern int g350_menu_pressed;
 
 struct screen_dimension {
-    int WIDTH;
-    int HEIGHT;
+    int width;
+    int height;
 };
 
 void detach_parent_process(void);
 
-void refresh_screen(lv_obj_t *screen, int flush);
+void refresh_screen(const lv_obj_t *screen, int flush);
 
 void safe_quit(int exit_status);
 
@@ -48,7 +48,7 @@ void init_display();
 
 void init_input(mux_input_options *opts, int def_combo);
 
-void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
+void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(const lv_timer_t *));
 
 void timer_suspend_all(void);
 
@@ -60,12 +60,12 @@ void init_fonts(void);
 
 void init_theme(int panel_init, int long_mode);
 
-void status_task(lv_timer_t *timer);
+void status_task(const lv_timer_t *timer);
 
 void status_poll(void);
 
-void bluetooth_task(lv_timer_t *timer);
+void bluetooth_task(const lv_timer_t *timer);
 
-void network_task(lv_timer_t *timer);
+void network_task(const lv_timer_t *timer);
 
 void battery_task();

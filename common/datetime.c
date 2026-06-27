@@ -5,12 +5,12 @@
 #include "options.h"
 
 char *get_datetime(void) {
-    time_t now = time(NULL);
-    struct tm *time_info = localtime(&now);
+    const time_t now = time(NULL);
+    const struct tm *time_info = localtime(&now);
     static char datetime_str[MAX_BUFFER_SIZE];
 
     const char *fmt;
-    switch (config.CLOCK.NOTATION) {
+    switch (config.clock.notation) {
         case 0:
             fmt = TIME_STRING_12;
             break;
@@ -30,7 +30,7 @@ char *get_datetime(void) {
             fmt = TIME_STRING_MM_DD_24;
             break;
         default:
-            fmt = *config.CLOCK.CUSTOM ? config.CLOCK.CUSTOM : TIME_STRING_12;
+            fmt = *config.clock.custom ? config.clock.custom : TIME_STRING_12;
             break;
     }
 
@@ -38,7 +38,7 @@ char *get_datetime(void) {
     return datetime_str;
 }
 
-void datetime_task(lv_timer_t *timer) {
+void datetime_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
-    if (ui_lblDatetime) lv_label_set_text(ui_lblDatetime, get_datetime());
+    if (ui_lbl_datetime) lv_label_set_text(ui_lbl_datetime, get_datetime());
 }

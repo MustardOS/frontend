@@ -3,10 +3,12 @@
 #include "theme.h"
 #include "../strutil.h"
 
-theme_item *add_theme_item(theme_item **theme_items, size_t *count, const char *name, const char *url,
-                           int grid_enabled, int hdmi_enabled, int language_enabled, int resolution640x480,
-                           int resolution720x480, int resolution720x720, int resolution1024x768,
-                           int resolution1280x720, int resolution1920x1080) {
+theme_item *add_theme_item(
+    theme_item **theme_items, size_t *count, const char *name, const char *url, const int grid_enabled,
+    const int hdmi_enabled, const int language_enabled, const int resolution640_x480, const int resolution720_x480,
+    const int resolution720_x720, const int resolution1024_x768, const int resolution1280_x720,
+    const int resolution1920_x1080
+) {
 
     if (*theme_items == NULL) {
         *theme_items = malloc(sizeof(theme_item));
@@ -19,12 +21,12 @@ theme_item *add_theme_item(theme_item **theme_items, size_t *count, const char *
     (*theme_items)[*count].grid_enabled = grid_enabled;
     (*theme_items)[*count].hdmi_enabled = hdmi_enabled;
     (*theme_items)[*count].language_enabled = language_enabled;
-    (*theme_items)[*count].resolution640x480 = resolution640x480;
-    (*theme_items)[*count].resolution720x480 = resolution720x480;
-    (*theme_items)[*count].resolution720x720 = resolution720x720;
-    (*theme_items)[*count].resolution1024x768 = resolution1024x768;
-    (*theme_items)[*count].resolution1280x720 = resolution1280x720;
-    (*theme_items)[*count].resolution1920x1080 = resolution1920x1080;
+    (*theme_items)[*count].resolution640_x480 = resolution640_x480;
+    (*theme_items)[*count].resolution720_x480 = resolution720_x480;
+    (*theme_items)[*count].resolution720_x720 = resolution720_x720;
+    (*theme_items)[*count].resolution1024_x768 = resolution1024_x768;
+    (*theme_items)[*count].resolution1280_x720 = resolution1280_x720;
+    (*theme_items)[*count].resolution1920_x1080 = resolution1920_x1080;
 
     (*count)++;
 
@@ -32,26 +34,26 @@ theme_item *add_theme_item(theme_item **theme_items, size_t *count, const char *
 }
 
 int theme_item_compare(const void *a, const void *b) {
-    theme_item *itemA = (theme_item *) a;
-    theme_item *itemB = (theme_item *) b;
+    const theme_item *item_a = (theme_item *) a;
+    const theme_item *item_b = (theme_item *) b;
 
     // Use strverscmp for natural sorting on sort_name
-    return strverscmp(str_tolower(itemA->name), str_tolower(itemB->name));
+    return strverscmp(str_tolower(item_a->name), str_tolower(item_b->name));
 }
 
-int theme_item_exists(theme_item *theme_items, size_t count, const char *name) {
+int theme_item_exists(const theme_item *theme_items, const size_t count, const char *name) {
     for (size_t i = 0; i < count; i++) {
         if (strcasecmp(theme_items[i].name, name) == 0) return 1;
     }
     return 0;
 }
 
-void sort_theme_items(theme_item *theme_items, size_t count) {
+void sort_theme_items(theme_item *theme_items, const size_t count) {
     qsort(theme_items, count, sizeof(theme_item), theme_item_compare);
 }
 
-theme_item get_theme_item_by_index(theme_item *theme_items, size_t index) {
-    return theme_items[index];
+theme_item get_theme_item_by_index(const theme_item *items, const size_t index) {
+    return items[index];
 }
 
 void free_theme_items(theme_item **theme_items, size_t *count) {
@@ -59,7 +61,7 @@ void free_theme_items(theme_item **theme_items, size_t *count) {
         free((*theme_items)[i].name);
         free((*theme_items)[i].url);
     }
-    free(*theme_items); // Free the array itself
+    free(*theme_items);  // Free the array itself
     *theme_items = NULL; // Set the pointer to NULL
-    *count = 0; // Set the count to 0
+    *count = 0;          // Set the count to 0
 }

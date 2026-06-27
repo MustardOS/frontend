@@ -3,9 +3,12 @@
 
 void plutovg_matrix_init(plutovg_matrix_t* matrix, float a, float b, float c, float d, float e, float f)
 {
-    matrix->a = a; matrix->b = b;
-    matrix->c = c; matrix->d = d;
-    matrix->e = e; matrix->f = f;
+    matrix->a = a;
+    matrix->b = b;
+    matrix->c = c;
+    matrix->d = d;
+    matrix->e = e;
+    matrix->f = f;
 }
 
 void plutovg_matrix_init_identity(plutovg_matrix_t* matrix)
@@ -77,9 +80,10 @@ void plutovg_matrix_multiply(plutovg_matrix_t* matrix, const plutovg_matrix_t* l
 bool plutovg_matrix_invert(const plutovg_matrix_t* matrix, plutovg_matrix_t* inverse)
 {
     float det = (matrix->a * matrix->d - matrix->b * matrix->c);
-    if(det == 0.f)
+    if (det == 0.f)
         return false;
-    if(inverse) {
+    if (inverse)
+    {
         float inv_det = 1.f / det;
         float a = matrix->a * inv_det;
         float b = matrix->b * inv_det;
@@ -106,7 +110,8 @@ void plutovg_matrix_map_point(const plutovg_matrix_t* matrix, const plutovg_poin
 
 void plutovg_matrix_map_points(const plutovg_matrix_t* matrix, const plutovg_point_t* src, plutovg_point_t* dst, int count)
 {
-    for(int i = 0; i < count; ++i) {
+    for (int i = 0; i < count; ++i)
+    {
         plutovg_matrix_map_point(matrix, &src[i], &dst[i]);
     }
 }
@@ -129,11 +134,12 @@ void plutovg_matrix_map_rect(const plutovg_matrix_t* matrix, const plutovg_rect_
     float r = p[0].x;
     float b = p[0].y;
 
-    for(int i = 1; i < 4; i++) {
-        if(p[i].x < l) l = p[i].x;
-        if(p[i].x > r) r = p[i].x;
-        if(p[i].y < t) t = p[i].y;
-        if(p[i].y > b) b = p[i].y;
+    for (int i = 1; i < 4; i++)
+    {
+        if (p[i].x < l) l = p[i].x;
+        if (p[i].x > r) r = p[i].x;
+        if (p[i].y < t) t = p[i].y;
+        if (p[i].y > b) b = p[i].y;
     }
 
     dst->x = l;
@@ -144,19 +150,21 @@ void plutovg_matrix_map_rect(const plutovg_matrix_t* matrix, const plutovg_rect_
 
 static int parse_matrix_parameters(const char** begin, const char* end, float values[6], int required, int optional)
 {
-    if(!plutovg_skip_ws_and_delim(begin, end, '('))
+    if (!plutovg_skip_ws_and_delim(begin, end, '('))
         return 0;
     int count = 0;
     int max_count = required + optional;
     bool has_trailing_comma = false;
-    for(; count < max_count; ++count) {
-        if(!plutovg_parse_number(begin, end, values + count))
+    for (; count < max_count; ++count)
+    {
+        if (!plutovg_parse_number(begin, end, values + count))
             break;
         plutovg_skip_ws_or_comma(begin, end, &has_trailing_comma);
     }
 
-    if(!has_trailing_comma && (count == required || count == max_count)
-        && plutovg_skip_delim(begin, end, ')')) {
+    if (!has_trailing_comma && (count == required || count == max_count)
+        && plutovg_skip_delim(begin, end, ')'))
+    {
         return count;
     }
 
@@ -167,58 +175,79 @@ bool plutovg_matrix_parse(plutovg_matrix_t* matrix, const char* data, int length
 {
     float values[6];
     plutovg_matrix_init_identity(matrix);
-    if(length == -1)
+    if (length == -1)
         length = strlen(data);
     const char* it = data;
     const char* end = it + length;
     bool has_trailing_comma = false;
     plutovg_skip_ws(&it, end);
-    while(it < end) {
-        if(plutovg_skip_string(&it, end, "matrix")) {
+    while (it < end)
+    {
+        if (plutovg_skip_string(&it, end, "matrix"))
+        {
             int count = parse_matrix_parameters(&it, end, values, 6, 0);
-            if(count == 0)
+            if (count == 0)
                 return false;
-            plutovg_matrix_t m = { values[0], values[1], values[2], values[3], values[4], values[5] };
+            plutovg_matrix_t m = {values[0], values[1], values[2], values[3], values[4], values[5]};
             plutovg_matrix_multiply(matrix, &m, matrix);
-        } else if(plutovg_skip_string(&it, end, "translate")) {
+        }
+        else if (plutovg_skip_string(&it, end, "translate"))
+        {
             int count = parse_matrix_parameters(&it, end, values, 1, 1);
-            if(count == 0)
+            if (count == 0)
                 return false;
-            if(count == 1) {
+            if (count == 1)
+            {
                 plutovg_matrix_translate(matrix, values[0], 0);
-            } else {
+            }
+            else
+            {
                 plutovg_matrix_translate(matrix, values[0], values[1]);
             }
-        } else if(plutovg_skip_string(&it, end, "scale")) {
+        }
+        else if (plutovg_skip_string(&it, end, "scale"))
+        {
             int count = parse_matrix_parameters(&it, end, values, 1, 1);
-            if(count == 0)
+            if (count == 0)
                 return false;
-            if(count == 1) {
+            if (count == 1)
+            {
                 plutovg_matrix_scale(matrix, values[0], values[0]);
-            } else {
+            }
+            else
+            {
                 plutovg_matrix_scale(matrix, values[0], values[1]);
             }
-        } else if(plutovg_skip_string(&it, end, "rotate")) {
+        }
+        else if (plutovg_skip_string(&it, end, "rotate"))
+        {
             int count = parse_matrix_parameters(&it, end, values, 1, 2);
-            if(count == 0)
+            if (count == 0)
                 return false;
-            if(count == 3)
+            if (count == 3)
                 plutovg_matrix_translate(matrix, values[1], values[2]);
             plutovg_matrix_rotate(matrix, PLUTOVG_DEG2RAD(values[0]));
-            if(count == 3) {
+            if (count == 3)
+            {
                 plutovg_matrix_translate(matrix, -values[1], -values[2]);
             }
-        } else if(plutovg_skip_string(&it, end, "skewX")) {
+        }
+        else if (plutovg_skip_string(&it, end, "skewX"))
+        {
             int count = parse_matrix_parameters(&it, end, values, 1, 0);
-            if(count == 0)
+            if (count == 0)
                 return false;
             plutovg_matrix_shear(matrix, PLUTOVG_DEG2RAD(values[0]), 0);
-        } else if(plutovg_skip_string(&it, end, "skewY")) {
+        }
+        else if (plutovg_skip_string(&it, end, "skewY"))
+        {
             int count = parse_matrix_parameters(&it, end, values, 1, 0);
-            if(count == 0)
+            if (count == 0)
                 return false;
             plutovg_matrix_shear(matrix, 0, PLUTOVG_DEG2RAD(values[0]));
-        } else {
+        }
+        else
+        {
             return false;
         }
 

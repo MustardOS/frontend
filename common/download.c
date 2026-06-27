@@ -1,3 +1,5 @@
+#include <curl/curl.h>
+#include <pthread.h>
 #include <unistd.h>
 #include "init.h"
 #include "fileio.h"
@@ -7,7 +9,7 @@
 #include "log.h"
 
 #define MAX_DOWNLOAD_BYTES ((curl_off_t) (512L * 1024L * 1024L))
-#define TEMP_DL_DIR "/opt/muos/temp_dl"
+#define TEMP_DL_DIR        "/opt/muos/temp_dl"
 
 int cancel_download = 0;
 int download_in_progress = 0;
@@ -19,7 +21,7 @@ typedef struct {
     char *save_path;
 } download_args_t;
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+static size_t write_data(const void *ptr, const size_t size, const size_t nmemb, FILE *stream) {
     return fwrite(ptr, size, nmemb, stream) * size;
 }
 
@@ -34,7 +36,7 @@ void set_download_callbacks(void (*callback)(int)) {
 void download_poll(void) {
     if (download_finish_result == INT_MIN) return;
 
-    int result = download_finish_result;
+    const int result = download_finish_result;
     download_finish_result = INT_MIN;
 
     void (*cb)(int) = download_finish_pending_cb;
@@ -49,8 +51,8 @@ void download_poll(void) {
     if (cb) cb(result);
 }
 
-static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
-                             curl_off_t ultotal, curl_off_t ulnow) {
+static int
+progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
     if (cancel_download) {
         LOG_INFO(mux_module, "Cancelling download");
         return 1;
@@ -207,10 +209,10 @@ static void *download_thread(void *arg) {
     return NULL;
 }
 
-void initiate_download(const char *url, const char *output_path, int showProgress, char *message) {
+void initiate_download(const char *url, const char *output_path, int show_progress, char *message) {
     download_finish_result = INT_MIN;
 
-    if (showProgress) show_progress_bar(message);
+    if (show_progress) show_progress_bar(message);
 
     download_args_t *args = mux_malloc(sizeof(*args));
 

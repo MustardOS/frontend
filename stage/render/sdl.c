@@ -18,7 +18,7 @@ static SDL_Texture *content_tex = NULL;
 static int content_w = 0;
 static int content_h = 0;
 
-static int content_rot_cached = ROTATE_0;
+static int content_rot_cached = rotate_0;
 static int content_fb_w = 0;
 static int content_fb_h = 0;
 
@@ -63,7 +63,7 @@ static void ensure_content_tex(SDL_Renderer *r, int w, int h) {
 }
 
 static void draw_rotated_content(SDL_Renderer *r, int rot, int fb_w, int fb_h) {
-    if (rot == ROTATE_0) return;
+    if (rot == rotate_0) return;
     if (fb_w < 1 || fb_h < 1) return;
 
     ensure_content_tex(r, fb_w, fb_h);
@@ -73,8 +73,7 @@ static void draw_rotated_content(SDL_Renderer *r, int rot, int fb_w, int fb_h) {
     int pitch = 0;
 
     if (capture_content_tex()) {
-        if (SDL_LockTexture(content_tex, NULL, &pixels, &pitch) != 0)
-            return;
+        if (SDL_LockTexture(content_tex, NULL, &pixels, &pitch) != 0) return;
 
         if (SDL_RenderReadPixels(r, NULL, SDL_PIXELFORMAT_ARGB8888, pixels, pitch) != 0) {
             SDL_UnlockTexture(content_tex);
@@ -85,13 +84,13 @@ static void draw_rotated_content(SDL_Renderer *r, int rot, int fb_w, int fb_h) {
     }
 
     static SDL_Rect dst;
-    static int dst_rot = ROTATE_0;
+    static int dst_rot = rotate_0;
     static int dst_fb_w = 0;
     static int dst_fb_h = 0;
     static double angle = 0.0;
 
     if (rot != dst_rot || fb_w != dst_fb_w || fb_h != dst_fb_h) {
-        if (rot == ROTATE_90 || rot == ROTATE_270) {
+        if (rot == rotate_90 || rot == rotate_270) {
             dst.w = fb_h;
             dst.h = fb_w;
             dst.x = (fb_w - dst.w) / 2;
@@ -113,8 +112,7 @@ static void draw_rotated_content(SDL_Renderer *r, int rot, int fb_w, int fb_h) {
     SDL_RenderCopyEx(r, content_tex, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
 }
 
-static void set_sdl_render(int tex_w, int tex_h, int anchor, int scale,
-                           int fb_w, int fb_h, int rot, SDL_Rect *out) {
+static void set_sdl_render(int tex_w, int tex_h, int anchor, int scale, int fb_w, int fb_h, int rot, SDL_Rect *out) {
     int draw_w = tex_w;
     int draw_h = tex_h;
     stretch_draw_size(tex_w, tex_h, fb_w, fb_h, scale, rot, &draw_w, &draw_h);
@@ -173,9 +171,10 @@ static void set_sdl_render(int tex_w, int tex_h, int anchor, int scale,
     out->h = draw_h;
 }
 
-static void draw_sdl_overlay(SDL_Renderer *renderer, SDL_Texture *tex, int tex_w, int tex_h,
-                             float alpha, int anchor, int scale,
-                             int fb_w, int fb_h, int rot, double angle) {
+static void draw_sdl_overlay(
+    SDL_Renderer *renderer, SDL_Texture *tex, int tex_w, int tex_h, float alpha, int anchor, int scale, int fb_w,
+    int fb_h, int rot, double angle
+) {
     if (!renderer || !tex) return;
 
     SDL_Rect dst;
@@ -188,11 +187,11 @@ static void draw_sdl_overlay(SDL_Renderer *renderer, SDL_Texture *tex, int tex_w
 
 void SDL_RenderPresent(SDL_Renderer *renderer) {
     if (is_overlay_disabled()) {
-        if (real_SDL_RenderPresent) real_SDL_RenderPresent(renderer);
+        if (real_sdl_render_present) real_sdl_render_present(renderer);
         return;
     }
 
-    if (!real_SDL_RenderPresent) return;
+    if (!real_sdl_render_present) return;
 
     base_inotify_check();
     if (ino_proc) inotify_check(ino_proc);
@@ -201,7 +200,7 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     if (renderer != last_renderer) {
         destroy_content_tex();
 
-        content_rot_cached = ROTATE_0;
+        content_rot_cached = rotate_0;
         content_fb_w = 0;
         content_fb_h = 0;
 
@@ -216,7 +215,7 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     }
 
     const int rot = rotate_read_cached();
-    capture_interval_ms = rot == ROTATE_0 ? 0 : 33;
+    capture_interval_ms = rot == rotate_0 ? 0 : 33;
     const double angle = rotate_angle(rot);
 
     int fb_w = 0, fb_h = 0;
@@ -252,17 +251,15 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     volume_overlay_update();
     notif_update();
 
-    if (rot != ROTATE_0) draw_rotated_content(renderer, rot, fb_w, fb_h);
+    if (rot != rotate_0) draw_rotated_content(renderer, rot, fb_w, fb_h);
 
     if (!base_disabled) {
         sdl_base_overlay_init(renderer);
         if (base_sdl_tex) {
-            draw_sdl_overlay(renderer, base_sdl_tex,
-                             base_sdl_w, base_sdl_h,
-                             get_alpha_cached(&overlay_alpha_cache),
-                             get_anchor_cached(&overlay_anchor_cache),
-                             get_scale_cached(&overlay_scale_cache),
-                             fb_w, fb_h, rot, angle);
+            draw_sdl_overlay(
+                renderer, base_sdl_tex, base_sdl_w, base_sdl_h, get_alpha_cached(&overlay_alpha_cache),
+                get_anchor_cached(&overlay_anchor_cache), get_scale_cached(&overlay_scale_cache), fb_w, fb_h, rot, angle
+            );
         }
     }
 
@@ -271,24 +268,22 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
     sdl_battery_overlay_init(renderer);
     int battery_step = battery_last_step;
     if (battery_step >= 0 && battery_step < INDICATOR_STEPS && battery_sdl_tex[battery_step]) {
-        draw_sdl_overlay(renderer, battery_sdl_tex[battery_step],
-                         battery_sdl_w[battery_step], battery_sdl_h[battery_step],
-                         get_alpha_cached(&battery_alpha_cache),
-                         get_anchor_cached(&battery_anchor_cache),
-                         get_scale_cached(&battery_scale_cache),
-                         fb_w, fb_h, rot, angle);
+        draw_sdl_overlay(
+            renderer, battery_sdl_tex[battery_step], battery_sdl_w[battery_step], battery_sdl_h[battery_step],
+            get_alpha_cached(&battery_alpha_cache), get_anchor_cached(&battery_anchor_cache),
+            get_scale_cached(&battery_scale_cache), fb_w, fb_h, rot, angle
+        );
     }
 
     if (bright_is_visible()) {
         sdl_bright_overlay_init(renderer);
         int step = bright_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && bright_sdl_tex[step]) {
-            draw_sdl_overlay(renderer, bright_sdl_tex[step],
-                             bright_sdl_w[step], bright_sdl_h[step],
-                             get_alpha_cached(&bright_alpha_cache),
-                             get_anchor_cached(&bright_anchor_cache),
-                             get_scale_cached(&bright_scale_cache),
-                             fb_w, fb_h, rot, angle);
+            draw_sdl_overlay(
+                renderer, bright_sdl_tex[step], bright_sdl_w[step], bright_sdl_h[step],
+                get_alpha_cached(&bright_alpha_cache), get_anchor_cached(&bright_anchor_cache),
+                get_scale_cached(&bright_scale_cache), fb_w, fb_h, rot, angle
+            );
         }
     }
 
@@ -296,16 +291,15 @@ void SDL_RenderPresent(SDL_Renderer *renderer) {
         sdl_volume_overlay_init(renderer);
         int step = volume_last_step;
         if (step >= 0 && step < INDICATOR_STEPS && volume_sdl_tex[step]) {
-            draw_sdl_overlay(renderer, volume_sdl_tex[step],
-                             volume_sdl_w[step], volume_sdl_h[step],
-                             get_alpha_cached(&volume_alpha_cache),
-                             get_anchor_cached(&volume_anchor_cache),
-                             get_scale_cached(&volume_scale_cache),
-                             fb_w, fb_h, rot, angle);
+            draw_sdl_overlay(
+                renderer, volume_sdl_tex[step], volume_sdl_w[step], volume_sdl_h[step],
+                get_alpha_cached(&volume_alpha_cache), get_anchor_cached(&volume_anchor_cache),
+                get_scale_cached(&volume_scale_cache), fb_w, fb_h, rot, angle
+            );
         }
     }
 
     if (notif_is_visible()) sdl_notif_draw(renderer, fb_w, fb_h);
 
-    real_SDL_RenderPresent(renderer);
+    real_sdl_render_present(renderer);
 }

@@ -54,11 +54,10 @@
 /*    the left edge of the glyph's bounding box.  If `xMin' is negative, */
 /*    the glyph extends to the left of the origin.                       */
 /*                                                                       */
-typedef struct  PVG_FT_BBox_
+typedef struct PVG_FT_BBox_
 {
-    PVG_FT_Pos  xMin, yMin;
-    PVG_FT_Pos  xMax, yMax;
-
+    PVG_FT_Pos xMin, yMin;
+    PVG_FT_Pos xMax, yMax;
 } PVG_FT_BBox;
 
 /*************************************************************************/
@@ -106,18 +105,17 @@ typedef struct  PVG_FT_BBox_
 /*                  and give hints to the scan-converter and hinter on   */
 /*                  how to convert/grid-fit it.  See @PVG_FT_OUTLINE_FLAGS.*/
 /*                                                                       */
-typedef struct  PVG_FT_Outline_
+typedef struct PVG_FT_Outline_
 {
-    int       n_contours;      /* number of contours in glyph        */
-    int       n_points;        /* number of points in the glyph      */
+    int n_contours; /* number of contours in glyph        */
+    int n_points; /* number of points in the glyph      */
 
-    PVG_FT_Vector*  points;          /* the outline's points               */
-    char*       tags;            /* the points flags                   */
-    int*      contours;        /* the contour end points             */
-    char*       contours_flag;   /* the contour open flags             */
+    PVG_FT_Vector* points; /* the outline's points               */
+    char* tags; /* the points flags                   */
+    int* contours; /* the contour end points             */
+    char* contours_flag; /* the contour open flags             */
 
-    int         flags;           /* outline masks                      */
-
+    int flags; /* outline masks                      */
 } PVG_FT_Outline;
 
 
@@ -193,7 +191,7 @@ typedef struct  PVG_FT_Outline_
 /*    FreeType error code.  0~means success.                             */
 /*                                                                       */
 PVG_FT_Error
-PVG_FT_Outline_Check( PVG_FT_Outline*  outline );
+PVG_FT_Outline_Check(PVG_FT_Outline* outline);
 
 
 /*************************************************************************/
@@ -223,8 +221,8 @@ PVG_FT_Outline_Check( PVG_FT_Outline*  outline );
 /*    See @PVG_FT_Glyph_Get_CBox for a discussion of tricky fonts.           */
 /*                                                                       */
 void
-PVG_FT_Outline_Get_CBox( const PVG_FT_Outline*  outline,
-    PVG_FT_BBox           *acbox );
+PVG_FT_Outline_Get_CBox(const PVG_FT_Outline* outline,
+                        PVG_FT_BBox* acbox);
 
 /*************************************************************************/
 /*                                                                       */
@@ -252,13 +250,12 @@ PVG_FT_Outline_Get_CBox( const PVG_FT_Outline*  outline,
 /*    The coverage value is always between 0 and 255.  If you want less  */
 /*    gray values, the callback function has to reduce them.             */
 /*                                                                       */
-typedef struct  PVG_FT_Span_
+typedef struct PVG_FT_Span_
 {
     int x;
     int len;
     int y;
     unsigned char coverage;
-
 } PVG_FT_Span;
 
 
@@ -299,12 +296,11 @@ typedef struct  PVG_FT_Span_
 /*    only for those scanlines that do have `gray' pixels on them.       */
 /*                                                                       */
 typedef void
-    (*PVG_FT_SpanFunc)( int             count,
-        const PVG_FT_Span*  spans,
-        void*           user );
+(*PVG_FT_SpanFunc)(int count,
+                   const PVG_FT_Span* spans,
+                   void* user);
 
 #define PVG_FT_Raster_Span_Func  PVG_FT_SpanFunc
-
 
 
 /*************************************************************************/
@@ -403,18 +399,17 @@ typedef void
 /*    rendering a monochrome bitmap, as they are crucial to implement    */
 /*    correct drop-out control as defined in the TrueType specification. */
 /*                                                                       */
-typedef struct  PVG_FT_Raster_Params_
+typedef struct PVG_FT_Raster_Params_
 {
-    const void*             source;
-    int                     flags;
-    PVG_FT_SpanFunc          gray_spans;
-    void*                   user;
-    PVG_FT_BBox              clip_box;
-
+    const void* source;
+    int flags;
+    PVG_FT_SpanFunc gray_spans;
+    void* user;
+    PVG_FT_BBox clip_box;
 } PVG_FT_Raster_Params;
 
 
 void
-PVG_FT_Raster_Render(const PVG_FT_Raster_Params *params);
+PVG_FT_Raster_Render(const PVG_FT_Raster_Params* params);
 
 #endif // PLUTOVG_FT_RASTER_H

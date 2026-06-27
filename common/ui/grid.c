@@ -14,14 +14,14 @@
 
 struct grid_info grid_info;
 
-void init_grid_info(int item_count, int column_count) {
+void init_grid_info(const int item_count, const int column_count) {
     grid_info.item_count = item_count;
     grid_info.column_count = column_count;
 
     // Calculate items in the last row
     int last_row_item_count = item_count % column_count;
     if (last_row_item_count == 0 && item_count != 0) {
-        last_row_item_count = column_count;  // Full last row if remainder is 0
+        last_row_item_count = column_count; // Full last row if remainder is 0
     }
     grid_info.last_row_item_count = last_row_item_count;
 
@@ -29,25 +29,24 @@ void init_grid_info(int item_count, int column_count) {
     grid_info.last_row_index = (item_count - 1) / column_count;
 }
 
-int get_grid_row_index(int current_item_index) {
+int get_grid_row_index(const int current_item_index) {
     return current_item_index / grid_info.column_count;
 }
 
-int get_grid_column_index(int current_item_index) {
+int get_grid_column_index(const int current_item_index) {
     return current_item_index % grid_info.column_count;
 }
 
-int get_grid_row_item_count(int current_item_index) {
-    uint8_t row_index = current_item_index / grid_info.column_count;
+int get_grid_row_item_count(const int current_item_index) {
+    const uint8_t row_index = current_item_index / grid_info.column_count;
 
     if (row_index == grid_info.last_row_index) {
         return grid_info.last_row_item_count;
-    } else {
-        return grid_info.column_count;
     }
+    return grid_info.column_count;
 }
 
-static void set_grid_catalogue_and_program_name(int index, char *catalogue_name, char *program) {
+static void set_grid_catalogue_and_program_name(const int index, char *catalogue_name, char *program) {
     catalogue_name[0] = '\0';
     program[0] = '\0';
 
@@ -55,8 +54,10 @@ static void set_grid_catalogue_and_program_name(int index, char *catalogue_name,
 
     if (strcmp(mux_module, "muxapp") == 0) {
         snprintf(catalogue_name, MAX_BUFFER_SIZE, "Application");
-        snprintf(program, MAX_BUFFER_SIZE, "%s",
-                 items[index].glyph_icon && items[index].glyph_icon[0] ? items[index].glyph_icon : "app");
+        snprintf(
+            program, MAX_BUFFER_SIZE, "%s",
+            items[index].glyph_icon && items[index].glyph_icon[0] ? items[index].glyph_icon : "app"
+        );
         return;
     }
 
@@ -92,15 +93,14 @@ static void set_grid_catalogue_and_program_name(int index, char *catalogue_name,
         return;
     }
 
-    snprintf(catalogue_name, MAX_BUFFER_SIZE, "%s",
-             strcmp(mux_module, "muxplore") == 0 ? "Folder" : "Collection");
+    snprintf(catalogue_name, MAX_BUFFER_SIZE, "%s", strcmp(mux_module, "muxplore") == 0 ? "Folder" : "Collection");
 
     char *item_no_ext = strip_ext(items[index].name);
     snprintf(program, MAX_BUFFER_SIZE, "%s", item_no_ext ? item_no_ext : items[index].name);
     free(item_no_ext);
 }
 
-void update_grid_image_paths(int index) {
+void update_grid_image_paths(const int index) {
     if (index < 0 || (size_t) index >= item_count) return;
 
     char catalogue_name[MAX_BUFFER_SIZE];
@@ -116,7 +116,7 @@ void update_grid_image_paths(int index) {
         items[index].grid_image_focused = strdup("");
 
         if (!items[index].grid_image || !items[index].grid_image_focused) {
-            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+            LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
         }
 
         return;
@@ -147,31 +147,37 @@ void update_grid_image_paths(int index) {
     grid_image_focused[0] = '\0';
 
     if (strcmp(mux_module, "muxapp") == 0) {
-        get_app_grid_glyph(items[index].extra_data, program, "default",
-                           grid_image, sizeof(grid_image));
+        get_app_grid_glyph(items[index].extra_data, program, "default", grid_image, sizeof(grid_image));
 
         if (!grid_image[0] || !file_exist(grid_image)) {
-            load_image_catalogue(catalogue_name, program, alt_name, "default",
-                                 mux_dim, "grid", grid_image, sizeof(grid_image));
+            load_image_catalogue(
+                catalogue_name, program, alt_name, "default", mux_dim, "grid", grid_image, sizeof(grid_image)
+            );
         }
 
-        get_app_grid_glyph(items[index].extra_data, glyph_name_focused, "default_focused",
-                           grid_image_focused, sizeof(grid_image_focused));
+        get_app_grid_glyph(
+            items[index].extra_data, glyph_name_focused, "default_focused", grid_image_focused,
+            sizeof(grid_image_focused)
+        );
 
         if (!grid_image_focused[0] || !file_exist(grid_image_focused)) {
-            load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
-                                 mux_dim, "grid", grid_image_focused, sizeof(grid_image_focused));
+            load_image_catalogue(
+                catalogue_name, glyph_name_focused, alt_name_focused, "default_focused", mux_dim, "grid",
+                grid_image_focused, sizeof(grid_image_focused)
+            );
         }
     } else {
-        load_image_catalogue(catalogue_name, program, alt_name, "default",
-                             mux_dim, "grid", grid_image, sizeof(grid_image));
+        load_image_catalogue(
+            catalogue_name, program, alt_name, "default", mux_dim, "grid", grid_image, sizeof(grid_image)
+        );
 
-        load_image_catalogue(catalogue_name, glyph_name_focused, alt_name_focused, "default_focused",
-                             mux_dim, "grid", grid_image_focused, sizeof(grid_image_focused));
+        load_image_catalogue(
+            catalogue_name, glyph_name_focused, alt_name_focused, "default_focused", mux_dim, "grid",
+            grid_image_focused, sizeof(grid_image_focused)
+        );
     }
 
-    if ((!grid_image_focused[0] || !file_exist(grid_image_focused)) &&
-        grid_image[0] && file_exist(grid_image)) {
+    if ((!grid_image_focused[0] || !file_exist(grid_image_focused)) && grid_image[0] && file_exist(grid_image)) {
         snprintf(grid_image_focused, sizeof(grid_image_focused), "%s", grid_image);
     }
 
@@ -181,7 +187,8 @@ void update_grid_image_paths(int index) {
     items[index].grid_image = strdup(grid_image);
     items[index].grid_image_focused = strdup(grid_image_focused);
 
-    if (!items[index].grid_image || !items[index].grid_image_focused) LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+    if (!items[index].grid_image || !items[index].grid_image_focused)
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
 }
 
 static void update_grid_image(lv_obj_t *cell, char *image_path) {
@@ -192,8 +199,8 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         return;
     }
 
-    int16_t grid_glyph = config.SETTINGS.THEMEOPT.GLYPH_SIZE_GRID;
-    if (grid_glyph == -2) grid_glyph = theme.GLYPH.GRID;
+    int16_t grid_glyph = config.settings.themeopt.glyph_size_grid;
+    if (grid_glyph == -2) grid_glyph = theme.glyph.grid;
 
     int grid_hint_w;
     int grid_hint_h;
@@ -201,16 +208,16 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
     if (grid_glyph < 0) {
         grid_hint_w = grid_hint_h = -1;
     } else if (grid_glyph == 0) {
-        grid_hint_w = (theme.GRID.CELL.WIDTH * 3) / 4;
-        grid_hint_h = (theme.GRID.CELL.HEIGHT * 3) / 4;
+        grid_hint_w = theme.grid.cell.width * 3 / 4;
+        grid_hint_h = theme.grid.cell.height * 3 / 4;
     } else {
         grid_hint_w = grid_hint_h = grid_glyph;
     }
 
-    int grid_px = (grid_glyph > 0) ? grid_glyph : 0;
+    const int grid_px = grid_glyph > 0 ? grid_glyph : 0;
 
     char grid_image[MAX_BUFFER_SIZE];
-    size_t plen = strlen(image_path);
+    const size_t plen = strlen(image_path);
 
     if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
         snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, grid_hint_w, grid_hint_h);
@@ -222,64 +229,65 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
     apply_glyph_scale(cell, grid_image, grid_px, grid_px);
 }
 
-static void update_grid_item(lv_obj_t *ui_pnlItem, int index) {
-    if (!ui_pnlItem) return;
+static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {
+    if (!ui_pnl_item) return;
 
-    lv_obj_set_user_data(ui_pnlItem, UFI(index));
+    lv_obj_set_user_data(ui_pnl_item, UFI(index));
 
-    lv_obj_t *cell_image = lv_obj_get_child(ui_pnlItem, 0);
-    lv_obj_t *ui_lblItem = lv_obj_get_child(ui_pnlItem, 1);
-    lv_obj_t *cell_image_focused = lv_obj_get_child(ui_pnlItem, 2);
+    lv_obj_t *cell_image = lv_obj_get_child(ui_pnl_item, 0);
+    lv_obj_t *ui_lbl_item = lv_obj_get_child(ui_pnl_item, 1);
+    lv_obj_t *cell_image_focused = lv_obj_get_child(ui_pnl_item, 2);
 
     if (index < 0 || (size_t) index >= item_count) {
-        lv_obj_add_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnl_item, LV_OBJ_FLAG_HIDDEN);
 
-        if (ui_lblItem) lv_obj_add_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
+        if (ui_lbl_item) lv_obj_add_flag(ui_lbl_item, LV_OBJ_FLAG_HIDDEN);
         if (cell_image) lv_obj_add_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
         if (cell_image_focused) lv_obj_add_flag(cell_image_focused, LV_OBJ_FLAG_HIDDEN);
 
         return;
     }
 
-    if (ui_lblItem && strcmp(lv_label_get_text(ui_lblItem), items[index].display_name) != 0) lv_label_set_text(ui_lblItem, items[index].display_name);
-    if (ui_lblItem && items[index].glyph_icon) lv_obj_set_user_data(ui_lblItem, items[index].glyph_icon);
+    if (ui_lbl_item && strcmp(lv_label_get_text(ui_lbl_item), items[index].display_name) != 0)
+        lv_label_set_text(ui_lbl_item, items[index].display_name);
+    if (ui_lbl_item && items[index].glyph_icon) lv_obj_set_user_data(ui_lbl_item, items[index].glyph_icon);
 
-    if (!items[index].grid_image || !items[index].grid_image[0] ||
-        !items[index].grid_image_focused || !items[index].grid_image_focused[0]) {
+    if (!items[index].grid_image || !items[index].grid_image[0] || !items[index].grid_image_focused
+        || !items[index].grid_image_focused[0]) {
         update_grid_image_paths(index);
     }
 
     update_grid_image(cell_image, items[index].grid_image);
     update_grid_image(cell_image_focused, items[index].grid_image_focused);
 
-    lv_obj_clear_flag(ui_pnlItem, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnl_item, LV_OBJ_FLAG_HIDDEN);
 
-    if (ui_lblItem) lv_obj_clear_flag(ui_lblItem, LV_OBJ_FLAG_HIDDEN);
+    if (ui_lbl_item) lv_obj_clear_flag(ui_lbl_item, LV_OBJ_FLAG_HIDDEN);
     if (cell_image) lv_obj_clear_flag(cell_image, LV_OBJ_FLAG_HIDDEN);
     if (cell_image_focused) lv_obj_clear_flag(cell_image_focused, LV_OBJ_FLAG_HIDDEN);
 
     if (current_item_index == index) {
-        lv_group_focus_obj(ui_pnlItem);
+        lv_group_focus_obj(ui_pnl_item);
 
         if (!is_carousel_grid_mode()) {
-            if (ui_lblItem) lv_group_focus_obj(ui_lblItem);
+            if (ui_lbl_item) lv_group_focus_obj(ui_lbl_item);
             if (cell_image) lv_group_focus_obj(cell_image);
         }
     }
 }
 
-void update_grid_items(int direction) {
+void update_grid_items(const int direction) {
     if (is_carousel_grid_mode()) {
-        int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT)
-                                  ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+        const int carousel_item_count =
+            theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
 
         for (int i = 0; i < carousel_item_count; i++) {
-            int offset = i - (carousel_item_count / 2);
+            const int offset = i - carousel_item_count / 2;
 
-            size_t raw_index = ((size_t) current_item_index + offset + (size_t) item_count) % (size_t) item_count;
-            int index = (int) raw_index;
+            const size_t raw_index = ((size_t) current_item_index + offset + item_count) % item_count;
+            const int index = (int) raw_index;
 
-            lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, i);
+            lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_grid, i);
             if (!panel_item) continue;
 
             update_grid_item(panel_item, index);
@@ -287,12 +295,12 @@ void update_grid_items(int direction) {
         return;
     }
 
-    int cols = theme.GRID.COLUMN_COUNT;
-    int rows = theme.GRID.ROW_COUNT;
-    int total_visible = cols * rows;
+    const int cols = theme.grid.column_count;
+    const int rows = theme.grid.row_count;
+    const int total_visible = cols * rows;
     if (total_visible <= 0) return;
 
-    int row = get_grid_row_index(current_item_index);
+    const int row = get_grid_row_index(current_item_index);
 
     int max_start_row = ((int) item_count - 1) / cols - rows + 1;
     if (max_start_row < 0) max_start_row = 0;
@@ -309,39 +317,40 @@ void update_grid_items(int direction) {
     if (start_row_index < 0) start_row_index = 0;
     if (start_row_index > max_start_row) start_row_index = max_start_row;
 
-    int start_index = start_row_index * cols;
+    const int start_index = start_row_index * cols;
 
     for (int index = 0; index < total_visible; index++) {
-        lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
+        lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_grid, index);
         if (!panel_item) continue;
 
         update_grid_item(panel_item, start_index + index);
     }
 }
 
-static int get_grid_item_index(int index) {
-    lv_obj_t *panel_item = lv_obj_get_child(ui_pnlGrid, index);
-    int item_index = IFU(lv_obj_get_user_data(panel_item));
+static int get_grid_item_index(const int index) {
+    lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_grid, index);
+    const int item_index = IFU(lv_obj_get_user_data(panel_item));
     return item_index;
 }
 
-void update_grid(int direction) {
+void update_grid(const int direction) {
     if (is_carousel_grid_mode()) {
         update_grid_items(1);
         return;
     }
 
-    int row_pitch = theme.GRID.ROW_HEIGHT + theme.GRID.ROW_PADDING;
+    const int row_pitch = theme.grid.row_height + theme.grid.row_padding;
 
-    if (item_count <= theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT) {
-        int virtual_row = current_item_index / theme.GRID.COLUMN_COUNT;
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT,
-                                    row_pitch, virtual_row * theme.GRID.COLUMN_COUNT, ui_pnlGrid);
+    if (item_count <= theme.grid.column_count * theme.grid.row_count) {
+        const int virtual_row = current_item_index / theme.grid.column_count;
+        update_grid_scroll_position(
+            theme.grid.row_count, row_pitch, virtual_row * theme.grid.column_count, ui_pnl_grid
+        );
         return;
     }
 
-    int grid_start_index = get_grid_item_index(0);
-    int grid_end_index = get_grid_item_index(theme.GRID.COLUMN_COUNT * theme.GRID.ROW_COUNT - 1);
+    const int grid_start_index = get_grid_item_index(0);
+    const int grid_end_index = get_grid_item_index(theme.grid.column_count * theme.grid.row_count - 1);
 
     if (direction < 0) {
         if (current_item_index == item_count - 1) {
@@ -361,17 +370,17 @@ void update_grid(int direction) {
         }
     }
 
-    int start_item = get_grid_item_index(0);
-    int virtual_row = (current_item_index - start_item) / theme.GRID.COLUMN_COUNT;
+    const int start_item = get_grid_item_index(0);
+    const int virtual_row = (current_item_index - start_item) / theme.grid.column_count;
 
-    update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, row_pitch, virtual_row * theme.GRID.COLUMN_COUNT, ui_pnlGrid);
+    update_grid_scroll_position(theme.grid.row_count, row_pitch, virtual_row * theme.grid.column_count, ui_pnl_grid);
 }
 
-static void gen_grid_item_common(int item_index, int panel_index, int focus_index) {
+static void gen_grid_item_common(const int item_index, const int panel_index, const int focus_index) {
     if (item_index < 0 || (size_t) item_index >= item_count) return;
 
-    if (!items[item_index].grid_image || !items[item_index].grid_image[0] ||
-        !items[item_index].grid_image_focused || !items[item_index].grid_image_focused[0]) {
+    if (!items[item_index].grid_image || !items[item_index].grid_image[0] || !items[item_index].grid_image_focused
+        || !items[item_index].grid_image_focused[0]) {
         update_grid_image_paths(item_index);
     }
 
@@ -379,14 +388,14 @@ static void gen_grid_item_common(int item_index, int panel_index, int focus_inde
     uint8_t row;
 
     if (is_carousel_grid_mode()) {
-        col = (theme.GRID.COLUMN_COUNT == 1) ? 0 : (uint8_t) panel_index;
-        row = (theme.GRID.ROW_COUNT == 1) ? 0 : (uint8_t) panel_index;
+        col = theme.grid.column_count == 1 ? 0 : (uint8_t) panel_index;
+        row = theme.grid.row_count == 1 ? 0 : (uint8_t) panel_index;
     } else {
-        col = (uint8_t) (item_index % theme.GRID.COLUMN_COUNT);
-        row = (uint8_t) (item_index / theme.GRID.COLUMN_COUNT);
+        col = (uint8_t) (item_index % theme.grid.column_count);
+        row = (uint8_t) (item_index / theme.grid.column_count);
     }
 
-    lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+    lv_obj_t *cell_panel = lv_obj_create(ui_pnl_grid);
     if (!cell_panel) return;
 
     lv_obj_set_user_data(cell_panel, UFI(item_index));
@@ -396,10 +405,10 @@ static void gen_grid_item_common(int item_index, int panel_index, int focus_inde
 
     if (cell_label && items[item_index].glyph_icon) lv_obj_set_user_data(cell_label, items[item_index].glyph_icon);
 
-    create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                     items[item_index].grid_image,
-                     items[item_index].grid_image_focused,
-                     items[item_index].display_name);
+    create_grid_item(
+        &theme, cell_panel, cell_label, cell_image, col, row, items[item_index].grid_image,
+        items[item_index].grid_image_focused, items[item_index].display_name
+    );
 
     if (cell_label) lv_group_add_obj(ui_group, cell_label);
     if (cell_image) lv_group_add_obj(ui_group_glyph, cell_image);
@@ -414,11 +423,11 @@ static void gen_grid_item_common(int item_index, int panel_index, int focus_inde
     }
 }
 
-void gen_grid_item(int item_index) {
+void gen_grid_item(const int item_index) {
     gen_grid_item_common(item_index, 0, -1);
 }
 
-static void gen_carousel_grid_item(int item_index, int panel_index, int focus_index) {
+static void gen_carousel_grid_item(const int item_index, const int panel_index, const int focus_index) {
     gen_grid_item_common(item_index, panel_index, focus_index);
 }
 
@@ -432,22 +441,25 @@ int disable_grid_file_exists(char *item_curr_dir) {
 void create_carousel_grid(void) {
     if (item_count == 0) return;
 
-    int carousel_item_count = theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT ? theme.GRID.COLUMN_COUNT : theme.GRID.ROW_COUNT;
+    const int carousel_item_count =
+        theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
     if (carousel_item_count <= 0) return;
 
-    int middle_index = carousel_item_count / 2;
+    const int middle_index = carousel_item_count / 2;
 
     for (int i = 0; i < carousel_item_count; i++) {
-        int offset = i - middle_index;
-        int item_index = (current_item_index + offset + (int) item_count) % (int) item_count;
+        const int offset = i - middle_index;
+        const int item_index = (current_item_index + offset + (int) item_count) % (int) item_count;
 
         gen_carousel_grid_item(item_index, i, middle_index);
     }
 }
 
 int is_carousel_grid_mode(void) {
-    int carousel_item_count = (theme.GRID.COLUMN_COUNT > theme.GRID.ROW_COUNT) ? theme.GRID.COLUMN_COUNT
-                                                                               : theme.GRID.ROW_COUNT;
-    return (grid_mode_enabled && (theme.GRID.ROW_COUNT == 1 || theme.GRID.COLUMN_COUNT == 1) &&
-            carousel_item_count > 2 && carousel_item_count % 2 == 1) ? 1 : 0;
+    const int carousel_item_count =
+        theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
+    return grid_mode_enabled && (theme.grid.row_count == 1 || theme.grid.column_count == 1) && carousel_item_count > 2
+                   && carousel_item_count % 2 == 1
+               ? 1
+               : 0;
 }

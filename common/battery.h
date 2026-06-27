@@ -22,4 +22,4 @@ int battery_is_charging(void);
 
 char *battery_get_capacity_glyph(void);
 
-void battery_capacity_task(lv_timer_t *timer);
+void battery_capacity_task(const lv_timer_t *timer);

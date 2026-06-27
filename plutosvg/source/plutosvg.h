@@ -100,7 +100,7 @@ typedef bool (*plutosvg_palette_func_t)(void* closure, const char* name, int len
  * @return Pointer to the loaded `plutosvg_document_t` object, or `NULL` if loading fails.
  */
 PLUTOSVG_API plutosvg_document_t* plutosvg_document_load_from_data(const char* data, int length, float width, float height,
-    plutovg_destroy_func_t destroy_func, void* closure);
+                                                                   plutovg_destroy_func_t destroy_func, void* closure);
 
 /**
  * @brief Loads an SVG document from a file.
@@ -124,7 +124,7 @@ PLUTOSVG_API plutosvg_document_t* plutosvg_document_load_from_file(const char* f
  * @return `true` if rendering was successful; `false` otherwise.
  */
 PLUTOSVG_API bool plutosvg_document_render(const plutosvg_document_t* document, const char* id, plutovg_canvas_t* canvas,
-    const plutovg_color_t* current_color, plutosvg_palette_func_t palette_func, void* closure);
+                                           const plutovg_color_t* current_color, plutosvg_palette_func_t palette_func, void* closure);
 
 /**
  * @brief Renders an SVG document or a specific element to a surface.
@@ -139,7 +139,7 @@ PLUTOSVG_API bool plutosvg_document_render(const plutosvg_document_t* document, 
  * @return Pointer to the rendered `plutovg_surface_t` object, or `NULL` if rendering fails.
  */
 PLUTOSVG_API plutovg_surface_t* plutosvg_document_render_to_surface(const plutosvg_document_t* document, const char* id, int width, int height,
-    const plutovg_color_t* current_color, plutosvg_palette_func_t palette_func, void* closure);
+                                                                    const plutovg_color_t* current_color, plutosvg_palette_func_t palette_func, void* closure);
 
 /**
  * @brief Returns the intrinsic width of the SVG document.

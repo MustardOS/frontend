@@ -25,12 +25,12 @@ extern "C" {
  * @param x how much space to take proportionally to other FR tracks
  * @return a special track size
  */
-#define LV_GRID_FR(x)          (LV_COORD_MAX - 100 + x)
+#define LV_GRID_FR(x) (LV_COORD_MAX - 100 + x)
 
-#define LV_GRID_CONTENT        (LV_COORD_MAX - 101)
+#define LV_GRID_CONTENT (LV_COORD_MAX - 101)
 LV_EXPORT_CONST_INT(LV_GRID_CONTENT);
 
-#define LV_GRID_TEMPLATE_LAST  (LV_COORD_MAX)
+#define LV_GRID_TEMPLATE_LAST (LV_COORD_MAX)
 LV_EXPORT_CONST_INT(LV_GRID_TEMPLATE_LAST);
 
 /**********************
@@ -86,8 +86,10 @@ void lv_obj_set_grid_align(lv_obj_t *obj, lv_grid_align_t column_align, lv_grid_
  * @param row_pos row ID
  * @param row_span number of rows to take (>= 1)
  */
-void lv_obj_set_grid_cell(lv_obj_t *obj, lv_grid_align_t column_align, uint8_t col_pos, uint8_t col_span,
-                          lv_grid_align_t row_align, uint8_t row_pos, uint8_t row_span);
+void lv_obj_set_grid_cell(
+    lv_obj_t *obj, lv_grid_align_t column_align, uint8_t col_pos, uint8_t col_span, lv_grid_align_t row_align,
+    uint8_t row_pos, uint8_t row_span
+);
 
 /**
  * Just a wrapper to `LV_GRID_FR` for bindings.

@@ -6,31 +6,31 @@
 #include "mini/mini.h"
 #include "options.h"
 
-uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value) {
+uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, const uint32_t default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
     if (strcmp(meta, "NOT FOUND") == 0) return default_value;
 
     char *end = NULL;
     errno = 0;
-    unsigned long hex_val = strtoul(meta, &end, 16);
+    const unsigned long hex_val = strtoul(meta, &end, 16);
     if (errno || end == meta || *end != '\0' || hex_val > UINT32_MAX) return default_value;
     return (uint32_t) hex_val;
 }
 
-uint16_t get_ini_uint(mini_t *ini_config, const char *section, const char *key, uint16_t default_value) {
+uint16_t get_ini_uint(mini_t *ini_config, const char *section, const char *key, const uint16_t default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
     if (strcmp(meta, "NOT FOUND") == 0) return default_value;
 
     char *end = NULL;
-    unsigned long result = strtoul(meta, &end, 10);
+    const unsigned long result = strtoul(meta, &end, 10);
 
     if (end == meta || *end != '\0' || result > UINT16_MAX) return default_value;
     return (uint16_t) result;
 }
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int default_value) {
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, const int default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
     long result;
 
@@ -49,7 +49,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
     return (int16_t) result;
 }
 
-float get_ini_float(mini_t *ini_config, const char *section, const char *key, float default_value) {
+float get_ini_float(mini_t *ini_config, const char *section, const char *key, const float default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
     float result;
@@ -64,7 +64,7 @@ float get_ini_float(mini_t *ini_config, const char *section, const char *key, fl
     return result;
 }
 
-char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value) {
+char *get_ini_string(mini_t *ini_config, const char *section, const char *key, const char *default_value) {
     static char meta[MAX_BUFFER_SIZE];
     const char *result = mini_get_string(ini_config, section, key, default_value);
 

@@ -48,4 +48,3 @@ void lv_draw_wait_for_finish(lv_draw_ctx_t *draw_ctx) {
 /**********************
  *   STATIC FUNCTIONS
  **********************/
-

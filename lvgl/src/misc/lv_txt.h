@@ -15,7 +15,6 @@ extern "C" {
  *********************/
 #include "../lv_conf_internal.h"
 
-#include <stdbool.h>
 #include <stdarg.h>
 #include "lv_area.h"
 #include "../font/lv_font.h"
@@ -29,7 +28,7 @@ extern "C" {
 #define LV_TXT_COLOR_CMD "#"
 #endif
 
-#define LV_TXT_ENC_UTF8 1
+#define LV_TXT_ENC_UTF8  1
 #define LV_TXT_ENC_ASCII 2
 
 /**********************
@@ -40,10 +39,10 @@ extern "C" {
  * Options for text rendering.
  */
 enum {
-    LV_TEXT_FLAG_NONE    = 0x00,
+    LV_TEXT_FLAG_NONE = 0x00,
     LV_TEXT_FLAG_RECOLOR = 0x01, /**< Enable parsing of recolor command*/
-    LV_TEXT_FLAG_EXPAND  = 0x02, /**< Ignore max-width to avoid automatic word wrapping*/
-    LV_TEXT_FLAG_FIT     = 0x04, /**< Max-width is already equal to the longest line. (Used to skip some calculation)*/
+    LV_TEXT_FLAG_EXPAND = 0x02,  /**< Ignore max-width to avoid automatic word wrapping*/
+    LV_TEXT_FLAG_FIT = 0x04,     /**< Max-width is already equal to the longest line. (Used to skip some calculation)*/
 };
 typedef uint8_t lv_text_flag_t;
 
@@ -58,10 +57,10 @@ typedef uint8_t lv_text_cmd_state_t;
 
 /** Label align policy*/
 enum {
-    LV_TEXT_ALIGN_AUTO, /**< Align text auto*/
-    LV_TEXT_ALIGN_LEFT, /**< Align text to left*/
+    LV_TEXT_ALIGN_AUTO,   /**< Align text auto*/
+    LV_TEXT_ALIGN_LEFT,   /**< Align text to left*/
     LV_TEXT_ALIGN_CENTER, /**< Align text to center*/
-    LV_TEXT_ALIGN_RIGHT, /**< Align text to right*/
+    LV_TEXT_ALIGN_RIGHT,  /**< Align text to right*/
 };
 typedef uint8_t lv_text_align_t;
 
@@ -80,8 +79,10 @@ typedef uint8_t lv_text_align_t;
  * @param max_width max width of the text (break the lines to fit this size). Set COORD_MAX to avoid
  * line breaks
  */
-void lv_txt_get_size(lv_point_t * size_res, const char * text, const lv_font_t * font, lv_coord_t letter_space,
-                     lv_coord_t line_space, lv_coord_t max_width, lv_text_flag_t flag);
+void lv_txt_get_size(
+    lv_point_t *size_res, const char *text, const lv_font_t *font, lv_coord_t letter_space, lv_coord_t line_space,
+    lv_coord_t max_width, lv_text_flag_t flag
+);
 
 /**
  * Get the next line of text. Check line length and break chars too.
@@ -96,8 +97,10 @@ void lv_txt_get_size(lv_point_t * size_res, const char * text, const lv_font_t *
  * @return the index of the first char of the new line (in byte index not letter index. With UTF-8
  * they are different)
  */
-uint32_t _lv_txt_get_next_line(const char * txt, const lv_font_t * font, lv_coord_t letter_space,
-                               lv_coord_t max_width, lv_coord_t * used_width, lv_text_flag_t flag);
+uint32_t _lv_txt_get_next_line(
+    const char *txt, const lv_font_t *font, lv_coord_t letter_space, lv_coord_t max_width, lv_coord_t *used_width,
+    lv_text_flag_t flag
+);
 
 /**
  * Give the length of a text with a given font
@@ -109,18 +112,18 @@ uint32_t _lv_txt_get_next_line(const char * txt, const lv_font_t * font, lv_coor
  * @param flags settings for the text from 'txt_flag_t' enum
  * @return length of a char_num long text
  */
-lv_coord_t lv_txt_get_width(const char * txt, uint32_t length, const lv_font_t * font, lv_coord_t letter_space,
-                            lv_text_flag_t flag);
+lv_coord_t
+lv_txt_get_width(const char *txt, uint32_t length, const lv_font_t *font, lv_coord_t letter_space, lv_text_flag_t flag);
 
 /**
  * Check next character in a string and decide if the character is part of the command or not
  * @param state pointer to a txt_cmd_state_t variable which stores the current state of command
  * processing
  * @param c the current character
- * @return true: the character is part of a command and should not be written,
- *         false: the character should be written
+ * @return 1: the character is part of a command and should not be written,
+ *         0: the character should be written
  */
-bool _lv_txt_is_cmd(lv_text_cmd_state_t * state, uint32_t c);
+int _lv_txt_is_cmd(lv_text_cmd_state_t *state, uint32_t c);
 
 /**
  * Insert a string into an other
@@ -128,7 +131,7 @@ bool _lv_txt_is_cmd(lv_text_cmd_state_t * state, uint32_t c);
  * @param pos position to insert (0: before the original text, 1: after the first char etc.)
  * @param ins_txt text to insert, must be '\0' terminated
  */
-void _lv_txt_ins(char * txt_buf, uint32_t pos, const char * ins_txt);
+void _lv_txt_ins(char *txt_buf, uint32_t pos, const char *ins_txt);
 
 /**
  * Delete a part of a string
@@ -137,14 +140,14 @@ void _lv_txt_ins(char * txt_buf, uint32_t pos, const char * ins_txt);
  * char etc.)
  * @param len number of characters to delete
  */
-void _lv_txt_cut(char * txt, uint32_t pos, uint32_t len);
+void _lv_txt_cut(char *txt, uint32_t pos, uint32_t len);
 
 /**
  * return a new formatted text. Memory will be allocated to store the text.
  * @param fmt `printf`-like format
  * @return pointer to the allocated text string.
  */
-char * _lv_txt_set_text_vfmt(const char * fmt, va_list ap) LV_FORMAT_ATTRIBUTE(1, 0);
+char *_lv_txt_set_text_vfmt(const char *fmt, va_list ap) LV_FORMAT_ATTRIBUTE(1, 0);
 
 /**
  * Decode two encoded character from a string.
@@ -155,27 +158,26 @@ char * _lv_txt_set_text_vfmt(const char * fmt, va_list ap) LV_FORMAT_ATTRIBUTE(1
  *                After the call it will point to the next encoded char in 'txt'.
  *                NULL to use txt[0] as index
  */
-void _lv_txt_encoded_letter_next_2(const char * txt, uint32_t * letter, uint32_t * letter_next, uint32_t * ofs);
+void _lv_txt_encoded_letter_next_2(const char *txt, uint32_t *letter, uint32_t *letter_next, uint32_t *ofs);
 
 /**
  * Test if char is break char or not (a text can broken here or not)
  * @param letter a letter
- * @return false: 'letter' is not break char
+ * @return 0: 'letter' is not break char
  */
-static inline bool _lv_txt_is_break_char(uint32_t letter)
-{
+static inline int _lv_txt_is_break_char(uint32_t letter) {
     uint8_t i;
-    bool ret = false;
+    int ret = 0;
 
     /* each chinese character can be break */
-    if(letter >= 0x4E00 && letter <= 0x9FA5) {
-        return true;
+    if (letter >= 0x4E00 && letter <= 0x9FA5) {
+        return 1;
     }
 
     /*Compare the letter to TXT_BREAK_CHARS*/
-    for(i = 0; LV_TXT_BREAK_CHARS[i] != '\0'; i++) {
-        if(letter == (uint32_t)LV_TXT_BREAK_CHARS[i]) {
-            ret = true; /*If match then it is break char*/
+    for (i = 0; LV_TXT_BREAK_CHARS[i] != '\0'; i++) {
+        if (letter == (uint32_t) LV_TXT_BREAK_CHARS[i]) {
+            ret = 1; /*If match then it is break char*/
             break;
         }
     }

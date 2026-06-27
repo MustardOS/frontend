@@ -27,11 +27,7 @@ const struct colour_state *colour_adjust_get(void) {
     if (colour_cache.loaded) return &colour_cache.value;
 
     struct colour_state colour = {
-            .brightness = 0.0f,
-            .contrast   = 1.0f,
-            .saturation = 1.0f,
-            .hueshift   = 0.0f,
-            .gamma      = 1.0f
+        .brightness = 0.0f, .contrast = 1.0f, .saturation = 1.0f, .hueshift = 0.0f, .gamma = 1.0f
     };
 
     float raw;

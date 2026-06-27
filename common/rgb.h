@@ -12,14 +12,14 @@ typedef enum {
 } rgb_mode_t;
 
 typedef enum {
-    RGB_BREATH_FAST = 0,
-    RGB_BREATH_MEDIUM,
-    RGB_BREATH_SLOW,
+    rgb_breath_fast = 0,
+    rgb_breath_medium,
+    rgb_breath_slow,
 } rgb_breath_speed_t;
 
 typedef enum {
-    RGB_BACKEND_AUTO = 0,
-    RGB_BACKEND_SYSFS,
-    RGB_BACKEND_SERIAL,
-    RGB_BACKEND_JOYPAD,
+    rgb_backend_auto = 0,
+    rgb_backend_sysfs,
+    rgb_backend_serial,
+    rgb_backend_joypad,
 } rgb_backend_t;

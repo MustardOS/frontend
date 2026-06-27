@@ -25,23 +25,14 @@
 #define SEQ_BUF_SIZE 32
 #define MAX_SEQUENCE 16
 
-#define SAFE_BIT(i) ((uint64_t)1 << ((i) & 63))
+#define SAFE_BIT(i)  ((uint64_t) 1 << ((i) & 63))
 #define SEQUENCE_WIN (400 + 150 * seq_buf.count)
 
-static struct pollfd vol_pfd = {
-        .fd = -1,
-        .events = POLLIN
-};
+static struct pollfd vol_pfd = {.fd = -1, .events = POLLIN};
 
-static struct pollfd pwr_pfd = {
-        .fd = -1,
-        .events = POLLIN
-};
+static struct pollfd pwr_pfd = {.fd = -1, .events = POLLIN};
 
-static struct pollfd lid_pfd = {
-        .fd = -1,
-        .events = POLLIN
-};
+static struct pollfd lid_pfd = {.fd = -1, .events = POLLIN};
 
 static void handle_combo(int num, mux_input_action action);
 
@@ -50,9 +41,9 @@ static void handle_input(mux_input_type type, mux_input_action action);
 static void handle_idle(void);
 
 typedef enum {
-    IDLE_INHIBIT_NONE = 0, // No idle inhibit.
-    IDLE_INHIBIT_BOTH = 1, // Inhibit idle sleep and display.
-    IDLE_INHIBIT_SLEEP = 2, // Inhibit idle sleep only.
+    idle_inhibit_none = 0,  // No idle inhibit.
+    idle_inhibit_both = 1,  // Inhibit idle sleep and display.
+    idle_inhibit_sleep = 2, // Inhibit idle sleep only.
 } idle_inhibit_state;
 
 typedef struct {
@@ -89,69 +80,69 @@ static struct {
     int count;
 } seq_buf = {0};
 
-static const char *input_name[MUX_INPUT_COUNT] = {
-        // Gamepad buttons:
-        [MUX_INPUT_A] = "A",
-        [MUX_INPUT_B] = "B",
-        [MUX_INPUT_C] = "C",
-        [MUX_INPUT_X] = "X",
-        [MUX_INPUT_Y] = "Y",
-        [MUX_INPUT_Z] = "Z",
-        [MUX_INPUT_L1] = "L1",
-        [MUX_INPUT_L2] = "L2",
-        [MUX_INPUT_L3] = "L3",
-        [MUX_INPUT_R1] = "R1",
-        [MUX_INPUT_R2] = "R2",
-        [MUX_INPUT_R3] = "R3",
-        [MUX_INPUT_SELECT] = "SELECT",
-        [MUX_INPUT_START] = "START",
-        [MUX_INPUT_SWITCH] = "SWITCH",
+static const char *input_name[mux_input_count] = {
+    // Gamepad buttons:
+    [mux_input_a] = "A",
+    [mux_input_b] = "B",
+    [mux_input_c] = "C",
+    [mux_input_x] = "X",
+    [mux_input_y] = "Y",
+    [mux_input_z] = "Z",
+    [mux_input_l1] = "L1",
+    [mux_input_l2] = "L2",
+    [mux_input_l3] = "L3",
+    [mux_input_r1] = "R1",
+    [mux_input_r2] = "R2",
+    [mux_input_r3] = "R3",
+    [mux_input_select] = "SELECT",
+    [mux_input_start] = "START",
+    [mux_input_switch] = "SWITCH",
 
-        // D-pad:
-        [MUX_INPUT_DPAD_UP] = "DPAD_UP",
-        [MUX_INPUT_DPAD_DOWN] = "DPAD_DOWN",
-        [MUX_INPUT_DPAD_LEFT] = "DPAD_LEFT",
-        [MUX_INPUT_DPAD_RIGHT] = "DPAD_RIGHT",
+    // D-pad:
+    [mux_input_dpad_up] = "DPAD_UP",
+    [mux_input_dpad_down] = "DPAD_DOWN",
+    [mux_input_dpad_left] = "DPAD_LEFT",
+    [mux_input_dpad_right] = "DPAD_RIGHT",
 
-        // Left stick:
-        [MUX_INPUT_LS_UP] = "LS_UP",
-        [MUX_INPUT_LS_DOWN] = "LS_DOWN",
-        [MUX_INPUT_LS_LEFT] = "LS_LEFT",
-        [MUX_INPUT_LS_RIGHT] = "LS_RIGHT",
+    // Left stick:
+    [mux_input_ls_up] = "LS_UP",
+    [mux_input_ls_down] = "LS_DOWN",
+    [mux_input_ls_left] = "LS_LEFT",
+    [mux_input_ls_right] = "LS_RIGHT",
 
-        // Right stick:
-        [MUX_INPUT_RS_UP] = "RS_UP",
-        [MUX_INPUT_RS_DOWN] = "RS_DOWN",
-        [MUX_INPUT_RS_LEFT] = "RS_LEFT",
-        [MUX_INPUT_RS_RIGHT] = "RS_RIGHT",
+    // Right stick:
+    [mux_input_rs_up] = "RS_UP",
+    [mux_input_rs_down] = "RS_DOWN",
+    [mux_input_rs_left] = "RS_LEFT",
+    [mux_input_rs_right] = "RS_RIGHT",
 
-        // Volume buttons:
-        [MUX_INPUT_VOL_UP] = "VOL_UP",
-        [MUX_INPUT_VOL_DOWN] = "VOL_DOWN",
+    // Volume buttons:
+    [mux_input_vol_up] = "VOL_UP",
+    [mux_input_vol_down] = "VOL_DOWN",
 
-        // Function buttons:
-        [MUX_INPUT_MENU] = "MENU",
+    // Function buttons:
+    [mux_input_menu] = "MENU",
 
-        // System buttons:
-        [MUX_INPUT_POWER_LONG] = "POWER_LONG",
-        [MUX_INPUT_POWER_SHORT] = "POWER_SHORT",
+    // System buttons:
+    [mux_input_power_long] = "POWER_LONG",
+    [mux_input_power_short] = "POWER_SHORT",
 
-        // Lid (Hall Switch):
-        [MUX_INPUT_LID_OPEN] = "LID_OPEN",
-        [MUX_INPUT_LID_CLOSE] = "LID_CLOSE",
+    // Lid (Hall Switch):
+    [mux_input_lid_open] = "LID_OPEN",
+    [mux_input_lid_close] = "LID_CLOSE",
 };
 
 static const char *action_name[] = {
-        [MUX_INPUT_PRESS] = "PRESS",
-        [MUX_INPUT_HOLD] = "HOLD",
-        [MUX_INPUT_RELEASE] = "RELEASE",
+    [mux_input_press] = "PRESS",
+    [mux_input_hold] = "HOLD",
+    [mux_input_release] = "RELEASE",
 };
 
 static mux_input_options input_opts = {
-        .max_idle_ms = IDLE_MS,
-        .input_handler = handle_input,
-        .combo_handler = handle_combo,
-        .idle_handler = handle_idle,
+    .max_idle_ms = IDLE_MS,
+    .input_handler = handle_input,
+    .combo_handler = handle_combo,
+    .idle_handler = handle_idle,
 };
 
 static combo_config combo[MUX_INPUT_COMBO_COUNT] = {};
@@ -175,7 +166,7 @@ static int raw_power_pressed = 0;
 static int raw_power_long_active = 0;
 static uint32_t raw_power_press_tick = 0;
 
-#define RAW_REPEAT_INITIAL_MS 180
+#define RAW_REPEAT_INITIAL_MS  180
 #define RAW_REPEAT_INTERVAL_MS 70
 
 static int lid_fd = -1;
@@ -189,21 +180,21 @@ static char *previous_governor = NULL;
 
 static volatile sig_atomic_t pending_signal = 0;
 
-static inline int in_idle_state(void) {
+static int in_idle_state(void) {
     return idle_state_exists;
 }
 
-static void del_old_proc(int signo) {
+static void del_old_proc(const int signo) {
     (void) signo;
 
     for (;;) {
         int status;
-        pid_t pid = waitpid(-1, &status, WNOHANG);
+        const pid_t pid = waitpid(-1, &status, WNOHANG);
         if (pid <= 0) break;
     }
 }
 
-static void do_cleanup(int signo) {
+static void do_cleanup(const int signo) {
     (void) signo;
 
     static int cleanup_done = 0;
@@ -250,11 +241,11 @@ static void do_cleanup(int signo) {
     free(previous_governor);
 }
 
-static void cleanup(int signo) {
+static void cleanup(const int signo) {
     pending_signal = signo;
 }
 
-static void record_sequence(mux_input_type type) {
+static void record_sequence(const mux_input_type type) {
     if (seq_buf.count >= SEQ_BUF_SIZE) {
         memmove(seq_buf.inputs, seq_buf.inputs + 1, (SEQ_BUF_SIZE - 1) * sizeof(int));
         memmove(seq_buf.time, seq_buf.time + 1, (SEQ_BUF_SIZE - 1) * sizeof(uint32_t));
@@ -289,20 +280,23 @@ static void record_sequence(mux_input_type type) {
     }
 }
 
-static void run_command(const combo_config *c) {
+static void run_command(combo_config *c) {
     if (!c || !c->exec_argv || c->exec_argc == 0) return;
 
-    if (c->is_handheld_mode && config.BOOT.DEVICE_MODE != 0) {
+    if (c->is_handheld_mode && config.boot.device_mode != 0) {
         if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
         return;
     }
 
-    if (c->is_normal_mode && config.BOOT.FACTORY_RESET != 0) {
+    if (c->is_normal_mode && config.boot.factory_reset != 0) {
         if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
         return;
     }
 
-    run_exec((const char **) c->exec_argv, c->exec_argc + 1, 1, 0, NULL, NULL);
+    const char *argv[c->exec_argc + 1];
+    for (size_t i = 0; i <= c->exec_argc; i++)
+        argv[i] = c->exec_argv[i];
+    run_exec(argv, c->exec_argc + 1, 1, 0, NULL, NULL);
 }
 
 static void run_raw_power_short_release(void) {
@@ -311,7 +305,7 @@ static void run_raw_power_short_release(void) {
 
         if (c->is_sequence) continue;
         if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
-        if (c->type_mask != SAFE_BIT(MUX_INPUT_POWER_SHORT)) continue;
+        if (c->type_mask != SAFE_BIT(mux_input_power_short)) continue;
 
         printf("%s\n", c->name);
         run_command(c);
@@ -319,8 +313,8 @@ static void run_raw_power_short_release(void) {
     }
 }
 
-static void run_raw_lid_action(mux_input_type type) {
-    uint64_t lid_bit = SAFE_BIT(type);
+static void run_raw_lid_action(const mux_input_type type) {
+    const uint64_t lid_bit = SAFE_BIT(type);
 
     for (int i = 0; i < combo_count; ++i) {
         combo_config *c = &combo[i];
@@ -341,7 +335,7 @@ static void handle_raw_lid(void) {
     struct input_event ev;
 
     for (;;) {
-        ssize_t r = read(lid_pfd.fd, &ev, sizeof(ev));
+        const ssize_t r = read(lid_pfd.fd, &ev, sizeof(ev));
 
         if (r != sizeof(ev)) break;
         if (ev.type != EV_KEY) continue;
@@ -349,20 +343,20 @@ static void handle_raw_lid(void) {
         global_tick = mux_input_tick();
 
         if (ev.code == KEY_INSERT && ev.value == 0) {
-            handle_input(MUX_INPUT_LID_CLOSE, MUX_INPUT_PRESS);
-            handle_input(MUX_INPUT_LID_CLOSE, MUX_INPUT_RELEASE);
-            run_raw_lid_action(MUX_INPUT_LID_CLOSE);
+            handle_input(mux_input_lid_close, mux_input_press);
+            handle_input(mux_input_lid_close, mux_input_release);
+            run_raw_lid_action(mux_input_lid_close);
 
         } else if (ev.code == KEY_DELETE && ev.value == 1) {
-            handle_input(MUX_INPUT_LID_OPEN, MUX_INPUT_PRESS);
-            handle_input(MUX_INPUT_LID_OPEN, MUX_INPUT_RELEASE);
-            run_raw_lid_action(MUX_INPUT_LID_OPEN);
+            handle_input(mux_input_lid_open, mux_input_press);
+            handle_input(mux_input_lid_open, mux_input_release);
+            run_raw_lid_action(mux_input_lid_open);
         }
     }
 }
 
 static void run_raw_power_long_action(void) {
-    uint64_t pwr_long_bit = SAFE_BIT(MUX_INPUT_POWER_LONG);
+    const uint64_t pwr_long_bit = SAFE_BIT(mux_input_power_long);
 
     for (int i = 0; i < combo_count; ++i) {
         combo_config *c = &combo[i];
@@ -378,22 +372,22 @@ static void run_raw_power_long_action(void) {
     }
 }
 
-static void run_raw_volume_action(mux_input_type type, mux_input_action action) {
+static void run_raw_volume_action(const mux_input_type type, const mux_input_action action) {
     handle_input(type, action);
 
-    uint64_t vol_bit = SAFE_BIT(type);
+    const uint64_t vol_bit = SAFE_BIT(type);
     int brightness_triggered = 0;
 
-    if (mux_input_pressed(MUX_INPUT_MENU)) {
+    if (mux_input_pressed(mux_input_menu)) {
         for (int i = 0; i < combo_count; ++i) {
             combo_config *c = &combo[i];
 
             if (c->is_sequence) continue;
             if (!(c->type_mask & vol_bit)) continue;
-            if (!(c->type_mask & SAFE_BIT(MUX_INPUT_MENU))) continue;
+            if (!(c->type_mask & SAFE_BIT(mux_input_menu))) continue;
             if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
 
-            if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && c->handle_hold)) {
+            if (action == mux_input_press || (action == mux_input_hold && c->handle_hold)) {
                 printf("%s\n", c->name);
                 run_command(c);
                 brightness_triggered = 1;
@@ -411,7 +405,7 @@ static void run_raw_volume_action(mux_input_type type, mux_input_action action) 
         if (c->type_mask != vol_bit) continue;
         if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
 
-        if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && c->handle_hold)) {
+        if (action == mux_input_press || (action == mux_input_hold && c->handle_hold)) {
             printf("%s\n", c->name);
             run_command(c);
             break;
@@ -425,7 +419,7 @@ static void handle_raw_power(void) {
     struct input_event ev;
 
     for (;;) {
-        ssize_t r = read(pwr_pfd.fd, &ev, sizeof(ev));
+        const ssize_t r = read(pwr_pfd.fd, &ev, sizeof(ev));
 
         if (r != sizeof(ev)) break;
         if (ev.type != EV_KEY) continue;
@@ -438,11 +432,11 @@ static void handle_raw_power(void) {
             raw_power_long_active = 0;
             raw_power_press_tick = global_tick;
 
-            handle_input(MUX_INPUT_POWER_SHORT, MUX_INPUT_PRESS);
+            handle_input(mux_input_power_short, mux_input_press);
         } else if (ev.value == 0) {
-            if (raw_power_long_active) handle_input(MUX_INPUT_POWER_LONG, MUX_INPUT_RELEASE);
+            if (raw_power_long_active) handle_input(mux_input_power_long, mux_input_release);
 
-            handle_input(MUX_INPUT_POWER_SHORT, MUX_INPUT_RELEASE);
+            handle_input(mux_input_power_short, mux_input_release);
             if (!raw_power_long_active) run_raw_power_short_release();
 
             raw_power_pressed = 0;
@@ -457,21 +451,21 @@ static void handle_raw_volume(void) {
     struct input_event ev;
 
     for (;;) {
-        ssize_t r = read(vol_pfd.fd, &ev, sizeof(ev));
+        const ssize_t r = read(vol_pfd.fd, &ev, sizeof(ev));
 
         if (r != sizeof(ev)) break;
         if (ev.type != EV_KEY) continue;
 
         mux_input_type type;
         int *pressed;
-        uint32_t * next_repeat;
+        uint32_t *next_repeat;
 
         if (ev.code == KEY_VOLUMEUP) {
-            type = MUX_INPUT_VOL_UP;
+            type = mux_input_vol_up;
             pressed = &raw_vol_up_pressed;
             next_repeat = &raw_vol_up_next_repeat;
         } else if (ev.code == KEY_VOLUMEDOWN) {
-            type = MUX_INPUT_VOL_DOWN;
+            type = mux_input_vol_down;
             pressed = &raw_vol_down_pressed;
             next_repeat = &raw_vol_down_next_repeat;
         } else {
@@ -483,24 +477,24 @@ static void handle_raw_volume(void) {
         if (ev.value == 1) {
             *pressed = 1;
             *next_repeat = global_tick + RAW_REPEAT_INITIAL_MS;
-            run_raw_volume_action(type, MUX_INPUT_PRESS);
+            run_raw_volume_action(type, mux_input_press);
         } else if (ev.value == 2) {
             *pressed = 1;
             *next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
-            run_raw_volume_action(type, MUX_INPUT_HOLD);
+            run_raw_volume_action(type, mux_input_hold);
         } else {
             *pressed = 0;
             *next_repeat = 0;
-            run_raw_volume_action(type, MUX_INPUT_RELEASE);
+            run_raw_volume_action(type, mux_input_release);
         }
     }
 }
 
-static int open_raw_event_index(int idx, struct pollfd *pfd, const char *label) {
+static int open_raw_event_index(const int idx, struct pollfd *pfd, const char *label) {
     char path[PATH_MAX];
     snprintf(path, sizeof(path), "/dev/input/event%d", idx);
 
-    int fd = open(path, O_RDONLY | O_NONBLOCK);
+    const int fd = open(path, O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
         LOG_WARN("input", "Cannot open %s", path);
         return -1;
@@ -517,20 +511,20 @@ static int open_raw_event_index(int idx, struct pollfd *pfd, const char *label) 
     return fd;
 }
 
-static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
-    uint32_t idle_ms = global_tick - timer->tick;
+static void check_idle(idle_timer *timer, const uint32_t timeout_ms) {
+    const uint32_t idle_ms = global_tick - timer->tick;
 
     if (idle_ms >= timeout_ms && !timer->idle) {
         if (verbose) LOG_INFO("input", "Device is now IDLE");
         if (timer->idle_name) printf("%s\n", timer->idle_name);
 
         if (!running_governor) {
-            running_governor = read_all_char_from(device.CPU.GOVERNOR);
+            running_governor = read_all_char_from(device.cpu.governor);
             if (running_governor) write_text_to_file(WAKE_CPU_GOV, "w", CHAR, running_governor);
         }
 
-        if (!previous_governor) previous_governor = read_all_char_from(device.CPU.GOVERNOR);
-        set_scaling_governor(config.SETTINGS.POWER.GOV.IDLE, 0);
+        if (!previous_governor) previous_governor = read_all_char_from(device.cpu.governor);
+        set_scaling_governor(config.settings.power.gov.idle, 0);
 
         write_text_to_file(IDLE_STATE, "w", INT, 1);
         timer->idle = 1;
@@ -553,17 +547,17 @@ static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
     }
 }
 
-static void handle_input(mux_input_type type, mux_input_action action) {
+static void handle_input(const mux_input_type type, const mux_input_action action) {
     global_tick = mux_input_tick();
 
     // Ignore the stupid TrimUI switch while device is in idle state.
     // Spent the last fucking hour trying to debug and it was this
     // stupid little cunt interrupting the idle timer...
-    if (type == MUX_INPUT_SWITCH && in_idle_state()) return;
+    if (type == mux_input_switch && in_idle_state()) return;
 
     if (verbose) printf("[%s %s]\n", input_name[type], action_name[action]);
 
-    if (action == MUX_INPUT_PRESS) {
+    if (action == mux_input_press) {
         record_sequence(type);
 
         for (int i = 0; i < combo_count; ++i) {
@@ -575,7 +569,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
             uint32_t prev_time = 0;
 
             for (int j = 0; j < c->sequence_length; ++j) {
-                int idx = seq_buf.count - c->sequence_length + j;
+                const int idx = seq_buf.count - c->sequence_length + j;
 
                 if (seq_buf.inputs[idx] != c->sequence_inputs[j]) {
                     match = 0;
@@ -583,7 +577,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
                 }
 
                 if (c->max_interval && j > 0) {
-                    uint32_t delta = seq_buf.time[idx] - prev_time;
+                    const uint32_t delta = seq_buf.time[idx] - prev_time;
                     if (delta > c->max_interval) {
                         match = 0;
                         break;
@@ -620,18 +614,18 @@ static void handle_idle(void) {
 
     if (raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat) {
         raw_vol_up_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
-        run_raw_volume_action(MUX_INPUT_VOL_UP, MUX_INPUT_HOLD);
+        run_raw_volume_action(mux_input_vol_up, mux_input_hold);
     }
 
     if (raw_vol_down_pressed && raw_vol_down_next_repeat && global_tick >= raw_vol_down_next_repeat) {
         raw_vol_down_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
-        run_raw_volume_action(MUX_INPUT_VOL_DOWN, MUX_INPUT_HOLD);
+        run_raw_volume_action(mux_input_vol_down, mux_input_hold);
     }
 
     if (raw_power_pressed && !raw_power_long_active) {
         if (global_tick - raw_power_press_tick >= POWER_LONG_MS) {
             raw_power_long_active = 1;
-            handle_input(MUX_INPUT_POWER_LONG, MUX_INPUT_PRESS);
+            handle_input(mux_input_power_long, mux_input_press);
             run_raw_power_long_action();
         }
     }
@@ -639,39 +633,41 @@ static void handle_idle(void) {
     if (idle_display.tick != global_tick) {
         // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
         // conditions here, but it's more flexible to leave that externally controllable.)
-        switch (read_line_int_from((CONF_CONFIG_PATH "system/idle_inhibit"), 1)) {
-            case IDLE_INHIBIT_BOTH:
+        switch (read_line_int_from(CONF_CONFIG_PATH "system/idle_inhibit", 1)) {
+            case idle_inhibit_both:
                 idle_display.tick = global_tick;
                 // fallthrough
-            case IDLE_INHIBIT_SLEEP:
+            case idle_inhibit_sleep:
                 idle_sleep.tick = global_tick;
+                break;
+            default:
                 break;
         }
     }
 
-    uint32_t disp_timeout = config.SETTINGS.POWER.IDLE.DISPLAY * 1000;
-    uint32_t sleep_timeout = config.SETTINGS.POWER.IDLE.SLEEP * 1000;
+    const uint32_t disp_timeout = config.settings.power.idle.display * 1000;
+    const uint32_t sleep_timeout = config.settings.power.idle.sleep * 1000;
 
     if (disp_timeout) check_idle(&idle_display, disp_timeout);
     if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout);
 }
 
-static void handle_combo(int num, mux_input_action action) {
+static void handle_combo(const int num, const mux_input_action action) {
     combo_config *c = &combo[num];
-    uint64_t mask = input_opts.combo[num].type_mask;
+    const uint64_t mask = input_opts.combo[num].type_mask;
 
     if (!mask || (c->negate_mask && mux_input_pressed_any(c->negate_mask))) return;
 
-    if (mask == SAFE_BIT(MUX_INPUT_POWER_SHORT)) {
-        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_POWER_LONG)) {
+    if (mask == SAFE_BIT(mux_input_power_short)) {
+        if (action == mux_input_release && !mux_input_pressed(mux_input_power_long)) {
             printf("%s\n", c->name);
             run_command(c);
         }
         return;
     }
 
-    if (mask == SAFE_BIT(MUX_INPUT_MENU)) {
-        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_MENU)) {
+    if (mask == SAFE_BIT(mux_input_menu)) {
+        if (action == mux_input_release && !mux_input_pressed(mux_input_menu)) {
             printf("%s\n", c->name);
             run_command(c);
         }
@@ -680,25 +676,25 @@ static void handle_combo(int num, mux_input_action action) {
 
     if (!mux_input_pressed_any(mask)) return;
 
-    if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && c->handle_hold)) {
+    if (action == mux_input_press || (action == mux_input_hold && c->handle_hold)) {
         printf("%s\n", c->name);
         run_command(c);
     }
 }
 
-// Parses input type specified by name. Returns MUX_INPUT_COUNT if name is not valid.
-static int parse_type(struct json input) {
-    for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
+// Parses input type specified by name. Returns mux_input_cOUNT if name is not valid.
+static int parse_type(const struct json input) {
+    for (int i = 0; i < mux_input_count; ++i) {
         if (input_name[i] && !json_string_compare(input, input_name[i])) return i;
     }
 
-    return MUX_INPUT_COUNT;
+    return mux_input_count;
 }
 
-static void parse_inputs_array(struct json array, combo_config *c) {
+static void parse_inputs_array(const struct json array, combo_config *c) {
     for (struct json input = json_first(array); json_exists(input); input = json_next(input)) {
-        int type = parse_type(input);
-        if (type == MUX_INPUT_COUNT) {
+        const int type = parse_type(input);
+        if (type == mux_input_count) {
             LOG_ERROR("input", "JSON Error: Invalid input name");
             exit(1);
         }
@@ -706,10 +702,10 @@ static void parse_inputs_array(struct json array, combo_config *c) {
     }
 }
 
-static void parse_negate_array(struct json array, combo_config *c) {
+static void parse_negate_array(const struct json array, combo_config *c) {
     for (struct json input = json_first(array); json_exists(input); input = json_next(input)) {
-        int type = parse_type(input);
-        if (type == MUX_INPUT_COUNT) {
+        const int type = parse_type(input);
+        if (type == mux_input_count) {
             LOG_ERROR("input", "JSON Error: Invalid negate input name");
             exit(1);
         }
@@ -717,7 +713,7 @@ static void parse_negate_array(struct json array, combo_config *c) {
     }
 }
 
-static void parse_sequence_array(struct json array, combo_config *c) {
+static void parse_sequence_array(const struct json array, combo_config *c) {
     int count = 0;
 
     for (struct json input = json_first(array); json_exists(input); input = json_next(input)) {
@@ -726,8 +722,8 @@ static void parse_sequence_array(struct json array, combo_config *c) {
             exit(1);
         }
 
-        int type = parse_type(input);
-        if (type == MUX_INPUT_COUNT) {
+        const int type = parse_type(input);
+        if (type == mux_input_count) {
             LOG_ERROR("input", "JSON Error: Invalid input name in sequence");
             exit(1);
         }
@@ -754,10 +750,10 @@ static int combo_name_exists(const char *name) {
 static int cmp_combo(const void *p1, const void *p2) {
     const combo_config *c1 = p1, *c2 = p2;
 
-    int o1 = __builtin_popcountll(c1->type_mask);
-    int o2 = __builtin_popcountll(c2->type_mask);
+    const int o1 = __builtin_popcountll(c1->type_mask);
+    const int o2 = __builtin_popcountll(c2->type_mask);
 
-    return (o1 != o2) ? o2 - o1 : strcmp(c1->name, c2->name);
+    return o1 != o2 ? o2 - o1 : strcmp(c1->name, c2->name);
 }
 
 static void print_combo_config(const combo_config *c) {
@@ -767,12 +763,11 @@ static void print_combo_config(const combo_config *c) {
     if (c->is_sequence) {
         for (int i = 0; i < c->sequence_length; ++i) {
             strlcat(inputs, input_name[c->sequence_inputs[i]], sizeof(inputs));
-            if (i < c->sequence_length - 1)
-                strlcat(inputs, ",", sizeof(inputs));
+            if (i < c->sequence_length - 1) strlcat(inputs, ",", sizeof(inputs));
         }
     } else {
         int first = 1;
-        for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
+        for (int i = 0; i < mux_input_count; ++i) {
             if (c->type_mask & SAFE_BIT(i)) {
                 if (!first) strlcat(inputs, ",", sizeof(inputs));
                 strlcat(inputs, input_name[i], sizeof(inputs));
@@ -783,8 +778,7 @@ static void print_combo_config(const combo_config *c) {
 
     LOG_INFO("input", "\t%s = %s", c->name, inputs);
     if (c->is_sequence)
-        LOG_INFO("input", "\thandle = sequence (%d)%s",
-                 c->sequence_length, c->max_interval ? " (timed)" : "");
+        LOG_INFO("input", "\thandle = sequence (%d)%s", c->sequence_length, c->max_interval ? " (timed)" : "");
 
     if (c->handle_hold) {
         LOG_INFO("input", "\thandle = hold");
@@ -818,14 +812,14 @@ static void parse_combos_file(const char *filename) {
         int match = 0;
 
         for (struct json j = json_first(devices); json_exists(j); j = json_next(j)) {
-            if (!json_string_compare(j, device.BOARD.NAME)) {
+            if (!json_string_compare(j, device.board.name)) {
                 match = 1;
                 break;
             }
         }
 
         if (!match) {
-            if (verbose) LOG_INFO("input", "Skipping File: '%s' not listed as compatible board", device.BOARD.NAME);
+            if (verbose) LOG_INFO("input", "Skipping File: '%s' not listed as compatible board", device.board.name);
             free(json_str);
             return;
         }
@@ -885,7 +879,7 @@ static void parse_combos_file(const char *filename) {
         c->is_sequence = json_exists(seq_json) && json_bool(seq_json);
         c->is_handheld_mode = json_exists(handheld) && json_bool(handheld);
         c->is_normal_mode = json_exists(normal) && json_bool(normal);
-        c->max_interval = (json_exists(interval) && json_int(interval) > 0) ? (uint32_t) json_int(interval) : 0;
+        c->max_interval = json_exists(interval) && json_int(interval) > 0 ? (uint32_t) json_int(interval) : 0;
 
         if (json_exists(exec_json)) {
             size_t l = json_string_length(exec_json) + 1;
@@ -949,14 +943,14 @@ static void load_hotkeys(void) {
 }
 
 static void usage(FILE *file) {
-    fprintf(file,
-            "Usage: muhotkey [-v]\n\n"
-            "Monitor input for activity and hotkey combos.\n\n"
-            "\t-v prints a lot of information input messages (verbose mode)\n"
-            "\t-l lists valid input names to be used for combos\n"
-            "\t-h displays this usage message\n\n"
-            "Hotkey names are arbitrary strings. Use -l to see valid values for inputs.\n\n"
-            "See 'hotkey' in share directory for example JSON hotkey files.\n"
+    fprintf(
+        file, "Usage: muhotkey [-v]\n\n"
+              "Monitor input for activity and hotkey combos.\n\n"
+              "\t-v prints a lot of information input messages (verbose mode)\n"
+              "\t-l lists valid input names to be used for combos\n"
+              "\t-h displays this usage message\n\n"
+              "Hotkey names are arbitrary strings. Use -l to see valid values for inputs.\n\n"
+              "See 'hotkey' in share directory for example JSON hotkey files.\n"
     );
 }
 
@@ -980,7 +974,7 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    board_init(device.BOARD.NAME);
+    board_init(device.board.name);
 
     int volume_idx = board_volume_event_index();
     if (volume_idx >= 0) {
@@ -1000,7 +994,7 @@ int main(int argc, char *argv[]) {
         if (lid_fd < 0) LOG_WARN("input", "Lid input event%d could not be opened", lid_idx);
     }
 
-    boot_governor = read_all_char_from(device.CPU.GOVERNOR);
+    boot_governor = read_all_char_from(device.cpu.governor);
     if (!boot_governor) {
         LOG_WARN("input", "Could not read initial CPU governor");
         boot_governor = strdup("ondemand");
@@ -1023,7 +1017,7 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 'l':
-                for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
+                for (int i = 0; i < mux_input_count; ++i) {
                     if (input_name[i]) printf("%s\n", input_name[i]);
                 }
                 return 0;
@@ -1059,7 +1053,7 @@ int main(int argc, char *argv[]) {
             char buf[MAX_BUFFER_SIZE] = {0};
             int first = 1;
 
-            for (int b = 0; b < MUX_INPUT_COUNT; ++b) {
+            for (int b = 0; b < mux_input_count; ++b) {
                 if (input_opts.combo[i].type_mask & SAFE_BIT(b)) {
                     if (!first) strlcat(buf, ",", sizeof(buf));
                     strlcat(buf, input_name[b], sizeof(buf));
@@ -1067,11 +1061,10 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            LOG_INFO("input", "\t%2d: %-14s\tmask=%016llx [%s]",
-                     i,
-                     combo[i].name,
-                     (unsigned long long) input_opts.combo[i].type_mask,
-                     buf);
+            LOG_INFO(
+                "input", "\t%2d: %-14s\tmask=%016llx [%s]", i, combo[i].name,
+                (unsigned long long) input_opts.combo[i].type_mask, buf
+            );
         }
 
         LOG_INFO("input", "====================================");

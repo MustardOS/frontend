@@ -11,24 +11,31 @@
 static int plutovg_text_iterator_length(const void* data, plutovg_text_encoding_t encoding)
 {
     int length = 0;
-    switch(encoding) {
+    switch (encoding)
+    {
     case PLUTOVG_TEXT_ENCODING_LATIN1:
-    case PLUTOVG_TEXT_ENCODING_UTF8: {
-        const uint8_t* text = data;
-        while(*text++)
-            length++;
-        break;
-    } case PLUTOVG_TEXT_ENCODING_UTF16: {
-        const uint16_t* text = data;
-        while(*text++)
-            length++;
-        break;
-    } case PLUTOVG_TEXT_ENCODING_UTF32: {
-        const uint32_t* text = data;
-        while(*text++)
-            length++;
-        break;
-    } default:
+    case PLUTOVG_TEXT_ENCODING_UTF8:
+        {
+            const uint8_t* text = data;
+            while (*text++)
+                length++;
+            break;
+        }
+    case PLUTOVG_TEXT_ENCODING_UTF16:
+        {
+            const uint16_t* text = data;
+            while (*text++)
+                length++;
+            break;
+        }
+    case PLUTOVG_TEXT_ENCODING_UTF32:
+        {
+            const uint32_t* text = data;
+            while (*text++)
+                length++;
+            break;
+        }
+    default:
         assert(false);
     }
 
@@ -37,7 +44,7 @@ static int plutovg_text_iterator_length(const void* data, plutovg_text_encoding_
 
 void plutovg_text_iterator_init(plutovg_text_iterator_t* it, const void* text, int length, plutovg_text_encoding_t encoding)
 {
-    if(length == -1)
+    if (length == -1)
         length = plutovg_text_iterator_length(text, encoding);
     it->text = text;
     it->length = length;
@@ -53,55 +60,67 @@ bool plutovg_text_iterator_has_next(const plutovg_text_iterator_t* it)
 plutovg_codepoint_t plutovg_text_iterator_next(plutovg_text_iterator_t* it)
 {
     plutovg_codepoint_t codepoint = 0;
-    switch(it->encoding) {
-    case PLUTOVG_TEXT_ENCODING_LATIN1: {
-        const uint8_t* text = it->text;
-        codepoint = text[it->index++];
-        break;
-    } case PLUTOVG_TEXT_ENCODING_UTF8: {
-        static const uint8_t trailing[256] = {
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5
-        };
-
-        static const uint32_t offsets[6] = {
-            0x00000000, 0x00003080, 0x000E2080, 0x03C82080, 0xFA082080, 0x82082080
-        };
-
-        const uint8_t* text = it->text;
-        uint8_t trailing_offset = trailing[text[it->index]];
-        uint32_t offset_value = offsets[trailing_offset];
-        while(trailing_offset > 0 && it->index < it->length - 1) {
-            codepoint += text[it->index++];
-            codepoint <<= 6;
-            trailing_offset--;
+    switch (it->encoding)
+    {
+    case PLUTOVG_TEXT_ENCODING_LATIN1:
+        {
+            const uint8_t* text = it->text;
+            codepoint = text[it->index++];
+            break;
         }
+    case PLUTOVG_TEXT_ENCODING_UTF8:
+        {
+            static const uint8_t trailing[256] = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5
+            };
 
-        codepoint += text[it->index++];
-        codepoint -= offset_value;
-        break;
-    } case PLUTOVG_TEXT_ENCODING_UTF16: {
-        const uint16_t* text = it->text;
-        codepoint = text[it->index++];
-        if(((codepoint) & 0xfffffc00) == 0xd800) {
-            if(it->index < it->length && (((codepoint) & 0xfffffc00) == 0xdc00)) {
-                uint16_t trail = text[it->index++];
-                codepoint = (codepoint << 10) + trail - ((0xD800u << 10) - 0x10000u + 0xDC00u);
+            static const uint32_t offsets[6] = {
+                0x00000000, 0x00003080, 0x000E2080, 0x03C82080, 0xFA082080, 0x82082080
+            };
+
+            const uint8_t* text = it->text;
+            uint8_t trailing_offset = trailing[text[it->index]];
+            uint32_t offset_value = offsets[trailing_offset];
+            while (trailing_offset > 0 && it->index < it->length - 1)
+            {
+                codepoint += text[it->index++];
+                codepoint <<= 6;
+                trailing_offset--;
             }
-        }
 
-        break;
-    } case PLUTOVG_TEXT_ENCODING_UTF32: {
-        const uint32_t* text = it->text;
-        codepoint = text[it->index++];
-        break;
-    } default:
+            codepoint += text[it->index++];
+            codepoint -= offset_value;
+            break;
+        }
+    case PLUTOVG_TEXT_ENCODING_UTF16:
+        {
+            const uint16_t* text = it->text;
+            codepoint = text[it->index++];
+            if (((codepoint) & 0xfffffc00) == 0xd800)
+            {
+                if (it->index < it->length && (((codepoint) & 0xfffffc00) == 0xdc00))
+                {
+                    uint16_t trail = text[it->index++];
+                    codepoint = (codepoint << 10) + trail - ((0xD800u << 10) - 0x10000u + 0xDC00u);
+                }
+            }
+
+            break;
+        }
+    case PLUTOVG_TEXT_ENCODING_UTF32:
+        {
+            const uint32_t* text = it->text;
+            codepoint = text[it->index++];
+            break;
+        }
+    default:
         assert(false);
     }
 
@@ -141,7 +160,8 @@ typedef int plutovg_mutex_t;
 
 #endif
 
-typedef struct plutovg_glyph {
+typedef struct plutovg_glyph
+{
     plutovg_codepoint_t codepoint;
     stbtt_vertex* vertices;
     int nvertices;
@@ -155,13 +175,15 @@ typedef struct plutovg_glyph {
     struct plutovg_glyph* next;
 } plutovg_glyph_t;
 
-typedef struct {
+typedef struct
+{
     plutovg_glyph_t** glyphs;
     size_t size;
     size_t capacity;
 } plutovg_glyph_cache_t;
 
-struct plutovg_font_face {
+struct plutovg_font_face
+{
     plutovg_ref_count_t ref_count;
     int ascent;
     int descent;
@@ -188,10 +210,13 @@ static void plutovg_glyph_cache_finish(plutovg_glyph_cache_t* cache, plutovg_fon
 {
     plutovg_mutex_lock(&face->mutex);
 
-    if(cache->glyphs) {
-        for(size_t i = 0; i < cache->capacity; ++i) {
+    if (cache->glyphs)
+    {
+        for (size_t i = 0; i < cache->capacity; ++i)
+        {
             plutovg_glyph_t* glyph = cache->glyphs[i];
-            while(glyph) {
+            while (glyph)
+            {
                 plutovg_glyph_t* next = glyph->next;
                 stbtt_FreeShape(&face->info, glyph->vertices);
                 free(glyph);
@@ -214,7 +239,8 @@ static plutovg_glyph_t* plutovg_glyph_cache_get(plutovg_glyph_cache_t* cache, pl
 {
     plutovg_mutex_lock(&face->mutex);
 
-    if(cache->glyphs == NULL) {
+    if (cache->glyphs == NULL)
+    {
         assert(cache->size == 0);
         cache->glyphs = calloc(GLYPH_CACHE_INIT_CAPACITY, sizeof(plutovg_glyph_t*));
         cache->capacity = GLYPH_CACHE_INIT_CAPACITY;
@@ -222,17 +248,20 @@ static plutovg_glyph_t* plutovg_glyph_cache_get(plutovg_glyph_cache_t* cache, pl
 
     size_t index = codepoint & (cache->capacity - 1);
     plutovg_glyph_t* glyph = cache->glyphs[index];
-    while(glyph && glyph->codepoint != codepoint) {
+    while (glyph && glyph->codepoint != codepoint)
+    {
         glyph = glyph->next;
     }
 
-    if(glyph == NULL) {
+    if (glyph == NULL)
+    {
         glyph = malloc(sizeof(plutovg_glyph_t));
         glyph->codepoint = codepoint;
         glyph->index = stbtt_FindGlyphIndex(&face->info, codepoint);
         glyph->nvertices = stbtt_GetGlyphShape(&face->info, glyph->index, &glyph->vertices);
         stbtt_GetGlyphHMetrics(&face->info, glyph->index, &glyph->advance_width, &glyph->left_side_bearing);
-        if(!stbtt_GetGlyphBox(&face->info, glyph->index, &glyph->x1, &glyph->y1, &glyph->x2, &glyph->y2)) {
+        if (!stbtt_GetGlyphBox(&face->info, glyph->index, &glyph->x1, &glyph->y1, &glyph->x2, &glyph->y2))
+        {
             glyph->x1 = glyph->y1 = glyph->x2 = glyph->y2 = 0;
         }
 
@@ -240,13 +269,16 @@ static plutovg_glyph_t* plutovg_glyph_cache_get(plutovg_glyph_cache_t* cache, pl
         cache->glyphs[index] = glyph;
         cache->size += 1;
 
-        if(cache->size > (cache->capacity * 3 / 4)) {
+        if (cache->size > (cache->capacity * 3 / 4))
+        {
             size_t newcapacity = cache->capacity << 1;
             plutovg_glyph_t** newglyphs = calloc(newcapacity, sizeof(plutovg_glyph_t*));
 
-            for(size_t i = 0; i < cache->capacity; ++i) {
+            for (size_t i = 0; i < cache->capacity; ++i)
+            {
                 plutovg_glyph_t* entry = cache->glyphs[i];
-                while(entry) {
+                while (entry)
+                {
                     plutovg_glyph_t* next = entry->next;
                     size_t newindex = entry->codepoint & (newcapacity - 1);
                     entry->next = newglyphs[newindex];
@@ -268,19 +300,22 @@ static plutovg_glyph_t* plutovg_glyph_cache_get(plutovg_glyph_cache_t* cache, pl
 plutovg_font_face_t* plutovg_font_face_load_from_file(const char* filename, int ttcindex)
 {
     FILE* fp = fopen(filename, "rb");
-    if(fp == NULL) {
+    if (fp == NULL)
+    {
         return NULL;
     }
 
     fseek(fp, 0, SEEK_END);
     long length = ftell(fp);
-    if(length == -1L) {
+    if (length == -1L)
+    {
         fclose(fp);
         return NULL;
     }
 
     void* data = malloc(length);
-    if(data == NULL) {
+    if (data == NULL)
+    {
         fclose(fp);
         return NULL;
     }
@@ -289,7 +324,8 @@ plutovg_font_face_t* plutovg_font_face_load_from_file(const char* filename, int 
     size_t nread = fread(data, 1, length, fp);
     fclose(fp);
 
-    if(nread != length) {
+    if (nread != length)
+    {
         free(data);
         return NULL;
     }
@@ -301,8 +337,9 @@ plutovg_font_face_t* plutovg_font_face_load_from_data(const void* data, unsigned
 {
     stbtt_fontinfo info;
     int offset = stbtt_GetFontOffsetForIndex(data, ttcindex);
-    if(offset == -1 || !stbtt_InitFont(&info, data, offset)) {
-        if(destroy_func)
+    if (offset == -1 || !stbtt_InitFont(&info, data, offset))
+    {
+        if (destroy_func)
             destroy_func(closure);
         return NULL;
     }
@@ -327,10 +364,11 @@ plutovg_font_face_t* plutovg_font_face_reference(plutovg_font_face_t* face)
 
 void plutovg_font_face_destroy(plutovg_font_face_t* face)
 {
-    if(plutovg_destroy_reference(face)) {
+    if (plutovg_destroy_reference(face))
+    {
         plutovg_glyph_cache_finish(&face->cache, face);
         plutovg_mutex_destroy(&face->mutex);
-        if(face->destroy_func)
+        if (face->destroy_func)
             face->destroy_func(face->closure);
         free(face);
     }
@@ -349,10 +387,11 @@ static float plutovg_font_face_get_scale(const plutovg_font_face_t* face, float 
 void plutovg_font_face_get_metrics(const plutovg_font_face_t* face, float size, float* ascent, float* descent, float* line_gap, plutovg_rect_t* extents)
 {
     float scale = plutovg_font_face_get_scale(face, size);
-    if(ascent) *ascent = face->ascent * scale;
-    if(descent) *descent = face->descent * scale;
-    if(line_gap) *line_gap = face->line_gap * scale;
-    if(extents) {
+    if (ascent) *ascent = face->ascent * scale;
+    if (descent) *descent = face->descent * scale;
+    if (line_gap) *line_gap = face->line_gap * scale;
+    if (extents)
+    {
         extents->x = face->x1 * scale;
         extents->y = face->y2 * -scale;
         extents->w = (face->x2 - face->x1) * scale;
@@ -365,13 +404,15 @@ static plutovg_glyph_t* plutovg_font_face_get_glyph(plutovg_font_face_t* face, p
     return plutovg_glyph_cache_get(&face->cache, face, codepoint);
 }
 
-void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing, plutovg_rect_t* extents)
+void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing,
+                                         plutovg_rect_t* extents)
 {
     float scale = plutovg_font_face_get_scale(face, size);
     plutovg_glyph_t* glyph = plutovg_font_face_get_glyph(face, codepoint);
-    if(advance_width) *advance_width = glyph->advance_width * scale;
-    if(left_side_bearing) *left_side_bearing = glyph->left_side_bearing * scale;
-    if(extents) {
+    if (advance_width) *advance_width = glyph->advance_width * scale;
+    if (left_side_bearing) *left_side_bearing = glyph->left_side_bearing * scale;
+    if (extents)
+    {
         extents->x = glyph->x1 * scale;
         extents->y = glyph->y2 * -scale;
         extents->w = (glyph->x2 - glyph->x1) * scale;
@@ -382,7 +423,8 @@ void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, 
 static void glyph_traverse_func(void* closure, plutovg_path_command_t command, const plutovg_point_t* points, int npoints)
 {
     plutovg_path_t* path = (plutovg_path_t*)(closure);
-    switch(command) {
+    switch (command)
+    {
     case PLUTOVG_PATH_COMMAND_MOVE_TO:
         plutovg_path_move_to(path, points[0].x, points[0].y);
         break;
@@ -402,7 +444,8 @@ float plutovg_font_face_get_glyph_path(plutovg_font_face_t* face, float size, fl
     return plutovg_font_face_traverse_glyph_path(face, size, x, y, codepoint, glyph_traverse_func, path);
 }
 
-float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint, plutovg_path_traverse_func_t traverse_func, void* closure)
+float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint,
+                                            plutovg_path_traverse_func_t traverse_func, void* closure)
 {
     float scale = plutovg_font_face_get_scale(face, size);
     plutovg_matrix_t matrix;
@@ -412,8 +455,10 @@ float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float siz
     plutovg_point_t points[3];
     plutovg_point_t current_point = {0, 0};
     plutovg_glyph_t* glyph = plutovg_font_face_get_glyph(face, codepoint);
-    for(int i = 0; i < glyph->nvertices; i++) {
-        switch(glyph->vertices[i].type) {
+    for (int i = 0; i < glyph->nvertices; i++)
+    {
+        switch (glyph->vertices[i].type)
+        {
         case STBTT_vmove:
             points[0].x = glyph->vertices[i].x;
             points[0].y = glyph->vertices[i].y;
@@ -458,17 +503,20 @@ float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float siz
     return glyph->advance_width * scale;
 }
 
-float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, const void* text, int length, plutovg_text_encoding_t encoding, plutovg_rect_t* extents)
+float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, const void* text, int length, plutovg_text_encoding_t encoding,
+                                     plutovg_rect_t* extents)
 {
     plutovg_text_iterator_t it;
     plutovg_text_iterator_init(&it, text, length, encoding);
     plutovg_rect_t* text_extents = NULL;
     float total_advance_width = 0.f;
-    while(plutovg_text_iterator_has_next(&it)) {
+    while (plutovg_text_iterator_has_next(&it))
+    {
         plutovg_codepoint_t codepoint = plutovg_text_iterator_next(&it);
 
         float advance_width;
-        if(extents == NULL) {
+        if (extents == NULL)
+        {
             plutovg_font_face_get_glyph_metrics(face, size, codepoint, &advance_width, NULL, NULL);
             total_advance_width += advance_width;
             continue;
@@ -479,7 +527,8 @@ float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, cons
 
         glyph_extents.x += total_advance_width;
         total_advance_width += advance_width;
-        if(text_extents == NULL) {
+        if (text_extents == NULL)
+        {
             text_extents = extents;
             *text_extents = glyph_extents;
             continue;
@@ -496,7 +545,8 @@ float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, cons
         text_extents->h = y2 - y1;
     }
 
-    if(extents && !text_extents) {
+    if (extents && !text_extents)
+    {
         extents->x = 0;
         extents->y = 0;
         extents->w = 0;
@@ -506,7 +556,8 @@ float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, cons
     return total_advance_width;
 }
 
-typedef struct plutovg_font_face_entry {
+typedef struct plutovg_font_face_entry
+{
     plutovg_font_face_t* face;
     char* family;
     char* filename;
@@ -516,7 +567,8 @@ typedef struct plutovg_font_face_entry {
     struct plutovg_font_face_entry* next;
 } plutovg_font_face_entry_t;
 
-struct plutovg_font_face_cache {
+struct plutovg_font_face_cache
+{
     plutovg_ref_count_t ref_count;
     plutovg_mutex_t mutex;
     plutovg_font_face_entry_t** entries;
@@ -545,7 +597,8 @@ plutovg_font_face_cache_t* plutovg_font_face_cache_reference(plutovg_font_face_c
 
 void plutovg_font_face_cache_destroy(plutovg_font_face_cache_t* cache)
 {
-    if(plutovg_destroy_reference(cache)) {
+    if (plutovg_destroy_reference(cache))
+    {
         plutovg_font_face_cache_reset(cache);
         plutovg_mutex_destroy(&cache->mutex);
         free(cache);
@@ -561,14 +614,17 @@ void plutovg_font_face_cache_reset(plutovg_font_face_cache_t* cache)
 {
     plutovg_mutex_lock(&cache->mutex);
 
-    for(int i = 0; i < cache->size; ++i) {
+    for (int i = 0; i < cache->size; ++i)
+    {
         plutovg_font_face_entry_t* entry = cache->entries[i];
-        do {
+        do
+        {
             plutovg_font_face_entry_t* next = entry->next;
             plutovg_font_face_destroy(entry->face);
             free(entry);
             entry = next;
-        } while(entry);
+        }
+        while (entry);
     }
 
     free(cache->entries);
@@ -584,15 +640,18 @@ static void plutovg_font_face_cache_add_entry(plutovg_font_face_cache_t* cache, 
 {
     plutovg_mutex_lock(&cache->mutex);
 
-    for(int i = 0; i < cache->size; ++i) {
-        if(strcmp(entry->family, cache->entries[i]->family) == 0) {
+    for (int i = 0; i < cache->size; ++i)
+    {
+        if (strcmp(entry->family, cache->entries[i]->family) == 0)
+        {
             entry->next = cache->entries[i];
             cache->entries[i] = entry;
             goto unlock;
         }
     }
 
-    if(cache->size >= cache->capacity) {
+    if (cache->size >= cache->capacity)
+    {
         cache->capacity = cache->capacity == 0 ? 8 : cache->capacity << 2;
         cache->entries = realloc(cache->entries, cache->capacity * sizeof(plutovg_font_face_entry_t*));
     }
@@ -607,7 +666,7 @@ unlock:
 
 void plutovg_font_face_cache_add(plutovg_font_face_cache_t* cache, const char* family, bool bold, bool italic, plutovg_font_face_t* face)
 {
-    if(family == NULL) family = "";
+    if (family == NULL) family = "";
     size_t family_length = strlen(family) + 1;
 
     plutovg_font_face_entry_t* entry = malloc(family_length + sizeof(plutovg_font_face_entry_t));
@@ -626,7 +685,7 @@ void plutovg_font_face_cache_add(plutovg_font_face_cache_t* cache, const char* f
 bool plutovg_font_face_cache_add_file(plutovg_font_face_cache_t* cache, const char* family, bool bold, bool italic, const char* filename, int ttcindex)
 {
     plutovg_font_face_t* face = plutovg_font_face_load_from_file(filename, ttcindex);
-    if(face == NULL)
+    if (face == NULL)
         return false;
     plutovg_font_face_cache_add(cache, family, bold, italic, face);
     plutovg_font_face_destroy(face);
@@ -651,7 +710,8 @@ plutovg_font_face_t* plutovg_font_face_cache_get(plutovg_font_face_cache_t* cach
 {
     plutovg_mutex_lock(&cache->mutex);
 
-    if(!cache->is_sorted && cache->size > 0) {
+    if (!cache->is_sorted && cache->size > 0)
+    {
         qsort(cache->entries, cache->size, sizeof(cache->entries[0]), plutovg_font_face_entry_compare);
         cache->is_sorted = true;
     }
@@ -669,15 +729,17 @@ plutovg_font_face_t* plutovg_font_face_cache_get(plutovg_font_face_cache_t* cach
     );
 
     plutovg_font_face_t* face = NULL;
-    if(entry_result) {
+    if (entry_result)
+    {
         plutovg_font_face_entry_t* selected = *entry_result;
         plutovg_font_face_entry_t* entry = selected->next;
-        while(entry) {
+        while (entry)
+        {
             selected = plutovg_font_face_entry_select(entry, selected, bold, italic);
             entry = entry->next;
         }
 
-        if(selected->filename && selected->face == NULL)
+        if (selected->filename && selected->face == NULL)
             selected->face = plutovg_font_face_load_from_file(selected->filename, selected->ttcindex);
         face = selected->face;
     }
@@ -712,16 +774,18 @@ plutovg_font_face_t* plutovg_font_face_cache_get(plutovg_font_face_cache_t* cach
 static void* plutovg_mmap(const char* filename, long* length)
 {
     HANDLE file = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(file == INVALID_HANDLE_VALUE)
+    if (file == INVALID_HANDLE_VALUE)
         return NULL;
     DWORD size = GetFileSize(file, NULL);
-    if(size == INVALID_FILE_SIZE) {
+    if (size == INVALID_FILE_SIZE)
+    {
         CloseHandle(file);
         return NULL;
     }
 
     HANDLE mapping = CreateFileMappingA(file, NULL, PAGE_READONLY, 0, 0, NULL);
-    if(mapping == NULL) {
+    if (mapping == NULL)
+    {
         CloseHandle(file);
         return NULL;
     }
@@ -730,7 +794,7 @@ static void* plutovg_mmap(const char* filename, long* length)
     CloseHandle(mapping);
     CloseHandle(file);
 
-    if(data == NULL)
+    if (data == NULL)
         return NULL;
     *length = size;
     return data;
@@ -746,15 +810,17 @@ static void plutovg_unmap(void* data, long length)
 static void* plutovg_mmap(const char* filename, long* length)
 {
     int fd = open(filename, O_RDONLY);
-    if(fd < 0)
+    if (fd < 0)
         return NULL;
     struct stat st;
-    if(fstat(fd, &st) < 0) {
+    if (fstat(fd, &st) < 0)
+    {
         close(fd);
         return NULL;
     }
 
-    if(st.st_size == 0) {
+    if (st.st_size == 0)
+    {
         close(fd);
         return NULL;
     }
@@ -762,7 +828,7 @@ static void* plutovg_mmap(const char* filename, long* length)
     void* data = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
-    if(data == MAP_FAILED)
+    if (data == MAP_FAILED)
         return NULL;
     *length = st.st_size;
     return data;
@@ -779,16 +845,19 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
 {
     long length;
     stbtt_uint8* data = plutovg_mmap(filename, &length);
-    if(data == NULL) {
+    if (data == NULL)
+    {
         return 0;
     }
 
     int num_faces = 0;
 
     int num_fonts = stbtt_GetNumberOfFonts(data);
-    for(int index = 0; index < num_fonts; ++index) {
+    for (int index = 0; index < num_fonts; ++index)
+    {
         int offset = stbtt_GetFontOffsetForIndex(data, index);
-        if(offset == -1 || !stbtt__isfont(data + offset)) {
+        if (offset == -1 || !stbtt__isfont(data + offset))
+        {
             continue;
         }
 
@@ -799,10 +868,12 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
         const stbtt_uint8* roman_family_name = NULL;
 
         size_t family_length = 0;
-        for(stbtt_int32 i = 0; i < nm_count; ++i) {
+        for (stbtt_int32 i = 0; i < nm_count; ++i)
+        {
             stbtt_uint32 loc = nm + 6 + 12 * i;
             stbtt_uint16 nm_id = ttUSHORT(data + loc + 6);
-            if(nm_id != 1) {
+            if (nm_id != 1)
+            {
                 continue;
             }
 
@@ -810,20 +881,22 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
             stbtt_uint16 encoding = ttUSHORT(data + loc + 2);
 
             const stbtt_uint8* family_name = data + nm + ttUSHORT(data + nm + 4) + ttUSHORT(data + loc + 10);
-            if(platform == 1 && encoding == 0) {
+            if (platform == 1 && encoding == 0)
+            {
                 family_length = ttUSHORT(data + loc + 8);
                 roman_family_name = family_name;
                 continue;
             }
 
-            if(platform == 0 || (platform == 3 && encoding == 1) || (platform == 3 && encoding == 10)) {
+            if (platform == 0 || (platform == 3 && encoding == 1) || (platform == 3 && encoding == 10))
+            {
                 family_length = ttUSHORT(data + loc + 8);
                 unicode_family_name = family_name;
                 break;
             }
         }
 
-        if(unicode_family_name == NULL && roman_family_name == NULL)
+        if (unicode_family_name == NULL && roman_family_name == NULL)
             continue;
         size_t filename_length = strlen(filename) + 1;
         size_t max_family_length = (unicode_family_name ? 3 * (family_length / 2) : family_length * 3) + 1;
@@ -834,16 +907,23 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
         memcpy(entry->filename, filename, filename_length);
 
         size_t family_index = 0;
-        if(unicode_family_name) {
+        if (unicode_family_name)
+        {
             const stbtt_uint8* family_name = unicode_family_name;
-            while(family_length) {
+            while (family_length)
+            {
                 stbtt_uint16 ch = family_name[0] * 256 + family_name[1];
-                if(ch < 0x80) {
+                if (ch < 0x80)
+                {
                     entry->family[family_index++] = ch;
-                } else if(ch < 0x800) {
+                }
+                else if (ch < 0x800)
+                {
                     entry->family[family_index++] = (0xc0 + (ch >> 6));
                     entry->family[family_index++] = (0x80 + (ch & 0x3f));
-                } else if(ch >= 0xd800 && ch < 0xdc00) {
+                }
+                else if (ch >= 0xd800 && ch < 0xdc00)
+                {
                     stbtt_uint16 ch2 = family_name[2] * 256 + family_name[3];
                     stbtt_uint32 c = ((ch - 0xd800) << 10) + (ch2 - 0xdc00) + 0x10000;
 
@@ -854,7 +934,9 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
 
                     family_name += 2;
                     family_length -= 2;
-                } else {
+                }
+                else
+                {
                     entry->family[family_index++] = (0xe0 + (ch >> 12));
                     entry->family[family_index++] = (0x80 + ((ch >> 6) & 0x3f));
                     entry->family[family_index++] = (0x80 + ((ch) & 0x3f));
@@ -865,7 +947,9 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
             }
 
             entry->family[family_index] = '\0';
-        } else {
+        }
+        else
+        {
             static const stbtt_uint16 MAC_ROMAN_TABLE[256] = {
                 0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
                 0x0008, 0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x000E, 0x000F,
@@ -902,14 +986,20 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
             };
 
             const stbtt_uint8* family_name = roman_family_name;
-            while(family_length) {
+            while (family_length)
+            {
                 stbtt_uint16 ch = MAC_ROMAN_TABLE[family_name[0]];
-                if(ch < 0x80) {
+                if (ch < 0x80)
+                {
                     entry->family[family_index++] = ch;
-                } else if(ch < 0x800) {
+                }
+                else if (ch < 0x800)
+                {
                     entry->family[family_index++] = (0xc0 + (ch >> 6));
                     entry->family[family_index++] = (0x80 + (ch & 0x3f));
-                } else {
+                }
+                else
+                {
                     entry->family[family_index++] = (0xe0 + (ch >> 12));
                     entry->family[family_index++] = (0x80 + ((ch >> 6) & 0x3f));
                     entry->family[family_index++] = (0x80 + ((ch) & 0x3f));
@@ -929,9 +1019,10 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
 
         stbtt_uint32 hd = stbtt__find_table(data, offset, "head");
         stbtt_uint16 style = ttUSHORT(data + hd + 44);
-        if(style & 0x1)
+        if (style & 0x1)
             entry->bold = true;
-        if(style & 0x2) {
+        if (style & 0x2)
+        {
             entry->italic = true;
         }
 
@@ -946,11 +1037,13 @@ int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cache, const ch
 static bool plutovg_font_face_supports_file(const char* filename)
 {
     const char* extension = strrchr(filename, '.');
-    if(extension) {
+    if (extension)
+    {
         char ext[5];
         size_t length = strlen(extension);
-        if(length == 4) {
-            for(size_t i = 0; i < length; ++i)
+        if (length == 4)
+        {
+            for (size_t i = 0; i < length; ++i)
                 ext[i] = tolower(extension[i]);
             ext[length] = '\0';
             return strcmp(ext, ".ttf") == 0
@@ -972,25 +1065,31 @@ int plutovg_font_face_cache_load_dir(plutovg_font_face_cache_t* cache, const cha
 
     WIN32_FIND_DATAA find_data;
     HANDLE handle = FindFirstFileA(search_path, &find_data);
-    if(handle == INVALID_HANDLE_VALUE) {
+    if (handle == INVALID_HANDLE_VALUE)
+    {
         return 0;
     }
 
     int num_faces = 0;
 
-    do {
+    do
+    {
         const char* name = find_data.cFileName;
-        if(strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
+        if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
             continue;
         char path[MAX_PATH * 2];
         snprintf(path, sizeof(path), "%s\\%s", dirname, name);
 
-        if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
             num_faces += plutovg_font_face_cache_load_dir(cache, path);
-        } else if(plutovg_font_face_supports_file(path)) {
+        }
+        else if (plutovg_font_face_supports_file(path))
+        {
             num_faces += plutovg_font_face_cache_load_file(cache, path);
         }
-    } while(FindNextFileA(handle, &find_data));
+    }
+    while (FindNextFileA(handle, &find_data));
 
     FindClose(handle);
     return num_faces;
@@ -1001,25 +1100,30 @@ int plutovg_font_face_cache_load_dir(plutovg_font_face_cache_t* cache, const cha
 int plutovg_font_face_cache_load_dir(plutovg_font_face_cache_t* cache, const char* dirname)
 {
     DIR* dir = opendir(dirname);
-    if(dir == NULL) {
+    if (dir == NULL)
+    {
         return 0;
     }
 
     int num_faces = 0;
 
     struct dirent* entry;
-    while((entry = readdir(dir)) != NULL) {
-        if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue;
         char path[PATH_MAX];
         snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
 
         struct stat st;
-        if(stat(path, &st) == -1)
+        if (stat(path, &st) == -1)
             continue;
-        if(S_ISDIR(st.st_mode)) {
+        if (S_ISDIR(st.st_mode))
+        {
             num_faces += plutovg_font_face_cache_load_dir(cache, path);
-        } else if(S_ISREG(st.st_mode) && plutovg_font_face_supports_file(path)) {
+        }
+        else if (S_ISREG(st.st_mode) && plutovg_font_face_supports_file(path))
+        {
             num_faces += plutovg_font_face_cache_load_file(cache, path);
         }
     }

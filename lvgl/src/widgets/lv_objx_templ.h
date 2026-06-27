@@ -50,7 +50,7 @@ extern const lv_obj_class_t lv_templ_class;
  * @param parent    pointer to an object, it will be the parent of the new templ
  * @return          pointer to the created bar
  */
-lv_obj_t * lv_templ_create(lv_obj_t * parent);
+lv_obj_t *lv_templ_create(lv_obj_t *parent);
 
 /*======================
  * Add/remove functions

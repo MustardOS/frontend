@@ -7,20 +7,9 @@ extern char progress_bar_message[MAX_BUFFER_SIZE];
 extern volatile int progress_bar_value;
 extern lv_timer_t *timer_update_progress;
 
-enum visual_type {
-    VIS_CLOCK,
-    VIS_BLUETOOTH,
-    VIS_NETWORK,
-    VIS_BATTERY,
-    VIS_HEADERTITLE
-};
+enum visual_type { vis_clock, vis_bluetooth, vis_network, vis_battery, vis_headertitle };
 
-enum toast_show {
-    FOREVER,
-    SHORT = 1000,
-    MEDIUM = 1750,
-    LONG = 2500
-};
+enum toast_wait { tst_wait_f, tst_wait_s = 1000, tst_wait_m = 1750, tst_wait_l = 2500 };
 
 struct nav_flag {
     lv_obj_t *element;
@@ -41,15 +30,15 @@ void watermark(lv_obj_t *screen);
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
-void update_grid_scroll_position(int col_count, int row_count, int row_height,
-                                 int current_item_index, lv_obj_t *ui_pnlGrid);
+void update_grid_scroll_position(int row_count, int row_height, int current_item_index, lv_obj_t *ui_pnl_grid);
 
-void scroll_object_to_middle(lv_obj_t *container, lv_obj_t *obj);
+void scroll_object_to_middle(lv_obj_t *container, const lv_obj_t *obj);
 
-void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
-                            lv_obj_t *ui_pnlContent);
+void update_scroll_position(
+    int mux_item_count, int mux_item_panel, int ui_count_static, int current_item_index, lv_obj_t *ui_pnl_content
+);
 
-void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
+void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], int count);
 
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);
 
@@ -61,16 +50,16 @@ void update_progress_bar(lv_timer_t *timer);
 
 void hide_progress_bar(void);
 
-void set_nav_flags(struct nav_flag *nav_flags, size_t count);
+void set_nav_flags(const struct nav_flag *nav_flags, size_t count);
 
 void footer_nav_check_scroll(void);
 
 void hide_info_box(void);
 
-int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);
+int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count_static, int *nav_moved);
 
 void nav_suppress_next_bounce(void);
 
 void nav_unsuppress_bounce(void);
 
-void nav_focus_bounce_cb(lv_group_t *group);
+void nav_focus_bounce_cb(const lv_group_t *group);

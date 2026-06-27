@@ -3,13 +3,13 @@
 #include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
-void init_muxrgb(lv_obj_t *ui_pnlContent);
+void init_muxrgb(lv_obj_t *ui_pnl_content);
 
-#define RGB(NAME, ENUM, UDATA)           \
-    extern lv_obj_t *ui_pnl##NAME##_rgb; \
-    extern lv_obj_t *ui_lbl##NAME##_rgb; \
-    extern lv_obj_t *ui_ico##NAME##_rgb; \
-    extern lv_obj_t *ui_dro##NAME##_rgb;
+#define RGB(NAME, UDATA)                                                                                               \
+    extern lv_obj_t *ui_pnl_##NAME##_rgb;                                                                              \
+    extern lv_obj_t *ui_lbl_##NAME##_rgb;                                                                              \
+    extern lv_obj_t *ui_ico_##NAME##_rgb;                                                                              \
+    extern lv_obj_t *ui_dro_##NAME##_rgb;
 
 RGB_ELEMENTS
 #undef RGB

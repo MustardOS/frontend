@@ -20,7 +20,7 @@ int file_exist(const char *filename) {
     return access(filename, F_OK) == 0;
 }
 
-int dir_exist(char *dirname) {
+int dir_exist(const char *dirname) {
     struct stat stats;
     return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
 }
@@ -29,7 +29,7 @@ int dir_exist(char *dirname) {
 // line < 0  returns entire output
 // line == 0 returns first line
 // line == 1 returns second line
-char *get_execute_result(const char *command, int line) {
+char *get_execute_result(const char *command, const int line) {
     FILE *fp = popen(command, "r");
     if (!fp) {
         LOG_ERROR(mux_module, "Failed to run: %s", command);
@@ -53,7 +53,7 @@ char *get_execute_result(const char *command, int line) {
             continue;
         }
 
-        size_t len = strlen(buffer);
+        const size_t len = strlen(buffer);
         char *tmp = realloc(result, total + len + 1);
         if (!tmp) {
             free(result);
@@ -80,26 +80,26 @@ char *read_all_char_from(const char *filename) {
     if (file == NULL) return strdup("");
 
     fseek(file, 0, SEEK_END);
-    long fileSize = ftell(file);
+    const long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    if (fileSize < 0) {
+    if (file_size < 0) {
         fclose(file);
         return strdup("");
     }
 
-    char *text = malloc((size_t) fileSize + 1);
+    char *text = malloc((size_t) file_size + 1);
 
     if (text != NULL) {
-        size_t bytesRead = fread(text, 1, (size_t) fileSize, file);
+        const size_t bytes_read = fread(text, 1, (size_t) file_size, file);
 
-        if (bytesRead > 0 && text[bytesRead - 1] == '\n') {
-            text[bytesRead - 1] = '\0';
+        if (bytes_read > 0 && text[bytes_read - 1] == '\n') {
+            text[bytes_read - 1] = '\0';
         } else {
-            text[bytesRead] = '\0';
+            text[bytes_read] = '\0';
         }
     } else {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
         fclose(file);
         return strdup("");
     }
@@ -108,7 +108,7 @@ char *read_all_char_from(const char *filename) {
     return text;
 }
 
-char *read_line_char_from(const char *filename, size_t line_number) {
+char *read_line_char_from(const char *filename, const size_t line_number) {
     if (!filename || line_number == 0) {
         LOG_ERROR(mux_module, "Invalid filename or line number...");
         return strdup("");
@@ -116,13 +116,13 @@ char *read_line_char_from(const char *filename, size_t line_number) {
 
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, filename);
         return strdup("");
     }
 
-    char *line = (char *) malloc(MAX_BUFFER_SIZE);
+    char *line = malloc(MAX_BUFFER_SIZE);
     if (!line) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
         fclose(file);
         return strdup("");
     }
@@ -131,7 +131,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
     while (fgets(line, MAX_BUFFER_SIZE, file) != NULL) {
         current_line++;
         if (current_line == line_number) {
-            size_t length = strlen(line);
+            const size_t length = strlen(line);
 
             if (length > 0 && line[length - 1] == '\n') line[length - 1] = '\0';
 
@@ -163,7 +163,7 @@ int read_all_int_from(const char *filename, size_t buffer) {
     return safe_atoi(line, 0);
 }
 
-int read_line_int_from(const char *filename, size_t line_number) {
+int read_line_int_from(const char *filename, const size_t line_number) {
     char line[MAX_BUFFER_SIZE];
     FILE *file = fopen(filename, "r");
     if (!file) return 0;
@@ -194,13 +194,13 @@ unsigned long long read_all_long_from(const char *filename) {
     char *end_ptr;
     errno = 0;
 
-    unsigned long long value = strtoull(buf, &end_ptr, 10);
+    const unsigned long long value = strtoull(buf, &end_ptr, 10);
     if (errno != 0 || end_ptr == buf || (*end_ptr && *end_ptr != '\n')) return 0;
 
     return value;
 }
 
-void cfg_write_def_int(const char *path, int value) {
+void cfg_write_def_int(const char *path, const int value) {
     if (file_exist(path)) return;
 
     create_directories(path, 1);
@@ -214,11 +214,11 @@ void cfg_write_def_char(const char *path, const char *value) {
     write_text_to_file(path, "w", CHAR, value);
 }
 
-void write_text_to_file(const char *filename, const char *mode, int type, ...) {
+void write_text_to_file(const char *filename, const char *mode, const int type, ...) {
     FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return;
     }
 
@@ -226,29 +226,27 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     va_start(args, type);
 
     if (type == CHAR) { // type is general text!
-        fprintf(file, "%s", va_arg(args,
-                                   const char *));
+        fprintf(file, "%s", va_arg(args, const char *));
     } else if (type == INT) { // type is a number!
-        fprintf(file, "%d", va_arg(args,
-                                   int));
+        fprintf(file, "%d", va_arg(args, int));
     }
 
     va_end(args);
     fclose(file);
 }
 
-void write_text_to_file_atomic(const char *filename, int type, ...) {
+void write_text_to_file_atomic(const char *filename, const int type, ...) {
     char tmp[PATH_MAX];
-    int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp", filename);
+    const int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp", filename);
 
     if (tmp_len < 0 || (size_t) tmp_len >= sizeof(tmp)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return;
     }
 
     FILE *f = fopen(tmp, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return;
     }
 
@@ -270,11 +268,11 @@ void write_text_to_file_atomic(const char *filename, int type, ...) {
 
     if (!ok || rename(tmp, filename) != 0) {
         remove(tmp);
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_WRITE, filename);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
     }
 }
 
-void create_directories(const char *path, int parent_only) {
+void create_directories(const char *path, const int parent_only) {
     struct stat st;
     char tmp_path[MAX_BUFFER_SIZE];
 
@@ -300,18 +298,17 @@ void create_directories(const char *path, int parent_only) {
     mkdir(tmp_path, 0777);
 }
 
-void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive) {
+void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], const int recursive) {
     struct dirent *entry;
     DIR *dir = opendir(dir_path);
 
     if (dir != NULL) {
         while ((entry = readdir(dir)) != NULL) {
             if (entry->d_type == DT_REG) {
-                size_t len = strlen(extension);
-                size_t name_len = strlen(entry->d_name);
+                const size_t len = strlen(extension);
+                const size_t name_len = strlen(entry->d_name);
 
-                if (name_len > len &&
-                    strcasecmp(entry->d_name + name_len - len, extension) == 0) {
+                if (name_len > len && strcasecmp(entry->d_name + name_len - len, extension) == 0) {
 
                     char file_path[PATH_MAX];
                     snprintf(file_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
@@ -328,12 +325,11 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
                     if (!is_exception) {
                         if (remove(file_path) != 0) {
-                            perror(lang.SYSTEM.FAIL_DELETE_FILE);
+                            perror(lang.system.fail_delete_file);
                         }
                     }
                 }
-            } else if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 &&
-                       strcmp(entry->d_name, "..") != 0) {
+            } else if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                 if (recursive) {
                     char sub_dir_path[PATH_MAX];
                     snprintf(sub_dir_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
@@ -344,22 +340,24 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
         closedir(dir);
     } else {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_dir_open);
     }
 }
 
 void delete_files_of_name(const char *dir_path, const char *filename) {
     DIR *dir = opendir(dir_path);
     if (!dir) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_DIR_OPEN, dir_path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_dir_open, dir_path);
         return;
     }
 
-    int dfd = dirfd(dir);
+    const int dfd = dirfd(dir);
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_name[0] == '.' && (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0'))) continue;
+        if (entry->d_name[0] == '.'
+            && (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0')))
+            continue;
 
         char full_path[PATH_MAX];
         snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
@@ -384,7 +382,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 
         if (strcmp(base, filename) == 0) {
             if (remove(full_path) != 0) {
-                perror(lang.SYSTEM.FAIL_DELETE_FILE);
+                perror(lang.system.fail_delete_file);
             }
         }
     }
@@ -394,7 +392,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 
 static void add_directory_to_list(char ***list, size_t *size, size_t *count, const char *dir) {
     if (*count >= *size) {
-        size_t new_size = *size + 10;
+        const size_t new_size = *size + 10;
 
         char **new_list = realloc(*list, new_size * sizeof(char *));
         if (!new_list) return;
@@ -409,13 +407,14 @@ static void add_directory_to_list(char ***list, size_t *size, size_t *count, con
     (*count)++;
 }
 
-static void collect_subdirectories(const char *base_dir, char ***list, size_t *size, size_t *count, size_t trim_start_count) {
+static void
+collect_subdirectories(const char *base_dir, char ***list, size_t *size, size_t *count, const size_t trim_start_count) {
     char subdir_path[PATH_MAX];
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_dir_open);
         return;
     }
 
@@ -440,7 +439,7 @@ static void collect_subdirectories(const char *base_dir, char ***list, size_t *s
 }
 
 char **get_subdirectories(const char *base_dir) {
-    size_t trim_start_count = strlen(base_dir) + 1;
+    const size_t trim_start_count = strlen(base_dir) + 1;
     size_t list_size = 10;
     size_t count = 0;
 
@@ -456,17 +455,18 @@ char **get_subdirectories(const char *base_dir) {
 void free_subdirectories(char **dir_names) {
     if (dir_names == NULL) return;
 
-    for (int i = 0; dir_names[i] != NULL; i++) free(dir_names[i]);
+    for (int i = 0; dir_names[i] != NULL; i++)
+        free(dir_names[i]);
 
     free(dir_names);
 }
 
-int cfg_read_int(const char *path, int fallback) {
+int cfg_read_int(const char *path, const int fallback) {
     FILE *f = fopen(path, "r");
     if (!f) return fallback;
 
     char buf[32];
-    int ok = (fgets(buf, sizeof(buf), f) != NULL);
+    const int ok = fgets(buf, sizeof(buf), f) != NULL;
     fclose(f);
 
     if (!ok) return fallback;
@@ -475,16 +475,16 @@ int cfg_read_int(const char *path, int fallback) {
     return safe_atoi(buf, fallback);
 }
 
-char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
+char **str_parse_file(const char *filename, int *count, const enum parse_mode mode) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, filename);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, filename);
         return NULL;
     }
 
     char **list = malloc(MAX_BUFFER_SIZE * sizeof(char *));
     if (!list) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
         fclose(file);
         return NULL;
     }
@@ -493,10 +493,10 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     char line[MAX_BUFFER_SIZE];
     int failed = 0;
 
-    if (mode == PARSE_TOKENS) {
+    if (mode == parse_tokens) {
         if (fgets(line, sizeof(line), file)) {
             char *saveptr;
-            char *token = strtok_r(line, " \t\r\n", &saveptr);
+            const char *token = strtok_r(line, " \t\r\n", &saveptr);
             while (token && *count < MAX_BUFFER_SIZE) {
                 list[*count] = strdup(token);
 
@@ -528,8 +528,9 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     fclose(file);
 
     if (failed) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
-        for (int i = 0; i < *count; i++) free(list[i]);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
+        for (int i = 0; i < *count; i++)
+            free(list[i]);
         free(list);
         return NULL;
     }
@@ -612,7 +613,7 @@ int copy_file(const char *from, const char *to) {
 
         size_t off = 0;
         while (off < (size_t) f_read) {
-            ssize_t nw = write(fd_to, buf + off, (size_t) f_read - off);
+            const ssize_t nw = write(fd_to, buf + off, (size_t) f_read - off);
 
             if (nw < 0) {
                 if (errno == EINTR) continue;
@@ -635,7 +636,7 @@ int copy_file(const char *from, const char *to) {
     close(fd_from);
     return 0;
 
-    out_error:
+out_error:
     saved_errno = errno;
 
     if (fd_from >= 0) close(fd_from);
@@ -658,15 +659,14 @@ int remove_directory_recursive(const char *path) {
         return -1;
     }
 
-    int dfd = dirfd(dp);
+    const int dfd = dirfd(dp);
 
     while ((entry = readdir(dp)) != NULL) {
         char fullpath[4096];
         struct stat statbuf;
 
         // Skip . and ..
-        if (strcmp(entry->d_name, ".") == 0 ||
-            strcmp(entry->d_name, "..") == 0) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
         }
 
@@ -732,9 +732,9 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
     return value;
 }
 
-int at_base(char *sys_dir, char *base_name) {
-    char *base_dir = strrchr(sys_dir, '/');
-    return (base_dir && strcasecmp(base_dir + 1, base_name) == 0) ? 1 : 0;
+int at_base(const char *sys_dir, const char *base_name) {
+    const char *base_dir = strrchr(sys_dir, '/');
+    return base_dir && strcasecmp(base_dir + 1, base_name) == 0 ? 1 : 0;
 }
 
 int search_for_config(const char *base_path, const char *file_name, const char *system_name) {
@@ -743,20 +743,20 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     DIR *dir = opendir(base_path);
 
     if (!dir) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DIR_OPEN);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_dir_open);
         return 0;
     }
 
     while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_name[0] == '.' &&
-            (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0')))
+        if (entry->d_name[0] == '.'
+            && (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0')))
             continue;
 
         snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
 
         if (entry->d_type == DT_REG) {
             if (strstr(entry->d_name, file_name)) {
-                char *line = read_line_char_from(full_path, 2);
+                const char *line = read_line_char_from(full_path, 2);
                 if (line && strcmp(line, system_name) == 0) {
                     closedir(dir);
                     return 1;
@@ -774,8 +774,10 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     return 0;
 }
 
-int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
-                        size_t dir_count, size_t ext_count, size_t *result_count) {
+int scan_directory_list(
+    const char *dirs[], const char *exts[], char ***results, const size_t dir_count, const size_t ext_count,
+    size_t *result_count
+) {
     size_t count = 0;
     size_t capacity = 0;
     char **list = NULL;
@@ -802,11 +804,11 @@ int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
             if (!match) continue;
 
             if (count >= capacity) {
-                size_t new_capacity = (capacity == 0) ? 8 : capacity * 2;
+                const size_t new_capacity = capacity == 0 ? 8 : capacity * 2;
                 char **tmp = realloc(list, new_capacity * sizeof(char *));
 
                 if (!tmp) {
-                    LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                    LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
                     free_array(list, count);
                     closedir(dir);
                     return -1;
@@ -823,7 +825,7 @@ int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
 
             list[count] = strdup(full);
             if (!list[count]) {
-                LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_DUP_STRING);
+                LOG_ERROR(mux_module, "%s", lang.system.fail_dup_string);
                 free_array(list, count);
                 closedir(dir);
                 return -1;

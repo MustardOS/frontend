@@ -16,14 +16,14 @@ void stretch_draw_size(int tex_w, int tex_h, int fb_w, int fb_h, int scale, int 
     if (fb_w < 1) fb_w = 1;
     if (fb_h < 1) fb_h = 1;
 
-    if (scale == SCALE_FIT) {
+    if (scale == scale_fit) {
         const float sx = (float) fb_w / draw_w;
         const float sy = (float) fb_h / draw_h;
         const float s = (sx < sy) ? sx : sy;
 
         draw_w *= s;
         draw_h *= s;
-    } else if (scale == SCALE_STRETCH) {
+    } else if (scale == scale_stretch) {
         draw_w = (float) fb_w;
         draw_h = (float) fb_h;
     }

@@ -39,10 +39,10 @@ typedef struct {
     lv_opa_t recolor_opa;
 
     lv_opa_t opa;
-    lv_blend_mode_t blend_mode: 4;
+    lv_blend_mode_t blend_mode : 4;
 
     int32_t frame_id;
-    uint8_t antialias: 1;
+    uint8_t antialias : 1;
 
     int8_t effect_type;
     lv_color_t effect_color;
@@ -59,8 +59,10 @@ struct _lv_draw_ctx_t;
 
 void lv_draw_img_dsc_init(lv_draw_img_dsc_t *dsc);
 
-void lv_glyph_shadow_set(int enabled, lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y,
-                         lv_color_t focus_colour, lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y);
+void lv_glyph_shadow_set(
+    int enabled, lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y, lv_color_t focus_colour,
+    lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y
+);
 
 /**
  * Draw an image
@@ -69,11 +71,14 @@ void lv_glyph_shadow_set(int enabled, lv_color_t def_colour, lv_opa_t def_alpha,
  * @param src pointer to a lv_color_t array which contains the pixels of the image
  * @param dsc pointer to an initialized `lv_draw_img_dsc_t` variable
  */
-void lv_draw_img(struct _lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc, const lv_area_t *coords,
-                 const void *src);
+void lv_draw_img(
+    struct _lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc, const lv_area_t *coords, const void *src
+);
 
-void lv_draw_img_decoded(struct _lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc,
-                         const lv_area_t *coords, const uint8_t *map_p, lv_img_cf_t color_format);
+void lv_draw_img_decoded(
+    struct _lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc, const lv_area_t *coords, const uint8_t *map_p,
+    lv_img_cf_t color_format
+);
 
 /**
  * Get the type of an image source
@@ -95,16 +100,16 @@ uint8_t lv_img_cf_get_px_size(lv_img_cf_t cf);
 /**
  * Check if a color format is chroma keyed or not
  * @param cf a color format (`LV_IMG_CF_...`)
- * @return true: chroma keyed; false: not chroma keyed
+ * @return 1: chroma keyed; 0: not chroma keyed
  */
-bool lv_img_cf_is_chroma_keyed(lv_img_cf_t cf);
+int lv_img_cf_is_chroma_keyed(lv_img_cf_t cf);
 
 /**
  * Check if a color format has alpha channel or not
  * @param cf a color format (`LV_IMG_CF_...`)
- * @return true: has alpha channel; false: doesn't have alpha channel
+ * @return 1: has alpha channel; 0: doesn't have alpha channel
  */
-bool lv_img_cf_has_alpha(lv_img_cf_t cf);
+int lv_img_cf_has_alpha(lv_img_cf_t cf);
 
 #ifdef __cplusplus
 } /*extern "C"*/

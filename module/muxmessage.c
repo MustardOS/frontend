@@ -11,8 +11,8 @@ int message_count = 0;
 static void split_dir_base(const char *path, char *dir, char *base) {
     const char *slash = strrchr(path, '/');
 
-    size_t ds = 1024;
-    size_t bs = ds;
+    const size_t ds = 1024;
+    const size_t bs = ds;
 
     if (!slash) {
         snprintf(dir, ds, ".");
@@ -57,7 +57,8 @@ static void load_messages(const char *filename) {
 
     char line[MAX_BUFFER_SIZE];
     int count = 0;
-    while (fgets(line, sizeof(line), file)) count++;
+    while (fgets(line, sizeof(line), file))
+        count++;
 
     if (count == 0) {
         fprintf(stderr, "No messages found in file: %s\n", filename);
@@ -75,7 +76,7 @@ static void load_messages(const char *filename) {
     rewind(file);
     int index = 0;
     while (fgets(line, sizeof(line), file)) {
-        size_t len = strlen(line);
+        const size_t len = strlen(line);
         if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0';
         messages[index++] = mux_strdup(line);
     }
@@ -84,7 +85,7 @@ static void load_messages(const char *filename) {
     fclose(file);
 }
 
-int main(int argc, char *argv[]) {
+int main(const int argc, char *argv[]) {
     char *default_message = NULL;
     char *live_file = NULL;
 
@@ -123,32 +124,33 @@ int main(int argc, char *argv[]) {
     init_display();
 
     init_muxmessage();
-    lv_obj_set_user_data(ui_scrMessage, mux_module);
+    lv_obj_set_user_data(ui_scr_message, mux_module);
 
-    if (config.BOOT.FACTORY_RESET) {
+    if (config.boot.factory_reset) {
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dim, mux_module);
 
-        if (!file_exist(init_wall)) snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
+        if (!file_exist(init_wall))
+            snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
 
         char lv_wall[MAX_BUFFER_SIZE];
         snprintf(lv_wall, sizeof(lv_wall), "M:%s", init_wall);
 
-        lv_img_set_src(ui_imgWall, lv_wall);
+        lv_img_set_src(ui_img_wall, lv_wall);
     } else {
-        load_wallpaper(ui_scrMessage, NULL, ui_imgWall, WALL_GENERAL);
+        load_wallpaper(ui_scr_message, NULL, ui_img_wall, wall_general);
     }
 
-    load_font_text(ui_scrMessage);
+    load_font_text(ui_scr_message);
 
-    overlay_image = lv_img_create(ui_scrMessage);
-    load_overlay_image(ui_scrMessage, overlay_image);
+    overlay_image = lv_img_create(ui_scr_message);
+    load_overlay_image(ui_scr_message, overlay_image);
 
-    lv_obj_set_style_bg_opa(ui_barProgress, 0, MU_OBJ_MAIN_DEFAULT);
-    refresh_screen(ui_scrMessage, 1);
+    lv_obj_set_style_bg_opa(ui_bar_progress, 0, MU_OBJ_MAIN_DEFAULT);
+    refresh_screen(ui_scr_message, 1);
 
-    char *ext = grab_ext((char *) default_message);
-    if (strcasecmp(ext, "txt") == 0 && file_exist((char *) default_message)) is_message_file = 1;
+    char *ext = grab_ext(default_message);
+    if (strcasecmp(ext, "txt") == 0 && file_exist(default_message)) is_message_file = 1;
     free(ext);
 
     if (live_file) {
@@ -186,36 +188,39 @@ int main(int argc, char *argv[]) {
             if (live_exists && live_changed != last_time) {
                 last_time = live_changed;
 
-                char *line = read_line_char_from(live_file, 1);
-                if (line && *line) lv_label_set_text_fmt(ui_lblMessage, "%s", parse_newline(line));
-                if (file_exist(PROGRESS_FILE)) lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
+                const char *line = read_line_char_from(live_file, 1);
+                if (line && *line) lv_label_set_text_fmt(ui_lbl_message, "%s", parse_newline(line));
+                if (file_exist(PROGRESS_FILE))
+                    lv_bar_set_value(ui_bar_progress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 
-                refresh_screen(ui_scrMessage, 1);
+                refresh_screen(ui_scr_message, 1);
             }
 
             usleep(25 * 1000);
         }
     } else if (is_message_file && delay > 0) {
         load_messages(default_message);
-        srandom((unsigned int) (time(NULL)));
+        srandom((unsigned int) time(NULL));
 
         while (!file_exist(FINISH_FILE)) {
-            int index = (int) (1 + (random() % (message_count - 1)));
-            lv_label_set_text_fmt(ui_lblMessage, "%s\n\n%s", messages[0], messages[index]);
+            const int index = (int) (1 + random() % (message_count - 1));
+            lv_label_set_text_fmt(ui_lbl_message, "%s\n\n%s", messages[0], messages[index]);
 
-            if (file_exist(PROGRESS_FILE)) lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
+            if (file_exist(PROGRESS_FILE))
+                lv_bar_set_value(ui_bar_progress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 
-            refresh_screen(ui_scrMessage, 1);
+            refresh_screen(ui_scr_message, 1);
             sleep(delay);
         }
 
-        for (int i = 0; i < message_count; i++) free(messages[i]);
+        for (int i = 0; i < message_count; i++)
+            free(messages[i]);
         free(messages);
     } else {
-        lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
-        lv_label_set_text(ui_lblMessage, parse_newline(default_message));
+        lv_bar_set_value(ui_bar_progress, progress, LV_ANIM_OFF);
+        lv_label_set_text(ui_lbl_message, parse_newline(default_message));
 
-        refresh_screen(ui_scrMessage, 1);
+        refresh_screen(ui_scr_message, 1);
     }
 
     sdl_cleanup();

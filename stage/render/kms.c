@@ -47,11 +47,11 @@
 #define DRM_PLANE_TYPE_OVERLAY          0
 
 #ifndef EGL_LINUX_DMA_BUF_EXT
-#define EGL_LINUX_DMA_BUF_EXT          0x3270
-#define EGL_LINUX_DRM_FOURCC_EXT       0x3271
-#define EGL_DMA_BUF_PLANE0_FD_EXT      0x3272
-#define EGL_DMA_BUF_PLANE0_OFFSET_EXT  0x3273
-#define EGL_DMA_BUF_PLANE0_PITCH_EXT   0x3274
+#define EGL_LINUX_DMA_BUF_EXT         0x3270
+#define EGL_LINUX_DRM_FOURCC_EXT      0x3271
+#define EGL_DMA_BUF_PLANE0_FD_EXT     0x3272
+#define EGL_DMA_BUF_PLANE0_OFFSET_EXT 0x3273
+#define EGL_DMA_BUF_PLANE0_PITCH_EXT  0x3274
 #endif
 
 typedef struct {
@@ -129,7 +129,7 @@ typedef enum {
     RENDER_PATH_OFFSCREEN_FBO,
 } render_path_t;
 
-static EGLBoolean (*real_eglSwapBuffers)(EGLDisplay, EGLSurface) = NULL;
+static EGLBoolean (*real_egl_swap_buffers)(EGLDisplay, EGLSurface) = NULL;
 
 static int (*real_drmModeAtomicCommit)(int, void *, uint32_t, void *) = NULL;
 
@@ -138,11 +138,11 @@ static int (*real_drmModePageFlip)(int, uint32_t, uint32_t, uint32_t, void *) = 
 static pthread_once_t hook_once = PTHREAD_ONCE_INIT;
 
 static void resolve_hooks_once(void) {
-    real_eglSwapBuffers = dlsym(RTLD_NEXT, "eglSwapBuffers");
+    real_egl_swap_buffers = dlsym(RTLD_NEXT, "eglSwapBuffers");
     real_drmModeAtomicCommit = dlsym(RTLD_NEXT, "drmModeAtomicCommit");
     real_drmModePageFlip = dlsym(RTLD_NEXT, "drmModePageFlip");
 
-    if (!real_eglSwapBuffers) LOG_ERROR("stage", "Failed to hook eglSwapBuffers");
+    if (!real_egl_swap_buffers) LOG_ERROR("stage", "Failed to hook eglSwapBuffers");
     if (!real_drmModeAtomicCommit) LOG_WARN("stage", "drmModeAtomicCommit not found");
     if (!real_drmModePageFlip) LOG_WARN("stage", "drmModePageFlip not found");
 }
@@ -180,7 +180,9 @@ static struct {
 
     void (*FreeProperty)(void *);
 
-    int (*AddFB2)(int, uint32_t, uint32_t, uint32_t, const uint32_t *, const uint32_t *, const uint32_t *, uint32_t *, uint32_t);
+    int (*AddFB2)(
+        int, uint32_t, uint32_t, uint32_t, const uint32_t *, const uint32_t *, const uint32_t *, uint32_t *, uint32_t
+    );
 
     int (*RmFB)(int, uint32_t);
 
@@ -206,22 +208,23 @@ static struct {
 
     int (*Ioctl)(int, unsigned long, void *);
 
-    int (*SetPlane)(int, uint32_t, uint32_t, uint32_t, uint32_t,
-                    int32_t, int32_t, uint32_t, uint32_t,
-                    uint32_t, uint32_t, uint32_t, uint32_t);
+    int (*SetPlane)(
+        int, uint32_t, uint32_t, uint32_t, uint32_t, int32_t, int32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
+        uint32_t
+    );
 } dl;
 
 static pthread_once_t dl_once = PTHREAD_ONCE_INIT;
 static int dl_init_result = 0;
 
-#define LOAD(handle, sym, name) do {               \
-    *(void **) &dl.sym = dlsym(dl.handle, name);   \
-    if (!dl.sym) {                                 \
-        LOG_INFO("stage", "%s missing symbol: %s", \
-                 #handle, name);                   \
-        return 0;                                  \
-    }                                              \
-} while (0)
+#define LOAD(handle, sym, name)                                                                                        \
+    do {                                                                                                               \
+        *(void **) &dl.sym = dlsym(dl.handle, name);                                                                   \
+        if (!dl.sym) {                                                                                                 \
+            LOG_INFO("stage", "%s missing symbol: %s", #handle, name);                                                 \
+            return 0;                                                                                                  \
+        }                                                                                                              \
+    } while (0)
 
 static int dl_load_all(void) {
     dl.h_drm = dlopen("libdrm.so.2", RTLD_LAZY | RTLD_LOCAL);
@@ -294,56 +297,56 @@ static int dl_init(void) {
     return dl_init_result;
 }
 
-static const char *k_vs_src =
-        "attribute vec2 a_pos;"
-        "attribute vec2 a_uv;"
-        "varying vec2 v_uv;"
-        "void main(){"
-        "    gl_Position = vec4(a_pos, 0.0, 1.0);"
-        "    v_uv = a_uv;"
-        "}";
+static const char *k_vs_src = "attribute vec2 a_pos;"
+                              "attribute vec2 a_uv;"
+                              "varying vec2 v_uv;"
+                              "void main(){"
+                              "    gl_Position = vec4(a_pos, 0.0, 1.0);"
+                              "    v_uv = a_uv;"
+                              "}";
 
-static const char *k_fs_overlay_src =
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "uniform float u_alpha;"
-        "varying vec2 v_uv;"
-        "void main(){"
-        "    gl_FragColor = texture2D(u_tex, v_uv) * vec4(1.0, 1.0, 1.0, u_alpha);"
-        "}";
+static const char *k_fs_overlay_src = "precision mediump float;"
+                                      "uniform sampler2D u_tex;"
+                                      "uniform float u_alpha;"
+                                      "varying vec2 v_uv;"
+                                      "void main(){"
+                                      "    gl_FragColor = texture2D(u_tex, v_uv) * vec4(1.0, 1.0, 1.0, u_alpha);"
+                                      "}";
 
-static const char *k_fs_content_src =
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "uniform float u_brightness;"
-        "uniform float u_contrast;"
-        "uniform float u_saturation;"
-        "uniform float u_cosH;"
-        "uniform float u_sinH;"
-        "uniform float u_gamma;"
-        "uniform mat3 u_filter;"
-        "uniform int u_filter_enabled;"
-        "varying vec2 v_uv;"
-        "vec3 apply_colour(vec3 c) {"
-        "    c += u_brightness;"
-        "    c = (c - 0.5) * u_contrast + 0.5;"
-        "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
-        "    c = mix(vec3(l), c, u_saturation);"
-        "    mat3 hueMat = mat3("
-        "        0.299 + 0.701*u_cosH + 0.168*u_sinH, 0.587 - 0.587*u_cosH + 0.330*u_sinH, 0.114 - 0.114*u_cosH - 0.497*u_sinH,"
-        "        0.299 - 0.299*u_cosH - 0.328*u_sinH, 0.587 + 0.413*u_cosH + 0.035*u_sinH, 0.114 - 0.114*u_cosH + 0.292*u_sinH,"
-        "        0.299 - 0.300*u_cosH + 1.250*u_sinH, 0.587 - 0.588*u_cosH - 1.050*u_sinH, 0.114 + 0.886*u_cosH - 0.203*u_sinH"
-        "    );"
-        "    c = hueMat * c;"
-        "    c = pow(max(c, vec3(0.0)), vec3(1.0 / u_gamma));"
-        "    if (u_filter_enabled == 1) c = u_filter * c;"
-        "    return c;"
-        "}"
-        "void main(){"
-        "    vec4 t = texture2D(u_tex, v_uv);"
-        "    vec3 rgb = apply_colour(t.rgb);"
-        "    gl_FragColor = vec4(rgb, t.a);"
-        "}";
+static const char *k_fs_content_src = "precision mediump float;"
+                                      "uniform sampler2D u_tex;"
+                                      "uniform float u_brightness;"
+                                      "uniform float u_contrast;"
+                                      "uniform float u_saturation;"
+                                      "uniform float u_cosH;"
+                                      "uniform float u_sinH;"
+                                      "uniform float u_gamma;"
+                                      "uniform mat3 u_filter;"
+                                      "uniform int u_filter_enabled;"
+                                      "varying vec2 v_uv;"
+                                      "vec3 apply_colour(vec3 c) {"
+                                      "    c += u_brightness;"
+                                      "    c = (c - 0.5) * u_contrast + 0.5;"
+                                      "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
+                                      "    c = mix(vec3(l), c, u_saturation);"
+                                      "    mat3 hueMat = mat3("
+                                      "        0.299 + 0.701*u_cosH + 0.168*u_sinH, 0.587 - 0.587*u_cosH + "
+                                      "0.330*u_sinH, 0.114 - 0.114*u_cosH - 0.497*u_sinH,"
+                                      "        0.299 - 0.299*u_cosH - 0.328*u_sinH, 0.587 + 0.413*u_cosH + "
+                                      "0.035*u_sinH, 0.114 - 0.114*u_cosH + 0.292*u_sinH,"
+                                      "        0.299 - 0.300*u_cosH + 1.250*u_sinH, 0.587 - 0.588*u_cosH - "
+                                      "1.050*u_sinH, 0.114 + 0.886*u_cosH - 0.203*u_sinH"
+                                      "    );"
+                                      "    c = hueMat * c;"
+                                      "    c = pow(max(c, vec3(0.0)), vec3(1.0 / u_gamma));"
+                                      "    if (u_filter_enabled == 1) c = u_filter * c;"
+                                      "    return c;"
+                                      "}"
+                                      "void main(){"
+                                      "    vec4 t = texture2D(u_tex, v_uv);"
+                                      "    vec3 rgb = apply_colour(t.rgb);"
+                                      "    gl_FragColor = vec4(rgb, t.a);"
+                                      "}";
 
 static GLuint k_prog_overlay = 0;
 static GLint k_overlay_a_pos = -1;
@@ -373,10 +376,10 @@ static GLuint k_current_program = 0;
 static int k_max_attribs = 0;
 
 static const k_vtx_t k_fullscreen_vtx[4] = {
-        {-1.0f, 1.0f,  0.0f, 1.0f},
-        {-1.0f, -1.0f, 0.0f, 0.0f},
-        {1.0f,  1.0f,  1.0f, 1.0f},
-        {1.0f,  -1.0f, 1.0f, 0.0f},
+    {-1.0f, 1.0f, 0.0f, 1.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1.0f, -1.0f, 1.0f, 0.0f},
 };
 
 typedef struct {
@@ -574,12 +577,21 @@ static void k_restore_state(const k_gl_state_t *st) {
     glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) st->framebuffer);
     glViewport(st->viewport[0], st->viewport[1], st->viewport[2], st->viewport[3]);
 
-    if (st->depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
-    if (st->scissor_test) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
+    if (st->depth_test)
+        glEnable(GL_DEPTH_TEST);
+    else
+        glDisable(GL_DEPTH_TEST);
+    if (st->scissor_test)
+        glEnable(GL_SCISSOR_TEST);
+    else
+        glDisable(GL_SCISSOR_TEST);
 
     glScissor(st->scissor_box[0], st->scissor_box[1], st->scissor_box[2], st->scissor_box[3]);
 
-    if (st->blend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
+    if (st->blend)
+        glEnable(GL_BLEND);
+    else
+        glDisable(GL_BLEND);
     glBlendEquation(st->blend_eq);
     glBlendFunc(st->blend_src, st->blend_dst);
 
@@ -591,9 +603,10 @@ static void k_restore_state(const k_gl_state_t *st) {
         glBindBuffer(GL_ARRAY_BUFFER, (GLuint) st->attrib[i].buffer);
 
         if (st->attrib[i].size > 0) {
-            glVertexAttribPointer((GLuint) i, st->attrib[i].size, st->attrib[i].type,
-                                  (GLboolean) st->attrib[i].normal, st->attrib[i].stride,
-                                  st->attrib[i].pointer);
+            glVertexAttribPointer(
+                (GLuint) i, st->attrib[i].size, st->attrib[i].type, (GLboolean) st->attrib[i].normal,
+                st->attrib[i].stride, st->attrib[i].pointer
+            );
         }
 
         if (st->attrib[i].enabled) {
@@ -613,7 +626,7 @@ static void k_rotate_uv(k_vtx_t out[4], int rot) {
     const float u3 = 1.0f, v3 = 1.0f;
 
     switch (rot) {
-        case ROTATE_90:
+        case rotate_90:
             out[0].u = u1;
             out[0].v = v1;
             out[1].u = u3;
@@ -624,7 +637,7 @@ static void k_rotate_uv(k_vtx_t out[4], int rot) {
             out[3].v = v2;
             break;
 
-        case ROTATE_180:
+        case rotate_180:
             out[0].u = u3;
             out[0].v = v3;
             out[1].u = u2;
@@ -635,7 +648,7 @@ static void k_rotate_uv(k_vtx_t out[4], int rot) {
             out[3].v = v0;
             break;
 
-        case ROTATE_270:
+        case rotate_270:
             out[0].u = u2;
             out[0].v = v2;
             out[1].u = u0;
@@ -670,7 +683,7 @@ static void k_build_fullscreen_quad(k_vtx_t out[4], int rot) {
     out[3].y = -1.0f;
 
     switch (rot) {
-        case ROTATE_90:
+        case rotate_90:
             out[0].u = 0;
             out[0].v = 0;
             out[1].u = 1;
@@ -681,7 +694,7 @@ static void k_build_fullscreen_quad(k_vtx_t out[4], int rot) {
             out[3].v = 1;
             break;
 
-        case ROTATE_180:
+        case rotate_180:
             out[0].u = 1;
             out[0].v = 0;
             out[1].u = 1;
@@ -692,7 +705,7 @@ static void k_build_fullscreen_quad(k_vtx_t out[4], int rot) {
             out[3].v = 1;
             break;
 
-        case ROTATE_270:
+        case rotate_270:
             out[0].u = 1;
             out[0].v = 1;
             out[1].u = 0;
@@ -888,7 +901,10 @@ static void k_draw_quad_overlay(GLuint tex, const k_vtx_t vtx[4], float alpha) {
     glEnableVertexAttribArray((GLuint) k_overlay_a_uv);
 
     glVertexAttribPointer((GLuint) k_overlay_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(k_vtx_t), vtx);
-    glVertexAttribPointer((GLuint) k_overlay_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(k_vtx_t), (const char *) vtx + offsetof(k_vtx_t, u));
+    glVertexAttribPointer(
+        (GLuint) k_overlay_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(k_vtx_t),
+        (const char *) vtx + offsetof(k_vtx_t, u)
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -912,7 +928,10 @@ static void k_draw_quad_content(GLuint tex, const k_vtx_t vtx[4]) {
     glEnableVertexAttribArray((GLuint) k_content_a_uv);
 
     glVertexAttribPointer((GLuint) k_content_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(k_vtx_t), vtx);
-    glVertexAttribPointer((GLuint) k_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(k_vtx_t), (const char *) vtx + offsetof(k_vtx_t, u));
+    glVertexAttribPointer(
+        (GLuint) k_content_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(k_vtx_t),
+        (const char *) vtx + offsetof(k_vtx_t, u)
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -921,10 +940,10 @@ static void k_draw_quad_content(GLuint tex, const k_vtx_t vtx[4]) {
 }
 
 static const float k_fullscreen_quad[4][4] = {
-        {-1.0f, 1.0f,  0.0f, 1.0f},
-        {-1.0f, -1.0f, 0.0f, 0.0f},
-        {1.0f,  1.0f,  1.0f, 1.0f},
-        {1.0f,  -1.0f, 1.0f, 0.0f},
+    {-1.0f, 1.0f, 0.0f, 1.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1.0f, -1.0f, 1.0f, 0.0f},
 };
 
 static GLuint k_shader_work_tex = 0;
@@ -939,35 +958,34 @@ static GLint k_smooth_u_tex = -1;
 static GLint k_smooth_u_texel = -1;
 static GLint k_smooth_u_strength = -1;
 
-static const char *k_fs_smooth_src =
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "uniform vec2 u_texel;"
-        "uniform float u_strength;"
-        "varying vec2 v_uv;"
-        "void main(){"
-        "    vec4 c;"
-        "    vec4 s;"
-        "    vec2 dx;"
-        "    vec2 dy;"
-        "    c = texture2D(u_tex, v_uv);"
-        "    if (u_strength <= 0.0001) {"
-        "        gl_FragColor = c;"
-        "        return;"
-        "    }"
-        "    dx = vec2(u_texel.x, 0.0);"
-        "    dy = vec2(0.0, u_texel.y);"
-        "    s = c * 0.25;"
-        "    s += texture2D(u_tex, v_uv - dx) * 0.125;"
-        "    s += texture2D(u_tex, v_uv + dx) * 0.125;"
-        "    s += texture2D(u_tex, v_uv - dy) * 0.125;"
-        "    s += texture2D(u_tex, v_uv + dy) * 0.125;"
-        "    s += texture2D(u_tex, v_uv - dx - dy) * 0.0625;"
-        "    s += texture2D(u_tex, v_uv + dx - dy) * 0.0625;"
-        "    s += texture2D(u_tex, v_uv - dx + dy) * 0.0625;"
-        "    s += texture2D(u_tex, v_uv + dx + dy) * 0.0625;"
-        "    gl_FragColor = mix(c, s, u_strength);"
-        "}";
+static const char *k_fs_smooth_src = "precision mediump float;"
+                                     "uniform sampler2D u_tex;"
+                                     "uniform vec2 u_texel;"
+                                     "uniform float u_strength;"
+                                     "varying vec2 v_uv;"
+                                     "void main(){"
+                                     "    vec4 c;"
+                                     "    vec4 s;"
+                                     "    vec2 dx;"
+                                     "    vec2 dy;"
+                                     "    c = texture2D(u_tex, v_uv);"
+                                     "    if (u_strength <= 0.0001) {"
+                                     "        gl_FragColor = c;"
+                                     "        return;"
+                                     "    }"
+                                     "    dx = vec2(u_texel.x, 0.0);"
+                                     "    dy = vec2(0.0, u_texel.y);"
+                                     "    s = c * 0.25;"
+                                     "    s += texture2D(u_tex, v_uv - dx) * 0.125;"
+                                     "    s += texture2D(u_tex, v_uv + dx) * 0.125;"
+                                     "    s += texture2D(u_tex, v_uv - dy) * 0.125;"
+                                     "    s += texture2D(u_tex, v_uv + dy) * 0.125;"
+                                     "    s += texture2D(u_tex, v_uv - dx - dy) * 0.0625;"
+                                     "    s += texture2D(u_tex, v_uv + dx - dy) * 0.0625;"
+                                     "    s += texture2D(u_tex, v_uv - dx + dy) * 0.0625;"
+                                     "    s += texture2D(u_tex, v_uv + dx + dy) * 0.0625;"
+                                     "    gl_FragColor = mix(c, s, u_strength);"
+                                     "}";
 
 static float k_get_shader_smooth_strength(int src_w, int src_h, int dst_w, int dst_h) {
     float scale_x;
@@ -1013,7 +1031,8 @@ static int k_ensure_smooth_program(void) {
     k_smooth_u_texel = glGetUniformLocation(k_smooth_prog, "u_texel");
     k_smooth_u_strength = glGetUniformLocation(k_smooth_prog, "u_strength");
 
-    if (k_smooth_a_pos < 0 || k_smooth_a_uv < 0 || k_smooth_u_tex < 0 || k_smooth_u_texel < 0 || k_smooth_u_strength < 0) {
+    if (k_smooth_a_pos < 0 || k_smooth_a_uv < 0 || k_smooth_u_tex < 0 || k_smooth_u_texel < 0
+        || k_smooth_u_strength < 0) {
         glDeleteProgram(k_smooth_prog);
         k_smooth_prog = 0;
 
@@ -1060,9 +1079,7 @@ static void k_draw_quad_smooth(GLuint tex, int src_w, int src_h, int dst_w, int 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    glUniform2f(k_smooth_u_texel,
-                1.0f / (float) src_w,
-                1.0f / (float) src_h);
+    glUniform2f(k_smooth_u_texel, 1.0f / (float) src_w, 1.0f / (float) src_h);
 
     glUniform1f(k_smooth_u_strength, strength);
 
@@ -1071,19 +1088,13 @@ static void k_draw_quad_smooth(GLuint tex, int src_w, int src_h, int dst_w, int 
     glEnableVertexAttribArray((GLuint) k_smooth_a_pos);
     glEnableVertexAttribArray((GLuint) k_smooth_a_uv);
 
-    glVertexAttribPointer((GLuint) k_smooth_a_pos,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &k_fullscreen_quad[0][0]);
+    glVertexAttribPointer(
+        (GLuint) k_smooth_a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &k_fullscreen_quad[0][0]
+    );
 
-    glVertexAttribPointer((GLuint) k_smooth_a_uv,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &k_fullscreen_quad[0][2]);
+    glVertexAttribPointer(
+        (GLuint) k_smooth_a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &k_fullscreen_quad[0][2]
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1152,8 +1163,10 @@ static void k_draw_quad_shader(const shader_prog_t *shader, GLuint tex, int fb_w
     k_get_shader_work_size(fb_w, fb_h, &pass_w, &pass_h);
     k_get_shader_native_resolution(pass_w, pass_h, &native_w, &native_h);
 
-    if ((pass_w != fb_w || pass_h != fb_h) &&
-        k_ensure_target(&k_shader_work_tex, &k_shader_work_fbo, &k_shader_work_w, &k_shader_work_h, pass_w, pass_h)) {
+    if ((pass_w != fb_w || pass_h != fb_h)
+        && k_ensure_target(
+            &k_shader_work_tex, &k_shader_work_fbo, &k_shader_work_w, &k_shader_work_h, pass_w, pass_h
+        )) {
         glBindFramebuffer(GL_FRAMEBUFFER, k_shader_work_fbo);
         glViewport(0, 0, pass_w, pass_h);
 
@@ -1177,19 +1190,13 @@ static void k_draw_quad_shader(const shader_prog_t *shader, GLuint tex, int fb_w
         glEnableVertexAttribArray((GLuint) shader->a_pos);
         glEnableVertexAttribArray((GLuint) shader->a_uv);
 
-        glVertexAttribPointer((GLuint) shader->a_pos,
-                              2,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              (GLsizei) (sizeof(float) * 4),
-                              &k_fullscreen_quad[0][0]);
+        glVertexAttribPointer(
+            (GLuint) shader->a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &k_fullscreen_quad[0][0]
+        );
 
-        glVertexAttribPointer((GLuint) shader->a_uv,
-                              2,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              (GLsizei) (sizeof(float) * 4),
-                              &k_fullscreen_quad[0][2]);
+        glVertexAttribPointer(
+            (GLuint) shader->a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &k_fullscreen_quad[0][2]
+        );
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1233,19 +1240,13 @@ static void k_draw_quad_shader(const shader_prog_t *shader, GLuint tex, int fb_w
     glEnableVertexAttribArray((GLuint) shader->a_pos);
     glEnableVertexAttribArray((GLuint) shader->a_uv);
 
-    glVertexAttribPointer((GLuint) shader->a_pos,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &k_fullscreen_quad[0][0]);
+    glVertexAttribPointer(
+        (GLuint) shader->a_pos, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &k_fullscreen_quad[0][0]
+    );
 
-    glVertexAttribPointer((GLuint) shader->a_uv,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          (GLsizei) (sizeof(float) * 4),
-                          &k_fullscreen_quad[0][2]);
+    glVertexAttribPointer(
+        (GLuint) shader->a_uv, 2, GL_FLOAT, GL_FALSE, (GLsizei) (sizeof(float) * 4), &k_fullscreen_quad[0][2]
+    );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1388,7 +1389,9 @@ static const char *k_resolve_base_path(int fb_w, int fb_h) {
 
     k_base_resolved_path[0] = '\0';
 
-    if (!load_stage_image("base", ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, k_dim, k_base_resolved_path)) {
+    if (!load_stage_image(
+            "base", ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, k_dim, k_base_resolved_path
+        )) {
         base_overlay_disabled_cached = 1;
         k_base_resolved = 1;
 
@@ -1484,13 +1487,8 @@ static int k_content_pass_needed(int rot) {
     const struct colour_state *a = colour_adjust_get();
     const colour_filter_matrix_t *f = colour_filter_get();
 
-    if (rot == ROTATE_0 &&
-        a->brightness == 0.0f &&
-        a->contrast == 1.0f &&
-        a->saturation == 1.0f &&
-        a->hueshift == 0.0f &&
-        a->gamma == 1.0f &&
-        !f->enabled) {
+    if (rot == rotate_0 && a->brightness == 0.0f && a->contrast == 1.0f && a->saturation == 1.0f && a->hueshift == 0.0f
+        && a->gamma == 1.0f && !f->enabled) {
         return 0;
     }
 
@@ -1567,7 +1565,10 @@ static void k_probe_surface_format(void) {
         k_content_format = GL_RGB;
     }
 
-    LOG_INFO("stage", "[kms] EGL surface format: R%d G%d B%d A%d - capture texture = %s", r, g, b, a, a > 0 ? "GL_RGBA" : "GL_RGB");
+    LOG_INFO(
+        "stage", "[kms] EGL surface format: R%d G%d B%d A%d - capture texture = %s", r, g, b, a,
+        a > 0 ? "GL_RGBA" : "GL_RGB"
+    );
 }
 
 static int k_ensure_content_target(int w, int h) {
@@ -1601,7 +1602,8 @@ static int k_ensure_content_target(int w, int h) {
 }
 
 static int k_capture_via_copy(int fb_w, int fb_h) {
-    while (glGetError() != GL_NO_ERROR) {}
+    while (glGetError() != GL_NO_ERROR) {
+    }
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, k_content_tex);
@@ -1624,7 +1626,8 @@ static int k_capture_via_readpixels(int fb_w, int fb_h) {
         k_read_buf_size = need;
     }
 
-    while (glGetError() != GL_NO_ERROR) {}
+    while (glGetError() != GL_NO_ERROR) {
+    }
 
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(0, 0, fb_w, fb_h, k_content_format, GL_UNSIGNED_BYTE, k_read_buf);
@@ -1763,12 +1766,16 @@ static k_overlay_state_t k_build_overlay_state(int fb_w, int fb_h, int base_disa
 
     st.bright_visible = bright_is_visible() ? 1 : 0;
     st.bright_step = bright_last_step;
-    st.bright_tex = (st.bright_visible && st.bright_step >= 0 && st.bright_step < INDICATOR_STEPS) ? k_layer_bright[st.bright_step].tex : 0;
+    st.bright_tex = (st.bright_visible && st.bright_step >= 0 && st.bright_step < INDICATOR_STEPS)
+                        ? k_layer_bright[st.bright_step].tex
+                        : 0;
     st.bright_alpha = st.bright_tex ? get_alpha_cached(&bright_alpha_cache) : 0.0f;
 
     st.volume_visible = volume_is_visible() ? 1 : 0;
     st.volume_step = volume_last_step;
-    st.volume_tex = (st.volume_visible && st.volume_step >= 0 && st.volume_step < INDICATOR_STEPS) ? k_layer_volume[st.volume_step].tex : 0;
+    st.volume_tex = (st.volume_visible && st.volume_step >= 0 && st.volume_step < INDICATOR_STEPS)
+                        ? k_layer_volume[st.volume_step].tex
+                        : 0;
     st.volume_alpha = st.volume_tex ? get_alpha_cached(&volume_alpha_cache) : 0.0f;
 
     return st;
@@ -1940,16 +1947,16 @@ static int pl_supports_format(drm_plane_t *p, uint32_t fmt) {
 }
 
 static int pl_resolve_plane_props(int fd, uint32_t pid) {
-    return pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "FB_ID", &pl.prop.fb_id) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_ID", &pl.prop.crtc_id) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_X", &pl.prop.src_x) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_Y", &pl.prop.src_y) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_W", &pl.prop.src_w) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_H", &pl.prop.src_h) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_X", &pl.prop.crtc_x) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_Y", &pl.prop.crtc_y) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_W", &pl.prop.crtc_w) &&
-           pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_H", &pl.prop.crtc_h);
+    return pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "FB_ID", &pl.prop.fb_id)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_ID", &pl.prop.crtc_id)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_X", &pl.prop.src_x)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_Y", &pl.prop.src_y)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_W", &pl.prop.src_w)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "SRC_H", &pl.prop.src_h)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_X", &pl.prop.crtc_x)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_Y", &pl.prop.crtc_y)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_W", &pl.prop.crtc_w)
+           && pl_find_prop(fd, pid, DRM_MODE_OBJECT_PLANE, "CRTC_H", &pl.prop.crtc_h);
 }
 
 static int pl_plane_is_candidate(int fd, drm_plane_t *p, uint32_t pid, int crtc_idx, uint32_t fmt) {
@@ -1980,8 +1987,7 @@ static int pl_find_overlay_plane(int fd, uint32_t crtc_id, int crtc_idx) {
             drm_plane_t *p = dl.GetPlane(fd, pid);
             if (!p) continue;
 
-            if (pl_plane_is_candidate(fd, p, pid, crtc_idx, fmt) &&
-                pl_resolve_plane_props(fd, pid)) {
+            if (pl_plane_is_candidate(fd, p, pid, crtc_idx, fmt) && pl_resolve_plane_props(fd, pid)) {
                 pl.plane_id = pid;
                 pl.crtc_id = crtc_id;
                 pl.fmt = fmt;
@@ -1999,7 +2005,8 @@ static int pl_find_overlay_plane(int fd, uint32_t crtc_id, int crtc_idx) {
 static int pl_resolve_egl_ext(void) {
     pl.eglCreateImageKHR_p = (PFN_eglCreateImageKHR_) eglGetProcAddress("eglCreateImageKHR");
     pl.eglDestroyImageKHR_p = (PFN_eglDestroyImageKHR_) eglGetProcAddress("eglDestroyImageKHR");
-    pl.glEGLImageTargetTexture2DOES_p = (PFN_glEGLImageTargetTexture2DOES_) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+    pl.glEGLImageTargetTexture2DOES_p =
+        (PFN_glEGLImageTargetTexture2DOES_) eglGetProcAddress("glEGLImageTargetTexture2DOES");
 
     return pl.eglCreateImageKHR_p && pl.eglDestroyImageKHR_p && pl.glEGLImageTargetTexture2DOES_p;
 }
@@ -2037,13 +2044,19 @@ static int pl_build_render_target(int w, int h) {
     if (dpy == EGL_NO_DISPLAY) return 0;
 
     const EGLint attribs[] = {
-            EGL_WIDTH, w,
-            EGL_HEIGHT, h,
-            EGL_LINUX_DRM_FOURCC_EXT, (EGLint) pl.fmt,
-            EGL_DMA_BUF_PLANE0_FD_EXT, pl.dma_fd,
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-            EGL_DMA_BUF_PLANE0_PITCH_EXT, (EGLint) stride,
-            EGL_NONE
+        EGL_WIDTH,
+        w,
+        EGL_HEIGHT,
+        h,
+        EGL_LINUX_DRM_FOURCC_EXT,
+        (EGLint) pl.fmt,
+        EGL_DMA_BUF_PLANE0_FD_EXT,
+        pl.dma_fd,
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT,
+        0,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT,
+        (EGLint) stride,
+        EGL_NONE
     };
 
     pl.image = pl.eglCreateImageKHR_p(dpy, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
@@ -2486,14 +2499,9 @@ static int cpl_state_dirty(int fb_w, int fb_h) {
     const int base_disabled = is_overlay_disabled() ? 1 : (base_overlay_disabled_cached ? 1 : 0);
     const int rot = rotate_read_cached();
 
-    if (b != cpl.last_bright_step ||
-        v != cpl.last_volume_step ||
-        bat != cpl.last_battery_step ||
-        base_disabled != cpl.last_base_disabled ||
-        rot != cpl.last_rot ||
-        fb_w != cpl.last_fb_w ||
-        fb_h != cpl.last_fb_h ||
-        cpl.dirty) {
+    if (b != cpl.last_bright_step || v != cpl.last_volume_step || bat != cpl.last_battery_step
+        || base_disabled != cpl.last_base_disabled || rot != cpl.last_rot || fb_w != cpl.last_fb_w
+        || fb_h != cpl.last_fb_h || cpl.dirty) {
 
         cpl.last_bright_step = b;
         cpl.last_volume_step = v;
@@ -2524,7 +2532,10 @@ static void cpl_redraw(int fb_w, int fb_h) {
         SDL_Surface *base = cpl_get_base(fb_w, fb_h);
         if (base) {
             SDL_Rect dst;
-            cpl_place_sprite(base->w, base->h, fb_w, fb_h, get_anchor_cached(&overlay_anchor_cache), get_scale_cached(&overlay_scale_cache), rot, &dst);
+            cpl_place_sprite(
+                base->w, base->h, fb_w, fb_h, get_anchor_cached(&overlay_anchor_cache),
+                get_scale_cached(&overlay_scale_cache), rot, &dst
+            );
             cpl_blit_sprite(base, &dst);
         }
     }
@@ -2533,7 +2544,10 @@ static void cpl_redraw(int fb_w, int fb_h) {
         SDL_Surface *s = cpl_get_indicator(cpl.sf_battery, "battery", cpl.last_battery_step);
         if (s) {
             SDL_Rect dst;
-            cpl_place_sprite(s->w, s->h, fb_w, fb_h, get_anchor_cached(&battery_anchor_cache), get_scale_cached(&battery_scale_cache), rot, &dst);
+            cpl_place_sprite(
+                s->w, s->h, fb_w, fb_h, get_anchor_cached(&battery_anchor_cache),
+                get_scale_cached(&battery_scale_cache), rot, &dst
+            );
             cpl_blit_sprite(s, &dst);
         }
     }
@@ -2542,7 +2556,10 @@ static void cpl_redraw(int fb_w, int fb_h) {
         SDL_Surface *s = cpl_get_indicator(cpl.sf_bright, "bright", cpl.last_bright_step);
         if (s) {
             SDL_Rect dst;
-            cpl_place_sprite(s->w, s->h, fb_w, fb_h, get_anchor_cached(&bright_anchor_cache), get_scale_cached(&bright_scale_cache), rot, &dst);
+            cpl_place_sprite(
+                s->w, s->h, fb_w, fb_h, get_anchor_cached(&bright_anchor_cache), get_scale_cached(&bright_scale_cache),
+                rot, &dst
+            );
             cpl_blit_sprite(s, &dst);
         }
     }
@@ -2551,7 +2568,10 @@ static void cpl_redraw(int fb_w, int fb_h) {
         SDL_Surface *s = cpl_get_indicator(cpl.sf_volume, "volume", cpl.last_volume_step);
         if (s) {
             SDL_Rect dst;
-            cpl_place_sprite(s->w, s->h, fb_w, fb_h, get_anchor_cached(&volume_anchor_cache), get_scale_cached(&volume_scale_cache), rot, &dst);
+            cpl_place_sprite(
+                s->w, s->h, fb_w, fb_h, get_anchor_cached(&volume_anchor_cache), get_scale_cached(&volume_scale_cache),
+                rot, &dst
+            );
             cpl_blit_sprite(s, &dst);
         }
     }
@@ -2570,9 +2590,10 @@ static void cpl_redraw(int fb_w, int fb_h) {
 }
 
 static int cpl_attach_plane(void) {
-    const int rc = dl.SetPlane(cpl.drm_fd, cpl.plane_id, cpl.crtc_id, cpl.fb_id, 0,
-                               0, 0, (uint32_t) cpl.crtc_w, (uint32_t) cpl.crtc_h,
-                               0, 0, (uint32_t) cpl.buf_w << 16, (uint32_t) cpl.buf_h << 16);
+    const int rc = dl.SetPlane(
+        cpl.drm_fd, cpl.plane_id, cpl.crtc_id, cpl.fb_id, 0, 0, 0, (uint32_t) cpl.crtc_w, (uint32_t) cpl.crtc_h, 0, 0,
+        (uint32_t) cpl.buf_w << 16, (uint32_t) cpl.buf_h << 16
+    );
     if (rc != 0) {
         LOG_INFO("stage", "[kms-cpu] drmModeSetPlane failed: rc=%d", rc);
         return 0;
@@ -2624,7 +2645,9 @@ static int cpl_init(int drm_fd) {
     }
 
     if (!cpl_find_overlay_plane_above(drm_fd, crtc_id, crtc_idx, primary_zpos)) {
-        LOG_INFO("stage", "[kms-cpu] no free overlay plane above primary (zpos=%llu)", (unsigned long long) primary_zpos);
+        LOG_INFO(
+            "stage", "[kms-cpu] no free overlay plane above primary (zpos=%llu)", (unsigned long long) primary_zpos
+        );
         cpl.disabled = 1;
         return 0;
     }
@@ -2662,8 +2685,10 @@ static int cpl_init(int drm_fd) {
     }
 
     cpl.ready = 1;
-    LOG_INFO("stage", "[kms-cpu] plane path ready: plane=%u crtc=%u fb=%u %dx%d pitch=%u",
-             cpl.plane_id, cpl.crtc_id, cpl.fb_id, crtc_w, crtc_h, cpl.pitch);
+    LOG_INFO(
+        "stage", "[kms-cpu] plane path ready: plane=%u crtc=%u fb=%u %dx%d pitch=%u", cpl.plane_id, cpl.crtc_id,
+        cpl.fb_id, crtc_w, crtc_h, cpl.pitch
+    );
 
     return 1;
 }
@@ -2733,7 +2758,8 @@ static void k_load_layer_textures(int fb_w, int fb_h, int base_disabled) {
 
     s = bright_last_step;
     const int bv = bright_is_visible();
-    if (bv && s >= 0 && s < INDICATOR_STEPS && (s != last_bright_step || bv != last_bright_visible || !k_layer_bright[s].tex)) {
+    if (bv && s >= 0 && s < INDICATOR_STEPS
+        && (s != last_bright_step || bv != last_bright_visible || !k_layer_bright[s].tex)) {
         char path[PATH_MAX];
         if (k_resolve_indicator_path("bright", s, path, sizeof(path))) k_load_png_to_layer(path, &k_layer_bright[s]);
 
@@ -2743,7 +2769,8 @@ static void k_load_layer_textures(int fb_w, int fb_h, int base_disabled) {
 
     s = volume_last_step;
     const int vv = volume_is_visible();
-    if (vv && s >= 0 && s < INDICATOR_STEPS && (s != last_volume_step || vv != last_volume_visible || !k_layer_volume[s].tex)) {
+    if (vv && s >= 0 && s < INDICATOR_STEPS
+        && (s != last_volume_step || vv != last_volume_visible || !k_layer_volume[s].tex)) {
         char path[PATH_MAX];
         if (k_resolve_indicator_path("volume", s, path, sizeof(path))) k_load_png_to_layer(path, &k_layer_volume[s]);
 
@@ -2752,14 +2779,14 @@ static void k_load_layer_textures(int fb_w, int fb_h, int base_disabled) {
     }
 }
 
-
-#define K_UPDATE_GEOM(LAYER, FIELD) do {                     \
-    int gc = get_##FIELD##_cached(&LAYER##_##FIELD##_cache); \
-    if (gc != k_##LAYER##_##FIELD##_cached) {                \
-        k_##LAYER##_##FIELD##_cached = gc;                   \
-        k_vtx_##LAYER##_valid = 0;                           \
-    }                                                        \
-} while (0)
+#define K_UPDATE_GEOM(LAYER, FIELD)                                                                                    \
+    do {                                                                                                               \
+        int gc = get_##FIELD##_cached(&LAYER##_##FIELD##_cache);                                                       \
+        if (gc != k_##LAYER##_##FIELD##_cached) {                                                                      \
+            k_##LAYER##_##FIELD##_cached = gc;                                                                         \
+            k_vtx_##LAYER##_valid = 0;                                                                                 \
+        }                                                                                                              \
+    } while (0)
 
 static void k_update_geometry_caches(void) {
     K_UPDATE_GEOM(base, anchor);
@@ -2775,7 +2802,8 @@ static void k_update_geometry_caches(void) {
     K_UPDATE_GEOM(volume, scale);
 }
 
-static void k_rebuild_vtx_if_needed(k_vtx_t *vtx, int *valid, const k_layer_t *layer, int fb_w, int fb_h, int anchor, int scale) {
+static void
+k_rebuild_vtx_if_needed(k_vtx_t *vtx, int *valid, const k_layer_t *layer, int fb_w, int fb_h, int anchor, int scale) {
     if (*valid || !layer || !layer->tex) return;
 
     k_build_quad_ndc(vtx, layer->w, layer->h, fb_w, fb_h, anchor, scale);
@@ -2787,7 +2815,8 @@ static int k_stage_has_work(int base_disabled, int rot) {
     if (k_render_path == RENDER_PATH_UNKNOWN) return 1;
     if (!k_overlay_valid) return 1;
     if (!base_disabled && k_layer_base.tex) return 1;
-    if (battery_last_step >= 0 && battery_last_step < INDICATOR_STEPS && k_layer_battery[battery_last_step].tex) return 1;
+    if (battery_last_step >= 0 && battery_last_step < INDICATOR_STEPS && k_layer_battery[battery_last_step].tex)
+        return 1;
     if (bright_is_visible()) return 1;
     if (volume_is_visible()) return 1;
     if (notif_is_visible()) return 1;
@@ -2818,28 +2847,36 @@ static void k_stage_draw(int fb_w, int fb_h, GLint dst_fbo) {
     k_load_layer_textures(fb_w, fb_h, base_disabled);
     k_update_geometry_caches();
 
-    k_rebuild_vtx_if_needed(k_vtx_base, &k_vtx_base_valid, base_disabled ? NULL : &k_layer_base,
-                            fb_w, fb_h, k_base_anchor_cached, k_base_scale_cached);
+    k_rebuild_vtx_if_needed(
+        k_vtx_base, &k_vtx_base_valid, base_disabled ? NULL : &k_layer_base, fb_w, fb_h, k_base_anchor_cached,
+        k_base_scale_cached
+    );
 
     const int battery_step = battery_last_step;
     if (battery_step >= 0 && battery_step < INDICATOR_STEPS) {
-        k_rebuild_vtx_if_needed(k_vtx_battery, &k_vtx_battery_valid, &k_layer_battery[battery_step],
-                                fb_w, fb_h, k_battery_anchor_cached, k_battery_scale_cached);
+        k_rebuild_vtx_if_needed(
+            k_vtx_battery, &k_vtx_battery_valid, &k_layer_battery[battery_step], fb_w, fb_h, k_battery_anchor_cached,
+            k_battery_scale_cached
+        );
     }
 
     if (bright_is_visible()) {
         const int s = bright_last_step;
         if (s >= 0 && s < INDICATOR_STEPS) {
-            k_rebuild_vtx_if_needed(k_vtx_bright, &k_vtx_bright_valid, &k_layer_bright[s],
-                                    fb_w, fb_h, k_bright_anchor_cached, k_bright_scale_cached);
+            k_rebuild_vtx_if_needed(
+                k_vtx_bright, &k_vtx_bright_valid, &k_layer_bright[s], fb_w, fb_h, k_bright_anchor_cached,
+                k_bright_scale_cached
+            );
         }
     }
 
     if (volume_is_visible()) {
         const int s = volume_last_step;
         if (s >= 0 && s < INDICATOR_STEPS) {
-            k_rebuild_vtx_if_needed(k_vtx_volume, &k_vtx_volume_valid, &k_layer_volume[s],
-                                    fb_w, fb_h, k_volume_anchor_cached, k_volume_scale_cached);
+            k_rebuild_vtx_if_needed(
+                k_vtx_volume, &k_vtx_volume_valid, &k_layer_volume[s], fb_w, fb_h, k_volume_anchor_cached,
+                k_volume_scale_cached
+            );
         }
     }
 
@@ -3036,7 +3073,10 @@ static void k_check_context(EGLDisplay d, EGLSurface s) {
     k_last_ctx = ctx;
     k_last_surf = s;
 
-    LOG_INFO("stage", "[kms] context/surface changed - resetting (dpy=%p ctx=%p surf=%p)", (void *) d, (void *) ctx, (void *) s);
+    LOG_INFO(
+        "stage", "[kms] context/surface changed - resetting (dpy=%p ctx=%p surf=%p)", (void *) d, (void *) ctx,
+        (void *) s
+    );
 
     k_on_context_changed();
     k_plane_tried = 0;
@@ -3087,10 +3127,10 @@ static void k_draw_into_plane(int w, int h) {
 
 EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     resolve_hooks();
-    if (!real_eglSwapBuffers) return EGL_FALSE;
+    if (!real_egl_swap_buffers) return EGL_FALSE;
 
-    if (is_overlay_disabled() || k_path == PATH_DISABLED) return real_eglSwapBuffers(dpy, surface);
-    if (eglGetCurrentSurface(EGL_DRAW) != surface) return real_eglSwapBuffers(dpy, surface);
+    if (is_overlay_disabled() || k_path == PATH_DISABLED) return real_egl_swap_buffers(dpy, surface);
+    if (eglGetCurrentSurface(EGL_DRAW) != surface) return real_egl_swap_buffers(dpy, surface);
 
     base_inotify_check();
     if (ino_proc) inotify_check(ino_proc);
@@ -3100,7 +3140,7 @@ EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     int w = 0;
     int h = 0;
 
-    if (!k_query_surface(dpy, surface, &w, &h)) return real_eglSwapBuffers(dpy, surface);
+    if (!k_query_surface(dpy, surface, &w, &h)) return real_egl_swap_buffers(dpy, surface);
 
     battery_overlay_update();
     bright_overlay_update();
@@ -3146,7 +3186,7 @@ EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
         k_draw_into_fbo0(w, h);
     }
 
-    EGLBoolean ret = real_eglSwapBuffers(dpy, surface);
+    EGLBoolean ret = real_egl_swap_buffers(dpy, surface);
     k_shader_frame = (k_shader_frame + 1) & 0xFFFF;
 
     return ret;
@@ -3156,7 +3196,8 @@ int drmModeAtomicCommit(int fd, void *req, uint32_t flags, void *user_data) {
     resolve_hooks();
     if (!real_drmModeAtomicCommit) return -1;
 
-    if (is_overlay_disabled() || k_path == PATH_DISABLED || !req) return real_drmModeAtomicCommit(fd, req, flags, user_data);
+    if (is_overlay_disabled() || k_path == PATH_DISABLED || !req)
+        return real_drmModeAtomicCommit(fd, req, flags, user_data);
     if (flags & DRM_MODE_ATOMIC_TEST_ONLY) return real_drmModeAtomicCommit(fd, req, flags, user_data);
 
     if (k_drm_fd < 0) k_drm_fd = fd;

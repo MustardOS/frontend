@@ -87,15 +87,16 @@ static int load_curve_file(const char *path, battery_curve_point_t *curve) {
     char *data = read_all_char_from(path);
     if (!data) return 0;
 
-    char *p = data;
+    const char *p = data;
     int i = 0;
 
     while (*p && i < BATTERY_CURVE_POINTS) {
         char *end;
-        long mv = strtol(p, &end, 10);
+        const long mv = strtol(p, &end, 10);
 
         if (p == end) {
-            while (*p && *p != '\n') p++;
+            while (*p && *p != '\n')
+                p++;
             if (*p) p++;
             continue;
         }
@@ -108,12 +109,13 @@ static int load_curve_file(const char *path, battery_curve_point_t *curve) {
     free(data);
 
     if (i != BATTERY_CURVE_POINTS) return 0;
-    for (i = 1; i < BATTERY_CURVE_POINTS; i++) if (curve[i].mv >= curve[i - 1].mv) return 0;
+    for (i = 1; i < BATTERY_CURVE_POINTS; i++)
+        if (curve[i].mv >= curve[i - 1].mv) return 0;
 
     return 1;
 }
 
-void battery_set_daemon_mode(int enable) {
+void battery_set_daemon_mode(const int enable) {
     battery_daemon_mode = enable;
 }
 
@@ -122,9 +124,7 @@ static void load_daemon_battery_config(void) {
     daemon_capacity_path[0] = '\0';
     daemon_voltage_path[0] = '\0';
 
-    char *battery_file;
-
-    battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/charger", 1);
+    char *battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/charger", 1);
     if (*battery_file) snprintf(daemon_charger_path, sizeof(daemon_charger_path), "%s", battery_file);
     if (*battery_file) free(battery_file);
 
@@ -137,7 +137,7 @@ static void load_daemon_battery_config(void) {
     if (*battery_file) free(battery_file);
 }
 
-static void write_capacity_file(int percent) {
+static void write_capacity_file(const int percent) {
     if (!battery_daemon_mode) return;
     if (percent == last_written_capacity) return;
 
@@ -145,7 +145,7 @@ static void write_capacity_file(int percent) {
     last_written_capacity = percent;
 }
 
-static void write_voltage_file(int mv) {
+static void write_voltage_file(const int mv) {
     if (!battery_daemon_mode) return;
     if (mv == last_written_voltage) return;
 
@@ -153,7 +153,7 @@ static void write_voltage_file(int mv) {
     last_written_voltage = mv;
 }
 
-static void write_charging_file(int charging) {
+static void write_charging_file(const int charging) {
     if (!battery_daemon_mode) return;
     if (charging == last_written_charging) return;
 
@@ -161,34 +161,34 @@ static void write_charging_file(int charging) {
     last_written_charging = charging;
 }
 
-static inline int clamp_percent(int p) {
+static int clamp_percent(const int p) {
     if (p < 0) return 0;
     if (p > 100) return 100;
 
     return p;
 }
 
-static inline int abs_int(int v) {
-    return (v < 0) ? -v : v;
+static int abs_int(const int v) {
+    return v < 0 ? -v : v;
 }
 
-static inline int is_charging(void) {
-    const char *path = battery_daemon_mode ? daemon_charger_path : device.BATTERY.CHARGER;
-    return (path && *path && read_all_long_from(path)) ? 1 : 0;
+static int is_charging(void) {
+    const char *path = battery_daemon_mode ? daemon_charger_path : device.battery.charger;
+    return path && *path && read_all_long_from(path) ? 1 : 0;
 }
 
-static void set_voltage_string(int mv) {
+static void set_voltage_string(const int mv) {
     snprintf(voltage_string, sizeof(voltage_string), BATTERY_GOOD_VOLTAGE, (double) mv / 1000.0);
 }
 
-static inline int percent_to_glyph(int percent) {
+static int percent_to_glyph(int percent) {
     percent = clamp_percent(percent);
     if (percent >= 95) return 100;
 
-    return (percent / 10) * 10;
+    return percent / 10 * 10;
 }
 
-static void set_battery_state(int mv, int percent) {
+static void set_battery_state(const int mv, const int percent) {
     battery_percent = clamp_percent(percent);
     battery_percent_valid = 1;
     set_voltage_string(mv);
@@ -233,30 +233,28 @@ static void build_battery_lookup(void) {
         return;
     }
 
-    int mv;
-    for (mv = battery_volt_min; mv <= battery_volt_max; mv++) {
+    for (int mv = battery_volt_min; mv <= battery_volt_max; mv++) {
         int percent = 0;
-        int i;
 
         if (mv >= battery_curve[0].mv) {
             percent = 100;
         } else if (mv <= battery_curve[BATTERY_CURVE_POINTS - 1].mv) {
             percent = 0;
         } else {
-            for (i = 0; i < BATTERY_CURVE_POINTS - 1; i++) {
-                int high_mv = battery_curve[i].mv;
-                int low_mv = battery_curve[i + 1].mv;
+            for (int i = 0; i < BATTERY_CURVE_POINTS - 1; i++) {
+                const int high_mv = battery_curve[i].mv;
+                const int low_mv = battery_curve[i + 1].mv;
 
                 if (mv <= high_mv && mv >= low_mv) {
-                    int low_pct = 100 - ((i + 1) * 10);
-                    int span_mv = high_mv - low_mv;
+                    const int low_pct = 100 - (i + 1) * 10;
+                    const int span_mv = high_mv - low_mv;
 
                     if (span_mv <= 0) {
                         percent = low_pct;
                     } else {
-                        int high_pct = 100 - (i * 10);
-                        int span_pct = high_pct - low_pct;
-                        int pos_mv = mv - low_mv;
+                        const int high_pct = 100 - i * 10;
+                        const int span_pct = high_pct - low_pct;
+                        const int pos_mv = mv - low_mv;
 
                         percent = low_pct + (pos_mv * span_pct + span_mv / 2) / span_mv;
                     }
@@ -307,20 +305,20 @@ static void init_battery_curves(void) {
 static int read_voltage_mv(void) {
     if (!voltage_path || !*voltage_path) return 0;
 
-    unsigned long long raw = read_all_long_from(voltage_path);
+    const unsigned long long raw = read_all_long_from(voltage_path);
     if (raw == 0) return 0;
 
     if (battery_daemon_mode) return (int) (raw / 1000ULL);
     return (int) raw;
 }
 
-static inline void swap_int(int *a, int *b) {
-    int t = *a;
+static void swap_int(int *a, int *b) {
+    const int t = *a;
     *a = *b;
     *b = t;
 }
 
-static int median_voltage(int mv) {
+static int median_voltage(const int mv) {
     int a, b, c, d, e; // Now I know my ABCs...
 
     voltage_samples[voltage_sample_index++] = mv;
@@ -346,7 +344,7 @@ static int median_voltage(int mv) {
     return c;
 }
 
-static int voltage_to_percent(int mv, int charging) {
+static int voltage_to_percent(int mv, const int charging) {
     if (!charging) mv += BATTERY_LOAD_COMPENSATION_MV;
     if (!battery_lookup || battery_lookup_size <= 0) return 0;
 
@@ -356,7 +354,7 @@ static int voltage_to_percent(int mv, int charging) {
     return battery_lookup[mv - battery_volt_min];
 }
 
-static int stabilise_percent(int raw_percent, int charging) {
+static int stabilise_percent(int raw_percent, const int charging) {
     raw_percent = clamp_percent(raw_percent);
 
     if (!battery_percent_valid) {
@@ -369,7 +367,8 @@ static int stabilise_percent(int raw_percent, int charging) {
 
     if (charging) {
         if (raw_percent > battery_percent + BATTERY_PERCENT_STEP_UP) return battery_percent + BATTERY_PERCENT_STEP_UP;
-        if (raw_percent < battery_percent - BATTERY_PERCENT_STEP_DOWN) return battery_percent - BATTERY_PERCENT_STEP_DOWN;
+        if (raw_percent < battery_percent - BATTERY_PERCENT_STEP_DOWN)
+            return battery_percent - BATTERY_PERCENT_STEP_DOWN;
 
         return raw_percent;
     }
@@ -418,7 +417,6 @@ void battery_update(void) {
     write_charging_file(charging);
 
     int mv = read_voltage_mv();
-    int percent;
 
     if (mv <= 0) {
         set_battery_state_unknown();
@@ -441,8 +439,8 @@ void battery_update(void) {
         }
     }
 
-    if (last_percent_source_mv >= 0 &&
-        abs_int(filtered_voltage_mv - last_percent_source_mv) < BATTERY_VOLTAGE_DEADBAND_MV) {
+    if (last_percent_source_mv >= 0
+        && abs_int(filtered_voltage_mv - last_percent_source_mv) < BATTERY_VOLTAGE_DEADBAND_MV) {
         if (battery_percent_valid) {
             write_capacity_file(battery_percent);
             write_voltage_file(filtered_voltage_mv);
@@ -450,7 +448,7 @@ void battery_update(void) {
         }
     }
 
-    percent = voltage_to_percent(filtered_voltage_mv, charging);
+    int percent = voltage_to_percent(filtered_voltage_mv, charging);
     percent = stabilise_percent(percent, charging);
 
     last_percent_source_mv = filtered_voltage_mv;
@@ -462,12 +460,12 @@ const char *battery_get_voltage(void) {
 }
 
 int battery_get_capacity(void) {
-    unsigned long long val = read_all_long_from(BATTERY_CAPACITY_FILE);
+    const unsigned long long val = read_all_long_from(BATTERY_CAPACITY_FILE);
     return clamp_percent((int) val);
 }
 
 int battery_get_low_threshold(void) {
-    return clamp_percent(config.SETTINGS.POWER.LOW_BATTERY);
+    return clamp_percent(config.settings.power.low_battery);
 }
 
 int battery_is_low(void) {
@@ -481,8 +479,8 @@ int battery_is_charging(void) {
 char *battery_get_capacity_glyph(void) {
     static char capacity[MAX_BUFFER_SIZE];
 
-    int percent = battery_get_capacity();
-    int glyph = percent_to_glyph(percent);
+    const int percent = battery_get_capacity();
+    const int glyph = percent_to_glyph(percent);
 
     const char *prefix = battery_is_charging() ? BATTERY_CHARGING_PREFIX : BATTERY_CAPACITY_PREFIX;
 
@@ -490,10 +488,10 @@ char *battery_get_capacity_glyph(void) {
     return capacity;
 }
 
-void battery_capacity_task(lv_timer_t *timer) {
+void battery_capacity_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
 
-    if (!ui_staCapacity || !lv_obj_is_valid(ui_staCapacity)) return;
+    if (!ui_sta_capacity || !lv_obj_is_valid(ui_sta_capacity)) return;
 
     const int percent = battery_get_capacity();
     const int charging = battery_is_charging();
@@ -503,6 +501,6 @@ void battery_capacity_task(lv_timer_t *timer) {
     last_ui_percent = percent;
     last_ui_charging = charging;
 
-    update_battery_capacity(ui_staCapacity, &theme);
-    update_battery_percent_label(ui_lblBatteryPercent, &theme);
+    update_battery_capacity(ui_sta_capacity, &theme);
+    update_battery_percent_label(ui_lbl_battery_percent, &theme);
 }

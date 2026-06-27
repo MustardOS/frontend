@@ -3,13 +3,13 @@
 #include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
-void init_muxcontent(lv_obj_t *ui_pnlContent);
+void init_muxcontent(lv_obj_t *ui_pnl_content);
 
-#define CONTENT(NAME, ENUM, UDATA)           \
-    extern lv_obj_t *ui_pnl##NAME##_content; \
-    extern lv_obj_t *ui_lbl##NAME##_content; \
-    extern lv_obj_t *ui_ico##NAME##_content; \
-    extern lv_obj_t *ui_dro##NAME##_content;
+#define CONTENT(NAME, UDATA)                                                                                           \
+    extern lv_obj_t *ui_pnl_##NAME##_content;                                                                          \
+    extern lv_obj_t *ui_lbl_##NAME##_content;                                                                          \
+    extern lv_obj_t *ui_ico_##NAME##_content;                                                                          \
+    extern lv_obj_t *ui_dro_##NAME##_content;
 
 CONTENT_ELEMENTS
 #undef CONTENT

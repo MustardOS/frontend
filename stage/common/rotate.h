@@ -4,12 +4,7 @@
 
 #define ROTATE_DETECT OVERLAY_RUNNER "rotate"
 
-enum {
-    ROTATE_0 = 0,
-    ROTATE_90 = 90,
-    ROTATE_180 = 180,
-    ROTATE_270 = 270
-};
+enum { rotate_0 = 0, rotate_90 = 90, rotate_180 = 180, rotate_270 = 270 };
 
 int rotate_normalise(int deg);
 

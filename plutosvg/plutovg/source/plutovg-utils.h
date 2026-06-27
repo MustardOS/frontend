@@ -60,7 +60,8 @@ static inline uint32_t plutovg_premultiply_argb(uint32_t color)
     uint32_t r = plutovg_red(color);
     uint32_t g = plutovg_green(color);
     uint32_t b = plutovg_blue(color);
-    if(a != 255) {
+    if (a != 255)
+    {
         r = (r * a) / 255;
         g = (g * a) / 255;
         b = (b * a) / 255;
@@ -78,52 +79,67 @@ static inline bool plutovg_parse_number(const char** begin, const char* end, flo
     int sign = 1;
     int expsign = 1;
 
-    if(it < end && *it == '+') {
+    if (it < end && *it == '+')
+    {
         ++it;
-    } else if(it < end && *it == '-') {
+    }
+    else if (it < end && *it == '-')
+    {
         ++it;
         sign = -1;
     }
 
-    if(it >= end || (*it != '.' && !PLUTOVG_IS_NUM(*it)))
+    if (it >= end || (*it != '.' && !PLUTOVG_IS_NUM(*it)))
         return false;
-    if(PLUTOVG_IS_NUM(*it)) {
-        do {
+    if (PLUTOVG_IS_NUM(*it))
+    {
+        do
+        {
             integer = 10.f * integer + (*it++ - '0');
-        } while(it < end && PLUTOVG_IS_NUM(*it));
+        }
+        while (it < end && PLUTOVG_IS_NUM(*it));
     }
 
-    if(it < end && *it == '.') {
+    if (it < end && *it == '.')
+    {
         ++it;
-        if(it >= end || !PLUTOVG_IS_NUM(*it))
+        if (it >= end || !PLUTOVG_IS_NUM(*it))
             return false;
         float divisor = 1.f;
-        do {
+        do
+        {
             fraction = 10.f * fraction + (*it++ - '0');
             divisor *= 10.f;
-        } while(it < end && PLUTOVG_IS_NUM(*it));
+        }
+        while (it < end && PLUTOVG_IS_NUM(*it));
         fraction /= divisor;
     }
 
-    if(it < end && (*it == 'e' || *it == 'E')) {
+    if (it < end && (*it == 'e' || *it == 'E'))
+    {
         ++it;
-        if(it < end && *it == '+') {
+        if (it < end && *it == '+')
+        {
             ++it;
-        } else if(it < end && *it == '-') {
+        }
+        else if (it < end && *it == '-')
+        {
             ++it;
             expsign = -1;
         }
 
-        if(it >= end || !PLUTOVG_IS_NUM(*it))
+        if (it >= end || !PLUTOVG_IS_NUM(*it))
             return false;
-        do {
+        do
+        {
             exponent = 10 * exponent + (*it++ - '0');
-        } while(it < end && PLUTOVG_IS_NUM(*it));
+        }
+        while (it < end && PLUTOVG_IS_NUM(*it));
     }
 
     *begin = it;
     *number = sign * (integer + fraction);
-    if(exponent)
+    if (exponent)
         *number *= powf(10.f, expsign * exponent);
     return *number >= -FLT_MAX && *number <= FLT_MAX;
 }
@@ -131,7 +147,8 @@ static inline bool plutovg_parse_number(const char** begin, const char* end, flo
 static inline bool plutovg_skip_delim(const char** begin, const char* end, const char delim)
 {
     const char* it = *begin;
-    if(it < end && *it == delim) {
+    if (it < end && *it == delim)
+    {
         *begin = it + 1;
         return true;
     }
@@ -142,12 +159,14 @@ static inline bool plutovg_skip_delim(const char** begin, const char* end, const
 static inline bool plutovg_skip_string(const char** begin, const char* end, const char* data)
 {
     const char* it = *begin;
-    while(it < end && *data && *it == *data) {
+    while (it < end && *data && *it == *data)
+    {
         ++data;
         ++it;
     }
 
-    if(*data == '\0') {
+    if (*data == '\0')
+    {
         *begin = it;
         return true;
     }
@@ -158,7 +177,7 @@ static inline bool plutovg_skip_string(const char** begin, const char* end, cons
 static inline bool plutovg_skip_ws(const char** begin, const char* end)
 {
     const char* it = *begin;
-    while(it < end && PLUTOVG_IS_WS(*it))
+    while (it < end && PLUTOVG_IS_WS(*it))
         ++it;
     *begin = it;
     return it < end;
@@ -167,11 +186,14 @@ static inline bool plutovg_skip_ws(const char** begin, const char* end)
 static inline bool plutovg_skip_ws_and_delim(const char** begin, const char* end, char delim)
 {
     const char* it = *begin;
-    if(plutovg_skip_ws(&it, end)) {
-        if(!plutovg_skip_delim(&it, end, delim))
+    if (plutovg_skip_ws(&it, end))
+    {
+        if (!plutovg_skip_delim(&it, end, delim))
             return false;
         plutovg_skip_ws(&it, end);
-    } else {
+    }
+    else
+    {
         return false;
     }
 
@@ -187,17 +209,19 @@ static inline bool plutovg_skip_ws_and_comma(const char** begin, const char* end
 static inline bool plutovg_skip_ws_or_delim(const char** begin, const char* end, char delim, bool* has_delim)
 {
     const char* it = *begin;
-    if(has_delim)
+    if (has_delim)
         *has_delim = false;
-    if(plutovg_skip_ws(&it, end)) {
-        if(plutovg_skip_delim(&it, end, delim)) {
-            if(has_delim)
+    if (plutovg_skip_ws(&it, end))
+    {
+        if (plutovg_skip_delim(&it, end, delim))
+        {
+            if (has_delim)
                 *has_delim = true;
             plutovg_skip_ws(&it, end);
         }
     }
 
-    if(it == *begin)
+    if (it == *begin)
         return false;
     *begin = it;
     return it < end;

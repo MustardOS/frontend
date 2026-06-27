@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 #include <SDL2/SDL.h>
 #include "../log.h"
 #include "../saver.h"
@@ -53,26 +52,23 @@ typedef struct {
 static mystify_module_t mod = {0};
 
 static const uint8_t myst_palette[][3] = {
-        {255, 64,  255}, // Magenta
-        {120, 255, 60},  // Lime
-        {255, 100, 100}, // Red
-        {80,  200, 255}, // Blue
-        {255, 200, 60},  // Gold
-        {180, 120, 255}, // Violet
-        {0,   255, 200}, // Aqua
-        {255, 140, 60},  // Orange
+    {255, 64, 255},  // Magenta
+    {120, 255, 60},  // Lime
+    {255, 100, 100}, // Red
+    {80, 200, 255},  // Blue
+    {255, 200, 60},  // Gold
+    {180, 120, 255}, // Violet
+    {0, 255, 200},   // Aqua
+    {255, 140, 60},  // Orange
 };
-#define MYST_PALETTE_COUNT ((int)(sizeof(myst_palette) / sizeof(myst_palette[0])))
+#define MYST_PALETTE_COUNT ((int) (sizeof(myst_palette) / sizeof(myst_palette[0])))
 
 static void pick_new_colour(myst_poly_t *p) {
     int idx;
 
     for (int tries = 0; tries < 8; tries++) {
         idx = (int) saver_rand_range(MYST_PALETTE_COUNT);
-        if (myst_palette[idx][0] != p->r ||
-            myst_palette[idx][1] != p->g ||
-            myst_palette[idx][2] != p->b)
-            break;
+        if (myst_palette[idx][0] != p->r || myst_palette[idx][1] != p->g || myst_palette[idx][2] != p->b) break;
     }
 
     p->r = myst_palette[idx][0];
@@ -126,8 +122,10 @@ static void seed_all(void) {
     int count = (mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) ? MYST_POLY_MAX : MYST_POLY_NORMAL;
     mod.poly_count = count;
 
-    for (int i = 0; i < MYST_POLY_MAX; i++) mod.poly[i].active = 0;
-    for (int i = 0; i < count; i++) poly_spawn(&mod.poly[i], i);
+    for (int i = 0; i < MYST_POLY_MAX; i++)
+        mod.poly[i].active = 0;
+    for (int i = 0; i < count; i++)
+        poly_spawn(&mod.poly[i], i);
 }
 
 static void on_speed_changed(void *user) {
@@ -160,8 +158,9 @@ int mystify_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     on_speed_changed(NULL);
     seed_all();
 
-    LOG_INFO("saver", "Mystify Initialised (%dx%d, polys=%d, speed=%d)",
-             screen_w, screen_h, mod.poly_count, mod.base.speed);
+    LOG_INFO(
+        "saver", "Mystify Initialised (%dx%d, polys=%d, speed=%d)", screen_w, screen_h, mod.poly_count, mod.base.speed
+    );
 
     return 1;
 }
@@ -248,7 +247,9 @@ void mystify_update(void) {
     }
 }
 
-static void render_polygon_outline(SDL_Renderer *renderer, const int16_t *xs, const int16_t *ys, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
+static void render_polygon_outline(
+    SDL_Renderer *renderer, const int16_t *xs, const int16_t *ys, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha
+) {
     SDL_SetRenderDrawColor(renderer, r, g, b, alpha);
 
     for (int i = 0; i < MYST_VERT_COUNT; i++) {
@@ -281,7 +282,10 @@ void mystify_render(SDL_Renderer *renderer) {
             int factor = (t * 1024) / count;
             int alpha = 80 + (factor * 150) / 1024;
 
-            render_polygon_outline(renderer, p->trail_x[idx], p->trail_y[idx], p->trail_r[idx], p->trail_g[idx], p->trail_b[idx], (uint8_t) alpha);
+            render_polygon_outline(
+                renderer, p->trail_x[idx], p->trail_y[idx], p->trail_r[idx], p->trail_g[idx], p->trail_b[idx],
+                (uint8_t) alpha
+            );
         }
 
         int16_t live_x[MYST_VERT_COUNT], live_y[MYST_VERT_COUNT];

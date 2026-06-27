@@ -27,7 +27,7 @@ extern "C" {
 #define LV_ARCH_64
 
 // Otherwise use compiler-dependent means to determine arch size
-#elif defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__) || defined (__aarch64__)
+#elif defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__) || defined(__aarch64__)
 #define LV_ARCH_64
 
 #endif
@@ -69,13 +69,13 @@ typedef uint32_t lv_uintptr_t;
  *      MACROS
  **********************/
 
-#define LV_UNUSED(x) ((void)x)
+#define LV_UNUSED(x) ((void) x)
 
-#define _LV_CONCAT(x, y) x ## y
-#define LV_CONCAT(x, y) _LV_CONCAT(x, y)
+#define _LV_CONCAT(x, y) x##y
+#define LV_CONCAT(x, y)  _LV_CONCAT(x, y)
 
-#define _LV_CONCAT3(x, y, z) x ## y ## z
-#define LV_CONCAT3(x, y, z) _LV_CONCAT3(x, y, z)
+#define _LV_CONCAT3(x, y, z) x##y##z
+#define LV_CONCAT3(x, y, z)  _LV_CONCAT3(x, y, z)
 
 #if defined(PYCPARSER) || defined(__CC_ARM)
 #define LV_FORMAT_ATTRIBUTE(fmtstr, vararg)

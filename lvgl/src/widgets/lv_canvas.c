@@ -40,10 +40,10 @@ static void deinit_fake_disp(lv_obj_t *canvas, lv_disp_t *disp);
  *  STATIC VARIABLES
  **********************/
 const lv_obj_class_t lv_canvas_class = {
-        .constructor_cb = lv_canvas_constructor,
-        .destructor_cb = lv_canvas_destructor,
-        .instance_size = sizeof(lv_canvas_t),
-        .base_class = &lv_img_class
+    .constructor_cb = lv_canvas_constructor,
+    .destructor_cb = lv_canvas_destructor,
+    .instance_size = sizeof(lv_canvas_t),
+    .base_class = &lv_img_class
 };
 
 /**********************
@@ -153,9 +153,10 @@ void lv_canvas_copy_buf(lv_obj_t *obj, const void *to_copy, lv_coord_t x, lv_coo
     }
 }
 
-void lv_canvas_transform(lv_obj_t *obj, lv_img_dsc_t *src_img, int16_t angle, uint16_t zoom, lv_coord_t offset_x,
-                         lv_coord_t offset_y,
-                         int32_t pivot_x, int32_t pivot_y, bool antialias) {
+void lv_canvas_transform(
+    lv_obj_t *obj, lv_img_dsc_t *src_img, int16_t angle, uint16_t zoom, lv_coord_t offset_x, lv_coord_t offset_y,
+    int32_t pivot_x, int32_t pivot_y, int antialias
+) {
 #if LV_DRAW_COMPLEX
     LV_ASSERT_OBJ(obj, MY_CLASS);
     LV_ASSERT_NULL(src_img);
@@ -183,8 +184,10 @@ void lv_canvas_transform(lv_obj_t *obj, lv_img_dsc_t *src_img, int16_t angle, ui
     lv_color_t *cbuf = lv_mem_alloc(dest_img->header.w * sizeof(lv_color_t));
     lv_opa_t *abuf = lv_mem_alloc(dest_img->header.w * sizeof(lv_opa_t));
     for (y = 0; y < dest_img->header.h; y++) {
-        lv_draw_sw_transform(NULL, &dest_area, src_img->data, src_img->header.w, src_img->header.h, src_img->header.w,
-                             &draw_dsc, canvas->dsc.header.cf, cbuf, abuf);
+        lv_draw_sw_transform(
+            NULL, &dest_area, src_img->data, src_img->header.w, src_img->header.h, src_img->header.w, &draw_dsc,
+            canvas->dsc.header.cf, cbuf, abuf
+        );
 
         for (x = 0; x < dest_img->header.w; x++) {
             if (abuf[x]) {
@@ -243,7 +246,7 @@ void lv_canvas_blur_hor(lv_obj_t *obj, const lv_area_t *area, uint16_t r) {
 
     if ((r & 0x1) == 0) r_back--;
 
-    bool has_alpha = lv_img_cf_has_alpha(canvas->dsc.header.cf);
+    int has_alpha = lv_img_cf_has_alpha(canvas->dsc.header.cf);
 
     lv_coord_t line_w = lv_img_buf_get_img_size(canvas->dsc.header.w, 1, canvas->dsc.header.cf);
     uint8_t *line_buf = lv_mem_buf_get(line_w);
@@ -287,7 +290,7 @@ void lv_canvas_blur_hor(lv_obj_t *obj, const lv_area_t *area, uint16_t r) {
         }
 
         /*Just to indicate that the px is visible*/
-        if (has_alpha == false) asum = LV_OPA_COVER;
+        if (has_alpha == 0) asum = LV_OPA_COVER;
 
         for (x = a.x1; x <= a.x2; x++) {
 
@@ -369,7 +372,7 @@ void lv_canvas_blur_ver(lv_obj_t *obj, const lv_area_t *area, uint16_t r) {
 
     if ((r & 0x1) == 0) r_back--;
 
-    bool has_alpha = lv_img_cf_has_alpha(canvas->dsc.header.cf);
+    int has_alpha = lv_img_cf_has_alpha(canvas->dsc.header.cf);
     lv_coord_t col_w = lv_img_buf_get_img_size(1, canvas->dsc.header.h, canvas->dsc.header.cf);
     uint8_t *col_buf = lv_mem_buf_get(col_w);
     lv_img_dsc_t line_img;
@@ -414,7 +417,7 @@ void lv_canvas_blur_ver(lv_obj_t *obj, const lv_area_t *area, uint16_t r) {
         }
 
         /*Just to indicate that the px is visible*/
-        if (has_alpha == false) asum = LV_OPA_COVER;
+        if (has_alpha == 0) asum = LV_OPA_COVER;
 
         for (y = a.y1; y <= a.y2; y++) {
             if (asum) {
@@ -498,8 +501,9 @@ void lv_canvas_fill_bg(lv_obj_t *canvas, lv_color_t color, lv_opa_t opa) {
     lv_obj_invalidate(canvas);
 }
 
-void lv_canvas_draw_rect(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h,
-                         const lv_draw_rect_dsc_t *draw_dsc) {
+void lv_canvas_draw_rect(
+    lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const lv_draw_rect_dsc_t *draw_dsc
+) {
     LV_ASSERT_OBJ(canvas, MY_CLASS);
 
     lv_img_dsc_t *dsc = lv_canvas_get_img(canvas);
@@ -521,8 +525,7 @@ void lv_canvas_draw_rect(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_
 
     /*Disable anti-aliasing if drawing with transparent color to chroma keyed canvas*/
     lv_color_t ctransp = LV_COLOR_CHROMA_KEY;
-    if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED &&
-        draw_dsc->bg_color.full == ctransp.full) {
+    if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED && draw_dsc->bg_color.full == ctransp.full) {
         fake_disp.driver->antialiasing = 0;
     }
 
@@ -541,8 +544,9 @@ void lv_canvas_draw_rect(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_
     lv_obj_invalidate(canvas);
 }
 
-void lv_canvas_draw_text(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t max_w,
-                         lv_draw_label_dsc_t *draw_dsc, const char *txt) {
+void lv_canvas_draw_text(
+    lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t max_w, lv_draw_label_dsc_t *draw_dsc, const char *txt
+) {
     LV_ASSERT_OBJ(canvas, MY_CLASS);
 
     lv_img_dsc_t *dsc = lv_canvas_get_img(canvas);
@@ -576,8 +580,9 @@ void lv_canvas_draw_text(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_
     lv_obj_invalidate(canvas);
 }
 
-void lv_canvas_draw_img(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, const void *src,
-                        const lv_draw_img_dsc_t *draw_dsc) {
+void lv_canvas_draw_img(
+    lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, const void *src, const lv_draw_img_dsc_t *draw_dsc
+) {
     LV_ASSERT_OBJ(canvas, MY_CLASS);
 
     lv_img_dsc_t *dsc = lv_canvas_get_img(canvas);
@@ -618,8 +623,9 @@ void lv_canvas_draw_img(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, const void
     lv_obj_invalidate(canvas);
 }
 
-void lv_canvas_draw_line(lv_obj_t *canvas, const lv_point_t points[], uint32_t point_cnt,
-                         const lv_draw_line_dsc_t *draw_dsc) {
+void lv_canvas_draw_line(
+    lv_obj_t *canvas, const lv_point_t points[], uint32_t point_cnt, const lv_draw_line_dsc_t *draw_dsc
+) {
     LV_ASSERT_OBJ(canvas, MY_CLASS);
 
     lv_img_dsc_t *dsc = lv_canvas_get_img(canvas);
@@ -641,8 +647,7 @@ void lv_canvas_draw_line(lv_obj_t *canvas, const lv_point_t points[], uint32_t p
 
     /*Disable anti-aliasing if drawing with transparent color to chroma keyed canvas*/
     lv_color_t ctransp = LV_COLOR_CHROMA_KEY;
-    if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED &&
-        draw_dsc->color.full == ctransp.full) {
+    if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED && draw_dsc->color.full == ctransp.full) {
         fake_disp.driver->antialiasing = 0;
     }
 
@@ -658,8 +663,9 @@ void lv_canvas_draw_line(lv_obj_t *canvas, const lv_point_t points[], uint32_t p
     lv_obj_invalidate(canvas);
 }
 
-void lv_canvas_draw_polygon(lv_obj_t *canvas, const lv_point_t points[], uint32_t point_cnt,
-                            const lv_draw_rect_dsc_t *draw_dsc) {
+void lv_canvas_draw_polygon(
+    lv_obj_t *canvas, const lv_point_t points[], uint32_t point_cnt, const lv_draw_rect_dsc_t *draw_dsc
+) {
     LV_ASSERT_OBJ(canvas, MY_CLASS);
 
     lv_img_dsc_t *dsc = lv_canvas_get_img(canvas);
@@ -681,8 +687,7 @@ void lv_canvas_draw_polygon(lv_obj_t *canvas, const lv_point_t points[], uint32_
 
     /*Disable anti-aliasing if drawing with transparent color to chroma keyed canvas*/
     lv_color_t ctransp = LV_COLOR_CHROMA_KEY;
-    if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED &&
-        draw_dsc->bg_color.full == ctransp.full) {
+    if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED && draw_dsc->bg_color.full == ctransp.full) {
         fake_disp.driver->antialiasing = 0;
     }
 
@@ -695,8 +700,10 @@ void lv_canvas_draw_polygon(lv_obj_t *canvas, const lv_point_t points[], uint32_
     lv_obj_invalidate(canvas);
 }
 
-void lv_canvas_draw_arc(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t r, int32_t start_angle,
-                        int32_t end_angle, const lv_draw_arc_dsc_t *draw_dsc) {
+void lv_canvas_draw_arc(
+    lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t r, int32_t start_angle, int32_t end_angle,
+    const lv_draw_arc_dsc_t *draw_dsc
+) {
 #if LV_DRAW_COMPLEX
     LV_ASSERT_OBJ(canvas, MY_CLASS);
 

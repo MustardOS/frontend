@@ -4,9 +4,11 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/sammycage/plutovg/badge)](https://www.codefactor.io/repository/github/sammycage/plutovg)
 
 # PlutoVG
+
 PlutoVG is a standalone 2D vector graphics library in C.
 
 ## Features
+
 - Path Filling, Stroking and Dashing
 - Solid, Gradient and Texture Paints
 - Fonts and Texts
@@ -15,6 +17,7 @@ PlutoVG is a standalone 2D vector graphics library in C.
 - Images
 
 ## Example
+
 ```c
 #include <plutovg.h>
 
@@ -95,5 +98,6 @@ cmake --install build
 ```
 
 ## Projects using PlutoVG
+
 - [LunaSVG](https://github.com/sammycage/lunasvg)
 - [PlutoSVG](https://github.com/sammycage/plutosvg)

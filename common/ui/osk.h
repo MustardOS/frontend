@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <linux/input.h>
 #include "../../lvgl/lvgl.h"
@@ -21,7 +19,7 @@ extern const char *key_number_map[];
 extern const char *key_hex_map[];
 
 // include_numpad: 0 = alpha only, 1 = w/numpad, 2 = w/hexpad
-void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, int include_numpad, bool is_password, uint16_t max_len);
+void init_osk(lv_obj_t *ui_pnl_entry, lv_obj_t *ui_txt_entry, int include_numpad, int is_password, uint16_t max_len);
 
 void osk_handler(lv_event_t *e);
 
@@ -51,6 +49,6 @@ void osk_hide(lv_obj_t *panel);
 
 void osk_refresh_labels(void);
 
-void process_key_event(struct input_event *ev, lv_obj_t *entry);
+void process_key_event(const struct input_event *ev, lv_obj_t *entry);
 
 char get_shifted_char(uint16_t key);

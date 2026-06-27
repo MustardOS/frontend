@@ -10,17 +10,11 @@
 #include "fileio.h"
 #include "saver.h"
 
-const uint8_t saver_pastel_r[SAVER_PASTEL_COUNT] = {
-        255, 255, 255, 255, 178, 153, 179, 204, 255, 255, 153
-};
+const uint8_t saver_pastel_r[SAVER_PASTEL_COUNT] = {255, 255, 255, 255, 178, 153, 179, 204, 255, 255, 153};
 
-const uint8_t saver_pastel_g[SAVER_PASTEL_COUNT] = {
-        255, 182, 179, 255, 255, 255, 204, 153, 153, 218, 255
-};
+const uint8_t saver_pastel_g[SAVER_PASTEL_COUNT] = {255, 182, 179, 255, 255, 255, 204, 153, 153, 218, 255};
 
-const uint8_t saver_pastel_b[SAVER_PASTEL_COUNT] = {
-        255, 193, 128, 153, 178, 255, 255, 255, 204, 153, 220
-};
+const uint8_t saver_pastel_b[SAVER_PASTEL_COUNT] = {255, 193, 128, 153, 178, 255, 255, 255, 204, 153, 220};
 
 #define SAVER_SPEED_PATH "/opt/muos/config/settings/power/saver_speed"
 
@@ -35,24 +29,24 @@ void saver_seed_rng_once(void) {
     seeded = 1;
 }
 
-int32_t saver_rand_range(int32_t range) {
+int32_t saver_rand_range(const int32_t range) {
     if (range <= 0) return 0;
 
     return (int32_t) (random() % (uint32_t) range);
 }
 
-uint8_t saver_clamp_u8(int v) {
+uint8_t saver_clamp_u8(const int v) {
     if (v < 0) return 0;
     if (v > 255) return 255;
 
     return (uint8_t) v;
 }
 
-int saver_int_abs(int v) {
+int saver_int_abs(const int v) {
     return v < 0 ? -v : v;
 }
 
-void saver_set_speed_override(int speed) {
+void saver_set_speed_override(const int speed) {
     saver_speed_override = speed > 0 ? speed : 0;
 }
 
@@ -72,7 +66,7 @@ int saver_read_speed(void) {
     return speed;
 }
 
-void saver_pastel_pick(int idx, uint8_t *r, uint8_t *g, uint8_t *b) {
+void saver_pastel_pick(const int idx, uint8_t *r, uint8_t *g, uint8_t *b) {
     int i = idx % SAVER_PASTEL_COUNT;
 
     if (i < 0) i += SAVER_PASTEL_COUNT;
@@ -82,8 +76,11 @@ void saver_pastel_pick(int idx, uint8_t *r, uint8_t *g, uint8_t *b) {
     *b = saver_pastel_b[i];
 }
 
-void saver_init_base(saver_state_t *s, int screen_w, int screen_h, const char *log_tag, uint8_t default_r, uint8_t default_g, uint8_t default_b,
-                     saver_speed_changed_cb on_speed_changed, saver_idle_enter_cb on_idle_enter, void *user) {
+void saver_init_base(
+    saver_state_t *s, const int screen_w, const int screen_h, const char *log_tag, const uint8_t default_r,
+    const uint8_t default_g, const uint8_t default_b, const saver_speed_changed_cb on_speed_changed,
+    const saver_idle_enter_cb on_idle_enter, void *user
+) {
     saver_seed_rng_once();
 
     s->screen_w = screen_w;
@@ -109,7 +106,7 @@ void saver_init_base(saver_state_t *s, int screen_w, int screen_h, const char *l
     s->speed = saver_read_speed();
 }
 
-int saver_poll_idle(saver_state_t *s, uint32_t now) {
+int saver_poll_idle(saver_state_t *s, const uint32_t now) {
     if (!s->enabled) return 0;
 
     if (now < s->suppress_until) {
@@ -122,10 +119,10 @@ int saver_poll_idle(saver_state_t *s, uint32_t now) {
 
     int should_poll;
     if (ino_proc) {
-        should_poll = (idle_state_changes != s->last_idle_changes);
+        should_poll = idle_state_changes != s->last_idle_changes;
         if (should_poll) s->last_idle_changes = idle_state_changes;
     } else {
-        should_poll = (now - s->last_idle_poll >= TIMER_IDLE);
+        should_poll = now - s->last_idle_poll >= TIMER_IDLE;
     }
 
     if (should_poll) {
@@ -134,15 +131,14 @@ int saver_poll_idle(saver_state_t *s, uint32_t now) {
         s->last_idle_poll = now;
 
         if (s->idle_active && !s->was_idle_active) {
-            int new_speed = saver_read_speed();
+            const int new_speed = saver_read_speed();
 
             if (new_speed != s->speed) {
                 s->speed = new_speed;
 
                 if (s->on_speed_changed) s->on_speed_changed(s->user);
 
-                LOG_INFO("saver", "%s Speed Refreshed: %d",
-                         s->log_tag ? s->log_tag : "Saver", s->speed);
+                LOG_INFO("saver", "%s Speed Refreshed: %d", s->log_tag ? s->log_tag : "Saver", s->speed);
             }
 
             if (s->on_idle_enter) s->on_idle_enter(s->user);

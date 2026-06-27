@@ -46,13 +46,13 @@ static struct {
 static int64_t mono_ms(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (int64_t) ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+    return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
 
 static void save_state(void) {
     if (!anim.mutex || anim.frames_ready == 0) return;
 
-    int64_t epoch_ms = mono_ms() - (int64_t) anim.current_frame * anim.frame_delay_ms;
+    const int64_t epoch_ms = mono_ms() - (int64_t) anim.current_frame * anim.frame_delay_ms;
 
     FILE *f = fopen(ANIM_STATE_FILE, "w");
     if (!f) {
@@ -63,10 +63,13 @@ static void save_state(void) {
     fprintf(f, "%s\n%d\n%lld\n%d\n", anim.base_path, anim.frame_delay_ms, (long long) epoch_ms, anim.frames_ready);
     fclose(f);
 
-    LOG_INFO("anim", "save_state: path=%s delay=%d epoch=%lld frames=%d", anim.base_path, anim.frame_delay_ms, (long long) epoch_ms, anim.frames_ready);
+    LOG_INFO(
+        "anim", "save_state: path=%s delay=%d epoch=%lld frames=%d", anim.base_path, anim.frame_delay_ms,
+        (long long) epoch_ms, anim.frames_ready
+    );
 }
 
-static int restore_state(const char *base_path, int frame_delay_ms, int frame_count) {
+static int restore_state(const char *base_path, const int frame_delay_ms, int frame_count) {
     FILE *f = fopen(ANIM_STATE_FILE, "r");
     if (!f) return 0;
 
@@ -74,7 +77,7 @@ static int restore_state(const char *base_path, int frame_delay_ms, int frame_co
     int saved_delay, saved_frames;
     long long saved_epoch;
 
-    int ok = fscanf(f, "%4095s\n%d\n%lld\n%d\n", saved_path, &saved_delay, &saved_epoch, &saved_frames) == 4;
+    const int ok = fscanf(f, "%4095s\n%d\n%lld\n%d\n", saved_path, &saved_delay, &saved_epoch, &saved_frames) == 4;
     fclose(f);
 
     if (!ok || strcmp(saved_path, base_path) != 0 || saved_delay != frame_delay_ms) {
@@ -85,8 +88,8 @@ static int restore_state(const char *base_path, int frame_delay_ms, int frame_co
     if (frame_count <= 0) frame_count = saved_frames;
     if (frame_count <= 0) return 0;
 
-    int64_t elapsed = mono_ms() - saved_epoch;
-    int frame = (int) ((elapsed / frame_delay_ms) % frame_count);
+    const int64_t elapsed = mono_ms() - saved_epoch;
+    int frame = (int) (elapsed / frame_delay_ms % frame_count);
     if (frame < 0) frame = 0;
 
     LOG_INFO("anim", "restore_state: elapsed=%lldms → frame %d / %d", (long long) elapsed, frame, frame_count);
@@ -187,7 +190,8 @@ void anim_unload(void) {
     LOG_INFO("anim", "Animation unloaded");
 }
 
-static void load_impl(const char *base_path, int frame_delay_ms, int foreground, int position, int alpha) {
+static void
+load_impl(const char *base_path, const int frame_delay_ms, const int foreground, const int position, const int alpha) {
     save_state();
     anim_unload();
 
@@ -209,8 +213,10 @@ static void load_impl(const char *base_path, int frame_delay_ms, int foreground,
     anim.current_frame = restore_state(base_path, anim.frame_delay_ms, 0);
     anim.last_tick = SDL_GetTicks();
 
-    LOG_INFO("anim", "load_impl: base=%s delay=%dms foreground=%d position=%d start_frame=%d",
-             anim.base_path, anim.frame_delay_ms, anim.foreground, anim.position, anim.current_frame);
+    LOG_INFO(
+        "anim", "load_impl: base=%s delay=%dms foreground=%d position=%d start_frame=%d", anim.base_path,
+        anim.frame_delay_ms, anim.foreground, anim.position, anim.current_frame
+    );
 
     anim.mutex = SDL_CreateMutex();
     if (!anim.mutex) {
@@ -237,24 +243,27 @@ void anim_set_gradient(SDL_Texture *tex) {
 void anim_process(void) {
     if (!pending.pending) return;
 
-    uint32_t elapsed = SDL_GetTicks() - pending.request_tick;
+    const uint32_t elapsed = SDL_GetTicks() - pending.request_tick;
     if (anim.mutex && (int) elapsed < ANIM_DEBOUNCE_MS) return;
 
     pending.pending = 0;
 
-    LOG_INFO("anim", "anim_process: %s (%ums), loading %s foreground=%d position=%d alpha=%d",
-             anim.mutex ? "debounce elapsed" : "first load", elapsed, pending.base_path, pending.foreground, pending.position, pending.alpha);
+    LOG_INFO(
+        "anim", "anim_process: %s (%ums), loading %s foreground=%d position=%d alpha=%d",
+        anim.mutex ? "debounce elapsed" : "first load", elapsed, pending.base_path, pending.foreground,
+        pending.position, pending.alpha
+    );
 
     load_impl(pending.base_path, pending.frame_delay_ms, pending.foreground, pending.position, pending.alpha);
 }
 
 void anim_tick(SDL_Renderer *renderer) {
     SDL_LockMutex(anim.mutex);
-    int count = anim.frame_count;
+    const int count = anim.frame_count;
     SDL_UnlockMutex(anim.mutex);
 
     while (anim.frames_ready < count) {
-        int i = anim.frames_ready;
+        const int i = anim.frames_ready;
 
         SDL_LockMutex(anim.mutex);
         SDL_Surface *surf = anim.frames[i].surface;
@@ -279,14 +288,13 @@ void anim_tick(SDL_Renderer *renderer) {
     if (anim.frames_ready == 0) return;
     if (anim.current_frame >= anim.frames_ready) anim.current_frame = anim.current_frame % anim.frames_ready;
 
-    uint32_t now = SDL_GetTicks();
+    const uint32_t now = SDL_GetTicks();
     if ((int) (now - anim.last_tick) >= anim.frame_delay_ms) {
         anim.current_frame = (anim.current_frame + 1) % anim.frames_ready;
         anim.last_tick = now;
     }
 
-    if (!anim.foreground && anim.gradient_tex)
-        SDL_RenderCopy(renderer, anim.gradient_tex, NULL, NULL);
+    if (!anim.foreground && anim.gradient_tex) SDL_RenderCopy(renderer, anim.gradient_tex, NULL, NULL);
 
     SDL_Texture *tex = anim.frames[anim.current_frame].texture;
     if (tex) {
@@ -294,13 +302,13 @@ void anim_tick(SDL_Renderer *renderer) {
         SDL_QueryTexture(tex, NULL, NULL, &tw, &th);
         SDL_GetRendererOutputSize(renderer, &rw, &rh);
 
-        int col = anim.position % 3;
-        int row = anim.position / 3;
+        const int col = anim.position % 3;
+        const int row = anim.position / 3;
 
-        int x = col == 0 ? 0 : col == 1 ? (rw - tw) / 2 : rw - tw;
-        int y = row == 0 ? 0 : row == 1 ? (rh - th) / 2 : rh - th;
+        const int x = col == 0 ? 0 : col == 1 ? (rw - tw) / 2 : rw - tw;
+        const int y = row == 0 ? 0 : row == 1 ? (rh - th) / 2 : rh - th;
 
-        SDL_Rect dst = {x, y, tw, th};
+        const SDL_Rect dst = {x, y, tw, th};
         SDL_RenderCopy(renderer, tex, NULL, &dst);
     }
 }

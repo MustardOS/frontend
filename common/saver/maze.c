@@ -34,7 +34,7 @@
 #define MAZE_HUNTER_MOVE_MAX_MS  5200u
 
 #define MAZE_RADAR_MAX_RADIUS_CELLS 5
-#define MAZE_RADAR_RING_COUNT 3
+#define MAZE_RADAR_RING_COUNT       3
 
 #define MAZE_RUNNER_R 80
 #define MAZE_RUNNER_G 255
@@ -749,14 +749,17 @@ static void maze_choose_hunter_target(void) {
     int next_x;
     int next_y;
 
-    if (maze_find_first_step_towards(mod.hunter.cell_x, mod.hunter.cell_y, mod.runner.cell_x, mod.runner.cell_y, &next_x, &next_y)) {
+    if (maze_find_first_step_towards(
+            mod.hunter.cell_x, mod.hunter.cell_y, mod.runner.cell_x, mod.runner.cell_y, &next_x, &next_y
+        )) {
         maze_actor_set_target(&mod.hunter, next_x, next_y);
     }
 }
 
 static void maze_schedule_runner_panic(uint32_t now) {
     mod.runner_panicking = 0;
-    mod.runner_next_panic = now + maze_rand_ms(MAZE_RUNNER_MOVE_MIN_MS, MAZE_RUNNER_MOVE_MAX_MS - MAZE_RUNNER_MOVE_MIN_MS + 1u);
+    mod.runner_next_panic =
+        now + maze_rand_ms(MAZE_RUNNER_MOVE_MIN_MS, MAZE_RUNNER_MOVE_MAX_MS - MAZE_RUNNER_MOVE_MIN_MS + 1u);
     mod.runner_panic_until = 0;
     mod.runner_panic_start = 0;
     mod.runner_panic_duration = 0;
@@ -765,7 +768,8 @@ static void maze_schedule_runner_panic(uint32_t now) {
 static void maze_begin_runner_panic(uint32_t now) {
     mod.runner_panicking = 1;
     mod.runner_panic_start = now;
-    mod.runner_panic_duration = maze_rand_ms(MAZE_RUNNER_PANIC_MIN_MS, MAZE_RUNNER_PANIC_MAX_MS - MAZE_RUNNER_PANIC_MIN_MS + 1u);
+    mod.runner_panic_duration =
+        maze_rand_ms(MAZE_RUNNER_PANIC_MIN_MS, MAZE_RUNNER_PANIC_MAX_MS - MAZE_RUNNER_PANIC_MIN_MS + 1u);
     mod.runner_panic_until = now + mod.runner_panic_duration;
 }
 
@@ -829,7 +833,8 @@ static void maze_get_runner_panic_offset(int *out_x, int *out_y) {
 
 static void maze_schedule_hunter_think(uint32_t now) {
     mod.hunter_thinking = 0;
-    mod.hunter_next_think = now + maze_rand_ms(MAZE_HUNTER_MOVE_MIN_MS, MAZE_HUNTER_MOVE_MAX_MS - MAZE_HUNTER_MOVE_MIN_MS + 1u);
+    mod.hunter_next_think =
+        now + maze_rand_ms(MAZE_HUNTER_MOVE_MIN_MS, MAZE_HUNTER_MOVE_MAX_MS - MAZE_HUNTER_MOVE_MIN_MS + 1u);
     mod.hunter_think_until = 0;
     mod.hunter_ping_start = 0;
     mod.hunter_ping_duration = 0;
@@ -838,7 +843,8 @@ static void maze_schedule_hunter_think(uint32_t now) {
 static void maze_begin_hunter_think(uint32_t now) {
     mod.hunter_thinking = 1;
     mod.hunter_ping_start = now;
-    mod.hunter_ping_duration = maze_rand_ms(MAZE_HUNTER_THINK_MIN_MS, MAZE_HUNTER_THINK_MAX_MS - MAZE_HUNTER_THINK_MIN_MS + 1u);
+    mod.hunter_ping_duration =
+        maze_rand_ms(MAZE_HUNTER_THINK_MIN_MS, MAZE_HUNTER_THINK_MAX_MS - MAZE_HUNTER_THINK_MIN_MS + 1u);
     mod.hunter_think_until = now + mod.hunter_ping_duration;
 }
 
@@ -1082,7 +1088,10 @@ static void maze_render_trail(SDL_Renderer *renderer, const maze_actor_t *actor,
         if (alpha < 20) alpha = 20;
 
         SDL_SetRenderDrawColor(renderer, r, g, b, (uint8_t) alpha);
-        SDL_RenderDrawLine(renderer, actor->trail_x[cur_idx], actor->trail_y[cur_idx], actor->trail_x[prev_idx], actor->trail_y[prev_idx]);
+        SDL_RenderDrawLine(
+            renderer, actor->trail_x[cur_idx], actor->trail_y[cur_idx], actor->trail_x[prev_idx],
+            actor->trail_y[prev_idx]
+        );
 
         cur_idx = prev_idx;
     }
@@ -1136,7 +1145,9 @@ static void maze_render_hunter_radar(SDL_Renderer *renderer) {
     }
 }
 
-static void maze_render_actor_offset(SDL_Renderer *renderer, const maze_actor_t *actor, uint8_t r, uint8_t g, uint8_t b, int off_x, int off_y) {
+static void maze_render_actor_offset(
+    SDL_Renderer *renderer, const maze_actor_t *actor, uint8_t r, uint8_t g, uint8_t b, int off_x, int off_y
+) {
     SDL_Rect rect;
     int px;
     int py;
@@ -1184,8 +1195,10 @@ int maze_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     refresh_speed_factor();
     maze_reset();
 
-    LOG_INFO("saver", "Maze Runner Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)",
-             screen_w, screen_h, mod.cols, mod.rows, mod.cell_size, mod.base.speed);
+    LOG_INFO(
+        "saver", "Maze Runner Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)", screen_w, screen_h, mod.cols,
+        mod.rows, mod.cell_size, mod.base.speed
+    );
 
     return 1;
 }
@@ -1272,8 +1285,10 @@ void maze_render(SDL_Renderer *renderer) {
 
             SDL_SetRenderDrawColor(renderer, wall_r, wall_g, wall_b, 118);
 
-            if (walls & (1u << MAZE_DIR_RIGHT)) SDL_RenderDrawLine(renderer, px + mod.cell_size, py, px + mod.cell_size, py + mod.cell_size);
-            if (walls & (1u << MAZE_DIR_DOWN)) SDL_RenderDrawLine(renderer, px, py + mod.cell_size, px + mod.cell_size, py + mod.cell_size);
+            if (walls & (1u << MAZE_DIR_RIGHT))
+                SDL_RenderDrawLine(renderer, px + mod.cell_size, py, px + mod.cell_size, py + mod.cell_size);
+            if (walls & (1u << MAZE_DIR_DOWN))
+                SDL_RenderDrawLine(renderer, px, py + mod.cell_size, px + mod.cell_size, py + mod.cell_size);
 
             if (x == 0 && (walls & (1u << MAZE_DIR_LEFT))) SDL_RenderDrawLine(renderer, px, py, px, py + mod.cell_size);
             if (y == 0 && (walls & (1u << MAZE_DIR_UP))) SDL_RenderDrawLine(renderer, px, py, px + mod.cell_size, py);

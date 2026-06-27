@@ -28,7 +28,7 @@ extern "C" {
 
 typedef struct {
     lv_obj_t obj;
-    const char * txt;
+    const char *txt;
     uint32_t static_txt : 1;
 } lv_checkbox_t;
 
@@ -39,7 +39,7 @@ extern const lv_obj_class_t lv_checkbox_class;
  * Used in `LV_EVENT_DRAW_PART_BEGIN` and `LV_EVENT_DRAW_PART_END`
  */
 typedef enum {
-    LV_CHECKBOX_DRAW_PART_BOX,    /**< The tick box*/
+    LV_CHECKBOX_DRAW_PART_BOX, /**< The tick box*/
 } lv_checkbox_draw_part_type_t;
 
 /**********************
@@ -51,7 +51,7 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of the new button
  * @return          pointer to the created check box
  */
-lv_obj_t * lv_checkbox_create(lv_obj_t * parent);
+lv_obj_t *lv_checkbox_create(lv_obj_t *parent);
 
 /*=====================
  * Setter functions
@@ -63,7 +63,7 @@ lv_obj_t * lv_checkbox_create(lv_obj_t * parent);
  * @param cb    pointer to a check box
  * @param txt   the text of the check box. NULL to refresh with the current text.
  */
-void lv_checkbox_set_text(lv_obj_t * obj, const char * txt);
+void lv_checkbox_set_text(lv_obj_t *obj, const char *txt);
 
 /**
  * Set the text of a check box. `txt` must not be deallocated during the life
@@ -71,7 +71,7 @@ void lv_checkbox_set_text(lv_obj_t * obj, const char * txt);
  * @param cb    pointer to a check box
  * @param txt   the text of the check box.
  */
-void lv_checkbox_set_text_static(lv_obj_t * obj, const char * txt);
+void lv_checkbox_set_text_static(lv_obj_t *obj, const char *txt);
 
 /*=====================
  * Getter functions
@@ -82,7 +82,7 @@ void lv_checkbox_set_text_static(lv_obj_t * obj, const char * txt);
  * @param cb    pointer to check box object
  * @return      pointer to the text of the check box
  */
-const char * lv_checkbox_get_text(const lv_obj_t * obj);
+const char *lv_checkbox_get_text(const lv_obj_t *obj);
 
 /**********************
  *      MACROS

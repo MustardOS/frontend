@@ -1,17 +1,17 @@
 #include "ui_muxshare.h"
 #include "ui_muxsysinfo.h"
 
-#define SYSINFO(NAME, ENUM, UDATA)         \
-    lv_obj_t *ui_pnl##NAME##_sysinfo;      \
-    lv_obj_t *ui_lbl##NAME##_sysinfo;      \
-    lv_obj_t *ui_ico##NAME##_sysinfo;      \
-    lv_obj_t *ui_lbl##NAME##Value_sysinfo;
+#define SYSINFO(NAME, UDATA)                                                                                           \
+    lv_obj_t *ui_pnl_##NAME##_sysinfo;                                                                                 \
+    lv_obj_t *ui_lbl_##NAME##_sysinfo;                                                                                 \
+    lv_obj_t *ui_ico_##NAME##_sysinfo;                                                                                 \
+    lv_obj_t *ui_val_##NAME##_sysinfo;
 
 SYSINFO_ELEMENTS
 #undef SYSINFO
 
-void init_muxsysinfo(lv_obj_t *ui_pnlContent) {
-#define SYSINFO(NAME, ENUM, UDATA) CREATE_VALUE_ITEM(sysinfo, NAME);
+void init_muxsysinfo(lv_obj_t *ui_pnl_content) {
+#define SYSINFO(NAME, UDATA) CREATE_VALUE_ITEM(sysinfo, NAME);
     SYSINFO_ELEMENTS
 #undef SYSINFO
 }

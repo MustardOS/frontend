@@ -12,7 +12,8 @@ You will need `make`, `ccache`, and a C compiler. Everything else depends on whi
 
 **Cross-compiling for ARM devices (normal workflow)**
 
-A pre-built aarch64 toolchain is expected at `~/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be pointed to by setting the `XTOOL`
+A pre-built aarch64 toolchain is expected at `~/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be
+pointed to by setting the `XTOOL`
 environment variable. The toolchain must include `gcc`, `g++`, `ar`, `ld`, and `strip` for the target host tuple.
 
 **Native builds for x86 / x86-64**
@@ -28,9 +29,11 @@ A system `gcc` and the following development packages are required:
 | `libcurl`    | Network requests  |
 | `libpng`     | PNG support       |
 
-On Fedora/RHEL: `sudo dnf install SDL2-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image-devel libcurl-devel libpng-devel`
+On Fedora/RHEL:
+`sudo dnf install SDL2-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image-devel libcurl-devel libpng-devel`
 
-On Debian/Ubuntu: `sudo apt install libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev libsdl2-image-dev libcurl4-openssl-dev libpng-dev`
+On Debian/Ubuntu:
+`sudo apt install libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev libsdl2-image-dev libcurl4-openssl-dev libpng-dev`
 
 ---
 
@@ -61,13 +64,15 @@ DEBUG=1 BUILD=release ./xtool.sh make -j$(nproc)
 DEVICE=ARM64 BUILD=release ./xtool.sh make -j$(nproc)
 ```
 
-`BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if unset.
+`BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if
+unset.
 
 ---
 
 ### Native Build (x86 / x86-64)
 
-Use `DEVICE=NATIVE` to build and run directly on the host machine. This is useful for quick iteration and debugging without hardware.
+Use `DEVICE=NATIVE` to build and run directly on the host machine. This is useful for quick iteration and debugging
+without hardware.
 
 ```sh
 DEVICE=NATIVE BUILD=release ./xtool.sh make -j$(nproc)
@@ -180,7 +185,8 @@ The following third party libraries are bundled in this repository.
 
 ### [LVGL](https://github.com/lvgl/lvgl)
 
-Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for glyph rasterisation.
+Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for
+glyph rasterisation.
 
 - Version: 8.4.0
 - License: MIT
@@ -188,8 +194,10 @@ Embedded graphics library used as the core UI toolkit for all menus and widgets.
 
 ### [PlutoSVG](https://github.com/sammycage/plutosvg)
 
-Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with scaling driven by the LVGL custom image
-decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser it is built on.
+Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with
+scaling driven by the LVGL custom image
+decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser
+it is built on.
 
 - PlutoSVG Version: 0.0.8
 - PlutoVG Version: 1.3.3
@@ -199,7 +207,8 @@ decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2
 
 ### [json.c](https://github.com/tidwall/json.c)
 
-Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration data, and API responses.
+Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration
+data, and API responses.
 
 - Author: Josh Baker
 - License: MIT
@@ -215,7 +224,8 @@ Minimal C INI file parser. Used for reading and writing `.ini` configuration fil
 
 ### [miniz](https://github.com/richgeldreich/miniz)
 
-Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP archive reading and writing. Used to extract downloaded ZIP archives.
+Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP archive reading and writing. Used to
+extract downloaded ZIP archives.
 
 - Version: 11.3.0
 - License: MIT (portions also released as public domain / Unlicense)
@@ -225,7 +235,8 @@ Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP 
 
 Extremely fast non-cryptographic hash algorithm. Used to compute file checksums for content verification.
 
-> **Note:** xxHash is non-cryptographic and is not resistant to deliberate collision attacks. It is suited for detecting accidental data corruption (content
+> **Note:** xxHash is non-cryptographic and is not resistant to deliberate collision attacks. It is suited for detecting
+> accidental data corruption (content
 > verification) but must not be used for tamper detection or cryptographic integrity verification.
 
 - Version: 0.8.3
@@ -235,7 +246,8 @@ Extremely fast non-cryptographic hash algorithm. Used to compute file checksums 
 
 ### [stb_truetype](https://github.com/nothings/stb)
 
-Single-header C library for TrueType font parsing and glyph rasterisation. Used by the LVGL TinyTTF renderer to load and render custom TTF fonts at runtime.
+Single-header C library for TrueType font parsing and glyph rasterisation. Used by the LVGL TinyTTF renderer to load and
+render custom TTF fonts at runtime.
 
 - Version: 1.26
 - Author: Sean Barrett
@@ -244,7 +256,8 @@ Single-header C library for TrueType font parsing and glyph rasterisation. Used 
 
 ### [stb_rect_pack](https://github.com/nothings/stb)
 
-Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer to pack glyph bitmaps into atlas textures.
+Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer to pack glyph bitmaps into atlas
+textures.
 
 - Version: 1.01
 - Author: Sean Barrett
@@ -253,7 +266,8 @@ Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer
 
 ### [stb_image_write](https://github.com/nothings/stb)
 
-Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from the framebuffer.
+Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from
+the framebuffer.
 
 - Version: 1.16
 - Author: Sean Barrett

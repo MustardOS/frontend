@@ -14,7 +14,7 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 
 void load_mux(const char *value);
 
-void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file, exec_callback cb);
+void run_exec(const char **args, size_t size, int background, int turbo, const char *log_file, exec_callback cb);
 
 void exec_watch_task(void);
 

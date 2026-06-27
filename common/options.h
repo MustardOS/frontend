@@ -10,12 +10,12 @@
 
 #define MAX_BUFFER_SIZE 1024
 
-#define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-#define E_SIZE(LIST) A_SIZE(((int[]){ LIST }))
+#define A_SIZE(arr)  (sizeof(arr) / sizeof((arr)[0]))
+#define E_SIZE(LIST) A_SIZE(((int[]) {LIST}))
 
 #define TRS(s) translate_specific(s)
-#define UFI(i) ((void *)(uintptr_t)(i))
-#define IFU(p) ((size_t)(uintptr_t)(p))
+#define UFI(i) ((void *) (uintptr_t) (i))
+#define IFU(p) ((size_t) (uintptr_t) (p))
 
 #define MAX_MANIFEST_ITEMS 2048
 #define MAX_MANIFEST_BYTES (8 * 1024 * 1024)
@@ -23,7 +23,7 @@
 // The rough calculation is as follows if a theme uses
 // a unique font for each individual module and panel...
 // module_count * (screen + content section + header + footer)
-#define FONT_CACHE_MAX  256
+#define FONT_CACHE_MAX 256
 
 #define RTC_MAX_RETRIES 4
 #define RTC_RETRY_DELAY 1
@@ -33,7 +33,7 @@
 
 #define SAVER_DELAY 512
 
-#define IDLE_MS 16 // ~60 FPS
+#define IDLE_MS 16                     // ~60 FPS
 #define IDLE_FZ (12 * 60 * 60 * 1000U) // Freeze for 12 hours!
 
 #define MU_OBJ_FLAG_HIDE_FLOAT (LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)
@@ -73,7 +73,7 @@
 #define RUN_PATH "/run/muos/"
 
 #define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
-#define CONTROL_RETRO OPT_PATH "share/info/gamecontrollerdb/retro.txt"
+#define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"
 
 #define IDLE_STATE   RUN_PATH "idle_state"
 #define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
@@ -218,16 +218,16 @@
 #define FONT_HEADER_DIR "header"
 #define FONT_FOOTER_DIR "footer"
 
-#define CFG_INT_FIELD(FIELD, PATH, DEFAULT)           \
-    do {                                              \
-        snprintf(buffer, sizeof(buffer), "%s", PATH); \
-        cfg_write_def_int(buffer, DEFAULT);           \
-        FIELD = cfg_read_int(buffer, DEFAULT);        \
-    } while(0)
+#define CFG_INT_FIELD(FIELD, PATH, DEFAULT)                                                                            \
+    do {                                                                                                               \
+        snprintf(buffer, sizeof(buffer), "%s", PATH);                                                                  \
+        cfg_write_def_int(buffer, DEFAULT);                                                                            \
+        FIELD = cfg_read_int(buffer, DEFAULT);                                                                         \
+    } while (0)
 
-#define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                     \
-    do {                                                                        \
-        snprintf(buffer, sizeof(buffer), "%s", PATH);                           \
-        cfg_write_def_char(buffer, DEFAULT);                                    \
-        snprintf(FIELD, MAX_BUFFER_SIZE, "%s", read_line_char_from(buffer, 1)); \
-    } while(0)
+#define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                                                            \
+    do {                                                                                                               \
+        snprintf(buffer, sizeof(buffer), "%s", PATH);                                                                  \
+        cfg_write_def_char(buffer, DEFAULT);                                                                           \
+        snprintf(FIELD, MAX_BUFFER_SIZE, "%s", read_line_char_from(buffer, 1));                                        \
+    } while (0)

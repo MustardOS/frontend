@@ -20,7 +20,8 @@ static exec_callback pending_exec_cb = NULL;
 
 const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     size_t arg_count = 0;
-    for (const char **p = term_cmd; p && *p; p++) arg_count++;
+    for (const char **p = term_cmd; p && *p; p++)
+        arg_count++;
 
     size_t total_args = 16 + arg_count + 2;
     const char **exec = malloc(sizeof(char *) * total_args);
@@ -30,7 +31,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     exec[i++] = (OPT_PATH "bin/muterm");
     exec[i++] = "-ro";
     exec[i++] = "-s";
-    exec[i++] = (char *) theme.TERMINAL.FONT_SIZE;
+    exec[i++] = (char *) theme.terminal.font_size;
 
     static char font_path[MAX_BUFFER_SIZE];
     if (load_terminal_resource("font", "ttf", font_path, sizeof(font_path))) {
@@ -39,7 +40,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     }
 
     exec[i++] = "--font-hinting";
-    exec[i++] = (char *) theme.TERMINAL.FONT_HINT;
+    exec[i++] = (char *) theme.terminal.font_hint;
 
     static char image_path[MAX_BUFFER_SIZE];
     if (load_terminal_resource("image", "png", image_path, sizeof(image_path))) {
@@ -48,12 +49,13 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     }
 
     exec[i++] = "-bg";
-    exec[i++] = (char *) theme.TERMINAL.BACKGROUND;
+    exec[i++] = (char *) theme.terminal.background;
     exec[i++] = "-fg";
-    exec[i++] = (char *) theme.TERMINAL.FOREGROUND;
+    exec[i++] = (char *) theme.terminal.foreground;
     exec[i++] = "--";
 
-    for (const char **p = term_cmd; p && *p; p++) exec[i++] = *p;
+    for (const char **p = term_cmd; p && *p; p++)
+        exec[i++] = *p;
 
     exec[i] = NULL;
     if (term_cnt) *term_cnt = i;
@@ -62,7 +64,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
 
 void extract_archive(const char *filename, const char *screen) {
     size_t exec_count;
-    const char *args[] = {(OPT_PATH "script/mux/extract.sh"), filename, screen, NULL};
+    const char *args[] = {OPT_PATH "script/mux/extract.sh", filename, screen, NULL};
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
@@ -74,7 +76,7 @@ void extract_archive(const char *filename, const char *screen) {
 
 void update_bootlogo(const char *next_screen) {
     size_t exec_count;
-    const char *args[] = {(OPT_PATH "script/package/theme.sh"), "bootlogo", next_screen, NULL};
+    const char *args[] = {OPT_PATH "script/package/theme.sh", "bootlogo", next_screen, NULL};
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
@@ -84,10 +86,12 @@ void update_bootlogo(const char *next_screen) {
     free(exec);
 }
 
-void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app) {
+void load_assign(
+    const char *loader, const char *rom, const char *dir, const char *sys, const int forced, const int app
+) {
     FILE *file = fopen(loader, "w");
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, loader);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, loader);
         return;
     }
 
@@ -98,7 +102,7 @@ void load_assign(const char *loader, const char *rom, const char *dir, const cha
 void load_mux(const char *value) {
     FILE *file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, MUOS_ACT_LOAD);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, MUOS_ACT_LOAD);
         return;
     }
 
@@ -106,7 +110,10 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
-void run_exec(const char *args[], size_t size, int background, int turbo, const char *log_file, exec_callback cb) {
+void run_exec(
+    const char **args, const size_t size, const int background, const int turbo, const char *log_file,
+    const exec_callback cb
+) {
     if (!args || size == 0) return;
 
     const char *san[size + 1];
@@ -121,17 +128,17 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
     if (j == 0) return;
     san[j] = NULL;
 
-/*
- * Debugging message to print arguments to check if nulls
- * are being sanitised or not.  They should but you never
- * know with C these days...
- *
- *  for (size_t k = 0; k < j; ++k) {
- *      printf("arg[%zu]: %s\n", k, san[k]);
- *  }
-*/
+    /*
+     * Debugging message to print arguments to check if nulls
+     * are being sanitised or not.  They should but you never
+     * know with C these days...
+     *
+     *  for (size_t k = 0; k < j; ++k) {
+     *      printf("arg[%zu]: %s\n", k, san[k]);
+     *  }
+     */
 
-    pid_t pid = fork();
+    const pid_t pid = fork();
     if (pid == 0) {
         if (background && cb == NULL) {
             // If we run in the background lets disconnect from the parent...
@@ -139,7 +146,7 @@ void run_exec(const char *args[], size_t size, int background, int turbo, const 
 
             // Perform a second fork to ensure the background process is reaped by init,
             // preventing zombie processes from hanging around after completion...
-            pid_t pid2 = fork();
+            const pid_t pid2 = fork();
             if (pid2 < 0) _exit(EXIT_FAILURE);
             if (pid2 > 0) _exit(EXIT_SUCCESS);
 
@@ -184,7 +191,7 @@ void exec_watch_task(void) {
     if (pending_exec_pid <= 0) return;
 
     int status;
-    pid_t r = waitpid(pending_exec_pid, &status, WNOHANG);
+    const pid_t r = waitpid(pending_exec_pid, &status, WNOHANG);
     if (r == 0) return;
 
     if (r < 0) {
@@ -193,7 +200,7 @@ void exec_watch_task(void) {
         return;
     }
 
-    int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    const int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
     if (pending_exec_cb) pending_exec_cb(exit_code);
 
@@ -201,17 +208,17 @@ void exec_watch_task(void) {
     pending_exec_cb = NULL;
 }
 
-int set_scaling_governor(const char *governor, int show_done) {
+int set_scaling_governor(const char *governor, const int show_done) {
     if (!governor) return -1;
 
-    FILE *fp = fopen(device.CPU.GOVERNOR, "w");
+    FILE *fp = fopen(device.cpu.governor, "w");
     if (!fp) {
-        LOG_ERROR(mux_module, "Failed to open %s: %s", device.CPU.GOVERNOR, strerror(errno));
+        LOG_ERROR(mux_module, "Failed to open %s: %s", device.cpu.governor, strerror(errno));
         return -1;
     }
 
     if (fprintf(fp, "%s", governor) < 0) {
-        LOG_ERROR(mux_module, "Failed to write '%s' to %s: %s", governor, device.CPU.GOVERNOR, strerror(errno));
+        LOG_ERROR(mux_module, "Failed to write '%s' to %s: %s", governor, device.cpu.governor, strerror(errno));
         fclose(fp);
         return -1;
     }
@@ -222,8 +229,8 @@ int set_scaling_governor(const char *governor, int show_done) {
     return 0;
 }
 
-void turbo_time(int toggle, int show_done) {
-    set_scaling_governor(toggle ? "performance" : device.CPU.DEFAULT, show_done);
+void turbo_time(const int toggle, const int show_done) {
+    set_scaling_governor(toggle ? "performance" : device.cpu.dflt, show_done);
 }
 
 void set_process_name(const char *module) {
@@ -242,7 +249,7 @@ const char *module_from_func(const char *func) {
     const char *suffix = "_main";
 
     size_t len = strlen(func);
-    size_t slen = strlen(suffix);
+    const size_t slen = strlen(suffix);
 
     if (len > slen && strcmp(func + len - slen, suffix) == 0) len -= slen;
     if (len >= sizeof(module)) len = sizeof(module) - 1;

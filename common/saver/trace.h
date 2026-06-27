@@ -1,9 +1,8 @@
 #pragma once
 
-#include <stdbool.h>
 #include <SDL2/SDL.h>
 
-int trace_init(SDL_Renderer *renderer, int screen_w, int screen_h);
+int trace_init(const SDL_Renderer *renderer, int screen_w, int screen_h);
 
 void trace_update(void);
 

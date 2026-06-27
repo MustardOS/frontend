@@ -2,35 +2,33 @@
 
 #include <SDL2/SDL_mixer.h>
 
-enum {
-    SOUND_TOTAL = 12
-};
+enum { sound_total = 12 };
 
-#define SND_CHUNK_HDR                                                                                  \
-    "\x64\x47\x6c\x79\x5a\x53\x42\x73\x61\x57\x5a\x6c\x4c\x69\x42\x55\x61\x47\x46\x30\x49\x48\x52\x6f" \
+#define SND_CHUNK_HDR                                                                                                  \
+    "\x64\x47\x6c\x79\x5a\x53\x42\x73\x61\x57\x5a\x6c\x4c\x69\x42\x55\x61\x47\x46\x30\x49\x48\x52\x6f"                 \
     "\x5a\x58\x4a\x6c\x4a\x33\x4d\x67\x63\x32\x39\x74\x5a\x58\x52\x6f\x61\x57\x35\x6e\x49\x48\x64\x79"
 
 enum sound_type {
-    SND_CONFIRM,
-    SND_BACK,
-    SND_KEYPRESS,
-    SND_NAVIGATE,
-    SND_ERROR,
-    SND_MUOS,
-    SND_REBOOT,
-    SND_SHUTDOWN,
-    SND_STARTUP,
-    SND_INFO_OPEN,
-    SND_INFO_CLOSE,
-    SND_OPTION
+    snd_confirm,
+    snd_back,
+    snd_keypress,
+    snd_navigate,
+    snd_error,
+    snd_muos,
+    snd_reboot,
+    snd_shutdown,
+    snd_startup,
+    snd_info_open,
+    snd_info_close,
+    snd_option
 };
 
 typedef struct {
     Mix_Chunk *chunk;
-} CachedSound;
+} cached_sound;
 
-extern CachedSound sound_cache[SOUND_TOTAL];
-extern const char *snd_names[SOUND_TOTAL];
+extern cached_sound sound_cache[sound_total];
+extern const char *snd_names[sound_total];
 
 extern int fe_snd;
 extern int fe_bgm;

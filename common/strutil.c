@@ -17,7 +17,8 @@ struct pattern skip_pattern_list = {NULL, 0, 0};
 int skip_patterns_loaded = 0;
 
 static void free_skip_patterns(void) {
-    for (size_t i = 0; i < skip_pattern_list.count; i++) free(skip_pattern_list.patterns[i]);
+    for (size_t i = 0; i < skip_pattern_list.count; i++)
+        free(skip_pattern_list.patterns[i]);
     free(skip_pattern_list.patterns);
     skip_pattern_list.patterns = NULL;
     skip_pattern_list.count = 0;
@@ -36,7 +37,7 @@ void load_skip_patterns(void) {
 
     FILE *file = fopen(skip_ini, "r");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, skip_ini);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, skip_ini);
         return;
     }
 
@@ -49,11 +50,12 @@ void load_skip_patterns(void) {
     char line[MAX_BUFFER_SIZE];
     while (fgets(line, sizeof(line), file)) {
         size_t len = strlen(line);
-        while (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) line[--len] = '\0';
+        while (len && (line[len - 1] == '\n' || line[len - 1] == '\r'))
+            line[--len] = '\0';
         if (len == 0 || line[0] == '#') continue;
 
         if (skip_pattern_list.count >= skip_pattern_list.capacity) {
-            size_t newcap = skip_pattern_list.capacity ? skip_pattern_list.capacity * 2 : 8;
+            const size_t newcap = skip_pattern_list.capacity ? skip_pattern_list.capacity * 2 : 8;
             char **newptr = realloc(skip_pattern_list.patterns, newcap * sizeof(char *));
             if (!newptr) break;
             skip_pattern_list.patterns = newptr;
@@ -61,7 +63,8 @@ void load_skip_patterns(void) {
         }
 
         char *stored = mux_strdup(line);
-        for (char *p = stored; *p; p++) *p = (char) tolower((unsigned char) *p);
+        for (char *p = stored; *p; p++)
+            *p = (char) tolower((unsigned char) *p);
 
         skip_pattern_list.patterns[skip_pattern_list.count++] = stored;
     }
@@ -70,12 +73,13 @@ void load_skip_patterns(void) {
     LOG_INFO(mux_module, "Loaded skip patterns: %zu", skip_pattern_list.count);
 }
 
-int should_skip(const char *name, int is_dir) {
+int should_skip(const char *name, const int is_dir) {
     if (!name || !*name) return 0;
 
     char name_l[MAX_BUFFER_SIZE];
     snprintf(name_l, sizeof(name_l), "%s", name);
-    for (char *p = name_l; *p; p++) *p = (char) tolower((unsigned char) *p);
+    for (char *p = name_l; *p; p++)
+        *p = (char) tolower((unsigned char) *p);
 
     for (size_t i = 0; i < skip_pattern_list.count; i++) {
         const char *pat = skip_pattern_list.patterns[i];
@@ -100,13 +104,15 @@ int str_compare(const void *a, const void *b) {
     const char *str2 = *(const char **) b;
 
     while (*str1 && *str2) {
-        unsigned char c1 = tolower((unsigned char) *str1);
-        unsigned char c2 = tolower((unsigned char) *str2);
+        const unsigned char c1 = tolower((unsigned char) *str1);
+        const unsigned char c2 = tolower((unsigned char) *str2);
 
         if (isdigit(c1) && isdigit(c2)) {
             unsigned long long n1 = 0, n2 = 0;
-            while (isdigit(*str1)) n1 = n1 * 10 + (*str1++ - '0');
-            while (isdigit(*str2)) n2 = n2 * 10 + (*str2++ - '0');
+            while (isdigit(*str1))
+                n1 = n1 * 10 + (*str1++ - '0');
+            while (isdigit(*str2))
+                n2 = n2 * 10 + (*str2++ - '0');
 
             if (n1 != n2) return (n1 > n2) - (n1 < n2);
             continue;
@@ -135,7 +141,7 @@ char *str_nonew(char *text) {
     return text;
 }
 
-char *str_tolower(char *text) {
+char *str_tolower(const char *text) {
     char *result = mux_strdup(text);
     char *ptr = result;
 
@@ -147,7 +153,7 @@ char *str_tolower(char *text) {
     return result;
 }
 
-char *str_toupper(char *text) {
+char *str_toupper(const char *text) {
     char *result = mux_strdup(text);
     char *ptr = result;
 
@@ -159,8 +165,8 @@ char *str_toupper(char *text) {
     return result;
 }
 
-char *str_remchar(char *text, char c) {
-    char *r_ptr = text;
+char *str_remchar(char *text, const char c) {
+    const char *r_ptr = text;
     char *w_ptr = text;
 
     while (*r_ptr != '\0') {
@@ -178,12 +184,12 @@ char *str_remchar(char *text, char c) {
     return text;
 }
 
-char *str_remchars(char *text, char *c) {
-    char *r_ptr = text;
+char *str_remchars(char *text, const char *c) {
+    const char *r_ptr = text;
     char *w_ptr = text;
 
     while (*r_ptr != '\0') {
-        char *d_ptr = c;
+        const char *d_ptr = c;
         int remove = 0;
 
         while (*d_ptr != '\0') {
@@ -209,12 +215,14 @@ char *str_remchars(char *text, char *c) {
 char *str_trim(char *text) {
     if (!text || !*text) return text;
 
-    while (isspace((unsigned char) (*text))) text++;
+    while (isspace((unsigned char) (*text)))
+        text++;
 
     if (*text == '\0') return text;
 
     char *end = text + strlen(text) - 1;
-    while (end > text && isspace((unsigned char) (*end))) end--;
+    while (end > text && isspace((unsigned char) (*end)))
+        end--;
 
     *(end + 1) = '\0';
     return text;
@@ -223,12 +231,12 @@ char *str_trim(char *text) {
 char *str_replace(const char *orig, const char *rep, const char *with) {
     if (!orig || !rep) return NULL;
 
-    size_t len_rep = strlen(rep);
+    const size_t len_rep = strlen(rep);
     if (len_rep == 0) return NULL;
 
     if (!with) with = "";
 
-    size_t len_with = strlen(with);
+    const size_t len_with = strlen(with);
 
     int count = 0;
     const char *ins = orig;
@@ -248,7 +256,7 @@ char *str_replace(const char *orig, const char *rep, const char *with) {
 
     while (count--) {
         tmp = strstr(ins, rep);
-        size_t len_front = tmp - ins;
+        const size_t len_front = tmp - ins;
 
         memcpy(out, ins, len_front);
         out += len_front;
@@ -259,31 +267,29 @@ char *str_replace(const char *orig, const char *rep, const char *with) {
         ins = tmp + len_rep;
     }
 
-    size_t tail = strlen(ins);
+    const size_t tail = strlen(ins);
     memcpy(out, ins, tail + 1);
     return result;
 }
 
-int str_replace_segment(const char *orig, const char *prefix, const char *suffix,
-                        const char *with, char **replacement) {
-    const char *start, *end;
-    size_t len_front, len_with, len_suffix, total_len;
-
+int str_replace_segment(
+    const char *orig, const char *prefix, const char *suffix, const char *with, char **replacement
+) {
     if (!orig || !prefix || !suffix || !replacement) return 0;
 
-    start = strstr(orig, prefix);
+    const char *start = strstr(orig, prefix);
     if (!start) return 0;
 
     start += strlen(prefix);
-    end = strstr(start, suffix);
+    const char *end = strstr(start, suffix);
     if (!end) return 0;
 
-    len_front = start - orig;
-    len_suffix = strlen(end);
-    len_with = strlen(with);
-    total_len = len_front + len_with + len_suffix + 1;
+    const size_t len_front = start - orig;
+    const size_t len_suffix = strlen(end);
+    const size_t len_with = strlen(with);
+    const size_t total_len = len_front + len_with + len_suffix + 1;
 
-    *replacement = (char *) malloc(total_len);
+    *replacement = malloc(total_len);
     if (!*replacement) return 0;
 
     memcpy(*replacement, orig, len_front);
@@ -294,21 +300,18 @@ int str_replace_segment(const char *orig, const char *prefix, const char *suffix
 }
 
 int str_extract(const char *orig, const char *prefix, const char *suffix, char **extraction) {
-    const char *start, *end;
-    size_t len_dynamic;
-
     if (!orig || !prefix || !suffix) return 0;
 
-    start = strstr(orig, prefix);
+    const char *start = strstr(orig, prefix);
     if (!start) return 0;
 
     start += strlen(prefix);
-    end = strstr(start, suffix);
+    const char *end = strstr(start, suffix);
     if (!end) return 0;
 
-    len_dynamic = end - start;
+    const size_t len_dynamic = end - start;
 
-    *extraction = (char *) malloc(len_dynamic + 1);
+    *extraction = malloc(len_dynamic + 1);
     if (!*extraction) return 0;
 
     memcpy(*extraction, start, len_dynamic);
@@ -337,9 +340,9 @@ char *str_capital_all(char *text) {
     return text;
 }
 
-char *str_rem_first_char(char *text, int count) {
+char *str_rem_first_char(char *text, const int count) {
     static char buffer[PATH_MAX];
-    size_t len = strlen(text);
+    const size_t len = strlen(text);
 
     if (count <= 0) return text;
     if (count >= (int) len) return "";
@@ -365,7 +368,7 @@ char *str_rem_last_char(char *text, int count) {
     return buffer;
 }
 
-char *get_last_subdir(char *text, char separator, int n) {
+char *get_last_subdir(char *text, const char separator, const int n) {
     char *ptr = text;
     int count = 0;
 
@@ -382,7 +385,7 @@ char *get_last_subdir(char *text, char separator, int n) {
 }
 
 void remove_double_slashes(char *str) {
-    char *src = str;
+    const char *src = str;
     char *dst = str;
 
     while (*src) {
@@ -401,7 +404,7 @@ void remove_double_slashes(char *str) {
     *dst = '\0';
 }
 
-char *get_last_dir(char *text) {
+char *get_last_dir(const char *text) {
     char *last_slash = strrchr(text, '/');
 
     if (last_slash != NULL) return last_slash + 1;
@@ -421,16 +424,19 @@ char *get_content_path(char *path) {
     char *directory_path = strip_dir(path);
     if (dir_exist(path)) return directory_path;
 
-    char *directory_name = get_last_dir(directory_path);
+    const char *directory_name = get_last_dir(directory_path);
 
-    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0) return strip_dir(directory_path);
-    if (!ends_with(path, ".scummvm") && !ends_with(path, ".m3u") && !ends_with(path, ".cue") && !ends_with(path, ".gdi")) return directory_path;
+    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0)
+        return strip_dir(directory_path);
+    if (!ends_with(path, ".scummvm") && !ends_with(path, ".m3u") && !ends_with(path, ".cue")
+        && !ends_with(path, ".gdi"))
+        return directory_path;
 
-    char *path_no_ext = strip_ext(get_file_name(path));
+    const char *path_no_ext = strip_ext(get_file_name(path));
     return strcasecmp(directory_name, path_no_ext) == 0 ? strip_dir(directory_path) : directory_path;
 }
 
-char *strip_dir(char *text) {
+char *strip_dir(const char *text) {
     char *result = mux_strdup(text);
     char *last_slash = strrchr(result, '/');
 
@@ -439,7 +445,7 @@ char *strip_dir(char *text) {
     return result;
 }
 
-char *strip_ext(char *text) {
+char *strip_ext(const char *text) {
     char *result = mux_strdup(text);
     char *ext = strrchr(result, '.');
 
@@ -448,15 +454,15 @@ char *strip_ext(char *text) {
     return result;
 }
 
-char *grab_ext(char *text) {
-    char *ext = strrchr(text, '.');
+char *grab_ext(const char *text) {
+    const char *ext = strrchr(text, '.');
 
     if (ext != NULL && *(ext + 1) != '\0') return mux_strdup(ext + 1);
 
     return mux_strdup("");
 }
 
-void adjust_visual_label(char *text, int method, int rep_dash) {
+void adjust_visual_label(char *text, const int method, const int rep_dash) {
     size_t len = strlen(text);
     size_t text_index = 0;
 
@@ -496,7 +502,8 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     text[text_index] = '\0';
 
     size_t start = 0;
-    while (isspace((unsigned char) text[start])) start++;
+    while (isspace((unsigned char) text[start]))
+        start++;
 
     len = strlen(text);
     size_t end = len ? len - 1 : 0;
@@ -506,7 +513,7 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     }
 
     if (start > 0 || end < len - 1) {
-        size_t new_len = end - start + 1;
+        const size_t new_len = end - start + 1;
         memmove(text, text + start, new_len);
         text[new_len] = '\0';
     }
@@ -521,20 +528,22 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     }
 }
 
-char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
-                             const char *suffix, int infix_position) {
+char *generate_number_string(
+    const int min, const int max, const int increment, const char *prefix, const char *infix, const char *suffix,
+    const int infix_position
+) {
     size_t buffer_size = 0;
 
-    size_t prefix_len = prefix ? strlen(prefix) : 0;
-    size_t infix_len = infix ? strlen(infix) : 0;
-    size_t suffix_len = suffix ? strlen(suffix) : 0;
+    const size_t prefix_len = prefix ? strlen(prefix) : 0;
+    const size_t infix_len = infix ? strlen(infix) : 0;
+    const size_t suffix_len = suffix ? strlen(suffix) : 0;
 
     if (prefix) buffer_size += prefix_len + 1;
 
-    for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
+    for (int i = min; increment > 0 ? i <= max : i >= max; i += increment) {
         buffer_size += (size_t) snprintf(NULL, 0, "%d", i);
         if (infix) buffer_size += infix_len;
-        if ((increment > 0 ? i + increment <= max : i + increment >= max)) buffer_size += 1;
+        if (increment > 0 ? i + increment <= max : i + increment >= max) buffer_size += 1;
     }
 
     if (suffix) buffer_size += suffix_len;
@@ -543,11 +552,11 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
     if (!number_string) return NULL;
 
     char *ptr = number_string;
-    char *end = number_string + buffer_size + 1;
+    const char *end = number_string + buffer_size + 1;
 
     if (prefix) ptr += snprintf(ptr, (size_t) (end - ptr), "%s\n", prefix);
 
-    for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
+    for (int i = min; increment > 0 ? i <= max : i >= max; i += increment) {
         if (infix && infix_position == 0) ptr += snprintf(ptr, (size_t) (end - ptr), "%s", infix);
 
         ptr += snprintf(ptr, (size_t) (end - ptr), "%d", i);
@@ -566,13 +575,13 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 char *generate_time_string(int minute_offset) {
     if (minute_offset <= 0) minute_offset = 15;
 
-    int slots = 1440 / minute_offset;
+    const int slots = 1440 / minute_offset;
     char *buf = malloc((size_t) slots * 6 + 1);
     if (!buf) return NULL;
 
     char *ptr = buf;
     for (int i = 0; i < slots; i++) {
-        int total = i * minute_offset;
+        const int total = i * minute_offset;
         ptr += snprintf(ptr, 6, "%02d:%02d", total / 60, total % 60);
         if (i < slots - 1) *ptr++ = '\n';
     }
@@ -582,11 +591,12 @@ char *generate_time_string(int minute_offset) {
 }
 
 char **split_command(const char *cmd, size_t *argc_out) {
-#define FREE_ARGV                                        \
-    do {                                                 \
-        for (size_t i = 0; i < argc; i++) free(argv[i]); \
-        free(argv);                                      \
-        return NULL;                                     \
+#define FREE_ARGV                                                                                                      \
+    do {                                                                                                               \
+        for (size_t i = 0; i < argc; i++)                                                                              \
+            free(argv[i]);                                                                                             \
+        free(argv);                                                                                                    \
+        return NULL;                                                                                                   \
     } while (0)
 
     if (!cmd || !*cmd) return NULL;
@@ -600,7 +610,8 @@ char **split_command(const char *cmd, size_t *argc_out) {
     const char *p = cmd;
 
     while (*p) {
-        while (*p == ' ' || *p == '\t') p++;
+        while (*p == ' ' || *p == '\t')
+            p++;
         if (!*p) break;
 
         char buf[MAX_BUFFER_SIZE];
@@ -630,7 +641,7 @@ char **split_command(const char *cmd, size_t *argc_out) {
         memcpy(arg, buf, len + 1);
 
         if (argc + 1 >= cap) {
-            size_t new_cap = cap * 2;
+            const size_t new_cap = cap * 2;
 
             char **tmp = realloc(argv, new_cap * sizeof(char *));
             if (!tmp) FREE_ARGV;
@@ -648,8 +659,9 @@ char **split_command(const char *cmd, size_t *argc_out) {
     return argv;
 }
 
-void free_array(char **array, size_t count) {
+void free_array(char **array, const size_t count) {
     if (!array) return;
-    for (size_t i = 0; i < count; ++i) free(array[i]);
+    for (size_t i = 0; i < count; ++i)
+        free(array[i]);
     free(array);
 }

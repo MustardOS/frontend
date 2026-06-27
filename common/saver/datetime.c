@@ -49,7 +49,7 @@ static datetime_module_t mod = {0};
 
 static int dt_load_fonts(int screen_h) {
     char path[512];
-    const char *name = config.SETTINGS.FONT.NAME[0] ? config.SETTINGS.FONT.NAME : "Noto Sans";
+    const char *name = config.settings.font.name[0] ? config.settings.font.name : "Noto Sans";
 
     int sz_time = screen_h / 7;
     if (sz_time < 24) sz_time = 24;
@@ -91,7 +91,7 @@ static void dt_pick_position(void) {
     char time_str[32];
     char date_str[64];
 
-    if (config.CLOCK.NOTATION == 0) {
+    if (config.clock.notation == 0) {
         strftime(time_str, sizeof(time_str), "%I:%M %p", tm);
     } else {
         strftime(time_str, sizeof(time_str), "%H:%M", tm);
@@ -136,7 +136,9 @@ static void dt_on_idle_enter(void *user) {
     mod.phase_start = SDL_GetTicks();
 }
 
-int datetime_init(SDL_Renderer *renderer, int screen_w, int screen_h, uint8_t col_r, uint8_t col_g, uint8_t col_b, uint8_t col_a) {
+int datetime_init(
+    SDL_Renderer *renderer, int screen_w, int screen_h, uint8_t col_r, uint8_t col_g, uint8_t col_b, uint8_t col_a
+) {
     (void) renderer;
 
     if (!TTF_WasInit() && TTF_Init() != 0) {
@@ -151,7 +153,10 @@ int datetime_init(SDL_Renderer *renderer, int screen_w, int screen_h, uint8_t co
     mod.col_b = col_b;
     mod.col_a = col_a;
 
-    saver_init_base(&mod.base, screen_w, screen_h, "DateTime", mod.col_r, mod.col_g, mod.col_b, dt_on_speed_changed, dt_on_idle_enter, &mod);
+    saver_init_base(
+        &mod.base, screen_w, screen_h, "DateTime", mod.col_r, mod.col_g, mod.col_b, dt_on_speed_changed,
+        dt_on_idle_enter, &mod
+    );
 
     mod.reposition_pending = 1;
     mod.fade_state = DT_FADE_IN;
@@ -249,7 +254,7 @@ void datetime_render(SDL_Renderer *renderer) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
 
-    int is_12h = (config.CLOCK.NOTATION == 0);
+    int is_12h = (config.clock.notation == 0);
     int time_x = mod.pos_x + (mod.block_w - mod.time_w) / 2;
 
     if (is_12h) {

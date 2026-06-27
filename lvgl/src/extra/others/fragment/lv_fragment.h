@@ -37,22 +37,21 @@ struct _lv_fragment_t {
     /**
      * Class of this fragment
      */
-    const lv_fragment_class_t * cls;
+    const lv_fragment_class_t *cls;
     /**
      * Managed fragment states. If not null, then this fragment is managed.
      *
      * @warning Don't modify values inside this struct!
      */
-    lv_fragment_managed_states_t * managed;
+    lv_fragment_managed_states_t *managed;
     /**
      * Child fragment manager
      */
-    lv_fragment_manager_t * child_manager;
+    lv_fragment_manager_t *child_manager;
     /**
      * lv_obj returned by create_obj_cb
      */
-    lv_obj_t * obj;
-
+    lv_obj_t *obj;
 };
 
 struct _lv_fragment_class_t {
@@ -61,25 +60,25 @@ struct _lv_fragment_class_t {
      * @param self Fragment instance
      * @param args Arguments assigned by fragment manager
      */
-    void (*constructor_cb)(lv_fragment_t * self, void * args);
+    void (*constructor_cb)(lv_fragment_t *self, void *args);
 
     /**
      * Destructor function for fragment class
      * @param self Fragment instance, will be freed after this call
      */
-    void (*destructor_cb)(lv_fragment_t * self);
+    void (*destructor_cb)(lv_fragment_t *self);
 
     /**
      * Fragment attached to manager
      * @param self Fragment instance
      */
-    void (*attached_cb)(lv_fragment_t * self);
+    void (*attached_cb)(lv_fragment_t *self);
 
     /**
      * Fragment detached from manager
      * @param self Fragment instance
      */
-    void (*detached_cb)(lv_fragment_t * self);
+    void (*detached_cb)(lv_fragment_t *self);
 
     /**
      * Create objects
@@ -87,14 +86,14 @@ struct _lv_fragment_class_t {
      * @param container Container of the objects should be created upon
      * @return Created object, NULL if multiple objects has been created
      */
-    lv_obj_t * (*create_obj_cb)(lv_fragment_t * self, lv_obj_t * container);
+    lv_obj_t *(*create_obj_cb)(lv_fragment_t *self, lv_obj_t *container);
 
     /**
      *
      * @param self Fragment instance
      * @param obj lv_obj returned by create_obj_cb
      */
-    void (*obj_created_cb)(lv_fragment_t * self, lv_obj_t * obj);
+    void (*obj_created_cb)(lv_fragment_t *self, lv_obj_t *obj);
 
     /**
      * Called before objects in the fragment will be deleted.
@@ -102,14 +101,14 @@ struct _lv_fragment_class_t {
      * @param self Fragment instance
      * @param obj object with this fragment
      */
-    void (*obj_will_delete_cb)(lv_fragment_t * self, lv_obj_t * obj);
+    void (*obj_will_delete_cb)(lv_fragment_t *self, lv_obj_t *obj);
 
     /**
      * Called when the object created by fragment received `LV_EVENT_DELETE` event
      * @param self Fragment instance
      * @param obj object with this fragment
      */
-    void (*obj_deleted_cb)(lv_fragment_t * self, lv_obj_t * obj);
+    void (*obj_deleted_cb)(lv_fragment_t *self, lv_obj_t *obj);
 
     /**
      * Handle event
@@ -118,7 +117,7 @@ struct _lv_fragment_class_t {
      * @param data1 User-defined data
      * @param data2 User-defined data
      */
-    bool (*event_cb)(lv_fragment_t * self, int code, void * userdata);
+    int (*event_cb)(lv_fragment_t *self, int code, void *userdata);
 
     /**
      * *REQUIRED*: Allocation size of fragment
@@ -129,35 +128,35 @@ struct _lv_fragment_class_t {
 /**
  * Fragment states
  */
-typedef struct _lv_fragment_managed_states_t  {
+typedef struct _lv_fragment_managed_states_t {
     /**
      * Class of the fragment
      */
-    const lv_fragment_class_t * cls;
+    const lv_fragment_class_t *cls;
     /**
      * Manager the fragment attached to
      */
-    lv_fragment_manager_t * manager;
+    lv_fragment_manager_t *manager;
     /**
      * Container object the fragment adding view to
      */
-    lv_obj_t * const * container;
+    lv_obj_t *const *container;
     /**
      * Fragment instance
      */
-    lv_fragment_t * instance;
+    lv_fragment_t *instance;
     /**
-     * true between `create_obj_cb` and `obj_deleted_cb`
+     * 1 between `create_obj_cb` and `obj_deleted_cb`
      */
-    bool obj_created;
+    int obj_created;
     /**
-     * true before `lv_fragment_del_obj` is called. Don't touch any object if this is true
+     * 1 before `lv_fragment_del_obj` is called. Don't touch any object if this is 1
      */
-    bool destroying_obj;
+    int destroying_obj;
     /**
-     * true if this fragment is in navigation stack that can be popped
+     * 1 if this fragment is in navigation stack that can be popped
      */
-    bool in_stack;
+    int in_stack;
 } lv_fragment_managed_states_t;
 
 /**********************
@@ -169,25 +168,25 @@ typedef struct _lv_fragment_managed_states_t  {
  * @param parent Parent fragment if this manager is placed inside another fragment, can be null.
  * @return Fragment manager instance
  */
-lv_fragment_manager_t * lv_fragment_manager_create(lv_fragment_t * parent);
+lv_fragment_manager_t *lv_fragment_manager_create(lv_fragment_t *parent);
 
 /**
  * Destroy fragment manager instance
  * @param manager Fragment manager instance
  */
-void lv_fragment_manager_del(lv_fragment_manager_t * manager);
+void lv_fragment_manager_del(lv_fragment_manager_t *manager);
 
 /**
  * Create object of all fragments managed by this manager.
  * @param manager Fragment manager instance
  */
-void lv_fragment_manager_create_obj(lv_fragment_manager_t * manager);
+void lv_fragment_manager_create_obj(lv_fragment_manager_t *manager);
 
 /**
  * Delete object created by all fragments managed by this manager. Instance of fragments will not be deleted.
  * @param manager Fragment manager instance
  */
-void lv_fragment_manager_del_obj(lv_fragment_manager_t * manager);
+void lv_fragment_manager_del_obj(lv_fragment_manager_t *manager);
 
 /**
  * Attach fragment to manager, and add to container.
@@ -195,14 +194,14 @@ void lv_fragment_manager_del_obj(lv_fragment_manager_t * manager);
  * @param fragment Fragment instance
  * @param container Pointer to container object for manager to add objects to
  */
-void lv_fragment_manager_add(lv_fragment_manager_t * manager, lv_fragment_t * fragment, lv_obj_t * const * container);
+void lv_fragment_manager_add(lv_fragment_manager_t *manager, lv_fragment_t *fragment, lv_obj_t *const *container);
 
 /**
  * Detach and destroy fragment. If fragment is in navigation stack, remove from it.
  * @param manager Fragment manager instance
  * @param fragment Fragment instance
  */
-void lv_fragment_manager_remove(lv_fragment_manager_t * manager, lv_fragment_t * fragment);
+void lv_fragment_manager_remove(lv_fragment_manager_t *manager, lv_fragment_t *fragment);
 
 /**
  * Attach fragment to manager and add to navigation stack.
@@ -210,14 +209,14 @@ void lv_fragment_manager_remove(lv_fragment_manager_t * manager, lv_fragment_t *
  * @param fragment Fragment instance
  * @param container Pointer to container object for manager to add objects to
  */
-void lv_fragment_manager_push(lv_fragment_manager_t * manager, lv_fragment_t * fragment, lv_obj_t * const * container);
+void lv_fragment_manager_push(lv_fragment_manager_t *manager, lv_fragment_t *fragment, lv_obj_t *const *container);
 
 /**
  * Remove the top-most fragment for stack
  * @param manager Fragment manager instance
- * @return true if there is fragment to pop
+ * @return 1 if there is fragment to pop
  */
-bool lv_fragment_manager_pop(lv_fragment_manager_t * manager);
+int lv_fragment_manager_pop(lv_fragment_manager_t *manager);
 
 /**
  * Replace fragment. Old item in the stack will be removed.
@@ -225,31 +224,30 @@ bool lv_fragment_manager_pop(lv_fragment_manager_t * manager);
  * @param fragment Fragment instance
  * @param container Pointer to container object for manager to add objects to
  */
-void lv_fragment_manager_replace(lv_fragment_manager_t * manager, lv_fragment_t * fragment,
-                                 lv_obj_t * const * container);
+void lv_fragment_manager_replace(lv_fragment_manager_t *manager, lv_fragment_t *fragment, lv_obj_t *const *container);
 
 /**
  * Send event to top-most fragment
  * @param manager Fragment manager instance
  * @param code User-defined ID of event
  * @param userdata User-defined data
- * @return true if fragment returned true
+ * @return 1 if fragment returned 1
  */
-bool lv_fragment_manager_send_event(lv_fragment_manager_t * manager, int code, void * userdata);
+int lv_fragment_manager_send_event(lv_fragment_manager_t *manager, int code, void *userdata);
 
 /**
  * Get stack size of this fragment manager
  * @param manager Fragment manager instance
  * @return Stack size of this fragment manager
  */
-size_t lv_fragment_manager_get_stack_size(lv_fragment_manager_t * manager);
+size_t lv_fragment_manager_get_stack_size(lv_fragment_manager_t *manager);
 
 /**
  * Get top most fragment instance
  * @param manager Fragment manager instance
  * @return Top most fragment instance
  */
-lv_fragment_t * lv_fragment_manager_get_top(lv_fragment_manager_t * manager);
+lv_fragment_t *lv_fragment_manager_get_top(lv_fragment_manager_t *manager);
 
 /**
  * Find first fragment instance in the container
@@ -257,14 +255,14 @@ lv_fragment_t * lv_fragment_manager_get_top(lv_fragment_manager_t * manager);
  * @param container Container which target fragment added to
  * @return First fragment instance in the container
  */
-lv_fragment_t * lv_fragment_manager_find_by_container(lv_fragment_manager_t * manager, const lv_obj_t * container);
+lv_fragment_t *lv_fragment_manager_find_by_container(lv_fragment_manager_t *manager, const lv_obj_t *container);
 
 /**
  * Get parent fragment
  * @param manager Fragment manager instance
  * @return Parent fragment instance
  */
-lv_fragment_t * lv_fragment_manager_get_parent_fragment(lv_fragment_manager_t * manager);
+lv_fragment_t *lv_fragment_manager_get_parent_fragment(lv_fragment_manager_t *manager);
 
 /**
  * Create a fragment instance.
@@ -273,34 +271,34 @@ lv_fragment_t * lv_fragment_manager_get_parent_fragment(lv_fragment_manager_t * 
  * @param args Arguments assigned by fragment manager
  * @return Fragment instance
  */
-lv_fragment_t * lv_fragment_create(const lv_fragment_class_t * cls, void * args);
+lv_fragment_t *lv_fragment_create(const lv_fragment_class_t *cls, void *args);
 
 /**
  * Destroy a fragment.
  * @param fragment Fragment instance.
  */
-void lv_fragment_del(lv_fragment_t * fragment);
+void lv_fragment_del(lv_fragment_t *fragment);
 
 /**
  * Get associated manager of this fragment
  * @param fragment Fragment instance
  * @return Fragment manager instance
  */
-lv_fragment_manager_t * lv_fragment_get_manager(lv_fragment_t * fragment);
+lv_fragment_manager_t *lv_fragment_get_manager(lv_fragment_t *fragment);
 
 /**
  * Get container object of this fragment
  * @param fragment Fragment instance
  * @return Reference to container object
  */
-lv_obj_t * const * lv_fragment_get_container(lv_fragment_t * fragment);
+lv_obj_t *const *lv_fragment_get_container(lv_fragment_t *fragment);
 
 /**
  * Get parent fragment of this fragment
  * @param fragment Fragment instance
  * @return Parent fragment
  */
-lv_fragment_t * lv_fragment_get_parent(lv_fragment_t * fragment);
+lv_fragment_t *lv_fragment_get_parent(lv_fragment_t *fragment);
 
 /**
  * Create object by fragment.
@@ -309,20 +307,20 @@ lv_fragment_t * lv_fragment_get_parent(lv_fragment_t * fragment);
  * @param container Container of the objects should be created upon.
  * @return Created object
  */
-lv_obj_t * lv_fragment_create_obj(lv_fragment_t * fragment, lv_obj_t * container);
+lv_obj_t *lv_fragment_create_obj(lv_fragment_t *fragment, lv_obj_t *container);
 
 /**
  * Delete created object of a fragment
  *
  * @param fragment Fragment instance.
  */
-void lv_fragment_del_obj(lv_fragment_t * fragment);
+void lv_fragment_del_obj(lv_fragment_t *fragment);
 
 /**
  * Destroy obj in fragment, and recreate them.
  * @param fragment Fragment instance
  */
-void lv_fragment_recreate_obj(lv_fragment_t * fragment);
+void lv_fragment_recreate_obj(lv_fragment_t *fragment);
 
 /**********************
  *      MACROS

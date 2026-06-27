@@ -204,11 +204,11 @@ extern uint64_t mux_tick(void);
 #define LV_USE_GPU_NXP_VG_LITE 0
 
 /*Use SDL renderer API*/
-#define LV_USE_GPU_SDL 0
+#define LV_USE_GPU_SDL 1
 #if LV_USE_GPU_SDL
 #define LV_GPU_SDL_INCLUDE_PATH <SDL2/SDL.h>
 /*Texture cache size, 8MB by default*/
-#define LV_GPU_SDL_LRU_SIZE (1024 * 1024 * 8)
+#define LV_GPU_SDL_LRU_SIZE (1024 * 1024 * 32)
 /*Custom blend mode for mask drawing, disable if you need to link with older SDL2 lib*/
 #define LV_GPU_SDL_CUSTOM_BLEND_MODE (SDL_VERSION_ATLEAST(2, 0, 6))
 #endif

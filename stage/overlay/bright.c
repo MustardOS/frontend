@@ -44,23 +44,11 @@ int bright_disabled_gles = 0;
 gl_vtx_t vtx_bright[4];
 int vtx_bright_valid = 0;
 
-struct alpha_cache bright_alpha_cache = {
-        .path  = BRIGHT_ALPHA,
-        .mtime = 0,
-        .value = 1.0f
-};
+struct alpha_cache bright_alpha_cache = {.path = BRIGHT_ALPHA, .mtime = 0, .value = 1.0f};
 
-struct anchor_cache bright_anchor_cache = {
-        .path  = BRIGHT_ANCHOR,
-        .mtime = 0,
-        .value = ANCHOR_TOP_RIGHT
-};
+struct anchor_cache bright_anchor_cache = {.path = BRIGHT_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_RIGHT};
 
-struct scale_cache bright_scale_cache = {
-        .path  = BRIGHT_SCALE,
-        .mtime = 0,
-        .value = SCALE_ORIGINAL
-};
+struct scale_cache bright_scale_cache = {.path = BRIGHT_SCALE, .mtime = 0, .value = scale_original};
 
 static int ensure_bright_path(const char *dim, int step) {
     if (step < 0) step = 0;
@@ -73,7 +61,9 @@ static int ensure_bright_path(const char *dim, int step) {
 
     if (load_stage_image("bright", ovl_go_cache.core, ovl_go_cache.system, name, dim, bright_overlay_path)) return 1;
 
-    LOG_WARN("stage", "Brightness " OVERLAY_NOP, ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dim, step);
+    LOG_WARN(
+        "stage", "Brightness " OVERLAY_NOP, ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dim, step
+    );
     return 0;
 }
 
@@ -113,7 +103,7 @@ static void preload_bright_textures_sdl(SDL_Renderer *renderer) {
     if (bright_preload_sdl_done || bright_disabled_sdl || !renderer) return;
 
     char dim[32];
-    get_dimension(RENDER_SDL, renderer, dim, sizeof(dim));
+    get_dimension(render_sdl, renderer, dim, sizeof(dim));
     if (!dim[0]) {
         disable_sdl();
         return;
@@ -154,7 +144,7 @@ static void preload_bright_textures_gles(void) {
     if (bright_preload_gles_done || bright_disabled_gles || !render_window) return;
 
     char dim[32];
-    get_dimension(RENDER_GLES, render_window, dim, sizeof(dim));
+    get_dimension(render_gles, render_window, dim, sizeof(dim));
     if (!dim[0]) {
         disable_gles();
         return;

@@ -85,7 +85,8 @@ static void reset_point(cpoint_t *p, uint32_t now) {
 
 static void seed_all(void) {
     uint32_t now = SDL_GetTicks();
-    for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) reset_point(&mod.point[i], now);
+    for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++)
+        reset_point(&mod.point[i], now);
 }
 
 static void on_speed_changed(void *user) {
@@ -111,13 +112,17 @@ int constellation_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     if (mod.edge_margin < 16) mod.edge_margin = 16;
     if (mod.edge_margin > 64) mod.edge_margin = 64;
 
-    saver_init_base(&mod.base, screen_w, screen_h, "Constellation", 179, 204, 255, on_speed_changed, on_idle_enter, &mod);
+    saver_init_base(
+        &mod.base, screen_w, screen_h, "Constellation", 179, 204, 255, on_speed_changed, on_idle_enter, &mod
+    );
 
     on_speed_changed(NULL);
     seed_all();
 
-    LOG_INFO("saver", "Constellation Initialised (%dx%d, points=%d, speed=%d)",
-             screen_w, screen_h, CONSTELLATION_POINT_COUNT, mod.base.speed);
+    LOG_INFO(
+        "saver", "Constellation Initialised (%dx%d, points=%d, speed=%d)", screen_w, screen_h,
+        CONSTELLATION_POINT_COUNT, mod.base.speed
+    );
 
     return 1;
 }
@@ -155,10 +160,14 @@ void constellation_update(void) {
         int y = p->fy >> SAVER_FRAME_SHF;
         int M = mod.edge_margin;
 
-        if (x < M) p->vx += (M - x) * 2 / M;
-        else if (x > mod.base.screen_w - M) p->vx -= (x - (mod.base.screen_w - M)) * 2 / M;
-        if (y < M) p->vy += (M - y) * 2 / M;
-        else if (y > mod.base.screen_h - M) p->vy -= (y - (mod.base.screen_h - M)) * 2 / M;
+        if (x < M)
+            p->vx += (M - x) * 2 / M;
+        else if (x > mod.base.screen_w - M)
+            p->vx -= (x - (mod.base.screen_w - M)) * 2 / M;
+        if (y < M)
+            p->vy += (M - y) * 2 / M;
+        else if (y > mod.base.screen_h - M)
+            p->vy -= (y - (mod.base.screen_h - M)) * 2 / M;
 
         if (p->vx > 64) p->vx = 64;
         if (p->vx < -64) p->vx = -64;

@@ -1,16 +1,16 @@
 #include "ui_muxshare.h"
 #include "ui_muxinstall.h"
 
-#define INSTALL(NAME, ENUM, UDATA)    \
-    lv_obj_t *ui_pnl##NAME##_install; \
-    lv_obj_t *ui_lbl##NAME##_install; \
-    lv_obj_t *ui_ico##NAME##_install;
+#define INSTALL(NAME, UDATA)                                                                                           \
+    lv_obj_t *ui_pnl_##NAME##_install;                                                                                 \
+    lv_obj_t *ui_lbl_##NAME##_install;                                                                                 \
+    lv_obj_t *ui_ico_##NAME##_install;
 
 INSTALL_ELEMENTS
 #undef INSTALL
 
-void init_muxinstall(lv_obj_t *ui_pnlContent) {
-#define INSTALL(NAME, ENUM, UDATA) CREATE_STATIC_ITEM(install, NAME);
+void init_muxinstall(lv_obj_t *ui_pnl_content) {
+#define INSTALL(NAME, UDATA) CREATE_STATIC_ITEM(install, NAME);
     INSTALL_ELEMENTS
 #undef INSTALL
 }

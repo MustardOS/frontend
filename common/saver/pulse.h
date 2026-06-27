@@ -1,9 +1,8 @@
 #pragma once
 
-#include <stdbool.h>
 #include <SDL2/SDL.h>
 
-int pulse_init(SDL_Renderer *renderer, int screen_w, int screen_h);
+int pulse_init(const SDL_Renderer *renderer, int screen_w, int screen_h);
 
 void pulse_update(void);
 

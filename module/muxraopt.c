@@ -3,18 +3,18 @@
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
-static bool is_dir = false;
+static int is_dir = 0;
 
 static int is_app = 0;
 
 static void show_help(void) {
-    show_info_box(lang.MUXRAOPT.TITLE, lang.MUXRAOPT.HELP, 0);
+    show_info_box(lang.muxraopt.title, lang.muxraopt.help, 0);
 }
 
 static void write_rac_file(char *path, const char *rac, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
@@ -24,7 +24,7 @@ static void write_rac_file(char *path, const char *rac, char *log) {
     fclose(file);
 }
 
-static void assign_rac_single(char *core_dir, const char *rac, char *rom) {
+static void assign_rac_single(char *core_dir, const char *rac, const char *rom) {
     char rac_path[MAX_BUFFER_SIZE];
     char *rom_no_ext = strip_ext(rom);
 
@@ -36,12 +36,11 @@ static void assign_rac_single(char *core_dir, const char *rac, char *rom) {
     write_rac_file(rac_path, rac, "Assign RetroArch Config (Single)");
 }
 
-static void assign_rac_directory(char *core_dir, const char *rac, int purge) {
+static void assign_rac_directory(const char *core_dir, const char *rac, const int purge) {
     if (purge) delete_files_of_type(core_dir, ".rac", NULL, 0);
 
     char rac_path[MAX_BUFFER_SIZE];
-    snprintf(rac_path, sizeof(rac_path), INFO_CON_PATH "/%s/core.rac",
-             get_last_subdir(rom_dir, '/', 4));
+    snprintf(rac_path, sizeof(rac_path), INFO_CON_PATH "/%s/core.rac", get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(rac_path);
 
     write_rac_file(rac_path, rac, "Assign RetroArch Config (Directory)");
@@ -67,15 +66,13 @@ static void assign_rac_parent(char *core_dir, const char *rac) {
     free_subdirectories(subdirs);
 }
 
-static void create_rac_assignment(const char *rac, char *rom, enum gen_type method) {
+static void create_rac_assignment(const char *rac, const char *rom, const enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
 
     if (is_app) {
-        snprintf(core_dir, sizeof(core_dir), "%s/",
-                 rom_dir);
+        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
     } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
-                 get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
     }
 
     remove_double_slashes(core_dir);
@@ -102,20 +99,20 @@ static void create_rac_assignment(const char *rac, char *rom, enum gen_type meth
 
 static void create_rac_items(void) {
     reset_ui_groups();
-    ui_count = 0;
+    ui_count_static = 0;
 
     const struct {
         const char *label;
         const char *value;
     } ra_opts[] = {
-            {lang.GENERIC.ENABLED,  "true"},
-            {lang.GENERIC.DISABLED, "false"},
+        {lang.generic.enabled, "true"},
+        {lang.generic.disabled, "false"},
     };
 
     for (size_t i = 0; i < A_SIZE(ra_opts); i++) {
-        ui_count++;
+        ui_count_static++;
 
-        lv_obj_t *pnl = lv_obj_create(ui_pnlContent);
+        lv_obj_t *pnl = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(pnl);
 
         lv_obj_t *lbl = lv_label_create(pnl);
@@ -130,19 +127,18 @@ static void create_rac_items(void) {
         lv_group_add_obj(ui_group_glyph, glyph);
         lv_group_add_obj(ui_group_panel, pnl);
 
-        apply_size_to_content(&theme, ui_pnlContent, lbl, glyph, ra_opts[i].label);
-        apply_text_long_dot(&theme, ui_pnlContent, lbl);
+        apply_size_to_content(&theme, ui_pnl_content, lbl, glyph, ra_opts[i].label);
+        apply_text_long_dot(&theme, lbl);
     }
 
-    lv_obj_update_layout(ui_pnlContent);
+    lv_obj_update_layout(ui_pnl_content);
 }
-
 
 static void handle_a(void) {
     if (msgbox_active || hold_call || is_dir) return;
 
     LOG_INFO(mux_module, "Single RetroArch Config Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     create_rac_assignment(selected, is_app ? "mux_option" : rom_name, SINGLE);
@@ -160,7 +156,7 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     remove(MUOS_SAR_LOAD);
 
     if (is_app) load_mux("appcon");
@@ -172,7 +168,7 @@ static void handle_x(void) {
     if (msgbox_active || is_app || hold_call) return;
 
     LOG_INFO(mux_module, "Directory RetroArch Config Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     create_rac_assignment(selected, rom_name, DIRECTORY);
@@ -184,7 +180,7 @@ static void handle_y(void) {
     if (msgbox_active || is_app || at_base(rom_dir, MAIN_ROM_DIR) || hold_call) return;
 
     LOG_INFO(mux_module, "Parent RetroArch Config Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     create_rac_assignment(selected, rom_name, PARENT);
@@ -193,9 +189,9 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
@@ -206,24 +202,24 @@ static void init_elements(void) {
     int i = 0;
 
     if (!is_dir) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.CONTENT, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
     }
 
-    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
-    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b_glyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b, lang.generic.back, 0};
 
     if (!is_app) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
 
         if (!at_base(rom_dir, MAIN_ROM_DIR)) {
-            nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
         }
     }
 
-    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};  // Null-terminate
+    nav_items[i] = (struct nav_bar) {NULL, NULL, 0}; // Null-terminate
 
     setup_nav(nav_items);
 
@@ -254,8 +250,7 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
         LOG_INFO(mux_module, "Automatic Assign RetroArch Config Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.rac",
-                 get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.rac", get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
         if (file_exist(core_file)) return;
@@ -270,9 +265,7 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
             free(last_dir_lower);
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(
-                    json_parse(read_all_char_from(assign_file)),
-                    assign_check);
+            struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -305,7 +298,10 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
                         snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
                         LOG_INFO(mux_module, "\t(LOCAL) Core RetroArch Config: %s", core_retroarch);
                     } else {
-                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
+                        snprintf(
+                            core_retroarch, sizeof(core_retroarch), "%s",
+                            get_ini_string(global_ini, "global", "retroarch", "false")
+                        );
                         LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
                     }
 
@@ -321,23 +317,22 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
                 mini_free(global_ini);
 
                 return;
-            } else {
-                LOG_INFO(mux_module, "\tAssigned RetroArch Config To Default: %s", "false");
-                create_rac_assignment("false", rom_name, DIRECTORY_NO_WIPE);
-
-                return;
             }
+            LOG_INFO(mux_module, "\tAssigned RetroArch Config To Default: %s", "false");
+            create_rac_assignment("false", rom_name, DIRECTORY_NO_WIPE);
+
+            return;
         }
     }
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXRAOPT.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxraopt.title);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
     init_fonts();
 
     create_rac_items();
@@ -347,30 +342,31 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
-
 }

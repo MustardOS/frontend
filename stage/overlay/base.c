@@ -35,35 +35,22 @@ uint64_t sdl_overlay_last_check_ms = 0;
 int base_overlay_disabled_cached = 0;
 int base_nop_last = -1;
 
-__attribute__((used))
-struct alpha_cache base_alpha_cache = {
-        .path  = BASE_ALPHA,
-        .mtime = 0,
-        .value = 1.0f
+__attribute__((used)) struct alpha_cache base_alpha_cache = {.path = BASE_ALPHA, .mtime = 0, .value = 1.0f};
+
+__attribute__((used)) struct anchor_cache base_anchor_cache = {
+    .path = BASE_ANCHOR, .mtime = 0, .value = ANCHOR_CENTRE_MIDDLE
 };
 
-__attribute__((used))
-struct anchor_cache base_anchor_cache = {
-        .path  = BASE_ANCHOR,
-        .mtime = 0,
-        .value = ANCHOR_CENTRE_MIDDLE
+__attribute__((used)) struct scale_cache base_scale_cache = {.path = BASE_SCALE, .mtime = 0, .value = scale_original};
+
+const struct overlay_resolver gles_resolver = {
+    .render_method = render_gles,
+    .get_dimension = get_dimension,
 };
 
-__attribute__((used))
-struct scale_cache base_scale_cache = {
-        .path  = BASE_SCALE,
-        .mtime = 0,
-        .value = SCALE_ORIGINAL
-};
-
-const struct overlay_resolver GLES_RESOLVER = {
-        .render_method = RENDER_GLES,
-        .get_dimension = get_dimension,
-};
-
-const struct overlay_resolver SDL_RESOLVER = {
-        .render_method = RENDER_SDL,
-        .get_dimension = get_dimension,
+const struct overlay_resolver sdl_resolver = {
+    .render_method = render_sdl,
+    .get_dimension = get_dimension,
 };
 
 void base_inotify_check(void) {
@@ -113,14 +100,17 @@ static int resolve_base_overlay(const struct overlay_resolver *res, void *ctx, c
     res->get_dimension(res->render_method, ctx, dimension, sizeof(dimension));
     if (!read_overlay_loader(&ovl_go_cache)) return 0;
 
-    if (load_stage_image("base", ovl_go_cache.core, ovl_go_cache.system,
-                         ovl_go_cache.content, dimension, overlay_path)) {
+    if (load_stage_image(
+            "base", ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension, overlay_path
+        )) {
         LOG_SUCCESS("stage", "Overlay loaded: %s", overlay_path);
         return 1;
     }
 
-    LOG_WARN("stage", "Overlay not found (core=%s, system=%s, content=%s, dim=%s)",
-             ovl_go_cache.core, ovl_go_cache.system, ovl_go_cache.content, dimension);
+    LOG_WARN(
+        "stage", "Overlay not found (core=%s, system=%s, content=%s, dim=%s)", ovl_go_cache.core, ovl_go_cache.system,
+        ovl_go_cache.content, dimension
+    );
 
     base_overlay_disabled_cached = 1;
     return 0;
@@ -133,7 +123,7 @@ void sdl_base_overlay_init(SDL_Renderer *renderer) {
     wanted_overlay[0] = '\0';
 
     if (!sdl_overlay_resolved) {
-        if (!resolve_base_overlay(&SDL_RESOLVER, renderer, wanted_overlay)) return;
+        if (!resolve_base_overlay(&sdl_resolver, renderer, wanted_overlay)) return;
         sdl_overlay_resolved = 1;
     } else {
         strlcpy(wanted_overlay, sdl_overlay_path_last, sizeof(wanted_overlay));
@@ -181,7 +171,7 @@ void gl_base_overlay_init(SDL_Window *window) {
     if (base_gles_ready || base_gles_attempted) return;
     base_gles_attempted = 1;
 
-    if (!window || !resolve_base_overlay(&GLES_RESOLVER, window, overlay_path)) return;
+    if (!window || !resolve_base_overlay(&gles_resolver, window, overlay_path)) return;
 
     SDL_Surface *raw = IMG_Load(overlay_path);
     if (!raw) {

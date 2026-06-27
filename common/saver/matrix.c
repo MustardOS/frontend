@@ -64,7 +64,8 @@ static void reset_drop(drop_t *d, int column, int randomise_y) {
 
 static void seed_all(void) {
     if (!mod.drop) return;
-    for (int i = 0; i < mod.columns; i++) reset_drop(&mod.drop[i], i, 1);
+    for (int i = 0; i < mod.columns; i++)
+        reset_drop(&mod.drop[i], i, 1);
 }
 
 static void rebuild_columns(void) {
@@ -109,8 +110,10 @@ int matrix_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
 
     rebuild_columns();
 
-    LOG_INFO("saver", "Matrix Initialised (%dx%d, columns=%d, cell=%d, speed=%d)",
-             screen_w, screen_h, mod.columns, mod.cell, mod.base.speed);
+    LOG_INFO(
+        "saver", "Matrix Initialised (%dx%d, columns=%d, cell=%d, speed=%d)", screen_w, screen_h, mod.columns, mod.cell,
+        mod.base.speed
+    );
 
     return mod.base.enabled;
 }
@@ -200,7 +203,9 @@ void matrix_render(SDL_Renderer *renderer) {
 
         if (head_y >= 0 && head_y < mod.base.screen_h) {
             int bloom_size = mod.cell + 4;
-            SDL_Rect bloom = {d->x + (mod.cell - bloom_size) / 2, head_y + (mod.cell - bloom_size) / 2, bloom_size, bloom_size};
+            SDL_Rect bloom = {
+                d->x + (mod.cell - bloom_size) / 2, head_y + (mod.cell - bloom_size) / 2, bloom_size, bloom_size
+            };
 
             SDL_SetRenderDrawColor(renderer, d->r, d->g, d->b, 90);
             SDL_RenderFillRect(renderer, &bloom);

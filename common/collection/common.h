@@ -1,12 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-
-typedef enum {
-    MENU,
-    FOLDER,
-    ITEM
-} content_type;
+typedef enum { menu, FOLDER, ITEM } content_type;
 
 typedef struct {
     char *name;
@@ -26,27 +20,29 @@ typedef struct {
 
 int is_in_list(char **list, int count, const char *sys_dir, const char *name);
 
-content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
-                       const char *extra_data, content_type content_type);
+content_item *add_item(
+    content_item **content_items, size_t *count, const char *name, const char *sort_name, const char *extra_data,
+    content_type content_type
+);
 
 void remove_item(content_item **content_items, size_t *count, size_t index);
 
 int bucket_item_compare(const void *a, const void *b);
 
-int item_exists(content_item *content_items, size_t count, const char *name);
+int item_exists(const content_item *content_items, size_t count, const char *name);
 
 void sort_items(content_item *content_items, size_t count);
 
 void sort_items_time(content_item *content_items, size_t count);
 
-content_item get_item_by_index(content_item *items, size_t index);
+content_item get_item_by_index(const content_item *items, size_t index);
 
-int get_item_index_by_name(content_item *content_items, size_t count, const char *name, content_type type);
+int get_item_index_by_name(const content_item *content_items, size_t count, const char *name, content_type type);
 
-int get_item_index_by_extra_data(content_item *content_items, size_t count, const char *extra_data);
+int get_item_index_by_extra_data(const content_item *content_items, size_t count, const char *extra_data);
 
 void free_items(content_item **content_items, size_t *count);
 
 void free_item_list(char ***list, int *count);
 
-void print_items(content_item *content_items, size_t count);
+void print_items(const content_item *content_items, size_t count);

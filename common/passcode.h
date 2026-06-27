@@ -7,17 +7,17 @@ extern struct mux_device device;
 
 struct mux_passcode {
     struct {
-        char BOOT[MAX_BUFFER_SIZE];
-        char LAUNCH[MAX_BUFFER_SIZE];
-        char SETTING[MAX_BUFFER_SIZE];
-        char SAFETY[MAX_BUFFER_SIZE];
-    } CODE;
+        char boot[MAX_BUFFER_SIZE];
+        char launch[MAX_BUFFER_SIZE];
+        char setting[MAX_BUFFER_SIZE];
+        char safety[MAX_BUFFER_SIZE];
+    } code;
 
     struct {
-        char BOOT[MAX_BUFFER_SIZE];
-        char LAUNCH[MAX_BUFFER_SIZE];
-        char SETTING[MAX_BUFFER_SIZE];
-    } MESSAGE;
+        char boot[MAX_BUFFER_SIZE];
+        char launch[MAX_BUFFER_SIZE];
+        char setting[MAX_BUFFER_SIZE];
+    } message;
 };
 
 void load_passcode(struct mux_passcode *passcode);

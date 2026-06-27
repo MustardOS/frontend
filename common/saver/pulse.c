@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 #include <SDL2/SDL.h>
 #include "../log.h"
 #include "../saver.h"
@@ -34,18 +33,18 @@ typedef struct {
 
 static pulse_module_t mod = {0};
 
-static int approx_distance(int x1, int y1, int x2, int y2) {
-    int dx = saver_int_abs(x1 - x2);
-    int dy = saver_int_abs(y1 - y2);
+static int approx_distance(const int x1, const int y1, const int x2, const int y2) {
+    const int dx = saver_int_abs(x1 - x2);
+    const int dy = saver_int_abs(y1 - y2);
 
-    int hi = dx > dy ? dx : dy;
-    int lo = dx > dy ? dy : dx;
+    const int hi = dx > dy ? dx : dy;
+    const int lo = dx > dy ? dy : dx;
 
     return hi + ((lo * 3) >> 3);
 }
 
 static void apply_ring_colour(ring_t *r) {
-    saver_pastel_pick((int) saver_rand_range(SAVER_PASTEL_COUNT), &r->r, &r->g, &r->b);
+    saver_pastel_pick(saver_rand_range(SAVER_PASTEL_COUNT), &r->r, &r->g, &r->b);
 }
 
 static void spawn_ring(void) {
@@ -68,18 +67,18 @@ static void spawn_ring(void) {
     }
 
     ring_t *r = &mod.ring[slot];
-    int max_x = mod.base.screen_w > 1 ? mod.base.screen_w : 1;
-    int max_y = mod.base.screen_h > 1 ? mod.base.screen_h : 1;
+    const int max_x = mod.base.screen_w > 1 ? mod.base.screen_w : 1;
+    const int max_y = mod.base.screen_h > 1 ? mod.base.screen_h : 1;
 
     r->active = 1;
-    r->origin_x = (int) saver_rand_range(max_x);
-    r->origin_y = (int) saver_rand_range(max_y);
+    r->origin_x = saver_rand_range(max_x);
+    r->origin_y = saver_rand_range(max_y);
     r->radius = 0;
 
-    int corner_a = approx_distance(r->origin_x, r->origin_y, 0, 0);
-    int corner_b = approx_distance(r->origin_x, r->origin_y, mod.base.screen_w, 0);
-    int corner_c = approx_distance(r->origin_x, r->origin_y, 0, mod.base.screen_h);
-    int corner_d = approx_distance(r->origin_x, r->origin_y, mod.base.screen_w, mod.base.screen_h);
+    const int corner_a = approx_distance(r->origin_x, r->origin_y, 0, 0);
+    const int corner_b = approx_distance(r->origin_x, r->origin_y, mod.base.screen_w, 0);
+    const int corner_c = approx_distance(r->origin_x, r->origin_y, 0, mod.base.screen_h);
+    const int corner_d = approx_distance(r->origin_x, r->origin_y, mod.base.screen_w, mod.base.screen_h);
 
     int max_radius = corner_a;
     if (corner_b > max_radius) max_radius = corner_b;
@@ -90,22 +89,23 @@ static void spawn_ring(void) {
 
     int speed = mod.base.speed;
     if (speed < 1) speed = 1;
-    int varied = speed + (int) saver_rand_range(speed + 1);
+    const int varied = speed + saver_rand_range(speed + 1);
 
-    r->speed = (int32_t) ((varied * SAVER_FRAME_ONE) / 1000);
-    if (r->speed < (SAVER_FRAME_ONE / 32)) r->speed = SAVER_FRAME_ONE / 32;
+    r->speed = varied * SAVER_FRAME_ONE / 1000;
+    if (r->speed < SAVER_FRAME_ONE / 32) r->speed = SAVER_FRAME_ONE / 32;
 
     apply_ring_colour(r);
 }
 
 static void seed_all(void) {
-    for (int i = 0; i < PULSE_RING_COUNT; i++) mod.ring[i].active = 0;
+    for (int i = 0; i < PULSE_RING_COUNT; i++)
+        mod.ring[i].active = 0;
     spawn_ring();
     spawn_ring();
 }
 
 static void rebuild_grid(void) {
-    int shortest = mod.base.screen_w < mod.base.screen_h ? mod.base.screen_w : mod.base.screen_h;
+    const int shortest = mod.base.screen_w < mod.base.screen_h ? mod.base.screen_w : mod.base.screen_h;
     mod.cell = shortest / 36;
 
     if (mod.cell < PULSE_MIN_CELL) mod.cell = PULSE_MIN_CELL;
@@ -118,7 +118,7 @@ static void rebuild_grid(void) {
     if (mod.rows < 1) mod.rows = 1;
 
     free(mod.shimmer_phase);
-    size_t cell_total = (size_t) mod.cols * (size_t) mod.rows;
+    const size_t cell_total = (size_t) mod.cols * (size_t) mod.rows;
     mod.shimmer_phase = malloc(cell_total);
 
     if (mod.shimmer_phase) {
@@ -128,14 +128,16 @@ static void rebuild_grid(void) {
     }
 }
 
-static void on_speed_changed(void *user) { (void) user; }
+static void on_speed_changed(void *user) {
+    (void) user;
+}
 
 static void on_idle_enter(void *user) {
     (void) user;
     seed_all();
 }
 
-int pulse_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
+int pulse_init(const SDL_Renderer *renderer, const int screen_w, const int screen_h) {
     (void) renderer;
 
     saver_init_base(&mod.base, screen_w, screen_h, "Pulse Grid", 153, 255, 220, on_speed_changed, on_idle_enter, &mod);
@@ -146,19 +148,21 @@ int pulse_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     mod.last_spawn = SDL_GetTicks();
     mod.shimmer_clock = 0;
 
-    LOG_INFO("saver", "Pulse Grid Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)",
-             screen_w, screen_h, mod.cols, mod.rows, mod.cell, mod.base.speed);
+    LOG_INFO(
+        "saver", "Pulse Grid Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)", screen_w, screen_h, mod.cols,
+        mod.rows, mod.cell, mod.base.speed
+    );
     return 1;
 }
 
 void pulse_update(void) {
-    uint32_t now = SDL_GetTicks();
+    const uint32_t now = SDL_GetTicks();
     if (!saver_poll_idle(&mod.base, now)) {
         mod.last_spawn = now;
         return;
     }
 
-    uint32_t elapsed = now - mod.base.last_tick;
+    const uint32_t elapsed = now - mod.base.last_tick;
     if (!elapsed) return;
 
     mod.base.last_tick = now;
@@ -186,7 +190,7 @@ void pulse_update(void) {
     }
 }
 
-static inline int tri256(int v) {
+static int tri256(int v) {
     v &= 511;
     return v < 256 ? v : 511 - v;
 }
@@ -196,20 +200,20 @@ void pulse_render(SDL_Renderer *renderer) {
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    int half_cell = mod.cell / 2;
+    const int half_cell = mod.cell / 2;
     int ring_width = mod.cell * 2;
     if (ring_width < 1) ring_width = 1;
 
-    int shimmer_t = (mod.shimmer_clock / 12) & 511; /* slow drift */
+    const int shimmer_t = mod.shimmer_clock / 12 & 511; /* slow drift */
     if (mod.shimmer_phase) {
         for (int gy = 0; gy < mod.rows; gy++) {
-            int y = gy * mod.cell;
+            const int y = gy * mod.cell;
             for (int gx = 0; gx < mod.cols; gx++) {
-                int x = gx * mod.cell;
+                const int x = gx * mod.cell;
 
-                int phase = mod.shimmer_phase[gy * mod.cols + gx];
-                int wave = tri256((shimmer_t + phase * 2));
-                int alpha = 4 + (wave * 14) / 256;
+                const int phase = mod.shimmer_phase[gy * mod.cols + gx];
+                const int wave = tri256(shimmer_t + phase * 2);
+                const int alpha = 4 + wave * 14 / 256;
 
                 int inset = mod.cell / 5;
                 if (inset < 1) inset = 1;
@@ -219,7 +223,9 @@ void pulse_render(SDL_Renderer *renderer) {
                 if (rect.w < 1) rect.w = 1;
                 if (rect.h < 1) rect.h = 1;
 
-                SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, (uint8_t) alpha);
+                SDL_SetRenderDrawColor(
+                    renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, (uint8_t) alpha
+                );
                 SDL_RenderFillRect(renderer, &rect);
             }
         }
@@ -229,13 +235,13 @@ void pulse_render(SDL_Renderer *renderer) {
         const ring_t *r = &mod.ring[i];
         if (!r->active) continue;
 
-        int radius = r->radius >> SAVER_FRAME_SHF;
-        int outer = radius + ring_width;
+        const int radius = r->radius >> SAVER_FRAME_SHF;
+        const int outer = radius + ring_width;
 
-        int x0 = r->origin_x - outer;
-        int y0 = r->origin_y - outer;
-        int x1 = r->origin_x + outer;
-        int y1 = r->origin_y + outer;
+        const int x0 = r->origin_x - outer;
+        const int y0 = r->origin_y - outer;
+        const int x1 = r->origin_x + outer;
+        const int y1 = r->origin_y + outer;
 
         int gx0 = x0 / mod.cell;
         if (gx0 < 0) gx0 = 0;
@@ -251,28 +257,28 @@ void pulse_render(SDL_Renderer *renderer) {
 
         if (gx1 < gx0 || gy1 < gy0) continue;
 
-        int outer_sq = outer * outer;
+        const int outer_sq = outer * outer;
 
         for (int gy = gy0; gy <= gy1; gy++) {
-            int cy = gy * mod.cell + half_cell;
-            int dy = cy - r->origin_y;
-            int dy_sq = dy * dy;
+            const int cy = gy * mod.cell + half_cell;
+            const int dy = cy - r->origin_y;
+            const int dy_sq = dy * dy;
             if (dy_sq > outer_sq) continue;
 
             for (int gx = gx0; gx <= gx1; gx++) {
-                int cx = gx * mod.cell + half_cell;
-                int dx = cx - r->origin_x;
+                const int cx = gx * mod.cell + half_cell;
+                const int dx = cx - r->origin_x;
                 if (dx * dx + dy_sq > outer_sq) continue;
 
-                int dist = approx_distance(cx, cy, r->origin_x, r->origin_y);
-                int delta = saver_int_abs(dist - radius);
+                const int dist = approx_distance(cx, cy, r->origin_x, r->origin_y);
+                const int delta = saver_int_abs(dist - radius);
                 if (delta > ring_width) continue;
 
-                int hit = 255 - ((delta * 255) / ring_width);
+                const int hit = 255 - delta * 255 / ring_width;
                 if (hit < 1) continue;
 
-                int x = gx * mod.cell;
-                int y = gy * mod.cell;
+                const int x = gx * mod.cell;
+                const int y = gy * mod.cell;
 
                 int inset = mod.cell / 5;
                 if (inset < 1) inset = 1;

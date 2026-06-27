@@ -39,13 +39,9 @@ typedef struct {
 static blockfall_module_t mod = {0};
 
 static const uint16_t shape_table[BLOCKFALL_SHAPE_COUNT][4] = {
-        {0x0F00, 0x2222, 0x00F0, 0x4444},
-        {0x6600, 0x6600, 0x6600, 0x6600},
-        {0x0E40, 0x4C40, 0x4E00, 0x4640},
-        {0x06C0, 0x4620, 0x06C0, 0x4620},
-        {0x0C60, 0x2640, 0x0C60, 0x2640},
-        {0x08E0, 0x6440, 0x0E20, 0x44C0},
-        {0x02E0, 0x4460, 0x0E80, 0xC440},
+    {0x0F00, 0x2222, 0x00F0, 0x4444}, {0x6600, 0x6600, 0x6600, 0x6600}, {0x0E40, 0x4C40, 0x4E00, 0x4640},
+    {0x06C0, 0x4620, 0x06C0, 0x4620}, {0x0C60, 0x2640, 0x0C60, 0x2640}, {0x08E0, 0x6440, 0x0E20, 0x44C0},
+    {0x02E0, 0x4460, 0x0E80, 0xC440},
 };
 
 static void colour_for_id(int id, uint8_t *r, uint8_t *g, uint8_t *b) {
@@ -248,8 +244,10 @@ int blockfall_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
 
     mod.last_ai_tick = SDL_GetTicks();
 
-    LOG_INFO("saver", "Block Fall Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)",
-             screen_w, screen_h, mod.cols, mod.rows, mod.cell, mod.base.speed);
+    LOG_INFO(
+        "saver", "Block Fall Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)", screen_w, screen_h, mod.cols,
+        mod.rows, mod.cell, mod.base.speed
+    );
 
     return mod.base.enabled;
 }
@@ -267,8 +265,10 @@ void blockfall_update(void) {
 
     uint32_t ai_delay = 180;
 
-    if (mod.base.speed >= 240) ai_delay = 90;
-    else if (mod.base.speed >= 120) ai_delay = 130;
+    if (mod.base.speed >= 240)
+        ai_delay = 90;
+    else if (mod.base.speed >= 120)
+        ai_delay = 130;
 
     if (now - mod.last_ai_tick >= ai_delay) {
         ai_step();
@@ -335,7 +335,9 @@ void blockfall_render(SDL_Renderer *renderer) {
                 draw_cell(renderer, x, y, id, alpha);
             } else if (mod.cell >= 10) {
                 SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, 10);
-                SDL_Rect dot = {mod.board_x + x * mod.cell + mod.cell / 2, mod.board_y + y * mod.cell + mod.cell / 2, 1, 1};
+                SDL_Rect dot = {
+                    mod.board_x + x * mod.cell + mod.cell / 2, mod.board_y + y * mod.cell + mod.cell / 2, 1, 1
+                };
                 SDL_RenderFillRect(renderer, &dot);
             }
         }

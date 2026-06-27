@@ -1,10 +1,6 @@
 #pragma once
 
-typedef enum {
-    SCREENSHOT_AUTO = 0,
-    SCREENSHOT_FBDEV,
-    SCREENSHOT_DRM
-} screenshot_mode;
+typedef enum { screenshot_auto = 0, screenshot_fbdev, screenshot_drm } screenshot_mode;
 
 typedef struct {
     int red;

@@ -41,29 +41,13 @@ int battery_disabled_gles = 0;
 gl_vtx_t vtx_battery[4];
 int vtx_battery_valid = 0;
 
-struct flag_cache battery_enable_cache = {
-        .path  = BATTERY_DETECT,
-        .mtime = 0,
-        .value = 0
-};
+struct flag_cache battery_enable_cache = {.path = BATTERY_DETECT, .mtime = 0, .value = 0};
 
-struct alpha_cache battery_alpha_cache = {
-        .path  = BATTERY_ALPHA,
-        .mtime = 0,
-        .value = 1.0f
-};
+struct alpha_cache battery_alpha_cache = {.path = BATTERY_ALPHA, .mtime = 0, .value = 1.0f};
 
-struct anchor_cache battery_anchor_cache = {
-        .path  = BATTERY_ANCHOR,
-        .mtime = 0,
-        .value = ANCHOR_TOP_LEFT
-};
+struct anchor_cache battery_anchor_cache = {.path = BATTERY_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_LEFT};
 
-struct scale_cache battery_scale_cache = {
-        .path  = BATTERY_SCALE,
-        .mtime = 0,
-        .value = SCALE_ORIGINAL
-};
+struct scale_cache battery_scale_cache = {.path = BATTERY_SCALE, .mtime = 0, .value = scale_original};
 
 static void disable_sdl(void) {
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -132,7 +116,7 @@ static void preload_battery_textures_sdl(SDL_Renderer *renderer) {
     if (battery_preload_sdl_done || battery_disabled_sdl || !renderer) return;
 
     char dim[32];
-    get_dimension(RENDER_SDL, renderer, dim, sizeof(dim));
+    get_dimension(render_sdl, renderer, dim, sizeof(dim));
     if (!dim[0]) {
         disable_sdl();
         return;
@@ -173,7 +157,7 @@ static void preload_battery_textures_gles(void) {
     if (battery_preload_gles_done || battery_disabled_gles || !render_window) return;
 
     char dim[32];
-    get_dimension(RENDER_GLES, render_window, dim, sizeof(dim));
+    get_dimension(render_gles, render_window, dim, sizeof(dim));
     if (!dim[0]) {
         disable_gles();
         return;

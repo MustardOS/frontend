@@ -69,7 +69,8 @@
 #include FT_OTSVG_H
 #include FT_COLOR_H
 
-typedef struct {
+typedef struct
+{
     plutosvg_document_t* document;
     const FT_Byte* data;
     FT_ULong length;
@@ -77,7 +78,8 @@ typedef struct {
 
 #define PLUTOSVG_FT_MAX_DOCS 16
 
-typedef struct {
+typedef struct
+{
     plutosvg_document_t* document;
     plutovg_matrix_t matrix;
     plutovg_rect_t extents;
@@ -96,7 +98,7 @@ static FT_Error plutosvg_ft_init(FT_Pointer* ft_state)
 static void plutosvg_ft_free(FT_Pointer* ft_state)
 {
     plutosvg_ft_state_t* state = (plutosvg_ft_state_t*)(*ft_state);
-    for(FT_ULong i = 0; i < state->num_entries; ++i)
+    for (FT_ULong i = 0; i < state->num_entries; ++i)
         plutosvg_document_destroy(state->entries[i].document);
     free(state);
 }
@@ -106,25 +108,27 @@ static void plutosvg_ft_free(FT_Pointer* ft_state)
 static bool plutosvg_ft_palette_func(void* closure, const char* name, int length, plutovg_color_t* color)
 {
     FT_Face ft_face = (FT_Face)(closure);
-    if(length < 5 || strncmp(name, "color", 5) != 0)
+    if (length < 5 || strncmp(name, "color", 5) != 0)
         return false;
     FT_Palette_Data ft_palette_data;
-    if(FT_Palette_Data_Get(ft_face, &ft_palette_data))
+    if (FT_Palette_Data_Get(ft_face, &ft_palette_data))
         return false;
     FT_Color* ft_palette = NULL;
-    if(FT_Palette_Select(ft_face, PLUTOSVG_FT_PALETTE_INDEX, &ft_palette)) {
+    if (FT_Palette_Select(ft_face, PLUTOSVG_FT_PALETTE_INDEX, &ft_palette))
+    {
         return false;
     }
 
     FT_Int index = 0;
-    for(int i = 5; i < length; ++i) {
+    for (int i = 5; i < length; ++i)
+    {
         const char ch = name[i];
-        if(ch < '0' || ch > '9')
+        if (ch < '0' || ch > '9')
             return false;
         index = index * 10 + ch - '0';
     }
 
-    if(index >= ft_palette_data.num_palette_entries)
+    if (index >= ft_palette_data.num_palette_entries)
         return false;
     FT_Color* ft_color = ft_palette + index;
     color->r = ft_color->red / 255.f;
@@ -137,7 +141,7 @@ static bool plutosvg_ft_palette_func(void* closure, const char* name, int length
 static FT_Error plutosvg_ft_render(FT_GlyphSlot ft_slot, FT_Pointer* ft_state)
 {
     plutosvg_ft_state_t* state = (plutosvg_ft_state_t*)(*ft_state);
-    if(state->document == NULL)
+    if (state->document == NULL)
         return FT_Err_Invalid_SVG_Document;
     plutovg_surface_t* surface = plutovg_surface_create_for_data(ft_slot->bitmap.buffer, ft_slot->bitmap.width, ft_slot->bitmap.rows, ft_slot->bitmap.pitch);
     plutovg_canvas_t* canvas = plutovg_canvas_create(surface);
@@ -148,7 +152,8 @@ static FT_Error plutosvg_ft_render(FT_GlyphSlot ft_slot, FT_Pointer* ft_state)
 
     char buffer[64];
     char* id = NULL;
-    if(start_glyph_id < end_glyph_id) {
+    if (start_glyph_id < end_glyph_id)
+    {
         snprintf(buffer, sizeof(buffer), "glyph%u", ft_slot->glyph_index);
         id = buffer;
     }
@@ -169,8 +174,10 @@ static FT_Error plutosvg_ft_render(FT_GlyphSlot ft_slot, FT_Pointer* ft_state)
 
 static plutosvg_document_t* plutosvg_ft_document_load(plutosvg_ft_state_t* state, const FT_Byte* data, FT_ULong length, FT_UShort units_per_EM)
 {
-    for(FT_ULong i = 0; i < state->num_entries; ++i) {
-        if(data == state->entries[i].data && length == state->entries[i].length) {
+    for (FT_ULong i = 0; i < state->num_entries; ++i)
+    {
+        if (data == state->entries[i].data && length == state->entries[i].length)
+        {
             plutosvg_ft_document_entry_t entry = state->entries[i];
             memmove(&state->entries[1], &state->entries[0], i * sizeof(plutosvg_ft_document_entry_t));
             state->entries[0] = entry;
@@ -179,9 +186,10 @@ static plutosvg_document_t* plutosvg_ft_document_load(plutosvg_ft_state_t* state
     }
 
     plutosvg_document_t* document = plutosvg_document_load_from_data((const char*)data, length, units_per_EM, units_per_EM, NULL, NULL);
-    if(document == NULL)
+    if (document == NULL)
         return NULL;
-    if(state->num_entries == PLUTOSVG_FT_MAX_DOCS) {
+    if (state->num_entries == PLUTOSVG_FT_MAX_DOCS)
+    {
         state->num_entries--;
         plutosvg_document_destroy(state->entries[state->num_entries].document);
     }
@@ -205,7 +213,8 @@ static FT_Error plutosvg_ft_preset_slot(FT_GlyphSlot ft_slot, FT_Bool ft_cache, 
     FT_UShort end_glyph_id = ft_document->end_glyph_id;
 
     plutosvg_document_t* document = plutosvg_ft_document_load(state, ft_document->svg_document, ft_document->svg_document_length, ft_document->units_per_EM);
-    if(document == NULL) {
+    if (document == NULL)
+    {
         return FT_Err_Invalid_SVG_Document;
     }
 
@@ -213,11 +222,11 @@ static FT_Error plutosvg_ft_preset_slot(FT_GlyphSlot ft_slot, FT_Bool ft_cache, 
     float document_height = plutosvg_document_get_height(document);
 
     plutovg_matrix_t transform = {
-         (float)ft_document->transform.xx / (1 << 16),
+        (float)ft_document->transform.xx / (1 << 16),
         -(float)ft_document->transform.xy / (1 << 16),
         -(float)ft_document->transform.yx / (1 << 16),
-         (float)ft_document->transform.yy / (1 << 16),
-         (float)ft_document->delta.x / 64 * document_width / ft_metrics.x_ppem,
+        (float)ft_document->transform.yy / (1 << 16),
+        (float)ft_document->delta.x / 64 * document_width / ft_metrics.x_ppem,
         -(float)ft_document->delta.y / 64 * document_height / ft_metrics.y_ppem
     };
 
@@ -230,19 +239,21 @@ static FT_Error plutosvg_ft_preset_slot(FT_GlyphSlot ft_slot, FT_Bool ft_cache, 
 
     char buffer[64];
     char* id = NULL;
-    if(start_glyph_id < end_glyph_id) {
+    if (start_glyph_id < end_glyph_id)
+    {
         snprintf(buffer, sizeof(buffer), "glyph%u", ft_slot->glyph_index);
         id = buffer;
     }
 
     plutovg_rect_t extents;
-    if(!plutosvg_document_extents(document, id, &extents)) {
+    if (!plutosvg_document_extents(document, id, &extents))
+    {
         return FT_Err_Invalid_SVG_Document;
     }
 
     plutovg_matrix_map_rect(&matrix, &extents, &extents);
     ft_slot->bitmap_left = (FT_Int)extents.x;
-    ft_slot->bitmap_top = (FT_Int)-extents.y;
+    ft_slot->bitmap_top = (FT_Int) - extents.y;
 
     ft_slot->bitmap.rows = (unsigned int)ceilf(extents.h);
     ft_slot->bitmap.width = (unsigned int)ceilf(extents.w);
@@ -265,9 +276,10 @@ static FT_Error plutosvg_ft_preset_slot(FT_GlyphSlot ft_slot, FT_Bool ft_cache, 
     ft_slot->metrics.horiBearingY = (FT_Pos)(horiBearingY * 64);
     ft_slot->metrics.vertBearingX = (FT_Pos)(vertBearingX * 64);
     ft_slot->metrics.vertBearingY = (FT_Pos)(vertBearingY * 64);
-    if(ft_slot->metrics.vertAdvance == 0)
+    if (ft_slot->metrics.vertAdvance == 0)
         ft_slot->metrics.vertAdvance = (FT_Pos)(metrics_height * 1.2f * 64);
-    if(ft_cache) {
+    if (ft_cache)
+    {
         state->document = document;
         state->extents = extents;
         state->matrix = matrix;

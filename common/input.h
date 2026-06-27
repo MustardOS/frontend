@@ -1,16 +1,15 @@
 #pragma once
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <linux/input.h>
 #include <SDL2/SDL.h>
 
 #define BIT(n) (UINT64_C(1) << (n))
 
-#define NAV_NONE         ((mux_nav_type)0x00)
-#define NAV_DPAD         ((mux_nav_type)0x01)
-#define NAV_LEFT_STICK   ((mux_nav_type)0x02)
-#define NAV_RIGHT_STICK  ((mux_nav_type)0x04)
+#define NAV_NONE        ((mux_nav_type) 0x00)
+#define NAV_DPAD        ((mux_nav_type) 0x01)
+#define NAV_LEFT_STICK  ((mux_nav_type) 0x02)
+#define NAV_RIGHT_STICK ((mux_nav_type) 0x04)
 
 // Maximum number of combos allowed per input task.
 #define MUX_INPUT_COMBO_COUNT 32
@@ -18,63 +17,63 @@
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {
     // Gamepad buttons:
-    MUX_INPUT_A,
-    MUX_INPUT_B,
-    MUX_INPUT_C,
-    MUX_INPUT_X,
-    MUX_INPUT_Y,
-    MUX_INPUT_Z,
-    MUX_INPUT_L1,
-    MUX_INPUT_L2,
-    MUX_INPUT_L3,
-    MUX_INPUT_R1,
-    MUX_INPUT_R2,
-    MUX_INPUT_R3,
-    MUX_INPUT_SELECT,
-    MUX_INPUT_START,
-    MUX_INPUT_SWITCH,
+    mux_input_a,
+    mux_input_b,
+    mux_input_c,
+    mux_input_x,
+    mux_input_y,
+    mux_input_z,
+    mux_input_l1,
+    mux_input_l2,
+    mux_input_l3,
+    mux_input_r1,
+    mux_input_r2,
+    mux_input_r3,
+    mux_input_select,
+    mux_input_start,
+    mux_input_switch,
 
     // D-pad:
-    MUX_INPUT_DPAD_UP,
-    MUX_INPUT_DPAD_DOWN,
-    MUX_INPUT_DPAD_LEFT,
-    MUX_INPUT_DPAD_RIGHT,
+    mux_input_dpad_up,
+    mux_input_dpad_down,
+    mux_input_dpad_left,
+    mux_input_dpad_right,
 
     // Left stick:
-    MUX_INPUT_LS_UP,
-    MUX_INPUT_LS_DOWN,
-    MUX_INPUT_LS_LEFT,
-    MUX_INPUT_LS_RIGHT,
+    mux_input_ls_up,
+    mux_input_ls_down,
+    mux_input_ls_left,
+    mux_input_ls_right,
 
     // Right stick:
-    MUX_INPUT_RS_UP,
-    MUX_INPUT_RS_DOWN,
-    MUX_INPUT_RS_LEFT,
-    MUX_INPUT_RS_RIGHT,
+    mux_input_rs_up,
+    mux_input_rs_down,
+    mux_input_rs_left,
+    mux_input_rs_right,
 
     // Volume buttons:
-    MUX_INPUT_VOL_UP,
-    MUX_INPUT_VOL_DOWN,
+    mux_input_vol_up,
+    mux_input_vol_down,
 
     // Function buttons:
-    MUX_INPUT_MENU,
+    mux_input_menu,
 
     // System buttons:
-    MUX_INPUT_POWER_SHORT,
-    MUX_INPUT_POWER_LONG,
+    mux_input_power_short,
+    mux_input_power_long,
 
     // Lid (Hall Switch):
-    MUX_INPUT_LID_OPEN,
-    MUX_INPUT_LID_CLOSE,
+    mux_input_lid_open,
+    mux_input_lid_close,
 
-    MUX_INPUT_COUNT,
+    mux_input_count,
 } mux_input_type;
 
 // Actions that can be performed on an input: press and release, as well as hold.
 typedef enum {
-    MUX_INPUT_PRESS,
-    MUX_INPUT_HOLD,
-    MUX_INPUT_RELEASE,
+    mux_input_press,
+    mux_input_hold,
+    mux_input_release,
 } mux_input_action;
 
 typedef uint8_t mux_nav_type;
@@ -138,12 +137,12 @@ typedef struct {
     // Callback functions for inputs. Fired in sequence: one press, zero or more holds, one release.
     //
     // Handlers may be NULL, in which case that input will be ignored.
-    mux_input_handler press_handler[MUX_INPUT_COUNT];
-    mux_input_handler hold_handler[MUX_INPUT_COUNT];
-    mux_input_handler release_handler[MUX_INPUT_COUNT];
+    mux_input_handler press_handler[mux_input_count];
+    mux_input_handler hold_handler[mux_input_count];
+    mux_input_handler release_handler[mux_input_count];
 
     // Alt ("hold") modifier. By default the core treats hold_input (which defaults to
-    // MUX_INPUT_L2 when left as 0) as a modifier rather than an ordinary input: its raw
+    // mux_input_l2 when left as 0) as a modifier rather than an ordinary input: its raw
     // pressed state is sampled at the start of every poll cycle, before any other input is
     // dispatched, so timing and ordering are deterministic regardless of which buttons are
     // pressed together. While the modifier is held the global hold_call is set and every
@@ -154,9 +153,9 @@ typedef struct {
     // Set hold_disabled to keep the modifier as an ordinary input.
     int hold_disabled;
     mux_input_type hold_input;
-    mux_input_handler alt_press_handler[MUX_INPUT_COUNT];
-    mux_input_handler alt_hold_handler[MUX_INPUT_COUNT];
-    mux_input_handler alt_release_handler[MUX_INPUT_COUNT];
+    mux_input_handler alt_press_handler[mux_input_count];
+    mux_input_handler alt_hold_handler[mux_input_count];
+    mux_input_handler alt_release_handler[mux_input_count];
 
     mux_input_generic_handler input_handler;
     mux_input_combo_handler combo_handler;

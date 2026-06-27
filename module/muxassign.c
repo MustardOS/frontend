@@ -8,7 +8,7 @@ static char rom_system[PATH_MAX];
 
 static int is_dir = 0;
 
-static lv_obj_t *ui_lblCoreDownloader;
+static lv_obj_t *ui_lbl_core_downloader;
 
 static int find_assigned_system(char *out_system) {
     // File Spec CFG: line 3 = sys
@@ -33,14 +33,14 @@ static int find_system_item_index(const char *system_name) {
     content_item *tmp_items = NULL;
     size_t tmp_count = 0;
 
-    if (device.BOARD.HASNETWORK) add_item(&tmp_items, &tmp_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
+    if (device.board.has_network)
+        add_item(&tmp_items, &tmp_count, lang.muxassign.core_down, lang.muxassign.core_down, "", menu);
 
     DIR *ad = opendir(STORE_LOC_ASIN);
     if (ad) {
         struct dirent *af;
         while ((af = readdir(ad))) {
-            if (af->d_type == DT_DIR &&
-                strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
+            if (af->d_type == DT_DIR && strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
                 add_item(&tmp_items, &tmp_count, af->d_name, af->d_name, "", FOLDER);
             }
         }
@@ -59,7 +59,7 @@ static int find_system_item_index(const char *system_name) {
 static int find_core_item_index(const char *system) {
     const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
     const char *dir_core = get_content_line(rom_dir, NULL, "cfg", 1);
-    const char *target = (file_core && *file_core) ? file_core : dir_core;
+    const char *target = file_core && *file_core ? file_core : dir_core;
 
     if (!target || !*target) return 0;
 
@@ -72,7 +72,7 @@ static int find_core_item_index(const char *system) {
     mini_t *global_config = mini_load(global_assign);
 
     const char *default_assign = get_ini_string(global_config, "global", "default", "none");
-    int has_default = strcmp(default_assign, "none") != 0;
+    const int has_default = strcmp(default_assign, "none") != 0;
 
     mini_free(global_config);
 
@@ -106,7 +106,8 @@ static int find_core_item_index(const char *system) {
 
         mini_free(core_config);
 
-        if (strcmp(assign_core, "none") != 0) add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, ITEM);
+        if (strcmp(assign_core, "none") != 0)
+            add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, ITEM);
     }
     closedir(ad);
 
@@ -120,19 +121,19 @@ static int find_core_item_index(const char *system) {
 }
 
 static void show_help(void) {
-    show_info_box(lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP, 0);
+    show_info_box(lang.muxassign.title, lang.muxassign.help, 0);
 }
 
 static void create_system_items(void) {
-    if (device.BOARD.HASNETWORK) add_item(&items, &item_count, lang.MUXASSIGN.CORE_DOWN, lang.MUXASSIGN.CORE_DOWN, "", MENU);
+    if (device.board.has_network)
+        add_item(&items, &item_count, lang.muxassign.core_down, lang.muxassign.core_down, "", menu);
 
-    DIR *ad;
     struct dirent *af;
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN);
 
-    ad = opendir(assign_dir);
+    DIR *ad = opendir(assign_dir);
     if (!ad) return;
 
     while ((af = readdir(ad))) {
@@ -149,39 +150,39 @@ static void create_system_items(void) {
     reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
-        ui_count++;
+        ui_count_static++;
 
-        lv_obj_t *ui_pnlSystem = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlSystem);
+        lv_obj_t *ui_pnl_system = lv_obj_create(ui_pnl_content);
+        apply_theme_list_panel(ui_pnl_system);
 
-        lv_obj_t *ui_lblSystemItem = lv_label_create(ui_pnlSystem);
-        apply_theme_list_item(&theme, ui_lblSystemItem, items[i].name);
-        lv_obj_set_user_data(ui_lblSystemItem, items[i].name);
+        lv_obj_t *ui_lbl_system_item = lv_label_create(ui_pnl_system);
+        apply_theme_list_item(&theme, ui_lbl_system_item, items[i].name);
+        lv_obj_set_user_data(ui_lbl_system_item, items[i].name);
 
-        lv_obj_t *ui_lblSystemItemGlyph = lv_img_create(ui_pnlSystem);
-        apply_theme_list_glyph(&theme, ui_lblSystemItemGlyph, mux_module,
-                               items[i].content_type == MENU ? "download" : "system");
+        lv_obj_t *ui_lbl_system_item_glyph = lv_img_create(ui_pnl_system);
+        apply_theme_list_glyph(
+            &theme, ui_lbl_system_item_glyph, mux_module, items[i].content_type == menu ? "download" : "system"
+        );
 
-        lv_group_add_obj(ui_group, ui_lblSystemItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblSystemItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlSystem);
+        lv_group_add_obj(ui_group, ui_lbl_system_item);
+        lv_group_add_obj(ui_group_glyph, ui_lbl_system_item_glyph);
+        lv_group_add_obj(ui_group_panel, ui_pnl_system);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblSystemItem, ui_lblSystemItemGlyph, items[i].name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblSystemItem);
+        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_system_item, ui_lbl_system_item_glyph, items[i].name);
+        apply_text_long_dot(&theme, ui_lbl_system_item);
 
-        if (items[i].content_type == MENU) ui_lblCoreDownloader = ui_lblSystemItem;
+        if (items[i].content_type == menu) ui_lbl_core_downloader = ui_lbl_system_item;
     }
 
-    if (ui_count > 0) {
-        lv_obj_update_layout(ui_pnlContent);
+    if (ui_count_static > 0) {
+        lv_obj_update_layout(ui_pnl_content);
         free_items(&items, &item_count);
     }
 }
 
 static void create_core_items(const char *target) {
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s",
-             target);
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", target);
 
     char global_assign[FILENAME_MAX];
     snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
@@ -193,10 +194,9 @@ static void create_core_items(const char *target) {
 
     if (strcmp(default_assign, "none") == 0) return;
 
-    DIR *ad;
     struct dirent *af;
 
-    ad = opendir(assign_dir);
+    DIR *ad = opendir(assign_dir);
     if (!ad) return;
 
     while ((af = readdir(ad))) {
@@ -213,10 +213,14 @@ static void create_core_items(const char *target) {
                 mini_t *core_config = mini_load(core_file);
 
                 char assign_name[FILENAME_MAX];
-                snprintf(assign_name, sizeof(assign_name), "%s", get_ini_string(core_config, af->d_name, "name", "none"));
+                snprintf(
+                    assign_name, sizeof(assign_name), "%s", get_ini_string(core_config, af->d_name, "name", "none")
+                );
 
                 char assign_core[FILENAME_MAX];
-                snprintf(assign_core, sizeof(assign_core), "%s", get_ini_string(core_config, af->d_name, "core", "none"));
+                snprintf(
+                    assign_core, sizeof(assign_core), "%s", get_ini_string(core_config, af->d_name, "core", "none")
+                );
 
                 mini_free(core_config);
 
@@ -233,7 +237,7 @@ static void create_core_items(const char *target) {
     reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
-        ui_count++;
+        ui_count_static++;
 
         const char *directory_core = get_content_line(rom_dir, NULL, "cfg", 1);
         const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
@@ -241,38 +245,37 @@ static void create_core_items(const char *target) {
 
         char display_name[MAX_BUFFER_SIZE];
         if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, items[i].extra_data) == 0) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.MUXASSIGN.FILE);
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.muxassign.file);
         } else if (strcasecmp(directory_core, items[i].extra_data) == 0) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.MUXASSIGN.DIR);
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.muxassign.dir);
         } else {
             snprintf(display_name, sizeof(display_name), "%s", core_name);
         }
 
-        lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlCore);
+        lv_obj_t *ui_pnl_core = lv_obj_create(ui_pnl_content);
+        apply_theme_list_panel(ui_pnl_core);
 
-        lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-        apply_theme_list_item(&theme, ui_lblCoreItem, display_name);
-        lv_obj_set_user_data(ui_lblCoreItem, strdup(items[i].name));
+        lv_obj_t *ui_lbl_core_item = lv_label_create(ui_pnl_core);
+        apply_theme_list_item(&theme, ui_lbl_core_item, display_name);
+        lv_obj_set_user_data(ui_lbl_core_item, strdup(items[i].name));
 
-        lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-        char *glyph = strcasecmp(items[i].name, default_assign) == 0 ? "default" : "core";
-        apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
+        lv_obj_t *ui_lbl_core_item_glyph = lv_img_create(ui_pnl_core);
+        const char *glyph = strcasecmp(items[i].name, default_assign) == 0 ? "default" : "core";
+        apply_theme_list_glyph(&theme, ui_lbl_core_item_glyph, mux_module, glyph);
 
-        lv_group_add_obj(ui_group, ui_lblCoreItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlCore);
+        lv_group_add_obj(ui_group, ui_lbl_core_item);
+        lv_group_add_obj(ui_group_glyph, ui_lbl_core_item_glyph);
+        lv_group_add_obj(ui_group_panel, ui_pnl_core);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, display_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem);
+        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_core_item, ui_lbl_core_item_glyph, display_name);
+        apply_text_long_dot(&theme, ui_lbl_core_item);
     }
 
-    if (ui_count > 0) {
-        lv_obj_update_layout(ui_pnlContent);
+    if (ui_count_static > 0) {
+        lv_obj_update_layout(ui_pnl_content);
         free_items(&items, &item_count);
     }
 }
-
 
 static void load_return_module() {
     if (file_exist(MUOS_ASS_FROM)) {
@@ -291,7 +294,7 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     if (strcasecmp(rom_system, "none") == 0) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
@@ -309,7 +312,7 @@ static void handle_b(void) {
 
 static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "%s", log_msg);
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     char *item_data = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     char *selected_item = str_tolower(item_data);
@@ -333,7 +336,9 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     if (strcmp(use_local_catalogue, "none") != 0) {
         snprintf(core_catalogue, sizeof(core_catalogue), "%s", use_local_catalogue);
     } else {
-        snprintf(core_catalogue, sizeof(core_catalogue), "%s", get_ini_string(global_ini, "global", "catalogue", "none"));
+        snprintf(
+            core_catalogue, sizeof(core_catalogue), "%s", get_ini_string(global_ini, "global", "catalogue", "none")
+        );
     }
     LOG_INFO(mux_module, "Content Core Catalogue: %s", core_catalogue);
 
@@ -342,7 +347,10 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     if (strcmp(use_local_governor, "none") != 0) {
         snprintf(core_governor, sizeof(core_governor), "%s", use_local_governor);
     } else {
-        snprintf(core_governor, sizeof(core_governor), "%s", get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+        snprintf(
+            core_governor, sizeof(core_governor), "%s",
+            get_ini_string(global_ini, "global", "governor", device.cpu.dflt)
+        );
     }
     LOG_INFO(mux_module, "Content Core Governor: %s", core_governor);
 
@@ -360,7 +368,9 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     if (strcmp(use_local_retroarch, "false") != 0) {
         snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
     } else {
-        snprintf(core_retroarch, sizeof(core_retroarch), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
+        snprintf(
+            core_retroarch, sizeof(core_retroarch), "%s", get_ini_string(global_ini, "global", "retroarch", "false")
+        );
     }
     LOG_INFO(mux_module, "Content Core RetroArch Config: %s", core_retroarch);
 
@@ -373,8 +383,10 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     snprintf(core_launch, sizeof(core_launch), "%s", get_ini_string(local_ini, selected_item, "core", "none"));
     LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch);
 
-    create_core_assignment(selected_item, rom_dir, core_launch, rom_system, core_catalogue, rom_name,
-                           core_governor, core_control, core_retroarch, core_lookup, assignment_mode);
+    create_core_assignment(
+        selected_item, rom_dir, core_launch, rom_system, core_catalogue, rom_name, core_governor, core_control,
+        core_retroarch, core_lookup, assignment_mode
+    );
 
     mini_free(global_ini);
     mini_free(local_ini);
@@ -385,19 +397,19 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblCoreDownloader) {
+    if (lv_group_get_focused(ui_group) == ui_lbl_core_downloader) {
         if (is_network_connected()) {
-            play_sound(SND_CONFIRM);
+            play_sound(snd_confirm);
             load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
             load_mux("coredown");
         } else {
-            play_sound(SND_ERROR);
-            toast_message(lang.GENERIC.NEED_CONNECT, MEDIUM);
+            play_sound(snd_error);
+            toast_message(lang.generic.need_connect, tst_wait_m);
             return;
         }
     } else {
         if (strcasecmp(rom_system, "none") == 0) {
-            play_sound(SND_CONFIRM);
+            play_sound(snd_confirm);
             load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
         } else {
             if (is_dir) return;
@@ -430,9 +442,9 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
@@ -443,12 +455,12 @@ static void init_elements(void) {
     int i = 0;
 
     if (!is_dir) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.SELECT, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.select, 1};
     }
 
-    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
-    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b_glyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b, lang.generic.back, 0};
     nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
 
     setup_nav(nav_items);
@@ -457,15 +469,15 @@ static void init_elements(void) {
         i = 0;
 
         if (!is_dir) {
-            nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.CONTENT, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
         }
-        nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
 
         if (!at_base(rom_dir, MAIN_ROM_DIR)) {
-            nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
         }
 
         nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
@@ -501,12 +513,12 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXASSIGN.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxassign.title);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
     init_fonts();
 
     int ass_index = 0;
@@ -542,48 +554,51 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
 
     init_elements();
 
-    if (ui_count > 0) {
+    if (ui_count_static > 0) {
         if (strcasecmp(rom_system, "none") == 0) {
-            LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s");
+            LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         } else {
-            LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s");
+            LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         }
 
-        if (ui_count > 0 && ass_index > -1 && ass_index <= ui_count && current_item_index < ui_count) {
+        if (ui_count_static > 0 && ass_index > -1 && ass_index <= ui_count_static
+            && current_item_index < ui_count_static) {
             gen_step_movement(ass_index, +1, 1, 0, 1);
         }
     } else {
         LOG_ERROR(mux_module, "No Cores Detected - Check Directory!");
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
+        lv_label_set_text(ui_lbl_screen_message, lang.muxassign.none);
     }
 
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     nav_silent = 1;

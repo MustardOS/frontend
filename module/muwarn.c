@@ -1,8 +1,6 @@
 #include <math.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -44,15 +42,15 @@
 
 #define LANG_TITLE "MustardOS Disclaimer"
 
-#define LANG_BODY \
-    "MustardOS is built with respect for developers, artists, and " \
-    "content creators. The system and tools provided are intended for use " \
-    "with legally obtained files only.\n\n" \
-    "MustardOS does not condone, support, or facilitate the use of " \
-    "unauthorised content in any form. Sourcing, distributing, or using " \
-    "such content is solely the responsibility of the user and is done " \
-    "against the spirit of this open source and free to use project.\n\n" \
-    "By installing and using MustardOS, you agree to respect the work of " \
+#define LANG_BODY                                                                                                      \
+    "MustardOS is built with respect for developers, artists, and "                                                    \
+    "content creators. The system and tools provided are intended for use "                                            \
+    "with legally obtained files only.\n\n"                                                                            \
+    "MustardOS does not condone, support, or facilitate the use of "                                                   \
+    "unauthorised content in any form. Sourcing, distributing, or using "                                              \
+    "such content is solely the responsibility of the user and is done "                                               \
+    "against the spirit of this open source and free to use project.\n\n"                                              \
+    "By installing and using MustardOS, you agree to respect the work of "                                             \
     "those who make the content we all enjoy."
 
 static SDL_Window *g_window = NULL;
@@ -87,10 +85,10 @@ static int g_glow_x = 0, g_glow_y = 0, g_glow_w = 0, g_glow_h = 0;
 static int g_bar_x = 0, g_bar_y = 0, g_bar_w = 0, g_bar_h = 0;
 static int g_bar_radius = 0;
 
-static bool g_running = true;
+static int g_running = 1;
 static float g_elapsed = 0.0f;
 
-static int sx(int v) {
+static int sx(const int v) {
     return (int) lroundf((float) v * g_scale);
 }
 
@@ -99,7 +97,7 @@ static void die(const char *msg) {
     exit(1);
 }
 
-static float smoothstep01(float t) {
+static float smoothstep01(const float t) {
     if (t <= 0.0f) return 0.0f;
     if (t >= 1.0f) return 1.0f;
 
@@ -128,12 +126,12 @@ static void load_background(void) {
     LOG_INFO(mux_module, "no background image found at %s/warn.{png,jpg,jpeg}", MEDIA_DIR);
 }
 
-static void bg_render(Uint8 alpha) {
-    float img_w = (float) g_bg.w;
-    float img_h = (float) g_bg.h;
+static void bg_render(const Uint8 alpha) {
+    const float img_w = (float) g_bg.w;
+    const float img_h = (float) g_bg.h;
 
-    float screen_aspect = (float) g_screen_w / (float) g_screen_h;
-    float img_aspect = img_w / img_h;
+    const float screen_aspect = (float) g_screen_w / (float) g_screen_h;
+    const float img_aspect = img_w / img_h;
 
     float crop_w = img_w;
     float crop_h = img_h;
@@ -158,18 +156,18 @@ static void bg_render(Uint8 alpha) {
     src.x = (g_bg.w - src.w) / 2;
     src.y = (g_bg.h - src.h) / 2;
 
-    float t = smoothstep01(g_bg_kb_t);
+    const float t = smoothstep01(g_bg_kb_t);
 
-    float zoom = 1.0f + KB_ZOOM * t;
+    const float zoom = 1.0f + KB_ZOOM * t;
 
-    float dw = (float) g_screen_w * zoom;
-    float dh = (float) g_screen_h * zoom;
+    const float dw = (float) g_screen_w * zoom;
+    const float dh = (float) g_screen_h * zoom;
 
-    float slack_x = dw - (float) g_screen_w;
-    float slack_y = dh - (float) g_screen_h;
+    const float slack_x = dw - (float) g_screen_w;
+    const float slack_y = dh - (float) g_screen_h;
 
-    float pan_x = (t - 0.5f) * 2.0f * KB_PAN * slack_x * 0.5f;
-    float pan_y = (t - 0.5f) * 2.0f * KB_PAN * slack_y * 0.5f * 0.6f;
+    const float pan_x = (t - 0.5f) * 2.0f * KB_PAN * slack_x * 0.5f;
+    const float pan_y = (t - 0.5f) * 2.0f * KB_PAN * slack_y * 0.5f * 0.6f;
 
     SDL_FRect dst;
 
@@ -184,16 +182,16 @@ static void bg_render(Uint8 alpha) {
 }
 
 static int text_shadow_offset(void) {
-    int v = sx(1);
+    const int v = sx(1);
     return v < 1 ? 1 : v;
 }
 
-static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Color col) {
+static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, const SDL_Color col) {
     if (!*text) return NULL;
 
-    int offset = text_shadow_offset();
+    const int offset = text_shadow_offset();
 
-    SDL_Color shadow_col = {0, 0, 0, 255};
+    const SDL_Color shadow_col = {0, 0, 0, 255};
 
     SDL_Surface *shadow = TTF_RenderUTF8_Blended(font, text, shadow_col);
     if (!shadow) return NULL;
@@ -204,7 +202,8 @@ static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Co
         return NULL;
     }
 
-    SDL_Surface *out = SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_Surface *out =
+        SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
     if (!out) {
         SDL_FreeSurface(front);
         SDL_FreeSurface(shadow);
@@ -237,12 +236,13 @@ static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Co
     return out;
 }
 
-static SDL_Surface *render_text_wrapped_surface(TTF_Font *font, const char *text, SDL_Color col, int wrap_w) {
+static SDL_Surface *
+render_text_wrapped_surface(TTF_Font *font, const char *text, const SDL_Color col, const int wrap_w) {
     if (!*text) return NULL;
 
-    int offset = text_shadow_offset();
+    const int offset = text_shadow_offset();
 
-    SDL_Color shadow_col = {0, 0, 0, 255};
+    const SDL_Color shadow_col = {0, 0, 0, 255};
 
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
 
@@ -255,7 +255,8 @@ static SDL_Surface *render_text_wrapped_surface(TTF_Font *font, const char *text
         return NULL;
     }
 
-    SDL_Surface *out = SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_Surface *out =
+        SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
     if (!out) {
         SDL_FreeSurface(front);
         SDL_FreeSurface(shadow);
@@ -288,7 +289,7 @@ static SDL_Surface *render_text_wrapped_surface(TTF_Font *font, const char *text
     return out;
 }
 
-static SDL_Texture *render_text(TTF_Font *font, const char *text, SDL_Color col, int *out_w, int *out_h) {
+static SDL_Texture *render_text(TTF_Font *font, const char *text, const SDL_Color col, int *out_w, int *out_h) {
     SDL_Surface *surf = render_text_surface(font, text, col);
     if (!surf) return NULL;
 
@@ -301,7 +302,8 @@ static SDL_Texture *render_text(TTF_Font *font, const char *text, SDL_Color col,
     return t;
 }
 
-static SDL_Texture *render_text_wrapped(TTF_Font *font, const char *text, SDL_Color col, int wrap_w, int *out_w, int *out_h) {
+static SDL_Texture *
+render_text_wrapped(TTF_Font *font, const char *text, const SDL_Color col, const int wrap_w, int *out_w, int *out_h) {
     SDL_Surface *surf = render_text_wrapped_surface(font, text, col, wrap_w);
     if (!surf) return NULL;
 
@@ -339,26 +341,26 @@ static int layout_avail_h(void) {
 }
 
 static void build_textures(void) {
-    SDL_Color C_TITLE = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
-    SDL_Color C_BODY = {COL_BODY_R, COL_BODY_G, COL_BODY_B, 255};
+    const SDL_Color c_title = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
+    const SDL_Color c_body = {COL_BODY_R, COL_BODY_G, COL_BODY_B, 255};
 
-    int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
-    int wrap = g_screen_w - 2 * page_pad;
+    const int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
+    const int wrap = g_screen_w - 2 * page_pad;
 
-    g_tex_title = render_text(g_font_big, LANG_TITLE, C_TITLE, &g_tex_title_w, &g_tex_title_h);
+    g_tex_title = render_text(g_font_big, LANG_TITLE, c_title, &g_tex_title_w, &g_tex_title_h);
     if (g_tex_title && g_tex_title_w > wrap) {
         SDL_DestroyTexture(g_tex_title);
-        g_tex_title = render_text_wrapped(g_font_big, LANG_TITLE, C_TITLE, wrap, &g_tex_title_w, &g_tex_title_h);
+        g_tex_title = render_text_wrapped(g_font_big, LANG_TITLE, c_title, wrap, &g_tex_title_w, &g_tex_title_h);
     }
 
-    g_tex_body = render_text_wrapped(g_font_med, LANG_BODY, C_BODY, wrap, &g_tex_body_w, &g_tex_body_h);
+    g_tex_body = render_text_wrapped(g_font_med, LANG_BODY, c_body, wrap, &g_tex_body_w, &g_tex_body_h);
 
     if (!g_tex_title || !g_tex_body) die("build_textures");
 
     int body_pt = (int) lroundf((float) FONT_MED_PT * g_font_scale);
     int min_pt = (int) lroundf((float) FONT_MED_MIN_PT * g_font_scale);
     if (min_pt < FONT_MED_MIN_PT) min_pt = FONT_MED_MIN_PT;
-    int avail_h = layout_avail_h();
+    const int avail_h = layout_avail_h();
 
     while (body_pt > min_pt) {
         if (g_tex_body_h + layout_chrome_h() <= avail_h) break;
@@ -370,23 +372,23 @@ static void build_textures(void) {
         if (!g_font_med) die("TTF_OpenFont (shrink)");
 
         SDL_DestroyTexture(g_tex_body);
-        g_tex_body = render_text_wrapped(g_font_med, LANG_BODY, C_BODY, wrap, &g_tex_body_w, &g_tex_body_h);
+        g_tex_body = render_text_wrapped(g_font_med, LANG_BODY, c_body, wrap, &g_tex_body_w, &g_tex_body_h);
         if (!g_tex_body) die("build_textures (shrink)");
     }
 }
 
 static void build_layout(void) {
-    int title_gap = layout_title_gap();
-    int bar_gap = layout_bar_gap();
+    const int title_gap = layout_title_gap();
+    const int bar_gap = layout_bar_gap();
 
     g_bar_h = layout_bar_h();
     g_bar_w = (int) ((float) g_screen_w * (1.0f - PAGE_PAD_FRAC * 2.0f) * 0.70f);
     g_bar_radius = g_bar_h / 2;
 
-    int content_h = g_tex_title_h + title_gap + g_tex_body_h + bar_gap + g_bar_h;
+    const int content_h = g_tex_title_h + title_gap + g_tex_body_h + bar_gap + g_bar_h;
 
     int start_y = (g_screen_h - content_h) / 2;
-    int v_margin = layout_v_margin();
+    const int v_margin = layout_v_margin();
     if (start_y < v_margin) start_y = v_margin;
 
     g_title_x = (g_screen_w - g_tex_title_w) / 2;
@@ -409,26 +411,27 @@ static void build_layout(void) {
     g_bar_y = g_body_y + g_tex_body_h + bar_gap;
 }
 
-static void fill_rounded_rect(SDL_Rect r, int radius, Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+static void
+fill_rounded_rect(const SDL_Rect r, const int radius, const Uint8 cr, const Uint8 cg, const Uint8 cb, const Uint8 ca) {
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(g_renderer, R, G, B, A);
+    SDL_SetRenderDrawColor(g_renderer, cr, cg, cb, ca);
 
     if (radius <= 0 || radius * 2 > r.w || radius * 2 > r.h) {
         SDL_RenderFillRect(g_renderer, &r);
         return;
     }
 
-    SDL_Rect centre = {r.x + radius, r.y, r.w - radius * 2, r.h};
-    SDL_Rect left = {r.x, r.y + radius, radius, r.h - radius * 2};
-    SDL_Rect right = {r.x + r.w - radius, r.y + radius, radius, r.h - radius * 2};
+    const SDL_Rect centre = {r.x + radius, r.y, r.w - radius * 2, r.h};
+    const SDL_Rect left = {r.x, r.y + radius, radius, r.h - radius * 2};
+    const SDL_Rect right = {r.x + r.w - radius, r.y + radius, radius, r.h - radius * 2};
     SDL_RenderFillRect(g_renderer, &centre);
     SDL_RenderFillRect(g_renderer, &left);
     SDL_RenderFillRect(g_renderer, &right);
 
     for (int cy = 0; cy < radius; cy++) {
         for (int cx = 0; cx < radius; cx++) {
-            int dx = radius - cx - 1;
-            int dy = radius - cy - 1;
+            const int dx = radius - cx - 1;
+            const int dy = radius - cy - 1;
             if (dx * dx + dy * dy <= radius * radius) {
                 SDL_RenderDrawPoint(g_renderer, r.x + cx, r.y + cy);
                 SDL_RenderDrawPoint(g_renderer, r.x + r.w - 1 - cx, r.y + cy);
@@ -439,7 +442,7 @@ static void fill_rounded_rect(SDL_Rect r, int radius, Uint8 R, Uint8 G, Uint8 B,
     }
 }
 
-static void render_background(float dt, Uint8 master_alpha) {
+static void render_background(const float dt, const Uint8 master_alpha) {
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
     SDL_RenderClear(g_renderer);
 
@@ -449,56 +452,60 @@ static void render_background(float dt, Uint8 master_alpha) {
     if (g_bg.tex) {
         bg_render(master_alpha);
 
-        Uint8 dim_a = (Uint8) lroundf((float) BG_DARKEN_ALPHA * ((float) master_alpha / 255.0f));
+        const Uint8 dim_a = (Uint8) lroundf((float) BG_DARKEN_ALPHA * ((float) master_alpha / 255.0f));
         SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, dim_a);
-        SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
+        const SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
         SDL_RenderFillRect(g_renderer, &full);
     }
 }
 
-static void render_content(Uint8 master_alpha, float bar_pct) {
+static void render_content(const Uint8 master_alpha, const float bar_pct) {
     SDL_SetTextureAlphaMod(g_tex_title, master_alpha);
-    SDL_Rect title_dst = {g_title_x, g_title_y, g_tex_title_w, g_tex_title_h};
+    const SDL_Rect title_dst = {g_title_x, g_title_y, g_tex_title_w, g_tex_title_h};
     SDL_RenderCopy(g_renderer, g_tex_title, NULL, &title_dst);
 
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(g_renderer, COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, (Uint8) lroundf((float) master_alpha * 0.20f));
-    SDL_Rect glow = {g_glow_x, g_glow_y, g_glow_w, g_glow_h};
+    SDL_SetRenderDrawColor(
+        g_renderer, COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, (Uint8) lroundf((float) master_alpha * 0.20f)
+    );
+    const SDL_Rect glow = {g_glow_x, g_glow_y, g_glow_w, g_glow_h};
     SDL_RenderFillRect(g_renderer, &glow);
 
     SDL_SetRenderDrawColor(g_renderer, COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, master_alpha);
-    SDL_Rect line = {g_div_x, g_div_y, g_div_w, g_div_h};
+    const SDL_Rect line = {g_div_x, g_div_y, g_div_w, g_div_h};
     SDL_RenderFillRect(g_renderer, &line);
 
     SDL_SetTextureAlphaMod(g_tex_body, master_alpha);
-    SDL_Rect body_dst = {g_body_x, g_body_y, g_tex_body_w, g_tex_body_h};
+    const SDL_Rect body_dst = {g_body_x, g_body_y, g_tex_body_w, g_tex_body_h};
     SDL_RenderCopy(g_renderer, g_tex_body, NULL, &body_dst);
 
-    SDL_Rect track = {g_bar_x, g_bar_y, g_bar_w, g_bar_h};
+    const SDL_Rect track = {g_bar_x, g_bar_y, g_bar_w, g_bar_h};
     fill_rounded_rect(track, g_bar_radius, 0x22, 0x22, 0x22, (Uint8) lroundf((float) master_alpha * 0.55f));
 
     int fill_w = (int) lroundf((float) g_bar_w * bar_pct);
     if (fill_w > 0) {
         if (fill_w < g_bar_radius * 2) fill_w = g_bar_radius * 2;
-        SDL_Rect fill = {g_bar_x, g_bar_y, fill_w, g_bar_h};
+        const SDL_Rect fill = {g_bar_x, g_bar_y, fill_w, g_bar_h};
         fill_rounded_rect(fill, g_bar_radius, 0xFF, 0xFF, 0xFF, master_alpha);
     }
 }
 
-static void handle_event(SDL_Event *ev) {
-    if (ev->type == SDL_QUIT) g_running = false;
+static void handle_event(const SDL_Event *ev) {
+    if (ev->type == SDL_QUIT) g_running = 0;
 }
 
 static void init_sdl(void) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) die("SDL_Init");
     if (TTF_Init() < 0) die("TTF_Init");
 
-    int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
+    const int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
     if ((IMG_Init(img_flags) & img_flags) != img_flags) LOG_WARN(mux_module, "IMG_Init partial: %s", IMG_GetError());
 
-    g_window = SDL_CreateWindow(mux_module, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-                                SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS);
+    g_window = SDL_CreateWindow(
+        mux_module, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
+        SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS
+    );
 
     if (!g_window) die("SDL_CreateWindow");
 
@@ -511,8 +518,8 @@ static void init_sdl(void) {
     SDL_GetRendererOutputSize(g_renderer, &g_screen_w, &g_screen_h);
     g_scale = (float) g_screen_h / (float) REF_H;
 
-    float scale_w = (float) g_screen_w / (float) REF_W;
-    float scale_h = (float) g_screen_h / (float) REF_H;
+    const float scale_w = (float) g_screen_w / (float) REF_W;
+    const float scale_h = (float) g_screen_h / (float) REF_H;
     g_font_scale = scale_w < scale_h ? scale_w : scale_h;
 
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
@@ -520,8 +527,8 @@ static void init_sdl(void) {
 }
 
 static void load_fonts(void) {
-    int s_big = (int) lroundf((float) FONT_BIG_PT * g_font_scale);
-    int s_med = (int) lroundf((float) FONT_MED_PT * g_font_scale);
+    const int s_big = (int) lroundf((float) FONT_BIG_PT * g_font_scale);
+    const int s_med = (int) lroundf((float) FONT_MED_PT * g_font_scale);
 
     g_font_big = TTF_OpenFont(FONT_FILE, s_big);
     g_font_med = TTF_OpenFont(FONT_FILE, s_med);
@@ -531,15 +538,16 @@ static void load_fonts(void) {
 
 static void main_loop(void) {
     Uint64 prev = SDL_GetPerformanceCounter();
-    double freq = (double) SDL_GetPerformanceFrequency();
+    const double freq = (double) SDL_GetPerformanceFrequency();
 
-    while (true) {
+    while (1) {
         SDL_Event ev;
-        while (SDL_PollEvent(&ev)) handle_event(&ev);
+        while (SDL_PollEvent(&ev))
+            handle_event(&ev);
 
         if (!g_running) break;
 
-        Uint64 now = SDL_GetPerformanceCounter();
+        const Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float) ((double) (now - prev) / freq);
         prev = now;
         if (dt > 0.1f) dt = 0.1f;
@@ -553,11 +561,11 @@ static void main_loop(void) {
         } else if (g_elapsed < WARN_FADE_IN_S + WARN_HOLD_S) {
             alpha_f = 1.0f;
         } else {
-            float fo = g_elapsed - WARN_FADE_IN_S - WARN_HOLD_S;
+            const float fo = g_elapsed - WARN_FADE_IN_S - WARN_HOLD_S;
             alpha_f = 1.0f - fo / WARN_FADE_OUT_S;
         }
         alpha_f = smoothstep01(alpha_f);
-        Uint8 master_alpha = (Uint8) lroundf(alpha_f * 255.0f);
+        const Uint8 master_alpha = (Uint8) lroundf(alpha_f * 255.0f);
 
         float bar_pct = 0.0f;
         if (g_elapsed >= WARN_FADE_IN_S) {

@@ -4,14 +4,10 @@
 
 int overlay_anchor_cached = -1;
 
-struct anchor_cache overlay_anchor_cache = {
-        .path  = OVERLAY_ANCHOR,
-        .mtime = 0,
-        .value = ANCHOR_TOP_LEFT
-};
+struct anchor_cache overlay_anchor_cache = {.path = OVERLAY_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_LEFT};
 
-static inline int clamp_anchor(int v) {
-    return (v >= 0 && v <= 8) ? v : ANCHOR_TOP_LEFT;
+static int clamp_anchor(const int v) {
+    return v >= 0 && v <= 8 ? v : ANCHOR_TOP_LEFT;
 }
 
 int get_anchor_cached(struct anchor_cache *cache) {
@@ -36,57 +32,48 @@ int get_anchor_cached(struct anchor_cache *cache) {
     return cache->value;
 }
 
-int get_anchor_rotate(int anchor, int rot) {
-    if (rot == ROTATE_0) return anchor;
+int get_anchor_rotate(const int anchor, const int rot) {
+    if (rot == rotate_0) return anchor;
 
     static const int map_90[] = {
-            [ANCHOR_TOP_LEFT]      = ANCHOR_TOP_RIGHT,
-            [ANCHOR_TOP_MIDDLE]    = ANCHOR_CENTRE_RIGHT,
-            [ANCHOR_TOP_RIGHT]     = ANCHOR_BOTTOM_RIGHT,
+        [ANCHOR_TOP_LEFT] = ANCHOR_TOP_RIGHT,         [ANCHOR_TOP_MIDDLE] = ANCHOR_CENTRE_RIGHT,
+        [ANCHOR_TOP_RIGHT] = ANCHOR_BOTTOM_RIGHT,
 
-            [ANCHOR_CENTRE_LEFT]   = ANCHOR_TOP_MIDDLE,
-            [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
-            [ANCHOR_CENTRE_RIGHT]  = ANCHOR_BOTTOM_MIDDLE,
+        [ANCHOR_CENTRE_LEFT] = ANCHOR_TOP_MIDDLE,     [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
+        [ANCHOR_CENTRE_RIGHT] = ANCHOR_BOTTOM_MIDDLE,
 
-            [ANCHOR_BOTTOM_LEFT]   = ANCHOR_TOP_LEFT,
-            [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_CENTRE_LEFT,
-            [ANCHOR_BOTTOM_RIGHT]  = ANCHOR_BOTTOM_LEFT,
+        [ANCHOR_BOTTOM_LEFT] = ANCHOR_TOP_LEFT,       [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_CENTRE_LEFT,
+        [ANCHOR_BOTTOM_RIGHT] = ANCHOR_BOTTOM_LEFT,
     };
 
     static const int map_180[] = {
-            [ANCHOR_TOP_LEFT]      = ANCHOR_BOTTOM_RIGHT,
-            [ANCHOR_TOP_MIDDLE]    = ANCHOR_BOTTOM_MIDDLE,
-            [ANCHOR_TOP_RIGHT]     = ANCHOR_BOTTOM_LEFT,
+        [ANCHOR_TOP_LEFT] = ANCHOR_BOTTOM_RIGHT,    [ANCHOR_TOP_MIDDLE] = ANCHOR_BOTTOM_MIDDLE,
+        [ANCHOR_TOP_RIGHT] = ANCHOR_BOTTOM_LEFT,
 
-            [ANCHOR_CENTRE_LEFT]   = ANCHOR_CENTRE_RIGHT,
-            [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
-            [ANCHOR_CENTRE_RIGHT]  = ANCHOR_CENTRE_LEFT,
+        [ANCHOR_CENTRE_LEFT] = ANCHOR_CENTRE_RIGHT, [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
+        [ANCHOR_CENTRE_RIGHT] = ANCHOR_CENTRE_LEFT,
 
-            [ANCHOR_BOTTOM_LEFT]   = ANCHOR_TOP_RIGHT,
-            [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_TOP_MIDDLE,
-            [ANCHOR_BOTTOM_RIGHT]  = ANCHOR_TOP_LEFT,
+        [ANCHOR_BOTTOM_LEFT] = ANCHOR_TOP_RIGHT,    [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_TOP_MIDDLE,
+        [ANCHOR_BOTTOM_RIGHT] = ANCHOR_TOP_LEFT,
     };
 
     static const int map_270[] = {
-            [ANCHOR_TOP_LEFT]      = ANCHOR_BOTTOM_LEFT,
-            [ANCHOR_TOP_MIDDLE]    = ANCHOR_CENTRE_LEFT,
-            [ANCHOR_TOP_RIGHT]     = ANCHOR_TOP_LEFT,
+        [ANCHOR_TOP_LEFT] = ANCHOR_BOTTOM_LEFT,      [ANCHOR_TOP_MIDDLE] = ANCHOR_CENTRE_LEFT,
+        [ANCHOR_TOP_RIGHT] = ANCHOR_TOP_LEFT,
 
-            [ANCHOR_CENTRE_LEFT]   = ANCHOR_BOTTOM_MIDDLE,
-            [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
-            [ANCHOR_CENTRE_RIGHT]  = ANCHOR_TOP_MIDDLE,
+        [ANCHOR_CENTRE_LEFT] = ANCHOR_BOTTOM_MIDDLE, [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
+        [ANCHOR_CENTRE_RIGHT] = ANCHOR_TOP_MIDDLE,
 
-            [ANCHOR_BOTTOM_LEFT]   = ANCHOR_BOTTOM_RIGHT,
-            [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_CENTRE_RIGHT,
-            [ANCHOR_BOTTOM_RIGHT]  = ANCHOR_TOP_RIGHT,
+        [ANCHOR_BOTTOM_LEFT] = ANCHOR_BOTTOM_RIGHT,  [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_CENTRE_RIGHT,
+        [ANCHOR_BOTTOM_RIGHT] = ANCHOR_TOP_RIGHT,
     };
 
     switch (rot) {
-        case ROTATE_90:
+        case rotate_90:
             return map_90[anchor];
-        case ROTATE_180:
+        case rotate_180:
             return map_180[anchor];
-        case ROTATE_270:
+        case rotate_270:
             return map_270[anchor];
         default:
             return anchor;

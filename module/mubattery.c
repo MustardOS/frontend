@@ -5,13 +5,13 @@
 
 static volatile int running = 1;
 
-static void handle_signal(int sig) {
+static void handle_signal(const int sig) {
     (void) sig;
     running = 0;
 }
 
 int main(void) {
-    struct timespec ts = {3, 0};
+    const struct timespec ts = {3, 0};
 
     signal(SIGTERM, handle_signal);
     signal(SIGINT, handle_signal);

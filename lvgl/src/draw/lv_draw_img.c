@@ -25,9 +25,8 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static lv_res_t /* LV_ATTRIBUTE_FAST_MEM */ decode_and_draw(lv_draw_ctx_t *draw_ctx,
-                                                            const lv_draw_img_dsc_t *draw_dsc,
-                                                            const lv_area_t *coords, const void *src);
+static lv_res_t /* LV_ATTRIBUTE_FAST_MEM */
+decode_and_draw(lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *draw_dsc, const lv_area_t *coords, const void *src);
 
 static void show_error(lv_draw_ctx_t *draw_ctx, const lv_area_t *coords, const char *msg);
 
@@ -59,9 +58,10 @@ int16_t g_glyph_shadow_y_offset_focus = 2;
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_glyph_shadow_set(int enabled,
-                         lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y,
-                         lv_color_t focus_colour, lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y) {
+void lv_glyph_shadow_set(
+    int enabled, lv_color_t def_colour, lv_opa_t def_alpha, int16_t def_x, int16_t def_y, lv_color_t focus_colour,
+    lv_opa_t focus_alpha, int16_t focus_x, int16_t focus_y
+) {
     g_glyph_shadow_enabled = enabled;
     g_glyph_shadow_colour_default = def_colour;
     g_glyph_shadow_alpha_default = def_alpha;
@@ -179,19 +179,19 @@ uint8_t lv_img_cf_get_px_size(lv_img_cf_t cf) {
 /**
  * Check if a color format is chroma keyed or not
  * @param cf a color format (`LV_IMG_CF_...`)
- * @return true: chroma keyed; false: not chroma keyed
+ * @return 1: chroma keyed; 0: not chroma keyed
  */
-bool lv_img_cf_is_chroma_keyed(lv_img_cf_t cf) {
-    bool is_chroma_keyed = false;
+int lv_img_cf_is_chroma_keyed(lv_img_cf_t cf) {
+    int is_chroma_keyed = 0;
 
     switch (cf) {
         case LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED:
         case LV_IMG_CF_RAW_CHROMA_KEYED:
-            is_chroma_keyed = true;
+            is_chroma_keyed = 1;
             break;
 
         default:
-            is_chroma_keyed = false;
+            is_chroma_keyed = 0;
             break;
     }
 
@@ -201,10 +201,10 @@ bool lv_img_cf_is_chroma_keyed(lv_img_cf_t cf) {
 /**
  * Check if a color format has alpha channel or not
  * @param cf a color format (`LV_IMG_CF_...`)
- * @return true: has alpha channel; false: doesn't have alpha channel
+ * @return 1: has alpha channel; 0: doesn't have alpha channel
  */
-bool lv_img_cf_has_alpha(lv_img_cf_t cf) {
-    bool has_alpha = false;
+int lv_img_cf_has_alpha(lv_img_cf_t cf) {
+    int has_alpha = 0;
 
     switch (cf) {
         case LV_IMG_CF_TRUE_COLOR_ALPHA:
@@ -217,10 +217,10 @@ bool lv_img_cf_has_alpha(lv_img_cf_t cf) {
         case LV_IMG_CF_ALPHA_2BIT:
         case LV_IMG_CF_ALPHA_4BIT:
         case LV_IMG_CF_ALPHA_8BIT:
-            has_alpha = true;
+            has_alpha = 1;
             break;
         default:
-            has_alpha = false;
+            has_alpha = 0;
             break;
     }
 
@@ -243,14 +243,14 @@ lv_img_src_t lv_img_src_get_type(const void *src) {
 
     /*The first or fourth byte depending on platform endianess shows the type of the image source*/
 #if LV_BIG_ENDIAN_SYSTEM
-    if(u8_p[3] >= 0x20 && u8_p[3] <= 0x7F) {
+    if (u8_p[3] >= 0x20 && u8_p[3] <= 0x7F) {
 #else
     if (u8_p[0] >= 0x20 && u8_p[0] <= 0x7F) {
 #endif
         img_src_type = LV_IMG_SRC_FILE; /*If it's an ASCII character then it's file name*/
     }
 #if LV_BIG_ENDIAN_SYSTEM
-        else if(u8_p[3] >= 0x80) {
+    else if (u8_p[3] >= 0x80) {
 #else
     else if (u8_p[0] >= 0x80) {
 #endif
@@ -266,8 +266,10 @@ lv_img_src_t lv_img_src_get_type(const void *src) {
     return img_src_type;
 }
 
-void lv_draw_img_decoded(lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc,
-                         const lv_area_t *coords, const uint8_t *map_p, lv_img_cf_t color_format) {
+void lv_draw_img_decoded(
+    lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc, const lv_area_t *coords, const uint8_t *map_p,
+    lv_img_cf_t color_format
+) {
     if (draw_ctx->draw_img_decoded == NULL) return;
 
     draw_ctx->draw_img_decoded(draw_ctx, dsc, coords, map_p, color_format);
@@ -277,9 +279,8 @@ void lv_draw_img_decoded(lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc,
  *   STATIC FUNCTIONS
  **********************/
 
-static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
-                                                      const lv_draw_img_dsc_t *draw_dsc,
-                                                      const lv_area_t *coords, const void *src) {
+static lv_res_t LV_ATTRIBUTE_FAST_MEM
+decode_and_draw(lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *draw_dsc, const lv_area_t *coords, const void *src) {
     if (draw_dsc->opa <= LV_OPA_MIN) return LV_RES_OK;
 
     _lv_img_cache_entry_t *cdsc = _lv_img_cache_open(src, draw_dsc->recolor, draw_dsc->frame_id);
@@ -287,11 +288,16 @@ static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
     if (cdsc == NULL) return LV_RES_INV;
 
     lv_img_cf_t cf;
-    if (lv_img_cf_is_chroma_keyed(cdsc->dec_dsc.header.cf)) cf = LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED;
-    else if (LV_IMG_CF_ALPHA_8BIT == cdsc->dec_dsc.header.cf) cf = LV_IMG_CF_ALPHA_8BIT;
-    else if (LV_IMG_CF_RGB565A8 == cdsc->dec_dsc.header.cf) cf = LV_IMG_CF_RGB565A8;
-    else if (lv_img_cf_has_alpha(cdsc->dec_dsc.header.cf)) cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
-    else cf = LV_IMG_CF_TRUE_COLOR;
+    if (lv_img_cf_is_chroma_keyed(cdsc->dec_dsc.header.cf))
+        cf = LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED;
+    else if (LV_IMG_CF_ALPHA_8BIT == cdsc->dec_dsc.header.cf)
+        cf = LV_IMG_CF_ALPHA_8BIT;
+    else if (LV_IMG_CF_RGB565A8 == cdsc->dec_dsc.header.cf)
+        cf = LV_IMG_CF_RGB565A8;
+    else if (lv_img_cf_has_alpha(cdsc->dec_dsc.header.cf))
+        cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
+    else
+        cf = LV_IMG_CF_TRUE_COLOR;
 
     if (cf == LV_IMG_CF_ALPHA_8BIT) {
         if (draw_dsc->angle || draw_dsc->zoom != LV_IMG_ZOOM_NONE) {
@@ -306,8 +312,8 @@ static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
 
         show_error(draw_ctx, coords, cdsc->dec_dsc.error_msg);
     }
-        /*The decoder could open the image and gave the entire uncompressed image.
-         *Just draw it!*/
+    /*The decoder could open the image and gave the entire uncompressed image.
+     *Just draw it!*/
     else if (cdsc->dec_dsc.img_data) {
         lv_area_t map_area_rot;
         lv_area_copy(&map_area_rot, coords);
@@ -324,10 +330,10 @@ static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
         }
 
         lv_area_t clip_com; /*Common area of mask and coords*/
-        bool union_ok;
+        int union_ok;
         union_ok = _lv_area_intersect(&clip_com, draw_ctx->clip_area, &map_area_rot);
         /*Out of mask. There is nothing to draw so the image is drawn successfully.*/
-        if (union_ok == false) {
+        if (union_ok == 0) {
             draw_cleanup(cdsc);
             return LV_RES_OK;
         }
@@ -337,21 +343,22 @@ static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
         lv_draw_img_decoded(draw_ctx, draw_dsc, coords, cdsc->dec_dsc.img_data, cf);
         draw_ctx->clip_area = clip_area_ori;
     }
-        /*The whole uncompressed image is not available. Try to read it line-by-line*/
+    /*The whole uncompressed image is not available. Try to read it line-by-line*/
     else {
         lv_area_t mask_com; /*Common area of mask and coords*/
-        bool union_ok;
+        int union_ok;
         union_ok = _lv_area_intersect(&mask_com, draw_ctx->clip_area, coords);
         /*Out of mask. There is nothing to draw so the image is drawn successfully.*/
-        if (union_ok == false) {
+        if (union_ok == 0) {
             draw_cleanup(cdsc);
             return LV_RES_OK;
         }
 
         int32_t width = lv_area_get_width(&mask_com);
 
-        uint8_t *buf = lv_mem_buf_get(lv_area_get_width(&mask_com) *
-                                      LV_IMG_PX_SIZE_ALPHA_BYTE);  /*+1 because of the possible alpha byte*/
+        uint8_t *buf = lv_mem_buf_get(
+            lv_area_get_width(&mask_com) * LV_IMG_PX_SIZE_ALPHA_BYTE
+        ); /*+1 because of the possible alpha byte*/
 
         const lv_area_t *clip_area_ori = draw_ctx->clip_area;
         lv_area_t line;
@@ -364,7 +371,7 @@ static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
         for (row = mask_com.y1; row <= mask_com.y2; row++) {
             lv_area_t mask_line;
             union_ok = _lv_area_intersect(&mask_line, clip_area_ori, &line);
-            if (union_ok == false) continue;
+            if (union_ok == 0) continue;
 
             read_res = lv_img_decoder_read_line(&cdsc->dec_dsc, x, y, width, buf);
             if (read_res != LV_RES_OK) {

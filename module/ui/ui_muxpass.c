@@ -1,18 +1,18 @@
 #include "ui_muxpass.h"
 
-lv_obj_t *ui_rolComboOne;
-lv_obj_t *ui_rolComboTwo;
-lv_obj_t *ui_rolComboThree;
-lv_obj_t *ui_rolComboFour;
-lv_obj_t *ui_rolComboFive;
-lv_obj_t *ui_rolComboSix;
+lv_obj_t *ui_rol_combo_one;
+lv_obj_t *ui_rol_combo_two;
+lv_obj_t *ui_rol_combo_three;
+lv_obj_t *ui_rol_combo_four;
+lv_obj_t *ui_rol_combo_five;
+lv_obj_t *ui_rol_combo_six;
 
-static const char *ROLLER_OPTS = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nA\nB\nC\nD\nE\nF";
+static const char *roller_opts = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nA\nB\nC\nD\nE\nF";
 
-static lv_obj_t *make_pass_roller(lv_obj_t *parent, lv_font_t *roller_font) {
+static lv_obj_t *make_pass_roller(lv_obj_t *parent, const lv_font_t *roller_font) {
     lv_obj_t *r = lv_roller_create(parent);
 
-    lv_roller_set_options(r, ROLLER_OPTS, LV_ROLLER_MODE_INFINITE);
+    lv_roller_set_options(r, roller_opts, LV_ROLLER_MODE_INFINITE);
     lv_obj_set_size(r, 80, 320);
     lv_obj_set_align(r, LV_ALIGN_CENTER);
 
@@ -42,19 +42,19 @@ static lv_obj_t *make_pass_roller(lv_obj_t *parent, lv_font_t *roller_font) {
     return r;
 }
 
-void init_muxpass(lv_obj_t *ui_pnlContent, lv_font_t *roller_font) {
-    lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+void init_muxpass(lv_obj_t *ui_pnl_content, const lv_font_t *roller_font) {
+    lv_obj_set_flex_flow(ui_pnl_content, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnl_content, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t *rollers[6];
     for (int i = 0; i < 6; ++i) {
-        rollers[i] = make_pass_roller(ui_pnlContent, roller_font);
+        rollers[i] = make_pass_roller(ui_pnl_content, roller_font);
     }
 
-    ui_rolComboOne = rollers[0];
-    ui_rolComboTwo = rollers[1];
-    ui_rolComboThree = rollers[2];
-    ui_rolComboFour = rollers[3];
-    ui_rolComboFive = rollers[4];
-    ui_rolComboSix = rollers[5];
+    ui_rol_combo_one = rollers[0];
+    ui_rol_combo_two = rollers[1];
+    ui_rol_combo_three = rollers[2];
+    ui_rol_combo_four = rollers[3];
+    ui_rol_combo_five = rollers[4];
+    ui_rol_combo_six = rollers[5];
 }

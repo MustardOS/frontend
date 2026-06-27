@@ -7,9 +7,9 @@
 
 #define BATTERY_DETECT OVERLAY_RUNNER "battery"
 
-#define BATTERY_ALPHA OVERLAY_CONFIG "bat_alpha"
+#define BATTERY_ALPHA  OVERLAY_CONFIG "bat_alpha"
 #define BATTERY_ANCHOR OVERLAY_CONFIG "bat_anchor"
-#define BATTERY_SCALE OVERLAY_CONFIG "bat_scale"
+#define BATTERY_SCALE  OVERLAY_CONFIG "bat_scale"
 
 extern char battery_overlay_path[PATH_MAX];
 

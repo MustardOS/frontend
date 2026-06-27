@@ -1,13 +1,9 @@
 #include <sys/stat.h>
 #include "alpha.h"
 
-struct alpha_cache overlay_alpha_cache = {
-        .path  = OVERLAY_ALPHA,
-        .mtime = 0,
-        .value = 1.0f
-};
+struct alpha_cache overlay_alpha_cache = {.path = OVERLAY_ALPHA, .mtime = 0, .value = 1.0f};
 
-static float clamp_alpha(int v) {
+static float clamp_alpha(const int v) {
     if (v < 0) return 0.0f;
     if (v > 255) return 1.0f;
 

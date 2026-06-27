@@ -33,21 +33,25 @@
  **********************/
 static lv_obj_tree_walk_res_t invalidate_layout_cb(lv_obj_t *obj, void *user_data);
 
-static void set_px_true_color_alpha(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x,
-                                    lv_coord_t y,
-                                    lv_color_t color, lv_opa_t opa);
+static void set_px_true_color_alpha(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+);
 
-static void set_px_cb_alpha1(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa);
+static void set_px_cb_alpha1(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+);
 
-static void set_px_cb_alpha2(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa);
+static void set_px_cb_alpha2(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+);
 
-static void set_px_cb_alpha4(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa);
+static void set_px_cb_alpha4(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+);
 
-static void set_px_cb_alpha8(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa);
+static void set_px_cb_alpha8(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+);
 
 static void set_px_alpha_generic(lv_img_dsc_t *d, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa);
 
@@ -117,7 +121,6 @@ void lv_disp_drv_init(lv_disp_drv_t *driver) {
     driver->draw_ctx_deinit = lv_draw_sw_init_ctx;
     driver->draw_ctx_size = sizeof(lv_draw_sw_ctx_t);
 #endif
-
 }
 
 /**
@@ -198,16 +201,17 @@ lv_disp_t *lv_disp_drv_register(lv_disp_drv_t *driver) {
 #endif
 
 #if LV_USE_THEME_DEFAULT
-    if(lv_theme_default_is_inited() == false) {
-        disp->theme = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
-                                            LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
-    }
-    else {
+    if (lv_theme_default_is_inited() == 0) {
+        disp->theme = lv_theme_default_init(
+            disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), LV_THEME_DEFAULT_DARK,
+            LV_FONT_DEFAULT
+        );
+    } else {
         disp->theme = lv_theme_default_get();
     }
 #endif
 
-    disp->act_scr = lv_obj_create(NULL); /*Create a default screen on the display*/
+    disp->act_scr = lv_obj_create(NULL);   /*Create a default screen on the display*/
     disp->top_layer = lv_obj_create(NULL); /*Create top layer on the display*/
     disp->sys_layer = lv_obj_create(NULL); /*Create sys layer on the display*/
     lv_obj_remove_style_all(disp->top_layer);
@@ -220,7 +224,7 @@ lv_disp_t *lv_disp_drv_register(lv_disp_drv_t *driver) {
 
     lv_obj_invalidate(disp->act_scr);
 
-    disp_def = disp_def_tmp; /*Revert the default display*/
+    disp_def = disp_def_tmp;               /*Revert the default display*/
     if (disp_def == NULL) disp_def = disp; /*Initialize the default display*/
 
     lv_timer_ready(disp->refr_timer); /*Be sure the screen will be refreshed immediately on start up*/
@@ -236,8 +240,8 @@ lv_disp_t *lv_disp_drv_register(lv_disp_drv_t *driver) {
 void lv_disp_drv_update(lv_disp_t *disp, lv_disp_drv_t *new_drv) {
     disp->driver = new_drv;
 
-    if (disp->driver->full_refresh &&
-        disp->driver->draw_buf->size < (uint32_t) disp->driver->hor_res * disp->driver->ver_res) {
+    if (disp->driver->full_refresh
+        && disp->driver->draw_buf->size < (uint32_t) disp->driver->hor_res * disp->driver->ver_res) {
         disp->driver->full_refresh = 0;
         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)");
     }
@@ -274,8 +278,8 @@ void lv_disp_drv_update(lv_disp_t *disp, lv_disp_drv_t *new_drv) {
  * @param disp pointer to display
  */
 void lv_disp_remove(lv_disp_t *disp) {
-    bool was_default = false;
-    if (disp == lv_disp_get_default()) was_default = true;
+    int was_default = 0;
+    if (disp == lv_disp_get_default()) was_default = 1;
 
     /*Detach the input devices*/
     lv_indev_t *indev;
@@ -460,13 +464,13 @@ lv_coord_t lv_disp_get_offset_y(lv_disp_t *disp) {
 /**
  * Get if anti-aliasing is enabled for a display or not
  * @param disp pointer to a display (NULL to use the default display)
- * @return true: anti-aliasing is enabled; false: disabled
+ * @return 1: anti-aliasing is enabled; 0: disabled
  */
-bool lv_disp_get_antialiasing(lv_disp_t *disp) {
+int lv_disp_get_antialiasing(lv_disp_t *disp) {
     if (disp == NULL) disp = lv_disp_get_default();
-    if (disp == NULL) return false;
+    if (disp == NULL) return 0;
 
-    return disp->driver->antialiasing ? true : false;
+    return disp->driver->antialiasing ? 1 : 0;
 }
 
 /**
@@ -476,7 +480,7 @@ bool lv_disp_get_antialiasing(lv_disp_t *disp) {
  */
 lv_coord_t lv_disp_get_dpi(const lv_disp_t *disp) {
     if (disp == NULL) disp = lv_disp_get_default();
-    if (disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+    if (disp == NULL) return LV_DPI_DEF; /*Do not return 0 because it might be a divider*/
     return disp->driver->dpi;
 }
 
@@ -493,9 +497,9 @@ void LV_ATTRIBUTE_FLUSH_READY lv_disp_flush_ready(lv_disp_drv_t *disp_drv) {
  * Tell if it's the last area of the refreshing process.
  * Can be called from `flush_cb` to execute some special display refreshing if needed when all areas area flushed.
  * @param disp_drv pointer to display driver
- * @return true: it's the last area to flush; false: there are other areas too which will be refreshed soon
+ * @return 1: it's the last area to flush; 0: there are other areas too which will be refreshed soon
  */
-bool LV_ATTRIBUTE_FLUSH_READY lv_disp_flush_is_last(lv_disp_drv_t *disp_drv) {
+int LV_ATTRIBUTE_FLUSH_READY lv_disp_flush_is_last(lv_disp_drv_t *disp_drv) {
     return disp_drv->draw_buf->flushing_last;
 }
 
@@ -576,8 +580,9 @@ static lv_obj_tree_walk_res_t invalidate_layout_cb(lv_obj_t *obj, void *user_dat
     return LV_OBJ_TREE_WALK_NEXT;
 }
 
-static void set_px_cb_alpha1(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa) {
+static void set_px_cb_alpha1(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+) {
     (void) disp_drv; /*Unused*/
 
     if (opa <= LV_OPA_MIN) return;
@@ -589,8 +594,9 @@ static void set_px_cb_alpha1(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t b
     set_px_alpha_generic(&d, x, y, color, opa);
 }
 
-static void set_px_cb_alpha2(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa) {
+static void set_px_cb_alpha2(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+) {
     (void) disp_drv; /*Unused*/
 
     if (opa <= LV_OPA_MIN) return;
@@ -602,8 +608,9 @@ static void set_px_cb_alpha2(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t b
     set_px_alpha_generic(&d, x, y, color, opa);
 }
 
-static void set_px_cb_alpha4(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa) {
+static void set_px_cb_alpha4(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+) {
     (void) disp_drv; /*Unused*/
 
     if (opa <= LV_OPA_MIN) return;
@@ -615,8 +622,9 @@ static void set_px_cb_alpha4(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t b
     set_px_alpha_generic(&d, x, y, color, opa);
 }
 
-static void set_px_cb_alpha8(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-                             lv_color_t color, lv_opa_t opa) {
+static void set_px_cb_alpha8(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+) {
     (void) disp_drv; /*Unused*/
 
     if (opa <= LV_OPA_MIN) return;
@@ -630,7 +638,7 @@ static void set_px_cb_alpha8(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t b
 
 static void set_px_alpha_generic(lv_img_dsc_t *d, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa) {
     d->header.always_zero = 0;
-    d->header.h = 1;    /*Doesn't matter*/
+    d->header.h = 1; /*Doesn't matter*/
 
     uint8_t br = lv_color_brightness(color);
     if (opa < LV_OPA_MAX) {
@@ -641,9 +649,9 @@ static void set_px_alpha_generic(lv_img_dsc_t *d, lv_coord_t x, lv_coord_t y, lv
     lv_img_buf_set_px_alpha(d, x, y, br);
 }
 
-static void set_px_true_color_alpha(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w,
-                                    lv_coord_t x, lv_coord_t y,
-                                    lv_color_t color, lv_opa_t opa) {
+static void set_px_true_color_alpha(
+    lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y, lv_color_t color, lv_opa_t opa
+) {
     (void) disp_drv; /*Unused*/
 
     uint8_t *buf_px = buf + (buf_w * y * LV_IMG_PX_SIZE_ALPHA_BYTE + x * LV_IMG_PX_SIZE_ALPHA_BYTE);
@@ -654,12 +662,12 @@ static void set_px_true_color_alpha(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_co
 #if LV_COLOR_DEPTH == 8 || LV_COLOR_DEPTH == 1
     bg_color.full = buf_px[0];
     lv_color_mix_with_alpha(bg_color, bg_opa, color, opa, &res_color, &buf_px[2]);
-    if(buf_px[1] <= LV_OPA_MIN) return;
+    if (buf_px[1] <= LV_OPA_MIN) return;
     buf_px[0] = res_color.full;
 #elif LV_COLOR_DEPTH == 16
     bg_color.full = buf_px[0] + (buf_px[1] << 8);
     lv_color_mix_with_alpha(bg_color, bg_opa, color, opa, &res_color, &buf_px[2]);
-    if(buf_px[2] <= LV_OPA_MIN) return;
+    if (buf_px[2] <= LV_OPA_MIN) return;
     buf_px[0] = res_color.full & 0xff;
     buf_px[1] = res_color.full >> 8;
 #elif LV_COLOR_DEPTH == 32
@@ -670,5 +678,4 @@ static void set_px_true_color_alpha(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_co
     buf_px[1] = res_color.ch.green;
     buf_px[2] = res_color.ch.red;
 #endif
-
 }

@@ -3,52 +3,49 @@
 
 static struct mux_passcode passcfg;
 
-#define PASSCFG(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(PASSCFG_ELEMENTS)
-};
+#define PASSCFG(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(PASSCFG_ELEMENTS) };
 #undef PASSCFG
 
 static int edit_field = -1;
 
-static int is_code_field(int idx) {
+static int is_code_field(const int idx) {
     return idx == 0 || idx == 2 || idx == 4 || idx == 6;
 }
 
 static const char *code_display(const char *code) {
-    return (strcasecmp(code, "000000") == 0) ? lang.GENERIC.DISABLED : code;
+    return strcasecmp(code, "000000") == 0 ? lang.generic.disabled : code;
 }
 
 static const char *msg_display(const char *msg) {
-    return (msg && msg[0]) ? msg : "-";
+    return msg && msg[0] ? msg : "-";
 }
 
 static void update_value_labels(void) {
-    lv_label_set_text(ui_lblBootCodeValue_passcfg, code_display(passcfg.CODE.BOOT));
-    lv_label_set_text(ui_lblBootMsgValue_passcfg, msg_display(passcfg.MESSAGE.BOOT));
-    lv_label_set_text(ui_lblLaunchCodeValue_passcfg, code_display(passcfg.CODE.LAUNCH));
-    lv_label_set_text(ui_lblLaunchMsgValue_passcfg, msg_display(passcfg.MESSAGE.LAUNCH));
-    lv_label_set_text(ui_lblSettingCodeValue_passcfg, code_display(passcfg.CODE.SETTING));
-    lv_label_set_text(ui_lblSettingMsgValue_passcfg, msg_display(passcfg.MESSAGE.SETTING));
-    lv_label_set_text(ui_lblSafetyCodeValue_passcfg, code_display(passcfg.CODE.SAFETY));
+    lv_label_set_text(ui_val_boot_code_passcfg, code_display(passcfg.code.boot));
+    lv_label_set_text(ui_val_boot_msg_passcfg, msg_display(passcfg.message.boot));
+    lv_label_set_text(ui_val_launch_code_passcfg, code_display(passcfg.code.launch));
+    lv_label_set_text(ui_val_launch_msg_passcfg, msg_display(passcfg.message.launch));
+    lv_label_set_text(ui_val_setting_code_passcfg, code_display(passcfg.code.setting));
+    lv_label_set_text(ui_val_setting_msg_passcfg, msg_display(passcfg.message.setting));
+    lv_label_set_text(ui_val_safety_code_passcfg, code_display(passcfg.code.safety));
 }
 
-
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define PASSCFG(NAME, ENUM, UDATA) { UDATA, lang.MUXPASSCFG.HELP.ENUM },
-            PASSCFG_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define PASSCFG(NAME, UDATA) {UDATA, lang.muxpasscfg.help.NAME},
+        PASSCFG_ELEMENTS
 #undef PASSCFG
     };
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
-static void open_entry(int idx) {
+static void open_entry(const int idx) {
     edit_field = idx;
 
     if (is_code_field(idx)) {
-        lv_textarea_set_max_length(ui_txtEntry_passcfg, 6);
-        lv_textarea_set_password_mode(ui_txtEntry_passcfg, 0);
+        lv_textarea_set_max_length(ui_txt_entry_passcfg, 6);
+        lv_textarea_set_password_mode(ui_txt_entry_passcfg, 0);
 
         lv_obj_clear_flag(hex_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(hex_entry, LV_STATE_DISABLED);
@@ -56,8 +53,8 @@ static void open_entry(int idx) {
         lv_obj_add_state(key_entry, LV_STATE_DISABLED);
         key_show = 3;
     } else {
-        lv_textarea_set_max_length(ui_txtEntry_passcfg, OSK_MAX);
-        lv_textarea_set_password_mode(ui_txtEntry_passcfg, 0);
+        lv_textarea_set_max_length(ui_txt_entry_passcfg, OSK_MAX);
+        lv_textarea_set_password_mode(ui_txt_entry_passcfg, 0);
 
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
@@ -71,25 +68,25 @@ static void open_entry(int idx) {
     const char *current = "";
     switch (idx) {
         case 0:
-            current = passcfg.CODE.BOOT;
+            current = passcfg.code.boot;
             break;
         case 1:
-            current = passcfg.MESSAGE.BOOT;
+            current = passcfg.message.boot;
             break;
         case 2:
-            current = passcfg.CODE.LAUNCH;
+            current = passcfg.code.launch;
             break;
         case 3:
-            current = passcfg.MESSAGE.LAUNCH;
+            current = passcfg.message.launch;
             break;
         case 4:
-            current = passcfg.CODE.SETTING;
+            current = passcfg.code.setting;
             break;
         case 5:
-            current = passcfg.MESSAGE.SETTING;
+            current = passcfg.message.setting;
             break;
         case 6:
-            current = passcfg.CODE.SAFETY;
+            current = passcfg.code.safety;
             break;
         default:
             break;
@@ -97,44 +94,45 @@ static void open_entry(int idx) {
 
     if (is_code_field(idx) && strcasecmp(current, "000000") == 0) current = "";
 
-    lv_textarea_set_text(ui_txtEntry_passcfg, current);
-    osk_show(ui_pnlEntry_passcfg);
+    lv_textarea_set_text(ui_txt_entry_passcfg, current);
+    osk_show(ui_pnl_entry_passcfg);
 }
 
 static void validate_and_save(void) {
-    const char *raw = lv_textarea_get_text(ui_txtEntry_passcfg);
+    const char *raw = lv_textarea_get_text(ui_txt_entry_passcfg);
 
     if (is_code_field(edit_field)) {
-        size_t len = strlen(raw);
+        const size_t len = strlen(raw);
         for (size_t i = 0; i < len; i++) {
-            char c = (char) toupper((unsigned char) raw[i]);
+            const char c = (char) toupper((unsigned char) raw[i]);
             if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F'))) {
-                play_sound(SND_ERROR);
-                toast_message(lang.MUXPASSCFG.INVALID, SHORT);
+                play_sound(snd_error);
+                toast_message(lang.muxpasscfg.invalid, tst_wait_s);
                 return;
             }
         }
 
         char code[7] = "000000";
         if (len > 0 && len <= 6) {
-            int pad = 6 - (int) len;
-            for (int i = 0; i < pad; i++) code[i] = '0';
+            const int pad = 6 - (int) len;
+            for (int i = 0; i < pad; i++)
+                code[i] = '0';
             memcpy(code + pad, raw, len);
             code[6] = '\0';
         }
 
         switch (edit_field) {
             case 0:
-                snprintf(passcfg.CODE.BOOT, MAX_BUFFER_SIZE, "%s", code);
+                snprintf(passcfg.code.boot, MAX_BUFFER_SIZE, "%s", code);
                 break;
             case 2:
-                snprintf(passcfg.CODE.LAUNCH, MAX_BUFFER_SIZE, "%s", code);
+                snprintf(passcfg.code.launch, MAX_BUFFER_SIZE, "%s", code);
                 break;
             case 4:
-                snprintf(passcfg.CODE.SETTING, MAX_BUFFER_SIZE, "%s", code);
+                snprintf(passcfg.code.setting, MAX_BUFFER_SIZE, "%s", code);
                 break;
             case 6:
-                snprintf(passcfg.CODE.SAFETY, MAX_BUFFER_SIZE, "%s", code);
+                snprintf(passcfg.code.safety, MAX_BUFFER_SIZE, "%s", code);
                 break;
             default:
                 break;
@@ -142,13 +140,13 @@ static void validate_and_save(void) {
     } else {
         switch (edit_field) {
             case 1:
-                snprintf(passcfg.MESSAGE.BOOT, MAX_BUFFER_SIZE, "%s", raw);
+                snprintf(passcfg.message.boot, MAX_BUFFER_SIZE, "%s", raw);
                 break;
             case 3:
-                snprintf(passcfg.MESSAGE.LAUNCH, MAX_BUFFER_SIZE, "%s", raw);
+                snprintf(passcfg.message.launch, MAX_BUFFER_SIZE, "%s", raw);
                 break;
             case 5:
-                snprintf(passcfg.MESSAGE.SETTING, MAX_BUFFER_SIZE, "%s", raw);
+                snprintf(passcfg.message.setting, MAX_BUFFER_SIZE, "%s", raw);
                 break;
             default:
                 break;
@@ -157,31 +155,31 @@ static void validate_and_save(void) {
 
     save_passcode(&passcfg);
     update_value_labels();
-    play_sound(SND_CONFIRM);
-    toast_message(lang.MUXPASSCFG.SAVED, SHORT);
+    play_sound(snd_confirm);
+    toast_message(lang.muxpasscfg.saved, tst_wait_s);
 }
 
-static void handle_keyboard_OK_press(void) {
+static void handle_keyboard_ok_press(void) {
     validate_and_save();
 
-    int was_code = is_code_field(edit_field);
+    const int was_code = is_code_field(edit_field);
     key_show = 0;
     edit_field = -1;
 
     reset_osk(was_code ? hex_entry : key_entry);
-    lv_textarea_set_text(ui_txtEntry_passcfg, "");
+    lv_textarea_set_text(ui_txt_entry_passcfg, "");
     lv_group_set_focus_cb(ui_group, NULL);
-    osk_hide(ui_pnlEntry_passcfg);
+    osk_hide(ui_pnl_entry_passcfg);
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_KEYPRESS);
+    first_open ? (first_open = 0) : play_sound(snd_keypress);
 
-    lv_obj_t *active = (key_show == 3) ? hex_entry : key_entry;
+    lv_obj_t *active = key_show == 3 ? hex_entry : key_entry;
     const char *is_key = lv_btnmatrix_get_btn_text(active, key_curr);
 
     if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
-        handle_keyboard_OK_press();
+        handle_keyboard_ok_press();
     } else {
         lv_event_send(active, LV_EVENT_CLICKED, &key_curr);
     }
@@ -207,17 +205,17 @@ static void handle_b(void) {
     }
 
     if (key_show) {
-        key_backspace(ui_txtEntry_passcfg);
+        key_backspace(ui_txt_entry_passcfg);
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "lock");
     mux_input_stop();
 }
 
 static void handle_b_hold(void) {
-    if (key_show) key_backspace(ui_txtEntry_passcfg);
+    if (key_show) key_backspace(ui_txt_entry_passcfg);
 }
 
 static void handle_x(void) {
@@ -226,16 +224,16 @@ static void handle_x(void) {
     if (key_show) {
         key_show = 0;
         edit_field = -1;
-        lv_textarea_set_text(ui_txtEntry_passcfg, "");
+        lv_textarea_set_text(ui_txt_entry_passcfg, "");
         lv_group_set_focus_cb(ui_group, NULL);
-        osk_hide(ui_pnlEntry_passcfg);
+        osk_hide(ui_pnl_entry_passcfg);
     }
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
@@ -283,45 +281,50 @@ static void handle_r1(void) {
     handle_list_nav_page_down();
 }
 
-
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_VALUE_ITEM(-1, passcfg, BootCode, lang.MUXPASSCFG.BOOTCODE, "boot_lock", code_display(passcfg.CODE.BOOT));
-    INIT_VALUE_ITEM(-1, passcfg, BootMsg, lang.MUXPASSCFG.BOOTMSG, "boot_info", msg_display(passcfg.MESSAGE.BOOT));
-    INIT_VALUE_ITEM(-1, passcfg, LaunchCode, lang.MUXPASSCFG.LAUNCHCODE, "launch_lock", code_display(passcfg.CODE.LAUNCH));
-    INIT_VALUE_ITEM(-1, passcfg, LaunchMsg, lang.MUXPASSCFG.LAUNCHMSG, "launch_info", msg_display(passcfg.MESSAGE.LAUNCH));
-    INIT_VALUE_ITEM(-1, passcfg, SettingCode, lang.MUXPASSCFG.SETTINGCODE, "setting_lock", code_display(passcfg.CODE.SETTING));
-    INIT_VALUE_ITEM(-1, passcfg, SettingMsg, lang.MUXPASSCFG.SETTINGMSG, "setting_info", msg_display(passcfg.MESSAGE.SETTING));
-    INIT_VALUE_ITEM(-1, passcfg, SafetyCode, lang.MUXPASSCFG.SAFETYCODE, "safety", code_display(passcfg.CODE.SAFETY));
+    INIT_VALUE_ITEM(-1, passcfg, boot_code, lang.muxpasscfg.bootcode, "boot_lock", code_display(passcfg.code.boot));
+    INIT_VALUE_ITEM(-1, passcfg, boot_msg, lang.muxpasscfg.bootmsg, "boot_info", msg_display(passcfg.message.boot));
+    INIT_VALUE_ITEM(
+        -1, passcfg, launch_code, lang.muxpasscfg.launchcode, "launch_lock", code_display(passcfg.code.launch)
+    );
+    INIT_VALUE_ITEM(
+        -1, passcfg, launch_msg, lang.muxpasscfg.launchmsg, "launch_info", msg_display(passcfg.message.launch)
+    );
+    INIT_VALUE_ITEM(
+        -1, passcfg, setting_code, lang.muxpasscfg.settingcode, "setting_lock", code_display(passcfg.code.setting)
+    );
+    INIT_VALUE_ITEM(
+        -1, passcfg, setting_msg, lang.muxpasscfg.settingmsg, "setting_info", msg_display(passcfg.message.setting)
+    );
+    INIT_VALUE_ITEM(-1, passcfg, safety_code, lang.muxpasscfg.safetycode, "safety", code_display(passcfg.code.safety));
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 }
 
-static void on_key_event(struct input_event ev) {
-    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_OK_press();
+static void on_key_event(const struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_ok_press();
 
     if (ev.code == KEY_ESC && ev.value == 1) {
         handle_b();
     } else {
-        process_key_event(&ev, ui_txtEntry_passcfg);
+        process_key_event(&ev, ui_txt_entry_passcfg);
     }
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                0},
-            {ui_lblNavA,      lang.GENERIC.EDIT, 0},
-            {ui_lblNavBGlyph, "",                0},
-            {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {NULL, NULL,                         0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.edit, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
     overlay_display();
 }
@@ -332,19 +335,19 @@ int muxpasscfg_main(void) {
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXPASSCFG.TITLE);
-    init_muxpasscfg(ui_screen, ui_pnlContent, &theme);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxpasscfg.title);
+    init_muxpasscfg(ui_screen, ui_pnl_content, &theme);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
 
-    init_osk(ui_pnlEntry_passcfg, ui_txtEntry_passcfg, 2, 0, 6);
+    init_osk(ui_pnl_entry_passcfg, ui_txt_entry_passcfg, 2, 0, 6);
     if (hex_entry && lv_obj_is_valid(hex_entry)) {
         lv_obj_add_flag(hex_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_state(hex_entry, LV_STATE_DISABLED);
@@ -354,34 +357,36 @@ int muxpasscfg_main(void) {
     gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_DPAD_UP] = handle_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_down,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_R1] = handle_r1,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_up] = handle_up,
+                [mux_input_dpad_down] = handle_down,
+                [mux_input_dpad_left] = handle_left,
+                [mux_input_dpad_right] = handle_right,
+                [mux_input_l1] = handle_l1,
+                [mux_input_r1] = handle_r1,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_B] = handle_b_hold,
-                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
-                    [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_R1] = handle_r1,
-            }
+        .hold_handler = {
+            [mux_input_b] = handle_b_hold,
+            [mux_input_dpad_up] = handle_up_hold,
+            [mux_input_dpad_down] = handle_down_hold,
+            [mux_input_dpad_left] = handle_left_hold,
+            [mux_input_dpad_right] = handle_right_hold,
+            [mux_input_l1] = handle_l1,
+            [mux_input_r1] = handle_r1,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 

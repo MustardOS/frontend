@@ -13,25 +13,22 @@
 
 int fe_snd;
 int fe_bgm;
-CachedSound sound_cache[SOUND_TOTAL];
+cached_sound sound_cache[sound_total];
 int is_silence_playing = 0;
 Mix_Music *current_bgm = NULL;
 int bgm_volume = 90;
 int nav_volume = 90;
 
-const char *snd_names[SOUND_TOTAL] = {
-        "confirm", "back", "keypress", "navigate",
-        "error", "muos", "reboot", "shutdown",
-        "startup", "info_open", "info_close", "option"
-};
+const char *snd_names[sound_total] = {"confirm", "back",     "keypress", "navigate",  "error",      "muos",
+                                      "reboot",  "shutdown", "startup",  "info_open", "info_close", "option"};
 
 static char **bgm_files = NULL;
 static size_t bgm_file_count = 0;
 
-int play_sound_wait(int sound) {
-    if (!fe_snd || sound < 0 || sound >= SOUND_TOTAL) return 0;
+int play_sound_wait(const int sound) {
+    if (!fe_snd || sound < 0 || sound >= sound_total) return 0;
 
-    CachedSound *cs = &sound_cache[sound];
+    const cached_sound *cs = &sound_cache[sound];
     if (!cs->chunk) return 0;
 
     if (Mix_PlayingMusic()) {
@@ -39,18 +36,19 @@ int play_sound_wait(int sound) {
         current_bgm = NULL;
     }
 
-    int channel = Mix_PlayChannel(-1, cs->chunk, 0);
+    const int channel = Mix_PlayChannel(-1, cs->chunk, 0);
     if (channel < 0) return 0;
 
-    while (Mix_Playing(channel)) SDL_Delay(10);
+    while (Mix_Playing(channel))
+        SDL_Delay(10);
 
     return 1;
 }
 
-void play_sound(int sound) {
-    if (!fe_snd || sound < 0 || sound >= SOUND_TOTAL) return;
+void play_sound(const int sound) {
+    if (!fe_snd || sound < 0 || sound >= sound_total) return;
 
-    CachedSound *cs = &sound_cache[sound];
+    const cached_sound *cs = &sound_cache[sound];
     if (cs->chunk) {
         Mix_PlayChannel(-1, cs->chunk, 0);
     } else {
@@ -59,7 +57,7 @@ void play_sound(int sound) {
 }
 
 void free_sound_cache(void) {
-    for (int i = 0; i < SOUND_TOTAL; ++i) {
+    for (int i = 0; i < sound_total; ++i) {
         if (sound_cache[i].chunk) {
             Mix_FreeChunk(sound_cache[i].chunk);
             sound_cache[i].chunk = NULL;
@@ -74,7 +72,7 @@ void set_nav_volume(int volume) {
 
     nav_volume = volume;
 
-    for (int i = 0; i < SOUND_TOTAL; i++) {
+    for (int i = 0; i < sound_total; i++) {
         if (sound_cache[i].chunk) {
             Mix_VolumeChunk(sound_cache[i].chunk, nav_volume);
         }
@@ -130,7 +128,7 @@ void play_random_bgm(void) {
     current_bgm = Mix_LoadMUS(path);
     if (current_bgm) {
         is_silence_playing = 0;
-        Mix_VolumeMusic((config.SETTINGS.GENERAL.BGMVOL * MIX_MAX_VOLUME) / 100);
+        Mix_VolumeMusic(config.settings.general.bgmvol * MIX_MAX_VOLUME / 100);
         Mix_PlayMusic(current_bgm, 1);
     }
 }
@@ -148,8 +146,8 @@ int init_audio_backend(void) {
         return 0;
     }
 
-    int flags = MIX_INIT_OGG;
-    int inited = Mix_Init(flags);
+    const int flags = MIX_INIT_OGG;
+    const int inited = Mix_Init(flags);
     if ((inited & flags) != flags) {
         LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
     }
@@ -161,18 +159,18 @@ int init_audio_backend(void) {
 
     LOG_SUCCESS("audio", "SDL Init Success");
 
-/*
-    printf("Audio Decode Support: ");
-    for (int i = 0; i < Mix_GetNumMusicDecoders(); i++) {
-        printf("%s ", Mix_GetMusicDecoder(i));
-    }
-    printf("\n");
-*/
+    /*
+        printf("Audio Decode Support: ");
+        for (int i = 0; i < Mix_GetNumMusicDecoders(); i++) {
+            printf("%s ", Mix_GetMusicDecoder(i));
+        }
+        printf("\n");
+    */
 
     return 1;
 }
 
-void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
+void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {
     *fe_snd = 0;
     free_sound_cache();
 
@@ -188,7 +186,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
         return;
     }
 
-    for (int i = 0; i < SOUND_TOTAL; ++i) {
+    for (int i = 0; i < sound_total; ++i) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), "%s/%s.wav", base_path, snd_names[i]);
 
@@ -227,7 +225,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     size_t capacity = 8;
     bgm_files = malloc(capacity * sizeof(char *));
     if (!bgm_files) {
-        LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR("audio", "%s", lang.system.fail_allocate_mem);
         closedir(dir);
         return;
     }
@@ -244,7 +242,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
                 char **bgm_temp = realloc(bgm_files, capacity * sizeof(char *));
 
                 if (!bgm_temp) {
-                    LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                    LOG_ERROR("audio", "%s", lang.system.fail_allocate_mem);
                     closedir(dir);
                     return;
                 }
@@ -257,7 +255,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
             bgm_files[bgm_file_count] = strdup(full_path);
             if (!bgm_files[bgm_file_count]) {
-                LOG_ERROR("audio", "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                LOG_ERROR("audio", "%s", lang.system.fail_allocate_mem);
                 continue;
             }
 

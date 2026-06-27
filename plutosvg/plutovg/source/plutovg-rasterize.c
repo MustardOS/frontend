@@ -17,7 +17,8 @@ void plutovg_span_buffer_init_rect(plutovg_span_buffer_t* span_buffer, int x, in
     plutovg_array_clear(span_buffer->spans);
     plutovg_array_ensure(span_buffer->spans, height);
     plutovg_span_t* spans = span_buffer->spans.data;
-    for(int i = 0; i < height; i++) {
+    for (int i = 0; i < height; i++)
+    {
         spans[i].x = x;
         spans[i].y = y + i;
         spans[i].len = width;
@@ -60,11 +61,13 @@ bool plutovg_span_buffer_contains(const plutovg_span_buffer_t* span_buffer, floa
     const int ix = (int)floorf(x);
     const int iy = (int)floorf(y);
 
-    for(int i = 0; i < span_buffer->spans.size; i++) {
+    for (int i = 0; i < span_buffer->spans.size; i++)
+    {
         plutovg_span_t* span = &span_buffer->spans.data[i];
-        if(span->y != iy)
+        if (span->y != iy)
             continue;
-        if(ix >= span->x && ix < (span->x + span->len)) {
+        if (ix >= span->x && ix < (span->x + span->len))
+        {
             return true;
         }
     }
@@ -74,9 +77,10 @@ bool plutovg_span_buffer_contains(const plutovg_span_buffer_t* span_buffer, floa
 
 static void plutovg_span_buffer_update_extents(plutovg_span_buffer_t* span_buffer)
 {
-    if(span_buffer->w != -1 && span_buffer->h != -1)
+    if (span_buffer->w != -1 && span_buffer->h != -1)
         return;
-    if(span_buffer->spans.size == 0) {
+    if (span_buffer->spans.size == 0)
+    {
         span_buffer->x = 0;
         span_buffer->y = 0;
         span_buffer->w = 0;
@@ -89,9 +93,10 @@ static void plutovg_span_buffer_update_extents(plutovg_span_buffer_t* span_buffe
     int y1 = spans[0].y;
     int x2 = 0;
     int y2 = spans[span_buffer->spans.size - 1].y;
-    for(int i = 0; i < span_buffer->spans.size; i++) {
-        if(spans[i].x < x1) x1 = spans[i].x;
-        if(spans[i].x + spans[i].len > x2) x2 = spans[i].x + spans[i].len;
+    for (int i = 0; i < span_buffer->spans.size; i++)
+    {
+        if (spans[i].x < x1) x1 = spans[i].x;
+        if (spans[i].x + spans[i].len > x2) x2 = spans[i].x + spans[i].len;
     }
 
     span_buffer->x = x1;
@@ -119,13 +124,16 @@ void plutovg_span_buffer_intersect(plutovg_span_buffer_t* span_buffer, const plu
 
     plutovg_span_t* b_spans = b->spans.data;
     plutovg_span_t* b_end = b_spans + b->spans.size;
-    while(a_spans < a_end && b_spans < b_end) {
-        if(b_spans->y > a_spans->y) {
+    while (a_spans < a_end && b_spans < b_end)
+    {
+        if (b_spans->y > a_spans->y)
+        {
             ++a_spans;
             continue;
         }
 
-        if(a_spans->y != b_spans->y) {
+        if (a_spans->y != b_spans->y)
+        {
             ++b_spans;
             continue;
         }
@@ -134,19 +142,22 @@ void plutovg_span_buffer_intersect(plutovg_span_buffer_t* span_buffer, const plu
         int ax2 = ax1 + a_spans->len;
         int bx1 = b_spans->x;
         int bx2 = bx1 + b_spans->len;
-        if(bx1 < ax1 && bx2 < ax1) {
+        if (bx1 < ax1 && bx2 < ax1)
+        {
             ++b_spans;
             continue;
         }
 
-        if(ax1 < bx1 && ax2 < bx1) {
+        if (ax1 < bx1 && ax2 < bx1)
+        {
             ++a_spans;
             continue;
         }
 
         int x = plutovg_max(ax1, bx1);
         int len = plutovg_min(ax2, bx2) - x;
-        if(len) {
+        if (len)
+        {
             plutovg_array_ensure(span_buffer->spans, 1);
             plutovg_span_t* span = span_buffer->spans.data + span_buffer->spans.size;
             span->x = x;
@@ -156,15 +167,19 @@ void plutovg_span_buffer_intersect(plutovg_span_buffer_t* span_buffer, const plu
             span_buffer->spans.size += 1;
         }
 
-        if(ax2 < bx2) {
+        if (ax2 < bx2)
+        {
             ++a_spans;
-        } else {
+        }
+        else
+        {
             ++b_spans;
         }
     }
 }
 
 #define ALIGN_SIZE(size) (((size) + 7ul) & ~7ul)
+
 static PVG_FT_Outline* ft_outline_create(int points, int contours)
 {
     size_t points_size = ALIGN_SIZE((points + contours) * sizeof(PVG_FT_Vector));
@@ -190,12 +205,14 @@ static void ft_outline_destroy(PVG_FT_Outline* outline)
 }
 
 #define FT_COORD(x) (PVG_FT_Pos)(roundf(x * 64))
+
 static void ft_outline_move_to(PVG_FT_Outline* ft, float x, float y)
 {
     ft->points[ft->n_points].x = FT_COORD(x);
     ft->points[ft->n_points].y = FT_COORD(y);
     ft->tags[ft->n_points] = PVG_FT_CURVE_TAG_ON;
-    if(ft->n_points) {
+    if (ft->n_points)
+    {
         ft->contours[ft->n_contours] = ft->n_points - 1;
         ft->n_contours++;
     }
@@ -234,7 +251,7 @@ static void ft_outline_close(PVG_FT_Outline* ft)
 {
     ft->contours_flag[ft->n_contours] = 0;
     int index = ft->n_contours ? ft->contours[ft->n_contours - 1] + 1 : 0;
-    if(index == ft->n_points)
+    if (index == ft->n_points)
         return;
     ft->points[ft->n_points].x = ft->points[index].x;
     ft->points[ft->n_points].y = ft->points[index].y;
@@ -244,7 +261,8 @@ static void ft_outline_close(PVG_FT_Outline* ft)
 
 static void ft_outline_end(PVG_FT_Outline* ft)
 {
-    if(ft->n_points) {
+    if (ft->n_points)
+    {
         ft->contours[ft->n_contours] = ft->n_points - 1;
         ft->n_contours++;
     }
@@ -254,7 +272,8 @@ static PVG_FT_Outline* ft_outline_convert_stroke(const plutovg_path_t* path, con
 
 static PVG_FT_Outline* ft_outline_convert(const plutovg_path_t* path, const plutovg_matrix_t* matrix, const plutovg_stroke_data_t* stroke_data)
 {
-    if(stroke_data) {
+    if (stroke_data)
+    {
         return ft_outline_convert_stroke(path, matrix, stroke_data);
     }
 
@@ -263,8 +282,10 @@ static PVG_FT_Outline* ft_outline_convert(const plutovg_path_t* path, const plut
 
     plutovg_point_t points[3];
     PVG_FT_Outline* outline = ft_outline_create(path->num_points, path->num_contours);
-    while(plutovg_path_iterator_has_next(&it)) {
-        switch(plutovg_path_iterator_next(&it, points)) {
+    while (plutovg_path_iterator_has_next(&it))
+    {
+        switch (plutovg_path_iterator_next(&it, points))
+        {
         case PLUTOVG_PATH_COMMAND_MOVE_TO:
             plutovg_matrix_map_points(matrix, points, points, 1);
             ft_outline_move_to(outline, points[0].x, points[0].y);
@@ -289,7 +310,7 @@ static PVG_FT_Outline* ft_outline_convert(const plutovg_path_t* path, const plut
 
 static PVG_FT_Outline* ft_outline_convert_dash(const plutovg_path_t* path, const plutovg_matrix_t* matrix, const plutovg_stroke_dash_t* stroke_dash)
 {
-    if(stroke_dash->array.size == 0)
+    if (stroke_dash->array.size == 0)
         return ft_outline_convert(path, matrix, NULL);
     plutovg_path_t* dashed = plutovg_path_clone_dashed(path, stroke_dash->offset, stroke_dash->array.data, stroke_dash->array.size);
     PVG_FT_Outline* outline = ft_outline_convert(dashed, matrix, NULL);
@@ -309,7 +330,8 @@ static PVG_FT_Outline* ft_outline_convert_stroke(const plutovg_path_t* path, con
     PVG_FT_Fixed ftMiterLimit = (PVG_FT_Fixed)(stroke_data->style.miter_limit * (1 << 16));
 
     PVG_FT_Stroker_LineCap ftCap;
-    switch(stroke_data->style.cap) {
+    switch (stroke_data->style.cap)
+    {
     case PLUTOVG_LINE_CAP_SQUARE:
         ftCap = PVG_FT_STROKER_LINECAP_SQUARE;
         break;
@@ -322,7 +344,8 @@ static PVG_FT_Outline* ft_outline_convert_stroke(const plutovg_path_t* path, con
     }
 
     PVG_FT_Stroker_LineJoin ftJoin;
-    switch(stroke_data->style.join) {
+    switch (stroke_data->style.join)
+    {
     case PLUTOVG_LINE_JOIN_BEVEL:
         ftJoin = PVG_FT_STROKER_LINEJOIN_BEVEL;
         break;
@@ -359,13 +382,18 @@ static void spans_generation_callback(int count, const PVG_FT_Span* spans, void*
     plutovg_array_append_data(span_buffer->spans, spans, count);
 }
 
-void plutovg_rasterize(plutovg_span_buffer_t* span_buffer, const plutovg_path_t* path, const plutovg_matrix_t* matrix, const plutovg_rect_t* clip_rect, const plutovg_stroke_data_t* stroke_data, plutovg_fill_rule_t winding)
+void plutovg_rasterize(plutovg_span_buffer_t* span_buffer, const plutovg_path_t* path, const plutovg_matrix_t* matrix, const plutovg_rect_t* clip_rect,
+                       const plutovg_stroke_data_t* stroke_data, plutovg_fill_rule_t winding)
 {
     PVG_FT_Outline* outline = ft_outline_convert(path, matrix, stroke_data);
-    if(stroke_data) {
+    if (stroke_data)
+    {
         outline->flags = PVG_FT_OUTLINE_NONE;
-    } else {
-        switch(winding) {
+    }
+    else
+    {
+        switch (winding)
+        {
         case PLUTOVG_FILL_RULE_EVEN_ODD:
             outline->flags = PVG_FT_OUTLINE_EVEN_ODD_FILL;
             break;
@@ -380,7 +408,8 @@ void plutovg_rasterize(plutovg_span_buffer_t* span_buffer, const plutovg_path_t*
     params.gray_spans = spans_generation_callback;
     params.user = span_buffer;
     params.source = outline;
-    if(clip_rect) {
+    if (clip_rect)
+    {
         params.flags |= PVG_FT_RASTER_FLAG_CLIP;
         params.clip_box.xMin = (PVG_FT_Pos)clip_rect->x;
         params.clip_box.yMin = (PVG_FT_Pos)clip_rect->y;

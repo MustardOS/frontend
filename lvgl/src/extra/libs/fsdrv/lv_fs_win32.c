@@ -30,17 +30,17 @@ typedef struct {
  *  STATIC PROTOTYPES
  **********************/
 
-static bool is_dots_name(const char * name);
+static int is_dots_name(const char *name);
 static lv_fs_res_t fs_error_from_win32(DWORD error);
-static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
-static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p);
-static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br);
-static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw);
-static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence);
-static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p);
-static void * fs_dir_open(lv_fs_drv_t * drv, const char * path);
-static lv_fs_res_t fs_dir_read(lv_fs_drv_t * drv, void * dir_p, char * fn);
-static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p);
+static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode);
+static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p);
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br);
+static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw);
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_whence_t whence);
+static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p);
+static void *fs_dir_open(lv_fs_drv_t *drv, const char *path);
+static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *dir_p, char *fn);
+static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *dir_p);
 
 /**********************
  *  STATIC VARIABLES
@@ -57,8 +57,7 @@ static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p);
 /**
  * Register a driver for the File system interface
  */
-void lv_fs_win32_init(void)
-{
+void lv_fs_win32_init(void) {
     /*---------------------------------------------------
      * Register the file system interface in LVGL
      *--------------------------------------------------*/
@@ -92,10 +91,9 @@ void lv_fs_win32_init(void)
 /**
  * Check the dots name
  * @param name file or dir name
- * @return true if the name is dots name
+ * @return 1 if the name is dots name
  */
-static bool is_dots_name(const char * name)
-{
+static int is_dots_name(const char *name) {
     return name[0] == '.' && (!name[1] || (name[1] == '.' && !name[2]));
 }
 
@@ -105,11 +103,10 @@ static bool is_dots_name(const char * name)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_error_from_win32(DWORD error)
-{
+static lv_fs_res_t fs_error_from_win32(DWORD error) {
     lv_fs_res_t res;
 
-    switch(error) {
+    switch (error) {
         case ERROR_SUCCESS:
             res = LV_FS_RES_OK;
             break;
@@ -201,17 +198,16 @@ static lv_fs_res_t fs_error_from_win32(DWORD error)
  * @param mode read: FS_MODE_RD, write: FS_MODE_WR, both: FS_MODE_RD | FS_MODE_WR
  * @return pointer to FIL struct or NULL in case of fail
  */
-static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
-{
+static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode) {
     LV_UNUSED(drv);
 
     DWORD desired_access = 0;
 
-    if(mode & LV_FS_MODE_RD) {
+    if (mode & LV_FS_MODE_RD) {
         desired_access |= GENERIC_READ;
     }
 
-    if(mode & LV_FS_MODE_WR) {
+    if (mode & LV_FS_MODE_WR) {
         desired_access |= GENERIC_WRITE;
     }
 
@@ -220,14 +216,7 @@ static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
     char buf[MAX_PATH];
     lv_snprintf(buf, sizeof(buf), LV_FS_WIN32_PATH "%s", path);
 
-    return (void *)CreateFileA(
-               buf,
-               desired_access,
-               FILE_SHARE_READ,
-               NULL,
-               OPEN_EXISTING,
-               FILE_ATTRIBUTE_NORMAL,
-               NULL);
+    return (void *) CreateFileA(buf, desired_access, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
 /**
@@ -237,12 +226,9 @@ static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p)
-{
+static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p) {
     LV_UNUSED(drv);
-    return CloseHandle((HANDLE)file_p)
-           ? LV_FS_RES_OK
-           : fs_error_from_win32(GetLastError());
+    return CloseHandle((HANDLE) file_p) ? LV_FS_RES_OK : fs_error_from_win32(GetLastError());
 }
 
 /**
@@ -255,12 +241,9 @@ static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br)
-{
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br) {
     LV_UNUSED(drv);
-    return ReadFile((HANDLE)file_p, buf, btr, (LPDWORD)br, NULL)
-           ? LV_FS_RES_OK
-           : fs_error_from_win32(GetLastError());
+    return ReadFile((HANDLE) file_p, buf, btr, (LPDWORD) br, NULL) ? LV_FS_RES_OK : fs_error_from_win32(GetLastError());
 }
 
 /**
@@ -272,12 +255,10 @@ static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_
  * @param bw the number of real written bytes (Bytes Written). NULL if unused.
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw)
-{
+static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw) {
     LV_UNUSED(drv);
-    return WriteFile((HANDLE)file_p, buf, btw, (LPDWORD)bw, NULL)
-           ? LV_FS_RES_OK
-           : fs_error_from_win32(GetLastError());
+    return WriteFile((HANDLE) file_p, buf, btw, (LPDWORD) bw, NULL) ? LV_FS_RES_OK
+                                                                    : fs_error_from_win32(GetLastError());
 }
 
 /**
@@ -288,26 +269,22 @@ static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, 
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence)
-{
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_whence_t whence) {
     LV_UNUSED(drv);
 
     DWORD move_method = (DWORD) -1;
-    if(whence == LV_FS_SEEK_SET) {
+    if (whence == LV_FS_SEEK_SET) {
         move_method = FILE_BEGIN;
-    }
-    else if(whence == LV_FS_SEEK_CUR) {
+    } else if (whence == LV_FS_SEEK_CUR) {
         move_method = FILE_CURRENT;
-    }
-    else if(whence == LV_FS_SEEK_END) {
+    } else if (whence == LV_FS_SEEK_END) {
         move_method = FILE_END;
     }
 
     LARGE_INTEGER distance_to_move;
     distance_to_move.QuadPart = pos;
-    return SetFilePointerEx((HANDLE)file_p, distance_to_move, NULL, move_method)
-           ? LV_FS_RES_OK
-           : fs_error_from_win32(GetLastError());
+    return SetFilePointerEx((HANDLE) file_p, distance_to_move, NULL, move_method) ? LV_FS_RES_OK
+                                                                                  : fs_error_from_win32(GetLastError());
 }
 
 /**
@@ -318,11 +295,10 @@ static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
-{
+static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p) {
     LV_UNUSED(drv);
 
-    if(!pos_p) {
+    if (!pos_p) {
         return LV_FS_RES_INV_PARAM;
     }
 
@@ -331,20 +307,14 @@ static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
 
     LARGE_INTEGER distance_to_move;
     distance_to_move.QuadPart = 0;
-    if(SetFilePointerEx(
-           (HANDLE)file_p,
-           distance_to_move,
-           &file_pointer,
-           FILE_CURRENT)) {
-        if(file_pointer.QuadPart > LONG_MAX) {
+    if (SetFilePointerEx((HANDLE) file_p, distance_to_move, &file_pointer, FILE_CURRENT)) {
+        if (file_pointer.QuadPart > LONG_MAX) {
             return LV_FS_RES_INV_PARAM;
-        }
-        else {
+        } else {
             *pos_p = file_pointer.LowPart;
             return LV_FS_RES_OK;
         }
-    }
-    else {
+    } else {
         return fs_error_from_win32(GetLastError());
     }
 }
@@ -355,10 +325,9 @@ static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
  * @param path path to a directory
  * @return pointer to an initialized 'DIR' or 'HANDLE' variable
  */
-static void * fs_dir_open(lv_fs_drv_t * drv, const char * path)
-{
+static void *fs_dir_open(lv_fs_drv_t *drv, const char *path) {
     LV_UNUSED(drv);
-    dir_handle_t * handle = (dir_handle_t *)lv_mem_alloc(sizeof(dir_handle_t));
+    dir_handle_t *handle = lv_mem_alloc(sizeof(dir_handle_t));
     handle->dir_p = INVALID_HANDLE_VALUE;
     handle->next_error = LV_FS_RES_OK;
     WIN32_FIND_DATAA fdata;
@@ -374,26 +343,23 @@ static void * fs_dir_open(lv_fs_drv_t * drv, const char * path)
     strcpy(handle->next_fn, "");
     handle->dir_p = FindFirstFileA(buf, &fdata);
     do {
-        if(is_dots_name(fdata.cFileName)) {
+        if (is_dots_name(fdata.cFileName)) {
             continue;
-        }
-        else {
-            if(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        } else {
+            if (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
                 lv_snprintf(handle->next_fn, sizeof(handle->next_fn), "/%s", fdata.cFileName);
-            }
-            else {
+            } else {
                 lv_snprintf(handle->next_fn, sizeof(handle->next_fn), "%s", fdata.cFileName);
             }
             break;
         }
-    } while(FindNextFileA(handle->dir_p, &fdata));
+    } while (FindNextFileA(handle->dir_p, &fdata));
 
-    if(handle->dir_p == INVALID_HANDLE_VALUE) {
+    if (handle->dir_p == INVALID_HANDLE_VALUE) {
         lv_mem_free(handle);
         handle->next_error = fs_error_from_win32(GetLastError());
         return INVALID_HANDLE_VALUE;
-    }
-    else {
+    } else {
         handle->next_error = LV_FS_RES_OK;
         return handle;
     }
@@ -407,32 +373,29 @@ static void * fs_dir_open(lv_fs_drv_t * drv, const char * path)
  * @param fn pointer to a buffer to store the filename
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_dir_read(lv_fs_drv_t * drv, void * dir_p, char * fn)
-{
+static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *dir_p, char *fn) {
     LV_UNUSED(drv);
-    dir_handle_t * handle = (dir_handle_t *)dir_p;
+    dir_handle_t *handle = (dir_handle_t *) dir_p;
     strcpy(fn, handle->next_fn);
     lv_fs_res_t current_error = handle->next_error;
     strcpy(handle->next_fn, "");
 
     WIN32_FIND_DATAA fdata;
 
-    while(FindNextFileA(handle->dir_p, &fdata)) {
-        if(is_dots_name(fdata.cFileName)) {
+    while (FindNextFileA(handle->dir_p, &fdata)) {
+        if (is_dots_name(fdata.cFileName)) {
             continue;
-        }
-        else {
-            if(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        } else {
+            if (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
                 lv_snprintf(handle->next_fn, sizeof(handle->next_fn), "/%s", fdata.cFileName);
-            }
-            else {
+            } else {
                 lv_snprintf(handle->next_fn, sizeof(handle->next_fn), "%s", fdata.cFileName);
             }
             break;
         }
     }
 
-    if(handle->next_fn[0] == '\0') {
+    if (handle->next_fn[0] == '\0') {
         handle->next_error = fs_error_from_win32(GetLastError());
     }
 
@@ -445,13 +408,10 @@ static lv_fs_res_t fs_dir_read(lv_fs_drv_t * drv, void * dir_p, char * fn)
  * @param dir_p pointer to an initialized 'DIR' or 'HANDLE' variable
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p)
-{
+static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *dir_p) {
     LV_UNUSED(drv);
-    dir_handle_t * handle = (dir_handle_t *)dir_p;
-    lv_fs_res_t res = FindClose(handle->dir_p)
-                      ? LV_FS_RES_OK
-                      : fs_error_from_win32(GetLastError());
+    dir_handle_t *handle = (dir_handle_t *) dir_p;
+    lv_fs_res_t res = FindClose(handle->dir_p) ? LV_FS_RES_OK : fs_error_from_win32(GetLastError());
     lv_mem_free(handle);
     return res;
 }
@@ -459,7 +419,7 @@ static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p)
 #else /*LV_USE_FS_WIN32 == 0*/
 
 #if defined(LV_FS_WIN32_LETTER) && LV_FS_WIN32_LETTER != '\0'
-    #warning "LV_USE_FS_WIN32 is not enabled but LV_FS_WIN32_LETTER is set"
+#warning "LV_USE_FS_WIN32 is not enabled but LV_FS_WIN32_LETTER is set"
 #endif
 
 #endif

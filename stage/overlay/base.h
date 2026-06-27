@@ -7,9 +7,9 @@
 
 #define BASE_OVERLAY_NOP OVERLAY_RUNNER "disable"
 
-#define BASE_ALPHA OVERLAY_CONFIG "gen_alpha"
+#define BASE_ALPHA  OVERLAY_CONFIG "gen_alpha"
 #define BASE_ANCHOR OVERLAY_CONFIG "gen_anchor"
-#define BASE_SCALE OVERLAY_CONFIG "gen_scale"
+#define BASE_SCALE  OVERLAY_CONFIG "gen_scale"
 
 extern int base_anchor_cached;
 extern int base_scale_cached;
@@ -41,8 +41,8 @@ extern struct alpha_cache base_alpha_cache;
 extern struct anchor_cache base_anchor_cache;
 extern struct scale_cache base_scale_cache;
 
-extern const struct overlay_resolver GLES_RESOLVER;
-extern const struct overlay_resolver SDL_RESOLVER;
+extern const struct overlay_resolver gles_resolver;
+extern const struct overlay_resolver sdl_resolver;
 
 void base_inotify_check(void);
 

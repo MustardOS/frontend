@@ -37,20 +37,20 @@ LV_EXPORT_CONST_INT(LV_TABLE_CELL_NONE);
 
 enum {
     LV_TABLE_CELL_CTRL_MERGE_RIGHT = 1 << 0,
-    LV_TABLE_CELL_CTRL_TEXT_CROP   = 1 << 1,
-    LV_TABLE_CELL_CTRL_CUSTOM_1    = 1 << 4,
-    LV_TABLE_CELL_CTRL_CUSTOM_2    = 1 << 5,
-    LV_TABLE_CELL_CTRL_CUSTOM_3    = 1 << 6,
-    LV_TABLE_CELL_CTRL_CUSTOM_4    = 1 << 7,
+    LV_TABLE_CELL_CTRL_TEXT_CROP = 1 << 1,
+    LV_TABLE_CELL_CTRL_CUSTOM_1 = 1 << 4,
+    LV_TABLE_CELL_CTRL_CUSTOM_2 = 1 << 5,
+    LV_TABLE_CELL_CTRL_CUSTOM_3 = 1 << 6,
+    LV_TABLE_CELL_CTRL_CUSTOM_4 = 1 << 7,
 };
 
-typedef uint8_t  lv_table_cell_ctrl_t;
+typedef uint8_t lv_table_cell_ctrl_t;
 
 /*Data of cell*/
 typedef struct {
     lv_table_cell_ctrl_t ctrl;
 #if LV_USE_USER_DATA
-    void * user_data; /**< Custom user data*/
+    void *user_data; /**< Custom user data*/
 #endif
     char txt[];
 } lv_table_cell_t;
@@ -60,9 +60,9 @@ typedef struct {
     lv_obj_t obj;
     uint16_t col_cnt;
     uint16_t row_cnt;
-    lv_table_cell_t ** cell_data;
-    lv_coord_t * row_h;
-    lv_coord_t * col_w;
+    lv_table_cell_t **cell_data;
+    lv_coord_t *row_h;
+    lv_coord_t *col_w;
     uint16_t col_act;
     uint16_t row_act;
 } lv_table_t;
@@ -74,7 +74,7 @@ extern const lv_obj_class_t lv_table_class;
  * Used in `LV_EVENT_DRAW_PART_BEGIN` and `LV_EVENT_DRAW_PART_END`
  */
 typedef enum {
-    LV_TABLE_DRAW_PART_CELL,       /**< A cell*/
+    LV_TABLE_DRAW_PART_CELL, /**< A cell*/
 } lv_table_draw_part_type_t;
 
 /**********************
@@ -86,7 +86,7 @@ typedef enum {
  * @param parent        pointer to an object, it will be the parent of the new table
  * @return              pointer to the created table
  */
-lv_obj_t * lv_table_create(lv_obj_t * parent);
+lv_obj_t *lv_table_create(lv_obj_t *parent);
 
 /*=====================
  * Setter functions
@@ -97,10 +97,11 @@ lv_obj_t * lv_table_create(lv_obj_t * parent);
  * @param obj           pointer to a Table object
  * @param row           id of the row [0 .. row_cnt -1]
  * @param col           id of the column [0 .. col_cnt -1]
- * @param txt           text to display in the cell. It will be copied and saved so this variable is not required after this function call.
+ * @param txt           text to display in the cell. It will be copied and saved so this variable is not required after
+ * this function call.
  * @note                New roes/columns are added automatically if required
  */
-void lv_table_set_cell_value(lv_obj_t * obj, uint16_t row, uint16_t col, const char * txt);
+void lv_table_set_cell_value(lv_obj_t *obj, uint16_t row, uint16_t col, const char *txt);
 
 /**
  * Set the value of a cell.  Memory will be allocated to store the text by the table.
@@ -110,21 +111,21 @@ void lv_table_set_cell_value(lv_obj_t * obj, uint16_t row, uint16_t col, const c
  * @param fmt           `printf`-like format
  * @note                New roes/columns are added automatically if required
  */
-void lv_table_set_cell_value_fmt(lv_obj_t * obj, uint16_t row, uint16_t col, const char * fmt, ...);
+void lv_table_set_cell_value_fmt(lv_obj_t *obj, uint16_t row, uint16_t col, const char *fmt, ...);
 
 /**
  * Set the number of rows
  * @param obj           table pointer to a Table object
  * @param row_cnt       number of rows
  */
-void lv_table_set_row_cnt(lv_obj_t * obj, uint16_t row_cnt);
+void lv_table_set_row_cnt(lv_obj_t *obj, uint16_t row_cnt);
 
 /**
  * Set the number of columns
  * @param obj       table pointer to a Table object
  * @param col_cnt   number of columns.
  */
-void lv_table_set_col_cnt(lv_obj_t * obj, uint16_t col_cnt);
+void lv_table_set_col_cnt(lv_obj_t *obj, uint16_t col_cnt);
 
 /**
  * Set the width of a column
@@ -132,7 +133,7 @@ void lv_table_set_col_cnt(lv_obj_t * obj, uint16_t col_cnt);
  * @param col_id    id of the column [0 .. LV_TABLE_COL_MAX -1]
  * @param w         width of the column
  */
-void lv_table_set_col_width(lv_obj_t * obj, uint16_t col_id, lv_coord_t w);
+void lv_table_set_col_width(lv_obj_t *obj, uint16_t col_id, lv_coord_t w);
 
 /**
  * Add control bits to the cell.
@@ -141,7 +142,7 @@ void lv_table_set_col_width(lv_obj_t * obj, uint16_t col_id, lv_coord_t w);
  * @param col       id of the column [0 .. col_cnt -1]
  * @param ctrl      OR-ed values from ::lv_table_cell_ctrl_t
  */
-void lv_table_add_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_table_cell_ctrl_t ctrl);
+void lv_table_add_cell_ctrl(lv_obj_t *obj, uint16_t row, uint16_t col, lv_table_cell_ctrl_t ctrl);
 
 /**
  * Clear control bits of the cell.
@@ -150,7 +151,7 @@ void lv_table_add_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_table
  * @param col       id of the column [0 .. col_cnt -1]
  * @param ctrl      OR-ed values from ::lv_table_cell_ctrl_t
  */
-void lv_table_clear_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_table_cell_ctrl_t ctrl);
+void lv_table_clear_cell_ctrl(lv_obj_t *obj, uint16_t row, uint16_t col, lv_table_cell_ctrl_t ctrl);
 
 #if LV_USE_USER_DATA
 /**
@@ -160,7 +161,7 @@ void lv_table_clear_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_tab
  * @param col       id of the column [0 .. col_cnt -1]
  * @param user_data pointer to the new user_data. It must be allocated by user as it will be freed automatically
  */
-void lv_table_set_cell_user_data(lv_obj_t * obj, uint16_t row, uint16_t col, void * user_data);
+void lv_table_set_cell_user_data(lv_obj_t *obj, uint16_t row, uint16_t col, void *user_data);
 #endif
 
 /*=====================
@@ -174,21 +175,21 @@ void lv_table_set_cell_user_data(lv_obj_t * obj, uint16_t row, uint16_t col, voi
  * @param col       id of the column [0 .. col_cnt -1]
  * @return          text in the cell
  */
-const char * lv_table_get_cell_value(lv_obj_t * obj, uint16_t row, uint16_t col);
+const char *lv_table_get_cell_value(lv_obj_t *obj, uint16_t row, uint16_t col);
 
 /**
  * Get the number of rows.
  * @param obj       table pointer to a Table object
  * @return          number of rows.
  */
-uint16_t lv_table_get_row_cnt(lv_obj_t * obj);
+uint16_t lv_table_get_row_cnt(lv_obj_t *obj);
 
 /**
  * Get the number of columns.
  * @param obj       table pointer to a Table object
  * @return          number of columns.
  */
-uint16_t lv_table_get_col_cnt(lv_obj_t * obj);
+uint16_t lv_table_get_col_cnt(lv_obj_t *obj);
 
 /**
  * Get the width of a column
@@ -196,7 +197,7 @@ uint16_t lv_table_get_col_cnt(lv_obj_t * obj);
  * @param col       id of the column [0 .. LV_TABLE_COL_MAX -1]
  * @return          width of the column
  */
-lv_coord_t lv_table_get_col_width(lv_obj_t * obj, uint16_t col);
+lv_coord_t lv_table_get_col_width(lv_obj_t *obj, uint16_t col);
 
 /**
  * Get whether a cell has the control bits
@@ -204,9 +205,9 @@ lv_coord_t lv_table_get_col_width(lv_obj_t * obj, uint16_t col);
  * @param row       id of the row [0 .. row_cnt -1]
  * @param col       id of the column [0 .. col_cnt -1]
  * @param ctrl      OR-ed values from ::lv_table_cell_ctrl_t
- * @return          true: all control bits are set; false: not all control bits are set
+ * @return          1: all control bits are set; 0: not all control bits are set
  */
-bool lv_table_has_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_table_cell_ctrl_t ctrl);
+int lv_table_has_cell_ctrl(lv_obj_t *obj, uint16_t row, uint16_t col, lv_table_cell_ctrl_t ctrl);
 
 /**
  * Get the selected cell (pressed and or focused)
@@ -214,7 +215,7 @@ bool lv_table_has_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_table
  * @param row       pointer to variable to store the selected row (LV_TABLE_CELL_NONE: if no cell selected)
  * @param col       pointer to variable to store the selected column  (LV_TABLE_CELL_NONE: if no cell selected)
  */
-void lv_table_get_selected_cell(lv_obj_t * obj, uint16_t * row, uint16_t * col);
+void lv_table_get_selected_cell(lv_obj_t *obj, uint16_t *row, uint16_t *col);
 
 #if LV_USE_USER_DATA
 /**
@@ -223,7 +224,7 @@ void lv_table_get_selected_cell(lv_obj_t * obj, uint16_t * row, uint16_t * col);
  * @param row       id of the row [0 .. row_cnt -1]
  * @param col       id of the column [0 .. col_cnt -1]
  */
-void * lv_table_get_cell_user_data(lv_obj_t * obj, uint16_t row, uint16_t col);
+void *lv_table_get_cell_user_data(lv_obj_t *obj, uint16_t row, uint16_t col);
 #endif
 
 /**********************

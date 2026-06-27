@@ -12,10 +12,13 @@ void apply_glyph_scale(lv_obj_t *img, const char *embed, int box_w, int box_h);
 
 void set_list_glyph_image(lv_obj_t *img, const char *embed);
 
-int get_glyph_path(const char *mux_module, const char *glyph_name,
-                   char *glyph_image_embed, size_t glyph_image_embed_size);
+int get_glyph_path(
+    const char *mux_module, const char *glyph_name, char *glyph_image_embed, size_t glyph_image_embed_size
+);
 
-void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lblItemGlyph);
+void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lbl_item_glyph);
 
-void get_app_grid_glyph(const char *app_folder, const char *glyph_name, const char *fallback_name,
-                        char *glyph_image_path, size_t glyph_image_path_size);
+void get_app_grid_glyph(
+    const char *app_folder, const char *glyph_name, const char *fallback_name, char *glyph_image_path,
+    size_t glyph_image_path_size
+);

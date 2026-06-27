@@ -12,8 +12,8 @@
 // Since we are sending the LVGL path and it is set to root
 // we can simply strip the ':' character within the string
 static const char *svg_real_path(const void *src) {
-    const char *path = (const char *) src;
-    return (path[1] == ':') ? path + 2 : path;
+    const char *path = src;
+    return path[1] == ':' ? path + 2 : path;
 }
 
 // Are we really who we say we are?
@@ -24,7 +24,7 @@ static int svg_src_is_svg(const void *src) {
 
     const char *path = svg_real_path(src);
     const char *q = strchr(path, '?');
-    size_t len = q ? (size_t) (q - path) : strlen(path);
+    const size_t len = q ? (size_t) (q - path) : strlen(path);
 
     return len >= 4 && strncasecmp(path + len - 4, ".svg", 4) == 0;
 }
@@ -50,11 +50,11 @@ static void svg_parse_src(const void *src, char *file_path, int *hint_w, int *hi
 
         const char *p = q + 1;
         char *end;
-        long w = strtol(p, &end, 10);
+        const long w = strtol(p, &end, 10);
 
         if (end != p && *end == 'x') {
             p = end + 1;
-            long h = strtol(p, &end, 10);
+            const long h = strtol(p, &end, 10);
             if (end != p) {
                 *hint_w = (int) w;
                 *hint_h = (int) h;
@@ -69,7 +69,8 @@ static void svg_parse_src(const void *src, char *file_path, int *hint_w, int *hi
 // If hint_w/h are non-zero (i.e grid or carousel mode), scale the glyph proportionally
 // to fit within that box. Otherwise uses the config/theme glyph size
 // -1 = native SVG size, 0 = auto-fit to item height, positive = explicit px etc.
-static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, int *out_w, int *out_h) {
+static void
+svg_target_size(const int native_w, const int native_h, const int hint_w, const int hint_h, int *out_w, int *out_h) {
     if (hint_w < 0 || hint_h < 0) {
         *out_w = native_w;
         *out_h = native_h;
@@ -83,8 +84,8 @@ static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, 
             return;
         }
 
-        int target_w = hint_w > 0 ? hint_w : native_w;
-        int target_h = hint_h > 0 ? hint_h : native_h;
+        const int target_w = hint_w > 0 ? hint_w : native_w;
+        const int target_h = hint_h > 0 ? hint_h : native_h;
 
         // Scale proportionally to fit within target box width and height
         int sw, sh;
@@ -96,13 +97,13 @@ static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, 
             sw = (native_w * target_h + native_h / 2) / native_h;
         }
 
-        *out_w = (sw < 1) ? 1 : sw;
-        *out_h = (sh < 1) ? 1 : sh;
+        *out_w = sw < 1 ? 1 : sw;
+        *out_h = sh < 1 ? 1 : sh;
 
         return;
     }
 
-    int target = (int) theme.MUX.ITEM.HEIGHT * 3 / 4;
+    const int target = (int) theme.mux.item.height * 3 / 4;
     if (target <= 0 || native_w <= 0 || native_h <= 0) {
         *out_w = native_w;
         *out_h = native_h;
@@ -119,8 +120,8 @@ static void svg_target_size(int native_w, int native_h, int hint_w, int hint_h, 
         sw = (native_w * target + native_h / 2) / native_h;
     }
 
-    *out_w = (sw < 1) ? 1 : sw;
-    *out_h = (sh < 1) ? 1 : sh;
+    *out_w = sw < 1 ? 1 : sw;
+    *out_h = sh < 1 ? 1 : sh;
 }
 
 static lv_res_t svg_info_cb(lv_img_decoder_t *decoder, const void *src, lv_img_header_t *header) {
@@ -135,8 +136,8 @@ static lv_res_t svg_info_cb(lv_img_decoder_t *decoder, const void *src, lv_img_h
     plutosvg_document_t *doc = plutosvg_document_load_from_file(file_path, -1, -1);
     if (!doc) return LV_RES_INV;
 
-    int native_w = (int) plutosvg_document_get_width(doc);
-    int native_h = (int) plutosvg_document_get_height(doc);
+    const int native_w = (int) plutosvg_document_get_width(doc);
+    const int native_h = (int) plutosvg_document_get_height(doc);
     plutosvg_document_destroy(doc);
 
     if (native_w <= 0 || native_h <= 0) return LV_RES_INV;
@@ -146,8 +147,8 @@ static lv_res_t svg_info_cb(lv_img_decoder_t *decoder, const void *src, lv_img_h
 
     header->always_zero = 0;
     header->cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
-    header->w = (lv_coord_t) w;
-    header->h = (lv_coord_t) h;
+    header->w = w;
+    header->h = h;
 
     return LV_RES_OK;
 }
@@ -164,8 +165,8 @@ static lv_res_t svg_open_cb(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *dsc
     plutosvg_document_t *doc = plutosvg_document_load_from_file(file_path, -1, -1);
     if (!doc) return LV_RES_INV;
 
-    int native_w = (int) plutosvg_document_get_width(doc);
-    int native_h = (int) plutosvg_document_get_height(doc);
+    const int native_w = (int) plutosvg_document_get_width(doc);
+    const int native_h = (int) plutosvg_document_get_height(doc);
 
     if (native_w <= 0 || native_h <= 0) {
         plutosvg_document_destroy(doc);

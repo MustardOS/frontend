@@ -3,13 +3,13 @@
 #include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
-void init_muxappcon(lv_obj_t *ui_pnlContent);
+void init_muxappcon(lv_obj_t *ui_pnl_content);
 
-#define APPCON(NAME, ENUM, UDATA)                \
-    extern lv_obj_t *ui_pnl##NAME##_appcon;      \
-    extern lv_obj_t *ui_lbl##NAME##_appcon;      \
-    extern lv_obj_t *ui_ico##NAME##_appcon;      \
-    extern lv_obj_t *ui_lbl##NAME##Value_appcon;
+#define APPCON(NAME, UDATA)                                                                                            \
+    extern lv_obj_t *ui_pnl_##NAME##_appcon;                                                                           \
+    extern lv_obj_t *ui_lbl_##NAME##_appcon;                                                                           \
+    extern lv_obj_t *ui_ico_##NAME##_appcon;                                                                           \
+    extern lv_obj_t *ui_val_##NAME##_appcon;
 
 APPCON_ELEMENTS
 #undef APPCON

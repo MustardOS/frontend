@@ -15,35 +15,34 @@
 #define RENDER_VK_CREATE_SC   "vkCreateSwapchainKHR"
 #define RENDER_VK_DESTROY_SC  "vkDestroySwapchainKHR"
 
-void (*real_SDL_RenderPresent)(SDL_Renderer *) = NULL;
+void (*real_sdl_render_present)(SDL_Renderer *) = NULL;
 
-EGLBoolean (*real_eglSwapBuffers)(EGLDisplay, EGLSurface) = NULL;
+EGLBoolean (*real_egl_swap_buffers)(EGLDisplay, EGLSurface) = NULL;
 
-void (*real_SDL_GL_SwapWindow)(SDL_Window *) = NULL;
+void (*real_sdl_gl_swap_window)(SDL_Window *) = NULL;
 
-PFN_vkGetInstanceProcAddr real_vkGetInstanceProcAddr = NULL;
+PFN_vkGetInstanceProcAddr real_vk_get_instance_proc_addr = NULL;
 
-PFN_vkGetDeviceProcAddr real_vkGetDeviceProcAddr = NULL;
+PFN_vkGetDeviceProcAddr real_vk_get_device_proc_addr = NULL;
 
-PFN_vkQueuePresentKHR real_vkQueuePresentKHR = NULL;
+PFN_vkQueuePresentKHR real_vk_queue_present_khr = NULL;
 
-PFN_vkCreateDevice real_vkCreateDevice = NULL;
+PFN_vkCreateDevice real_vk_create_device = NULL;
 
-PFN_vkDestroyDevice real_vkDestroyDevice = NULL;
+PFN_vkDestroyDevice real_vk_destroy_device = NULL;
 
-PFN_vkCreateSwapchainKHR real_vkCreateSwapchainKHR = NULL;
+PFN_vkCreateSwapchainKHR real_vk_create_swapchain_khr = NULL;
 
-PFN_vkDestroySwapchainKHR real_vkDestroySwapchainKHR = NULL;
+PFN_vkDestroySwapchainKHR real_vk_destroy_swapchain_khr = NULL;
 
-__attribute__((constructor))
-static void resolve_symbols(void) {
-    real_SDL_RenderPresent = dlsym(RTLD_NEXT, RENDER_SDL);
-    real_eglSwapBuffers = dlsym(RTLD_NEXT, RENDER_EGL);
-    real_SDL_GL_SwapWindow = dlsym(RTLD_NEXT, RENDER_GL);
+__attribute__((constructor)) static void resolve_symbols(void) {
+    real_sdl_render_present = dlsym(RTLD_NEXT, RENDER_SDL);
+    real_egl_swap_buffers = dlsym(RTLD_NEXT, RENDER_EGL);
+    real_sdl_gl_swap_window = dlsym(RTLD_NEXT, RENDER_GL);
 
-    if (!real_SDL_RenderPresent) LOG_ERROR("stage", "Failed to hook to renderer: " RENDER_SDL);
-    if (!real_eglSwapBuffers) LOG_WARN ("stage", "Failed to hook to renderer: " RENDER_EGL);
-    if (!real_SDL_GL_SwapWindow) LOG_ERROR("stage", "Failed to hook to renderer: " RENDER_GL);
+    if (!real_sdl_render_present) LOG_ERROR("stage", "Failed to hook to renderer: " RENDER_SDL);
+    if (!real_egl_swap_buffers) LOG_WARN("stage", "Failed to hook to renderer: " RENDER_EGL);
+    if (!real_sdl_gl_swap_window) LOG_ERROR("stage", "Failed to hook to renderer: " RENDER_GL);
 }
 
 static pthread_once_t vulkan_resolve_once = PTHREAD_ONCE_INIT;
@@ -59,17 +58,14 @@ extern VkResult vkCreateDevice(VkPhysicalDevice, const VkDeviceCreateInfo *, con
 
 extern void vkDestroyDevice(VkDevice, const VkAllocationCallbacks *);
 
-extern VkResult vkCreateSwapchainKHR(VkDevice, const VkSwapchainCreateInfoKHR *, const VkAllocationCallbacks *, VkSwapchainKHR *);
+extern VkResult
+vkCreateSwapchainKHR(VkDevice, const VkSwapchainCreateInfoKHR *, const VkAllocationCallbacks *, VkSwapchainKHR *);
 
 extern void vkDestroySwapchainKHR(VkDevice, VkSwapchainKHR, const VkAllocationCallbacks *);
 
 static int is_self_pointer(void *p) {
-    return p == (void *) vkGetInstanceProcAddr
-           || p == (void *) vkGetDeviceProcAddr
-           || p == (void *) vkQueuePresentKHR
-           || p == (void *) vkCreateDevice
-           || p == (void *) vkDestroyDevice
-           || p == (void *) vkCreateSwapchainKHR
+    return p == (void *) vkGetInstanceProcAddr || p == (void *) vkGetDeviceProcAddr || p == (void *) vkQueuePresentKHR
+           || p == (void *) vkCreateDevice || p == (void *) vkDestroyDevice || p == (void *) vkCreateSwapchainKHR
            || p == (void *) vkDestroySwapchainKHR;
 }
 
@@ -97,13 +93,13 @@ static int try_resolve_via(void *handle, const char *tag) {
 
     if (!p_present) return n;
 
-    real_vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) p_gipa;
-    real_vkGetDeviceProcAddr = (PFN_vkGetDeviceProcAddr) p_gdpa;
-    real_vkQueuePresentKHR = (PFN_vkQueuePresentKHR) p_present;
-    real_vkCreateDevice = (PFN_vkCreateDevice) p_create_dev;
-    real_vkDestroyDevice = (PFN_vkDestroyDevice) p_destroy_dev;
-    real_vkCreateSwapchainKHR = (PFN_vkCreateSwapchainKHR) p_create_sc;
-    real_vkDestroySwapchainKHR = (PFN_vkDestroySwapchainKHR) p_destroy_sc;
+    real_vk_get_instance_proc_addr = (PFN_vkGetInstanceProcAddr) p_gipa;
+    real_vk_get_device_proc_addr = (PFN_vkGetDeviceProcAddr) p_gdpa;
+    real_vk_queue_present_khr = (PFN_vkQueuePresentKHR) p_present;
+    real_vk_create_device = (PFN_vkCreateDevice) p_create_dev;
+    real_vk_destroy_device = (PFN_vkDestroyDevice) p_destroy_dev;
+    real_vk_create_swapchain_khr = (PFN_vkCreateSwapchainKHR) p_create_sc;
+    real_vk_destroy_swapchain_khr = (PFN_vkDestroySwapchainKHR) p_destroy_sc;
     return n;
 }
 
@@ -113,13 +109,13 @@ static void resolve_vulkan_once(void) {
     if (!handle) handle = dlopen("libvulkan.so.1", RTLD_LAZY | RTLD_LOCAL);
     if (!handle) handle = dlopen("libvulkan.so", RTLD_LAZY | RTLD_LOCAL);
 
-    if (handle && try_resolve_via(handle, "dlopen(libvulkan)") > 0 && real_vkQueuePresentKHR) {
+    if (handle && try_resolve_via(handle, "dlopen(libvulkan)") > 0 && real_vk_queue_present_khr) {
         LOG_INFO("stage", "[vk] resolved via explicit dlopen of libvulkan");
         vulkan_resolved_ok = 1;
         return;
     }
 
-    if (try_resolve_via(RTLD_NEXT, "RTLD_NEXT") > 0 && real_vkQueuePresentKHR) {
+    if (try_resolve_via(RTLD_NEXT, "RTLD_NEXT") > 0 && real_vk_queue_present_khr) {
         LOG_INFO("stage", "[vk] resolved via RTLD_NEXT");
         vulkan_resolved_ok = 1;
         return;
@@ -128,7 +124,12 @@ static void resolve_vulkan_once(void) {
     void *gipa = dlsym(RTLD_NEXT, RENDER_VK_GIPA);
     void *gdpa = dlsym(RTLD_NEXT, RENDER_VK_GDPA);
 
-    LOG_WARN("stage", "[vk] could not resolve real Vulkan symbols. vkGetInstanceProcAddr=%p vkGetDeviceProcAddr=%p libvulkan_handle=%p", gipa, gdpa, handle);
+    LOG_WARN(
+        "stage",
+        "[vk] could not resolve real Vulkan symbols. vkGetInstanceProcAddr=%p vkGetDeviceProcAddr=%p "
+        "libvulkan_handle=%p",
+        gipa, gdpa, handle
+    );
 }
 
 int resolve_vulkan_symbols(void) {

@@ -18,18 +18,17 @@ static void hide_save_dialog(void) {
     dialogue_hide(&save_dlg);
 }
 
-#define VISUAL(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(VISUAL_ELEMENTS)
-};
+#define VISUAL(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(VISUAL_ELEMENTS) };
 #undef VISUAL
 
-#define VISUAL(NAME, ENUM, UDATA) static int NAME##_original;
+#define VISUAL(NAME, UDATA) static int NAME##_original;
 VISUAL_ELEMENTS
 #undef VISUAL
 
 static int any_visual_modified(void) {
-#define VISUAL(NAME, ENUM, UDATA) if (lv_dropdown_get_selected(ui_dro##NAME##_visual) != NAME##_original) return 1;
+#define VISUAL(NAME, UDATA)                                                                                            \
+    if (lv_dropdown_get_selected(ui_dro_##NAME##_visual) != NAME##_original) return 1;
     VISUAL_ELEMENTS
 #undef VISUAL
     return 0;
@@ -38,7 +37,7 @@ static int any_visual_modified(void) {
 static int overlay_count;
 static int has_theme_overlay;
 
-static int overlay_config_to_dropdown(int config_val) {
+static int overlay_config_to_dropdown(const int config_val) {
     if (!has_theme_overlay) {
         if (config_val == 1) return 0;
         if (config_val >= 2) return config_val - 1;
@@ -46,15 +45,15 @@ static int overlay_config_to_dropdown(int config_val) {
     return config_val;
 }
 
-static int overlay_dropdown_to_config(int dropdown_idx) {
+static int overlay_dropdown_to_config(const int dropdown_idx) {
     if (!has_theme_overlay && dropdown_idx >= 1) return dropdown_idx + 1;
     return dropdown_idx;
 }
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define VISUAL(NAME, ENUM, UDATA) { UDATA, lang.MUXVISUAL.HELP.ENUM },
-            VISUAL_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define VISUAL(NAME, UDATA) {UDATA, lang.muxvisual.help.NAME},
+        VISUAL_ELEMENTS
 #undef VISUAL
     };
 
@@ -62,211 +61,205 @@ static void show_help(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define VISUAL(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
+#define VISUAL(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_visual);
     VISUAL_ELEMENTS
 #undef VISUAL
 }
 
 static void restore_visual_options(void) {
-#define VISUAL(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_visual, config.VISUAL.ENUM);
+#define VISUAL(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_visual, config.visual.NAME);
     VISUAL_ELEMENTS
 #undef VISUAL
 
     {
-        int ddr = overlay_config_to_dropdown(config.VISUAL.OVERLAYIMAGE);
-        lv_dropdown_set_selected(ui_droOverlayImage_visual, (ddr < 0 || ddr >= overlay_count) ? 0 : ddr);
+        const int ddr = overlay_config_to_dropdown(config.visual.overlay_image);
+        lv_dropdown_set_selected(ui_dro_overlay_image_visual, ddr < 0 || ddr >= overlay_count ? 0 : ddr);
     }
 
-    lv_dropdown_set_selected(ui_droOverlayTransparency_visual, int_to_pct(config.VISUAL.OVERLAYTRANSPARENCY, 0, 255));
+    lv_dropdown_set_selected(
+        ui_dro_overlay_transparency_visual, int_to_pct(config.visual.overlay_transparency, 0, 255)
+    );
 }
 
 static void save_visual_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Bluetooth, "visual/bluetooth", INT, 0);
-    CHECK_AND_SAVE_STD(visual, HeaderTitle, "visual/headertitle", INT, 0);
-    CHECK_AND_SAVE_STD(visual, DialogueTransition, "visual/dialoguetransition", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Dash, "visual/dash", INT, 0);
-    CHECK_AND_SAVE_STD(visual, FriendlyFolder, "visual/friendlyfolder", INT, 0);
-    CHECK_AND_SAVE_STD(visual, TheTitleFormat, "visual/thetitleformat", INT, 0);
-    CHECK_AND_SAVE_STD(visual, TitleIncludeRootDrive, "visual/titleincluderootdrive", INT, 0);
-    CHECK_AND_SAVE_STD(visual, FolderItemCount, "visual/folderitemcount", INT, 0);
-    CHECK_AND_SAVE_STD(visual, DisplayEmptyFolder, "visual/folderempty", INT, 0);
-    CHECK_AND_SAVE_STD(visual, MenuCounterFolder, "visual/counterfolder", INT, 0);
-    CHECK_AND_SAVE_STD(visual, MenuCounterFile, "visual/counterfile", INT, 0);
-    CHECK_AND_SAVE_STD(visual, Hidden, "visual/hidden", INT, 0);
-    CHECK_AND_SAVE_STD(visual, ContentCollect, "visual/contentcollect", INT, 0);
-    CHECK_AND_SAVE_STD(visual, ContentHistory, "visual/contenthistory", INT, 0);
-    CHECK_AND_SAVE_STD(visual, MixedContent, "visual/mixedcontent", INT, 0);
-    CHECK_AND_SAVE_STD(visual, ForwardHistory, "visual/forwardhistory", INT, 0);
-    CHECK_AND_SAVE_STD(visual, NameScroll, "visual/namescroll", INT, 0);
-    CHECK_AND_SAVE_STD(visual, LabelScrollSpeed, "visual/labelscrollspeed", INT, 0);
-    CHECK_AND_SAVE_STD(visual, ListGlyph, "visual/listglyph", INT, 0);
-    CHECK_AND_SAVE_STD(visual, SelectionAnimation, "visual/selectionanimation", INT, 0);
-    CHECK_AND_SAVE_STD(visual, SelectionStyle, "visual/selectionstyle", INT, 0);
-    CHECK_AND_SAVE_STD(visual, RenderShadows, "visual/shadow", INT, 0);
+    CHECK_AND_SAVE_STD(visual, battery, "visual/battery", INT, 0);
+    CHECK_AND_SAVE_STD(visual, clock, "visual/clock", INT, 0);
+    CHECK_AND_SAVE_STD(visual, network, "visual/network", INT, 0);
+    CHECK_AND_SAVE_STD(visual, bluetooth, "visual/bluetooth", INT, 0);
+    CHECK_AND_SAVE_STD(visual, header_title, "visual/headertitle", INT, 0);
+    CHECK_AND_SAVE_STD(visual, dialogue_transition, "visual/dialoguetransition", INT, 0);
+    CHECK_AND_SAVE_STD(visual, name, "visual/name", INT, 0);
+    CHECK_AND_SAVE_STD(visual, dash, "visual/dash", INT, 0);
+    CHECK_AND_SAVE_STD(visual, friendly_folder, "visual/friendlyfolder", INT, 0);
+    CHECK_AND_SAVE_STD(visual, the_title_format, "visual/thetitleformat", INT, 0);
+    CHECK_AND_SAVE_STD(visual, title_include_root_drive, "visual/titleincluderootdrive", INT, 0);
+    CHECK_AND_SAVE_STD(visual, folder_item_count, "visual/folderitemcount", INT, 0);
+    CHECK_AND_SAVE_STD(visual, display_empty_folder, "visual/folderempty", INT, 0);
+    CHECK_AND_SAVE_STD(visual, menu_counter_folder, "visual/counterfolder", INT, 0);
+    CHECK_AND_SAVE_STD(visual, menu_counter_file, "visual/counterfile", INT, 0);
+    CHECK_AND_SAVE_STD(visual, hidden, "visual/hidden", INT, 0);
+    CHECK_AND_SAVE_STD(visual, content_collect, "visual/contentcollect", INT, 0);
+    CHECK_AND_SAVE_STD(visual, content_history, "visual/contenthistory", INT, 0);
+    CHECK_AND_SAVE_STD(visual, mixed_content, "visual/mixedcontent", INT, 0);
+    CHECK_AND_SAVE_STD(visual, forward_history, "visual/forwardhistory", INT, 0);
+    CHECK_AND_SAVE_STD(visual, name_scroll, "visual/namescroll", INT, 0);
+    CHECK_AND_SAVE_STD(visual, label_scroll_speed, "visual/labelscrollspeed", INT, 0);
+    CHECK_AND_SAVE_STD(visual, list_glyph, "visual/listglyph", INT, 0);
+    CHECK_AND_SAVE_STD(visual, selection_animation, "visual/selectionanimation", INT, 0);
+    CHECK_AND_SAVE_STD(visual, selection_style, "visual/selectionstyle", INT, 0);
+    CHECK_AND_SAVE_STD(visual, render_shadows, "visual/shadow", INT, 0);
 
     {
-        int current = lv_dropdown_get_selected(ui_droOverlayImage_visual);
-        if (current != OverlayImage_original) {
+        const int oi_current = lv_dropdown_get_selected(ui_dro_overlay_image_visual);
+        if (oi_current != overlay_image_original) {
             is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "visual/overlayimage", "w", INT, overlay_dropdown_to_config(current));
+            write_text_to_file(
+                CONF_CONFIG_PATH "visual/overlayimage", "w", INT, overlay_dropdown_to_config(oi_current)
+            );
         }
     }
 
     {
-        int ot_current = lv_dropdown_get_selected(ui_droOverlayTransparency_visual);
-        if (ot_current != OverlayTransparency_original) {
+        const int ot_current = lv_dropdown_get_selected(ui_dro_overlay_transparency_visual);
+        if (ot_current != overlay_transparency_original) {
             is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "visual/overlaytransparency", "w", INT,
-                               pct_to_int(ot_current, 0, 255));
+            write_text_to_file(CONF_CONFIG_PATH "visual/overlaytransparency", "w", INT, pct_to_int(ot_current, 0, 255));
         }
     }
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
+        toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
     char *visual_names[] = {
-            lang.MUXVISUAL.NAME.FULL,
-            lang.MUXVISUAL.NAME.REM_SQ,
-            lang.MUXVISUAL.NAME.REM_PA,
-            lang.MUXVISUAL.NAME.REM_SQPA
+        lang.muxvisual.name.full, lang.muxvisual.name.rem_sq, lang.muxvisual.name.rem_pa, lang.muxvisual.name.rem_sqpa
     };
 
     char *scroll_mode[] = {
-            lang.MUXVISUAL.SCROLL_MODE.DISABLED,
-            lang.MUXVISUAL.SCROLL_MODE.CONTINUOUS,
-            lang.MUXVISUAL.SCROLL_MODE.BOUNCE
+        lang.muxvisual.scroll_mode.disabled, lang.muxvisual.scroll_mode.continuous, lang.muxvisual.scroll_mode.bounce
     };
 
-    char *label_scroll_speed[] = {
-            scroll_speed[0],
-            scroll_speed[1],
-            scroll_speed[2],
-            scroll_speed[3]
-    };
+    char *label_scroll_speed[] = {scroll_speed[0], scroll_speed[1], scroll_speed[2], scroll_speed[3]};
 
     char *dialogue_transition[] = {
-            lang.MUXCONTENT.BOX_ART.TRANSITION.FADE_IN,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_RIGHT,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_LEFT,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_UP,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SLIDE_DOWN,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_RIGHT,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_LEFT,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_UP,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.BOUNCE_DOWN,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_RIGHT,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_LEFT,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_UP,
-            lang.MUXCONTENT.BOX_ART.TRANSITION.SHOOT_DOWN,
-            lang.GENERIC.DISABLED
+        lang.muxcontent.box_art.transition.fade_in,     lang.muxcontent.box_art.transition.slide_right,
+        lang.muxcontent.box_art.transition.slide_left,  lang.muxcontent.box_art.transition.slide_up,
+        lang.muxcontent.box_art.transition.slide_down,  lang.muxcontent.box_art.transition.bounce_right,
+        lang.muxcontent.box_art.transition.bounce_left, lang.muxcontent.box_art.transition.bounce_up,
+        lang.muxcontent.box_art.transition.bounce_down, lang.muxcontent.box_art.transition.shoot_right,
+        lang.muxcontent.box_art.transition.shoot_left,  lang.muxcontent.box_art.transition.shoot_up,
+        lang.muxcontent.box_art.transition.shoot_down,  lang.generic.disabled
     };
 
-    char *selection_animation[] = {
-            lang.GENERIC.DISABLED,
-            lang.GENERIC.MINIMAL,
-            lang.GENERIC.LOW,
-            lang.GENERIC.MEDIUM,
-            lang.GENERIC.HIGH,
-            lang.GENERIC.MAXIMUM
-    };
+    char *selection_animation[] = {lang.generic.disabled, lang.generic.minimal, lang.generic.low,
+                                   lang.generic.medium,   lang.generic.high,    lang.generic.maximum};
 
     char *bounce_direction[] = {
-            lang.GENERIC.OUTWARD,
-            lang.GENERIC.VERTICAL,
-            lang.GENERIC.HORIZONTAL,
-            lang.GENERIC.WOBBLE,
-            lang.GENERIC.SHRINK
+        lang.generic.outward, lang.generic.vertical, lang.generic.horizontal, lang.generic.wobble, lang.generic.shrink
     };
 
-    INIT_OPTION_ITEM(-1, visual, Sort, lang.MUXVISUAL.SORT, "sort", NULL, 0);
-    INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", battery_display, 3);
-    INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, Bluetooth, lang.MUXVISUAL.BLUETOOTH, "bluetooth", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, HeaderTitle, lang.MUXVISUAL.HEADERTITLE, "headertitle", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, DialogueTransition, lang.MUXVISUAL.DIALOGUETRANSITION, "dialoguetransition", dialogue_transition, 14);
-    INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
-    INIT_OPTION_ITEM(-1, visual, NameScroll, lang.MUXVISUAL.NAMESCROLL, "namescroll", scroll_mode, 3);
-    INIT_OPTION_ITEM(-1, visual, LabelScrollSpeed, lang.MUXVISUAL.LABELSCROLLSPEED, "labelscrollspeed", label_scroll_speed, 4);
-    INIT_OPTION_ITEM(-1, visual, ListGlyph, lang.MUXVISUAL.LISTGLYPH, "listglyph", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, SelectionAnimation, lang.MUXVISUAL.SELECTIONANIMATION, "selectionanimation", selection_animation, 6);
-    INIT_OPTION_ITEM(-1, visual, SelectionStyle, lang.MUXVISUAL.SELECTIONSTYLE, "selectionstyle", bounce_direction, 5);
-    INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLYFOLDER, "friendlyfolder", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.THETITLEFORMAT, "thetitleformat", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, TitleIncludeRootDrive, lang.MUXVISUAL.TITLEINCLUDEROOTDRIVE, "titleincluderootdrive", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, FolderItemCount, lang.MUXVISUAL.FOLDERITEMCOUNT, "folderitemcount", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, DisplayEmptyFolder, lang.MUXVISUAL.DISPLAYEMPTYFOLDER, "folderempty", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, MenuCounterFolder, lang.MUXVISUAL.MENUCOUNTERFOLDER, "counterfolder", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, MenuCounterFile, lang.MUXVISUAL.MENUCOUNTERFILE, "counterfile", hidden_visible, 2);
-    INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, ContentCollect, lang.MUXVISUAL.CONTENTCOLLECT, "collection", toggle_icon_visible, 3);
-    INIT_OPTION_ITEM(-1, visual, ContentHistory, lang.MUXVISUAL.CONTENTHISTORY, "history", toggle_icon_visible, 3);
-    INIT_OPTION_ITEM(-1, visual, MixedContent, lang.MUXVISUAL.MIXEDCONTENT, "mixedcontent", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, ForwardHistory, lang.MUXVISUAL.FORWARDHISTORY, "forwardhistory", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
-    INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
-    INIT_OPTION_ITEM(-1, visual, RenderShadows, lang.MUXVISUAL.RENDERSHADOWS, "shadow", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, sort, lang.muxvisual.sort, "sort", NULL, 0);
+    INIT_OPTION_ITEM(-1, visual, battery, lang.muxvisual.battery, "battery", battery_display, 3);
+    INIT_OPTION_ITEM(-1, visual, clock, lang.muxvisual.clock, "clock", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, network, lang.muxvisual.network, "network", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, bluetooth, lang.muxvisual.bluetooth, "bluetooth", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, header_title, lang.muxvisual.headertitle, "headertitle", hidden_visible, 2);
+    INIT_OPTION_ITEM(
+        -1, visual, dialogue_transition, lang.muxvisual.dialoguetransition, "dialoguetransition", dialogue_transition,
+        14
+    );
+    INIT_OPTION_ITEM(-1, visual, name, lang.muxvisual.name.title, "name", visual_names, 4);
+    INIT_OPTION_ITEM(-1, visual, name_scroll, lang.muxvisual.namescroll, "namescroll", scroll_mode, 3);
+    INIT_OPTION_ITEM(
+        -1, visual, label_scroll_speed, lang.muxvisual.labelscrollspeed, "labelscrollspeed", label_scroll_speed, 4
+    );
+    INIT_OPTION_ITEM(-1, visual, list_glyph, lang.muxvisual.listglyph, "listglyph", disabled_enabled, 2);
+    INIT_OPTION_ITEM(
+        -1, visual, selection_animation, lang.muxvisual.selectionanimation, "selectionanimation", selection_animation, 6
+    );
+    INIT_OPTION_ITEM(-1, visual, selection_style, lang.muxvisual.selectionstyle, "selectionstyle", bounce_direction, 5);
+    INIT_OPTION_ITEM(-1, visual, dash, lang.muxvisual.dash, "dash", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, friendly_folder, lang.muxvisual.friendlyfolder, "friendlyfolder", disabled_enabled, 2);
+    INIT_OPTION_ITEM(
+        -1, visual, the_title_format, lang.muxvisual.thetitleformat, "thetitleformat", disabled_enabled, 2
+    );
+    INIT_OPTION_ITEM(
+        -1, visual, title_include_root_drive, lang.muxvisual.titleincluderootdrive, "titleincluderootdrive",
+        disabled_enabled, 2
+    );
+    INIT_OPTION_ITEM(
+        -1, visual, folder_item_count, lang.muxvisual.folderitemcount, "folderitemcount", disabled_enabled, 2
+    );
+    INIT_OPTION_ITEM(
+        -1, visual, display_empty_folder, lang.muxvisual.displayemptyfolder, "folderempty", hidden_visible, 2
+    );
+    INIT_OPTION_ITEM(
+        -1, visual, menu_counter_folder, lang.muxvisual.menucounterfolder, "counterfolder", hidden_visible, 2
+    );
+    INIT_OPTION_ITEM(-1, visual, menu_counter_file, lang.muxvisual.menucounterfile, "counterfile", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, hidden, lang.muxvisual.hidden, "hidden", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, content_collect, lang.muxvisual.contentcollect, "collection", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(-1, visual, content_history, lang.muxvisual.contenthistory, "history", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(-1, visual, mixed_content, lang.muxvisual.mixedcontent, "mixedcontent", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, forward_history, lang.muxvisual.forwardhistory, "forwardhistory", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, overlay_image, lang.muxvisual.overlay.image, "overlayimage", NULL, 0);
+    INIT_OPTION_ITEM(
+        -1, visual, overlay_transparency, lang.muxvisual.overlay.transparency, "overlaytransparency", NULL, 0
+    );
+    INIT_OPTION_ITEM(-1, visual, render_shadows, lang.muxvisual.rendershadows, "shadow", disabled_enabled, 2);
 
-    if (config.VISUAL.SELECTIONANIMATION == 6) {
-        char *ludicrous_options[] = {
-                lang.GENERIC.DISABLED, lang.GENERIC.MINIMAL, lang.GENERIC.LOW,
-                lang.GENERIC.MEDIUM, lang.GENERIC.HIGH, lang.GENERIC.MAXIMUM,
-                lang.GENERIC.LUDICROUS
-        };
-        add_drop_down_options(ui_droSelectionAnimation_visual, ludicrous_options, 7);
+    if (config.visual.selection_animation == 6) {
+        char *ludicrous_options[] = {lang.generic.disabled, lang.generic.minimal, lang.generic.low,
+                                     lang.generic.medium,   lang.generic.high,    lang.generic.maximum,
+                                     lang.generic.ludicrous};
+        add_drop_down_options(ui_dro_selection_animation_visual, ludicrous_options, 7);
     }
 
     const char *program = lv_obj_get_user_data(ui_screen);
     char tmp_path[MAX_BUFFER_SIZE];
-    has_theme_overlay = load_image_specifics(mux_dim, program, "overlay", "png", tmp_path, sizeof(tmp_path)) ||
-                        load_image_specifics("", program, "overlay", "png", tmp_path, sizeof(tmp_path));
-    overlay_count = load_overlay_set(ui_droOverlayImage_visual, has_theme_overlay);
+    has_theme_overlay = load_image_specifics(mux_dim, program, "overlay", "png", tmp_path, sizeof(tmp_path))
+                        || load_image_specifics("", program, "overlay", "png", tmp_path, sizeof(tmp_path));
+    overlay_count = load_overlay_set(ui_dro_overlay_image_visual, has_theme_overlay);
 
     char *pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_droOverlayTransparency_visual, pct_values);
+    apply_theme_list_drop_down(&theme, ui_dro_overlay_transparency_visual, pct_values);
     free(pct_values);
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    if (!device.BOARD.HASNETWORK) HIDE_OPTION_ITEM(visual, Network);
-    if (!device.BOARD.HASBLUETOOTH) HIDE_OPTION_ITEM(visual, Bluetooth);
+    if (!device.board.has_network) HIDE_OPTION_ITEM(visual, network);
+    if (!device.board.has_bluetooth) HIDE_OPTION_ITEM(visual, bluetooth);
 }
 
-
 static void refresh_overlay_preview(void) {
-    struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
+    const struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
 
-    if (focused == ui_lblOverlayImage_visual) {
-        int16_t saved_image = config.VISUAL.OVERLAYIMAGE;
-        int16_t saved_opa = config.VISUAL.OVERLAYTRANSPARENCY;
+    if (focused == ui_lbl_overlay_image_visual) {
+        const int16_t saved_image = config.visual.overlay_image;
+        const int16_t saved_opa = config.visual.overlay_transparency;
 
-        config.VISUAL.OVERLAYIMAGE = (int16_t) overlay_dropdown_to_config(lv_dropdown_get_selected(ui_droOverlayImage_visual));
-        config.VISUAL.OVERLAYTRANSPARENCY = (int16_t) pct_to_int(
-                lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
+        config.visual.overlay_image =
+            (int16_t) overlay_dropdown_to_config(lv_dropdown_get_selected(ui_dro_overlay_image_visual));
+        config.visual.overlay_transparency =
+            (int16_t) pct_to_int(lv_dropdown_get_selected(ui_dro_overlay_transparency_visual), 0, 255);
 
         load_overlay_image_sdl();
 
-        config.VISUAL.OVERLAYIMAGE = saved_image;
-        config.VISUAL.OVERLAYTRANSPARENCY = saved_opa;
-    } else if (focused == ui_lblOverlayTransparency_visual) {
-        int opa = pct_to_int(lv_dropdown_get_selected(ui_droOverlayTransparency_visual), 0, 255);
+        config.visual.overlay_image = saved_image;
+        config.visual.overlay_transparency = saved_opa;
+    } else if (focused == ui_lbl_overlay_transparency_visual) {
+        const int opa = pct_to_int(lv_dropdown_get_selected(ui_dro_overlay_transparency_visual), 0, 255);
         display_update_overlay_opacity((uint8_t) opa);
     }
 }
@@ -276,7 +269,7 @@ static void handle_option_prev(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -290,7 +283,7 @@ static void handle_option_next(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -305,32 +298,26 @@ static void handle_x(void) {
     const char *focused_key = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     if (!focused_key || strcmp(focused_key, "selectionanimation") != 0) return;
 
-    char *ludicrous_options[] = {
-            lang.GENERIC.DISABLED,
-            lang.GENERIC.MINIMAL,
-            lang.GENERIC.LOW,
-            lang.GENERIC.MEDIUM,
-            lang.GENERIC.HIGH,
-            lang.GENERIC.MAXIMUM,
-            lang.GENERIC.LUDICROUS
-    };
-    add_drop_down_options(ui_droSelectionAnimation_visual, ludicrous_options, 7);
-    lv_dropdown_set_selected(ui_droSelectionAnimation_visual, 6);
-    play_sound(SND_MUOS);
+    char *ludicrous_options[] = {lang.generic.disabled, lang.generic.minimal, lang.generic.low,
+                                 lang.generic.medium,   lang.generic.high,    lang.generic.maximum,
+                                 lang.generic.ludicrous};
+    add_drop_down_options(ui_dro_selection_animation_visual, ludicrous_options, 7);
+    lv_dropdown_set_selected(ui_dro_selection_animation_visual, 6);
+    play_sound(snd_muos);
 }
 
 static void handle_a(void) {
     if (msgbox_active) return;
 
     if (save_mode) {
-        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
         if (pending_sort) {
             pending_sort = 0;
 
-            if (opt == MUX_UNSAVED_SAVE) save_visual_options();
-            play_sound(SND_CONFIRM);
+            if (opt == mux_unsaved_save) save_visual_options();
+            play_sound(snd_confirm);
 
             load_mux("sort");
             mux_input_stop();
@@ -338,9 +325,9 @@ static void handle_a(void) {
             return;
         }
 
-        if (opt == MUX_UNSAVED_SAVE) save_visual_options();
+        if (opt == mux_unsaved_save) save_visual_options();
 
-        play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
 
         mux_input_stop();
@@ -348,16 +335,16 @@ static void handle_a(void) {
         return;
     }
 
-    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused == ui_lblSort_visual) {
-        if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_visual_modified()) {
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lbl_sort_visual) {
+        if (!config.settings.advanced.trust_modify && any_visual_modified()) {
             pending_sort = 1;
             show_save_dialog();
 
             return;
         }
 
-        play_sound(SND_CONFIRM);
+        play_sound(snd_confirm);
 
         save_visual_options();
         load_mux("sort");
@@ -381,12 +368,12 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_visual_modified()) {
+    if (!config.settings.advanced.trust_modify && any_visual_modified()) {
         show_save_dialog();
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
 
     save_visual_options();
 
@@ -399,7 +386,7 @@ static void handle_dpad_up(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -411,7 +398,7 @@ static void handle_dpad_down(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -432,24 +419,22 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
-#define VISUAL(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_visual, UDATA);
+#define VISUAL(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_visual, UDATA);
     VISUAL_ELEMENTS
 #undef VISUAL
 
@@ -460,14 +445,14 @@ int muxvisual_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXVISUAL.TITLE);
-    init_muxvisual(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxvisual.title);
+    init_muxvisual(ui_pnl_content);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -475,39 +460,43 @@ int muxvisual_main(void) {
     restore_visual_options();
     init_dropdown_settings();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
-                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(
+        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
+        lang.generic.select, lang.generic.back
+    );
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

@@ -10,7 +10,6 @@
 #include "miniz/miniz.h"
 #include "log.h"
 #include "language.h"
-#include "skip.h"
 
 static void (*extraction_finish_cb)(char *result) = NULL;
 
@@ -25,9 +24,9 @@ typedef struct {
 } extraction_args_t;
 
 static void *extraction_thread(void *arg) {
-    extraction_args_t *args = (extraction_args_t *) arg;
+    extraction_args_t *args = arg;
 
-    int rc = extract_zip_to_dir(args->filename, args->output_path);
+    const int rc = extract_zip_to_dir(args->filename, args->output_path);
 
     extraction_finish_pending_cb = extraction_finish_cb;
     extraction_finish_cb = NULL;
@@ -43,7 +42,7 @@ static void *extraction_thread(void *arg) {
 void extraction_poll(void) {
     if (extraction_finish_result == INT_MIN) return;
 
-    int result = extraction_finish_result;
+    const int result = extraction_finish_result;
     extraction_finish_result = INT_MIN;
 
     void (*cb)(char *) = extraction_finish_pending_cb;
@@ -63,7 +62,7 @@ void extraction_poll(void) {
 
 void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result)) {
     extraction_finish_cb = callback;
-    show_progress_bar(lang.GENERIC.EXTRACTING_ARCHIVE);
+    show_progress_bar(lang.generic.extracting_archive);
 
     extraction_args_t *args = mux_malloc(sizeof(*args));
 
@@ -111,8 +110,8 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         char dest_file[PATH_MAX];
         snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, entry_name);
 
-        if (strncmp(dest_file, resolved_output, resolved_len) != 0 ||
-            (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
+        if (strncmp(dest_file, resolved_output, resolved_len) != 0
+            || (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
             LOG_ERROR(mux_module, "Blocked path escape in ZIP: '%s'", entry_name);
             mz_zip_reader_end(&zip);
             return MUX_EXTRACT_BLOCKED;
@@ -133,31 +132,30 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             return MUX_EXTRACT_ERR;
         }
 
-        progress_bar_value = (int) (((i + 1) * 100) / zip_file_count);
+        progress_bar_value = (int) ((i + 1) * 100 / zip_file_count);
     }
 
     mz_zip_reader_end(&zip);
     return 0;
 }
 
-int extract_file_from_zip(const char *zip_path, const char *filename, const char *output) {
-    mz_zip_archive zip;
-    memset(&zip, 0, sizeof(zip));
+int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
+    mz_zip_archive zip = {0};
 
     if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
         LOG_ERROR(mux_module, "Could not open archive '%s' - Corrupt?", zip_path);
         return 0;
     }
 
-    int file_index = mz_zip_reader_locate_file(&zip, filename, NULL, 0);
+    const int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
     if (file_index == -1) {
-        LOG_ERROR(mux_module, "File '%s' not found in archive", filename);
+        LOG_ERROR(mux_module, "File '%s' not found in archive", file_name);
         mz_zip_reader_end(&zip);
         return 0;
     }
 
-    if (!mz_zip_reader_extract_to_file(&zip, file_index, output, 0)) {
-        LOG_ERROR(mux_module, "File '%s' could not be extracted", filename);
+    if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
+        LOG_ERROR(mux_module, "File '%s' could not be extracted", file_name);
         mz_zip_reader_end(&zip);
         return 0;
     }

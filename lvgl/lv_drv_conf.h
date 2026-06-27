@@ -104,7 +104,7 @@
 /* Scale window by this factor (useful when simulating small screens) */
 #  define SDL_ZOOM        1
 
-/* Used to test true double buffering with only address changing.
+/* Used to test 1 double buffering with only address changing.
  * Use 2 draw buffers, both with SDL_HOR_RES x SDL_VER_RES size*/
 #  define SDL_DOUBLE_BUFFERED 1
 
@@ -131,7 +131,7 @@
 /* Scale window by this factor (useful when simulating small screens) */
 #  define MONITOR_ZOOM        1
 
-/* Used to test true double buffering with only address changing.
+/* Used to test 1 double buffering with only address changing.
  * Use 2 draw buffers, bith with MONITOR_HOR_RES x MONITOR_VER_RES size*/
 #  define MONITOR_DOUBLE_BUFFERED 0
 
@@ -433,7 +433,7 @@
 
 #if USE_LIBINPUT || USE_BSD_LIBINPUT
 /*If only a single device of the same type is connected, you can also auto detect it, e.g.:
- *#define LIBINPUT_NAME   libinput_find_dev(LIBINPUT_CAPABILITY_TOUCH, false)*/
+ *#define LIBINPUT_NAME   libinput_find_dev(LIBINPUT_CAPABILITY_TOUCH, 0)*/
 #  define LIBINPUT_NAME   "/dev/input/js0"        /*You can use the "evtest" Linux tool to get the list of devices and test them*/
 
 #endif  /*USE_LIBINPUT || USE_BSD_LIBINPUT*/

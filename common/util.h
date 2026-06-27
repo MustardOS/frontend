@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <errno.h>
 #include <limits.h>
 
@@ -22,7 +20,7 @@ int get_index_on_delete(int current_index, int post_delete_count);
 
 int16_t validate_int16(int value, const char *field);
 
-static inline void *mux_malloc(size_t n) {
+static void *mux_malloc(const size_t n) {
     void *p = malloc(n);
     if (!p && n) {
         fprintf(stderr, "OOM (%zu bytes)\n", n);
@@ -31,7 +29,7 @@ static inline void *mux_malloc(size_t n) {
     return p;
 }
 
-static inline char *mux_strdup(const char *s) {
+static char *mux_strdup(const char *s) {
     char *p = strdup(s);
     if (!p) {
         fprintf(stderr, "OOM\n");
@@ -40,11 +38,11 @@ static inline char *mux_strdup(const char *s) {
     return p;
 }
 
-static inline int safe_atoi(const char *s, int fallback) {
+static int safe_atoi(const char *s, const int fallback) {
     if (!s || !*s) return fallback;
     char *end;
     errno = 0;
-    long v = strtol(s, &end, 10);
+    const long v = strtol(s, &end, 10);
     if (errno || end == s || *end != '\0' || v < INT_MIN || v > INT_MAX) return fallback;
     return (int) v;
 }

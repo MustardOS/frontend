@@ -21,22 +21,23 @@
 #define MY_CLASS &lv_bar_class
 
 /** hor. pad and ver. pad cannot make the indicator smaller than this [px]*/
-#define LV_BAR_SIZE_MIN  4
+#define LV_BAR_SIZE_MIN 4
 
 #define LV_BAR_IS_ANIMATING(anim_struct) (((anim_struct).anim_state) != LV_BAR_ANIM_STATE_INV)
-#define LV_BAR_GET_ANIM_VALUE(orig_value, anim_struct) (LV_BAR_IS_ANIMATING(anim_struct) ? ((anim_struct).anim_end) : (orig_value))
+#define LV_BAR_GET_ANIM_VALUE(orig_value, anim_struct)                                                                 \
+    (LV_BAR_IS_ANIMATING(anim_struct) ? ((anim_struct).anim_end) : (orig_value))
 
 /** Bar animation start value. (Not the real value of the Bar just indicates process animation)*/
 #define LV_BAR_ANIM_STATE_START 0
 
 /** Bar animation end value.  (Not the real value of the Bar just indicates process animation)*/
-#define LV_BAR_ANIM_STATE_END   256
+#define LV_BAR_ANIM_STATE_END 256
 
 /** Mark no animation is in progress*/
-#define LV_BAR_ANIM_STATE_INV   -1
+#define LV_BAR_ANIM_STATE_INV -1
 
 /** log2(LV_BAR_ANIM_STATE_END) used to normalize data*/
-#define LV_BAR_ANIM_STATE_NORM  8
+#define LV_BAR_ANIM_STATE_NORM 8
 
 /**********************
  *      TYPEDEFS
@@ -53,8 +54,9 @@ static void lv_bar_event(const lv_obj_class_t *class_p, lv_event_t *e);
 
 static void draw_indic(lv_event_t *e);
 
-static void lv_bar_set_value_with_anim(lv_obj_t *obj, int32_t new_value, int32_t *value_ptr,
-                                       _lv_bar_anim_t *anim_info, lv_anim_enable_t en);
+static void lv_bar_set_value_with_anim(
+    lv_obj_t *obj, int32_t new_value, int32_t *value_ptr, _lv_bar_anim_t *anim_info, lv_anim_enable_t en
+);
 
 static void lv_bar_init_anim(lv_obj_t *bar, _lv_bar_anim_t *bar_anim);
 
@@ -66,13 +68,13 @@ static void lv_bar_anim_ready(lv_anim_t *a);
  *  STATIC VARIABLES
  **********************/
 const lv_obj_class_t lv_bar_class = {
-        .constructor_cb = lv_bar_constructor,
-        .destructor_cb = lv_bar_destructor,
-        .event_cb = lv_bar_event,
-        .width_def = LV_DPI_DEF * 2,
-        .height_def = LV_DPI_DEF / 10,
-        .instance_size = sizeof(lv_bar_t),
-        .base_class = &lv_obj_class
+    .constructor_cb = lv_bar_constructor,
+    .destructor_cb = lv_bar_destructor,
+    .event_cb = lv_bar_event,
+    .width_def = LV_DPI_DEF * 2,
+    .height_def = LV_DPI_DEF / 10,
+    .instance_size = sizeof(lv_bar_t),
+    .base_class = &lv_obj_class
 };
 
 /**********************
@@ -133,8 +135,7 @@ void lv_bar_set_range(lv_obj_t *obj, int32_t min, int32_t max) {
     bar->max_value = max;
     bar->min_value = min;
 
-    if (lv_bar_get_mode(obj) != LV_BAR_MODE_RANGE)
-        bar->start_value = min;
+    if (lv_bar_get_mode(obj) != LV_BAR_MODE_RANGE) bar->start_value = min;
 
     if (bar->cur_value > max) {
         bar->cur_value = max;
@@ -254,11 +255,11 @@ static void draw_indic(lv_event_t *e) {
     lv_coord_t barw = lv_area_get_width(&bar_coords);
     lv_coord_t barh = lv_area_get_height(&bar_coords);
     int32_t range = bar->max_value - bar->min_value;
-    bool hor = barw >= barh ? true : false;
-    bool sym = false;
-    if (bar->mode == LV_BAR_MODE_SYMMETRICAL && bar->min_value < 0 && bar->max_value > 0 &&
-        bar->start_value == bar->min_value)
-        sym = true;
+    int hor = barw >= barh ? 1 : 0;
+    int sym = 0;
+    if (bar->mode == LV_BAR_MODE_SYMMETRICAL && bar->min_value < 0 && bar->max_value > 0
+        && bar->start_value == bar->min_value)
+        sym = 1;
 
     /*Calculate the indicator area*/
     lv_coord_t bg_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
@@ -303,12 +304,13 @@ static void draw_indic(lv_event_t *e) {
 
     if (LV_BAR_IS_ANIMATING(bar->start_value_anim)) {
         lv_coord_t anim_start_value_start_x =
-                (int32_t) ((int32_t) anim_length * (bar->start_value_anim.anim_start - bar->min_value)) / range;
+            (int32_t) ((int32_t) anim_length * (bar->start_value_anim.anim_start - bar->min_value)) / range;
         lv_coord_t anim_start_value_end_x =
-                (int32_t) ((int32_t) anim_length * (bar->start_value_anim.anim_end - bar->min_value)) / range;
+            (int32_t) ((int32_t) anim_length * (bar->start_value_anim.anim_end - bar->min_value)) / range;
 
-        anim_start_value_x = (((anim_start_value_end_x - anim_start_value_start_x) * bar->start_value_anim.anim_state) /
-                              LV_BAR_ANIM_STATE_END);
+        anim_start_value_x =
+            (((anim_start_value_end_x - anim_start_value_start_x) * bar->start_value_anim.anim_state)
+             / LV_BAR_ANIM_STATE_END);
 
         anim_start_value_x += anim_start_value_start_x;
     } else {
@@ -317,13 +319,13 @@ static void draw_indic(lv_event_t *e) {
 
     if (LV_BAR_IS_ANIMATING(bar->cur_value_anim)) {
         lv_coord_t anim_cur_value_start_x =
-                (int32_t) ((int32_t) anim_length * (bar->cur_value_anim.anim_start - bar->min_value)) / range;
+            (int32_t) ((int32_t) anim_length * (bar->cur_value_anim.anim_start - bar->min_value)) / range;
         lv_coord_t anim_cur_value_end_x =
-                (int32_t) ((int32_t) anim_length * (bar->cur_value_anim.anim_end - bar->min_value)) / range;
+            (int32_t) ((int32_t) anim_length * (bar->cur_value_anim.anim_end - bar->min_value)) / range;
 
-        anim_cur_value_x = anim_cur_value_start_x + (((anim_cur_value_end_x - anim_cur_value_start_x) *
-                                                      bar->cur_value_anim.anim_state) /
-                                                     LV_BAR_ANIM_STATE_END);
+        anim_cur_value_x = anim_cur_value_start_x
+                           + (((anim_cur_value_end_x - anim_cur_value_start_x) * bar->cur_value_anim.anim_state)
+                              / LV_BAR_ANIM_STATE_END);
     } else {
         anim_cur_value_x = (int32_t) ((int32_t) anim_length * (bar->cur_value - bar->min_value)) / range;
     }
@@ -418,8 +420,8 @@ static void draw_indic(lv_event_t *e) {
     /*Draw only the shadow and outline only if the indicator is long enough.
      *The radius of the bg and the indicator can make a strange shape where
      *it'd be very difficult to draw shadow.*/
-    if ((hor && lv_area_get_width(&bar->indic_area) > indic_radius * 2) ||
-        (!hor && lv_area_get_height(&bar->indic_area) > indic_radius * 2)) {
+    if ((hor && lv_area_get_width(&bar->indic_area) > indic_radius * 2)
+        || (!hor && lv_area_get_height(&bar->indic_area) > indic_radius * 2)) {
         lv_opa_t bg_opa = draw_rect_dsc.bg_opa;
         lv_opa_t bg_img_opa = draw_rect_dsc.bg_img_opa;
         lv_opa_t border_opa = draw_rect_dsc.border_opa;
@@ -442,7 +444,7 @@ static void draw_indic(lv_event_t *e) {
     bg_mask_area.y1 = obj->coords.y1 + bg_top;
     bg_mask_area.y2 = obj->coords.y2 - bg_bottom;
 
-    lv_draw_mask_radius_init(&mask_bg_param, &bg_mask_area, bg_radius, false);
+    lv_draw_mask_radius_init(&mask_bg_param, &bg_mask_area, bg_radius, 0);
     lv_coord_t mask_bg_id = lv_draw_mask_add(&mask_bg_param, NULL);
 #endif
 
@@ -470,7 +472,7 @@ static void draw_indic(lv_event_t *e) {
 #if LV_DRAW_COMPLEX
     /*Create a mask to the current indicator area to see only this part from the whole gradient.*/
     lv_draw_mask_radius_param_t mask_indic_param;
-    lv_draw_mask_radius_init(&mask_indic_param, &bar->indic_area, draw_rect_dsc.radius, false);
+    lv_draw_mask_radius_init(&mask_indic_param, &bar->indic_area, draw_rect_dsc.radius, 0);
     int16_t mask_indic_id = lv_draw_mask_add(&mask_indic_param, NULL);
 #endif
 
@@ -551,8 +553,9 @@ static void lv_bar_anim_ready(lv_anim_t *a) {
     lv_obj_invalidate(var->bar);
 }
 
-static void lv_bar_set_value_with_anim(lv_obj_t *obj, int32_t new_value, int32_t *value_ptr,
-                                       _lv_bar_anim_t *anim_info, lv_anim_enable_t en) {
+static void lv_bar_set_value_with_anim(
+    lv_obj_t *obj, int32_t new_value, int32_t *value_ptr, _lv_bar_anim_t *anim_info, lv_anim_enable_t en
+) {
     if (en == LV_ANIM_OFF) {
         lv_anim_del(anim_info, NULL);
         anim_info->anim_state = LV_BAR_ANIM_STATE_INV;
@@ -564,7 +567,7 @@ static void lv_bar_set_value_with_anim(lv_obj_t *obj, int32_t new_value, int32_t
             anim_info->anim_start = *value_ptr;
             anim_info->anim_end = new_value;
         }
-            /*Animation in progress. Start from the animation end value*/
+        /*Animation in progress. Start from the animation end value*/
         else {
             anim_info->anim_start = anim_info->anim_end;
             anim_info->anim_end = new_value;

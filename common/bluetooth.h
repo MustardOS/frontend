@@ -1,21 +1,21 @@
 #pragma once
 
 typedef enum {
-    BT_TYPE_AUDIO_HEADSET = 0,
-    BT_TYPE_AUDIO_HEADPHONES,
-    BT_TYPE_AUDIO_SPEAKER,
-    BT_TYPE_AUDIO_MICROPHONE,
-    BT_TYPE_AUDIO_CARD,
-    BT_TYPE_INPUT_GAMEPAD,
-    BT_TYPE_INPUT_KEYBOARD,
-    BT_TYPE_INPUT_MOUSE,
-    BT_TYPE_INPUT_COMBO,
-    BT_TYPE_INPUT_REMOTE,
-    BT_TYPE_PHONE,
-    BT_TYPE_COMPUTER,
-    BT_TYPE_NETWORK,
-    BT_TYPE_UNKNOWN,
-    BT_TYPE_COUNT,
+    bt_type_audio_headset = 0,
+    bt_type_audio_headphones,
+    bt_type_audio_speaker,
+    bt_type_audio_microphone,
+    bt_type_audio_card,
+    bt_type_input_gamepad,
+    bt_type_input_keyboard,
+    bt_type_input_mouse,
+    bt_type_input_combo,
+    bt_type_input_remote,
+    bt_type_phone,
+    bt_type_computer,
+    bt_type_network,
+    bt_type_unknown,
+    bt_type_count,
 } bt_type_t;
 
 struct bt_type_info {
@@ -23,8 +23,8 @@ struct bt_type_info {
     const char *label;
 };
 
-extern const struct bt_type_info bt_type_infos[BT_TYPE_COUNT];
-extern const char *const bt_type_keys[BT_TYPE_COUNT];
+extern const struct bt_type_info bt_type_infos[bt_type_count];
+extern const char *const bt_type_keys[bt_type_count];
 
 const char *bt_type_key(bt_type_t type);
 

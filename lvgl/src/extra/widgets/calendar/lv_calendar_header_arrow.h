@@ -34,7 +34,7 @@ extern const lv_obj_class_t lv_calendar_header_arrow_class;
  * @param parent    pointer to a calendar object.
  * @return          the created header
  */
-lv_obj_t * lv_calendar_header_arrow_create(lv_obj_t * parent);
+lv_obj_t *lv_calendar_header_arrow_create(lv_obj_t *parent);
 
 /**********************
  *      MACROS

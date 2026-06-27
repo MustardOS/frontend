@@ -88,16 +88,21 @@ static void firefly_reset_one(firefly_t *f, uint32_t now) {
     int max_y = mod.base.screen_h > 1 ? mod.base.screen_h : 1;
 
     /* Spawn somewhere not too close to an edge. */
-    int sx = firefly_edge_margin + (int) saver_rand_range(max_x - 2 * firefly_edge_margin > 1 ? max_x - 2 * firefly_edge_margin : 1);
-    int sy = firefly_edge_margin + (int) saver_rand_range(max_y - 2 * firefly_edge_margin > 1 ? max_y - 2 * firefly_edge_margin : 1);
+    int sx = firefly_edge_margin
+             + (int) saver_rand_range(max_x - 2 * firefly_edge_margin > 1 ? max_x - 2 * firefly_edge_margin : 1);
+    int sy = firefly_edge_margin
+             + (int) saver_rand_range(max_y - 2 * firefly_edge_margin > 1 ? max_y - 2 * firefly_edge_margin : 1);
 
     f->fx = ((int32_t) sx) << SAVER_FRAME_SHF;
     f->fy = ((int32_t) sy) << SAVER_FRAME_SHF;
 
     int roll = (int) saver_rand_range(9);
-    if (roll < 3) f->size_class = 0;
-    else if (roll < 6) f->size_class = 1;
-    else f->size_class = 2;
+    if (roll < 3)
+        f->size_class = 0;
+    else if (roll < 6)
+        f->size_class = 1;
+    else
+        f->size_class = 2;
 
     f->vx = random_velocity_for_class(f->size_class);
     f->vy = random_velocity_for_class(f->size_class);
@@ -113,7 +118,8 @@ static void firefly_reset_one(firefly_t *f, uint32_t now) {
 
 static void firefly_seed_all(void) {
     uint32_t now = SDL_GetTicks();
-    for (int i = 0; i < FIREFLY_COUNT; i++) firefly_reset_one(&mod.fly[i], now);
+    for (int i = 0; i < FIREFLY_COUNT; i++)
+        firefly_reset_one(&mod.fly[i], now);
 }
 
 static void firefly_on_speed_changed(void *user) {
@@ -139,13 +145,17 @@ int firefly_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     if (firefly_edge_margin < 24) firefly_edge_margin = 24;
     if (firefly_edge_margin > 96) firefly_edge_margin = 96;
 
-    saver_init_base(&mod.base, screen_w, screen_h, "Firefly", 255, 218, 153, firefly_on_speed_changed, firefly_on_idle_enter, &mod);
+    saver_init_base(
+        &mod.base, screen_w, screen_h, "Firefly", 255, 218, 153, firefly_on_speed_changed, firefly_on_idle_enter, &mod
+    );
 
     firefly_on_speed_changed(NULL);
     firefly_seed_all();
 
-    LOG_INFO("saver", "Firefly Initialised (%dx%d, count=%d, margin=%d, speed=%d)",
-             screen_w, screen_h, FIREFLY_COUNT, firefly_edge_margin, mod.base.speed);
+    LOG_INFO(
+        "saver", "Firefly Initialised (%dx%d, count=%d, margin=%d, speed=%d)", screen_w, screen_h, FIREFLY_COUNT,
+        firefly_edge_margin, mod.base.speed
+    );
 
     return 1;
 }
@@ -211,7 +221,8 @@ static void integrate_fly(firefly_t *f, int32_t step_fp, uint32_t now) {
     }
 
     f->twinkle_phase += f->twinkle_step * (step_fp >> SAVER_FRAME_SHF);
-    while (f->twinkle_phase >= SAVER_FRAME_ONE) f->twinkle_phase -= SAVER_FRAME_ONE;
+    while (f->twinkle_phase >= SAVER_FRAME_ONE)
+        f->twinkle_phase -= SAVER_FRAME_ONE;
 }
 
 static void apply_pair_separation(int32_t step_fp) {

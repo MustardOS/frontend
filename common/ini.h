@@ -11,4 +11,4 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
 
 float get_ini_float(mini_t *ini_config, const char *section, const char *key, float default_value);
 
-char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value);
+char *get_ini_string(mini_t *ini_config, const char *section, const char *key, const char *default_value);

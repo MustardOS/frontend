@@ -21,7 +21,9 @@ enum json_type {
     JSON_ARRAY,
     JSON_OBJECT,
 };
-struct json { void *priv[4]; };
+struct json {
+    void *priv[4];
+};
 
 struct json_valid {
     bool valid;
@@ -52,14 +54,13 @@ static inline struct vutf8res vutf8(const uint8_t data[], int64_t len) {
     if (data[0] >> 4 == 14) {
         if (len < 3) goto fail;
         if (((data[1] >> 6) | (data[2] >> 6 << 2)) != 10) goto fail;
-        cp = ((uint32_t) (data[0] & 15) << 12) | ((uint32_t) (data[1] & 63) << 6) |
-             ((uint32_t) (data[2] & 63));
+        cp = ((uint32_t) (data[0] & 15) << 12) | ((uint32_t) (data[1] & 63) << 6) | ((uint32_t) (data[2] & 63));
         n = 3;
     } else if (data[0] >> 3 == 30) {
         if (len < 4) goto fail;
         if (((data[1] >> 6) | (data[2] >> 6 << 2) | (data[3] >> 6 << 4)) != 42) goto fail;
-        cp = ((uint32_t) (data[0] & 7) << 18) | ((uint32_t) (data[1] & 63) << 12) |
-             ((uint32_t) (data[2] & 63) << 6) | ((uint32_t) (data[3] & 63));
+        cp = ((uint32_t) (data[0] & 7) << 18) | ((uint32_t) (data[1] & 63) << 12) | ((uint32_t) (data[2] & 63) << 6)
+             | ((uint32_t) (data[3] & 63));
         n = 4;
     } else if (data[0] >> 5 == 6) {
         if (len < 2) goto fail;
@@ -69,11 +70,11 @@ static inline struct vutf8res vutf8(const uint8_t data[], int64_t len) {
     } else {
         goto fail;
     }
-    if (cp < 128) goto fail; // don't allow multibyte ascii characters
-    if (cp >= 0x10FFFF) goto fail; // restricted to utf-16
+    if (cp < 128) goto fail;                     // don't allow multibyte ascii characters
+    if (cp >= 0x10FFFF) goto fail;               // restricted to utf-16
     if (cp >= 0xD800 && cp <= 0xDFFF) goto fail; // needs surrogate pairs
     return (struct vutf8res) {.n = n, .cp = cp};
-    fail:
+fail:
     return (struct vutf8res) {0};
 }
 
@@ -97,9 +98,8 @@ vesc(const uint8_t *json, int64_t jlen, int64_t i) {
             for (int j = 0; j < 4; j++) {
                 i++;
                 if (i == jlen) return -(i + 1);
-                if (!((json[i] >= '0' && json[i] <= '9') ||
-                      (json[i] >= 'a' && json[i] <= 'f') ||
-                      (json[i] >= 'A' && json[i] <= 'F')))
+                if (!((json[i] >= '0' && json[i] <= '9') || (json[i] >= 'a' && json[i] <= 'f')
+                      || (json[i] >= 'A' && json[i] <= 'F')))
                     return -(i + 1);
             }
             return i + 1;
@@ -109,41 +109,83 @@ vesc(const uint8_t *json, int64_t jlen, int64_t i) {
 
 #ifndef ludo
 #define ludo
-#define ludo1(i, f) f; i++;
-#define ludo2(i, f) ludo1(i,f); ludo1(i,f);
-#define ludo4(i, f) ludo2(i,f); ludo2(i,f);
-#define ludo8(i, f) ludo4(i,f); ludo4(i,f);
-#define ludo16(i, f) ludo8(i,f); ludo8(i,f);
-#define ludo32(i, f) ludo16(i,f); ludo16(i,f);
-#define ludo64(i, f) ludo32(i,f); ludo32(i,f);
-#define for1(i, n, f) while(i+1<=(n)) { ludo1(i,f); }
-#define for2(i, n, f) while(i+2<=(n)) { ludo2(i,f); } for1(i,n,f);
-#define for4(i, n, f) while(i+4<=(n)) { ludo4(i,f); } for1(i,n,f);
-#define for8(i, n, f) while(i+8<=(n)) { ludo8(i,f); } for1(i,n,f);
-#define for16(i, n, f) while(i+16<=(n)) { ludo16(i,f); } for1(i,n,f);
-#define for32(i, n, f) while(i+32<=(n)) { ludo32(i,f); } for1(i,n,f);
-#define for64(i, n, f) while(i+64<=(n)) { ludo64(i,f); } for1(i,n,f);
+#define ludo1(i, f)                                                                                                    \
+    f;                                                                                                                 \
+    i++;
+#define ludo2(i, f)                                                                                                    \
+    ludo1(i, f);                                                                                                       \
+    ludo1(i, f);
+#define ludo4(i, f)                                                                                                    \
+    ludo2(i, f);                                                                                                       \
+    ludo2(i, f);
+#define ludo8(i, f)                                                                                                    \
+    ludo4(i, f);                                                                                                       \
+    ludo4(i, f);
+#define ludo16(i, f)                                                                                                   \
+    ludo8(i, f);                                                                                                       \
+    ludo8(i, f);
+#define ludo32(i, f)                                                                                                   \
+    ludo16(i, f);                                                                                                      \
+    ludo16(i, f);
+#define ludo64(i, f)                                                                                                   \
+    ludo32(i, f);                                                                                                      \
+    ludo32(i, f);
+#define for1(i, n, f)                                                                                                  \
+    while (i + 1 <= (n)) {                                                                                             \
+        ludo1(i, f);                                                                                                   \
+    }
+#define for2(i, n, f)                                                                                                  \
+    while (i + 2 <= (n)) {                                                                                             \
+        ludo2(i, f);                                                                                                   \
+    }                                                                                                                  \
+    for1(i, n, f);
+#define for4(i, n, f)                                                                                                  \
+    while (i + 4 <= (n)) {                                                                                             \
+        ludo4(i, f);                                                                                                   \
+    }                                                                                                                  \
+    for1(i, n, f);
+#define for8(i, n, f)                                                                                                  \
+    while (i + 8 <= (n)) {                                                                                             \
+        ludo8(i, f);                                                                                                   \
+    }                                                                                                                  \
+    for1(i, n, f);
+#define for16(i, n, f)                                                                                                 \
+    while (i + 16 <= (n)) {                                                                                            \
+        ludo16(i, f);                                                                                                  \
+    }                                                                                                                  \
+    for1(i, n, f);
+#define for32(i, n, f)                                                                                                 \
+    while (i + 32 <= (n)) {                                                                                            \
+        ludo32(i, f);                                                                                                  \
+    }                                                                                                                  \
+    for1(i, n, f);
+#define for64(i, n, f)                                                                                                 \
+    while (i + 64 <= (n)) {                                                                                            \
+        ludo64(i, f);                                                                                                  \
+    }                                                                                                                  \
+    for1(i, n, f);
 #endif
 
 static const uint8_t strtoksu[256] = {
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #ifndef JSON_NOVALIDATEUTF8
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6,
-        //0=ascii, 1=quote, 2=escape, 3=utf82, 4=utf83, 5=utf84, 6=error
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6,
+// 0=ascii, 1=quote, 2=escape, 3=utf82, 4=utf83, 5=utf84, 6=error
 #endif
 };
 
 static int64_t vstring(const uint8_t *json, int64_t jlen, int64_t i) {
     while (1) {
-        for8(i, jlen, { if (strtoksu[json[i]]) goto tok; })
-        break;
-        tok:
+        for8(i, jlen, {
+            if (strtoksu[json[i]]) goto tok;
+        }) break;
+    tok:
         if (json[i] == '"') {
             return i + 1;
 #ifndef JSON_NOVALIDATEUTF8
@@ -208,18 +250,16 @@ static int64_t vnumber(const uint8_t *data, int64_t dlen, int64_t i) {
 }
 
 static int64_t vnull(const uint8_t *data, int64_t dlen, int64_t i) {
-    return i + 3 <= dlen && data[i] == 'u' && data[i + 1] == 'l' &&
-           data[i + 2] == 'l' ? i + 3 : -(i + 1);
+    return i + 3 <= dlen && data[i] == 'u' && data[i + 1] == 'l' && data[i + 2] == 'l' ? i + 3 : -(i + 1);
 }
 
 static int64_t vtrue(const uint8_t *data, int64_t dlen, int64_t i) {
-    return i + 3 <= dlen && data[i] == 'r' && data[i + 1] == 'u' &&
-           data[i + 2] == 'e' ? i + 3 : -(i + 1);
+    return i + 3 <= dlen && data[i] == 'r' && data[i + 1] == 'u' && data[i + 2] == 'e' ? i + 3 : -(i + 1);
 }
 
 static int64_t vfalse(const uint8_t *data, int64_t dlen, int64_t i) {
-    return i + 4 <= dlen && data[i] == 'a' && data[i + 1] == 'l' &&
-           data[i + 2] == 's' && data[i + 3] == 'e' ? i + 4 : -(i + 1);
+    return i + 4 <= dlen && data[i] == 'a' && data[i + 1] == 'l' && data[i + 2] == 's' && data[i + 3] == 'e' ? i + 4
+                                                                                                             : -(i + 1);
 }
 
 static int64_t vcolon(const uint8_t *json, int64_t len, int64_t i) {
@@ -284,9 +324,10 @@ static int64_t varray(const uint8_t *data, int64_t dlen, int64_t i, int depth) {
 }
 
 static int64_t vkey(const uint8_t *json, int64_t len, int64_t i) {
-    for16(i, len, { if (strtoksu[json[i]]) goto tok; })
-    return -(i + 1);
-    tok:
+    for16(i, len, {
+        if (strtoksu[json[i]]) goto tok;
+    }) return -(i + 1);
+tok:
     if (json[i] == '"') return i + 1;
     return vstring(json, len, i);
 }
@@ -419,30 +460,25 @@ JSON_EXTERN bool json_valid(const char *json_str) {
 }
 
 // don't changes these flags without changing the numtoks table too.
-enum iflags {
-    IESC = 1, IDOT = 2, ISCI = 4, ISIGN = 8
-};
+enum iflags { IESC = 1, IDOT = 2, ISCI = 4, ISIGN = 8 };
 
-#define jmake(info, raw, end, len) ((struct json) { .priv = { \
-    (void*)(uintptr_t)(info), (void*)(uintptr_t)(raw), \
-    (void*)(uintptr_t)(end), (void*)(uintptr_t)(len) } })
-#define jinfo(json) ((int)(uintptr_t)((json).priv[0]))
-#define jraw(json) ((uint8_t*)(uintptr_t)((json).priv[1]))
-#define jend(json) ((uint8_t*)(uintptr_t)((json).priv[2]))
-#define jlen(json) ((size_t)(uintptr_t)((json).priv[3]))
+#define jmake(info, raw, end, len)                                                                                     \
+    ((struct json) {.priv = {                                                                                          \
+                        (void *) (uintptr_t) (info), (void *) (uintptr_t) (raw), (void *) (uintptr_t) (end),           \
+                        (void *) (uintptr_t) (len)                                                                     \
+                    }})
+#define jinfo(json) ((int) (uintptr_t) ((json).priv[0]))
+#define jraw(json)  ((uint8_t *) (uintptr_t) ((json).priv[1]))
+#define jend(json)  ((uint8_t *) (uintptr_t) ((json).priv[2]))
+#define jlen(json)  ((size_t) (uintptr_t) ((json).priv[3]))
 
 static const uint8_t strtoksa[256] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 };
 
-static inline size_t
-count_string(uint8_t
-             *raw,
-             uint8_t *end,
-             int *infoout
-) {
+static inline size_t count_string(uint8_t *raw, uint8_t *end, int *infoout) {
     size_t len = end - raw;
     size_t i = 1;
     int info = 0;
@@ -453,7 +489,7 @@ count_string(uint8_t
             e = false;
         });
         break;
-        tok:
+    tok:
         if (raw[i] == '"') {
             i++;
             if (!e) {
@@ -463,16 +499,13 @@ count_string(uint8_t
             continue;
         }
         if (raw[i] == '\\') {
-            info |=
-                    IESC;
+            info |= IESC;
             e = !e;
         }
         i++;
     }
-    *
-            infoout = info;
-    return
-            i;
+    *infoout = info;
+    return i;
 }
 
 static struct json take_string(uint8_t *raw, uint8_t *end) {
@@ -482,11 +515,11 @@ static struct json take_string(uint8_t *raw, uint8_t *end) {
 }
 
 static const uint8_t numtoks[256] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        // don't changes these flags without changing enum iflags too.
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // don't changes these flags without changing enum iflags too.
 };
 
 static struct json take_number(uint8_t *raw, uint8_t *end) {
@@ -497,15 +530,15 @@ static struct json take_number(uint8_t *raw, uint8_t *end) {
         if (!numtoks[raw[i]]) goto done;
         info |= (numtoks[raw[i]] - 1);
     });
-    done:
+done:
     return jmake(info, raw, end, i);
 }
 
 static const uint8_t nesttoks[256] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2, 0, 0,
 };
 
 static size_t count_nested(uint8_t *raw, uint8_t *end) {
@@ -515,18 +548,22 @@ static size_t count_nested(uint8_t *raw, uint8_t *end) {
     int kind = 0;
     if (i >= len) return i;
     while (depth) {
-        for16(i, len, { if (nesttoks[raw[i]]) goto tok0; });
+        for16(i, len, {
+            if (nesttoks[raw[i]]) goto tok0;
+        });
         break;
-        tok0:
+    tok0:
         kind = nesttoks[raw[i]];
         i++;
         if (kind - 1) {
             depth += kind - 3;
         } else {
             while (1) {
-                for16(i, len, { if (raw[i] == '"') goto tok1; });
+                for16(i, len, {
+                    if (raw[i] == '"') goto tok1;
+                });
                 break;
-                tok1:
+            tok1:
                 i++;
                 if (raw[i - 2] == '\\') {
                     size_t j = i - 3;
@@ -604,9 +641,7 @@ JSON_EXTERN struct json json_parsen(const char *json_str, size_t len) {
         return jmake(0, json_str, json_str + len, 0);
     }
     if (len == 0) return (struct json) {0};
-    return peek_any((uint8_t *)
-                            json_str, (uint8_t *)
-                                              json_str + len);
+    return peek_any((uint8_t *) json_str, (uint8_t *) json_str + len);
 }
 
 JSON_EXTERN struct json json_parse(const char *json_str) {
@@ -628,10 +663,10 @@ JSON_EXTERN size_t json_raw_length(struct json json) {
 }
 
 static const uint8_t typetoks[256] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0,
 };
 
 JSON_EXTERN enum json_type json_type(struct json json) {
@@ -652,15 +687,15 @@ static int strcmpn(const char *a, size_t alen, const char *b, size_t blen) {
 }
 
 static const uint8_t hextoks[256] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0,
-        0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0,
+    0, 0, 0, 10, 11, 12, 13, 14, 15, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0,  10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 static uint32_t decode_hex(const uint8_t *str) {
-    return (((int) hextoks[str[0]]) << 12) | (((int) hextoks[str[1]]) << 8) |
-           (((int) hextoks[str[2]]) << 4) | (((int) hextoks[str[3]]) << 0);
+    return (((int) hextoks[str[0]]) << 12) | (((int) hextoks[str[1]]) << 8) | (((int) hextoks[str[2]]) << 4)
+           | (((int) hextoks[str[3]]) << 0);
 }
 
 static bool is_surrogate(uint32_t cp) {
@@ -668,9 +703,8 @@ static bool is_surrogate(uint32_t cp) {
 }
 
 static uint32_t decode_codepoint(uint32_t cp1, uint32_t cp2) {
-    return cp1 > 55296 && cp1 < 56320 && cp2 > 56320 && cp2 < 57344 ?
-           ((cp1 - 55296) << 10) | ((cp2 - 56320) + 65536) :
-           65533;
+    return cp1 > 55296 && cp1 < 56320 && cp2 > 56320 && cp2 < 57344 ? ((cp1 - 55296) << 10) | ((cp2 - 56320) + 65536)
+                                                                    : 65533;
 }
 
 static inline int encode_codepoint(uint8_t dst[], uint32_t cp) {
@@ -700,51 +734,70 @@ static inline int encode_codepoint(uint8_t dst[], uint32_t cp) {
 // for_each_utf8 iterates over each UTF-8 bytes in jstr, unescaping along the
 // way. 'f' is a loop expression that will make available the 'ch' char which
 // is just a single byte in a UTF-8 series.
-#define for_each_utf8(jstr, len, f) { \
-    size_t nn = (len); \
-    int ch = 0; \
-    (void)ch; \
-    for (size_t ii = 0; ii < nn; ii++) { \
-        if ((jstr)[ii] != '\\') { \
-            ch = (jstr)[ii]; \
-            if (1) f \
-            continue; \
-        }; \
-        ii++; \
-        if (ii == nn) break; \
-        switch  ((jstr)[ii]) { \
-        case '\\': ch = '\\'; break; \
-        case '/' : ch = '/';  break; \
-        case 'b' : ch = '\b'; break; \
-        case 'f' : ch = '\f'; break; \
-        case 'n' : ch = '\n'; break; \
-        case 'r' : ch = '\r'; break; \
-        case 't' : ch = '\t'; break; \
-        case '"' : ch = '"';  break; \
-        case 'u' : \
-            if (ii+5 > nn) { nn = 0; continue; }; \
-            uint32_t cp = decode_hex((jstr)+ii+1); \
-            ii += 5; \
-            if (is_surrogate(cp)) { \
-                if (nn-ii >= 6 && (jstr)[ii] == '\\' && (jstr)[ii+1] == 'u') { \
-                    cp = decode_codepoint(cp, decode_hex((jstr)+ii+2)); \
-                    ii += 6; \
-                } \
-            } \
-            uint8_t _bytes[4]; \
-            int _n = encode_codepoint(_bytes, cp); \
-            for (int _j = 0; _j < _n; _j++) { \
-                ch = _bytes[_j]; \
-                if (1) f \
-            } \
-            ii--; \
-            continue; \
-        default: \
-            continue; \
-        }; \
-        if (1) f \
-    } \
-}
+#define for_each_utf8(jstr, len, f)                                                                                    \
+    {                                                                                                                  \
+        size_t nn = (len);                                                                                             \
+        int ch = 0;                                                                                                    \
+        (void) ch;                                                                                                     \
+        for (size_t ii = 0; ii < nn; ii++) {                                                                           \
+            if ((jstr)[ii] != '\\') {                                                                                  \
+                ch = (jstr)[ii];                                                                                       \
+                if (1) f continue;                                                                                     \
+            };                                                                                                         \
+            ii++;                                                                                                      \
+            if (ii == nn) break;                                                                                       \
+            switch ((jstr)[ii]) {                                                                                      \
+                case '\\':                                                                                             \
+                    ch = '\\';                                                                                         \
+                    break;                                                                                             \
+                case '/':                                                                                              \
+                    ch = '/';                                                                                          \
+                    break;                                                                                             \
+                case 'b':                                                                                              \
+                    ch = '\b';                                                                                         \
+                    break;                                                                                             \
+                case 'f':                                                                                              \
+                    ch = '\f';                                                                                         \
+                    break;                                                                                             \
+                case 'n':                                                                                              \
+                    ch = '\n';                                                                                         \
+                    break;                                                                                             \
+                case 'r':                                                                                              \
+                    ch = '\r';                                                                                         \
+                    break;                                                                                             \
+                case 't':                                                                                              \
+                    ch = '\t';                                                                                         \
+                    break;                                                                                             \
+                case '"':                                                                                              \
+                    ch = '"';                                                                                          \
+                    break;                                                                                             \
+                case 'u':                                                                                              \
+                    if (ii + 5 > nn) {                                                                                 \
+                        nn = 0;                                                                                        \
+                        continue;                                                                                      \
+                    };                                                                                                 \
+                    uint32_t cp = decode_hex((jstr) + ii + 1);                                                         \
+                    ii += 5;                                                                                           \
+                    if (is_surrogate(cp)) {                                                                            \
+                        if (nn - ii >= 6 && (jstr)[ii] == '\\' && (jstr)[ii + 1] == 'u') {                             \
+                            cp = decode_codepoint(cp, decode_hex((jstr) + ii + 2));                                    \
+                            ii += 6;                                                                                   \
+                        }                                                                                              \
+                    }                                                                                                  \
+                    uint8_t _bytes[4];                                                                                 \
+                    int _n = encode_codepoint(_bytes, cp);                                                             \
+                    for (int _j = 0; _j < _n; _j++) {                                                                  \
+                        ch = _bytes[_j];                                                                               \
+                        if (1) f                                                                                       \
+                    }                                                                                                  \
+                    ii--;                                                                                              \
+                    continue;                                                                                          \
+                default:                                                                                               \
+                    continue;                                                                                          \
+            };                                                                                                         \
+            if (1) f                                                                                                   \
+        }                                                                                                              \
+    }
 
 JSON_EXTERN
 int json_raw_comparen(struct json json, const char *str, size_t len) {
@@ -797,7 +850,7 @@ int json_string_comparen(struct json json, const char *str, size_t slen) {
         }
         sp++;
     });
-    done:
+done:
     if (cmp == 0 && *sp) cmp = -1;
     return cmp;
 }
@@ -829,8 +882,10 @@ JSON_EXTERN size_t json_string_copy(struct json json, char *str, size_t n) {
         if (count < n) str[count] = ch;
         count++;
     });
-    if (n > count) str[count] = '\0';
-    else if (n > 0) str[n - 1] = '\0';
+    if (n > count)
+        str[count] = '\0';
+    else if (n > 0)
+        str[n - 1] = '\0';
     return count;
 }
 
@@ -910,7 +965,7 @@ static int64_t parse_int64(const uint8_t *s, size_t len) {
         if ((size_t) (ptr - buf) == len) goto clamp;
     }
     y = parse_double(s, len);
-    clamp:
+clamp:
     if (y < (double) INT64_MIN) return INT64_MIN;
     if (y > (double) INT64_MAX) return INT64_MAX;
     return y;
@@ -920,8 +975,7 @@ static uint64_t parse_uint64(const uint8_t *s, size_t len) {
     char buf[21];
     double y;
     if (len == 0) return 0;
-    if (len < sizeof(buf) && sizeof(long long) == sizeof(uint64_t) &&
-        s[0] != '-') {
+    if (len < sizeof(buf) && sizeof(long long) == sizeof(uint64_t) && s[0] != '-') {
         memcpy(buf, s, len);
         buf[len] = '\0';
         char *ptr = NULL;
@@ -931,7 +985,7 @@ static uint64_t parse_uint64(const uint8_t *s, size_t len) {
         if ((size_t) (ptr - buf) == len) goto clamp;
     }
     y = parse_double(s, len);
-    clamp:
+clamp:
     if (y < 0) return 0;
     if (y > (double) UINT64_MAX) return UINT64_MAX;
     return y;
@@ -1025,8 +1079,7 @@ static void jesc_append2(struct jesc_buf *buf, uint8_t c1, uint8_t c2) {
 
 static const uint8_t hexchars[] = "0123456789abcdef";
 
-static void
-jesc_append_ux(struct jesc_buf *buf, uint8_t c1, uint8_t c2, uint16_t x) {
+static void jesc_append_ux(struct jesc_buf *buf, uint8_t c1, uint8_t c2, uint16_t x) {
     jesc_append2(buf, c1, c2);
     jesc_append2(buf, hexchars[x >> 12 & 0xF], hexchars[x >> 8 & 0xF]);
     jesc_append2(buf, hexchars[x >> 4 & 0xF], hexchars[x >> 0 & 0xF]);
@@ -1038,9 +1091,7 @@ size_t json_escapen(const char *str, size_t len, char *esc, size_t n) {
     struct jesc_buf buf = {.esc = (uint8_t *) esc, .esclen = n};
     jesc_append(&buf, '"');
     for (size_t i = 0; i < len; i++) {
-        uint32_t
-                c = (uint8_t)
-                str[i];
+        uint32_t c = (uint8_t) str[i];
         if (c < ' ') {
             switch (c) {
                 case '\n':
@@ -1106,10 +1157,13 @@ struct json json_getn(const char *json_str, size_t len, const char *path) {
     for (; !end && json_exists(json); i++) {
         // get the next component
         const char *key = p;
-        while (*p && *p != '.') p++;
+        while (*p && *p != '.')
+            p++;
         size_t klen = p - key;
-        if (*p == '.') p++;
-        else if (!*p) end = true;
+        if (*p == '.')
+            p++;
+        else if (!*p)
+            end = true;
         enum json_type type = json_type(json);
         if (type == JSON_OBJECT) {
             json = json_object_getn(json, key, klen);

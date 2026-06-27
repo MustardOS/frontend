@@ -14,10 +14,6 @@ extern int overlay_scale_cached;
 
 extern struct scale_cache overlay_scale_cache;
 
-enum overlay_scale {
-    SCALE_ORIGINAL = 0,
-    SCALE_FIT = 1,
-    SCALE_STRETCH = 2
-};
+enum overlay_scale { scale_original = 0, scale_fit = 1, scale_stretch = 2 };
 
 int get_scale_cached(struct scale_cache *cache);

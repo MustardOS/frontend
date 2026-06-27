@@ -19,7 +19,8 @@
 
 #if defined(_MSC_VER)
 #include <intrin.h>
-static inline int clz(unsigned int x) {
+static inline int clz(unsigned int x)
+{
     unsigned long r = 0;
     if (_BitScanReverse(&r, x))
         return 31 - r;
@@ -29,14 +30,31 @@ static inline int clz(unsigned int x) {
 #elif defined(__GNUC__)
 #define PVG_FT_MSB(x)  (31 - __builtin_clz(x))
 #else
-static inline int clz(unsigned int x) {
+static inline int clz(unsigned int x)
+{
     int n = 0;
     if (x == 0) return 32;
-    if (x <= 0x0000FFFFU) { n += 16; x <<= 16; }
-    if (x <= 0x00FFFFFFU) { n +=  8; x <<=  8; }
-    if (x <= 0x0FFFFFFFU) { n +=  4; x <<=  4; }
-    if (x <= 0x3FFFFFFFU) { n +=  2; x <<=  2; }
-    if (x <= 0x7FFFFFFFU) { n +=  1; }
+    if (x <= 0x0000FFFFU)
+    {
+        n += 16;
+        x <<= 16;
+    }
+    if (x <= 0x00FFFFFFU)
+    {
+        n += 8;
+        x <<= 8;
+    }
+    if (x <= 0x0FFFFFFFU)
+    {
+        n += 4;
+        x <<= 4;
+    }
+    if (x <= 0x3FFFFFFFU)
+    {
+        n += 2;
+        x <<= 2;
+    }
+    if (x <= 0x7FFFFFFFU) { n += 1; }
     return n;
 }
 #define PVG_FT_MSB(x)  (31 - clz(x))
@@ -57,7 +75,7 @@ static inline int clz(unsigned int x) {
 
 PVG_FT_Long PVG_FT_MulFix(PVG_FT_Long a, PVG_FT_Long b)
 {
-    PVG_FT_Int  s = 1;
+    PVG_FT_Int s = 1;
     PVG_FT_Long c;
 
     PVG_FT_MOVE_SIGN(a, s);
@@ -70,7 +88,7 @@ PVG_FT_Long PVG_FT_MulFix(PVG_FT_Long a, PVG_FT_Long b)
 
 PVG_FT_Long PVG_FT_MulDiv(PVG_FT_Long a, PVG_FT_Long b, PVG_FT_Long c)
 {
-    PVG_FT_Int  s = 1;
+    PVG_FT_Int s = 1;
     PVG_FT_Long d;
 
     PVG_FT_MOVE_SIGN(a, s);
@@ -84,14 +102,15 @@ PVG_FT_Long PVG_FT_MulDiv(PVG_FT_Long a, PVG_FT_Long b, PVG_FT_Long c)
 
 PVG_FT_Long PVG_FT_DivFix(PVG_FT_Long a, PVG_FT_Long b)
 {
-    PVG_FT_Int  s = 1;
+    PVG_FT_Int s = 1;
     PVG_FT_Long q;
 
     PVG_FT_MOVE_SIGN(a, s);
     PVG_FT_MOVE_SIGN(b, s);
 
-    q = (PVG_FT_Long)(b > 0 ? (((PVG_FT_UInt64)a << 16) + (b >> 1)) / b
-                           : 0x7FFFFFFFL);
+    q = (PVG_FT_Long)(b > 0
+                          ? (((PVG_FT_UInt64)a << 16) + (b >> 1)) / b
+                          : 0x7FFFFFFFL);
 
     return (s < 0 ? -q : q);
 }
@@ -122,8 +141,9 @@ PVG_FT_Long PVG_FT_DivFix(PVG_FT_Long a, PVG_FT_Long b)
 
 static const PVG_FT_Fixed ft_trig_arctan_table[] = {
     1740967L, 919879L, 466945L, 234379L, 117304L, 58666L, 29335L, 14668L,
-    7334L,    3667L,   1833L,   917L,    458L,    229L,   115L,   57L,
-    29L,      14L,     7L,      4L,      2L,      1L};
+    7334L, 3667L, 1833L, 917L, 458L, 229L, 115L, 57L,
+    29L, 14L, 7L, 4L, 2L, 1L
+};
 
 /* multiply a given value by the CORDIC shrink factor */
 static PVG_FT_Fixed ft_trig_downscale(PVG_FT_Fixed val)
@@ -151,11 +171,14 @@ static PVG_FT_Int ft_trig_prenorm(PVG_FT_Vector* vec)
 
     shift = PVG_FT_MSB(PVG_FT_ABS(x) | PVG_FT_ABS(y));
 
-    if (shift <= PVG_FT_TRIG_SAFE_MSB) {
+    if (shift <= PVG_FT_TRIG_SAFE_MSB)
+    {
         shift = PVG_FT_TRIG_SAFE_MSB - shift;
         vec->x = (PVG_FT_Pos)((PVG_FT_ULong)x << shift);
         vec->y = (PVG_FT_Pos)((PVG_FT_ULong)y << shift);
-    } else {
+    }
+    else
+    {
         shift -= PVG_FT_TRIG_SAFE_MSB;
         vec->x = x >> shift;
         vec->y = y >> shift;
@@ -167,22 +190,24 @@ static PVG_FT_Int ft_trig_prenorm(PVG_FT_Vector* vec)
 
 static void ft_trig_pseudo_rotate(PVG_FT_Vector* vec, PVG_FT_Angle theta)
 {
-    PVG_FT_Int          i;
-    PVG_FT_Fixed        x, y, xtemp, b;
+    PVG_FT_Int i;
+    PVG_FT_Fixed x, y, xtemp, b;
     const PVG_FT_Fixed* arctanptr;
 
     x = vec->x;
     y = vec->y;
 
     /* Rotate inside [-PI/4,PI/4] sector */
-    while (theta < -PVG_FT_ANGLE_PI4) {
+    while (theta < -PVG_FT_ANGLE_PI4)
+    {
         xtemp = y;
         y = -x;
         x = xtemp;
         theta += PVG_FT_ANGLE_PI2;
     }
 
-    while (theta > PVG_FT_ANGLE_PI4) {
+    while (theta > PVG_FT_ANGLE_PI4)
+    {
         xtemp = -y;
         y = x;
         x = xtemp;
@@ -192,15 +217,19 @@ static void ft_trig_pseudo_rotate(PVG_FT_Vector* vec, PVG_FT_Angle theta)
     arctanptr = ft_trig_arctan_table;
 
     /* Pseudorotations, with right shifts */
-    for (i = 1, b = 1; i < PVG_FT_TRIG_MAX_ITERS; b <<= 1, i++) {
+    for (i = 1, b = 1; i < PVG_FT_TRIG_MAX_ITERS; b <<= 1, i++)
+    {
         PVG_FT_Fixed v1 = ((y + b) >> i);
         PVG_FT_Fixed v2 = ((x + b) >> i);
-        if (theta < 0) {
+        if (theta < 0)
+        {
             xtemp = x + v1;
             y = y - v2;
             x = xtemp;
             theta += *arctanptr++;
-        } else {
+        }
+        else
+        {
             xtemp = x - v1;
             y = y + v2;
             x = xtemp;
@@ -214,33 +243,42 @@ static void ft_trig_pseudo_rotate(PVG_FT_Vector* vec, PVG_FT_Angle theta)
 
 static void ft_trig_pseudo_polarize(PVG_FT_Vector* vec)
 {
-    PVG_FT_Angle        theta;
-    PVG_FT_Int          i;
-    PVG_FT_Fixed        x, y, xtemp, b;
+    PVG_FT_Angle theta;
+    PVG_FT_Int i;
+    PVG_FT_Fixed x, y, xtemp, b;
     const PVG_FT_Fixed* arctanptr;
 
     x = vec->x;
     y = vec->y;
 
     /* Get the vector into [-PI/4,PI/4] sector */
-    if (y > x) {
-        if (y > -x) {
+    if (y > x)
+    {
+        if (y > -x)
+        {
             theta = PVG_FT_ANGLE_PI2;
             xtemp = y;
             y = -x;
             x = xtemp;
-        } else {
+        }
+        else
+        {
             theta = y > 0 ? PVG_FT_ANGLE_PI : -PVG_FT_ANGLE_PI;
             x = -x;
             y = -y;
         }
-    } else {
-        if (y < -x) {
+    }
+    else
+    {
+        if (y < -x)
+        {
             theta = -PVG_FT_ANGLE_PI2;
             xtemp = -y;
             y = x;
             x = xtemp;
-        } else {
+        }
+        else
+        {
             theta = 0;
         }
     }
@@ -248,15 +286,19 @@ static void ft_trig_pseudo_polarize(PVG_FT_Vector* vec)
     arctanptr = ft_trig_arctan_table;
 
     /* Pseudorotations, with right shifts */
-    for (i = 1, b = 1; i < PVG_FT_TRIG_MAX_ITERS; b <<= 1, i++) {
+    for (i = 1, b = 1; i < PVG_FT_TRIG_MAX_ITERS; b <<= 1, i++)
+    {
         PVG_FT_Fixed v1 = ((y + b) >> i);
         PVG_FT_Fixed v2 = ((x + b) >> i);
-        if (y > 0) {
+        if (y > 0)
+        {
             xtemp = x + v1;
             y = y - v2;
             x = xtemp;
             theta += *arctanptr++;
-        } else {
+        }
+        else
+        {
             xtemp = x - v1;
             y = y + v2;
             x = xtemp;
@@ -336,30 +378,30 @@ void PVG_FT_Vector_Unit(PVG_FT_Vector* vec, PVG_FT_Angle angle)
 
 void PVG_FT_Vector_Rotate(PVG_FT_Vector* vec, PVG_FT_Angle angle)
 {
-    PVG_FT_Int     shift;
-    PVG_FT_Vector  v = *vec;
+    PVG_FT_Int shift;
+    PVG_FT_Vector v = *vec;
 
-    if ( v.x == 0 && v.y == 0 )
+    if (v.x == 0 && v.y == 0)
         return;
 
-    shift = ft_trig_prenorm( &v );
-    ft_trig_pseudo_rotate( &v, angle );
-    v.x = ft_trig_downscale( v.x );
-    v.y = ft_trig_downscale( v.y );
+    shift = ft_trig_prenorm(&v);
+    ft_trig_pseudo_rotate(&v, angle);
+    v.x = ft_trig_downscale(v.x);
+    v.y = ft_trig_downscale(v.y);
 
-    if ( shift > 0 )
+    if (shift > 0)
     {
-        PVG_FT_Int32  half = (PVG_FT_Int32)1L << ( shift - 1 );
+        PVG_FT_Int32 half = (PVG_FT_Int32)1L << (shift - 1);
 
 
-        vec->x = ( v.x + half - ( v.x < 0 ) ) >> shift;
-        vec->y = ( v.y + half - ( v.y < 0 ) ) >> shift;
+        vec->x = (v.x + half - (v.x < 0)) >> shift;
+        vec->y = (v.y + half - (v.y < 0)) >> shift;
     }
     else
     {
-        shift  = -shift;
-        vec->x = (PVG_FT_Pos)( (PVG_FT_ULong)v.x << shift );
-        vec->y = (PVG_FT_Pos)( (PVG_FT_ULong)v.y << shift );
+        shift = -shift;
+        vec->x = (PVG_FT_Pos)((PVG_FT_ULong)v.x << shift);
+        vec->y = (PVG_FT_Pos)((PVG_FT_ULong)v.y << shift);
     }
 }
 
@@ -367,15 +409,18 @@ void PVG_FT_Vector_Rotate(PVG_FT_Vector* vec, PVG_FT_Angle angle)
 
 PVG_FT_Fixed PVG_FT_Vector_Length(PVG_FT_Vector* vec)
 {
-    PVG_FT_Int    shift;
+    PVG_FT_Int shift;
     PVG_FT_Vector v;
 
     v = *vec;
 
     /* handle trivial cases */
-    if (v.x == 0) {
+    if (v.x == 0)
+    {
         return PVG_FT_ABS(v.y);
-    } else if (v.y == 0) {
+    }
+    else if (v.y == 0)
+    {
         return PVG_FT_ABS(v.x);
     }
 
@@ -393,9 +438,9 @@ PVG_FT_Fixed PVG_FT_Vector_Length(PVG_FT_Vector* vec)
 /* documentation is in fttrigon.h */
 
 void PVG_FT_Vector_Polarize(PVG_FT_Vector* vec, PVG_FT_Fixed* length,
-    PVG_FT_Angle* angle)
+                            PVG_FT_Angle* angle)
 {
-    PVG_FT_Int    shift;
+    PVG_FT_Int shift;
     PVG_FT_Vector v;
 
     v = *vec;
@@ -407,15 +452,16 @@ void PVG_FT_Vector_Polarize(PVG_FT_Vector* vec, PVG_FT_Fixed* length,
 
     v.x = ft_trig_downscale(v.x);
 
-    *length = (shift >= 0) ? (v.x >> shift)
-                           : (PVG_FT_Fixed)((PVG_FT_UInt32)v.x << -shift);
+    *length = (shift >= 0)
+                  ? (v.x >> shift)
+                  : (PVG_FT_Fixed)((PVG_FT_UInt32)v.x << -shift);
     *angle = v.y;
 }
 
 /* documentation is in fttrigon.h */
 
 void PVG_FT_Vector_From_Polar(PVG_FT_Vector* vec, PVG_FT_Fixed length,
-    PVG_FT_Angle angle)
+                              PVG_FT_Angle angle)
 {
     vec->x = length;
     vec->y = 0;
@@ -425,14 +471,14 @@ void PVG_FT_Vector_From_Polar(PVG_FT_Vector* vec, PVG_FT_Fixed length,
 
 /* documentation is in fttrigon.h */
 
-PVG_FT_Angle PVG_FT_Angle_Diff( PVG_FT_Angle  angle1, PVG_FT_Angle  angle2 )
+PVG_FT_Angle PVG_FT_Angle_Diff(PVG_FT_Angle angle1, PVG_FT_Angle angle2)
 {
-    PVG_FT_Angle  delta = angle2 - angle1;
+    PVG_FT_Angle delta = angle2 - angle1;
 
-    while ( delta <= -PVG_FT_ANGLE_PI )
+    while (delta <= -PVG_FT_ANGLE_PI)
         delta += PVG_FT_ANGLE_2PI;
 
-    while ( delta > PVG_FT_ANGLE_PI )
+    while (delta > PVG_FT_ANGLE_PI)
         delta -= PVG_FT_ANGLE_2PI;
 
     return delta;

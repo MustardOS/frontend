@@ -1,560 +1,567 @@
 #pragma once
 
-#define CREATE_OPTION_ITEM(MODULE, NAME) do {                                                   \
-        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                 \
-        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                     \
-        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                         \
-        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                       \
-        ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);                  \
-        lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                                     \
-        lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, LV_OPA_TRANSP, MU_OBJ_INDI_DEFAULT); \
+#define CREATE_OPTION_ITEM(MODULE, NAME)                                                                               \
+    do {                                                                                                               \
+        ui_pnl_##NAME##_##MODULE = lv_obj_create(ui_pnl_content);                                                      \
+        ui_lbl_##NAME##_##MODULE = lv_label_create(ui_pnl_##NAME##_##MODULE);                                          \
+        lv_label_set_text(ui_lbl_##NAME##_##MODULE, "");                                                               \
+        ui_ico_##NAME##_##MODULE = lv_img_create(ui_pnl_##NAME##_##MODULE);                                            \
+        ui_dro_##NAME##_##MODULE = lv_dropdown_create(ui_pnl_##NAME##_##MODULE);                                       \
+        lv_dropdown_clear_options(ui_dro_##NAME##_##MODULE);                                                           \
+        lv_obj_set_style_text_opa(ui_dro_##NAME##_##MODULE, LV_OPA_TRANSP, MU_OBJ_INDI_DEFAULT);                       \
     } while (0)
 
-#define CREATE_STATIC_ITEM(MODULE, NAME) do {                               \
-        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);             \
-        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
-        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                     \
-        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);   \
+#define CREATE_STATIC_ITEM(MODULE, NAME)                                                                               \
+    do {                                                                                                               \
+        ui_pnl_##NAME##_##MODULE = lv_obj_create(ui_pnl_content);                                                      \
+        ui_lbl_##NAME##_##MODULE = lv_label_create(ui_pnl_##NAME##_##MODULE);                                          \
+        lv_label_set_text(ui_lbl_##NAME##_##MODULE, "");                                                               \
+        ui_ico_##NAME##_##MODULE = lv_img_create(ui_pnl_##NAME##_##MODULE);                                            \
     } while (0)
 
-#define CREATE_VALUE_ITEM(MODULE, NAME) do {                                     \
-        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                  \
-        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);      \
-        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                          \
-        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);        \
-        ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
-        lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                     \
+#define CREATE_VALUE_ITEM(MODULE, NAME)                                                                                \
+    do {                                                                                                               \
+        ui_pnl_##NAME##_##MODULE = lv_obj_create(ui_pnl_content);                                                      \
+        ui_lbl_##NAME##_##MODULE = lv_label_create(ui_pnl_##NAME##_##MODULE);                                          \
+        lv_label_set_text(ui_lbl_##NAME##_##MODULE, "");                                                               \
+        ui_ico_##NAME##_##MODULE = lv_img_create(ui_pnl_##NAME##_##MODULE);                                            \
+        ui_val_##NAME##_##MODULE = lv_label_create(ui_pnl_##NAME##_##MODULE);                                          \
+        lv_label_set_text(ui_val_##NAME##_##MODULE, "");                                                               \
     } while (0)
 
-#define CREATE_BAR_ITEM(MODULE, NAME) do {                                                                          \
-    ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                                         \
-    ui_pnl##NAME##Bar_##MODULE = lv_obj_create(ui_pnlContent);                                                      \
-    ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                             \
-    ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                                               \
-    ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                        \
-    ui_bar##NAME##_##MODULE = lv_bar_create(ui_pnl##NAME##Bar_##MODULE);                                            \
-    lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                                                 \
-    lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                                                            \
-    lv_obj_set_height(ui_pnl##NAME##Bar_##MODULE, 10);                                                              \
-    lv_obj_set_width(ui_pnl##NAME##Bar_##MODULE, lv_pct(100));                                                      \
-    lv_obj_set_width(ui_bar##NAME##_##MODULE, lv_pct(100));                                                         \
-    lv_bar_set_range(ui_bar##NAME##_##MODULE, 0, device.MUX.WIDTH);                                                 \
-    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), MU_OBJ_MAIN_DEFAULT); \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, MU_OBJ_MAIN_DEFAULT);                                      \
-    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), MU_OBJ_INDI_DEFAULT); \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, LV_OPA_COVER, MU_OBJ_INDI_DEFAULT);                            \
-} while (0)
+#define CREATE_BAR_ITEM(MODULE, NAME)                                                                                  \
+    do {                                                                                                               \
+        ui_pnl_##NAME##_##MODULE = lv_obj_create(ui_pnl_content);                                                      \
+        ui_pnl_##NAME##_bar_##MODULE = lv_obj_create(ui_pnl_content);                                                  \
+        ui_lbl_##NAME##_##MODULE = lv_label_create(ui_pnl_##NAME##_##MODULE);                                          \
+        ui_ico_##NAME##_##MODULE = lv_img_create(ui_pnl_##NAME##_##MODULE);                                            \
+        ui_val_##NAME##_##MODULE = lv_label_create(ui_pnl_##NAME##_##MODULE);                                          \
+        ui_bar_##NAME##_##MODULE = lv_bar_create(ui_pnl_##NAME##_bar_##MODULE);                                        \
+        lv_label_set_text(ui_lbl_##NAME##_##MODULE, "");                                                               \
+        lv_label_set_text(ui_val_##NAME##_##MODULE, "");                                                               \
+        lv_obj_set_height(ui_pnl_##NAME##_bar_##MODULE, 10);                                                           \
+        lv_obj_set_width(ui_pnl_##NAME##_bar_##MODULE, lv_pct(100));                                                   \
+        lv_obj_set_width(ui_bar_##NAME##_##MODULE, lv_pct(100));                                                       \
+        lv_bar_set_range(ui_bar_##NAME##_##MODULE, 0, device.mux.width);                                               \
+        lv_obj_set_style_bg_color(                                                                                     \
+            ui_bar_##NAME##_##MODULE, lv_color_hex(theme.verbose_boot.text), MU_OBJ_MAIN_DEFAULT                       \
+        );                                                                                                             \
+        lv_obj_set_style_bg_opa(ui_bar_##NAME##_##MODULE, 25, MU_OBJ_MAIN_DEFAULT);                                    \
+        lv_obj_set_style_bg_color(                                                                                     \
+            ui_bar_##NAME##_##MODULE, lv_color_hex(theme.verbose_boot.text), MU_OBJ_INDI_DEFAULT                       \
+        );                                                                                                             \
+        lv_obj_set_style_bg_opa(ui_bar_##NAME##_##MODULE, LV_OPA_COVER, MU_OBJ_INDI_DEFAULT);                          \
+    } while (0)
 
-#define APPCON_ELEMENTS                    \
-    APPCON(Governor, GOVERNOR, "governor") \
-    APPCON(Control,  CONTROL,  "control")
+#define APPCON_ELEMENTS                                                                                                \
+    APPCON(governor, "governor")                                                                                       \
+    APPCON(control, "control")
 
-#define BACKUP_ELEMENTS                           \
-    BACKUP(Track,      TRACK,      "track")       \
-    BACKUP(Apps,       APPS,       "application") \
-    BACKUP(Music,      MUSIC,      "music")       \
-    BACKUP(Content,    CONTENT,    "content")     \
-    BACKUP(Collection, COLLECTION, "collection")  \
-    BACKUP(Override,   OVERRIDE,   "override")    \
-    BACKUP(Package,    PACKAGE,    "package")     \
-    BACKUP(Name,       NAME,       "name")        \
-    BACKUP(History,    HISTORY,    "history")     \
-    BACKUP(Catalogue,  CATALOGUE,  "catalogue")   \
-    BACKUP(Network,    NETWORK,    "network")     \
-    BACKUP(Cheats,     CHEATS,     "cheats")      \
-    BACKUP(Config,     CONFIG,     "config")      \
-    BACKUP(Overlays,   OVERLAYS,   "overlays")    \
-    BACKUP(Shaders,    SHADERS,    "shaders")     \
-    BACKUP(Save,       SAVE,       "save")        \
-    BACKUP(Screenshot, SCREENSHOT, "screenshot")  \
-    BACKUP(Syncthing,  SYNCTHING,  "syncthing")   \
-    BACKUP(Bios,       BIOS,       "bios")        \
-    BACKUP(Theme,      THEME,      "theme")       \
-    BACKUP(Init,       INIT,       "init")        \
-    BACKUP(Target,     TARGET,     "target")      \
-    BACKUP(Merge,      MERGE,      "merge")       \
-    BACKUP(Start,      START,      "start")
+#define BACKUP_ELEMENTS                                                                                                \
+    BACKUP(track, "track")                                                                                             \
+    BACKUP(apps, "application")                                                                                        \
+    BACKUP(music, "music")                                                                                             \
+    BACKUP(content, "content")                                                                                         \
+    BACKUP(collection, "collection")                                                                                   \
+    BACKUP(override, "override")                                                                                       \
+    BACKUP(package, "package")                                                                                         \
+    BACKUP(name, "name")                                                                                               \
+    BACKUP(history, "history")                                                                                         \
+    BACKUP(catalogue, "catalogue")                                                                                     \
+    BACKUP(network, "network")                                                                                         \
+    BACKUP(cheats, "cheats")                                                                                           \
+    BACKUP(config, "config")                                                                                           \
+    BACKUP(overlays, "overlays")                                                                                       \
+    BACKUP(shaders, "shaders")                                                                                         \
+    BACKUP(save, "save")                                                                                               \
+    BACKUP(screenshot, "screenshot")                                                                                   \
+    BACKUP(syncthing, "syncthing")                                                                                     \
+    BACKUP(bios, "bios")                                                                                               \
+    BACKUP(theme, "theme")                                                                                             \
+    BACKUP(init, "init")                                                                                               \
+    BACKUP(target, "target")                                                                                           \
+    BACKUP(merge, "merge")                                                                                             \
+    BACKUP(start, "start")
 
-#define BATINFO_ELEMENTS                                     \
-    BATINFO(Capacity,      CAPACITY,        "capacity")      \
-    BATINFO(Voltage,       VOLTAGE,         "voltage")       \
-    BATINFO(Status,        STATUS,          "status")        \
-    BATINFO(Health,        HEALTH,          "health")        \
-    BATINFO(DesignCap,     DESIGN_CAP,      "designcap")     \
-    BATINFO(LastCharged,   LAST_CHARGED,    "lastcharged")   \
-    BATINFO(TimeOnBattery, TIME_ON_BATTERY, "timeonbattery") \
-    BATINFO(BatteryUsed,   BATTERY_USED,    "batteryused")   \
-    BATINFO(Charger,       CHARGER,         "charger")
+#define BATINFO_ELEMENTS                                                                                               \
+    BATINFO(capacity, "capacity")                                                                                      \
+    BATINFO(voltage, "voltage")                                                                                        \
+    BATINFO(status, "status")                                                                                          \
+    BATINFO(health, "health")                                                                                          \
+    BATINFO(design_cap, "designcap")                                                                                   \
+    BATINFO(last_charged, "lastcharged")                                                                               \
+    BATINFO(time_on_battery, "timeonbattery")                                                                          \
+    BATINFO(battery_used, "batteryused")                                                                               \
+    BATINFO(charger, "charger")
 
-#define BTALL_ELEMENTS                             \
-    BTALL(AutoConnect, AUTOCONNECT, "autoconnect")
+#define BTALL_ELEMENTS BTALL(auto_connect, "autoconnect")
 
-#define BTDEV_INFO_ELEMENTS                                \
-    BTDEV_INFO(FriendlyName, FRIENDLYNAME, "friendlyname") \
-    BTDEV_INFO(Battery,      BATTERY,      "battery")      \
-    BTDEV_INFO(Address,      ADDRESS,      "address")
+#define BTDEV_INFO_ELEMENTS                                                                                            \
+    BTDEV_INFO(friendly_name, "friendlyname")                                                                          \
+    BTDEV_INFO(battery, "battery")                                                                                     \
+    BTDEV_INFO(address, "address")
 
-#define BTDEV_ACT_ELEMENTS              \
-    BTDEV_ACT(Type,   TYPE,   "type")   \
-    BTDEV_ACT(Status, STATUS, "status") \
-    BTDEV_ACT(Forget, FORGET, "forget")
+#define BTDEV_ACT_ELEMENTS                                                                                             \
+    BTDEV_ACT(type, "type")                                                                                            \
+    BTDEV_ACT(status, "status")                                                                                        \
+    BTDEV_ACT(forget, "forget")
 
-#define BTDEV_ELEMENTS                                \
-    BTDEV(FriendlyName, FRIENDLYNAME, "friendlyname") \
-    BTDEV(Battery,      BATTERY,      "battery")      \
-    BTDEV(Address,      ADDRESS,      "address")      \
-    BTDEV(Type,         TYPE,         "type")         \
-    BTDEV(Status,       STATUS,       "status")       \
-    BTDEV(Forget,       FORGET,       "forget")
+#define BTDEV_ELEMENTS                                                                                                 \
+    BTDEV(friendly_name, "friendlyname")                                                                               \
+    BTDEV(battery, "battery")                                                                                          \
+    BTDEV(address, "address")                                                                                          \
+    BTDEV(type, "type")                                                                                                \
+    BTDEV(status, "status")                                                                                            \
+    BTDEV(forget, "forget")
 
-#define CHRONY_ELEMENTS                         \
-    CHRONY(Reference,  REFERENCE,  "reference") \
-    CHRONY(Stratum,    STRATUM,    "stratum")   \
-    CHRONY(RefTime,    REFTIME,    "reftime")   \
-    CHRONY(SystemTime, SYSTEMTIME, "system")    \
-    CHRONY(LastOffset, LASTOFFSET, "last")      \
-    CHRONY(RmsOffset,  RMSOFFSET,  "rms")       \
-    CHRONY(Frequency,  FREQUENCY,  "freq")      \
-    CHRONY(RootDelay,  ROOTDELAY,  "delay")     \
-    CHRONY(RootDisp,   ROOTDISP,   "disp")      \
-    CHRONY(UpdateInt,  UPDATEINT,  "update")    \
-    CHRONY(Leap,       LEAP,       "leap")
+#define CHRONY_ELEMENTS                                                                                                \
+    CHRONY(reference, "reference")                                                                                     \
+    CHRONY(stratum, "stratum")                                                                                         \
+    CHRONY(ref_time, "reftime")                                                                                        \
+    CHRONY(system_time, "system")                                                                                      \
+    CHRONY(last_offset, "last")                                                                                        \
+    CHRONY(rms_offset, "rms")                                                                                          \
+    CHRONY(frequency, "freq")                                                                                          \
+    CHRONY(root_delay, "delay")                                                                                        \
+    CHRONY(root_disp, "disp")                                                                                          \
+    CHRONY(update_int, "update")                                                                                       \
+    CHRONY(leap, "leap")
 
-#define CONFIG_ELEMENTS                       \
-    CONFIG(General,   GENERAL,   "general")   \
-    CONFIG(Connect,   CONNECT,   "connect")   \
-    CONFIG(Custom,    CUSTOM,    "custom")    \
-    CONFIG(Interface, INTERFACE, "interface") \
-    CONFIG(Overlay,   OVERLAY,   "overlay")   \
-    CONFIG(Language,  LANGUAGE,  "language")  \
-    CONFIG(Power,     POWER,     "power")     \
-    CONFIG(Storage,   STORAGE,   "storage")   \
-    CONFIG(Backup,    BACKUP,    "backup")
+#define CONFIG_ELEMENTS                                                                                                \
+    CONFIG(general, "general")                                                                                         \
+    CONFIG(connect, "connect")                                                                                         \
+    CONFIG(custom, "custom")                                                                                           \
+    CONFIG(interface, "interface")                                                                                     \
+    CONFIG(overlay, "overlay")                                                                                         \
+    CONFIG(language, "language")                                                                                       \
+    CONFIG(power, "power")                                                                                             \
+    CONFIG(storage, "storage")                                                                                         \
+    CONFIG(backup, "backup")
 
-#define CONNECT_ELEMENTS                       \
-    CONNECT(Network,   NETWORK,   "network")   \
-    CONNECT(NetAdv,    NETADV,    "netadv")    \
-    CONNECT(Proxy,     PROXY,     "net_proxy") \
-    CONNECT(Services,  SERVICES,  "service")   \
-    CONNECT(Bluetooth, BLUETOOTH, "bluetooth")
+#define CONNECT_ELEMENTS                                                                                               \
+    CONNECT(network, "network")                                                                                        \
+    CONNECT(net_adv, "netadv")                                                                                         \
+    CONNECT(proxy, "net_proxy")                                                                                        \
+    CONNECT(services, "service")                                                                                       \
+    CONNECT(bluetooth, "bluetooth")
 
-#define CONTENT_ELEMENTS                                              \
-    CONTENT(LaunchSwap,        LAUNCHSWAP,        "launch_swap")      \
-    CONTENT(Shuffle,           SHUFFLE,           "shuffle")          \
-    CONTENT(BoxArtImage,       BOXARTIMAGE,       "boxart")           \
-    CONTENT(BoxArtAlign,       BOXARTALIGN,       "align")            \
-    CONTENT(BoxArtScale,       BOXARTSCALE,       "boxartscale")      \
-    CONTENT(BoxArtTransition,  BOXARTTRANSITION,  "boxarttransition") \
-    CONTENT(VideoPreview,      VIDEOPREVIEW,      "videopreview")     \
-    CONTENT(FullWidth,         WIDTH,             "width")            \
-    CONTENT(LaunchSplash,      LAUNCHSPLASH,      "splash")           \
-    CONTENT(GridMode,          GRIDMODE,          "gridmodecontent")  \
-    CONTENT(GridModeArt,       GRIDMODEART,       "boxarthide")
+#define CONTENT_ELEMENTS                                                                                               \
+    CONTENT(launch_swap, "launch_swap")                                                                                \
+    CONTENT(shuffle, "shuffle")                                                                                        \
+    CONTENT(box_art_image, "boxart")                                                                                   \
+    CONTENT(box_art_align, "align")                                                                                    \
+    CONTENT(box_art_scale, "boxartscale")                                                                              \
+    CONTENT(box_art_transition, "boxarttransition")                                                                    \
+    CONTENT(video_preview, "videopreview")                                                                             \
+    CONTENT(full_width, "width")                                                                                       \
+    CONTENT(launch_splash, "splash")                                                                                   \
+    CONTENT(grid_mode, "gridmodecontent")                                                                              \
+    CONTENT(grid_mode_art, "boxarthide")
 
-#define CUSTOM_ELEMENTS                                     \
-    CUSTOM(Catalogue,       CATALOGUE,       "catalogue")   \
-    CUSTOM(Config,          CONFIG,          "config")      \
-    CUSTOM(ContentOptions,  CONTENT,         "content")     \
-    CUSTOM(Font,            FONT,            "font")        \
-    CUSTOM(ThemeOpt,        THEMEOPT,        "themeopt")    \
-    CUSTOM(Theme,           THEME,           "theme")       \
-    CUSTOM(ThemeResolution, THEMERESOLUTION, "resolution")  \
-    CUSTOM(ThemeScaling,    THEMESCALING,    "scaling")     \
-    CUSTOM(ThemeAlternate,  THEMEALTERNATE,  "alternate")   \
-    CUSTOM(VideoWallpaper,  VIDEOWALLPAPER,  "videowallpaper")  \
-    CUSTOM(BackgroundScale, BACKGROUNDSCALE, "backgroundscale") \
-    CUSTOM(Music,           MUSIC,           "music")       \
-    CUSTOM(MusicVolume,     MUSICVOLUME,     "musicvolume") \
-    CUSTOM(BlackFade,       BLACKFADE,       "blackfade")   \
-    CUSTOM(Sound,           SOUND,           "sound")       \
-    CUSTOM(SoundVolume,     SOUNDVOLUME,     "soundvolume") \
-    CUSTOM(Chime,           CHIME,           "chime")
+#define CUSTOM_ELEMENTS                                                                                                \
+    CUSTOM(catalogue, "catalogue")                                                                                     \
+    CUSTOM(config, "config")                                                                                           \
+    CUSTOM(content_options, "content")                                                                                 \
+    CUSTOM(font, "font")                                                                                               \
+    CUSTOM(theme_opt, "themeopt")                                                                                      \
+    CUSTOM(theme, "theme")                                                                                             \
+    CUSTOM(theme_resolution, "resolution")                                                                             \
+    CUSTOM(theme_scaling, "scaling")                                                                                   \
+    CUSTOM(theme_alternate, "alternate")                                                                               \
+    CUSTOM(video_wallpaper, "videowallpaper")                                                                          \
+    CUSTOM(background_scale, "backgroundscale")                                                                        \
+    CUSTOM(music, "music")                                                                                             \
+    CUSTOM(music_volume, "musicvolume")                                                                                \
+    CUSTOM(black_fade, "blackfade")                                                                                    \
+    CUSTOM(sound, "sound")                                                                                             \
+    CUSTOM(sound_volume, "soundvolume")                                                                                \
+    CUSTOM(chime, "chime")
 
-#define DANGER_ELEMENTS                                 \
-    DANGER(VmSwap,        VMSWAP,        "vmswap")      \
-    DANGER(DirtyRatio,    DIRTYRATIO,    "dirty-ratio") \
-    DANGER(DirtyBack,     DIRTYBACK,     "dirty-back")  \
-    DANGER(CachePressure, CACHEPRESSURE, "cache")       \
-    DANGER(NoMerge,       NOMERGE,       "merge")       \
-    DANGER(NrRequests,    NRREQUESTS,    "requests")    \
-    DANGER(ReadAhead,     READAHEAD,     "readahead")   \
-    DANGER(PageCluster,   PAGECLUSTER,   "cluster")     \
-    DANGER(TimeSlice,     TIMESLICE,     "timeslice")   \
-    DANGER(IoStats,       IOSTATS,       "iostats")     \
-    DANGER(IdleFlush,     IDLEFLUSH,     "idleflush")   \
-    DANGER(ChildFirst,    CHILDFIRST,    "child")       \
-    DANGER(TuneScale,     TUNESCALE,     "tunescale")   \
-    DANGER(CardMode,      CARDMODE,      "cardmode")    \
-    DANGER(State,         STATE,         "state")
+#define DANGER_ELEMENTS                                                                                                \
+    DANGER(vm_swap, "vmswap")                                                                                          \
+    DANGER(dirty_ratio, "dirty-ratio")                                                                                 \
+    DANGER(dirty_back, "dirty-back")                                                                                   \
+    DANGER(cache_pressure, "cache")                                                                                    \
+    DANGER(no_merge, "merge")                                                                                          \
+    DANGER(nr_requests, "requests")                                                                                    \
+    DANGER(read_ahead, "readahead")                                                                                    \
+    DANGER(page_cluster, "cluster")                                                                                    \
+    DANGER(time_slice, "timeslice")                                                                                    \
+    DANGER(io_stats, "iostats")                                                                                        \
+    DANGER(idle_flush, "idleflush")                                                                                    \
+    DANGER(child_first, "child")                                                                                       \
+    DANGER(tune_scale, "tunescale")                                                                                    \
+    DANGER(card_mode, "cardmode")                                                                                      \
+    DANGER(state, "state")
 
-#define DEVICE_ELEMENTS                                \
-    DEVICE(HasBluetooth,  HASBLUETOOTH,  "bluetooth")  \
-    DEVICE(HasRgb,        HASRGB,        "rgb")        \
-    DEVICE(HasDebugFs,    HASDEBUGFS,    "debugfs")    \
-    DEVICE(HasHdmi,       HASHDMI,       "hdmi")       \
-    DEVICE(HasLid,        HASLID,        "lid")        \
-    DEVICE(HasNetwork,    HASNETWORK,    "network")    \
-    DEVICE(HasPortmaster, HASPORTMASTER, "portmaster")
+#define DEVICE_ELEMENTS                                                                                                \
+    DEVICE(has_bluetooth, "bluetooth")                                                                                 \
+    DEVICE(has_rgb, "rgb")                                                                                             \
+    DEVICE(has_debugfs, "debugfs")                                                                                     \
+    DEVICE(has_hdmi, "hdmi")                                                                                           \
+    DEVICE(has_lid, "lid")                                                                                             \
+    DEVICE(has_network, "network")                                                                                     \
+    DEVICE(has_portmaster, "portmaster")
 
-#define DISTEMP_ELEMENTS                               \
-    DISTEMP(Schedule,    SCHEDULE,     "schedule")     \
-    DISTEMP(SunriseTemp, SUNRISE_TEMP, "sunrisetemp")  \
-    DISTEMP(SunsetTemp,  SUNSET_TEMP,  "sunsettemp")   \
-    DISTEMP(SunriseTime, SUNRISE_TIME, "sunrisetime")  \
-    DISTEMP(SunsetTime,  SUNSET_TIME,  "sunsettime")   \
-    DISTEMP(Temp,        TEMPERATURE,  "temp")
+#define DISTEMP_ELEMENTS                                                                                               \
+    DISTEMP(schedule, "schedule")                                                                                      \
+    DISTEMP(sunrise_temp, "sunrisetemp")                                                                               \
+    DISTEMP(sunset_temp, "sunsettemp")                                                                                 \
+    DISTEMP(sunrise_time, "sunrisetime")                                                                               \
+    DISTEMP(sunset_time, "sunsettime")                                                                                 \
+    DISTEMP(temp, "temp")
 
-#define FONT_ELEMENTS                          \
-    FONT(Type,       TYPE,       "type")       \
-    FONT(Name,       NAME,       "name")       \
-    FONT(ListSize,   LISTSIZE,   "listsize")   \
-    FONT(HeaderSize, HEADERSIZE, "headersize") \
-    FONT(FooterSize, FOOTERSIZE, "footersize") \
-    FONT(PanelSize,  PANELSIZE,  "panelsize")
+#define FONT_ELEMENTS                                                                                                  \
+    FONT(type, "type")                                                                                                 \
+    FONT(name, "name")                                                                                                 \
+    FONT(list_size, "listsize")                                                                                        \
+    FONT(header_size, "headersize")                                                                                    \
+    FONT(footer_size, "footersize")                                                                                    \
+    FONT(panel_size, "panelsize")
 
-#define HDMI_ELEMENTS                          \
-    HDMI(Resolution, RESOLUTION, "resolution") \
-    HDMI(Space,      SPACE,      "space")      \
-    HDMI(Depth,      DEPTH,      "depth")      \
-    HDMI(Range,      RANGE,      "range")      \
-    HDMI(Scan,       SCAN,       "scan")       \
-    HDMI(Audio,      AUDIO,      "audio")
+#define HDMI_ELEMENTS                                                                                                  \
+    HDMI(resolution, "resolution")                                                                                     \
+    HDMI(space, "space")                                                                                               \
+    HDMI(depth, "depth")                                                                                               \
+    HDMI(range, "range")                                                                                               \
+    HDMI(scan, "scan")                                                                                                 \
+    HDMI(audio, "audio")
 
-#define INFO_ELEMENTS                          \
-    INFO(News,       NEWS,       "news")       \
-    INFO(Activity,   ACTIVITY,   "activity")   \
-    INFO(Screenshot, SCREENSHOT, "screenshot") \
-    INFO(Space,      SPACE,      "space")      \
-    INFO(Tester,     TESTER,     "tester")     \
-    INFO(SysInfo,    SYSINFO,    "sysinfo")    \
-    INFO(BatInfo,    BATINFO,    "batinfo")    \
-    INFO(NetInfo,    NETINFO,    "netinfo")    \
-    INFO(Chrony,     CHRONY,     "chrony")     \
-    INFO(Credit,     CREDIT,     "credit")
+#define INFO_ELEMENTS                                                                                                  \
+    INFO(news, "news")                                                                                                 \
+    INFO(activity, "activity")                                                                                         \
+    INFO(screenshot, "screenshot")                                                                                     \
+    INFO(space, "space")                                                                                               \
+    INFO(tester, "tester")                                                                                             \
+    INFO(sys_info, "sysinfo")                                                                                          \
+    INFO(bat_info, "batinfo")                                                                                          \
+    INFO(net_info, "netinfo")                                                                                          \
+    INFO(chrony, "chrony")                                                                                             \
+    INFO(credit, "credit")
 
-#define INSTALL_ELEMENTS                    \
-    INSTALL(Rtc,      RTC,      "clock")    \
-    INSTALL(Language, LANGUAGE, "language") \
-    INSTALL(Shutdown, SHUTDOWN, "shutdown") \
-    INSTALL(Install,  INSTALL,  "install")
+#define INSTALL_ELEMENTS                                                                                               \
+    INSTALL(rtc, "clock")                                                                                              \
+    INSTALL(language, "language")                                                                                      \
+    INSTALL(shutdown, "shutdown")                                                                                      \
+    INSTALL(install, "install")
 
-#define KIOSK_ELEMENTS                          \
-    KIOSK(Enable,     ENABLE,     "enable")     \
-    KIOSK(Message,    MESSAGE,    "message")    \
-    KIOSK(Archive,    ARCHIVE,    "archive")    \
-    KIOSK(Task,       TASK,       "task")       \
-    KIOSK(Custom,     CUSTOM,     "custom")     \
-    KIOSK(Language,   LANGUAGE,   "language")   \
-    KIOSK(Network,    NETWORK,    "network")    \
-    KIOSK(Storage,    STORAGE,    "storage")    \
-    KIOSK(Backup,     BACKUP,     "backup")     \
-    KIOSK(NetAdv,     NETADV,     "netadv")     \
-    KIOSK(WebServ,    WEBSERV,    "webserv")    \
-    KIOSK(Core,       CORE,       "core")       \
-    KIOSK(Governor,   GOVERNOR,   "governor")   \
-    KIOSK(Control,    CONTROL,    "control")    \
-    KIOSK(Option,     OPTION,     "option")     \
-    KIOSK(RetroArch,  RETROARCH,  "retroarch")  \
-    KIOSK(Search,     SEARCH,     "search")     \
-    KIOSK(Tag,        TAG,        "tag")        \
-    KIOSK(ColFilter,  COLFILTER,  "colfilter")  \
-    KIOSK(Shader,     SHADER,     "shader")     \
-    KIOSK(RemConfig,  REMCONFIG,  "remconfig")  \
-    KIOSK(Catalogue,  CATALOGUE,  "catalogue")  \
-    KIOSK(RAConfig,   RACONFIG,   "raconfig")   \
-    KIOSK(Theme,      THEME,      "theme")      \
-    KIOSK(ThemeDown,  THEMEDOWN,  "theme_down") \
-    KIOSK(Clock,      CLOCK,      "clock")      \
-    KIOSK(Timezone,   TIMEZONE,   "timezone")   \
-    KIOSK(Apps,       APPS,       "apps")       \
-    KIOSK(Config,     CONFIG,     "config")     \
-    KIOSK(Explore,    EXPLORE,    "explore")    \
-    KIOSK(CollectMod, COLLECTMOD, "collectmod") \
-    KIOSK(CollectAdd, COLLECTADD, "collectadd") \
-    KIOSK(CollectNew, COLLECTNEW, "collectnew") \
-    KIOSK(CollectRem, COLLECTREM, "collectrem") \
-    KIOSK(CollectAcc, COLLECTACC, "collectacc") \
-    KIOSK(HistoryMod, HISTORYMOD, "historymod") \
-    KIOSK(HistoryRem, HISTORYREM, "historyrem") \
-    KIOSK(Info,       INFO,       "info")       \
-    KIOSK(Rgb,        RGB,        "rgb")        \
-    KIOSK(Advanced,   ADVANCED,   "advanced")   \
-    KIOSK(General,    GENERAL,    "general")    \
-    KIOSK(Hdmi,       HDMI,       "hdmi")       \
-    KIOSK(Power,      POWER,      "power")      \
-    KIOSK(Visual,     VISUAL,     "visual")     \
-    KIOSK(Overlay,    OVERLAY,    "overlay")
+#define KIOSK_ELEMENTS                                                                                                 \
+    KIOSK(enable, "enable")                                                                                            \
+    KIOSK(message, "message")                                                                                          \
+    KIOSK(archive, "archive")                                                                                          \
+    KIOSK(task, "task")                                                                                                \
+    KIOSK(custom, "custom")                                                                                            \
+    KIOSK(language, "language")                                                                                        \
+    KIOSK(network, "network")                                                                                          \
+    KIOSK(storage, "storage")                                                                                          \
+    KIOSK(backup, "backup")                                                                                            \
+    KIOSK(net_adv, "netadv")                                                                                           \
+    KIOSK(web_serv, "webserv")                                                                                         \
+    KIOSK(core, "core")                                                                                                \
+    KIOSK(governor, "governor")                                                                                        \
+    KIOSK(control, "control")                                                                                          \
+    KIOSK(option, "option")                                                                                            \
+    KIOSK(retro_arch, "retroarch")                                                                                     \
+    KIOSK(search, "search")                                                                                            \
+    KIOSK(tag, "tag")                                                                                                  \
+    KIOSK(col_filter, "colfilter")                                                                                     \
+    KIOSK(shader, "shader")                                                                                            \
+    KIOSK(rem_config, "remconfig")                                                                                     \
+    KIOSK(catalogue, "catalogue")                                                                                      \
+    KIOSK(ra_config, "raconfig")                                                                                       \
+    KIOSK(theme, "theme")                                                                                              \
+    KIOSK(theme_down, "theme_down")                                                                                    \
+    KIOSK(clock, "clock")                                                                                              \
+    KIOSK(timezone, "timezone")                                                                                        \
+    KIOSK(apps, "apps")                                                                                                \
+    KIOSK(config, "config")                                                                                            \
+    KIOSK(explore, "explore")                                                                                          \
+    KIOSK(collect_mod, "collectmod")                                                                                   \
+    KIOSK(collect_add, "collectadd")                                                                                   \
+    KIOSK(collect_new, "collectnew")                                                                                   \
+    KIOSK(collect_rem, "collectrem")                                                                                   \
+    KIOSK(collect_acc, "collectacc")                                                                                   \
+    KIOSK(history_mod, "historymod")                                                                                   \
+    KIOSK(history_rem, "historyrem")                                                                                   \
+    KIOSK(info, "info")                                                                                                \
+    KIOSK(rgb, "rgb")                                                                                                  \
+    KIOSK(advanced, "advanced")                                                                                        \
+    KIOSK(general, "general")                                                                                          \
+    KIOSK(hdmi, "hdmi")                                                                                                \
+    KIOSK(power, "power")                                                                                              \
+    KIOSK(visual, "visual")                                                                                            \
+    KIOSK(overlay, "overlay")
 
-#define LAUNCH_ELEMENTS                          \
-    LAUNCH(Explore,    EXPLORE,    "explore")    \
-    LAUNCH(Collection, COLLECTION, "collection") \
-    LAUNCH(History,    HISTORY,    "history")    \
-    LAUNCH(Apps,       APPS,       "apps")       \
-    LAUNCH(Info,       INFO,       "info")       \
-    LAUNCH(Config,     CONFIG,     "config")     \
-    LAUNCH(Reboot,     REBOOT,     "reboot")     \
-    LAUNCH(Shutdown,   SHUTDOWN,   "shutdown")
+#define LAUNCH_ELEMENTS                                                                                                \
+    LAUNCH(explore, "explore")                                                                                         \
+    LAUNCH(collection, "collection")                                                                                   \
+    LAUNCH(history, "history")                                                                                         \
+    LAUNCH(apps, "apps")                                                                                               \
+    LAUNCH(info, "info")                                                                                               \
+    LAUNCH(config, "config")                                                                                           \
+    LAUNCH(reboot, "reboot")                                                                                           \
+    LAUNCH(shutdown, "shutdown")
 
-#define NETADV_ELEMENTS                       \
-    NETADV(Monitor,   MONITOR,   "monitor")   \
-    NETADV(Boot,      BOOT,      "boot")      \
-    NETADV(Wake,      WAKE,      "wake")      \
-    NETADV(Compat,    COMPAT,    "compat")    \
-    NETADV(AsyncLoad, ASYNCLOAD, "asyncload") \
-    NETADV(ConRetry,  CONRETRY,  "conretry")  \
-    NETADV(Wait,      WAIT,      "wait")      \
-    NETADV(ModRetry,  MODRETRY,  "modretry")
+#define NETADV_ELEMENTS                                                                                                \
+    NETADV(monitor, "monitor")                                                                                         \
+    NETADV(boot, "boot")                                                                                               \
+    NETADV(wake, "wake")                                                                                               \
+    NETADV(compat, "compat")                                                                                           \
+    NETADV(async_load, "asyncload")                                                                                    \
+    NETADV(con_retry, "conretry")                                                                                      \
+    NETADV(wait, "wait")                                                                                               \
+    NETADV(mod_retry, "modretry")
 
-#define NETINFO_ELEMENTS                       \
-    NETINFO(Hostname,  HOSTNAME,  "hostname")  \
-    NETINFO(Mac,       MAC,       "mac")       \
-    NETINFO(Ip,        IP,        "ip")        \
-    NETINFO(Ssid,      SSID,      "ssid")      \
-    NETINFO(Gateway,   GATEWAY,   "gateway")   \
-    NETINFO(Dns,       DNS,       "dns")       \
-    NETINFO(Signal,    SIGNAL,    "signal")    \
-    NETINFO(Channel,   CHANNEL,   "channel")   \
-    NETINFO(AcTraffic, ACTRAFFIC, "actraffic") \
-    NETINFO(TpTraffic, TPTRAFFIC, "tptraffic")
+#define NETINFO_ELEMENTS                                                                                               \
+    NETINFO(hostname, "hostname")                                                                                      \
+    NETINFO(mac, "mac")                                                                                                \
+    NETINFO(ip, "ip")                                                                                                  \
+    NETINFO(ssid, "ssid")                                                                                              \
+    NETINFO(gateway, "gateway")                                                                                        \
+    NETINFO(dns, "dns")                                                                                                \
+    NETINFO(signal, "signal")                                                                                          \
+    NETINFO(channel, "channel")                                                                                        \
+    NETINFO(ac_traffic, "actraffic")                                                                                   \
+    NETINFO(tp_traffic, "tptraffic")
 
-#define NETWORK_ELEMENTS                               \
-    NETWORK(ProfileName, PROFILE_NAME, "profile_name") \
-    NETWORK(Identifier,  IDENTIFIER,   "identifier")   \
-    NETWORK(Password,    PASSWORD,     "password")     \
-    NETWORK(Type,        TYPE,         "type")         \
-    NETWORK(Priority,    PRIORITY,     "priority")     \
-    NETWORK(Address,     ADDRESS,      "address")      \
-    NETWORK(Subnet,      SUBNET,       "subnet")       \
-    NETWORK(Gateway,     GATEWAY,      "gateway")      \
-    NETWORK(Dns,         DNS,          "dns")          \
-    NETWORK(Connect,     CONNECT,      "connect")
+#define NETWORK_ELEMENTS                                                                                               \
+    NETWORK(profile_name, "profile_name")                                                                              \
+    NETWORK(identifier, "identifier")                                                                                  \
+    NETWORK(password, "password")                                                                                      \
+    NETWORK(type, "type")                                                                                              \
+    NETWORK(priority, "priority")                                                                                      \
+    NETWORK(address, "address")                                                                                        \
+    NETWORK(subnet, "subnet")                                                                                          \
+    NETWORK(gateway, "gateway")                                                                                        \
+    NETWORK(dns, "dns")                                                                                                \
+    NETWORK(connect, "connect")
 
-#define OPTION_ELEMENTS                       \
-    OPTION(Core,      CORE,      "core")      \
-    OPTION(Governor,  GOVERNOR,  "governor")  \
-    OPTION(Control,   CONTROL,   "control")   \
-    OPTION(RetroArch, RETROARCH, "retroarch") \
-    OPTION(RemConfig, REMCONFIG, "remconfig") \
-    OPTION(ColFilter, COLFILTER, "colfilter") \
-    OPTION(Shader,    SHADER,    "shader")    \
-    OPTION(Tag,       TAG,       "tag")       \
-    OPTION(Storage,   STORAGE,   "storage")   \
-    OPTION(Folder,    FOLDER,    "folder")    \
-    OPTION(Name,      NAME,      "name")      \
-    OPTION(Time,      TIME,      "time")      \
-    OPTION(Launch,    LAUNCH,    "launch")
+#define OPTION_ELEMENTS                                                                                                \
+    OPTION(core, "core")                                                                                               \
+    OPTION(governor, "governor")                                                                                       \
+    OPTION(control, "control")                                                                                         \
+    OPTION(retro_arch, "retroarch")                                                                                    \
+    OPTION(rem_config, "remconfig")                                                                                    \
+    OPTION(col_filter, "colfilter")                                                                                    \
+    OPTION(shader, "shader")                                                                                           \
+    OPTION(tag, "tag")                                                                                                 \
+    OPTION(storage, "storage")                                                                                         \
+    OPTION(folder, "folder")                                                                                           \
+    OPTION(name, "name")                                                                                               \
+    OPTION(time, "time")                                                                                               \
+    OPTION(launch, "launch")
 
-#define OVERLAY_ELEMENTS                        \
-    OVERLAY(GenAlpha,  GENALPHA,  "gen_alpha")  \
-    OVERLAY(GenAnchor, GENANCHOR, "gen_anchor") \
-    OVERLAY(GenScale,  GENSCALE,  "gen_scale")  \
-    OVERLAY(BatAlpha,  BATALPHA,  "bat_alpha")  \
-    OVERLAY(BatAnchor, BATANCHOR, "bat_anchor") \
-    OVERLAY(BatScale,  BATSCALE,  "bat_scale")  \
-    OVERLAY(VolAlpha,  VOLALPHA,  "vol_alpha")  \
-    OVERLAY(VolAnchor, VOLANCHOR, "vol_anchor") \
-    OVERLAY(VolScale,  VOLSCALE,  "vol_scale")  \
-    OVERLAY(BriAlpha,  BRIALPHA,  "bri_alpha")  \
-    OVERLAY(BriAnchor, BRIANCHOR, "bri_anchor") \
-    OVERLAY(BriScale,  BRISCALE,  "bri_scale")
+#define OVERLAY_ELEMENTS                                                                                               \
+    OVERLAY(gen_alpha, "gen_alpha")                                                                                    \
+    OVERLAY(gen_anchor, "gen_anchor")                                                                                  \
+    OVERLAY(gen_scale, "gen_scale")                                                                                    \
+    OVERLAY(bat_alpha, "bat_alpha")                                                                                    \
+    OVERLAY(bat_anchor, "bat_anchor")                                                                                  \
+    OVERLAY(bat_scale, "bat_scale")                                                                                    \
+    OVERLAY(vol_alpha, "vol_alpha")                                                                                    \
+    OVERLAY(vol_anchor, "vol_anchor")                                                                                  \
+    OVERLAY(vol_scale, "vol_scale")                                                                                    \
+    OVERLAY(bri_alpha, "bri_alpha")                                                                                    \
+    OVERLAY(bri_anchor, "bri_anchor")                                                                                  \
+    OVERLAY(bri_scale, "bri_scale")
 
-#define PASSCFG_ELEMENTS                              \
-    PASSCFG(BootCode,    BOOTCODE,    "boot_lock")    \
-    PASSCFG(BootMsg,     BOOTMSG,     "boot_info")    \
-    PASSCFG(LaunchCode,  LAUNCHCODE,  "launch_lock")  \
-    PASSCFG(LaunchMsg,   LAUNCHMSG,   "launch_info")  \
-    PASSCFG(SettingCode, SETTINGCODE, "setting_lock") \
-    PASSCFG(SettingMsg,  SETTINGMSG,  "setting_info") \
-    PASSCFG(SafetyCode,  SAFETYCODE,  "safety")
+#define PASSCFG_ELEMENTS                                                                                               \
+    PASSCFG(boot_code, "boot_lock")                                                                                    \
+    PASSCFG(boot_msg, "boot_info")                                                                                     \
+    PASSCFG(launch_code, "launch_lock")                                                                                \
+    PASSCFG(launch_msg, "launch_info")                                                                                 \
+    PASSCFG(setting_code, "setting_lock")                                                                              \
+    PASSCFG(setting_msg, "setting_info")                                                                               \
+    PASSCFG(safety_code, "safety")
 
-#define POWER_ELEMENTS                              \
-    POWER(Shutdown,    SHUTDOWN,    "shutdown")     \
-    POWER(Battery,     BATTERY,     "battery")      \
-    POWER(IdleSleep,   IDLESLEEP,   "idle_sleep")   \
-    POWER(IdleDisplay, IDLEDISPLAY, "idle_display") \
-    POWER(IdleMute,    IDLEMUTE,    "idle_mute")    \
-    POWER(GovIdle,     GOVIDLE,     "gov_idle")     \
-    POWER(GovDefault,  GOVDEFAULT,  "gov_default")  \
-    POWER(SaverType,   SAVERTYPE,   "saver_type")   \
-    POWER(SaverSpeed,  SAVERSPEED,  "saver_speed")
+#define POWER_ELEMENTS                                                                                                 \
+    POWER(shutdown, "shutdown")                                                                                        \
+    POWER(battery, "battery")                                                                                          \
+    POWER(idle_sleep, "idle_sleep")                                                                                    \
+    POWER(idle_display, "idle_display")                                                                                \
+    POWER(idle_mute, "idle_mute")                                                                                      \
+    POWER(gov_idle, "gov_idle")                                                                                        \
+    POWER(gov_default, "gov_default")                                                                                  \
+    POWER(saver_type, "saver_type")                                                                                    \
+    POWER(saver_speed, "saver_speed")
 
-#define PROXY_ELEMENTS                 \
-    PROXY(Enabled, ENABLED, "enabled") \
-    PROXY(Type,    TYPE,    "type")    \
-    PROXY(Server,  SERVER,  "server")  \
-    PROXY(NoProxy, NOPROXY, "noproxy") \
-    PROXY(Test,    TEST,    "test")
+#define PROXY_ELEMENTS                                                                                                 \
+    PROXY(enabled, "enabled")                                                                                          \
+    PROXY(type, "type")                                                                                                \
+    PROXY(server, "server")                                                                                            \
+    PROXY(no_proxy, "noproxy")                                                                                         \
+    PROXY(test, "test")
 
-#define RGB_ELEMENTS                               \
-    RGB(Mode,        MODE,         "mode")         \
-    RGB(Bright,      BRIGHT,       "bright")       \
-    RGB(BreathSpeed, BREATH_SPEED, "breath_speed") \
-    RGB(ColourL,     COLOURL,      "colour_l")     \
-    RGB(ColourR,     COLOURR,      "colour_r")     \
-    RGB(ColourM,     COLOURM,      "colour_m")     \
-    RGB(ColourF1,    COLOURF1,     "colour_f1")    \
-    RGB(ColourF2,    COLOURF2,     "colour_f2")    \
-    RGB(Combo,       COMBO,        "combo")        \
-    RGB(Backend,     BACKEND,      "backend")
+#define RGB_ELEMENTS                                                                                                   \
+    RGB(mode, "mode")                                                                                                  \
+    RGB(bright, "bright")                                                                                              \
+    RGB(breath_speed, "breath_speed")                                                                                  \
+    RGB(colour_l, "colour_l")                                                                                          \
+    RGB(colour_r, "colour_r")                                                                                          \
+    RGB(colour_m, "colour_m")                                                                                          \
+    RGB(colour_f1, "colour_f1")                                                                                        \
+    RGB(colour_f2, "colour_f2")                                                                                        \
+    RGB(combo, "combo")                                                                                                \
+    RGB(backend, "backend")
 
-#define RTC_ELEMENTS                    \
-    RTC(Timezone, TIMEZONE, "timezone") \
-    RTC(Year,     YEAR,     "year")     \
-    RTC(Month,    MONTH,    "month")    \
-    RTC(Day,      DAY,      "day")      \
-    RTC(Hour,     HOUR,     "hour")     \
-    RTC(Minute,   MINUTE,   "minute")   \
-    RTC(Notation, NOTATION, "notation") \
-    RTC(Custom,   CUSTOM,   "custom")
+#define RTC_ELEMENTS                                                                                                   \
+    RTC(timezone, "timezone")                                                                                          \
+    RTC(year, "year")                                                                                                  \
+    RTC(month, "month")                                                                                                \
+    RTC(day, "day")                                                                                                    \
+    RTC(hour, "hour")                                                                                                  \
+    RTC(minute, "minute")                                                                                              \
+    RTC(notation, "notation")                                                                                          \
+    RTC(custom, "custom")
 
-#define SEARCH_ELEMENTS                          \
-    SEARCH(Lookup,       LOOKUP,       "lookup") \
-    SEARCH(SearchLocal,  SEARCHLOCAL,  "local")  \
-    SEARCH(SearchGlobal, SEARCHGLOBAL, "global")
+#define SEARCH_ELEMENTS                                                                                                \
+    SEARCH(lookup, "lookup")                                                                                           \
+    SEARCH(search_local, "local")                                                                                      \
+    SEARCH(search_global, "global")
 
-#define SPACE_ELEMENTS                       \
-    SPACE(Primary,   PRIMARY,   "primary")   \
-    SPACE(Secondary, SECONDARY, "secondary") \
-    SPACE(External,  EXTERNAL,  "external")  \
-    SPACE(System,    SYSTEM,    "system")
+#define SPACE_ELEMENTS                                                                                                 \
+    SPACE(primary, "primary")                                                                                          \
+    SPACE(secondary, "secondary")                                                                                      \
+    SPACE(external, "external")                                                                                        \
+    SPACE(system, "system")
 
-#define STORAGE_ELEMENTS                          \
-    STORAGE(Apps,       APPS,       "apps")       \
-    STORAGE(Bios,       BIOS,       "bios")       \
-    STORAGE(Catalogue,  CATALOGUE,  "catalogue")  \
-    STORAGE(Collection, COLLECTION, "collection") \
-    STORAGE(History,    HISTORY,    "history")    \
-    STORAGE(Init,       INIT,       "init")       \
-    STORAGE(Music,      MUSIC,      "music")      \
-    STORAGE(Name,       NAME,       "name")       \
-    STORAGE(Network,    NETWORK,    "network")    \
-    STORAGE(Package,    PACKAGE,    "package")    \
-    STORAGE(Save,       SAVE,       "save")       \
-    STORAGE(Screenshot, SCREENSHOT, "screenshot") \
-    STORAGE(Syncthing,  SYNCTHING,  "syncthing")  \
-    STORAGE(Theme,      THEME,      "theme")      \
-    STORAGE(Track,      TRACK,      "track")
+#define STORAGE_ELEMENTS                                                                                               \
+    STORAGE(apps, "apps")                                                                                              \
+    STORAGE(bios, "bios")                                                                                              \
+    STORAGE(catalogue, "catalogue")                                                                                    \
+    STORAGE(collection, "collection")                                                                                  \
+    STORAGE(history, "history")                                                                                        \
+    STORAGE(init, "init")                                                                                              \
+    STORAGE(music, "music")                                                                                            \
+    STORAGE(name, "name")                                                                                              \
+    STORAGE(network, "network")                                                                                        \
+    STORAGE(package, "package")                                                                                        \
+    STORAGE(save, "save")                                                                                              \
+    STORAGE(screenshot, "screenshot")                                                                                  \
+    STORAGE(syncthing, "syncthing")                                                                                    \
+    STORAGE(theme, "theme")                                                                                            \
+    STORAGE(track, "track")
 
-#define SYSINFO_ELEMENTS                     \
-    SYSINFO(Version,  VERSION,   "version")  \
-    SYSINFO(Build,    BUILD,     "build")    \
-    SYSINFO(Device,   DEVICE,    "device")   \
-    SYSINFO(Kernel,   KERNEL,    "kernel")   \
-    SYSINFO(Arch,     ARCH,      "arch")     \
-    SYSINFO(Uptime,   UPTIME,    "uptime")   \
-    SYSINFO(BootTime, BOOT_TIME, "boottime") \
-    SYSINFO(LoadAvg,  LOAD_AVG,  "loadavg")  \
-    SYSINFO(Cpu,      CPU,       "cpu")      \
-    SYSINFO(Speed,    SPEED,     "speed")    \
-    SYSINFO(Governor, GOVERNOR,  "governor") \
-    SYSINFO(Memory,   MEMORY,    "memory")   \
-    SYSINFO(Swap,     SWAP,      "swap")     \
-    SYSINFO(Temp,     TEMP,      "temp")     \
-    SYSINFO(Reload,   RELOAD,    "reload")
+#define SYSINFO_ELEMENTS                                                                                               \
+    SYSINFO(version, "version")                                                                                        \
+    SYSINFO(build, "build")                                                                                            \
+    SYSINFO(device, "device")                                                                                          \
+    SYSINFO(kernel, "kernel")                                                                                          \
+    SYSINFO(arch, "arch")                                                                                              \
+    SYSINFO(uptime, "uptime")                                                                                          \
+    SYSINFO(boot_time, "boottime")                                                                                     \
+    SYSINFO(load_avg, "loadavg")                                                                                       \
+    SYSINFO(cpu, "cpu")                                                                                                \
+    SYSINFO(speed, "speed")                                                                                            \
+    SYSINFO(governor, "governor")                                                                                      \
+    SYSINFO(memory, "memory")                                                                                          \
+    SYSINFO(swap, "swap")                                                                                              \
+    SYSINFO(temp, "temp")                                                                                              \
+    SYSINFO(reload, "reload")
 
-#define THEMEFILTER_ELEMENTS                      \
-    THEMEFILTER(AllThemes, ALLTHEMES, "theme")    \
-    THEMEFILTER(Grid,      GRID,      "grid")     \
-    THEMEFILTER(Hdmi,      HDMI,      "hdmi")     \
-    THEMEFILTER(Language,  LANGUAGE,  "language")
+#define THEMEFILTER_ELEMENTS                                                                                           \
+    THEMEFILTER(all_themes, "theme")                                                                                   \
+    THEMEFILTER(grid, "grid")                                                                                          \
+    THEMEFILTER(hdmi, "hdmi")                                                                                          \
+    THEMEFILTER(language, "language")
 
-#define THEMEOPT_ELEMENTS                                        \
-    THEMEOPT(HeaderHeight,     HEADERHEIGHT,     "headerheight") \
-    THEMEOPT(FooterHeight,     FOOTERHEIGHT,     "footerheight") \
-    THEMEOPT(ContentItemCount, CONTENTITEMCOUNT, "count")        \
-    THEMEOPT(GlyphList,        GLYPHLIST,        "glyphlist")    \
-    THEMEOPT(GlyphFooter,      GLYPHFOOTER,      "glyphfooter")  \
-    THEMEOPT(GlyphHeader,      GLYPHHEADER,      "glyphheader")  \
-    THEMEOPT(GlyphGrid,        GLYPHGRID,        "glyphgrid")    \
-    THEMEOPT(LabelWidth,       LABELWIDTH,       "labelwidth")
+#define THEMEOPT_ELEMENTS                                                                                              \
+    THEMEOPT(header_height, "headerheight")                                                                            \
+    THEMEOPT(footer_height, "footerheight")                                                                            \
+    THEMEOPT(content_item_count, "count")                                                                              \
+    THEMEOPT(glyph_list, "glyphlist")                                                                                  \
+    THEMEOPT(glyph_footer, "glyphfooter")                                                                              \
+    THEMEOPT(glyph_header, "glyphheader")                                                                              \
+    THEMEOPT(glyph_grid, "glyphgrid")                                                                                  \
+    THEMEOPT(label_width, "labelwidth")
 
-#define TWEAKADV_ELEMENTS                                  \
-    TWEAKADV(Accelerate,    ACCELERATE,    "accelerate")   \
-    TWEAKADV(RepeatDelay,   REPEATDELAY,   "repeat")       \
-    TWEAKADV(StickNav,      STICKNAV,      "sticknav")     \
-    TWEAKADV(Volume,        VOLUME,        "volume")       \
-    TWEAKADV(Brightness,    BRIGHTNESS,    "brightness")   \
-    TWEAKADV(Thermal,       THERMAL,       "thermal")      \
-    TWEAKADV(Led,           LED,           "led")          \
-    TWEAKADV(RandomTheme,   RANDOMTHEME,   "randomtheme")  \
-    TWEAKADV(RetroWait,     RETROWAIT,     "retrowait")    \
-    TWEAKADV(RetroFree,     RETROFREE,     "retrofree")    \
-    TWEAKADV(RetroCache,    RETROCACHE,    "retrocache")   \
-    TWEAKADV(Activity,      ACTIVITY,      "activity")     \
-    TWEAKADV(Verbose,       VERBOSE,       "verbose")      \
-    TWEAKADV(DebugLog,      DEBUGLOG,      "debuglog")     \
-    TWEAKADV(Rumble,        RUMBLE,        "rumble")       \
-    TWEAKADV(UserInit,      USERINIT,      "userinit")     \
-    TWEAKADV(DpadSwap,      DPADSWAP,      "dpadswap")     \
-    TWEAKADV(Overdrive,     OVERDRIVE,     "overdrive")    \
-    TWEAKADV(LidSwitch,     LIDSWITCH,     "lidswitch")    \
-    TWEAKADV(DispSuspend,   DISPSUSPEND,   "dispsuspend")  \
-    TWEAKADV(StageOverlay,  STAGEOVERLAY,  "stageoverlay") \
-    TWEAKADV(Swapfile,      SWAPFILE,      "swapfile")     \
-    TWEAKADV(Zramfile,      ZRAMFILE,      "zramfile")     \
-    TWEAKADV(SecondPart,    SECONDPART,    "secondpart")   \
-    TWEAKADV(UsbPart,       USBPART,       "usbpart")      \
-    TWEAKADV(IncBright,     INCBRIGHT,     "incbright")    \
-    TWEAKADV(IncVolume,     INCVOLUME,     "invvolume")    \
-    TWEAKADV(MaxGpu,        MAXGPU,        "maxgpu")       \
-    TWEAKADV(AudioReady,    AUDIOREADY,    "audioready")   \
-    TWEAKADV(AudioSwap,     AUDIOSWAP,     "audioswap")    \
-    TWEAKADV(AudioSuspend,  AUDIOSUSPEND,  "audiosuspend") \
-    TWEAKADV(BtScanTimeout, BTSCANTIMEOUT, "btscan")       \
-    TWEAKADV(TrustModify,   TRUSTMODIFY,   "trustmodify")  \
-    TWEAKADV(TrustPower,    TRUSTPOWER,    "trustpower")   \
-    TWEAKADV(TrustRemove,   TRUSTREMOVE,   "trustremove")  \
-    TWEAKADV(UsbFunction,   USBFUNCTION,   "usbfunction")
+#define TWEAKADV_ELEMENTS                                                                                              \
+    TWEAKADV(accelerate, "accelerate")                                                                                 \
+    TWEAKADV(repeat_delay, "repeat")                                                                                   \
+    TWEAKADV(stick_nav, "sticknav")                                                                                    \
+    TWEAKADV(volume, "volume")                                                                                         \
+    TWEAKADV(brightness, "brightness")                                                                                 \
+    TWEAKADV(thermal, "thermal")                                                                                       \
+    TWEAKADV(led, "led")                                                                                               \
+    TWEAKADV(random_theme, "randomtheme")                                                                              \
+    TWEAKADV(retro_wait, "retrowait")                                                                                  \
+    TWEAKADV(retro_free, "retrofree")                                                                                  \
+    TWEAKADV(retro_cache, "retrocache")                                                                                \
+    TWEAKADV(activity, "activity")                                                                                     \
+    TWEAKADV(verbose, "verbose")                                                                                       \
+    TWEAKADV(debug_log, "debuglog")                                                                                    \
+    TWEAKADV(rumble, "rumble")                                                                                         \
+    TWEAKADV(user_init, "userinit")                                                                                    \
+    TWEAKADV(dpad_swap, "dpadswap")                                                                                    \
+    TWEAKADV(overdrive, "overdrive")                                                                                   \
+    TWEAKADV(lid_switch, "lidswitch")                                                                                  \
+    TWEAKADV(disp_suspend, "dispsuspend")                                                                              \
+    TWEAKADV(stage_overlay, "stageoverlay")                                                                            \
+    TWEAKADV(swapfile, "swapfile")                                                                                     \
+    TWEAKADV(zramfile, "zramfile")                                                                                     \
+    TWEAKADV(second_part, "secondpart")                                                                                \
+    TWEAKADV(usb_part, "usbpart")                                                                                      \
+    TWEAKADV(inc_bright, "incbright")                                                                                  \
+    TWEAKADV(inc_volume, "incvolume")                                                                                  \
+    TWEAKADV(max_gpu, "maxgpu")                                                                                        \
+    TWEAKADV(audio_ready, "audioready")                                                                                \
+    TWEAKADV(audio_swap, "audioswap")                                                                                  \
+    TWEAKADV(audio_suspend, "audiosuspend")                                                                            \
+    TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
+    TWEAKADV(trust_modify, "trustmodify")                                                                              \
+    TWEAKADV(trust_power, "trustpower")                                                                                \
+    TWEAKADV(trust_remove, "trustremove")                                                                              \
+    TWEAKADV(usb_function, "usbfunction")
 
-#define TWEAKGEN_ELEMENTS                             \
-    TWEAKGEN(Rtc,         RTC,         "clock")       \
-    TWEAKGEN(Hdmi,        HDMI,        "hdmi")        \
-    TWEAKGEN(Rgb,         RGB,         "rgb")         \
-    TWEAKGEN(InputRemap,  INPUTREMAP,  "inputremap")  \
-    TWEAKGEN(Advanced,    ADVANCED,    "advanced")    \
-    TWEAKGEN(PassCode,    PASSCODE,    "lock")        \
-    TWEAKGEN(DisplayTemp, DISPLAYTEMP, "displaytemp") \
-    TWEAKGEN(Brightness,  BRIGHTNESS,  "brightness")  \
-    TWEAKGEN(Volume,      VOLUME,      "volume")      \
-    TWEAKGEN(AudioSink,   AUDIOSINK,   "audiosink")   \
-    TWEAKGEN(HkDpad,      HKDPAD,      "hkdpad")      \
-    TWEAKGEN(HkShot,      HKSHOT,      "hkshot")      \
-    TWEAKGEN(Startup,     STARTUP,     "startup")
+#define TWEAKGEN_ELEMENTS                                                                                              \
+    TWEAKGEN(rtc, "clock")                                                                                             \
+    TWEAKGEN(hdmi, "hdmi")                                                                                             \
+    TWEAKGEN(rgb, "rgb")                                                                                               \
+    TWEAKGEN(input_remap, "inputremap")                                                                                \
+    TWEAKGEN(advanced, "advanced")                                                                                     \
+    TWEAKGEN(pass_code, "lock")                                                                                        \
+    TWEAKGEN(display_temp, "displaytemp")                                                                              \
+    TWEAKGEN(brightness, "brightness")                                                                                 \
+    TWEAKGEN(volume, "volume")                                                                                         \
+    TWEAKGEN(audio_sink, "audiosink")                                                                                  \
+    TWEAKGEN(hk_dpad, "hkdpad")                                                                                        \
+    TWEAKGEN(hk_shot, "hkshot")                                                                                        \
+    TWEAKGEN(startup, "startup")
 
-#define VISUAL_ELEMENTS                                                           \
-    VISUAL(Sort,                  SORT,                  "sort")                  \
-    VISUAL(Battery,               BATTERY,               "battery")               \
-    VISUAL(Clock,                 CLOCK,                 "clock")                 \
-    VISUAL(Network,               NETWORK,               "network")               \
-    VISUAL(Bluetooth,             BLUETOOTH,             "bluetooth")             \
-    VISUAL(HeaderTitle,           HEADERTITLE,           "headertitle")           \
-    VISUAL(DialogueTransition,    DIALOGUETRANSITION,    "dialoguetransition")    \
-    VISUAL(Name,                  NAME,                  "name")                  \
-    VISUAL(NameScroll,            NAMESCROLL,            "namescroll")            \
-    VISUAL(LabelScrollSpeed,      LABELSCROLLSPEED,      "labelscrollspeed")      \
-    VISUAL(ListGlyph,             LISTGLYPH,             "listglyph")             \
-    VISUAL(SelectionAnimation,    SELECTIONANIMATION,    "selectionanimation")    \
-    VISUAL(SelectionStyle,        SELECTIONSTYLE,        "selectionstyle")        \
-    VISUAL(Dash,                  DASH,                  "dash")                  \
-    VISUAL(FriendlyFolder,        FRIENDLYFOLDER,        "friendlyfolder")        \
-    VISUAL(TheTitleFormat,        THETITLEFORMAT,        "thetitleformat")        \
-    VISUAL(TitleIncludeRootDrive, TITLEINCLUDEROOTDRIVE, "titleincluderootdrive") \
-    VISUAL(FolderItemCount,       FOLDERITEMCOUNT,       "folderitemcount")       \
-    VISUAL(DisplayEmptyFolder,    DISPLAYEMPTYFOLDER,    "folderempty")           \
-    VISUAL(MenuCounterFolder,     MENUCOUNTERFOLDER,     "counterfolder")         \
-    VISUAL(MenuCounterFile,       MENUCOUNTERFILE,       "counterfile")           \
-    VISUAL(Hidden,                HIDDEN,                "hidden")                \
-    VISUAL(ContentCollect,        CONTENTCOLLECT,        "contentcollect")        \
-    VISUAL(ContentHistory,        CONTENTHISTORY,        "contenthistory")        \
-    VISUAL(MixedContent,          MIXEDCONTENT,          "mixedcontent")          \
-    VISUAL(ForwardHistory,        FORWARDHISTORY,        "forwardhistory")        \
-    VISUAL(OverlayImage,          OVERLAYIMAGE,          "overlayimage")          \
-    VISUAL(OverlayTransparency,   OVERLAYTRANSPARENCY,   "overlaytransparency")   \
-    VISUAL(RenderShadows,         RENDERSHADOWS,         "rendershadows")
+#define VISUAL_ELEMENTS                                                                                                \
+    VISUAL(sort, "sort")                                                                                               \
+    VISUAL(battery, "battery")                                                                                         \
+    VISUAL(clock, "clock")                                                                                             \
+    VISUAL(network, "network")                                                                                         \
+    VISUAL(bluetooth, "bluetooth")                                                                                     \
+    VISUAL(header_title, "headertitle")                                                                                \
+    VISUAL(dialogue_transition, "dialoguetransition")                                                                  \
+    VISUAL(name, "name")                                                                                               \
+    VISUAL(name_scroll, "namescroll")                                                                                  \
+    VISUAL(label_scroll_speed, "labelscrollspeed")                                                                     \
+    VISUAL(list_glyph, "listglyph")                                                                                    \
+    VISUAL(selection_animation, "selectionanimation")                                                                  \
+    VISUAL(selection_style, "selectionstyle")                                                                          \
+    VISUAL(dash, "dash")                                                                                               \
+    VISUAL(friendly_folder, "friendlyfolder")                                                                          \
+    VISUAL(the_title_format, "thetitleformat")                                                                         \
+    VISUAL(title_include_root_drive, "titleincluderootdrive")                                                          \
+    VISUAL(folder_item_count, "folderitemcount")                                                                       \
+    VISUAL(display_empty_folder, "folderempty")                                                                        \
+    VISUAL(menu_counter_folder, "counterfolder")                                                                       \
+    VISUAL(menu_counter_file, "counterfile")                                                                           \
+    VISUAL(hidden, "hidden")                                                                                           \
+    VISUAL(content_collect, "contentcollect")                                                                          \
+    VISUAL(content_history, "contenthistory")                                                                          \
+    VISUAL(mixed_content, "mixedcontent")                                                                              \
+    VISUAL(forward_history, "forwardhistory")                                                                          \
+    VISUAL(overlay_image, "overlayimage")                                                                              \
+    VISUAL(overlay_transparency, "overlaytransparency")                                                                \
+    VISUAL(render_shadows, "rendershadows")
 
-#define WEBSERV_ELEMENTS                          \
-    WEBSERV(Sshd,       SSHD,       "sshd")       \
-    WEBSERV(SftpGo,     SFTPGO,     "sftpgo")     \
-    WEBSERV(Ttyd,       TTYD,       "ttyd")       \
-    WEBSERV(Syncthing,  SYNCTHING,  "syncthing")  \
-    WEBSERV(Tailscaled, TAILSCALED, "tailscaled")
+#define WEBSERV_ELEMENTS                                                                                               \
+    WEBSERV(sshd, "sshd")                                                                                              \
+    WEBSERV(sftp_go, "sftpgo")                                                                                         \
+    WEBSERV(ttyd, "ttyd")                                                                                              \
+    WEBSERV(syncthing, "syncthing")                                                                                    \
+    WEBSERV(tailscaled, "tailscaled")

@@ -4,7 +4,6 @@
 #include <limits.h>
 #include <poll.h>
 #include <signal.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,13 +34,7 @@
 #define IDLE_EXIT_MS   4096
 #define DAEMON_WAIT_MS 256
 
-typedef enum {
-    LVL_INFO = 0,
-    LVL_WARN,
-    LVL_ERROR,
-    LVL_SUCCESS,
-    LVL_DEBUG
-} log_level_t;
+typedef enum { lvl_info = 0, lvl_warn, lvl_error, lvl_success, lvl_debug } log_level_t;
 
 typedef struct {
     int level;
@@ -65,16 +58,14 @@ static uint64_t now_ms(void) {
     struct timespec ts;
 
     if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return 0;
-    return ((uint64_t) ts.tv_sec * 1000ULL) + ((uint64_t) ts.tv_nsec / 1000000ULL);
+    return (uint64_t) ts.tv_sec * 1000ULL + (uint64_t) ts.tv_nsec / 1000000ULL;
 }
 
 static int read_mode_file(const char *path) {
-    FILE *fp;
     char buf[16];
     char *end = NULL;
-    long val;
 
-    fp = fopen(path, "r");
+    FILE *fp = fopen(path, "r");
     if (!fp) return 0;
 
     if (!fgets(buf, sizeof(buf), fp)) {
@@ -87,7 +78,7 @@ static int read_mode_file(const char *path) {
     buf[strcspn(buf, "\r\n")] = '\0';
 
     errno = 0;
-    val = strtol(buf, &end, 10);
+    const long val = strtol(buf, &end, 10);
 
     if (end == buf) return 0;
 
@@ -121,23 +112,22 @@ static int mode_enabled(void) {
     return debug_enabled() || verbose_enabled();
 }
 
-static int log_level_enabled(log_level_t level) {
-    int mode = debug_mode();
+static int log_level_enabled(const log_level_t level) {
+    const int mode = debug_mode();
 
     if (mode <= 0) return 0;
-    if (level == LVL_DEBUG && mode < 2) return 0;
+    if (level == lvl_debug && mode < 2) return 0;
 
     return 1;
 }
 
 static int parse_int_strict(const char *str, int *out) {
     char *end = NULL;
-    long val;
 
     if (!str || !*str) return 0;
 
     errno = 0;
-    val = strtol(str, &end, 10);
+    const long val = strtol(str, &end, 10);
 
     if (end == str || *end != '\0') return 0;
     if (errno == ERANGE || val < INT_MIN || val > INT_MAX) return 0;
@@ -150,56 +140,56 @@ static int parse_level(const char *s, log_level_t *level) {
     if (!s || !*s) return 0;
 
     if (strcasecmp(s, "info") == 0) {
-        *level = LVL_INFO;
+        *level = lvl_info;
         return 1;
     }
     if (strcasecmp(s, "warn") == 0) {
-        *level = LVL_WARN;
+        *level = lvl_warn;
         return 1;
     }
     if (strcasecmp(s, "error") == 0) {
-        *level = LVL_ERROR;
+        *level = lvl_error;
         return 1;
     }
     if (strcasecmp(s, "success") == 0) {
-        *level = LVL_SUCCESS;
+        *level = lvl_success;
         return 1;
     }
     if (strcasecmp(s, "debug") == 0) {
-        *level = LVL_DEBUG;
+        *level = lvl_debug;
         return 1;
     }
 
     return 0;
 }
 
-static const char *level_plain_symbol(log_level_t level) {
+static const char *level_plain_symbol(const log_level_t level) {
     switch (level) {
-        case LVL_WARN:
+        case lvl_warn:
             return "!";
-        case LVL_ERROR:
+        case lvl_error:
             return "-";
-        case LVL_SUCCESS:
+        case lvl_success:
             return "+";
-        case LVL_DEBUG:
+        case lvl_debug:
             return "?";
-        case LVL_INFO:
+        case lvl_info:
         default:
             return "*";
     }
 }
 
-static const char *level_colour_symbol(log_level_t level) {
+static const char *level_colour_symbol(const log_level_t level) {
     switch (level) {
-        case LVL_WARN:
+        case lvl_warn:
             return WARN_SYMBOL;
-        case LVL_ERROR:
+        case lvl_error:
             return ERROR_SYMBOL;
-        case LVL_SUCCESS:
+        case lvl_success:
             return SUCCESS_SYMBOL;
-        case LVL_DEBUG:
+        case lvl_debug:
             return DEBUG_SYMBOL;
-        case LVL_INFO:
+        case lvl_info:
         default:
             return INFO_SYMBOL;
     }
@@ -221,29 +211,25 @@ static int ensure_dir(const char *path) {
 }
 
 static void sanitise_module_name(char *s) {
-    char *base;
-    char *dot;
-    char *p;
 
     if (!s || !*s) return;
 
-    base = strrchr(s, '/');
+    const char *base = strrchr(s, '/');
     if (base) memmove(s, base + 1, strlen(base + 1) + 1);
 
-    dot = strrchr(s, '.');
+    char *dot = strrchr(s, '.');
     if (dot) *dot = '\0';
 
-    for (p = s; *p; ++p) if (!(isalnum((unsigned char) *p) || *p == '_' || *p == '-')) *p = '_';
+    for (char *p = s; *p; ++p)
+        if (!(isalnum((unsigned char) *p) || *p == '_' || *p == '-')) *p = '_';
 
     if (!*s) snprintf(s, MODULE_SIZE, "unknown");
 }
 
 static void detect_module(char *module) {
-    const char *env;
     char path[64];
-    FILE *fp;
 
-    env = getenv("MUOS_MODULE");
+    const char *env = getenv("MUOS_MODULE");
     if (env && *env) {
         snprintf(module, MODULE_SIZE, "%s", env);
         sanitise_module_name(module);
@@ -251,10 +237,10 @@ static void detect_module(char *module) {
     }
 
     snprintf(path, sizeof(path), "/proc/%d/cmdline", getppid());
-    fp = fopen(path, "r");
+    FILE *fp = fopen(path, "r");
     if (fp) {
         char buf[512];
-        size_t n = fread(buf, 1, sizeof(buf) - 1, fp);
+        const size_t n = fread(buf, 1, sizeof(buf) - 1, fp);
         fclose(fp);
 
         if (n > 0) {
@@ -283,13 +269,12 @@ static void detect_module(char *module) {
     snprintf(module, MODULE_SIZE, "unknown");
 }
 
-static void join_args(char *out, int argc, char *argv[], int start_index) {
-    int i;
+static void join_args(char *out, const int argc, char *argv[], const int start_index) {
     size_t used = 0;
 
     out[0] = '\0';
 
-    for (i = start_index; i < argc; i++) {
+    for (int i = start_index; i < argc; i++) {
         int wrote;
 
         if (used >= MAX_ARG_SIZE - 1) break;
@@ -315,9 +300,9 @@ static void join_args(char *out, int argc, char *argv[], int start_index) {
     }
 }
 
-static int write_all(int fd, const char *buf, size_t len) {
+static int write_all(const int fd, const char *buf, size_t len) {
     while (len > 0) {
-        ssize_t wr = write(fd, buf, len);
+        const ssize_t wr = write(fd, buf, len);
 
         if (wr < 0) {
             if (errno == EINTR) continue;
@@ -331,25 +316,25 @@ static int write_all(int fd, const char *buf, size_t len) {
     return 0;
 }
 
-static void make_date_time(char *date_buf, size_t date_sz, char *time_buf, size_t time_sz) {
+static void make_date_time(char *date_buf, const size_t date_sz, char *time_buf, const size_t time_sz) {
     struct tm tm_now;
-    time_t now = time(NULL);
+    const time_t now = time(NULL);
 
     localtime_r(&now, &tm_now);
 
     if (date_buf) {
-        snprintf(date_buf, date_sz, "%04d_%02d_%02d",
-                 tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday);
+        snprintf(date_buf, date_sz, "%04d_%02d_%02d", tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday);
     }
 
     if (time_buf) {
-        snprintf(time_buf, time_sz, "%04d-%02d-%02d %02d:%02d:%02d",
-                 tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday,
-                 tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec);
+        snprintf(
+            time_buf, time_sz, "%04d-%02d-%02d %02d:%02d:%02d", tm_now.tm_year + 1900, tm_now.tm_mon + 1,
+            tm_now.tm_mday, tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec
+        );
     }
 }
 
-static int build_line(char *line, log_level_t level, const char *module, const char *message) {
+static int build_line(char *line, const log_level_t level, const char *module, const char *message) {
     char time_buffer[20];
     char truncated_module[20];
     struct timespec ts;
@@ -358,17 +343,18 @@ static int build_line(char *line, log_level_t level, const char *module, const c
     make_date_time(NULL, 0, time_buffer, sizeof(time_buffer));
 
     if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-        uptime = (double) ts.tv_sec + ((double) ts.tv_nsec / 1000000000.0);
+        uptime = (double) ts.tv_sec + (double) ts.tv_nsec / 1000000000.0;
     }
 
     snprintf(truncated_module, sizeof(truncated_module), "%.19s", module);
 
-    return snprintf(line, MAX_LINE_SIZE, "[%.2f]\t[%s] [%s] [%s]\t%s\n",
-                    uptime, time_buffer, level_plain_symbol(level),
-                    truncated_module, message);
+    return snprintf(
+        line, MAX_LINE_SIZE, "[%.2f]\t[%s] [%s] [%s]\t%s\n", uptime, time_buffer, level_plain_symbol(level),
+        truncated_module, message
+    );
 }
 
-static void emit_stderr(log_level_t level, const char *module, const char *message) {
+static void emit_stderr(const log_level_t level, const char *module, const char *message) {
     char time_buffer[20];
     char truncated_module[20];
     struct timespec ts;
@@ -377,25 +363,24 @@ static void emit_stderr(log_level_t level, const char *module, const char *messa
     make_date_time(NULL, 0, time_buffer, sizeof(time_buffer));
 
     if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-        uptime = (double) ts.tv_sec + ((double) ts.tv_nsec / 1000000000.0);
+        uptime = (double) ts.tv_sec + (double) ts.tv_nsec / 1000000000.0;
     }
 
     snprintf(truncated_module, sizeof(truncated_module), "%.19s", module);
 
-    fprintf(stderr, "[%.2f]\t[%s] [%s] [%s]\t%s\n",
-            uptime, time_buffer, level_colour_symbol(level),
-            truncated_module, message);
+    fprintf(
+        stderr, "[%.2f]\t[%s] [%s] [%s]\t%s\n", uptime, time_buffer, level_colour_symbol(level), truncated_module,
+        message
+    );
     fflush(stderr);
 }
 
-static void show_message(int progress, const char *title, const char *message) {
+static void show_message(const int progress, const char *title, const char *message) {
     static uint64_t last_msg_time = 0;
-    uint64_t now = now_ms();
+    const uint64_t now = now_ms();
 
     if (now - last_msg_time < FLUSH_MS) return;
     last_msg_time = now;
-
-    pid_t pid;
 
     char progress_str[16];
     char msg_buffer[MAX_BUFFER_SIZE];
@@ -407,13 +392,13 @@ static void show_message(int progress, const char *title, const char *message) {
     snprintf(progress_str, sizeof(progress_str), "%d", progress);
     snprintf(msg_buffer, sizeof(msg_buffer), "%s\n\n%s", title, message);
 
-    pid = fork();
+    const pid_t pid = fork();
     if (pid != 0) return;
 
     setsid();
 
     {
-        int the_void = open("/dev/null", O_RDWR);
+        const int the_void = open("/dev/null", O_RDWR);
         if (the_void >= 0) {
             dup2(the_void, STDIN_FILENO);
             dup2(the_void, STDOUT_FILENO);
@@ -432,20 +417,17 @@ static int direct_write_packet(const log_packet_t *pkt) {
     char logfile[PATH_MAX];
     char line[MAX_BUFFER_SIZE + 256];
 
-    int fd;
-    int line_len;
-
     if (ensure_dir(LOG_DIR) < 0) return -1;
 
     make_date_time(date_buffer, sizeof(date_buffer), NULL, 0);
 
     snprintf(logfile, sizeof(logfile), "%s/%s_%s.log", LOG_DIR, date_buffer, pkt->module);
 
-    line_len = build_line(line, (log_level_t) pkt->level, pkt->module, pkt->message);
+    int line_len = build_line(line, (log_level_t) pkt->level, pkt->module, pkt->message);
     if (line_len < 0) return -1;
     if ((size_t) line_len >= sizeof(line)) line_len = (int) sizeof(line) - 1;
 
-    fd = open(logfile, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+    const int fd = open(logfile, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
     if (fd < 0) return -1;
 
     if (write_all(fd, line, (size_t) line_len) < 0) {
@@ -482,8 +464,8 @@ static void close_cache_entry(log_cache_t *entry) {
 }
 
 static int cache_find(log_cache_t cache[], const char *path) {
-    int i;
-    for (i = 0; i < LOG_CACHE_MAX; i++) if (cache[i].used && strcmp(cache[i].path, path) == 0) return i;
+    for (int i = 0; i < LOG_CACHE_MAX; i++)
+        if (cache[i].used && strcmp(cache[i].path, path) == 0) return i;
 
     return -1;
 }
@@ -514,15 +496,12 @@ static int daemon_write_packet(log_cache_t cache[], const log_packet_t *pkt) {
     char logfile[PATH_MAX];
     char line[MAX_BUFFER_SIZE + 256];
 
-    int idx;
-    int line_len;
-
     if (ensure_dir(LOG_DIR) < 0) return -1;
 
     make_date_time(date_buffer, sizeof(date_buffer), NULL, 0);
     snprintf(logfile, sizeof(logfile), "%s/%s_%s.log", LOG_DIR, date_buffer, pkt->module);
 
-    idx = cache_find(cache, logfile);
+    int idx = cache_find(cache, logfile);
     if (idx < 0) {
         idx = cache_alloc(cache);
         if (idx < 0) return -1;
@@ -539,7 +518,7 @@ static int daemon_write_packet(log_cache_t cache[], const log_packet_t *pkt) {
         snprintf(cache[idx].path, sizeof(cache[idx].path), "%s", logfile);
     }
 
-    line_len = build_line(line, (log_level_t) pkt->level, pkt->module, pkt->message);
+    int line_len = build_line(line, (log_level_t) pkt->level, pkt->module, pkt->message);
     if (line_len < 0) return -1;
     if ((size_t) line_len >= sizeof(line)) line_len = (int) sizeof(line) - 1;
 
@@ -555,9 +534,8 @@ static int daemon_write_packet(log_cache_t cache[], const log_packet_t *pkt) {
 }
 
 static void flush_dirty(log_cache_t cache[]) {
-    int i;
 
-    for (i = 0; i < LOG_CACHE_MAX; i++) {
+    for (int i = 0; i < LOG_CACHE_MAX; i++) {
         if (cache[i].used && cache[i].dirty) {
             fdatasync(cache[i].fd);
             cache[i].dirty = 0;
@@ -566,22 +544,21 @@ static void flush_dirty(log_cache_t cache[]) {
 }
 
 static void close_all_cache(log_cache_t cache[]) {
-    int i;
-    for (i = 0; i < LOG_CACHE_MAX; i++) close_cache_entry(&cache[i]);
+    for (int i = 0; i < LOG_CACHE_MAX; i++)
+        close_cache_entry(&cache[i]);
 }
 
-static void sigterm_handler(int sig) {
+static void sigterm_handler(const int sig) {
     (void) sig;
     daemon_stop = 1;
 }
 
 static int daemon_socket_open(void) {
-    int fd;
     struct sockaddr_un addr;
 
     unlink(LOG_SCK);
 
-    fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    const int fd = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (fd < 0) return -1;
 
     memset(&addr, 0, sizeof(addr));
@@ -610,43 +587,40 @@ static void cleanup_daemon(void) {
 }
 
 static int run_daemon(void) {
-    int sock;
     struct pollfd pfd;
     log_cache_t cache[LOG_CACHE_MAX];
-    uint64_t last_rx_ms;
-    int i;
 
     if (ensure_dir("/run/muos") < 0) return 1;
     if (ensure_dir(LOG_DIR) < 0) return 1;
 
     memset(cache, 0, sizeof(cache));
-    for (i = 0; i < LOG_CACHE_MAX; i++) cache[i].fd = -1;
+    for (int i = 0; i < LOG_CACHE_MAX; i++)
+        cache[i].fd = -1;
 
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
+    struct sigaction sa = {0};
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = SA_NOCLDWAIT;
     sigaction(SIGCHLD, &sa, NULL);
 
-    sock = daemon_socket_open();
+    const int sock = daemon_socket_open();
     if (sock < 0) return 1;
 
     write_pid_file();
 
     pfd.fd = sock;
     pfd.events = POLLIN;
-    last_rx_ms = now_ms();
+    uint64_t last_rx_ms = now_ms();
 
     while (!daemon_stop) {
-        int pr = poll(&pfd, 1, FLUSH_MS);
+        const int pr = poll(&pfd, 1, FLUSH_MS);
 
-        if (pr > 0 && (pfd.revents & POLLIN)) {
+        if (pr > 0 && pfd.revents & POLLIN) {
             for (;;) {
                 log_packet_t pkt;
-                ssize_t rd = recv(sock, &pkt, sizeof(pkt), MSG_DONTWAIT);
+                const ssize_t rd = recv(sock, &pkt, sizeof(pkt), MSG_DONTWAIT);
 
                 if (rd < 0) {
                     if (errno == EINTR) continue;
@@ -668,7 +642,7 @@ static int run_daemon(void) {
 
         flush_dirty(cache);
 
-        if (!mode_enabled() && (now_ms() - last_rx_ms) >= IDLE_EXIT_MS) {
+        if (!mode_enabled() && now_ms() - last_rx_ms >= IDLE_EXIT_MS) {
             break;
         }
     }
@@ -687,11 +661,10 @@ static int socket_exists(void) {
 }
 
 static int spawn_daemon(const char *self_path) {
-    pid_t pid;
 
     if (!self_path || !*self_path) return -1;
 
-    pid = fork();
+    pid_t pid = fork();
     if (pid < 0) return -1;
     if (pid > 0) return 0;
 
@@ -702,7 +675,7 @@ static int spawn_daemon(const char *self_path) {
     if (pid > 0) _exit(0);
 
     {
-        int the_void = open("/dev/null", O_RDWR);
+        const int the_void = open("/dev/null", O_RDWR);
         if (the_void >= 0) {
             dup2(the_void, STDIN_FILENO);
             dup2(the_void, STDOUT_FILENO);
@@ -716,13 +689,12 @@ static int spawn_daemon(const char *self_path) {
 }
 
 static int ensure_daemon_running(const char *self_path) {
-    uint64_t start_ms;
 
     if (socket_exists()) return 0;
     if (spawn_daemon(self_path) < 0) return -1;
 
-    start_ms = now_ms();
-    while ((now_ms() - start_ms) < DAEMON_WAIT_MS) {
+    const uint64_t start_ms = now_ms();
+    while (now_ms() - start_ms < DAEMON_WAIT_MS) {
         if (socket_exists()) return 0;
         usleep(10 * 1000);
     }
@@ -731,24 +703,22 @@ static int ensure_daemon_running(const char *self_path) {
 }
 
 static int send_packet(const log_packet_t *pkt) {
-    int fd;
     struct sockaddr_un addr;
-    ssize_t wr;
 
-    fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    const int fd = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (fd < 0) return -1;
 
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", LOG_SCK);
 
-    wr = sendto(fd, pkt, sizeof(*pkt), 0, (struct sockaddr *) &addr, sizeof(addr));
+    const ssize_t wr = sendto(fd, pkt, sizeof(*pkt), 0, (struct sockaddr *) &addr, sizeof(addr));
     close(fd);
 
-    return (wr == (ssize_t) sizeof(*pkt)) ? 0 : -1;
+    return wr == (ssize_t) sizeof(*pkt) ? 0 : -1;
 }
 
-static int build_packet_from_args(int argc, char *argv[], log_packet_t *pkt) {
+static int build_packet_from_args(const int argc, char *argv[], log_packet_t *pkt) {
     log_level_t level;
 
     int progress;
@@ -785,7 +755,7 @@ static int build_packet_from_args(int argc, char *argv[], log_packet_t *pkt) {
     return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(const int argc, char *argv[]) {
     log_packet_t pkt;
 
     if (argc == 2 && strcmp(argv[1], "--daemon") == 0) {
@@ -804,7 +774,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (direct_write_packet(&pkt) < 0) {
-        emit_stderr(LVL_ERROR, "arborist", "Failed to write log file");
+        emit_stderr(lvl_error, "arborist", "Failed to write log file");
         return 1;
     }
 

@@ -3,13 +3,13 @@
 #include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
-void init_muxfont(lv_obj_t *ui_pnlContent);
+void init_muxfont(lv_obj_t *ui_pnl_content);
 
-#define FONT(NAME, ENUM, UDATA)           \
-    extern lv_obj_t *ui_pnl##NAME##_font; \
-    extern lv_obj_t *ui_lbl##NAME##_font; \
-    extern lv_obj_t *ui_ico##NAME##_font; \
-    extern lv_obj_t *ui_dro##NAME##_font;
+#define FONT(NAME, UDATA)                                                                                              \
+    extern lv_obj_t *ui_pnl_##NAME##_font;                                                                             \
+    extern lv_obj_t *ui_lbl_##NAME##_font;                                                                             \
+    extern lv_obj_t *ui_ico_##NAME##_font;                                                                             \
+    extern lv_obj_t *ui_dro_##NAME##_font;
 
 FONT_ELEMENTS
 #undef FONT

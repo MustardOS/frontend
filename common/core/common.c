@@ -16,7 +16,7 @@
 
 #define CORE_BUFFER 256
 
-static int read_catalogue(const char *path, int line, char *out, size_t out_size) {
+static int read_catalogue(const char *path, const int line, char *out, const size_t out_size) {
     if (!file_exist(path)) return 0;
 
     char *val = read_line_char_from(path, line);
@@ -26,7 +26,7 @@ static int read_catalogue(const char *path, int line, char *out, size_t out_size
     return 1;
 }
 
-void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size) {
+void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, const size_t catalogue_name_size) {
     char sys_dir_lower[MAX_BUFFER_SIZE];
     char *raw = get_last_subdir(sys_dir, '/', 4);
 
@@ -39,13 +39,13 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
     char path[MAX_BUFFER_SIZE];
 
     snprintf(path, sizeof(path), INFO_CON_PATH "/%s%s.cfg", sys_dir_lower, strip_ext(content_label));
-    if (read_catalogue(path, CONTENT_CATALOGUE, catalogue_name, catalogue_name_size)) {
+    if (read_catalogue(path, content_catalogue, catalogue_name, catalogue_name_size)) {
         LOG_INFO(mux_module, "Reading Configuration: %s", path);
         return;
     }
 
     snprintf(path, sizeof(path), INFO_CON_PATH "/%score.cfg", sys_dir_lower);
-    if (read_catalogue(path, GLOBAL_CATALOGUE, catalogue_name, catalogue_name_size)) {
+    if (read_catalogue(path, global_catalogue, catalogue_name, catalogue_name_size)) {
         LOG_INFO(mux_module, "Reading Configuration: %s", path);
         return;
     }
@@ -57,52 +57,58 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     char rom_dir[MAX_BUFFER_SIZE];
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, content_label);
 
-    return get_content_line(rom_dir, NULL, "cfg", GLOBAL_CATALOGUE);
+    return get_content_line(rom_dir, NULL, "cfg", global_catalogue);
 }
 
-static void write_cfg_file(char *def_core, char *path, char *core, char *sys, char *cat, int lookup,
-                           char *rom_name, char *rom_mount, char *rom_base, char *rom_full) {
+static void write_cfg_file(
+    char *def_core, char *path, char *core, char *sys, char *cat, const int lookup, char *rom_name, char *rom_mount,
+    char *rom_base, char *rom_full
+) {
     char tmp[PATH_MAX];
     if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
     FILE *f = fopen(tmp, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
     if (rom_name) {
-        fprintf(f, "%s\n%s\n%s\n%s\n%d\n%s\n%s\n%s\n%s",
-                rom_name, core, sys, cat, lookup, def_core, rom_mount, rom_base, rom_full);
-        LOG_INFO(mux_module, "Assign Content (Single): %s|%s|%s|%s|%d|%s|%s|%s|%s",
-                 rom_name, core, sys, cat, lookup, def_core, rom_mount, rom_base, rom_full);
+        fprintf(
+            f, "%s\n%s\n%s\n%s\n%d\n%s\n%s\n%s\n%s", rom_name, core, sys, cat, lookup, def_core, rom_mount, rom_base,
+            rom_full
+        );
+        LOG_INFO(
+            mux_module, "Assign Content (Single): %s|%s|%s|%s|%d|%s|%s|%s|%s", rom_name, core, sys, cat, lookup,
+            def_core, rom_mount, rom_base, rom_full
+        );
     } else {
         fprintf(f, "%s\n%s\n%s\n%d\n%s", core, sys, cat, lookup, def_core);
         LOG_INFO(mux_module, "Assign Content: %s|%s|%s|%d|%s", core, sys, cat, lookup, def_core);
     }
 
-    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
+    const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
     if (!ok || rename(tmp, path) != 0) {
         remove(tmp);
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
 }
 
 static void write_gov_file(char *path, char *gov, const char *rom_name) {
     char tmp[PATH_MAX];
     if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
     FILE *f = fopen(tmp, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
@@ -113,25 +119,25 @@ static void write_gov_file(char *path, char *gov, const char *rom_name) {
         LOG_INFO(mux_module, "Assign Governor: %s", gov);
     }
 
-    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
+    const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
     if (!ok || rename(tmp, path) != 0) {
         remove(tmp);
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
 }
 
 static void write_con_file(char *path, char *con, const char *rom_name) {
     char tmp[PATH_MAX];
     if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
     FILE *f = fopen(tmp, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
@@ -142,25 +148,25 @@ static void write_con_file(char *path, char *con, const char *rom_name) {
         LOG_INFO(mux_module, "Assign Control: %s", con);
     }
 
-    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
+    const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
     if (!ok || rename(tmp, path) != 0) {
         remove(tmp);
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
 }
 
 static void write_rac_file(char *path, char *rac, const char *rom_name) {
     char tmp[PATH_MAX];
     if (snprintf(tmp, sizeof(tmp), "%s.tmp", path) >= (int) sizeof(tmp)) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
     FILE *f = fopen(tmp, "w");
     if (!f) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
@@ -171,17 +177,19 @@ static void write_rac_file(char *path, char *rac, const char *rom_name) {
         LOG_INFO(mux_module, "Assign RetroArch Config: %s", rac);
     }
 
-    int ok = (fflush(f) == 0 && fsync(fileno(f)) == 0);
+    const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
     if (!ok || rename(tmp, path) != 0) {
         remove(tmp);
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
 }
 
-static void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *core,
-                               char *sys, char *cat, char *rom, char *gov, char *con, char *rac, int lookup) {
+static void assign_core_single(
+    char *def_core, char *rom_dir, char *core_dir, char *core, char *sys, char *cat, char *rom, char *gov, char *con,
+    char *rac, const int lookup
+) {
     char base_path[MAX_BUFFER_SIZE];
     char *rom_no_ext = strip_ext(get_file_name(rom));
 
@@ -198,22 +206,27 @@ static void assign_core_single(char *def_core, char *rom_dir, char *core_dir, ch
     snprintf(rac_path, sizeof(rac_path), "%s.rac", base_path);
 
     char *paths[] = {cfg_path, gov_path, con_path, rac_path};
-    for (size_t i = 0; i < A_SIZE(paths); ++i) if (file_exist(paths[i])) remove(paths[i]);
+    for (size_t i = 0; i < A_SIZE(paths); ++i)
+        if (file_exist(paths[i])) remove(paths[i]);
 
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom);
     char *item_dir = strip_dir(file_path);
     char *last_sub = get_last_subdir(item_dir, '/', 4);
-    char *base_dir = (last_sub[0] == '\0') ? item_dir : str_replace(item_dir, last_sub, "");
+    char *base_dir = last_sub[0] == '\0' ? item_dir : str_replace(item_dir, last_sub, "");
 
-    write_cfg_file(def_core, cfg_path, core, str_trim(sys), cat, lookup, rom_no_ext, base_dir, last_sub, get_file_name(rom));
+    write_cfg_file(
+        def_core, cfg_path, core, str_trim(sys), cat, lookup, rom_no_ext, base_dir, last_sub, get_file_name(rom)
+    );
     write_gov_file(gov_path, gov, rom_no_ext);
     write_con_file(con_path, con, rom_no_ext);
     write_rac_file(rac_path, rac, rom_no_ext);
 }
 
-static void assign_core_directory(char *def_core, char *core_dir, char *core,
-                                  char *sys, char *cat, char *gov, char *con, char *rac, int lookup, int purge) {
+static void assign_core_directory(
+    char *def_core, char *core_dir, char *core, char *sys, char *cat, char *gov, char *con, char *rac, const int lookup,
+    const int purge
+) {
     if (purge) {
         delete_files_of_type(core_dir, ".cfg", NULL, 0);
         delete_files_of_type(core_dir, ".gov", NULL, 0);
@@ -238,8 +251,10 @@ static void assign_core_directory(char *def_core, char *core_dir, char *core,
     write_rac_file(rac_file, rac, NULL);
 }
 
-static void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *core,
-                               char *sys, char *cat, char *gov, char *con, char *rac, int lookup) {
+static void assign_core_parent(
+    char *def_core, const char *rom_dir, char *core_dir, char *core, char *sys, char *cat, char *gov, char *con,
+    char *rac, const int lookup
+) {
     delete_files_of_type(core_dir, ".cfg", NULL, 1);
     delete_files_of_type(core_dir, ".gov", NULL, 1);
     delete_files_of_type(core_dir, ".con", NULL, 1);
@@ -282,11 +297,12 @@ static void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, ch
     free_subdirectories(subdirs);
 }
 
-void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys, char *cat, char *rom,
-                            char *gov, char *con, char *rac, int lookup, enum gen_type method) {
+void create_core_assignment(
+    char *def_core, char *rom_dir, char *core, char *sys, char *cat, char *rom, char *gov, char *con, char *rac,
+    const int lookup, const enum gen_type method
+) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s",
-             get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s", get_last_subdir(rom_dir, '/', 4));
 
     remove_double_slashes(core_dir);
     create_directories(core_dir, 0);
@@ -322,7 +338,10 @@ static int find_recursive_core_file(const char *start_path, char *recursive_core
     while (1) {
         snprintf(current_dir, sizeof(current_dir), "%s", strip_dir(current_dir));
 
-        snprintf(recursive_core_file, MAX_BUFFER_SIZE, INFO_CON_PATH "/%s/core_recursive.cfg", get_last_subdir(current_dir, '/', 4));
+        snprintf(
+            recursive_core_file, MAX_BUFFER_SIZE, INFO_CON_PATH "/%s/core_recursive.cfg",
+            get_last_subdir(current_dir, '/', 4)
+        );
         remove_double_slashes(recursive_core_file);
 
         if (file_exist(recursive_core_file)) return 1;
@@ -332,13 +351,13 @@ static int find_recursive_core_file(const char *start_path, char *recursive_core
     return 0;
 }
 
-bool automatic_assign_core(char *rom_dir) {
+int automatic_assign_core(char *rom_dir) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.cfg", get_last_subdir(rom_dir, '/', 4));
 
     remove_double_slashes(core_file);
 
-    if (file_exist(core_file)) return true;
+    if (file_exist(core_file)) return 1;
     int auto_assign_good = 0;
 
     char assign_file[MAX_BUFFER_SIZE];
@@ -346,13 +365,10 @@ bool automatic_assign_core(char *rom_dir) {
 
     if (json_valid(read_all_char_from(assign_file))) {
         static char assign_check[MAX_BUFFER_SIZE];
-        snprintf(assign_check, sizeof(assign_check), "%s",
-                 str_tolower(get_last_dir(rom_dir)));
+        snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
         str_remchars(assign_check, " -_+");
 
-        struct json auto_assign_config = json_object_get(
-                json_parse(read_all_char_from(assign_file)),
-                assign_check);
+        struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
 
         if (json_exists(auto_assign_config)) {
             char ass_config[MAX_BUFFER_SIZE];
@@ -361,8 +377,7 @@ bool automatic_assign_core(char *rom_dir) {
             LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config);
 
             char assigned_core_global[MAX_BUFFER_SIZE];
-            snprintf(assigned_core_global, sizeof(assigned_core_global), STORE_LOC_ASIN "/%s/global.ini",
-                     ass_config);
+            snprintf(assigned_core_global, sizeof(assigned_core_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
 
             LOG_INFO(mux_module, "\tObtaining System Global INI: %s", assigned_core_global);
 
@@ -375,8 +390,7 @@ bool automatic_assign_core(char *rom_dir) {
 
             if (strcmp(def_core, "none") != 0) {
                 char default_core[MAX_BUFFER_SIZE];
-                snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini",
-                         ass_config, def_core);
+                snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_core);
 
                 mini_t *core_ini = mini_load(default_core);
 
@@ -398,7 +412,10 @@ bool automatic_assign_core(char *rom_dir) {
                         snprintf(core_catalogue, sizeof(core_catalogue), "%s", use_local_catalogue);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Catalogue: %s", core_catalogue);
                     } else {
-                        snprintf(core_catalogue, sizeof(core_catalogue), "%s", get_ini_string(global_ini, "global", "catalogue", "none"));
+                        snprintf(
+                            core_catalogue, sizeof(core_catalogue), "%s",
+                            get_ini_string(global_ini, "global", "catalogue", "none")
+                        );
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue);
                     }
 
@@ -407,7 +424,10 @@ bool automatic_assign_core(char *rom_dir) {
                         snprintf(core_governor, sizeof(core_governor), "%s", use_local_governor);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
                     } else {
-                        snprintf(core_governor, sizeof(core_governor), "%s", get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+                        snprintf(
+                            core_governor, sizeof(core_governor), "%s",
+                            get_ini_string(global_ini, "global", "governor", device.cpu.dflt)
+                        );
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
                     }
 
@@ -416,7 +436,10 @@ bool automatic_assign_core(char *rom_dir) {
                         snprintf(core_control, sizeof(core_control), "%s", use_local_control);
                         LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
                     } else {
-                        snprintf(core_control, sizeof(core_control), "%s", get_ini_string(global_ini, "global", "control", "system"));
+                        snprintf(
+                            core_control, sizeof(core_control), "%s",
+                            get_ini_string(global_ini, "global", "control", "system")
+                        );
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control);
                     }
 
@@ -425,7 +448,10 @@ bool automatic_assign_core(char *rom_dir) {
                         snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
                         LOG_INFO(mux_module, "\t(LOCAL) Core RetroArch Config: %s", core_retroarch);
                     } else {
-                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
+                        snprintf(
+                            core_retroarch, sizeof(core_retroarch), "%s",
+                            get_ini_string(global_ini, "global", "retroarch", "false")
+                        );
                         LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
                     }
 
@@ -438,8 +464,10 @@ bool automatic_assign_core(char *rom_dir) {
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup);
                     }
 
-                    create_core_assignment(def_core, rom_dir, auto_core, ass_config, core_catalogue, "",
-                                           core_governor, core_control, core_retroarch, core_lookup, DIRECTORY);
+                    create_core_assignment(
+                        def_core, rom_dir, auto_core, ass_config, core_catalogue, "", core_governor, core_control,
+                        core_retroarch, core_lookup, DIRECTORY
+                    );
 
                     auto_assign_good = 1;
                     LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful");
@@ -484,7 +512,8 @@ static const char *format_retroarch_core(const char *ra_core) {
         }
     }
 
-    for (ra_so = tmp; *ra_so; ra_so++) if (*ra_so == '_') *ra_so = ' ';
+    for (ra_so = tmp; *ra_so; ra_so++)
+        if (*ra_so == '_') *ra_so = ' ';
     tmp[0] = toupper((unsigned char) tmp[0]);
 
     snprintf(out, sizeof(out), "%s", tmp);
@@ -504,7 +533,7 @@ static const char *format_external_core(const char *ext_core) {
     return NULL;
 }
 
-const char *format_core_name(const char *core, int use_lang) {
+const char *format_core_name(const char *core, const int use_lang) {
     static char buf[CORE_BUFFER];
 
     const char *ext = format_external_core(core);
@@ -519,7 +548,7 @@ const char *format_core_name(const char *core, int use_lang) {
         return buf;
     }
 
-    return use_lang ? lang.GENERIC.UNKNOWN : "Unknown";
+    return use_lang ? lang.generic.unknown : "Unknown";
 }
 
 static const char *get_ra_config_dir(const char *core) {
@@ -542,7 +571,7 @@ static const char *get_ra_config_dir(const char *core) {
 }
 
 int remove_content_config(const char *name, const char *core) {
-    toast_message(lang.MUXOPTION.REMCONTENT, MEDIUM);
+    toast_message(lang.muxoption.remcontent, tst_wait_m);
 
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, get_ra_config_dir(core));
@@ -555,7 +584,7 @@ int remove_content_config(const char *name, const char *core) {
 }
 
 int remove_dir_config(const char *dir, const char *core) {
-    toast_message(lang.MUXOPTION.REMDIR, MEDIUM);
+    toast_message(lang.muxoption.remdir, tst_wait_m);
 
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s/%s", INFO_CFG_PATH, get_ra_config_dir(core));
@@ -568,7 +597,7 @@ int remove_dir_config(const char *dir, const char *core) {
 }
 
 int remove_core_config(const char *core) {
-    toast_message(lang.MUXOPTION.REMCORE, MEDIUM);
+    toast_message(lang.muxoption.remcore, tst_wait_m);
 
     const char *core_name = get_ra_config_dir(core);
 

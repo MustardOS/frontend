@@ -14,14 +14,14 @@
 #include "stb/stb_image_write.h"
 #include "screenshot.h"
 
-#define DRM_IOCTL_BASE 'd'
+#define DRM_IOCTL_BASE     'd'
 #define DRM_IOWR(nr, type) _IOWR(DRM_IOCTL_BASE, nr, type)
 
-#define DRM_IOCTL_PRIME_HANDLE_TO_FD DRM_IOWR(0x2d, struct drm_prime_handle)
-#define DRM_IOCTL_MODE_GETRESOURCES  DRM_IOWR(0xA0, struct drm_mode_card_res)
-#define DRM_IOCTL_MODE_GETCRTC       DRM_IOWR(0xA1, struct drm_mode_crtc)
-#define DRM_IOCTL_MODE_GETFB         DRM_IOWR(0xAD, struct drm_mode_fb_cmd)
-#define DRM_IOCTL_MODE_MAP_DUMB      DRM_IOWR(0xB3, struct drm_mode_map_dumb)
+#define DRM_IOCTL_PRIME_HANDLE_TO_FD DRM_IOWR(0x2d, drm_prime_handle)
+#define DRM_IOCTL_MODE_GETRESOURCES  DRM_IOWR(0xA0, drm_mode_card_res)
+#define DRM_IOCTL_MODE_GETCRTC       DRM_IOWR(0xA1, drm_mode_crtc)
+#define DRM_IOCTL_MODE_GETFB         DRM_IOWR(0xAD, drm_mode_fb_cmd)
+#define DRM_IOCTL_MODE_MAP_DUMB      DRM_IOWR(0xB3, drm_mode_map_dumb)
 
 #define DRM_MAX_CRTCS 8
 #define DRM_MAX_CARDS 4
@@ -31,81 +31,81 @@
 #define BLANK_SAMPLE_STEP    256
 #define BLANK_NONZERO_NEEDED 4
 
-struct drm_mode_card_res {
-    uint64_t fb_id_ptr;
+typedef struct {
+    uint64_t fb_id_ptr __attribute__((unused));
     uint64_t crtc_id_ptr;
-    uint64_t connector_id_ptr;
-    uint64_t encoder_id_ptr;
-    uint32_t count_fbs;
+    uint64_t connector_id_ptr __attribute__((unused));
+    uint64_t encoder_id_ptr __attribute__((unused));
+    uint32_t count_fbs __attribute__((unused));
     uint32_t count_crtcs;
-    uint32_t count_connectors;
-    uint32_t count_encoders;
-    uint32_t min_width;
-    uint32_t max_width;
-    uint32_t min_height;
-    uint32_t max_height;
-};
+    uint32_t count_connectors __attribute__((unused));
+    uint32_t count_encoders __attribute__((unused));
+    uint32_t min_width __attribute__((unused));
+    uint32_t max_width __attribute__((unused));
+    uint32_t min_height __attribute__((unused));
+    uint32_t max_height __attribute__((unused));
+} drm_mode_card_res;
 
-struct drm_mode_modeinfo {
-    uint32_t clock;
-    uint16_t hdisplay;
-    uint16_t hsync_start;
-    uint16_t hsync_end;
-    uint16_t htotal;
-    uint16_t hskew;
-    uint16_t vdisplay;
-    uint16_t vsync_start;
-    uint16_t vsync_end;
-    uint16_t vtotal;
-    uint16_t vscan;
-    uint32_t vrefresh;
-    uint32_t flags;
-    uint32_t type;
-    char name[32];
-};
+typedef struct {
+    uint32_t clock __attribute__((unused));
+    uint16_t hdisplay __attribute__((unused));
+    uint16_t hsync_start __attribute__((unused));
+    uint16_t hsync_end __attribute__((unused));
+    uint16_t htotal __attribute__((unused));
+    uint16_t hskew __attribute__((unused));
+    uint16_t vdisplay __attribute__((unused));
+    uint16_t vsync_start __attribute__((unused));
+    uint16_t vsync_end __attribute__((unused));
+    uint16_t vtotal __attribute__((unused));
+    uint16_t vscan __attribute__((unused));
+    uint32_t vrefresh __attribute__((unused));
+    uint32_t flags __attribute__((unused));
+    uint32_t type __attribute__((unused));
+    char name[32] __attribute__((unused));
+} drm_mode_modeinfo;
 
-struct drm_mode_crtc {
-    uint64_t set_connectors_ptr;
-    uint32_t count_connectors;
+typedef struct {
+    uint64_t set_connectors_ptr __attribute__((unused));
+    uint32_t count_connectors __attribute__((unused));
     uint32_t crtc_id;
     uint32_t fb_id;
-    uint32_t x;
-    uint32_t y;
-    uint32_t gamma_size;
+    uint32_t x __attribute__((unused));
+    uint32_t y __attribute__((unused));
+    uint32_t gamma_size __attribute__((unused));
     uint32_t mode_valid;
-    struct drm_mode_modeinfo mode;
-};
+    drm_mode_modeinfo mode __attribute__((unused));
+} drm_mode_crtc;
 
-struct drm_mode_fb_cmd {
+typedef struct {
     uint32_t fb_id;
     uint32_t width;
     uint32_t height;
     uint32_t pitch;
     uint32_t bpp;
-    uint32_t depth;
+    uint32_t depth __attribute__((unused));
     uint32_t handle;
-};
+} drm_mode_fb_cmd;
 
-struct drm_mode_map_dumb {
+typedef struct {
     uint32_t handle;
-    uint32_t pad;
+    uint32_t pad __attribute__((unused));
     uint64_t offset;
-};
+} drm_mode_map_dumb;
 
-struct drm_prime_handle {
+typedef struct {
     uint32_t handle;
     uint32_t flags;
     int32_t fd;
-};
+} drm_prime_handle;
 
-static inline uint8_t scale_bits(uint32_t value, uint32_t bits) {
+static uint8_t scale_bits(const uint32_t value, const uint32_t bits) {
     if (bits == 0) return 0;
     if (bits >= 8) return (uint8_t) (value >> (bits - 8));
 
-    return (uint8_t) ((value * 255U) / ((1U << bits) - 1U));
+    return (uint8_t) (value * 255U / ((1U << bits) - 1U));
 }
 
-static int buffer_is_blank(const uint8_t *buf, size_t len) {
+static int buffer_is_blank(const uint8_t *buf, const size_t len) {
     size_t nonzero = 0;
     for (size_t i = 0; i < len; i += BLANK_SAMPLE_STEP) {
         if (buf[i]) {
@@ -119,44 +119,50 @@ static int hue_red = 0;
 static int hue_green = 0;
 static int hue_blue = 0;
 
-static float range_weight(float hue, float centre) {
+static float range_weight(const float hue, const float centre) {
     float diff = fabsf(hue - centre);
     if (diff > 180.0f) diff = 360.0f - diff;
     if (diff >= 120.0f) return 0.0f;
 
-    return 1.0f - (diff / 120.0f);
+    return 1.0f - diff / 120.0f;
 }
 
-static void hue_adjust(uint8_t *rgb, size_t pixels) {
+static void hue_adjust(uint8_t *rgb, const size_t pixels) {
     if (!hue_red && !hue_green && !hue_blue) return;
 
     for (size_t i = 0; i < pixels; i++) {
         uint8_t *p = rgb + i * 3U;
 
-        float r = (float) p[0] / 255.0f, g = (float) p[1] / 255.0f, b = (float) p[2] / 255.0f;
-        float mx = fmaxf(r, fmaxf(g, b));
-        float mn = fminf(r, fminf(g, b));
-        float c = mx - mn;
+        const float r = (float) p[0] / 255.0f;
+        const float g = (float) p[1] / 255.0f;
+        const float b = (float) p[2] / 255.0f;
+
+        const float mx = fmaxf(r, fmaxf(g, b));
+        const float mn = fminf(r, fminf(g, b));
+
+        const float c = mx - mn;
 
         if (c <= 0.0f) continue;
 
         float h;
-        if (mx == r) h = fmodf((g - b) / c, 6.0f);
-        else if (mx == g) h = (b - r) / c + 2.0f;
-        else h = (r - g) / c + 4.0f;
+        if (mx == r)
+            h = fmodf((g - b) / c, 6.0f);
+        else if (mx == g)
+            h = (b - r) / c + 2.0f;
+        else
+            h = (r - g) / c + 4.0f;
 
         h *= 60.0f;
         if (h < 0.0f) h += 360.0f;
 
-        h += range_weight(h, 0.0f) * (float) hue_red +
-             range_weight(h, 120.0f) * (float) hue_green +
-             range_weight(h, 240.0f) * (float) hue_blue;
+        h += range_weight(h, 0.0f) * (float) hue_red + range_weight(h, 120.0f) * (float) hue_green
+             + range_weight(h, 240.0f) * (float) hue_blue;
 
         h = fmodf(h, 360.0f);
         if (h < 0.0f) h += 360.0f;
 
-        float k = h / 60.0f;
-        float x = c * (1.0f - fabsf(fmodf(k, 2.0f) - 1.0f));
+        const float k = h / 60.0f;
+        const float x = c * (1.0f - fabsf(fmodf(k, 2.0f) - 1.0f));
         float r1 = 0.0f, g1 = 0.0f, b1 = 0.0f;
 
         if (k < 1.0f) {
@@ -185,7 +191,7 @@ static void hue_adjust(uint8_t *rgb, size_t pixels) {
     }
 }
 
-static int png_write(const char *path, uint8_t *rgb, uint32_t width, uint32_t height) {
+static int png_write(const char *path, uint8_t *rgb, const uint32_t width, const uint32_t height) {
     if (!width || !height) return -1;
 
     hue_adjust(rgb, (size_t) width * height);
@@ -196,32 +202,32 @@ static int png_write(const char *path, uint8_t *rgb, uint32_t width, uint32_t he
     return stbi_write_png(path, (int) width, (int) height, 3, rgb, (int) (width * 3U)) ? 0 : -1;
 }
 
-static inline void convert_16b(uint8_t *dst, const uint8_t *src, uint32_t width) {
+static void convert_16_b(uint8_t *dst, const uint8_t *src, const uint32_t width) {
     const uint8_t *s = src;
 
     uint8_t *d = dst;
     uint32_t x = width;
 
     while (x >= 4) {
-        uint16_t p0 = (uint16_t) s[0] | ((uint16_t) s[1] << 8);
-        uint16_t p1 = (uint16_t) s[2] | ((uint16_t) s[3] << 8);
-        uint16_t p2 = (uint16_t) s[4] | ((uint16_t) s[5] << 8);
-        uint16_t p3 = (uint16_t) s[6] | ((uint16_t) s[7] << 8);
+        const uint16_t p0 = (uint16_t) s[0] | (uint16_t) s[1] << 8;
+        const uint16_t p1 = (uint16_t) s[2] | (uint16_t) s[3] << 8;
+        const uint16_t p2 = (uint16_t) s[4] | (uint16_t) s[5] << 8;
+        const uint16_t p3 = (uint16_t) s[6] | (uint16_t) s[7] << 8;
 
-        d[0] = scale_bits((p0 >> 11) & 0x1F, 5);
-        d[1] = scale_bits((p0 >> 5) & 0x3F, 6);
+        d[0] = scale_bits(p0 >> 11 & 0x1F, 5);
+        d[1] = scale_bits(p0 >> 5 & 0x3F, 6);
         d[2] = scale_bits(p0 & 0x1F, 5);
 
-        d[3] = scale_bits((p1 >> 11) & 0x1F, 5);
-        d[4] = scale_bits((p1 >> 5) & 0x3F, 6);
+        d[3] = scale_bits(p1 >> 11 & 0x1F, 5);
+        d[4] = scale_bits(p1 >> 5 & 0x3F, 6);
         d[5] = scale_bits(p1 & 0x1F, 5);
 
-        d[6] = scale_bits((p2 >> 11) & 0x1F, 5);
-        d[7] = scale_bits((p2 >> 5) & 0x3F, 6);
+        d[6] = scale_bits(p2 >> 11 & 0x1F, 5);
+        d[7] = scale_bits(p2 >> 5 & 0x3F, 6);
         d[8] = scale_bits(p2 & 0x1F, 5);
 
-        d[9] = scale_bits((p3 >> 11) & 0x1F, 5);
-        d[10] = scale_bits((p3 >> 5) & 0x3F, 6);
+        d[9] = scale_bits(p3 >> 11 & 0x1F, 5);
+        d[10] = scale_bits(p3 >> 5 & 0x3F, 6);
         d[11] = scale_bits(p3 & 0x1F, 5);
 
         s += 8;
@@ -230,10 +236,10 @@ static inline void convert_16b(uint8_t *dst, const uint8_t *src, uint32_t width)
     }
 
     while (x--) {
-        uint16_t pix = (uint16_t) s[0] | ((uint16_t) s[1] << 8);
+        const uint16_t pix = (uint16_t) s[0] | (uint16_t) s[1] << 8;
 
-        d[0] = scale_bits((pix >> 11) & 0x1F, 5);
-        d[1] = scale_bits((pix >> 5) & 0x3F, 6);
+        d[0] = scale_bits(pix >> 11 & 0x1F, 5);
+        d[1] = scale_bits(pix >> 5 & 0x3F, 6);
         d[2] = scale_bits(pix & 0x1F, 5);
 
         s += 2;
@@ -241,7 +247,7 @@ static inline void convert_16b(uint8_t *dst, const uint8_t *src, uint32_t width)
     }
 }
 
-static inline void convert_24b(uint8_t *dst, const uint8_t *src, uint32_t width) {
+static void convert_24_b(uint8_t *dst, const uint8_t *src, const uint32_t width) {
     const uint8_t *s = src;
 
     uint8_t *d = dst;
@@ -279,7 +285,7 @@ static inline void convert_24b(uint8_t *dst, const uint8_t *src, uint32_t width)
     }
 }
 
-static inline void convert_32b(uint8_t *dst, const uint8_t *src, uint32_t width) {
+static void convert_32_b(uint8_t *dst, const uint8_t *src, const uint32_t width) {
     const uint8_t *s = src;
 
     uint8_t *d = dst;
@@ -317,41 +323,49 @@ static inline void convert_32b(uint8_t *dst, const uint8_t *src, uint32_t width)
     }
 }
 
-static void convert_fbdev(uint8_t *dst, const uint8_t *src, uint32_t width, uint32_t height, uint32_t pitch, const struct fb_var_screeninfo *var) {
+static void convert_fbdev(
+    uint8_t *dst, const uint8_t *src, const uint32_t width, const uint32_t height, const uint32_t pitch,
+    const struct fb_var_screeninfo *var
+) {
     const uint32_t bytes_pp = (var->bits_per_pixel + 7U) / 8U;
 
     for (uint32_t y = 0; y < height; y++) {
-        const uint8_t *src_row = src + ((size_t) y * pitch);
-        uint8_t *dst_row = dst + ((size_t) y * width * 3U);
+        const uint8_t *src_row = src + (size_t) y * pitch;
+        uint8_t *dst_row = dst + (size_t) y * width * 3U;
 
         for (uint32_t x = 0; x < width; x++) {
-            const uint8_t *p = src_row + ((size_t) x * bytes_pp);
+            const uint8_t *p = src_row + (size_t) x * bytes_pp;
             uint32_t pix = 0;
 
             if (bytes_pp == 2) {
-                pix = (uint32_t) p[0] | ((uint32_t) p[1] << 8);
+                pix = (uint32_t) p[0] | (uint32_t) p[1] << 8;
             } else if (bytes_pp == 3) {
-                pix = (uint32_t) p[0] | ((uint32_t) p[1] << 8) | ((uint32_t) p[2] << 16);
+                pix = (uint32_t) p[0] | (uint32_t) p[1] << 8 | (uint32_t) p[2] << 16;
             } else {
-                pix = (uint32_t) p[0] | ((uint32_t) p[1] << 8) | ((uint32_t) p[2] << 16) | ((uint32_t) p[3] << 24);
+                pix = (uint32_t) p[0] | (uint32_t) p[1] << 8 | (uint32_t) p[2] << 16 | (uint32_t) p[3] << 24;
             }
 
-            dst_row[x * 3 + 0] = scale_bits((pix >> var->red.offset) & ((1U << var->red.length) - 1U), var->red.length);
-            dst_row[x * 3 + 1] = scale_bits((pix >> var->green.offset) & ((1U << var->green.length) - 1U), var->green.length);
-            dst_row[x * 3 + 2] = scale_bits((pix >> var->blue.offset) & ((1U << var->blue.length) - 1U), var->blue.length);
+            dst_row[x * 3 + 0] = scale_bits(pix >> var->red.offset & ((1U << var->red.length) - 1U), var->red.length);
+            dst_row[x * 3 + 1] =
+                scale_bits(pix >> var->green.offset & ((1U << var->green.length) - 1U), var->green.length);
+            dst_row[x * 3 + 2] =
+                scale_bits(pix >> var->blue.offset & ((1U << var->blue.length) - 1U), var->blue.length);
         }
     }
 }
 
-static void convert_drm(uint8_t *dst, const uint8_t *src, uint32_t width, uint32_t height, uint32_t pitch, uint32_t bpp) {
+static void convert_drm(
+    uint8_t *dst, const uint8_t *src, const uint32_t width, const uint32_t height, const uint32_t pitch,
+    const uint32_t bpp
+) {
     void (*conv)(uint8_t *, const uint8_t *, uint32_t);
 
     if (bpp == 32) {
-        conv = convert_32b;
+        conv = convert_32_b;
     } else if (bpp == 24) {
-        conv = convert_24b;
+        conv = convert_24_b;
     } else {
-        conv = convert_16b;
+        conv = convert_16_b;
     }
 
     for (uint32_t y = 0; y < height; y++) {
@@ -360,14 +374,13 @@ static void convert_drm(uint8_t *dst, const uint8_t *src, uint32_t width, uint32
 }
 
 static int capture_fbdev_path(const char *fb_path, const char *path) {
-    int fd = open(fb_path, O_RDONLY);
+    const int fd = open(fb_path, O_RDONLY);
     if (fd < 0) return -1;
 
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
 
-    if (ioctl(fd, FBIOGET_FSCREENINFO, &fix) < 0 ||
-        ioctl(fd, FBIOGET_VSCREENINFO, &var) < 0) {
+    if (ioctl(fd, FBIOGET_FSCREENINFO, &fix) < 0 || ioctl(fd, FBIOGET_VSCREENINFO, &var) < 0) {
         close(fd);
         return -1;
     }
@@ -377,14 +390,12 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
         return -1;
     }
 
-    if (var.bits_per_pixel != 16 &&
-        var.bits_per_pixel != 24 &&
-        var.bits_per_pixel != 32) {
+    if (var.bits_per_pixel != 16 && var.bits_per_pixel != 24 && var.bits_per_pixel != 32) {
         close(fd);
         return -1;
     }
 
-    size_t map_size = (size_t) fix.line_length * var.yres;
+    const size_t map_size = (size_t) fix.line_length * var.yres;
     uint8_t *fb = mmap(NULL, map_size, PROT_READ, MAP_SHARED, fd, 0);
     if (fb == MAP_FAILED) {
         close(fd);
@@ -397,7 +408,7 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
         return -1;
     }
 
-    size_t rgb_size = (size_t) var.xres * var.yres * 3U;
+    const size_t rgb_size = (size_t) var.xres * var.yres * 3U;
     uint8_t *rgb = malloc(rgb_size);
     if (!rgb) {
         munmap(fb, map_size);
@@ -406,7 +417,7 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
     }
 
     convert_fbdev(rgb, fb, var.xres, var.yres, fix.line_length, &var);
-    int ret = png_write(path, rgb, var.xres, var.yres);
+    const int ret = png_write(path, rgb, var.xres, var.yres);
 
     free(rgb);
     munmap(fb, map_size);
@@ -428,11 +439,10 @@ static int capture_fbdev(const char *path) {
     return -1;
 }
 
-static uint8_t *map_gem_handle(int drm_fd, uint32_t handle, size_t map_size, int *out_prime_fd) {
+static uint8_t *map_gem_handle(const int drm_fd, const uint32_t handle, const size_t map_size, int *out_prime_fd) {
     *out_prime_fd = -1;
 
-    struct drm_mode_map_dumb map;
-    memset(&map, 0, sizeof(map));
+    drm_mode_map_dumb map = {0};
     map.handle = handle;
 
     if (ioctl(drm_fd, DRM_IOCTL_MODE_MAP_DUMB, &map) == 0 && map.offset <= (uint64_t) INT64_MAX) {
@@ -440,8 +450,7 @@ static uint8_t *map_gem_handle(int drm_fd, uint32_t handle, size_t map_size, int
         if (mem != MAP_FAILED) return mem;
     }
 
-    struct drm_prime_handle prime;
-    memset(&prime, 0, sizeof(prime));
+    drm_prime_handle prime = {0};
     prime.handle = handle;
     prime.flags = 0;
 
@@ -457,24 +466,22 @@ static uint8_t *map_gem_handle(int drm_fd, uint32_t handle, size_t map_size, int
     return mem;
 }
 
-static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
-    struct drm_mode_crtc crtc;
+static int capture_drm_crtc(const int fd, const uint32_t crtc_id, const char *path) {
+    drm_mode_crtc crtc = {0};
 
-    memset(&crtc, 0, sizeof(crtc));
     crtc.crtc_id = crtc_id;
 
     if (ioctl(fd, DRM_IOCTL_MODE_GETCRTC, &crtc) < 0) return -1;
     if (!crtc.mode_valid || crtc.fb_id == 0) return -1;
 
-    struct drm_mode_fb_cmd fb;
-    memset(&fb, 0, sizeof(fb));
+    drm_mode_fb_cmd fb = {0};
     fb.fb_id = crtc.fb_id;
 
     if (ioctl(fd, DRM_IOCTL_MODE_GETFB, &fb) < 0) return -1;
     if (fb.width == 0 || fb.height == 0 || fb.pitch == 0) return -1;
     if (fb.bpp != 16 && fb.bpp != 24 && fb.bpp != 32) return -1;
 
-    size_t map_size = (size_t) fb.pitch * fb.height;
+    const size_t map_size = (size_t) fb.pitch * fb.height;
 
     int prime_fd = -1;
     uint8_t *mem = map_gem_handle(fd, fb.handle, map_size, &prime_fd);
@@ -486,7 +493,7 @@ static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
         return -1;
     }
 
-    size_t rgb_size = (size_t) fb.width * fb.height * 3U;
+    const size_t rgb_size = (size_t) fb.width * fb.height * 3U;
     uint8_t *rgb = malloc(rgb_size);
     if (!rgb) {
         munmap(mem, map_size);
@@ -495,7 +502,7 @@ static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
     }
 
     convert_drm(rgb, mem, fb.width, fb.height, fb.pitch, fb.bpp);
-    int ret = png_write(path, rgb, fb.width, fb.height);
+    const int ret = png_write(path, rgb, fb.width, fb.height);
 
     free(rgb);
     munmap(mem, map_size);
@@ -506,16 +513,16 @@ static int capture_drm_crtc(int fd, uint32_t crtc_id, const char *path) {
 }
 
 static int capture_drm_card(const char *card_path, const char *path) {
-    int fd = open(card_path, O_RDWR);
+    const int fd = open(card_path, O_RDWR);
     if (fd < 0) return -1;
 
-    struct drm_mode_card_res res;
+    drm_mode_card_res res;
     uint32_t crtc_ids[DRM_MAX_CRTCS];
 
     memset(&res, 0, sizeof(res));
     memset(crtc_ids, 0, sizeof(crtc_ids));
 
-    res.crtc_id_ptr = (uint64_t) (uintptr_t) crtc_ids;
+    res.crtc_id_ptr = (uintptr_t) crtc_ids;
     res.count_crtcs = DRM_MAX_CRTCS;
 
     if (ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res) < 0) {
@@ -546,10 +553,10 @@ static int capture_drm_card(const char *card_path, const char *path) {
 
 static int capture_drm(const char *path) {
     static const char *cards[DRM_MAX_CARDS] = {
-            "/dev/dri/card0",
-            "/dev/dri/card1",
-            "/dev/dri/card2",
-            "/dev/dri/card3",
+        "/dev/dri/card0",
+        "/dev/dri/card1",
+        "/dev/dri/card2",
+        "/dev/dri/card3",
     };
 
     for (size_t i = 0; i < DRM_MAX_CARDS; i++) {
@@ -560,7 +567,7 @@ static int capture_drm(const char *path) {
     return -1;
 }
 
-int screenshot_save(const char *path, screenshot_mode mode, screenshot_hue hue) {
+int screenshot_save(const char *path, const screenshot_mode mode, const screenshot_hue hue) {
     if (!path || !*path) return -1;
 
     hue_red = hue.red;
@@ -568,11 +575,11 @@ int screenshot_save(const char *path, screenshot_mode mode, screenshot_hue hue) 
     hue_blue = hue.blue;
 
     switch (mode) {
-        case SCREENSHOT_FBDEV:
+        case screenshot_fbdev:
             return capture_fbdev(path);
-        case SCREENSHOT_DRM:
+        case screenshot_drm:
             return capture_drm(path);
-        case SCREENSHOT_AUTO:
+        case screenshot_auto:
         default:
             if (capture_drm(path) == 0) return 0;
             return capture_fbdev(path);

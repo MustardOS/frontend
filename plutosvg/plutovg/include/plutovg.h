@@ -98,7 +98,8 @@ typedef void (*plutovg_write_func_t)(void* closure, void* data, int size);
 /**
  * @brief A structure representing a point in 2D space.
  */
-typedef struct plutovg_point {
+typedef struct plutovg_point
+{
     float x; ///< The x-coordinate of the point.
     float y; ///< The y-coordinate of the point.
 } plutovg_point_t;
@@ -109,7 +110,8 @@ typedef struct plutovg_point {
 /**
  * @brief A structure representing a rectangle in 2D space.
  */
-typedef struct plutovg_rect {
+typedef struct plutovg_rect
+{
     float x; ///< The x-coordinate of the top-left corner of the rectangle.
     float y; ///< The y-coordinate of the top-left corner of the rectangle.
     float w; ///< The width of the rectangle.
@@ -122,7 +124,8 @@ typedef struct plutovg_rect {
 /**
  * @brief A structure representing a 2D transformation matrix.
  */
-typedef struct plutovg_matrix {
+typedef struct plutovg_matrix
+{
     float a; ///< The horizontal scaling factor.
     float b; ///< The vertical shearing factor.
     float c; ///< The horizontal shearing factor.
@@ -277,11 +280,11 @@ PLUTOVG_API void plutovg_matrix_map_rect(const plutovg_matrix_t* matrix, const p
 
 /**
  * @brief Parses an SVG transform string into a matrix.
- * 
+ *
  * @param matrix A pointer to a `plutovg_matrix_t` object to store the result.
  * @param data Input SVG transform string.
  * @param length Length of the string, or `-1` if null-terminated.
- * 
+ *
  * @return `true` on success, `false` on failure.
  */
 PLUTOVG_API bool plutovg_matrix_parse(plutovg_matrix_t* matrix, const char* data, int length);
@@ -294,7 +297,8 @@ typedef struct plutovg_path plutovg_path_t;
 /**
  * @brief Enumeration defining path commands.
  */
-typedef enum plutovg_path_command {
+typedef enum plutovg_path_command
+{
     PLUTOVG_PATH_COMMAND_MOVE_TO, ///< Moves the current point to a new position.
     PLUTOVG_PATH_COMMAND_LINE_TO, ///< Draws a straight line to a new point.
     PLUTOVG_PATH_COMMAND_CUBIC_TO, ///< Draws a cubic Bézier curve to a new point.
@@ -335,8 +339,10 @@ typedef enum plutovg_path_command {
  *     }
  * }
  */
-typedef union plutovg_path_element {
-    struct {
+typedef union plutovg_path_element
+{
+    struct
+    {
         plutovg_path_command_t command; ///< The path command.
         int length; ///< Number of elements including the header.
     } header; ///< Header for path commands.
@@ -346,7 +352,8 @@ typedef union plutovg_path_element {
 /**
  * @brief Iterator for traversing path elements in a path.
  */
-typedef struct plutovg_path_iterator {
+typedef struct plutovg_path_iterator
+{
     const plutovg_path_element_t* elements; ///< Pointer to the array of path elements.
     int size; ///< Total number of elements in the array.
     int index; ///< Current position in the array.
@@ -672,7 +679,8 @@ PLUTOVG_API void plutovg_path_traverse_flatten(const plutovg_path_t* path, pluto
  * @param traverse_func The callback function to be called for each element of the path.
  * @param closure User-defined data passed to the callback.
  */
-PLUTOVG_API void plutovg_path_traverse_dashed(const plutovg_path_t* path, float offset, const float* dashes, int ndashes, plutovg_path_traverse_func_t traverse_func, void* closure);
+PLUTOVG_API void plutovg_path_traverse_dashed(const plutovg_path_t* path, float offset, const float* dashes, int ndashes,
+                                              plutovg_path_traverse_func_t traverse_func, void* closure);
 
 /**
  * @brief Creates a copy of the path.
@@ -732,7 +740,8 @@ PLUTOVG_API bool plutovg_path_parse(plutovg_path_t* path, const char* data, int 
 /**
  * @brief Text encodings used for converting text data to code points.
  */
-typedef enum plutovg_text_encoding {
+typedef enum plutovg_text_encoding
+{
     PLUTOVG_TEXT_ENCODING_LATIN1, ///< Latin-1 encoding
     PLUTOVG_TEXT_ENCODING_UTF8, ///< UTF-8 encoding
     PLUTOVG_TEXT_ENCODING_UTF16, ///< UTF-16 encoding
@@ -742,7 +751,8 @@ typedef enum plutovg_text_encoding {
 /**
  * @brief Iterator for traversing code points in text data.
  */
-typedef struct plutovg_text_iterator {
+typedef struct plutovg_text_iterator
+{
     const void* text; ///< Pointer to the text data.
     int length; ///< Length of the text data.
     plutovg_text_encoding_t encoding; ///< Encoding format of the text data.
@@ -804,7 +814,8 @@ PLUTOVG_API plutovg_font_face_t* plutovg_font_face_load_from_file(const char* fi
  * @param closure User-defined data passed to `destroy_func`.
  * @return A pointer to the loaded `plutovg_font_face_t` object, or `NULL` on failure.
  */
-PLUTOVG_API plutovg_font_face_t* plutovg_font_face_load_from_data(const void* data, unsigned int length, int ttcindex, plutovg_destroy_func_t destroy_func, void* closure);
+PLUTOVG_API plutovg_font_face_t* plutovg_font_face_load_from_data(const void* data, unsigned int length, int ttcindex, plutovg_destroy_func_t destroy_func,
+                                                                  void* closure);
 
 /**
  * @brief Increments the reference count of a font face.
@@ -839,7 +850,8 @@ PLUTOVG_API int plutovg_font_face_get_reference_count(const plutovg_font_face_t*
  * @param line_gap Pointer to store the line gap metric.
  * @param extents Pointer to a `plutovg_rect_t` object to store the font bounding box.
  */
-PLUTOVG_API void plutovg_font_face_get_metrics(const plutovg_font_face_t* face, float size, float* ascent, float* descent, float* line_gap, plutovg_rect_t* extents);
+PLUTOVG_API void plutovg_font_face_get_metrics(const plutovg_font_face_t* face, float size, float* ascent, float* descent, float* line_gap,
+                                               plutovg_rect_t* extents);
 
 /**
  * @brief Retrieves metrics for a specified glyph at a given size.
@@ -851,7 +863,8 @@ PLUTOVG_API void plutovg_font_face_get_metrics(const plutovg_font_face_t* face, 
  * @param left_side_bearing Pointer to store the left side bearing of the glyph.
  * @param extents Pointer to a `plutovg_rect_t` object to store the glyph bounding box.
  */
-PLUTOVG_API void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing, plutovg_rect_t* extents);
+PLUTOVG_API void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, plutovg_codepoint_t codepoint, float* advance_width,
+                                                     float* left_side_bearing, plutovg_rect_t* extents);
 
 /**
  * @brief Retrieves the path of a glyph and its advance width.
@@ -864,7 +877,8 @@ PLUTOVG_API void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, 
  * @param path Pointer to a `plutovg_path_t` object to store the glyph path.
  * @return The advance width of the glyph.
  */
-PLUTOVG_API float plutovg_font_face_get_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint, plutovg_path_t* path);
+PLUTOVG_API float plutovg_font_face_get_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint,
+                                                   plutovg_path_t* path);
 
 /**
  * @brief Traverses the path of a glyph and calls a callback for each path element.
@@ -878,7 +892,8 @@ PLUTOVG_API float plutovg_font_face_get_glyph_path(plutovg_font_face_t* face, fl
  * @param closure User-defined data passed to the callback function.
  * @return The advance width of the glyph.
  */
-PLUTOVG_API float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint, plutovg_path_traverse_func_t traverse_func, void* closure);
+PLUTOVG_API float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint,
+                                                        plutovg_path_traverse_func_t traverse_func, void* closure);
 
 /**
  * @brief Computes the bounding box of a text string and its advance width.
@@ -891,7 +906,8 @@ PLUTOVG_API float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* fac
  * @param extents Pointer to a `plutovg_rect_t` object to store the bounding box of the text.
  * @return The total advance width of the text.
  */
-PLUTOVG_API float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, const void* text, int length, plutovg_text_encoding_t encoding, plutovg_rect_t* extents);
+PLUTOVG_API float plutovg_font_face_text_extents(plutovg_font_face_t* face, float size, const void* text, int length, plutovg_text_encoding_t encoding,
+                                                 plutovg_rect_t* extents);
 
 /**
  * @brief Represents a cache of loaded font faces.
@@ -957,7 +973,8 @@ PLUTOVG_API void plutovg_font_face_cache_add(plutovg_font_face_cache_t* cache, c
  * @param ttcindex Index of the face in a TrueType collection (use 0 for non-TTC fonts).
  * @return `true` on success, `false` if the file could not be loaded.
  */
-PLUTOVG_API bool plutovg_font_face_cache_add_file(plutovg_font_face_cache_t* cache, const char* family, bool bold, bool italic, const char* filename, int ttcindex);
+PLUTOVG_API bool plutovg_font_face_cache_add_file(plutovg_font_face_cache_t* cache, const char* family, bool bold, bool italic, const char* filename,
+                                                  int ttcindex);
 
 /**
  * @brief Retrieve a font face from the cache by family and style.
@@ -981,9 +998,9 @@ PLUTOVG_API int plutovg_font_face_cache_load_file(plutovg_font_face_cache_t* cac
 
 /**
  * @brief Load all font faces from files in a directory recursively and add them to the cache.
- * 
+ *
  * This scans the specified directory recursively and loads all supported font files.
- * 
+ *
  * @param cache A pointer to a `plutovg_font_face_cache_t` object.
  * @param dirname Path to the directory containing font files.
  * @return The number of faces successfully loaded, or `-1` if font face cache loading is disabled.
@@ -994,7 +1011,7 @@ PLUTOVG_API int plutovg_font_face_cache_load_dir(plutovg_font_face_cache_t* cach
  * @brief Load all available system font faces and add them to the cache.
  *
  * This scans standard system font directories recursively and loads all supported font files.
- * 
+ *
  * @param cache A pointer to a `plutovg_font_face_cache_t` object.
  * @return The number of faces successfully loaded, or `-1` if font face cache loading is disabled.
  */
@@ -1003,7 +1020,8 @@ PLUTOVG_API int plutovg_font_face_cache_load_sys(plutovg_font_face_cache_t* cach
 /**
  * @brief Represents a color with red, green, blue, and alpha components.
  */
-typedef struct plutovg_color {
+typedef struct plutovg_color
+{
     float r; ///< Red component (0 to 1).
     float g; ///< Green component (0 to 1).
     float b; ///< Blue component (0 to 1).
@@ -1023,7 +1041,7 @@ typedef struct plutovg_color {
 
 /**
  * @brief Initializes a color using RGB components in the 0-1 range.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
  * @param r Red component (0 to 1).
  * @param g Green component (0 to 1).
@@ -1033,7 +1051,7 @@ PLUTOVG_API void plutovg_color_init_rgb(plutovg_color_t* color, float r, float g
 
 /**
  * @brief Initializes a color using RGBA components in the 0-1 range.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
  * @param r Red component (0 to 1).
  * @param g Green component (0 to 1).
@@ -1044,7 +1062,7 @@ PLUTOVG_API void plutovg_color_init_rgba(plutovg_color_t* color, float r, float 
 
 /**
  * @brief Initializes a color using RGB components in the 0-255 range.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
  * @param r Red component (0 to 255).
  * @param g Green component (0 to 255).
@@ -1054,7 +1072,7 @@ PLUTOVG_API void plutovg_color_init_rgb8(plutovg_color_t* color, int r, int g, i
 
 /**
  * @brief Initializes a color using RGBA components in the 0-255 range.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
  * @param r Red component (0 to 255).
  * @param g Green component (0 to 255).
@@ -1065,7 +1083,7 @@ PLUTOVG_API void plutovg_color_init_rgba8(plutovg_color_t* color, int r, int g, 
 
 /**
  * @brief Initializes a color from a 32-bit unsigned RGBA value.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
  * @param value 32-bit unsigned RGBA value.
  */
@@ -1073,7 +1091,7 @@ PLUTOVG_API void plutovg_color_init_rgba32(plutovg_color_t* color, unsigned int 
 
 /**
  * @brief Initializes a color from a 32-bit unsigned ARGB value.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
  * @param value 32-bit unsigned ARGB value.
  */
@@ -1102,29 +1120,29 @@ PLUTOVG_API void plutovg_color_init_hsla(plutovg_color_t* color, float h, float 
 
 /**
  * @brief Converts a color to a 32-bit unsigned RGBA value.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
- * 
+ *
  * @return 32-bit unsigned RGBA value.
  */
 PLUTOVG_API unsigned int plutovg_color_to_rgba32(const plutovg_color_t* color);
 
 /**
  * @brief Converts a color to a 32-bit unsigned ARGB value.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object.
- * 
+ *
  * @return 32-bit unsigned ARGB value.
  */
 PLUTOVG_API unsigned int plutovg_color_to_argb32(const plutovg_color_t* color);
 
 /**
  * @brief Parses a color from a string using CSS color syntax.
- * 
+ *
  * @param color A pointer to a `plutovg_color_t` object to store the parsed color.
  * @param data A pointer to the input string containing the color data.
  * @param length The length of the input string in bytes, or `-1` if the string is null-terminated.
- * 
+ *
  * @return The number of characters consumed on success (including leading/trailing spaces), or 0 on failure.
  */
 PLUTOVG_API int plutovg_color_parse(plutovg_color_t* color, const char* data, int length);
@@ -1318,7 +1336,8 @@ PLUTOVG_API void plutovg_convert_rgba_to_argb(unsigned char* dst, const unsigned
 /**
  * @brief Defines the type of texture, either plain or tiled.
  */
-typedef enum {
+typedef enum
+{
     PLUTOVG_TEXTURE_TYPE_PLAIN, ///< Plain texture.
     PLUTOVG_TEXTURE_TYPE_TILED ///< Tiled texture.
 } plutovg_texture_type_t;
@@ -1326,7 +1345,8 @@ typedef enum {
 /**
  * @brief Defines the spread method for gradients.
  */
-typedef enum {
+typedef enum
+{
     PLUTOVG_SPREAD_METHOD_PAD, ///< Pad the gradient's edges.
     PLUTOVG_SPREAD_METHOD_REFLECT, ///< Reflect the gradient beyond its bounds.
     PLUTOVG_SPREAD_METHOD_REPEAT ///< Repeat the gradient pattern.
@@ -1335,7 +1355,8 @@ typedef enum {
 /**
  * @brief Represents a gradient stop.
  */
-typedef struct {
+typedef struct
+{
     float offset; ///< The offset of the gradient stop, as a value between 0 and 1.
     plutovg_color_t color; ///< The color of the gradient stop.
 } plutovg_gradient_stop_t;
@@ -1388,7 +1409,8 @@ PLUTOVG_API plutovg_paint_t* plutovg_paint_create_color(const plutovg_color_t* c
  * @return A pointer to the created `plutovg_paint_t` object.
  */
 PLUTOVG_API plutovg_paint_t* plutovg_paint_create_linear_gradient(float x1, float y1, float x2, float y2,
-    plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops, const plutovg_matrix_t* matrix);
+                                                                  plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops,
+                                                                  const plutovg_matrix_t* matrix);
 
 /**
  * @brief Creates a radial gradient paint.
@@ -1406,7 +1428,8 @@ PLUTOVG_API plutovg_paint_t* plutovg_paint_create_linear_gradient(float x1, floa
  * @return A pointer to the created `plutovg_paint_t` object.
  */
 PLUTOVG_API plutovg_paint_t* plutovg_paint_create_radial_gradient(float cx, float cy, float cr, float fx, float fy, float fr,
-    plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops, const plutovg_matrix_t* matrix);
+                                                                  plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops,
+                                                                  const plutovg_matrix_t* matrix);
 
 /**
  * @brief Creates a texture paint from a surface.
@@ -1417,7 +1440,8 @@ PLUTOVG_API plutovg_paint_t* plutovg_paint_create_radial_gradient(float cx, floa
  * @param matrix Optional transformation matrix.
  * @return A pointer to the created `plutovg_paint_t` object.
  */
-PLUTOVG_API plutovg_paint_t* plutovg_paint_create_texture(plutovg_surface_t* surface, plutovg_texture_type_t type, float opacity, const plutovg_matrix_t* matrix);
+PLUTOVG_API plutovg_paint_t* plutovg_paint_create_texture(plutovg_surface_t* surface, plutovg_texture_type_t type, float opacity,
+                                                          const plutovg_matrix_t* matrix);
 
 /**
  * @brief Increments the reference count of a paint object.
@@ -1445,7 +1469,8 @@ PLUTOVG_API int plutovg_paint_get_reference_count(const plutovg_paint_t* paint);
 /**
  * @brief Defines fill rule types for filling paths.
  */
-typedef enum {
+typedef enum
+{
     PLUTOVG_FILL_RULE_NON_ZERO, ///< Non-zero winding fill rule.
     PLUTOVG_FILL_RULE_EVEN_ODD ///< Even-odd fill rule.
 } plutovg_fill_rule_t;
@@ -1453,25 +1478,27 @@ typedef enum {
 /**
  * @brief Defines compositing operations.
  */
-typedef enum {
-    PLUTOVG_OPERATOR_CLEAR,       ///< Clears the destination (resulting in a fully transparent image).
-    PLUTOVG_OPERATOR_SRC,         ///< Source replaces destination.
-    PLUTOVG_OPERATOR_DST,         ///< Destination is kept, source is ignored.
-    PLUTOVG_OPERATOR_SRC_OVER,    ///< Source is composited over destination.
-    PLUTOVG_OPERATOR_DST_OVER,    ///< Destination is composited over source.
-    PLUTOVG_OPERATOR_SRC_IN,      ///< Source within destination (only the overlapping part of source is shown).
-    PLUTOVG_OPERATOR_DST_IN,      ///< Destination within source.
-    PLUTOVG_OPERATOR_SRC_OUT,     ///< Source outside destination (non-overlapping part of source is shown).
-    PLUTOVG_OPERATOR_DST_OUT,     ///< Destination outside source.
-    PLUTOVG_OPERATOR_SRC_ATOP,    ///< Source atop destination (source shown over destination but only in the destination's bounds).
-    PLUTOVG_OPERATOR_DST_ATOP,    ///< Destination atop source (destination shown over source but only in the source's bounds).
-    PLUTOVG_OPERATOR_XOR          ///< Source and destination are combined, but their overlapping regions are cleared.
+typedef enum
+{
+    PLUTOVG_OPERATOR_CLEAR, ///< Clears the destination (resulting in a fully transparent image).
+    PLUTOVG_OPERATOR_SRC, ///< Source replaces destination.
+    PLUTOVG_OPERATOR_DST, ///< Destination is kept, source is ignored.
+    PLUTOVG_OPERATOR_SRC_OVER, ///< Source is composited over destination.
+    PLUTOVG_OPERATOR_DST_OVER, ///< Destination is composited over source.
+    PLUTOVG_OPERATOR_SRC_IN, ///< Source within destination (only the overlapping part of source is shown).
+    PLUTOVG_OPERATOR_DST_IN, ///< Destination within source.
+    PLUTOVG_OPERATOR_SRC_OUT, ///< Source outside destination (non-overlapping part of source is shown).
+    PLUTOVG_OPERATOR_DST_OUT, ///< Destination outside source.
+    PLUTOVG_OPERATOR_SRC_ATOP, ///< Source atop destination (source shown over destination but only in the destination's bounds).
+    PLUTOVG_OPERATOR_DST_ATOP, ///< Destination atop source (destination shown over source but only in the source's bounds).
+    PLUTOVG_OPERATOR_XOR ///< Source and destination are combined, but their overlapping regions are cleared.
 } plutovg_operator_t;
 
 /**
  * @brief Defines the shape used at the ends of open subpaths.
  */
-typedef enum {
+typedef enum
+{
     PLUTOVG_LINE_CAP_BUTT, ///< Flat edge at the end of the stroke.
     PLUTOVG_LINE_CAP_ROUND, ///< Rounded ends at the end of the stroke.
     PLUTOVG_LINE_CAP_SQUARE ///< Square ends at the end of the stroke.
@@ -1480,7 +1507,8 @@ typedef enum {
 /**
  * @brief Defines the shape used at the corners of paths.
  */
-typedef enum {
+typedef enum
+{
     PLUTOVG_LINE_JOIN_MITER, ///< Miter join with sharp corners.
     PLUTOVG_LINE_JOIN_ROUND, ///< Rounded join.
     PLUTOVG_LINE_JOIN_BEVEL ///< Beveled join with a flattened corner.
@@ -1595,7 +1623,8 @@ PLUTOVG_API void plutovg_canvas_set_color(plutovg_canvas_t* canvas, const plutov
  * @param matrix Optional transformation matrix.
  */
 PLUTOVG_API void plutovg_canvas_set_linear_gradient(plutovg_canvas_t* canvas, float x1, float y1, float x2, float y2,
-    plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops, const plutovg_matrix_t* matrix);
+                                                    plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops,
+                                                    const plutovg_matrix_t* matrix);
 
 /**
  * @brief Sets the current paint to a radial gradient.
@@ -1615,7 +1644,8 @@ PLUTOVG_API void plutovg_canvas_set_linear_gradient(plutovg_canvas_t* canvas, fl
  * @param matrix Optional transformation matrix.
  */
 PLUTOVG_API void plutovg_canvas_set_radial_gradient(plutovg_canvas_t* canvas, float cx, float cy, float cr, float fx, float fy, float fr,
-    plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops, const plutovg_matrix_t* matrix);
+                                                    plutovg_spread_method_t spread, const plutovg_gradient_stop_t* stops, int nstops,
+                                                    const plutovg_matrix_t* matrix);
 
 /**
  * @brief Sets the current paint to a texture.
@@ -1628,7 +1658,8 @@ PLUTOVG_API void plutovg_canvas_set_radial_gradient(plutovg_canvas_t* canvas, fl
  * @param opacity The opacity of the texture (0 to 1).
  * @param matrix Optional transformation matrix.
  */
-PLUTOVG_API void plutovg_canvas_set_texture(plutovg_canvas_t* canvas, plutovg_surface_t* surface, plutovg_texture_type_t type, float opacity, const plutovg_matrix_t* matrix);
+PLUTOVG_API void plutovg_canvas_set_texture(plutovg_canvas_t* canvas, plutovg_surface_t* surface, plutovg_texture_type_t type, float opacity,
+                                            const plutovg_matrix_t* matrix);
 
 /**
  * @brief Sets the current paint.
@@ -2280,7 +2311,7 @@ PLUTOVG_API bool plutovg_canvas_clip_contains(plutovg_canvas_t* canvas, float x,
  * Computes an axis-aligned bounding box in user space that encloses the area
  * which would be affected by a fill operation (`plutovg_canvas_fill()`) given the current path,
  * fill rule, and transformation state.
- * 
+ *
  * @note Clipping and surface dimensions are not considered in this calculation.
  *
  * @param canvas A pointer to a `plutovg_canvas_t` object.
@@ -2527,7 +2558,8 @@ PLUTOVG_API void plutovg_canvas_font_metrics(const plutovg_canvas_t* canvas, flo
  * @param left_side_bearing The left side bearing of the glyph.
  * @param extents The bounding box of the glyph.
  */
-PLUTOVG_API void plutovg_canvas_glyph_metrics(plutovg_canvas_t* canvas, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing, plutovg_rect_t* extents);
+PLUTOVG_API void plutovg_canvas_glyph_metrics(plutovg_canvas_t* canvas, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing,
+                                              plutovg_rect_t* extents);
 
 /**
  * @brief Retrieves the extents of a text.
@@ -2539,7 +2571,8 @@ PLUTOVG_API void plutovg_canvas_glyph_metrics(plutovg_canvas_t* canvas, plutovg_
  * @param extents The bounding box of the text.
  * @return The total advance width of the text.
  */
-PLUTOVG_API float plutovg_canvas_text_extents(plutovg_canvas_t* canvas, const void* text, int length, plutovg_text_encoding_t encoding, plutovg_rect_t* extents);
+PLUTOVG_API float plutovg_canvas_text_extents(plutovg_canvas_t* canvas, const void* text, int length, plutovg_text_encoding_t encoding,
+                                              plutovg_rect_t* extents);
 
 #ifdef __cplusplus
 }

@@ -28,7 +28,7 @@
  * @description:
  *   Opaque handler to a path stroker object.
  */
-typedef struct PVG_FT_StrokerRec_*  PVG_FT_Stroker;
+typedef struct PVG_FT_StrokerRec_* PVG_FT_Stroker;
 
 
 /**************************************************************
@@ -77,14 +77,13 @@ typedef struct PVG_FT_StrokerRec_*  PVG_FT_Stroker;
  *     for PVG_FT_STROKER_LINEJOIN_MITER_VARIABLE, retained for
  *     backwards compatibility.
  */
-typedef enum  PVG_FT_Stroker_LineJoin_
+typedef enum PVG_FT_Stroker_LineJoin_
 {
-    PVG_FT_STROKER_LINEJOIN_ROUND          = 0,
-    PVG_FT_STROKER_LINEJOIN_BEVEL          = 1,
+    PVG_FT_STROKER_LINEJOIN_ROUND = 0,
+    PVG_FT_STROKER_LINEJOIN_BEVEL = 1,
     PVG_FT_STROKER_LINEJOIN_MITER_VARIABLE = 2,
-    PVG_FT_STROKER_LINEJOIN_MITER          = PVG_FT_STROKER_LINEJOIN_MITER_VARIABLE,
-    PVG_FT_STROKER_LINEJOIN_MITER_FIXED    = 3
-
+    PVG_FT_STROKER_LINEJOIN_MITER = PVG_FT_STROKER_LINEJOIN_MITER_VARIABLE,
+    PVG_FT_STROKER_LINEJOIN_MITER_FIXED = 3
 } PVG_FT_Stroker_LineJoin;
 
 
@@ -110,12 +109,11 @@ typedef enum  PVG_FT_Stroker_LineJoin_
  *     The end of lines is rendered as a square around the
  *     last point.
  */
-typedef enum  PVG_FT_Stroker_LineCap_
+typedef enum PVG_FT_Stroker_LineCap_
 {
     PVG_FT_STROKER_LINECAP_BUTT = 0,
     PVG_FT_STROKER_LINECAP_ROUND,
     PVG_FT_STROKER_LINECAP_SQUARE
-
 } PVG_FT_Stroker_LineCap;
 
 
@@ -144,11 +142,10 @@ typedef enum  PVG_FT_Stroker_LineCap_
  *   You can however use @PVG_FT_Outline_GetInsideBorder and
  *   @PVG_FT_Outline_GetOutsideBorder to get these.
  */
-typedef enum  PVG_FT_StrokerBorder_
+typedef enum PVG_FT_StrokerBorder_
 {
     PVG_FT_STROKER_BORDER_LEFT = 0,
     PVG_FT_STROKER_BORDER_RIGHT
-
 } PVG_FT_StrokerBorder;
 
 
@@ -172,7 +169,7 @@ typedef enum  PVG_FT_StrokerBorder_
  *    FreeType error code.  0~means success.
  */
 PVG_FT_Error
-PVG_FT_Stroker_New( PVG_FT_Stroker  *astroker );
+PVG_FT_Stroker_New(PVG_FT_Stroker* astroker);
 
 
 /**************************************************************
@@ -206,11 +203,11 @@ PVG_FT_Stroker_New( PVG_FT_Stroker  *astroker );
  *   coordinates.
  */
 void
-PVG_FT_Stroker_Set( PVG_FT_Stroker           stroker,
-    PVG_FT_Fixed             radius,
-    PVG_FT_Stroker_LineCap   line_cap,
-    PVG_FT_Stroker_LineJoin  line_join,
-    PVG_FT_Fixed             miter_limit );
+PVG_FT_Stroker_Set(PVG_FT_Stroker stroker,
+                   PVG_FT_Fixed radius,
+                   PVG_FT_Stroker_LineCap line_cap,
+                   PVG_FT_Stroker_LineJoin line_join,
+                   PVG_FT_Fixed miter_limit);
 
 /**************************************************************
  *
@@ -241,8 +238,8 @@ PVG_FT_Stroker_Set( PVG_FT_Stroker           stroker,
  *   This function calls @PVG_FT_Stroker_Rewind automatically.
  */
 PVG_FT_Error
-PVG_FT_Stroker_ParseOutline( PVG_FT_Stroker   stroker,
-    const PVG_FT_Outline*  outline);
+PVG_FT_Stroker_ParseOutline(PVG_FT_Stroker stroker,
+                            const PVG_FT_Outline* outline);
 
 
 /**************************************************************
@@ -271,9 +268,9 @@ PVG_FT_Stroker_ParseOutline( PVG_FT_Stroker   stroker,
  *   FreeType error code.  0~means success.
  */
 PVG_FT_Error
-PVG_FT_Stroker_GetCounts( PVG_FT_Stroker  stroker,
-    PVG_FT_UInt    *anum_points,
-    PVG_FT_UInt    *anum_contours );
+PVG_FT_Stroker_GetCounts(PVG_FT_Stroker stroker,
+                         PVG_FT_UInt* anum_points,
+                         PVG_FT_UInt* anum_contours);
 
 
 /**************************************************************
@@ -297,8 +294,8 @@ PVG_FT_Stroker_GetCounts( PVG_FT_Stroker  stroker,
  *     The target outline handle.
  */
 void
-PVG_FT_Stroker_Export( PVG_FT_Stroker   stroker,
-    PVG_FT_Outline*  outline );
+PVG_FT_Stroker_Export(PVG_FT_Stroker stroker,
+                      PVG_FT_Outline* outline);
 
 
 /**************************************************************
@@ -314,7 +311,7 @@ PVG_FT_Stroker_Export( PVG_FT_Stroker   stroker,
  *     A stroker handle.  Can be NULL.
  */
 void
-PVG_FT_Stroker_Done( PVG_FT_Stroker  stroker );
+PVG_FT_Stroker_Done(PVG_FT_Stroker stroker);
 
 
 #endif // PLUTOVG_FT_STROKER_H

@@ -11,13 +11,13 @@
 
 #define CAT_DIR_CACHE_MAX 256
 
-struct cat_dir_entry {
+typedef struct cat_dir_entry {
     char path[MAX_BUFFER_SIZE];
     char **files;
     int count;
-};
+} cat_dir_entry;
 
-static struct cat_dir_entry cat_dir_cache[CAT_DIR_CACHE_MAX];
+static cat_dir_entry cat_dir_cache[CAT_DIR_CACHE_MAX];
 static int cat_dir_cache_n;
 static char cat_theme_path_snapshot[MAX_BUFFER_SIZE];
 
@@ -45,10 +45,10 @@ void invalidate_catalogue_cache(void) {
     cat_theme_path_snapshot[0] = '\0';
 }
 
-static struct cat_dir_entry *cat_dir_lookup(const char *dir_path) {
-    if (strcmp(config.THEME.THEME_CAT_PATH, cat_theme_path_snapshot) != 0) {
+static cat_dir_entry *cat_dir_lookup(const char *dir_path) {
+    if (strcmp(config.theme.theme_cat_path, cat_theme_path_snapshot) != 0) {
         cat_dir_free_all();
-        snprintf(cat_theme_path_snapshot, sizeof(cat_theme_path_snapshot), "%s", config.THEME.THEME_CAT_PATH);
+        snprintf(cat_theme_path_snapshot, sizeof(cat_theme_path_snapshot), "%s", config.theme.theme_cat_path);
     }
 
     for (int i = 0; i < cat_dir_cache_n; i++) {
@@ -57,7 +57,7 @@ static struct cat_dir_entry *cat_dir_lookup(const char *dir_path) {
 
     if (cat_dir_cache_n >= CAT_DIR_CACHE_MAX) return NULL;
 
-    struct cat_dir_entry *e = &cat_dir_cache[cat_dir_cache_n++];
+    cat_dir_entry *e = &cat_dir_cache[cat_dir_cache_n++];
     snprintf(e->path, sizeof(e->path), "%s", dir_path);
 
     e->files = NULL;
@@ -84,7 +84,7 @@ static struct cat_dir_entry *cat_dir_lookup(const char *dir_path) {
         if (!is_image_ext(ext)) continue;
 
         if (e->count >= cap) {
-            int new_cap = cap * 2;
+            const int new_cap = cap * 2;
             char **tmp = realloc(e->files, (size_t) new_cap * sizeof(char *));
             if (!tmp) break;
 
@@ -102,59 +102,55 @@ static struct cat_dir_entry *cat_dir_lookup(const char *dir_path) {
     return e;
 }
 
-static int cat_dir_has_file(struct cat_dir_entry *e, const char *filename) {
+static int cat_dir_has_file(cat_dir_entry *e, const char *filename) {
     if (!e || e->count == 0) return 0;
     return bsearch(&filename, e->files, (size_t) e->count, sizeof(char *), cat_file_cmp) != NULL;
 }
 
-void load_splash_image_fallback(const char *mux_dim, char *image, size_t image_size) {
+void load_splash_image_fallback(const char *mux_dim, char *image, const size_t image_size) {
     if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
 
-    if (snprintf(image, image_size, "%s/%simage/splash.png",
-                 theme_base, mux_dim) >= 0 && file_exist(image))
-        return;
+    if (snprintf(image, image_size, "%s/%simage/splash.png", theme_base, mux_dim) >= 0 && file_exist(image)) return;
 
     snprintf(image, image_size, "%s/image/splash.png", theme_base);
 }
 
 int is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
-    return (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "box") == 0) ||
-           (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "grid") == 0) ||
-           (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "box") == 0) ||
-           (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "grid") == 0) ||
-           (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "box") == 0) ||
-           (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "grid") == 0);
+    return (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "box") == 0)
+           || (strcmp(catalogue_name, "Application") == 0 && strcmp(image_type, "grid") == 0)
+           || (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "box") == 0)
+           || (strcmp(catalogue_name, "Collection") == 0 && strcmp(image_type, "grid") == 0)
+           || (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "box") == 0)
+           || (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "grid") == 0);
 }
 
-int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_alt,
-                         const char *program_default, const char *mux_dim, const char *image_type,
-                         char *image_path, size_t path_size) {
-    enum catalogue_kind {
-        CAT_THEME,
-        CAT_INFO
-    };
+int load_image_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
+    const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
+) {
+    enum catalogue_kind { cat_theme, cat_info };
 
-    struct {
+    const struct {
         enum catalogue_kind kind;
         const char *catalogue_path;
         const char *dimension;
         const char *program;
     } args[] = {
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program_alt},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program_alt},
+        {cat_theme, config.theme.theme_cat_path, mux_dim, program},
+        {cat_theme, config.theme.theme_cat_path, mux_dim, program_alt},
+        {cat_theme, config.theme.theme_cat_path, "", program},
+        {cat_theme, config.theme.theme_cat_path, "", program_alt},
 
-            {CAT_INFO, INFO_CAT_PATH,                mux_dim, program},
-            {CAT_INFO, INFO_CAT_PATH,                mux_dim, program_alt},
-            {CAT_INFO, INFO_CAT_PATH,                "",      program},
-            {CAT_INFO, INFO_CAT_PATH,                "",      program_alt},
+        {cat_info, INFO_CAT_PATH, mux_dim, program},
+        {cat_info, INFO_CAT_PATH, mux_dim, program_alt},
+        {cat_info, INFO_CAT_PATH, "", program},
+        {cat_info, INFO_CAT_PATH, "", program_alt},
 
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, mux_dim, program_default},
-            {CAT_THEME, config.THEME.THEME_CAT_PATH, "",      program_default},
+        {cat_theme, config.theme.theme_cat_path, mux_dim, program_default},
+        {cat_theme, config.theme.theme_cat_path, "", program_default},
 
-            {CAT_INFO, INFO_CAT_PATH,                mux_dim, program_default},
-            {CAT_INFO, INFO_CAT_PATH,                "",      program_default},
+        {cat_info, INFO_CAT_PATH, mux_dim, program_default},
+        {cat_info, INFO_CAT_PATH, "", program_default},
     };
 
     int ext_count;
@@ -163,23 +159,20 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
     if (image_path && path_size > 0) image_path[0] = '\0';
 
-    if (!catalogue_name || !catalogue_name[0] ||
-        !image_type || !image_type[0] ||
-        !image_path || path_size == 0) {
+    if (!catalogue_name || !catalogue_name[0] || !image_type || !image_type[0] || !image_path || path_size == 0) {
         return 0;
     }
 
     for (int j = 0; j < ext_count; j++) {
         for (size_t i = 0; i < A_SIZE(args); i++) {
-            if ((args[i].kind == CAT_THEME && skip_theme) ||
-                !args[i].catalogue_path || !args[i].catalogue_path[0] ||
-                !args[i].program || !args[i].program[0]) {
+            if ((args[i].kind == cat_theme && skip_theme) || !args[i].catalogue_path || !args[i].catalogue_path[0]
+                || !args[i].program || !args[i].program[0]) {
                 continue;
             }
 
             char base_dir[MAX_BUFFER_SIZE];
-            int bw = snprintf(base_dir, sizeof(base_dir), "%s/%s/%s",
-                              args[i].catalogue_path, catalogue_name, image_type);
+            const int bw =
+                snprintf(base_dir, sizeof(base_dir), "%s/%s/%s", args[i].catalogue_path, catalogue_name, image_type);
             if (bw < 0 || (size_t) bw >= sizeof(base_dir)) continue;
 
             char dim_clean[MAX_BUFFER_SIZE];
@@ -195,21 +188,20 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
             }
 
             char dir[MAX_BUFFER_SIZE];
-            int dw = dim_clean[0]
-                     ? snprintf(dir, sizeof(dir), "%s/%s", base_dir, dim_clean)
-                     : snprintf(dir, sizeof(dir), "%s", base_dir);
+            const int dw = dim_clean[0] ? snprintf(dir, sizeof(dir), "%s/%s", base_dir, dim_clean)
+                                        : snprintf(dir, sizeof(dir), "%s", base_dir);
 
             if (dw < 0 || (size_t) dw >= sizeof(dir)) continue;
 
             char filename[MAX_BUFFER_SIZE];
-            int fw = snprintf(filename, sizeof(filename), "%s.%s", args[i].program, extensions[j]);
+            const int fw = snprintf(filename, sizeof(filename), "%s.%s", args[i].program, extensions[j]);
             if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
 
             char full_path[MAX_BUFFER_SIZE];
-            int pw = snprintf(full_path, sizeof(full_path), "%s/%s", dir, filename);
+            const int pw = snprintf(full_path, sizeof(full_path), "%s/%s", dir, filename);
             if (pw < 0 || (size_t) pw >= sizeof(full_path)) continue;
 
-            struct cat_dir_entry *e = cat_dir_lookup(dir);
+            cat_dir_entry *e = cat_dir_lookup(dir);
             if (e) {
                 if (!cat_dir_has_file(e, filename)) continue;
             } else if (!file_exist(full_path)) {
@@ -225,17 +217,18 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     return 0;
 }
 
-int load_video_catalogue(const char *catalogue_name, const char *program,
-                         const char *program_alt, const char *mux_dim,
-                         char *video_path, size_t path_size) {
-    struct {
+int load_video_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, const char *mux_dim, char *video_path,
+    const size_t path_size
+) {
+    const struct {
         const char *dimension;
         const char *program;
     } args[] = {
-            {mux_dim, program},
-            {mux_dim, program_alt},
-            {"",      program},
-            {"",      program_alt},
+        {mux_dim, program},
+        {mux_dim, program_alt},
+        {"", program},
+        {"", program_alt},
     };
 
     const char *extensions[] = {"mp4"}; // Just MP4 for now...
@@ -245,15 +238,15 @@ int load_video_catalogue(const char *catalogue_name, const char *program,
             if (!args[i].program || args[i].program[0] == '\0') continue;
 
             char dir[MAX_BUFFER_SIZE];
-            int dw = snprintf(dir, sizeof(dir), "%s/%s/video", INFO_CAT_PATH, catalogue_name);
+            const int dw = snprintf(dir, sizeof(dir), "%s/%s/video", INFO_CAT_PATH, catalogue_name);
             if (dw < 0 || (size_t) dw >= sizeof(dir)) continue;
 
             char filename[MAX_BUFFER_SIZE];
-            int fw = snprintf(filename, sizeof(filename), "%s%s.%s",
-                              args[i].dimension, args[i].program, extensions[j]);
+            const int fw =
+                snprintf(filename, sizeof(filename), "%s%s.%s", args[i].dimension, args[i].program, extensions[j]);
             if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
 
-            int pw = snprintf(video_path, path_size, "%s/%s", dir, filename);
+            const int pw = snprintf(video_path, path_size, "%s/%s", dir, filename);
             if (pw >= 0 && (size_t) pw < path_size && file_exist(video_path)) return 1;
         }
     }

@@ -10,7 +10,6 @@
 #include "../common/util.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/theme.h"
 #include "../common/log.h"
 
 static char *module = "fbset";
@@ -22,7 +21,7 @@ int clear_framebuffer(void) {
     struct fb_fix_screeninfo f_info;
     struct fb_var_screeninfo v_info;
 
-    fb_fd = open(device.SCREEN.DEVICE, O_RDWR);
+    fb_fd = open(device.screen.device, O_RDWR);
     if (fb_fd < 0) {
         LOG_ERROR(module, "Error opening framebuffer device");
         return -1;
@@ -70,14 +69,15 @@ void print_available_modes(void) {
     LOG_INFO(module, "Available Modes:");
 
     char mode[64];
-    while (fgets(mode, sizeof(mode), modes_file)) LOG_INFO(module, "  %s", mode);
+    while (fgets(mode, sizeof(mode), modes_file))
+        LOG_INFO(module, "  %s", mode);
 
     fclose(modes_file);
 }
 
 void show_current_mode(void) {
     struct fb_var_screeninfo v_info;
-    int fb_fd = open(device.SCREEN.DEVICE, O_RDONLY);
+    int fb_fd = open(device.screen.device, O_RDONLY);
 
     if (fb_fd < 0) {
         LOG_ERROR(module, "Error opening framebuffer device");
@@ -90,9 +90,10 @@ void show_current_mode(void) {
         return;
     }
 
-    LOG_INFO(module, "Current Mode: %dx%d (%dx%d virtual), %dbpp",
-             v_info.xres, v_info.yres, v_info.xres_virtual,
-             v_info.yres_virtual, v_info.bits_per_pixel);
+    LOG_INFO(
+        module, "Current Mode: %dx%d (%dx%d virtual), %dbpp", v_info.xres, v_info.yres, v_info.xres_virtual,
+        v_info.yres_virtual, v_info.bits_per_pixel
+    );
 
     LOG_INFO(module, "Timing: hsync=%d, vsync=%d, rotate=%d", v_info.hsync_len, v_info.vsync_len, v_info.rotate);
 
@@ -103,7 +104,7 @@ int set_framebuffer(int width, int height, int depth, int hsync_len, int vsync_l
     struct fb_var_screeninfo v_info, verify;
     int fb_fd;
 
-    fb_fd = open(device.SCREEN.DEVICE, O_RDWR);
+    fb_fd = open(device.screen.device, O_RDWR);
     if (fb_fd < 0) {
         LOG_ERROR(module, "Error opening framebuffer device");
         return -1;
@@ -189,25 +190,23 @@ int main(int argc, char *argv[]) {
     int rotation = -1, show_info = 0;
 
     const char *grab_path = NULL;
-    screenshot_mode grab_mode = SCREENSHOT_AUTO;
+    screenshot_mode grab_mode = screenshot_auto;
 
-    static struct option long_options[] = {
-            {"width",   required_argument, 0, 'w'},
-            {"height",  required_argument, 0, 'h'},
-            {"depth",   required_argument, 0, 'd'},
-            {"hsync",   required_argument, 0, 'x'},
-            {"vsync",   required_argument, 0, 'y'},
-            {"rotate",  required_argument, 0, 'r'},
-            {"ignore",  no_argument,       0, 'i'},
-            {"modes",   no_argument,       0, 'm'},
-            {"show",    no_argument,       0, 's'},
-            {"clear",   no_argument,       0, 'c'},
-            {"grab",    required_argument, 0, 'g'},
-            {"method",  required_argument, 0, 'M'},
-            {"verbose", no_argument,       0, 'v'},
-            {"help",    no_argument,       0, 'H'},
-            {0, 0,                         0, 0}
-    };
+    static struct option long_options[] = {{"width", required_argument, 0, 'w'},
+                                           {"height", required_argument, 0, 'h'},
+                                           {"depth", required_argument, 0, 'd'},
+                                           {"hsync", required_argument, 0, 'x'},
+                                           {"vsync", required_argument, 0, 'y'},
+                                           {"rotate", required_argument, 0, 'r'},
+                                           {"ignore", no_argument, 0, 'i'},
+                                           {"modes", no_argument, 0, 'm'},
+                                           {"show", no_argument, 0, 's'},
+                                           {"clear", no_argument, 0, 'c'},
+                                           {"grab", required_argument, 0, 'g'},
+                                           {"method", required_argument, 0, 'M'},
+                                           {"verbose", no_argument, 0, 'v'},
+                                           {"help", no_argument, 0, 'H'},
+                                           {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "w:h:d:x:y:r:imscg:M:vH", long_options, NULL)) != -1) {
         switch (opt) {
@@ -246,11 +245,11 @@ int main(int argc, char *argv[]) {
                 break;
             case 'M':
                 if (!strcmp(optarg, "fbdev"))
-                    grab_mode = SCREENSHOT_FBDEV;
+                    grab_mode = screenshot_fbdev;
                 else if (!strcmp(optarg, "drm"))
-                    grab_mode = SCREENSHOT_DRM;
+                    grab_mode = screenshot_drm;
                 else
-                    grab_mode = SCREENSHOT_AUTO;
+                    grab_mode = screenshot_auto;
                 break;
             case 'v':
                 verbose = 1;
@@ -269,9 +268,9 @@ int main(int argc, char *argv[]) {
 
     if (grab_path) {
         screenshot_hue hue = {
-                .red = device.COLOUR.RED,
-                .green = device.COLOUR.GREEN,
-                .blue = device.COLOUR.BLUE,
+            .red = device.colour.red,
+            .green = device.colour.green,
+            .blue = device.colour.blue,
         };
 
         if (screenshot_save(grab_path, grab_mode, hue) < 0) {

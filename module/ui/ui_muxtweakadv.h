@@ -3,13 +3,13 @@
 #include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
-void init_muxtweakadv(lv_obj_t *ui_pnlContent);
+void init_muxtweakadv(lv_obj_t *ui_pnl_content);
 
-#define TWEAKADV(NAME, ENUM, UDATA)           \
-    extern lv_obj_t *ui_pnl##NAME##_tweakadv; \
-    extern lv_obj_t *ui_lbl##NAME##_tweakadv; \
-    extern lv_obj_t *ui_ico##NAME##_tweakadv; \
-    extern lv_obj_t *ui_dro##NAME##_tweakadv;
+#define TWEAKADV(NAME, UDATA)                                                                                          \
+    extern lv_obj_t *ui_pnl_##NAME##_tweakadv;                                                                         \
+    extern lv_obj_t *ui_lbl_##NAME##_tweakadv;                                                                         \
+    extern lv_obj_t *ui_ico_##NAME##_tweakadv;                                                                         \
+    extern lv_obj_t *ui_dro_##NAME##_tweakadv;
 
 TWEAKADV_ELEMENTS
 #undef TWEAKADV

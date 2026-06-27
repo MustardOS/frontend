@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stddef.h>
-
 typedef struct inotify_proc inotify_status;
 
 extern inotify_status *ino_proc;

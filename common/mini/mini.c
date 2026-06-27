@@ -40,15 +40,13 @@
 /* === UTF8 <-> Wchar === */
 #ifdef _WIN32
 
-static char *mini_strdup(const char *str)
-{
+static char *mini_strdup(const char *str) {
     return _strdup(str);
 }
 
 #define mini_strtok strtok_s
 
-wchar_t *mini_utf8_to_wide_char(const char *utf8)
-{
+wchar_t *mini_utf8_to_wide_char(const char *utf8) {
     const int len = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
     if (!len) {
         return NULL;
@@ -63,8 +61,7 @@ wchar_t *mini_utf8_to_wide_char(const char *utf8)
     return wide;
 }
 
-char *mini_utf8_from_wide_char(const wchar_t *ws)
-{
+char *mini_utf8_from_wide_char(const wchar_t *ws) {
     const int len = WideCharToMultiByte(CP_UTF8, 0, ws, -1, NULL, 0, NULL, NULL);
     if (!len) {
         return NULL;
@@ -79,8 +76,7 @@ char *mini_utf8_from_wide_char(const wchar_t *ws)
     return utf8;
 }
 
-int mini_set_wstring(mini_t *mini, const char *group, const char *id, const wchar_t *val)
-{
+int mini_set_wstring(mini_t *mini, const char *group, const char *id, const wchar_t *val) {
     const char *utf8 = mini_utf8_from_wide_char(val);
     const int ret = mini_set_string(mini, group, id, utf8);
     free(utf8);
@@ -122,8 +118,7 @@ void free_value(mini_value_t *v) {
 mini_group_t *make_group(const char *name) {
     mini_group_t *g = malloc(sizeof(mini_group_t));
     memset(g, 0, sizeof(mini_group_t));
-    if (name)
-        g->id = mini_strdup(name);
+    if (name) g->id = mini_strdup(name);
     return g;
 }
 
@@ -139,8 +134,7 @@ void free_group(mini_group_t *g) {
 }
 
 void free_group_children(mini_group_t *g) {
-    if (!g)
-        return;
+    if (!g) return;
 
     mini_group_t *cgrp = g, *ngrp = NULL;
     mini_value_t *cval = NULL, *nval = NULL;
@@ -162,16 +156,14 @@ void free_group_children(mini_group_t *g) {
 mini_value_t *get_group_value(mini_group_t *grp, const char *id) {
     mini_value_t *result = grp->head;
     while (result) {
-        if (strcmp(result->id, id) == 0)
-            return result;
+        if (strcmp(result->id, id) == 0) return result;
         result = result->next;
     }
     return NULL;
 }
 
 int add_value(mini_group_t *group, const char *id, const char *val) {
-    if (get_group_value(group, id))
-        return MINI_DUPLICATE_ID;
+    if (get_group_value(group, id)) return MINI_DUPLICATE_ID;
 
     mini_value_t *n = make_value();
     n->id = mini_strdup(id);
@@ -180,10 +172,8 @@ int add_value(mini_group_t *group, const char *id, const char *val) {
 
     /* If this is the first value added to this group
      * we set the tail pointer to this first value */
-    if (group->head == NULL)
-        group->tail = n;
-    if (group->head)
-        group->head->prev = n;
+    if (group->head == NULL) group->tail = n;
+    if (group->head) group->head->prev = n;
     group->head = n;
 
     return MINI_OK;
@@ -193,17 +183,17 @@ int parse_value(mini_group_t *group, char *line) {
     char *ctx1 = NULL, *ctx2 = NULL;
     char *id = mini_strtok(line, "=", &ctx1);
 
-    if (strlen(id) < 1)
-        return MINI_INVALID_ID;
-    if (get_group_value(group, id))
-        return MINI_DUPLICATE_ID;
+    if (strlen(id) < 1) return MINI_INVALID_ID;
+    if (get_group_value(group, id)) return MINI_DUPLICATE_ID;
 
     /* use proper ini formatting but keep compatibility with existing ini formatting
      * some_key=some_value
      * some_key = some_value */
-    while (*id == ' ') id++;
+    while (*id == ' ')
+        id++;
     char *end = id + strlen(id) - 1;
-    while (end > id && *end == ' ') *end-- = '\0';
+    while (end > id && *end == ' ')
+        *end-- = '\0';
 
     char *val = mini_strtok(ctx1, "", &ctx2);
     if (val) {
@@ -223,14 +213,12 @@ void add_group(mini_t *mini, mini_group_t *grp) {
     if (grp->id == NULL) { /* The root group should always be first */
         grp->next = mini->head;
         grp->prev = NULL;
-        if (mini->head)
-            mini->head->prev = grp;
+        if (mini->head) mini->head->prev = grp;
         mini->head = grp;
     } else {
         grp->next = NULL;
         grp->prev = mini->tail;
-        if (mini->tail)
-            mini->tail->next = grp;
+        if (mini->tail) mini->tail->next = grp;
         mini->tail = grp;
     }
 }
@@ -243,37 +231,31 @@ mini_group_t *create_group(mini_t *mini, const char *name) {
 }
 
 mini_group_t *get_group(mini_t *mini, char *id, int create) {
-    if (!id)
-        return mini->head;
+    if (!id) return mini->head;
 
     mini_group_t *c = mini->head->next;
 
     /* Go over all groups on this level */
     while (c) {
-        if (strcmp(c->id, id) == 0)
-            break;
+        if (strcmp(c->id, id) == 0) break;
         c = c->next;
     }
 
     /* Didn't find any group */
-    if (!c && create)
-        return create_group(mini, id);
+    if (!c && create) return create_group(mini, id);
     return c;
 }
 
 mini_value_t *get_value(mini_t *mini, const char *group, const char *id, int *err, mini_group_t **group_ptr) {
     char *tmp = NULL;
     mini_value_t *result = NULL;
-    if (group)
-        tmp = mini_strdup(group);
+    if (group) tmp = mini_strdup(group);
     mini_group_t *grp = get_group(mini, tmp, 0);
 
     if (grp) {
-        if (group_ptr)
-            *group_ptr = grp;
+        if (group_ptr) *group_ptr = grp;
         result = get_group_value(grp, id);
-        if (!result && err)
-            *err = MINI_VALUE_NOT_FOUND;
+        if (!result && err) *err = MINI_VALUE_NOT_FOUND;
     } else if (err) {
         *err = MINI_GROUP_NOT_FOUND;
     }
@@ -286,8 +268,7 @@ int write_group(const mini_group_t *g, FILE *f, int flags) {
     int wrote_something = 0;
     mini_value_t *cval = g->tail;
 
-    if (cval == NULL && flags & MINI_FLAGS_SKIP_EMPTY_GROUPS)
-        return 0;
+    if (cval == NULL && flags & MINI_FLAGS_SKIP_EMPTY_GROUPS) return 0;
 
     /* Root group doesn't have a header so it'll skip this */
     if (g->prev) {
@@ -307,33 +288,27 @@ int write_group(const mini_group_t *g, FILE *f, int flags) {
 /* === API implementation === */
 
 #if WIN32
-mini_t *mini_wcreate(const wchar_t *path)
-{
+mini_t *mini_wcreate(const wchar_t *path) {
     mini_t *result = malloc(sizeof(mini_t));
-    if (path)
-        result->path = mini_utf8_from_wide_char(path);
+    if (path) result->path = mini_utf8_from_wide_char(path);
     result->head = make_group(NULL);
     result->tail = result->head;
     return result;
 }
 
-mini_t *mini_wtry_load_ex(const wchar_t *path, int *err)
-{
+mini_t *mini_wtry_load_ex(const wchar_t *path, int *err) {
     mini_t *result = mini_wload_ex(path, err);
 
-    if (!result)
-        result = mini_wcreate(path);
+    if (!result) result = mini_wcreate(path);
     return result;
 }
 
-mini_t *mini_wload_ex(const wchar_t *path, int *err)
-{
+mini_t *mini_wload_ex(const wchar_t *path, int *err) {
     mini_t *result = NULL;
     struct _stat buf;
 
     if (_wstat(path, &buf) != 0) {
-        if (err)
-            *err = MINI_FILE_NOT_FOUND;
+        if (err) *err = MINI_FILE_NOT_FOUND;
     } else {
         FILE *fp = NULL;
         _wfopen_s(&fp, path, L"r");
@@ -353,8 +328,7 @@ mini_t *mini_wload_ex(const wchar_t *path, int *err)
 
 mini_t *mini_create(const char *path) {
     mini_t *result = malloc(sizeof(mini_t));
-    if (path)
-        result->path = mini_strdup(path);
+    if (path) result->path = mini_strdup(path);
     result->head = make_group(NULL);
     result->tail = result->head;
     return result;
@@ -363,8 +337,7 @@ mini_t *mini_create(const char *path) {
 mini_t *mini_try_load_ex(const char *path, int *err) {
     mini_t *result = mini_load_ex(path, err);
 
-    if (!result)
-        result = mini_create(path);
+    if (!result) result = mini_create(path);
     return result;
 }
 
@@ -373,8 +346,7 @@ mini_t *mini_load_ex(const char *path, int *err) {
     struct stat buf;
 
     if (stat(path, &buf) != 0) {
-        if (err)
-            *err = MINI_FILE_NOT_FOUND;
+        if (err) *err = MINI_FILE_NOT_FOUND;
     } else {
         FILE *fp = NULL;
 #if WIN32
@@ -410,9 +382,9 @@ mini_t *mini_loadf_ex(FILE *f, int *err) {
             /* Group header */
             size_t len = strlen(buffer);
             if (len > 3 && buffer[len - 2] == '\r' && buffer[len - 3] == ']') {
-                buffer[len - 3] = '\0';  // Remove ']\r\n'
+                buffer[len - 3] = '\0'; // Remove ']\r\n'
             } else if (len > 2 && buffer[len - 2] == ']') {
-                buffer[len - 2] = '\0';  // Remove ']\n'
+                buffer[len - 2] = '\0'; // Remove ']\n'
             }
             mini_group_t *n = get_group(result, buffer + 1, 1); /* Skip '[' */
 
@@ -440,8 +412,7 @@ int mini_save(const mini_t *mini, int flags) {
     return result;
 #else
     char tmp[PATH_MAX];
-    if (snprintf(tmp, sizeof(tmp), "%s.tmp", mini->path) >= (int) sizeof(tmp))
-        return MINI_INVALID_PATH;
+    if (snprintf(tmp, sizeof(tmp), "%s.tmp", mini->path) >= (int) sizeof(tmp)) return MINI_INVALID_PATH;
 
     FILE *fp = fopen(tmp, "w");
     if (!fp) return MINI_ACCESS_DENIED;
@@ -477,8 +448,7 @@ int mini_save(const mini_t *mini, int flags) {
 }
 
 int mini_savef(const mini_t *mini, FILE *f, int flags) {
-    if (!f)
-        return MINI_INVALID_ARG;
+    if (!f) return MINI_INVALID_ARG;
 
     mini_group_t *grp = mini->head;
 
@@ -487,8 +457,7 @@ int mini_savef(const mini_t *mini, FILE *f, int flags) {
         grp = grp->next;
         /* Unless this is the last group, add an empty line
          * to separate groups */
-        if (grp && wrote_something)
-            fprintf(f, "\n");
+        if (grp && wrote_something) fprintf(f, "\n");
     }
     return MINI_OK;
 }
@@ -504,29 +473,23 @@ void mini_free(mini_t *mini) {
 }
 
 int mini_delete_value(mini_t *mini, const char *group, const char *id) {
-    if (!mini || !id)
-        return MINI_INVALID_ARG;
+    if (!mini || !id) return MINI_INVALID_ARG;
     int result = MINI_OK;
     mini_group_t *grp = NULL;
     mini_value_t *v = get_value(mini, group, id, &result, &grp);
 
     if (v) {
-        if (v->next)
-            v->next->prev = v->prev;
-        if (v->prev)
-            v->prev->next = v->next;
-        if (v == grp->head)
-            grp->head = v->next;
-        if (v == grp->tail)
-            grp->tail = v->prev;
+        if (v->next) v->next->prev = v->prev;
+        if (v->prev) v->prev->next = v->next;
+        if (v == grp->head) grp->head = v->next;
+        if (v == grp->tail) grp->tail = v->prev;
         free_value(v);
     }
     return result;
 }
 
 int mini_delete_group(mini_t *mini, const char *group) {
-    if (!mini)
-        return MINI_INVALID_ARG;
+    if (!mini) return MINI_INVALID_ARG;
     int result = MINI_OK;
     char *tmp = mini_strdup(group);
     mini_group_t *grp = get_group(mini, tmp, 0);
@@ -534,10 +497,8 @@ int mini_delete_group(mini_t *mini, const char *group) {
 
     if (grp) {
         free_group_children(grp);
-        if (grp->next)
-            grp->next->prev = grp->prev;
-        if (grp->prev)
-            grp->prev->next = grp->next;
+        if (grp->next) grp->next->prev = grp->prev;
+        if (grp->prev) grp->prev->next = grp->next;
         free_group(grp);
     } else {
         result = MINI_GROUP_NOT_FOUND;
@@ -546,16 +507,14 @@ int mini_delete_group(mini_t *mini, const char *group) {
 }
 
 int mini_value_exists(mini_t *mini, const char *group, const char *id) {
-    if (!mini || !id)
-        return MINI_INVALID_ARG;
+    if (!mini || !id) return MINI_INVALID_ARG;
     int result = MINI_OK;
     get_value(mini, group, id, &result, NULL);
     return result;
 }
 
 int mini_set_string(mini_t *mini, const char *group, const char *id, const char *val) {
-    if (!mini || !id)
-        return MINI_INVALID_ARG;
+    if (!mini || !id) return MINI_INVALID_ARG;
     int result = MINI_OK;
     mini_group_t *grp = NULL;
     mini_value_t *v = get_value(mini, group, id, &result, &grp);
@@ -564,8 +523,7 @@ int mini_set_string(mini_t *mini, const char *group, const char *id, const char 
         free(v->val);
         v->val = mini_strdup(val);
     } else {
-        if (!grp)
-            grp = create_group(mini, group);
+        if (!grp) grp = create_group(mini, group);
         result = add_value(grp, id, val);
     }
 
@@ -585,22 +543,19 @@ int mini_set_double(mini_t *mini, const char *group, const char *id, double val)
 }
 
 const char *mini_get_string_ex(mini_t *mini, const char *group, const char *id, const char *fallback, int *err) {
-    if (!mini || !id)
-        return fallback;
+    if (!mini || !id) return fallback;
     const char *result = fallback;
 
     mini_value_t *v = get_value(mini, group, id, err, NULL);
 
-    if (v)
-        result = v->val;
+    if (v) result = v->val;
 
     return result;
 }
 
 long long mini_get_int_ex(mini_t *mini, const char *group, const char *id, long long fallback, int *err) {
     const char *val = mini_get_string_ex(mini, group, id, NULL, err);
-    if (!val)
-        return fallback;
+    if (!val) return fallback;
     long long res = strtoimax(val, NULL, 10);
     if ((res == INTMAX_MAX || res == INTMAX_MIN) && errno == ERANGE && err) {
         *err = MINI_CONVERSION_ERROR;
@@ -611,8 +566,7 @@ long long mini_get_int_ex(mini_t *mini, const char *group, const char *id, long 
 
 double mini_get_double_ex(mini_t *mini, const char *group, const char *id, double fallback, int *err) {
     const char *val = mini_get_string_ex(mini, group, id, NULL, err);
-    if (!val)
-        return fallback;
+    if (!val) return fallback;
     double res = 0;
 #if WIN32
     sscanf_s(val, "%lf", &res);

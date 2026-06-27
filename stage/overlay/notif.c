@@ -48,11 +48,7 @@ notif_cfg_t notif_cfg;
 
 static struct stat notif_stat_last;
 
-typedef enum {
-    NOTIF_SCROLL_NONE,
-    NOTIF_SCROLL_MARQUEE,
-    NOTIF_SCROLL_VERTICAL
-} notif_scroll_mode_t;
+typedef enum { NOTIF_SCROLL_NONE, NOTIF_SCROLL_MARQUEE, NOTIF_SCROLL_VERTICAL } notif_scroll_mode_t;
 
 static SDL_Surface *notif_content_surf = NULL;
 static int notif_content_w = 0;
@@ -90,10 +86,12 @@ static Uint8 parse_alpha(const char *s) {
 }
 
 static char *trim(char *s) {
-    while (*s && isspace((unsigned char) *s)) s++;
+    while (*s && isspace((unsigned char) *s))
+        s++;
 
     char *end = s + strlen(s);
-    while (end > s && isspace((unsigned char) *(end - 1))) end--;
+    while (end > s && isspace((unsigned char) *(end - 1)))
+        end--;
 
     *end = '\0';
     return s;
@@ -133,8 +131,12 @@ static int parse_notif_file(void) {
 
     while (fgets(line, sizeof(line), f)) {
         size_t len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') { line[--len] = '\0'; }
-        if (len > 0 && line[len - 1] == '\r') { line[--len] = '\0'; }
+        if (len > 0 && line[len - 1] == '\n') {
+            line[--len] = '\0';
+        }
+        if (len > 0 && line[len - 1] == '\r') {
+            line[--len] = '\0';
+        }
 
         if (!in_text) {
             char *trimmed = trim(line);
@@ -227,8 +229,10 @@ static int word_wrap(TTF_Font *font, const char *text, int max_px, char lines[][
         }
 
         char trial[WW_LINE_LEN];
-        if (cur[0]) snprintf(trial, sizeof(trial), "%s %s", cur, word);
-        else snprintf(trial, sizeof(trial), "%s", word);
+        if (cur[0])
+            snprintf(trial, sizeof(trial), "%s %s", cur, word);
+        else
+            snprintf(trial, sizeof(trial), "%s", word);
 
         int tw = 0, th = 0;
         TTF_SizeUTF8(font, trial, &tw, &th);
@@ -294,8 +298,10 @@ static void calc_box_position(int pos, int fb_w, int fb_h, int box_w, int box_h,
     *out_by = by < 0 ? 0 : by;
 }
 
-static SDL_Surface *build_notif_content(int fb_w, int fb_h, int *out_bx, int *out_by, int *out_box_w, int *out_box_h,
-                                        notif_scroll_mode_t *out_scroll_mode, int *out_scroll_total) {
+static SDL_Surface *build_notif_content(
+    int fb_w, int fb_h, int *out_bx, int *out_by, int *out_box_w, int *out_box_h, notif_scroll_mode_t *out_scroll_mode,
+    int *out_scroll_total
+) {
     if (!TTF_WasInit() && TTF_Init() != 0) {
         LOG_ERROR("notif", "TTF_Init: %s", TTF_GetError());
         return NULL;
@@ -362,7 +368,8 @@ static SDL_Surface *build_notif_content(int fb_w, int fb_h, int *out_bx, int *ou
         scroll_total = total_content_h - (max_vis_lines * line_h + 2 * (pad + border));
     }
 
-    const int visible_lines = (scroll_mode == NOTIF_SCROLL_NONE) ? total_lines : (total_lines < max_vis_lines ? total_lines : max_vis_lines);
+    const int visible_lines =
+        (scroll_mode == NOTIF_SCROLL_NONE) ? total_lines : (total_lines < max_vis_lines ? total_lines : max_vis_lines);
     const int box_h = visible_lines * line_h + 2 * (pad + border);
 
     int bx = 0, by = 0;
@@ -582,8 +589,9 @@ void sdl_notif_draw(SDL_Renderer *renderer, int fb_w, int fb_h) {
     if (!notif_visible || !renderer) return;
 
     if (!notif_content_surf) {
-        notif_content_surf = build_notif_content(fb_w, fb_h, &notif_bx, &notif_by, &notif_box_w, &notif_box_h,
-                                                 &notif_scroll_mode, &notif_scroll_total);
+        notif_content_surf = build_notif_content(
+            fb_w, fb_h, &notif_bx, &notif_by, &notif_box_w, &notif_box_h, &notif_scroll_mode, &notif_scroll_total
+        );
 
         if (!notif_content_surf) {
             notif_visible = 0;
@@ -673,8 +681,9 @@ int gl_notif_prepare(int fb_w, int fb_h) {
     if (!notif_visible) return 0;
 
     if (!notif_content_surf) {
-        notif_content_surf = build_notif_content(fb_w, fb_h, &notif_bx, &notif_by, &notif_box_w, &notif_box_h,
-                                                 &notif_scroll_mode, &notif_scroll_total);
+        notif_content_surf = build_notif_content(
+            fb_w, fb_h, &notif_bx, &notif_by, &notif_box_w, &notif_box_h, &notif_scroll_mode, &notif_scroll_total
+        );
 
         if (!notif_content_surf) {
             notif_visible = 0;

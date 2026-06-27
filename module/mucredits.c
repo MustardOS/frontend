@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,97 +65,84 @@
 #define BG_DARKEN_ALPHA  0
 #define TXT_SHADOW_ALPHA 160
 
+// clang-format off
 static const char *commanders[] = {
-        "xonglebongle", "antikk", "corey", "bitter_bizarro",
-        NULL
+    "antikk", "bitter_bizarro", "corey", "xonglebongle"
 };
 
 static const char *enforcers[] = {
-        "acmeplus", "bgelmini", "ilfordhp5", "duncanyoyo1",
-        "illumini_85", "delibirb77",
-        NULL
+    "acmeplus", "bgelmini", "delibirb77", "duncanyoyo1", "ilfordhp5"
 };
 
 static const char *wizards[] = {
-        "xquader", "ee1000", "kloptops", "thegammasqueeze", ".tokyovigilante",
-        "joyrider3774", ".cebion", "irilivibi", "vagueparade", "shengy.",
-        "siliconexarch", "shauninman", "johnnyonflame", "snowram", "habbening",
-        "trngaje", "skorpy", "stanley_00", "ajmandourah", "bcat24",
-        "xanxic", "arkun_", "mikhailzrick", "retrogfx_",
-        "aeverdyn", "kitfox618", "spycat88", "sundownersport",
-        NULL
+    "aeverdyn", "ajmandourah", "arkun_", "bcat24", ".cebion", "ee1000", "habbening",
+    "irilivibi", "johnnyonflame", "joyrider3774", "kitfox618", "kloptops", "mikhailzrick", "retrogfx_",
+    "shauninman", "shengy.", "siliconexarch", "skorpy", "snowram", "spycat88", "stanley_00",
+    "sundownersport", "thegammasqueeze", ".tokyovigilante", "trngaje", "vagueparade", "xanxic", "xquader"
 };
 
 static const char *heroes[] = {
-        "romus85", "x_tremis", "lmarcomiranda", "timecarp", "intelliaim",
-        "kentonftw", "bazkart", "msx6011", "btreecat", "teggydave",
-        "zazouboy", "robbiet480", "luzfcb", "brohsnbluffs",
-        "superzu", "pr0j3kt2501", "rosemelody254", "bigbossman0816",
-        "warlordwossman", "meowman_", "kaeltis", "paletochen",
-        "benjaminbercy", "snesfan1", "suribii", "asiaclonk", "jimmycrackedcorn_4711",
-        "rabite890", "hueykablooey", "mrwhistles", "losermatic",
-        "ivar2028", ".dririan", "spivvmeister", "sol6_vi", "qpla",
-        "amos_06286", "techagent", "meanagar", "roundpi", "chiefwally_73445",
-        "scy0n", "luckyphil", "nahck", "mach5682", "foamygames",
-        "xraygoggles", "hybrid_sith", "mxdamp", "ownedmumbles", "exe0237",
-        "kernelkritic", "verctexius", "misfitsorbet",
-        "bigolpeewee", ".zerohalo", "milkworlds", "amildinconvenience.",
-        "turner74.", "jmtn070", "izzythefool", "nahck", "cjiiio",
-        NULL
+    "amildinconvenience.", "amos_06286", "asiaclonk", "bazkart", "benjaminbercy", "bigbossman0816", "bigolpeewee",
+    "brohsnbluffs", "btreecat", "chiefwally_73445", "cjiiio", ".dririan", "exe0237", "foamygames",
+    "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "izzythefool", "jimmycrackedcorn_4711", "jmtn070",
+    "kaeltis", "kentonftw", "kernelkritic", "lmarcomiranda", "losermatic", "luckyphil", "luzfcb",
+    "mach5682", "meanagar", "meowman_", "milkworlds", "misfitsorbet", "mrwhistles", "msx6011",
+    "mxdamp", "nahck", "ownedmumbles", "paletochen", "pr0j3kt2501", "qpla", "rabite890",
+    "robbiet480", "romus85", "rosemelody254", "roundpi", "scy0n", "snesfan1", "sol6_vi",
+    "spivvmeister", "superzu", "suribii", "techagent", "teggydave", "timecarp", "turner74.",
+    "verctexius", "warlordwossman", "x_tremis", "xraygoggles", "zazouboy", ".zerohalo"
 };
 
 static const char *knights[] = {
-        "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc",
-        "_maxwellsdemon", "kiko_lake", "arkholt", "julas8799", "allepac", "drisc",
-        "clempurp9868", "aj15", "retrogamecorps", "rbndr_", "sanelessone",
-        "billynaing", "nuke_67641", "zauberpony", "smittywerbenjaegermanjensen9250",
-        "wizardfights", "_wizdude", "stin87", "surge_84306",
-        "mrcee1503", "admiralthrawn_1", "penpen2crayon", "jupyter.", "bburbank",
-        "crownlessk", "johnunsc", "crusader4hope3222",
-        NULL
+    "admiralthrawn_1", "aj15", "allepac", "arkholt", "bburbank",
+    "billynaing", "clempurp9868", "crownlessk", "crusader4hope3222", "drisc",
+    "galloc", "hai6266", "jdanteq_18123", "johnunsc", "julas8799",
+    "jupyter.", "kiko_lake", "_maxwellsdemon", "mrcee1503", "notflacko",
+    "nuke_67641", "penpen2crayon", "rbndr_", "retrogamecorps", "sanelessone",
+    "skyarcher", "smittywerbenjaegermanjensen9250", "stin87", "surge_84306", "wizardfights",
+    "_wizdude", "zauberpony"
 };
 
 static const char *contributors[] = {
-        "0xada.3", "antikk", "artur_ditu", "bitter_bizarro", "corey",
-        "imcokeman", "key777", "mugwomp93", "saitamasahil", "thewalruzz",
-        "xikteny", "xonglebongle",
-        NULL
+    "0xada.3", "antikk", "artur_ditu", "bitter_bizarro", "corey", "imcokeman",
+    "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xikteny", "xonglebongle"
 };
+// clang-format on
 
 #define LANG_THANKS "Thank you for choosing MustardOS"
-#define LANG_MESSAGE \
-    "The people listed throughout have been amazing supporters and " \
-    "contributors to MustardOS, helping shape its wild future.\n\n" \
-    "From the bottom of my heart, thank you for your time, ideas, " \
+#define LANG_MESSAGE                                                                                                   \
+    "The people listed throughout have been amazing supporters and "                                                   \
+    "contributors to MustardOS, helping shape its wild future.\n\n"                                                    \
+    "From the bottom of my heart, thank you for your time, ideas, "                                                    \
     "testing, and support. MustardOS is better because of you."
 
 #define LANG_SPECIAL "Special Thanks"
-#define LANG_EVERYONE \
-    "A heartfelt thanks to the artificers, druids, porters, theme creators, " \
-    "and translators who have helped shape MustardOS. Your dedication, " \
-    "creativity, testing, and care have enriched this project in so many " \
+#define LANG_EVERYONE                                                                                                  \
+    "A heartfelt thanks to the artificers, druids, porters, theme creators, "                                          \
+    "and translators who have helped shape MustardOS. Your dedication, "                                               \
+    "creativity, testing, and care have enriched this project in so many "                                             \
     "ways, and I am truly grateful for everything you have contributed."
 
 #define LANG_SHOUTS "Shout Out"
-#define LANG_AWESOME \
-    "I would like to thank one of our MustardOS community members. Here is " \
-    "to Egg for keeping a much needed positive and warm energy within the " \
-    "MustardOS community. Thank you for being someone people can talk to, " \
-    "for greeting new people, and for always sharing good vibes. Your kindness " \
+#define LANG_AWESOME                                                                                                   \
+    "I would like to thank one of our MustardOS community members. Here is "                                           \
+    "to Egg for keeping a much needed positive and warm energy within the "                                            \
+    "MustardOS community. Thank you for being someone people can talk to, "                                            \
+    "for greeting new people, and for always sharing good vibes. Your kindness "                                       \
     "and presence help make this community feel welcoming, friendly, and special."
 
 #define LANG_SUPPORT "My One True Supporter"
-#define LANG_BONGLE \
-    "To my wonderful wife, Mrs. Bongle, whose endless support, guidance, " \
-    "and patience have been my light throughout this entire adventure. " \
-    "Thank you for believing in me, standing beside me, and helping make " \
-    "this journey possible. You mean everything to me, and I love you more " \
+#define LANG_BONGLE                                                                                                    \
+    "To my wonderful wife, Mrs. Bongle, whose endless support, guidance, "                                             \
+    "and patience have been my light throughout this entire adventure. "                                               \
+    "Thank you for believing in me, standing beside me, and helping make "                                             \
+    "this journey possible. You mean everything to me, and I love you more "                                           \
     "than words could ever express!"
 
-#define LANG_DONATE \
-    "You can support MustardOS by donating or subscribing, which helps " \
-    "keep the project running, from development and new device support " \
-    "to the website, forums, and other community services.\n\nMustardOS " \
+#define LANG_DONATE                                                                                                    \
+    "You can support MustardOS by donating or subscribing, which helps "                                               \
+    "keep the project running, from development and new device support "                                               \
+    "to the website, forums, and other community services.\n\nMustardOS "                                              \
     "is made and maintained as a free time hobby!"
 
 #define LANG_QRCODE "Scan the QR code below to visit the Ko-fi page!"
@@ -168,12 +154,12 @@ static const char *contributors[] = {
 #define SONG_BLESSED "Have a blessed day…"
 
 typedef enum {
-    BLK_TITLE_BIG,
-    BLK_TITLE_MED,
-    BLK_PARAGRAPH,
-    BLK_NAMES,
-    BLK_SPACER,
-    BLK_QR,
+    blk_title_big,
+    blk_title_med,
+    blk_paragraph,
+    blk_names,
+    blk_spacer,
+    blk_qr,
 } block_kind_t;
 
 typedef struct {
@@ -236,15 +222,15 @@ static float g_bg_kb_t = 0.0f;
 static float g_bg_kb_dir = 1.0f;
 static const char *g_bg_active_key = "";
 
-static bool g_running = true;
-static bool g_first_pass_done = false;
-static bool g_skip_requested = false;
-static bool g_quit_requested = false;
+static int g_running = 1;
+static int g_first_pass_done = 0;
+static int g_skip_requested = 0;
+static int g_quit_requested = 0;
 static float g_quit_fade = 0.0f;
 
-static bool g_factory_music_fading = false;
+static int g_factory_music_fading = 0;
 
-static int sx(int v) {
+static int sx(const int v) {
     return (int) lroundf((float) v * g_scale);
 }
 
@@ -253,14 +239,14 @@ static void die(const char *msg) {
     exit(1);
 }
 
-static SDL_Texture *load_image_scaled(const char *path, int target_w, int *out_w, int *out_h) {
+static SDL_Texture *load_image_scaled(const char *path, const int target_w, int *out_w, int *out_h) {
     SDL_Surface *surf = IMG_Load(path);
     if (!surf) return NULL;
 
     SDL_Surface *scaled = surf;
     if (target_w > 0 && surf->w != target_w) {
-        float r = (float) target_w / (float) surf->w;
-        int new_h = (int) lroundf((float) surf->h * r);
+        const float r = (float) target_w / (float) surf->w;
+        const int new_h = (int) lroundf((float) surf->h * r);
         scaled = SDL_CreateRGBSurfaceWithFormat(0, target_w, new_h, 32, SDL_PIXELFORMAT_RGBA32);
         if (scaled) {
             SDL_BlitScaled(surf, NULL, scaled, NULL);
@@ -278,29 +264,29 @@ static SDL_Texture *load_image_scaled(const char *path, int target_w, int *out_w
     return t;
 }
 
-static bool random_u32(uint32_t *out) {
+static int random_u32(uint32_t *out) {
     FILE *f = fopen("/dev/urandom", "rb");
-    if (!f) return false;
+    if (!f) return 0;
 
     uint32_t v = 0;
-    size_t n = fread(&v, 1, sizeof(v), f);
-    int saved_errno = ferror(f) ? errno : 0;
+    const size_t n = fread(&v, 1, sizeof(v), f);
+    const int saved_errno = ferror(f) ? errno : 0;
 
     fclose(f);
 
     if (n != sizeof(v)) {
         errno = saved_errno;
-        return false;
+        return 0;
     }
 
     *out = v;
-    return true;
+    return 1;
 }
 
-static int random_index(int count) {
+static int random_index(const int count) {
     if (count <= 1) return 0;
 
-    uint32_t limit = UINT32_MAX - (UINT32_MAX % (uint32_t) count);
+    const uint32_t limit = UINT32_MAX - UINT32_MAX % (uint32_t) count;
     uint32_t v = 0;
 
     do {
@@ -323,12 +309,15 @@ static char *pick_random_quote_excluding(const char *exclude) {
         if (line_no == 1) continue;
 
         char *p = buf;
-        while (*p) ++p;
-        while (p > buf && (p[-1] == '\n' || p[-1] == '\r' || p[-1] == ' ' || p[-1] == '\t')) --p;
+        while (*p)
+            ++p;
+        while (p > buf && (p[-1] == '\n' || p[-1] == '\r' || p[-1] == ' ' || p[-1] == '\t'))
+            --p;
         *p = '\0';
 
-        char *start = buf;
-        while (*start == ' ' || *start == '\t') ++start;
+        const char *start = buf;
+        while (*start == ' ' || *start == '\t')
+            ++start;
 
         if (*start == '\0') continue;
         if (exclude && strcmp(start, exclude) == 0) continue;
@@ -341,7 +330,7 @@ static char *pick_random_quote_excluding(const char *exclude) {
         return NULL;
     }
 
-    int pick = random_index(eligible);
+    const int pick = random_index(eligible);
     rewind(f);
 
     line_no = 0;
@@ -353,12 +342,15 @@ static char *pick_random_quote_excluding(const char *exclude) {
         if (line_no == 1) continue;
 
         char *p = buf;
-        while (*p) ++p;
-        while (p > buf && (p[-1] == '\n' || p[-1] == '\r' || p[-1] == ' ' || p[-1] == '\t')) --p;
+        while (*p)
+            ++p;
+        while (p > buf && (p[-1] == '\n' || p[-1] == '\r' || p[-1] == ' ' || p[-1] == '\t'))
+            --p;
         *p = '\0';
 
-        char *start = buf;
-        while (*start == ' ' || *start == '\t') ++start;
+        const char *start = buf;
+        while (*start == ' ' || *start == '\t')
+            ++start;
         if (*start == '\0') continue;
         if (exclude && strcmp(start, exclude) == 0) continue;
 
@@ -439,21 +431,21 @@ static void bg_set_active(const char *key) {
     if (g_bg_kb_dir == 0.0f) g_bg_kb_dir = 1.0f;
 }
 
-static float smoothstep01(float t) {
+static float smoothstep01(const float t) {
     if (t <= 0.0f) return 0.0f;
     if (t >= 1.0f) return 1.0f;
 
     return t * t * (3.0f - 2.0f * t);
 }
 
-static void bg_render_one(bg_image_t *bg, float kb_t, float kb_dir, Uint8 alpha) {
+static void bg_render_one(const bg_image_t *bg, const float kb_t, const float kb_dir, const Uint8 alpha) {
     if (!bg->tex) return;
 
-    float img_w = (float) bg->w;
-    float img_h = (float) bg->h;
+    const float img_w = (float) bg->w;
+    const float img_h = (float) bg->h;
 
-    float screen_aspect = (float) g_screen_w / (float) g_screen_h;
-    float img_aspect = img_w / img_h;
+    const float screen_aspect = (float) g_screen_w / (float) g_screen_h;
+    const float img_aspect = img_w / img_h;
 
     float crop_w = img_w;
     float crop_h = img_h;
@@ -478,18 +470,18 @@ static void bg_render_one(bg_image_t *bg, float kb_t, float kb_dir, Uint8 alpha)
     src.x = (bg->w - src.w) / 2;
     src.y = (bg->h - src.h) / 2;
 
-    float t = smoothstep01(kb_t);
+    const float t = smoothstep01(kb_t);
 
-    float zoom = (kb_dir > 0) ? (1.0f + KB_ZOOM * t) : (1.0f + KB_ZOOM * (1.0f - t));
+    const float zoom = kb_dir > 0 ? 1.0f + KB_ZOOM * t : 1.0f + KB_ZOOM * (1.0f - t);
 
-    float dw = (float) g_screen_w * zoom;
-    float dh = (float) g_screen_h * zoom;
+    const float dw = (float) g_screen_w * zoom;
+    const float dh = (float) g_screen_h * zoom;
 
-    float slack_x = dw - (float) g_screen_w;
-    float slack_y = dh - (float) g_screen_h;
+    const float slack_x = dw - (float) g_screen_w;
+    const float slack_y = dh - (float) g_screen_h;
 
-    float pan_x = (t - 0.5f) * 2.0f * KB_PAN * slack_x * 0.5f;
-    float pan_y = (t - 0.5f) * 2.0f * KB_PAN * slack_y * 0.5f * 0.6f;
+    const float pan_x = (t - 0.5f) * 2.0f * KB_PAN * slack_x * 0.5f;
+    const float pan_y = (t - 0.5f) * 2.0f * KB_PAN * slack_y * 0.5f * 0.6f;
 
     SDL_FRect dst;
 
@@ -503,7 +495,7 @@ static void bg_render_one(bg_image_t *bg, float kb_t, float kb_dir, Uint8 alpha)
     SDL_RenderCopyF(g_renderer, bg->tex, &src, &dst);
 }
 
-static void render_backgrounds(float dt) {
+static void render_backgrounds(const float dt) {
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
     SDL_RenderClear(g_renderer);
 
@@ -516,26 +508,19 @@ static void render_backgrounds(float dt) {
     if (g_bg_kb_t > 1.0f) g_bg_kb_t = 1.0f;
 
     if (g_bg_previous && g_bg_fade < 1.0f) {
-        float eased_out = smoothstep01(g_bg_fade);
+        const float eased_out = smoothstep01(g_bg_fade);
         bg_render_one(g_bg_previous, g_bg_prev_kb_frozen, g_bg_prev_dir, (Uint8) ((1.0f - eased_out) * 255));
     }
     if (g_bg_current) {
-        float eased_in = smoothstep01(g_bg_fade);
+        const float eased_in = smoothstep01(g_bg_fade);
         bg_render_one(g_bg_current, g_bg_kb_t, g_bg_kb_dir, (Uint8) (eased_in * 255));
-    }
-
-    if (BG_DARKEN_ALPHA > 0) {
-        SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, BG_DARKEN_ALPHA);
-        SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
-        SDL_RenderFillRect(g_renderer, &full);
     }
 }
 
 static int g_text_shadow_offset = 1;
 
 static void recompute_text_shadow_offset(void) {
-    int v = sx(1);
+    const int v = sx(1);
     g_text_shadow_offset = v < 1 ? 1 : v;
 }
 
@@ -543,12 +528,12 @@ static int text_shadow_offset(void) {
     return g_text_shadow_offset;
 }
 
-static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Color col) {
+static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, const SDL_Color col) {
     if (!text || !*text) return NULL;
 
-    int offset = text_shadow_offset();
+    const int offset = text_shadow_offset();
 
-    SDL_Color shadow_col = {0, 0, 0, 255};
+    const SDL_Color shadow_col = {0, 0, 0, 255};
 
     SDL_Surface *shadow = TTF_RenderUTF8_Blended(font, text, shadow_col);
     if (!shadow) return NULL;
@@ -559,7 +544,8 @@ static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Co
         return NULL;
     }
 
-    SDL_Surface *out = SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_Surface *out =
+        SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
     if (!out) {
         SDL_FreeSurface(front);
         SDL_FreeSurface(shadow);
@@ -592,12 +578,13 @@ static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, SDL_Co
     return out;
 }
 
-static SDL_Surface *render_text_wrapped_surface(TTF_Font *font, const char *text, SDL_Color col, int wrap_w) {
+static SDL_Surface *
+render_text_wrapped_surface(TTF_Font *font, const char *text, const SDL_Color col, const int wrap_w) {
     if (!*text) return NULL;
 
-    int offset = text_shadow_offset();
+    const int offset = text_shadow_offset();
 
-    SDL_Color shadow_col = {0, 0, 0, 255};
+    const SDL_Color shadow_col = {0, 0, 0, 255};
 
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
 
@@ -610,7 +597,8 @@ static SDL_Surface *render_text_wrapped_surface(TTF_Font *font, const char *text
         return NULL;
     }
 
-    SDL_Surface *out = SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_Surface *out =
+        SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
     if (!out) {
         SDL_FreeSurface(front);
         SDL_FreeSurface(shadow);
@@ -643,7 +631,7 @@ static SDL_Surface *render_text_wrapped_surface(TTF_Font *font, const char *text
     return out;
 }
 
-static SDL_Texture *render_text(TTF_Font *font, const char *text, SDL_Color col, int *out_w, int *out_h) {
+static SDL_Texture *render_text(TTF_Font *font, const char *text, const SDL_Color col, int *out_w, int *out_h) {
     SDL_Surface *surf = render_text_surface(font, text, col);
     if (!surf) return NULL;
 
@@ -656,7 +644,8 @@ static SDL_Texture *render_text(TTF_Font *font, const char *text, SDL_Color col,
     return t;
 }
 
-static SDL_Texture *render_text_wrapped(TTF_Font *font, const char *text, SDL_Color col, int wrap_w, int *out_w, int *out_h) {
+static SDL_Texture *
+render_text_wrapped(TTF_Font *font, const char *text, const SDL_Color col, const int wrap_w, int *out_w, int *out_h) {
     SDL_Surface *surf = render_text_wrapped_surface(font, text, col, wrap_w);
     if (!surf) return NULL;
 
@@ -669,7 +658,7 @@ static SDL_Texture *render_text_wrapped(TTF_Font *font, const char *text, SDL_Co
     return t;
 }
 
-static block_t *new_block(block_kind_t kind, const char *bg_key) {
+static block_t *new_block(const block_kind_t kind, const char *bg_key) {
     if (g_block_count >= MAX_BLOCKS) {
         fprintf(stderr, "%s: too many blocks\n", mux_module);
         exit(1);
@@ -684,7 +673,7 @@ static block_t *new_block(block_kind_t kind, const char *bg_key) {
     return b;
 }
 
-static bool block_install_single(block_t *b, SDL_Texture *tex, int w, int h) {
+static int block_install_single(block_t *b, SDL_Texture *tex, const int w, const int h) {
     SDL_Texture **arr = malloc(sizeof(SDL_Texture *));
     int *aw = malloc(sizeof(int));
     int *ah = malloc(sizeof(int));
@@ -693,7 +682,7 @@ static bool block_install_single(block_t *b, SDL_Texture *tex, int w, int h) {
         free(arr);
         free(aw);
         free(ah);
-        return false;
+        return 0;
     }
 
     arr[0] = tex;
@@ -706,7 +695,7 @@ static bool block_install_single(block_t *b, SDL_Texture *tex, int w, int h) {
     b->line_count = 1;
     b->height = h;
 
-    return true;
+    return 1;
 }
 
 static void block_free_lines(block_t *b) {
@@ -728,7 +717,7 @@ static void block_free_lines(block_t *b) {
 static char *format_quote_text(const char *quote) {
     if (!quote || !*quote) return NULL;
 
-    size_t len = strlen(quote) + 16;
+    const size_t len = strlen(quote) + 16;
     char *text = malloc(len);
     if (!text) return NULL;
 
@@ -736,8 +725,8 @@ static char *format_quote_text(const char *quote) {
     return text;
 }
 
-static void add_spacer(int px, const char *bg_key) {
-    block_t *b = new_block(BLK_SPACER, bg_key);
+static void add_spacer(const int px, const char *bg_key) {
+    block_t *b = new_block(blk_spacer, bg_key);
     b->spacer_h = px;
     b->height = px;
 }
@@ -746,12 +735,12 @@ static void add_kofi_qr() {
     char path[512];
     snprintf(path, sizeof(path), "%s/kofi_qr.png", MEDIA_DIR);
 
-    int target_w = (int) ((float) g_screen_h * 0.45f);
+    const int target_w = (int) ((float) g_screen_h * 0.45f);
     int w = 0, h = 0;
     SDL_Texture *t = load_image_scaled(path, target_w, &w, &h);
     if (!t) return;
 
-    block_t *b = new_block(BLK_QR, "kofi");
+    block_t *b = new_block(blk_qr, "kofi");
     b->image = t;
     b->img_w = w;
     b->img_h = h;
@@ -767,51 +756,51 @@ static void add_logo() {
     if (!natural) return;
 
     int target_h = (int) ((float) g_screen_h * 0.32f);
-    float aspect = (natural_h > 0) ? (float) natural_w / (float) natural_h : 1.0f;
+    const float aspect = natural_h > 0 ? (float) natural_w / (float) natural_h : 1.0f;
     int target_w = (int) lroundf((float) target_h * aspect);
 
-    int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
-    int max_w = g_screen_w - 2 * page_pad;
+    const int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
+    const int max_w = g_screen_w - 2 * page_pad;
     if (target_w > max_w) {
         target_w = max_w;
         target_h = (int) lroundf((float) target_w / aspect);
     }
 
-    block_t *b = new_block(BLK_QR, "intro");
+    block_t *b = new_block(blk_qr, "intro");
     b->image = natural;
     b->img_w = target_w;
     b->img_h = target_h;
     b->height = target_h;
 }
 
-static void add_title(TTF_Font *font, const char *text, SDL_Color col, const char *bg_key) {
+static void add_title(TTF_Font *font, const char *text, const SDL_Color col, const char *bg_key) {
     int w = 0, h = 0;
     SDL_Texture *t = render_text(font, text, col, &w, &h);
     if (!t) return;
 
-    int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
-    int max_w = g_screen_w - 2 * page_pad;
+    const int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
+    const int max_w = g_screen_w - 2 * page_pad;
     if (w > max_w) {
         SDL_DestroyTexture(t);
         t = render_text_wrapped(font, text, col, max_w, &w, &h);
         if (!t) return;
     }
 
-    block_t *b = new_block(font == g_font_huge ? BLK_TITLE_BIG : BLK_TITLE_MED, bg_key);
+    block_t *b = new_block(font == g_font_huge ? blk_title_big : blk_title_med, bg_key);
     if (!block_install_single(b, t, w, h)) {
         SDL_DestroyTexture(t);
         --g_block_count;
     }
 }
 
-static block_t *add_paragraph(const char *text, SDL_Color col, const char *bg_key) {
-    int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
-    int wrap = g_screen_w - 2 * page_pad;
+static block_t *add_paragraph(const char *text, const SDL_Color col, const char *bg_key) {
+    const int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
+    const int wrap = g_screen_w - 2 * page_pad;
     int w = 0, h = 0;
     SDL_Texture *t = render_text_wrapped(g_font_med, text, col, wrap, &w, &h);
     if (!t) return NULL;
 
-    block_t *b = new_block(BLK_PARAGRAPH, bg_key);
+    block_t *b = new_block(blk_paragraph, bg_key);
     if (!block_install_single(b, t, w, h)) {
         SDL_DestroyTexture(t);
         --g_block_count;
@@ -821,11 +810,10 @@ static block_t *add_paragraph(const char *text, SDL_Color col, const char *bg_ke
     return b;
 }
 
-static void add_names(const char **names, SDL_Color col, const char *bg_key, int force_cols) {
-    int n = 0;
-    while (names[n]) ++n;
-    if (n == 0) return;
+#define ADD_NAMES(arr, col, key, cols)                                                                                 \
+    add_names_impl((arr), (int) (sizeof(arr) / sizeof((arr)[0])), (col), (key), (cols))
 
+static void add_names_impl(const char **names, const int n, const SDL_Color col, const char *bg_key, const int f_cols) {
     int *widths = NULL;
     int *regular = NULL;
     int *oversized = NULL;
@@ -834,34 +822,35 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     widths = malloc(sizeof(*widths) * (size_t) n);
     if (!widths) goto cleanup;
 
-    int max_name_w = 0;
+    int total_name_w = 0;
     for (int i = 0; i < n; ++i) {
         int tw = 0, th = 0;
         TTF_SizeUTF8(g_font_sml, names[i], &tw, &th);
         widths[i] = tw;
-        if (tw > max_name_w) max_name_w = tw;
+        total_name_w += tw;
     }
+    const int avg_name_w = total_name_w / n;
 
-    int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
-    int avail = g_screen_w - 2 * page_pad;
+    const int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
+    const int avail = g_screen_w - 2 * page_pad;
     if (avail < 1) goto cleanup;
 
-    int cell_inset = sx(8);
+    const int cell_inset = sx(8);
     int line_h = TTF_FontHeight(g_font_sml) + sx(4) + text_shadow_offset();
     if (line_h < 1) line_h = 1;
 
     int cols;
-    if (force_cols > 0) {
-        cols = force_cols;
+    if (f_cols > 0) {
+        cols = f_cols;
     } else {
-        cols = avail / (max_name_w + cell_inset);
+        cols = avail / (avg_name_w + cell_inset);
         if (cols < 1) cols = 1;
         if (cols > 4) cols = 4;
     }
 
     if (cols < 1) cols = 1;
 
-    int cell_w = avail / cols;
+    const int cell_w = avail / cols;
     int cell_budget = cell_w - cell_inset;
     if (cell_budget < 1) cell_budget = 1;
 
@@ -871,20 +860,22 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
 
     int reg_n = 0, over_n = 0;
     for (int i = 0; i < n; ++i) {
-        if (widths[i] > cell_budget) oversized[over_n++] = i;
-        else regular[reg_n++] = i;
+        if (widths[i] > cell_budget)
+            oversized[over_n++] = i;
+        else
+            regular[reg_n++] = i;
     }
 
     if (reg_n < cols) cols = reg_n > 0 ? reg_n : 1;
     if (cols < 1) cols = 1;
 
-    int cell_w2 = avail / cols;
-    int reg_rows = (reg_n + cols - 1) / cols;
-    int total_rows = reg_rows + over_n;
+    const int cell_w2 = avail / cols;
+    const int reg_rows = (reg_n + cols - 1) / cols;
+    const int total_rows = reg_rows + over_n;
 
     if (total_rows == 0) goto cleanup;
 
-    int total_h = total_rows * line_h;
+    const int total_h = total_rows * line_h;
 
     full = SDL_CreateRGBSurfaceWithFormat(0, avail, total_h, 32, SDL_PIXELFORMAT_RGBA32);
     if (!full) goto cleanup;
@@ -896,17 +887,17 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     for (int r = 0; r < reg_rows; ++r) {
         int cells_in_row = cols;
         if (r == reg_rows - 1) {
-            int leftover = reg_n - r * cols;
+            const int leftover = reg_n - r * cols;
             if (leftover > 0 && leftover < cols) cells_in_row = leftover;
         }
 
-        int row_x_offset = (avail - cells_in_row * cell_w2) / 2;
+        const int row_x_offset = (avail - cells_in_row * cell_w2) / 2;
 
         for (int c = 0; c < cells_in_row; ++c) {
-            int reg_idx = r * cols + c;
+            const int reg_idx = r * cols + c;
             if (reg_idx >= reg_n) break;
 
-            int idx = regular[reg_idx];
+            const int idx = regular[reg_idx];
             SDL_Surface *ns = render_text_surface(g_font_sml, names[idx], col);
             if (!ns) continue;
 
@@ -925,7 +916,7 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     }
 
     for (int o = 0; o < over_n; ++o) {
-        int idx = oversized[o];
+        const int idx = oversized[o];
 
         SDL_Surface *ns = render_text_surface(g_font_sml, names[idx], col);
         if (ns) {
@@ -940,9 +931,9 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
                 SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
                 SDL_BlitSurface(ns, NULL, full, &dst);
             } else {
-                float k = (float) avail / (float) ns->w;
-                int tw = avail;
-                int th = (int) lroundf((float) ns->h * k);
+                const float k = (float) avail / (float) ns->w;
+                const int tw = avail;
+                const int th = (int) lroundf((float) ns->h * k);
 
                 dst.x = 0;
                 dst.y = cursor_y + (line_h - th) / 2;
@@ -962,14 +953,13 @@ static void add_names(const char **names, SDL_Color col, const char *bg_key, int
     SDL_Texture *tex = SDL_CreateTextureFromSurface(g_renderer, full);
     if (!tex) goto cleanup;
 
-    block_t *b = new_block(BLK_NAMES, bg_key);
+    block_t *b = new_block(blk_names, bg_key);
     if (!block_install_single(b, tex, avail, total_h)) {
         SDL_DestroyTexture(tex);
         --g_block_count;
-        goto cleanup;
     }
 
-    cleanup:
+cleanup:
     if (full) SDL_FreeSurface(full);
     free(widths);
     free(regular);
@@ -988,39 +978,39 @@ static void relayout_reel(void) {
 
     g_last_content_y_centre = g_reel_height / 2;
     for (int i = g_block_count - 1; i >= 0; --i) {
-        block_t *b = &g_blocks[i];
-        if (b->kind != BLK_SPACER) {
+        const block_t *b = &g_blocks[i];
+        if (b->kind != blk_spacer) {
             g_last_content_y_centre = b->y_top + b->height / 2;
             break;
         }
     }
 }
 
-static bool replace_quote_block(block_t *b, const char *quote) {
-    if (!quote || !*quote) return false;
+static int replace_quote_block(block_t *b, const char *quote) {
+    if (!quote || !*quote) return 0;
 
     char *text = format_quote_text(quote);
-    if (!text) return false;
+    if (!text) return 0;
 
-    SDL_Color C_TITLE = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
+    const SDL_Color c_title = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
 
-    int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
-    int wrap = g_screen_w - 2 * page_pad;
+    const int page_pad = (int) ((float) g_screen_w * PAGE_PAD_FRAC);
+    const int wrap = g_screen_w - 2 * page_pad;
     int w = 0, h = 0;
 
-    SDL_Texture *t = render_text_wrapped(g_font_med, text, C_TITLE, wrap, &w, &h);
+    SDL_Texture *t = render_text_wrapped(g_font_med, text, c_title, wrap, &w, &h);
     free(text);
 
-    if (!t) return false;
+    if (!t) return 0;
 
     block_free_lines(b);
 
     if (!block_install_single(b, t, w, h)) {
         SDL_DestroyTexture(t);
-        return false;
+        return 0;
     }
 
-    return true;
+    return 1;
 }
 
 static void refresh_quote_block(void) {
@@ -1040,106 +1030,107 @@ static void refresh_quote_block(void) {
 }
 
 static void build_reel(void) {
-    SDL_Color C_TITLE = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
-    SDL_Color C_BODY = {COL_BODY_R, COL_BODY_G, COL_BODY_B, 255};
-    SDL_Color C_CMD = {COL_CMD_R, COL_CMD_G, COL_CMD_B, 255};
-    SDL_Color C_ENF = {COL_ENF_R, COL_ENF_G, COL_ENF_B, 255};
-    SDL_Color C_WIZ = {COL_WIZ_R, COL_WIZ_G, COL_WIZ_B, 255};
-    SDL_Color C_HERO = {COL_HERO_R, COL_HERO_G, COL_HERO_B, 255};
-    SDL_Color C_KNT = {COL_KNIGHT_R, COL_KNIGHT_G, COL_KNIGHT_B, 255};
-    SDL_Color C_CON = {COL_CON_R, COL_CON_G, COL_CON_B, 255};
+    const SDL_Color c_title = {COL_TITLE_R, COL_TITLE_G, COL_TITLE_B, 255};
+    const SDL_Color c_body = {COL_BODY_R, COL_BODY_G, COL_BODY_B, 255};
+    const SDL_Color c_cmd = {COL_CMD_R, COL_CMD_G, COL_CMD_B, 255};
+    const SDL_Color c_enf = {COL_ENF_R, COL_ENF_G, COL_ENF_B, 255};
+    const SDL_Color c_wiz = {COL_WIZ_R, COL_WIZ_G, COL_WIZ_B, 255};
+    const SDL_Color c_hero = {COL_HERO_R, COL_HERO_G, COL_HERO_B, 255};
+    const SDL_Color c_knt = {COL_KNIGHT_R, COL_KNIGHT_G, COL_KNIGHT_B, 255};
+    const SDL_Color c_con = {COL_CON_R, COL_CON_G, COL_CON_B, 255};
 
-    int big_gap = sx(80);
-    int sec_gap = sx(48);
-    int sml_gap = sx(20);
+    const int big_gap = sx(80);
+    const int sec_gap = sx(48);
+    const int sml_gap = sx(20);
 
-    int wrap_head = sx(60);
-    int wrap_tail = sx(60);
+    const int wrap_head = sx(60);
+    const int wrap_tail = sx(60);
 
     add_spacer(wrap_head, "intro");
 
     add_logo();
     add_spacer(sec_gap, "intro");
-    add_title(g_font_huge, LANG_THANKS, C_TITLE, "intro");
+    add_title(g_font_huge, LANG_THANKS, c_title, "intro");
     add_spacer(sml_gap, "intro");
-    add_paragraph(LANG_MESSAGE, C_BODY, "intro");
+    add_paragraph(LANG_MESSAGE, c_body, "intro");
     add_spacer(big_gap, "intro");
 
-    add_title(g_font_big, "Commanders", C_CMD, "commanders");
+    add_title(g_font_big, "Commanders", c_cmd, "commanders");
     add_spacer(sml_gap, "commanders");
-    add_names(commanders, C_CMD, "commanders", 0);
+    ADD_NAMES(commanders, c_cmd, "commanders", 0);
     add_spacer(sec_gap, "commanders");
 
-    add_title(g_font_big, "Enforcers", C_ENF, "commanders");
+    add_title(g_font_big, "Enforcers", c_enf, "commanders");
     add_spacer(sml_gap, "commanders");
-    add_names(enforcers, C_ENF, "commanders", 0);
+    ADD_NAMES(enforcers, c_enf, "commanders", 0);
     add_spacer(big_gap, "commanders");
 
-    add_title(g_font_big, "Wizards", C_WIZ, "wizards");
+    add_title(g_font_big, "Wizards", c_wiz, "wizards");
     add_spacer(sml_gap, "wizards");
-    add_names(wizards, C_WIZ, "wizards", 0);
+    ADD_NAMES(wizards, c_wiz, "wizards", 0);
     add_spacer(big_gap, "wizards");
 
-    add_title(g_font_big, "Heroes", C_HERO, "heroes");
+    add_title(g_font_big, "Heroes", c_hero, "heroes");
     add_spacer(sml_gap, "heroes");
-    add_names(heroes, C_HERO, "heroes", 2);
+    ADD_NAMES(heroes, c_hero, "heroes", 0);
     add_spacer(big_gap, "heroes");
 
-    add_title(g_font_big, "Knights", C_KNT, "knights");
+    add_title(g_font_big, "Knights", c_knt, "knights");
     add_spacer(sml_gap, "knights");
-    add_names(knights, C_KNT, "knights", 2);
+    ADD_NAMES(knights, c_knt, "knights", 2);
     add_spacer(big_gap, "knights");
 
     char ctitle[128];
     char ver[64] = "MustardOS";
-    snprintf(ver, sizeof(ver), "%s", config.SYSTEM.VERSION);
+    snprintf(ver, sizeof(ver), "%s", config.system.version);
 
-    for (char *p = ver; *p; ++p) if (*p == '_') *p = ' ';
+    for (char *p = ver; *p; ++p)
+        if (*p == '_') *p = ' ';
     snprintf(ctitle, sizeof(ctitle), "%s Contributors", ver);
 
-    add_title(g_font_big, ctitle, C_CON, "contributors");
+    add_title(g_font_big, ctitle, c_con, "contributors");
     add_spacer(sml_gap, "contributors");
-    add_names(contributors, C_CON, "contributors", 0);
+    ADD_NAMES(contributors, c_con, "contributors", 0);
     add_spacer(big_gap, "contributors");
 
-    add_title(g_font_big, LANG_SPECIAL, C_CON, "special");
+    add_title(g_font_big, LANG_SPECIAL, c_con, "special");
     add_spacer(sml_gap, "special");
-    add_paragraph(LANG_EVERYONE, C_CON, "special");
+    add_paragraph(LANG_EVERYONE, c_con, "special");
     add_spacer(sec_gap, "special");
 
-    add_title(g_font_big, LANG_SHOUTS, C_CON, "special");
+    add_title(g_font_big, LANG_SHOUTS, c_con, "special");
     add_spacer(sml_gap, "special");
-    add_paragraph(LANG_AWESOME, C_CON, "special");
+    add_paragraph(LANG_AWESOME, c_con, "special");
     add_spacer(sec_gap, "special");
 
-    add_title(g_font_big, LANG_SUPPORT, C_CON, "special");
+    add_title(g_font_big, LANG_SUPPORT, c_con, "special");
     add_spacer(sml_gap, "special");
-    add_paragraph(LANG_BONGLE, C_CON, "special");
+    add_paragraph(LANG_BONGLE, c_con, "special");
     add_spacer(big_gap, "special");
 
-    add_title(g_font_huge, LANG_THANKS, C_TITLE, "kofi");
+    add_title(g_font_huge, LANG_THANKS, c_title, "kofi");
     add_spacer(sml_gap, "kofi");
-    add_paragraph(LANG_DONATE, C_BODY, "kofi");
+    add_paragraph(LANG_DONATE, c_body, "kofi");
     add_spacer(sec_gap, "kofi");
-    add_paragraph(LANG_QRCODE, C_BODY, "kofi");
+    add_paragraph(LANG_QRCODE, c_body, "kofi");
     add_spacer(sml_gap, "kofi");
     add_kofi_qr();
     add_spacer(big_gap, "kofi");
 
-    add_title(g_font_big, SONG_TITLE, C_TITLE, "music");
+    add_title(g_font_big, SONG_TITLE, c_title, "music");
     add_spacer(sml_gap, "music");
 
     char buf[256];
     snprintf(buf, sizeof(buf), "Track \u2014 %s", SONG_TRACK);
-    add_paragraph(buf, C_BODY, "music");
+    add_paragraph(buf, c_body, "music");
 
     snprintf(buf, sizeof(buf), "Artist \u2014 %s", SONG_ARTIST);
-    add_paragraph(buf, C_BODY, "music");
+    add_paragraph(buf, c_body, "music");
 
     add_spacer(sec_gap, "music");
 
-    const char *signoff = config.BOOT.FACTORY_RESET ? SONG_REBOOT : SONG_BLESSED;
-    add_title(g_font_big, signoff, C_TITLE, "music");
+    const char *signoff = config.boot.factory_reset ? SONG_REBOOT : SONG_BLESSED;
+    add_title(g_font_big, signoff, c_title, "music");
 
     char *quote = pick_random_quote();
     if (quote) {
@@ -1147,7 +1138,7 @@ static void build_reel(void) {
 
         char *qbuf = format_quote_text(quote);
         if (qbuf) {
-            g_quote_block = add_paragraph(qbuf, C_TITLE, "music");
+            g_quote_block = add_paragraph(qbuf, c_title, "music");
             free(qbuf);
         }
 
@@ -1163,18 +1154,18 @@ static void build_reel(void) {
     relayout_reel();
 }
 
-static void render_block(block_t *b, float draw_y) {
+static void render_block(const block_t *b, const float draw_y) {
     switch (b->kind) {
-        case BLK_QR: {
+        case blk_qr: {
             SDL_FRect dst;
-            dst.x = (float) ((g_screen_w - b->img_w) / 2);
+            dst.x = (float) (g_screen_w - b->img_w) / 2.0f;
             dst.y = draw_y;
             dst.w = (float) b->img_w;
             dst.h = (float) b->img_h;
             SDL_RenderCopyF(g_renderer, b->image, NULL, &dst);
             break;
         }
-        case BLK_SPACER:
+        case blk_spacer:
             break;
         default: {
             float y = draw_y;
@@ -1182,7 +1173,7 @@ static void render_block(block_t *b, float draw_y) {
                 SDL_FRect dst;
                 dst.w = (float) b->line_w[i];
                 dst.h = (float) b->line_h[i];
-                dst.x = (float) ((g_screen_w - b->line_w[i]) / 2);
+                dst.x = (float) (g_screen_w - b->line_w[i]) / 2.0f;
                 dst.y = y;
                 SDL_RenderCopyF(g_renderer, b->lines[i], NULL, &dst);
                 y += (float) b->line_h[i];
@@ -1192,16 +1183,16 @@ static void render_block(block_t *b, float draw_y) {
     }
 }
 
-static void render_reel_pass(float top, float bottom, int reel_offset, const char **want_bg) {
-    float centre = top + (float) g_screen_h * 0.5f;
+static void render_reel_pass(const float top, const float bottom, const int reel_offset, const char **want_bg) {
+    const float centre = top + (float) g_screen_h * 0.5f;
     for (int i = 0; i < g_block_count; ++i) {
-        block_t *b = &g_blocks[i];
-        float by = (float) (b->y_top + reel_offset);
-        float bh = (float) b->height;
+        const block_t *b = &g_blocks[i];
+        const float by = (float) (b->y_top + reel_offset);
+        const float bh = (float) b->height;
         if (by + bh < top) continue;
         if (by > bottom) break;
 
-        float draw_y = by - top;
+        const float draw_y = by - top;
         render_block(b, draw_y);
 
         if (!*want_bg && by <= centre && by + bh >= centre) *want_bg = b->bg_key;
@@ -1209,21 +1200,21 @@ static void render_reel_pass(float top, float bottom, int reel_offset, const cha
 }
 
 static void render_reel(void) {
-    float top = g_scroll_y;
-    float bottom = top + (float) g_screen_h;
+    const float top = g_scroll_y;
+    const float bottom = top + (float) g_screen_h;
 
     const char *want_bg = NULL;
 
     render_reel_pass(top, bottom, 0, &want_bg);
 
-    if (!config.BOOT.FACTORY_RESET) {
+    if (!config.boot.factory_reset) {
         render_reel_pass(top, bottom, g_reel_height, &want_bg);
         if (g_first_pass_done) render_reel_pass(top, bottom, -g_reel_height, &want_bg);
     }
 
     if (!want_bg) {
         for (int i = 0; i < g_block_count; ++i) {
-            block_t *b = &g_blocks[i];
+            const block_t *b = &g_blocks[i];
             if ((float) (b->y_top + b->height) >= top) {
                 want_bg = b->bg_key;
                 break;
@@ -1234,7 +1225,7 @@ static void render_reel(void) {
     if (want_bg) bg_set_active(want_bg);
 }
 
-static bool g_audio_open = false;
+static int g_audio_open = 0;
 
 static void try_start_music(void) {
     if (!g_audio_open) return;
@@ -1252,51 +1243,51 @@ static void try_start_music(void) {
 }
 
 static void finish_credits(void) {
-    if (!config.BOOT.FACTORY_RESET) {
+    if (!config.boot.factory_reset) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
         write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
     }
 
-    g_running = false;
+    g_running = 0;
 }
 
 static void quit_credits(void) {
     if (g_quit_requested) return;
 
-    g_quit_requested = true;
+    g_quit_requested = 1;
     g_quit_fade = 0.0f;
 
     if (g_music && Mix_PlayingMusic()) Mix_FadeOutMusic((int) (QUIT_FADE_S * 1000.0f));
 }
 
-static void render_quit_fade(float dt) {
+static void render_quit_fade(const float dt) {
     if (!g_quit_requested) return;
 
     g_quit_fade += dt / QUIT_FADE_S;
     if (g_quit_fade > 1.0f) g_quit_fade = 1.0f;
 
-    float eased = smoothstep01(g_quit_fade);
-    Uint8 alpha = (Uint8) lroundf(eased * 255.0f);
+    const float eased = smoothstep01(g_quit_fade);
+    const Uint8 alpha = (Uint8) lroundf(eased * 255.0f);
 
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, alpha);
 
-    SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
+    const SDL_Rect full = {0, 0, g_screen_w, g_screen_h};
     SDL_RenderFillRect(g_renderer, &full);
 
     if (g_quit_fade >= 1.0f) finish_credits();
 }
 
-static void handle_event(SDL_Event *ev) {
+static void handle_event(const SDL_Event *ev) {
     if (ev->type == SDL_QUIT) {
-        if (config.BOOT.FACTORY_RESET && !g_first_pass_done) return;
+        if (config.boot.factory_reset && !g_first_pass_done) return;
         quit_credits();
         return;
     }
 
     if (ev->type == SDL_KEYDOWN || ev->type == SDL_JOYBUTTONDOWN || ev->type == SDL_CONTROLLERBUTTONDOWN) {
-        if (config.BOOT.FACTORY_RESET) return;
-        g_skip_requested = true;
+        if (config.boot.factory_reset) return;
+        g_skip_requested = 1;
     }
 }
 
@@ -1304,18 +1295,20 @@ static void init_sdl(void) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) die("SDL_Init");
     if (TTF_Init() < 0) die("TTF_Init");
 
-    int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
+    const int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
     if ((IMG_Init(img_flags) & img_flags) != img_flags) LOG_WARN(mux_module, "IMG_Init partial: %s", IMG_GetError());
 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0) {
         LOG_WARN(mux_module, "Mix_OpenAudio failed: %s", Mix_GetError());
-        g_audio_open = false;
+        g_audio_open = 0;
     } else {
-        g_audio_open = true;
+        g_audio_open = 1;
     }
 
-    g_window = SDL_CreateWindow(mux_module, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-                                SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS);
+    g_window = SDL_CreateWindow(
+        mux_module, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
+        SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS
+    );
 
     if (!g_window) die("SDL_CreateWindow");
 
@@ -1333,15 +1326,16 @@ static void init_sdl(void) {
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
     SDL_ShowCursor(SDL_DISABLE);
 
-    int n = SDL_NumJoysticks();
-    for (int i = 0; i < n; ++i) SDL_JoystickOpen(i);
+    const int n = SDL_NumJoysticks();
+    for (int i = 0; i < n; ++i)
+        SDL_JoystickOpen(i);
 }
 
 static void load_fonts(void) {
-    int s_huge = sx(40);
-    int s_big = sx(30);
-    int s_med = sx(22);
-    int s_sml = sx(22);
+    const int s_huge = sx(40);
+    const int s_big = sx(30);
+    const int s_med = sx(22);
+    const int s_sml = sx(22);
 
     g_font_huge = TTF_OpenFont(FONT_FILE, s_huge);
     g_font_big = TTF_OpenFont(FONT_FILE, s_big);
@@ -1353,57 +1347,58 @@ static void load_fonts(void) {
 
 static void main_loop(void) {
     Uint64 prev = SDL_GetPerformanceCounter();
-    double freq = (double) SDL_GetPerformanceFrequency();
+    const double freq = (double) SDL_GetPerformanceFrequency();
 
     g_scroll_y = (float) -g_screen_h;
 
     float intro_hold = INTRO_HOLD_S;
 
-    while (true) {
+    while (1) {
         SDL_Event ev;
-        while (SDL_PollEvent(&ev)) handle_event(&ev);
+        while (SDL_PollEvent(&ev))
+            handle_event(&ev);
 
         if (!g_running) break;
 
-        Uint64 now = SDL_GetPerformanceCounter();
+        const Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float) ((double) (now - prev) / freq);
         prev = now;
         if (dt > 0.1f) dt = 0.1f;
 
-        float scroll_speed = SCROLL_PX_PER_S * g_scale;
+        const float scroll_speed = SCROLL_PX_PER_S * g_scale;
 
         if (!g_quit_requested) {
             if (intro_hold > 0.0f) {
                 intro_hold -= dt;
-            } else if (config.BOOT.FACTORY_RESET) {
+            } else if (config.boot.factory_reset) {
                 g_scroll_y += scroll_speed * dt;
 
-                float end_y = (float) g_reel_height;
-                float fade_trigger_y = end_y - scroll_speed * OUTRO_HOLD_S;
+                const float end_y = (float) g_reel_height;
+                const float fade_trigger_y = end_y - scroll_speed * OUTRO_HOLD_S;
 
                 if (!g_factory_music_fading && g_scroll_y >= fade_trigger_y) {
-                    g_factory_music_fading = true;
+                    g_factory_music_fading = 1;
                     if (g_music && Mix_PlayingMusic()) Mix_FadeOutMusic((int) (OUTRO_HOLD_S * 1000.0f));
                 }
 
                 if (g_scroll_y >= end_y) {
                     g_scroll_y = end_y;
-                    g_first_pass_done = true;
+                    g_first_pass_done = 1;
                     quit_credits();
                 }
             } else {
                 g_scroll_y += scroll_speed * dt;
                 if (g_scroll_y >= (float) g_reel_height) {
-                    float previous_reel_height = (float) g_reel_height;
+                    const float previous_reel_height = (float) g_reel_height;
 
                     g_scroll_y -= previous_reel_height;
-                    g_first_pass_done = true;
+                    g_first_pass_done = 1;
 
                     refresh_quote_block();
                 }
             }
 
-            if (g_skip_requested && !config.BOOT.FACTORY_RESET) quit_credits();
+            if (g_skip_requested && !config.boot.factory_reset) quit_credits();
         }
 
         render_backgrounds(dt);
@@ -1415,7 +1410,7 @@ static void main_loop(void) {
 
 static void cleanup(void) {
     for (int i = 0; i < g_block_count; ++i) {
-        block_t *b = &g_blocks[i];
+        const block_t *b = &g_blocks[i];
         if (b->image) SDL_DestroyTexture(b->image);
         for (int j = 0; j < b->line_count; ++j) {
             if (b->lines[j]) SDL_DestroyTexture(b->lines[j]);

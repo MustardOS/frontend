@@ -1,56 +1,55 @@
 #pragma once
 
 #include <stdint.h>
-#include "options.h"
 
 extern struct control controller;
 
 struct control {
     struct {
-        int16_t A;
-        int16_t B;
-        int16_t X;
-        int16_t Y;
-        int16_t Z;
-        int16_t L1;
-        int16_t L2;
-        int16_t L3;
-        int16_t R1;
-        int16_t R2;
-        int16_t R3;
-        int16_t SELECT;
-        int16_t START;
-        int16_t MENU;
-        int16_t UP;
-        int16_t DOWN;
-        int16_t LEFT;
-        int16_t RIGHT;
-    } BUTTON;
+        int16_t a;
+        int16_t b;
+        int16_t x;
+        int16_t y;
+        int16_t z;
+        int16_t l1;
+        int16_t l2;
+        int16_t l3;
+        int16_t r1;
+        int16_t r2;
+        int16_t r3;
+        int16_t select;
+        int16_t start;
+        int16_t menu;
+        int16_t up;
+        int16_t down;
+        int16_t left;
+        int16_t right;
+    } button;
 
     struct {
-        int16_t AXIS;
-        int16_t L2;
-        int16_t R2;
-    } TRIGGER;
+        int16_t axis;
+        int16_t l2;
+        int16_t r2;
+    } trigger;
 
     struct {
-        int16_t AXIS;
-        int16_t UP;
-        int16_t LEFT;
-    } DPAD;
+        int16_t axis;
+        int16_t up;
+        int16_t left;
+    } dpad;
 
     struct {
         struct {
-            int16_t AXIS;
-            int16_t UP;
-            int16_t LEFT;
-        } LEFT;
+            int16_t axis;
+            int16_t up;
+            int16_t left;
+        } left;
         struct {
-            int16_t AXIS;
-            int16_t UP;
-            int16_t LEFT;
-        } RIGHT;
-    } ANALOG;
+            int16_t axis;
+            int16_t up;
+            int16_t left;
+        } right;
+    } analog;
 };
 
 void load_controller_profile(struct control *controller, char *controller_name);

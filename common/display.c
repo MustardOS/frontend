@@ -1,8 +1,9 @@
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "../lvgl/src/draw/sdl/lv_draw_sdl.h"
+#include "../lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h"
 #include "anim.h"
 #include "log.h"
 #include "init.h"
@@ -15,6 +16,7 @@
 #include "inotify.h"
 #include "fileio.h"
 #include "saver.h"
+#include "video.h"
 #include "saver/dvd.h"
 #include "saver/star.h"
 #include "saver/matrix.h"
@@ -32,7 +34,7 @@ typedef struct {
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
-    volatile bool refresh;
+    volatile int refresh;
 
     // Cached render state
     SDL_Rect dest_rect;
@@ -41,11 +43,11 @@ typedef struct {
     SDL_Point *pivot_ptr;
 
     // Track if we should clear
-    bool needs_clear;
-    bool force_clear;
+    int needs_clear;
+    int force_clear;
 
     // Background image support
-    bool background_solid;
+    int background_solid;
     SDL_Texture *background_image;
     SDL_Color background_colour;
     char theme_name[256];
@@ -53,29 +55,44 @@ typedef struct {
     // Theme overlay image
     SDL_Texture *theme_overlay;
     uint8_t theme_overlay_opacity;
+
+    // Shadow layer composited between background and UI texture
+    SDL_Texture *shadow_layer;
 } monitor_t;
 
 static monitor_t monitor;
 
-static SDL_Rect pending_rect;
-static bool pending_rect_valid = false;
 static uint32_t last_saver_exit = 0;
 static uint8_t display_fade_alpha = 0;
-static bool gradient_captured = false;
+static int gradient_captured = 0;
 static display_overlay_fn video_overlay_fn_ptr = NULL;
 static display_overlay_fn video_bg_fn_ptr = NULL;
 
-SDL_Renderer *display_get_renderer(void) { return monitor.renderer; }
+SDL_Renderer *display_get_renderer(void) {
+    return monitor.renderer;
+}
 
-void display_set_video_overlay(display_overlay_fn fn) { video_overlay_fn_ptr = fn; }
+SDL_Texture *display_get_shadow_layer(void) {
+    return monitor.shadow_layer;
+}
 
-void display_clear_video_overlay(void) { video_overlay_fn_ptr = NULL; }
+void display_set_video_overlay(const display_overlay_fn fn) {
+    video_overlay_fn_ptr = fn;
+}
 
-void display_set_video_background(display_overlay_fn fn) { video_bg_fn_ptr = fn; }
+void display_clear_video_overlay(void) {
+    video_overlay_fn_ptr = NULL;
+}
 
-void display_clear_video_background(void) { video_bg_fn_ptr = NULL; }
+void display_set_video_background(const display_overlay_fn fn) {
+    video_bg_fn_ptr = fn;
+}
 
-void display_set_fade_alpha(uint8_t alpha) {
+void display_clear_video_background(void) {
+    video_bg_fn_ptr = NULL;
+}
+
+void display_set_fade_alpha(const uint8_t alpha) {
     display_fade_alpha = alpha;
 }
 
@@ -85,7 +102,7 @@ static void update_blend_mode(void) {
     SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_NONE);
     SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
 
-    monitor.force_clear = true;
+    monitor.force_clear = 1;
 }
 
 static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
@@ -106,14 +123,14 @@ SDL_Texture *display_load_png_texture(const char *path) {
     return load_png(monitor.renderer, path);
 }
 
-void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity) {
+void display_set_theme_overlay(SDL_Texture *tex, const uint8_t opacity) {
     if (monitor.theme_overlay) SDL_DestroyTexture(monitor.theme_overlay);
 
     monitor.theme_overlay = tex;
     monitor.theme_overlay_opacity = opacity;
 }
 
-void display_update_overlay_opacity(uint8_t opacity) {
+void display_update_overlay_opacity(const uint8_t opacity) {
     monitor.theme_overlay_opacity = opacity;
 }
 
@@ -141,8 +158,8 @@ static void reload_background(const char *active_theme) {
             // If the theme background opacity is set to 0 we'll just revert
             // back to a solid black colour, otherwise we'll get some lovely
             // overlap graphic glitches!
-            monitor.background_solid = true;
-            monitor.background_colour = (SDL_Color) {theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255};
+            monitor.background_solid = 1;
+            monitor.background_colour = (SDL_Color) {theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255};
             monitor.theme_name[0] = '\0';
 
             // The good news is that a failure to find an image fails gracefully!
@@ -170,84 +187,117 @@ static void reload_background(const char *active_theme) {
 }
 
 enum {
-    SAVER_TYPE_DISABLED = 0,
-    SAVER_TYPE_DVD = 1,
-    SAVER_TYPE_STAR = 2,
-    SAVER_TYPE_MATRIX = 3,
-    SAVER_TYPE_FIREFLY = 4,
-    SAVER_TYPE_PULSE = 5,
-    SAVER_TYPE_TRACE = 6,
-    SAVER_TYPE_CONSTELLATION = 7,
-    SAVER_TYPE_MYSTIFY = 8,
-    SAVER_TYPE_MAZE = 9,
-    SAVER_TYPE_BLOCKFALL = 10,
-    SAVER_TYPE_DATETIME = 11,
+    saver_type_disabled = 0,
+    saver_type_dvd = 1,
+    saver_type_star = 2,
+    saver_type_matrix = 3,
+    saver_type_firefly = 4,
+    saver_type_pulse = 5,
+    saver_type_trace = 6,
+    saver_type_constellation = 7,
+    saver_type_mystify = 8,
+    saver_type_maze = 9,
+    saver_type_blockfall = 10,
+    saver_type_datetime = 11,
 };
 
 static int saver_speed_override = 0;
 static int active_saver = -1;
 
 static int saver_active(void) {
-    if (active_saver == SAVER_TYPE_DATETIME) return datetime_active();
-    if (active_saver == SAVER_TYPE_BLOCKFALL) return blockfall_active();
-    if (active_saver == SAVER_TYPE_MAZE) return maze_active();
-    if (active_saver == SAVER_TYPE_MYSTIFY) return mystify_active();
-    if (active_saver == SAVER_TYPE_CONSTELLATION) return constellation_active();
-    if (active_saver == SAVER_TYPE_TRACE) return trace_active();
-    if (active_saver == SAVER_TYPE_PULSE) return pulse_active();
-    if (active_saver == SAVER_TYPE_FIREFLY) return firefly_active();
-    if (active_saver == SAVER_TYPE_MATRIX) return matrix_active();
-    if (active_saver == SAVER_TYPE_STAR) return star_active();
-    if (active_saver == SAVER_TYPE_DVD) return dvd_active();
+    if (active_saver == saver_type_datetime) return datetime_active();
+    if (active_saver == saver_type_blockfall) return blockfall_active();
+    if (active_saver == saver_type_maze) return maze_active();
+    if (active_saver == saver_type_mystify) return mystify_active();
+    if (active_saver == saver_type_constellation) return constellation_active();
+    if (active_saver == saver_type_trace) return trace_active();
+    if (active_saver == saver_type_pulse) return pulse_active();
+    if (active_saver == saver_type_firefly) return firefly_active();
+    if (active_saver == saver_type_matrix) return matrix_active();
+    if (active_saver == saver_type_star) return star_active();
+    if (active_saver == saver_type_dvd) return dvd_active();
     return 0;
 }
 
 static void saver_update(void) {
-    if (active_saver == SAVER_TYPE_DATETIME) datetime_update();
-    else if (active_saver == SAVER_TYPE_BLOCKFALL) blockfall_update();
-    else if (active_saver == SAVER_TYPE_MAZE) maze_update();
-    else if (active_saver == SAVER_TYPE_MYSTIFY) mystify_update();
-    else if (active_saver == SAVER_TYPE_CONSTELLATION) constellation_update();
-    else if (active_saver == SAVER_TYPE_TRACE) trace_update();
-    else if (active_saver == SAVER_TYPE_PULSE) pulse_update();
-    else if (active_saver == SAVER_TYPE_FIREFLY) firefly_update();
-    else if (active_saver == SAVER_TYPE_MATRIX) matrix_update();
-    else if (active_saver == SAVER_TYPE_STAR) star_update();
-    else if (active_saver == SAVER_TYPE_DVD) dvd_update();
+    if (active_saver == saver_type_datetime)
+        datetime_update();
+    else if (active_saver == saver_type_blockfall)
+        blockfall_update();
+    else if (active_saver == saver_type_maze)
+        maze_update();
+    else if (active_saver == saver_type_mystify)
+        mystify_update();
+    else if (active_saver == saver_type_constellation)
+        constellation_update();
+    else if (active_saver == saver_type_trace)
+        trace_update();
+    else if (active_saver == saver_type_pulse)
+        pulse_update();
+    else if (active_saver == saver_type_firefly)
+        firefly_update();
+    else if (active_saver == saver_type_matrix)
+        matrix_update();
+    else if (active_saver == saver_type_star)
+        star_update();
+    else if (active_saver == saver_type_dvd)
+        dvd_update();
 }
 
 static void saver_render(SDL_Renderer *r) {
-    if (active_saver == SAVER_TYPE_DATETIME) datetime_render(r);
-    else if (active_saver == SAVER_TYPE_BLOCKFALL) blockfall_render(r);
-    else if (active_saver == SAVER_TYPE_MAZE) maze_render(r);
-    else if (active_saver == SAVER_TYPE_MYSTIFY) mystify_render(r);
-    else if (active_saver == SAVER_TYPE_CONSTELLATION) constellation_render(r);
-    else if (active_saver == SAVER_TYPE_TRACE) trace_render(r);
-    else if (active_saver == SAVER_TYPE_PULSE) pulse_render(r);
-    else if (active_saver == SAVER_TYPE_FIREFLY) firefly_render(r);
-    else if (active_saver == SAVER_TYPE_MATRIX) matrix_render(r);
-    else if (active_saver == SAVER_TYPE_STAR) star_render(r);
-    else if (active_saver == SAVER_TYPE_DVD) dvd_render(r);
+    if (active_saver == saver_type_datetime)
+        datetime_render(r);
+    else if (active_saver == saver_type_blockfall)
+        blockfall_render(r);
+    else if (active_saver == saver_type_maze)
+        maze_render(r);
+    else if (active_saver == saver_type_mystify)
+        mystify_render(r);
+    else if (active_saver == saver_type_constellation)
+        constellation_render(r);
+    else if (active_saver == saver_type_trace)
+        trace_render(r);
+    else if (active_saver == saver_type_pulse)
+        pulse_render(r);
+    else if (active_saver == saver_type_firefly)
+        firefly_render(r);
+    else if (active_saver == saver_type_matrix)
+        matrix_render(r);
+    else if (active_saver == saver_type_star)
+        star_render(r);
+    else if (active_saver == saver_type_dvd)
+        dvd_render(r);
 }
 
 static void saver_stop(void) {
-    if (active_saver == SAVER_TYPE_DATETIME) datetime_stop();
-    else if (active_saver == SAVER_TYPE_BLOCKFALL) blockfall_stop();
-    else if (active_saver == SAVER_TYPE_MAZE) maze_stop();
-    else if (active_saver == SAVER_TYPE_MYSTIFY) mystify_stop();
-    else if (active_saver == SAVER_TYPE_CONSTELLATION) constellation_stop();
-    else if (active_saver == SAVER_TYPE_TRACE) trace_stop();
-    else if (active_saver == SAVER_TYPE_PULSE) pulse_stop();
-    else if (active_saver == SAVER_TYPE_FIREFLY) firefly_stop();
-    else if (active_saver == SAVER_TYPE_MATRIX) matrix_stop();
-    else if (active_saver == SAVER_TYPE_STAR) star_stop();
-    else if (active_saver == SAVER_TYPE_DVD) dvd_stop();
+    if (active_saver == saver_type_datetime)
+        datetime_stop();
+    else if (active_saver == saver_type_blockfall)
+        blockfall_stop();
+    else if (active_saver == saver_type_maze)
+        maze_stop();
+    else if (active_saver == saver_type_mystify)
+        mystify_stop();
+    else if (active_saver == saver_type_constellation)
+        constellation_stop();
+    else if (active_saver == saver_type_trace)
+        trace_stop();
+    else if (active_saver == saver_type_pulse)
+        pulse_stop();
+    else if (active_saver == saver_type_firefly)
+        firefly_stop();
+    else if (active_saver == saver_type_matrix)
+        matrix_stop();
+    else if (active_saver == saver_type_star)
+        star_stop();
+    else if (active_saver == saver_type_dvd)
+        dvd_stop();
 }
 
-int get_saver_speed(int fallback) {
+int get_saver_speed(const int fallback) {
     int speed = saver_speed_override;
 
-    if (speed <= 0) speed = config.SETTINGS.POWER.SAVERSPEED;
+    if (speed <= 0) speed = config.settings.power.saver_speed;
     if (speed <= 0) speed = read_line_int_from(CONF_CONFIG_PATH "settings/power/saver_speed", fallback);
     if (speed <= 0) speed = fallback;
 
@@ -267,34 +317,34 @@ static void reload_saver() {
     blockfall_shutdown();
     datetime_shutdown();
 
-    int type = config.SETTINGS.POWER.SAVERTYPE;
+    const int type = config.settings.power.saver_type;
 
-    if (type == SAVER_TYPE_DATETIME) {
-        uint32_t tc = theme.LIST_DEFAULT.TEXT;
-        uint8_t dt_r = (uint8_t) ((tc >> 16) & 0xFF);
-        uint8_t dt_g = (uint8_t) ((tc >> 8) & 0xFF);
-        uint8_t dt_b = (uint8_t) (tc & 0xFF);
-        uint8_t dt_a = (theme.LIST_DEFAULT.TEXT_ALPHA < 0) ? 255 : (uint8_t) theme.LIST_DEFAULT.TEXT_ALPHA;
-        datetime_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT, dt_r, dt_g, dt_b, dt_a);
-    } else if (type == SAVER_TYPE_BLOCKFALL) {
-        blockfall_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_MAZE) {
-        maze_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_MYSTIFY) {
-        mystify_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_CONSTELLATION) {
-        constellation_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_TRACE) {
-        trace_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_PULSE) {
-        pulse_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_FIREFLY) {
-        firefly_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_MATRIX) {
-        matrix_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_STAR) {
-        star_init(monitor.renderer, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    } else if (type == SAVER_TYPE_DVD) {
+    if (type == saver_type_datetime) {
+        const uint32_t tc = theme.list_default.text;
+        const uint8_t dt_r = (uint8_t) (tc >> 16 & 0xFF);
+        const uint8_t dt_g = (uint8_t) (tc >> 8 & 0xFF);
+        const uint8_t dt_b = (uint8_t) (tc & 0xFF);
+        const uint8_t dt_a = theme.list_default.text_alpha < 0 ? 255 : (uint8_t) theme.list_default.text_alpha;
+        datetime_init(monitor.renderer, device.screen.width, device.screen.height, dt_r, dt_g, dt_b, dt_a);
+    } else if (type == saver_type_blockfall) {
+        blockfall_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_maze) {
+        maze_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_mystify) {
+        mystify_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_constellation) {
+        constellation_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_trace) {
+        trace_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_pulse) {
+        pulse_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_firefly) {
+        firefly_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_matrix) {
+        matrix_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_star) {
+        star_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_dvd) {
         char saver_image[MAX_BUFFER_SIZE];
         snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
 
@@ -303,82 +353,57 @@ static void reload_saver() {
             if (!file_exist(saver_image)) snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
         }
 
-        dvd_init(monitor.renderer, saver_image, device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
+        dvd_init(monitor.renderer, saver_image, device.screen.width, device.screen.height);
     }
 
     active_saver = type;
 }
 
 void check_theme_change(void) {
-    const char *theme = config.THEME.ACTIVE;
+    const char *theme = config.theme.active;
     if (strncmp(theme, monitor.theme_name, sizeof(monitor.theme_name)) != 0) {
         LOG_DEBUG("video", "Theme change detected: %s -> %s", monitor.theme_name, theme);
 
+        if (video_wallpaper_active()) video_wallpaper_stop();
         reload_background(theme);
         reload_saver();
 
-        monitor.refresh = true;
+        monitor.refresh = 1;
     }
 }
 
-static inline void rect_union_xywh(SDL_Rect *dst, const SDL_Rect *src) {
-    int x1 = (dst->x < src->x) ? dst->x : src->x;
-    int y1 = (dst->y < src->y) ? dst->y : src->y;
-
-    int x2 = ((dst->x + dst->w) > (src->x + src->w)) ? (dst->x + dst->w) : (src->x + src->w);
-    int y2 = ((dst->y + dst->h) > (src->y + src->h)) ? (dst->y + dst->h) : (src->y + src->h);
-
-    dst->x = x1;
-    dst->y = y1;
-
-    dst->w = x2 - x1;
-    dst->h = y2 - y1;
-}
-
-static inline void accumulate_pending_rect(const SDL_Rect *upd) {
-    if (upd->w <= 0 || upd->h <= 0) return;
-
-    if (!pending_rect_valid) {
-        pending_rect = *upd;
-        pending_rect_valid = true;
-        return;
-    }
-
-    rect_union_xywh(&pending_rect, upd);
-}
-
-static inline int scale_pixels(int px, float zoom) {
+static int scale_pixels(const int px, const float zoom) {
     return (int) ((float) px * zoom + 0.5f);
 }
 
-static inline int pct_offset(int screen, int render, float percent) {
-    return ((screen - render) / 2) + (int) ((percent / 100.0f) * (float) screen);
+static int pct_offset(const int screen, const int render, const float percent) {
+    return (screen - render) / 2 + (int) (percent / 100.0f * (float) screen);
 }
 
 static void update_render_state(void) {
-    switch (config.SETTINGS.GENERAL.THEME_SCALING) {
+    switch (config.settings.general.theme_scaling) {
         case 0: // No Scaling
-            scale_width = device.MUX.WIDTH;
-            scale_height = device.MUX.HEIGHT;
+            scale_width = device.mux.width;
+            scale_height = device.mux.height;
             LOG_INFO("video", "Scaling: Disabled");
             break;
         case 2: // Stretch to Screen
-            if (device.SCREEN.ZOOM_WIDTH <= 0.0f || device.SCREEN.ZOOM_HEIGHT <= 0.0f) {
-                scale_width = device.MUX.WIDTH;
-                scale_height = device.MUX.HEIGHT;
+            if (device.screen.zoom_width <= 0.0f || device.screen.zoom_height <= 0.0f) {
+                scale_width = device.mux.width;
+                scale_height = device.mux.height;
             } else {
-                scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM_WIDTH);
-                scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM_HEIGHT);
+                scale_width = scale_pixels(device.mux.width, device.screen.zoom_width);
+                scale_height = scale_pixels(device.mux.height, device.screen.zoom_height);
             }
             LOG_INFO("video", "Scaling: Stretch");
             break;
         default: // Scale with letterbox
-            if (device.SCREEN.ZOOM <= 0.0f) {
-                scale_width = device.MUX.WIDTH;
-                scale_height = device.MUX.HEIGHT;
+            if (device.screen.zoom <= 0.0f) {
+                scale_width = device.mux.width;
+                scale_height = device.mux.height;
             } else {
-                scale_width = scale_pixels(device.MUX.WIDTH, device.SCREEN.ZOOM);
-                scale_height = scale_pixels(device.MUX.HEIGHT, device.SCREEN.ZOOM);
+                scale_width = scale_pixels(device.mux.width, device.screen.zoom);
+                scale_height = scale_pixels(device.mux.height, device.screen.zoom);
             }
             LOG_INFO("video", "Scaling: Scale");
             break;
@@ -386,42 +411,36 @@ static void update_render_state(void) {
 
     LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height);
 
-    underscan = (config.BOOT.DEVICE_MODE && config.SETTINGS.HDMI.SCAN) ? 16 : 0;
+    underscan = config.boot.device_mode && config.settings.hdmi.scan ? 16 : 0;
     LOG_INFO("video", "Device Underscan: %d", underscan);
 
-    int offset_render_x = pct_offset(device.SCREEN.WIDTH, scale_width, device.SCREEN.RENDER_OFFSET_X);
-    int offset_render_y = pct_offset(device.SCREEN.HEIGHT, scale_height, device.SCREEN.RENDER_OFFSET_Y);
+    const int offset_render_x = pct_offset(device.screen.width, scale_width, device.screen.render_offset_x);
+    const int offset_render_y = pct_offset(device.screen.height, scale_height, device.screen.render_offset_y);
 
-    int offset_theme_x = pct_offset(scale_width, scale_width, theme.SDL.RENDER.OFFSET_X);
-    int offset_theme_y = pct_offset(scale_height, scale_height, theme.SDL.RENDER.OFFSET_Y);
+    const int offset_theme_x = pct_offset(scale_width, scale_width, theme.sdl.render.offset_x);
+    const int offset_theme_y = pct_offset(scale_height, scale_height, theme.sdl.render.offset_y);
 
-    monitor.dest_rect = (SDL_Rect) {
-            offset_render_x + offset_theme_x + underscan,
-            offset_render_y + offset_theme_y + underscan,
-            scale_width - (underscan * 2),
-            scale_height - (underscan * 2)
-    };
+    monitor.dest_rect =
+        (SDL_Rect) {offset_render_x + offset_theme_x + underscan, offset_render_y + offset_theme_y + underscan,
+                    scale_width - underscan * 2, scale_height - underscan * 2};
 
     if (monitor.dest_rect.w <= 0 || monitor.dest_rect.h <= 0) {
-        monitor.dest_rect = (SDL_Rect) {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+        monitor.dest_rect = (SDL_Rect) {0, 0, device.screen.width, device.screen.height};
     }
 
     if (hdmi_mode) {
         monitor.angle = 0.0;
         monitor.pivot_ptr = NULL;
     } else {
-        monitor.angle = (device.SCREEN.ROTATE <= 3) ? device.SCREEN.ROTATE * 90.0 : device.SCREEN.ROTATE;
-        monitor.pivot = (SDL_Point) {device.SCREEN.ROTATE_PIVOT_X, device.SCREEN.ROTATE_PIVOT_Y};
-        monitor.pivot_ptr = (monitor.pivot.x > 0 && monitor.pivot.y > 0) ? &monitor.pivot : NULL;
+        monitor.angle = device.screen.rotate <= 3 ? device.screen.rotate * 90.0 : device.screen.rotate;
+        monitor.pivot = (SDL_Point) {device.screen.rotate_pivot_x, device.screen.rotate_pivot_y};
+        monitor.pivot_ptr = monitor.pivot.x > 0 && monitor.pivot.y > 0 ? &monitor.pivot : NULL;
     }
 
     // So if we are not covering the whole window we'll clear it to avoid artifacts
-    monitor.needs_clear =
-            (monitor.dest_rect.x > 0) ||
-            (monitor.dest_rect.y > 0) ||
-            (monitor.dest_rect.w < device.SCREEN.WIDTH) ||
-            (monitor.dest_rect.h < device.SCREEN.HEIGHT) ||
-            (underscan > 0);
+    monitor.needs_clear = monitor.dest_rect.x > 0 || monitor.dest_rect.y > 0
+                          || monitor.dest_rect.w < device.screen.width || monitor.dest_rect.h < device.screen.height
+                          || underscan > 0;
 }
 
 void sdl_init(void) {
@@ -451,14 +470,18 @@ void sdl_init(void) {
     SDL_ShowCursor(SDL_DISABLE);
     update_render_state();
 
-    monitor.window = SDL_CreateWindow(MUX_CALLER, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
-                                      SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI);
+    monitor.window = SDL_CreateWindow(
+        MUX_CALLER, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, device.screen.width, device.screen.height,
+        SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI
+    );
     if (!monitor.window) {
         LOG_ERROR("video", "Window Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    monitor.renderer = SDL_CreateRenderer(monitor.window, -1, hdmi_mode ? SDL_RENDERER_ACCELERATED : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
+    monitor.renderer = SDL_CreateRenderer(
+        monitor.window, -1, hdmi_mode ? SDL_RENDERER_ACCELERATED : SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
+    );
     if (!monitor.renderer) {
         LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -467,7 +490,9 @@ void sdl_init(void) {
     int out_w = 0, out_h = 0;
     SDL_GetRendererOutputSize(monitor.renderer, &out_w, &out_h);
 
-    monitor.texture = SDL_CreateTexture(monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, device.MUX.WIDTH, device.MUX.HEIGHT);
+    monitor.texture = SDL_CreateTexture(
+        monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
+    );
     if (!monitor.texture) {
         LOG_ERROR("video", "Texture Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -476,31 +501,28 @@ void sdl_init(void) {
     SDL_SetTextureScaleMode(monitor.texture, SDL_ScaleModeNearest);
     update_blend_mode();
 
-    {
-        const size_t tex_pixels = (size_t) device.MUX.WIDTH * (size_t) device.MUX.HEIGHT;
-        const size_t tex_bytes = tex_pixels * sizeof(uint32_t);
-
-        uint32_t * clear_buf = calloc(tex_pixels, sizeof(uint32_t));
-
-        if (!clear_buf) {
-            LOG_ERROR("video", "Texture clear buffer allocation failed");
-            exit(EXIT_FAILURE);
-        }
-
-        if (SDL_UpdateTexture(monitor.texture, NULL, clear_buf, device.MUX.WIDTH * (int) sizeof(uint32_t)) != 0) {
-            LOG_ERROR("video", "Initial texture clear failed: %s", SDL_GetError());
-            free(clear_buf);
-            exit(EXIT_FAILURE);
-        }
-
-        free(clear_buf);
-        (void) tex_bytes;
+    monitor.shadow_layer = SDL_CreateTexture(
+        monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
+    );
+    if (!monitor.shadow_layer) {
+        LOG_ERROR("video", "Shadow layer texture creation failed: %s", SDL_GetError());
+        exit(EXIT_FAILURE);
     }
+    SDL_SetTextureBlendMode(monitor.shadow_layer, SDL_BLENDMODE_BLEND);
 
-    pending_rect = (SDL_Rect) {0, 0, 0, 0};
-    pending_rect_valid = false;
-    monitor.refresh = true;
-    monitor.force_clear = true;
+    /* Clear both render-target textures to transparent black */
+    SDL_SetRenderTarget(monitor.renderer, monitor.shadow_layer);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 0);
+    SDL_RenderFillRect(monitor.renderer, NULL);
+
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+    SDL_RenderFillRect(monitor.renderer, NULL);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderTarget(monitor.renderer, NULL);
+
+    monitor.refresh = 1;
+    monitor.force_clear = 1;
 
     LOG_INFO("video", "SDL Video Initialised Successfully");
 
@@ -509,7 +531,7 @@ void sdl_init(void) {
 
     LOG_INFO("video", "SDL Renderer: %s (%dx%d)", info.name, out_w, out_h);
 
-    reload_background(config.THEME.ACTIVE);
+    reload_background(config.theme.active);
     reload_saver();
 }
 
@@ -527,6 +549,10 @@ void sdl_cleanup(void) {
     blockfall_shutdown();
     datetime_shutdown();
 
+    if (monitor.shadow_layer) {
+        SDL_DestroyTexture(monitor.shadow_layer);
+        monitor.shadow_layer = NULL;
+    }
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
     if (monitor.window) SDL_DestroyWindow(monitor.window);
@@ -539,27 +565,30 @@ void sdl_cleanup(void) {
 
 static void drain_saver_launch_input(void) {
     SDL_Event ev;
-    uint32_t start = SDL_GetTicks();
+    const uint32_t start = SDL_GetTicks();
 
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
 
     while (SDL_GetTicks() - start < 180) {
-        while (SDL_PollEvent(&ev)) {}
+        while (SDL_PollEvent(&ev)) {
+        }
         SDL_Delay(10);
     }
 }
 
 static void render_saver_frame(void) {
-    SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+    SDL_SetRenderTarget(monitor.renderer, NULL);
+    SDL_SetRenderDrawColor(monitor.renderer, theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255);
     SDL_RenderClear(monitor.renderer);
 
     saver_render(monitor.renderer);
 
     SDL_RenderPresent(monitor.renderer);
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
 static int saver_event_is_touch(const SDL_Event *ev) {
-    if (!device.BOARD.HASTOUCH) return 0;
+    if (!device.board.has_touch) return 0;
 
     switch (ev->type) {
         case SDL_FINGERDOWN:
@@ -609,13 +638,13 @@ static void run_saver_loop(int preview) {
     if (preview) drain_saver_launch_input();
 
     SDL_Event ev;
-    const uint32_t frame_ms = IDLE_MS;
     uint32_t next = SDL_GetTicks();
     uint32_t last_status = SDL_GetTicks();
 
     while (preview || saver_active()) {
+        const uint32_t frame_ms = IDLE_MS;
         uint32_t now = SDL_GetTicks();
-        int timeout = (int) (next > now ? next - now : 0);
+        const int timeout = (int) (next > now ? next - now : 0);
 
         if (SDL_WaitEventTimeout(&ev, timeout)) {
             do {
@@ -645,32 +674,31 @@ static void run_saver_loop(int preview) {
         if (next <= now) next = now + frame_ms;
     }
 
-    monitor.force_clear = true;
-    monitor.refresh = true;
+    monitor.force_clear = 1;
+    monitor.refresh = 1;
 
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
     mux_input_resume();
 }
 
-void preview_saver(int type, int speed) {
-    if (!monitor.renderer || type == SAVER_TYPE_DISABLED || speed <= 0) return;
+void preview_saver(const int type, const int speed) {
+    if (!monitor.renderer || type == saver_type_disabled || speed <= 0) return;
 
-    int old_type = config.SETTINGS.POWER.SAVERTYPE;
-    int old_speed = config.SETTINGS.POWER.SAVERSPEED;
-    int old_idle = read_line_int_from(IDLE_STATE, 0);
+    const int old_type = config.settings.power.saver_type;
+    const int old_speed = config.settings.power.saver_speed;
+    const int old_idle = read_line_int_from(IDLE_STATE, 0);
 
     saver_set_speed_override(speed);
 
-    config.SETTINGS.POWER.SAVERTYPE = (int16_t) type;
-    config.SETTINGS.POWER.SAVERSPEED = (int16_t) speed;
+    config.settings.power.saver_type = (int16_t) type;
+    config.settings.power.saver_speed = (int16_t) speed;
 
     write_text_to_file(IDLE_STATE, "w", INT, 1);
 
     reload_saver();
 
-    pending_rect_valid = false;
-    monitor.force_clear = true;
-    monitor.refresh = true;
+    monitor.force_clear = 1;
+    monitor.refresh = 1;
 
     for (int i = 0; i < 3; i++) {
         saver_update();
@@ -684,34 +712,35 @@ void preview_saver(int type, int speed) {
 
     saver_clear_speed_override();
 
-    config.SETTINGS.POWER.SAVERTYPE = (int16_t) old_type;
-    config.SETTINGS.POWER.SAVERSPEED = (int16_t) old_speed;
+    config.settings.power.saver_type = (int16_t) old_type;
+    config.settings.power.saver_speed = (int16_t) old_speed;
 
     reload_saver();
 
     last_saver_exit = SDL_GetTicks();
 
-    pending_rect_valid = false;
-    monitor.force_clear = true;
-    monitor.refresh = true;
+    monitor.force_clear = 1;
+    monitor.refresh = 1;
 }
 
 void display_composite_frame(void) {
     if (!monitor.renderer || !monitor.texture) return;
 
-    int animating = anim_is_active();
-    int anim_fg = animating && anim_is_foreground();
-    int anim_bg = animating && !anim_fg;
+    SDL_SetRenderTarget(monitor.renderer, NULL);
+
+    const int animating = anim_is_active();
+    const int anim_fg = animating && anim_is_foreground();
+    const int anim_bg = animating && !anim_fg;
 
     if (monitor.background_image) {
-        SDL_Rect full = {0, 0, device.SCREEN.WIDTH, device.SCREEN.HEIGHT};
+        const SDL_Rect full = {0, 0, device.screen.width, device.screen.height};
         SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
     } else {
-        SDL_SetRenderDrawColor(monitor.renderer, theme.SDL.SOLID.R, theme.SDL.SOLID.G, theme.SDL.SOLID.B, 255);
+        SDL_SetRenderDrawColor(monitor.renderer, theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255);
         SDL_RenderClear(monitor.renderer);
     }
 
-    monitor.force_clear = false;
+    monitor.force_clear = 0;
 
     if (anim_bg) {
         if (!gradient_captured) {
@@ -719,29 +748,50 @@ void display_composite_frame(void) {
             int gw, gh;
             ui_common_get_gradient_buffer(&buf, &gw, &gh);
             if (buf) {
-                SDL_Surface *s = SDL_CreateRGBSurfaceFrom(buf, gw, gh, 32, gw * 4, 0x00FF0000, 0x0000FF00, 0x000000FF, 0);
+                SDL_Surface *s =
+                    SDL_CreateRGBSurfaceFrom(buf, gw, gh, 32, gw * 4, 0x00FF0000, 0x0000FF00, 0x000000FF, 0);
                 if (s) {
                     anim_set_gradient(SDL_CreateTextureFromSurface(monitor.renderer, s));
                     SDL_FreeSurface(s);
                 }
-                gradient_captured = true;
+                gradient_captured = 1;
             }
         }
         anim_tick(monitor.renderer);
         SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     } else if (video_bg_fn_ptr) {
-        gradient_captured = false;
+        gradient_captured = 0;
         video_bg_fn_ptr(monitor.renderer);
         SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     } else {
-        gradient_captured = false;
-        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_NONE);
+        gradient_captured = 0;
+        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     }
+
+    if (monitor.shadow_layer) {
+        if (monitor.angle == 0.0) {
+            SDL_RenderCopy(monitor.renderer, monitor.shadow_layer, NULL, &monitor.dest_rect);
+        } else {
+            SDL_RenderCopyEx(
+                monitor.renderer, monitor.shadow_layer, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr,
+                SDL_FLIP_NONE
+            );
+        }
+    }
+
+    SDL_SetTextureBlendMode(
+        monitor.texture, SDL_ComposeCustomBlendMode(
+                             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
+                             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
+                         )
+    );
 
     if (monitor.angle == 0.0) {
         SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
     } else {
-        SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(
+            monitor.renderer, monitor.texture, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE
+        );
     }
 
     if (anim_fg) anim_tick(monitor.renderer);
@@ -749,12 +799,7 @@ void display_composite_frame(void) {
     if (monitor.theme_overlay) {
         int tex_w, tex_h;
         SDL_QueryTexture(monitor.theme_overlay, NULL, NULL, &tex_w, &tex_h);
-        SDL_Rect dst = {
-                (device.SCREEN.WIDTH - tex_w) / 2,
-                (device.SCREEN.HEIGHT - tex_h) / 2,
-                tex_w,
-                tex_h
-        };
+        const SDL_Rect dst = {(device.screen.width - tex_w) / 2, (device.screen.height - tex_h) / 2, tex_w, tex_h};
         SDL_SetTextureBlendMode(monitor.theme_overlay, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(monitor.theme_overlay, monitor.theme_overlay_opacity);
         SDL_RenderCopy(monitor.renderer, monitor.theme_overlay, NULL, &dst);
@@ -769,74 +814,17 @@ void display_composite_frame(void) {
     }
 
     SDL_RenderPresent(monitor.renderer);
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
-void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
-    if (!monitor.texture || !monitor.renderer || !area || !color_p ||
-        area->x2 < 0 || area->y2 < 0 ||
-        area->x1 >= device.MUX.WIDTH || area->y1 >= device.MUX.HEIGHT) {
+void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, const lv_color_t *color_p) {
+    (void) area;
+    (void) color_p;
+
+    if (!monitor.renderer) {
         lv_disp_flush_ready(disp_drv);
         return;
     }
-
-    // Since we've got direct mode switched off we need to clamp to the screen
-    // or we'll get lovely glitches galore all around the place
-    int x1 = LV_CLAMP(0, area->x1, device.MUX.WIDTH - 1);
-    int y1 = LV_CLAMP(0, area->y1, device.MUX.HEIGHT - 1);
-    int x2 = LV_CLAMP(0, area->x2, device.MUX.WIDTH - 1);
-    int y2 = LV_CLAMP(0, area->y2, device.MUX.HEIGHT - 1);
-
-    if (x2 < x1 || y2 < y1) {
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
-
-    // Optimised full-screen flush...
-    const int copy_w = x2 - x1 + 1;
-    const int copy_h = y2 - y1 + 1;
-
-    const int src_w = area->x2 - area->x1 + 1;
-    const int src_x_ofs = x1 - area->x1;
-    const int src_y_ofs = y1 - area->y1;
-
-    SDL_Rect upd = {.x = x1, .y = y1, .w = copy_w, .h = copy_h};
-
-    const uint8_t *src_base = (const uint8_t *) color_p;
-    const uint8_t *src_ptr = src_base + ((size_t) (src_y_ofs * src_w + src_x_ofs) * sizeof(lv_color_t));
-
-    const int src_pitch = src_w * (int) sizeof(lv_color_t);
-    const int dst_pitch = copy_w * (int) sizeof(lv_color_t);
-
-    static uint8_t *stage = NULL;
-    static size_t stage_cap = 0;
-
-    size_t stage_needed = (size_t) copy_h * dst_pitch;
-    if (stage_needed > stage_cap) {
-        uint8_t *new_stage = realloc(stage, stage_needed);
-        if (!new_stage) {
-            LOG_ERROR("video", "Failed to reallocate staging buffer");
-            lv_disp_flush_ready(disp_drv);
-            return;
-        }
-        stage = new_stage;
-        stage_cap = stage_needed;
-    }
-
-    uint8_t *dst = stage;
-    const uint8_t *src = src_ptr;
-
-    for (int y = 0; y < copy_h; y++) {
-        memcpy(dst, src, dst_pitch);
-        dst += dst_pitch;
-        src += src_pitch;
-    }
-
-    if (SDL_UpdateTexture(monitor.texture, &upd, stage, dst_pitch) != 0) {
-        LOG_ERROR("video", "SDL_UpdateTexture staged upload failed: %s", SDL_GetError());
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
-    accumulate_pending_rect(&upd);
 
     if (!lv_disp_flush_is_last(disp_drv)) {
         lv_disp_flush_ready(disp_drv);
@@ -846,14 +834,14 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     {
         static unsigned last_saver_type_seen = 0;
         static uint32_t last_type_poll = 0;
-        uint32_t now = SDL_GetTicks();
+        const uint32_t now = SDL_GetTicks();
 
         int should_check;
         if (ino_proc) {
-            should_check = (saver_type_changes != last_saver_type_seen);
+            should_check = saver_type_changes != last_saver_type_seen;
             if (should_check) last_saver_type_seen = saver_type_changes;
         } else {
-            should_check = (now - last_type_poll >= TIMER_IDLE);
+            should_check = now - last_type_poll >= TIMER_IDLE;
             if (should_check) last_type_poll = now;
         }
 
@@ -862,19 +850,18 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
             if (wanted_type < 0) wanted_type = 0;
 
             if (active_saver != wanted_type) {
-                config.SETTINGS.POWER.SAVERTYPE = (int16_t) wanted_type;
+                config.settings.power.saver_type = (int16_t) wanted_type;
                 reload_saver();
             }
         }
     }
 
-    if (active_saver != SAVER_TYPE_DISABLED) {
-        uint32_t now = SDL_GetTicks();
+    if (active_saver != saver_type_disabled) {
+        const uint32_t now = SDL_GetTicks();
 
         if (now - last_saver_exit > SAVER_DELAY) {
             saver_update();
             if (saver_active()) {
-                pending_rect_valid = false;
                 run_saver_loop(0);
                 last_saver_exit = SDL_GetTicks();
             }
@@ -882,9 +869,13 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     }
 
     display_composite_frame();
-
-    pending_rect_valid = false;
-    pending_rect = (SDL_Rect) {0, 0, 0, 0};
-
     lv_disp_flush_ready(disp_drv);
+}
+
+void canvas_invalidate_gpu_texture(lv_obj_t *canvas) {
+    lv_disp_t *disp = lv_disp_get_default();
+    if (!disp || !disp->driver || !disp->driver->draw_ctx) return;
+
+    lv_draw_sdl_ctx_t *sdl_ctx = (lv_draw_sdl_ctx_t *) disp->driver->draw_ctx;
+    lv_draw_sdl_texture_cache_remove_src(sdl_ctx, lv_canvas_get_img(canvas));
 }

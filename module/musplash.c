@@ -11,12 +11,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-typedef enum {
-    SCALE_ORIGINAL = 0,
-    SCALE_KEEP = 1,
-    SCALE_STRETCH = 2,
-    SCALE_FILL = 3
-} scale_mode_t;
+typedef enum { scale_original = 0, scale_keep = 1, scale_stretch = 2, scale_fill = 3 } scale_mode_t;
 
 typedef struct {
     uint8_t *data;
@@ -91,15 +86,14 @@ static void log_fmt(const options_t *opts, const char *fmt, const char *value) {
     if (opts->verbose) fprintf(stderr, fmt, value);
 }
 
-static void handle_signal(int sig) {
+static void handle_signal(const int sig) {
     (void) sig;
     keep_running = 0;
 }
 
 static void setup_signals(void) {
-    struct sigaction sa;
+    struct sigaction sa = {0};
 
-    memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handle_signal;
 
     sigemptyset(&sa.sa_mask);
@@ -108,42 +102,44 @@ static void setup_signals(void) {
 }
 
 static void print_usage(const char *name) {
-    fprintf(stderr,
-            "Usage:\n"
-            "  %s -i <image.png> [options]\n"
-            "  %s --image <image.png> [options]\n"
-            "  %s -c [options]\n"
-            "  %s <image.png> [fbdev]\n\n"
-            "Options:\n"
-            "  -i, --image <path>          PNG image path\n"
-            "  -f, --fb <path>             Framebuffer device, default: /dev/fb0\n"
-            "  -r, --rotate <0|90|180|270> Rotation, default: 0\n"
-            "  -s, --scale <mode>          0/original | 1/keep | 2/stretch | 3/fill, default: keep\n"
-            "  -g, --gradient <A:B>        Vertical background gradient, top:bottom\n"
-            "                              e.g. 000000:FFFFFF or #1A1A2E:#16213E\n"
-            "  -t, --tint <RRGGBB>         PNG recolour (tint), e.g. FFFFFF or #FFFFFF\n"
-            "  -a, --alpha <0-100>         Recolour strength as a percentage, default: 0 (off)\n"
-            "  -c, --clear                 Clear the framebuffer to black and exit\n"
-            "  -w, --wait                  Keep running until killed\n"
-            "  -v, --verbose               Enable log output\n"
-            "  -h, --help                  Show this help\n\n"
-            "Scale modes:\n"
-            "  0, original                 Draw at original size, centred\n"
-            "  1, keep                     Keep aspect ratio and fit inside the screen\n"
-            "  2, stretch                  Stretch to the full screen\n"
-            "  3, fill                     Keep aspect ratio, fill screen, crop overflow\n",
-            name, name, name, name);
+    fprintf(
+        stderr,
+        "Usage:\n"
+        "  %s -i <image.png> [options]\n"
+        "  %s --image <image.png> [options]\n"
+        "  %s -c [options]\n"
+        "  %s <image.png> [fbdev]\n\n"
+        "Options:\n"
+        "  -i, --image <path>          PNG image path\n"
+        "  -f, --fb <path>             Framebuffer device, default: /dev/fb0\n"
+        "  -r, --rotate <0|90|180|270> Rotation, default: 0\n"
+        "  -s, --scale <mode>          0/original | 1/keep | 2/stretch | 3/fill, default: keep\n"
+        "  -g, --gradient <A:B>        Vertical background gradient, top:bottom\n"
+        "                              e.g. 000000:FFFFFF or #1A1A2E:#16213E\n"
+        "  -t, --tint <RRGGBB>         PNG recolour (tint), e.g. FFFFFF or #FFFFFF\n"
+        "  -a, --alpha <0-100>         Recolour strength as a percentage, default: 0 (off)\n"
+        "  -c, --clear                 Clear the framebuffer to black and exit\n"
+        "  -w, --wait                  Keep running until killed\n"
+        "  -v, --verbose               Enable log output\n"
+        "  -h, --help                  Show this help\n\n"
+        "Scale modes:\n"
+        "  0, original                 Draw at original size, centred\n"
+        "  1, keep                     Keep aspect ratio and fit inside the screen\n"
+        "  2, stretch                  Stretch to the full screen\n"
+        "  3, fill                     Keep aspect ratio, fill screen, crop overflow\n",
+        name, name, name, name
+    );
 }
 
-static const char *scale_name(scale_mode_t scale) {
+static const char *scale_name(const scale_mode_t scale) {
     switch (scale) {
-        case SCALE_ORIGINAL:
+        case scale_original:
             return "original";
-        case SCALE_KEEP:
+        case scale_keep:
             return "keep";
-        case SCALE_STRETCH:
+        case scale_stretch:
             return "stretch";
-        case SCALE_FILL:
+        case scale_fill:
             return "fill";
         default:
             return "unknown";
@@ -152,22 +148,23 @@ static const char *scale_name(scale_mode_t scale) {
 
 static int parse_scale(const char *value, scale_mode_t *scale) {
     if (strcmp(value, "0") == 0 || strcmp(value, "original") == 0 || strcmp(value, "orig") == 0) {
-        *scale = SCALE_ORIGINAL;
+        *scale = scale_original;
         return 0;
     }
 
-    if (strcmp(value, "1") == 0 || strcmp(value, "keep") == 0 || strcmp(value, "aspect") == 0 || strcmp(value, "contain") == 0) {
-        *scale = SCALE_KEEP;
+    if (strcmp(value, "1") == 0 || strcmp(value, "keep") == 0 || strcmp(value, "aspect") == 0
+        || strcmp(value, "contain") == 0) {
+        *scale = scale_keep;
         return 0;
     }
 
     if (strcmp(value, "2") == 0 || strcmp(value, "stretch") == 0) {
-        *scale = SCALE_STRETCH;
+        *scale = scale_stretch;
         return 0;
     }
 
     if (strcmp(value, "3") == 0 || strcmp(value, "fill") == 0 || strcmp(value, "cover") == 0) {
-        *scale = SCALE_FILL;
+        *scale = scale_fill;
         return 0;
     }
 
@@ -176,10 +173,9 @@ static int parse_scale(const char *value, scale_mode_t *scale) {
 
 static int parse_rotation(const char *value, int *rotate) {
     char *end = NULL;
-    long r;
 
     errno = 0;
-    r = strtol(value, &end, 10);
+    const long r = strtol(value, &end, 10);
 
     if (errno != 0 || !end || *end != '\0') return -1;
 
@@ -195,7 +191,7 @@ static int parse_rotation(const char *value, int *rotate) {
     }
 }
 
-static int hex_nibble(char c) {
+static int hex_nibble(const char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
     if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
@@ -204,31 +200,27 @@ static int hex_nibble(char c) {
 }
 
 static int parse_hex_colour(const char *value, uint8_t *r, uint8_t *g, uint8_t *b) {
-    int i;
     int n[6];
 
     if (!value) return -1;
     if (value[0] == '#') value++;
 
-    for (i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; i++) {
         n[i] = hex_nibble(value[i]);
         if (n[i] < 0) return -1;
     }
 
     if (value[6] != '\0') return -1;
 
-    *r = (uint8_t) ((n[0] << 4) | n[1]);
-    *g = (uint8_t) ((n[2] << 4) | n[3]);
-    *b = (uint8_t) ((n[4] << 4) | n[5]);
+    *r = (uint8_t) (n[0] << 4 | n[1]);
+    *g = (uint8_t) (n[2] << 4 | n[3]);
+    *b = (uint8_t) (n[4] << 4 | n[5]);
 
     return 0;
 }
 
 static int parse_gradient(const char *value, gradient_t *grad) {
-    const char *colon;
-
     char top[8];
-    size_t top_len;
 
     uint8_t tr;
     uint8_t tg;
@@ -239,10 +231,10 @@ static int parse_gradient(const char *value, gradient_t *grad) {
 
     if (!value) return -1;
 
-    colon = strchr(value, ':');
+    const char *colon = strchr(value, ':');
     if (!colon || colon == value) return -1;
 
-    top_len = (size_t) (colon - value);
+    const size_t top_len = (size_t) (colon - value);
     if (top_len >= sizeof(top)) return -1;
 
     memcpy(top, value, top_len);
@@ -266,10 +258,9 @@ static int parse_gradient(const char *value, gradient_t *grad) {
 
 static int parse_alpha(const char *value, int *out) {
     char *end = NULL;
-    long v;
 
     errno = 0;
-    v = strtol(value, &end, 10);
+    long v = strtol(value, &end, 10);
 
     if (errno != 0 || !end || *end != '\0') return -1;
 
@@ -281,31 +272,19 @@ static int parse_alpha(const char *value, int *out) {
 }
 
 static int option_takes_value(const char *arg) {
-    return strcmp(arg, "-i") == 0 ||
-           strcmp(arg, "--image") == 0 ||
-           strcmp(arg, "-f") == 0 ||
-           strcmp(arg, "--fb") == 0 ||
-           strcmp(arg, "-r") == 0 ||
-           strcmp(arg, "--rotate") == 0 ||
-           strcmp(arg, "-s") == 0 ||
-           strcmp(arg, "--scale") == 0 ||
-           strcmp(arg, "-g") == 0 ||
-           strcmp(arg, "--gradient") == 0 ||
-           strcmp(arg, "-t") == 0 ||
-           strcmp(arg, "--tint") == 0 ||
-           strcmp(arg, "--recolour") == 0 ||
-           strcmp(arg, "--recolor") == 0 ||
-           strcmp(arg, "-a") == 0 ||
-           strcmp(arg, "--alpha") == 0;
+    return strcmp(arg, "-i") == 0 || strcmp(arg, "--image") == 0 || strcmp(arg, "-f") == 0 || strcmp(arg, "--fb") == 0
+           || strcmp(arg, "-r") == 0 || strcmp(arg, "--rotate") == 0 || strcmp(arg, "-s") == 0
+           || strcmp(arg, "--scale") == 0 || strcmp(arg, "-g") == 0 || strcmp(arg, "--gradient") == 0
+           || strcmp(arg, "-t") == 0 || strcmp(arg, "--tint") == 0 || strcmp(arg, "--recolour") == 0
+           || strcmp(arg, "--recolor") == 0 || strcmp(arg, "-a") == 0 || strcmp(arg, "--alpha") == 0;
 }
 
-static int parse_args(int argc, char *argv[], options_t *opts) {
-    int i;
+static int parse_args(const int argc, char *argv[], options_t *opts) {
 
     opts->image_path = NULL;
     opts->fb_path = "/dev/fb0";
     opts->rotate = 0;
-    opts->scale = SCALE_KEEP;
+    opts->scale = scale_keep;
     opts->wait = 0;
     opts->verbose = 0;
     opts->clear = 0;
@@ -331,7 +310,7 @@ static int parse_args(int argc, char *argv[], options_t *opts) {
         return 0;
     }
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             print_usage(argv[0]);
             exit(0);
@@ -379,7 +358,8 @@ static int parse_args(int argc, char *argv[], options_t *opts) {
             continue;
         }
 
-        if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tint") == 0 || strcmp(argv[i], "--recolour") == 0 || strcmp(argv[i], "--recolor") == 0) {
+        if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tint") == 0 || strcmp(argv[i], "--recolour") == 0
+            || strcmp(argv[i], "--recolor") == 0) {
             if (parse_hex_colour(argv[++i], &opts->recolour_r, &opts->recolour_g, &opts->recolour_b) != 0) return -1;
             opts->recolour_enabled = 1;
             continue;
@@ -403,8 +383,8 @@ static int parse_args(int argc, char *argv[], options_t *opts) {
     return opts->image_path ? 0 : -1;
 }
 
-static void png_read_from_memory(png_structp png_ptr, png_bytep out, png_size_t count) {
-    png_mem_t *mem = (png_mem_t *) png_get_io_ptr(png_ptr);
+static void png_read_from_memory(const png_struct *const png_ptr, png_byte *const out, const size_t count) {
+    png_mem_t *mem = png_get_io_ptr(png_ptr);
     if (!mem || mem->offset + count > mem->size) png_error(png_ptr, "PNG read beyond end of buffer");
 
     memcpy(out, mem->data + mem->offset, count);
@@ -412,14 +392,11 @@ static void png_read_from_memory(png_structp png_ptr, png_bytep out, png_size_t 
 }
 
 static int read_file(const char *path, uint8_t **out_buf, size_t *out_size) {
-    FILE *fp;
-    long size;
-    uint8_t *buf;
 
     *out_buf = NULL;
     *out_size = 0;
 
-    fp = fopen(path, "rb");
+    FILE *fp = fopen(path, "rb");
     if (!fp) return -1;
 
     if (fseek(fp, 0, SEEK_END) != 0) {
@@ -428,7 +405,7 @@ static int read_file(const char *path, uint8_t **out_buf, size_t *out_size) {
         return -1;
     }
 
-    size = ftell(fp);
+    const long size = ftell(fp);
     if (size <= 0) {
         fclose(fp);
 
@@ -441,7 +418,7 @@ static int read_file(const char *path, uint8_t **out_buf, size_t *out_size) {
         return -1;
     }
 
-    buf = malloc((size_t) size);
+    uint8_t *buf = malloc((size_t) size);
     if (!buf) {
         fclose(fp);
 
@@ -478,8 +455,6 @@ static int load_png_to_rgba(const char *path, image_t *img) {
     int bit_depth;
     int colour_type;
     int interlace_type;
-
-    int y;
 
     memset(img, 0, sizeof(*img));
 
@@ -524,7 +499,7 @@ static int load_png_to_rgba(const char *path, image_t *img) {
     mem.size = file_size;
     mem.offset = 0;
 
-    png_set_read_fn(png_ptr, &mem, png_read_from_memory);
+    png_set_read_fn(png_ptr, &mem, (png_rw_ptr) png_read_from_memory);
     png_read_info(png_ptr, info_ptr);
 
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &colour_type, &interlace_type, NULL, NULL);
@@ -559,7 +534,8 @@ static int load_png_to_rgba(const char *path, image_t *img) {
         return -1;
     }
 
-    for (y = 0; y < img->height; y++) rows[y] = img->pixels + ((size_t) y * (size_t) img->width * 4);
+    for (int y = 0; y < img->height; y++)
+        rows[y] = img->pixels + (size_t) y * (size_t) img->width * 4;
 
     png_read_image(png_ptr, rows);
     png_read_end(png_ptr, NULL);
@@ -572,8 +548,6 @@ static int load_png_to_rgba(const char *path, image_t *img) {
 }
 
 static int open_fb(const char *path, fb_t *fb) {
-    size_t visible_offset;
-
     memset(fb, 0, sizeof(*fb));
     fb->fd = -1;
 
@@ -613,7 +587,8 @@ static int open_fb(const char *path, fb_t *fb) {
         return -1;
     }
 
-    visible_offset = (size_t) fb->var.yoffset * (size_t) fb->stride + (size_t) fb->var.xoffset * (size_t) fb->bytes_per_pixel;
+    const size_t visible_offset =
+        (size_t) fb->var.yoffset * (size_t) fb->stride + (size_t) fb->var.xoffset * (size_t) fb->bytes_per_pixel;
     if (visible_offset >= fb->mem_size) {
         munmap(fb->mem, fb->mem_size);
         close(fb->fd);
@@ -641,16 +616,13 @@ static void close_fb(fb_t *fb) {
 
 static int unblank_fb(const char *fbdev) {
     char path[256];
-    const char *name;
-    const char *slash;
-    int fd;
 
-    slash = strrchr(fbdev, '/');
-    name = slash ? slash + 1 : fbdev;
+    const char *slash = strrchr(fbdev, '/');
+    const char *name = slash ? slash + 1 : fbdev;
 
     snprintf(path, sizeof(path), "/sys/class/graphics/%s/blank", name);
 
-    fd = open(path, O_WRONLY);
+    const int fd = open(path, O_WRONLY);
     if (fd < 0) return -1;
 
     if (write(fd, "0\n", 2) < 0) {
@@ -662,7 +634,7 @@ static int unblank_fb(const char *fbdev) {
     return 0;
 }
 
-static uint32_t pack_pixel(const fb_t *fb, uint8_t r, uint8_t g, uint8_t b) {
+static uint32_t pack_pixel(const fb_t *fb, const uint8_t r, const uint8_t g, const uint8_t b) {
     uint32_t pixel = 0;
     uint32_t max;
 
@@ -696,14 +668,13 @@ static uint32_t pack_pixel(const fb_t *fb, uint8_t r, uint8_t g, uint8_t b) {
     return pixel;
 }
 
-static void put_pixel(const fb_t *fb, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
-    uint8_t *dst;
+static void put_pixel(const fb_t *fb, const int x, const int y, const uint8_t r, const uint8_t g, const uint8_t b) {
     uint32_t pixel;
     uint16_t pixel16;
 
     if (x < 0 || x >= fb->width || y < 0 || y >= fb->height) return;
 
-    dst = fb->base + (size_t) y * (size_t) fb->stride + (size_t) x * (size_t) fb->bytes_per_pixel;
+    uint8_t *dst = fb->base + (size_t) y * (size_t) fb->stride + (size_t) x * (size_t) fb->bytes_per_pixel;
     pixel = pack_pixel(fb, r, g, b);
 
     switch (fb->bpp) {
@@ -713,8 +684,8 @@ static void put_pixel(const fb_t *fb, int x, int y, uint8_t r, uint8_t g, uint8_
             break;
         case 24:
             dst[0] = (uint8_t) (pixel & 0xFF);
-            dst[1] = (uint8_t) ((pixel >> 8) & 0xFF);
-            dst[2] = (uint8_t) ((pixel >> 16) & 0xFF);
+            dst[1] = (uint8_t) (pixel >> 8 & 0xFF);
+            dst[2] = (uint8_t) (pixel >> 16 & 0xFF);
             break;
         case 32:
             memcpy(dst, &pixel, sizeof(pixel));
@@ -724,32 +695,32 @@ static void put_pixel(const fb_t *fb, int x, int y, uint8_t r, uint8_t g, uint8_
     }
 }
 
-static void clear_fb(const fb_t *fb, uint8_t r, uint8_t g, uint8_t b) {
-    uint32_t pixel;
-    uint16_t pixel16;
+static void clear_fb(const fb_t *fb, const uint8_t r, const uint8_t g, const uint8_t b) {
 
     int x;
     int y;
 
-    pixel = pack_pixel(fb, r, g, b);
+    const uint32_t pixel = pack_pixel(fb, r, g, b);
 
     if (fb->bpp == 32) {
         for (y = 0; y < fb->height; y++) {
             uint32_t *row = (uint32_t *) (fb->base + (size_t) y * (size_t) fb->stride);
 
-            for (x = 0; x < fb->width; x++) row[x] = pixel;
+            for (x = 0; x < fb->width; x++)
+                row[x] = pixel;
         }
 
         return;
     }
 
     if (fb->bpp == 16) {
-        pixel16 = (uint16_t) pixel;
+        const uint16_t pixel16 = (uint16_t) pixel;
 
         for (y = 0; y < fb->height; y++) {
             uint16_t *row = (uint16_t *) (fb->base + (size_t) y * (size_t) fb->stride);
 
-            for (x = 0; x < fb->width; x++) row[x] = pixel16;
+            for (x = 0; x < fb->width; x++)
+                row[x] = pixel16;
         }
 
         return;
@@ -760,24 +731,26 @@ static void clear_fb(const fb_t *fb, uint8_t r, uint8_t g, uint8_t b) {
 
         for (x = 0; x < fb->width; x++) {
             row[(size_t) x * 3 + 0] = (uint8_t) (pixel & 0xFF);
-            row[(size_t) x * 3 + 1] = (uint8_t) ((pixel >> 8) & 0xFF);
-            row[(size_t) x * 3 + 2] = (uint8_t) ((pixel >> 16) & 0xFF);
+            row[(size_t) x * 3 + 1] = (uint8_t) (pixel >> 8 & 0xFF);
+            row[(size_t) x * 3 + 2] = (uint8_t) (pixel >> 16 & 0xFF);
         }
     }
 }
 
-static void gradient_colour_at(const gradient_t *grad, int t_in, int span_in, uint8_t *out_r, uint8_t *out_g, uint8_t *out_b) {
-    int span = span_in > 1 ? span_in - 1 : 1;
+static void gradient_colour_at(
+    const gradient_t *grad, const int t_in, const int span_in, uint8_t *out_r, uint8_t *out_g, uint8_t *out_b
+) {
+    const int span = span_in > 1 ? span_in - 1 : 1;
 
-    uint32_t s = (uint32_t) span;
-    uint32_t t = (uint32_t) (t_in < 0 ? 0 : (t_in > span ? span : t_in));
+    const uint32_t s = (uint32_t) span;
+    const uint32_t t = (uint32_t) (t_in < 0 ? 0 : t_in > span ? span : t_in);
 
     *out_r = (uint8_t) (((uint32_t) grad->top_r * (s - t) + (uint32_t) grad->bot_r * t) / s);
     *out_g = (uint8_t) (((uint32_t) grad->top_g * (s - t) + (uint32_t) grad->bot_g * t) / s);
     *out_b = (uint8_t) (((uint32_t) grad->top_b * (s - t) + (uint32_t) grad->bot_b * t) / s);
 }
 
-static void gradient_axis(int rotate, const fb_t *fb, int *axis, int *span, int *flip) {
+static void gradient_axis(const int rotate, const fb_t *fb, int *axis, int *span, int *flip) {
     switch (rotate) {
         case 90:
             *axis = 1;
@@ -803,7 +776,7 @@ static void gradient_axis(int rotate, const fb_t *fb, int *axis, int *span, int 
     }
 }
 
-static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, int rotate) {
+static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, const int rotate) {
     int axis;
     int span;
     int flip;
@@ -815,40 +788,39 @@ static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, int rot
     uint8_t g;
     uint8_t b;
 
-    uint32_t pixel;
-    uint16_t pixel16;
-
     gradient_axis(rotate, fb, &axis, &span, &flip);
 
     if (axis == 0) {
         for (y = 0; y < fb->height; y++) {
-            int t = flip ? (fb->height - 1 - y) : y;
+            const int t = flip ? fb->height - 1 - y : y;
 
             gradient_colour_at(grad, t, span, &r, &g, &b);
-            pixel = pack_pixel(fb, r, g, b);
+            const uint32_t pixel = pack_pixel(fb, r, g, b);
 
             if (fb->bpp == 32) {
                 uint32_t *row = (uint32_t *) (fb->base + (size_t) y * (size_t) fb->stride);
 
-                for (x = 0; x < fb->width; x++) row[x] = pixel;
+                for (x = 0; x < fb->width; x++)
+                    row[x] = pixel;
                 continue;
             }
 
             if (fb->bpp == 16) {
                 uint16_t *row = (uint16_t *) (fb->base + (size_t) y * (size_t) fb->stride);
 
-                pixel16 = (uint16_t) pixel;
+                const uint16_t pixel16 = (uint16_t) pixel;
 
-                for (x = 0; x < fb->width; x++) row[x] = pixel16;
+                for (x = 0; x < fb->width; x++)
+                    row[x] = pixel16;
                 continue;
             }
 
             {
                 uint8_t *row = fb->base + (size_t) y * (size_t) fb->stride;
 
-                uint8_t b0 = (uint8_t) (pixel & 0xFF);
-                uint8_t b1 = (uint8_t) ((pixel >> 8) & 0xFF);
-                uint8_t b2 = (uint8_t) ((pixel >> 16) & 0xFF);
+                const uint8_t b0 = (uint8_t) (pixel & 0xFF);
+                const uint8_t b1 = (uint8_t) (pixel >> 8 & 0xFF);
+                const uint8_t b2 = (uint8_t) (pixel >> 16 & 0xFF);
 
                 for (x = 0; x < fb->width; x++) {
                     row[(size_t) x * 3 + 0] = b0;
@@ -866,7 +838,7 @@ static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, int rot
         if (!col_pixels32) return -1;
 
         for (x = 0; x < fb->width; x++) {
-            int t = flip ? (fb->width - 1 - x) : x;
+            const int t = flip ? fb->width - 1 - x : x;
             gradient_colour_at(grad, t, span, &r, &g, &b);
             col_pixels32[x] = pack_pixel(fb, r, g, b);
         }
@@ -885,7 +857,7 @@ static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, int rot
         if (!col_pixels16) return -1;
 
         for (x = 0; x < fb->width; x++) {
-            int t = flip ? (fb->width - 1 - x) : x;
+            const int t = flip ? fb->width - 1 - x : x;
             gradient_colour_at(grad, t, span, &r, &g, &b);
             col_pixels16[x] = (uint16_t) pack_pixel(fb, r, g, b);
         }
@@ -904,15 +876,14 @@ static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, int rot
         if (!col_pixels24) return -1;
 
         for (x = 0; x < fb->width; x++) {
-            int t = flip ? (fb->width - 1 - x) : x;
-            uint32_t pix;
+            const int t = flip ? fb->width - 1 - x : x;
 
             gradient_colour_at(grad, t, span, &r, &g, &b);
-            pix = pack_pixel(fb, r, g, b);
+            const uint32_t pix = pack_pixel(fb, r, g, b);
 
             col_pixels24[(size_t) x * 3 + 0] = (uint8_t) (pix & 0xFF);
-            col_pixels24[(size_t) x * 3 + 1] = (uint8_t) ((pix >> 8) & 0xFF);
-            col_pixels24[(size_t) x * 3 + 2] = (uint8_t) ((pix >> 16) & 0xFF);
+            col_pixels24[(size_t) x * 3 + 1] = (uint8_t) (pix >> 8 & 0xFF);
+            col_pixels24[(size_t) x * 3 + 2] = (uint8_t) (pix >> 16 & 0xFF);
         }
 
         for (y = 0; y < fb->height; y++) {
@@ -926,7 +897,7 @@ static int fill_fb_with_gradient(const fb_t *fb, const gradient_t *grad, int rot
     return 0;
 }
 
-static void rotated_size(const image_t *img, int rotate, int *out_w, int *out_h) {
+static void rotated_size(const image_t *img, const int rotate, int *out_w, int *out_h) {
     if (rotate == 90 || rotate == 270) {
         *out_w = img->height;
         *out_h = img->width;
@@ -938,7 +909,7 @@ static void rotated_size(const image_t *img, int rotate, int *out_w, int *out_h)
     *out_h = img->height;
 }
 
-static void rotated_to_source(const image_t *img, int rotate, int rx, int ry, int *sx, int *sy) {
+static void rotated_to_source(const image_t *img, const int rotate, const int rx, const int ry, int *sx, int *sy) {
     switch (rotate) {
         case 90:
             *sx = ry;
@@ -960,38 +931,39 @@ static void rotated_to_source(const image_t *img, int rotate, int rx, int ry, in
     }
 }
 
-static void calculate_dest_rect(const fb_t *fb, int src_w, int src_h, scale_mode_t scale, int *dst_x, int *dst_y, int *dst_w, int *dst_h) {
+static void calculate_dest_rect(
+    const fb_t *fb, const int src_w, const int src_h, const scale_mode_t scale, int *dst_x, int *dst_y, int *dst_w,
+    int *dst_h
+) {
     int w;
     int h;
 
     switch (scale) {
-        case SCALE_ORIGINAL:
+        case scale_original:
             w = src_w;
             h = src_h;
             break;
-        case SCALE_STRETCH:
+        case scale_stretch:
             w = fb->width;
             h = fb->height;
             break;
-        case SCALE_FILL:
-            if ((long long) fb->width * (long long) src_h >=
-                (long long) fb->height * (long long) src_w) {
+        case scale_fill:
+            if ((long long) fb->width * (long long) src_h >= (long long) fb->height * (long long) src_w) {
                 w = fb->width;
-                h = (src_h * fb->width) / src_w;
+                h = src_h * fb->width / src_w;
             } else {
                 h = fb->height;
-                w = (src_w * fb->height) / src_h;
+                w = fb->height * src_w / src_h;
             }
             break;
-        case SCALE_KEEP:
+        case scale_keep:
         default:
-            if ((long long) fb->width * (long long) src_h <=
-                (long long) fb->height * (long long) src_w) {
+            if ((long long) fb->width * (long long) src_h <= (long long) fb->height * (long long) src_w) {
                 w = fb->width;
-                h = (src_h * fb->width) / src_w;
+                h = src_h * fb->width / src_w;
             } else {
                 h = fb->height;
-                w = (src_w * fb->height) / src_h;
+                w = src_w * fb->height / src_h;
             }
             break;
     }
@@ -1006,15 +978,14 @@ static void calculate_dest_rect(const fb_t *fb, int src_w, int src_h, scale_mode
     *dst_y = (fb->height - h) / 2;
 }
 
-static void write_fb_pixel(const fb_t *fb, int x, int y, const uint8_t *src, uint8_t bg_r, uint8_t bg_g, uint8_t bg_b) {
-    uint8_t sr = src[0];
-    uint8_t sg = src[1];
-    uint8_t sb = src[2];
-    uint8_t sa = src[3];
-    uint8_t dr;
-    uint8_t dg;
-    uint8_t db;
-    uint32_t inv;
+static void write_fb_pixel(
+    const fb_t *fb, const int x, const int y, const uint8_t *src, const uint8_t bg_r, const uint8_t bg_g,
+    const uint8_t bg_b
+) {
+    const uint8_t sr = src[0];
+    const uint8_t sg = src[1];
+    const uint8_t sb = src[2];
+    const uint8_t sa = src[3];
 
     if (sa == 0xFF) {
         put_pixel(fb, x, y, sr, sg, sb);
@@ -1028,26 +999,24 @@ static void write_fb_pixel(const fb_t *fb, int x, int y, const uint8_t *src, uin
         return;
     }
 
-    inv = 255u - (uint32_t) sa;
+    const uint32_t inv = 255u - (uint32_t) sa;
 
-    dr = (uint8_t) (((uint32_t) sr * sa + (uint32_t) bg_r * inv + 127u) / 255u);
-    dg = (uint8_t) (((uint32_t) sg * sa + (uint32_t) bg_g * inv + 127u) / 255u);
-    db = (uint8_t) (((uint32_t) sb * sa + (uint32_t) bg_b * inv + 127u) / 255u);
+    const uint8_t dr = (uint8_t) (((uint32_t) sr * sa + (uint32_t) bg_r * inv + 127u) / 255u);
+    const uint8_t dg = (uint8_t) (((uint32_t) sg * sa + (uint32_t) bg_g * inv + 127u) / 255u);
+    const uint8_t db = (uint8_t) (((uint32_t) sb * sa + (uint32_t) bg_b * inv + 127u) / 255u);
 
     put_pixel(fb, x, y, dr, dg, db);
 }
 
 static void build_recolour_lut(const options_t *opts, uint8_t lut_r[256], uint8_t lut_g[256], uint8_t lut_b[256]) {
-    uint32_t a = (uint32_t) opts->recolour_alpha;
-    uint32_t inv = 100u - a;
+    const uint32_t a = (uint32_t) opts->recolour_alpha;
+    const uint32_t inv = 100u - a;
 
-    uint32_t tr = (uint32_t) opts->recolour_r;
-    uint32_t tg = (uint32_t) opts->recolour_g;
-    uint32_t tb = (uint32_t) opts->recolour_b;
+    const uint32_t tr = opts->recolour_r;
+    const uint32_t tg = opts->recolour_g;
+    const uint32_t tb = opts->recolour_b;
 
-    int i;
-
-    for (i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         lut_r[i] = (uint8_t) (((uint32_t) i * inv + tr * a + 50u) / 100u);
         lut_g[i] = (uint8_t) (((uint32_t) i * inv + tg * a + 50u) / 100u);
         lut_b[i] = (uint8_t) (((uint32_t) i * inv + tb * a + 50u) / 100u);
@@ -1055,10 +1024,10 @@ static void build_recolour_lut(const options_t *opts, uint8_t lut_r[256], uint8_
 }
 
 static void draw_image(const fb_t *fb, const image_t *img, const options_t *opts) {
-    int rotate = opts->rotate;
-    scale_mode_t scale = opts->scale;
+    const int rotate = opts->rotate;
+    const scale_mode_t scale = opts->scale;
     const gradient_t *grad = &opts->gradient;
-    int recolour = opts->recolour_enabled;
+    const int recolour = opts->recolour_enabled;
 
     uint8_t lut_r[256];
     uint8_t lut_g[256];
@@ -1075,15 +1044,6 @@ static void draw_image(const fb_t *fb, const image_t *img, const options_t *opts
     int dst_y;
     int dst_w;
     int dst_h;
-
-    int screen_x0;
-    int screen_y0;
-
-    int screen_x1;
-    int screen_y1;
-
-    int x;
-    int y;
 
     if (!img->pixels || img->width <= 0 || img->height <= 0) return;
 
@@ -1103,37 +1063,36 @@ static void draw_image(const fb_t *fb, const image_t *img, const options_t *opts
         int span;
         int flip;
 
-        int i;
-        int n;
-
         gradient_axis(rotate, fb, &axis, &span, &flip);
         bg_axis = axis;
-        n = (axis == 0) ? fb->height : fb->width;
+        const int n = axis == 0 ? fb->height : fb->width;
 
         bg_lut = malloc((size_t) n * 3);
 
         if (!bg_lut) {
             clear_fb(fb, grad->top_r, grad->top_g, grad->top_b);
         } else {
-            for (i = 0; i < n; i++) {
-                int t = flip ? (n - 1 - i) : i;
-                gradient_colour_at(grad, t, span, &bg_lut[(size_t) i * 3 + 0], &bg_lut[(size_t) i * 3 + 1], &bg_lut[(size_t) i * 3 + 2]);
+            for (int i = 0; i < n; i++) {
+                const int t = flip ? n - 1 - i : i;
+                gradient_colour_at(
+                    grad, t, span, &bg_lut[(size_t) i * 3 + 0], &bg_lut[(size_t) i * 3 + 1], &bg_lut[(size_t) i * 3 + 2]
+                );
             }
         }
     }
 
-    screen_x0 = dst_x < 0 ? 0 : dst_x;
-    screen_y0 = dst_y < 0 ? 0 : dst_y;
+    const int screen_x0 = dst_x < 0 ? 0 : dst_x;
+    const int screen_y0 = dst_y < 0 ? 0 : dst_y;
 
-    screen_x1 = dst_x + dst_w;
-    screen_y1 = dst_y + dst_h;
+    int screen_x1 = dst_x + dst_w;
+    int screen_y1 = dst_y + dst_h;
 
     if (screen_x1 > fb->width) screen_x1 = fb->width;
     if (screen_y1 > fb->height) screen_y1 = fb->height;
 
-    for (y = screen_y0; y < screen_y1; y++) {
-        int local_y = y - dst_y;
-        int ry = (local_y * rot_h) / dst_h;
+    for (int y = screen_y0; y < screen_y1; y++) {
+        const int local_y = y - dst_y;
+        int ry = local_y * rot_h / dst_h;
 
         uint8_t row_bg_r = 0;
         uint8_t row_bg_g = 0;
@@ -1148,14 +1107,12 @@ static void draw_image(const fb_t *fb, const image_t *img, const options_t *opts
             row_bg_b = bg_lut[(size_t) y * 3 + 2];
         }
 
-        for (x = screen_x0; x < screen_x1; x++) {
-            int local_x = x - dst_x;
+        for (int x = screen_x0; x < screen_x1; x++) {
+            const int local_x = x - dst_x;
 
-            int rx = (local_x * rot_w) / dst_w;
+            int rx = local_x * rot_w / dst_w;
             int sx;
             int sy;
-
-            const uint8_t *src;
 
             uint8_t bg_r = row_bg_r;
             uint8_t bg_g = row_bg_g;
@@ -1176,7 +1133,7 @@ static void draw_image(const fb_t *fb, const image_t *img, const options_t *opts
                 bg_b = bg_lut[(size_t) x * 3 + 2];
             }
 
-            src = img->pixels + (((size_t) sy * (size_t) img->width + (size_t) sx) * 4);
+            const uint8_t *src = img->pixels + ((size_t) sy * (size_t) img->width + (size_t) sx) * 4;
 
             if (recolour) {
                 pixel[0] = lut_r[src[0]];
@@ -1205,9 +1162,7 @@ static void free_image(image_t *img) {
 }
 
 static int run_clear(const options_t *opts) {
-    fb_t fb;
-
-    memset(&fb, 0, sizeof(fb));
+    fb_t fb = {0};
     fb.fd = -1;
 
     log_fmt(opts, "Opening framebuffer: %s\n", opts->fb_path);
@@ -1261,18 +1216,23 @@ static int run_draw(const options_t *opts) {
     unblank_fb(opts->fb_path);
 
     if (opts->verbose) {
-        fprintf(stderr, "Drawing image=%s fb=%s screen=%dx%d bpp=%d rotate=%d scale=%s\n",
-                opts->image_path, opts->fb_path, fb.width, fb.height, fb.bpp, opts->rotate, scale_name(opts->scale));
+        fprintf(
+            stderr, "Drawing image=%s fb=%s screen=%dx%d bpp=%d rotate=%d scale=%s\n", opts->image_path, opts->fb_path,
+            fb.width, fb.height, fb.bpp, opts->rotate, scale_name(opts->scale)
+        );
 
         if (opts->gradient.enabled) {
-            fprintf(stderr, "Gradient: top=%02X%02X%02X bottom=%02X%02X%02X\n",
-                    opts->gradient.top_r, opts->gradient.top_g, opts->gradient.top_b,
-                    opts->gradient.bot_r, opts->gradient.bot_g, opts->gradient.bot_b);
+            fprintf(
+                stderr, "Gradient: top=%02X%02X%02X bottom=%02X%02X%02X\n", opts->gradient.top_r, opts->gradient.top_g,
+                opts->gradient.top_b, opts->gradient.bot_r, opts->gradient.bot_g, opts->gradient.bot_b
+            );
         }
 
         if (opts->recolour_enabled) {
-            fprintf(stderr, "Recolour: tint=%02X%02X%02X alpha=%d%%\n",
-                    opts->recolour_r, opts->recolour_g, opts->recolour_b, opts->recolour_alpha);
+            fprintf(
+                stderr, "Recolour: tint=%02X%02X%02X alpha=%d%%\n", opts->recolour_r, opts->recolour_g,
+                opts->recolour_b, opts->recolour_alpha
+            );
         }
     }
 
@@ -1282,7 +1242,8 @@ static int run_draw(const options_t *opts) {
 
     if (opts->wait) {
         log_msg(opts, "Waiting until killed");
-        while (keep_running) pause();
+        while (keep_running)
+            pause();
     }
 
     close_fb(&fb);
@@ -1293,7 +1254,7 @@ static int run_draw(const options_t *opts) {
     return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(const int argc, char *argv[]) {
     options_t opts;
 
     if (parse_args(argc, argv, &opts) != 0) return 1;

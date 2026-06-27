@@ -71,8 +71,8 @@
 /*    difference.                                                        */
 /*                                                                       */
 PVG_FT_Long
-PVG_FT_MulFix( PVG_FT_Long  a,
-    PVG_FT_Long  b );
+PVG_FT_MulFix(PVG_FT_Long a,
+              PVG_FT_Long b);
 
 /*************************************************************************/
 /*                                                                       */
@@ -98,9 +98,9 @@ PVG_FT_MulFix( PVG_FT_Long  a,
 /*    on the signs of `a' and `b'.                                       */
 /*                                                                       */
 PVG_FT_Long
-PVG_FT_MulDiv( PVG_FT_Long  a,
-    PVG_FT_Long  b,
-    PVG_FT_Long  c );
+PVG_FT_MulDiv(PVG_FT_Long a,
+              PVG_FT_Long b,
+              PVG_FT_Long c);
 
 /*************************************************************************/
 /*                                                                       */
@@ -120,9 +120,8 @@ PVG_FT_MulDiv( PVG_FT_Long  a,
 /*    The result of `(a*0x10000)/b'.                                     */
 /*                                                                       */
 PVG_FT_Long
-PVG_FT_DivFix( PVG_FT_Long  a,
-    PVG_FT_Long  b );
-
+PVG_FT_DivFix(PVG_FT_Long a,
+              PVG_FT_Long b);
 
 
 /*************************************************************************/
@@ -143,7 +142,7 @@ PVG_FT_DivFix( PVG_FT_Long  a,
  *   angle is a 16.16 fixed-point value expressed in degrees.
  *
  */
-typedef PVG_FT_Fixed  PVG_FT_Angle;
+typedef PVG_FT_Fixed PVG_FT_Angle;
 
 
 /*************************************************************************
@@ -215,7 +214,7 @@ typedef PVG_FT_Fixed  PVG_FT_Angle;
  *
  */
 PVG_FT_Fixed
-PVG_FT_Sin( PVG_FT_Angle  angle );
+PVG_FT_Sin(PVG_FT_Angle angle);
 
 
 /*************************************************************************
@@ -239,7 +238,7 @@ PVG_FT_Sin( PVG_FT_Angle  angle );
  *
  */
 PVG_FT_Fixed
-PVG_FT_Cos( PVG_FT_Angle  angle );
+PVG_FT_Cos(PVG_FT_Angle angle);
 
 
 /*************************************************************************
@@ -259,7 +258,7 @@ PVG_FT_Cos( PVG_FT_Angle  angle );
  *
  */
 PVG_FT_Fixed
-PVG_FT_Tan( PVG_FT_Angle  angle );
+PVG_FT_Tan(PVG_FT_Angle angle);
 
 
 /*************************************************************************
@@ -283,8 +282,8 @@ PVG_FT_Tan( PVG_FT_Angle  angle );
  *
  */
 PVG_FT_Angle
-PVG_FT_Atan2( PVG_FT_Fixed  x,
-    PVG_FT_Fixed  y );
+PVG_FT_Atan2(PVG_FT_Fixed x,
+             PVG_FT_Fixed y);
 
 
 /*************************************************************************
@@ -308,8 +307,8 @@ PVG_FT_Atan2( PVG_FT_Fixed  x,
  *
  */
 PVG_FT_Angle
-PVG_FT_Angle_Diff( PVG_FT_Angle  angle1,
-    PVG_FT_Angle  angle2 );
+PVG_FT_Angle_Diff(PVG_FT_Angle angle1,
+                  PVG_FT_Angle angle2);
 
 
 /*************************************************************************
@@ -335,8 +334,8 @@ PVG_FT_Angle_Diff( PVG_FT_Angle  angle1,
  *
  */
 void
-PVG_FT_Vector_Unit( PVG_FT_Vector*  vec,
-    PVG_FT_Angle    angle );
+PVG_FT_Vector_Unit(PVG_FT_Vector* vec,
+                   PVG_FT_Angle angle);
 
 
 /*************************************************************************
@@ -357,8 +356,8 @@ PVG_FT_Vector_Unit( PVG_FT_Vector*  vec,
  *
  */
 void
-PVG_FT_Vector_Rotate( PVG_FT_Vector*  vec,
-    PVG_FT_Angle    angle );
+PVG_FT_Vector_Rotate(PVG_FT_Vector* vec,
+                     PVG_FT_Angle angle);
 
 
 /*************************************************************************
@@ -379,7 +378,7 @@ PVG_FT_Vector_Rotate( PVG_FT_Vector*  vec,
  *
  */
 PVG_FT_Fixed
-PVG_FT_Vector_Length( PVG_FT_Vector*  vec );
+PVG_FT_Vector_Length(PVG_FT_Vector * vec);
 
 
 /*************************************************************************
@@ -403,9 +402,9 @@ PVG_FT_Vector_Length( PVG_FT_Vector*  vec );
  *
  */
 void
-PVG_FT_Vector_Polarize( PVG_FT_Vector*  vec,
-    PVG_FT_Fixed   *length,
-    PVG_FT_Angle   *angle );
+PVG_FT_Vector_Polarize(PVG_FT_Vector * vec,
+                       PVG_FT_Fixed * length,
+                       PVG_FT_Angle * angle);
 
 
 /*************************************************************************
@@ -429,8 +428,8 @@ PVG_FT_Vector_Polarize( PVG_FT_Vector*  vec,
  *
  */
 void
-PVG_FT_Vector_From_Polar( PVG_FT_Vector*  vec,
-    PVG_FT_Fixed    length,
-    PVG_FT_Angle    angle );
+PVG_FT_Vector_From_Polar(PVG_FT_Vector* vec,
+                         PVG_FT_Fixed length,
+                         PVG_FT_Angle angle);
 
 #endif /* PLUTOVG_FT_MATH_H */

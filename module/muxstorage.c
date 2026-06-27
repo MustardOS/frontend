@@ -1,31 +1,28 @@
 #include "muxshare.h"
 #include "ui/ui_muxstorage.h"
 
-#define STORAGE(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(STORAGE_ELEMENTS)
-};
+#define STORAGE(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(STORAGE_ELEMENTS) };
 #undef STORAGE
 
-struct storage {
+typedef struct {
     const char *path_suffix;
     lv_obj_t *ui_label;
-};
+} storage;
 
-struct storage storage_path[UI_COUNT];
-
+storage storage_path[ui_count_dynamic];
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define STORAGE(NAME, ENUM, UDATA) { UDATA, lang.MUXSTORAGE.HELP.ENUM },
-            STORAGE_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define STORAGE(NAME, UDATA) {UDATA, lang.muxstorage.help.NAME},
+        STORAGE_ELEMENTS
 #undef STORAGE
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
-static inline void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
+static void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
     storage_path[*sp].path_suffix = suffix;
     storage_path[*sp].ui_label = label;
     (*sp)++;
@@ -34,27 +31,27 @@ static inline void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
 static void update_storage_info(void) {
     int sp = 0;
 
-    add_storage(&sp, STORE_LOC_APPS, ui_lblAppsValue_storage);
-    add_storage(&sp, STORE_LOC_BIOS, ui_lblBiosValue_storage);
-    add_storage(&sp, STORE_LOC_CLOG, ui_lblCatalogueValue_storage);
-    add_storage(&sp, STORE_LOC_COLL, ui_lblCollectionValue_storage);
-    add_storage(&sp, STORE_LOC_HIST, ui_lblHistoryValue_storage);
-    add_storage(&sp, STORE_LOC_INIT, ui_lblInitValue_storage);
-    add_storage(&sp, STORE_LOC_MUSI, ui_lblMusicValue_storage);
-    add_storage(&sp, STORE_LOC_NAME, ui_lblNameValue_storage);
-    add_storage(&sp, STORE_LOC_NETW, ui_lblNetworkValue_storage);
-    add_storage(&sp, STORE_LOC_PACK, ui_lblPackageValue_storage);
-    add_storage(&sp, STORE_LOC_SAVE, ui_lblSaveValue_storage);
-    add_storage(&sp, STORE_LOC_SCRS, ui_lblScreenshotValue_storage);
-    add_storage(&sp, STORE_LOC_SYCT, ui_lblSyncthingValue_storage);
-    add_storage(&sp, STORE_LOC_THEM, ui_lblThemeValue_storage);
-    add_storage(&sp, STORE_LOC_TRAK, ui_lblTrackValue_storage);
+    add_storage(&sp, STORE_LOC_APPS, ui_val_apps_storage);
+    add_storage(&sp, STORE_LOC_BIOS, ui_val_bios_storage);
+    add_storage(&sp, STORE_LOC_CLOG, ui_val_catalogue_storage);
+    add_storage(&sp, STORE_LOC_COLL, ui_val_collection_storage);
+    add_storage(&sp, STORE_LOC_HIST, ui_val_history_storage);
+    add_storage(&sp, STORE_LOC_INIT, ui_val_init_storage);
+    add_storage(&sp, STORE_LOC_MUSI, ui_val_music_storage);
+    add_storage(&sp, STORE_LOC_NAME, ui_val_name_storage);
+    add_storage(&sp, STORE_LOC_NETW, ui_val_network_storage);
+    add_storage(&sp, STORE_LOC_PACK, ui_val_package_storage);
+    add_storage(&sp, STORE_LOC_SAVE, ui_val_save_storage);
+    add_storage(&sp, STORE_LOC_SCRS, ui_val_screenshot_storage);
+    add_storage(&sp, STORE_LOC_SYCT, ui_val_syncthing_storage);
+    add_storage(&sp, STORE_LOC_THEM, ui_val_theme_storage);
+    add_storage(&sp, STORE_LOC_TRAK, ui_val_track_storage);
 
     char dir[FILENAME_MAX];
     int on_sd2 = 0;
 
     for (int i = 0; i < sp; i++) {
-        snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
+        snprintf(dir, sizeof(dir), "%s/%s", device.storage.sdcard.mount, storage_path[i].path_suffix);
         if (dir_exist(dir)) {
             lv_label_set_text(storage_path[i].ui_label, "SD2");
             on_sd2 = 1;
@@ -63,33 +60,33 @@ static void update_storage_info(void) {
         }
     }
 
-    lv_label_set_text(ui_lblNavX, on_sd2 ? lang.GENERIC.SYNC : lang.GENERIC.MIGRATE);
+    lv_label_set_text(ui_lbl_nav_x, on_sd2 ? lang.generic.sync : lang.generic.migrate);
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_VALUE_ITEM(-1, storage, Apps, lang.MUXSTORAGE.APPS, "apps", "");
-    INIT_VALUE_ITEM(-1, storage, Bios, lang.MUXSTORAGE.BIOS, "bios", "");
-    INIT_VALUE_ITEM(-1, storage, Catalogue, lang.MUXSTORAGE.CATALOGUE, "catalogue", "");
-    INIT_VALUE_ITEM(-1, storage, Collection, lang.MUXSTORAGE.COLLECTION, "collection", "");
-    INIT_VALUE_ITEM(-1, storage, History, lang.MUXSTORAGE.HISTORY, "history", "");
-    INIT_VALUE_ITEM(-1, storage, Init, lang.MUXSTORAGE.INIT, "init", "");
-    INIT_VALUE_ITEM(-1, storage, Music, lang.MUXSTORAGE.MUSIC, "music", "");
-    INIT_VALUE_ITEM(-1, storage, Name, lang.MUXSTORAGE.NAME, "name", "");
-    INIT_VALUE_ITEM(-1, storage, Network, lang.MUXSTORAGE.NETWORK, "network", "");
-    INIT_VALUE_ITEM(-1, storage, Package, lang.MUXSTORAGE.PACKAGE, "package", "");
-    INIT_VALUE_ITEM(-1, storage, Save, lang.MUXSTORAGE.SAVE, "save", "");
-    INIT_VALUE_ITEM(-1, storage, Screenshot, lang.MUXSTORAGE.SCREENSHOT, "screenshot", "");
-    INIT_VALUE_ITEM(-1, storage, Syncthing, lang.MUXSTORAGE.SYNCTHING, "syncthing", "");
-    INIT_VALUE_ITEM(-1, storage, Theme, lang.MUXSTORAGE.THEME, "theme", "");
-    INIT_VALUE_ITEM(-1, storage, Track, lang.MUXSTORAGE.TRACK, "track", "");
+    INIT_VALUE_ITEM(-1, storage, apps, lang.muxstorage.apps, "apps", "");
+    INIT_VALUE_ITEM(-1, storage, bios, lang.muxstorage.bios, "bios", "");
+    INIT_VALUE_ITEM(-1, storage, catalogue, lang.muxstorage.catalogue, "catalogue", "");
+    INIT_VALUE_ITEM(-1, storage, collection, lang.muxstorage.collection, "collection", "");
+    INIT_VALUE_ITEM(-1, storage, history, lang.muxstorage.history, "history", "");
+    INIT_VALUE_ITEM(-1, storage, init, lang.muxstorage.init, "init", "");
+    INIT_VALUE_ITEM(-1, storage, music, lang.muxstorage.music, "music", "");
+    INIT_VALUE_ITEM(-1, storage, name, lang.muxstorage.name, "name", "");
+    INIT_VALUE_ITEM(-1, storage, network, lang.muxstorage.network, "network", "");
+    INIT_VALUE_ITEM(-1, storage, package, lang.muxstorage.package, "package", "");
+    INIT_VALUE_ITEM(-1, storage, save, lang.muxstorage.save, "save", "");
+    INIT_VALUE_ITEM(-1, storage, screenshot, lang.muxstorage.screenshot, "screenshot", "");
+    INIT_VALUE_ITEM(-1, storage, syncthing, lang.muxstorage.syncthing, "syncthing", "");
+    INIT_VALUE_ITEM(-1, storage, theme, lang.muxstorage.theme, "theme", "");
+    INIT_VALUE_ITEM(-1, storage, track, lang.muxstorage.track, "track", "");
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
     int sin_index = 0;
     if (file_exist(MUOS_SIN_LOAD)) {
@@ -97,11 +94,10 @@ static void init_navigation_group(void) {
         remove(MUOS_SIN_LOAD);
     }
 
-    if (ui_count > 0 && sin_index >= 0 && sin_index < ui_count && current_item_index < ui_count) {
+    if (ui_count_static > 0 && sin_index >= 0 && sin_index < ui_count_static && current_item_index < ui_count_static) {
         gen_step_movement(sin_index, 1, 0, 0, 1);
     }
 }
-
 
 static void handle_b(void) {
     if (hold_call) return;
@@ -111,7 +107,7 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "storage");
 
@@ -121,9 +117,9 @@ static void handle_b(void) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
-    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
 
     static char storage_script[MAX_BUFFER_SIZE];
     if (strcasecmp(lv_label_get_text(e_focused), "SD2") == 0) {
@@ -150,43 +146,41 @@ static void handle_a(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavBGlyph, "",                0},
-            {ui_lblNavB,      lang.GENERIC.BACK, 0},
-            {ui_lblNavXGlyph, "",                0},
-            {ui_lblNavX,      "",                0},
-            {NULL, NULL,                         0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, "", 0},
+                                  {NULL, NULL, 0}});
 
-#define STORAGE(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_storage, UDATA);
+#define STORAGE(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_storage, UDATA);
     STORAGE_ELEMENTS
 #undef STORAGE
 
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, WALL_GENERAL);
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();
 
-        struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
+        const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
         if (strcasecmp(lv_label_get_text(e_focused), "SD2") == 0) {
-            lv_label_set_text(ui_lblNavX, lang.GENERIC.SYNC);
+            lv_label_set_text(ui_lbl_nav_x, lang.generic.sync);
         } else {
-            lv_label_set_text(ui_lblNavX, lang.GENERIC.MIGRATE);
+            lv_label_set_text(ui_lbl_nav_x, lang.generic.migrate);
         }
 
-        lv_obj_invalidate(ui_pnlContent);
+        lv_obj_invalidate(ui_pnl_content);
         nav_moved = 0;
     }
 }
@@ -195,14 +189,14 @@ int muxstorage_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);
-    init_muxstorage(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxstorage.title);
+    init_muxstorage(ui_pnl_content);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -211,28 +205,30 @@ int muxstorage_main(void) {
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_a,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_a,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

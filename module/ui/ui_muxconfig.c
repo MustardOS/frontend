@@ -1,16 +1,16 @@
 #include "ui_muxshare.h"
 #include "ui_muxconfig.h"
 
-#define CONFIG(NAME, ENUM, UDATA)    \
-    lv_obj_t *ui_pnl##NAME##_config; \
-    lv_obj_t *ui_lbl##NAME##_config; \
-    lv_obj_t *ui_ico##NAME##_config;
+#define CONFIG(NAME, UDATA)                                                                                            \
+    lv_obj_t *ui_pnl_##NAME##_config;                                                                                  \
+    lv_obj_t *ui_lbl_##NAME##_config;                                                                                  \
+    lv_obj_t *ui_ico_##NAME##_config;
 
 CONFIG_ELEMENTS
 #undef CONFIG
 
-void init_muxconfig(lv_obj_t *ui_pnlContent) {
-#define CONFIG(NAME, ENUM, UDATA) CREATE_STATIC_ITEM(config, NAME);
+void init_muxconfig(lv_obj_t *ui_pnl_content) {
+#define CONFIG(NAME, UDATA) CREATE_STATIC_ITEM(config, NAME);
     CONFIG_ELEMENTS
 #undef CONFIG
 }

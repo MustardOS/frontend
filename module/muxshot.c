@@ -1,6 +1,6 @@
 #include "muxshare.h"
 
-lv_obj_t *ui_imgScreenshot;
+lv_obj_t *ui_img_screenshot;
 static int is_fullscreen = 0;
 
 static int remove_mode = 0;
@@ -20,46 +20,45 @@ static void hide_remove_dialog(void) {
 }
 
 static void show_help(void) {
-    show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.MUXSHOT.HELP, 0);
+    show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.muxshot.help, 0);
 }
 
 static void image_refresh(void) {
     // Invalidate the cache for this image path
-    lv_img_cache_invalidate_src(lv_img_get_src(ui_imgScreenshot));
+    lv_img_cache_invalidate_src(lv_img_get_src(ui_img_screenshot));
 
     char shot_name[PATH_MAX];
-    int n_name = snprintf(shot_name, sizeof(shot_name), "%s.png",
-                          lv_label_get_text(lv_group_get_focused(ui_group)));
+    const int n_name =
+        snprintf(shot_name, sizeof(shot_name), "%s.png", lv_label_get_text(lv_group_get_focused(ui_group)));
     if (n_name < 0 || (size_t) n_name >= sizeof(shot_name)) {
-        lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
+        lv_img_set_src(ui_img_screenshot, &ui_img_blank);
         return;
     }
 
     char screenshot_file[PATH_MAX];
     if (build_safe_path(screenshot_file, sizeof(screenshot_file), STORAGE_SHOTS, shot_name) != 0) {
-        lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
+        lv_img_set_src(ui_img_screenshot, &ui_img_blank);
         return;
     }
 
     char screenshot_image[PATH_MAX];
-    int n_img = snprintf(screenshot_image, sizeof(screenshot_image), "M:%s", screenshot_file);
+    const int n_img = snprintf(screenshot_image, sizeof(screenshot_image), "M:%s", screenshot_file);
     if (n_img < 0 || (size_t) n_img >= sizeof(screenshot_image)) {
-        lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
+        lv_img_set_src(ui_img_screenshot, &ui_img_blank);
         return;
     }
 
-    lv_img_set_src(ui_imgScreenshot, screenshot_image);
+    lv_img_set_src(ui_img_screenshot, screenshot_image);
 }
 
 static void create_screenshot_items(void) {
-    DIR *td;
     struct dirent *tf;
     regex_t regex;
     const char *pattern = "^muOS_[0-9]{8}_[0-9]{4}_[0-9]+\\.png$";
 
     if (regcomp(&regex, pattern, REG_EXTENDED | REG_NOSUB) != 0) return;
 
-    td = opendir(STORAGE_SHOTS);
+    DIR *td = opendir(STORAGE_SHOTS);
     if (!td) {
         regfree(&regex);
         return;
@@ -82,45 +81,47 @@ static void create_screenshot_items(void) {
     reset_ui_groups();
 
     for (size_t i = 0; i < item_count; i++) {
-        ui_count++;
+        ui_count_static++;
 
-        lv_obj_t *ui_pnlScreenshot = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlScreenshot);
+        lv_obj_t *ui_pnl_screenshot = lv_obj_create(ui_pnl_content);
+        apply_theme_list_panel(ui_pnl_screenshot);
 
-        lv_obj_t *ui_lblScreenshotItem = lv_label_create(ui_pnlScreenshot);
-        apply_theme_list_item(&theme, ui_lblScreenshotItem, items[i].display_name);
+        lv_obj_t *ui_lbl_screenshot_item = lv_label_create(ui_pnl_screenshot);
+        apply_theme_list_item(&theme, ui_lbl_screenshot_item, items[i].display_name);
 
-        lv_obj_t *ui_lblScreenshotItemGlyph = lv_img_create(ui_pnlScreenshot);
-        apply_theme_list_glyph(&theme, ui_lblScreenshotItemGlyph, mux_module, "screenshot");
+        lv_obj_t *ui_lbl_screenshot_item_glyph = lv_img_create(ui_pnl_screenshot);
+        apply_theme_list_glyph(&theme, ui_lbl_screenshot_item_glyph, mux_module, "screenshot");
 
-        lv_group_add_obj(ui_group, ui_lblScreenshotItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblScreenshotItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlScreenshot);
+        lv_group_add_obj(ui_group, ui_lbl_screenshot_item);
+        lv_group_add_obj(ui_group_glyph, ui_lbl_screenshot_item_glyph);
+        lv_group_add_obj(ui_group_panel, ui_pnl_screenshot);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblScreenshotItem, ui_lblScreenshotItemGlyph, items[i].display_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblScreenshotItem);
+        apply_size_to_content(
+            &theme, ui_pnl_content, ui_lbl_screenshot_item, ui_lbl_screenshot_item_glyph, items[i].display_name
+        );
+        apply_text_long_dot(&theme, ui_lbl_screenshot_item);
     }
 
-    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+    if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 }
-
 
 static void do_remove(void) {
     char shot_name[PATH_MAX];
-    int n_name = snprintf(shot_name, sizeof(shot_name), "%s.png", lv_label_get_text(lv_group_get_focused(ui_group)));
+    const int n_name =
+        snprintf(shot_name, sizeof(shot_name), "%s.png", lv_label_get_text(lv_group_get_focused(ui_group)));
 
     char screenshot_file[PATH_MAX];
-    if (n_name < 0 || (size_t) n_name >= sizeof(shot_name) ||
-        build_safe_path(screenshot_file, sizeof(screenshot_file), STORAGE_SHOTS, shot_name) != 0) {
-        play_sound(SND_ERROR);
-        toast_message(lang.GENERIC.REMOVE_FAIL, MEDIUM);
+    if (n_name < 0 || (size_t) n_name >= sizeof(shot_name)
+        || build_safe_path(screenshot_file, sizeof(screenshot_file), STORAGE_SHOTS, shot_name) != 0) {
+        play_sound(snd_error);
+        toast_message(lang.generic.remove_fail, tst_wait_m);
         return;
     }
 
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count - 1));
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
     remove(screenshot_file);
 
-    play_sound(SND_MUOS);
+    play_sound(snd_muos);
     load_mux("screenshot");
 
     mux_input_stop();
@@ -130,7 +131,7 @@ static void handle_dpad_up(void) {
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -142,7 +143,7 @@ static void handle_dpad_down(void) {
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -163,36 +164,36 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count_static || hold_call) return;
 
     if (remove_mode) {
-        mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
+        const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         hide_remove_dialog();
-        if (opt == MUX_REMOVE_YEP) {
+        if (opt == mux_remove_yep) {
             do_remove();
-        } else if (opt == MUX_REMOVE_SKIP) {
+        } else if (opt == mux_remove_skip) {
             skip_confirm = 1;
             do_remove();
         }
         return;
     }
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     if (is_fullscreen) {
         is_fullscreen = 0;
-        lv_obj_set_style_img_opa(ui_imgScreenshot, 64, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_move_to_index(ui_imgScreenshot, (int16_t) (lv_obj_get_index(ui_pnlWall) + 1));
-        lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_img_opa(ui_img_screenshot, 64, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_to_index(ui_img_screenshot, (int16_t) (lv_obj_get_index(ui_pnl_wall) + 1));
+        lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
     } else {
         is_fullscreen = 1;
-        lv_obj_set_style_img_opa(ui_imgScreenshot, 255, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_move_foreground(ui_imgScreenshot);
-        lv_obj_add_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_img_opa(ui_img_screenshot, 255, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_move_foreground(ui_img_screenshot);
+        lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -209,69 +210,67 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "screenshot");
 
     mux_input_stop();
 }
 
 static void handle_x(void) {
-    if (msgbox_active || is_fullscreen || !ui_count || remove_mode) return;
+    if (msgbox_active || is_fullscreen || !ui_count_static || remove_mode) return;
 
-    if (config.SETTINGS.ADVANCED.TRUSTREMOVE || skip_confirm) {
+    if (config.settings.advanced.trust_remove || skip_confirm) {
         do_remove();
         return;
     }
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
     show_remove_dialog();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || is_fullscreen || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || is_fullscreen || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                  1},
-            {ui_lblNavA,      lang.GENERIC.SELECT, 1},
-            {ui_lblNavBGlyph, "",                  0},
-            {ui_lblNavB,      lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph, "",                  1},
-            {ui_lblNavX,      lang.GENERIC.REMOVE, 1},
-            {NULL, NULL,                           0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 1},
+                                  {ui_lbl_nav_a, lang.generic.select, 1},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 1},
+                                  {ui_lbl_nav_x, lang.generic.remove, 1},
+                                  {NULL, NULL, 0}});
 
-    ui_imgScreenshot = lv_img_create(ui_screen);
+    ui_img_screenshot = lv_img_create(ui_screen);
 
-    lv_img_set_src(ui_imgScreenshot, &ui_img_blank);
-    lv_obj_set_width(ui_imgScreenshot, device.MUX.WIDTH);
-    lv_obj_set_height(ui_imgScreenshot, device.MUX.HEIGHT);
-    lv_obj_set_align(ui_imgScreenshot, LV_ALIGN_CENTER);
+    lv_img_set_src(ui_img_screenshot, &ui_img_blank);
+    lv_obj_set_width(ui_img_screenshot, device.mux.width);
+    lv_obj_set_height(ui_img_screenshot, device.mux.height);
+    lv_obj_set_align(ui_img_screenshot, LV_ALIGN_CENTER);
 
-    lv_obj_set_style_img_opa(ui_imgScreenshot, 64, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_imgScreenshot, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_imgScreenshot, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_shadow_width(ui_imgScreenshot, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_all(ui_imgScreenshot, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_opa(ui_img_screenshot, 64, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_img_screenshot, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_img_screenshot, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_shadow_width(ui_img_screenshot, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_img_screenshot, 0, MU_OBJ_MAIN_DEFAULT);
 
-    mu_img_no_shadow(ui_imgScreenshot);
-    lv_obj_move_to_index(ui_imgScreenshot, (int16_t) (lv_obj_get_index(ui_pnlWall) + 1));
+    mu_img_no_shadow(ui_img_screenshot);
+    lv_obj_move_to_index(ui_img_screenshot, (int16_t) (lv_obj_get_index(ui_pnl_wall) + 1));
 
     overlay_display();
 }
 
-static void ui_refresh_task() {
-    if (ui_count > 0 && nav_moved) {
+static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    if (ui_count_static > 0 && nav_moved) {
         image_refresh();
         adjust_gen_panel();
 
-        lv_obj_invalidate(ui_pnlBox);
+        lv_obj_invalidate(ui_pnl_box);
         nav_moved = 0;
     }
 }
@@ -283,12 +282,12 @@ int muxshot_main(void) {
     init_module(__func__);
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXSHOT.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxshot.title);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     create_screenshot_items();
@@ -301,49 +300,52 @@ int muxshot_main(void) {
     }
 
     int nav_hidden = 0;
-    if (ui_count > 0) {
+    if (ui_count_static > 0) {
         nav_hidden = 1;
     } else {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXSHOT.NONE);
+        lv_label_set_text(ui_lbl_screen_message, lang.muxshot.none);
     }
 
-    struct nav_flag nav_e[] = {
-            {ui_lblNavA,      nav_hidden},
-            {ui_lblNavAGlyph, nav_hidden},
-            {ui_lblNavX,      nav_hidden},
-            {ui_lblNavXGlyph, nav_hidden}
+    const struct nav_flag nav_e[] = {
+        {ui_lbl_nav_a, nav_hidden},
+        {ui_lbl_nav_a_glyph, nav_hidden},
+        {ui_lbl_nav_x, nav_hidden},
+        {ui_lbl_nav_x_glyph, nav_hidden}
     };
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
-    if (ui_count > 0 && sys_index <= ui_count && current_item_index < ui_count) gen_step_movement(sys_index, +1, 1, 0, 1);
+    if (ui_count_static > 0 && sys_index <= ui_count_static && current_item_index < ui_count_static)
+        gen_step_movement(sys_index, +1, 1, 0, 1);
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.back);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

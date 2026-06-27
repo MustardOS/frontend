@@ -1,20 +1,18 @@
 #include "muxshare.h"
 #include "ui/ui_muxbtall.h"
 
-#define BTALL(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(BTALL_ELEMENTS)
-};
+#define BTALL(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(BTALL_ELEMENTS) };
 #undef BTALL
 
-#define BTALL(NAME, ENUM, UDATA) static int NAME##_original;
+#define BTALL(NAME, UDATA) static int NAME##_original;
 BTALL_ELEMENTS
 #undef BTALL
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define BTALL(NAME, ENUM, UDATA) { UDATA, lang.MUXBTALL.HELP.ENUM },
-            BTALL_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define BTALL(NAME, UDATA) {UDATA, lang.muxbtall.help.NAME},
+        BTALL_ELEMENTS
 #undef BTALL
     };
 
@@ -22,22 +20,22 @@ static void show_help(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define BTALL(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_btall);
+#define BTALL(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_btall);
     BTALL_ELEMENTS
 #undef BTALL
 }
 
 static void restore_btall_options(void) {
-    lv_dropdown_set_selected(ui_droAutoConnect_btall, config.BLUETOOTH.AUTOCONNECT);
+    lv_dropdown_set_selected(ui_dro_auto_connect_btall, config.bluetooth.auto_connect);
 }
 
 static void save_btall_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(btall, AutoConnect, "bluetooth/autoconnect", INT, 0);
+    CHECK_AND_SAVE_STD(btall, auto_connect, "bluetooth/autoconnect", INT, 0);
 
     if (is_modified > 0) {
-        const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "autoconnect", NULL};
+        const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "autoconnect", NULL};
         run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
         refresh_config = 1;
     }
@@ -66,7 +64,7 @@ static void populate_paired_device_list(void) {
         int connected = 0;
         char name[64] = {0};
 
-        char *tok = line;
+        const char *tok = line;
         char *sp = strchr(tok, ' ');
         if (!sp || sp - tok > 17) continue;
         memcpy(mac, tok, sp - tok);
@@ -74,40 +72,42 @@ static void populate_paired_device_list(void) {
 
         tok = sp + 1;
         char *end;
-        long val = strtol(tok, &end, 10);
+        const long val = strtol(tok, &end, 10);
         if (end == tok || *end != ' ' || val < 0 || val > 1) continue;
         connected = (int) val;
 
         snprintf(name, sizeof(name), "%s", end + 1);
         if (name[0] == '\0') continue;
 
-        ui_count++;
+        ui_count_static++;
 
-        lv_obj_t *ui_pnlDevice = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlDevice);
+        lv_obj_t *ui_pnl_device = lv_obj_create(ui_pnl_content);
+        apply_theme_list_panel(ui_pnl_device);
 
-        lv_obj_t *ui_lblDevice = lv_label_create(ui_pnlDevice);
-        apply_theme_list_item(&theme, ui_lblDevice, name);
+        lv_obj_t *ui_lbl_device = lv_label_create(ui_pnl_device);
+        apply_theme_list_item(&theme, ui_lbl_device, name);
 
-        lv_obj_t *ui_lblDeviceStatus = lv_label_create(ui_pnlDevice);
-        apply_theme_list_value(&theme, ui_lblDeviceStatus, connected ? lang.MUXBTALL.CONNECTED : lang.MUXBTALL.DISCONNECTED);
+        lv_obj_t *ui_lbl_device_status = lv_label_create(ui_pnl_device);
+        apply_theme_list_value(
+            &theme, ui_lbl_device_status, connected ? lang.muxbtall.connected : lang.muxbtall.disconnected
+        );
 
-        lv_obj_t *ui_icoDevice = lv_img_create(ui_pnlDevice);
-        apply_theme_list_glyph(&theme, ui_icoDevice, mux_module, "bluetooth");
+        lv_obj_t *ui_ico_device = lv_img_create(ui_pnl_device);
+        apply_theme_list_glyph(&theme, ui_ico_device, mux_module, "bluetooth");
 
-        lv_group_add_obj(ui_group, ui_lblDevice);
-        lv_group_add_obj(ui_group_value, ui_lblDeviceStatus);
-        lv_group_add_obj(ui_group_glyph, ui_icoDevice);
-        lv_group_add_obj(ui_group_panel, ui_pnlDevice);
+        lv_group_add_obj(ui_group, ui_lbl_device);
+        lv_group_add_obj(ui_group_value, ui_lbl_device_status);
+        lv_group_add_obj(ui_group_glyph, ui_ico_device);
+        lv_group_add_obj(ui_group_panel, ui_pnl_device);
 
-        lv_obj_set_user_data(ui_pnlDevice, strdup(mac));
+        lv_obj_set_user_data(ui_pnl_device, strdup(mac));
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblDevice, ui_icoDevice, name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblDevice);
+        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_device, ui_ico_device, name);
+        apply_text_long_dot(&theme, ui_lbl_device);
     }
     fclose(file);
 
-    if (ui_count > UI_COUNT) lv_obj_update_layout(ui_pnlContent);
+    if (ui_count_static > ui_count_dynamic) lv_obj_update_layout(ui_pnl_content);
 }
 
 static void bt_poll_task(lv_timer_t *t) {
@@ -118,8 +118,8 @@ static void bt_poll_task(lv_timer_t *t) {
     }
 
     struct stat st;
-    int file_ready = (stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0);
-    int timed_out = (time(NULL) - bt_list_start >= 10);
+    const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0;
+    const int timed_out = time(NULL) - bt_list_start >= 10;
 
     if (!file_ready && !timed_out) return;
 
@@ -129,9 +129,9 @@ static void bt_poll_task(lv_timer_t *t) {
 
     populate_paired_device_list();
 
-    lv_label_set_text(ui_lblScreenMessage, ui_count <= UI_COUNT ? lang.MUXBTALL.NONE : "");
+    lv_label_set_text(ui_lbl_screen_message, ui_count_static <= ui_count_dynamic ? lang.muxbtall.none : "");
 
-    if (ui_count > UI_COUNT) {
+    if (ui_count_static > ui_count_dynamic) {
         nav_silent = 1;
         list_nav_next(0);
         nav_silent = 0;
@@ -140,7 +140,7 @@ static void bt_poll_task(lv_timer_t *t) {
 }
 
 static void create_paired_device_items(void) {
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXBTALL.LOADING);
+    lv_label_set_text(ui_lbl_screen_message, lang.muxbtall.loading);
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
 
@@ -149,7 +149,7 @@ static void create_paired_device_items(void) {
     bt_list_start = time(NULL);
     bt_list_pending = 1;
 
-    const char *args[] = {(OPT_PATH "script/mux/bt_device.sh"), "list", NULL};
+    const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "list", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 }
 
@@ -157,38 +157,38 @@ static const char *get_focused_device_mac(void) {
     lv_obj_t *panel = lv_group_get_focused(ui_group_panel);
     if (!panel) return NULL;
 
-    return (const char *) lv_obj_get_user_data(panel);
+    return lv_obj_get_user_data(panel);
 }
 
-static void nav_show_a(int show, const char *text) {
+static void nav_show_a(const int show, const char *text) {
     if (show) {
-        lv_label_set_text(ui_lblNavA, text);
-        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_label_set_text(ui_lbl_nav_a, text);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
-static void nav_show_lr(int show) {
+static void nav_show_lr(const int show) {
     if (show) {
-        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
 static void check_focus(void) {
-    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (e_focused == ui_lblAutoConnect_btall) {
+    if (e_focused == ui_lbl_auto_connect_btall) {
         nav_show_a(0, NULL);
         nav_show_lr(1);
     } else if (e_focused) {
-        nav_show_a(1, lang.GENERIC.SELECT);
+        nav_show_a(1, lang.generic.select);
         nav_show_lr(0);
     } else {
         nav_show_a(0, NULL);
@@ -196,27 +196,27 @@ static void check_focus(void) {
     }
 }
 
-static void list_nav_move(int steps, int direction) {
+static void list_nav_move(const int steps, const int direction) {
     gen_step_movement(steps, direction, 1, 0, 1);
     check_focus();
 }
 
-static void list_nav_prev(int steps) {
+static void list_nav_prev(const int steps) {
     list_nav_move(steps, -1);
 }
 
-static void list_nav_next(int steps) {
+static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
 static void handle_option_prev(void) {
-    if (msgbox_active || current_item_index >= UI_COUNT) return;
+    if (msgbox_active || current_item_index >= ui_count_dynamic) return;
 
     move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
-    if (msgbox_active || current_item_index >= UI_COUNT) return;
+    if (msgbox_active || current_item_index >= ui_count_dynamic) return;
 
     move_option(lv_group_get_focused(ui_group_value), +1);
 }
@@ -224,11 +224,11 @@ static void handle_option_next(void) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    static int16_t KIOSK_PASS = 0;
+    static int16_t kiosk_pass = 0;
 
     typedef enum {
-        MENU_GENERAL = 0,
-        MENU_OPTION,
+        menu_general = 0,
+        menu_option,
     } menu_action;
 
     typedef struct {
@@ -237,14 +237,14 @@ static void handle_a(void) {
         menu_action action;
     } menu_entry;
 
-    static const menu_entry entries[UI_COUNT] = {
-            {NULL, &KIOSK_PASS, MENU_OPTION},  // Auto Connect
+    static const menu_entry entries[ui_count_dynamic] = {
+        {NULL, &kiosk_pass, menu_option}, // Auto Connect
     };
 
-    if (current_item_index < UI_COUNT) {
+    if (current_item_index < ui_count_dynamic) {
         const menu_entry *entry = &entries[current_item_index];
-        if (entry->action == MENU_GENERAL) {
-            play_sound(SND_CONFIRM);
+        if (entry->action == menu_general) {
+            play_sound(snd_confirm);
             cancel_bt_poll();
             save_btall_options();
             load_mux(entry->mux_name);
@@ -258,13 +258,13 @@ static void handle_a(void) {
     const char *mac = get_focused_device_mac();
     if (!mac) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
     cancel_bt_poll();
 
     char mac_copy[18];
     snprintf(mac_copy, sizeof(mac_copy), "%s", mac);
 
-    const char *info_args[] = {(OPT_PATH "script/mux/bt_device.sh"), "info", mac_copy, NULL};
+    const char *info_args[] = {OPT_PATH "script/mux/bt_device.sh", "info", mac_copy, NULL};
     run_exec(info_args, A_SIZE(info_args), 0, 1, NULL, NULL);
 
     write_text_to_file(CONF_CONFIG_PATH "bluetooth/selected", "w", CHAR, mac_copy);
@@ -284,7 +284,7 @@ static void cancel_bt_poll(void) {
 static void handle_x(void) {
     if (msgbox_active || hold_call) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
     cancel_bt_poll();
     save_btall_options();
     load_mux("btcon");
@@ -300,7 +300,7 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     cancel_bt_poll();
     save_btall_options();
 
@@ -309,29 +309,26 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
-    if (current_item_index >= UI_COUNT) return;
+    if (current_item_index >= ui_count_dynamic) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    char *auto_connect_options[] = {
-            lang.GENERIC.DISABLED,
-            lang.GENERIC.ENABLED
-    };
+    char *auto_connect_options[] = {lang.generic.disabled, lang.generic.enabled};
 
-    INIT_OPTION_ITEM(-1, btall, AutoConnect, lang.MUXBTALL.AUTOCONNECT, "autoconnect", auto_connect_options, 2);
+    INIT_OPTION_ITEM(-1, btall, auto_connect, lang.muxbtall.auto_connect, "autoconnect", auto_connect_options, 2);
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, true);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 1);
 
     create_paired_device_items();
     list_nav_next(0);
@@ -340,21 +337,19 @@ static void init_navigation_group(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavAGlyph,  "",                  0},
-            {ui_lblNavA,       lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {ui_lblNavXGlyph,  "",                  0},
-            {ui_lblNavX,       lang.GENERIC.SCAN,   0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.scan, 0},
+                                  {NULL, NULL, 0}});
 
     check_focus();
 
-#define BTALL(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_btall, UDATA);
+#define BTALL(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_btall, UDATA);
     BTALL_ELEMENTS
 #undef BTALL
 
@@ -365,14 +360,14 @@ int muxbtall_main(void) {
     init_module(__func__);
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXBTALL.TITLE);
-    init_muxbtall(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxbtall.title);
+    init_muxbtall(ui_pnl_content);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -384,33 +379,35 @@ int muxbtall_main(void) {
     bt_poll_timer = lv_timer_create(bt_poll_task, 300, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            },
+        .hold_handler = {
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        },
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
 
     mux_input_task(&input_opts);
 

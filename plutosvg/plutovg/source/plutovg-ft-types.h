@@ -27,7 +27,7 @@
 /*    This type is used to store 16.16 fixed-point values, like scaling  */
 /*    values or matrix coefficients.                                     */
 /*                                                                       */
-typedef signed long  PVG_FT_Fixed;
+typedef signed long PVG_FT_Fixed;
 
 
 /*************************************************************************/
@@ -38,7 +38,7 @@ typedef signed long  PVG_FT_Fixed;
 /* <Description>                                                         */
 /*    A typedef for the int type.                                        */
 /*                                                                       */
-typedef signed int  PVG_FT_Int;
+typedef signed int PVG_FT_Int;
 
 
 /*************************************************************************/
@@ -49,7 +49,7 @@ typedef signed int  PVG_FT_Int;
 /* <Description>                                                         */
 /*    A typedef for the unsigned int type.                               */
 /*                                                                       */
-typedef unsigned int  PVG_FT_UInt;
+typedef unsigned int PVG_FT_UInt;
 
 
 /*************************************************************************/
@@ -60,7 +60,7 @@ typedef unsigned int  PVG_FT_UInt;
 /* <Description>                                                         */
 /*    A typedef for signed long.                                         */
 /*                                                                       */
-typedef signed long  PVG_FT_Long;
+typedef signed long PVG_FT_Long;
 
 
 /*************************************************************************/
@@ -81,7 +81,7 @@ typedef unsigned long PVG_FT_ULong;
 /* <Description>                                                         */
 /*    A typedef for signed short.                                        */
 /*                                                                       */
-typedef signed short  PVG_FT_Short;
+typedef signed short PVG_FT_Short;
 
 
 /*************************************************************************/
@@ -92,7 +92,7 @@ typedef signed short  PVG_FT_Short;
 /* <Description>                                                         */
 /*    A simple typedef for the _unsigned_ char type.                     */
 /*                                                                       */
-typedef unsigned char  PVG_FT_Byte;
+typedef unsigned char PVG_FT_Byte;
 
 
 /*************************************************************************/
@@ -104,8 +104,7 @@ typedef unsigned char  PVG_FT_Byte;
 /*    A typedef of unsigned char, used for simple booleans.  As usual,   */
 /*    values 1 and~0 represent true and false, respectively.             */
 /*                                                                       */
-typedef unsigned char  PVG_FT_Bool;
-
+typedef unsigned char PVG_FT_Bool;
 
 
 /*************************************************************************/
@@ -117,7 +116,7 @@ typedef unsigned char  PVG_FT_Bool;
 /*    The FreeType error code type.  A value of~0 is always interpreted  */
 /*    as a successful operation.                                         */
 /*                                                                       */
-typedef int  PVG_FT_Error;
+typedef int PVG_FT_Error;
 
 
 /*************************************************************************/
@@ -130,7 +129,7 @@ typedef int  PVG_FT_Error;
 /*    on the context, these can represent distances in integer font      */
 /*    units, or 16.16, or 26.6 fixed-point pixel coordinates.            */
 /*                                                                       */
-typedef signed long  PVG_FT_Pos;
+typedef signed long PVG_FT_Pos;
 
 
 /*************************************************************************/
@@ -146,19 +145,18 @@ typedef signed long  PVG_FT_Pos;
 /*    x :: The horizontal coordinate.                                    */
 /*    y :: The vertical coordinate.                                      */
 /*                                                                       */
-typedef struct  PVG_FT_Vector_
+typedef struct PVG_FT_Vector_
 {
-    PVG_FT_Pos  x;
-    PVG_FT_Pos  y;
-
+    PVG_FT_Pos x;
+    PVG_FT_Pos y;
 } PVG_FT_Vector;
 
 
-typedef long long int           PVG_FT_Int64;
-typedef unsigned long long int  PVG_FT_UInt64;
+typedef long long int PVG_FT_Int64;
+typedef unsigned long long int PVG_FT_UInt64;
 
-typedef signed int              PVG_FT_Int32;
-typedef unsigned int            PVG_FT_UInt32;
+typedef signed int PVG_FT_Int32;
+typedef unsigned int PVG_FT_UInt32;
 
 #define PVG_FT_BOOL( x )  ( (PVG_FT_Bool)( x ) )
 

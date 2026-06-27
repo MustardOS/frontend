@@ -5,77 +5,77 @@
 extern struct mux_kiosk kiosk;
 
 struct mux_kiosk {
-    int16_t ENABLE;
-    int16_t MESSAGE;
+    int16_t enable;
+    int16_t message;
 
     struct {
-        int16_t ARCHIVE;
-        int16_t TASK;
-    } APPLICATION;
+        int16_t archive;
+        int16_t task;
+    } application;
 
     struct {
-        int16_t CUSTOMISATION;
-        int16_t LANGUAGE;
-        int16_t CONNECTIVITY;
-        int16_t NETWORK;
-        int16_t STORAGE;
-        int16_t WEB_SERVICES;
-        int16_t NET_SETTINGS;
-        int16_t PROXY;
-        int16_t BACKUP;
-    } CONFIG;
+        int16_t customisation;
+        int16_t language;
+        int16_t connectivity;
+        int16_t network;
+        int16_t storage;
+        int16_t web_services;
+        int16_t net_settings;
+        int16_t proxy;
+        int16_t backup;
+    } config;
 
     struct {
-        int16_t CORE;
-        int16_t GOVERNOR;
-        int16_t CONTROL;
-        int16_t TAG;
-        int16_t OPTION;
-        int16_t RETROARCH;
-        int16_t COLFILTER;
-        int16_t SHADER;
-        int16_t REMCONFIG;
-        int16_t SEARCH;
-        int16_t HISTORY;
-    } CONTENT;
+        int16_t core;
+        int16_t governor;
+        int16_t control;
+        int16_t tag;
+        int16_t option;
+        int16_t retroarch;
+        int16_t colfilter;
+        int16_t shader;
+        int16_t remconfig;
+        int16_t search;
+        int16_t history;
+    } content;
 
     struct {
-        int16_t ADD_CON;
-        int16_t NEW_DIR;
-        int16_t REMOVE;
-        int16_t ACCESS;
-    } COLLECT;
+        int16_t add_con;
+        int16_t new_dir;
+        int16_t remove;
+        int16_t access;
+    } collect;
 
     struct {
-        int16_t CATALOGUE;
-        int16_t RACONFIG;
-        int16_t THEME;
-        int16_t THEME_DOWN;
-    } CUSTOM;
+        int16_t catalogue;
+        int16_t raconfig;
+        int16_t theme;
+        int16_t theme_down;
+    } custom;
 
     struct {
-        int16_t CLOCK;
-        int16_t TIMEZONE;
-    } DATETIME;
+        int16_t clock;
+        int16_t timezone;
+    } datetime;
 
     struct {
-        int16_t APPLICATION;
-        int16_t CONFIGURATION;
-        int16_t EXPLORE;
-        int16_t COLLECTION;
-        int16_t HISTORY;
-        int16_t INFORMATION;
-    } LAUNCH;
+        int16_t application;
+        int16_t configuration;
+        int16_t explore;
+        int16_t collection;
+        int16_t history;
+        int16_t information;
+    } launch;
 
     struct {
-        int16_t ADVANCED;
-        int16_t RGB;
-        int16_t GENERAL;
-        int16_t HDMI;
-        int16_t POWER;
-        int16_t VISUAL;
-        int16_t OVERLAY;
-    } SETTING;
+        int16_t advanced;
+        int16_t rgb;
+        int16_t general;
+        int16_t hdmi;
+        int16_t power;
+        int16_t visual;
+        int16_t overlay;
+    } setting;
 };
 
 void load_kiosk(struct mux_kiosk *kiosk);

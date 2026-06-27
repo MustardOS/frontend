@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stddef.h>
-#include "options.h"
 
 struct pattern {
     char **patterns;
@@ -22,20 +21,19 @@ int str_startswith(const char *a, const char *b);
 
 char *str_nonew(char *text);
 
-char *str_tolower(char *text);
+char *str_tolower(const char *text);
 
-char *str_toupper(char *text);
+char *str_toupper(const char *text);
 
 char *str_remchar(char *text, char c);
 
-char *str_remchars(char *text, char *c);
+char *str_remchars(char *text, const char *c);
 
 char *str_trim(char *text);
 
 char *str_replace(const char *orig, const char *rep, const char *with);
 
-int str_replace_segment(const char *orig, const char *prefix, const char *suffix,
-                        const char *with, char **replacement);
+int str_replace_segment(const char *orig, const char *prefix, const char *suffix, const char *with, char **replacement);
 
 int str_extract(const char *orig, const char *prefix, const char *suffix, char **extraction);
 
@@ -51,22 +49,23 @@ char *get_last_subdir(char *text, char separator, int n);
 
 void remove_double_slashes(char *str);
 
-char *get_last_dir(char *text);
+char *get_last_dir(const char *text);
 
 char *get_file_name(const char *text);
 
 char *get_content_path(char *path);
 
-char *strip_dir(char *text);
+char *strip_dir(const char *text);
 
-char *strip_ext(char *text);
+char *strip_ext(const char *text);
 
-char *grab_ext(char *text);
+char *grab_ext(const char *text);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
 
-char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
-                             const char *suffix, int infix_position);
+char *generate_number_string(
+    int min, int max, int increment, const char *prefix, const char *infix, const char *suffix, int infix_position
+);
 
 char *generate_time_string(int minute_offset);
 

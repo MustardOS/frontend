@@ -1,16 +1,16 @@
 #pragma once
 
 typedef enum {
-    BOARD_SPECIAL_NONE = 0,
-    BOARD_SPECIAL_G350,
-    BOARD_SPECIAL_TUI_BRICK,
-    BOARD_SPECIAL_TUI_SPOON,
-    BOARD_SPECIAL_VITA_PRO,
+    board_special_none = 0,
+    board_special_g350,
+    board_special_tui_brick,
+    board_special_tui_spoon,
+    board_special_vita_pro,
 } board_special_t;
 
 typedef enum {
-    BOARD_EVENT_OFFSET_NONE = 0,
-    BOARD_EVENT_OFFSET_TOUCH,
+    board_event_offset_none = 0,
+    board_event_offset_touch,
 } board_event_offset_condition_t;
 
 typedef struct {
@@ -30,16 +30,16 @@ typedef struct {
 } board_info_t;
 
 enum {
-    NOP = -1,
-    EV0 = 0,
-    EV1 = 1,
-    EV2 = 2,
-    EV3 = 3,
-    EV4 = 4,
-    EV5 = 5,
-    EV6 = 6,
-    EV7 = 7,
-    EV8 = 8,
+    nop = -1,
+    ev0 = 0,
+    ev1 = 1,
+    ev2 = 2,
+    ev3 = 3,
+    ev4 = 4,
+    ev5 = 5,
+    ev6 = 6,
+    ev7 = 7,
+    ev8 = 8,
 };
 
 void board_init(const char *code);

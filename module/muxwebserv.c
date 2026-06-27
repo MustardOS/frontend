@@ -1,13 +1,11 @@
 #include "muxshare.h"
 #include "ui/ui_muxwebserv.h"
 
-#define WEBSERV(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(WEBSERV_ELEMENTS)
-};
+#define WEBSERV(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(WEBSERV_ELEMENTS) };
 #undef WEBSERV
 
-#define WEBSERV(NAME, ENUM, UDATA) static int NAME##_original;
+#define WEBSERV(NAME, UDATA) static int NAME##_original;
 WEBSERV_ELEMENTS
 #undef WEBSERV
 
@@ -27,16 +25,17 @@ static void hide_save_dialog(void) {
 }
 
 static int any_web_modified(void) {
-#define WEBSERV(NAME, ENUM, UDATA) if ((int) lv_dropdown_get_selected(ui_dro##NAME##_webserv) != NAME##_original) return 1;
+#define WEBSERV(NAME, UDATA)                                                                                           \
+    if ((int) lv_dropdown_get_selected(ui_dro_##NAME##_webserv) != NAME##_original) return 1;
     WEBSERV_ELEMENTS
 #undef WEBSERV
     return 0;
 }
 
 static void show_help(void) {
-    struct help_msg help_messages[] = {
-#define WEBSERV(NAME, ENUM, UDATA) { UDATA, lang.MUXWEBSERV.HELP.ENUM },
-            WEBSERV_ELEMENTS
+    const struct help_msg help_messages[] = {
+#define WEBSERV(NAME, UDATA) {UDATA, lang.muxwebserv.help.NAME},
+        WEBSERV_ELEMENTS
 #undef WEBSERV
     };
 
@@ -44,13 +43,13 @@ static void show_help(void) {
 }
 
 static void init_dropdown_settings(void) {
-#define WEBSERV(NAME, ENUM, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_webserv);
+#define WEBSERV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_webserv);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 }
 
 static void restore_web_options(void) {
-#define WEBSERV(NAME, ENUM, UDATA) lv_dropdown_set_selected(ui_dro##NAME##_webserv, config.WEB.ENUM);
+#define WEBSERV(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_webserv, config.web.NAME);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 }
@@ -58,16 +57,16 @@ static void restore_web_options(void) {
 static void save_web_options(void) {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(webserv, Sshd, "web/sshd", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, SftpGo, "web/sftpgo", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, Ttyd, "web/ttyd", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, Syncthing, "web/syncthing", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, sshd, "web/sshd", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, sftp_go, "web/sftpgo", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, ttyd, "web/ttyd", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, syncthing, "web/syncthing", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, tailscaled, "web/tailscaled", INT, 0);
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, FOREVER);
+        toast_message(lang.generic.saving, tst_wait_f);
 
-        const char *args[] = {(OPT_PATH "script/web/service.sh"), NULL};
+        const char *args[] = {OPT_PATH "script/web/service.sh", NULL};
         run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 
         refresh_config = 1;
@@ -75,27 +74,26 @@ static void save_web_options(void) {
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_OPTION_ITEM(-1, webserv, Sshd, lang.MUXWEBSERV.SSHD, "sshd", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, SftpGo, lang.MUXWEBSERV.SFTPGO, "sftpgo", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, Ttyd, lang.MUXWEBSERV.TTYD, "ttyd", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALED, "tailscaled", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, sshd, lang.muxwebserv.sshd, "sshd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, sftp_go, lang.muxwebserv.sftpgo, "sftpgo", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, ttyd, lang.muxwebserv.ttyd, "ttyd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, syncthing, lang.muxwebserv.syncthing, "syncthing", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, tailscaled, lang.muxwebserv.tailscaled, "tailscaled", disabled_enabled, 2);
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, false);
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 }
-
 
 static void handle_option_prev(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -109,7 +107,7 @@ static void handle_option_next(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -121,12 +119,12 @@ static void handle_option_next(void) {
 
 static void handle_a(void) {
     if (save_mode) {
-        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
-        if (opt == MUX_UNSAVED_SAVE) save_web_options();
+        if (opt == mux_unsaved_save) save_web_options();
 
-        play_sound(opt == MUX_UNSAVED_SAVE ? SND_CONFIRM : SND_BACK);
+        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "service");
 
         mux_input_stop();
@@ -151,12 +149,12 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_web_modified()) {
+    if (!config.settings.advanced.trust_modify && any_web_modified()) {
         show_save_dialog();
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     save_web_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "service");
@@ -168,7 +166,7 @@ static void handle_dpad_up(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -180,7 +178,7 @@ static void handle_dpad_down(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -201,24 +199,22 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
-#define WEBSERV(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_webserv, UDATA);
+#define WEBSERV(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_webserv, UDATA);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 
@@ -229,14 +225,14 @@ int muxwebserv_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXWEBSERV.TITLE);
-    init_muxwebserv(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxwebserv.title);
+    init_muxwebserv(ui_pnl_content);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
     init_navigation_group();
@@ -244,38 +240,42 @@ int muxwebserv_main(void) {
     restore_web_options();
     init_dropdown_settings();
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
-                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(
+        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
+        lang.generic.select, lang.generic.back
+    );
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 2, 0, 1);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     return 0;

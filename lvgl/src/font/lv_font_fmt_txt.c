@@ -43,7 +43,7 @@ static int32_t kern_pair_16_compare(const void *ref, const void *element);
 
 #if LV_USE_FONT_COMPRESSED
 
-static void decompress(const uint8_t *in, uint8_t *out, lv_coord_t w, lv_coord_t h, uint8_t bpp, bool prefilter);
+static void decompress(const uint8_t *in, uint8_t *out, lv_coord_t w, lv_coord_t h, uint8_t bpp, int prefilter);
 
 static inline void decompress_line(uint8_t *out, lv_coord_t w);
 
@@ -99,7 +99,7 @@ const uint8_t *lv_font_get_bitmap_fmt_txt(const lv_font_t *font, uint32_t unicod
     if (fdsc->bitmap_format == LV_FONT_FMT_TXT_PLAIN) {
         return &fdsc->glyph_bitmap[gdsc->bitmap_index];
     }
-        /*Handle compressed bitmap*/
+    /*Handle compressed bitmap*/
     else {
 #if LV_USE_FONT_COMPRESSED
         static size_t last_buf_size = 0;
@@ -133,9 +133,11 @@ const uint8_t *lv_font_get_bitmap_fmt_txt(const lv_font_t *font, uint32_t unicod
             last_buf_size = buf_size;
         }
 
-        bool prefilter = fdsc->bitmap_format == LV_FONT_FMT_TXT_COMPRESSED ? true : false;
-        decompress(&fdsc->glyph_bitmap[gdsc->bitmap_index], LV_GC_ROOT(_lv_font_decompr_buf), gdsc->box_w, gdsc->box_h,
-                   (uint8_t) fdsc->bpp, prefilter);
+        int prefilter = fdsc->bitmap_format == LV_FONT_FMT_TXT_COMPRESSED ? 1 : 0;
+        decompress(
+            &fdsc->glyph_bitmap[gdsc->bitmap_index], LV_GC_ROOT(_lv_font_decompr_buf), gdsc->box_w, gdsc->box_h,
+            (uint8_t) fdsc->bpp, prefilter
+        );
         return LV_GC_ROOT(_lv_font_decompr_buf);
 #else /*!LV_USE_FONT_COMPRESSED*/
         LV_LOG_WARN("Compressed fonts is used but LV_USE_FONT_COMPRESSED is not enabled in lv_conf.h");
@@ -152,19 +154,20 @@ const uint8_t *lv_font_get_bitmap_fmt_txt(const lv_font_t *font, uint32_t unicod
  * @param font_p pointer to font
  * @param dsc_out store the result descriptor here
  * @param letter a UNICODE letter code
- * @return true: descriptor is successfully loaded into `dsc_out`.
- *         false: the letter was not found, no data is loaded to `dsc_out`
+ * @return 1: descriptor is successfully loaded into `dsc_out`.
+ *         0: the letter was not found, no data is loaded to `dsc_out`
  */
-bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t *font, lv_font_glyph_dsc_t *dsc_out, uint32_t unicode_letter,
-                                   uint32_t unicode_letter_next) {
+int lv_font_get_glyph_dsc_fmt_txt(
+    const lv_font_t *font, lv_font_glyph_dsc_t *dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next
+) {
     /*It fixes a strange compiler optimization issue: https://github.com/lvgl/lvgl/issues/4370*/
-    bool is_tab = unicode_letter == '\t';
+    int is_tab = unicode_letter == '\t';
     if (is_tab) {
         unicode_letter = ' ';
     }
     lv_font_fmt_txt_dsc_t *fdsc = (lv_font_fmt_txt_dsc_t *) font->dsc;
     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
-    if (!gid) return false;
+    if (!gid) return 0;
 
     int8_t kvalue = 0;
     if (fdsc->kern_dsc) {
@@ -191,11 +194,11 @@ bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t *font, lv_font_glyph_dsc_t *d
     dsc_out->ofs_x = gdsc->ofs_x;
     dsc_out->ofs_y = gdsc->ofs_y;
     dsc_out->bpp = (uint8_t) fdsc->bpp;
-    dsc_out->is_placeholder = false;
+    dsc_out->is_placeholder = 0;
 
     if (is_tab) dsc_out->box_w = dsc_out->box_w * 2;
 
-    return true;
+    return 1;
 }
 
 /**
@@ -236,8 +239,10 @@ static uint32_t get_glyph_dsc_id(const lv_font_t *font, uint32_t letter) {
             glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_8[rcp];
         } else if (fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_SPARSE_TINY) {
             uint16_t key = rcp;
-            uint16_t *p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length,
-                                            sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_compare);
+            uint16_t *p = _lv_utils_bsearch(
+                &key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length, sizeof(fdsc->cmaps[i].unicode_list[0]),
+                unicode_list_compare
+            );
 
             if (p) {
                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
@@ -245,8 +250,10 @@ static uint32_t get_glyph_dsc_id(const lv_font_t *font, uint32_t letter) {
             }
         } else if (fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_SPARSE_FULL) {
             uint16_t key = rcp;
-            uint16_t *p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length,
-                                            sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_compare);
+            uint16_t *p = _lv_utils_bsearch(
+                &key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length, sizeof(fdsc->cmaps[i].unicode_list[0]),
+                unicode_list_compare
+            );
 
             if (p) {
                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
@@ -268,7 +275,6 @@ static uint32_t get_glyph_dsc_id(const lv_font_t *font, uint32_t letter) {
         fdsc->cache->last_glyph_id = 0;
     }
     return 0;
-
 }
 
 static int8_t get_kern_value(const lv_font_t *font, uint32_t gid_left, uint32_t gid_right) {
@@ -318,7 +324,6 @@ static int8_t get_kern_value(const lv_font_t *font, uint32_t gid_left, uint32_t 
         if (left_class > 0 && right_class > 0) {
             value = kdsc->class_pair_values[(left_class - 1) * kdsc->right_class_cnt + (right_class - 1)];
         }
-
     }
     return value;
 }
@@ -328,9 +333,10 @@ static int32_t kern_pair_8_compare(const void *ref, const void *element) {
     const uint8_t *element8_p = element;
 
     /*If the MSB is different it will matter. If not return the diff. of the LSB*/
-    if (ref8_p[0] != element8_p[0]) return (int32_t) ref8_p[0] - element8_p[0];
-    else return (int32_t) ref8_p[1] - element8_p[1];
-
+    if (ref8_p[0] != element8_p[0])
+        return (int32_t) ref8_p[0] - element8_p[0];
+    else
+        return (int32_t) ref8_p[1] - element8_p[1];
 }
 
 static int32_t kern_pair_16_compare(const void *ref, const void *element) {
@@ -338,8 +344,10 @@ static int32_t kern_pair_16_compare(const void *ref, const void *element) {
     const uint16_t *element16_p = element;
 
     /*If the MSB is different it will matter. If not return the diff. of the LSB*/
-    if (ref16_p[0] != element16_p[0]) return (int32_t) ref16_p[0] - element16_p[0];
-    else return (int32_t) ref16_p[1] - element16_p[1];
+    if (ref16_p[0] != element16_p[0])
+        return (int32_t) ref16_p[0] - element16_p[0];
+    else
+        return (int32_t) ref16_p[1] - element16_p[1];
 }
 
 #if LV_USE_FONT_COMPRESSED
@@ -350,9 +358,9 @@ static int32_t kern_pair_16_compare(const void *ref, const void *element) {
  * @param out buffer to store the result
  * @param px_num number of pixels in the glyph (width * height)
  * @param bpp bit per pixel (bpp = 3 will be converted to bpp = 4)
- * @param prefilter true: the lines are XORed
+ * @param prefilter 1: the lines are XORed
  */
-static void decompress(const uint8_t *in, uint8_t *out, lv_coord_t w, lv_coord_t h, uint8_t bpp, bool prefilter) {
+static void decompress(const uint8_t *in, uint8_t *out, lv_coord_t w, lv_coord_t h, uint8_t bpp, int prefilter) {
     uint32_t wrp = 0;
     uint8_t wr_size = bpp;
     if (bpp == 3) wr_size = 4;

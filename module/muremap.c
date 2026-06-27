@@ -7,50 +7,50 @@
 #define GCB_PATH_MAIN "/usr/lib/gamecontrollerdb.txt"
 #define GCB_PATH_USER "/opt/muos/share/info/gamecontrollerdb/user.txt"
 
-#define SLOT_COUNT 21
+#define SLOT_COUNT     23
 #define AXIS_THRESHOLD 16384
 
 typedef struct {
     const char *gc_key;
     const char *label;
-
     int is_axis;
-    int is_half_axis;
 } slot_def;
 
 static const slot_def slots[SLOT_COUNT] = {
-        {"a",             "A",          0, 0},
-        {"b",             "B",          0, 0},
-        {"x",             "X",          0, 0},
-        {"y",             "Y",          0, 0},
-        {"leftshoulder",  "L1",         0, 0},
-        {"rightshoulder", "R1",         0, 0},
-        {"lefttrigger",   "L2",         0, 1},
-        {"righttrigger",  "R2",         0, 1},
-        {"leftstick",     "L3",         0, 0},
-        {"rightstick",    "R3",         0, 0},
-        {"start",         "Start",      0, 0},
-        {"back",          "Select",     0, 0},
-        {"guide",         "Menu",       0, 0},
-        {"dpup",          "DPAD Up",    0, 0},
-        {"dpdown",        "DPAD Down",  0, 0},
-        {"dpleft",        "DPAD Left",  0, 0},
-        {"dpright",       "DPAD Right", 0, 0},
-        {"leftx",         "Left X",     1, 0},
-        {"lefty",         "Left Y",     1, 0},
-        {"rightx",        "Right X",    1, 0},
-        {"righty",        "Right Y",    1, 0},
+    {"a", "A", 0},
+    {"b", "B", 0},
+    {"c", "C", 0},
+    {"x", "X", 0},
+    {"y", "Y", 0},
+    {"z", "Z", 0},
+    {"leftshoulder", "L1", 0},
+    {"rightshoulder", "R1", 0},
+    {"lefttrigger", "L2", 0},
+    {"righttrigger", "R2", 0},
+    {"leftstick", "L3", 0},
+    {"rightstick", "R3", 0},
+    {"start", "Start", 0},
+    {"back", "Select", 0},
+    {"guide", "Menu", 0},
+    {"dpup", "DPAD Up", 0},
+    {"dpdown", "DPAD Down", 0},
+    {"dpleft", "DPAD Left", 0},
+    {"dpright", "DPAD Right", 0},
+    {"leftx", "Left X", 1},
+    {"lefty", "Left Y", 1},
+    {"rightx", "Right X", 1},
+    {"righty", "Right Y", 1},
 };
 
 static char phys[SLOT_COUNT][32];
 static volatile int quit = 0;
 
-static void handle_signal(int sig) {
+static void handle_signal(const int sig) {
     (void) sig;
     quit = 1;
 }
 
-static int capture_event(int slot_idx, char *out) {
+static int capture_event(const int slot_idx, char *out) {
     printf("  >> Press the physical input for [%s]  (or Ctrl-C to skip)... ", slots[slot_idx].label);
     fflush(stdout);
 
@@ -69,9 +69,9 @@ static int capture_event(int slot_idx, char *out) {
                 printf("h%d.%d\n", ev.jhat.hat, ev.jhat.value);
                 return 1;
             case SDL_JOYAXISMOTION: {
-                int16_t val = ev.jaxis.value;
+                const int16_t val = ev.jaxis.value;
                 if (val < -AXIS_THRESHOLD || val > AXIS_THRESHOLD) {
-                    int axis = ev.jaxis.axis;
+                    const int axis = ev.jaxis.axis;
                     if (slots[slot_idx].is_axis) {
                         snprintf(out, 32, "a%d", axis);
                         printf("a%d\n", axis);
@@ -105,7 +105,7 @@ static void build_mapping_line(const char *guid, const char *name, char *buf) {
     snprintf(buf + n, 4096 - (size_t) n, ",platform:Linux,");
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, char **argv) {
     const char *output_file = NULL;
 
     for (int i = 1; i < argc; i++) {
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
     SDL_PumpEvents();
     SDL_JoystickUpdate();
 
-    int num = SDL_NumJoysticks();
+    const int num = SDL_NumJoysticks();
     if (num <= 0) {
         fprintf(stderr, "No joystick/controller detected.\n");
         SDL_Quit();
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     }
 
     char guid[64];
-    SDL_JoystickGUID joy_guid = SDL_JoystickGetGUID(joy);
+    const SDL_JoystickGUID joy_guid = SDL_JoystickGetGUID(joy);
     SDL_JoystickGetGUIDString(joy_guid, guid, sizeof(guid));
 
     const char *name = SDL_JoystickName(joy);
@@ -157,17 +157,17 @@ int main(int argc, char **argv) {
     printf("================================\n");
     printf("Device : %s\n", name);
     printf("GUID   : %s\n", guid);
-    printf("Axes   : %d   Buttons: %d   Hats: %d\n\n",
-           SDL_JoystickNumAxes(joy),
-           SDL_JoystickNumButtons(joy),
-           SDL_JoystickNumHats(joy));
+    printf(
+        "Axes   : %d   Buttons: %d   Hats: %d\n\n", SDL_JoystickNumAxes(joy), SDL_JoystickNumButtons(joy),
+        SDL_JoystickNumHats(joy)
+    );
     printf("Press each physical input when prompted.\n");
     printf("Press Ctrl-C during a prompt to skip that slot.\n\n");
 
     memset(phys, 0, sizeof(phys));
 
     for (int i = 0; i < SLOT_COUNT && !quit; i++) {
-        int was_quit = quit;
+        const int was_quit = quit;
 
         quit = 0;
         capture_event(i, phys[i]);

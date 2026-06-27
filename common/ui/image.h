@@ -7,14 +7,9 @@
 
 extern char current_wall[MAX_BUFFER_SIZE];
 
-enum wall_type {
-    WALL_APPLICATION,
-    WALL_ARCHIVE,
-    WALL_GENERAL,
-    WALL_TASK
-};
+enum wall_type { wall_application, wall_archive, wall_general, wall_task };
 
-struct ImageSettings {
+struct image_settings {
     char *image_path;
     int16_t align;
     int16_t max_width;
@@ -25,16 +20,19 @@ struct ImageSettings {
     int16_t pad_bottom;
 };
 
-int load_element_image_specifics(const char *mux_dim, const char *program, const char *image_type,
-                                 const char *element, const char *element_fallback,
-                                 const char *image_extension, char *image_path, size_t path_size);
+int load_element_image_specifics(
+    const char *mux_dim, const char *program, const char *image_type, const char *element, const char *element_fallback,
+    const char *image_extension, char *image_path, size_t path_size
+);
 
-int load_image_specifics(const char *mux_dim, const char *program, const char *image_type,
-                         const char *image_extension, char *image_path, size_t path_size);
+int load_image_specifics(
+    const char *mux_dim, const char *program, const char *image_type, const char *image_extension, char *image_path,
+    size_t path_size
+);
 
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type);
 
-void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_imgWall, int wall_type);
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_img_wall, int wall_type);
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type);
 
@@ -48,4 +46,4 @@ int load_terminal_resource(const char *resource, const char *extension, char *bu
 
 void unload_image_animation(void);
 
-void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings);
+void update_image(lv_obj_t *ui_img_obj, struct image_settings image_settings);

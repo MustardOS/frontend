@@ -25,18 +25,12 @@
 #define MCU_BRI 255
 #define JOY_BRI 100
 
-typedef enum {
-    BE_AUTO,
-    BE_SYSFS,
-    BE_SERIAL,
-    BE_JOYPAD
-} backend_t;
+typedef enum { be_auto, be_sysfs, be_serial, be_joypad } backend_t;
 
 typedef struct {
     int dur_all, dur_l, dur_r, dur_m, dur_f1, dur_f2;
     int cyc_all, cyc_l, cyc_r, cyc_m, cyc_f1, cyc_f2;
 } flags_t;
-
 
 static void die(const char *fmt, ...) {
     va_list ap;
@@ -50,7 +44,7 @@ static void die(const char *fmt, ...) {
     exit(1);
 }
 
-static int clamp(int v, int max) {
+static int clamp(const int v, const int max) {
     if (v < 0) return 0;
     if (v > max) return max;
 
@@ -62,7 +56,7 @@ static int parse_int(const char *s, const char *what) {
 
     char *end;
 
-    long v = strtol(s, &end, 10);
+    const long v = strtol(s, &end, 10);
     if (*end) die("Error: %s must be numeric (got '%s')", what, s);
 
     return (int) v;
@@ -82,7 +76,7 @@ static int write_string(const char *path, const char *value) {
     FILE *f = fopen(path, "w");
     if (!f) return -1;
 
-    int n = fputs(value, f);
+    const int n = fputs(value, f);
     fclose(f);
 
     return n < 0 ? -1 : 0;
@@ -104,7 +98,7 @@ static int sysfs_write(const char *leaf, const char *value) {
     return write_string(path, value);
 }
 
-static int sysfs_write_int(const char *leaf, int v) {
+static int sysfs_write_int(const char *leaf, const int v) {
     char buf[32];
     snprintf(buf, sizeof buf, "%d\n", v);
 
@@ -127,18 +121,18 @@ static int joypad_write(const char *leaf, const char *value) {
     return write_string(path, value);
 }
 
-static int joypad_write_int(const char *leaf, int v) {
+static int joypad_write_int(const char *leaf, const int v) {
     char buf[32];
     snprintf(buf, sizeof buf, "%d\n", v);
 
     return joypad_write(leaf, buf);
 }
 
-static int joypad_level_from_byte(int brightness) {
-    return clamp((clamp(brightness, MCU_BRI) * JOY_BRI + (MCU_BRI / 2)) / MCU_BRI, JOY_BRI);
+static int joypad_level_from_byte(const int brightness) {
+    return clamp((clamp(brightness, MCU_BRI) * JOY_BRI + MCU_BRI / 2) / MCU_BRI, JOY_BRI);
 }
 
-static int joypad_mode_from_protocol(int mode) {
+static int joypad_mode_from_protocol(const int mode) {
     switch (mode) {
         case 1:
             return 1;
@@ -172,7 +166,7 @@ static int joypad_breathing_speed_invert(int ui_pct) {
     return 100 - ui_pct;
 }
 
-static int joypad_breathing_speed_pct_for_protocol(int mode) {
+static int joypad_breathing_speed_pct_for_protocol(const int mode) {
     switch (mode) {
         case 2:
             return 80;
@@ -196,41 +190,36 @@ static backend_t detect_device_backend(void) {
         const char *code;
         backend_t backend;
     } map[] = {
-            {"gcs-h36s",    BE_SERIAL},
-            {"rg40xx-h",    BE_SERIAL},
-            {"rg40xx-v",    BE_SERIAL},
-            {"rgcubexx-h",  BE_SERIAL},
-            {"rg-vita-pro", BE_JOYPAD},
-            {"tui-brick",   BE_SYSFS},
-            {"tui-spoon",   BE_SYSFS},
+        {"gcs-h36s", be_serial},    {"rg40xx-h", be_serial}, {"rg40xx-v", be_serial}, {"rgcubexx-h", be_serial},
+        {"rg-vita-pro", be_joypad}, {"tui-brick", be_sysfs}, {"tui-spoon", be_sysfs},
     };
 
     const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
-    if (!board || !*board) return BE_AUTO;
+    if (!board || !*board) return be_auto;
 
     for (size_t i = 0; i < sizeof map / sizeof map[0]; i++) {
         if (strcmp(board, map[i].code) == 0) return map[i].backend;
     }
 
-    return BE_AUTO;
+    return be_auto;
 }
 
-static backend_t detect_backend(backend_t requested) {
-    if (requested != BE_AUTO) return requested;
+static backend_t detect_backend(const backend_t requested) {
+    if (requested != be_auto) return requested;
 
-    backend_t from_device = detect_device_backend();
+    const backend_t from_device = detect_device_backend();
 
-    if (from_device == BE_JOYPAD && dir_exists(JOY_SYS)) return BE_JOYPAD;
-    if (from_device == BE_SYSFS && dir_exists(LED_SYS)) return BE_SYSFS;
-    if (from_device == BE_SERIAL && char_dev_exists(SER_DEV)) return BE_SERIAL;
+    if (from_device == be_joypad && dir_exists(JOY_SYS)) return be_joypad;
+    if (from_device == be_sysfs && dir_exists(LED_SYS)) return be_sysfs;
+    if (from_device == be_serial && char_dev_exists(SER_DEV)) return be_serial;
 
-    if (dir_exists(JOY_SYS) && joypad_writable()) return BE_JOYPAD;
-    if (dir_exists(LED_SYS)) return BE_SYSFS;
-    if (char_dev_exists(SER_DEV)) return BE_SERIAL;
+    if (dir_exists(JOY_SYS) && joypad_writable()) return be_joypad;
+    if (dir_exists(LED_SYS)) return be_sysfs;
+    if (char_dev_exists(SER_DEV)) return be_serial;
 
     die("Error: no supported LED backend found (missing %s, %s and %s)", JOY_SYS, LED_SYS, SER_DEV);
 
-    return BE_AUTO;
+    return be_auto;
 }
 
 static int serial_fd = -1;
@@ -248,7 +237,7 @@ static void serial_prepare(void) {
         cfsetispeed(&tio, B115200);
         cfsetospeed(&tio, B115200);
 
-        tio.c_cflag |= (CLOCAL | CREAD | CS8);
+        tio.c_cflag |= CLOCAL | CREAD | CS8;
         tio.c_cflag &= ~(PARENB | CSTOPB);
         tio.c_lflag &= ~(ICANON | ECHO | ISIG);
         tio.c_oflag &= ~OPOST;
@@ -259,20 +248,23 @@ static void serial_prepare(void) {
     sleep(1);
 }
 
-static uint8_t checksum_u8(const uint8_t *bytes, size_t n) {
+static uint8_t checksum_u8(const uint8_t *bytes, const size_t n) {
     unsigned sum = 0;
-    for (size_t i = 0; i < n; i++) sum += bytes[i];
+    for (size_t i = 0; i < n; i++)
+        sum += bytes[i];
     return (uint8_t) (sum & 0xff);
 }
 
-static void serial_write_bytes(const uint8_t *bytes, size_t n) {
+static void serial_write_bytes(const uint8_t *bytes, const size_t n) {
     if (serial_fd < 0) return;
 
-    ssize_t w = write(serial_fd, bytes, n);
+    const ssize_t w = write(serial_fd, bytes, n);
     (void) w;
 }
 
-static void serial_send_static(int brightness, int rr, int rg, int rb, int lr, int lg, int lb) {
+static void serial_send_static(
+    const int brightness, const int rr, const int rg, const int rb, const int lr, const int lg, const int lb
+) {
     uint8_t buf[51];
     size_t i = 0;
 
@@ -295,7 +287,7 @@ static void serial_send_static(int brightness, int rr, int rg, int rb, int lr, i
     serial_write_bytes(buf, i + 1);
 }
 
-static void serial_send_breath(int mode, int brightness, int r, int g, int b) {
+static void serial_send_breath(const int mode, const int brightness, const int r, const int g, const int b) {
     uint8_t buf[51];
     size_t i = 0;
 
@@ -312,7 +304,7 @@ static void serial_send_breath(int mode, int brightness, int r, int g, int b) {
     serial_write_bytes(buf, i + 1);
 }
 
-static void serial_send_rainbow(int mode, int brightness, int speed) {
+static void serial_send_rainbow(const int mode, const int brightness, const int speed) {
     uint8_t buf[6];
 
     buf[0] = (uint8_t) mode;
@@ -325,7 +317,7 @@ static void serial_send_rainbow(int mode, int brightness, int speed) {
     serial_write_bytes(buf, 6);
 }
 
-static int effect_map_sysfs(int mode) {
+static int effect_map_sysfs(const int mode) {
     switch (mode) {
         case 1:
             return 4;
@@ -348,7 +340,7 @@ static int effect_map_sysfs(int mode) {
     }
 }
 
-static int duration_map_sysfs(int mode, int fallback) {
+static int duration_map_sysfs(const int mode, const int fallback) {
     switch (mode) {
         case 2:
             return 3000;
@@ -361,18 +353,18 @@ static int duration_map_sysfs(int mode, int fallback) {
     }
 }
 
-static int env_int(const char *name, int fallback) {
+static int env_int(const char *name, const int fallback) {
     const char *v = getenv(name);
 
     if (!v || !*v) return fallback;
 
     char *end;
-    long n = strtol(v, &end, 10);
+    const long n = strtol(v, &end, 10);
 
     return *end ? fallback : (int) n;
 }
 
-static void hex3(char *out, int r, int g, int b) {
+static void hex3(char *out, const int r, const int g, const int b) {
     snprintf(out, 16, "%02X%02X%02X ", clamp(r, MCU_BRI), clamp(g, MCU_BRI), clamp(b, MCU_BRI));
 }
 
@@ -382,7 +374,7 @@ static int apply_serial(int mode, int brightness, int argc, char **argv);
 
 static int apply_joypad(int mode, int brightness, int argc, char **argv);
 
-static int read_config_int(const char *leaf, int fallback) {
+static int read_config_int(const char *leaf, const int fallback) {
     char path[512];
     snprintf(path, sizeof path, "%s%s", MUOS_CONFIG_PATH, leaf);
 
@@ -396,20 +388,20 @@ static int read_config_int(const char *leaf, int fallback) {
     if (!got) return fallback;
 
     char *end;
-    long v = strtol(buf, &end, 10);
+    const long v = strtol(buf, &end, 10);
     if (end == buf) return fallback;
 
     return (int) v;
 }
 
-static int dispatch_off(backend_t requested) {
-    backend_t use = detect_backend(requested);
+static int dispatch_off(const backend_t requested) {
+    const backend_t use = detect_backend(requested);
     flags_t fl;
 
     fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
     fl.cyc_all = fl.cyc_l = fl.cyc_r = fl.cyc_m = fl.cyc_f1 = fl.cyc_f2 = INT32_MIN;
 
-    if (use == BE_JOYPAD) {
+    if (use == be_joypad) {
         if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
 
         joypad_write_int("led_switch", 0);
@@ -418,15 +410,11 @@ static int dispatch_off(backend_t requested) {
         return 0;
     }
 
-    if (use == BE_SYSFS) {
+    if (use == be_sysfs) {
         if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
 
         char *zero_argv[] = {
-                "0", "0", "0",
-                "0", "0", "0",
-                "0", "0", "0",
-                "0", "0", "0",
-                "0", "0", "0",
+            "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0",
         };
 
         return apply_sysfs(1, 0, 15, zero_argv, &fl);
@@ -435,7 +423,7 @@ static int dispatch_off(backend_t requested) {
     if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present.", SER_DEV);
 
     char *zero_argv[] = {"0", "0", "0", "0", "0", "0"};
-    int rc = apply_serial(1, 0, 6, zero_argv);
+    const int rc = apply_serial(1, 0, 6, zero_argv);
 
     if (serial_fd >= 0) {
         close(serial_fd);
@@ -445,20 +433,20 @@ static int dispatch_off(backend_t requested) {
     return rc;
 }
 
-static backend_t restore_backend_from_config(int saved) {
+static backend_t restore_backend_from_config(const int saved) {
     switch (saved) {
         case 1:
-            return BE_SYSFS;
+            return be_sysfs;
         case 2:
-            return BE_SERIAL;
+            return be_serial;
         case 3:
-            return BE_JOYPAD;
+            return be_joypad;
         default:
-            return BE_AUTO;
+            return be_auto;
     }
 }
 
-static int restore_breath_wire_mode(int saved) {
+static int restore_breath_wire_mode(const int saved) {
     switch (saved) {
         case 0:
             return 2;
@@ -484,7 +472,7 @@ static int joypad_speed_pct_from_saved(int bs) {
     }
 }
 
-static int restore_brightness_to_byte(int b) {
+static int restore_brightness_to_byte(const int b) {
     return clamp(b, MCU_BRI);
 }
 
@@ -493,8 +481,10 @@ static int get_rgb_path(char *rgb_path) {
     char active_path[MAX_BUFFER_SIZE];
     snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
     if (file_exist(active_path)) {
-        snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", theme_base,
-                 str_replace(read_line_char_from(active_path, 1), "\r", ""));
+        snprintf(
+            rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", theme_base,
+            str_replace(read_line_char_from(active_path, 1), "\r", "")
+        );
         return dir_exist(rgb_path);
     }
     snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/rgb/", theme_base);
@@ -523,7 +513,7 @@ static int dispatch_restore(void) {
         saved_bright_raw = read_line_int_from(settings_path, 1);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_l", base_path);
-        read_rgb_colour_from_file(settings_path, &col_l, &RGB_COLOURS[0]);
+        read_rgb_colour_from_file(settings_path, &col_l, &rgb_colours[0]);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_r", base_path);
         read_rgb_colour_from_file(settings_path, &col_r, &col_l);
@@ -538,7 +528,7 @@ static int dispatch_restore(void) {
         read_rgb_colour_from_file(settings_path, &col_f2, &col_r);
     } else {
         saved_bright_raw = read_config_int("settings/rgb/bright", 6);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &col_l, &RGB_COLOURS[0]);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &col_l, &rgb_colours[0]);
         col_r = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r", 0), &col_l);
         col_m = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m", 0), &col_l);
         col_f1 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f1", 0), &col_l);
@@ -567,7 +557,12 @@ static int dispatch_restore(void) {
     int wire_mode;
     int n = 0;
 
-#define PUSH(v) do { snprintf(num_buf[n], sizeof num_buf[n], "%d", (v)); argv_buf[n] = num_buf[n]; n++; } while (0)
+#define PUSH(v)                                                                                                        \
+    do {                                                                                                               \
+        snprintf(num_buf[n], sizeof num_buf[n], "%d", (v));                                                            \
+        argv_buf[n] = num_buf[n];                                                                                      \
+        n++;                                                                                                           \
+    } while (0)
 
     if (saved_mode == 3) {
         wire_mode = 1;
@@ -580,10 +575,10 @@ static int dispatch_restore(void) {
     } else if (saved_mode == 2) {
         int bs = read_config_int("settings/rgb/breath_speed", 1);
 
-        if (use == BE_JOYPAD) {
+        if (use == be_joypad) {
             int sec_r, sec_g, sec_b;
             //
-            //TODO: by Xongle
+            // TODO: by Xongle
             //
             // if (idx_r <= 0) {
             //     sec_r = sec_g = sec_b = 0;
@@ -604,7 +599,7 @@ static int dispatch_restore(void) {
         } else {
             wire_mode = restore_breath_wire_mode(bs);
 
-            if (use == BE_SYSFS) {
+            if (use == be_sysfs) {
                 PUSH(col_l.r);
                 PUSH(col_l.g);
                 PUSH(col_l.b);
@@ -646,7 +641,7 @@ static int dispatch_restore(void) {
     } else {
         wire_mode = 1;
 
-        if (use == BE_SYSFS) {
+        if (use == be_sysfs) {
             PUSH(col_l.r);
             PUSH(col_l.g);
             PUSH(col_l.b);
@@ -674,12 +669,12 @@ static int dispatch_restore(void) {
 
 #undef PUSH
 
-    if (use == BE_JOYPAD) {
+    if (use == be_joypad) {
         if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
         return apply_joypad(wire_mode, bright_byte, n, argv_buf);
     }
 
-    if (use == BE_SYSFS) {
+    if (use == be_sysfs) {
         if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
         return apply_sysfs(wire_mode, bright_byte, n, argv_buf, &fl);
     }
@@ -695,35 +690,37 @@ static int dispatch_restore(void) {
     return rc;
 }
 
-static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, const flags_t *fl) {
+static int apply_sysfs(const int mode, const int brightness_raw, const int argc, char **argv, const flags_t *fl) {
     if (effect_map_sysfs(mode) < 0) die("Invalid mode for SYSFS: %d (1-9)", mode);
-    int bri = clamp((brightness_raw * SER_BRI) / MCU_BRI, SER_BRI);
+    const int bri = clamp(brightness_raw * SER_BRI / MCU_BRI, SER_BRI);
 
     if (argc < 3) {
-        fprintf(stderr, "SYSFS usage: murgb -b sysfs <mode 1-9> <brightness 0-255> "
-                        "<L_r L_g L_b> [<R_r R_g R_b>] [M_r M_g M_b] [F1_r F1_g F1_b] [F2_r F2_g F2_b]\n");
+        fprintf(
+            stderr, "SYSFS usage: murgb -b sysfs <mode 1-9> <brightness 0-255> "
+                    "<L_r L_g L_b> [<R_r R_g R_b>] [M_r M_g M_b] [F1_r F1_g F1_b] [F2_r F2_g F2_b]\n"
+        );
         return 1;
     }
 
-    int lr = parse_int(argv[0], "L_r");
-    int lg = parse_int(argv[1], "L_g");
-    int lb = parse_int(argv[2], "L_b");
+    const int lr = parse_int(argv[0], "L_r");
+    const int lg = parse_int(argv[1], "L_g");
+    const int lb = parse_int(argv[2], "L_b");
 
-    int rr = (argc >= 6) ? parse_int(argv[3], "R_r") : lr;
-    int rg = (argc >= 6) ? parse_int(argv[4], "R_g") : lg;
-    int rb = (argc >= 6) ? parse_int(argv[5], "R_b") : lb;
+    const int rr = argc >= 6 ? parse_int(argv[3], "R_r") : lr;
+    const int rg = argc >= 6 ? parse_int(argv[4], "R_g") : lg;
+    const int rb = argc >= 6 ? parse_int(argv[5], "R_b") : lb;
 
-    int mr = (argc >= 9) ? parse_int(argv[6], "M_r") : lr;
-    int mg = (argc >= 9) ? parse_int(argv[7], "M_g") : lg;
-    int mb = (argc >= 9) ? parse_int(argv[8], "M_b") : lb;
+    const int mr = argc >= 9 ? parse_int(argv[6], "M_r") : lr;
+    const int mg = argc >= 9 ? parse_int(argv[7], "M_g") : lg;
+    const int mb = argc >= 9 ? parse_int(argv[8], "M_b") : lb;
 
-    int f1r = (argc >= 12) ? parse_int(argv[9], "F1_r") : lr;
-    int f1g = (argc >= 12) ? parse_int(argv[10], "F1_g") : lg;
-    int f1b = (argc >= 12) ? parse_int(argv[11], "F1_b") : lb;
+    const int f1_r = argc >= 12 ? parse_int(argv[9], "F1_r") : lr;
+    const int f1_g = argc >= 12 ? parse_int(argv[10], "F1_g") : lg;
+    const int f1_b = argc >= 12 ? parse_int(argv[11], "F1_b") : lb;
 
-    int f2r = (argc >= 15) ? parse_int(argv[12], "F2_r") : rr;
-    int f2g = (argc >= 15) ? parse_int(argv[13], "F2_g") : rg;
-    int f2b = (argc >= 15) ? parse_int(argv[14], "F2_b") : rb;
+    const int f2_r = argc >= 15 ? parse_int(argv[12], "F2_r") : rr;
+    const int f2_g = argc >= 15 ? parse_int(argv[13], "F2_g") : rg;
+    const int f2_b = argc >= 15 ? parse_int(argv[14], "F2_b") : rb;
 
     char hex_l[16];
     char hex_r[16];
@@ -734,12 +731,12 @@ static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, cons
     hex3(hex_l, lr, lg, lb);
     hex3(hex_r, rr, rg, rb);
     hex3(hex_m, mr, mg, mb);
-    hex3(hex_f1, f1r, f1g, f1b);
-    hex3(hex_f2, f2r, f2g, f2b);
+    hex3(hex_f1, f1_r, f1_g, f1_b);
+    hex3(hex_f2, f2_r, f2_g, f2_b);
 
     sysfs_write_int("max_scale", bri);
 
-    int same_lr = (strcmp(hex_l, hex_r) == 0);
+    const int same_lr = strcmp(hex_l, hex_r) == 0;
     if (same_lr && sysfs_writable("effect_rgb_hex_lr")) {
         sysfs_write("effect_rgb_hex_lr", hex_l);
     } else {
@@ -751,21 +748,21 @@ static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, cons
     sysfs_write("effect_rgb_hex_f1", hex_f1);
     sysfs_write("effect_rgb_hex_f2", hex_f2);
 
-    int dur_all = (fl->dur_all >= 0) ? fl->dur_all : env_int("LED_DUR", 1000);
+    int dur_all = fl->dur_all >= 0 ? fl->dur_all : env_int("LED_DUR", 1000);
     dur_all = duration_map_sysfs(mode, dur_all);
 
-    int dur_l = (fl->dur_l >= 0) ? fl->dur_l : env_int("LED_DUR_L", dur_all);
-    int dur_r = (fl->dur_r >= 0) ? fl->dur_r : env_int("LED_DUR_R", dur_all);
-    int dur_m = (fl->dur_m >= 0) ? fl->dur_m : env_int("LED_DUR_M", dur_all);
-    int dur_f1 = (fl->dur_f1 >= 0) ? fl->dur_f1 : env_int("LED_DUR_F1", dur_all);
-    int dur_f2 = (fl->dur_f2 >= 0) ? fl->dur_f2 : env_int("LED_DUR_F2", dur_all);
+    const int dur_l = fl->dur_l >= 0 ? fl->dur_l : env_int("LED_DUR_L", dur_all);
+    const int dur_r = fl->dur_r >= 0 ? fl->dur_r : env_int("LED_DUR_R", dur_all);
+    const int dur_m = fl->dur_m >= 0 ? fl->dur_m : env_int("LED_DUR_M", dur_all);
+    const int dur_f1 = fl->dur_f1 >= 0 ? fl->dur_f1 : env_int("LED_DUR_F1", dur_all);
+    const int dur_f2 = fl->dur_f2 >= 0 ? fl->dur_f2 : env_int("LED_DUR_F2", dur_all);
 
-    int cyc_all = (fl->cyc_all != INT32_MIN) ? fl->cyc_all : env_int("LED_CYCLES", -1);
-    int cyc_l = (fl->cyc_l != INT32_MIN) ? fl->cyc_l : env_int("LED_CYCLES_L", cyc_all);
-    int cyc_r = (fl->cyc_r != INT32_MIN) ? fl->cyc_r : env_int("LED_CYCLES_R", cyc_all);
-    int cyc_m = (fl->cyc_m != INT32_MIN) ? fl->cyc_m : env_int("LED_CYCLES_M", cyc_all);
-    int cyc_f1 = (fl->cyc_f1 != INT32_MIN) ? fl->cyc_f1 : env_int("LED_CYCLES_F1", cyc_all);
-    int cyc_f2 = (fl->cyc_f2 != INT32_MIN) ? fl->cyc_f2 : env_int("LED_CYCLES_F2", cyc_all);
+    const int cyc_all = fl->cyc_all != INT32_MIN ? fl->cyc_all : env_int("LED_CYCLES", -1);
+    const int cyc_l = fl->cyc_l != INT32_MIN ? fl->cyc_l : env_int("LED_CYCLES_L", cyc_all);
+    const int cyc_r = fl->cyc_r != INT32_MIN ? fl->cyc_r : env_int("LED_CYCLES_R", cyc_all);
+    const int cyc_m = fl->cyc_m != INT32_MIN ? fl->cyc_m : env_int("LED_CYCLES_M", cyc_all);
+    const int cyc_f1 = fl->cyc_f1 != INT32_MIN ? fl->cyc_f1 : env_int("LED_CYCLES_F1", cyc_all);
+    const int cyc_f2 = fl->cyc_f2 != INT32_MIN ? fl->cyc_f2 : env_int("LED_CYCLES_F2", cyc_all);
 
     if (sysfs_writable("effect_duration_lr") && dur_l == dur_r) {
         sysfs_write_int("effect_duration_lr", dur_l);
@@ -789,7 +786,7 @@ static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, cons
     sysfs_write_int("effect_cycles_f1", cyc_f1);
     sysfs_write_int("effect_cycles_f2", cyc_f2);
 
-    int effect = effect_map_sysfs(mode);
+    const int effect = effect_map_sysfs(mode);
     if (sysfs_writable("effect_lr")) {
         sysfs_write_int("effect_lr", effect);
     } else {
@@ -808,10 +805,10 @@ static int apply_sysfs(int mode, int brightness_raw, int argc, char **argv, cons
     return 0;
 }
 
-static int apply_joypad(int mode, int brightness, int argc, char **argv) {
+static int apply_joypad(const int mode, const int brightness, const int argc, char **argv) {
     if (mode < 1 || mode > 8) die("Invalid mode for JOYPAD: %d (1-8)", mode);
 
-    int level = joypad_level_from_byte(brightness);
+    const int level = joypad_level_from_byte(brightness);
 
     if (level <= 0) {
         joypad_write_int("led_switch", 0);
@@ -827,9 +824,9 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
         joypad_write_int("led_level", level);
 
         if (argc >= 3) {
-            int sr = clamp(parse_int(argv[0], "R"), MCU_BRI);
-            int sg = clamp(parse_int(argv[1], "G"), MCU_BRI);
-            int sb = clamp(parse_int(argv[2], "B"), MCU_BRI);
+            const int sr = clamp(parse_int(argv[0], "R"), MCU_BRI);
+            const int sg = clamp(parse_int(argv[1], "G"), MCU_BRI);
+            const int sb = clamp(parse_int(argv[2], "B"), MCU_BRI);
 
             joypad_write_int("Led_rgb_r1", sr);
             joypad_write_int("Led_rgb_g1", sg);
@@ -852,7 +849,7 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
         joypad_write_int("led_level", level);
 
         if (argc >= 1) {
-            int speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
+            const int speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
             joypad_write_int("led_speed", speed_pct);
         }
 
@@ -864,16 +861,18 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
     }
 
     if (mode == 7 || mode == 8) {
-        int mode8_argc_ok = (mode == 8 && (argc == 4 || argc == 7));
+        const int mode8_argc_ok = mode == 8 && (argc == 4 || argc == 7);
         if (!(mode == 7 && argc == 1) && !mode8_argc_ok) {
-            fprintf(stderr, "JOYPAD usage:\n"
-                            "  murgb -b joypad 7 <brightness> <speed 0-100>\n"
-                            "  murgb -b joypad 8 <brightness> <speed 0-100> <R1> <G1> <B1> [<R2> <G2> <B2>]\n");
+            fprintf(
+                stderr, "JOYPAD usage:\n"
+                        "  murgb -b joypad 7 <brightness> <speed 0-100>\n"
+                        "  murgb -b joypad 8 <brightness> <speed 0-100> <R1> <G1> <B1> [<R2> <G2> <B2>]\n"
+            );
             return 1;
         }
 
-        int ui_speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
-        int reg_speed_pct = (mode == 8) ? joypad_breathing_speed_invert(ui_speed_pct) : ui_speed_pct;
+        const int ui_speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
+        const int reg_speed_pct = mode == 8 ? joypad_breathing_speed_invert(ui_speed_pct) : ui_speed_pct;
 
         joypad_write_int("led_switch", 1);
         joypad_write_int("led_level", level);
@@ -881,9 +880,9 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
         joypad_write_int("led_speed", reg_speed_pct);
 
         if (mode == 8) {
-            int r1 = clamp(parse_int(argv[1], "R1"), MCU_BRI);
-            int g1 = clamp(parse_int(argv[2], "G1"), MCU_BRI);
-            int b1 = clamp(parse_int(argv[3], "B1"), MCU_BRI);
+            const int r1 = clamp(parse_int(argv[1], "R1"), MCU_BRI);
+            const int g1 = clamp(parse_int(argv[2], "G1"), MCU_BRI);
+            const int b1 = clamp(parse_int(argv[3], "B1"), MCU_BRI);
 
             int r2, g2, b2;
             if (argc == 7) {
@@ -917,11 +916,11 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
         return 1;
     }
 
-    int lr = clamp(parse_int(argv[0], "R"), MCU_BRI);
-    int lg = clamp(parse_int(argv[1], "G"), MCU_BRI);
-    int lb = clamp(parse_int(argv[2], "B"), MCU_BRI);
+    const int lr = clamp(parse_int(argv[0], "R"), MCU_BRI);
+    const int lg = clamp(parse_int(argv[1], "G"), MCU_BRI);
+    const int lb = clamp(parse_int(argv[2], "B"), MCU_BRI);
 
-    int enabled = lr || lg || lb;
+    const int enabled = lr || lg || lb;
 
     if (!enabled) {
         joypad_write_int("led_switch", 0);
@@ -937,7 +936,7 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
     joypad_write_int("led_sync_colour", mode == 1 ? 0 : 1);
 
     if (mode >= 2 && mode <= 4) {
-        int ui_pct = joypad_breathing_speed_pct_for_protocol(mode);
+        const int ui_pct = joypad_breathing_speed_pct_for_protocol(mode);
         joypad_write_int("led_speed", joypad_breathing_speed_invert(ui_pct));
     }
 
@@ -945,9 +944,9 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
     joypad_write_int("Led_rgb_g1", lg);
     joypad_write_int("Led_rgb_b1", lb);
 
-    int lr2 = argc >= 6 ? clamp(parse_int(argv[3], "R2"), MCU_BRI) : lr;
-    int lg2 = argc >= 6 ? clamp(parse_int(argv[4], "G2"), MCU_BRI) : lg;
-    int lb2 = argc >= 6 ? clamp(parse_int(argv[5], "B2"), MCU_BRI) : lb;
+    const int lr2 = argc >= 6 ? clamp(parse_int(argv[3], "R2"), MCU_BRI) : lr;
+    const int lg2 = argc >= 6 ? clamp(parse_int(argv[4], "G2"), MCU_BRI) : lg;
+    const int lb2 = argc >= 6 ? clamp(parse_int(argv[5], "B2"), MCU_BRI) : lb;
 
     joypad_write_int("Led_rgb_r2", lr2);
     joypad_write_int("Led_rgb_g2", lg2);
@@ -961,10 +960,10 @@ static int apply_joypad(int mode, int brightness, int argc, char **argv) {
     return 0;
 }
 
-static int apply_serial(int mode, int brightness, int argc, char **argv) {
+static int apply_serial(const int mode, const int brightness, const int argc, char **argv) {
     if (mode < 1 || mode > 6) die("Invalid mode for SERIAL: %d (1-6)", mode);
 
-    int bri = clamp(brightness, MCU_BRI);
+    const int bri = clamp(brightness, MCU_BRI);
     serial_prepare();
 
     if (mode >= 5 && mode <= 6) {
@@ -973,7 +972,7 @@ static int apply_serial(int mode, int brightness, int argc, char **argv) {
             return 1;
         }
 
-        int speed = clamp(parse_int(argv[0], "speed"), MCU_BRI);
+        const int speed = clamp(parse_int(argv[0], "speed"), MCU_BRI);
         serial_send_rainbow(mode, bri, speed);
 
         printf("LED mode %d set with brightness %d (SERIAL)\n", mode, bri);
@@ -983,18 +982,20 @@ static int apply_serial(int mode, int brightness, int argc, char **argv) {
 
     if (mode == 1) {
         if (argc != 6) {
-            fprintf(stderr, "SERIAL usage (1): murgb -b serial 1 <brightness> "
-                            "<right_r> <right_g> <right_b> <left_r> <left_g> <left_b>\n");
+            fprintf(
+                stderr, "SERIAL usage (1): murgb -b serial 1 <brightness> "
+                        "<right_r> <right_g> <right_b> <left_r> <left_g> <left_b>\n"
+            );
             return 1;
         }
 
-        int rr = parse_int(argv[0], "right_r");
-        int rg = parse_int(argv[1], "right_g");
-        int rb = parse_int(argv[2], "right_b");
+        const int rr = parse_int(argv[0], "right_r");
+        const int rg = parse_int(argv[1], "right_g");
+        const int rb = parse_int(argv[2], "right_b");
 
-        int lr = parse_int(argv[3], "left_r");
-        int lg = parse_int(argv[4], "left_g");
-        int lb = parse_int(argv[5], "left_b");
+        const int lr = parse_int(argv[3], "left_r");
+        const int lg = parse_int(argv[4], "left_g");
+        const int lb = parse_int(argv[5], "left_b");
 
         serial_send_static(bri, rr, rg, rb, lr, lg, lb);
         printf("LED mode %d set with brightness %d (SERIAL)\n", mode, bri);
@@ -1007,9 +1008,9 @@ static int apply_serial(int mode, int brightness, int argc, char **argv) {
         return 1;
     }
 
-    int r = parse_int(argv[0], "r");
-    int g = parse_int(argv[1], "g");
-    int b = parse_int(argv[2], "b");
+    const int r = parse_int(argv[0], "r");
+    const int g = parse_int(argv[1], "g");
+    const int b = parse_int(argv[2], "b");
 
     serial_send_breath(mode, bri, r, g, b);
     printf("LED mode %d set with brightness %d (SERIAL)\n", mode, bri);
@@ -1019,40 +1020,41 @@ static int apply_serial(int mode, int brightness, int argc, char **argv) {
 
 static void usage(void) {
     fputs(
-            "Usage:\n"
-            "  murgb [-b auto|sysfs|serial|joypad] [--dur MS] [--dur-l MS] [--dur-r MS]\n"
-            "        [--dur-m MS] [--dur-f1 MS] [--dur-f2 MS]\n"
-            "        [--cycles N] [--cycles-l N] [--cycles-r N] [--cycles-m N]\n"
-            "        [--cycles-f1 N] [--cycles-f2 N]\n"
-            "        <mode> <brightness> [args...]\n"
-            "\n"
-            "  murgb off       Blank the lights.  Persistent settings are kept\n"
-            "                  intact for a later `restore`.  Takes no other args.\n"
-            "  murgb restore   Re-apply whatever the muxrgb frontend last saved\n"
-            "                  (read from " MUOS_CONFIG_PATH "settings/rgb/).\n"
-            "                  Useful for boot, suspend resume, etc.  Takes no\n"
-            "                  other args.\n"
-            "\nBackends:\n"
-            "  JOYPAD : " JOY_SYS "\n"
-            "  SYSFS  : " LED_SYS "\n"
-            "  SERIAL : " SER_DEV "\n"
-            "  AUTO   : prefer JOYPAD if present, else SYSFS, else SERIAL\n",
-            stderr);
+        "Usage:\n"
+        "  murgb [-b auto|sysfs|serial|joypad] [--dur MS] [--dur-l MS] [--dur-r MS]\n"
+        "        [--dur-m MS] [--dur-f1 MS] [--dur-f2 MS]\n"
+        "        [--cycles N] [--cycles-l N] [--cycles-r N] [--cycles-m N]\n"
+        "        [--cycles-f1 N] [--cycles-f2 N]\n"
+        "        <mode> <brightness> [args...]\n"
+        "\n"
+        "  murgb off       Blank the lights.  Persistent settings are kept\n"
+        "                  intact for a later `restore`.  Takes no other args.\n"
+        "  murgb restore   Re-apply whatever the muxrgb frontend last saved\n"
+        "                  (read from " MUOS_CONFIG_PATH "settings/rgb/).\n"
+        "                  Useful for boot, suspend resume, etc.  Takes no\n"
+        "                  other args.\n"
+        "\nBackends:\n"
+        "  JOYPAD : " JOY_SYS "\n"
+        "  SYSFS  : " LED_SYS "\n"
+        "  SERIAL : " SER_DEV "\n"
+        "  AUTO   : prefer JOYPAD if present, else SYSFS, else SERIAL\n",
+        stderr
+    );
 }
 
 static backend_t parse_backend(const char *s) {
     if (!s) die("Error: -b requires a value");
 
-    if (!strcasecmp(s, "auto")) return BE_AUTO;
-    if (!strcasecmp(s, "sysfs")) return BE_SYSFS;
-    if (!strcasecmp(s, "serial")) return BE_SERIAL;
-    if (!strcasecmp(s, "joypad")) return BE_JOYPAD;
+    if (!strcasecmp(s, "auto")) return be_auto;
+    if (!strcasecmp(s, "sysfs")) return be_sysfs;
+    if (!strcasecmp(s, "serial")) return be_serial;
+    if (!strcasecmp(s, "joypad")) return be_joypad;
 
     die("Invalid backend: %s", s);
-    return BE_AUTO;
+    return be_auto;
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, char **argv) {
     load_config(&config);
 
     if (argc >= 2 && (strcmp(argv[1], "off") == 0 || strcmp(argv[1], "restore") == 0)) {
@@ -1060,7 +1062,7 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Error: '%s' takes no other arguments\n", argv[1]);
             return 1;
         }
-        if (strcmp(argv[1], "off") == 0) return dispatch_off(BE_AUTO);
+        if (strcmp(argv[1], "off") == 0) return dispatch_off(be_auto);
         return dispatch_restore();
     }
 
@@ -1068,7 +1070,7 @@ int main(int argc, char **argv) {
     fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
     fl.cyc_all = fl.cyc_l = fl.cyc_r = fl.cyc_m = fl.cyc_f1 = fl.cyc_f2 = INT32_MIN;
 
-    backend_t be = BE_AUTO;
+    backend_t be = be_auto;
     int i = 1;
 
     while (i < argc) {
@@ -1089,13 +1091,13 @@ int main(int argc, char **argv) {
             continue;
         }
 
-#define OPT_INT(flag, slot)                                             \
-        if (strcmp(a, flag) == 0) {                                     \
-            if (i + 1 >= argc) die("Error: %s requires a value", flag); \
-            slot = parse_int(argv[i + 1], flag);                        \
-            i += 2;                                                     \
-            continue;                                                   \
-        }
+#define OPT_INT(flag, slot)                                                                                            \
+    if (strcmp(a, flag) == 0) {                                                                                        \
+        if (i + 1 >= argc) die("Error: %s requires a value", flag);                                                    \
+        (slot) = parse_int(argv[i + 1], flag);                                                                         \
+        i += 2;                                                                                                        \
+        continue;                                                                                                      \
+    }
         OPT_INT("--dur", fl.dur_all)
         OPT_INT("--dur-l", fl.dur_l)
         OPT_INT("--dur-r", fl.dur_r)
@@ -1120,26 +1122,26 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    int mode = parse_int(argv[i], "mode");
-    int brightness = parse_int(argv[i + 1], "brightness");
-    int rest_argc = argc - i - 2;
+    const int mode = parse_int(argv[i], "mode");
+    const int brightness = parse_int(argv[i + 1], "brightness");
+    const int rest_argc = argc - i - 2;
     char **rest_argv = argv + i + 2;
 
-    backend_t use = detect_backend(be);
+    const backend_t use = detect_backend(be);
 
-    if (use == BE_JOYPAD) {
+    if (use == be_joypad) {
         if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
         return apply_joypad(mode, brightness, rest_argc, rest_argv);
     }
 
-    if (use == BE_SYSFS) {
+    if (use == be_sysfs) {
         if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
         return apply_sysfs(mode, brightness, rest_argc, rest_argv, &fl);
     }
 
     if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present.", SER_DEV);
 
-    int rc = apply_serial(mode, brightness, rest_argc, rest_argv);
+    const int rc = apply_serial(mode, brightness, rest_argc, rest_argv);
 
     if (serial_fd >= 0) {
         close(serial_fd);

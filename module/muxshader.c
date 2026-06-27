@@ -3,7 +3,7 @@
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
-static bool is_dir = false;
+static int is_dir = 0;
 
 static int is_app = 0;
 
@@ -11,24 +11,24 @@ static char *get_selected_shader(void) {
     lv_obj_t *e_focused = lv_group_get_focused(ui_group_panel);
     if (!e_focused) return NULL;
 
-    return (char *) lv_obj_get_user_data(e_focused);
+    return lv_obj_get_user_data(e_focused);
 }
 
 static void show_help(void) {
-    if (!ui_count) {
-        show_info_box(lang.MUXSHADER.TITLE, lang.MUXSHADER.HELP, 0);
+    if (!ui_count_static) {
+        show_info_box(lang.muxshader.title, lang.muxshader.help, 0);
         return;
     }
 
     char *selected = get_selected_shader();
     if (!selected) {
-        show_info_box(lang.MUXSHADER.TITLE, lang.MUXSHADER.HELP, 0);
+        show_info_box(lang.muxshader.title, lang.muxshader.help, 0);
         return;
     }
 
     char *name = read_shader_info(selected, "Name");
     char *author = read_shader_info(selected, "Author");
-    char *version = read_shader_info(selected, "Version");
+    const char *version = read_shader_info(selected, "Version");
 
     if (name && *name) {
         char buffer[MAX_BUFFER_SIZE];
@@ -46,9 +46,9 @@ static void show_help(void) {
             strncat(buffer, version, sizeof(buffer) - strlen(buffer) - 1);
         }
 
-        show_info_box(lang.MUXSHADER.TITLE, buffer, 0);
+        show_info_box(lang.muxshader.title, buffer, 0);
     } else {
-        show_info_box(lang.MUXSHADER.TITLE, lang.MUXSHADER.HELP, 0);
+        show_info_box(lang.muxshader.title, lang.muxshader.help, 0);
     }
 
     if (name) free(name);
@@ -60,7 +60,7 @@ static void write_shader_file(char *path, char *shader, char *log) {
 
     FILE *file = fopen(path, "w");
     if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.SYSTEM.FAIL_FILE_OPEN, path);
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
         return;
     }
 
@@ -70,7 +70,7 @@ static void write_shader_file(char *path, char *shader, char *log) {
     fclose(file);
 }
 
-static void assign_shader_single(char *core_dir, char *shader, char *rom) {
+static void assign_shader_single(char *core_dir, char *shader, const char *rom) {
     char shader_path[MAX_BUFFER_SIZE];
     char *rom_no_ext = strip_ext(rom);
 
@@ -81,12 +81,11 @@ static void assign_shader_single(char *core_dir, char *shader, char *rom) {
     write_shader_file(shader_path, shader, "Assign Shader (Single)");
 }
 
-static void assign_shader_directory(char *core_dir, char *shader, int purge) {
+static void assign_shader_directory(const char *core_dir, char *shader, const int purge) {
     if (purge) delete_files_of_type(core_dir, ".shd", NULL, 0);
 
     char shader_path[MAX_BUFFER_SIZE];
-    snprintf(shader_path, sizeof(shader_path), INFO_CON_PATH "/%s/core.shd",
-             get_last_subdir(rom_dir, '/', 4));
+    snprintf(shader_path, sizeof(shader_path), INFO_CON_PATH "/%s/core.shd", get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(shader_path);
 
     write_shader_file(shader_path, shader, "Assign Shader (Directory)");
@@ -115,10 +114,9 @@ static void assign_shader_parent(char *core_dir, char *shader) {
     free_subdirectories(subdirs);
 }
 
-static void create_shader_assignment(char *shader, char *rom, enum gen_type method) {
+static void create_shader_assignment(char *shader, const char *rom, const enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/",
-             get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_dir);
 
     create_directories(core_dir, 0);
@@ -140,7 +138,7 @@ static void generate_available_shaders(void) {
     size_t file_count = 0;
 
     if (scan_directory_list(dirs, exts, &files, A_SIZE(dirs), A_SIZE(exts), &file_count) < 0) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
         return;
     }
 
@@ -155,7 +153,7 @@ static void generate_available_shaders(void) {
     for (size_t i = 0; i < file_count; i++) {
         assert(files[i] != NULL);
 
-        char *base_filename = files[i];
+        const char *base_filename = files[i];
 
         char shader_name[MAX_BUFFER_SIZE];
 
@@ -185,40 +183,38 @@ static void generate_available_shaders(void) {
 
         if (meta_name) free(meta_name);
 
-        ui_count++;
+        ui_count_static++;
         add_item(&items, &item_count, shader_store, shader_store, "", ITEM);
 
-        lv_obj_t *ui_pnlFilter = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlFilter);
+        lv_obj_t *ui_pnl_filter = lv_obj_create(ui_pnl_content);
+        apply_theme_list_panel(ui_pnl_filter);
 
-        lv_obj_set_user_data(ui_pnlFilter, strdup(shader_store));
+        lv_obj_set_user_data(ui_pnl_filter, strdup(shader_store));
 
-        lv_obj_t *ui_lblFilterItem = lv_label_create(ui_pnlFilter);
-        apply_theme_list_item(&theme, ui_lblFilterItem, shader_display);
+        lv_obj_t *ui_lbl_filter_item = lv_label_create(ui_pnl_filter);
+        apply_theme_list_item(&theme, ui_lbl_filter_item, shader_display);
 
-        lv_obj_t *ui_lblFilterItemGlyph = lv_img_create(ui_pnlFilter);
-        apply_theme_list_glyph(&theme, ui_lblFilterItemGlyph, mux_module, "shader");
+        lv_obj_t *ui_lbl_filter_item_glyph = lv_img_create(ui_pnl_filter);
+        apply_theme_list_glyph(&theme, ui_lbl_filter_item_glyph, mux_module, "shader");
 
-        lv_group_add_obj(ui_group, ui_lblFilterItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblFilterItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlFilter);
+        lv_group_add_obj(ui_group, ui_lbl_filter_item);
+        lv_group_add_obj(ui_group_glyph, ui_lbl_filter_item_glyph);
+        lv_group_add_obj(ui_group_panel, ui_pnl_filter);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblFilterItem, ui_lblFilterItemGlyph, shader_display);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblFilterItem);
+        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_filter_item, ui_lbl_filter_item_glyph, shader_display);
+        apply_text_long_dot(&theme, ui_lbl_filter_item);
     }
 
-    if (ui_count > 0)
-        lv_obj_update_layout(ui_pnlContent);
+    if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 
     free_array(files, file_count);
 }
 
-
 static void handle_a(void) {
-    if (msgbox_active || !ui_count || hold_call || is_dir) return;
+    if (msgbox_active || !ui_count_static || hold_call || is_dir) return;
 
     LOG_INFO(mux_module, "Single Shader Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     char *selected = get_selected_shader();
     create_shader_assignment(selected, rom_name, SINGLE);
@@ -234,17 +230,17 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
     remove(MUOS_SAG_LOAD);
 
     mux_input_stop();
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count_static || hold_call) return;
 
     LOG_INFO(mux_module, "Directory Shader Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     char *selected = get_selected_shader();
     create_shader_assignment(selected, rom_name, DIRECTORY);
@@ -253,10 +249,10 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count || hold_call) return;
+    if (msgbox_active || !ui_count_static || hold_call) return;
 
     LOG_INFO(mux_module, "Parent Shader Assignment Triggered");
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     char *selected = get_selected_shader();
     create_shader_assignment(selected, rom_name, PARENT);
@@ -265,9 +261,9 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
@@ -278,20 +274,20 @@ static void init_elements(void) {
     int i = 0;
 
     if (!is_dir) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.CONTENT, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
     }
 
-    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
-    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b_glyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b, lang.generic.back, 0};
 
     if (!is_app) {
-        nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
 
         if (!at_base(rom_dir, MAIN_ROM_DIR)) {
-            nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
         }
     }
 
@@ -326,52 +322,54 @@ void muxshader_main(int auto_assign, const char *name, const char *dir, const ch
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXSHADER.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxshader.title);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
     init_fonts();
 
     generate_available_shaders();
     init_elements();
 
-    if (ui_count > 0) {
-        LOG_SUCCESS(mux_module, "%d Shader%s Detected", ui_count, ui_count == 1 ? "" : "s");
+    if (ui_count_static > 0) {
+        LOG_SUCCESS(mux_module, "%d Shader%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         gen_step_movement(0, +1, 1, 0, 1);
     } else {
         LOG_ERROR(mux_module, "No Shaders Detected!");
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXSHADER.NONE);
+        lv_label_set_text(ui_lbl_screen_message, lang.muxshader.none);
     }
 
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_r1] = handle_list_nav_page_down,
+        }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

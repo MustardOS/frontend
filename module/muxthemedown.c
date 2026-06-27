@@ -10,7 +10,7 @@ static char *preview_zip_path = "/opt/theme_catalogue.muxzip";
 
 static int exit_status = 0;
 
-static int preview_displayTime = 0;
+static int preview_display_time = 0;
 static int preview_index = -1;
 
 static int schedule_theme_update = 0;
@@ -43,17 +43,16 @@ static void show_help(void) {
         snprintf(credits, sizeof(credits), "%s", raw ? raw : "");
         free(raw);
     } else {
-        snprintf(credits, sizeof(credits), "%s", lang.MUXPICKER.NONE.CREDIT);
+        snprintf(credits, sizeof(credits), "%s", lang.muxpicker.none.credit);
     }
 
     show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), TRS(credits), 0);
 }
 
-static int is_downloaded(int index) {
+static int is_downloaded(const int index) {
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s",
-             theme_items[index].name);
-    return (dir_exist(theme_path));
+    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s", theme_items[index].name);
+    return dir_exist(theme_path);
 }
 
 static void image_refresh() {
@@ -63,57 +62,61 @@ static void image_refresh() {
     snprintf(base_image_path, sizeof(base_image_path), INFO_CAT_PATH "/theme/box");
 
     char preview_path[MAX_BUFFER_SIZE];
-    if (get_theme_preview_path(base_image_path, theme_items[current_item_index].name, preview_path,
-                               sizeof(preview_path), preview_index) != 0) {
+    if (get_theme_preview_path(
+            base_image_path, theme_items[current_item_index].name, preview_path, sizeof(preview_path), preview_index
+        )
+        != 0) {
         preview_index = -1;
     }
 
-    lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
+    lv_img_cache_invalidate_src(lv_img_get_src(ui_img_box));
 
     if (strcasecmp(box_image_previous_path, preview_path) != 0) {
 
         if (!file_exist(preview_path)) {
-            lv_img_set_src(ui_imgBox, &ui_img_blank);
+            lv_img_set_src(ui_img_box, &ui_img_blank);
             snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
         } else {
-            struct ImageSettings image_settings = {
-                    preview_path, 6,
-                    validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
-                    validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
-                    theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
-                    theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
+            const struct image_settings image_settings = {
+                preview_path,
+                6,
+                validate_int16((int16_t) (device.mux.width * .45), "width"),
+                validate_int16(device.mux.height, "height"),
+                theme.image_list.pad_left,
+                theme.image_list.pad_right,
+                theme.image_list.pad_top,
+                theme.image_list.pad_bottom
             };
-            update_image(ui_imgBox, image_settings);
+            update_image(ui_img_box, image_settings);
             snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", preview_path);
         }
     }
-    preview_displayTime = 0;
+    preview_display_time = 0;
 }
 
-static int skip_theme_item(const char *name, int grid_enabled, int hdmi_enabled, int language_enabled,
-                           int resolution640x480, int resolution720x480, int resolution720x720,
-                           int resolution1024x768, int resolution1280x720, int resolution1920x1080) {
-    return (
-            (config.THEME.FILTER.RESOLUTION_640x480 && !resolution640x480) ||
-            (config.THEME.FILTER.RESOLUTION_720x480 && !resolution720x480) ||
-            (config.THEME.FILTER.RESOLUTION_720x720 && !resolution720x720) ||
-            (config.THEME.FILTER.RESOLUTION_1024x768 && !resolution1024x768) ||
-            (config.THEME.FILTER.RESOLUTION_1280x720 && !resolution1280x720) ||
-            (config.THEME.FILTER.RESOLUTION_1920x1080 && !resolution1920x1080) ||
-            (config.THEME.FILTER.GRID && !grid_enabled) ||
-            (config.THEME.FILTER.HDMI && !hdmi_enabled) ||
-            (config.THEME.FILTER.LANGUAGE && !language_enabled) ||
-            (config.THEME.FILTER.LOOKUP[0] != '\0' && strcasestr(name, config.THEME.FILTER.LOOKUP) == NULL)
-    );
+static int skip_theme_item(
+    const char *name, const int grid_enabled, const int hdmi_enabled, const int language_enabled,
+    const int resolution640_x480, const int resolution720_x480, const int resolution720_x720,
+    const int resolution1024_x768, const int resolution1280_x720, const int resolution1920_x1080
+) {
+    return (config.theme.filter.resolution_640_x480 && !resolution640_x480)
+           || (config.theme.filter.resolution_720_x480 && !resolution720_x480)
+           || (config.theme.filter.resolution_720_x720 && !resolution720_x720)
+           || (config.theme.filter.resolution_1024_x768 && !resolution1024_x768)
+           || (config.theme.filter.resolution_1280_x720 && !resolution1280_x720)
+           || (config.theme.filter.resolution_1920_x1080 && !resolution1920_x1080)
+           || (config.theme.filter.grid && !grid_enabled) || (config.theme.filter.hdmi && !hdmi_enabled)
+           || (config.theme.filter.language && !language_enabled)
+           || (config.theme.filter.lookup[0] != '\0' && strcasestr(name, config.theme.filter.lookup) == NULL);
 }
 
 static void create_content_items(void) {
     if (!file_exist(theme_data_local_path)) {
         LOG_WARN(mux_module, "Theme Data Not Found At: %s", theme_data_local_path);
         return;
-    } else {
-        LOG_SUCCESS(mux_module, "Found Theme Data At: %s", theme_data_local_path);
     }
+
+    LOG_SUCCESS(mux_module, "Found Theme Data At: %s", theme_data_local_path);
 
     char *json_str = read_all_char_from(theme_data_local_path);
     if (!json_valid(json_str)) return;
@@ -124,7 +127,7 @@ static void create_content_items(void) {
         return;
     }
 
-    struct json fn_json = json_parse(json_str);
+    const struct json fn_json = json_parse(json_str);
 
     size_t theme_count = json_array_count(fn_json);
     if (theme_count > MAX_MANIFEST_ITEMS) {
@@ -133,18 +136,18 @@ static void create_content_items(void) {
     }
 
     for (int i = 0; i < theme_count; i++) {
-        struct json theme_item = json_array_get(fn_json, i);
+        const struct json theme_item = json_array_get(fn_json, i);
 
-        int grid_enabled = json_bool(json_object_get(theme_item, "grid"));
-        int hdmi = json_bool(json_object_get(theme_item, "hdmi"));
-        int language = json_bool(json_object_get(theme_item, "language"));
+        const int grid_enabled = json_bool(json_object_get(theme_item, "grid"));
+        const int hdmi = json_bool(json_object_get(theme_item, "hdmi"));
+        const int language = json_bool(json_object_get(theme_item, "language"));
 
-        int resolution640x480 = json_bool(json_object_get(theme_item, "resolution640x480"));
-        int resolution720x480 = json_bool(json_object_get(theme_item, "resolution720x480"));
-        int resolution720x720 = json_bool(json_object_get(theme_item, "resolution720x720"));
-        int resolution1024x768 = json_bool(json_object_get(theme_item, "resolution1024x768"));
-        int resolution1280x720 = json_bool(json_object_get(theme_item, "resolution1280x720"));
-        int resolution1920x1080 = json_bool(json_object_get(theme_item, "resolution1920x1080"));
+        const int resolution640_x480 = json_bool(json_object_get(theme_item, "resolution640x480"));
+        const int resolution720_x480 = json_bool(json_object_get(theme_item, "resolution720x480"));
+        const int resolution720_x720 = json_bool(json_object_get(theme_item, "resolution720x720"));
+        const int resolution1024_x768 = json_bool(json_object_get(theme_item, "resolution1024x768"));
+        const int resolution1280_x720 = json_bool(json_object_get(theme_item, "resolution1280x720"));
+        const int resolution1920_x1080 = json_bool(json_object_get(theme_item, "resolution1920x1080"));
 
         char theme_name[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "name"), theme_name, sizeof(theme_name));
@@ -157,107 +160,123 @@ static void create_content_items(void) {
         char theme_url[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "url"), theme_url, sizeof(theme_url));
 
-        if (!skip_theme_item(theme_name, grid_enabled, hdmi, language,
-                             resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720, resolution1920x1080)) {
-            add_theme_item(&theme_items, &theme_item_count, theme_name, theme_url, grid_enabled, hdmi, language,
-                           resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720, resolution1920x1080);
+        if (!skip_theme_item(
+                theme_name, grid_enabled, hdmi, language, resolution640_x480, resolution720_x480, resolution720_x720,
+                resolution1024_x768, resolution1280_x720, resolution1920_x1080
+            )) {
+            add_theme_item(
+                &theme_items, &theme_item_count, theme_name, theme_url, grid_enabled, hdmi, language,
+                resolution640_x480, resolution720_x480, resolution720_x720, resolution1024_x768, resolution1280_x720,
+                resolution1920_x1080
+            );
         }
     }
     sort_theme_items(theme_items, theme_item_count);
 
     for (int i = 0; i < theme_item_count; i++) {
-        if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
+        if (lv_obj_get_child_cnt(ui_pnl_content) >= theme.mux.item.count) break;
 
         gen_label(mux_module, is_downloaded(i) ? "theme_down" : "theme", theme_items[i].name);
     }
 }
 
-static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, int index) {
-    lv_label_set_text(ui_lblItem, theme_items[index].name);
+static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
+    lv_label_set_text(ui_lbl_item, theme_items[index].name);
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
+    if (theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {
         get_glyph_path(mux_module, is_downloaded(index) ? "theme_down" : "theme", glyph_image_embed, MAX_BUFFER_SIZE);
-        set_list_glyph_image(ui_lblItemGlyph, glyph_image_embed);
+        set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
     }
 
-    apply_size_to_content(&theme, ui_pnlContent, ui_lblItem, ui_lblItemGlyph, theme_items[index].name);
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lblItem);
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, theme_items[index].name);
+    apply_text_long_dot(&theme, ui_lbl_item);
 }
 
-static void update_list_items(int start_index) {
-    for (int index = 0; index < theme.MUX.ITEM.COUNT; ++index) {
-        lv_obj_t *panel_item = lv_obj_get_child(ui_pnlContent, index);
+static void update_list_items(const int start_index) {
+    for (int index = 0; index < theme.mux.item.count; ++index) {
+        const lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_content, index);
         update_list_item(lv_obj_get_child(panel_item, 0), lv_obj_get_child(panel_item, 1), start_index + index);
     }
 }
 
-static void list_nav_move(int steps, int direction) {
-    if (!ui_count) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
+static void list_nav_move(const int steps, const int direction) {
+    if (!ui_count_static) return;
+    first_open ? (first_open = 0) : play_sound(snd_navigate);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
+        apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
-            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+            current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
         } else {
-            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+            current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
         }
 
         nav_move(ui_group, direction);
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
 
-        if (theme_item_count > theme.MUX.ITEM.COUNT) {
-            int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
-            int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
+        if (theme_item_count > theme.mux.item.count) {
+            const int items_before_selected = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
+            const int items_after_selected = (theme.mux.item.count - 1) / 2;
 
             if (direction < 0) {
                 if (current_item_index == theme_item_count - 1) {
-                    update_list_items((int) theme_item_count - theme.MUX.ITEM.COUNT);
+                    update_list_items((int) theme_item_count - theme.mux.item.count);
                 } else {
-                    if (current_item_index >= items_before_selected &&
-                        current_item_index < theme_item_count - items_after_selected - 1) {
-                        lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent, theme.MUX.ITEM.COUNT - 1); // Get the last child
+                    if (current_item_index >= items_before_selected
+                        && current_item_index < theme_item_count - items_after_selected - 1) {
+                        lv_obj_t *last_item =
+                            lv_obj_get_child(ui_pnl_content, theme.mux.item.count - 1); // Get the last child
                         lv_obj_move_to_index(last_item, 0);
-                        update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1), current_item_index - items_before_selected);
+                        update_list_item(
+                            lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
+                            current_item_index - items_before_selected
+                        );
                     }
                 }
             } else {
                 if (current_item_index == 0) {
                     update_list_items(0);
                 } else {
-                    if (current_item_index > items_before_selected &&
-                        current_item_index < theme_item_count - items_after_selected) {
-                        lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
-                        lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
-                        update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1), current_item_index + items_after_selected);
+                    if (current_item_index > items_before_selected
+                        && current_item_index < theme_item_count - items_after_selected) {
+                        lv_obj_t *first_item = lv_obj_get_child(ui_pnl_content, 0);
+                        lv_obj_move_to_index(first_item, theme.mux.item.count - 1);
+                        update_list_item(
+                            lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
+                            current_item_index + items_after_selected
+                        );
                     }
                 }
             }
         }
     }
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.VISUAL.NAMESCROLL);
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE : lang.MUXTHEMEDOWN.DOWNLOAD);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+    lv_label_set_text(
+        ui_lbl_nav_a, is_downloaded(current_item_index) ? lang.muxthemedown.remove : lang.muxthemedown.download
+    );
 
     nav_moved = 1;
 }
 
-static void list_nav_prev(int steps) {
+static void list_nav_prev(const int steps) {
     if (download_in_progress) return;
     list_nav_move(steps, -1);
 }
 
-static void list_nav_next(int steps) {
+static void list_nav_next(const int steps) {
     if (download_in_progress) return;
     list_nav_move(steps, +1);
 }
 
 static void refresh_current_list_item() {
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
-    lv_label_set_text(ui_lblNavA, is_downloaded(current_item_index) ? lang.MUXTHEMEDOWN.REMOVE : lang.MUXTHEMEDOWN.DOWNLOAD);
+    lv_label_set_text(
+        ui_lbl_nav_a, is_downloaded(current_item_index) ? lang.muxthemedown.remove : lang.muxthemedown.download
+    );
 }
 
 static void theme_extraction_finished(char *theme_path) {
@@ -273,27 +292,25 @@ static void theme_extraction_finished(char *theme_path) {
     theme_extract_done = 1;
 }
 
-static void theme_download_finished(int result) {
+static void theme_download_finished(const int result) {
     if (result != 0) {
-        play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, SHORT);
+        play_sound(snd_error);
+        toast_message(lang.muxthemedown.error_get_data, tst_wait_s);
         return;
     }
 
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
-             theme_items[current_item_index].name);
+    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name);
 
     if (!file_exist(theme_path)) {
         LOG_WARN(mux_module, "Theme archive missing after download: %s", theme_path);
-        play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, SHORT);
+        play_sound(snd_error);
+        toast_message(lang.muxthemedown.error_get_data, tst_wait_s);
         return;
     }
 
     char output_path[MAX_BUFFER_SIZE];
-    snprintf(output_path, sizeof(output_path), RUN_STORAGE_PATH "theme/%s",
-             theme_items[current_item_index].name);
+    snprintf(output_path, sizeof(output_path), RUN_STORAGE_PATH "theme/%s", theme_items[current_item_index].name);
 
     theme_extracting = 1;
     block_input = 1;
@@ -301,70 +318,67 @@ static void theme_download_finished(int result) {
     extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
 }
 
-static void refresh_theme_previews_finished(int result) {
+static void refresh_theme_previews_finished(const int result) {
     if (result == 0) {
         extract_archive(preview_zip_path, "themedwn");
         pending_download_switch = 1;
     } else {
-        play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, FOREVER);
+        play_sound(snd_error);
+        toast_message(lang.muxthemedown.error_get_data, tst_wait_f);
     }
 }
 
-static void refresh_theme_data_finished(int result) {
+static void refresh_theme_data_finished(const int result) {
     if (result == 0) {
         if (file_exist(preview_zip_path)) remove(preview_zip_path);
         set_download_callbacks(refresh_theme_previews_finished);
-        initiate_download(config.THEME.DOWNLOAD.PREVIEW, preview_zip_path, 1,
-                          lang.MUXTHEMEDOWN.DOWN.PREVIEW);
+        initiate_download(config.theme.download.preview, preview_zip_path, 1, lang.muxthemedown.down.preview);
     } else {
-        play_sound(SND_ERROR);
-        toast_message(lang.MUXTHEMEDOWN.ERROR_GET_DATA, FOREVER);
+        play_sound(snd_error);
+        toast_message(lang.muxthemedown.error_get_data, tst_wait_f);
     }
 }
 
 static void update_theme_data(void) {
     if (file_exist(theme_data_local_path)) remove(theme_data_local_path);
     set_download_callbacks(refresh_theme_data_finished);
-    initiate_download(config.THEME.DOWNLOAD.DATA, theme_data_local_path, 1,
-                      lang.MUXTHEMEDOWN.DOWN.DATA);
+    initiate_download(config.theme.download.data, theme_data_local_path, 1, lang.muxthemedown.down.data);
 }
 
 static void handle_a(void) {
-    if (msg_mode || download_in_progress || msgbox_active || !ui_count || hold_call) return;
+    if (msg_mode || download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     char theme_path[MAX_BUFFER_SIZE];
-    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s",
-             theme_items[current_item_index].name);
+    snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s", theme_items[current_item_index].name);
     if (dir_exist(theme_path)) {
         if (strcasecmp(theme_path, theme_base) == 0) {
-            toast_message(lang.GENERIC.CANNOT_DELETE_ACTIVE_THEME, SHORT);
+            toast_message(lang.generic.cannot_delete_active_theme, tst_wait_s);
         } else {
             remove_directory_recursive(theme_path);
             sync();
             refresh_current_list_item();
-            toast_message(lang.MUXTHEMEDOWN.THEME_REMOVED, SHORT);
+            toast_message(lang.muxthemedown.theme_removed, tst_wait_s);
         }
     } else {
         set_download_callbacks(theme_download_finished);
-        snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
-                 theme_items[current_item_index].name);
-        initiate_download(theme_items[current_item_index].url, theme_path, 1,
-                          lang.MUXTHEMEDOWN.DOWN.THEME);
+        snprintf(
+            theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name
+        );
+        initiate_download(theme_items[current_item_index].url, theme_path, 1, lang.muxthemedown.down.theme);
     }
 }
 
 static void handle_b(void) {
     if (msg_mode) {
-        play_sound(SND_BACK);
+        play_sound(snd_back);
         hide_message_dialog();
         return;
     }
 
     if (theme_extracting) {
-        toast_message(lang.MUXTHEMEDOWN.THEME_EXTRACTING, LONG);
+        toast_message(lang.muxthemedown.theme_extracting, tst_wait_l);
         return;
     }
 
@@ -375,14 +389,15 @@ static void handle_b(void) {
         return;
     }
 
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     if (download_in_progress) {
         cancel_download = 1;
-        if (theme_items && ui_count > 0) {
+        if (theme_items && ui_count_static > 0) {
             char theme_path[MAX_BUFFER_SIZE];
-            snprintf(theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm",
-                     theme_items[current_item_index].name);
+            snprintf(
+                theme_path, sizeof(theme_path), RUN_STORAGE_PATH "theme/%s.muxthm", theme_items[current_item_index].name
+            );
             if (file_exist(theme_path)) remove(theme_path);
         }
     } else {
@@ -396,14 +411,14 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
-    play_sound(SND_CONFIRM);
+    if (download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
+    play_sound(snd_confirm);
     update_theme_data();
 }
 
 static void handle_y(void) {
     if (download_in_progress || msgbox_active || hold_call) return;
-    play_sound(SND_CONFIRM);
+    play_sound(snd_confirm);
 
     theme_down_index = current_item_index;
 
@@ -413,44 +428,35 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (download_in_progress || msgbox_active || !ui_count || hold_call) return;
+    if (download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
 static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]) {
-            ui_pnlFooter,
-            ui_pnlHeader,
-            ui_lblCounter_explore,
-            ui_pnlHelp,
-            ui_pnlProgressBrightness,
-            ui_pnlProgressVolume,
-            NULL
-    });
+    adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_lbl_counter_explore, ui_pnl_help,
+                                          ui_pnl_progress_brightness, ui_pnl_progress_volume, NULL});
 }
 
 static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                         1},
-            {ui_lblNavA,      lang.MUXTHEMEDOWN.DOWNLOAD, 1},
-            {ui_lblNavBGlyph, "",                         0},
-            {ui_lblNavB,      lang.GENERIC.BACK,          0},
-            {ui_lblNavXGlyph, "",                         0},
-            {ui_lblNavX,      lang.GENERIC.REFRESH,       0},
-            {ui_lblNavYGlyph, "",                         0},
-            {ui_lblNavY,      lang.GENERIC.FILTER,        0},
-            {NULL, NULL,                                  0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 1},
+                                  {ui_lbl_nav_a, lang.muxthemedown.download, 1},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.refresh, 0},
+                                  {ui_lbl_nav_y_glyph, "", 0},
+                                  {ui_lbl_nav_y, lang.generic.filter, 0},
+                                  {NULL, NULL, 0}});
 
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     download_poll();
     extraction_poll();
 
@@ -493,79 +499,77 @@ static void ui_refresh_task() {
         return;
     }
 
-    if (ui_count > 0 && nav_moved) {
+    if (ui_count_static > 0 && nav_moved) {
         preview_index = -1;
         image_refresh();
-        preview_displayTime = 0;
+        preview_display_time = 0;
 
         adjust_panels();
 
-        if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        if (!lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
         }
 
-        update_file_counter(ui_lblCounter_explore, ui_count);
+        update_file_counter(ui_lbl_counter_explore, ui_count_static);
         if (overlay_image) lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
     }
 
-    preview_displayTime += TIMER_REFRESH;
-    if (preview_displayTime > THEME_PREVIEW_DELAY) {
+    preview_display_time += TIMER_REFRESH;
+    if (preview_display_time > THEME_PREVIEW_DELAY) {
         if (theme_items && theme_item_count > 0) {
             preview_index++;
             image_refresh();
         }
-        preview_displayTime = 0;
+        preview_display_time = 0;
     }
 }
 
 int muxthemedown_main(void) {
     exit_status = 0;
-    snprintf(theme_data_local_path, sizeof(theme_data_local_path), "%s/%s",
-             device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH "/" THEME_DATA);
+    snprintf(
+        theme_data_local_path, sizeof(theme_data_local_path), "%s/%s", device.storage.rom.mount,
+        MUOS_INFO_PATH "/" THEME_DATA
+    );
     create_directories(theme_data_local_path, 1);
 
     init_module(__func__);
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXTHEMEDOWN.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxthemedown.title);
     init_ui_item_counter(&theme);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
     init_fonts();
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     reset_ui_groups();
 
     create_content_items();
-    ui_count = (int) theme_item_count;
+    ui_count_static = (int) theme_item_count;
     init_elements();
 
-    int nav_vis = ui_count > 0 ? 1 : 0;
-    struct nav_flag nav_e[] = {
-            {ui_lblNavA,         nav_vis},
-            {ui_lblNavAGlyph,    nav_vis},
-            {ui_lblNavX,         nav_vis},
-            {ui_lblNavXGlyph,    nav_vis},
-            {ui_lblNavY,         nav_vis},
-            {ui_lblNavYGlyph,    nav_vis},
-            {ui_lblNavMenu,      0},
-            {ui_lblNavMenuGlyph, 0}
-    };
+    const int nav_vis = ui_count_static > 0 ? 1 : 0;
+    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_vis}, {ui_lbl_nav_a_glyph, nav_vis},
+                                     {ui_lbl_nav_x, nav_vis}, {ui_lbl_nav_x_glyph, nav_vis},
+                                     {ui_lbl_nav_y, nav_vis}, {ui_lbl_nav_y_glyph, nav_vis},
+                                     {ui_lbl_nav_menu, 0},    {ui_lbl_nav_menu_glyph, 0}};
 
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
-    dialogue_init_message(&msg_dlg, &theme, ui_screen, lang.GENERIC.WARNING, NULL, lang.GENERIC.UNSAFE_ARCHIVE, lang.GENERIC.BACK);
+    dialogue_init_message(
+        &msg_dlg, &theme, ui_screen, lang.generic.warning, NULL, lang.generic.unsafe_archive, lang.generic.back
+    );
 
-    if (ui_count > 0) list_nav_move(theme_down_index, 1);
+    if (ui_count_static > 0) list_nav_move(theme_down_index, 1);
     theme_down_index = 0;
 
-    update_file_counter(ui_lblCounter_explore, ui_count);
+    update_file_counter(ui_lbl_counter_explore, ui_count_static);
 
     init_timer(ui_refresh_task, NULL);
 
@@ -575,39 +579,41 @@ int muxthemedown_main(void) {
     }
 
     mux_input_options input_opts = {
-            .swap_axis = theme.MISC.NAVIGATION_TYPE == 1,
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_dpad_left] = handle_list_nav_left,
+                [mux_input_dpad_right] = handle_list_nav_right,
+                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_r1] = handle_list_nav_page_down,
             },
-            .release_handler = {
-                    [MUX_INPUT_L2] = hold_call_release,
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_l2] = hold_call_release,
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_L2] = hold_call_set,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            },
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_dpad_left] = handle_list_nav_left_hold,
+            [mux_input_dpad_right] = handle_list_nav_right_hold,
+            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_l2] = hold_call_set,
+            [mux_input_r1] = handle_list_nav_page_down,
+        },
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 
-    if (ui_count > 0) free_theme_items(&theme_items, &theme_item_count);
+    if (ui_count_static > 0) free_theme_items(&theme_items, &theme_item_count);
 
     return exit_status;
 }

@@ -36,10 +36,10 @@ extern "C" {
 
 typedef struct {
     char head[8];
-    SDL_Texture * texture;
+    SDL_Texture *texture;
     SDL_Rect rect;
-    bool texture_managed;
-    bool texture_referenced;
+    int texture_managed;
+    int texture_referenced;
 } lv_draw_sdl_dec_dsc_userdata_t;
 
 typedef enum {
@@ -70,32 +70,35 @@ typedef struct {
  * GLOBAL PROTOTYPES
  **********************/
 
-void lv_draw_sdl_texture_cache_init(lv_draw_sdl_ctx_t * ctx);
+void lv_draw_sdl_texture_cache_init(lv_draw_sdl_ctx_t *ctx);
 
-void lv_draw_sdl_texture_cache_deinit(lv_draw_sdl_ctx_t * ctx);
+void lv_draw_sdl_texture_cache_deinit(lv_draw_sdl_ctx_t *ctx);
 
 /**
  * Find cached texture by key. The texture can be destroyed during usage.
  */
-SDL_Texture * lv_draw_sdl_texture_cache_get(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length, bool * found);
+SDL_Texture *lv_draw_sdl_texture_cache_get(lv_draw_sdl_ctx_t *ctx, const void *key, size_t key_length, int *found);
 
-SDL_Texture * lv_draw_sdl_texture_cache_get_with_userdata(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
-                                                          bool * found, void ** userdata);
-
-/**
- * @return Whether the texture has been put in the cache
- */
-bool lv_draw_sdl_texture_cache_put(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length, SDL_Texture * texture);
+SDL_Texture *lv_draw_sdl_texture_cache_get_with_userdata(
+    lv_draw_sdl_ctx_t *ctx, const void *key, size_t key_length, int *found, void **userdata
+);
 
 /**
  * @return Whether the texture has been put in the cache
  */
-bool lv_draw_sdl_texture_cache_put_advanced(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
-                                            SDL_Texture * texture, void * userdata, void userdata_free(void *),
-                                            lv_draw_sdl_cache_flag_t flags);
+int lv_draw_sdl_texture_cache_put(lv_draw_sdl_ctx_t *ctx, const void *key, size_t key_length, SDL_Texture *texture);
 
-lv_draw_sdl_cache_key_head_img_t * lv_draw_sdl_texture_img_key_create(const void * src, int32_t frame_id,
-                                                                      size_t * size);
+/**
+ * @return Whether the texture has been put in the cache
+ */
+int lv_draw_sdl_texture_cache_put_advanced(
+    lv_draw_sdl_ctx_t *ctx, const void *key, size_t key_length, SDL_Texture *texture, void *userdata,
+    void userdata_free(void *), lv_draw_sdl_cache_flag_t flags
+);
+
+lv_draw_sdl_cache_key_head_img_t *lv_draw_sdl_texture_img_key_create(const void *src, int32_t frame_id, size_t *size);
+
+void lv_draw_sdl_texture_cache_remove_src(lv_draw_sdl_ctx_t *ctx, const void *src);
 
 /**********************
  *      MACROS

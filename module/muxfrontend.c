@@ -40,12 +40,12 @@ typedef struct {
     void (*func)(void *);
 
     void *arg;
-} ParamLoader;
+} param_loader;
 
 typedef struct {
     const char *action;
     size_t index;
-} DispatchSlot;
+} dispatch_slot;
 
 typedef struct {
     char *action;
@@ -55,18 +55,17 @@ typedef struct {
     int (*mux_main)(void);
 
     void (*mux_func)(void);
-} ModuleEntry;
+} module_entry;
 
-static DispatchSlot dispatch_map[DISPATCH_SLOTS];
+static dispatch_slot dispatch_map[DISPATCH_SLOTS];
 static int dispatch_map_ready = 0;
 
-static void on_signal(int sig) {
+static void on_signal(const int sig) {
     quit_signal = sig ? sig : 1;
 }
 
 static void install_signal_handlers(void) {
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
+    struct sigaction sa = {0};
     sa.sa_handler = on_signal;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0; // Do NOT use SA_RESTART (we want blocking syscalls to unblock)
@@ -101,10 +100,13 @@ static void cleanup_screen(void) {
     key_curr = 0;
     key_show = 0;
     msgbox_active = 0;
-    ui_count = 0;
+    ui_count_static = 0;
     grid_mode_enabled = 0;
 
-    if (!video_wallpaper_active()) RESET_PATH(current_wall);
+    if (video_wallpaper_active()) {
+        video_wallpaper_stop();
+    }
+    RESET_PATH(current_wall);
     RESET_PATH(box_image_previous_path);
     RESET_PATH(preview_image_previous_path);
     RESET_PATH(splash_image_previous_path);
@@ -117,8 +119,7 @@ static void cleanup_all(void) {
     sdl_cleanup();
 }
 
-static void quit_watchdog(lv_timer_t *timer) {
-    LV_UNUSED(timer);
+static void quit_watchdog(lv_timer_t *timer __attribute__((unused))) {
 
     if (shutting_down) return;
     inotify_check(ino_proc);
@@ -194,29 +195,33 @@ int set_splash_image_path(char *splash_image_name) {
         int uses_dim;
         int uses_lang;
     } paths[] = {
-            {"%s/%simage/%s/%s.png", 1, 1},
-            {"%s/%simage/%s.png",    1, 0},
-            {"%s/image/%s/%s.png",   0, 1},
-            {"%s/image/%s.png",      0, 0},
+        {"%s/%simage/%s/%s.png", 1, 1},
+        {"%s/%simage/%s.png", 1, 0},
+        {"%s/image/%s/%s.png", 0, 1},
+        {"%s/image/%s.png", 0, 0},
     };
 
-    const char *curr_lang = config.SETTINGS.GENERAL.LANGUAGE;
+    const char *curr_lang = config.settings.general.language;
 
     for (size_t i = 0; i < A_SIZE(paths); ++i) {
         int written;
 
         if (paths[i].uses_dim && paths[i].uses_lang) {
-            written = snprintf(splash_image_path, sizeof(splash_image_path),
-                               paths[i].fmt, theme_base, mux_dim, curr_lang, splash_image_name);
+            written = snprintf(
+                splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, mux_dim, curr_lang,
+                splash_image_name
+            );
         } else if (paths[i].uses_dim) {
-            written = snprintf(splash_image_path, sizeof(splash_image_path),
-                               paths[i].fmt, theme_base, mux_dim, splash_image_name);
+            written = snprintf(
+                splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, mux_dim, splash_image_name
+            );
         } else if (paths[i].uses_lang) {
-            written = snprintf(splash_image_path, sizeof(splash_image_path),
-                               paths[i].fmt, theme_base, curr_lang, splash_image_name);
+            written = snprintf(
+                splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, curr_lang, splash_image_name
+            );
         } else {
-            written = snprintf(splash_image_path, sizeof(splash_image_path),
-                               paths[i].fmt, theme_base, splash_image_name);
+            written =
+                snprintf(splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, splash_image_name);
         }
 
         if (written < 0 || (size_t) written >= sizeof(splash_image_path)) continue;
@@ -237,18 +242,18 @@ static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
 }
 
 static void module_reset(void) {
-    if (config.BOOT.FACTORY_RESET) safe_quit(0);
+    if (config.boot.factory_reset) safe_quit(0);
 }
 
-static void module_exit(char *module, bool apply_recolour) {
+static void module_exit(char *module, const int apply_recolour) {
     if (set_splash_image_path(module)) {
         muxsplash_main(splash_image_path, apply_recolour);
     }
 
     if (strcmp(module, "shutdown") == 0) {
-        play_sound_wait(SND_SHUTDOWN);
+        play_sound_wait(snd_shutdown);
     } else if (strcmp(module, "reboot") == 0) {
-        play_sound_wait(SND_REBOOT);
+        play_sound_wait(snd_reboot);
     }
 
     load_mux(module);
@@ -256,15 +261,15 @@ static void module_exit(char *module, bool apply_recolour) {
 }
 
 static void module_shutdown(void) {
-    module_exit("shutdown", true);
+    module_exit("shutdown", 1);
 }
 
 static void module_reboot(void) {
-    module_exit("reboot", true);
+    module_exit("reboot", 1);
 }
 
 static void module_install(void) {
-    module_exit("install", false);
+    module_exit("install", 0);
 }
 
 static void module_credits(void) {
@@ -302,18 +307,17 @@ static void module_explore(void) {
     if (muxplore_main(last_index, explore_dir) == 1) safe_quit(0);
 }
 
-void module_content_list(const char *path, const char *max_depth, int is_collection) {
+void module_content_list(const char *path, const char *max_depth, const int is_collection) {
     last_index_check();
 
-    const char *args[] = {"find", path, "-maxdepth", max_depth,
-                          "-type", "f", "-size", "0", "!", "-name", ".nogrid",
-                          "-delete", NULL};
+    const char *args[] = {"find", path, "-maxdepth", max_depth, "-type",   "f", "-size",
+                          "0",    "!",  "-name",     ".nogrid", "-delete", NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     load_mux("launcher");
 
     if (is_collection) {
-        int add_mode = file_exist(ADD_MODE_WORK);
+        const int add_mode = file_exist(ADD_MODE_WORK);
         if (add_mode) last_index = 0;
 
         if (muxcollect_main(add_mode, read_line_char_from(COLLECTION_DIR, 1), last_index) == 1) safe_quit(0);
@@ -323,8 +327,8 @@ void module_content_list(const char *path, const char *max_depth, int is_collect
 }
 
 static void module_collection(void) {
-    const char *collection_path = (is_ksk(kiosk.COLLECT.ACCESS) && dir_exist(INFO_CKS_PATH))
-                                  ? INFO_CKS_PATH : INFO_COL_PATH;
+    const char *collection_path =
+        is_ksk(kiosk.collect.access) && dir_exist(INFO_CKS_PATH) ? INFO_CKS_PATH : INFO_COL_PATH;
     module_content_list(collection_path, "2", 1);
 }
 
@@ -337,7 +341,7 @@ static void module_search(void) {
     muxsearch_main(read_line_char_from(EXPLORE_DIR, 1));
 
     if (file_exist(MUOS_RES_LOAD)) {
-        char *file_path = read_line_char_from(MUOS_RES_LOAD, 1);
+        const char *file_path = read_line_char_from(MUOS_RES_LOAD, 1);
         char *ex_directory = strip_dir(file_path);
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, ex_directory);
@@ -407,10 +411,10 @@ static void module_appcon(void) {
 static void module_app(void) {
     int auth = 0; // no more fights about 's' vs 'z'...
 
-    if (strcasecmp(passcode.CODE.LAUNCH, "000000") != 0) {
+    if (strcasecmp(passcode.code.launch, "000000") != 0) {
         load_mux("launcher");
 
-        if (muxpass_main(PCT_LAUNCH) == 1) {
+        if (muxpass_main(pct_launch) == 1) {
             cleanup_screen();
             auth = 1;
         }
@@ -422,7 +426,7 @@ static void module_app(void) {
         exec_mux("launcher", "muxapp", muxapp_main);
 
         if (file_exist(MUOS_APP_LOAD)) {
-            char *app = read_line_char_from(MUOS_APP_LOAD, 1);
+            const char *app = read_line_char_from(MUOS_APP_LOAD, 1);
 
             if (strcmp(app, "Archive Manager") == 0) {
                 remove(MUOS_APP_LOAD);
@@ -444,10 +448,10 @@ static void module_task(void) {
 }
 
 static void module_config(void) {
-    if (strcasecmp(passcode.CODE.SETTING, "000000") != 0 && !config_auth) {
+    if (strcasecmp(passcode.code.setting, "000000") != 0 && !config_auth) {
         load_mux("launcher");
 
-        if (muxpass_main(PCT_CONFIG) == 1) {
+        if (muxpass_main(pct_config) == 1) {
             cleanup_screen();
             config_auth = 1;
             exec_mux("launcher", "muxconfig", muxconfig_main);
@@ -470,7 +474,7 @@ static void module_device(void) {
 }
 
 static void module_rtc(void) {
-    if (config.BOOT.FACTORY_RESET) {
+    if (config.boot.factory_reset) {
         exec_mux("installer", "muxrtc", muxrtc_main);
     } else {
         exec_mux("tweakgen", "muxrtc", muxrtc_main);
@@ -483,7 +487,7 @@ static void module_launcher(void) {
 }
 
 static void module_start(void) {
-    if (config.BOOT.FACTORY_RESET) {
+    if (config.boot.factory_reset) {
         exec_mux("installer", "muxinstall", muxinstall_main);
     } else {
         module_launcher();
@@ -502,98 +506,101 @@ static void module_refresh(void) {
     refresh_kiosk = refresh_config = refresh_device = 0;
 }
 
-static const ModuleEntry modules[] = {
-        // these modules have specific functions and are not
-        // straight forward module launching
-        {"reset",      NULL, NULL, NULL, module_reset},
-        {"reboot",     NULL, NULL, NULL, module_reboot},
-        {"shutdown",   NULL, NULL, NULL, module_shutdown},
-        {"assign",     NULL, NULL, NULL, module_assign},
-        {"coredown",   NULL, NULL, NULL, module_download},
-        {"governor",   NULL, NULL, NULL, module_governor},
-        {"control",    NULL, NULL, NULL, module_control},
-        {"retroarch",  NULL, NULL, NULL, module_retroarch},
-        {"tag",        NULL, NULL, NULL, module_tag},
-        {"filter",     NULL, NULL, NULL, module_filter},
-        {"shader",     NULL, NULL, NULL, module_shader},
-        {"explore",    NULL, NULL, NULL, module_explore},
-        {"collection", NULL, NULL, NULL, module_collection},
-        {"history",    NULL, NULL, NULL, module_history},
-        {"search",     NULL, NULL, NULL, module_search},
-        {"picker",     NULL, NULL, NULL, module_picker},
-        {"theme",      NULL, NULL, NULL, module_theme},
-        {"option",     NULL, NULL, NULL, module_option},
-        {"appcon",     NULL, NULL, NULL, module_appcon},
-        {"app",        NULL, NULL, NULL, module_app},
-        {"task",       NULL, NULL, NULL, module_task},
-        {"config",     NULL, NULL, NULL, module_config},
-        {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
-        {"danger",     NULL, NULL, NULL, module_danger},
-        {"device",     NULL, NULL, NULL, module_device},
-        {"rtc",        NULL, NULL, NULL, module_rtc},
-        {"credits",    NULL, NULL, NULL, module_credits},
+static const module_entry modules[] = {
+    // these modules have specific functions and are not
+    // straight forward module launching
+    {"reset", NULL, NULL, NULL, module_reset},
+    {"reboot", NULL, NULL, NULL, module_reboot},
+    {"shutdown", NULL, NULL, NULL, module_shutdown},
+    {"assign", NULL, NULL, NULL, module_assign},
+    {"coredown", NULL, NULL, NULL, module_download},
+    {"governor", NULL, NULL, NULL, module_governor},
+    {"control", NULL, NULL, NULL, module_control},
+    {"retroarch", NULL, NULL, NULL, module_retroarch},
+    {"tag", NULL, NULL, NULL, module_tag},
+    {"filter", NULL, NULL, NULL, module_filter},
+    {"shader", NULL, NULL, NULL, module_shader},
+    {"explore", NULL, NULL, NULL, module_explore},
+    {"collection", NULL, NULL, NULL, module_collection},
+    {"history", NULL, NULL, NULL, module_history},
+    {"search", NULL, NULL, NULL, module_search},
+    {"picker", NULL, NULL, NULL, module_picker},
+    {"theme", NULL, NULL, NULL, module_theme},
+    {"option", NULL, NULL, NULL, module_option},
+    {"appcon", NULL, NULL, NULL, module_appcon},
+    {"app", NULL, NULL, NULL, module_app},
+    {"task", NULL, NULL, NULL, module_task},
+    {"config", NULL, NULL, NULL, module_config},
+    {"tweakadv", NULL, NULL, NULL, module_tweakadv},
+    {"danger", NULL, NULL, NULL, module_danger},
+    {"device", NULL, NULL, NULL, module_device},
+    {"rtc", NULL, NULL, NULL, module_rtc},
+    {"credits", NULL, NULL, NULL, module_credits},
 
-        // the following modules can be loaded directly
-        // without any other functionality
-        {"launcher",    "launcher",    "muxlaunch",      muxlaunch_main,      NULL},
-        {"info",        "launcher",    "muxinfo",        muxinfo_main,        NULL},
-        {"archive",     "app",         "muxarchive",     muxarchive_main,     NULL},
-        {"tweakgen",    "config",      "muxtweakgen",    muxtweakgen_main,    NULL},
-        {"overlay",     "config",      "muxoverlay",     muxoverlay_main,     NULL},
-        {"distemp",     "tweakgen",    "muxdistemp",     muxdistemp_main,     NULL},
-        {"connect",     "config",      "muxconnect",     muxconnect_main,     NULL},
-        {"custom",      "config",      "muxcustom",      muxcustom_main,      NULL},
-        {"language",    "config",      "muxlanguage",    muxlanguage_main,    NULL},
-        {"net_profile", "connect",     "muxnetwork",     muxnetwork_main,     NULL},
-        {"network",     "net_profile", "muxnetprofile",  muxnetprofile_main,  NULL},
-        {"netadv",      "connect",     "muxnetadv",      muxnetadv_main,      NULL},
-        {"net_proxy",   "connect",     "muxnetproxy",    muxnetproxy_main,    NULL},
-        {"webserv",     "connect",     "muxwebserv",     muxwebserv_main,     NULL},
-        {"btall",       "connect",     "muxbtall",       muxbtall_main,       NULL},
-        {"btcon",       "btall",       "muxbtcon",       muxbtcon_main,       NULL},
-        {"btdev",       "btall",       "muxbtdev",       muxbtdev_main,       NULL},
-        {"hdmi",        "tweakgen",    "muxhdmi",        muxhdmi_main,        NULL},
-        {"rgb",         "tweakgen",    "muxrgb",         muxrgb_main,         NULL},
-        {"remap",       "tweakgen",    "muxremap",       muxremap_main,       NULL},
-        {"passcfg",     "tweakgen",    "muxpasscfg",     muxpasscfg_main,     NULL},
-        {"storage",     "config",      "muxstorage",     muxstorage_main,     NULL},
-        {"backup",      "config",      "muxbackup",      muxbackup_main,      NULL},
-        {"power",       "config",      "muxpower",       muxpower_main,       NULL},
-        {"visual",      "config",      "muxvisual",      muxvisual_main,      NULL},
-        {"sort",        "visual",      "muxsort",        muxsort_main,        NULL},
-        {"content",     "custom",      "muxcontent",     muxcontent_main,     NULL},
-        {"font",        "custom",      "muxfont",        muxfont_main,        NULL},
-        {"kiosk",       "launcher",    "muxkiosk",       muxkiosk_main,       NULL},
-        {"net_scan",    "net_profile", "muxnetscan",     muxnetscan_main,     NULL},
-        {"timezone",    "rtc",         "muxtimezone",    muxtimezone_main,    NULL},
-        {"screenshot",  "info",        "muxshot",        muxshot_main,        NULL},
-        {"space",       "info",        "muxspace",       muxspace_main,       NULL},
-        {"news",        "info",        "muxnews",        muxnews_main,        NULL},
-        {"activity",    "info",        "muxactivity",    muxactivity_main,    NULL},
-        {"themedwn",    "picker",      "muxthemedown",   muxthemedown_main,   NULL},
-        {"themefilter", "themedwn",    "muxthemefilter", muxthemefilter_main, NULL},
-        {"themeopt",    "custom",      "muxthemeopt",    muxthemeopt_main,    NULL},
-        {"tester",      "info",        "muxtester",      muxtester_main,      NULL},
-        {"sysinfo",     "info",        "muxsysinfo",     muxsysinfo_main,     NULL},
-        {"batinfo",     "info",        "muxbatinfo",     muxbatinfo_main,     NULL},
-        {"netinfo",     "info",        "muxnetinfo",     muxnetinfo_main,     NULL},
-        {"chrony",      "info",        "muxchrony",      muxchrony_main,      NULL},
-        {"text",        "info",        "muxtext",        muxtext_main,        NULL},
+    // the following modules can be loaded directly
+    // without any other functionality
+    {"launcher", "launcher", "muxlaunch", muxlaunch_main, NULL},
+    {"info", "launcher", "muxinfo", muxinfo_main, NULL},
+    {"archive", "app", "muxarchive", muxarchive_main, NULL},
+    {"tweakgen", "config", "muxtweakgen", muxtweakgen_main, NULL},
+    {"overlay", "config", "muxoverlay", muxoverlay_main, NULL},
+    {"distemp", "tweakgen", "muxdistemp", muxdistemp_main, NULL},
+    {"connect", "config", "muxconnect", muxconnect_main, NULL},
+    {"custom", "config", "muxcustom", muxcustom_main, NULL},
+    {"language", "config", "muxlanguage", muxlanguage_main, NULL},
+    {"net_profile", "connect", "muxnetwork", muxnetwork_main, NULL},
+    {"network", "net_profile", "muxnetprofile", muxnetprofile_main, NULL},
+    {"netadv", "connect", "muxnetadv", muxnetadv_main, NULL},
+    {"net_proxy", "connect", "muxnetproxy", muxnetproxy_main, NULL},
+    {"webserv", "connect", "muxwebserv", muxwebserv_main, NULL},
+    {"btall", "connect", "muxbtall", muxbtall_main, NULL},
+    {"btcon", "btall", "muxbtcon", muxbtcon_main, NULL},
+    {"btdev", "btall", "muxbtdev", muxbtdev_main, NULL},
+    {"hdmi", "tweakgen", "muxhdmi", muxhdmi_main, NULL},
+    {"rgb", "tweakgen", "muxrgb", muxrgb_main, NULL},
+    {"remap", "tweakgen", "muxremap", muxremap_main, NULL},
+    {"passcfg", "tweakgen", "muxpasscfg", muxpasscfg_main, NULL},
+    {"storage", "config", "muxstorage", muxstorage_main, NULL},
+    {"backup", "config", "muxbackup", muxbackup_main, NULL},
+    {"power", "config", "muxpower", muxpower_main, NULL},
+    {"visual", "config", "muxvisual", muxvisual_main, NULL},
+    {"sort", "visual", "muxsort", muxsort_main, NULL},
+    {"content", "custom", "muxcontent", muxcontent_main, NULL},
+    {"font", "custom", "muxfont", muxfont_main, NULL},
+    {"kiosk", "launcher", "muxkiosk", muxkiosk_main, NULL},
+    {"net_scan", "net_profile", "muxnetscan", muxnetscan_main, NULL},
+    {"timezone", "rtc", "muxtimezone", muxtimezone_main, NULL},
+    {"screenshot", "info", "muxshot", muxshot_main, NULL},
+    {"space", "info", "muxspace", muxspace_main, NULL},
+    {"news", "info", "muxnews", muxnews_main, NULL},
+    {"activity", "info", "muxactivity", muxactivity_main, NULL},
+    {"themedwn", "picker", "muxthemedown", muxthemedown_main, NULL},
+    {"themefilter", "themedwn", "muxthemefilter", muxthemefilter_main, NULL},
+    {"themeopt", "custom", "muxthemeopt", muxthemeopt_main, NULL},
+    {"tester", "info", "muxtester", muxtester_main, NULL},
+    {"sysinfo", "info", "muxsysinfo", muxsysinfo_main, NULL},
+    {"batinfo", "info", "muxbatinfo", muxbatinfo_main, NULL},
+    {"netinfo", "info", "muxnetinfo", muxnetinfo_main, NULL},
+    {"chrony", "info", "muxchrony", muxchrony_main, NULL},
+    {"text", "info", "muxtext", muxtext_main, NULL},
 
-        // these are custom entries specifically for the first time installer
-        {"installer",   "installer",   "muxinstall",     muxinstall_main,     NULL},
-        {"install",    NULL, NULL, NULL, module_install},
+    // these are custom entries specifically for the first time installer
+    {"installer", "installer", "muxinstall", muxinstall_main, NULL},
+    {"install", NULL, NULL, NULL, module_install},
 
-        // this is required because it is the end of the table!
-        {NULL,         NULL, NULL, NULL,                                      NULL}
+    // this is required because it is the end of the table!
+    {NULL, NULL, NULL, NULL, NULL}
 };
 
 static void dispatch_map_build(void) {
     memset(dispatch_map, 0, sizeof(dispatch_map));
 
     for (size_t i = 0; modules[i].action; ++i) {
-        uint32_t slot = fnv1a_hash_str(modules[i].action) & DISPATCH_MASK;
-        while (dispatch_map[slot].action) slot = (slot + 1) & DISPATCH_MASK;
+        uint32_t slot = fnv_hash_str(modules[i].action) & DISPATCH_MASK;
+        while (dispatch_map[slot].action) {
+            slot++;
+            slot &= DISPATCH_MASK;
+        }
 
         dispatch_map[slot].action = modules[i].action;
         dispatch_map[slot].index = i;
@@ -611,11 +618,11 @@ static int module_dispatch(void) {
     remove(MUOS_ACT_LOAD);
 
     if (!dispatch_map_ready) dispatch_map_build();
-    uint32_t slot = fnv1a_hash_str(action) & DISPATCH_MASK;
+    uint32_t slot = fnv_hash_str(action) & DISPATCH_MASK;
 
     while (dispatch_map[slot].action) {
         if (strcmp(action, dispatch_map[slot].action) == 0) {
-            size_t i = dispatch_map[slot].index;
+            const size_t i = dispatch_map[slot].index;
             screen_clean = 0;
 
             if (modules[i].mux_func) {
@@ -627,14 +634,15 @@ static int module_dispatch(void) {
             return 1;
         }
 
-        slot = (slot + 1) & DISPATCH_MASK;
+        slot++;
+        slot &= DISPATCH_MASK;
     }
 
     return 0;
 }
 
 static void reset_alert(void) {
-    if (config.BOOT.FACTORY_RESET) return;
+    if (config.boot.factory_reset) return;
 
     int show_alert = 0;
     if (!file_exist(DONE_RESET) && read_line_int_from(USED_RESET, 1)) show_alert = 1;
@@ -653,13 +661,12 @@ static void init_audio(void) {
 
     for (size_t i = 0; i < tries; ++i) {
         if (init_audio_backend()) {
-            init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
-            init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
+            init_fe_snd(&fe_snd, config.settings.general.sound, 0);
+            init_fe_bgm(&fe_bgm, config.settings.general.bgm, 0);
 
-            if (!file_exist(CHIME_DONE) &&
-                config.SETTINGS.GENERAL.CHIME &&
-                strcasecmp(passcode.CODE.BOOT, "000000") == 0)
-                play_sound(SND_STARTUP);
+            if (!file_exist(CHIME_DONE) && config.settings.general.chime
+                && strcasecmp(passcode.code.boot, "000000") == 0)
+                play_sound(snd_startup);
 
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
             return;
@@ -669,18 +676,29 @@ static void init_audio(void) {
     }
 }
 
-static void *load_params(void *arg) {
-    ParamLoader *p_load = arg;
+static void *load_params(const void *arg) {
+    const param_loader *p_load = arg;
     p_load->func(p_load->arg);
 
     return NULL;
 }
 
-static void parallel_load(ParamLoader *loaders, size_t count) {
-    pthread_t threads[count];
+static void parallel_load(param_loader *loaders) {
+    size_t count = 0;
+    while (loaders[count].func)
+        count++;
 
-    for (size_t i = 0; i < count; ++i) pthread_create(&threads[i], NULL, load_params, &loaders[i]);
-    for (size_t i = 0; i < count; ++i) pthread_join(threads[i], NULL);
+    if (!count) return;
+
+    pthread_t *threads = malloc(count * sizeof(*threads));
+    if (!threads) return;
+
+    for (size_t i = 0; i < count; ++i)
+        pthread_create(&threads[i], NULL, (void *(*) (void *) ) load_params, &loaders[i]);
+    for (size_t i = 0; i < count; ++i)
+        pthread_join(threads[i], NULL);
+
+    free(threads);
 }
 
 int main(void) {
@@ -693,14 +711,15 @@ int main(void) {
     // Close the stupid race where the parent already died before the prctl call or we get a segfault...
     if (getppid() == 1) raise(SIGTERM);
 
-    ParamLoader loaders[] = {
-            {(void (*)(void *)) load_device,   &device},
-            {(void (*)(void *)) load_config,   &config},
-            {(void (*)(void *)) load_kiosk,    &kiosk},
-            {(void (*)(void *)) load_passcode, &passcode},
+    param_loader loaders[] = {
+        {(void (*)(void *)) load_device, &device},
+        {(void (*)(void *)) load_config, &config},
+        {(void (*)(void *)) load_kiosk, &kiosk},
+        {(void (*)(void *)) load_passcode, &passcode},
+        {NULL, NULL},
     };
 
-    parallel_load(loaders, 4);
+    parallel_load(loaders);
 
     LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build());
     if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
@@ -721,15 +740,15 @@ int main(void) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&t_audio, &attr, (void *(*)(void *)) init_audio, NULL);
+    pthread_create(&t_audio, &attr, (void *(*) (void *) ) init_audio, NULL);
     pthread_attr_destroy(&attr);
 
-    if (strcasecmp(passcode.CODE.BOOT, "000000") != 0 && !file_exist(MUX_BOOT_AUTH)) {
+    if (strcasecmp(passcode.code.boot, "000000") != 0 && !file_exist(MUX_BOOT_AUTH)) {
         int result = 0;
 
         while (result != 1) {
             screen_clean = 0;
-            result = muxpass_main(PCT_BOOT);
+            result = muxpass_main(pct_boot);
 
             if (result == 2) {
                 cleanup_screen();

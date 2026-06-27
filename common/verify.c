@@ -18,11 +18,12 @@ static int file_xxh64(const char *path, char out[17]) {
     unsigned char buf[8192];
     size_t n;
 
-    while ((n = fread(buf, 1, sizeof(buf), f)) > 0) XXH64_update(state, buf, n);
+    while ((n = fread(buf, 1, sizeof(buf), f)) > 0)
+        XXH64_update(state, buf, n);
 
     fclose(f);
 
-    XXH64_hash_t h = XXH64_digest(state);
+    const XXH64_hash_t h = XXH64_digest(state);
     XXH64_freeState(state);
 
     snprintf(out, 17, "%016llx", (unsigned long long) h);

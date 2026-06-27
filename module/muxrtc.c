@@ -1,18 +1,16 @@
 #include "muxshare.h"
 #include "ui/ui_muxrtc.h"
 
-#define RTC(NAME, ENUM, UDATA) 1,
-enum {
-    UI_COUNT = E_SIZE(RTC_ELEMENTS)
-};
+#define RTC(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(RTC_ELEMENTS) };
 #undef RTC
 
-#define MIN_YEAR 1970
-#define MAX_YEAR 2199
-#define MONTHS_IN_YEAR 12
-#define HOURS_IN_DAY 24
+#define MIN_YEAR        1970
+#define MAX_YEAR        2199
+#define MONTHS_IN_YEAR  12
+#define HOURS_IN_DAY    24
 #define MINUTES_IN_HOUR 60
-#define NOTATION_COUNT 7
+#define NOTATION_COUNT  7
 #define NOTATION_CUSTOM 6
 
 typedef struct {
@@ -46,30 +44,26 @@ static void hide_save_dialog(void) {
 }
 
 static int any_rtc_modified(void) {
-    return rtc.year != rtc_original.year ||
-           rtc.month != rtc_original.month ||
-           rtc.day != rtc_original.day ||
-           rtc.hour != rtc_original.hour ||
-           rtc.minute != rtc_original.minute ||
-           rtc.notation != rtc_original.notation ||
-           strcmp(rtc.custom_fmt, rtc_original.custom_fmt) != 0;
+    return rtc.year != rtc_original.year || rtc.month != rtc_original.month || rtc.day != rtc_original.day
+           || rtc.hour != rtc_original.hour || rtc.minute != rtc_original.minute
+           || rtc.notation != rtc_original.notation || strcmp(rtc.custom_fmt, rtc_original.custom_fmt) != 0;
 }
 
 static void list_nav_move(int steps, int direction);
 
-static void handle_keyboard_OK_press(void);
+static void handle_keyboard_ok_press(void);
 
 static void show_help(void) {
-    show_info_box(lang.MUXRTC.TITLE, lang.MUXRTC.HELP, 0);
+    show_info_box(lang.muxrtc.title, lang.muxrtc.help, 0);
 }
 
-static void toggle_custom_format(int show) {
+static void toggle_custom_format(const int show) {
     if (show) {
-        lv_obj_clear_flag(ui_pnlCustom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblCustom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_pnl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_pnlCustom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblCustom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
@@ -84,7 +78,7 @@ static void confirm_rtc_config(void) {
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 }
 
-static int days_in_month(int year, int month) {
+static int days_in_month(const int year, const int month) {
     int max_days;
     switch (month) {
         case 2: // February
@@ -104,15 +98,15 @@ static int days_in_month(int year, int month) {
 }
 
 static void restore_clock_settings(void) {
-    time_t now = time(NULL);
-    struct tm *tm_now;
+    const time_t current_time = time(NULL);
+    struct tm *tm_now = 0;
     int is_error = 0;
 
-    if (now == (time_t) -1) {
+    if (current_time == (time_t) -1) {
         is_error = 1;
         LOG_ERROR(mux_module, "Failed to get current time");
     } else {
-        tm_now = localtime(&now);
+        tm_now = localtime(&current_time);
     }
 
     if (!is_error && !tm_now) {
@@ -135,65 +129,64 @@ static void restore_clock_settings(void) {
         rtc.minute = tm_now->tm_min;
     }
 
-    lv_label_set_text_fmt(ui_lblYearValue_rtc, "%04d", rtc.year);
-    lv_label_set_text_fmt(ui_lblMonthValue_rtc, "%02d", rtc.month);
-    lv_label_set_text_fmt(ui_lblDayValue_rtc, "%02d", rtc.day);
-    lv_label_set_text_fmt(ui_lblHourValue_rtc, "%02d", rtc.hour);
-    lv_label_set_text_fmt(ui_lblMinuteValue_rtc, "%02d", rtc.minute);
+    lv_label_set_text_fmt(ui_val_year_rtc, "%04d", rtc.year);
+    lv_label_set_text_fmt(ui_val_month_rtc, "%02d", rtc.month);
+    lv_label_set_text_fmt(ui_val_day_rtc, "%02d", rtc.day);
+    lv_label_set_text_fmt(ui_val_hour_rtc, "%02d", rtc.hour);
+    lv_label_set_text_fmt(ui_val_minute_rtc, "%02d", rtc.minute);
 
-    if (config.CLOCK.NOTATION < 0 || config.CLOCK.NOTATION >= NOTATION_COUNT) {
+    if (config.clock.notation < 0 || config.clock.notation >= NOTATION_COUNT) {
         LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format");
-        rtc.notation = TIME_24H;
+        rtc.notation = time_24_h;
     } else {
-        rtc.notation = config.CLOCK.NOTATION;
+        rtc.notation = config.clock.notation;
     }
 
-    snprintf(rtc.custom_fmt, sizeof(rtc.custom_fmt), "%s", *config.CLOCK.CUSTOM ? config.CLOCK.CUSTOM : TIME_STRING_24);
+    snprintf(rtc.custom_fmt, sizeof(rtc.custom_fmt), "%s", *config.clock.custom ? config.clock.custom : TIME_STRING_24);
 
-    lv_label_set_text(ui_lblNotationValue_rtc, notation[rtc.notation]);
-    lv_label_set_text(ui_lblCustomValue_rtc, rtc.custom_fmt);
+    lv_label_set_text(ui_val_notation_rtc, notation[rtc.notation]);
+    lv_label_set_text(ui_val_custom_rtc, rtc.custom_fmt);
 
     toggle_custom_format(rtc.notation == NOTATION_CUSTOM);
 }
 
-static void save_clock_settings(int year, int month, int day, int hour, int minute, int n) {
+static void
+save_clock_settings(const int year, const int month, const int day, const int hour, const int minute, const int n) {
     struct tm t = {
-            .tm_year = year - 1900,
-            .tm_mon  = month - 1,
-            .tm_mday = day,
-            .tm_hour = hour,
-            .tm_min  = minute,
-            .tm_sec  = 0,
-            .tm_isdst = -1
+        .tm_year = year - 1900,
+        .tm_mon = month - 1,
+        .tm_mday = day,
+        .tm_hour = hour,
+        .tm_min = minute,
+        .tm_sec = 0,
+        .tm_isdst = -1
     };
 
     int rtc_retry_attempt = 0;
     while (rtc_retry_attempt < RTC_MAX_RETRIES) {
-        time_t time_seconds = mktime(&t);
+        const time_t time_seconds = mktime(&t);
         if (time_seconds == (time_t) -1) {
             LOG_ERROR(mux_module, "Invalid time retrieved");
             break;
         }
 
-        struct timeval tv = {
-                .tv_sec = time_seconds,
-                .tv_usec = 0
-        };
+        struct timeval tv = {.tv_sec = time_seconds, .tv_usec = 0};
 
         if (settimeofday(&tv, NULL) == 0) {
             const struct tm *tm_check = localtime(&time_seconds);
-            LOG_SUCCESS(mux_module, "Time set to: %04d-%02d-%02d %02d:%02d:00 (DST %s) (notation %d)",
-                        year, month, day, hour, minute, tm_check && tm_check->tm_isdst > 0 ? "YES" : "NO", n);
+            LOG_SUCCESS(
+                mux_module, "Time set to: %04d-%02d-%02d %02d:%02d:00 (DST %s) (notation %d)", year, month, day, hour,
+                minute, tm_check && tm_check->tm_isdst > 0 ? "YES" : "NO", n
+            );
 
             confirm_rtc_config();
             refresh_config = 1;
 
             return;
-        } else {
-            LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_RUN_COMMAND);
-            rtc_retry_attempt++;
-            sleep(RTC_RETRY_DELAY);
         }
+        LOG_ERROR(mux_module, "%s", lang.system.fail_run_command);
+        rtc_retry_attempt++;
+        sleep(RTC_RETRY_DELAY);
     }
 
     LOG_ERROR(mux_module, "Attempt to set system date failed");
@@ -201,60 +194,60 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
 }
 
 static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[UI_COUNT];
-    static lv_obj_t *ui_objects_value[UI_COUNT];
-    static lv_obj_t *ui_objects_glyph[UI_COUNT];
-    static lv_obj_t *ui_objects_panel[UI_COUNT];
+    static lv_obj_t *ui_objects[ui_count_dynamic];
+    static lv_obj_t *ui_objects_value[ui_count_dynamic];
+    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_VALUE_ITEM(-1, rtc, Timezone, lang.MUXRTC.TIMEZONE, "timezone", "");
-    INIT_VALUE_ITEM(-1, rtc, Year, lang.MUXRTC.YEAR, "year", "");
-    INIT_VALUE_ITEM(-1, rtc, Month, lang.MUXRTC.MONTH, "month", "");
-    INIT_VALUE_ITEM(-1, rtc, Day, lang.MUXRTC.DAY, "day", "");
-    INIT_VALUE_ITEM(-1, rtc, Hour, lang.MUXRTC.HOUR, "hour", "");
-    INIT_VALUE_ITEM(-1, rtc, Minute, lang.MUXRTC.MINUTE, "minute", "");
-    INIT_VALUE_ITEM(-1, rtc, Notation, lang.MUXRTC.NOTATION, "notation", "");
-    INIT_VALUE_ITEM(-1, rtc, Custom, lang.MUXRTC.CUSTOM, "custom", "");
+    INIT_VALUE_ITEM(-1, rtc, timezone, lang.muxrtc.timezone, "timezone", "");
+    INIT_VALUE_ITEM(-1, rtc, year, lang.muxrtc.year, "year", "");
+    INIT_VALUE_ITEM(-1, rtc, month, lang.muxrtc.month, "month", "");
+    INIT_VALUE_ITEM(-1, rtc, day, lang.muxrtc.day, "day", "");
+    INIT_VALUE_ITEM(-1, rtc, hour, lang.muxrtc.hour, "hour", "");
+    INIT_VALUE_ITEM(-1, rtc, minute, lang.muxrtc.minute, "minute", "");
+    INIT_VALUE_ITEM(-1, rtc, notation, lang.muxrtc.notation, "notation", "");
+    INIT_VALUE_ITEM(-1, rtc, custom, lang.muxrtc.custom, "custom", "");
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
+    list_nav_move(direct_to_previous(ui_objects, ui_count_static, &nav_moved), +1);
 }
 
 static void check_focus(void) {
-    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    int show_a = (e_focused == ui_lblTimezone_rtc || e_focused == ui_lblCustom_rtc);
-    int show_lr = !show_a;
+    const int show_a = e_focused == ui_lbl_timezone_rtc || e_focused == ui_lbl_custom_rtc;
+    const int show_lr = !show_a;
 
     if (show_a) {
-        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else if (show_lr) {
-        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLR, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lblNavLRGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
-static void list_nav_move(int steps, int direction) {
+static void list_nav_move(const int steps, const int direction) {
     gen_step_movement(steps, direction, 0, 0, 1);
     check_focus();
 }
 
-static void list_nav_prev(int steps) {
+static void list_nav_prev(const int steps) {
     list_nav_move(steps, -1);
 }
 
-static void list_nav_next(int steps) {
+static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
@@ -278,7 +271,7 @@ static void validate_hour(void) {
 }
 
 static void validate_day(void) {
-    int max_days = days_in_month(rtc.year, rtc.month);
+    const int max_days = days_in_month(rtc.year, rtc.month);
 
     if (rtc.day < 1) rtc.day = max_days;
     if (rtc.day > max_days) rtc.day = 1;
@@ -300,67 +293,67 @@ static void validate_year(void) {
     validate_month();
 }
 
-static void adjust_year(int direction) {
+static void adjust_year(const int direction) {
     rtc.year += direction;
     validate_year();
 }
 
-static void adjust_month(int direction) {
+static void adjust_month(const int direction) {
     rtc.month += direction;
     validate_month();
 }
 
-static void adjust_day(int direction) {
+static void adjust_day(const int direction) {
     rtc.day += direction;
     validate_day();
 }
 
-static void adjust_hour(int direction) {
+static void adjust_hour(const int direction) {
     rtc.hour += direction;
     validate_hour();
 }
 
-static void adjust_minute(int direction) {
+static void adjust_minute(const int direction) {
     rtc.minute += direction;
     validate_minute();
 }
 
-static void adjust_notation(int direction) {
+static void adjust_notation(const int direction) {
     rtc.notation += direction;
     validate_notation();
     toggle_custom_format(rtc.notation == NOTATION_CUSTOM);
 }
 
-static void check_rtc_state(rtc_state_t *r, rtc_state_t *old) {
-    if (r->year != old->year) lv_label_set_text_fmt(ui_lblYearValue_rtc, "%04d", r->year);
-    if (r->month != old->month) lv_label_set_text_fmt(ui_lblMonthValue_rtc, "%02d", r->month);
-    if (r->day != old->day) lv_label_set_text_fmt(ui_lblDayValue_rtc, "%02d", r->day);
-    if (r->hour != old->hour) lv_label_set_text_fmt(ui_lblHourValue_rtc, "%02d", r->hour);
-    if (r->minute != old->minute) lv_label_set_text_fmt(ui_lblMinuteValue_rtc, "%02d", r->minute);
-    if (r->notation != old->notation) lv_label_set_text(ui_lblNotationValue_rtc, notation[r->notation]);
-    if (strcmp(r->custom_fmt, old->custom_fmt) != 0) lv_label_set_text(ui_lblCustomValue_rtc, r->custom_fmt);
+static void check_rtc_state(const rtc_state_t *r, const rtc_state_t *old) {
+    if (r->year != old->year) lv_label_set_text_fmt(ui_val_year_rtc, "%04d", r->year);
+    if (r->month != old->month) lv_label_set_text_fmt(ui_val_month_rtc, "%02d", r->month);
+    if (r->day != old->day) lv_label_set_text_fmt(ui_val_day_rtc, "%02d", r->day);
+    if (r->hour != old->hour) lv_label_set_text_fmt(ui_val_hour_rtc, "%02d", r->hour);
+    if (r->minute != old->minute) lv_label_set_text_fmt(ui_val_minute_rtc, "%02d", r->minute);
+    if (r->notation != old->notation) lv_label_set_text(ui_val_notation_rtc, notation[r->notation]);
+    if (strcmp(r->custom_fmt, old->custom_fmt) != 0) lv_label_set_text(ui_val_custom_rtc, r->custom_fmt);
 }
 
-static void adjust_option(int direction) {
+static void adjust_option(const int direction) {
     if (msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused == ui_lblTimezone_rtc || e_focused == ui_lblCustom_rtc) return;
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lbl_timezone_rtc || e_focused == ui_lbl_custom_rtc) return;
 
-    rtc_state_t old_rtc = rtc;
-    play_sound(SND_OPTION);
+    const rtc_state_t old_rtc = rtc;
+    play_sound(snd_option);
 
-    if (e_focused == ui_lblYear_rtc) {
+    if (e_focused == ui_lbl_year_rtc) {
         adjust_year(direction);
-    } else if (e_focused == ui_lblMonth_rtc) {
+    } else if (e_focused == ui_lbl_month_rtc) {
         adjust_month(direction);
-    } else if (e_focused == ui_lblDay_rtc) {
+    } else if (e_focused == ui_lbl_day_rtc) {
         adjust_day(direction);
-    } else if (e_focused == ui_lblHour_rtc) {
+    } else if (e_focused == ui_lbl_hour_rtc) {
         adjust_hour(direction);
-    } else if (e_focused == ui_lblMinute_rtc) {
+    } else if (e_focused == ui_lbl_minute_rtc) {
         adjust_minute(direction);
-    } else if (e_focused == ui_lblNotation_rtc) {
+    } else if (e_focused == ui_lbl_notation_rtc) {
         adjust_notation(direction);
     }
 
@@ -377,60 +370,60 @@ static int is_valid_date(void) {
     return 1;
 }
 
-static void save_and_exit(char *message) {
+static void save_and_exit(const char *message) {
     validate_year();
 
     if (!is_valid_date()) {
-        toast_message(lang.GENERIC.INVALID_TIME, MEDIUM);
+        toast_message(lang.generic.invalid_time, tst_wait_m);
         return;
     }
 
-    toast_message(message, FOREVER);
+    toast_message(message, tst_wait_f);
     save_clock_settings(rtc.year, rtc.month, rtc.day, rtc.hour, rtc.minute, rtc.notation);
 
     mux_input_stop();
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_KEYPRESS);
+    first_open ? (first_open = 0) : play_sound(snd_keypress);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
-        handle_keyboard_OK_press();
+        handle_keyboard_ok_press();
     } else {
         lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
     }
 }
 
-static void handle_keyboard_OK_press(void) {
-    const char *val = lv_textarea_get_text(ui_txtEntry_rtc);
+static void handle_keyboard_ok_press(void) {
+    const char *val = lv_textarea_get_text(ui_txt_entry_rtc);
     if (val && *val) {
         snprintf(rtc.custom_fmt, sizeof(rtc.custom_fmt), "%s", val);
-        lv_label_set_text(ui_lblCustomValue_rtc, rtc.custom_fmt);
+        lv_label_set_text(ui_val_custom_rtc, rtc.custom_fmt);
     }
 
     key_show = 0;
     reset_osk(key_entry);
-    lv_textarea_set_text(ui_txtEntry_rtc, "");
+    lv_textarea_set_text(ui_txt_entry_rtc, "");
     lv_group_set_focus_cb(ui_group, NULL);
-    osk_hide(ui_pnlEntry_rtc);
+    osk_hide(ui_pnl_entry_rtc);
 }
 
 static void handle_a(void) {
     if (save_mode) {
-        mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
-        if (opt == MUX_UNSAVED_SAVE) {
-            if (config.BOOT.FACTORY_RESET) {
+        if (opt == mux_unsaved_save) {
+            if (config.boot.factory_reset) {
                 write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
             } else {
                 write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
             }
-            save_and_exit(lang.GENERIC.SAVING);
+            save_and_exit(lang.generic.saving);
         } else {
-            play_sound(SND_BACK);
-            if (config.BOOT.FACTORY_RESET) {
+            play_sound(snd_back);
+            if (config.boot.factory_reset) {
                 write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
             } else {
                 write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
@@ -447,24 +440,24 @@ static void handle_a(void) {
 
     if (msgbox_active || hold_call) return;
 
-    struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    if (e_focused == ui_lblTimezone_rtc) {
-        if (is_ksk(kiosk.DATETIME.TIMEZONE)) return;
+    if (e_focused == ui_lbl_timezone_rtc) {
+        if (is_ksk(kiosk.datetime.timezone)) return;
 
-        play_sound(SND_CONFIRM);
+        play_sound(snd_confirm);
 
         load_mux("timezone");
-        save_and_exit(lang.GENERIC.LOADING);
-    } else if (e_focused == ui_lblCustom_rtc) {
-        play_sound(SND_CONFIRM);
+        save_and_exit(lang.generic.loading);
+    } else if (e_focused == ui_lbl_custom_rtc) {
+        play_sound(snd_confirm);
         key_curr = 0;
         first_open = 1;
-        lv_textarea_set_text(ui_txtEntry_rtc, rtc.custom_fmt);
+        lv_textarea_set_text(ui_txt_entry_rtc, rtc.custom_fmt);
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
         key_show = 1;
-        osk_show(ui_pnlEntry_rtc);
+        osk_show(ui_pnl_entry_rtc);
         osk_refresh_labels();
     } else {
         adjust_option(+1);
@@ -475,7 +468,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (key_show) {
-        key_backspace(ui_txtEntry_rtc);
+        key_backspace(ui_txt_entry_rtc);
         return;
     }
 
@@ -489,20 +482,20 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.SETTINGS.ADVANCED.TRUSTMODIFY && any_rtc_modified()) {
+    if (!config.settings.advanced.trust_modify && any_rtc_modified()) {
         show_save_dialog();
         return;
     }
 
-    play_sound(SND_BACK);
+    play_sound(snd_back);
 
-    if (config.BOOT.FACTORY_RESET) {
+    if (config.boot.factory_reset) {
         write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
     } else {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
     }
 
-    save_and_exit(lang.GENERIC.SAVING);
+    save_and_exit(lang.generic.saving);
 }
 
 static void handle_left(void) {
@@ -514,7 +507,7 @@ static void handle_left(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -531,7 +524,7 @@ static void handle_right(void) {
     if (save_mode) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -548,7 +541,7 @@ static void handle_dpad_up(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -565,7 +558,7 @@ static void handle_dpad_down(void) {
     if (save_mode) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(SND_NAVIGATE);
+            play_sound(snd_navigate);
         }
         return;
     }
@@ -616,46 +609,43 @@ static void handle_r1(void) {
 static void handle_x(void) {
     if (!key_show) return;
 
-    close_osk(key_entry, ui_group, ui_txtEntry_rtc, ui_pnlEntry_rtc);
+    close_osk(key_entry, ui_group, ui_txt_entry_rtc, ui_pnl_entry_rtc);
 }
 
 static void handle_y(void) {
     if (key_show) {
-        key_space(ui_txtEntry_rtc);
-        return;
+        key_space(ui_txt_entry_rtc);
     }
 }
 
 static void handle_b_hold(void) {
-    if (key_show) key_backspace(ui_txtEntry_rtc);
+    if (key_show) key_backspace(ui_txt_entry_rtc);
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count || hold_call || save_mode || key_show) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode || key_show) return;
 
-    play_sound(SND_INFO_OPEN);
+    play_sound(snd_info_open);
     show_help();
 }
 
-static void on_key_event(struct input_event ev) {
-    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_OK_press();
-    ev.code == KEY_ESC && ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txtEntry_rtc);
+static void on_key_event(const struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_ok_press();
+    ev.code == KEY_ESC &&ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txt_entry_rtc);
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  0},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
-            {ui_lblNavAGlyph,  "",                  0},
-            {ui_lblNavA,       lang.GENERIC.SELECT, 0},
-            {ui_lblNavBGlyph,  "",                  0},
-            {ui_lblNavB,       lang.GENERIC.BACK,   0},
-            {NULL, NULL,                            0}
-    });
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
-#define RTC(NAME, ENUM, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);
+#define RTC(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_rtc, UDATA);
     RTC_ELEMENTS
 #undef RTC
 
@@ -666,62 +656,66 @@ int muxrtc_main(void) {
     init_module(__func__);
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXRTC.TITLE);
-    init_muxrtc(ui_screen, ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxrtc.title);
+    init_muxrtc(ui_screen, ui_pnl_content);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblDatetime, get_datetime());
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_imgWall, WALL_GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
 
-    notation[0] = lang.MUXRTC.F_12HR;
-    notation[1] = lang.MUXRTC.F_24HR;
-    notation[2] = lang.MUXRTC.F_DD_MM_12;
-    notation[3] = lang.MUXRTC.F_DD_MM_24;
-    notation[4] = lang.MUXRTC.F_MM_DD_12;
-    notation[5] = lang.MUXRTC.F_MM_DD_24;
-    notation[6] = lang.MUXRTC.F_CUSTOM;
+    notation[0] = lang.muxrtc.f_12_hr;
+    notation[1] = lang.muxrtc.f_24_hr;
+    notation[2] = lang.muxrtc.f_dd_mm_12;
+    notation[3] = lang.muxrtc.f_dd_mm_24;
+    notation[4] = lang.muxrtc.f_mm_dd_12;
+    notation[5] = lang.muxrtc.f_mm_dd_24;
+    notation[6] = lang.muxrtc.f_custom;
 
     init_navigation_group();
     restore_clock_settings();
     rtc_original = rtc;
 
-    init_osk(ui_pnlEntry_rtc, ui_txtEntry_rtc, 0, 0, OSK_MAX);
+    init_osk(ui_pnl_entry_rtc, ui_txt_entry_rtc, 0, 0, OSK_MAX);
     register_key_event_callback(on_key_event);
 
-    dialogue_init_unsaved(&save_dlg, &theme, ui_screen, lang.GENERIC.UNSAVED, NULL,
-                          lang.GENERIC.SAVE, lang.GENERIC.DISCARD, lang.GENERIC.SELECT, lang.GENERIC.BACK);
+    dialogue_init_unsaved(
+        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
+        lang.generic.select, lang.generic.back
+    );
     init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_X] = handle_x,
-                    [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down,
-                    [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_R1] = handle_r1,
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
+                [mux_input_dpad_left] = handle_left,
+                [mux_input_dpad_right] = handle_right,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_l1,
+                [mux_input_r1] = handle_r1,
             },
-            .release_handler = {
-                    [MUX_INPUT_MENU] = handle_help,
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
-            .hold_handler = {
-                    [MUX_INPUT_B] = handle_b_hold,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    [MUX_INPUT_DPAD_UP] = handle_dpad_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_dpad_down_hold,
-                    [MUX_INPUT_L1] = handle_l1,
-                    [MUX_INPUT_R1] = handle_r1,
-            },
+        .hold_handler = {
+            [mux_input_b] = handle_b_hold,
+            [mux_input_dpad_left] = handle_left,
+            [mux_input_dpad_right] = handle_right,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_l1,
+            [mux_input_r1] = handle_r1,
+        },
     };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);

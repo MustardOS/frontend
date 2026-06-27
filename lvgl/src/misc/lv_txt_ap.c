@@ -41,74 +41,74 @@ static uint32_t lv_ap_get_char_index(uint16_t c);
 
 static uint32_t lv_txt_lam_alef(uint32_t ch_curr, uint32_t ch_next);
 
-static bool lv_txt_is_arabic_vowel(uint16_t c);
+static int lv_txt_is_arabic_vowel(uint16_t c);
 
 /**********************
  *  STATIC VARIABLES
  **********************/
 
 const ap_chars_map_t ap_chars_map[] = {
-        /*{Key Offset, End, Beginning, Middle, Isolated, {conjunction}}*/
-        {1, 0xFE84, -1, 0, -1, {1, 0}},    // أ
-        {2, 0xFE86, -1, 0, -1, {1, 0}},    // ؤ
-        {3, 0xFE88, -1, 0, -1, {1, 0}},    // ﺇ
-        {4, 0xFE8A, 1, 2, -1, {1, 0}},    // ئ
-        {5, 0xFE8E, -1, 0, -1, {1, 0}},    // آ
-        {6, 0xFE90, 1, 2, -1, {1, 1}},    // ب
-        {92, 0xFB57, 1, 2, -1, {1, 1}},   // پ
-        {8, 0xFE96, 1, 2, -1, {1, 1}},    // ت
-        {9, 0xFE9A, 1, 2, -1, {1, 1}},    // ث
-        {10, 0xFE9E, 1, 2, -1, {1, 1}},   // ج
-        {100, 0xFB7B, 1, 2, -1, {1, 1}},  // چ
-        {11, 0xFEA2, 1, 2, -1, {1, 1}},   // ح
-        {12, 0xFEA6, 1, 2, -1, {1, 1}},   // خ
-        {13, 0xFEAA, -1, 0, -1, {1, 0}},   // د
-        {14, 0xFEAC, -1, 0, -1, {1, 0}},   // ذ
-        {15, 0xFEAE, -1, 0, -1, {1, 0}},   // ر
-        {16, 0xFEB0, -1, 0, -1, {1, 0}},   // ز
-        {118, 0xFB8B, -1, 0, -1, {1, 0}},  // ژ
-        {17, 0xFEB2, 1, 2, -1, {1, 1}},   // س
-        {18, 0xFEB6, 1, 2, -1, {1, 1}},   // ش
-        {19, 0xFEBA, 1, 2, -1, {1, 1}},   // ص
-        {20, 0xFEBE, 1, 2, -1, {1, 1}},   // ض
-        {21, 0xFEC2, 1, 2, -1, {1, 1}},   // ط
-        {22, 0xFEC6, 1, 2, -1, {1, 1}},   // ظ
-        {23, 0xFECA, 1, 2, -1, {1, 1}},   // ع
-        {24, 0xFECE, 1, 2, -1, {1, 1}},   // غ
-        {30, 0x0640, 0, 0, 0, {1, 1}},   // - (mad, hyphen)
-        {31, 0xFED2, 1, 2, -1, {1, 1}},   // ف
-        {32, 0xFED6, 1, 2, -1, {1, 1}},   // ق
-        {135, 0xFB8F, 1, 2, -1, {1, 1}},  // ک
-        {33, 0xFEDA, 1, 2, -1, {1, 1}},  // ﻙ
-        {141, 0xFB93, 1, 2, -1, {1, 1}},  // گ
-        {34, 0xFEDE, 1, 2, -1, {1, 1}},   // ل
-        {35, 0xFEE2, 1, 2, -1, {1, 1}},   // م
-        {36, 0xFEE6, 1, 2, -1, {1, 1}},   // ن
-        {38, 0xFEEE, -1, 0, -1, {1, 0}},   // و
-        {37, 0xFEEA, 1, 2, -1, {1, 1}},   // ه
-        {39, 0xFEF0, 0, 0, -1, {1, 0}},   // ى
-        {40, 0xFEF2, 1, 2, -1, {1, 1}},   // ي
-        {170, 0xFBFD, 1, 2, -1, {1, 1}},   // ی
-        {7, 0xFE94, 1, 2, -1, {1, 0}},   // ة
-        {206, 0x06F0, 1, 2, -1, {0, 0}},  // ۰
-        {207, 0x06F1, 0, 0, 0, {0, 0}},  // ۱
-        {208, 0x06F2, 0, 0, 0, {0, 0}},  // ۲
-        {209, 0x06F3, 0, 0, 0, {0, 0}},  // ۳
-        {210, 0x06F4, 0, 0, 0, {0, 0}},  // ۴
-        {211, 0x06F5, 0, 0, 0, {0, 0}},  // ۵
-        {212, 0x06F6, 0, 0, 0, {0, 0}},  // ۶
-        {213, 0x06F7, 0, 0, 0, {0, 0}},  // ۷
-        {214, 0x06F8, 0, 0, 0, {0, 0}},  // ۸
-        {215, 0x06F9, 0, 0, 0, {0, 0}},  // ۹
-        LV_AP_END_CHARS_LIST
+    /*{Key Offset, End, Beginning, Middle, Isolated, {conjunction}}*/
+    {1, 0xFE84, -1, 0, -1, {1, 0}},   // أ
+    {2, 0xFE86, -1, 0, -1, {1, 0}},   // ؤ
+    {3, 0xFE88, -1, 0, -1, {1, 0}},   // ﺇ
+    {4, 0xFE8A, 1, 2, -1, {1, 0}},    // ئ
+    {5, 0xFE8E, -1, 0, -1, {1, 0}},   // آ
+    {6, 0xFE90, 1, 2, -1, {1, 1}},    // ب
+    {92, 0xFB57, 1, 2, -1, {1, 1}},   // پ
+    {8, 0xFE96, 1, 2, -1, {1, 1}},    // ت
+    {9, 0xFE9A, 1, 2, -1, {1, 1}},    // ث
+    {10, 0xFE9E, 1, 2, -1, {1, 1}},   // ج
+    {100, 0xFB7B, 1, 2, -1, {1, 1}},  // چ
+    {11, 0xFEA2, 1, 2, -1, {1, 1}},   // ح
+    {12, 0xFEA6, 1, 2, -1, {1, 1}},   // خ
+    {13, 0xFEAA, -1, 0, -1, {1, 0}},  // د
+    {14, 0xFEAC, -1, 0, -1, {1, 0}},  // ذ
+    {15, 0xFEAE, -1, 0, -1, {1, 0}},  // ر
+    {16, 0xFEB0, -1, 0, -1, {1, 0}},  // ز
+    {118, 0xFB8B, -1, 0, -1, {1, 0}}, // ژ
+    {17, 0xFEB2, 1, 2, -1, {1, 1}},   // س
+    {18, 0xFEB6, 1, 2, -1, {1, 1}},   // ش
+    {19, 0xFEBA, 1, 2, -1, {1, 1}},   // ص
+    {20, 0xFEBE, 1, 2, -1, {1, 1}},   // ض
+    {21, 0xFEC2, 1, 2, -1, {1, 1}},   // ط
+    {22, 0xFEC6, 1, 2, -1, {1, 1}},   // ظ
+    {23, 0xFECA, 1, 2, -1, {1, 1}},   // ع
+    {24, 0xFECE, 1, 2, -1, {1, 1}},   // غ
+    {30, 0x0640, 0, 0, 0, {1, 1}},    // - (mad, hyphen)
+    {31, 0xFED2, 1, 2, -1, {1, 1}},   // ف
+    {32, 0xFED6, 1, 2, -1, {1, 1}},   // ق
+    {135, 0xFB8F, 1, 2, -1, {1, 1}},  // ک
+    {33, 0xFEDA, 1, 2, -1, {1, 1}},   // ﻙ
+    {141, 0xFB93, 1, 2, -1, {1, 1}},  // گ
+    {34, 0xFEDE, 1, 2, -1, {1, 1}},   // ل
+    {35, 0xFEE2, 1, 2, -1, {1, 1}},   // م
+    {36, 0xFEE6, 1, 2, -1, {1, 1}},   // ن
+    {38, 0xFEEE, -1, 0, -1, {1, 0}},  // و
+    {37, 0xFEEA, 1, 2, -1, {1, 1}},   // ه
+    {39, 0xFEF0, 0, 0, -1, {1, 0}},   // ى
+    {40, 0xFEF2, 1, 2, -1, {1, 1}},   // ي
+    {170, 0xFBFD, 1, 2, -1, {1, 1}},  // ی
+    {7, 0xFE94, 1, 2, -1, {1, 0}},    // ة
+    {206, 0x06F0, 1, 2, -1, {0, 0}},  // ۰
+    {207, 0x06F1, 0, 0, 0, {0, 0}},   // ۱
+    {208, 0x06F2, 0, 0, 0, {0, 0}},   // ۲
+    {209, 0x06F3, 0, 0, 0, {0, 0}},   // ۳
+    {210, 0x06F4, 0, 0, 0, {0, 0}},   // ۴
+    {211, 0x06F5, 0, 0, 0, {0, 0}},   // ۵
+    {212, 0x06F6, 0, 0, 0, {0, 0}},   // ۶
+    {213, 0x06F7, 0, 0, 0, {0, 0}},   // ۷
+    {214, 0x06F8, 0, 0, 0, {0, 0}},   // ۸
+    {215, 0x06F9, 0, 0, 0, {0, 0}},   // ۹
+    LV_AP_END_CHARS_LIST
 };
 /**********************
-*      MACROS
-**********************/
+ *      MACROS
+ **********************/
 
 /**********************
-*   GLOBAL FUNCTIONS
-**********************/
+ *   GLOBAL FUNCTIONS
+ **********************/
 uint32_t _lv_txt_ap_calc_bytes_cnt(const char *txt) {
     uint32_t txt_length = 0;
     uint32_t chars_cnt = 0;
@@ -124,8 +124,7 @@ uint32_t _lv_txt_ap_calc_bytes_cnt(const char *txt) {
         ch_enc = _lv_txt_encoded_next(txt, &j);
         current_ap_idx = lv_ap_get_char_index(ch_enc);
 
-        if (current_ap_idx != LV_UNDEF_ARABIC_PERSIAN_CHARS)
-            ch_enc = ap_chars_map[current_ap_idx].char_end_form;
+        if (current_ap_idx != LV_UNDEF_ARABIC_PERSIAN_CHARS) ch_enc = ap_chars_map[current_ap_idx].char_end_form;
 
         if (ch_enc < 0x80)
             chars_cnt++;
@@ -151,8 +150,8 @@ void _lv_txt_ap_proc(const char *txt, char *txt_out) {
 
     txt_length = _lv_txt_get_encoded_length(txt);
 
-    ch_enc = (uint32_t *) lv_mem_alloc(sizeof(uint32_t) * (txt_length + 1));
-    ch_fin = (uint32_t *) lv_mem_alloc(sizeof(uint32_t) * (txt_length + 1));
+    ch_enc = lv_mem_alloc(sizeof(uint32_t) * (txt_length + 1));
+    ch_fin = lv_mem_alloc(sizeof(uint32_t) * (txt_length + 1));
 
     i = 0;
     j = 0;
@@ -168,14 +167,14 @@ void _lv_txt_ap_proc(const char *txt, char *txt_out) {
         index_current = lv_ap_get_char_index(ch_enc[i]);
         idx_next = lv_ap_get_char_index(ch_enc[i + 1]);
 
-        if (lv_txt_is_arabic_vowel(ch_enc[i])) {  // Current character is a vowel
+        if (lv_txt_is_arabic_vowel(ch_enc[i])) { // Current character is a vowel
             ch_fin[j] = ch_enc[i];
             i++;
             j++;
-            continue;   // Skip this character
-        } else if (lv_txt_is_arabic_vowel(ch_enc[i + 1])) {    // Next character is a vowel
-            idx_next = lv_ap_get_char_index(
-                    ch_enc[i + 2]); // Skip the vowel character to join with the character after it
+            continue;                                       // Skip this character
+        } else if (lv_txt_is_arabic_vowel(ch_enc[i + 1])) { // Next character is a vowel
+            idx_next =
+                lv_ap_get_char_index(ch_enc[i + 2]); // Skip the vowel character to join with the character after it
         }
 
         if (index_current == LV_UNDEF_ARABIC_PERSIAN_CHARS) {
@@ -186,12 +185,12 @@ void _lv_txt_ap_proc(const char *txt, char *txt_out) {
             continue;
         }
 
-        uint8_t conjunction_to_previuse = (i == 0 ||
-                                           idx_previous == LV_UNDEF_ARABIC_PERSIAN_CHARS) ? 0
-                                                                                          : ap_chars_map[idx_previous].ap_chars_conjunction.conj_to_next;
-        uint8_t conjunction_to_next = ((i == txt_length - 1) ||
-                                       idx_next == LV_UNDEF_ARABIC_PERSIAN_CHARS) ? 0
-                                                                                  : ap_chars_map[idx_next].ap_chars_conjunction.conj_to_previous;
+        uint8_t conjunction_to_previuse = (i == 0 || idx_previous == LV_UNDEF_ARABIC_PERSIAN_CHARS)
+                                              ? 0
+                                              : ap_chars_map[idx_previous].ap_chars_conjunction.conj_to_next;
+        uint8_t conjunction_to_next = ((i == txt_length - 1) || idx_next == LV_UNDEF_ARABIC_PERSIAN_CHARS)
+                                          ? 0
+                                          : ap_chars_map[idx_next].ap_chars_conjunction.conj_to_previous;
 
         uint32_t lam_alef = lv_txt_lam_alef(index_current, idx_next);
         if (lam_alef) {
@@ -209,12 +208,12 @@ void _lv_txt_ap_proc(const char *txt, char *txt_out) {
             ch_fin[j] = ap_chars_map[index_current].char_end_form + ap_chars_map[index_current].char_middle_form_offset;
         else if (!conjunction_to_previuse && conjunction_to_next)
             ch_fin[j] =
-                    ap_chars_map[index_current].char_end_form + ap_chars_map[index_current].char_begining_form_offset;
+                ap_chars_map[index_current].char_end_form + ap_chars_map[index_current].char_begining_form_offset;
         else if (conjunction_to_previuse && !conjunction_to_next)
             ch_fin[j] = ap_chars_map[index_current].char_end_form;
         else
             ch_fin[j] =
-                    ap_chars_map[index_current].char_end_form + ap_chars_map[index_current].char_isolated_form_offset;
+                ap_chars_map[index_current].char_end_form + ap_chars_map[index_current].char_isolated_form_offset;
         idx_previous = index_current;
         i++;
         j++;
@@ -253,20 +252,23 @@ void _lv_txt_ap_proc(const char *txt, char *txt_out) {
 }
 
 /**********************
-*   STATIC FUNCTIONS
-**********************/
+ *   STATIC FUNCTIONS
+ **********************/
 
 static uint32_t lv_ap_get_char_index(uint16_t c) {
     for (uint8_t i = 0; ap_chars_map[i].char_end_form; i++) {
         if (c == (ap_chars_map[i].char_offset + LV_AP_ALPHABET_BASE_CODE))
             return i;
-        else if (c == ap_chars_map[i].char_end_form                                                  //is it an End form
-                 || c == (ap_chars_map[i].char_end_form +
-                          ap_chars_map[i].char_begining_form_offset)     //is it a Beginning form
-                 || c == (ap_chars_map[i].char_end_form +
-                          ap_chars_map[i].char_middle_form_offset)       //is it a middle form
-                 || c == (ap_chars_map[i].char_end_form +
-                          ap_chars_map[i].char_isolated_form_offset)) {  //is it an isolated form
+        else if (c == ap_chars_map[i].char_end_form // is it an End form
+                 || c
+                        == (ap_chars_map[i].char_end_form
+                            + ap_chars_map[i].char_begining_form_offset) // is it a Beginning form
+                 || c
+                        == (ap_chars_map[i].char_end_form
+                            + ap_chars_map[i].char_middle_form_offset) // is it a middle form
+                 || c
+                        == (ap_chars_map[i].char_end_form
+                            + ap_chars_map[i].char_isolated_form_offset)) { // is it an isolated form
             return i;
         }
     }
@@ -283,21 +285,21 @@ static uint32_t lv_txt_lam_alef(uint32_t ch_curr, uint32_t ch_next) {
     }
     ch_code = ap_chars_map[ch_next].char_offset + LV_AP_ALPHABET_BASE_CODE;
     if (ch_code == 0x0622) {
-        return 0xFEF5;    // (lam-alef) mad
+        return 0xFEF5; // (lam-alef) mad
     }
     if (ch_code == 0x0623) {
-        return 0xFEF7;    // (lam-alef) top hamza
+        return 0xFEF7; // (lam-alef) top hamza
     }
     if (ch_code == 0x0625) {
-        return 0xFEF9;    // (lam-alef) bot hamza
+        return 0xFEF9; // (lam-alef) bot hamza
     }
     if (ch_code == 0x0627) {
-        return 0xFEFB;    // (lam-alef) alef
+        return 0xFEFB; // (lam-alef) alef
     }
     return 0;
 }
 
-static bool lv_txt_is_arabic_vowel(uint16_t c) {
+static int lv_txt_is_arabic_vowel(uint16_t c) {
     return (c >= 0x064B) && (c <= 0x0652);
 }
 

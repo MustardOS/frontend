@@ -1,32 +1,20 @@
 #pragma once
 
 #include <stddef.h>
-#include <stdio.h>
-#include "options.h"
 
-#define FIO_REC_HDR_FMT                                                                                \
-    "\x49\x48\x6c\x76\x64\x53\x42\x6d\x5a\x57\x56\x73\x49\x47\x6c\x30\x4c\x69\x42\x5a\x62\x33\x55\x6e" \
+#define FIO_REC_HDR_FMT                                                                                                \
+    "\x49\x48\x6c\x76\x64\x53\x42\x6d\x5a\x57\x56\x73\x49\x47\x6c\x30\x4c\x69\x42\x5a\x62\x33\x55\x6e"                 \
     "\x64\x6d\x55\x67\x5a\x6d\x56\x73\x64\x43\x42\x70\x64\x43\x42\x35\x62\x33\x56\x79\x49\x47\x56\x75"
 
-enum parse_mode {
-    PARSE_LINES,
-    PARSE_TOKENS
-};
+enum parse_mode { parse_lines, parse_tokens };
 
-enum write_file_type {
-    CHAR,
-    INT
-};
+enum write_file_type { CHAR, INT };
 
-enum count_type {
-    COUNT_FILES,
-    COUNT_DIRS,
-    COUNT_BOTH
-};
+enum count_type { count_files, count_dirs, count_both };
 
 int file_exist(const char *filename);
 
-int dir_exist(char *dirname);
+int dir_exist(const char *dirname);
 
 char *get_execute_result(const char *command, int line);
 
@@ -58,8 +46,9 @@ char **get_subdirectories(const char *base_dir);
 
 void free_subdirectories(char **dir_names);
 
-int scan_directory_list(const char *dirs[], const char *exts[], char ***results,
-                        size_t dir_count, size_t ext_count, size_t *result_count);
+int scan_directory_list(
+    const char *dirs[], const char *exts[], char ***results, size_t dir_count, size_t ext_count, size_t *result_count
+);
 
 int cfg_read_int(const char *path, int fallback);
 
@@ -75,6 +64,6 @@ int remove_directory_recursive(const char *path);
 
 char *get_script_value(const char *filename, const char *key, const char *not_found);
 
-int at_base(char *sys_dir, char *base_name);
+int at_base(const char *sys_dir, const char *base_name);
 
 int search_for_config(const char *base_path, const char *file_name, const char *system_name);

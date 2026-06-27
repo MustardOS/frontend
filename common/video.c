@@ -67,7 +67,7 @@ static int vq_head = 0;
 static int vq_tail = 0;
 static int vq_count = 0;
 
-static struct SwrContext *swr = NULL;
+static SwrContext *swr = NULL;
 static int mix_freq = 0;
 static int mix_ch = 0;
 static float *ring_buf = NULL;
@@ -99,7 +99,7 @@ static void vq_push(AVFrame *src) {
     vq_count++;
 }
 
-static AVFrame *vq_at(int i) {
+static AVFrame *vq_at(const int i) {
     return vq[(vq_head + i) % VFRAME_Q];
 }
 
@@ -113,7 +113,8 @@ static void vq_pop(void) {
 
 static void vq_clear(void) {
     int n = vq_count;
-    while (n-- > 0) vq_pop();
+    while (n-- > 0)
+        vq_pop();
     vq_head = vq_tail = 0;
 }
 
@@ -128,28 +129,27 @@ static int ring_space(void) {
 static void ring_write(const float *src, int nframes) {
     if (nframes <= 0) return;
 
-    int space = ring_space();
+    const int space = ring_space();
     if (nframes > space) nframes = space;
 
-    int tail = ring_w;
-    int first = (nframes < ring_frames - tail) ? nframes : ring_frames - tail;
+    const int tail = ring_w;
+    const int first = nframes < ring_frames - tail ? nframes : ring_frames - tail;
     memcpy(ring_buf + tail * 2, src, (size_t) first * 2 * sizeof(float));
     memcpy(ring_buf, src + first * 2, (size_t) (nframes - first) * 2 * sizeof(float));
 
     ring_w = (ring_w + nframes) % ring_frames;
 }
 
-static void audio_hook_cb(void *udata, Uint8 *stream, int len) {
-    (void) udata;
-    int nframes = len / (mix_ch * (int) sizeof(float));
+static void audio_hook_cb(void *udata __attribute__((unused)), Uint8 *stream, const int len) {
+    const int nframes = len / (mix_ch * (int) sizeof(float));
     float *out = (float *) stream;
 
-    int avail = ring_avail();
-    int to_read = (avail < nframes) ? avail : nframes;
+    const int avail = ring_avail();
+    const int to_read = avail < nframes ? avail : nframes;
 
     if (to_read > 0) {
-        int head = ring_r;
-        int first = (to_read < ring_frames - head) ? to_read : ring_frames - head;
+        const int head = ring_r;
+        const int first = to_read < ring_frames - head ? to_read : ring_frames - head;
 
         memcpy(out, ring_buf + head * 2, (size_t) first * 2 * sizeof(float));
         memcpy(out + first * 2, ring_buf, (size_t) (to_read - first) * 2 * sizeof(float));
@@ -160,13 +160,13 @@ static void audio_hook_cb(void *udata, Uint8 *stream, int len) {
     if (to_read < nframes) SDL_memset(out + to_read * mix_ch, 0, (size_t) (nframes - to_read) * mix_ch * sizeof(float));
 }
 
-static SDL_Texture *make_corner_mask(int w, int h) {
+static SDL_Texture *make_corner_mask(const int w, const int h) {
     int radius = VIDEO_CORNER_RAD;
     if (radius * 2 > w) radius = w / 2;
     if (radius * 2 > h) radius = h / 2;
     if (radius < 1) return NULL;
 
-    uint32_t * buf = (uint32_t *) malloc((size_t) w * h * 4);
+    uint32_t *buf = malloc((size_t) w * h * 4);
     if (!buf) return NULL;
 
     for (int y = 0; y < h; y++) {
@@ -190,15 +190,15 @@ static SDL_Texture *make_corner_mask(int w, int h) {
             }
 
             if (cx >= 0) {
-                float dx = (float) (x - cx);
-                float dy = (float) (y - cy);
+                const float dx = (float) (x - cx);
+                const float dy = (float) (y - cy);
                 cov = (float) radius + 0.5f - sqrtf(dx * dx + dy * dy);
                 if (cov < 0.0f) cov = 0.0f;
                 if (cov > 1.0f) cov = 1.0f;
             }
 
-            uint8_t a = (uint8_t) (cov * 255.0f + 0.5f);
-            buf[y * w + x] = ((uint32_t) a << 24) | 0x00FFFFFF;
+            const uint8_t a = (uint8_t) (cov * 255.0f + 0.5f);
+            buf[y * w + x] = (uint32_t) a << 24 | 0x00FFFFFF;
         }
     }
 
@@ -254,22 +254,22 @@ static void fade_cb(lv_timer_t *t) {
     display_composite_frame();
 }
 
-static int ensure_texture(AVFrame *f) {
+static int ensure_texture(const AVFrame *f) {
     if (video_tex) return 1;
     if (!sdl_ren) return 0;
 
-    int w = f->width;
-    int h = f->height;
+    const int w = f->width;
+    const int h = f->height;
 
-    enum AVPixelFormat fmt = (enum AVPixelFormat) f->format;
+    const enum AVPixelFormat fmt = (enum AVPixelFormat) f->format;
 
-    int dw = lv_disp_get_hor_res(NULL);
-    int dh = lv_disp_get_ver_res(NULL);
+    const int dw = lv_disp_get_hor_res(NULL);
+    const int dh = lv_disp_get_ver_res(NULL);
 
     if (is_wallpaper) {
         int tex_w = w, tex_h = h;
 
-        switch (config.VISUAL.BACKGROUND_SCALE) {
+        switch (config.visual.background_scale) {
             case 1:
                 tex_w = dw;
                 tex_h = h * dw / w;
@@ -294,17 +294,20 @@ static int ensure_texture(AVFrame *f) {
         if (!video_tex) {
             use_iyuv = 0;
             sws_ctx = sws_getContext(w, h, fmt, tex_w, tex_h, AV_PIX_FMT_BGRA, SWS_BILINEAR, NULL, NULL, NULL);
-            sws_buf = (uint8_t *) malloc((size_t) tex_w * tex_h * 4);
-            if (sws_ctx && sws_buf) video_tex = SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tex_w, tex_h);
+            sws_buf = malloc((size_t) tex_w * tex_h * 4);
+            if (sws_ctx && sws_buf)
+                video_tex =
+                    SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tex_w, tex_h);
         }
 
         if (!video_tex) return 0;
         SDL_SetTextureScaleMode(video_tex, SDL_ScaleModeLinear);
 
-        video_dst = (config.VISUAL.BACKGROUND_SCALE >= 2) ? (SDL_Rect) {0, 0, tex_w, tex_h} : (SDL_Rect) {(dw - tex_w) / 2, (dh - tex_h) / 2, tex_w, tex_h};
+        video_dst = config.visual.background_scale >= 2 ? (SDL_Rect) {0, 0, tex_w, tex_h}
+                                                        : (SDL_Rect) {(dw - tex_w) / 2, (dh - tex_h) / 2, tex_w, tex_h};
 
     } else {
-        int want_round = SDL_RenderTargetSupported(sdl_ren);
+        const int want_round = SDL_RenderTargetSupported(sdl_ren);
 
         if (!want_round && (fmt == AV_PIX_FMT_YUV420P || fmt == AV_PIX_FMT_YUVJ420P)) {
             video_tex = SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, w, h);
@@ -314,15 +317,16 @@ static int ensure_texture(AVFrame *f) {
         if (!video_tex) {
             use_iyuv = 0;
             sws_ctx = sws_getContext(w, h, fmt, w, h, AV_PIX_FMT_BGRA, SWS_BILINEAR, NULL, NULL, NULL);
-            sws_buf = (uint8_t *) malloc((size_t) w * h * 4);
-            if (sws_ctx && sws_buf) video_tex = SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
+            sws_buf = malloc((size_t) w * h * 4);
+            if (sws_ctx && sws_buf)
+                video_tex = SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
         }
 
         if (!video_tex) return 0;
         SDL_SetTextureScaleMode(video_tex, SDL_ScaleModeLinear);
 
-        int bw = dw - 2 * VIDEO_BOX_PAD_H;
-        int bh = dh - 2 * VIDEO_BOX_PAD_V;
+        const int bw = dw - 2 * VIDEO_BOX_PAD_H;
+        const int bh = dh - 2 * VIDEO_BOX_PAD_V;
         int vw = bw, vh = h * bw / w;
 
         if (vh > bh) {
@@ -340,8 +344,10 @@ static int ensure_texture(AVFrame *f) {
             if (round_target && corner_mask) {
                 SDL_SetTextureBlendMode(round_target, SDL_BLENDMODE_BLEND);
                 SDL_SetTextureScaleMode(round_target, SDL_ScaleModeLinear);
-                mask_blend = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD,
-                                                        SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD);
+                mask_blend = SDL_ComposeCustomBlendMode(
+                    SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO,
+                    SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD
+                );
                 SDL_SetTextureBlendMode(corner_mask, mask_blend);
                 use_round = 1;
             } else {
@@ -360,52 +366,57 @@ static int ensure_texture(AVFrame *f) {
     return 1;
 }
 
-static void video_upload(AVFrame *f) {
+static void video_upload(const AVFrame *f) {
     if (!ensure_texture(f)) return;
 
     int ok = 0;
 
     if (use_iyuv) {
-        ok = (SDL_UpdateYUVTexture(video_tex, NULL, f->data[0], f->linesize[0], f->data[1], f->linesize[1], f->data[2], f->linesize[2]) == 0);
+        ok = SDL_UpdateYUVTexture(
+                 video_tex, NULL, f->data[0], f->linesize[0], f->data[1], f->linesize[1], f->data[2], f->linesize[2]
+             )
+             == 0;
     } else if (sws_ctx && sws_buf) {
         int tw = 0;
         SDL_QueryTexture(video_tex, NULL, NULL, &tw, NULL);
         if (tw <= 0) tw = f->width;
 
         uint8_t *dst[4] = {sws_buf, NULL, NULL, NULL};
-        int dls[4] = {tw * 4, 0, 0, 0};
+        const int dls[4] = {tw * 4, 0, 0, 0};
 
-        ok = (sws_scale(sws_ctx, (const uint8_t *const *) f->data, f->linesize, 0, f->height, dst, dls) > 0);
+        ok = sws_scale(sws_ctx, (const uint8_t **) f->data, f->linesize, 0, f->height, dst, dls) > 0;
         if (ok) SDL_UpdateTexture(video_tex, NULL, sws_buf, tw * 4);
     }
 
     if (ok) has_frame = 1;
 }
 
-static void decode_audio_pkt(AVPacket *pkt) {
+static void decode_audio_pkt(const AVPacket *pkt) {
     if (!ring_buf || avcodec_send_packet(audio_dec, pkt) < 0) return;
 
     while (avcodec_receive_frame(audio_dec, av_frame) >= 0) {
         if (!swr) {
 #if LIBAVUTIL_VERSION_MAJOR >= 58
             AVChannelLayout stereo_layout = AV_CHANNEL_LAYOUT_STEREO;
-            swr_alloc_set_opts2(&swr, &stereo_layout, AV_SAMPLE_FMT_FLT, mix_freq,
-                                &av_frame->ch_layout, (enum AVSampleFormat) av_frame->format,
-                                av_frame->sample_rate, 0, NULL);
+            swr_alloc_set_opts2(
+                &swr, &stereo_layout, AV_SAMPLE_FMT_FLT, mix_freq, &av_frame->ch_layout,
+                (enum AVSampleFormat) av_frame->format, av_frame->sample_rate, 0, NULL
+            );
 #else
-            int64_t in_layout = av_frame->channel_layout
-                                ? (int64_t) av_frame->channel_layout
-                                : av_get_default_channel_layout(av_frame->channels);
-            swr = swr_alloc_set_opts(NULL, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_FLT, mix_freq,
-                                     in_layout, (enum AVSampleFormat) av_frame->format,
-                                     av_frame->sample_rate, 0, NULL);
+            const int64_t in_layout = av_frame->channel_layout ? (int64_t) av_frame->channel_layout
+                                                               : av_get_default_channel_layout(av_frame->channels);
+            swr = swr_alloc_set_opts(
+                NULL, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_FLT, mix_freq, in_layout,
+                (enum AVSampleFormat) av_frame->format, av_frame->sample_rate, 0, NULL
+            );
 #endif
             if (swr) swr_init(swr);
         }
 
         if (swr) {
             uint8_t *outp = (uint8_t *) audio_tmp;
-            int n = swr_convert(swr, &outp, AUDIO_TMP_FRAMES, (const uint8_t **) av_frame->data, av_frame->nb_samples);
+            const int n =
+                swr_convert(swr, &outp, AUDIO_TMP_FRAMES, (const uint8_t **) av_frame->data, av_frame->nb_samples);
             if (n > 0) {
                 SDL_LockAudio();
                 ring_write(audio_tmp, n);
@@ -417,7 +428,7 @@ static void decode_audio_pkt(AVPacket *pkt) {
     }
 }
 
-static void decode_video_pkt(AVPacket *pkt) {
+static void decode_video_pkt(const AVPacket *pkt) {
     if (avcodec_send_packet(video_dec, pkt) < 0) return;
 
     while (avcodec_receive_frame(video_dec, av_frame) >= 0) {
@@ -444,19 +455,18 @@ static void restart_stream(void) {
     play_start_ms = SDL_GetTicks();
 }
 
-static void decode_cb(lv_timer_t *t) {
-    (void) t;
+static void decode_cb(lv_timer_t *t __attribute__((unused))) {
     if (!fmt_ctx) return;
 
     if (is_wallpaper) {
-        uint32_t cur_ticks = SDL_GetTicks();
-        if (stall_last_ticks > 0 && (cur_ticks - stall_last_ticks) > 500) {
-            play_start_ms += (cur_ticks - stall_last_ticks);
+        const uint32_t cur_ticks = SDL_GetTicks();
+        if (stall_last_ticks > 0 && cur_ticks - stall_last_ticks > 500) {
+            play_start_ms += cur_ticks - stall_last_ticks;
         }
         stall_last_ticks = cur_ticks;
     }
 
-    int64_t now = (int64_t) (SDL_GetTicks() - play_start_ms);
+    const int64_t now = SDL_GetTicks() - play_start_ms;
     int shown = 0;
 
     while (vq_count > 0 && frame_pts_ms(vq_at(0)) <= now + DISPLAY_SLACK) {
@@ -599,7 +609,7 @@ static void preview_open(void) {
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0) goto fail;
 
     for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
-        AVCodecParameters *par = fmt_ctx->streams[i]->codecpar;
+        const AVCodecParameters *par = fmt_ctx->streams[i]->codecpar;
 
         if (par->codec_type == AVMEDIA_TYPE_VIDEO && video_si < 0) {
             const AVCodec *dec = avcodec_find_decoder(par->codec_id);
@@ -661,7 +671,7 @@ static void preview_open(void) {
 
         if (mix_freq > 0 && mix_ch > 0 && mix_fmt == AUDIO_F32LSB) {
             ring_frames = mix_freq * AUDIO_RING_SEC;
-            ring_buf = (float *) calloc((size_t) ring_frames * 2, sizeof(float));
+            ring_buf = calloc((size_t) ring_frames * 2, sizeof(float));
 
             if (ring_buf) {
                 ring_r = ring_w = 0;
@@ -679,12 +689,11 @@ static void preview_open(void) {
 
     return;
 
-    fail:
+fail:
     cleanup();
 }
 
-static void preview_timer_cb(lv_timer_t *t) {
-    (void) t;
+static void preview_timer_cb(lv_timer_t *t __attribute__((unused))) {
 
     lv_timer_pause(preview_timer);
     if (!preview_pending_path[0]) return;
@@ -706,7 +715,7 @@ static void wallpaper_open(void) {
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0) goto fail;
 
     for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
-        AVCodecParameters *par = fmt_ctx->streams[i]->codecpar;
+        const AVCodecParameters *par = fmt_ctx->streams[i]->codecpar;
 
         if (par->codec_type == AVMEDIA_TYPE_VIDEO && video_si < 0) {
             const AVCodec *dec = avcodec_find_decoder(par->codec_id);
@@ -765,7 +774,7 @@ static void wallpaper_open(void) {
     decode_timer = lv_timer_create(decode_cb, 16, NULL);
     return;
 
-    fail:
+fail:
     cleanup();
 }
 
@@ -786,7 +795,7 @@ int video_wallpaper_active(void) {
     return is_wallpaper && decode_timer != NULL;
 }
 
-void video_preview_arm(const char *path, int delay_ms, lv_obj_t *container, lv_obj_t *box_img) {
+void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img) {
     (void) container;
     (void) box_img;
 

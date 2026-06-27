@@ -7,141 +7,142 @@ extern struct mux_device device;
 
 struct mux_device {
     struct {
-        char NAME[MAX_BUFFER_SIZE];
-        int16_t HASNETWORK;
-        int16_t HASBLUETOOTH;
-        int16_t HASPORTMASTER;
-        int16_t HASLID;
-        int16_t HASHDMI;
-        int16_t HASEVENT;
-        int16_t HASDEBUGFS;
-        int16_t HASRGB;
-        int16_t HASSTICK;
-        int16_t HASTOUCH;
-        char SDL_MAP[MAX_BUFFER_SIZE];
-        char JOY_HALL[MAX_BUFFER_SIZE];
-        char LED[MAX_BUFFER_SIZE];
-        char RTC_CLOCK[MAX_BUFFER_SIZE];
-        char RTC_WAKE[MAX_BUFFER_SIZE];
-    } BOARD;
+        char name[MAX_BUFFER_SIZE];
+        int16_t has_network;
+        int16_t has_bluetooth;
+        int16_t has_portmaster;
+        int16_t has_lid;
+        int16_t has_hdmi;
+        int16_t has_event;
+        int16_t has_debugfs;
+        int16_t has_rgb;
+        int16_t has_stick;
+        int16_t has_touch;
+        char sdl_map[MAX_BUFFER_SIZE];
+        char joy_hall[MAX_BUFFER_SIZE];
+        char led[MAX_BUFFER_SIZE];
+        char rtc_clock[MAX_BUFFER_SIZE];
+        char rtc_wake[MAX_BUFFER_SIZE];
+    } board;
 
     struct {
-        int16_t MIN;
-        int16_t MAX;
-    } AUDIO;
+        int16_t min;
+        int16_t max;
+    } audio;
 
     struct {
-        int16_t WIDTH;
-        int16_t HEIGHT;
-    } MUX;
+        int16_t width;
+        int16_t height;
+        int16_t buffer;
+    } mux;
 
     struct {
         struct {
-            char DEVICE[MAX_BUFFER_SIZE];
-            char SEPARATOR[MAX_BUFFER_SIZE];
-            int16_t PARTITION;
-            char MOUNT[MAX_BUFFER_SIZE];
-            char TYPE[MAX_BUFFER_SIZE];
-            char LABEL[MAX_BUFFER_SIZE];
-        } BOOT;
+            char device[MAX_BUFFER_SIZE];
+            char separator[MAX_BUFFER_SIZE];
+            int16_t partition;
+            char mount[MAX_BUFFER_SIZE];
+            char type[MAX_BUFFER_SIZE];
+            char label[MAX_BUFFER_SIZE];
+        } boot;
         struct {
-            char DEVICE[MAX_BUFFER_SIZE];
-            char SEPARATOR[MAX_BUFFER_SIZE];
-            int16_t PARTITION;
-            char MOUNT[MAX_BUFFER_SIZE];
-            char TYPE[MAX_BUFFER_SIZE];
-            char LABEL[MAX_BUFFER_SIZE];
-        } ROM;
+            char device[MAX_BUFFER_SIZE];
+            char separator[MAX_BUFFER_SIZE];
+            int16_t partition;
+            char mount[MAX_BUFFER_SIZE];
+            char type[MAX_BUFFER_SIZE];
+            char label[MAX_BUFFER_SIZE];
+        } rom;
         struct {
-            char DEVICE[MAX_BUFFER_SIZE];
-            char SEPARATOR[MAX_BUFFER_SIZE];
-            int16_t PARTITION;
-            char MOUNT[MAX_BUFFER_SIZE];
-            char TYPE[MAX_BUFFER_SIZE];
-            char LABEL[MAX_BUFFER_SIZE];
-        } ROOT;
+            char device[MAX_BUFFER_SIZE];
+            char separator[MAX_BUFFER_SIZE];
+            int16_t partition;
+            char mount[MAX_BUFFER_SIZE];
+            char type[MAX_BUFFER_SIZE];
+            char label[MAX_BUFFER_SIZE];
+        } root;
         struct {
-            char DEVICE[MAX_BUFFER_SIZE];
-            char SEPARATOR[MAX_BUFFER_SIZE];
-            int16_t PARTITION;
-            char MOUNT[MAX_BUFFER_SIZE];
-            char TYPE[MAX_BUFFER_SIZE];
-            char LABEL[MAX_BUFFER_SIZE];
-        } SDCARD;
+            char device[MAX_BUFFER_SIZE];
+            char separator[MAX_BUFFER_SIZE];
+            int16_t partition;
+            char mount[MAX_BUFFER_SIZE];
+            char type[MAX_BUFFER_SIZE];
+            char label[MAX_BUFFER_SIZE];
+        } sdcard;
         struct {
-            char DEVICE[MAX_BUFFER_SIZE];
-            char SEPARATOR[MAX_BUFFER_SIZE];
-            int16_t PARTITION;
-            char MOUNT[MAX_BUFFER_SIZE];
-            char TYPE[MAX_BUFFER_SIZE];
-            char LABEL[MAX_BUFFER_SIZE];
-        } USB;
-    } STORAGE;
+            char device[MAX_BUFFER_SIZE];
+            char separator[MAX_BUFFER_SIZE];
+            int16_t partition;
+            char mount[MAX_BUFFER_SIZE];
+            char type[MAX_BUFFER_SIZE];
+            char label[MAX_BUFFER_SIZE];
+        } usb;
+    } storage;
 
     struct {
-        char DEFAULT[MAX_BUFFER_SIZE];
-        char AVAILABLE[MAX_BUFFER_SIZE];
-        char GOVERNOR[MAX_BUFFER_SIZE];
-        char SCALER[MAX_BUFFER_SIZE];
-    } CPU;
+        char dflt[MAX_BUFFER_SIZE];
+        char available[MAX_BUFFER_SIZE];
+        char governor[MAX_BUFFER_SIZE];
+        char scaler[MAX_BUFFER_SIZE];
+    } cpu;
 
     struct {
-        char MODULE[MAX_BUFFER_SIZE];
-        char NAME[MAX_BUFFER_SIZE];
-        char TYPE[MAX_BUFFER_SIZE];
-        char INTERFACE[MAX_BUFFER_SIZE];
-        char STATE[MAX_BUFFER_SIZE];
-    } NETWORK;
+        char module[MAX_BUFFER_SIZE];
+        char name[MAX_BUFFER_SIZE];
+        char type[MAX_BUFFER_SIZE];
+        char interface[MAX_BUFFER_SIZE];
+        char state[MAX_BUFFER_SIZE];
+    } network;
 
     struct {
-        char DEVICE[MAX_BUFFER_SIZE];
-        char HDMI[MAX_BUFFER_SIZE];
-        int16_t BRIGHT;
-        int16_t ROTATE;
-        int16_t ROTATE_PIVOT_X;
-        int16_t ROTATE_PIVOT_Y;
-        int16_t RENDER_OFFSET_X;
-        int16_t RENDER_OFFSET_Y;
-        int16_t WAIT;
-        int16_t WIDTH;
-        int16_t HEIGHT;
-        float ZOOM;
-        float ZOOM_WIDTH;
-        float ZOOM_HEIGHT;
+        char device[MAX_BUFFER_SIZE];
+        char hdmi[MAX_BUFFER_SIZE];
+        int16_t bright;
+        int16_t rotate;
+        int16_t rotate_pivot_x;
+        int16_t rotate_pivot_y;
+        int16_t render_offset_x;
+        int16_t render_offset_y;
+        int16_t wait;
+        int16_t width;
+        int16_t height;
+        float zoom;
+        float zoom_width;
+        float zoom_height;
         struct {
-            int16_t WIDTH;
-            int16_t HEIGHT;
-        } INTERNAL;
+            int16_t width;
+            int16_t height;
+        } internal;
         struct {
-            int16_t WIDTH;
-            int16_t HEIGHT;
-        } EXTERNAL;
-    } SCREEN;
+            int16_t width;
+            int16_t height;
+        } external;
+    } screen;
 
     struct {
-        int16_t SCALER;
-        int16_t ROTATE;
-    } SDL;
+        int16_t scaler;
+        int16_t rotate;
+    } sdl;
 
     struct {
-        int16_t RED;
-        int16_t GREEN;
-        int16_t BLUE;
-    } COLOUR;
+        int16_t red;
+        int16_t green;
+        int16_t blue;
+    } colour;
 
     struct {
-        char CAPACITY[MAX_BUFFER_SIZE];
-        char HEALTH[MAX_BUFFER_SIZE];
-        char VOLTAGE[MAX_BUFFER_SIZE];
-        char CHARGER[MAX_BUFFER_SIZE];
-        int16_t VOLT_MIN;
-        int16_t VOLT_MAX;
-        int16_t SIZE;
+        char capacity[MAX_BUFFER_SIZE];
+        char health[MAX_BUFFER_SIZE];
+        char voltage[MAX_BUFFER_SIZE];
+        char charger[MAX_BUFFER_SIZE];
+        int16_t volt_min;
+        int16_t volt_max;
+        int16_t size;
         struct {
-            char CHARGE[MAX_BUFFER_SIZE];
-            char DISCHARGE[MAX_BUFFER_SIZE];
-        } CURVE;
-    } BATTERY;
+            char charge[MAX_BUFFER_SIZE];
+            char discharge[MAX_BUFFER_SIZE];
+        } curve;
+    } battery;
 };
 
 void load_device(struct mux_device *device);

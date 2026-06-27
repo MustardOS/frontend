@@ -27,15 +27,15 @@ LV_EXPORT_CONST_INT(LV_MSG_ID_ANY);
  **********************/
 
 typedef struct {
-    uint32_t id;            /*Identifier of the message*/
-    void * user_data;       /*Set the the user_data set in `lv_msg_subscribe`*/
-    void * _priv_data;      /*Used internally*/
-    const void * payload;   /*Pointer to the data of the message*/
+    uint32_t id;         /*Identifier of the message*/
+    void *user_data;     /*Set the the user_data set in `lv_msg_subscribe`*/
+    void *_priv_data;    /*Used internally*/
+    const void *payload; /*Pointer to the data of the message*/
 } lv_msg_t;
 
-typedef void (*lv_msg_subscribe_cb_t)(void * s, lv_msg_t * msg);
+typedef void (*lv_msg_subscribe_cb_t)(void *s, lv_msg_t *msg);
 
-typedef void (*lv_msg_request_cb_t)(void * r, uint32_t msg_id);
+typedef void (*lv_msg_request_cb_t)(void *r, uint32_t msg_id);
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -53,7 +53,7 @@ void lv_msg_init(void);
  * @param user_data     arbitrary data which will be available in `cb` too
  * @return              pointer to a "subscribe object". It can be used the unsubscribe.
  */
-void * lv_msg_subsribe(uint32_t msg_id, lv_msg_subscribe_cb_t cb, void * user_data);
+void *lv_msg_subsribe(uint32_t msg_id, lv_msg_subscribe_cb_t cb, void *user_data);
 
 /**
  * Subscribe an `lv_obj` to a message.
@@ -63,14 +63,14 @@ void * lv_msg_subsribe(uint32_t msg_id, lv_msg_subscribe_cb_t cb, void * user_da
  * @param user_data     arbitrary data which will be available in `cb` too
  * @return              pointer to a "subscribe object". It can be used the unsubscribe.
  */
-void * lv_msg_subsribe_obj(uint32_t msg_id, lv_obj_t * obj, void * user_data);
+void *lv_msg_subsribe_obj(uint32_t msg_id, lv_obj_t *obj, void *user_data);
 
 /**
  * Cancel a previous subscription
  * @param s             pointer to a "subscibe object".
  *                      Return value of `lv_msg_subsribe` or `lv_msg_subsribe_obj`
  */
-void lv_msg_unsubscribe(void * s);
+void lv_msg_unsubscribe(void *s);
 
 /**
  * Unsubscribe an object from a message ID
@@ -78,51 +78,49 @@ void lv_msg_unsubscribe(void * s);
  * @param obj           the object to unsubscribe or NULL for any object
  * @return              number of unsubscriptions
  */
-uint32_t lv_msg_unsubscribe_obj(uint32_t msg_id, lv_obj_t * obj);
+uint32_t lv_msg_unsubscribe_obj(uint32_t msg_id, lv_obj_t *obj);
 
 /**
  * Send a message with a given ID and payload
  * @param msg_id        ID of the message to send
  * @param data          pointer to the data to send
  */
-void lv_msg_send(uint32_t msg_id, const void * payload);
+void lv_msg_send(uint32_t msg_id, const void *payload);
 
 /**
  * Get the ID of a message object. Typically used in the subscriber callback.
  * @param m             pointer to a message object
  * @return              the ID of the message
  */
-uint32_t lv_msg_get_id(lv_msg_t * m);
+uint32_t lv_msg_get_id(lv_msg_t *m);
 
 /**
  * Get the payload of a message object. Typically used in the subscriber callback.
  * @param m             pointer to a message object
  * @return              the payload of the message
  */
-const void * lv_msg_get_payload(lv_msg_t * m);
+const void *lv_msg_get_payload(lv_msg_t *m);
 
 /**
  * Get the user data of a message object. Typically used in the subscriber callback.
  * @param m             pointer to a message object
  * @return              the user data of the message
  */
-void * lv_msg_get_user_data(lv_msg_t * m);
+void *lv_msg_get_user_data(lv_msg_t *m);
 
 /**
  * Get the message object from an event object. Can be used in `LV_EVENT_MSG_RECEIVED` events.
  * @param e     pointer to an event object
  * @return      the message object or NULL if called with unrelated event code.
  */
-lv_msg_t * lv_event_get_msg(lv_event_t * e);
+lv_msg_t *lv_event_get_msg(lv_event_t *e);
 
 /*Fix typo*/
-static inline void * lv_msg_subscribe(uint32_t msg_id, lv_msg_subscribe_cb_t cb, void * user_data)
-{
+static inline void *lv_msg_subscribe(uint32_t msg_id, lv_msg_subscribe_cb_t cb, void *user_data) {
     return lv_msg_subsribe(msg_id, cb, user_data);
 }
 
-static inline void * lv_msg_subscribe_obj(uint32_t msg_id, lv_obj_t * obj, void * user_data)
-{
+static inline void *lv_msg_subscribe_obj(uint32_t msg_id, lv_obj_t *obj, void *user_data) {
     return lv_msg_subsribe_obj(msg_id, obj, user_data);
 }
 
