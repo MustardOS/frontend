@@ -119,10 +119,11 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_dro_hk_dpad_tweakgen, device.board.has_stick > 0 ? 0 : config.settings.general.hkdpad);
     lv_dropdown_set_selected(ui_dro_hk_shot_tweakgen, config.settings.general.hkshot);
 
-    if (audio_sink_count > 0)
-        lv_dropdown_set_selected(
-            ui_dro_audio_sink_tweakgen, clamp_range(config.settings.general.audiosink, 0, audio_sink_count - 1)
-        );
+    if (audio_sink_count > 0) {
+        const int active_sink =
+            read_line_int_from(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
+        lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamp_range(active_sink, 0, audio_sink_count - 1));
+    }
 
     lv_dropdown_set_selected(
         ui_dro_startup_tweakgen, strcasecmp(config.settings.general.startup, "explore") == 0      ? 1
