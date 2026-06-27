@@ -1084,7 +1084,7 @@ void init_ui_common_screen(
         ui_bar_progress_brightness, lv_color_hex(theme->bar.progress_main_background), MU_OBJ_MAIN_DEFAULT
     );
     lv_obj_set_style_bg_opa(ui_bar_progress_brightness, theme->bar.progress_main_background_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_radius(ui_bar_progress_brightness, 0, MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_radius(ui_bar_progress_brightness, theme->bar.progress_radius, MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_color(
         ui_bar_progress_brightness, lv_color_hex(theme->bar.progress_active_background), MU_OBJ_INDI_DEFAULT
     );
@@ -1131,7 +1131,7 @@ void init_ui_common_screen(
         ui_bar_progress_volume, lv_color_hex(theme->bar.progress_main_background), MU_OBJ_MAIN_DEFAULT
     );
     lv_obj_set_style_bg_opa(ui_bar_progress_volume, theme->bar.progress_main_background_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_radius(ui_bar_progress_volume, 0, MU_OBJ_INDI_DEFAULT);
+    lv_obj_set_style_radius(ui_bar_progress_volume, theme->bar.progress_radius, MU_OBJ_INDI_DEFAULT);
     lv_obj_set_style_bg_color(
         ui_bar_progress_volume, lv_color_hex(theme->bar.progress_active_background), MU_OBJ_INDI_DEFAULT
     );
@@ -1242,6 +1242,40 @@ static int blank_check(void) {
     return is_blank;
 }
 
+#define PROGRESS_FADE_TIME 200
+
+static void progress_fade_exec_cb(void *var, const int32_t value) {
+    lv_obj_set_style_opa(var, (lv_opa_t) value, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void progress_fade_ready_cb(const lv_anim_t *a) {
+    lv_obj_t *obj = a->var;
+    lv_obj_add_flag(obj, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_set_style_opa(obj, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+}
+
+void ui_common_progress_fade_out(lv_obj_t *obj) {
+    if (!obj || !lv_obj_is_valid(obj)) return;
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN)) return;
+    if (lv_anim_get(obj, progress_fade_exec_cb)) return;
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_values(&a, LV_OPA_COVER, LV_OPA_TRANSP);
+    lv_anim_set_time(&a, PROGRESS_FADE_TIME);
+    lv_anim_set_exec_cb(&a, progress_fade_exec_cb);
+    lv_anim_set_ready_cb(&a, progress_fade_ready_cb);
+    lv_anim_start(&a);
+}
+
+static void progress_show(lv_obj_t *show, lv_obj_t *hide) {
+    lv_obj_add_flag(hide, LV_OBJ_FLAG_HIDDEN);
+    lv_anim_del(show, progress_fade_exec_cb);
+    lv_obj_set_style_opa(show, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+}
+
 static void adjust_brightness(const int direction) {
     if (!ui_common_check(0) || !progress_onscreen) return;
 
@@ -1268,14 +1302,13 @@ static void adjust_brightness(const int direction) {
 
     update_glyph(ui_ico_progress_brightness, "bar", glyph);
 
-    lv_obj_add_flag(ui_pnl_progress_volume, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnl_progress_brightness, LV_OBJ_FLAG_HIDDEN);
+    progress_show(ui_pnl_progress_brightness, ui_pnl_progress_volume);
 
     brightness_changed = 1;
 }
 
 static void adjust_volume(const int direction) {
-    if (!progress_onscreen) return;
+    if (!ui_common_check(0) || !progress_onscreen) return;
 
     const int inc_volume = config.settings.advanced.inc_volume;
 
@@ -1300,8 +1333,7 @@ static void adjust_volume(const int direction) {
 
     update_glyph(ui_ico_progress_volume, "bar", glyph);
 
-    lv_obj_add_flag(ui_pnl_progress_brightness, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnl_progress_volume, LV_OBJ_FLAG_HIDDEN);
+    progress_show(ui_pnl_progress_volume, ui_pnl_progress_brightness);
 
     volume_changed = 1;
 }
@@ -1627,7 +1659,7 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
     }
 }
 
-static void hide_message(lv_timer_t *msg_timer) {
+static void hide_message(const lv_timer_t *msg_timer) {
     lv_obj_t *target_obj = msg_timer->user_data;
     lv_obj_set_style_opa(target_obj, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 

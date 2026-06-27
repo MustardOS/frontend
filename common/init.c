@@ -472,7 +472,7 @@ void status_task(const lv_timer_t *timer) {
         lv_obj_t *obj = panels[i];
         if (obj && lv_obj_is_valid(obj)) {
             if (!lv_obj_has_flag(obj, MU_OBJ_FLAG_HIDE_FLOAT)) {
-                lv_obj_add_flag(obj, MU_OBJ_FLAG_HIDE_FLOAT);
+                ui_common_progress_fade_out(obj);
             }
         }
     }

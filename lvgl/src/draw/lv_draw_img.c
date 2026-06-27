@@ -106,7 +106,7 @@ void lv_draw_img(lv_draw_ctx_t *draw_ctx, const lv_draw_img_dsc_t *dsc, const lv
         lv_draw_img_dsc_t shadow_dsc = *dsc;
         shadow_dsc.recolor = dsc->effect_color;
         shadow_dsc.recolor_opa = LV_OPA_COVER;
-        shadow_dsc.opa = dsc->effect_opa;
+        shadow_dsc.opa = (lv_opa_t) ((dsc->effect_opa * dsc->opa) >> 8);
         shadow_dsc.effect_type = 0;
         lv_area_t shadow_coords = *coords;
         shadow_coords.x1 += dsc->effect_x_offset;

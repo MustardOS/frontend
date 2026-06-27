@@ -133,7 +133,7 @@ void lv_draw_sdl_composite_end(lv_draw_sdl_ctx_t *ctx, const lv_area_t *apply_ar
 #if LV_GPU_SDL_CUSTOM_BLEND_MODE
     if (internals->mask) {
         SDL_BlendMode mode = SDL_ComposeCustomBlendMode(
-            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO,
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO,
             SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD
         );
         SDL_SetTextureBlendMode(internals->mask, mode);
