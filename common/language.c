@@ -938,15 +938,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxhdmi.colour.range.title, "Colour Range");
     SPECIFIC_FIELD(lang->muxhdmi.colour.range.full, "Full");
     SPECIFIC_FIELD(lang->muxhdmi.colour.range.limited, "Limited");
-    SPECIFIC_FIELD(lang->muxhdmi.audio_output.title, "Audio Output");
-    SPECIFIC_FIELD(lang->muxhdmi.audio_output.external, "External");
-    SPECIFIC_FIELD(lang->muxhdmi.audio_output.internal, "Internal");
     SPECIFIC_FIELD(lang->muxhdmi.scan_scale.title, "Scan Scaling");
     SPECIFIC_FIELD(lang->muxhdmi.scan_scale.over, "Over");
     SPECIFIC_FIELD(lang->muxhdmi.scan_scale.under, "Under");
-    SPECIFIC_FIELD(
-        lang->muxhdmi.help.audio, "Switch between device speaker or external monitor audio via HDMI connection"
-    );
     SPECIFIC_FIELD(lang->muxhdmi.help.resolution, "Select the resolution for HDMI output, such as 720p or 1080p");
     SPECIFIC_FIELD(lang->muxhdmi.help.scan, "Switch between overscan or underscan to fit the display screen");
     SPECIFIC_FIELD(lang->muxhdmi.help.depth, "Set the colour depth, such as 8-bit or 10-bit");

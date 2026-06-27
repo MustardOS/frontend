@@ -43,7 +43,6 @@ static void save_hdmi_options(void) {
     CHECK_AND_SAVE_STD(hdmi, depth, "settings/hdmi/depth", INT, 0);
     CHECK_AND_SAVE_STD(hdmi, range, "settings/hdmi/range", INT, 0);
     CHECK_AND_SAVE_STD(hdmi, scan, "settings/hdmi/scan", INT, 0);
-    CHECK_AND_SAVE_STD(hdmi, audio, "settings/hdmi/audio", INT, 0);
 
     if (is_modified > 0) {
         toast_message(lang.generic.saving, tst_wait_f);
@@ -58,18 +57,9 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
     char *hdmi_resolution[] = {
-        "480i",        "576i",       "480p", "576p",
-        "720p + 50hz", "720p + 60hz"
-        /* Unfortunately 1080 resolutions are still not possible with muX
-         * since the display is refreshing the entire full screen worth
-         * and that's just over 2m pixels every frame...
-         *
-         *            "1080i + 50hz",
-         *            "1080i + 60hz",
-         *            "1080p + 24hz",
-         *            "1080p + 50hz",
-         *            "1080p + 60hz"
-         */
+        "480i",         "576i",          "480p",          "576p",        "720p + 50hz",
+        "720p + 60hz",  "1080i + 50hz",  "1080i + 60hz",  "1080p + 24hz",
+        "1080p + 50hz", "1080p + 60hz",
     };
 
     char *hdmi_space[] = {"RGB", "YUV444", "YUV422", "YUV420"};
@@ -78,22 +68,15 @@ static void init_navigation_group(void) {
 
     char *hdmi_scan[] = {lang.muxhdmi.scan_scale.over, lang.muxhdmi.scan_scale.under};
 
-    char *hdmi_audio[] = {lang.muxhdmi.audio_output.external, lang.muxhdmi.audio_output.internal};
-
-    INIT_OPTION_ITEM(-1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, 6);
+    INIT_OPTION_ITEM(-1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, 11);
     INIT_OPTION_ITEM(-1, hdmi, space, lang.muxhdmi.colour.space, "space", hdmi_space, 4);
     INIT_OPTION_ITEM(-1, hdmi, depth, lang.muxhdmi.colour.depth, "depth", NULL, 0);
     INIT_OPTION_ITEM(-1, hdmi, range, lang.muxhdmi.colour.range.title, "range", hdmi_range, 2);
     INIT_OPTION_ITEM(-1, hdmi, scan, lang.muxhdmi.scan_scale.title, "scan", hdmi_scan, 2);
-    INIT_OPTION_ITEM(-1, hdmi, audio, lang.muxhdmi.audio_output.title, "audio", hdmi_audio, 2);
 
     char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_dro_depth_hdmi, depth_string);
     free(depth_string);
-
-    // Hide audio control since we can change it from the audio sink in
-    // general settings.  However this will stay for compatibility...
-    HIDE_OPTION_ITEM(hdmi, audio);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

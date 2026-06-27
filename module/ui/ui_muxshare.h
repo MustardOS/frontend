@@ -224,8 +224,7 @@
     HDMI(space, "space")                                                                                               \
     HDMI(depth, "depth")                                                                                               \
     HDMI(range, "range")                                                                                               \
-    HDMI(scan, "scan")                                                                                                 \
-    HDMI(audio, "audio")
+    HDMI(scan, "scan")
 
 #define INFO_ELEMENTS                                                                                                  \
     INFO(news, "news")                                                                                                 \

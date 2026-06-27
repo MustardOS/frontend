@@ -236,7 +236,6 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->settings.hdmi.depth, &d, "depth", 0);
     CFG_INT(config->settings.hdmi.range, &d, "range", 0);
     CFG_INT(config->settings.hdmi.scan, &d, "scan", 0);
-    CFG_INT(config->settings.hdmi.audio, &d, "audio", 0);
 
     // settings/network/
     cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/network");

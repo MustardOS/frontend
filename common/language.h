@@ -844,11 +844,6 @@ struct mux_lang {
         } colour;
         struct {
             char title[MAX_BUFFER_SIZE];
-            char external[MAX_BUFFER_SIZE];
-            char internal[MAX_BUFFER_SIZE];
-        } audio_output;
-        struct {
-            char title[MAX_BUFFER_SIZE];
             char over[MAX_BUFFER_SIZE];
             char under[MAX_BUFFER_SIZE];
         } scan_scale;
@@ -858,7 +853,6 @@ struct mux_lang {
             char depth[MAX_BUFFER_SIZE];
             char range[MAX_BUFFER_SIZE];
             char scan[MAX_BUFFER_SIZE];
-            char audio[MAX_BUFFER_SIZE];
         } help;
     } muxhdmi;
 

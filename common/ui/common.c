@@ -1275,7 +1275,7 @@ static void adjust_brightness(const int direction) {
 }
 
 static void adjust_volume(const int direction) {
-    if (!ui_common_check(config.settings.hdmi.audio) || !progress_onscreen) return;
+    if (!progress_onscreen) return;
 
     const int inc_volume = config.settings.advanced.inc_volume;
 
