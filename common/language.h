@@ -1734,6 +1734,7 @@ struct mux_lang {
         char incbright[MAX_BUFFER_SIZE];
         char incvolume[MAX_BUFFER_SIZE];
         char maxgpu[MAX_BUFFER_SIZE];
+        char doublebuffer[MAX_BUFFER_SIZE];
         char audioready[MAX_BUFFER_SIZE];
         char audioswap[MAX_BUFFER_SIZE];
         char audiosuspend[MAX_BUFFER_SIZE];
@@ -1805,6 +1806,7 @@ struct mux_lang {
             char inc_bright[MAX_BUFFER_SIZE];
             char inc_volume[MAX_BUFFER_SIZE];
             char max_gpu[MAX_BUFFER_SIZE];
+            char double_buffer[MAX_BUFFER_SIZE];
             char audio_ready[MAX_BUFFER_SIZE];
             char audio_swap[MAX_BUFFER_SIZE];
             char audio_suspend[MAX_BUFFER_SIZE];

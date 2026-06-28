@@ -174,10 +174,6 @@ void init_display(void) {
             LOG_INFO("video", "Overriding MUX resolution for HDMI: %dx%d", ext_w, ext_h);
             device.mux.width = (int16_t) ext_w;
             device.mux.height = (int16_t) ext_h;
-            int lines = (int) (1024 * 1024 / ((uint32_t) device.mux.width * sizeof(lv_color_t)));
-            if (lines < 10) lines = 10;
-            if (lines > device.mux.height) lines = device.mux.height;
-            device.mux.buffer = (int16_t) lines;
         } else {
             LOG_WARN("video", "Failed to read HDMI external resolution, using default MUX size");
         }
@@ -191,18 +187,23 @@ void init_display(void) {
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
 
-    uint32_t disp_buf_lines = (uint32_t) device.mux.buffer;
+    const int double_buffer = config.settings.advanced.double_buffer;
+    uint32_t disp_buf_lines = (uint32_t) device.mux.height;
 
     uint32_t disp_buf_size = (uint32_t) device.mux.width * disp_buf_lines;
     size_t disp_buf_bytes = (size_t) disp_buf_size * sizeof(lv_color_t);
 
-    LOG_INFO("init", "Draw buffer: %u lines (%lu KB)", disp_buf_lines, disp_buf_bytes / 1024);
+    LOG_INFO(
+        "init", "Draw buffer: %s, %u lines (%lu KB)", double_buffer ? "double" : "single", disp_buf_lines,
+        disp_buf_bytes / 1024
+    );
 
     static lv_color_t *disp_buf_s1 = NULL;
     static lv_color_t *disp_buf_s2 = NULL;
     static uint32_t disp_buf_pixels = 0;
+    static int disp_buf_double = -1;
 
-    if (__builtin_expect(disp_buf_size != disp_buf_pixels, 0)) {
+    if (__builtin_expect(disp_buf_size != disp_buf_pixels || double_buffer != disp_buf_double, 0)) {
         free(disp_buf_s1);
         free(disp_buf_s2);
 
@@ -210,9 +211,9 @@ void init_display(void) {
         disp_buf_s2 = NULL;
 
         if (posix_memalign((void **) &disp_buf_s1, 64, disp_buf_bytes) != 0) disp_buf_s1 = NULL;
-        if (posix_memalign((void **) &disp_buf_s2, 64, disp_buf_bytes) != 0) disp_buf_s2 = NULL;
+        if (double_buffer && posix_memalign((void **) &disp_buf_s2, 64, disp_buf_bytes) != 0) disp_buf_s2 = NULL;
 
-        if (!disp_buf_s1 || !disp_buf_s2) {
+        if (!disp_buf_s1 || (double_buffer && !disp_buf_s2)) {
             LOG_ERROR("init", "Failed to allocate display buffer(s)!");
             LOG_ERROR("init", "Requested %zu KB each. Out of memory?", disp_buf_bytes / 1024);
 
@@ -226,9 +227,10 @@ void init_display(void) {
         }
 
         memset(disp_buf_s1, 0, disp_buf_bytes);
-        memset(disp_buf_s2, 0, disp_buf_bytes);
+        if (disp_buf_s2) memset(disp_buf_s2, 0, disp_buf_bytes);
 
         disp_buf_pixels = disp_buf_size;
+        disp_buf_double = double_buffer;
     }
 
     lv_disp_draw_buf_init(&disp_buf, disp_buf_s1, disp_buf_s2, disp_buf_size);

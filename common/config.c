@@ -154,6 +154,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->settings.advanced.inc_bright, &d, "incbright", 16);
     CFG_INT(config->settings.advanced.inc_volume, &d, "incvolume", 8);
     CFG_INT(config->settings.advanced.max_gpu, &d, "maxgpu", 0);
+    CFG_INT(config->settings.advanced.double_buffer, &d, "double_buffer", 0);
     CFG_INT(config->settings.advanced.audio_ready, &d, "audio_ready", 0);
     CFG_INT(config->settings.advanced.audio_swap, &d, "audio_swap", 0);
     CFG_INT(config->settings.advanced.audio_suspend, &d, "audio_suspend", 1);

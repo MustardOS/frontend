@@ -529,7 +529,8 @@ void sdl_init(void) {
     SDL_RendererInfo info;
     SDL_GetRendererInfo(monitor.renderer, &info);
 
-    LOG_INFO("video", "SDL Renderer: %s (%dx%d)", info.name, out_w, out_h);
+    LOG_INFO("video", "SDL Renderer Method: %s (%dx%d)", info.name, out_w, out_h);
+    LOG_INFO("video", "SDL Renderer Texture: %dx%d", info.max_texture_width, info.max_texture_height);
 
     reload_background(config.theme.active);
     reload_saver();

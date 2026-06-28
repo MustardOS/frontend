@@ -503,6 +503,7 @@
     TWEAKADV(inc_bright, "incbright")                                                                                  \
     TWEAKADV(inc_volume, "incvolume")                                                                                  \
     TWEAKADV(max_gpu, "maxgpu")                                                                                        \
+    TWEAKADV(double_buffer, "doublebuffer")                                                                            \
     TWEAKADV(audio_ready, "audioready")                                                                                \
     TWEAKADV(audio_swap, "audioswap")                                                                                  \
     TWEAKADV(audio_suspend, "audiosuspend")                                                                            \

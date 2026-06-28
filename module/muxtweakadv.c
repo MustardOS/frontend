@@ -112,6 +112,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, disp_suspend, "settings/advanced/disp_suspend", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, stage_overlay, "settings/advanced/stage_overlay", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, max_gpu, "settings/advanced/maxgpu", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, double_buffer, "settings/advanced/double_buffer", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, audio_ready, "settings/advanced/audio_ready", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, audio_swap, "settings/advanced/audio_swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, audio_suspend, "settings/advanced/audio_suspend", INT, 0);
@@ -236,6 +237,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, inc_bright, lang.muxtweakadv.incbright, "incbright", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, inc_volume, lang.muxtweakadv.incvolume, "incvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, max_gpu, lang.muxtweakadv.maxgpu, "maxgpu", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, double_buffer, lang.muxtweakadv.doublebuffer, "doublebuffer", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, audio_ready, lang.muxtweakadv.audioready, "audioready", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, audio_swap, lang.muxtweakadv.audioswap, "audioswap", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, audio_suspend, lang.muxtweakadv.audiosuspend, "audiosuspend", disabled_enabled, 2);

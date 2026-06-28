@@ -1917,6 +1917,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxtweakadv.incbright, "Brightness Increment");
     SPECIFIC_FIELD(lang->muxtweakadv.incvolume, "Volume Increment");
     SPECIFIC_FIELD(lang->muxtweakadv.maxgpu, "GPU Performance Mode");
+    SPECIFIC_FIELD(lang->muxtweakadv.doublebuffer, "Double Buffering");
     SPECIFIC_FIELD(lang->muxtweakadv.audioready, "Audio Subsystem Wait");
     SPECIFIC_FIELD(lang->muxtweakadv.audioswap, "Audio Reverse");
     SPECIFIC_FIELD(lang->muxtweakadv.audiosuspend, "Audio Suspend");
@@ -1997,6 +1998,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxtweakadv.help.inc_bright, "Change the level of brightness incrementation when adjusting");
     SPECIFIC_FIELD(lang->muxtweakadv.help.inc_volume, "Change the level of volume incrementation when adjusting");
     SPECIFIC_FIELD(lang->muxtweakadv.help.max_gpu, "Push the onboard GPU to the maximum frequency at all times");
+    SPECIFIC_FIELD(
+        lang->muxtweakadv.help.double_buffer,
+        "Allocate a second fullscreen draw buffer. Uses more memory and is mainly for debugging\n\nLeave "
+        "disabled unless comparing rendering behaviour!\n\nTakes effect on next launch"
+    );
     SPECIFIC_FIELD(
         lang->muxtweakadv.help.audio_ready,
         "Toggle if the device will wait for the audio subsystem to initialise during boot"

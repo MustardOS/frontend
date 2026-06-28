@@ -147,6 +147,7 @@ struct mux_config {
             int16_t inc_bright;
             int16_t inc_volume;
             int16_t max_gpu;
+            int16_t double_buffer;
             int16_t audio_ready;
             int16_t audio_swap;
             int16_t audio_suspend;
