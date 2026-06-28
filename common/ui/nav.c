@@ -513,22 +513,40 @@ static void focus_bounce_x_cb(void *obj, const int32_t v) {
     lv_obj_set_style_translate_x(obj, v, MU_OBJ_MAIN_DEFAULT);
 }
 
+static lv_area_t bounce_inv_prev;
+static int bounce_inv_prev_valid = 0;
+
+static void invalidate_focus_area(lv_obj_t *o) {
+    lv_obj_t *parent = lv_obj_get_parent(o);
+    if (!parent) return;
+
+    lv_area_t cur;
+    lv_obj_get_coords(o, &cur);
+    lv_obj_get_transformed_area(o, &cur, 0, 0);
+
+    lv_obj_invalidate_area(parent, &cur);
+    if (bounce_inv_prev_valid) lv_obj_invalidate_area(parent, &bounce_inv_prev);
+
+    bounce_inv_prev = cur;
+    bounce_inv_prev_valid = 1;
+}
+
 static void focus_outward_cb(void *obj, const int32_t v) {
     lv_obj_t *o = obj;
     lv_obj_set_style_transform_zoom(o, 256 + v, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_invalidate(lv_obj_get_parent(o));
+    invalidate_focus_area(o);
 }
 
 static void focus_wobble_cb(void *obj, const int32_t v) {
     lv_obj_t *o = obj;
     lv_obj_set_style_transform_angle(o, v, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_invalidate(lv_obj_get_parent(o));
+    invalidate_focus_area(o);
 }
 
 static void focus_shrink_cb(void *obj, const int32_t v) {
     lv_obj_t *o = obj;
     lv_obj_set_style_transform_zoom(o, 256 - v, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_invalidate(lv_obj_get_parent(o));
+    invalidate_focus_area(o);
 }
 
 static void reset_bounce_styles(lv_obj_t *obj) {
@@ -582,6 +600,8 @@ void nav_focus_bounce_cb(const lv_group_t *group) {
 
     lv_anim_del(focused, exec_cb);
     reset_bounce_styles(focused);
+
+    bounce_inv_prev_valid = 0;
 
     int travel;
     if (exec_cb == focus_outward_cb || exec_cb == focus_wobble_cb || exec_cb == focus_shrink_cb) {
