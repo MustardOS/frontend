@@ -169,7 +169,7 @@ static void init_navigation_group(void) {
     //     lang.generic.shrink
     // };
 
-    char *bounce_direction[] = {lang.generic.vertical, lang.generic.horizontal};
+    char *bounce_direction[] = {lang.generic.horizontal, lang.generic.vertical};
 
     INIT_OPTION_ITEM(-1, visual, sort, lang.muxvisual.sort, "sort", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, battery, lang.muxvisual.battery, "battery", battery_display, 3);

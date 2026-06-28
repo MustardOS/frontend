@@ -367,7 +367,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->visual.label_scroll_speed, &d, "labelscrollspeed", 2);
     CFG_INT(config->visual.list_glyph, &d, "listglyph", 1);
     CFG_INT(config->visual.selection_animation, &d, "selectionanimation", 2);
-    CFG_INT(config->visual.selection_style, &d, "selectionstyle", 4);
+    CFG_INT(config->visual.selection_style, &d, "selectionstyle", 1);
     CFG_INT(config->visual.render_shadows, &d, "shadow", 1);
 
     // bluetooth/
