@@ -81,6 +81,7 @@ int lv_draw_sdl_composite_begin(
 
     const int draw_mask = has_mask && LV_GPU_SDL_CUSTOM_BLEND_MODE;
     const int draw_blend = blend_mode != LV_BLEND_MODE_NORMAL;
+    int composited = 0;
     if (draw_mask || draw_blend) {
         lv_draw_sdl_context_internals_t *internals = ctx->internals;
         LV_ASSERT(internals->mask == NULL && internals->composition == NULL && internals->target_backup == NULL);
@@ -89,25 +90,33 @@ int lv_draw_sdl_composite_begin(
         internals->composition = lv_draw_sdl_composite_texture_obtain(
             ctx, LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_TARGET0, w, h, &internals->composition_cached
         );
-        /* Don't need to worry about integral overflow */
-        lv_coord_t ofs_x = (lv_coord_t) -apply_area->x1, ofs_y = (lv_coord_t) -apply_area->y1;
-        /* Offset draw area to start with (0,0) of coords */
-        lv_area_move(coords_out, ofs_x, ofs_y);
-        lv_area_move(clip_out, ofs_x, ofs_y);
-        internals->target_backup = SDL_GetRenderTarget(ctx->renderer);
-        SDL_SetRenderTarget(ctx->renderer, internals->composition);
-        SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 0);
-        /* SDL_RenderClear is not working properly, so we overwrite the target with solid color */
-        SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
-        SDL_RenderFillRect(ctx->renderer, NULL);
-        SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
+
+        if (internals->composition != NULL) {
+            composited = 1;
+            // Don't need to worry about integral overflow even if it does complain...
+            lv_coord_t ofs_x = (lv_coord_t) -apply_area->x1, ofs_y = (lv_coord_t) -apply_area->y1;
+
+            lv_area_move(coords_out, ofs_x, ofs_y);
+            lv_area_move(clip_out, ofs_x, ofs_y);
+
+            internals->target_backup = SDL_GetRenderTarget(ctx->renderer);
+            SDL_SetRenderTarget(ctx->renderer, internals->composition);
+            SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 0);
+
+            // SDL_RenderClear doesn't seem to work properly with some GPU rendering mechanisms,
+            // so we'll overwrite the target with a solid color(s)
+            SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
+            SDL_RenderFillRect(ctx->renderer, NULL);
+            SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
 #if LV_GPU_SDL_CUSTOM_BLEND_MODE
-        internals->mask = lv_draw_sdl_composite_texture_obtain(
-            ctx, LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_STREAM0, w, h, &internals->composition_cached
-        );
-        dump_masks(internals->mask, apply_area);
+            internals->mask = lv_draw_sdl_composite_texture_obtain(
+                ctx, LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_STREAM0, w, h, &internals->composition_cached
+            );
+            if (internals->mask) dump_masks(internals->mask, apply_area);
 #endif
-    } else if (has_mask) {
+        }
+    }
+    if (!composited && has_mask) {
         /* Fallback mask handling. This will at least make bars looks less bad */
         for (uint8_t i = 0; i < _LV_MASK_MAX_NUM; i++) {
             _lv_draw_mask_common_dsc_t *comm_param = LV_GC_ROOT(_lv_draw_mask_list[i]).param;
@@ -208,16 +217,20 @@ SDL_Texture *lv_draw_sdl_composite_texture_obtain(
     SDL_Texture *result =
         lv_draw_sdl_texture_cache_get_with_userdata(ctx, &mask_key, sizeof(composite_key_t), NULL, (void **) &tex_size);
     if (result == NULL || tex_size->x < w || tex_size->y < h) {
-        lv_coord_t size = next_pow_of_2(LV_MAX(w, h));
+        lv_coord_t cur_w = (result != NULL && tex_size != NULL) ? tex_size->x : 0;
+        lv_coord_t cur_h = (result != NULL && tex_size != NULL) ? tex_size->y : 0;
+        lv_coord_t tw = next_pow_of_2(LV_MAX(w, cur_w));
+        lv_coord_t th = next_pow_of_2(LV_MAX(h, cur_h));
         int access = SDL_TEXTUREACCESS_STREAMING;
         if (id >= LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_TRANSFORM0) {
             access = SDL_TEXTUREACCESS_TARGET;
         } else if (id >= LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_TARGET0) {
             access = SDL_TEXTUREACCESS_TARGET;
         }
-        result = SDL_CreateTexture(ctx->renderer, LV_DRAW_SDL_TEXTURE_FORMAT, access, size, size);
+        result = SDL_CreateTexture(ctx->renderer, LV_DRAW_SDL_TEXTURE_FORMAT, access, tw, th);
         tex_size = lv_mem_alloc(sizeof(lv_point_t));
-        tex_size->x = tex_size->y = size;
+        tex_size->x = tw;
+        tex_size->y = th;
         int in_cache = lv_draw_sdl_texture_cache_put_advanced(
             ctx, &mask_key, sizeof(composite_key_t), result, tex_size, lv_mem_free, 0
         );
@@ -259,9 +272,20 @@ static void dump_masks(SDL_Texture *texture, const lv_area_t *coords) {
     lv_coord_t w = lv_area_get_width(coords), h = lv_area_get_height(coords);
     SDL_assert(w > 0 && h > 0);
     SDL_Rect rect = {0, 0, w, h};
-    uint8_t *pixels;
-    int pitch;
-    if (SDL_LockTexture(texture, &rect, (void **) &pixels, &pitch) != 0) return;
+    uint8_t *pixels = NULL;
+    int pitch = 0;
+
+    // Some GPU drivers cannot lock streaming textures, in which case the SDL_LockTexture fails and the
+    // cached mask texture keeps stale contents.  So instead we'll just fall back to building the mask
+    // in a CPU buffer and pushing it with SDL_UpdateTexture, which seems to be reliable across GPU
+    // rendering mechanisms.  The lock path stays the fast default when it works...
+    uint8_t *owned = NULL;
+    if (SDL_LockTexture(texture, &rect, (void **) &pixels, &pitch) != 0) {
+        pitch = rect.w * 4;
+        owned = lv_mem_buf_get((uint32_t) (pitch * rect.h));
+        if (!owned) return;
+        pixels = owned;
+    }
 
     lv_opa_t *line_buf = lv_mem_buf_get(rect.w);
     for (lv_coord_t y = 0; y < rect.h; y++) {
@@ -282,7 +306,13 @@ static void dump_masks(SDL_Texture *texture, const lv_area_t *coords) {
         }
     }
     lv_mem_buf_release(line_buf);
-    SDL_UnlockTexture(texture);
+
+    if (owned) {
+        SDL_UpdateTexture(texture, &rect, owned, pitch);
+        lv_mem_buf_release(owned);
+    } else {
+        SDL_UnlockTexture(texture);
+    }
 }
 
 #endif /*LV_USE_GPU_SDL*/
