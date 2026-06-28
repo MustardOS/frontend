@@ -19,7 +19,7 @@ static const char *get_profile_status(const char *profile_name) {
 
     mini_free(net);
 
-    if (priority < 0) priority = 0;
+    if (priority < 1) priority = 1;
     if (priority > 9) priority = 9;
 
     const char *active = config.network.ssid;
@@ -221,7 +221,7 @@ static void toggle_focused_autoconnect(void) {
     lv_obj_t *val = lv_group_get_focused(ui_group_value);
     if (!val) return;
 
-    if (priority < 0) priority = 0;
+    if (priority < 1) priority = 1;
     if (priority > 9) priority = 9;
 
     char status[MAX_BUFFER_SIZE];

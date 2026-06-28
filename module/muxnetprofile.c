@@ -9,7 +9,7 @@ enum { ui_count_dynamic = E_SIZE(NETWORK_ELEMENTS) };
 #define NET_SCRIPT "script/init/async/S02network.sh"
 
 const char *pass_args[] = {OPT_PATH "script/web/password.sh", NULL};
-const char *net_c_args[] = {OPT_PATH NET_SCRIPT, "start", NULL};
+const char *net_c_args[] = {OPT_PATH NET_SCRIPT, "connect", NULL};
 const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
 
 #define PASS_ENCODE "********"
@@ -344,7 +344,7 @@ static void restore_network_values(void) {
 
         int priority = (int) mini_get_int(net, "network", "priority", 5);
 
-        if (priority < 0) priority = 0;
+        if (priority < 1) priority = 1;
         if (priority > 9) priority = 9;
 
         char priority_buf[4];
@@ -426,22 +426,48 @@ static void save_network_config(void) {
 
     if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) idx_type = 1;
 
+    const char *ssid = lv_label_get_text(ui_val_identifier_network);
+    const char *pass = lv_label_get_text(ui_val_password_network);
+
     char esc_ssid[MAX_BUFFER_SIZE];
-    escape_wpa_string(lv_label_get_text(ui_val_identifier_network), esc_ssid);
+    char pass_buf[MAX_BUFFER_SIZE] = {0};
+
+    escape_wpa_string(ssid ? ssid : "", esc_ssid);
+
+    if (pass && strcasecmp(pass, PASS_ENCODE) == 0) {
+        char *profile_name_raw = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
+
+        if (profile_name_raw && *profile_name_raw) {
+            char profile_file[MAX_BUFFER_SIZE];
+            const int pf_len =
+                snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name_raw);
+
+            if (pf_len >= 0 && (size_t) pf_len < sizeof(profile_file)) {
+                mini_t *net = mini_try_load(profile_file);
+                snprintf(pass_buf, sizeof(pass_buf), "%s", mini_get_string(net, "network", "pass", ""));
+                mini_free(net);
+            }
+        }
+
+        free(profile_name_raw);
+    } else {
+        snprintf(pass_buf, sizeof(pass_buf), "%s", pass ? pass : "");
+    }
 
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type);
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, lv_label_get_text(ui_val_identifier_network));
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, ssid ? ssid : "");
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid);
-
-    if (strcasecmp(lv_label_get_text(ui_val_password_network), PASS_ENCODE) != 0) {
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, lv_label_get_text(ui_val_password_network));
-    }
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, pass_buf);
 
     if (idx_type) {
         write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, lv_label_get_text(ui_val_address_network));
         write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, lv_label_get_text(ui_val_subnet_network));
         write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, lv_label_get_text(ui_val_gateway_network));
         write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR, lv_label_get_text(ui_val_dns_network));
+    } else {
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, "");
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, "");
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, "");
     }
 
     refresh_config = 1;
@@ -586,9 +612,10 @@ static void handle_priority_change(const int delta) {
         return;
     }
 
-    int next = safe_atoi(lv_label_get_text(ui_val_priority_network), 0) + delta;
-    if (next < 0) next = 9;
-    if (next > 9) next = 0;
+    int next = safe_atoi(lv_label_get_text(ui_val_priority_network), 5) + delta;
+
+    if (next < 1) next = 9;
+    if (next > 9) next = 1;
 
     char buf[4];
     snprintf(buf, sizeof(buf), "%d", next);
