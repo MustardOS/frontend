@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <SDL2/SDL.h>
@@ -13,12 +14,12 @@
 #include "display.h"
 #include "config.h"
 
-#define DECODE_MS        10   // Decoding timer period
+#define PRESENT_MS       16   // Presentation timer period (main thread)
 #define FADE_STEP_MS     16   // How many ms between fade steps
 #define FADE_STEPS       24   // Fade steps... duh
 #define DIM_TARGET       160  // How much the background dims
-#define DECODE_AHEAD_MS  200  // Stop reading once video is this far ahead of clock
 #define DISPLAY_SLACK    5    // The frame when is "due" within this many ms
+#define LOOP_BACK_MS     500  // Backward PTS jump larger than this means the stream looped
 #define VFRAME_Q         12   // Decoded video frames buffered for ready display
 #define AUDIO_RING_SEC   3    // Audio ring capacity
 #define AUDIO_TMP_FRAMES 8192 // Conversion in stereo frames
@@ -31,8 +32,14 @@ static char saved_wall_path[MAX_BUFFER_SIZE];
 static char preview_pending_path[MAX_BUFFER_SIZE];
 
 static lv_timer_t *preview_timer = NULL;
-static lv_timer_t *decode_timer = NULL;
+static lv_timer_t *present_timer = NULL;
 static lv_timer_t *fade_timer = NULL;
+
+static SDL_Thread *decode_thread = NULL;
+static SDL_mutex *vq_lock = NULL;
+static SDL_cond *vq_cond = NULL;
+static volatile int decode_run = 0;
+static int64_t last_pts = INT64_MIN;
 
 static SDL_Renderer *sdl_ren = NULL;
 static SDL_Texture *video_tex = NULL;
@@ -109,13 +116,6 @@ static void vq_pop(void) {
     av_frame_unref(vq[vq_head]);
     vq_head = (vq_head + 1) % VFRAME_Q;
     vq_count--;
-}
-
-static void vq_clear(void) {
-    int n = vq_count;
-    while (n-- > 0)
-        vq_pop();
-    vq_head = vq_tail = 0;
 }
 
 static int ring_avail(void) {
@@ -432,7 +432,9 @@ static void decode_video_pkt(const AVPacket *pkt) {
     if (avcodec_send_packet(video_dec, pkt) < 0) return;
 
     while (avcodec_receive_frame(video_dec, av_frame) >= 0) {
+        if (vq_lock) SDL_LockMutex(vq_lock);
         vq_push(av_frame);
+        if (vq_lock) SDL_UnlockMutex(vq_lock);
     }
 }
 
@@ -446,50 +448,25 @@ static void restart_stream(void) {
         swr = NULL;
     }
 
-    vq_clear();
     SDL_LockAudio();
-
     ring_r = ring_w = 0;
     SDL_UnlockAudio();
-
-    play_start_ms = SDL_GetTicks();
 }
 
-static void decode_cb(lv_timer_t *t __attribute__((unused))) {
-    if (!fmt_ctx) return;
+static int decode_thread_fn(void *unused __attribute__((unused))) {
+    while (1) {
+        SDL_LockMutex(vq_lock);
+        while (decode_run && vq_count >= VFRAME_Q - 2)
+            SDL_CondWait(vq_cond, vq_lock);
+        const int run = decode_run;
+        SDL_UnlockMutex(vq_lock);
 
-    if (is_wallpaper) {
-        const uint32_t cur_ticks = SDL_GetTicks();
-        if (stall_last_ticks > 0 && cur_ticks - stall_last_ticks > 500) {
-            play_start_ms += cur_ticks - stall_last_ticks;
-        }
-        stall_last_ticks = cur_ticks;
-    }
-
-    const int64_t now = SDL_GetTicks() - play_start_ms;
-    int shown = 0;
-
-    while (vq_count > 0 && frame_pts_ms(vq_at(0)) <= now + DISPLAY_SLACK) {
-        if (vq_count >= 2 && frame_pts_ms(vq_at(1)) <= now + DISPLAY_SLACK) {
-            vq_pop();
-            continue;
-        }
-
-        video_upload(vq_at(0));
-        vq_pop();
-        shown = 1;
-
-        break;
-    }
-
-    int budget = is_wallpaper ? 4 : 24;
-    while (budget-- > 0 && vq_count <= VFRAME_Q - 2) {
-        if (vq_count > 0 && frame_pts_ms(vq_at(vq_count - 1)) > now + DECODE_AHEAD_MS) break;
+        if (!run) break;
 
         if (av_read_frame(fmt_ctx, av_pkt) < 0) {
             restart_stream();
             av_packet_unref(av_pkt);
-            break;
+            continue;
         }
 
         if (av_pkt->stream_index == video_si && video_dec) {
@@ -501,10 +478,105 @@ static void decode_cb(lv_timer_t *t __attribute__((unused))) {
         av_packet_unref(av_pkt);
     }
 
+    return 0;
+}
+
+static void present_cb(lv_timer_t *t __attribute__((unused))) {
+    if (!fmt_ctx) return;
+
+    if (is_wallpaper) {
+        const uint32_t cur_ticks = SDL_GetTicks();
+        if (stall_last_ticks > 0 && cur_ticks - stall_last_ticks > 500) {
+            play_start_ms += cur_ticks - stall_last_ticks;
+        }
+        stall_last_ticks = cur_ticks;
+    }
+
+    const AVFrame *to_upload = NULL;
+
+    SDL_LockMutex(vq_lock);
+
+    if (vq_count > 0) {
+        const int64_t head_pts = frame_pts_ms(vq_at(0));
+        if (last_pts != INT64_MIN && head_pts + LOOP_BACK_MS < last_pts) {
+            play_start_ms = SDL_GetTicks() - (uint32_t) (head_pts > 0 ? head_pts : 0);
+            last_pts = INT64_MIN;
+        }
+    }
+
+    const int64_t now = (int64_t) SDL_GetTicks() - (int64_t) play_start_ms;
+
+    while (vq_count > 0 && frame_pts_ms(vq_at(0)) <= now + DISPLAY_SLACK) {
+        if (vq_count >= 2 && frame_pts_ms(vq_at(1)) <= now + DISPLAY_SLACK) {
+            vq_pop();
+            continue;
+        }
+
+        to_upload = vq_at(0);
+        break;
+    }
+
+    SDL_UnlockMutex(vq_lock);
+
+    int shown = 0;
+
+    if (to_upload) {
+        last_pts = frame_pts_ms(to_upload);
+        video_upload(to_upload);
+
+        SDL_LockMutex(vq_lock);
+        vq_pop();
+
+        SDL_CondSignal(vq_cond);
+        SDL_UnlockMutex(vq_lock);
+
+        shown = 1;
+    }
+
     if (shown && has_frame) display_composite_frame();
 }
 
+static int start_decode_thread(void) {
+    vq_lock = SDL_CreateMutex();
+    vq_cond = SDL_CreateCond();
+
+    if (!vq_lock || !vq_cond) return 0;
+
+    decode_run = 1;
+    decode_thread = SDL_CreateThread(decode_thread_fn, "video_decode", NULL);
+    if (!decode_thread) {
+        decode_run = 0;
+        return 0;
+    }
+
+    return 1;
+}
+
+static void stop_decode_thread(void) {
+    if (decode_thread) {
+        SDL_LockMutex(vq_lock);
+        decode_run = 0;
+        SDL_CondSignal(vq_cond);
+        SDL_UnlockMutex(vq_lock);
+
+        SDL_WaitThread(decode_thread, NULL);
+        decode_thread = NULL;
+    }
+
+    if (vq_cond) {
+        SDL_DestroyCond(vq_cond);
+        vq_cond = NULL;
+    }
+
+    if (vq_lock) {
+        SDL_DestroyMutex(vq_lock);
+        vq_lock = NULL;
+    }
+}
+
 static void cleanup(void) {
+    stop_decode_thread();
+
     if (is_wallpaper) {
         display_clear_video_background();
     } else {
@@ -515,15 +587,16 @@ static void cleanup(void) {
     has_frame = 0;
     fade_step = 0;
     is_wallpaper = 0;
+    last_pts = INT64_MIN;
 
     if (fade_timer) {
         lv_timer_del(fade_timer);
         fade_timer = NULL;
     }
 
-    if (decode_timer) {
-        lv_timer_del(decode_timer);
-        decode_timer = NULL;
+    if (present_timer) {
+        lv_timer_del(present_timer);
+        present_timer = NULL;
     }
 
     Mix_HookMusic(NULL, NULL);
@@ -682,9 +755,14 @@ static void preview_open(void) {
     }
 
     play_start_ms = SDL_GetTicks();
+    last_pts = INT64_MIN;
+    stall_last_ticks = 0;
+
+    if (!start_decode_thread()) goto fail;
+
     display_set_video_overlay(sdl_overlay_cb);
 
-    decode_timer = lv_timer_create(decode_cb, DECODE_MS, NULL);
+    present_timer = lv_timer_create(present_cb, PRESENT_MS, NULL);
     fade_timer = lv_timer_create(fade_cb, FADE_STEP_MS, NULL);
 
     return;
@@ -770,8 +848,14 @@ static void wallpaper_open(void) {
         }
     }
 
+    play_start_ms = SDL_GetTicks();
+    last_pts = INT64_MIN;
+    stall_last_ticks = 0;
+
+    if (!start_decode_thread()) goto fail;
+
     display_set_video_background(wallpaper_cb);
-    decode_timer = lv_timer_create(decode_cb, 16, NULL);
+    present_timer = lv_timer_create(present_cb, PRESENT_MS, NULL);
     return;
 
 fail:
@@ -792,7 +876,7 @@ void video_wallpaper_stop(void) {
 }
 
 int video_wallpaper_active(void) {
-    return is_wallpaper && decode_timer != NULL;
+    return is_wallpaper && present_timer != NULL;
 }
 
 void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img) {
@@ -817,7 +901,7 @@ void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *con
 }
 
 int video_preview_active(void) {
-    return decode_timer != NULL && !is_wallpaper;
+    return present_timer != NULL && !is_wallpaper;
 }
 
 void video_preview_cancel(void) {
