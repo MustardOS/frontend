@@ -103,20 +103,13 @@ static void create_picker_items(void) {
 }
 
 static void do_remove(void) {
-    char zip_path[PATH_MAX];
-    const char *label = lv_label_get_text(lv_group_get_focused(ui_group));
-
-    if (strcasecmp(picker_extension, "muxcat") == 0) {
-        snprintf(
-            zip_path, sizeof(zip_path), "%s/%s/%s.%s", device.storage.rom.mount, STORE_LOC_PCAT, label, picker_extension
-        );
-    } else if (strcasecmp(picker_extension, "muxcfg") == 0) {
-        snprintf(
-            zip_path, sizeof(zip_path), "%s/%s/%s.%s", device.storage.rom.mount, STORE_LOC_PCON, label, picker_extension
-        );
-    } else {
+    if (strcasecmp(picker_extension, "muxcat") != 0 && strcasecmp(picker_extension, "muxcfg") != 0) {
         return;
     }
+
+    char zip_path[PATH_MAX];
+    const char *label = lv_label_get_text(lv_group_get_focused(ui_group));
+    snprintf(zip_path, sizeof(zip_path), "%s/%s.%s", sys_dir, label, picker_extension);
 
     if (!file_exist(zip_path)) {
         play_sound(snd_error);
