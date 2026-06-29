@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <errno.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <libavformat/avformat.h>
@@ -14,18 +15,22 @@
 #include "display.h"
 #include "config.h"
 
-#define PRESENT_MS       16   // Presentation timer period (main thread)
-#define FADE_STEP_MS     16   // How many ms between fade steps
-#define FADE_STEPS       24   // Fade steps... duh
-#define DIM_TARGET       160  // How much the background dims
-#define DISPLAY_SLACK    5    // The frame when is "due" within this many ms
-#define LOOP_BACK_MS     500  // Backward PTS jump larger than this means the stream looped
-#define VFRAME_Q         12   // Decoded video frames buffered for ready display
-#define AUDIO_RING_SEC   3    // Audio ring capacity
-#define AUDIO_TMP_FRAMES 8192 // Conversion in stereo frames
-#define VIDEO_BOX_PAD_H  60   // Padding on left/right
-#define VIDEO_BOX_PAD_V  70   // Padding on top/bottom
-#define VIDEO_CORNER_RAD 14   // Rounded corner radius on video
+#define PRESENT_MS               16   // Presentation timer period (main thread)
+#define FADE_STEP_MS             16   // How many ms between fade steps
+#define FADE_STEPS               24   // Fade steps... duh
+#define DIM_TARGET               160  // How much the background dims
+#define DISPLAY_SLACK            5    // The frame when is "due" within this many ms
+#define LOOP_BACK_MS             500  // Backward PTS jump larger than this means the stream looped
+#define VFRAME_Q                 12   // Decoded video frames buffered for ready display
+#define AUDIO_RING_SEC           3    // Audio ring capacity
+#define AUDIO_TMP_FRAMES         8192 // Conversion in stereo frames
+#define PREVIEW_VIDEO_BOX_PAD_H  60   // Padding on left/right
+#define PREVIEW_VIDEO_BOX_PAD_V  70   // Padding on top/bottom
+#define PREVIEW_VIDEO_CORNER_RAD 14   // Rounded corner radius on video
+#define WALLPAPER_STALL_MS       50   // Main-loop stalls above this are treated as pauses
+#define WALLPAPER_DEF_FRAME_MS   33   // Fallback frame pacing for wallpaper videos
+#define WALLPAPER_MIN_FRAME_MS   8    // Upper frame rate clamp for wallpaper pacing
+#define WALLPAPER_MAX_FRAME_MS   100  // Lower frame rate clamp for wallpaper pacing
 
 static char video_path[MAX_BUFFER_SIZE];
 static char saved_wall_path[MAX_BUFFER_SIZE];
@@ -50,6 +55,8 @@ static int fade_step = 0;
 static int has_frame = 0;
 static int is_wallpaper = 0;
 static uint32_t stall_last_ticks = 0;
+static uint32_t wallpaper_frame_ms = WALLPAPER_DEF_FRAME_MS;
+static uint32_t wallpaper_next_ticks = 0;
 
 static int use_iyuv = 0;
 static struct SwsContext *sws_ctx = NULL;
@@ -64,6 +71,7 @@ static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *video_dec = NULL;
 static AVCodecContext *audio_dec = NULL;
 static AVFrame *av_frame = NULL;
+static AVFrame *present_frame = NULL;
 static AVPacket *av_pkt = NULL;
 static AVRational video_tb;
 static int video_si = -1;
@@ -94,6 +102,33 @@ static int64_t frame_pts_ms(const AVFrame *f) {
     return (int64_t) ((double) pts * av_q2d(video_tb) * 1000.0);
 }
 
+static uint32_t stream_frame_ms(const AVStream *stream) {
+    AVRational rate = {0, 1};
+
+    if (stream) {
+        if (stream->avg_frame_rate.num > 0 && stream->avg_frame_rate.den > 0) {
+            rate = stream->avg_frame_rate;
+        } else if (stream->r_frame_rate.num > 0 && stream->r_frame_rate.den > 0) {
+            rate = stream->r_frame_rate;
+        }
+    }
+
+    if (rate.num > 0 && rate.den > 0) {
+        const double fps = av_q2d(rate);
+
+        if (fps > 0.0 && fps < 1000.0) {
+            uint32_t frame_ms = (uint32_t) (1000.0 / fps + 0.5);
+
+            if (frame_ms < WALLPAPER_MIN_FRAME_MS) frame_ms = WALLPAPER_MIN_FRAME_MS;
+            if (frame_ms > WALLPAPER_MAX_FRAME_MS) frame_ms = WALLPAPER_MAX_FRAME_MS;
+
+            return frame_ms;
+        }
+    }
+
+    return WALLPAPER_DEF_FRAME_MS;
+}
+
 static void vq_push(AVFrame *src) {
     if (vq_count >= VFRAME_Q) {
         av_frame_unref(src);
@@ -116,6 +151,34 @@ static void vq_pop(void) {
     av_frame_unref(vq[vq_head]);
     vq_head = (vq_head + 1) % VFRAME_Q;
     vq_count--;
+}
+
+static int vq_pop_into(AVFrame *dst) {
+    if (vq_count <= 0 || !dst) return 0;
+
+    av_frame_unref(dst);
+    av_frame_move_ref(dst, vq[vq_head]);
+    vq_head = (vq_head + 1) % VFRAME_Q;
+    vq_count--;
+
+    return 1;
+}
+
+static void vq_clear_locked(void) {
+    for (int i = 0; i < VFRAME_Q; i++) {
+        if (vq[i]) av_frame_unref(vq[i]);
+    }
+
+    vq_head = 0;
+    vq_tail = 0;
+    vq_count = 0;
+}
+
+static void reset_playback_timing(const uint32_t ticks) {
+    play_start_ms = ticks;
+    last_pts = INT64_MIN;
+    stall_last_ticks = is_wallpaper ? ticks : 0;
+    wallpaper_next_ticks = is_wallpaper ? ticks : 0;
 }
 
 static int ring_avail(void) {
@@ -161,7 +224,7 @@ static void audio_hook_cb(void *udata __attribute__((unused)), Uint8 *stream, co
 }
 
 static SDL_Texture *make_corner_mask(const int w, const int h) {
-    int radius = VIDEO_CORNER_RAD;
+    int radius = PREVIEW_VIDEO_CORNER_RAD;
     if (radius * 2 > w) radius = w / 2;
     if (radius * 2 > h) radius = h / 2;
     if (radius < 1) return NULL;
@@ -325,8 +388,8 @@ static int ensure_texture(const AVFrame *f) {
         if (!video_tex) return 0;
         SDL_SetTextureScaleMode(video_tex, SDL_ScaleModeLinear);
 
-        const int bw = dw - 2 * VIDEO_BOX_PAD_H;
-        const int bh = dh - 2 * VIDEO_BOX_PAD_V;
+        const int bw = dw - 2 * PREVIEW_VIDEO_BOX_PAD_H;
+        const int bh = dh - 2 * PREVIEW_VIDEO_BOX_PAD_V;
         int vw = bw, vh = h * bw / w;
 
         if (vh > bh) {
@@ -334,7 +397,8 @@ static int ensure_texture(const AVFrame *f) {
             vw = w * bh / h;
         }
 
-        video_dst = (SDL_Rect) {VIDEO_BOX_PAD_H + (bw - vw) / 2, VIDEO_BOX_PAD_V + (bh - vh) / 2, vw, vh};
+        video_dst =
+            (SDL_Rect) {PREVIEW_VIDEO_BOX_PAD_H + (bw - vw) / 2, PREVIEW_VIDEO_BOX_PAD_V + (bh - vh) / 2, vw, vh};
 
         use_round = 0;
         if (want_round) {
@@ -428,29 +492,92 @@ static void decode_audio_pkt(const AVPacket *pkt) {
     }
 }
 
+static int vq_push_wait(AVFrame *src) {
+    if (!src) return 0;
+
+    if (!vq_lock) {
+        vq_push(src);
+        return 1;
+    }
+
+    SDL_LockMutex(vq_lock);
+
+    while (decode_run && vq_count >= VFRAME_Q) {
+        SDL_CondWait(vq_cond, vq_lock);
+    }
+
+    if (!decode_run) {
+        SDL_UnlockMutex(vq_lock);
+        av_frame_unref(src);
+        return 0;
+    }
+
+    vq_push(src);
+    SDL_UnlockMutex(vq_lock);
+
+    return 1;
+}
+
 static void decode_video_pkt(const AVPacket *pkt) {
     if (avcodec_send_packet(video_dec, pkt) < 0) return;
 
     while (avcodec_receive_frame(video_dec, av_frame) >= 0) {
-        if (vq_lock) SDL_LockMutex(vq_lock);
-        vq_push(av_frame);
-        if (vq_lock) SDL_UnlockMutex(vq_lock);
+        if (!vq_push_wait(av_frame)) break;
     }
 }
 
-static void restart_stream(void) {
-    av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
+static void drain_video_decoder(void) {
+    if (!video_dec) return;
+
+    const int send_ret = avcodec_send_packet(video_dec, NULL);
+    if (send_ret < 0 && send_ret != AVERROR_EOF) return;
+
+    while (decode_run) {
+        const int recv_ret = avcodec_receive_frame(video_dec, av_frame);
+
+        if (recv_ret == AVERROR_EOF || recv_ret == AVERROR(EAGAIN)) break;
+        if (recv_ret < 0) break;
+
+        if (!vq_push_wait(av_frame)) break;
+    }
+}
+
+static void reset_audio_ring(void) {
+    if (!ring_buf) return;
+
+    SDL_LockAudio();
+    ring_r = 0;
+    ring_w = 0;
+    SDL_UnlockAudio();
+}
+
+static int restart_stream(void) {
+    int seek_ok = -1;
+
+    if (video_si >= 0) seek_ok = av_seek_frame(fmt_ctx, video_si, 0, AVSEEK_FLAG_BACKWARD);
+    if (seek_ok < 0) seek_ok = av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
+    if (seek_ok < 0) return 0;
+
     if (video_dec) avcodec_flush_buffers(video_dec);
     if (audio_dec) avcodec_flush_buffers(audio_dec);
+
+    SDL_LockMutex(vq_lock);
+
+    if (!is_wallpaper) {
+        vq_clear_locked();
+        reset_playback_timing(SDL_GetTicks());
+    }
+
+    SDL_CondSignal(vq_cond);
+    SDL_UnlockMutex(vq_lock);
 
     if (swr) {
         swr_free(&swr);
         swr = NULL;
     }
 
-    SDL_LockAudio();
-    ring_r = ring_w = 0;
-    SDL_UnlockAudio();
+    reset_audio_ring();
+    return 1;
 }
 
 static int decode_thread_fn(void *unused __attribute__((unused))) {
@@ -464,8 +591,9 @@ static int decode_thread_fn(void *unused __attribute__((unused))) {
         if (!run) break;
 
         if (av_read_frame(fmt_ctx, av_pkt) < 0) {
-            restart_stream();
             av_packet_unref(av_pkt);
+            drain_video_decoder();
+            if (!restart_stream()) break;
             continue;
         }
 
@@ -482,58 +610,71 @@ static int decode_thread_fn(void *unused __attribute__((unused))) {
 }
 
 static void present_cb(lv_timer_t *t __attribute__((unused))) {
-    if (!fmt_ctx) return;
+    if (!fmt_ctx || !present_frame) return;
 
-    if (is_wallpaper) {
-        const uint32_t cur_ticks = SDL_GetTicks();
-        if (stall_last_ticks > 0 && cur_ticks - stall_last_ticks > 500) {
-            play_start_ms += cur_ticks - stall_last_ticks;
-        }
-        stall_last_ticks = cur_ticks;
-    }
-
-    const AVFrame *to_upload = NULL;
+    const uint32_t ticks = SDL_GetTicks();
+    int moved_frame = 0;
+    int64_t moved_pts = 0;
 
     SDL_LockMutex(vq_lock);
 
-    if (vq_count > 0) {
-        const int64_t head_pts = frame_pts_ms(vq_at(0));
-        if (last_pts != INT64_MIN && head_pts + LOOP_BACK_MS < last_pts) {
-            play_start_ms = SDL_GetTicks() - (uint32_t) (head_pts > 0 ? head_pts : 0);
-            last_pts = INT64_MIN;
-        }
-    }
+    if (is_wallpaper) {
+        if (stall_last_ticks > 0) {
+            const uint32_t delta = ticks - stall_last_ticks;
 
-    const int64_t now = (int64_t) SDL_GetTicks() - (int64_t) play_start_ms;
-
-    while (vq_count > 0 && frame_pts_ms(vq_at(0)) <= now + DISPLAY_SLACK) {
-        if (vq_count >= 2 && frame_pts_ms(vq_at(1)) <= now + DISPLAY_SLACK) {
-            vq_pop();
-            continue;
+            if (delta > WALLPAPER_STALL_MS) {
+                wallpaper_next_ticks = ticks;
+            }
         }
 
-        to_upload = vq_at(0);
-        break;
+        stall_last_ticks = ticks;
+        if (wallpaper_next_ticks == 0) wallpaper_next_ticks = ticks;
+
+        if (vq_count > 0 && ticks + DISPLAY_SLACK >= wallpaper_next_ticks) {
+            moved_pts = frame_pts_ms(vq_at(0));
+            moved_frame = vq_pop_into(present_frame);
+            if (moved_frame) last_pts = moved_pts;
+            SDL_CondSignal(vq_cond);
+
+            wallpaper_next_ticks += wallpaper_frame_ms;
+            if (ticks > wallpaper_next_ticks + WALLPAPER_STALL_MS) {
+                wallpaper_next_ticks = ticks + wallpaper_frame_ms;
+            }
+        }
+    } else {
+        if (vq_count > 0) {
+            const int64_t head_pts = frame_pts_ms(vq_at(0));
+
+            if (last_pts != INT64_MIN && head_pts + LOOP_BACK_MS < last_pts) {
+                play_start_ms = ticks - (uint32_t) (head_pts > 0 ? head_pts : 0);
+                last_pts = INT64_MIN;
+            }
+        }
+
+        const int64_t now = (int64_t) ticks - (int64_t) play_start_ms;
+
+        while (vq_count > 0 && frame_pts_ms(vq_at(0)) <= now + DISPLAY_SLACK) {
+            if (vq_count >= 2 && frame_pts_ms(vq_at(1)) <= now + DISPLAY_SLACK) {
+                vq_pop();
+                SDL_CondSignal(vq_cond);
+                continue;
+            }
+
+            moved_pts = frame_pts_ms(vq_at(0));
+            moved_frame = vq_pop_into(present_frame);
+            if (moved_frame) last_pts = moved_pts;
+            SDL_CondSignal(vq_cond);
+            break;
+        }
     }
 
     SDL_UnlockMutex(vq_lock);
 
-    int shown = 0;
+    if (!moved_frame) return;
 
-    if (to_upload) {
-        last_pts = frame_pts_ms(to_upload);
-        video_upload(to_upload);
+    video_upload(present_frame);
 
-        SDL_LockMutex(vq_lock);
-        vq_pop();
-
-        SDL_CondSignal(vq_cond);
-        SDL_UnlockMutex(vq_lock);
-
-        shown = 1;
-    }
-
-    if (shown && has_frame) display_composite_frame();
+    if (has_frame) display_composite_frame();
 }
 
 static int start_decode_thread(void) {
@@ -607,9 +748,7 @@ static void cleanup(void) {
     }
 
     if (ring_buf) {
-        SDL_LockAudio();
-        ring_r = ring_w = 0;
-        SDL_UnlockAudio();
+        reset_audio_ring();
         free(ring_buf);
         ring_buf = NULL;
     }
@@ -631,6 +770,11 @@ static void cleanup(void) {
     if (av_frame) {
         av_frame_free(&av_frame);
         av_frame = NULL;
+    }
+
+    if (present_frame) {
+        av_frame_free(&present_frame);
+        present_frame = NULL;
     }
 
     if (av_pkt) {
@@ -670,6 +814,8 @@ static void cleanup(void) {
     video_si = audio_si = -1;
     use_iyuv = use_round = 0;
     stall_last_ticks = 0;
+    wallpaper_frame_ms = WALLPAPER_DEF_FRAME_MS;
+    wallpaper_next_ticks = 0;
     sdl_ren = NULL;
 }
 
@@ -728,9 +874,10 @@ static void preview_open(void) {
     if (!sdl_ren) goto fail;
 
     av_frame = av_frame_alloc();
+    present_frame = av_frame_alloc();
     av_pkt = av_packet_alloc();
 
-    if (!av_frame || !av_pkt) goto fail;
+    if (!av_frame || !present_frame || !av_pkt) goto fail;
     for (int i = 0; i < VFRAME_Q; i++) {
         vq[i] = av_frame_alloc();
         if (!vq[i]) goto fail;
@@ -754,9 +901,7 @@ static void preview_open(void) {
         }
     }
 
-    play_start_ms = SDL_GetTicks();
-    last_pts = INT64_MIN;
-    stall_last_ticks = 0;
+    reset_playback_timing(SDL_GetTicks());
 
     if (!start_decode_thread()) goto fail;
 
@@ -813,6 +958,8 @@ static void wallpaper_open(void) {
 
             video_si = (int) i;
             video_tb = fmt_ctx->streams[i]->time_base;
+
+            wallpaper_frame_ms = stream_frame_ms(fmt_ctx->streams[i]);
         }
     }
 
@@ -822,8 +969,9 @@ static void wallpaper_open(void) {
     if (!sdl_ren) goto fail;
 
     av_frame = av_frame_alloc();
+    present_frame = av_frame_alloc();
     av_pkt = av_packet_alloc();
-    if (!av_frame || !av_pkt) goto fail;
+    if (!av_frame || !present_frame || !av_pkt) goto fail;
 
     for (int i = 0; i < VFRAME_Q; i++) {
         vq[i] = av_frame_alloc();
@@ -831,7 +979,7 @@ static void wallpaper_open(void) {
     }
 
     vq_head = vq_tail = vq_count = 0;
-    play_start_ms = SDL_GetTicks();
+    reset_playback_timing(SDL_GetTicks());
 
     for (int i = 0; i < 32 && !has_frame; i++) {
         if (av_read_frame(fmt_ctx, av_pkt) < 0) {
@@ -848,9 +996,9 @@ static void wallpaper_open(void) {
         }
     }
 
-    play_start_ms = SDL_GetTicks();
-    last_pts = INT64_MIN;
-    stall_last_ticks = 0;
+    const uint32_t start_ticks = SDL_GetTicks();
+    reset_playback_timing(start_ticks);
+    if (has_frame) wallpaper_next_ticks = start_ticks + wallpaper_frame_ms;
 
     if (!start_decode_thread()) goto fail;
 
