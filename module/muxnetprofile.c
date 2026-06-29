@@ -14,16 +14,29 @@ const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
 
 #define PASS_ENCODE "********"
 
-#define UI_DHCP         (ui_count_dynamic - 4)
-#define UI_STATIC       ui_count_dynamic
-#define NET_STATUS_FILE "/run/muos/network.status"
-#define IP_OCTET        64
+#define UI_DHCP        (ui_count_dynamic - 4)
+#define UI_STATIC      ui_count_dynamic
+#define NET_STATUS_DIR "/run/muos/network"
+#define IP_OCTET       64
 
 int connecting_phase = 0;
 int ui_network_locked = 0;
 
 static char last_status[IP_OCTET] = "";
 static char address_file[MAX_BUFFER_SIZE];
+static char current_profile[MAX_BUFFER_SIZE] = "";
+
+static void profile_status_path(char *buf) {
+    snprintf(buf, MAX_BUFFER_SIZE, NET_STATUS_DIR "/%s.status", *current_profile ? current_profile : "_none_");
+}
+
+static int profile_is_active(void) {
+    if (!*current_profile) return 0;
+    char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
+    const int match = active && *active && strcmp(active, current_profile) == 0;
+    free(active);
+    return match;
+}
 
 static unsigned connect_grace_ticks = 0;
 
@@ -119,7 +132,7 @@ static void nav_scan_hide(const int hide) {
 }
 
 static int is_safe_iface(const char *iface) {
-    if (!iface || !*iface) return 0;
+    if (!*iface) return 0;
 
     const size_t len = strlen(iface);
     if (len >= 16) return 0;
@@ -225,7 +238,7 @@ static void can_scan_check(const int forced_disconnect) {
         return;
     }
 
-    if (!forced_disconnect && is_network_connected()) {
+    if (!forced_disconnect && profile_is_active()) {
         lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
         nav_scan_hide(1);
         update_network_status(ui_sta_network, &theme, 0);
@@ -242,17 +255,9 @@ static void can_scan_check(const int forced_disconnect) {
 static void get_current_ip(void) {
     char ip[IP_OCTET];
 
-    if (!read_ip(ip)) {
-        if (ui_network_locked && connecting_phase) {
-            set_connect_value(lang.muxnetprofile.connect_try);
-            return;
-        }
-
-        can_scan_check(1);
-        return;
-    }
-
-    if (!*ip || !strcasecmp(ip, "0.0.0.0")) {
+    // Only the active profile owns the live connection/IP. For any other profile
+    // there is nothing to show, so fall back to the not connected state.
+    if (!profile_is_active() || !read_ip(ip) || !*ip || !strcasecmp(ip, "0.0.0.0")) {
         if (ui_network_locked && connecting_phase) {
             set_connect_value(lang.muxnetprofile.connect_try);
             return;
@@ -264,7 +269,7 @@ static void get_current_ip(void) {
 
     connecting_phase = 0;
 
-    set_connect_value(config.network.type ? lang.muxnetprofile.connected : ip);
+    set_connect_value(ip);
     lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
 
     nav_scan_hide(1);
@@ -274,7 +279,10 @@ static void get_current_ip(void) {
 static void update_network_label(void) {
     if (!ui_network_locked) return;
 
-    char *status = read_line_char_from(NET_STATUS_FILE, 1);
+    char status_path[MAX_BUFFER_SIZE];
+    profile_status_path(status_path);
+    char *status = read_line_char_from(status_path, 1);
+
     if (!status || !*status) {
         if (connecting_phase && connect_grace_ticks < 20) {
             connect_grace_ticks++;
@@ -328,6 +336,8 @@ static void restore_network_values(void) {
     char *profile_name_raw = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
     viewing_existing_profile = profile_name_raw && *profile_name_raw;
 
+    snprintf(current_profile, sizeof(current_profile), "%s", viewing_existing_profile ? profile_name_raw : "");
+
     if (viewing_existing_profile) {
         char profile_name_buf[MAX_BUFFER_SIZE];
         snprintf(profile_name_buf, sizeof(profile_name_buf), "%s", profile_name_raw);
@@ -378,36 +388,7 @@ static void restore_network_values(void) {
         lv_label_set_text(ui_val_dns_network, "");
     }
 
-    const char *profile_ssid = lv_label_get_text(ui_val_identifier_network);
-    const char *active_ssid = config.network.ssid;
-
-    viewing_active_profile = 0;
-
-    if (profile_ssid && *profile_ssid && is_network_connected()) {
-        if (active_ssid && *active_ssid) viewing_active_profile = strcmp(profile_ssid, active_ssid) == 0;
-
-        if (!viewing_active_profile && is_safe_iface(device.network.interface)) {
-            char cmd[MAX_BUFFER_SIZE];
-            snprintf(
-                cmd, sizeof(cmd), "iw dev %s link 2>/dev/null | awk -F': ' '/SSID/ {print $2}'",
-                device.network.interface
-            );
-            FILE *iw_pipe = popen(cmd, "r");
-
-            if (iw_pipe) {
-                char live_ssid[MAX_BUFFER_SIZE] = {0};
-                if (fgets(live_ssid, sizeof(live_ssid), iw_pipe)) {
-                    char *p = live_ssid;
-                    while (*p && *p != '\n' && *p != '\r')
-                        p++;
-                    *p = '\0';
-                    viewing_active_profile = *live_ssid && strcmp(profile_ssid, live_ssid) == 0;
-                }
-
-                pclose(iw_pipe);
-            }
-        }
-    }
+    viewing_active_profile = profile_is_active();
 }
 
 static void escape_wpa_string(const char *src, char *dst) {
@@ -659,7 +640,9 @@ static void handle_confirm(void) {
             play_sound(snd_confirm);
             write_text_to_file_atomic(address_file, CHAR, "");
             run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
+            viewing_active_profile = profile_is_active();
             can_scan_check(1);
+            check_focus();
         } else {
             int valid_info = 0;
             const char *cv_ssid = lv_label_get_text(ui_val_identifier_network);
@@ -715,7 +698,10 @@ static void handle_confirm(void) {
                 lv_task_handler();
 
                 last_status[0] = '\0';
-                run_exec(net_c_args, A_SIZE(net_c_args), 1, 0, NULL, net_connect_check);
+
+                // Connect the specific profile so the script tracks its active status independently!
+                const char *net_c_prof_args[] = {OPT_PATH NET_SCRIPT, "connect", current_profile, NULL};
+                run_exec(net_c_prof_args, A_SIZE(net_c_prof_args), 1, 0, NULL, net_connect_check);
                 lv_task_handler();
             } else {
                 play_sound(snd_error);
@@ -944,6 +930,7 @@ static void save_profile_ini(void) {
     mini_free(net);
 
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/profile_name", CHAR, profile_name);
+    snprintf(current_profile, sizeof(current_profile), "%s", profile_name);
     viewing_existing_profile = 1;
 
     lv_obj_clear_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -1223,7 +1210,9 @@ static void handle_r1(void) {
 }
 
 static void check_connecting_state(void) {
-    FILE *f = fopen(NET_STATUS_FILE, "r");
+    char status_path[MAX_BUFFER_SIZE];
+    profile_status_path(status_path);
+    FILE *f = fopen(status_path, "r");
     if (!f) return;
 
     char status[64] = {0};
@@ -1340,13 +1329,11 @@ int muxnetprofile_main(void) {
     can_scan_check(viewing_active_profile ? 0 : 1);
 
     if (viewing_active_profile) {
-        if (config.network.type) {
-            set_connect_value(lang.muxnetprofile.connected);
+        char ip[IP_OCTET] = {0};
+        if (read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0) {
+            set_connect_value(ip);
         } else {
-            char ip[IP_OCTET] = {0};
-            if (read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0) {
-                set_connect_value(ip);
-            }
+            set_connect_value(lang.muxnetprofile.connected);
         }
     }
 

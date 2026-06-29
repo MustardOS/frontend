@@ -4,15 +4,34 @@ static void show_help(void) {
     show_info_box(lang.muxnetwork.title, lang.muxnetwork.help, 0);
 }
 
-static const char *get_profile_status(const char *profile_name) {
+// Formats the profile status line...
+//   Auto, connected     -> "Connected - Auto (3)"
+//   Auto, not connected -> "Auto (3)"
+//   Manual, connected   -> "Connected - Manual"
+//   Manual              -> "Manual"
+static void format_profile_status(char *buf, const int autoconnect, const int priority, const int connected) {
+    char base[MAX_BUFFER_SIZE];
+
+    if (autoconnect) {
+        snprintf(base, sizeof(base), "%s (%d)", lang.muxnetwork.autom, priority);
+    } else {
+        snprintf(base, sizeof(base), "%s", lang.muxnetwork.manual);
+    }
+
+    if (connected) {
+        snprintf(buf, MAX_BUFFER_SIZE, "%s - %s", lang.muxnetwork.connected, base);
+    } else {
+        snprintf(buf, MAX_BUFFER_SIZE, "%s", base);
+    }
+}
+
+static const char *get_profile_status(const char *profile_name, const char *active_profile) {
     static char profile_file[MAX_BUFFER_SIZE];
     static char status_buf[MAX_BUFFER_SIZE];
-    char profile_ssid[MAX_BUFFER_SIZE];
 
     snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name);
 
     mini_t *net = mini_try_load(profile_file);
-    snprintf(profile_ssid, sizeof(profile_ssid), "%s", mini_get_string(net, "network", "ssid", ""));
 
     const int autoconnect = (int) mini_get_int(net, "network", "autoconnect", 1);
     int priority = (int) mini_get_int(net, "network", "priority", 5);
@@ -22,32 +41,34 @@ static const char *get_profile_status(const char *profile_name) {
     if (priority < 1) priority = 1;
     if (priority > 9) priority = 9;
 
-    const char *active = config.network.ssid;
-    if (active && *active && strcmp(profile_ssid, active) == 0 && is_network_connected()) {
-        snprintf(
-            status_buf, sizeof(status_buf), "%s (%s)", lang.muxnetwork.connected,
-            autoconnect ? lang.muxnetwork.autom : lang.muxnetwork.manual
-        );
-        return status_buf;
-    }
+    const int connected = *active_profile && strcmp(profile_name, active_profile) == 0;
+    format_profile_status(status_buf, autoconnect, priority, connected);
 
-    snprintf(
-        status_buf, sizeof(status_buf), "%s (%d)", autoconnect ? lang.muxnetwork.autom : lang.muxnetwork.manual,
-        priority
-    );
     return status_buf;
+}
+
+static void read_active_profile(char *buf) {
+    buf[0] = '\0';
+    char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
+    if (active && *active) snprintf(buf, MAX_BUFFER_SIZE, "%s", active);
+    free(active);
 }
 
 typedef struct {
     char name[MAX_BUFFER_SIZE];
     int priority;
+    int autoconnect;
 } profile_entry;
 
 static int profile_entry_compare(const void *a, const void *b) {
     const profile_entry *pa = a;
     const profile_entry *pb = b;
 
-    if (pa->priority != pb->priority) return pa->priority - pb->priority;
+    // Manual profiles always sort below Auto ones (autoconnect 1 before 0)
+    if (pa->autoconnect != pb->autoconnect) return pb->autoconnect - pa->autoconnect;
+
+    // Auto: by priority then name. Manual: priority is meaningless, so by name only.
+    if (pa->autoconnect && pa->priority != pb->priority) return pa->priority - pb->priority;
 
     return strcasecmp(pa->name, pb->name);
 }
@@ -92,6 +113,7 @@ static void populate_profile_list(void) {
 
         mini_t *net = mini_try_load(profile_file);
         int pri = (int) mini_get_int(net, "network", "priority", 5);
+        entries[i].autoconnect = (int) mini_get_int(net, "network", "autoconnect", 1);
         mini_free(net);
 
         if (pri < 0) pri = 0;
@@ -103,9 +125,12 @@ static void populate_profile_list(void) {
 
     qsort(entries, file_count, sizeof(profile_entry), profile_entry_compare);
 
+    char active_profile[MAX_BUFFER_SIZE];
+    read_active_profile(active_profile);
+
     for (size_t i = 0; i < file_count; ++i) {
         const char *profile_store = entries[i].name;
-        const char *status = get_profile_status(profile_store);
+        const char *status = get_profile_status(profile_store, active_profile);
 
         ui_count_static++;
 
@@ -209,9 +234,6 @@ static void toggle_focused_autoconnect(void) {
     const int autoconnect = !(int) mini_get_int(net, "network", "autoconnect", 1);
     int priority = (int) mini_get_int(net, "network", "priority", 5);
 
-    char profile_ssid[MAX_BUFFER_SIZE];
-    snprintf(profile_ssid, sizeof(profile_ssid), "%s", mini_get_string(net, "network", "ssid", ""));
-
     mini_set_int(net, "network", "autoconnect", autoconnect);
     mini_save(net, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net);
@@ -224,15 +246,12 @@ static void toggle_focused_autoconnect(void) {
     if (priority < 1) priority = 1;
     if (priority > 9) priority = 9;
 
-    char status[MAX_BUFFER_SIZE];
-    const char *active = config.network.ssid;
-    const char *ac_str = autoconnect ? lang.muxnetwork.autom : lang.muxnetwork.manual;
+    char active_profile[MAX_BUFFER_SIZE];
+    read_active_profile(active_profile);
 
-    if (active && *active && strcmp(profile_ssid, active) == 0 && is_network_connected()) {
-        snprintf(status, sizeof(status), "%s (%s)", lang.muxnetwork.connected, ac_str);
-    } else {
-        snprintf(status, sizeof(status), "%s (%d)", ac_str, priority);
-    }
+    char status[MAX_BUFFER_SIZE];
+    const int connected = *active_profile && strcmp(profile_name, active_profile) == 0;
+    format_profile_status(status, autoconnect, priority, connected);
 
     lv_label_set_text(val, status);
 }
