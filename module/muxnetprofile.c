@@ -14,6 +14,8 @@ const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
 
 #define PASS_ENCODE "********"
 
+#define CONNECT_SETTLE_TICKS 120
+
 #define UI_DHCP        (ui_count_dynamic - 4)
 #define UI_STATIC      ui_count_dynamic
 #define NET_STATUS_DIR "/run/muos/network"
@@ -27,6 +29,10 @@ static char address_file[MAX_BUFFER_SIZE];
 static char current_profile[MAX_BUFFER_SIZE] = "";
 
 static unsigned connect_grace_ticks = 0;
+
+static int connect_process_done = 1;
+static int connect_exit_code = 0;
+static unsigned connect_settle_ticks = 0;
 
 static int fields_modified = 0;
 static int network_saved = 0;
@@ -156,13 +162,12 @@ static int profile_is_active(void) {
 
     char state[MAX_BUFFER_SIZE];
     if (read_wpa_status_value("wpa_state", state)) {
-        if (strcmp(state, "COMPLETED") != 0) {
-            clear_current_active_profile();
-            return 0;
+        if (strcmp(state, "COMPLETED") == 0) {
+            char ssid[MAX_BUFFER_SIZE];
+            return read_wpa_status_value("ssid", ssid) && current_profile_matches_ssid(ssid);
         }
 
-        char ssid[MAX_BUFFER_SIZE];
-        return read_wpa_status_value("ssid", ssid) && current_profile_matches_ssid(ssid);
+        return 0;
     }
 
     char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
@@ -338,6 +343,49 @@ static int resolve_status_id(const char *s) {
     return -1;
 }
 
+static int status_from_connect_exit_code(const int exit_code) {
+    switch (exit_code) {
+        case 2:
+            return status_invalid_password;
+        case 3:
+            return status_ap_not_found;
+        case 4:
+            return status_auth_timeout;
+        case 5:
+            return status_dhcp_failed;
+        case 6:
+            return status_link_timeout;
+        case 7:
+            return status_wpa_start_failed;
+        default:
+            return status_failed;
+    }
+}
+
+static void clear_profile_status_file(void) {
+    char status_path[MAX_BUFFER_SIZE];
+    profile_status_path(status_path);
+    remove(status_path);
+}
+
+static void show_connect_failure(const int exit_code) {
+    const int id = status_from_connect_exit_code(exit_code);
+
+    ui_network_locked = 0;
+    connecting_phase = 0;
+    connect_grace_ticks = 0;
+    connect_settle_ticks = 0;
+    viewing_active_profile = 0;
+
+    clear_current_active_profile();
+
+    if (id >= 0) set_connect_value(net_status_label(id));
+
+    lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.connect);
+    nav_scan_hide(0);
+    update_network_status(ui_sta_network, &theme, 2);
+}
+
 static void can_scan_check(const int forced_disconnect) {
     if (ui_network_locked && connecting_phase) {
         lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
@@ -360,29 +408,32 @@ static void can_scan_check(const int forced_disconnect) {
     update_network_status(ui_sta_network, &theme, 2);
 }
 
-static void get_current_ip(void) {
+static int get_current_ip(void) {
     char ip[IP_OCTET];
 
-    if (!profile_is_active() || !read_ip(ip) || !*ip || !strcasecmp(ip, "0.0.0.0")) {
-        if (ui_network_locked && connecting_phase) {
-            set_connect_value(lang.muxnetprofile.connect_try);
-            return;
-        }
+    const int has_ip = read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0;
 
-        can_scan_check(1);
-        return;
+    if (has_ip && (profile_is_active() || (ui_network_locked && connecting_phase))) {
+        connecting_phase = 0;
+        viewing_active_profile = 1;
+        write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, current_profile);
+
+        set_connect_value(ip);
+        lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
+
+        nav_scan_hide(1);
+        update_network_status(ui_sta_network, &theme, 1);
+
+        return 1;
     }
 
-    connecting_phase = 0;
-    viewing_active_profile = 1;
+    if (ui_network_locked && connecting_phase) {
+        set_connect_value(lang.muxnetprofile.connect_try);
+        return 0;
+    }
 
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, current_profile);
-
-    set_connect_value(ip);
-    lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
-
-    nav_scan_hide(1);
-    update_network_status(ui_sta_network, &theme, 1);
+    can_scan_check(1);
+    return 0;
 }
 
 static void update_network_label(void) {
@@ -393,55 +444,101 @@ static void update_network_label(void) {
 
     char *status = read_line_char_from(status_path, 1);
 
-    if (!status || !*status) {
-        if (connecting_phase && connect_grace_ticks < 20) {
-            connect_grace_ticks++;
-            set_connect_value(lang.muxnetprofile.connect_try);
-            return;
-        }
-
-        get_current_ip();
-        return;
-    }
-
-    char *p = status;
-    while (*p && *p != '\n' && *p != '\r')
-        p++;
-    *p = '\0';
-
-    if (strcmp(status, last_status) != 0) {
-        snprintf(last_status, sizeof(last_status), "%s", status);
+    if (status && *status) {
+        char *p = status;
+        while (*p && *p != '\n' && *p != '\r')
+            p++;
+        *p = '\0';
 
         const int id = resolve_status_id(status);
+        const int status_changed = strcmp(status, last_status) != 0;
+
+        if (status_changed) {
+            snprintf(last_status, sizeof(last_status), "%s", status);
+
+            if (id >= 0 && id != status_connected) {
+                set_connect_value(net_status_label(id));
+            }
+        }
 
         if (id == status_connected) {
-            connecting_phase = 0;
-            ui_network_locked = 0;
-            connect_grace_ticks = 0;
-            get_current_ip();
+            if (get_current_ip()) {
+                ui_network_locked = 0;
+                connecting_phase = 0;
+                connect_grace_ticks = 0;
+                connect_settle_ticks = 0;
+                free(status);
+                return;
+            }
+
+            connecting_phase = 1;
+            set_connect_value(lang.muxnetprofile.connect_try);
+            free(status);
             return;
         }
 
         if (id == status_failed || id >= status_invalid_password) {
-            connecting_phase = 0;
-            ui_network_locked = 0;
-            connect_grace_ticks = 0;
-            clear_current_active_profile();
-            viewing_active_profile = 0;
+            if (!connect_process_done) {
+                free(status);
+                return;
+            }
+
+            show_connect_failure(connect_exit_code);
+            free(status);
+            return;
         }
 
-        if (id >= 0) set_connect_value(net_status_label(id));
+        free(status);
+        return;
     }
+
+    free(status);
+
+    if (get_current_ip()) {
+        ui_network_locked = 0;
+        connecting_phase = 0;
+        connect_grace_ticks = 0;
+        connect_settle_ticks = 0;
+        return;
+    }
+
+    if (!connect_process_done) {
+        connecting_phase = 1;
+        set_connect_value(lang.muxnetprofile.connect_try);
+        return;
+    }
+
+    if (connect_exit_code != 0) {
+        show_connect_failure(connect_exit_code);
+        return;
+    }
+
+    if (connect_settle_ticks < CONNECT_SETTLE_TICKS) {
+        connect_settle_ticks++;
+        connecting_phase = 1;
+        set_connect_value(lang.muxnetprofile.connect_try);
+        return;
+    }
+
+    show_connect_failure(connect_exit_code);
 }
 
 static void net_connect_check(const int exit_code) {
-    (void) exit_code;
-    ui_network_locked = 0;
-    connecting_phase = 0;
-    connect_grace_ticks = 0;
+    connect_process_done = 1;
+    connect_exit_code = exit_code;
+    connect_settle_ticks = 0;
 
+    if (exit_code != 0) {
+        show_connect_failure(exit_code);
+        return;
+    }
+
+    ui_network_locked = 1;
+    connecting_phase = 1;
+    connect_grace_ticks = 0;
     last_status[0] = '\0';
-    get_current_ip();
+
+    if (!get_current_ip()) set_connect_value(lang.muxnetprofile.connect_try);
 }
 
 static void restore_network_values(void) {
@@ -821,6 +918,12 @@ static void handle_confirm(void) {
                 lv_task_handler();
 
                 last_status[0] = '\0';
+                connect_process_done = 0;
+                connect_exit_code = 0;
+                connect_grace_ticks = 0;
+                connect_settle_ticks = 0;
+
+                clear_profile_status_file();
 
                 // Connect the specific profile so the script tracks its active status independently!
                 const char *net_c_prof_args[] = {OPT_PATH NET_SCRIPT, "connect", current_profile, NULL};
