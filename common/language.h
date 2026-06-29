@@ -147,10 +147,12 @@ struct mux_lang {
         char maximum[MAX_BUFFER_SIZE];
         char horizontal[MAX_BUFFER_SIZE];
         char vertical[MAX_BUFFER_SIZE];
-        char outward[MAX_BUFFER_SIZE];
+        char up[MAX_BUFFER_SIZE];
+        char down[MAX_BUFFER_SIZE];
+        char left[MAX_BUFFER_SIZE];
+        char right[MAX_BUFFER_SIZE];
+        char all[MAX_BUFFER_SIZE];
         char ludicrous[MAX_BUFFER_SIZE];
-        char wobble[MAX_BUFFER_SIZE];
-        char shrink[MAX_BUFFER_SIZE];
         char unsaved[MAX_BUFFER_SIZE];
         char crash_title[MAX_BUFFER_SIZE];
         char crash_message[MAX_BUFFER_SIZE];

@@ -11,7 +11,7 @@ static size_t skip_hash(const char *key, const size_t cap) {
         h = (h ^ (unsigned char) *p) * 16777619u;
     }
 
-    return (size_t) h & cap - 1;
+    return (size_t) h & (cap - 1);
 }
 
 void init_skiplist(skip_list *sl) {
@@ -52,7 +52,7 @@ void add_to_skiplist(skip_list *sl, const char *dir, const char *name) {
 
     while (sl->buckets[i]) {
         if (strcasecmp(sl->buckets[i], full_path) == 0) return;
-        i = sl->bucket_cap - 1 & i + 1;
+        i = (sl->bucket_cap - 1) & (i + 1);
     }
 
     if (sl->count == sl->capacity) {
@@ -78,7 +78,7 @@ int in_skiplist(const skip_list *sl, const char *name) {
 
     while (sl->buckets[i]) {
         if (strcasecmp(sl->buckets[i], name) == 0) return 1;
-        i = i + 1 & sl->bucket_cap - 1;
+        i = (i + 1) & (sl->bucket_cap - 1);
     }
 
     return 0;

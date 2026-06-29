@@ -115,6 +115,26 @@ void adjust_box_art(void) {
     }
 }
 
+static enum nav_direction normalise_nav_direction(const enum nav_direction direction) {
+    if (!swap_axis) return direction;
+
+    switch (direction) {
+        case nav_dir_up:
+            return nav_dir_left;
+        case nav_dir_down:
+            return nav_dir_right;
+        case nav_dir_left:
+            return nav_dir_up;
+        case nav_dir_right:
+        default:
+            return nav_dir_down;
+    }
+}
+
+void set_nav_input_dir(const enum nav_direction direction) {
+    nav_set_last_dir(normalise_nav_direction(direction));
+}
+
 void setup_nav(const struct nav_bar *nav_items) {
     for (size_t i = 0; nav_items[i].item != NULL; i++) {
         if (nav_items[i].ui_check && !ui_count_static) continue;
@@ -475,8 +495,8 @@ void reset_ui_groups(void) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    lv_group_set_focus_cb(ui_group_panel, nav_focus_bounce_cb);
-    nav_suppress_next_bounce();
+    lv_group_set_focus_cb(ui_group_panel, nav_focus_shake_cb);
+    nav_suppress_next_shake();
 }
 
 void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_obj_t **panels, const int long_dot) {

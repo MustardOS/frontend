@@ -58,8 +58,12 @@ void hide_info_box(void);
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count_static, int *nav_moved);
 
-void nav_suppress_next_bounce(void);
+void nav_suppress_next_shake(void);
 
-void nav_unsuppress_bounce(void);
+void nav_unsuppress_shake(void);
 
-void nav_focus_bounce_cb(const lv_group_t *group);
+enum nav_direction { nav_dir_up, nav_dir_down, nav_dir_left, nav_dir_right };
+
+void nav_set_last_dir(enum nav_direction dir);
+
+void nav_focus_shake_cb(const lv_group_t *group);

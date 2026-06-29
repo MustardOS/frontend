@@ -492,132 +492,103 @@ int direct_to_previous(lv_obj_t **ui_objects, const size_t ui_count_static, int 
     return nav_next_return;
 }
 
-static lv_obj_t *bounce_prev_focused = NULL;
-static int bounce_suppress = 0;
-static lv_anim_exec_xcb_t bounce_prev_exec_cb = NULL;
+static lv_obj_t *shake_prev_focused = NULL;
+static int shake_suppress = 0;
+static lv_anim_exec_xcb_t shake_prev_exec_cb = NULL;
 
-void nav_suppress_next_bounce(void) {
-    bounce_suppress = 1;
-    bounce_prev_focused = NULL;
+void nav_suppress_next_shake(void) {
+    shake_suppress = 1;
+    shake_prev_focused = NULL;
 }
 
-void nav_unsuppress_bounce(void) {
-    bounce_suppress = 0;
+void nav_unsuppress_shake(void) {
+    shake_suppress = 0;
 }
 
-static void focus_bounce_y_cb(void *obj, const int32_t v) {
+static void focus_shake_y_cb(void *obj, const int32_t v) {
     lv_obj_set_style_translate_y(obj, v, MU_OBJ_MAIN_DEFAULT);
 }
 
-static void focus_bounce_x_cb(void *obj, const int32_t v) {
+static void focus_shake_x_cb(void *obj, const int32_t v) {
     lv_obj_set_style_translate_x(obj, v, MU_OBJ_MAIN_DEFAULT);
 }
 
-static lv_area_t bounce_inv_prev;
-static int bounce_inv_prev_valid = 0;
-
-static void invalidate_focus_area(lv_obj_t *o) {
-    lv_obj_t *parent = lv_obj_get_parent(o);
-    if (!parent) return;
-
-    lv_area_t cur;
-    lv_obj_get_coords(o, &cur);
-    lv_obj_get_transformed_area(o, &cur, 0, 0);
-
-    lv_obj_invalidate_area(parent, &cur);
-    if (bounce_inv_prev_valid) lv_obj_invalidate_area(parent, &bounce_inv_prev);
-
-    bounce_inv_prev = cur;
-    bounce_inv_prev_valid = 1;
-}
-
-static void focus_outward_cb(void *obj, const int32_t v) {
-    lv_obj_t *o = obj;
-    lv_obj_set_style_transform_zoom(o, 256 + v, MU_OBJ_MAIN_DEFAULT);
-    invalidate_focus_area(o);
-}
-
-static void focus_wobble_cb(void *obj, const int32_t v) {
-    lv_obj_t *o = obj;
-    lv_obj_set_style_transform_angle(o, v, MU_OBJ_MAIN_DEFAULT);
-    invalidate_focus_area(o);
-}
-
-static void focus_shrink_cb(void *obj, const int32_t v) {
-    lv_obj_t *o = obj;
-    lv_obj_set_style_transform_zoom(o, 256 - v, MU_OBJ_MAIN_DEFAULT);
-    invalidate_focus_area(o);
-}
-
-static void reset_bounce_styles(lv_obj_t *obj) {
+static void reset_shake_styles(lv_obj_t *obj) {
     lv_obj_set_style_translate_y(obj, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_translate_x(obj, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_transform_zoom(obj, 256, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_transform_angle(obj, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_transform_pivot_x(obj, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_transform_pivot_y(obj, 0, MU_OBJ_MAIN_DEFAULT);
 }
 
-void nav_focus_bounce_cb(const lv_group_t *group) {
-    if (bounce_prev_focused && lv_obj_is_valid(bounce_prev_focused)) {
-        lv_anim_del(bounce_prev_focused, bounce_prev_exec_cb);
-        reset_bounce_styles(bounce_prev_focused);
+enum { sel_dir_up = 0, sel_dir_down = 1, sel_dir_left = 2, sel_dir_right = 3, sel_dir_all = 4 };
+
+static int last_nav_dir = nav_dir_down;
+
+void nav_set_last_dir(const enum nav_direction dir) {
+    last_nav_dir = dir;
+}
+
+void nav_focus_shake_cb(const lv_group_t *group) {
+    if (shake_prev_focused && lv_obj_is_valid(shake_prev_focused)) {
+        lv_anim_del(shake_prev_focused, shake_prev_exec_cb);
+        reset_shake_styles(shake_prev_focused);
     }
 
     lv_obj_t *focused = lv_group_get_focused(group);
-    bounce_prev_focused = focused;
+    shake_prev_focused = focused;
 
-    static const int bounce_travel[] = {0, 2, 4, 6, 8, 10, 30};
-    static const int outward_travel[] = {0, 1, 3, 6, 9, 12, 32};
-    static const int wobble_travel[] = {0, 15, 30, 45, 60, 75, 160};
-    static const int shrink_travel[] = {0, 1, 4, 8, 16, 24, 64};
+    static const int shake_travel[] = {0, 2, 4, 6, 8, 10, 30};
 
     const int level = config.visual.selection_animation;
-    if (bounce_suppress || level <= 0 || level > 6) return;
+    if (shake_suppress || level <= 0 || level > 6) return;
 
     if (!focused || !lv_obj_is_valid(focused)) return;
 
+    int dir = config.visual.selection_style;
+    if (dir == sel_dir_all) {
+        switch (last_nav_dir) {
+            case nav_dir_up:
+                dir = sel_dir_up;
+                break;
+            case nav_dir_left:
+                dir = sel_dir_left;
+                break;
+            case nav_dir_right:
+                dir = sel_dir_right;
+                break;
+            case nav_dir_down:
+            default:
+                dir = sel_dir_down;
+                break;
+        }
+    }
+
     lv_anim_exec_xcb_t exec_cb;
-    switch (config.visual.selection_style) {
-        case 1:
-            exec_cb = focus_bounce_y_cb;
+    int sign;
+    switch (dir) {
+        case sel_dir_up:
+            exec_cb = focus_shake_y_cb;
+            sign = -1;
             break;
-        case 2:
-            exec_cb = focus_bounce_x_cb;
+        case sel_dir_left:
+            exec_cb = focus_shake_x_cb;
+            sign = -1;
             break;
-        case 3:
-            exec_cb = focus_wobble_cb;
+        case sel_dir_right:
+            exec_cb = focus_shake_x_cb;
+            sign = 1;
             break;
-        case 4:
-            exec_cb = focus_shrink_cb;
-            break;
+        case sel_dir_down:
         default:
-            exec_cb = focus_outward_cb;
+            exec_cb = focus_shake_y_cb;
+            sign = 1;
             break;
     }
 
-    bounce_prev_exec_cb = exec_cb;
+    shake_prev_exec_cb = exec_cb;
 
     lv_anim_del(focused, exec_cb);
-    reset_bounce_styles(focused);
+    reset_shake_styles(focused);
 
-    bounce_inv_prev_valid = 0;
-
-    int travel;
-    if (exec_cb == focus_outward_cb || exec_cb == focus_wobble_cb || exec_cb == focus_shrink_cb) {
-        lv_obj_set_style_transform_pivot_x(focused, lv_obj_get_width(focused) / 2, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_transform_pivot_y(focused, lv_obj_get_height(focused) / 2, MU_OBJ_MAIN_DEFAULT);
-    }
-
-    if (exec_cb == focus_outward_cb) {
-        travel = outward_travel[level];
-    } else if (exec_cb == focus_wobble_cb) {
-        travel = wobble_travel[level];
-    } else if (exec_cb == focus_shrink_cb) {
-        travel = shrink_travel[level];
-    } else {
-        travel = bounce_travel[level];
-    }
+    const int travel = sign * shake_travel[level];
 
     lv_anim_t a;
     lv_anim_init(&a);

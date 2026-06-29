@@ -113,7 +113,7 @@ static void list_nav_move(const int steps, const int direction) {
     if (first_open) {
         first_open = 0;
     } else {
-        nav_unsuppress_bounce();
+        nav_unsuppress_shake();
         play_sound(snd_navigate);
     }
 
@@ -292,6 +292,8 @@ static void handle_up(void) {
         return;
     }
 
+    set_nav_input_dir(nav_dir_up);
+
     // Grid mode.  Wrap on Row.
     if (theme.grid.enabled && theme.grid.navigation_type == 4 && !get_grid_column_index(current_item_index)) {
         list_nav_next(
@@ -323,6 +325,8 @@ static void handle_down(void) {
         }
         return;
     }
+
+    set_nav_input_dir(nav_dir_down);
 
     // Grid Navigation.  Wrap on Row.
     if (theme.grid.enabled && theme.grid.navigation_type == 4
@@ -386,6 +390,12 @@ static void handle_left(void) {
         return;
     }
 
+    set_nav_input_dir(nav_dir_left);
+    if (is_carousel_grid_mode() && theme.grid.row_count == 1) {
+        list_nav_prev(1);
+        return;
+    }
+
     // Horizontal Navigation with 2 rows of 4 items
     if (theme.grid.enabled && (theme.grid.navigation_type == 2 || theme.grid.navigation_type == 4)) {
         const int column_index = current_item_index % grid_info.column_count;
@@ -426,6 +436,12 @@ static void handle_right(void) {
             dialogue_navigate(&confirm_dlg, &theme, +1);
             play_sound(snd_navigate);
         }
+        return;
+    }
+
+    set_nav_input_dir(nav_dir_right);
+    if (is_carousel_grid_mode() && theme.grid.row_count == 1) {
+        list_nav_next(1);
         return;
     }
 

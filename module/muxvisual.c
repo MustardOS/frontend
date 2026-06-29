@@ -164,12 +164,9 @@ static void init_navigation_group(void) {
     char *selection_animation[] = {lang.generic.disabled, lang.generic.minimal, lang.generic.low,
                                    lang.generic.medium,   lang.generic.high,    lang.generic.maximum};
 
-    // char *bounce_direction[] = {
-    //     lang.generic.outward, lang.generic.vertical, lang.generic.horizontal, lang.generic.wobble,
-    //     lang.generic.shrink
-    // };
-
-    char *bounce_direction[] = {lang.generic.horizontal, lang.generic.vertical};
+    char *shake_direction[] = {
+        lang.generic.up, lang.generic.down, lang.generic.left, lang.generic.right, lang.generic.all
+    };
 
     INIT_OPTION_ITEM(-1, visual, sort, lang.muxvisual.sort, "sort", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, battery, lang.muxvisual.battery, "battery", battery_display, 3);
@@ -190,7 +187,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(
         -1, visual, selection_animation, lang.muxvisual.selectionanimation, "selectionanimation", selection_animation, 6
     );
-    INIT_OPTION_ITEM(-1, visual, selection_style, lang.muxvisual.selectionstyle, "selectionstyle", bounce_direction, 2);
+    INIT_OPTION_ITEM(-1, visual, selection_style, lang.muxvisual.selectionstyle, "selectionstyle", shake_direction, 5);
     INIT_OPTION_ITEM(-1, visual, dash, lang.muxvisual.dash, "dash", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, friendly_folder, lang.muxvisual.friendlyfolder, "friendlyfolder", disabled_enabled, 2);
     INIT_OPTION_ITEM(

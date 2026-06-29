@@ -121,6 +121,8 @@ void shuffle_index(int current, int *dir, int *target);
 
 void adjust_box_art();
 
+void set_nav_input_dir(enum nav_direction direction);
+
 void setup_nav(const struct nav_bar *nav_items);
 
 void header_and_footer_setup();

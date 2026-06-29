@@ -252,10 +252,12 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->generic.maximum, "Maximum");
     GENERIC_FIELD(lang->generic.horizontal, "Horizontal");
     GENERIC_FIELD(lang->generic.vertical, "Vertical");
-    GENERIC_FIELD(lang->generic.outward, "Outward");
+    GENERIC_FIELD(lang->generic.up, "Up");
+    GENERIC_FIELD(lang->generic.down, "Down");
+    GENERIC_FIELD(lang->generic.left, "Left");
+    GENERIC_FIELD(lang->generic.right, "Right");
+    GENERIC_FIELD(lang->generic.all, "All");
     GENERIC_FIELD(lang->generic.ludicrous, "Ludicrous");
-    GENERIC_FIELD(lang->generic.wobble, "Wobble");
-    GENERIC_FIELD(lang->generic.shrink, "Shrink");
     GENERIC_FIELD(lang->generic.unsaved, "Unsaved Changes");
     GENERIC_FIELD(lang->generic.crash_title, "Guru Meditation Error");
     GENERIC_FIELD(lang->generic.crash_message, "If this continues, please report it to the MustardOS team!");
@@ -2103,8 +2105,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxvisual.namescroll, "Label Scroll Style");
     SPECIFIC_FIELD(lang->muxvisual.labelscrollspeed, "Label Scroll Speed");
     SPECIFIC_FIELD(lang->muxvisual.listglyph, "List Glyph");
-    SPECIFIC_FIELD(lang->muxvisual.selectionanimation, "Selection Animation");
-    SPECIFIC_FIELD(lang->muxvisual.selectionstyle, "Selection Style");
+    SPECIFIC_FIELD(lang->muxvisual.selectionanimation, "Selection Intensity");
+    SPECIFIC_FIELD(lang->muxvisual.selectionstyle, "Selection Direction");
     SPECIFIC_FIELD(lang->muxvisual.rendershadows, "Shadow Rendering");
     SPECIFIC_FIELD(lang->muxvisual.scroll_mode.disabled, "Disabled");
     SPECIFIC_FIELD(lang->muxvisual.scroll_mode.continuous, "Continuous");
