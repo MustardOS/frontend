@@ -115,17 +115,10 @@ static void map_vol_buttons(mux_input_type *map, const int down_idx, const int u
 }
 
 static void apply_face_button_layout(void) {
-    if (config.settings.remap.layout == 1) {
-        controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_b;
-        controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_a;
-        controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_y;
-        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_x;
-    } else {
-        controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_a;
-        controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_b;
-        controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_x;
-        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_y;
-    }
+    controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_a;
+    controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_b;
+    controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_x;
+    controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_y;
 }
 
 static void init_input_maps(void) {
@@ -518,24 +511,52 @@ static void close_all_devices(void) {
     device_count = 0;
 }
 
+static void clear_input_state(void) {
+    pressed = 0;
+    held = 0;
+    hold_active = 0;
+    hold_call = 0;
+    alt_keys = 0;
+
+    menu_short_pressed = 0;
+    menu_short_consumed = 0;
+
+    reset_raw_analog();
+}
+
+static void flush_input_events(void) {
+    SDL_FlushEvents(SDL_JOYAXISMOTION, SDL_JOYDEVICEREMOVED);
+    SDL_FlushEvents(SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERDEVICEREMAPPED);
+}
+
+static void load_active_controller_mappings(void) {
+    const int modern_layout = config.settings.remap.layout == 1;
+    const char *layout_name = modern_layout ? "modern" : "retro";
+    const char *info_map = modern_layout ? CONTROL_MODERN : CONTROL_RETRO;
+
+    if (device.board.sdl_map[0] != '\0') {
+        const int board_result = SDL_GameControllerAddMapping(device.board.sdl_map);
+        if (board_result < 0) {
+            LOG_WARN("input", "Failed to add board SDL_MAP: %s", SDL_GetError());
+        } else {
+            LOG_DEBUG("input", "Loaded board SDL_MAP");
+        }
+    }
+
+    const int mappings = SDL_GameControllerAddMappingsFromFile(info_map);
+    if (mappings < 0) {
+        LOG_WARN("input", "Failed to load %s gamecontrollerdb from %s: %s", layout_name, info_map, SDL_GetError());
+    } else {
+        LOG_INFO("input", "Loaded %d %s controller mappings from %s", mappings, layout_name, info_map);
+    }
+}
+
 static void open_all_input_devices(void) {
     static uint32_t last_no_device_log = UINT32_MAX;
     int was_empty = device_count == 0;
 
     if (!mappings_loaded) {
-        if (device.board.sdl_map[0] != '\0' && SDL_GameControllerAddMapping(device.board.sdl_map) < 0) {
-            LOG_WARN("input", "Failed to add device SDL_MAP: %s", SDL_GetError());
-        }
-
-        const char *info_map = config.settings.remap.layout == 1 ? CONTROL_MODERN : CONTROL_RETRO;
-
-        int mappings = SDL_GameControllerAddMappingsFromFile(info_map);
-        if (mappings < 0) {
-            LOG_WARN("input", "Failed to load gamecontrollerdb: %s", SDL_GetError());
-        } else {
-            LOG_INFO("input", "Loaded %d controller mappings", mappings);
-        }
-
+        load_active_controller_mappings();
         mappings_loaded = 1;
     }
 
@@ -643,10 +664,21 @@ static void open_all_input_devices(void) {
 
 void mux_input_reload_mappings(void) {
     close_all_devices();
+
     primary_instance = -1;
     mappings_loaded = 0;
+
+    clear_input_state();
+    flush_input_events();
+
     open_all_input_devices();
     apply_face_button_layout();
+
+    suppress_until_tick = (uint32_t) (mux_tick() + INPUT_COOLDOWN);
+
+    SDL_Event ev = {0};
+    ev.type = SDL_USEREVENT;
+    SDL_PushEvent(&ev);
 }
 
 static mux_input_type remap_stick_to_dpad(const mux_nav_type nav, const mux_input_type mux_type) {
