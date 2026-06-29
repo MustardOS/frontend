@@ -4,6 +4,114 @@ static void show_help(void) {
     show_info_box(lang.muxnetwork.title, lang.muxnetwork.help, 0);
 }
 
+static void net_trim(char *value) {
+    if (!value) return;
+
+    const char *start = value;
+    while (*start && isspace((unsigned char) *start))
+        start++;
+
+    if (start != value) memmove(value, start, strlen(start) + 1);
+
+    size_t len = strlen(value);
+    while (len > 0 && isspace((unsigned char) value[len - 1])) {
+        value[--len] = '\0';
+    }
+}
+
+static int read_wpa_status_value(const char *key, char *value) {
+    if (!*key) return 0;
+
+    value[0] = '\0';
+
+    FILE *fp = popen("wpa_cli status 2>/dev/null", "r");
+    if (!fp) return 0;
+
+    char line[MAX_BUFFER_SIZE];
+    const size_t key_len = strlen(key);
+    int found = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        net_trim(line);
+
+        if (strncmp(line, key, key_len) == 0 && line[key_len] == '=') {
+            snprintf(value, MAX_BUFFER_SIZE, "%s", line + key_len + 1);
+            net_trim(value);
+            found = *value;
+            break;
+        }
+    }
+
+    pclose(fp);
+    return found;
+}
+
+static int read_connected_ssid(char *ssid) {
+    ssid[0] = '\0';
+
+    char state[MAX_BUFFER_SIZE];
+    if (!read_wpa_status_value("wpa_state", state)) return 0;
+    if (strcmp(state, "COMPLETED") != 0) return 0;
+
+    return read_wpa_status_value("ssid", ssid);
+}
+
+static int profile_matches_connected_ssid(const char *profile_name, const char *ssid) {
+    if (!*profile_name || !*ssid) return 0;
+
+    if (strcmp(profile_name, ssid) == 0) return 1;
+
+    char profile_file[MAX_BUFFER_SIZE];
+    const int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name);
+    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return 0;
+
+    mini_t *net = mini_try_load(profile_file);
+    const char *profile_ssid = mini_get_string(net, "network", "ssid", "");
+    const int match = profile_ssid && *profile_ssid && strcmp(profile_ssid, ssid) == 0;
+    mini_free(net);
+
+    return match;
+}
+
+static int find_connected_profile(char *buf) {
+    buf[0] = '\0';
+
+    char ssid[MAX_BUFFER_SIZE];
+    if (!read_connected_ssid(ssid)) return 0;
+
+    const char *dirs[] = {STORAGE_NETWORK};
+    const char *exts[] = {".ini"};
+
+    char **files = NULL;
+    size_t file_count = 0;
+
+    if (scan_directory_list(dirs, exts, &files, A_SIZE(dirs), A_SIZE(exts), &file_count) < 0) return 0;
+
+    int found = 0;
+
+    for (size_t i = 0; i < file_count; ++i) {
+        const char *base_filename = files[i];
+
+        char profile_name[MAX_BUFFER_SIZE];
+        snprintf(
+            profile_name, sizeof(profile_name), "%s",
+            str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/')
+        );
+
+        char profile_store[MAX_BUFFER_SIZE];
+        snprintf(profile_store, sizeof(profile_store), "%s", strip_ext(profile_name));
+
+        if (profile_matches_connected_ssid(profile_store, ssid)) {
+            snprintf(buf, MAX_BUFFER_SIZE, "%s", profile_store);
+            found = 1;
+            break;
+        }
+    }
+
+    free_array(files, file_count);
+    return found;
+}
+
 // Formats the profile status line...
 //   Auto, connected     -> "Connected - Auto (3)"
 //   Auto, not connected -> "Auto (3)"
@@ -49,8 +157,27 @@ static const char *get_profile_status(const char *profile_name, const char *acti
 
 static void read_active_profile(char *buf) {
     buf[0] = '\0';
+
+    char state[MAX_BUFFER_SIZE];
+    if (read_wpa_status_value("wpa_state", state)) {
+        if (strcmp(state, "COMPLETED") != 0) {
+            write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, "");
+            return;
+        }
+
+        if (find_connected_profile(buf)) {
+            write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, buf);
+            return;
+        }
+
+        return;
+    }
+
     char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
-    if (active && *active) snprintf(buf, MAX_BUFFER_SIZE, "%s", active);
+    if (active && *active) {
+        snprintf(buf, MAX_BUFFER_SIZE, "%s", active);
+        net_trim(buf);
+    }
     free(active);
 }
 
@@ -285,8 +412,10 @@ static void init_navigation_group(void) {
 
     if (ui_count_static > 0) {
         int target = 0;
-        const char *saved_name = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
+        char *saved_name = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
         if (saved_name && *saved_name) {
+            net_trim(saved_name);
+
             const uint32_t count = lv_obj_get_child_cnt(ui_pnl_content);
             for (uint32_t i = 0; i < count; i++) {
                 lv_obj_t *child = lv_obj_get_child(ui_pnl_content, (int32_t) i);
@@ -297,6 +426,8 @@ static void init_navigation_group(void) {
                 }
             }
         }
+        free(saved_name);
+
         gen_step_movement(target, +1, 1, 0, 1);
     }
 }
