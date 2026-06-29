@@ -1242,6 +1242,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxnetprofile.subnet, "Subnet CIDR");
     SPECIFIC_FIELD(lang->muxnetprofile.profiles, "Profiles");
     SPECIFIC_FIELD(lang->muxnetprofile.connect_try, "Trying to Connect…");
+    SPECIFIC_FIELD(lang->muxnetprofile.connect_deny, "Disconnect active network first");
     SPECIFIC_FIELD(lang->muxnetprofile.password, "Password");
     SPECIFIC_FIELD(lang->muxnetprofile.no_password, "No Password Detected…");
     SPECIFIC_FIELD(lang->muxnetprofile.dns, "DNS Server");

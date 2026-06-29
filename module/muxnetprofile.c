@@ -76,36 +76,6 @@ static void profile_status_path(char *buf) {
     snprintf(buf, MAX_BUFFER_SIZE, NET_STATUS_DIR "/%s.status", *current_profile ? current_profile : "_none_");
 }
 
-static int sanitise_ssid_name(char *dest, const char *src) {
-    size_t j = 0;
-
-    for (; *src && j < MAX_BUFFER_SIZE - 1; src++) {
-        const unsigned char c = (unsigned char) *src;
-        char out;
-
-        if (isalnum(c) || c == ' ' || c == '_' || c == '-' || c == '.' || c == '(' || c == ')') {
-            out = (char) c;
-        } else {
-            out = '_';
-        }
-
-        if (out == '_' && j > 0 && dest[j - 1] == '_') continue;
-
-        dest[j++] = out;
-    }
-    dest[j] = '\0';
-
-    while (j > 0 && (dest[j - 1] == ' ' || dest[j - 1] == '.'))
-        dest[--j] = '\0';
-
-    size_t start = 0;
-    while (dest[start] == ' ' || dest[start] == '.')
-        start++;
-    if (start > 0) memmove(dest, dest + start, j - start + 1);
-
-    return dest[0] != '\0';
-}
-
 static void net_trim(char *value) {
     const char *start = value;
     while (*start && isspace((unsigned char) *start))
@@ -144,6 +114,16 @@ static int read_wpa_status_value(const char *key, char *value) {
 
     pclose(fp);
     return found;
+}
+
+static int read_connected_ssid(char *ssid) {
+    ssid[0] = '\0';
+
+    char state[MAX_BUFFER_SIZE];
+    if (!read_wpa_status_value("wpa_state", state)) return 0;
+    if (strcmp(state, "COMPLETED") != 0) return 0;
+
+    return read_wpa_status_value("ssid", ssid);
 }
 
 static int current_profile_matches_ssid(const char *ssid) {
@@ -190,23 +170,6 @@ static int profile_is_active(void) {
     free(active);
 
     return active_match;
-}
-
-static void set_connect_value(const char *value) {
-    if (!ui_val_connect_network || !value) return;
-
-    const char *curr = lv_label_get_text(ui_val_connect_network);
-    if (!curr || strcmp(curr, value) != 0) lv_label_set_text(ui_val_connect_network, value);
-}
-
-static void nav_scan_hide(const int hide) {
-    if (hide) {
-        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else {
-        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    }
 }
 
 static int is_safe_iface(const char *iface) {
@@ -260,6 +223,73 @@ static int read_ip(char *buf) {
     *p = '\0';
 
     return *buf != '\0';
+}
+
+static int live_network_connected(void) {
+    char ssid[MAX_BUFFER_SIZE];
+    if (read_connected_ssid(ssid)) return 1;
+
+    char ip[IP_OCTET];
+    return read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0;
+}
+
+static int active_profile_blocks_connect(void) {
+    if (!*current_profile) return 0;
+    if (profile_is_active()) return 0;
+
+    char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
+    const int blocked = active && *active && strcmp(active, current_profile) != 0 && live_network_connected();
+
+    free(active);
+
+    return blocked;
+}
+
+static int sanitise_ssid_name(char *dest, const char *src) {
+    size_t j = 0;
+
+    for (; *src && j < MAX_BUFFER_SIZE - 1; src++) {
+        const unsigned char c = (unsigned char) *src;
+        char out;
+
+        if (isalnum(c) || c == ' ' || c == '_' || c == '-' || c == '.' || c == '(' || c == ')') {
+            out = (char) c;
+        } else {
+            out = '_';
+        }
+
+        if (out == '_' && j > 0 && dest[j - 1] == '_') continue;
+
+        dest[j++] = out;
+    }
+    dest[j] = '\0';
+
+    while (j > 0 && (dest[j - 1] == ' ' || dest[j - 1] == '.'))
+        dest[--j] = '\0';
+
+    size_t start = 0;
+    while (dest[start] == ' ' || dest[start] == '.')
+        start++;
+    if (start > 0) memmove(dest, dest + start, j - start + 1);
+
+    return dest[0] != '\0';
+}
+
+static void set_connect_value(const char *value) {
+    if (!ui_val_connect_network || !value) return;
+
+    const char *curr = lv_label_get_text(ui_val_connect_network);
+    if (!curr || strcmp(curr, value) != 0) lv_label_set_text(ui_val_connect_network, value);
+}
+
+static void nav_scan_hide(const int hide) {
+    if (hide) {
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 }
 
 static const char *net_status_label(const int id) {
@@ -334,16 +364,8 @@ static void get_current_ip(void) {
     char ip[IP_OCTET];
 
     if (!profile_is_active() || !read_ip(ip) || !*ip || !strcasecmp(ip, "0.0.0.0")) {
-        if (ui_network_locked || connecting_phase) {
-            connecting_phase = 1;
-            ui_network_locked = 1;
-
+        if (ui_network_locked && connecting_phase) {
             set_connect_value(lang.muxnetprofile.connect_try);
-            lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
-
-            nav_scan_hide(1);
-            update_network_status(ui_sta_network, &theme, 0);
-
             return;
         }
 
@@ -352,8 +374,6 @@ static void get_current_ip(void) {
     }
 
     connecting_phase = 0;
-    ui_network_locked = 0;
-    connect_grace_ticks = 0;
     viewing_active_profile = 1;
 
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, current_profile);
@@ -366,7 +386,7 @@ static void get_current_ip(void) {
 }
 
 static void update_network_label(void) {
-    if (!ui_network_locked && !connecting_phase) return;
+    if (!ui_network_locked) return;
 
     char status_path[MAX_BUFFER_SIZE];
     profile_status_path(status_path);
@@ -374,22 +394,10 @@ static void update_network_label(void) {
     char *status = read_line_char_from(status_path, 1);
 
     if (!status || !*status) {
-        free(status);
-
-        if (connecting_phase || ui_network_locked) {
+        if (connecting_phase && connect_grace_ticks < 20) {
             connect_grace_ticks++;
-
-            if (connect_grace_ticks < 120) {
-                set_connect_value(lang.muxnetprofile.connect_try);
-                lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
-                nav_scan_hide(1);
-                update_network_status(ui_sta_network, &theme, 0);
-                return;
-            }
-
-            connecting_phase = 0;
-            ui_network_locked = 0;
-            connect_grace_ticks = 0;
+            set_connect_value(lang.muxnetprofile.connect_try);
+            return;
         }
 
         get_current_ip();
@@ -401,68 +409,38 @@ static void update_network_label(void) {
         p++;
     *p = '\0';
 
-    const int id = resolve_status_id(status);
+    if (strcmp(status, last_status) != 0) {
+        snprintf(last_status, sizeof(last_status), "%s", status);
 
-    if (id == status_connected) {
-        get_current_ip();
-        free(status);
-        return;
-    }
+        const int id = resolve_status_id(status);
 
-    if (id == status_associating || id == status_authenticating || id == status_waiting_ip || id == status_validating) {
-        connecting_phase = 1;
-        ui_network_locked = 1;
-        connect_grace_ticks = 0;
-
-        if (strcmp(status, last_status) != 0) {
-            snprintf(last_status, sizeof(last_status), "%s", status);
-            set_connect_value(net_status_label(id));
+        if (id == status_connected) {
+            connecting_phase = 0;
+            ui_network_locked = 0;
+            connect_grace_ticks = 0;
+            get_current_ip();
+            return;
         }
 
-        lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
-        nav_scan_hide(1);
-        update_network_status(ui_sta_network, &theme, 0);
-
-        free(status);
-        return;
-    }
-
-    if (id == status_failed || id >= status_invalid_password) {
-        connecting_phase = 0;
-        ui_network_locked = 0;
-        connect_grace_ticks = 0;
-
-        clear_current_active_profile();
-        viewing_active_profile = 0;
-
-        if (strcmp(status, last_status) != 0) {
-            snprintf(last_status, sizeof(last_status), "%s", status);
-            set_connect_value(net_status_label(id));
+        if (id == status_failed || id >= status_invalid_password) {
+            connecting_phase = 0;
+            ui_network_locked = 0;
+            connect_grace_ticks = 0;
+            clear_current_active_profile();
+            viewing_active_profile = 0;
         }
 
-        free(status);
-        return;
+        if (id >= 0) set_connect_value(net_status_label(id));
     }
-
-    free(status);
 }
 
 static void net_connect_check(const int exit_code) {
-    last_status[0] = '\0';
-
-    if (exit_code == 0) {
-        ui_network_locked = 1;
-        connecting_phase = 1;
-        connect_grace_ticks = 0;
-
-        get_current_ip();
-        return;
-    }
-
+    (void) exit_code;
     ui_network_locked = 0;
     connecting_phase = 0;
     connect_grace_ticks = 0;
 
+    last_status[0] = '\0';
     get_current_ip();
 }
 
@@ -781,6 +759,12 @@ static void handle_confirm(void) {
             can_scan_check(1);
             check_focus();
         } else {
+            if (active_profile_blocks_connect()) {
+                play_sound(snd_error);
+                toast_message(lang.muxnetprofile.connect_deny, tst_wait_s);
+                return;
+            }
+
             int valid_info = 0;
             const char *cv_ssid = lv_label_get_text(ui_val_identifier_network);
 

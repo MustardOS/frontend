@@ -1125,6 +1125,7 @@ struct mux_lang {
         char subnet[MAX_BUFFER_SIZE];
         char profiles[MAX_BUFFER_SIZE];
         char connect_try[MAX_BUFFER_SIZE];
+        char connect_deny[MAX_BUFFER_SIZE];
         char password[MAX_BUFFER_SIZE];
         char no_password[MAX_BUFFER_SIZE];
         char dns[MAX_BUFFER_SIZE];
