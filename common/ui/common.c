@@ -18,6 +18,7 @@
 #include "../battery.h"
 #include "../display.h"
 #include "../log.h"
+#include "../video.h"
 
 const lv_img_dsc_t ui_img_blank = {
     .header.always_zero = 0,
@@ -1711,13 +1712,32 @@ void adjust_panel_priority(lv_obj_t *panels[]) {
 
 int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, const int wall_type) {
     if (config.boot.factory_reset) {
-        char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", theme_base, mux_dim);
-        lv_img_header_t wall_hdr;
-        if (lv_img_decoder_get_info(init_wall, &wall_hdr) == LV_RES_OK) {
-            lv_img_set_src(ui_img_wall, init_wall);
-        } else {
-            lv_img_set_src(ui_img_wall, &ui_img_blank);
+        int video_played = 0;
+        if (config.visual.video_wallpaper) {
+            const char *program = lv_obj_get_user_data(ui_screen);
+            char mp4_path[MAX_BUFFER_SIZE];
+            const char *ad_dims[] = {mux_dim, ""};
+            for (size_t i = 0; i < 2 && !video_played; i++) {
+                int w = snprintf(mp4_path, sizeof(mp4_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[i], program);
+                if (w > 0 && (size_t) w < sizeof(mp4_path) && file_exist(mp4_path)) {
+                    video_wallpaper_play(mp4_path);
+                    lv_img_set_src(ui_img_wall, &ui_img_blank);
+                    lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                    lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                    set_gradient_visible(0);
+                    video_played = 1;
+                }
+            }
+        }
+        if (!video_played) {
+            char init_wall[MAX_BUFFER_SIZE];
+            snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", theme_base, mux_dim);
+            lv_img_header_t wall_hdr;
+            if (lv_img_decoder_get_info(init_wall, &wall_hdr) == LV_RES_OK) {
+                lv_img_set_src(ui_img_wall, init_wall);
+            } else {
+                lv_img_set_src(ui_img_wall, &ui_img_blank);
+            }
         }
     } else {
         load_wallpaper(ui_screen, ui_group, ui_img_wall, wall_type);
