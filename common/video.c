@@ -1065,7 +1065,10 @@ void video_preview_cancel(void) {
         snprintf(video_path, sizeof(video_path), "%s", saved_wall_path);
         saved_wall_path[0] = '\0';
         wallpaper_open();
+        return;
     }
+
+    display_composite_frame();
 }
 
 void video_preview_destroy(void) {
