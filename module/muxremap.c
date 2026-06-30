@@ -362,6 +362,7 @@ static void update_footer_glyph(lv_obj_t *glyph, const char *name) {
 static void apply_layout(const int layout) {
     remap_layout = layout;
     config.settings.remap.layout = (int16_t) layout;
+    create_directories(CONF_CONFIG_PATH "settings/remap/layout", 1);
     write_text_to_file(CONF_CONFIG_PATH "settings/remap/layout", "w", INT, layout);
     mux_input_reload_mappings();
 

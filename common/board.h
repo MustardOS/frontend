@@ -27,6 +27,7 @@ typedef struct {
     int pwr_event;
     int lid_event;
     board_event_offset_t event_offset;
+    int layout_map_swap;
 } board_info_t;
 
 enum {
@@ -42,6 +43,11 @@ enum {
     ev8 = 8,
 };
 
+enum {
+    regular = 0,
+    goofy = 1,
+};
+
 void board_init(const char *code);
 
 const board_info_t *board_current(void);
@@ -53,6 +59,8 @@ board_special_t board_special(void);
 int board_is(board_special_t type);
 
 int board_is_special(void);
+
+int board_layout_map_swap(void);
 
 int board_volume_event_index(void);
 

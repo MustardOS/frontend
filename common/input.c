@@ -115,6 +115,16 @@ static void map_vol_buttons(mux_input_type *map, const int down_idx, const int u
 }
 
 static void apply_face_button_layout(void) {
+    // Some weirdo devices have SDL gamecontrollerdb updates that don't reliably affect
+    // their actual runtime GUID, so fall back to swapping the logical button map directly
+    if (board_layout_map_swap() && config.settings.remap.layout == 1) {
+        controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_b;
+        controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_a;
+        controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_y;
+        controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_x;
+        return;
+    }
+
     controller_button_map[SDL_CONTROLLER_BUTTON_A] = mux_input_a;
     controller_button_map[SDL_CONTROLLER_BUTTON_B] = mux_input_b;
     controller_button_map[SDL_CONTROLLER_BUTTON_X] = mux_input_x;
@@ -531,8 +541,10 @@ static void flush_input_events(void) {
 
 static void load_active_controller_mappings(void) {
     const int modern_layout = config.settings.remap.layout == 1;
-    const char *layout_name = modern_layout ? "modern" : "retro";
-    const char *info_map = modern_layout ? CONTROL_MODERN : CONTROL_RETRO;
+    const int use_modern_sdl = modern_layout && !board_layout_map_swap();
+
+    const char *layout_name = use_modern_sdl ? "modern" : "retro";
+    const char *info_map = use_modern_sdl ? CONTROL_MODERN : CONTROL_RETRO;
 
     if (device.board.sdl_map[0] != '\0') {
         const int board_result = SDL_GameControllerAddMapping(device.board.sdl_map);
