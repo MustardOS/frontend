@@ -131,6 +131,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, trust_power, "settings/advanced/trust_power", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_remove, "settings/advanced/trust_remove", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, usb_function, "settings/advanced/usb_function", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, box_art_pad_div, "settings/advanced/boxartpaddiv", INT, 0);
 
     do {
         const int sd2_current = lv_dropdown_get_selected(ui_dro_second_part_tweakadv);
@@ -246,6 +247,11 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, trust_power, lang.muxtweakadv.trustpower, "trustpower", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_remove, lang.muxtweakadv.trustremove, "trustremove", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, usb_function, lang.muxtweakadv.usbfunction, "usbfunction", usb_functions, 3);
+    INIT_OPTION_ITEM(-1, tweakadv, box_art_pad_div, lang.muxtweakadv.box_art_pad_div, "boxartpaddiv", NULL, 0);
+
+    char pad_div_values[MAX_BUFFER_SIZE];
+    snprintf(pad_div_values, sizeof(pad_div_values), "50\n100\n200\n400\n600\n800");
+    apply_theme_list_drop_down(&theme, ui_dro_box_art_pad_div_tweakadv, pad_div_values);
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.generic.disabled, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_dro_accelerate_tweakadv, accelerate_values);

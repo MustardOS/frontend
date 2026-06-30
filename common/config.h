@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stddef.h>
 #include <stdint.h>
 #include "options.h"
 
@@ -157,6 +156,7 @@ struct mux_config {
             int16_t trust_modify;
             int16_t trust_power;
             int16_t trust_remove;
+            int16_t box_art_pad_div;
         } advanced;
         struct {
             int16_t schedule_mode;
@@ -289,6 +289,7 @@ struct mux_config {
         int16_t box_art_align;
         int16_t box_art_hide;
         int16_t box_art_scale;
+        int16_t box_art_padding;
         int16_t box_art_transition;
         int16_t video_preview;
         int16_t content_width;

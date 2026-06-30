@@ -64,8 +64,9 @@ static void restore_content_options(void) {
     lv_dropdown_set_selected(ui_dro_launch_splash_content, config.visual.launchsplash);
     lv_dropdown_set_selected(ui_dro_grid_mode_content, config.visual.grid_mode_content);
     lv_dropdown_set_selected(ui_dro_grid_mode_art_content, 1 - config.visual.box_art_hide);
-    lv_dropdown_set_selected(ui_dro_box_art_scale_content, config.visual.box_art_scale);
     lv_dropdown_set_selected(ui_dro_box_art_transition_content, config.visual.box_art_transition);
+    lv_dropdown_set_selected(ui_dro_box_art_scale_content, config.visual.box_art_scale);
+    lv_dropdown_set_selected(ui_dro_box_art_padding_content, config.visual.box_art_padding);
     lv_dropdown_set_selected(ui_dro_video_preview_content, config.visual.video_preview);
 }
 
@@ -88,8 +89,9 @@ static int save_content_options(void) {
         );
     }
 
-    CHECK_AND_SAVE_STD(content, box_art_scale, "visual/boxartscale", INT, 0);
     CHECK_AND_SAVE_STD(content, box_art_transition, "visual/boxarttransition", INT, 0);
+    CHECK_AND_SAVE_STD(content, box_art_scale, "visual/boxartscale", INT, 0);
+    CHECK_AND_SAVE_STD(content, box_art_padding, "visual/boxartpadding", INT, 0);
     CHECK_AND_SAVE_STD(content, video_preview, "visual/videopreview", INT, 0);
 
     if (is_modified > 0) run_tweak_script(lang.generic.saving);
@@ -135,11 +137,12 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, content, shuffle, lang.muxcontent.shuffle, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, content, box_art_image, lang.muxcontent.box_art.title, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, content, box_art_align, lang.muxcontent.box_art.align.title, "align", boxart_align, 9);
-    INIT_OPTION_ITEM(-1, content, box_art_scale, lang.muxcontent.box_art.scale, "boxartscale", NULL, 0);
     INIT_OPTION_ITEM(
         -1, content, box_art_transition, lang.muxcontent.box_art.transition.title, "boxarttransition",
         boxart_transition, 14
     );
+    INIT_OPTION_ITEM(-1, content, box_art_scale, lang.muxcontent.box_art.scale, "boxartscale", NULL, 0);
+    INIT_OPTION_ITEM(-1, content, box_art_padding, lang.muxcontent.box_art.padding, "boxartpadding", NULL, 0);
     INIT_OPTION_ITEM(
         -1, content, video_preview, lang.muxcontent.video_preview.title, "videopreview", video_preview_options, 4
     );
@@ -154,6 +157,13 @@ static void init_navigation_group(void) {
         generate_number_string(1, 100, 1, NULL, "%", NULL, 1)
     );
     apply_theme_list_drop_down(&theme, ui_dro_box_art_scale_content, boxart_scale_values);
+
+    char boxart_padding_values[MAX_BUFFER_SIZE];
+    snprintf(
+        boxart_padding_values, sizeof(boxart_padding_values), "%s\n%s", lang.generic.disabled,
+        generate_number_string(1, 100, 1, NULL, "%", NULL, 1)
+    );
+    apply_theme_list_drop_down(&theme, ui_dro_box_art_padding_content, boxart_padding_values);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

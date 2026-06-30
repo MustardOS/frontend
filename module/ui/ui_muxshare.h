@@ -150,8 +150,9 @@
     CONTENT(shuffle, "shuffle")                                                                                        \
     CONTENT(box_art_image, "boxart")                                                                                   \
     CONTENT(box_art_align, "align")                                                                                    \
-    CONTENT(box_art_scale, "boxartscale")                                                                              \
     CONTENT(box_art_transition, "boxarttransition")                                                                    \
+    CONTENT(box_art_scale, "boxartscale")                                                                              \
+    CONTENT(box_art_padding, "boxartpadding")                                                                          \
     CONTENT(video_preview, "videopreview")                                                                             \
     CONTENT(full_width, "width")                                                                                       \
     CONTENT(launch_splash, "splash")                                                                                   \
@@ -511,7 +512,8 @@
     TWEAKADV(trust_modify, "trustmodify")                                                                              \
     TWEAKADV(trust_power, "trustpower")                                                                                \
     TWEAKADV(trust_remove, "trustremove")                                                                              \
-    TWEAKADV(usb_function, "usbfunction")
+    TWEAKADV(usb_function, "usbfunction")                                                                              \
+    TWEAKADV(box_art_pad_div, "boxartpaddiv")
 
 #define TWEAKGEN_ELEMENTS                                                                                              \
     TWEAKGEN(rtc, "clock")                                                                                             \

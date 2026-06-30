@@ -909,25 +909,31 @@ void render_image_refresh(
                     const int16_t max_w =
                         (int16_t) (config.visual.box_art_scale > 0 ? box_w * config.visual.box_art_scale / 100 : 0);
 
+                    const int explicit_align = config.visual.box_art_align > 0;
+                    static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
+                    const int pad_div_idx = config.settings.advanced.box_art_pad_div;
+                    const int pad_div = pad_div_idx >= 0 && pad_div_idx < 6 ? pad_div_map[pad_div_idx] : 400;
+                    const int user_pad =
+                        config.visual.box_art_padding > 0 ? box_h * config.visual.box_art_padding / pad_div : 0;
+                    const int pad_l = (explicit_align ? 0 : theme.image_list.pad_left) + user_pad;
+                    const int pad_r = (explicit_align ? 0 : theme.image_list.pad_right) + user_pad;
+                    const int pad_t = (explicit_align ? 0 : theme.image_list.pad_top) + user_pad;
+                    const int pad_b = (explicit_align ? 0 : theme.image_list.pad_bottom) + user_pad;
+
                     const size_t ilen = strlen(image);
                     if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {
                         const int svg_w = max_w > 0 ? max_w : box_w;
-                        const int svg_h = box_h;
-                        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, svg_w, svg_h);
+                        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, svg_w, box_h);
                         lv_img_set_size_mode(ui_img_box, LV_IMG_SIZE_MODE_VIRTUAL);
                         lv_img_set_zoom(ui_img_box, LV_IMG_ZOOM_NONE);
+                        lv_obj_set_style_pad_left(ui_img_box, pad_l, MU_OBJ_MAIN_DEFAULT);
+                        lv_obj_set_style_pad_right(ui_img_box, pad_r, MU_OBJ_MAIN_DEFAULT);
+                        lv_obj_set_style_pad_top(ui_img_box, pad_t, MU_OBJ_MAIN_DEFAULT);
+                        lv_obj_set_style_pad_bottom(ui_img_box, pad_b, MU_OBJ_MAIN_DEFAULT);
                         lv_img_set_src(ui_img_box, image_path);
                     } else {
-                        const struct image_settings image_settings = {
-                            image,
-                            -1,
-                            max_w,
-                            (int16_t) box_h,
-                            theme.image_list.pad_left,
-                            theme.image_list.pad_right,
-                            theme.image_list.pad_top,
-                            theme.image_list.pad_bottom
-                        };
+                        const struct image_settings image_settings = {image, -1,    max_w, (int16_t) box_h,
+                                                                      pad_l, pad_r, pad_t, pad_b};
                         update_image(ui_img_box, image_settings);
                     }
 

@@ -564,6 +564,7 @@ struct mux_lang {
             char fs_front[MAX_BUFFER_SIZE];
             char original[MAX_BUFFER_SIZE];
             char scale[MAX_BUFFER_SIZE];
+            char padding[MAX_BUFFER_SIZE];
             struct {
                 char title[MAX_BUFFER_SIZE];
                 char b_left[MAX_BUFFER_SIZE];
@@ -616,6 +617,7 @@ struct mux_lang {
             char grid_mode[MAX_BUFFER_SIZE];
             char grid_mode_art[MAX_BUFFER_SIZE];
             char box_art_scale[MAX_BUFFER_SIZE];
+            char box_art_padding[MAX_BUFFER_SIZE];
             char box_art_transition[MAX_BUFFER_SIZE];
             char video_preview[MAX_BUFFER_SIZE];
         } help;
@@ -1747,6 +1749,7 @@ struct mux_lang {
         char trustpower[MAX_BUFFER_SIZE];
         char trustremove[MAX_BUFFER_SIZE];
         char usbfunction[MAX_BUFFER_SIZE];
+        char box_art_pad_div[MAX_BUFFER_SIZE];
         char adb[MAX_BUFFER_SIZE];
         char mtp[MAX_BUFFER_SIZE];
         struct {
@@ -1818,6 +1821,7 @@ struct mux_lang {
             char trust_power[MAX_BUFFER_SIZE];
             char trust_remove[MAX_BUFFER_SIZE];
             char usb_function[MAX_BUFFER_SIZE];
+            char box_art_pad_div[MAX_BUFFER_SIZE];
         } help;
     } muxtweakadv;
 

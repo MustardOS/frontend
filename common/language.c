@@ -623,6 +623,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxcontent.box_art.fs_front, "Fullscreen + Front");
     SPECIFIC_FIELD(lang->muxcontent.box_art.original, "Original");
     SPECIFIC_FIELD(lang->muxcontent.box_art.scale, "Box Art Scale");
+    SPECIFIC_FIELD(lang->muxcontent.box_art.padding, "Box Art Padding");
     SPECIFIC_FIELD(lang->muxcontent.box_art.transition.title, "Box Art Transition");
     SPECIFIC_FIELD(lang->muxcontent.box_art.transition.fade_in, "Fade In");
     SPECIFIC_FIELD(lang->muxcontent.box_art.transition.slide_right, "Slide From Right");
@@ -671,6 +672,9 @@ void load_lang(struct mux_lang *lang) {
         "Show or hide system box art images in Content Explorer when theme uses grid mode"
     );
     SPECIFIC_FIELD(lang->muxcontent.help.box_art_scale, "Scale box art to a percentage of the available display area");
+    SPECIFIC_FIELD(
+        lang->muxcontent.help.box_art_padding, "Add percentage padding around the box art image on all sides"
+    );
     SPECIFIC_FIELD(
         lang->muxcontent.help.box_art_transition, "Select the animation for box art when navigating content"
     );
@@ -1930,6 +1934,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxtweakadv.trustpower, "Trust Power Choice");
     SPECIFIC_FIELD(lang->muxtweakadv.trustremove, "Trust Removals");
     SPECIFIC_FIELD(lang->muxtweakadv.usbfunction, "USB Function");
+    SPECIFIC_FIELD(lang->muxtweakadv.box_art_pad_div, "Box Art Padding Divisor");
     SPECIFIC_FIELD(lang->muxtweakadv.adb, "Android Debug Bridge");
     SPECIFIC_FIELD(lang->muxtweakadv.mtp, "Media Transfer Protocol");
     SPECIFIC_FIELD(lang->muxtweakadv.help.accelerate, "Adjust the rate of speed when holding navigation keys down");
@@ -2030,6 +2035,9 @@ void load_lang(struct mux_lang *lang) {
         "Skip the removal confirmation dialogue when using X to remove content or reset settings"
     );
     SPECIFIC_FIELD(lang->muxtweakadv.help.usb_function, "Toggle between ADB and MTP USB functionality");
+    SPECIFIC_FIELD(
+        lang->muxtweakadv.help.box_art_pad_div, "Divisor used to scale the box art padding percentage into pixels"
+    );
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->muxtweakgen.title, "GENERAL SETTINGS");
