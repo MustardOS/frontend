@@ -336,9 +336,33 @@ static void check_focus(void) {
     }
 }
 
+static void update_footer_glyph(lv_obj_t *glyph, const char *name) {
+    if (!glyph) return;
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+
+    if (generate_image_embed(
+            mux_dim, "footer", name, image_path, sizeof(image_path), image_embed, sizeof(image_embed)
+        )) {
+        const int footer_target = resolve_glyph_size(
+            config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.mux.item.height * 3 / 4
+        );
+
+        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer);
+
+        append_glyph_size_hint(image_embed, sizeof(image_embed), footer_target);
+        lv_img_set_src(glyph, image_embed);
+        apply_glyph_scale(glyph, image_embed, footer_px, footer_px);
+    }
+
+    lv_obj_update_layout(glyph);
+}
+
 static void apply_layout(const int layout) {
     remap_layout = layout;
     config.settings.remap.layout = (int16_t) layout;
+    write_text_to_file(CONF_CONFIG_PATH "settings/remap/layout", "w", INT, layout);
     mux_input_reload_mappings();
 
     load_current_mapping();
@@ -349,10 +373,10 @@ static void apply_layout(const int layout) {
     if (layout_value)
         lv_label_set_text(layout_value, remap_layout == 1 ? lang.muxremap.layout_modern : lang.muxremap.layout_retro);
 
-    update_glyph(ui_lbl_nav_a_glyph, "footer", remap_layout ? "b" : "a");
-    update_glyph(ui_lbl_nav_b_glyph, "footer", remap_layout ? "a" : "b");
-    update_glyph(ui_lbl_nav_x_glyph, "footer", remap_layout ? "y" : "x");
-    update_glyph(ui_lbl_nav_y_glyph, "footer", remap_layout ? "x" : "y");
+    update_footer_glyph(ui_lbl_nav_a_glyph, remap_layout ? "b" : "a");
+    update_footer_glyph(ui_lbl_nav_b_glyph, remap_layout ? "a" : "b");
+    update_footer_glyph(ui_lbl_nav_x_glyph, remap_layout ? "y" : "x");
+    update_footer_glyph(ui_lbl_nav_y_glyph, remap_layout ? "x" : "y");
 }
 
 static void cycle_to_next_device(void) {
