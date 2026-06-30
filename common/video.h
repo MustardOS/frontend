@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL2/SDL.h>
 #include "../lvgl/lvgl.h"
 
 void video_wallpaper_play(const char *path);
@@ -15,3 +16,7 @@ int video_preview_active(void);
 void video_preview_cancel(void);
 
 void video_preview_destroy(void);
+
+void video_wallpaper_render_frame(SDL_Renderer *r);
+
+const char *video_wallpaper_path(void);

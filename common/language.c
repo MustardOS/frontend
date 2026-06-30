@@ -1469,6 +1469,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxpower.saver.type.maze, "Maze Runner");
     SPECIFIC_FIELD(lang->muxpower.saver.type.blockfall, "Block Fall");
     SPECIFIC_FIELD(lang->muxpower.saver.type.datetime, "Date and Time");
+    SPECIFIC_FIELD(lang->muxpower.saver.type.video, "Video Wallpaper");
     SPECIFIC_FIELD(lang->muxpower.saver.speed.title, "Screensaver Speed");
     SPECIFIC_FIELD(lang->muxpower.saver.speed.crawl, "Crawl");
     SPECIFIC_FIELD(lang->muxpower.saver.speed.cruise, "Cruise");

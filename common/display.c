@@ -199,12 +199,19 @@ enum {
     saver_type_maze = 9,
     saver_type_blockfall = 10,
     saver_type_datetime = 11,
+    saver_type_video = 12,
 };
+
+static char video_saver_path[MAX_BUFFER_SIZE];
+static char video_saver_prev_path[MAX_BUFFER_SIZE];
+static int video_saver_running = 0;
+static saver_state_t video_saver_base;
 
 static int saver_speed_override = 0;
 static int active_saver = -1;
 
 static int saver_active(void) {
+    if (active_saver == saver_type_video) return saver_active_base(&video_saver_base);
     if (active_saver == saver_type_datetime) return datetime_active();
     if (active_saver == saver_type_blockfall) return blockfall_active();
     if (active_saver == saver_type_maze) return maze_active();
@@ -220,6 +227,15 @@ static int saver_active(void) {
 }
 
 static void saver_update(void) {
+    if (active_saver == saver_type_video) {
+        if (saver_poll_idle(&video_saver_base, SDL_GetTicks()) && !video_saver_running) {
+            snprintf(video_saver_prev_path, sizeof(video_saver_prev_path),
+                     "%s", video_wallpaper_active() ? video_wallpaper_path() : "");
+            video_wallpaper_play(video_saver_path);
+            video_saver_running = 1;
+        }
+        return;
+    }
     if (active_saver == saver_type_datetime)
         datetime_update();
     else if (active_saver == saver_type_blockfall)
@@ -245,6 +261,10 @@ static void saver_update(void) {
 }
 
 static void saver_render(SDL_Renderer *r) {
+    if (active_saver == saver_type_video) {
+        video_wallpaper_render_frame(r);
+        return;
+    }
     if (active_saver == saver_type_datetime)
         datetime_render(r);
     else if (active_saver == saver_type_blockfall)
@@ -270,6 +290,16 @@ static void saver_render(SDL_Renderer *r) {
 }
 
 static void saver_stop(void) {
+    if (active_saver == saver_type_video) {
+        video_wallpaper_stop();
+        if (video_saver_prev_path[0]) {
+            video_wallpaper_play(video_saver_prev_path);
+            video_saver_prev_path[0] = '\0';
+        }
+        video_saver_running = 0;
+        saver_stop_base(&video_saver_base);
+        return;
+    }
     if (active_saver == saver_type_datetime)
         datetime_stop();
     else if (active_saver == saver_type_blockfall)
@@ -305,6 +335,15 @@ int get_saver_speed(const int fallback) {
 }
 
 static void reload_saver() {
+    if (active_saver == saver_type_video && video_saver_running) {
+        video_wallpaper_stop();
+        if (video_saver_prev_path[0]) {
+            video_wallpaper_play(video_saver_prev_path);
+            video_saver_prev_path[0] = '\0';
+        }
+        video_saver_running = 0;
+    }
+
     dvd_shutdown();
     star_shutdown();
     matrix_shutdown();
@@ -344,6 +383,18 @@ static void reload_saver() {
         matrix_init(monitor.renderer, device.screen.width, device.screen.height);
     } else if (type == saver_type_star) {
         star_init(monitor.renderer, device.screen.width, device.screen.height);
+    } else if (type == saver_type_video) {
+        char saver_video[MAX_BUFFER_SIZE];
+        snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
+
+        if (!file_exist(saver_video)) {
+            snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
+            if (!file_exist(saver_video)) snprintf(saver_video, sizeof(saver_video), OPT_SHARE_PATH "media/logo.mp4");
+        }
+
+        snprintf(video_saver_path, sizeof(video_saver_path), "%s", saver_video);
+        saver_init_base(&video_saver_base, device.screen.width, device.screen.height, "Video Wallpaper", 0, 0, 0, NULL,
+                        NULL, NULL);
     } else if (type == saver_type_dvd) {
         char saver_image[MAX_BUFFER_SIZE];
         snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
@@ -538,6 +589,10 @@ void sdl_init(void) {
 
 void sdl_cleanup(void) {
     anim_unload();
+    if (active_saver == saver_type_video && video_saver_running) {
+        video_wallpaper_stop();
+        video_saver_running = 0;
+    }
     dvd_shutdown();
     star_shutdown();
     matrix_shutdown();

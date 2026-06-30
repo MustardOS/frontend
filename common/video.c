@@ -1082,3 +1082,41 @@ void video_preview_destroy(void) {
     saved_wall_path[0] = '\0';
     video_path[0] = '\0';
 }
+
+const char *video_wallpaper_path(void) {
+    return video_path;
+}
+
+void video_wallpaper_render_frame(SDL_Renderer *r) {
+    if (!is_wallpaper || !fmt_ctx || !present_frame || !vq_lock) return;
+
+    const uint32_t ticks = SDL_GetTicks();
+    int moved_frame = 0;
+
+    SDL_LockMutex(vq_lock);
+
+    if (stall_last_ticks > 0 && ticks - stall_last_ticks > WALLPAPER_STALL_MS) {
+        wallpaper_next_ticks = ticks;
+    }
+
+    stall_last_ticks = ticks;
+    if (wallpaper_next_ticks == 0) wallpaper_next_ticks = ticks;
+
+    if (vq_count > 0 && ticks + DISPLAY_SLACK >= wallpaper_next_ticks) {
+        const int64_t moved_pts = frame_pts_ms(vq_at(0));
+        moved_frame = vq_pop_into(present_frame);
+        if (moved_frame) last_pts = moved_pts;
+        SDL_CondSignal(vq_cond);
+
+        wallpaper_next_ticks += wallpaper_frame_ms;
+        if (ticks > wallpaper_next_ticks + WALLPAPER_STALL_MS) {
+            wallpaper_next_ticks = ticks + wallpaper_frame_ms;
+        }
+    }
+
+    SDL_UnlockMutex(vq_lock);
+
+    if (moved_frame) video_upload(present_frame);
+
+    if (has_frame && video_tex) SDL_RenderCopy(r, video_tex, NULL, &video_dst);
+}
