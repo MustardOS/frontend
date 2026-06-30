@@ -223,7 +223,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     }
 
     size_t capacity = 8;
-    bgm_files = malloc(capacity * sizeof(char *));
+    bgm_files = calloc(capacity, sizeof(char *));
     if (!bgm_files) {
         LOG_ERROR("audio", "%s", lang.system.fail_allocate_mem);
         closedir(dir);
@@ -238,6 +238,12 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         if (len > 4 && strcmp(entry->d_name + len - 4, ".ogg") == 0) {
             if (bgm_file_count >= capacity) {
                 capacity <<= 1;
+
+                if (capacity > SIZE_MAX / sizeof(char *)) {
+                    LOG_ERROR("audio", "%s", lang.system.fail_allocate_mem);
+                    closedir(dir);
+                    return;
+                }
 
                 char **bgm_temp = realloc(bgm_files, capacity * sizeof(char *));
 
