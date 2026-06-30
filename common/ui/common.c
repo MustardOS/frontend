@@ -1731,26 +1731,42 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
 
         switch (theme.misc.static_alignment) {
             case 0: // Bottom + Front
+                lv_obj_set_x(ui_pnl_box, 0);
+                lv_obj_set_y(ui_pnl_box, 0);
+                lv_obj_set_width(ui_pnl_box, device.mux.width);
+                lv_obj_set_height(ui_pnl_box, device.mux.height);
                 lv_obj_set_align(ui_img_box, LV_ALIGN_BOTTOM_RIGHT);
                 lv_obj_move_foreground(ui_pnl_box);
                 break;
             case 1: // Middle + Front
+                lv_obj_set_x(ui_pnl_box, 0);
+                lv_obj_set_y(ui_pnl_box, 0);
+                lv_obj_set_width(ui_pnl_box, device.mux.width);
+                lv_obj_set_height(ui_pnl_box, device.mux.height);
                 lv_obj_set_align(ui_img_box, LV_ALIGN_RIGHT_MID);
                 lv_obj_move_foreground(ui_pnl_box);
                 break;
             case 2: // Top + Front
+                lv_obj_set_x(ui_pnl_box, 0);
+                lv_obj_set_y(ui_pnl_box, 0);
+                lv_obj_set_width(ui_pnl_box, device.mux.width);
+                lv_obj_set_height(ui_pnl_box, device.mux.height);
                 lv_obj_set_align(ui_img_box, LV_ALIGN_TOP_RIGHT);
                 lv_obj_move_foreground(ui_pnl_box);
                 break;
             case 3: // Fullscreen + Behind
+                lv_obj_set_x(ui_pnl_box, 0);
                 lv_obj_set_y(ui_pnl_box, 0);
+                lv_obj_set_width(ui_pnl_box, device.mux.width);
                 lv_obj_set_height(ui_pnl_box, device.mux.height);
                 lv_obj_set_align(ui_img_box, LV_ALIGN_CENTER);
                 lv_obj_move_background(ui_pnl_box);
                 lv_obj_move_background(ui_pnl_wall);
                 break;
             case 4: // Fullscreen + Front
+                lv_obj_set_x(ui_pnl_box, 0);
                 lv_obj_set_y(ui_pnl_box, 0);
+                lv_obj_set_width(ui_pnl_box, device.mux.width);
                 lv_obj_set_height(ui_pnl_box, device.mux.height);
                 lv_obj_set_align(ui_img_box, LV_ALIGN_CENTER);
                 lv_obj_move_foreground(ui_pnl_box);

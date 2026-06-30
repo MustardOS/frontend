@@ -88,22 +88,37 @@ void shuffle_index(const int current, int *dir, int *target) {
 }
 
 void adjust_box_art(void) {
+    const int content_y = theme.header.height + 2;
+    const int content_h = device.mux.height - theme.header.height - theme.footer.height - 4;
+
     switch (config.visual.box_art) {
-        case 0: // Behind
+        case 0: // Behind — within content area, behind content; header/footer clip
+            lv_obj_set_x(ui_pnl_box, 0);
+            lv_obj_set_y(ui_pnl_box, content_y);
+            lv_obj_set_width(ui_pnl_box, device.mux.width);
+            lv_obj_set_height(ui_pnl_box, content_h > 0 ? content_h : device.mux.height);
             lv_obj_move_background(ui_pnl_box);
             lv_obj_move_background(ui_pnl_wall);
             break;
-        case 1: // Front
+        case 1: // Front — within content area, in front of content; header/footer always on top
+            lv_obj_set_x(ui_pnl_box, 0);
+            lv_obj_set_y(ui_pnl_box, content_y);
+            lv_obj_set_width(ui_pnl_box, device.mux.width);
+            lv_obj_set_height(ui_pnl_box, content_h > 0 ? content_h : device.mux.height);
             lv_obj_move_foreground(ui_pnl_box);
             break;
-        case 2: // Fullscreen + Behind
+        case 2: // Fullscreen + Behind — full screen, behind content; header/footer render on top but do not clip
+            lv_obj_set_x(ui_pnl_box, 0);
             lv_obj_set_y(ui_pnl_box, 0);
+            lv_obj_set_width(ui_pnl_box, device.mux.width);
             lv_obj_set_height(ui_pnl_box, device.mux.height);
             lv_obj_move_background(ui_pnl_box);
             lv_obj_move_background(ui_pnl_wall);
             break;
-        case 3: // Fullscreen + Front
+        case 3: // Fullscreen + Front — full screen, in front of everything including header/footer
+            lv_obj_set_x(ui_pnl_box, 0);
             lv_obj_set_y(ui_pnl_box, 0);
+            lv_obj_set_width(ui_pnl_box, device.mux.width);
             lv_obj_set_height(ui_pnl_box, device.mux.height);
             lv_obj_move_foreground(ui_pnl_box);
             break;
@@ -518,6 +533,7 @@ void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_
 void adjust_gen_panel(void) {
     adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_pnl_help, ui_pnl_progress_brightness,
                                           ui_pnl_progress_volume, NULL});
+    if (config.visual.box_art == 3) lv_obj_move_foreground(ui_pnl_box);
 }
 
 void ui_gen_refresh_task(lv_timer_t *timer __attribute__((unused))) {

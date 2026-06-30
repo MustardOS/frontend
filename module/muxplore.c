@@ -1317,6 +1317,7 @@ static void handle_nav_key_released(void) {
 static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_lbl_counter_explore, ui_pnl_help,
                                           ui_pnl_progress_brightness, ui_pnl_progress_volume, ui_pnl_message, NULL});
+    if (config.visual.box_art == 3) lv_obj_move_foreground(ui_pnl_box);
 }
 
 static void init_elements(void) {
