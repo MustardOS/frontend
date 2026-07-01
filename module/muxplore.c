@@ -511,35 +511,6 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
     free(tagged_names);
 }
 
-static void init_navigation_group_grid(void) {
-    grid_mode_enabled = 1;
-
-    init_grid_info((int) item_count, theme.grid.column_count);
-    create_grid_panel(&theme, (int) item_count);
-
-    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
-    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
-
-    if (item_count == 0) return;
-
-    if (is_carousel_grid_mode()) {
-        create_carousel_grid();
-
-        const int prev_dir_index = get_item_index_by_extra_data(items, item_count, prev_dir);
-        if (prev_dir_index > -1) sys_index = prev_dir_index;
-
-        return;
-    }
-
-    const int visible_count = theme.grid.column_count * theme.grid.row_count;
-    if (visible_count <= 0) return;
-
-    for (int i = 0; i < (int) item_count; i++) {
-        if (items[i].extra_data && strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = i;
-        if (i < visible_count) gen_grid_item(i);
-    }
-}
-
 static int get_visible_dir_count(const char *base_dir, const char *name, const int idx) {
     if (union_dir_item_count && idx >= 0 && idx < union_dir_item_count_len) {
         const int cnt = union_dir_item_count[idx];
@@ -701,7 +672,7 @@ static void create_content_items(void) {
                         && ((file_count > 0 && config.visual.grid_mode_content) || (dir_count > 0 && file_count == 0));
 
     if (grid_mode_enabled) {
-        init_navigation_group_grid();
+        init_grid_dynamic(prev_dir, &sys_index);
     } else {
         const size_t limit = theme.mux.item.count;
         for (size_t i = 0; i < item_count && i < limit; i++) {

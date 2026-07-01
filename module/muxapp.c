@@ -90,29 +90,6 @@ static void show_help(void) {
     }
 }
 
-static void init_navigation_group_grid(void) {
-    grid_mode_enabled = 1;
-
-    init_grid_info((int) item_count, theme.grid.column_count);
-    create_grid_panel(&theme, (int) item_count);
-
-    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
-    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
-
-    if (item_count == 0) return;
-
-    if (is_carousel_grid_mode()) {
-        create_carousel_grid();
-        return;
-    }
-
-    const int visible_count = theme.grid.column_count * theme.grid.row_count;
-    if (visible_count <= 0) return;
-
-    for (int i = 0; i < (int) item_count && i < visible_count; i++)
-        gen_grid_item(i);
-}
-
 static int append_mux_app(char ***arr, size_t *count, size_t *cap, const char *name) {
     for (size_t i = 0; i < *count; i++) {
         if ((*arr)[i] && strcmp((*arr)[i], name) == 0) return 0;
@@ -284,7 +261,7 @@ clean_up:
     }
 
     if (theme.grid.enabled && item_count > 0) {
-        init_navigation_group_grid();
+        init_grid_dynamic(NULL, NULL);
         ui_count_static += (int) item_count;
     } else {
         for (size_t i = 0; i < item_count; i++) {

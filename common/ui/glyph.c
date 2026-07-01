@@ -27,6 +27,35 @@ void append_glyph_size_hint(char *embed, const size_t embed_size, const int size
     snprintf(embed + n, embed_size - n, "?%dx%d", size, size);
 }
 
+void resolve_grid_glyph_hint(const struct theme_config *theme, int *hint_w, int *hint_h, int *px) {
+    int16_t grid_glyph = config.settings.themeopt.glyph_size_grid;
+    if (grid_glyph == -2) grid_glyph = theme->glyph.grid;
+
+    if (grid_glyph < 0) {
+        *hint_w = *hint_h = -1;
+    } else if (grid_glyph == 0) {
+        *hint_w = theme->grid.cell.width * 3 / 4;
+        *hint_h = theme->grid.cell.height * 3 / 4;
+    } else {
+        *hint_w = *hint_h = grid_glyph;
+    }
+
+    *px = grid_glyph > 0 ? grid_glyph : 0;
+}
+
+void build_embed_path(char *embed, const size_t embed_size, const char *path, const int hint_w, const int hint_h) {
+    const int written = snprintf(embed, embed_size, "M:%s", path);
+    if (written < 0 || (size_t) written >= embed_size) {
+        embed[0] = '\0';
+        return;
+    }
+
+    const size_t len = strlen(path);
+    if (len <= 4 || strcmp(path + len - 4, ".svg") != 0) return;
+
+    snprintf(embed + written, embed_size - (size_t) written, "?%dx%d", hint_w, hint_h);
+}
+
 void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const int box_h) {
     lv_img_set_zoom(img, LV_IMG_ZOOM_NONE);
     if (!embed || box_w <= 0 || box_h <= 0) return;

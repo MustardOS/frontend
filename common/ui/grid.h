@@ -30,3 +30,7 @@ int disable_grid_file_exists(char *item_curr_dir);
 void create_carousel_grid(void);
 
 int is_carousel_grid_mode(void);
+
+void init_grid_dynamic(const char *prev_dir, int *sys_index);
+
+int init_grid_static(int count, char *item_labels[], char *item_grid_labels[], char *glyph_names[]);

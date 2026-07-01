@@ -224,30 +224,6 @@ static void gen_item(const int file_count, char **file_names) {
     }
 }
 
-static void init_navigation_group_grid(void) {
-    grid_mode_enabled = 1;
-
-    init_grid_info((int) item_count, theme.grid.column_count);
-    create_grid_panel(&theme, (int) item_count);
-
-    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
-    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
-
-    if (item_count == 0) return;
-
-    if (is_carousel_grid_mode()) {
-        create_carousel_grid();
-        return;
-    }
-
-    const int visible_count = theme.grid.column_count * theme.grid.row_count;
-    if (visible_count <= 0) return;
-
-    for (int i = 0; i < (int) item_count && i < visible_count; i++) {
-        gen_grid_item(i);
-    }
-}
-
 static void create_history_items(void) {
     turbo_time(1, 1);
 
@@ -264,7 +240,7 @@ static void create_history_items(void) {
         lv_obj_update_layout(ui_pnl_content);
     }
 
-    if (grid_mode_enabled) init_navigation_group_grid();
+    if (grid_mode_enabled) init_grid_dynamic(NULL, NULL);
 
     free(file_names);
 

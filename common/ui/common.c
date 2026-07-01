@@ -2107,31 +2107,12 @@ void create_grid_item(
     }
 
     // Grid glyph size: -1 native, 0 auto, > 0 fixed pixels
-    int grid_hint_w;
-    int grid_hint_h;
-
-    int16_t grid_glyph = config.settings.themeopt.glyph_size_grid;
-    if (grid_glyph == -2) grid_glyph = theme->glyph.grid;
-
-    if (grid_glyph < 0) {
-        grid_hint_w = grid_hint_h = -1;
-    } else if (grid_glyph == 0) {
-        grid_hint_w = theme->grid.cell.width * 3 / 4;
-        grid_hint_h = theme->grid.cell.height * 3 / 4;
-    } else {
-        grid_hint_w = grid_hint_h = grid_glyph;
-    }
-
-    const int grid_px = grid_glyph > 0 ? grid_glyph : 0;
+    int grid_hint_w, grid_hint_h, grid_px;
+    resolve_grid_glyph_hint(theme, &grid_hint_w, &grid_hint_h, &grid_px);
 
     if (item_image_path && *item_image_path && file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
-        const size_t path_len = strlen(item_image_path);
-        if (path_len > 4 && strcmp(item_image_path + path_len - 4, ".svg") == 0) {
-            snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", item_image_path, grid_hint_w, grid_hint_h);
-        } else {
-            snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
-        }
+        build_embed_path(grid_image, sizeof(grid_image), item_image_path, grid_hint_w, grid_hint_h);
         lv_img_set_src(cell_image, grid_image);
         apply_glyph_scale(cell_image, grid_image, grid_px, grid_px);
     } else {
@@ -2144,15 +2125,9 @@ void create_grid_item(
 
     if (item_image_focused_path && *item_image_focused_path && file_exist(item_image_focused_path)) {
         char grid_image_focused[MAX_BUFFER_SIZE];
-        const size_t path_len = strlen(item_image_focused_path);
-        if (path_len > 4 && strcmp(item_image_focused_path + path_len - 4, ".svg") == 0) {
-            snprintf(
-                grid_image_focused, sizeof(grid_image_focused), "M:%s?%dx%d", item_image_focused_path, grid_hint_w,
-                grid_hint_h
-            );
-        } else {
-            snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
-        }
+        build_embed_path(
+            grid_image_focused, sizeof(grid_image_focused), item_image_focused_path, grid_hint_w, grid_hint_h
+        );
         lv_img_set_src(cell_image_focused, grid_image_focused);
         apply_glyph_scale(cell_image_focused, grid_image_focused, grid_px, grid_px);
     } else {

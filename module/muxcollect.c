@@ -238,35 +238,6 @@ static void gen_item(const int file_count, char **file_names) {
     }
 }
 
-static void init_navigation_group_grid(void) {
-    grid_mode_enabled = 1;
-
-    init_grid_info((int) item_count, theme.grid.column_count);
-    create_grid_panel(&theme, (int) item_count);
-
-    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
-    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
-
-    if (item_count == 0) return;
-
-    if (is_carousel_grid_mode()) {
-        create_carousel_grid();
-
-        const int prev_dir_index = get_item_index_by_extra_data(items, item_count, prev_dir);
-        if (prev_dir_index > -1) sys_index = prev_dir_index;
-
-        return;
-    }
-
-    const int visible_count = theme.grid.column_count * theme.grid.row_count;
-    if (visible_count <= 0) return;
-
-    for (int i = 0; i < (int) item_count; i++) {
-        if (items[i].extra_data && strcasecmp(items[i].extra_data, prev_dir) == 0) sys_index = i;
-        if (i < visible_count) gen_grid_item(i);
-    }
-}
-
 static void create_collection_items(void) {
     char **dir_names = NULL;
     char **file_names = NULL;
@@ -345,7 +316,7 @@ static void create_collection_items(void) {
 
         gen_item(file_count, file_names);
 
-        if (grid_mode_enabled) init_navigation_group_grid();
+        if (grid_mode_enabled) init_grid_dynamic(prev_dir, &sys_index);
         if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 
         free(file_names);

@@ -635,8 +635,8 @@ void update_image(lv_obj_t *ui_img_obj, const struct image_settings image_settin
 
         char image_path[MAX_BUFFER_SIZE];
         if (is_svg && image_settings.max_width > 0 && image_settings.max_height > 0) {
-            snprintf(
-                image_path, sizeof(image_path), "M:%s?%dx%d", image_settings.image_path, image_settings.max_width,
+            build_embed_path(
+                image_path, sizeof(image_path), image_settings.image_path, image_settings.max_width,
                 image_settings.max_height
             );
         } else {

@@ -199,31 +199,11 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         return;
     }
 
-    int16_t grid_glyph = config.settings.themeopt.glyph_size_grid;
-    if (grid_glyph == -2) grid_glyph = theme.glyph.grid;
-
-    int grid_hint_w;
-    int grid_hint_h;
-
-    if (grid_glyph < 0) {
-        grid_hint_w = grid_hint_h = -1;
-    } else if (grid_glyph == 0) {
-        grid_hint_w = theme.grid.cell.width * 3 / 4;
-        grid_hint_h = theme.grid.cell.height * 3 / 4;
-    } else {
-        grid_hint_w = grid_hint_h = grid_glyph;
-    }
-
-    const int grid_px = grid_glyph > 0 ? grid_glyph : 0;
+    int grid_hint_w, grid_hint_h, grid_px;
+    resolve_grid_glyph_hint(&theme, &grid_hint_w, &grid_hint_h, &grid_px);
 
     char grid_image[MAX_BUFFER_SIZE];
-    const size_t plen = strlen(image_path);
-
-    if (plen > 4 && strcmp(image_path + plen - 4, ".svg") == 0) {
-        snprintf(grid_image, sizeof(grid_image), "M:%s?%dx%d", image_path, grid_hint_w, grid_hint_h);
-    } else {
-        snprintf(grid_image, sizeof(grid_image), "M:%s", image_path);
-    }
+    build_embed_path(grid_image, sizeof(grid_image), image_path, grid_hint_w, grid_hint_h);
 
     lv_img_set_src(cell, grid_image);
     apply_glyph_scale(cell, grid_image, grid_px, grid_px);
@@ -462,4 +442,73 @@ int is_carousel_grid_mode(void) {
                    && carousel_item_count % 2 == 1
                ? 1
                : 0;
+}
+
+void init_grid_dynamic(const char *prev_dir, int *sys_index) {
+    grid_mode_enabled = 1;
+
+    init_grid_info((int) item_count, theme.grid.column_count);
+    create_grid_panel(&theme, (int) item_count);
+
+    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
+    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
+
+    if (item_count == 0) return;
+
+    if (prev_dir && sys_index) {
+        const int prev_dir_index = get_item_index_by_extra_data(items, item_count, prev_dir);
+        if (prev_dir_index > -1) *sys_index = prev_dir_index;
+    }
+
+    if (is_carousel_grid_mode()) {
+        create_carousel_grid();
+        return;
+    }
+
+    const int visible_count = theme.grid.column_count * theme.grid.row_count;
+    if (visible_count <= 0) return;
+
+    for (int i = 0; i < (int) item_count && i < visible_count; i++) {
+        gen_grid_item(i);
+    }
+}
+
+int init_grid_static(const int count, char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
+    grid_mode_enabled = 1;
+
+    init_grid_info(count, theme.grid.column_count);
+    create_grid_panel(&theme, count);
+
+    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
+    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
+
+    char prev_dir[MAX_BUFFER_SIZE];
+    snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
+
+    int steps = 0;
+    for (int i = 0; i < count; i++) {
+        if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
+
+        char grid_img[MAX_BUFFER_SIZE];
+        char grid_img_foc[MAX_BUFFER_SIZE];
+        resolve_grid_item_images(
+            mux_dim, mux_module, glyph_names[i], grid_img, sizeof(grid_img), grid_img_foc, sizeof(grid_img_foc)
+        );
+
+        content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);
+
+        new_item->glyph_icon = strdup(glyph_names[i]);
+        new_item->grid_image = strdup(grid_img);
+        new_item->grid_image_focused = strdup(grid_img_foc);
+    }
+
+    if (is_carousel_grid_mode()) {
+        create_carousel_grid();
+    } else {
+        for (int i = 0; i < (int) item_count; i++) {
+            if (i < theme.grid.column_count * theme.grid.row_count) gen_grid_item(i);
+        }
+    }
+
+    return steps;
 }

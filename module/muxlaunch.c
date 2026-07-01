@@ -34,46 +34,6 @@ static void show_help(void) {
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
-static void init_navigation_group_grid(char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
-    grid_mode_enabled = 1;
-
-    init_grid_info(ui_count_dynamic, theme.grid.column_count);
-    create_grid_panel(&theme, ui_count_dynamic);
-
-    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
-    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
-
-    char prev_dir[MAX_BUFFER_SIZE];
-    snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
-
-    int steps = 0;
-    for (int i = 0; i < ui_count_dynamic; i++) {
-        if (strcasecmp(glyph_names[i], prev_dir) == 0) steps = i;
-
-        char grid_img[MAX_BUFFER_SIZE];
-        char grid_img_foc[MAX_BUFFER_SIZE];
-        resolve_grid_item_images(
-            mux_dim, mux_module, glyph_names[i], grid_img, sizeof(grid_img), grid_img_foc, sizeof(grid_img_foc)
-        );
-
-        content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", ITEM);
-
-        new_item->glyph_icon = strdup(glyph_names[i]);
-        new_item->grid_image = strdup(grid_img);
-        new_item->grid_image_focused = strdup(grid_img_foc);
-    }
-
-    if (is_carousel_grid_mode()) {
-        create_carousel_grid();
-    } else {
-        for (int i = 0; i < item_count; i++) {
-            if (i < theme.grid.column_count * theme.grid.row_count) gen_grid_item(i);
-        }
-    }
-
-    list_nav_move(steps, +1);
-}
-
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
@@ -93,7 +53,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
 
     if (theme.grid.enabled) {
-        init_navigation_group_grid(item_labels, item_labels_short, glyph_names);
+        list_nav_move(init_grid_static(ui_count_dynamic, item_labels, item_labels_short, glyph_names), +1);
     } else {
         INIT_STATIC_ITEM(-1, launch, explore, item_labels[0], glyph_names[0], 0);
         INIT_STATIC_ITEM(-1, launch, collection, item_labels[1], glyph_names[1], 0);

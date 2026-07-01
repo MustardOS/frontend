@@ -2,9 +2,15 @@
 
 #include <stdint.h>
 
+struct theme_config;
+
 int resolve_glyph_size(int16_t runtime_size, int16_t section_size, int auto_px);
 
 void append_glyph_size_hint(char *embed, size_t embed_size, int size);
+
+void resolve_grid_glyph_hint(const struct theme_config *theme, int *hint_w, int *hint_h, int *px);
+
+void build_embed_path(char *embed, size_t embed_size, const char *path, int hint_w, int hint_h);
 
 int glyph_explicit_px(int16_t runtime_size, int16_t section_size);
 
