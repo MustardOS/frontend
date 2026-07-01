@@ -158,7 +158,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->settings.advanced.audio_ready, &d, "audio_ready", 0);
     CFG_INT(config->settings.advanced.audio_swap, &d, "audio_swap", 0);
     CFG_INT(config->settings.advanced.audio_suspend, &d, "audio_suspend", 1);
-    CFG_INT(config->settings.advanced.bt_scan_timeout, &d, "bt_scan_timeout", 20);
+    CFG_INT(config->settings.advanced.bt_scan_timeout, &d, "bt_scan_timeout", 10);
     CFG_INT(config->settings.advanced.usb_part, &d, "part_external", 0);
     CFG_INT(config->settings.advanced.second_part, &d, "part_secondary", 0);
     CFG_INT(config->settings.advanced.trust_modify, &d, "trust_modify", 0);
