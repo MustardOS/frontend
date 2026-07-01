@@ -1355,6 +1355,7 @@ struct mux_lang {
                 char blockfall[MAX_BUFFER_SIZE];
                 char datetime[MAX_BUFFER_SIZE];
                 char video[MAX_BUFFER_SIZE];
+                char slideshow[MAX_BUFFER_SIZE];
             } type;
             struct {
                 char title[MAX_BUFFER_SIZE];

@@ -28,6 +28,7 @@
 #include "saver/maze.h"
 #include "saver/blockfall.h"
 #include "saver/datetime.h"
+#include "saver/slideshow.h"
 
 typedef struct {
     // Just the default base stuff we need
@@ -200,6 +201,7 @@ enum {
     saver_type_blockfall = 10,
     saver_type_datetime = 11,
     saver_type_video = 12,
+    saver_type_slideshow = 13,
 };
 
 static char video_saver_path[MAX_BUFFER_SIZE];
@@ -211,6 +213,7 @@ static int saver_speed_override = 0;
 static int active_saver = -1;
 
 static int saver_active(void) {
+    if (active_saver == saver_type_slideshow) return slideshow_active();
     if (active_saver == saver_type_video) return saver_active_base(&video_saver_base);
     if (active_saver == saver_type_datetime) return datetime_active();
     if (active_saver == saver_type_blockfall) return blockfall_active();
@@ -229,8 +232,10 @@ static int saver_active(void) {
 static void saver_update(void) {
     if (active_saver == saver_type_video) {
         if (saver_poll_idle(&video_saver_base, SDL_GetTicks()) && !video_saver_running) {
-            snprintf(video_saver_prev_path, sizeof(video_saver_prev_path),
-                     "%s", video_wallpaper_active() ? video_wallpaper_path() : "");
+            snprintf(
+                video_saver_prev_path, sizeof(video_saver_prev_path), "%s",
+                video_wallpaper_active() ? video_wallpaper_path() : ""
+            );
             video_wallpaper_play(video_saver_path);
             video_saver_running = 1;
         }
@@ -258,6 +263,8 @@ static void saver_update(void) {
         star_update();
     else if (active_saver == saver_type_dvd)
         dvd_update();
+    else if (active_saver == saver_type_slideshow)
+        slideshow_update();
 }
 
 static void saver_render(SDL_Renderer *r) {
@@ -287,6 +294,8 @@ static void saver_render(SDL_Renderer *r) {
         star_render(r);
     else if (active_saver == saver_type_dvd)
         dvd_render(r);
+    else if (active_saver == saver_type_slideshow)
+        slideshow_render(r);
 }
 
 static void saver_stop(void) {
@@ -322,6 +331,8 @@ static void saver_stop(void) {
         star_stop();
     else if (active_saver == saver_type_dvd)
         dvd_stop();
+    else if (active_saver == saver_type_slideshow)
+        slideshow_stop();
 }
 
 int get_saver_speed(const int fallback) {
@@ -355,6 +366,7 @@ static void reload_saver() {
     maze_shutdown();
     blockfall_shutdown();
     datetime_shutdown();
+    slideshow_shutdown();
 
     const int type = config.settings.power.saver_type;
 
@@ -393,8 +405,9 @@ static void reload_saver() {
         }
 
         snprintf(video_saver_path, sizeof(video_saver_path), "%s", saver_video);
-        saver_init_base(&video_saver_base, device.screen.width, device.screen.height, "Video Wallpaper", 0, 0, 0, NULL,
-                        NULL, NULL);
+        saver_init_base(
+            &video_saver_base, device.screen.width, device.screen.height, "Video Wallpaper", 0, 0, 0, NULL, NULL, NULL
+        );
     } else if (type == saver_type_dvd) {
         char saver_image[MAX_BUFFER_SIZE];
         snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
@@ -405,6 +418,34 @@ static void reload_saver() {
         }
 
         dvd_init(monitor.renderer, saver_image, device.screen.width, device.screen.height);
+    } else if (type == saver_type_slideshow) {
+        char slide_dirs[4][MAX_BUFFER_SIZE];
+        const char *slide_dir_ptrs[4];
+        int slide_dir_count = 0;
+
+        snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/%simage/slideshow", theme_base, mux_dim);
+        slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
+        slide_dir_count++;
+
+        snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/image/slideshow", theme_base);
+        slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
+        slide_dir_count++;
+
+        if (device.storage.sdcard.mount[0]) {
+            snprintf(
+                slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/MUOS/slideshow", device.storage.sdcard.mount
+            );
+            slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
+            slide_dir_count++;
+        }
+
+        if (device.storage.rom.mount[0]) {
+            snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/MUOS/slideshow", device.storage.rom.mount);
+            slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
+            slide_dir_count++;
+        }
+
+        slideshow_init(monitor.renderer, slide_dir_ptrs, slide_dir_count, device.screen.width, device.screen.height);
     }
 
     active_saver = type;
@@ -604,6 +645,7 @@ void sdl_cleanup(void) {
     maze_shutdown();
     blockfall_shutdown();
     datetime_shutdown();
+    slideshow_shutdown();
 
     if (monitor.shadow_layer) {
         SDL_DestroyTexture(monitor.shadow_layer);
