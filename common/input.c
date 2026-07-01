@@ -1119,6 +1119,10 @@ void mux_input_task(const mux_input_options *opts) {
             open_all_input_devices();
             next_retry_tick = tick + interval;
             if (device_count > 0) retry_count = 0;
+        } else if (device_count > 0 && SDL_NumJoysticks() > device_count && tick >= next_retry_tick) {
+            LOG_INFO("input", "New input device detected via poll, rescanning");
+            open_all_input_devices();
+            next_retry_tick = tick + retry_interval_slow_ms;
         }
 
         if (input_is_suppressed()) {
