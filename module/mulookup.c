@@ -9,7 +9,7 @@
 #include "../common/strutil.h"
 #include "../common/sysinfo.h"
 #include "../common/util.h"
-#include "../lookup/lookup.h"
+#include "../common/lookup.h"
 #include "../common/json/json.h"
 
 #define LOOKUP_DIR_PATH OPT_SHARE_PATH "lookup/"
@@ -188,25 +188,6 @@ static void dedupe_results(results *r) {
     r->count = w + 1;
 }
 
-static struct {
-    void (*forward_multi)(const char *, void (*emit)(const char *, const char *, void *), void *);
-
-    void (*reverse_multi)(const char *, void (*emit)(const char *, const char *, void *), void *);
-} multi_table[] = {
-    {lookup_0_multi, r_lookup_0_multi}, {lookup_1_multi, r_lookup_1_multi}, {lookup_2_multi, r_lookup_2_multi},
-    {lookup_3_multi, r_lookup_3_multi}, {lookup_4_multi, r_lookup_4_multi}, {lookup_5_multi, r_lookup_5_multi},
-    {lookup_6_multi, r_lookup_6_multi}, {lookup_7_multi, r_lookup_7_multi}, {lookup_8_multi, r_lookup_8_multi},
-    {lookup_9_multi, r_lookup_9_multi}, {lookup_a_multi, r_lookup_a_multi}, {lookup_b_multi, r_lookup_b_multi},
-    {lookup_c_multi, r_lookup_c_multi}, {lookup_d_multi, r_lookup_d_multi}, {lookup_e_multi, r_lookup_e_multi},
-    {lookup_f_multi, r_lookup_f_multi}, {lookup_g_multi, r_lookup_g_multi}, {lookup_h_multi, r_lookup_h_multi},
-    {lookup_i_multi, r_lookup_i_multi}, {lookup_j_multi, r_lookup_j_multi}, {lookup_k_multi, r_lookup_k_multi},
-    {lookup_l_multi, r_lookup_l_multi}, {lookup_m_multi, r_lookup_m_multi}, {lookup_n_multi, r_lookup_n_multi},
-    {lookup_o_multi, r_lookup_o_multi}, {lookup_p_multi, r_lookup_p_multi}, {lookup_q_multi, r_lookup_q_multi},
-    {lookup_r_multi, r_lookup_r_multi}, {lookup_s_multi, r_lookup_s_multi}, {lookup_t_multi, r_lookup_t_multi},
-    {lookup_u_multi, r_lookup_u_multi}, {lookup_v_multi, r_lookup_v_multi}, {lookup_w_multi, r_lookup_w_multi},
-    {lookup_x_multi, r_lookup_x_multi}, {lookup_y_multi, r_lookup_y_multi}, {lookup_z_multi, r_lookup_z_multi},
-};
-
 static void emit_pair(const char *name, const char *value, void *ud) {
     results_push(ud, name, value);
 }
@@ -240,9 +221,9 @@ static void generate_internal(void) {
     results r;
     results_reserve(&r);
 
-    for (size_t j = 0; j < A_SIZE(multi_table); j++) {
-        multi_table[j].forward_multi("", emit_pair, &r);
-        multi_table[j].reverse_multi("", emit_pair, &r);
+    for (size_t j = 0; j < LOOKUP_TABLE_COUNT; j++) {
+        lookup_multi_at(j, "", emit_pair, &r);
+        r_lookup_multi_at(j, "", emit_pair, &r);
     }
 
     write_results_to_file(&r, LOOKUP_INTERNAL);
@@ -400,7 +381,7 @@ int main(const int argc, char **argv) {
     results_reserve(&out);
 
     const unsigned char f0 = tolower((unsigned char) term[0]);
-    int forward_start = 0, forward_end = A_SIZE(multi_table);
+    int forward_start = 0, forward_end = LOOKUP_TABLE_COUNT;
 
     if (isalnum(f0)) {
         if (f0 >= '0' && f0 <= '9') {
@@ -413,11 +394,11 @@ int main(const int argc, char **argv) {
     }
 
     for (int j = forward_start; j < forward_end; j++) {
-        multi_table[j].forward_multi(term, emit_pair, &out);
+        lookup_multi_at(j, term, emit_pair, &out);
     }
 
-    for (size_t j = 0; j < A_SIZE(multi_table); j++) {
-        multi_table[j].reverse_multi(term, emit_pair, &out);
+    for (size_t j = 0; j < LOOKUP_TABLE_COUNT; j++) {
+        r_lookup_multi_at(j, term, emit_pair, &out);
     }
 
     lookup_key(&out);

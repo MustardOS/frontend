@@ -1,12 +1,12 @@
 include ../common.mk
 
 CFLAGS = $(BASE_CFLAGS) \
-         -I./ui -I../font -I../lookup -I../common \
+         -I./ui -I../font -I../common \
          -I../common/img -I../common/input -I../common/json \
          -I../common/mini -I../common/miniz
 
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
-          -L../bin/lib -lui -llookup -lmuxcom -lplutosvg
+          -L../bin/lib -lui -lmuxcom -lplutosvg
 
 MODULES = muxactivity muxapp muxappcon muxarchive muxassign muxbackup muxbatinfo muxbtall \
           muxbtcon muxbtdev muxchrony muxcolfilter muxcollect muxconfig muxconnect \
