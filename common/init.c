@@ -26,6 +26,7 @@
 #include "fileio.h"
 #include "exec.h"
 #include "datetime.h"
+#include "sysinfo.h"
 
 static uint64_t start_ms = 0;
 static lv_timer_t *mux_refresh_timer = NULL;
@@ -490,16 +491,28 @@ void status_poll(void) {
 void bluetooth_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
 
+    static int last_ui_connected = -1;
+
     if (!ui_sta_bluetooth || !lv_obj_is_valid(ui_sta_bluetooth)) return;
 
+    const int connected = device.board.has_bluetooth && is_bluetooth_connected();
+    if (connected == last_ui_connected) return;
+
+    last_ui_connected = connected;
     update_bluetooth_status(ui_sta_bluetooth, &theme);
 }
 
 void network_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
 
+    static int last_ui_connected = -1;
+
     if (!ui_sta_network || !lv_obj_is_valid(ui_sta_network)) return;
     if (strcasecmp(mux_module, "muxnetwork") == 0) return;
 
+    const int connected = device.board.has_network && is_network_connected();
+    if (connected == last_ui_connected) return;
+
+    last_ui_connected = connected;
     update_network_status(ui_sta_network, &theme, 0);
 }
