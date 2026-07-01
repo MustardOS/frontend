@@ -271,6 +271,14 @@ static void add_directory_and_file_names(
     file_count = all_file_count;
 }
 
+static int filter_path_sort(const void *a, const void *b) {
+    return strcasecmp(*(const char **) a, *(const char **) b);
+}
+
+static int filter_path_search(const void *key, const void *elem) {
+    return strcasecmp(key, *(const char **) elem);
+}
+
 static void remove_match_items(
     const char *filter_name, const int mode, char ***filter_list, int *filter_count, void (*pop_func)(void),
     content_item **items, size_t *item_count, const char *sys_dir
@@ -280,18 +288,24 @@ static void remove_match_items(
 
     if (mode != 2 || !*filter_list || *filter_count == 0) return;
 
-    for (int c = 0; c < *filter_count; c++) {
-        for (size_t i = 0; i < *item_count; i++) {
-            char item_path[PATH_MAX];
-            if (build_safe_path(item_path, sizeof(item_path), sys_dir, (*items)[i].name) != 0) continue;
+    char **sorted = malloc((size_t) *filter_count * sizeof(char *));
+    if (!sorted) return;
 
-            if (strcasecmp(item_path, (*filter_list)[c]) == 0) {
-                LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
-                remove_item(items, item_count, i);
-                i--;
-            }
+    memcpy(sorted, *filter_list, (size_t) *filter_count * sizeof(char *));
+    qsort(sorted, (size_t) *filter_count, sizeof(char *), filter_path_sort);
+
+    for (size_t i = 0; i < *item_count; i++) {
+        char item_path[PATH_MAX];
+        if (build_safe_path(item_path, sizeof(item_path), sys_dir, (*items)[i].name) != 0) continue;
+
+        if (bsearch(item_path, sorted, (size_t) *filter_count, sizeof(char *), filter_path_search)) {
+            LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
+            remove_item(items, item_count, i);
+            i--;
         }
     }
+
+    free(sorted);
 }
 
 static int tag_name_sort(const void *a, const void *b) {
