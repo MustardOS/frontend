@@ -118,7 +118,7 @@ static void bt_poll_task(lv_timer_t *t) {
     }
 
     struct stat st;
-    const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0;
+    const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0 && st.st_mtime >= bt_list_start;
     const int timed_out = time(NULL) - bt_list_start >= 10;
 
     if (!file_ready && !timed_out) return;
@@ -143,8 +143,6 @@ static void create_paired_device_items(void) {
     lv_label_set_text(ui_lbl_screen_message, lang.muxbtall.loading);
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
-
-    remove(CONF_CONFIG_PATH "bluetooth/paired");
 
     bt_list_start = time(NULL);
     bt_list_pending = 1;

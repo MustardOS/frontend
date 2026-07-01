@@ -2,8 +2,8 @@
 
 static void cancel_scan(void);
 
-static int scan_pending = 0;
 static time_t scan_start = 0;
+static time_t last_scan_mtime = 0;
 static lv_timer_t *scan_poll_timer = NULL;
 
 static void show_help(void) {
@@ -51,22 +51,22 @@ static void populate_bt_scan_items(void) {
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 }
 
-static void bt_scan_poll_task(lv_timer_t *t) {
-    if (!scan_pending) {
-        lv_timer_del(t);
-        scan_poll_timer = NULL;
-        return;
+static void refresh_scan_list(void) {
+    const uint32_t child_cnt = lv_obj_get_child_cnt(ui_pnl_content);
+    for (uint32_t i = 0; i < child_cnt; i++) {
+        free(lv_obj_get_user_data(lv_obj_get_child(ui_pnl_content, (int32_t) i)));
     }
 
-    struct stat st;
-    const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/scan", &st) == 0;
-    const int timed_out = time(NULL) - scan_start >= 60;
+    lv_obj_clean(ui_pnl_content);
 
-    if (!file_ready && !timed_out) return;
+    if (ui_group) lv_group_del(ui_group);
+    if (ui_group_glyph) lv_group_del(ui_group_glyph);
+    if (ui_group_panel) lv_group_del(ui_group_panel);
+    ui_group = ui_group_glyph = ui_group_panel = NULL;
+    ui_count_static = current_item_index = 0;
 
-    scan_pending = 0;
-    lv_timer_del(t);
-    scan_poll_timer = NULL;
+    reset_ui_groups();
+    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
 
     populate_bt_scan_items();
 
@@ -79,27 +79,32 @@ static void bt_scan_poll_task(lv_timer_t *t) {
     }
 }
 
+static void bt_scan_poll_task(lv_timer_t *timer __attribute__((unused))) {
+    struct stat st;
+    if (stat(CONF_CONFIG_PATH "bluetooth/scan", &st) != 0) return;
+
+    const time_t mtime = st.st_mtime;
+    if (mtime < scan_start || mtime <= last_scan_mtime) return;
+
+    last_scan_mtime = mtime;
+    refresh_scan_list();
+}
+
 static void create_bt_scan_items(void) {
     lv_label_set_text(ui_lbl_screen_message, lang.muxbtcon.scan);
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
 
-    remove(CONF_CONFIG_PATH "bluetooth/scan");
-
     scan_start = time(NULL);
-    scan_pending = 1;
+    last_scan_mtime = 0;
 
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "list", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 }
 
 static void cancel_scan(void) {
-    if (scan_poll_timer) {
-        lv_timer_del(scan_poll_timer);
-        scan_poll_timer = NULL;
-    }
-
-    scan_pending = 0;
+    const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "stop", NULL};
+    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 }
 
 static void handle_a(void) {
@@ -136,16 +141,6 @@ static void handle_b(void) {
 
     play_sound(snd_back);
     cancel_scan();
-
-    mux_input_stop();
-}
-
-static void handle_rescan(void) {
-    if (msgbox_active || hold_call) return;
-
-    play_sound(snd_confirm);
-    cancel_scan();
-    load_mux("btcon");
 
     mux_input_stop();
 }
@@ -198,8 +193,6 @@ static void init_elements(void) {
                                   {ui_lbl_nav_a, lang.generic.select, 1},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.generic.rescan, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
                                   {ui_lbl_nav_y, lang.muxbtcon.info, 0},
                                   {NULL, NULL, 0}});
@@ -208,6 +201,10 @@ static void init_elements(void) {
 }
 
 int muxbtcon_main(void) {
+    scan_start = 0;
+    last_scan_mtime = 0;
+    scan_poll_timer = NULL;
+
     init_module(__func__);
     init_theme(1, 1);
 
@@ -232,7 +229,6 @@ int muxbtcon_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
-                [mux_input_x] = handle_rescan,
                 [mux_input_y] = handle_y,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
