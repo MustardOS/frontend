@@ -54,7 +54,7 @@ static const int saver_speed_values[SAVER_SPEED_COUNT] = {
     saver_speed_crawl, saver_speed_cruise, saver_speed_fast, saver_speed_turbo
 };
 
-#define SAVER_TYPE_COUNT 14
+#define SAVER_TYPE_COUNT 15
 enum saver_type {
     saver_type_disabled = 0,
     saver_type_dvd = 1,
@@ -70,13 +70,13 @@ enum saver_type {
     saver_type_datetime = 11,
     saver_type_video = 12,
     saver_type_slideshow = 13,
+    saver_type_boxart = 14,
 };
 
 static const int saver_type_values[SAVER_TYPE_COUNT] = {
-    saver_type_disabled, saver_type_dvd,   saver_type_star,         saver_type_matrix,
-    saver_type_firefly,  saver_type_pulse, saver_type_trace,        saver_type_constellation,
-    saver_type_mystify,  saver_type_maze,  saver_type_blockfall,    saver_type_datetime,
-    saver_type_video,    saver_type_slideshow,
+    saver_type_disabled,  saver_type_dvd,      saver_type_star,          saver_type_matrix,    saver_type_firefly,
+    saver_type_pulse,     saver_type_trace,    saver_type_constellation, saver_type_mystify,   saver_type_maze,
+    saver_type_blockfall, saver_type_datetime, saver_type_video,         saver_type_slideshow, saver_type_boxart,
 };
 
 char **gov_values_lower = NULL;
@@ -420,7 +420,7 @@ static void init_navigation_group(void) {
         lang.muxpower.saver.type.matrix, lang.muxpower.saver.type.firefly,       lang.muxpower.saver.type.pulse,
         lang.muxpower.saver.type.trace,  lang.muxpower.saver.type.constellation, lang.muxpower.saver.type.mystify,
         lang.muxpower.saver.type.maze,   lang.muxpower.saver.type.blockfall,     lang.muxpower.saver.type.datetime,
-        lang.muxpower.saver.type.video,  lang.muxpower.saver.type.slideshow,
+        lang.muxpower.saver.type.video,  lang.muxpower.saver.type.slideshow,     lang.muxpower.saver.type.boxart,
     };
 
     INIT_OPTION_ITEM(-1, power, shutdown, lang.muxpower.sleep.title, "shutdown", sleep_timer, SHUTDOWN_COUNT);

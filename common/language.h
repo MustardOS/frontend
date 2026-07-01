@@ -1356,6 +1356,7 @@ struct mux_lang {
                 char datetime[MAX_BUFFER_SIZE];
                 char video[MAX_BUFFER_SIZE];
                 char slideshow[MAX_BUFFER_SIZE];
+                char boxart[MAX_BUFFER_SIZE];
             } type;
             struct {
                 char title[MAX_BUFFER_SIZE];
