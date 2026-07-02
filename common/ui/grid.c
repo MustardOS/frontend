@@ -444,14 +444,18 @@ int is_carousel_grid_mode(void) {
                : 0;
 }
 
-void init_grid_dynamic(const char *prev_dir, int *sys_index) {
+static void init_grid_common(const int count) {
     grid_mode_enabled = 1;
 
-    init_grid_info((int) item_count, theme.grid.column_count);
-    create_grid_panel(&theme, (int) item_count);
+    init_grid_info(count, theme.grid.column_count);
+    create_grid_panel(&theme, count);
 
     load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
     load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
+}
+
+void init_grid_dynamic(const char *prev_dir, int *sys_index) {
+    init_grid_common((int) item_count);
 
     if (item_count == 0) return;
 
@@ -474,13 +478,7 @@ void init_grid_dynamic(const char *prev_dir, int *sys_index) {
 }
 
 int init_grid_static(const int count, char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
-    grid_mode_enabled = 1;
-
-    init_grid_info(count, theme.grid.column_count);
-    create_grid_panel(&theme, count);
-
-    load_font_section(FONT_PANEL_DIR, ui_pnl_grid);
-    load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
+    init_grid_common(count);
 
     char prev_dir[MAX_BUFFER_SIZE];
     snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
