@@ -342,6 +342,7 @@ void load_config(struct mux_config *config) {
     CFG_INT(config->visual.box_art_hide, &d, "boxarthide", 0);
     CFG_INT(config->visual.box_art_scale, &d, "boxartscale", 100);
     CFG_INT(config->visual.box_art_padding, &d, "boxartpadding", 15);
+    CFG_INT(config->visual.box_art_placeholder, &d, "boxartplaceholder", 0);
     CFG_INT(config->visual.box_art_transition, &d, "boxarttransition", 1);
     CFG_INT(config->visual.video_preview, &d, "videopreview", 0);
     CFG_INT(config->visual.content_width, &d, "contentwidth", 0);

@@ -67,6 +67,7 @@ static void restore_content_options(void) {
     lv_dropdown_set_selected(ui_dro_box_art_transition_content, config.visual.box_art_transition);
     lv_dropdown_set_selected(ui_dro_box_art_scale_content, config.visual.box_art_scale);
     lv_dropdown_set_selected(ui_dro_box_art_padding_content, config.visual.box_art_padding);
+    lv_dropdown_set_selected(ui_dro_box_art_placeholder_content, config.visual.box_art_placeholder);
     lv_dropdown_set_selected(ui_dro_video_preview_content, config.visual.video_preview);
 }
 
@@ -92,6 +93,7 @@ static int save_content_options(void) {
     CHECK_AND_SAVE_STD(content, box_art_transition, "visual/boxarttransition", INT, 0);
     CHECK_AND_SAVE_STD(content, box_art_scale, "visual/boxartscale", INT, 0);
     CHECK_AND_SAVE_STD(content, box_art_padding, "visual/boxartpadding", INT, 0);
+    CHECK_AND_SAVE_STD(content, box_art_placeholder, "visual/boxartplaceholder", INT, 0);
     CHECK_AND_SAVE_STD(content, video_preview, "visual/videopreview", INT, 0);
 
     if (is_modified > 0) run_tweak_script(lang.generic.saving);
@@ -143,6 +145,9 @@ static void init_navigation_group(void) {
     );
     INIT_OPTION_ITEM(-1, content, box_art_scale, lang.muxcontent.box_art.scale, "boxartscale", NULL, 0);
     INIT_OPTION_ITEM(-1, content, box_art_padding, lang.muxcontent.box_art.padding, "boxartpadding", NULL, 0);
+    INIT_OPTION_ITEM(
+        -1, content, box_art_placeholder, lang.muxcontent.box_art.placeholder, "boxartplaceholder", disabled_enabled, 2
+    );
     INIT_OPTION_ITEM(
         -1, content, video_preview, lang.muxcontent.video_preview.title, "videopreview", video_preview_options, 4
     );

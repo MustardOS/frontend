@@ -565,6 +565,7 @@ struct mux_lang {
             char original[MAX_BUFFER_SIZE];
             char scale[MAX_BUFFER_SIZE];
             char padding[MAX_BUFFER_SIZE];
+            char placeholder[MAX_BUFFER_SIZE];
             struct {
                 char title[MAX_BUFFER_SIZE];
                 char b_left[MAX_BUFFER_SIZE];
@@ -618,6 +619,7 @@ struct mux_lang {
             char grid_mode_art[MAX_BUFFER_SIZE];
             char box_art_scale[MAX_BUFFER_SIZE];
             char box_art_padding[MAX_BUFFER_SIZE];
+            char box_art_placeholder[MAX_BUFFER_SIZE];
             char box_art_transition[MAX_BUFFER_SIZE];
             char video_preview[MAX_BUFFER_SIZE];
         } help;

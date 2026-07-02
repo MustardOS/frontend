@@ -624,6 +624,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxcontent.box_art.original, "Original");
     SPECIFIC_FIELD(lang->muxcontent.box_art.scale, "Box Art Scale");
     SPECIFIC_FIELD(lang->muxcontent.box_art.padding, "Box Art Padding");
+    SPECIFIC_FIELD(lang->muxcontent.box_art.placeholder, "Box Art Placeholder");
     SPECIFIC_FIELD(lang->muxcontent.box_art.transition.title, "Box Art Transition");
     SPECIFIC_FIELD(lang->muxcontent.box_art.transition.fade_in, "Fade In");
     SPECIFIC_FIELD(lang->muxcontent.box_art.transition.slide_right, "Slide From Right");
@@ -674,6 +675,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->muxcontent.help.box_art_scale, "Scale box art to a percentage of the available display area");
     SPECIFIC_FIELD(
         lang->muxcontent.help.box_art_padding, "Add percentage padding around the box art image on all sides"
+    );
+    SPECIFIC_FIELD(
+        lang->muxcontent.help.box_art_placeholder,
+        "Show a theme's placeholder image in place of box art when none can be found"
     );
     SPECIFIC_FIELD(
         lang->muxcontent.help.box_art_transition, "Select the animation for box art when navigating content"

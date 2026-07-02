@@ -290,6 +290,7 @@ struct mux_config {
         int16_t box_art_hide;
         int16_t box_art_scale;
         int16_t box_art_padding;
+        int16_t box_art_placeholder;
         int16_t box_art_transition;
         int16_t video_preview;
         int16_t content_width;

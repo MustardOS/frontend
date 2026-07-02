@@ -867,6 +867,36 @@ void update_label_scroll() {
     }
 }
 
+static void resolve_none_box_fallback(char *out) {
+    snprintf(out, MAX_BUFFER_SIZE, "%s/%simage/none_box.png", theme_base, mux_dim);
+    if (!file_exist(out)) {
+        snprintf(out, MAX_BUFFER_SIZE, "%s/image/none_box.png", theme_base);
+    }
+}
+
+static void apply_box_blank_or_fallback(lv_obj_t *ui_viewport_objects[], int *starter_image) {
+    char none_box[MAX_BUFFER_SIZE] = {0};
+    if (config.visual.box_art_placeholder) resolve_none_box_fallback(none_box);
+
+    if (strcasecmp(box_image_previous_path, none_box) == 0) return;
+
+    if (none_box[0] && file_exist(none_box)) {
+        *starter_image = 1;
+        char image_path[MAX_BUFFER_SIZE];
+        snprintf(image_path, sizeof(image_path), "M:%s", none_box);
+        lv_img_set_src(ui_img_box, image_path);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", none_box);
+    } else {
+        lv_img_set_src(ui_img_box, &ui_img_blank);
+        if (ui_viewport_objects) {
+            for (int i = 1; i < 6; i++) {
+                if (ui_viewport_objects[i]) lv_img_set_src(ui_viewport_objects[i], &ui_img_blank);
+            }
+        }
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+    }
+}
+
 void render_image_refresh(
     const char *image_type, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_img_splash,
     lv_obj_t *ui_viewport_objects[], int *starter_image, int *splash_valid
@@ -880,11 +910,7 @@ void render_image_refresh(
             lv_img_set_src(ui_img_splash, &ui_img_blank);
             snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
         } else {
-            lv_img_set_src(ui_img_box, &ui_img_blank);
-            for (int i = 1; i < 6; i++) {
-                if (ui_viewport_objects[i]) lv_img_set_src(ui_viewport_objects[i], &ui_img_blank);
-            }
-            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+            apply_box_blank_or_fallback(ui_viewport_objects, starter_image);
         }
         return;
     }
@@ -995,8 +1021,7 @@ void render_image_refresh(
 
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
                 } else {
-                    lv_img_set_src(ui_img_box, &ui_img_blank);
-                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+                    apply_box_blank_or_fallback(NULL, starter_image);
                 }
             }
         }

@@ -153,6 +153,7 @@
     CONTENT(box_art_transition, "boxarttransition")                                                                    \
     CONTENT(box_art_scale, "boxartscale")                                                                              \
     CONTENT(box_art_padding, "boxartpadding")                                                                          \
+    CONTENT(box_art_placeholder, "boxartplaceholder")                                                                  \
     CONTENT(video_preview, "videopreview")                                                                             \
     CONTENT(full_width, "width")                                                                                       \
     CONTENT(launch_splash, "splash")                                                                                   \

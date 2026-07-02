@@ -2,7 +2,9 @@
 #include "ui/ui_muxactivity.h"
 
 static lv_obj_t *ui_viewport_objects[7];
+static lv_obj_t *ui_img_splash;
 static int starter_image = 0;
+static int splash_valid = 0;
 static int track_delete = 0;
 
 typedef enum {
@@ -152,44 +154,9 @@ static void image_refresh() {
     char *dot = strrchr(h_file_name, '.');
     if (dot) *dot = '\0';
 
-    char image[MAX_BUFFER_SIZE] = {0};
-    char image_path[MAX_BUFFER_SIZE];
-
-    if (strlen(h_core_artwork) <= 1) {
-        snprintf(image, sizeof(image), "%s/%simage/none_box.png", theme_base, mux_dim);
-        if (!file_exist(image)) {
-            snprintf(image, sizeof(image), "%s/image/none_box.png", theme_base);
-        }
-    } else {
-        if (!grid_mode_enabled || !config.visual.box_art_hide) {
-            load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, "box", image, sizeof(image));
-        }
-    }
-
-    LOG_INFO(mux_module, "Loading 'box' Artwork: %s", image);
-
-    if (strcasecmp(box_image_previous_path, image) != 0) {
-        char artwork_config_path[MAX_BUFFER_SIZE];
-        snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini", INFO_CAT_PATH, h_core_artwork);
-        if (!file_exist(artwork_config_path)) {
-            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini", INFO_CAT_PATH);
-        }
-
-        if (file_exist(artwork_config_path)) {
-            viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
-            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-        } else {
-            if (file_exist(image)) {
-                starter_image = 1;
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-                lv_img_set_src(ui_img_box, image_path);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-            } else {
-                lv_img_set_src(ui_img_box, &ui_img_blank);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
-            }
-        }
-    }
+    render_image_refresh(
+        "box", h_core_artwork, h_file_name, ui_img_splash, ui_viewport_objects, &starter_image, &splash_valid
+    );
 }
 
 static size_t json_size_positive(const struct json j) {
