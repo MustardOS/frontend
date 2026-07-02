@@ -38,7 +38,7 @@ static int cached_has_theme_font = -1;
 // Must be a power-of-2 and at least 2× FONT_CACHE_MAX so load factor stays ≤ 50%
 #define FONT_CACHE_SLOTS 512
 _Static_assert(FONT_CACHE_SLOTS >= FONT_CACHE_MAX * 2, "FONT_CACHE_SLOTS must be >= 2 * FONT_CACHE_MAX");
-_Static_assert((FONT_CACHE_SLOTS & (FONT_CACHE_SLOTS - 1)) == 0, "FONT_CACHE_SLOTS must be a power of 2");
+_Static_assert((FONT_CACHE_SLOTS & FONT_CACHE_SLOTS - 1) == 0, "FONT_CACHE_SLOTS must be a power of 2");
 
 typedef struct {
     uint32_t hash;
@@ -248,10 +248,10 @@ static uint32_t font_key_hash(const char *path, const int size) {
 
 static lv_font_t *cache_lookup(const char *path, const int size) {
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
+    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        const font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
+        const font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
         if (e->path[0] == '\0') return NULL;
         if (e->hash == h && e->size == size && strcmp(e->path, path) == 0) return e->font;
     }
@@ -272,10 +272,10 @@ static void cache_store(const char *path, const int size, lv_font_t *font, void 
     }
 
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
+    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
+        font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
 
         if (e->path[0] != '\0') continue;
         e->hash = h;
@@ -423,6 +423,53 @@ lv_font_t *load_font_pass_roller(void) {
     return create_language_font(size);
 }
 
+static void build_font_candidate(
+    char *base, const char *dim, const char *lang, const char *section, const int use_grid, const char *name
+) {
+    const size_t base_size = MAX_BUFFER_SIZE;
+
+    size_t n = (size_t) snprintf(base, base_size, "%s/%sfont", theme_base, dim);
+    if (n >= base_size) n = base_size - 1;
+
+    if (lang && lang[0]) {
+        n += (size_t) snprintf(base + n, base_size - n, "/%s", lang);
+        if (n >= base_size) n = base_size - 1;
+    }
+    if (section && section[0]) {
+        n += (size_t) snprintf(base + n, base_size - n, "/%s", section);
+        if (n >= base_size) n = base_size - 1;
+    }
+    if (use_grid) {
+        n += (size_t) snprintf(base + n, base_size - n, "/grid");
+        if (n >= base_size) n = base_size - 1;
+    }
+
+    snprintf(base + n, base_size - n, "/%s", name);
+}
+
+static lv_font_t *
+find_theme_font(const char *curr_lang, const char *section, const int use_grid, const int size, char *resolved) {
+    char *dims[2] = {mux_dim, ""};
+    char base[MAX_BUFFER_SIZE];
+    lv_font_t *font = NULL;
+
+    for (int i = 0; i < 2 && !font; i++) {
+        build_font_candidate(base, dims[i], curr_lang, section, use_grid, mux_module);
+        if ((font = try_font_at(base, resolved, size))) break;
+
+        build_font_candidate(base, dims[i], curr_lang, section, use_grid, "default");
+        if ((font = try_font_at(base, resolved, size))) break;
+
+        build_font_candidate(base, dims[i], NULL, section, use_grid, mux_module);
+        if ((font = try_font_at(base, resolved, size))) break;
+
+        build_font_candidate(base, dims[i], NULL, section, use_grid, "default");
+        font = try_font_at(base, resolved, size);
+    }
+
+    return font;
+}
+
 void load_font_text(lv_obj_t *screen) {
     const int eff_type = effective_type();
 
@@ -468,48 +515,13 @@ void load_font_text(lv_obj_t *screen) {
 
     if (eff_type == 1) {
         const char *curr_lang = config.settings.general.language;
-
-        char *dims[2] = {mux_dim, ""};
         const int size = get_ttf_size();
 
-        char base[MAX_BUFFER_SIZE];
         char resolved[MAX_BUFFER_SIZE];
-
         lv_font_t *font = NULL;
 
-        if (grid_mode_enabled) {
-            for (int i = 0; i < 2 && !font; i++) {
-                snprintf(base, sizeof(base), "%s/%sfont/%s/grid/%s", theme_base, dims[i], curr_lang, mux_module);
-
-                if ((font = try_font_at(base, resolved, size))) break;
-                snprintf(base, sizeof(base), "%s/%sfont/%s/grid/default", theme_base, dims[i], curr_lang);
-
-                if ((font = try_font_at(base, resolved, size))) break;
-                snprintf(base, sizeof(base), "%s/%sfont/grid/%s", theme_base, dims[i], mux_module);
-
-                if ((font = try_font_at(base, resolved, size))) break;
-                snprintf(base, sizeof(base), "%s/%sfont/grid/default", theme_base, dims[i]);
-
-                font = try_font_at(base, resolved, size);
-            }
-        }
-
-        if (!font) {
-            for (int i = 0; i < 2 && !font; i++) {
-                snprintf(base, sizeof(base), "%s/%sfont/%s/%s", theme_base, dims[i], curr_lang, mux_module);
-
-                if ((font = try_font_at(base, resolved, size))) break;
-                snprintf(base, sizeof(base), "%s/%sfont/%s/default", theme_base, dims[i], curr_lang);
-
-                if ((font = try_font_at(base, resolved, size))) break;
-                snprintf(base, sizeof(base), "%s/%sfont/%s", theme_base, dims[i], mux_module);
-
-                if ((font = try_font_at(base, resolved, size))) break;
-                snprintf(base, sizeof(base), "%s/%sfont/default", theme_base, dims[i]);
-
-                font = try_font_at(base, resolved, size);
-            }
-        }
+        if (grid_mode_enabled) font = find_theme_font(curr_lang, NULL, 1, size, resolved);
+        if (!font) font = find_theme_font(curr_lang, NULL, 0, size, resolved);
 
         if (font) {
             LOG_INFO(mux_module, "Loading Theme Font: %s", resolved);
@@ -565,50 +577,13 @@ void load_font_section(const char *section, lv_obj_t *element) {
     }
 
     const char *curr_lang = config.settings.general.language;
-
-    char *dims[2] = {mux_dim, ""};
     const int size = get_section_ttf_size(section);
 
-    char base[MAX_BUFFER_SIZE];
     char resolved[MAX_BUFFER_SIZE];
-
     lv_font_t *font = NULL;
 
-    if (grid_mode_enabled) {
-        for (int i = 0; i < 2 && !font; i++) {
-            snprintf(
-                base, sizeof(base), "%s/%sfont/%s/%s/grid/%s", theme_base, dims[i], curr_lang, section, mux_module
-            );
-
-            if ((font = try_font_at(base, resolved, size))) break;
-            snprintf(base, sizeof(base), "%s/%sfont/%s/%s/grid/default", theme_base, dims[i], curr_lang, section);
-
-            if ((font = try_font_at(base, resolved, size))) break;
-            snprintf(base, sizeof(base), "%s/%sfont/%s/grid/%s", theme_base, dims[i], section, mux_module);
-
-            if ((font = try_font_at(base, resolved, size))) break;
-            snprintf(base, sizeof(base), "%s/%sfont/%s/grid/default", theme_base, dims[i], section);
-
-            font = try_font_at(base, resolved, size);
-        }
-    }
-
-    if (!font) {
-        for (int i = 0; i < 2 && !font; i++) {
-            snprintf(base, sizeof(base), "%s/%sfont/%s/%s/%s", theme_base, dims[i], curr_lang, section, mux_module);
-
-            if ((font = try_font_at(base, resolved, size))) break;
-            snprintf(base, sizeof(base), "%s/%sfont/%s/%s/default", theme_base, dims[i], curr_lang, section);
-
-            if ((font = try_font_at(base, resolved, size))) break;
-            snprintf(base, sizeof(base), "%s/%sfont/%s/%s", theme_base, dims[i], section, mux_module);
-
-            if ((font = try_font_at(base, resolved, size))) break;
-            snprintf(base, sizeof(base), "%s/%sfont/%s/default", theme_base, dims[i], section);
-
-            font = try_font_at(base, resolved, size);
-        }
-    }
+    if (grid_mode_enabled) font = find_theme_font(curr_lang, section, 1, size, resolved);
+    if (!font) font = find_theme_font(curr_lang, section, 0, size, resolved);
 
     if (font) {
         LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, resolved);
