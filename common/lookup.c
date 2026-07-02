@@ -362,3 +362,17 @@ void r_lookup_multi_at(
 
     r_lookup_generic_multi(table, count, term, emit, udata);
 }
+
+void lookup_dump_at(const size_t index, void (*emit)(const char *name, const char *value, void *udata), void *udata) {
+    if (index >= LOOKUP_TABLE_COUNT) {
+        return;
+    }
+
+    const lookup_internal_name *table;
+    size_t count;
+    get_table(index, &table, &count);
+
+    for (size_t i = 0; i < count; i++) {
+        emit(table[i].name, table[i].value, udata);
+    }
+}

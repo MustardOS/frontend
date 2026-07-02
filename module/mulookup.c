@@ -222,8 +222,7 @@ static void generate_internal(void) {
     results_reserve(&r);
 
     for (size_t j = 0; j < LOOKUP_TABLE_COUNT; j++) {
-        lookup_multi_at(j, "", emit_pair, &r);
-        r_lookup_multi_at(j, "", emit_pair, &r);
+        lookup_dump_at(j, emit_pair, &r);
     }
 
     write_results_to_file(&r, LOOKUP_INTERNAL);

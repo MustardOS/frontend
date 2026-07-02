@@ -17,3 +17,5 @@ void lookup_multi_at(
 void r_lookup_multi_at(
     size_t index, const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata
 );
+
+void lookup_dump_at(size_t index, void (*emit)(const char *name, const char *value, void *udata), void *udata);
