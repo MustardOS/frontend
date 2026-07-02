@@ -3,7 +3,7 @@
 #include "../lvgl/lvgl.h"
 #include "options.h"
 
-enum { theme_compat = 3 };
+enum { theme_compat = 8 };
 
 enum time_type { time_12_h, time_24_h };
 

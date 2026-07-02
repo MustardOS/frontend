@@ -18,6 +18,11 @@ static void compat_theme_init(void) {
     theme_back_compat[0] = config.system.version;
     theme_back_compat[1] = "2601.1_FUNKY_JACARANDA";
     theme_back_compat[2] = "2601.0_JACARANDA";
+    theme_back_compat[3] = "2508.4_LOOSE_GOOSE";
+    theme_back_compat[4] = "2508.3_GOLDEN_GOOSE";
+    theme_back_compat[5] = "2508.2_SILLY_GOOSE";
+    theme_back_compat[6] = "2508.1_CANADA_GOOSE";
+    theme_back_compat[7] = "2508.0_GOOSE";
 }
 
 const char *get_theme_base(void) {
