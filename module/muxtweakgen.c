@@ -301,12 +301,9 @@ static void init_navigation_group(void) {
 
     if (combo_path) hk_combos = load_combos(combo_path, &hk_combo_count);
 
+    const char *sink_args[] = {OPT_PATH "script/mux/audio_sink.sh", "list", NULL};
+    run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
     audio_sinks = str_parse_file("/run/muos/audio_sinks", &audio_sink_count, parse_lines);
-    if (audio_sink_count == 0) {
-        const char *sink_args[] = {OPT_PATH "script/mux/audio_sink.sh", "list", NULL};
-        run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
-        audio_sinks = str_parse_file("/run/muos/audio_sinks", &audio_sink_count, parse_lines);
-    }
 
     INIT_OPTION_ITEM(-1, tweakgen, rtc, lang.muxtweakgen.rtc, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, hdmi, lang.muxtweakgen.hdmi, "hdmi", NULL, 0);
