@@ -1,6 +1,8 @@
 #include "muxshare.h"
 #include <SDL2/SDL.h>
 
+#define EMPTY_SLOT "---"
+
 #define REMAP_SLOT_COUNT 23
 #define PHYS_LABEL_SIZE  64
 
@@ -65,14 +67,16 @@ static int remap_dev_idx = 0;
 static volatile int capture_active = 0;
 static int capture_target = -1;
 static int capture_pending_clear = 0;
+static lv_timer_t *capture_timeout_timer = NULL;
+static int capture_timeout_seconds = 0;
 
-#define AXIS_CAPTURE_THRESHOLD 16384
+#define AXIS_CAPTURE_THRESHOLD  16384
+#define CAPTURE_TIMEOUT_TICK_MS 1000
+#define CAPTURE_TIMEOUT_SECONDS 3
 
 static int remap_layout = 0; // 0 = Retro, 1 = Modern
 static int pending_layout = -1;
 
-static char capture_prev_phys[32] = "";
-static int capture_prev_modified = 0;
 static int entry_layout = 0;
 
 static int save_mode = 0;
@@ -112,30 +116,52 @@ static void detect_device_at(const int idx) {
     if (name) snprintf(ctrl_name, sizeof(ctrl_name), "%s", name);
 }
 
-static void parse_gcdb_slot(const char *line, const int idx) {
+static void parse_gcdb_value(const char *line, const char *gc_key, char *out) {
+    const size_t out_size = 32;
+
     char search[48];
-    snprintf(search, sizeof(search), ",%s:", slot_defs[idx].gc_key);
+    snprintf(search, sizeof(search), ",%s:", gc_key);
 
     const char *p = strstr(line, search);
     if (!p) {
-        snprintf(phys[idx], sizeof(phys[0]), "---");
+        snprintf(out, out_size, EMPTY_SLOT);
         return;
     }
     p += strlen(search);
 
     const char *end = strchr(p, ',');
     size_t len = end ? (size_t) (end - p) : strlen(p);
-    if (len >= sizeof(phys[0])) len = sizeof(phys[0]) - 1;
+    if (len >= out_size) len = out_size - 1;
 
-    memcpy(phys[idx], p, len);
-    phys[idx][len] = '\0';
+    memcpy(out, p, len);
+    out[len] = '\0';
 
-    if (phys[idx][0] == '\0') snprintf(phys[idx], sizeof(phys[0]), "---");
+    if (out[0] == '\0') snprintf(out, out_size, EMPTY_SLOT);
+}
+
+static void parse_gcdb_slot(const char *line, const int idx) {
+    parse_gcdb_value(line, slot_defs[idx].gc_key, phys[idx]);
+}
+
+static int slot_index_for_key(const char *gc_key) {
+    for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
+        if (strcmp(slot_defs[i].gc_key, gc_key) == 0) return i;
+    }
+    return -1;
+}
+
+// The boards own built-in controls are always device index 0 and is the only source
+// of a sane fallback physical input we can trust for a cleared critical slot, very important!
+static int get_board_default_phys(const int idx, char *out) {
+    if (remap_dev_idx != 0 || !device.board.sdl_map[0]) return 0;
+
+    parse_gcdb_value(device.board.sdl_map, slot_defs[idx].gc_key, out);
+    return strcmp(out, EMPTY_SLOT) != 0;
 }
 
 static void phys_to_label(const char *p, char out[PHYS_LABEL_SIZE]) {
-    if (!p || p[0] == '\0' || strcmp(p, "---") == 0) {
-        snprintf(out, PHYS_LABEL_SIZE, "---");
+    if (!p || p[0] == '\0' || strcmp(p, EMPTY_SLOT) == 0) {
+        snprintf(out, PHYS_LABEL_SIZE, EMPTY_SLOT);
         return;
     }
 
@@ -234,7 +260,7 @@ static int load_from_file(const char *path, const char *guid) {
 // Load from the active layout file (retro.txt or modern.txt), fall back to board SDL_MAP.
 static void load_current_mapping(void) {
     for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
-        snprintf(phys[i], sizeof(phys[0]), "---");
+        snprintf(phys[i], sizeof(phys[0]), EMPTY_SLOT);
     }
 
     const char *layout_file = remap_layout == 1 ? OPT_PATH "share/info/gamecontrollerdb/modern.txt"
@@ -255,23 +281,12 @@ static void build_mapping_line(char *buf) {
     );
 
     for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
-        if (phys[i][0] && strcmp(phys[i], "---") != 0)
+        if (phys[i][0] && strcmp(phys[i], EMPTY_SLOT) != 0)
             n += snprintf(tmp + n, sizeof(tmp) - (size_t) n, ",%s:%s", slot_defs[i].gc_key, phys[i]);
     }
 
     snprintf(tmp + n, sizeof(tmp) - (size_t) n, ",platform:Linux,");
     snprintf(buf, 4096, "%s", tmp);
-}
-
-static void do_save(void) {
-    char mapping[4096];
-    build_mapping_line(mapping);
-
-    const char *target = remap_layout == 1 ? "modern" : "retro";
-    const char *args[] = {OPT_PATH "script/mux/sdl_remap.sh", target, mapping, NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-    mux_input_reload_mappings();
 }
 
 static int focused_slot(void) {
@@ -426,6 +441,45 @@ static void clear_capture_state(void) {
     capture_active = 0;
     capture_target = -1;
     capture_pending_clear = 0;
+    SAFE_DELETE(capture_timeout_timer, lv_timer_del);
+}
+
+static void set_capture_countdown_label(void) {
+    if (capture_target < 0 || capture_target >= REMAP_SLOT_COUNT) return;
+
+    char label[PHYS_LABEL_SIZE];
+    snprintf(label, sizeof(label), "%s (%d)", lang.muxremap.waiting, capture_timeout_seconds);
+    lv_label_set_text(item_values[capture_target], label);
+}
+
+static void capture_timeout_cb(lv_timer_t *t) {
+    capture_timeout_seconds--;
+
+    if (capture_timeout_seconds > 0) {
+        set_capture_countdown_label();
+        return;
+    }
+
+    lv_timer_del(t);
+    capture_timeout_timer = NULL;
+
+    if (capture_target >= 0 && capture_target < REMAP_SLOT_COUNT) {
+        char label[PHYS_LABEL_SIZE];
+        phys_to_label(phys[capture_target], label);
+        lv_label_set_text(item_values[capture_target], label);
+    }
+
+    clear_capture_state();
+    check_focus();
+    play_sound(snd_back);
+}
+
+static int find_slot_using_phys(const char *phys_str, const int exclude_slot) {
+    for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
+        if (i == exclude_slot) continue;
+        if (phys[i][0] && strcmp(phys[i], EMPTY_SLOT) != 0 && strcmp(phys[i], phys_str) == 0) return i;
+    }
+    return -1;
 }
 
 static void raw_event_capture(const SDL_Event *ev) {
@@ -464,6 +518,15 @@ static void raw_event_capture(const SDL_Event *ev) {
 
     if (phys_str[0] == '\0') return;
 
+    if (find_slot_using_phys(phys_str, capture_target) >= 0) {
+        play_sound(snd_error);
+        toast_message(lang.muxremap.already_used, tst_wait_m);
+
+        capture_timeout_seconds = CAPTURE_TIMEOUT_SECONDS;
+        set_capture_countdown_label();
+        return;
+    }
+
     snprintf(phys[capture_target], sizeof(phys[0]), "%s", phys_str);
     char label[PHYS_LABEL_SIZE];
     phys_to_label(phys[capture_target], label);
@@ -471,6 +534,7 @@ static void raw_event_capture(const SDL_Event *ev) {
 
     mapping_modified = 1;
     capture_pending_clear = 1;
+    SAFE_DELETE(capture_timeout_timer, lv_timer_del);
 
     check_focus();
 }
@@ -488,6 +552,53 @@ static void cycle_layout(void) {
     play_sound(snd_navigate);
 }
 
+// This is a fallback catch... So DPAD and A+B must never all be capable of ending up unmapped,
+// or the whole frontend becomes unusable with no way back into the remapper to fix it. If one of
+// these was cleared, first try to fail safe back to the boards own default physical input for it,
+// but only if that physical control has not been intentionally reassigned to something else.
+// Anything that still can't be resolved blocks it entirely upon save and quit...
+static int validate_and_backfill_mapping(void) {
+    static const char *const critical_keys[] = {"dpup", "dpdown", "dpleft", "dpright", "a", "b"};
+
+    int recovered = 0;
+    int missing = 0;
+
+    for (size_t k = 0; k < A_SIZE(critical_keys); k++) {
+        const int idx = slot_index_for_key(critical_keys[k]);
+        if (idx < 0 || (phys[idx][0] && strcmp(phys[idx], EMPTY_SLOT) != 0)) continue;
+
+        char fallback[32];
+        if (get_board_default_phys(idx, fallback, sizeof(fallback)) && find_slot_using_phys(fallback, idx) < 0) {
+            snprintf(phys[idx], sizeof(phys[0]), "%s", fallback);
+            recovered = 1;
+        } else {
+            missing = 1;
+        }
+    }
+
+    if (recovered) refresh_slot_labels();
+
+    return !missing;
+}
+
+static int do_save(void) {
+    if (!validate_and_backfill_mapping()) {
+        play_sound(snd_error);
+        toast_message(lang.muxremap.core_missing, tst_wait_l);
+        return 0;
+    }
+
+    char mapping[4096];
+    build_mapping_line(mapping);
+
+    const char *target = remap_layout == 1 ? "modern" : "retro";
+    const char *args[] = {OPT_PATH "script/mux/sdl_remap.sh", target, mapping, NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    mux_input_reload_mappings();
+    return 1;
+}
+
 static void handle_a(void) {
     if (hold_call) return;
 
@@ -496,7 +607,12 @@ static void handle_a(void) {
         hide_save_dialog();
 
         if (opt == mux_unsaved_save) {
-            do_save();
+            if (!do_save()) {
+                pending_layout = -1;
+                check_focus();
+                return;
+            }
+
             entry_layout = remap_layout;
         }
 
@@ -528,47 +644,17 @@ static void handle_a(void) {
 
     if (slot < 0 || slot >= REMAP_SLOT_COUNT) return;
 
-    snprintf(capture_prev_phys, sizeof(capture_prev_phys), "%s", phys[slot]);
-    capture_prev_modified = mapping_modified;
     capture_target = slot;
     capture_active = 1;
+    capture_timeout_seconds = CAPTURE_TIMEOUT_SECONDS;
+    capture_timeout_timer = lv_timer_create(capture_timeout_cb, CAPTURE_TIMEOUT_TICK_MS, NULL);
 
-    lv_label_set_text(item_values[slot], lang.muxremap.waiting);
+    set_capture_countdown_label();
     play_sound(snd_confirm);
 }
 
 static void handle_b(void) {
-    if (hold_call) return;
-
-    if (capture_pending_clear) {
-        if (capture_target >= 0 && capture_target < REMAP_SLOT_COUNT) {
-            snprintf(phys[capture_target], sizeof(phys[0]), "%s", capture_prev_phys);
-            char label[PHYS_LABEL_SIZE];
-            phys_to_label(phys[capture_target], label);
-            lv_label_set_text(item_values[capture_target], label);
-        }
-
-        mapping_modified = capture_prev_modified;
-
-        check_focus();
-        clear_capture_state();
-
-        play_sound(snd_back);
-
-        return;
-    }
-
-    if (capture_active) {
-        if (capture_target >= 0 && capture_target < REMAP_SLOT_COUNT) {
-            char label[PHYS_LABEL_SIZE];
-            phys_to_label(phys[capture_target], label);
-            lv_label_set_text(item_values[capture_target], label);
-        }
-
-        clear_capture_state();
-        play_sound(snd_back);
-        return;
-    }
+    if (hold_call || capture_active) return;
 
     if (save_mode) {
         hide_save_dialog();
@@ -594,7 +680,7 @@ static void handle_x(void) {
 
     play_sound(snd_info_close);
 
-    snprintf(phys[slot], sizeof(phys[0]), "---");
+    snprintf(phys[slot], sizeof(phys[0]), EMPTY_SLOT);
     lv_label_set_text(item_values[slot], phys[slot]);
     mapping_modified = 1;
 

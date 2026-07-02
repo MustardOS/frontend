@@ -1434,6 +1434,8 @@ struct mux_lang {
         char none[MAX_BUFFER_SIZE];
         char waiting[MAX_BUFFER_SIZE];
         char saved[MAX_BUFFER_SIZE];
+        char already_used[MAX_BUFFER_SIZE];
+        char core_missing[MAX_BUFFER_SIZE];
         char input_label[MAX_BUFFER_SIZE];
         char layout_label[MAX_BUFFER_SIZE];
         char layout_retro[MAX_BUFFER_SIZE];

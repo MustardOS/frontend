@@ -1345,6 +1345,8 @@ static const lang_field lang_fields[] = {
     {"muxremap", LANG_OFF(muxremap.none), lang_specific, "No Controller Detected"},
     {"muxremap", LANG_OFF(muxremap.waiting), lang_specific, "Press Any Input…"},
     {"muxremap", LANG_OFF(muxremap.saved), lang_specific, "Mapping Saved"},
+    {"muxremap", LANG_OFF(muxremap.already_used), lang_specific, "Already In Use"},
+    {"muxremap", LANG_OFF(muxremap.core_missing), lang_specific, "Core Controls Required"},
     {"muxremap", LANG_OFF(muxremap.input_label), lang_specific, "Controller"},
     {"muxremap", LANG_OFF(muxremap.layout_label), lang_specific, "Active Layout"},
     {"muxremap", LANG_OFF(muxremap.layout_retro), lang_specific, "Retro"},
