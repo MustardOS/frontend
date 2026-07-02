@@ -112,7 +112,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
 
-    if (p_type == pct_boot) lv_label_set_text(ui_lbl_nav_b, lang.muxlaunch.shutdown);
+    if (p_type == pct_boot) lv_label_set_text(ui_lbl_nav_b, lang.muxpass.shutdown);
 
     overlay_display();
 }

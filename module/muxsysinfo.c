@@ -293,16 +293,17 @@ static const char *get_system_uptime(void) {
 
     if (days > 0) {
         snprintf(
-            buffer, sizeof(buffer), "%llu %s%s %llu %s%s %llu %s%s", days, lang.muxrtc.day, days == 1ULL ? "" : "s",
-            hours, lang.muxrtc.hour, hours == 1ULL ? "" : "s", minutes, lang.muxrtc.minute, minutes == 1ULL ? "" : "s"
+            buffer, sizeof(buffer), "%llu %s%s %llu %s%s %llu %s%s", days, lang.muxsysinfo.day, days == 1ULL ? "" : "s",
+            hours, lang.muxsysinfo.hour, hours == 1ULL ? "" : "s", minutes, lang.muxsysinfo.minute,
+            minutes == 1ULL ? "" : "s"
         );
     } else if (hours > 0) {
         snprintf(
-            buffer, sizeof(buffer), "%llu %s%s %llu %s%s", hours, lang.muxrtc.hour, hours == 1ULL ? "" : "s", minutes,
-            lang.muxrtc.minute, minutes == 1ULL ? "" : "s"
+            buffer, sizeof(buffer), "%llu %s%s %llu %s%s", hours, lang.muxsysinfo.hour, hours == 1ULL ? "" : "s",
+            minutes, lang.muxsysinfo.minute, minutes == 1ULL ? "" : "s"
         );
     } else {
-        snprintf(buffer, sizeof(buffer), "%llu %s%s", minutes, lang.muxrtc.minute, minutes == 1ULL ? "" : "s");
+        snprintf(buffer, sizeof(buffer), "%llu %s%s", minutes, lang.muxsysinfo.minute, minutes == 1ULL ? "" : "s");
     }
 
     return buffer;

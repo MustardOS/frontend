@@ -28,7 +28,7 @@ static void show_warn_dialog(const char *target) {
     snprintf(warn_pending, sizeof(warn_pending), "%s", target);
 
     if (warn_dlg.description_label) {
-        const char *desc = strcmp(target, "danger") == 0 ? lang.muxdanger.warn : lang.muxtweakgen.warn;
+        const char *desc = strcmp(target, "danger") == 0 ? lang.muxtweakgen.warn_danger : lang.muxtweakgen.warn;
         lv_label_set_text(warn_dlg.description_label, desc);
     }
 

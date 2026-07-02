@@ -152,13 +152,13 @@ static void init_navigation_group(void) {
     char *label_scroll_speed[] = {scroll_speed[0], scroll_speed[1], scroll_speed[2], scroll_speed[3]};
 
     char *dialogue_transition[] = {
-        lang.muxcontent.box_art.transition.fade_in,     lang.muxcontent.box_art.transition.slide_right,
-        lang.muxcontent.box_art.transition.slide_left,  lang.muxcontent.box_art.transition.slide_up,
-        lang.muxcontent.box_art.transition.slide_down,  lang.muxcontent.box_art.transition.bounce_right,
-        lang.muxcontent.box_art.transition.bounce_left, lang.muxcontent.box_art.transition.bounce_up,
-        lang.muxcontent.box_art.transition.bounce_down, lang.muxcontent.box_art.transition.shoot_right,
-        lang.muxcontent.box_art.transition.shoot_left,  lang.muxcontent.box_art.transition.shoot_up,
-        lang.muxcontent.box_art.transition.shoot_down,  lang.generic.disabled
+        lang.muxvisual.transition.fade_in,     lang.muxvisual.transition.slide_right,
+        lang.muxvisual.transition.slide_left,  lang.muxvisual.transition.slide_up,
+        lang.muxvisual.transition.slide_down,  lang.muxvisual.transition.bounce_right,
+        lang.muxvisual.transition.bounce_left, lang.muxvisual.transition.bounce_up,
+        lang.muxvisual.transition.bounce_down, lang.muxvisual.transition.shoot_right,
+        lang.muxvisual.transition.shoot_left,  lang.muxvisual.transition.shoot_up,
+        lang.muxvisual.transition.shoot_down,  lang.generic.disabled
     };
 
     char *selection_animation[] = {lang.generic.disabled, lang.generic.minimal, lang.generic.low,

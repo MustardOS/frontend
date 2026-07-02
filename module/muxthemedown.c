@@ -43,7 +43,7 @@ static void show_help(void) {
         snprintf(credits, sizeof(credits), "%s", raw ? raw : "");
         free(raw);
     } else {
-        snprintf(credits, sizeof(credits), "%s", lang.muxpicker.none.credit);
+        snprintf(credits, sizeof(credits), "%s", lang.muxthemedown.no_credit);
     }
 
     show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), TRS(credits), 0);

@@ -237,7 +237,10 @@ static void populate_info_values(void) {
         add_info_item_type(ui_val_tag_option, tag_file, tag_dir, "tag", 1);
     }
 
-    lv_label_set_text(ui_val_storage_option, get_storage_label(rom_dir));
+    lv_label_set_text(
+        ui_val_storage_option,
+        get_storage_label(rom_dir, lang.muxoption.primary, lang.muxoption.secondary, lang.muxoption.external)
+    );
 
     char rel_path[PATH_MAX];
     union_get_relative_path(rom_dir, rel_path, sizeof(rel_path));

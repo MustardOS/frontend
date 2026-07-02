@@ -4,7 +4,6 @@
 #include <limits.h>
 #include "init.h"
 #include "log.h"
-#include "language.h"
 #include "device.h"
 #include "config.h"
 #include "fileio.h"
@@ -92,13 +91,12 @@ char *get_build(void) {
     return build;
 }
 
-char *get_storage_label(const char *path) {
+char *get_storage_label(const char *path, const char *primary, const char *secondary, const char *external) {
     if (!path) return "Unknown";
 
-    if (strncmp(path, device.storage.rom.mount, strlen(device.storage.rom.mount)) == 0) return lang.muxspace.primary;
-    if (strncmp(path, device.storage.sdcard.mount, strlen(device.storage.sdcard.mount)) == 0)
-        return lang.muxspace.secondary;
-    if (strncmp(path, device.storage.usb.mount, strlen(device.storage.usb.mount)) == 0) return lang.muxspace.external;
+    if (strncmp(path, device.storage.rom.mount, strlen(device.storage.rom.mount)) == 0) return (char *) primary;
+    if (strncmp(path, device.storage.sdcard.mount, strlen(device.storage.sdcard.mount)) == 0) return (char *) secondary;
+    if (strncmp(path, device.storage.usb.mount, strlen(device.storage.usb.mount)) == 0) return (char *) external;
 
     return "Unknown";
 }

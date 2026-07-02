@@ -521,6 +521,10 @@ struct mux_lang {
         char status[MAX_BUFFER_SIZE];
         char connected[MAX_BUFFER_SIZE];
         char disconnected[MAX_BUFFER_SIZE];
+        char connect[MAX_BUFFER_SIZE];
+        char disconnect[MAX_BUFFER_SIZE];
+        char connecting[MAX_BUFFER_SIZE];
+        char disconnecting[MAX_BUFFER_SIZE];
         char forget[MAX_BUFFER_SIZE];
         char forget_confirm[MAX_BUFFER_SIZE];
         struct {
@@ -834,6 +838,9 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        struct {
+            char no_core[MAX_BUFFER_SIZE];
+        } error;
     } muxhistory;
 
     struct {
@@ -1216,6 +1223,9 @@ struct mux_lang {
         char not_assigned[MAX_BUFFER_SIZE];
         char storage[MAX_BUFFER_SIZE];
         char folder[MAX_BUFFER_SIZE];
+        char primary[MAX_BUFFER_SIZE];
+        char secondary[MAX_BUFFER_SIZE];
+        char external[MAX_BUFFER_SIZE];
         struct {
             char core[MAX_BUFFER_SIZE];
             char governor[MAX_BUFFER_SIZE];
@@ -1287,6 +1297,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char shutdown[MAX_BUFFER_SIZE];
     } muxpass;
 
     struct {
@@ -1592,6 +1603,9 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char day[MAX_BUFFER_SIZE];
+        char hour[MAX_BUFFER_SIZE];
+        char minute[MAX_BUFFER_SIZE];
         char version[MAX_BUFFER_SIZE];
         char build[MAX_BUFFER_SIZE];
         char device[MAX_BUFFER_SIZE];
@@ -1653,6 +1667,15 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char theme_down[MAX_BUFFER_SIZE];
+        char invalid_ver[MAX_BUFFER_SIZE];
+        char invalid_res[MAX_BUFFER_SIZE];
+        char protected_theme[MAX_BUFFER_SIZE];
+        char no_credit[MAX_BUFFER_SIZE];
+    } muxtheme;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
         char theme_removed[MAX_BUFFER_SIZE];
         char theme_extracting[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
@@ -1664,6 +1687,7 @@ struct mux_lang {
         } down;
         char remove[MAX_BUFFER_SIZE];
         char error_get_data[MAX_BUFFER_SIZE];
+        char no_credit[MAX_BUFFER_SIZE];
     } muxthemedown;
 
     struct {
@@ -1856,6 +1880,7 @@ struct mux_lang {
         char passcode[MAX_BUFFER_SIZE];
         char displaytemp[MAX_BUFFER_SIZE];
         char warn[MAX_BUFFER_SIZE];
+        char warn_danger[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char rtc[MAX_BUFFER_SIZE];
@@ -1933,6 +1958,21 @@ struct mux_lang {
             char continuous[MAX_BUFFER_SIZE];
             char bounce[MAX_BUFFER_SIZE];
         } scroll_mode;
+        struct {
+            char fade_in[MAX_BUFFER_SIZE];
+            char slide_right[MAX_BUFFER_SIZE];
+            char slide_left[MAX_BUFFER_SIZE];
+            char slide_up[MAX_BUFFER_SIZE];
+            char slide_down[MAX_BUFFER_SIZE];
+            char bounce_right[MAX_BUFFER_SIZE];
+            char bounce_left[MAX_BUFFER_SIZE];
+            char bounce_up[MAX_BUFFER_SIZE];
+            char bounce_down[MAX_BUFFER_SIZE];
+            char shoot_right[MAX_BUFFER_SIZE];
+            char shoot_left[MAX_BUFFER_SIZE];
+            char shoot_up[MAX_BUFFER_SIZE];
+            char shoot_down[MAX_BUFFER_SIZE];
+        } transition;
         struct {
             char image[MAX_BUFFER_SIZE];
             char transparency[MAX_BUFFER_SIZE];

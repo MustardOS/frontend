@@ -542,6 +542,7 @@ typedef struct {
 
 #define THEME_OFF(member) offsetof(struct theme_config, member)
 
+// clang-format off
 static const theme_field theme_fields[] = {
     // background
     {"background", "BACKGROUND", THEME_OFF(system.background), theme_hex},
@@ -737,14 +738,10 @@ static const theme_field theme_fields[] = {
     {"grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA", THEME_OFF(grid.current_item_label.border_alpha), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_BACKGROUND", THEME_OFF(grid.current_item_label.background), theme_hex},
     {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", THEME_OFF(grid.current_item_label.background_alpha), theme_int},
-    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR",
-     THEME_OFF(grid.current_item_label.background_gradient_color), theme_hex},
-    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START",
-     THEME_OFF(grid.current_item_label.background_gradient_start), theme_int},
-    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.current_item_label.background_gradient_stop),
-     theme_int},
-    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION",
-     THEME_OFF(grid.current_item_label.background_gradient_direction), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR", THEME_OFF(grid.current_item_label.background_gradient_color), theme_hex},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START", THEME_OFF(grid.current_item_label.background_gradient_start), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.current_item_label.background_gradient_stop), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.current_item_label.background_gradient_direction), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_SHADOW", THEME_OFF(grid.current_item_label.shadow), theme_hex},
     {"grid", "CURRENT_ITEM_LABEL_SHADOW_WIDTH", THEME_OFF(grid.current_item_label.shadow_width), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_SHADOW_X_OFFSET", THEME_OFF(grid.current_item_label.shadow_x_offset), theme_int},
@@ -754,8 +751,7 @@ static const theme_field theme_fields[] = {
     {"grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA", THEME_OFF(grid.current_item_label.text_alpha), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT", THEME_OFF(grid.current_item_label.text_alignment), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", THEME_OFF(grid.current_item_label.text_line_spacing), theme_int},
-    {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", THEME_OFF(grid.current_item_label.text_padding_bottom),
-     theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", THEME_OFF(grid.current_item_label.text_padding_bottom), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", THEME_OFF(grid.current_item_label.text_padding_left), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", THEME_OFF(grid.current_item_label.text_padding_right), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", THEME_OFF(grid.current_item_label.text_padding_top), theme_int},
@@ -777,13 +773,10 @@ static const theme_field theme_fields[] = {
     {"grid", "CELL_SHADOW_Y_OFFSET", THEME_OFF(grid.cell.shadow_y_offset), theme_int},
     {"grid", "CELL_DEFAULT_BACKGROUND", THEME_OFF(grid.cell_default.background), theme_hex},
     {"grid", "CELL_DEFAULT_BACKGROUND_ALPHA", THEME_OFF(grid.cell_default.background_alpha), theme_int},
-    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR", THEME_OFF(grid.cell_default.background_gradient_color),
-     theme_hex},
-    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_START", THEME_OFF(grid.cell_default.background_gradient_start),
-     theme_int},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR", THEME_OFF(grid.cell_default.background_gradient_color), theme_hex},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_START", THEME_OFF(grid.cell_default.background_gradient_start), theme_int},
     {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.cell_default.background_gradient_stop), theme_int},
-    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.cell_default.background_gradient_direction),
-     theme_int},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.cell_default.background_gradient_direction), theme_int},
     {"grid", "CELL_DEFAULT_BORDER", THEME_OFF(grid.cell_default.border), theme_hex},
     {"grid", "CELL_DEFAULT_BORDER_ALPHA", THEME_OFF(grid.cell_default.border_alpha), theme_int},
     {"grid", "CELL_DEFAULT_IMAGE_ALPHA", THEME_OFF(grid.cell_default.image_alpha), theme_int},
@@ -796,8 +789,7 @@ static const theme_field theme_fields[] = {
     {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_COLOR", THEME_OFF(grid.cell_focus.background_gradient_color), theme_hex},
     {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_START", THEME_OFF(grid.cell_focus.background_gradient_start), theme_int},
     {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.cell_focus.background_gradient_stop), theme_int},
-    {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.cell_focus.background_gradient_direction),
-     theme_int},
+    {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.cell_focus.background_gradient_direction), theme_int},
     {"grid", "CELL_FOCUS_BORDER", THEME_OFF(grid.cell_focus.border), theme_hex},
     {"grid", "CELL_FOCUS_BORDER_ALPHA", THEME_OFF(grid.cell_focus.border_alpha), theme_int},
     {"grid", "CELL_FOCUS_IMAGE_ALPHA", THEME_OFF(grid.cell_focus.image_alpha), theme_int},
@@ -1000,6 +992,7 @@ static const theme_field theme_fields[] = {
     {"sdl", "SOLID_G", THEME_OFF(sdl.solid.g), theme_int},
     {"sdl", "SOLID_B", THEME_OFF(sdl.solid.b), theme_int},
 };
+// clang-format on
 
 void load_theme_from_scheme(const char *scheme, struct theme_config *theme, const struct mux_device *device) {
     mini_t *muos_theme = mini_try_load(scheme);

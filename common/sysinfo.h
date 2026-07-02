@@ -18,6 +18,6 @@ char *get_version(int verify);
 
 char *get_build(void);
 
-char *get_storage_label(const char *path);
+char *get_storage_label(const char *path, const char *primary, const char *secondary, const char *external);
 
 const char *resolve_info_path(const char *rel);

@@ -106,7 +106,7 @@ static void check_focus(void) {
         nav_show_lr(1);
         nav_show_x(0, NULL);
     } else if (current_item_index == BTDEV_STAT_IDX) {
-        nav_show_a(1, is_connected ? lang.muxbtall.disconnect : lang.muxbtall.connect);
+        nav_show_a(1, is_connected ? lang.muxbtdev.disconnect : lang.muxbtdev.connect);
         nav_show_lr(0);
         nav_show_x(0, NULL);
     } else {
@@ -232,10 +232,10 @@ static void handle_a(void) {
     if (current_item_index == BTDEV_STAT_IDX) {
         if (!*selected_mac) return;
         if (is_connected) {
-            toast_message(lang.muxbtcon.disconnect, tst_wait_f);
+            toast_message(lang.muxbtdev.disconnecting, tst_wait_f);
             status_change("disconnect");
         } else {
-            toast_message(lang.muxbtcon.connect, tst_wait_f);
+            toast_message(lang.muxbtdev.connecting, tst_wait_f);
             status_change("connect");
         }
     }

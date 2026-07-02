@@ -40,7 +40,7 @@ static void show_help(void) {
         snprintf(credits, sizeof(credits), "%s", raw ? raw : "");
         free(raw);
     } else {
-        snprintf(credits, sizeof(credits), "%s", lang.muxpicker.none.credit);
+        snprintf(credits, sizeof(credits), "%s", lang.muxtheme.no_credit);
     }
 
     show_info_box(TRS(lv_label_get_text(lv_group_get_focused(ui_group))), TRS(credits), 0);
@@ -111,7 +111,7 @@ static void image_refresh(void) {
 
 static void create_theme_items(void) {
     if (device.board.has_network && strcasecmp(base_dir, sys_dir) == 0 && !is_ksk(kiosk.custom.theme_down)) {
-        add_item(&items, &item_count, lang.muxpicker.theme_down, lang.muxpicker.theme_down, "", menu);
+        add_item(&items, &item_count, lang.muxtheme.theme_down, lang.muxtheme.theme_down, "", menu);
     }
 
     struct dirent *tf;
@@ -205,7 +205,7 @@ static void save_active_theme(char *path) {
 static void do_remove(void) {
     if (strcasecmp(items[current_item_index].name, "MustardOS") == 0) {
         play_sound(snd_error);
-        toast_message(lang.muxpicker.protected, tst_wait_m);
+        toast_message(lang.muxtheme.protected_theme, tst_wait_m);
         return;
     }
 
@@ -306,7 +306,7 @@ static void handle_a(void) {
 
         if (!version_check()) {
             char invalid_ver[MAX_BUFFER_SIZE];
-            snprintf(invalid_ver, sizeof(invalid_ver), "%s (%s)", lang.muxpicker.invalid_ver, theme_version_compat);
+            snprintf(invalid_ver, sizeof(invalid_ver), "%s (%s)", lang.muxtheme.invalid_ver, theme_version_compat);
 
             play_sound(snd_error);
             toast_message(invalid_ver, tst_wait_s);
@@ -317,7 +317,7 @@ static void handle_a(void) {
         snprintf(theme_path, sizeof(theme_path), "%s/%s", sys_dir, items[current_item_index].name);
         if (!resolution_check(theme_path)) {
             play_sound(snd_error);
-            toast_message(lang.muxpicker.invalid_res, tst_wait_s);
+            toast_message(lang.muxtheme.invalid_res, tst_wait_s);
             return;
         }
 
@@ -447,7 +447,7 @@ int muxtheme_main(char *ex_dir) {
     init_module(__func__);
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.muxpicker.theme);
+    init_ui_common_screen(&theme, &device, &lang, lang.muxtheme.title);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lbl_datetime, get_datetime());

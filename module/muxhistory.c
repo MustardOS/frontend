@@ -543,7 +543,7 @@ static void handle_y(void) {
     if (!load_content(1, items[current_item_index].extra_data)) {
         remove(ADD_MODE_FROM);
         play_sound(snd_error);
-        toast_message(lang.muxplore.error.no_core, tst_wait_s);
+        toast_message(lang.muxhistory.error.no_core, tst_wait_s);
     }
 }
 

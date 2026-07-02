@@ -20,6 +20,7 @@ typedef struct {
 
 #define CFG_OFF(member) offsetof(struct mux_config, member)
 
+// clang-format off
 static const cfg_field cfg_fields[] = {
     // system/
     {CONF_CONFIG_PATH "system", "build", CFG_OFF(system.build), 1, {.s = "Unknown"}},
@@ -133,16 +134,8 @@ static const cfg_field cfg_fields[] = {
 
     // settings/colour/
     {CONF_CONFIG_PATH "settings/colour", "schedule_mode", CFG_OFF(settings.colour.schedule_mode), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "settings/colour",
-     "sunrise_temp",
-     CFG_OFF(settings.colour.sunrise_temp),
-     0,
-     {.i = DEFAULT_TEMPERATURE}},
-    {CONF_CONFIG_PATH "settings/colour",
-     "sunset_temp",
-     CFG_OFF(settings.colour.sunset_temp),
-     0,
-     {.i = DEFAULT_TEMPERATURE}},
+    {CONF_CONFIG_PATH "settings/colour", "sunrise_temp", CFG_OFF(settings.colour.sunrise_temp), 0, {.i = DEFAULT_TEMPERATURE}},
+    {CONF_CONFIG_PATH "settings/colour", "sunset_temp", CFG_OFF(settings.colour.sunset_temp), 0, {.i = DEFAULT_TEMPERATURE}},
     {CONF_CONFIG_PATH "settings/colour", "sunrise_time", CFG_OFF(settings.colour.sunrise_time), 0, {.i = 24}},
     {CONF_CONFIG_PATH "settings/colour", "sunset_time", CFG_OFF(settings.colour.sunset_time), 0, {.i = 72}},
 
@@ -184,11 +177,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/network", "proxy_enabled", CFG_OFF(settings.network.proxy_enabled), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/network", "proxy_type", CFG_OFF(settings.network.proxy_type), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/network", "proxy_server", CFG_OFF(settings.network.proxy_server), 1, {.s = ""}},
-    {CONF_CONFIG_PATH "settings/network",
-     "proxy_noproxy",
-     CFG_OFF(settings.network.proxy_noproxy),
-     1,
-     {.s = "localhost,127.0.0.1,::1"}},
+    {CONF_CONFIG_PATH "settings/network", "proxy_noproxy", CFG_OFF(settings.network.proxy_noproxy), 1, {.s = "localhost,127.0.0.1,::1"}},
 
     // settings/overlay/
     {CONF_CONFIG_PATH "settings/overlay", "gen_alpha", CFG_OFF(settings.overlay.gen_alpha), 0, {.i = 255}},
@@ -239,22 +228,10 @@ static const cfg_field cfg_fields[] = {
     // settings/theme/ (theme option overrides - distinct from theme/filter/)
     {CONF_CONFIG_PATH "settings/theme", "header_height", CFG_OFF(settings.themeopt.header_height), 0, {.i = -1}},
     {CONF_CONFIG_PATH "settings/theme", "footer_height", CFG_OFF(settings.themeopt.footer_height), 0, {.i = -1}},
-    {CONF_CONFIG_PATH "settings/theme",
-     "content_item_count",
-     CFG_OFF(settings.themeopt.content_item_count),
-     0,
-     {.i = 0}},
+    {CONF_CONFIG_PATH "settings/theme", "content_item_count", CFG_OFF(settings.themeopt.content_item_count), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/theme", "glyph_size_list", CFG_OFF(settings.themeopt.glyph_size_list), 0, {.i = -2}},
-    {CONF_CONFIG_PATH "settings/theme",
-     "glyph_size_footer",
-     CFG_OFF(settings.themeopt.glyph_size_footer),
-     0,
-     {.i = -2}},
-    {CONF_CONFIG_PATH "settings/theme",
-     "glyph_size_header",
-     CFG_OFF(settings.themeopt.glyph_size_header),
-     0,
-     {.i = -2}},
+    {CONF_CONFIG_PATH "settings/theme", "glyph_size_footer", CFG_OFF(settings.themeopt.glyph_size_footer), 0, {.i = -2}},
+    {CONF_CONFIG_PATH "settings/theme", "glyph_size_header", CFG_OFF(settings.themeopt.glyph_size_header), 0, {.i = -2}},
     {CONF_CONFIG_PATH "settings/theme", "glyph_size_grid", CFG_OFF(settings.themeopt.glyph_size_grid), 0, {.i = -2}},
     {CONF_CONFIG_PATH "settings/theme", "label_width", CFG_OFF(settings.themeopt.label_width), 0, {.i = 0}},
 
@@ -339,6 +316,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "danger", "cardmode", CFG_OFF(danger.card_mode), 1, {.s = "noop"}},
     {CONF_CONFIG_PATH "danger", "state", CFG_OFF(danger.state), 1, {.s = "mem"}},
 };
+// clang-format on
 
 #undef CFG_OFF
 
