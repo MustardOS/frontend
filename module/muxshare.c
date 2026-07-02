@@ -824,11 +824,17 @@ void render_image_refresh(
     if (strlen(h_core_artwork) <= 1) {
         if (strcasecmp(image_type, "preview") == 0) {
             lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
+            snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
         } else if (strcasecmp(image_type, "splash") == 0) {
             *splash_valid = 0;
             lv_img_set_src(ui_img_splash, &ui_img_blank);
+            snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
         } else {
             lv_img_set_src(ui_img_box, &ui_img_blank);
+            for (int i = 1; i < 6; i++) {
+                if (ui_viewport_objects[i]) lv_img_set_src(ui_viewport_objects[i], &ui_img_blank);
+            }
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
         }
         return;
     }
