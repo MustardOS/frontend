@@ -256,10 +256,13 @@ static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {
     }
 }
 
+static int get_carousel_item_count(void) {
+    return theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
+}
+
 void update_grid_items(const int direction) {
     if (is_carousel_grid_mode()) {
-        const int carousel_item_count =
-            theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
+        const int carousel_item_count = get_carousel_item_count();
 
         for (int i = 0; i < carousel_item_count; i++) {
             const int offset = i - carousel_item_count / 2;
@@ -421,8 +424,7 @@ int disable_grid_file_exists(char *item_curr_dir) {
 void create_carousel_grid(void) {
     if (item_count == 0) return;
 
-    const int carousel_item_count =
-        theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
+    const int carousel_item_count = get_carousel_item_count();
     if (carousel_item_count <= 0) return;
 
     const int middle_index = carousel_item_count / 2;
@@ -436,8 +438,7 @@ void create_carousel_grid(void) {
 }
 
 int is_carousel_grid_mode(void) {
-    const int carousel_item_count =
-        theme.grid.column_count > theme.grid.row_count ? theme.grid.column_count : theme.grid.row_count;
+    const int carousel_item_count = get_carousel_item_count();
     return grid_mode_enabled && (theme.grid.row_count == 1 || theme.grid.column_count == 1) && carousel_item_count > 2
                    && carousel_item_count % 2 == 1
                ? 1
