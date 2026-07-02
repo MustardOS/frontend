@@ -217,10 +217,7 @@ static void handle_b(void) {
         return;
     }
 
-    load_mux("launcher");
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");
-
-    mux_input_stop();
+    if (current_item_index != 0) list_nav_move(current_item_index, -1);
 }
 
 static void handle_x(void) {

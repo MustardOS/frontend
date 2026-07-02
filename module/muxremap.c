@@ -568,7 +568,7 @@ static int validate_and_backfill_mapping(void) {
         if (idx < 0 || (phys[idx][0] && strcmp(phys[idx], EMPTY_SLOT) != 0)) continue;
 
         char fallback[32];
-        if (get_board_default_phys(idx, fallback, sizeof(fallback)) && find_slot_using_phys(fallback, idx) < 0) {
+        if (get_board_default_phys(idx, fallback) && find_slot_using_phys(fallback, idx) < 0) {
             snprintf(phys[idx], sizeof(phys[0]), "%s", fallback);
             recovered = 1;
         } else {
