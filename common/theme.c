@@ -1026,6 +1026,11 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, cons
         }
     }
 
+    theme->list_default.background_gradient =
+        theme->list_default.gradient_start == 255 ? theme->list_default.background : theme->system.background;
+    theme->list_focus.background_gradient =
+        theme->list_focus.gradient_start == 255 ? theme->list_focus.background : theme->system.background;
+
     theme->misc.content.width = get_ini_int(
         muos_theme, "misc", "CONTENT_WIDTH",
         config.visual.content_width ? device->screen.width : theme->misc.content.width
