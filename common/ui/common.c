@@ -1557,7 +1557,8 @@ void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_
 }
 
 static void update_status_glyph(
-    lv_obj_t *ui_img, const struct theme_config *theme, const char *glyph_folder, const char *glyph_name
+    lv_obj_t *ui_img, const struct theme_config *theme, const char *glyph_folder, const char *glyph_name,
+    const int size_pct
 ) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
@@ -1565,9 +1566,12 @@ static void update_status_glyph(
     if (generate_image_embed(
             mux_dim, glyph_folder, glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed)
         )) {
-        const int header_target =
+        int header_target =
             resolve_glyph_size(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
-        const int header_px = glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header);
+        int header_px = glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header);
+
+        if (header_target > 0) header_target = header_target * size_pct / 100;
+        if (header_px > 0) header_px = header_px * size_pct / 100;
 
         append_glyph_size_hint(image_embed, sizeof(image_embed), header_target);
         lv_img_set_src(ui_img, image_embed);
@@ -1589,7 +1593,7 @@ void update_battery_capacity(lv_obj_t *ui_sta_capacity, const struct theme_confi
         lv_obj_set_style_img_recolor_opa(ui_sta_capacity, theme->status.battery.normal_alpha, MU_OBJ_MAIN_DEFAULT);
     }
 
-    update_status_glyph(ui_sta_capacity, theme, "header", battery_glyph_name);
+    update_status_glyph(ui_sta_capacity, theme, "header", battery_glyph_name, 100);
 }
 
 void update_battery_percent_label(lv_obj_t *ui_label, const struct theme_config *theme) {
@@ -1634,7 +1638,7 @@ void update_bluetooth_status(lv_obj_t *ui_sta_bluetooth, const struct theme_conf
 
     const char *bluetooth_status_filename = status_style.status[0] == 'a' ? "bluetooth_active" : "bluetooth_normal";
 
-    update_status_glyph(ui_sta_bluetooth, theme, "header", bluetooth_status_filename);
+    update_status_glyph(ui_sta_bluetooth, theme, "header", bluetooth_status_filename, 75);
 }
 
 void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *theme, const int force_glyph) {
@@ -1659,7 +1663,7 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
 
     const char *network_status_filename = status_style.status[0] == 'a' ? "network_active" : "network_normal";
 
-    update_status_glyph(ui_sta_network, theme, "header", network_status_filename);
+    update_status_glyph(ui_sta_network, theme, "header", network_status_filename, 75);
 }
 
 static void hide_message(const lv_timer_t *msg_timer) {
