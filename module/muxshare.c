@@ -788,6 +788,56 @@ void resolve_friendly_name(const char *file_path, char *out) {
     }
 }
 
+void gen_item_from_files(const char *base_path, const int file_count, char **file_names) {
+    char *created_dirs[file_count];
+    int created_count = 0;
+
+    for (int i = 0; i < file_count; i++) {
+        char fn_name[MAX_BUFFER_SIZE];
+
+        char item_file[MAX_BUFFER_SIZE];
+        snprintf(item_file, sizeof(item_file), "%s/%s", base_path, file_names[i]);
+
+        union_rewrite_file_paths(item_file);
+        char *file_path_raw = read_line_char_from(item_file, cache_core_path);
+
+        char resolved_path[PATH_MAX];
+        if (union_resolve_to_real(file_path_raw, resolved_path, sizeof(resolved_path))) {
+            free(file_path_raw);
+            file_path_raw = strdup(resolved_path);
+        }
+
+        const char *file_path = file_path_raw;
+        char *sub_path = read_line_char_from(item_file, cache_core_dir);
+
+        int already_created = 0;
+        for (int c = 0; c < created_count; c++) {
+            if (strcasecmp(created_dirs[c], sub_path) == 0) {
+                already_created = 1;
+                break;
+            }
+        }
+
+        if (!already_created) {
+            char init_meta_dir[MAX_BUFFER_SIZE];
+            snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
+            create_directories(init_meta_dir, 0);
+
+            created_dirs[created_count++] = strdup(sub_path);
+        }
+
+        resolve_friendly_name(file_path, fn_name);
+        add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
+
+        ui_count_static++;
+        free(file_names[i]);
+    }
+
+    for (int c = 0; c < created_count; c++) {
+        free(created_dirs[c]);
+    }
+}
+
 void adjust_label_value_width(const lv_obj_t *panel, const lv_obj_t *label, lv_obj_t *value) {
     lv_obj_update_layout(panel);
 

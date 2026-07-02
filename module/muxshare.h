@@ -185,6 +185,8 @@ int build_safe_path(char *dst, size_t n, const char *base, const char *name);
 
 void resolve_friendly_name(const char *file_path, char *out);
 
+void gen_item_from_files(const char *base_path, int file_count, char **file_names);
+
 void adjust_label_value_width(const lv_obj_t *panel, const lv_obj_t *label, lv_obj_t *value);
 
 void update_label_scroll();

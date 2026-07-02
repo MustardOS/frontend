@@ -179,34 +179,7 @@ static char *get_glyph_name(const size_t index) {
 }
 
 static void gen_item(const int file_count, char **file_names) {
-    char init_meta_dir[MAX_BUFFER_SIZE];
-    for (int i = 0; i < file_count; i++) {
-        char fn_name[MAX_BUFFER_SIZE];
-
-        char history_file[MAX_BUFFER_SIZE];
-        snprintf(history_file, sizeof(history_file), "%s/%s", INFO_HIS_PATH, file_names[i]);
-
-        union_rewrite_file_paths(history_file);
-        char *file_path_raw = read_line_char_from(history_file, cache_core_path);
-
-        char resolved_path[PATH_MAX];
-        if (union_resolve_to_real(file_path_raw, resolved_path, sizeof(resolved_path))) {
-            free(file_path_raw);
-            file_path_raw = strdup(resolved_path);
-        }
-
-        const char *file_path = file_path_raw;
-        char *sub_path = read_line_char_from(history_file, cache_core_dir);
-
-        snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
-        create_directories(init_meta_dir, 0);
-
-        resolve_friendly_name(file_path, fn_name);
-        add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
-
-        ui_count_static++;
-        free(file_names[i]);
-    }
+    gen_item_from_files(INFO_HIS_PATH, file_count, file_names);
 
     sort_items_time(items, item_count);
 
