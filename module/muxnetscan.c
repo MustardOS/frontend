@@ -6,6 +6,8 @@ static int scan_pending = 0;
 static time_t scan_start = 0;
 static lv_timer_t *scan_poll_timer = NULL;
 
+#define NET_SCAN_TIMEOUT 30
+
 static void show_help(void) {
     show_info_box(lang.muxnetscan.title, lang.muxnetscan.help, 0);
 }
@@ -60,7 +62,8 @@ static void net_scan_poll_task(lv_timer_t *t) {
 
     struct stat st;
     const int file_ready = stat("/tmp/net_scan", &st) == 0;
-    const int timed_out = time(NULL) - scan_start >= 30;
+    const int elapsed = (int) (time(NULL) - scan_start);
+    const int timed_out = elapsed >= NET_SCAN_TIMEOUT;
 
     if (!file_ready && !timed_out) return;
 
@@ -68,6 +71,7 @@ static void net_scan_poll_task(lv_timer_t *t) {
     lv_timer_del(t);
     scan_poll_timer = NULL;
 
+    hide_bounce_progress_bar();
     populate_network_items();
 
     lv_label_set_text(ui_lbl_screen_message, !ui_count_static ? lang.muxnetscan.none : "");
@@ -76,14 +80,12 @@ static void net_scan_poll_task(lv_timer_t *t) {
 }
 
 static void create_network_items(void) {
-    lv_label_set_text(ui_lbl_screen_message, lang.muxnetscan.scan);
-    lv_obj_invalidate(ui_screen);
-    lv_refr_now(NULL);
-
     remove("/tmp/net_scan");
 
     scan_start = time(NULL);
     scan_pending = 1;
+
+    show_bounce_progress_bar(lang.muxnetscan.scan);
 
     const char *args[] = {OPT_PATH "script/web/ssid.sh", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
@@ -96,6 +98,7 @@ static void cancel_scan(void) {
     }
 
     scan_pending = 0;
+    hide_bounce_progress_bar();
 }
 
 static void handle_a(void) {

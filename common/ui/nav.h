@@ -50,6 +50,10 @@ void update_progress_bar(lv_timer_t *timer);
 
 void hide_progress_bar(void);
 
+void show_bounce_progress_bar(const char *message);
+
+void hide_bounce_progress_bar(void);
+
 void set_nav_flags(const struct nav_flag *nav_flags, size_t count);
 
 void footer_nav_check_scroll(void);

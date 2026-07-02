@@ -14,9 +14,16 @@ char progress_bar_message[MAX_BUFFER_SIZE];
 volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
+static lv_timer_t *timer_bounce_progress = NULL;
+static int bounce_pos = 0;
+static int bounce_direction = 1;
+
 #define FOOTER_SCROLL_PAUSE_MS   1500
 #define FOOTER_SCROLL_PX_PER_SEC 60
 #define FOOTER_SCROLL_PAD_RIGHT  16
+
+#define BOUNCE_SEGMENT_WIDTH 15
+#define BOUNCE_STEP          2
 
 static void footer_scroll_anim_cb(void *obj, const int32_t x) {
     lv_obj_t *panel = obj;
@@ -452,6 +459,50 @@ void hide_progress_bar(void) {
         timer_update_progress = NULL;
     }
 
+    lv_obj_add_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void update_bounce_progress_bar(lv_timer_t *timer) {
+    (void) timer;
+
+    bounce_pos += bounce_direction * BOUNCE_STEP;
+
+    if (bounce_pos >= 100 - BOUNCE_SEGMENT_WIDTH) {
+        bounce_pos = 100 - BOUNCE_SEGMENT_WIDTH;
+        bounce_direction = -1;
+    } else if (bounce_pos <= 0) {
+        bounce_pos = 0;
+        bounce_direction = 1;
+    }
+
+    lv_bar_set_start_value(ui_bar_progress, bounce_pos, LV_ANIM_OFF);
+    lv_bar_set_value(ui_bar_progress, bounce_pos + BOUNCE_SEGMENT_WIDTH, LV_ANIM_OFF);
+}
+
+void show_bounce_progress_bar(const char *message) {
+    lv_label_set_text(ui_lbl_progress, message);
+
+    lv_bar_set_mode(ui_bar_progress, LV_BAR_MODE_RANGE);
+
+    bounce_pos = 0;
+    bounce_direction = 1;
+
+    lv_bar_set_start_value(ui_bar_progress, 0, LV_ANIM_OFF);
+    lv_bar_set_value(ui_bar_progress, BOUNCE_SEGMENT_WIDTH, LV_ANIM_OFF);
+
+    lv_obj_clear_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(ui_pnl_progress);
+
+    timer_bounce_progress = lv_timer_create(update_bounce_progress_bar, TIMER_REFRESH, NULL);
+}
+
+void hide_bounce_progress_bar(void) {
+    if (timer_bounce_progress) {
+        lv_timer_del(timer_bounce_progress);
+        timer_bounce_progress = NULL;
+    }
+
+    lv_bar_set_mode(ui_bar_progress, LV_BAR_MODE_NORMAL);
     lv_obj_add_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN);
 }
 
