@@ -570,7 +570,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxbtcon
     SPECIFIC_FIELD(lang->muxbtcon.title, "BLUETOOTH SCAN");
-    SPECIFIC_FIELD(lang->muxbtcon.scan, "Scanning for Bluetooth Devices…");
+    SPECIFIC_FIELD(lang->muxbtcon.scan, "Scanning for Bluetooth Devices");
     SPECIFIC_FIELD(lang->muxbtcon.none, "No Bluetooth Devices Found");
     SPECIFIC_FIELD(lang->muxbtcon.info, "Device Info");
     SPECIFIC_FIELD(lang->muxbtcon.help, "Scan for nearby Bluetooth devices and pair or connect to them");
@@ -1287,7 +1287,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxnetscan
     SPECIFIC_FIELD(lang->muxnetscan.title, "NETWORK SCAN");
-    SPECIFIC_FIELD(lang->muxnetscan.scan, "Scanning for Wi-Fi Networks…");
+    SPECIFIC_FIELD(lang->muxnetscan.scan, "Scanning for Wi-Fi Networks");
     SPECIFIC_FIELD(lang->muxnetscan.none, "No Wi-Fi Networks Found");
     SPECIFIC_FIELD(lang->muxnetscan.help, "Detect, display and connect to available Wi-Fi networks");
 

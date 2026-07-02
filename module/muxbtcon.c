@@ -3,7 +3,6 @@
 static void cancel_scan(void);
 
 static time_t scan_start = 0;
-static time_t last_scan_mtime = 0;
 static lv_timer_t *scan_poll_timer = NULL;
 
 static void show_help(void) {
@@ -79,24 +78,31 @@ static void refresh_scan_list(void) {
     }
 }
 
-static void bt_scan_poll_task(lv_timer_t *timer __attribute__((unused))) {
+static void bt_scan_poll_task(lv_timer_t *timer) {
+    const int scan_timeout =
+        config.settings.advanced.bt_scan_timeout > 0 ? config.settings.advanced.bt_scan_timeout : 10;
+    const int elapsed = (int) (time(NULL) - scan_start);
+
+    if (elapsed < scan_timeout) {
+        progress_bar_value = clamp_range(elapsed * 100 / scan_timeout, 0, 100);
+        return;
+    }
+
     struct stat st;
-    if (stat(CONF_CONFIG_PATH "bluetooth/scan", &st) != 0) return;
+    const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/scan", &st) == 0 && st.st_mtime >= scan_start;
+    if (!file_ready && elapsed < scan_timeout + 10) return;
 
-    const time_t mtime = st.st_mtime;
-    if (mtime < scan_start || mtime <= last_scan_mtime) return;
+    lv_timer_del(timer);
+    scan_poll_timer = NULL;
 
-    last_scan_mtime = mtime;
+    hide_progress_bar();
     refresh_scan_list();
 }
 
 static void create_bt_scan_items(void) {
-    lv_label_set_text(ui_lbl_screen_message, lang.muxbtcon.scan);
-    lv_obj_invalidate(ui_screen);
-    lv_refr_now(NULL);
-
     scan_start = time(NULL);
-    last_scan_mtime = 0;
+
+    show_progress_bar(lang.muxbtcon.scan);
 
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "list", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
@@ -105,6 +111,8 @@ static void create_bt_scan_items(void) {
 static void cancel_scan(void) {
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "stop", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+
+    hide_progress_bar();
 }
 
 static void handle_a(void) {
@@ -141,6 +149,16 @@ static void handle_b(void) {
 
     play_sound(snd_back);
     cancel_scan();
+
+    mux_input_stop();
+}
+
+static void handle_rescan(void) {
+    if (msgbox_active || hold_call) return;
+
+    play_sound(snd_confirm);
+    cancel_scan();
+    load_mux("btcon");
 
     mux_input_stop();
 }
@@ -193,6 +211,8 @@ static void init_elements(void) {
                                   {ui_lbl_nav_a, lang.generic.select, 1},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.rescan, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
                                   {ui_lbl_nav_y, lang.muxbtcon.info, 0},
                                   {NULL, NULL, 0}});
@@ -202,7 +222,6 @@ static void init_elements(void) {
 
 int muxbtcon_main(void) {
     scan_start = 0;
-    last_scan_mtime = 0;
     scan_poll_timer = NULL;
 
     init_module(__func__);
@@ -229,6 +248,7 @@ int muxbtcon_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_rescan,
                 [mux_input_y] = handle_y,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
