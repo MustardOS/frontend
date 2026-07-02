@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include "init.h"
 #include "options.h"
@@ -526,722 +527,516 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->sdl.solid.b = 0;
 }
 
+typedef enum { theme_int, theme_hex, theme_uint, theme_float, theme_str } theme_value_type;
+
+typedef struct {
+    const char *section;
+    const char *key;
+    size_t offset;
+    theme_value_type type;
+    int has_min;
+    int min;
+    int has_max;
+    int max;
+} theme_field;
+
+#define THEME_OFF(member) offsetof(struct theme_config, member)
+
+static const theme_field theme_fields[] = {
+    // background
+    {"background", "BACKGROUND", THEME_OFF(system.background), theme_hex},
+    {"background", "BACKGROUND_ALPHA", THEME_OFF(system.background_alpha), theme_int},
+    {"background", "BACKGROUND_GRADIENT_COLOR", THEME_OFF(system.background_gradient_color), theme_hex},
+    {"background", "BACKGROUND_GRADIENT_START", THEME_OFF(system.background_gradient_start), theme_int},
+    {"background", "BACKGROUND_GRADIENT_STOP", THEME_OFF(system.background_gradient_stop), theme_int},
+    {"background", "BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(system.background_gradient_direction), theme_int},
+    {"background", "BACKGROUND_GRADIENT_DITHER", THEME_OFF(system.background_gradient_dither), theme_int},
+    {"background", "BACKGROUND_GRADIENT_BLUR", THEME_OFF(system.background_gradient_blur), theme_int},
+
+    // animation
+    {"animation", "ANIMATION_DELAY", THEME_OFF(animation.animation_delay), theme_int, 1, 10, 0, 0},
+    {"animation", "ANIMATION_REPEAT", THEME_OFF(animation.animation_repeat), theme_int},
+    {"animation", "ANIMATION_FOREGROUND", THEME_OFF(animation.animation_foreground), theme_int},
+    {"animation", "ANIMATION_POSITION", THEME_OFF(animation.animation_position), theme_int},
+    {"animation", "ANIMATION_ALPHA", THEME_OFF(animation.animation_alpha), theme_int, 1, 0, 1, 255},
+
+    // font
+    {"font", "FONT_LIST_SIZE", THEME_OFF(font.font_list_size), theme_int, 1, 0, 0, 0},
+    {"font", "FONT_HEADER_SIZE", THEME_OFF(font.font_header_size), theme_int, 1, 0, 0, 0},
+    {"font", "FONT_FOOTER_SIZE", THEME_OFF(font.font_footer_size), theme_int, 1, 0, 0, 0},
+    {"font", "FONT_PANEL_SIZE", THEME_OFF(font.font_panel_size), theme_int, 1, 0, 0, 0},
+    {"font", "FONT_HEADER_PAD_TOP", THEME_OFF(font.header_pad_top), theme_int},
+    {"font", "FONT_HEADER_PAD_BOTTOM", THEME_OFF(font.header_pad_bottom), theme_int},
+    {"font", "FONT_HEADER_ICON_PAD_TOP", THEME_OFF(font.header_icon_pad_top), theme_int},
+    {"font", "FONT_HEADER_ICON_PAD_BOTTOM", THEME_OFF(font.header_icon_pad_bottom), theme_int},
+    {"font", "FONT_FOOTER_PAD_TOP", THEME_OFF(font.footer_pad_top), theme_int},
+    {"font", "FONT_FOOTER_PAD_BOTTOM", THEME_OFF(font.footer_pad_bottom), theme_int},
+    {"font", "FONT_FOOTER_ICON_PAD_TOP", THEME_OFF(font.footer_icon_pad_top), theme_int},
+    {"font", "FONT_FOOTER_ICON_PAD_BOTTOM", THEME_OFF(font.footer_icon_pad_bottom), theme_int},
+    {"font", "FONT_MESSAGE_PAD_TOP", THEME_OFF(font.message_pad_top), theme_int},
+    {"font", "FONT_MESSAGE_PAD_BOTTOM", THEME_OFF(font.message_pad_bottom), theme_int},
+    {"font", "FONT_MESSAGE_ICON_PAD_TOP", THEME_OFF(font.message_icon_pad_top), theme_int},
+    {"font", "FONT_MESSAGE_ICON_PAD_BOTTOM", THEME_OFF(font.message_icon_pad_bottom), theme_int},
+    {"font", "FONT_LIST_PAD_TOP", THEME_OFF(font.list_pad_top), theme_int},
+    {"font", "FONT_LIST_PAD_BOTTOM", THEME_OFF(font.list_pad_bottom), theme_int},
+    {"font", "FONT_LIST_PAD_LEFT", THEME_OFF(font.list_pad_left), theme_int},
+    {"font", "FONT_LIST_PAD_RIGHT", THEME_OFF(font.list_pad_right), theme_int},
+    {"font", "FONT_LIST_ICON_PAD_TOP", THEME_OFF(font.list_icon_pad_top), theme_int},
+    {"font", "FONT_LIST_ICON_PAD_BOTTOM", THEME_OFF(font.list_icon_pad_bottom), theme_int},
+
+    // status
+    {"status", "ALIGN", THEME_OFF(status.align), theme_int},
+    {"status", "PADDING_LEFT", THEME_OFF(status.padding_left), theme_int},
+    {"status", "PADDING_RIGHT", THEME_OFF(status.padding_right), theme_int},
+
+    // battery
+    {"battery", "BATTERY_NORMAL", THEME_OFF(status.battery.normal), theme_hex},
+    {"battery", "BATTERY_ACTIVE", THEME_OFF(status.battery.active), theme_hex},
+    {"battery", "BATTERY_LOW", THEME_OFF(status.battery.low), theme_hex},
+    {"battery", "BATTERY_NORMAL_ALPHA", THEME_OFF(status.battery.normal_alpha), theme_int},
+    {"battery", "BATTERY_ACTIVE_ALPHA", THEME_OFF(status.battery.active_alpha), theme_int},
+    {"battery", "BATTERY_LOW_ALPHA", THEME_OFF(status.battery.low_alpha), theme_int},
+
+    // network
+    {"network", "NETWORK_NORMAL", THEME_OFF(status.network.normal), theme_hex},
+    {"network", "NETWORK_ACTIVE", THEME_OFF(status.network.active), theme_hex},
+    {"network", "NETWORK_NORMAL_ALPHA", THEME_OFF(status.network.normal_alpha), theme_int},
+    {"network", "NETWORK_ACTIVE_ALPHA", THEME_OFF(status.network.active_alpha), theme_int},
+
+    // bluetooth
+    {"bluetooth", "BLUETOOTH_NORMAL", THEME_OFF(status.bluetooth.normal), theme_hex},
+    {"bluetooth", "BLUETOOTH_ACTIVE", THEME_OFF(status.bluetooth.active), theme_hex},
+    {"bluetooth", "BLUETOOTH_NORMAL_ALPHA", THEME_OFF(status.bluetooth.normal_alpha), theme_int},
+    {"bluetooth", "BLUETOOTH_ACTIVE_ALPHA", THEME_OFF(status.bluetooth.active_alpha), theme_int},
+
+    // date
+    {"date", "DATETIME_TEXT", THEME_OFF(datetime.text), theme_hex},
+    {"date", "DATETIME_ALPHA", THEME_OFF(datetime.alpha), theme_int},
+    {"date", "DATETIME_ALIGN", THEME_OFF(datetime.align), theme_int},
+    {"date", "PADDING_LEFT", THEME_OFF(datetime.padding_left), theme_int},
+    {"date", "PADDING_RIGHT", THEME_OFF(datetime.padding_right), theme_int},
+
+    // footer
+    {"footer", "FOOTER_HEIGHT", THEME_OFF(footer.height), theme_int},
+    {"footer", "FOOTER_BACKGROUND", THEME_OFF(footer.background), theme_hex},
+    {"footer", "FOOTER_BACKGROUND_ALPHA", THEME_OFF(footer.background_alpha), theme_uint},
+    {"footer", "FOOTER_TEXT", THEME_OFF(footer.text), theme_hex},
+    {"footer", "FOOTER_TEXT_ALPHA", THEME_OFF(footer.text_alpha), theme_int},
+
+    // header
+    {"header", "HEADER_HEIGHT", THEME_OFF(header.height), theme_int},
+    {"header", "HEADER_BACKGROUND", THEME_OFF(header.background), theme_hex},
+    {"header", "HEADER_BACKGROUND_ALPHA", THEME_OFF(header.background_alpha), theme_uint},
+    {"header", "HEADER_TEXT", THEME_OFF(header.text), theme_hex},
+    {"header", "HEADER_TEXT_ALPHA", THEME_OFF(header.text_alpha), theme_int},
+    {"header", "HEADER_TEXT_ALIGN", THEME_OFF(header.text_align), theme_int},
+    {"header", "PADDING_LEFT", THEME_OFF(header.padding_left), theme_int},
+    {"header", "PADDING_RIGHT", THEME_OFF(header.padding_right), theme_int},
+
+    // help
+    {"help", "HELP_BACKGROUND", THEME_OFF(help.background), theme_hex},
+    {"help", "HELP_BACKGROUND_ALPHA", THEME_OFF(help.background_alpha), theme_int},
+    {"help", "HELP_BORDER", THEME_OFF(help.border), theme_hex},
+    {"help", "HELP_BORDER_ALPHA", THEME_OFF(help.border_alpha), theme_int},
+    {"help", "HELP_CONTENT", THEME_OFF(help.content), theme_hex},
+    {"help", "HELP_TITLE", THEME_OFF(help.title), theme_hex},
+    {"help", "HELP_RADIUS", THEME_OFF(help.radius), theme_int},
+
+    // dialogue
+    {"dialogue", "DIALOGUE_BACKGROUND", THEME_OFF(dialogue.background), theme_hex},
+    {"dialogue", "DIALOGUE_BACKGROUND_ALPHA", THEME_OFF(dialogue.background_alpha), theme_int},
+    {"dialogue", "DIALOGUE_BORDER", THEME_OFF(dialogue.border), theme_hex},
+    {"dialogue", "DIALOGUE_BORDER_ALPHA", THEME_OFF(dialogue.border_alpha), theme_int},
+    {"dialogue", "DIALOGUE_TITLE", THEME_OFF(dialogue.title), theme_hex},
+    {"dialogue", "DIALOGUE_CONTENT", THEME_OFF(dialogue.content), theme_hex},
+    {"dialogue", "DIALOGUE_OPTION", THEME_OFF(dialogue.option), theme_hex},
+    {"dialogue", "DIALOGUE_DIM_ALPHA", THEME_OFF(dialogue.dim_alpha), theme_int},
+    {"dialogue", "DIALOGUE_SELECTION", THEME_OFF(dialogue.selection), theme_hex},
+    {"dialogue", "DIALOGUE_SELECTION_ALPHA", THEME_OFF(dialogue.selection_alpha), theme_int},
+    {"dialogue", "DIALOGUE_RADIUS_MAIN", THEME_OFF(dialogue.radius.main), theme_int},
+    {"dialogue", "DIALOGUE_RADIUS_SELECTED", THEME_OFF(dialogue.radius.selected), theme_int},
+    {"dialogue", "DIALOGUE_SHADOW_COLOUR", THEME_OFF(dialogue.shadow_colour), theme_hex},
+    {"dialogue", "DIALOGUE_SHADOW_ALPHA", THEME_OFF(dialogue.shadow_alpha), theme_int, 1, 0, 1, 255},
+    {"dialogue", "DIALOGUE_SHADOW_X_OFFSET", THEME_OFF(dialogue.shadow_x_offset), theme_int},
+    {"dialogue", "DIALOGUE_SHADOW_Y_OFFSET", THEME_OFF(dialogue.shadow_y_offset), theme_int},
+    {"dialogue", "DIALOGUE_SHADOW_COLOUR_FOCUS", THEME_OFF(dialogue.shadow_colour_focus), theme_hex},
+    {"dialogue", "DIALOGUE_SHADOW_ALPHA_FOCUS", THEME_OFF(dialogue.shadow_alpha_focus), theme_int, 1, 0, 1, 255},
+    {"dialogue", "DIALOGUE_SHADOW_X_OFFSET_FOCUS", THEME_OFF(dialogue.shadow_x_offset_focus), theme_int},
+    {"dialogue", "DIALOGUE_SHADOW_Y_OFFSET_FOCUS", THEME_OFF(dialogue.shadow_y_offset_focus), theme_int},
+
+    // navigation
+    {"navigation", "ALIGNMENT", THEME_OFF(nav.alignment), theme_uint},
+    {"navigation", "SPACING", THEME_OFF(nav.spacing), theme_uint},
+    {"navigation", "NAV_LR_GLYPH", THEME_OFF(nav.lr.glyph), theme_hex},
+    {"navigation", "NAV_LR_GLYPH_ALPHA", THEME_OFF(nav.lr.glyph_alpha), theme_int},
+    {"navigation", "NAV_LR_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.lr.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_LR_TEXT", THEME_OFF(nav.lr.text), theme_hex},
+    {"navigation", "NAV_LR_TEXT_ALPHA", THEME_OFF(nav.lr.text_alpha), theme_int},
+    {"navigation", "NAV_UD_GLYPH", THEME_OFF(nav.ud.glyph), theme_hex},
+    {"navigation", "NAV_UD_GLYPH_ALPHA", THEME_OFF(nav.ud.glyph_alpha), theme_int},
+    {"navigation", "NAV_UD_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.ud.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_UD_TEXT", THEME_OFF(nav.ud.text), theme_hex},
+    {"navigation", "NAV_UD_TEXT_ALPHA", THEME_OFF(nav.ud.text_alpha), theme_int},
+    {"navigation", "NAV_A_GLYPH", THEME_OFF(nav.a.glyph), theme_hex},
+    {"navigation", "NAV_A_GLYPH_ALPHA", THEME_OFF(nav.a.glyph_alpha), theme_int},
+    {"navigation", "NAV_A_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.a.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_A_TEXT", THEME_OFF(nav.a.text), theme_hex},
+    {"navigation", "NAV_A_TEXT_ALPHA", THEME_OFF(nav.a.text_alpha), theme_int},
+    {"navigation", "NAV_B_GLYPH", THEME_OFF(nav.b.glyph), theme_hex},
+    {"navigation", "NAV_B_GLYPH_ALPHA", THEME_OFF(nav.b.glyph_alpha), theme_int},
+    {"navigation", "NAV_B_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.b.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_B_TEXT", THEME_OFF(nav.b.text), theme_hex},
+    {"navigation", "NAV_B_TEXT_ALPHA", THEME_OFF(nav.b.text_alpha), theme_int},
+    {"navigation", "NAV_C_GLYPH", THEME_OFF(nav.c.glyph), theme_hex},
+    {"navigation", "NAV_C_GLYPH_ALPHA", THEME_OFF(nav.c.glyph_alpha), theme_int},
+    {"navigation", "NAV_C_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.c.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_C_TEXT", THEME_OFF(nav.c.text), theme_hex},
+    {"navigation", "NAV_C_TEXT_ALPHA", THEME_OFF(nav.c.text_alpha), theme_int},
+    {"navigation", "NAV_X_GLYPH", THEME_OFF(nav.x.glyph), theme_hex},
+    {"navigation", "NAV_X_GLYPH_ALPHA", THEME_OFF(nav.x.glyph_alpha), theme_int},
+    {"navigation", "NAV_X_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.x.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_X_TEXT", THEME_OFF(nav.x.text), theme_hex},
+    {"navigation", "NAV_X_TEXT_ALPHA", THEME_OFF(nav.x.text_alpha), theme_int},
+    {"navigation", "NAV_Y_GLYPH", THEME_OFF(nav.y.glyph), theme_hex},
+    {"navigation", "NAV_Y_GLYPH_ALPHA", THEME_OFF(nav.y.glyph_alpha), theme_int},
+    {"navigation", "NAV_Y_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.y.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_Y_TEXT", THEME_OFF(nav.y.text), theme_hex},
+    {"navigation", "NAV_Y_TEXT_ALPHA", THEME_OFF(nav.y.text_alpha), theme_int},
+    {"navigation", "NAV_Z_GLYPH", THEME_OFF(nav.z.glyph), theme_hex},
+    {"navigation", "NAV_Z_GLYPH_ALPHA", THEME_OFF(nav.z.glyph_alpha), theme_int},
+    {"navigation", "NAV_Z_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.z.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_Z_TEXT", THEME_OFF(nav.z.text), theme_hex},
+    {"navigation", "NAV_Z_TEXT_ALPHA", THEME_OFF(nav.z.text_alpha), theme_int},
+    {"navigation", "NAV_MENU_GLYPH", THEME_OFF(nav.menu.glyph), theme_hex},
+    {"navigation", "NAV_MENU_GLYPH_ALPHA", THEME_OFF(nav.menu.glyph_alpha), theme_int},
+    {"navigation", "NAV_MENU_GLYPH_RECOLOUR_ALPHA", THEME_OFF(nav.menu.glyph_recolour_alpha), theme_int},
+    {"navigation", "NAV_MENU_TEXT", THEME_OFF(nav.menu.text), theme_hex},
+    {"navigation", "NAV_MENU_TEXT_ALPHA", THEME_OFF(nav.menu.text_alpha), theme_int},
+
+    // grid
+    {"grid", "NAVIGATION_TYPE", THEME_OFF(grid.navigation_type), theme_int},
+    {"grid", "BACKGROUND", THEME_OFF(grid.background), theme_hex},
+    {"grid", "BACKGROUND_ALPHA", THEME_OFF(grid.background_alpha), theme_int},
+    {"grid", "ALIGNMENT", THEME_OFF(grid.alignment), theme_int},
+    {"grid", "ALIGNMENT_X_OFFSET", THEME_OFF(grid.alignment_x_offset), theme_int},
+    {"grid", "ALIGNMENT_Y_OFFSET", THEME_OFF(grid.alignment_y_offset), theme_int},
+    {"grid", "LOCATION_X", THEME_OFF(grid.location_x), theme_int},
+    {"grid", "LOCATION_Y", THEME_OFF(grid.location_y), theme_int},
+    {"grid", "COLUMN_COUNT", THEME_OFF(grid.column_count), theme_int},
+    {"grid", "COLUMN_PADDING", THEME_OFF(grid.column_padding), theme_int},
+    {"grid", "ROW_COUNT", THEME_OFF(grid.row_count), theme_int},
+    {"grid", "ROW_PADDING", THEME_OFF(grid.row_padding), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_ALIGNMENT", THEME_OFF(grid.current_item_label.alignment), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_WIDTH", THEME_OFF(grid.current_item_label.width), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_HEIGHT", THEME_OFF(grid.current_item_label.height), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_OFFSET_X", THEME_OFF(grid.current_item_label.offset_x), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_OFFSET_Y", THEME_OFF(grid.current_item_label.offset_y), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_RADIUS", THEME_OFF(grid.current_item_label.radius), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BORDER_WIDTH", THEME_OFF(grid.current_item_label.border_width), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BORDER", THEME_OFF(grid.current_item_label.border), theme_hex},
+    {"grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA", THEME_OFF(grid.current_item_label.border_alpha), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND", THEME_OFF(grid.current_item_label.background), theme_hex},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", THEME_OFF(grid.current_item_label.background_alpha), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR",
+     THEME_OFF(grid.current_item_label.background_gradient_color), theme_hex},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START",
+     THEME_OFF(grid.current_item_label.background_gradient_start), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.current_item_label.background_gradient_stop),
+     theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION",
+     THEME_OFF(grid.current_item_label.background_gradient_direction), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_SHADOW", THEME_OFF(grid.current_item_label.shadow), theme_hex},
+    {"grid", "CURRENT_ITEM_LABEL_SHADOW_WIDTH", THEME_OFF(grid.current_item_label.shadow_width), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_SHADOW_X_OFFSET", THEME_OFF(grid.current_item_label.shadow_x_offset), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_SHADOW_Y_OFFSET", THEME_OFF(grid.current_item_label.shadow_y_offset), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_LABEL_LONG_MODE", THEME_OFF(grid.current_item_label.label_long_mode), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT", THEME_OFF(grid.current_item_label.text), theme_hex},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA", THEME_OFF(grid.current_item_label.text_alpha), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT", THEME_OFF(grid.current_item_label.text_alignment), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", THEME_OFF(grid.current_item_label.text_line_spacing), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", THEME_OFF(grid.current_item_label.text_padding_bottom),
+     theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", THEME_OFF(grid.current_item_label.text_padding_left), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", THEME_OFF(grid.current_item_label.text_padding_right), theme_int},
+    {"grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", THEME_OFF(grid.current_item_label.text_padding_top), theme_int},
+    {"grid", "ROW_HEIGHT", THEME_OFF(grid.row_height), theme_int},
+    {"grid", "COLUMN_WIDTH", THEME_OFF(grid.column_width), theme_int},
+    {"grid", "CELL_COLUMN_ALIGN", THEME_OFF(grid.cell.column_align), theme_int},
+    {"grid", "CELL_ROW_ALIGN", THEME_OFF(grid.cell.row_align), theme_int},
+    {"grid", "CELL_WIDTH", THEME_OFF(grid.cell.width), theme_int},
+    {"grid", "CELL_HEIGHT", THEME_OFF(grid.cell.height), theme_int},
+    {"grid", "CELL_RADIUS", THEME_OFF(grid.cell.radius), theme_int},
+    {"grid", "CELL_BORDER_WIDTH", THEME_OFF(grid.cell.border_width), theme_int},
+    {"grid", "CELL_IMAGE_PADDING_TOP", THEME_OFF(grid.cell.image_padding_top), theme_int},
+    {"grid", "CELL_TEXT_PADDING_BOTTOM", THEME_OFF(grid.cell.text_padding_bottom), theme_int},
+    {"grid", "CELL_TEXT_PADDING_SIDE", THEME_OFF(grid.cell.text_padding_side), theme_int},
+    {"grid", "CELL_TEXT_LINE_SPACING", THEME_OFF(grid.cell.text_line_spacing), theme_int},
+    {"grid", "CELL_SHADOW", THEME_OFF(grid.cell.shadow), theme_hex},
+    {"grid", "CELL_SHADOW_WIDTH", THEME_OFF(grid.cell.shadow_width), theme_int},
+    {"grid", "CELL_SHADOW_X_OFFSET", THEME_OFF(grid.cell.shadow_x_offset), theme_int},
+    {"grid", "CELL_SHADOW_Y_OFFSET", THEME_OFF(grid.cell.shadow_y_offset), theme_int},
+    {"grid", "CELL_DEFAULT_BACKGROUND", THEME_OFF(grid.cell_default.background), theme_hex},
+    {"grid", "CELL_DEFAULT_BACKGROUND_ALPHA", THEME_OFF(grid.cell_default.background_alpha), theme_int},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR", THEME_OFF(grid.cell_default.background_gradient_color),
+     theme_hex},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_START", THEME_OFF(grid.cell_default.background_gradient_start),
+     theme_int},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.cell_default.background_gradient_stop), theme_int},
+    {"grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.cell_default.background_gradient_direction),
+     theme_int},
+    {"grid", "CELL_DEFAULT_BORDER", THEME_OFF(grid.cell_default.border), theme_hex},
+    {"grid", "CELL_DEFAULT_BORDER_ALPHA", THEME_OFF(grid.cell_default.border_alpha), theme_int},
+    {"grid", "CELL_DEFAULT_IMAGE_ALPHA", THEME_OFF(grid.cell_default.image_alpha), theme_int},
+    {"grid", "CELL_DEFAULT_IMAGE_RECOLOUR", THEME_OFF(grid.cell_default.image_recolour), theme_hex},
+    {"grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", THEME_OFF(grid.cell_default.image_recolour_alpha), theme_int},
+    {"grid", "CELL_DEFAULT_TEXT", THEME_OFF(grid.cell_default.text), theme_hex},
+    {"grid", "CELL_DEFAULT_TEXT_ALPHA", THEME_OFF(grid.cell_default.text_alpha), theme_int},
+    {"grid", "CELL_FOCUS_BACKGROUND", THEME_OFF(grid.cell_focus.background), theme_hex},
+    {"grid", "CELL_FOCUS_BACKGROUND_ALPHA", THEME_OFF(grid.cell_focus.background_alpha), theme_int},
+    {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_COLOR", THEME_OFF(grid.cell_focus.background_gradient_color), theme_hex},
+    {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_START", THEME_OFF(grid.cell_focus.background_gradient_start), theme_int},
+    {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_STOP", THEME_OFF(grid.cell_focus.background_gradient_stop), theme_int},
+    {"grid", "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION", THEME_OFF(grid.cell_focus.background_gradient_direction),
+     theme_int},
+    {"grid", "CELL_FOCUS_BORDER", THEME_OFF(grid.cell_focus.border), theme_hex},
+    {"grid", "CELL_FOCUS_BORDER_ALPHA", THEME_OFF(grid.cell_focus.border_alpha), theme_int},
+    {"grid", "CELL_FOCUS_IMAGE_ALPHA", THEME_OFF(grid.cell_focus.image_alpha), theme_int},
+    {"grid", "CELL_FOCUS_IMAGE_RECOLOUR", THEME_OFF(grid.cell_focus.image_recolour), theme_hex},
+    {"grid", "CELL_FOCUS_IMAGE_RECOLOUR_ALPHA", THEME_OFF(grid.cell_focus.image_recolour_alpha), theme_int},
+    {"grid", "CELL_FOCUS_TEXT", THEME_OFF(grid.cell_focus.text), theme_hex},
+    {"grid", "CELL_FOCUS_TEXT_ALPHA", THEME_OFF(grid.cell_focus.text_alpha), theme_int},
+
+    // list
+    {"list", "LIST_DEFAULT_RADIUS", THEME_OFF(list_default.radius), theme_int},
+    {"list", "LIST_DEFAULT_BACKGROUND", THEME_OFF(list_default.background), theme_hex},
+    {"list", "LIST_DEFAULT_BACKGROUND_ALPHA", THEME_OFF(list_default.background_alpha), theme_int},
+    {"list", "LIST_DEFAULT_GRADIENT_START", THEME_OFF(list_default.gradient_start), theme_int},
+    {"list", "LIST_DEFAULT_GRADIENT_STOP", THEME_OFF(list_default.gradient_stop), theme_int},
+    {"list", "LIST_DEFAULT_GRADIENT_DIRECTION", THEME_OFF(list_default.gradient_direction), theme_int},
+    {"list", "LIST_DEFAULT_BORDER_WIDTH", THEME_OFF(list_default.border_width), theme_int},
+    {"list", "LIST_DEFAULT_BORDER_SIDE", THEME_OFF(list_default.border_side), theme_int},
+    {"list", "LIST_DEFAULT_INDICATOR", THEME_OFF(list_default.indicator), theme_hex},
+    {"list", "LIST_DEFAULT_INDICATOR_ALPHA", THEME_OFF(list_default.indicator_alpha), theme_int},
+    {"list", "LIST_DEFAULT_TEXT", THEME_OFF(list_default.text), theme_hex},
+    {"list", "LIST_DEFAULT_TEXT_ALPHA", THEME_OFF(list_default.text_alpha), theme_int},
+    {"list", "LIST_DEFAULT_GLYPH_PAD_LEFT", THEME_OFF(list_default.glyph_padding_left), theme_int},
+    {"list", "LIST_DEFAULT_GLYPH_ALPHA", THEME_OFF(list_default.glyph_alpha), theme_int},
+    {"list", "LIST_DEFAULT_GLYPH_RECOLOUR", THEME_OFF(list_default.glyph_recolour), theme_hex},
+    {"list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", THEME_OFF(list_default.glyph_recolour_alpha), theme_int},
+    {"list", "LIST_DEFAULT_LABEL_LONG_MODE", THEME_OFF(list_default.label_long_mode), theme_int},
+    {"list", "LIST_DEFAULT_SHADOW_COLOUR", THEME_OFF(list_default.shadow_colour), theme_hex},
+    {"list", "LIST_DEFAULT_SHADOW_ALPHA", THEME_OFF(list_default.shadow_alpha), theme_int, 1, 0, 1, 255},
+    {"list", "LIST_DEFAULT_SHADOW_X_OFFSET", THEME_OFF(list_default.shadow_x_offset), theme_int},
+    {"list", "LIST_DEFAULT_SHADOW_Y_OFFSET", THEME_OFF(list_default.shadow_y_offset), theme_int},
+    {"list", "LIST_DISABLED_TEXT", THEME_OFF(list_disabled.text), theme_hex},
+    {"list", "LIST_DISABLED_TEXT_ALPHA", THEME_OFF(list_disabled.text_alpha), theme_int},
+    {"list", "LIST_FOCUS_BACKGROUND", THEME_OFF(list_focus.background), theme_hex},
+    {"list", "LIST_FOCUS_BACKGROUND_ALPHA", THEME_OFF(list_focus.background_alpha), theme_int},
+    {"list", "LIST_FOCUS_GRADIENT_START", THEME_OFF(list_focus.gradient_start), theme_int},
+    {"list", "LIST_FOCUS_GRADIENT_STOP", THEME_OFF(list_focus.gradient_stop), theme_int},
+    {"list", "LIST_FOCUS_GRADIENT_DIRECTION", THEME_OFF(list_focus.gradient_direction), theme_int},
+    {"list", "LIST_FOCUS_BORDER_WIDTH", THEME_OFF(list_focus.border_width), theme_int},
+    {"list", "LIST_FOCUS_BORDER_SIDE", THEME_OFF(list_focus.border_side), theme_int},
+    {"list", "LIST_FOCUS_INDICATOR", THEME_OFF(list_focus.indicator), theme_hex},
+    {"list", "LIST_FOCUS_INDICATOR_ALPHA", THEME_OFF(list_focus.indicator_alpha), theme_int},
+    {"list", "LIST_FOCUS_TEXT", THEME_OFF(list_focus.text), theme_hex},
+    {"list", "LIST_FOCUS_TEXT_ALPHA", THEME_OFF(list_focus.text_alpha), theme_int},
+    {"list", "LIST_FOCUS_GLYPH_ALPHA", THEME_OFF(list_focus.glyph_alpha), theme_int},
+    {"list", "LIST_FOCUS_GLYPH_RECOLOUR", THEME_OFF(list_focus.glyph_recolour), theme_hex},
+    {"list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA", THEME_OFF(list_focus.glyph_recolour_alpha), theme_int},
+    {"list", "LIST_FOCUS_SHADOW_COLOUR", THEME_OFF(list_focus.shadow_colour), theme_hex},
+    {"list", "LIST_FOCUS_SHADOW_ALPHA", THEME_OFF(list_focus.shadow_alpha), theme_int, 1, 0, 1, 255},
+    {"list", "LIST_FOCUS_SHADOW_X_OFFSET", THEME_OFF(list_focus.shadow_x_offset), theme_int},
+    {"list", "LIST_FOCUS_SHADOW_Y_OFFSET", THEME_OFF(list_focus.shadow_y_offset), theme_int},
+
+    // image_list
+    {"image_list", "IMAGE_LIST_ALPHA", THEME_OFF(image_list.alpha), theme_int},
+    {"image_list", "IMAGE_LIST_RADIUS", THEME_OFF(image_list.radius), theme_int},
+    {"image_list", "IMAGE_LIST_RECOLOUR", THEME_OFF(image_list.recolour), theme_hex},
+    {"image_list", "IMAGE_LIST_RECOLOUR_ALPHA", THEME_OFF(image_list.recolour_alpha), theme_int},
+    {"image_list", "IMAGE_LIST_PAD_TOP", THEME_OFF(image_list.pad_top), theme_int},
+    {"image_list", "IMAGE_LIST_PAD_BOTTOM", THEME_OFF(image_list.pad_bottom), theme_int},
+    {"image_list", "IMAGE_LIST_PAD_LEFT", THEME_OFF(image_list.pad_left), theme_int},
+    {"image_list", "IMAGE_LIST_PAD_RIGHT", THEME_OFF(image_list.pad_right), theme_int},
+    {"image_list", "IMAGE_PREVIEW_ALPHA", THEME_OFF(image_preview.alpha), theme_int},
+    {"image_list", "IMAGE_PREVIEW_RADIUS", THEME_OFF(image_preview.radius), theme_int},
+    {"image_list", "IMAGE_PREVIEW_RECOLOUR", THEME_OFF(image_preview.recolour), theme_hex},
+    {"image_list", "IMAGE_PREVIEW_RECOLOUR_ALPHA", THEME_OFF(image_preview.recolour_alpha), theme_int},
+
+    // charging
+    {"charging", "CHARGER_BACKGROUND", THEME_OFF(charger.background), theme_hex},
+    {"charging", "CHARGER_BACKGROUND_ALPHA", THEME_OFF(charger.background_alpha), theme_int},
+    {"charging", "CHARGER_TEXT", THEME_OFF(charger.text), theme_hex},
+    {"charging", "CHARGER_TEXT_ALPHA", THEME_OFF(charger.text_alpha), theme_int},
+    {"charging", "CHARGER_Y_POS", THEME_OFF(charger.y_pos), theme_int},
+
+    // verbose
+    {"verbose", "VERBOSE_BOOT_BACKGROUND", THEME_OFF(verbose_boot.background), theme_hex},
+    {"verbose", "VERBOSE_BOOT_BACKGROUND_ALPHA", THEME_OFF(verbose_boot.background_alpha), theme_int},
+    {"verbose", "VERBOSE_BOOT_TEXT", THEME_OFF(verbose_boot.text), theme_hex},
+    {"verbose", "VERBOSE_BOOT_TEXT_ALPHA", THEME_OFF(verbose_boot.text_alpha), theme_int},
+    {"verbose", "VERBOSE_BOOT_Y_POS", THEME_OFF(verbose_boot.y_pos), theme_int},
+
+    // keyboard
+    {"keyboard", "OSK_BACKGROUND", THEME_OFF(osk.background), theme_hex},
+    {"keyboard", "OSK_BACKGROUND_ALPHA", THEME_OFF(osk.background_alpha), theme_int},
+    {"keyboard", "OSK_BORDER", THEME_OFF(osk.border), theme_hex},
+    {"keyboard", "OSK_BORDER_ALPHA", THEME_OFF(osk.border_alpha), theme_int},
+    {"keyboard", "OSK_RADIUS", THEME_OFF(osk.radius), theme_int},
+    {"keyboard", "OSK_TEXT", THEME_OFF(osk.text), theme_hex},
+    {"keyboard", "OSK_TEXT_ALPHA", THEME_OFF(osk.text_alpha), theme_int},
+    {"keyboard", "OSK_TEXT_FOCUS", THEME_OFF(osk.text_focus), theme_hex},
+    {"keyboard", "OSK_TEXT_FOCUS_ALPHA", THEME_OFF(osk.text_focus_alpha), theme_int},
+    {"keyboard", "OSK_ITEM_BACKGROUND", THEME_OFF(osk.item.background), theme_hex},
+    {"keyboard", "OSK_ITEM_BACKGROUND_ALPHA", THEME_OFF(osk.item.background_alpha), theme_int},
+    {"keyboard", "OSK_ITEM_BACKGROUND_FOCUS", THEME_OFF(osk.item.background_focus), theme_hex},
+    {"keyboard", "OSK_ITEM_BACKGROUND_FOCUS_ALPHA", THEME_OFF(osk.item.background_focus_alpha), theme_int},
+    {"keyboard", "OSK_ITEM_BORDER", THEME_OFF(osk.item.border), theme_hex},
+    {"keyboard", "OSK_ITEM_BORDER_ALPHA", THEME_OFF(osk.item.border_alpha), theme_int},
+    {"keyboard", "OSK_ITEM_BORDER_FOCUS", THEME_OFF(osk.item.border_focus), theme_hex},
+    {"keyboard", "OSK_ITEM_BORDER_FOCUS_ALPHA", THEME_OFF(osk.item.border_focus_alpha), theme_int},
+    {"keyboard", "OSK_ITEM_RADIUS", THEME_OFF(osk.item.radius), theme_int},
+    {"keyboard", "OSK_ITEM_SHADOW_COLOUR", THEME_OFF(osk.item.shadow_colour), theme_hex},
+    {"keyboard", "OSK_ITEM_SHADOW_ALPHA", THEME_OFF(osk.item.shadow_alpha), theme_int, 1, 0, 1, 255},
+    {"keyboard", "OSK_ITEM_SHADOW_X_OFFSET", THEME_OFF(osk.item.shadow_x_offset), theme_int},
+    {"keyboard", "OSK_ITEM_SHADOW_Y_OFFSET", THEME_OFF(osk.item.shadow_y_offset), theme_int},
+    {"keyboard", "OSK_ITEM_SHADOW_COLOUR_FOCUS", THEME_OFF(osk.item.shadow_colour_focus), theme_hex},
+    {"keyboard", "OSK_ITEM_SHADOW_ALPHA_FOCUS", THEME_OFF(osk.item.shadow_alpha_focus), theme_int, 1, 0, 1, 255},
+    {"keyboard", "OSK_ITEM_SHADOW_X_OFFSET_FOCUS", THEME_OFF(osk.item.shadow_x_offset_focus), theme_int},
+    {"keyboard", "OSK_ITEM_SHADOW_Y_OFFSET_FOCUS", THEME_OFF(osk.item.shadow_y_offset_focus), theme_int},
+
+    // notification
+    {"notification", "MSG_BACKGROUND", THEME_OFF(message.background), theme_hex},
+    {"notification", "MSG_BACKGROUND_ALPHA", THEME_OFF(message.background_alpha), theme_int},
+    {"notification", "MSG_BORDER", THEME_OFF(message.border), theme_hex},
+    {"notification", "MSG_BORDER_ALPHA", THEME_OFF(message.border_alpha), theme_int},
+    {"notification", "MSG_RADIUS", THEME_OFF(message.radius), theme_int},
+    {"notification", "MSG_TEXT", THEME_OFF(message.text), theme_hex},
+    {"notification", "MSG_TEXT_ALPHA", THEME_OFF(message.text_alpha), theme_int},
+
+    // bar
+    {"bar", "BAR_WIDTH", THEME_OFF(bar.panel_width), theme_int},
+    {"bar", "BAR_HEIGHT", THEME_OFF(bar.panel_height), theme_int},
+    {"bar", "BAR_BACKGROUND", THEME_OFF(bar.panel_background), theme_hex},
+    {"bar", "BAR_BACKGROUND_ALPHA", THEME_OFF(bar.panel_background_alpha), theme_int},
+    {"bar", "BAR_BORDER", THEME_OFF(bar.panel_border), theme_hex},
+    {"bar", "BAR_BORDER_ALPHA", THEME_OFF(bar.panel_border_alpha), theme_int},
+    {"bar", "BAR_RADIUS", THEME_OFF(bar.panel_border_radius), theme_int},
+    {"bar", "BAR_PROGRESS_WIDTH", THEME_OFF(bar.progress_width), theme_int},
+    {"bar", "BAR_PROGRESS_HEIGHT", THEME_OFF(bar.progress_height), theme_int},
+    {"bar", "BAR_PROGRESS_BACKGROUND", THEME_OFF(bar.progress_main_background), theme_hex},
+    {"bar", "BAR_PROGRESS_BACKGROUND_ALPHA", THEME_OFF(bar.progress_main_background_alpha), theme_int},
+    {"bar", "BAR_PROGRESS_ACTIVE_BACKGROUND", THEME_OFF(bar.progress_active_background), theme_hex},
+    {"bar", "BAR_PROGRESS_ACTIVE_BACKGROUND_ALPHA", THEME_OFF(bar.progress_active_background_alpha), theme_int},
+    {"bar", "BAR_PROGRESS_RADIUS", THEME_OFF(bar.progress_radius), theme_int},
+    {"bar", "BAR_ICON", THEME_OFF(bar.icon), theme_hex},
+    {"bar", "BAR_ICON_ALPHA", THEME_OFF(bar.icon_alpha), theme_int},
+    {"bar", "BAR_Y_POS", THEME_OFF(bar.y_pos), theme_int},
+
+    // roll
+    {"roll", "ROLL_TEXT", THEME_OFF(roll.text), theme_hex},
+    {"roll", "ROLL_TEXT_ALPHA", THEME_OFF(roll.text_alpha), theme_int},
+    {"roll", "ROLL_BACKGROUND", THEME_OFF(roll.background), theme_hex},
+    {"roll", "ROLL_BACKGROUND_ALPHA", THEME_OFF(roll.background_alpha), theme_int},
+    {"roll", "ROLL_RADIUS", THEME_OFF(roll.radius), theme_int},
+    {"roll", "ROLL_SELECT_TEXT", THEME_OFF(roll.select_text), theme_hex},
+    {"roll", "ROLL_SELECT_TEXT_ALPHA", THEME_OFF(roll.select_text_alpha), theme_int},
+    {"roll", "ROLL_SELECT_BACKGROUND", THEME_OFF(roll.select_background), theme_hex},
+    {"roll", "ROLL_SELECT_BACKGROUND_ALPHA", THEME_OFF(roll.select_background_alpha), theme_int},
+    {"roll", "ROLL_SELECT_RADIUS", THEME_OFF(roll.select_radius), theme_int},
+    {"roll", "ROLL_BORDER_COLOUR", THEME_OFF(roll.border_colour), theme_hex},
+    {"roll", "ROLL_BORDER_ALPHA", THEME_OFF(roll.border_alpha), theme_int},
+    {"roll", "ROLL_BORDER_RADIUS", THEME_OFF(roll.border_radius), theme_int},
+
+    // counter
+    {"counter", "COUNTER_ALIGNMENT", THEME_OFF(counter.alignment), theme_uint},
+    {"counter", "COUNTER_PADDING_AROUND", THEME_OFF(counter.padding_around), theme_int},
+    {"counter", "COUNTER_PADDING_SIDE", THEME_OFF(counter.padding_side), theme_int},
+    {"counter", "COUNTER_PADDING_TOP", THEME_OFF(counter.padding_top), theme_int},
+    {"counter", "COUNTER_BORDER_COLOUR", THEME_OFF(counter.border_colour), theme_hex},
+    {"counter", "COUNTER_BORDER_ALPHA", THEME_OFF(counter.border_alpha), theme_int},
+    {"counter", "COUNTER_BORDER_WIDTH", THEME_OFF(counter.border_width), theme_int},
+    {"counter", "COUNTER_RADIUS", THEME_OFF(counter.radius), theme_int},
+    {"counter", "COUNTER_BACKGROUND", THEME_OFF(counter.background), theme_hex},
+    {"counter", "COUNTER_BACKGROUND_ALPHA", THEME_OFF(counter.background_alpha), theme_int},
+    {"counter", "COUNTER_TEXT", THEME_OFF(counter.text), theme_hex},
+    {"counter", "COUNTER_TEXT_ALPHA", THEME_OFF(counter.text_alpha), theme_int},
+    {"counter", "COUNTER_TEXT_FADE_TIME", THEME_OFF(counter.text_fade_time), theme_int},
+    {"counter", "COUNTER_TEXT_SEPARATOR", THEME_OFF(counter.text_separator), theme_str},
+
+    // misc
+    {"misc", "STATIC_ALIGNMENT", THEME_OFF(misc.static_alignment), theme_int},
+    {"misc", "CONTENT_ITEM_COUNT", THEME_OFF(mux.item.count), theme_int},
+    {"misc", "CONTENT_ITEM_HEIGHT", THEME_OFF(mux.item.height), theme_int},
+    {"misc", "CONTENT_SIZE_TO_CONTENT", THEME_OFF(misc.content.size_to_content), theme_int},
+    {"misc", "CONTENT_ALIGNMENT", THEME_OFF(misc.content.alignment), theme_int},
+    {"misc", "CONTENT_PADDING_LEFT", THEME_OFF(misc.content.padding_left), theme_int},
+    {"misc", "CONTENT_PADDING_TOP", THEME_OFF(misc.content.padding_top), theme_int},
+    {"misc", "CONTENT_HEIGHT", THEME_OFF(misc.content.height), theme_int},
+    {"misc", "ANIMATED_BACKGROUND", THEME_OFF(misc.animated_background), theme_int},
+    {"misc", "RANDOM_BACKGROUND", THEME_OFF(misc.random_background), theme_int},
+    {"misc", "IMAGE_OVERLAY", THEME_OFF(misc.image_overlay), theme_int},
+    {"misc", "NAVIGATION_TYPE", THEME_OFF(misc.navigation_type), theme_int},
+    {"misc", "ANTIALIASING", THEME_OFF(misc.antialiasing), theme_int},
+    {"misc", "LABEL_WIDTH", THEME_OFF(misc.label_width), theme_int},
+
+    // glyph
+    {"glyph", "LIST", THEME_OFF(glyph.list), theme_int},
+    {"glyph", "FOOTER", THEME_OFF(glyph.footer), theme_int},
+    {"glyph", "HEADER", THEME_OFF(glyph.header), theme_int},
+    {"glyph", "GRID", THEME_OFF(glyph.grid), theme_int},
+
+    // terminal
+    {"terminal", "FONT_SIZE", THEME_OFF(terminal.font_size), theme_str},
+    {"terminal", "FOREGROUND", THEME_OFF(terminal.foreground), theme_str},
+    {"terminal", "BACKGROUND", THEME_OFF(terminal.background), theme_str},
+
+    // sdl
+    {"sdl", "TEXTURE_BLEND_MODE", THEME_OFF(sdl.texture_blend_mode), theme_int},
+    {"sdl", "DRAW_BLEND_MODE", THEME_OFF(sdl.draw_blend_mode), theme_int},
+    {"sdl", "RENDER_OFFSET_X", THEME_OFF(sdl.render.offset_x), theme_float},
+    {"sdl", "RENDER_OFFSET_Y", THEME_OFF(sdl.render.offset_y), theme_float},
+    {"sdl", "SOLID_R", THEME_OFF(sdl.solid.r), theme_int},
+    {"sdl", "SOLID_G", THEME_OFF(sdl.solid.g), theme_int},
+    {"sdl", "SOLID_B", THEME_OFF(sdl.solid.b), theme_int},
+};
+
 void load_theme_from_scheme(const char *scheme, struct theme_config *theme, const struct mux_device *device) {
     mini_t *muos_theme = mini_try_load(scheme);
 
-    theme->system.background = get_ini_hex(muos_theme, "background", "BACKGROUND", theme->system.background);
-    theme->system.background_alpha =
-        get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", theme->system.background_alpha);
-    theme->system.background_gradient_color =
-        get_ini_hex(muos_theme, "background", "BACKGROUND_GRADIENT_COLOR", theme->system.background_gradient_color);
-    theme->system.background_gradient_start =
-        get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_START", theme->system.background_gradient_start);
-    theme->system.background_gradient_stop =
-        get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_STOP", theme->system.background_gradient_stop);
-    theme->system.background_gradient_direction = get_ini_int(
-        muos_theme, "background", "BACKGROUND_GRADIENT_DIRECTION", theme->system.background_gradient_direction
-    );
-    theme->system.background_gradient_dither =
-        get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DITHER", theme->system.background_gradient_dither);
-    theme->system.background_gradient_blur =
-        get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_BLUR", theme->system.background_gradient_blur);
+    for (size_t i = 0; i < sizeof(theme_fields) / sizeof(theme_fields[0]); i++) {
+        const theme_field *f = &theme_fields[i];
+        void *field_ptr = (char *) theme + f->offset;
 
-    theme->animation.animation_delay =
-        get_ini_int(muos_theme, "animation", "ANIMATION_DELAY", theme->animation.animation_delay);
-    if (theme->animation.animation_delay < 10) theme->animation.animation_delay = 10;
-    theme->animation.animation_repeat =
-        get_ini_int(muos_theme, "animation", "ANIMATION_REPEAT", theme->animation.animation_repeat);
-    theme->animation.animation_foreground =
-        get_ini_int(muos_theme, "animation", "ANIMATION_FOREGROUND", theme->animation.animation_foreground);
-    theme->animation.animation_position =
-        get_ini_int(muos_theme, "animation", "ANIMATION_POSITION", theme->animation.animation_position);
-    theme->animation.animation_alpha =
-        get_ini_int(muos_theme, "animation", "ANIMATION_ALPHA", theme->animation.animation_alpha);
-    if (theme->animation.animation_alpha < 0) theme->animation.animation_alpha = 0;
-    if (theme->animation.animation_alpha > 255) theme->animation.animation_alpha = 255;
+        switch (f->type) {
+            case theme_int: {
+                int16_t v = get_ini_int(muos_theme, f->section, f->key, *(int16_t *) field_ptr);
+                if (f->has_min && v < f->min) v = (int16_t) f->min;
+                if (f->has_max && v > f->max) v = (int16_t) f->max;
+                *(int16_t *) field_ptr = v;
+                break;
+            }
+            case theme_hex:
+                *(uint32_t *) field_ptr = get_ini_hex(muos_theme, f->section, f->key, *(uint32_t *) field_ptr);
+                break;
+            case theme_uint:
+                *(uint16_t *) field_ptr = get_ini_uint(muos_theme, f->section, f->key, *(uint16_t *) field_ptr);
+                break;
+            case theme_float:
+                *(float *) field_ptr = get_ini_float(muos_theme, f->section, f->key, *(float *) field_ptr);
+                break;
+            case theme_str:
+                snprintf(
+                    (char *) field_ptr, MAX_BUFFER_SIZE, "%s", get_ini_string(muos_theme, f->section, f->key, field_ptr)
+                );
+                break;
+        }
+    }
 
-    theme->font.font_list_size = get_ini_int(muos_theme, "font", "FONT_LIST_SIZE", theme->font.font_list_size);
-    if (theme->font.font_list_size < 0) theme->font.font_list_size = 0;
-    theme->font.font_header_size = get_ini_int(muos_theme, "font", "FONT_HEADER_SIZE", theme->font.font_header_size);
-    if (theme->font.font_header_size < 0) theme->font.font_header_size = 0;
-    theme->font.font_footer_size = get_ini_int(muos_theme, "font", "FONT_FOOTER_SIZE", theme->font.font_footer_size);
-    if (theme->font.font_footer_size < 0) theme->font.font_footer_size = 0;
-    theme->font.font_panel_size = get_ini_int(muos_theme, "font", "FONT_PANEL_SIZE", theme->font.font_panel_size);
-    if (theme->font.font_panel_size < 0) theme->font.font_panel_size = 0;
-
-    theme->font.header_pad_top = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_TOP", theme->font.header_pad_top);
-    theme->font.header_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM", theme->font.header_pad_bottom);
-    theme->font.header_icon_pad_top =
-        get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_TOP", theme->font.header_icon_pad_top);
-    theme->font.header_icon_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_BOTTOM", theme->font.header_icon_pad_bottom);
-    theme->font.footer_pad_top = get_ini_int(muos_theme, "font", "FONT_FOOTER_PAD_TOP", theme->font.footer_pad_top);
-    theme->font.footer_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_FOOTER_PAD_BOTTOM", theme->font.footer_pad_bottom);
-    theme->font.footer_icon_pad_top =
-        get_ini_int(muos_theme, "font", "FONT_FOOTER_ICON_PAD_TOP", theme->font.footer_icon_pad_top);
-    theme->font.footer_icon_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_FOOTER_ICON_PAD_BOTTOM", theme->font.footer_icon_pad_bottom);
-    theme->font.message_pad_top = get_ini_int(muos_theme, "font", "FONT_MESSAGE_PAD_TOP", theme->font.message_pad_top);
-    theme->font.message_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_MESSAGE_PAD_BOTTOM", theme->font.message_pad_bottom);
-    theme->font.message_icon_pad_top =
-        get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_TOP", theme->font.message_icon_pad_top);
-    theme->font.message_icon_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_BOTTOM", theme->font.message_icon_pad_bottom);
-    theme->font.list_pad_top = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_TOP", theme->font.list_pad_top);
-    theme->font.list_pad_bottom = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_BOTTOM", theme->font.list_pad_bottom);
-    theme->font.list_pad_left = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_LEFT", theme->font.list_pad_left);
-    theme->font.list_pad_right = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_RIGHT", theme->font.list_pad_right);
-    theme->font.list_icon_pad_top =
-        get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_TOP", theme->font.list_icon_pad_top);
-    theme->font.list_icon_pad_bottom =
-        get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_BOTTOM", theme->font.list_icon_pad_bottom);
-
-    theme->status.align = get_ini_int(muos_theme, "status", "ALIGN", theme->status.align);
-    theme->status.padding_left = get_ini_int(muos_theme, "status", "PADDING_LEFT", theme->status.padding_left);
-    theme->status.padding_right = get_ini_int(muos_theme, "status", "PADDING_RIGHT", theme->status.padding_right);
-
-    theme->status.battery.normal = get_ini_hex(muos_theme, "battery", "BATTERY_NORMAL", theme->status.battery.normal);
-    theme->status.battery.active = get_ini_hex(muos_theme, "battery", "BATTERY_ACTIVE", theme->status.battery.active);
-    theme->status.battery.low = get_ini_hex(muos_theme, "battery", "BATTERY_LOW", theme->status.battery.low);
-    theme->status.battery.normal_alpha =
-        get_ini_int(muos_theme, "battery", "BATTERY_NORMAL_ALPHA", theme->status.battery.normal_alpha);
-    theme->status.battery.active_alpha =
-        get_ini_int(muos_theme, "battery", "BATTERY_ACTIVE_ALPHA", theme->status.battery.active_alpha);
-    theme->status.battery.low_alpha =
-        get_ini_int(muos_theme, "battery", "BATTERY_LOW_ALPHA", theme->status.battery.low_alpha);
-
-    theme->status.network.normal = get_ini_hex(muos_theme, "network", "NETWORK_NORMAL", theme->status.network.normal);
-    theme->status.network.active = get_ini_hex(muos_theme, "network", "NETWORK_ACTIVE", theme->status.network.active);
-    theme->status.network.normal_alpha =
-        get_ini_int(muos_theme, "network", "NETWORK_NORMAL_ALPHA", theme->status.network.normal_alpha);
-    theme->status.network.active_alpha =
-        get_ini_int(muos_theme, "network", "NETWORK_ACTIVE_ALPHA", theme->status.network.active_alpha);
-
-    theme->status.bluetooth.normal =
-        get_ini_hex(muos_theme, "bluetooth", "BLUETOOTH_NORMAL", theme->status.bluetooth.normal);
-    theme->status.bluetooth.active =
-        get_ini_hex(muos_theme, "bluetooth", "BLUETOOTH_ACTIVE", theme->status.bluetooth.active);
-    theme->status.bluetooth.normal_alpha =
-        get_ini_int(muos_theme, "bluetooth", "BLUETOOTH_NORMAL_ALPHA", theme->status.bluetooth.normal_alpha);
-    theme->status.bluetooth.active_alpha =
-        get_ini_int(muos_theme, "bluetooth", "BLUETOOTH_ACTIVE_ALPHA", theme->status.bluetooth.active_alpha);
-
-    theme->datetime.text = get_ini_hex(muos_theme, "date", "DATETIME_TEXT", theme->datetime.text);
-    theme->datetime.alpha = get_ini_int(muos_theme, "date", "DATETIME_ALPHA", theme->datetime.alpha);
-    theme->datetime.align = get_ini_int(muos_theme, "date", "DATETIME_ALIGN", theme->datetime.align);
-    theme->datetime.padding_left = get_ini_int(muos_theme, "date", "PADDING_LEFT", theme->datetime.padding_left);
-    theme->datetime.padding_right = get_ini_int(muos_theme, "date", "PADDING_RIGHT", theme->datetime.padding_right);
-
-    theme->footer.height = get_ini_int(muos_theme, "footer", "FOOTER_HEIGHT", theme->footer.height);
-    theme->footer.background = get_ini_hex(muos_theme, "footer", "FOOTER_BACKGROUND", theme->footer.background);
-    theme->footer.background_alpha =
-        get_ini_uint(muos_theme, "footer", "FOOTER_BACKGROUND_ALPHA", theme->footer.background_alpha);
-    theme->footer.text = get_ini_hex(muos_theme, "footer", "FOOTER_TEXT", theme->footer.text);
-    theme->footer.text_alpha = get_ini_int(muos_theme, "footer", "FOOTER_TEXT_ALPHA", theme->footer.text_alpha);
-
-    theme->header.height = get_ini_int(muos_theme, "header", "HEADER_HEIGHT", theme->header.height);
-    theme->header.background = get_ini_hex(muos_theme, "header", "HEADER_BACKGROUND", theme->header.background);
-    theme->header.background_alpha =
-        get_ini_uint(muos_theme, "header", "HEADER_BACKGROUND_ALPHA", theme->header.background_alpha);
-    theme->header.text = get_ini_hex(muos_theme, "header", "HEADER_TEXT", theme->header.text);
-    theme->header.text_alpha = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALPHA", theme->header.text_alpha);
-    theme->header.text_align = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALIGN", theme->header.text_align);
-    theme->header.padding_left = get_ini_int(muos_theme, "header", "PADDING_LEFT", theme->header.padding_left);
-    theme->header.padding_right = get_ini_int(muos_theme, "header", "PADDING_RIGHT", theme->header.padding_right);
-
-    theme->help.background = get_ini_hex(muos_theme, "help", "HELP_BACKGROUND", theme->help.background);
-    theme->help.background_alpha =
-        get_ini_int(muos_theme, "help", "HELP_BACKGROUND_ALPHA", theme->help.background_alpha);
-    theme->help.border = get_ini_hex(muos_theme, "help", "HELP_BORDER", theme->help.border);
-    theme->help.border_alpha = get_ini_int(muos_theme, "help", "HELP_BORDER_ALPHA", theme->help.border_alpha);
-    theme->help.content = get_ini_hex(muos_theme, "help", "HELP_CONTENT", theme->help.content);
-    theme->help.title = get_ini_hex(muos_theme, "help", "HELP_TITLE", theme->help.title);
-    theme->help.radius = get_ini_int(muos_theme, "help", "HELP_RADIUS", theme->help.radius);
-
-    theme->dialogue.background = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_BACKGROUND", theme->dialogue.background);
-    theme->dialogue.background_alpha =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_BACKGROUND_ALPHA", theme->dialogue.background_alpha);
-    theme->dialogue.border = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_BORDER", theme->dialogue.border);
-    theme->dialogue.border_alpha =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_BORDER_ALPHA", theme->dialogue.border_alpha);
-    theme->dialogue.title = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_TITLE", theme->dialogue.title);
-    theme->dialogue.content = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_CONTENT", theme->dialogue.content);
-    theme->dialogue.option = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_OPTION", theme->dialogue.option);
-    theme->dialogue.dim_alpha = get_ini_int(muos_theme, "dialogue", "DIALOGUE_DIM_ALPHA", theme->dialogue.dim_alpha);
-    theme->dialogue.selection = get_ini_hex(muos_theme, "dialogue", "DIALOGUE_SELECTION", theme->dialogue.selection);
-    theme->dialogue.selection_alpha =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SELECTION_ALPHA", theme->dialogue.selection_alpha);
-    theme->dialogue.radius.main =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_RADIUS_MAIN", theme->dialogue.radius.main);
-    theme->dialogue.radius.selected =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_RADIUS_SELECTED", theme->dialogue.radius.selected);
-    theme->dialogue.shadow_colour =
-        get_ini_hex(muos_theme, "dialogue", "DIALOGUE_SHADOW_COLOUR", theme->dialogue.shadow_colour);
-    theme->dialogue.shadow_alpha =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_ALPHA", theme->dialogue.shadow_alpha);
-    if (theme->dialogue.shadow_alpha < 0) theme->dialogue.shadow_alpha = 0;
-    if (theme->dialogue.shadow_alpha > 255) theme->dialogue.shadow_alpha = 255;
-    theme->dialogue.shadow_x_offset =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_X_OFFSET", theme->dialogue.shadow_x_offset);
-    theme->dialogue.shadow_y_offset =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_Y_OFFSET", theme->dialogue.shadow_y_offset);
-    theme->dialogue.shadow_colour_focus =
-        get_ini_hex(muos_theme, "dialogue", "DIALOGUE_SHADOW_COLOUR_FOCUS", theme->dialogue.shadow_colour_focus);
-    theme->dialogue.shadow_alpha_focus =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_ALPHA_FOCUS", theme->dialogue.shadow_alpha_focus);
-    if (theme->dialogue.shadow_alpha_focus < 0) theme->dialogue.shadow_alpha_focus = 0;
-    if (theme->dialogue.shadow_alpha_focus > 255) theme->dialogue.shadow_alpha_focus = 255;
-    theme->dialogue.shadow_x_offset_focus =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_X_OFFSET_FOCUS", theme->dialogue.shadow_x_offset_focus);
-    theme->dialogue.shadow_y_offset_focus =
-        get_ini_int(muos_theme, "dialogue", "DIALOGUE_SHADOW_Y_OFFSET_FOCUS", theme->dialogue.shadow_y_offset_focus);
-
-    theme->nav.alignment = get_ini_uint(muos_theme, "navigation", "ALIGNMENT", theme->nav.alignment);
-    theme->nav.spacing = get_ini_uint(muos_theme, "navigation", "SPACING", theme->nav.spacing);
-
-    theme->nav.lr.glyph = get_ini_hex(muos_theme, "navigation", "NAV_LR_GLYPH", theme->nav.lr.glyph);
-    theme->nav.lr.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_LR_GLYPH_ALPHA", theme->nav.lr.glyph_alpha);
-    theme->nav.lr.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_LR_GLYPH_RECOLOUR_ALPHA", theme->nav.lr.glyph_recolour_alpha);
-    theme->nav.lr.text = get_ini_hex(muos_theme, "navigation", "NAV_LR_TEXT", theme->nav.lr.text);
-    theme->nav.lr.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_LR_TEXT_ALPHA", theme->nav.lr.text_alpha);
-
-    theme->nav.ud.glyph = get_ini_hex(muos_theme, "navigation", "NAV_UD_GLYPH", theme->nav.ud.glyph);
-    theme->nav.ud.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_UD_GLYPH_ALPHA", theme->nav.ud.glyph_alpha);
-    theme->nav.ud.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_UD_GLYPH_RECOLOUR_ALPHA", theme->nav.ud.glyph_recolour_alpha);
-    theme->nav.ud.text = get_ini_hex(muos_theme, "navigation", "NAV_UD_TEXT", theme->nav.ud.text);
-    theme->nav.ud.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_UD_TEXT_ALPHA", theme->nav.ud.text_alpha);
-
-    theme->nav.a.glyph = get_ini_hex(muos_theme, "navigation", "NAV_A_GLYPH", theme->nav.a.glyph);
-    theme->nav.a.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_ALPHA", theme->nav.a.glyph_alpha);
-    theme->nav.a.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_RECOLOUR_ALPHA", theme->nav.a.glyph_recolour_alpha);
-    theme->nav.a.text = get_ini_hex(muos_theme, "navigation", "NAV_A_TEXT", theme->nav.a.text);
-    theme->nav.a.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_A_TEXT_ALPHA", theme->nav.a.text_alpha);
-
-    theme->nav.b.glyph = get_ini_hex(muos_theme, "navigation", "NAV_B_GLYPH", theme->nav.b.glyph);
-    theme->nav.b.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_ALPHA", theme->nav.b.glyph_alpha);
-    theme->nav.b.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_RECOLOUR_ALPHA", theme->nav.b.glyph_recolour_alpha);
-    theme->nav.b.text = get_ini_hex(muos_theme, "navigation", "NAV_B_TEXT", theme->nav.b.text);
-    theme->nav.b.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_B_TEXT_ALPHA", theme->nav.b.text_alpha);
-
-    theme->nav.c.glyph = get_ini_hex(muos_theme, "navigation", "NAV_C_GLYPH", theme->nav.c.glyph);
-    theme->nav.c.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_ALPHA", theme->nav.c.glyph_alpha);
-    theme->nav.c.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_RECOLOUR_ALPHA", theme->nav.c.glyph_recolour_alpha);
-    theme->nav.c.text = get_ini_hex(muos_theme, "navigation", "NAV_C_TEXT", theme->nav.c.text);
-    theme->nav.c.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_C_TEXT_ALPHA", theme->nav.c.text_alpha);
-
-    theme->nav.x.glyph = get_ini_hex(muos_theme, "navigation", "NAV_X_GLYPH", theme->nav.x.glyph);
-    theme->nav.x.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_ALPHA", theme->nav.x.glyph_alpha);
-    theme->nav.x.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_RECOLOUR_ALPHA", theme->nav.x.glyph_recolour_alpha);
-    theme->nav.x.text = get_ini_hex(muos_theme, "navigation", "NAV_X_TEXT", theme->nav.x.text);
-    theme->nav.x.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_X_TEXT_ALPHA", theme->nav.x.text_alpha);
-
-    theme->nav.y.glyph = get_ini_hex(muos_theme, "navigation", "NAV_Y_GLYPH", theme->nav.y.glyph);
-    theme->nav.y.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_ALPHA", theme->nav.y.glyph_alpha);
-    theme->nav.y.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_RECOLOUR_ALPHA", theme->nav.y.glyph_recolour_alpha);
-    theme->nav.y.text = get_ini_hex(muos_theme, "navigation", "NAV_Y_TEXT", theme->nav.y.text);
-    theme->nav.y.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_Y_TEXT_ALPHA", theme->nav.y.text_alpha);
-
-    theme->nav.z.glyph = get_ini_hex(muos_theme, "navigation", "NAV_Z_GLYPH", theme->nav.z.glyph);
-    theme->nav.z.glyph_alpha = get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_ALPHA", theme->nav.z.glyph_alpha);
-    theme->nav.z.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_RECOLOUR_ALPHA", theme->nav.z.glyph_recolour_alpha);
-    theme->nav.z.text = get_ini_hex(muos_theme, "navigation", "NAV_Z_TEXT", theme->nav.z.text);
-    theme->nav.z.text_alpha = get_ini_int(muos_theme, "navigation", "NAV_Z_TEXT_ALPHA", theme->nav.z.text_alpha);
-
-    theme->nav.menu.glyph = get_ini_hex(muos_theme, "navigation", "NAV_MENU_GLYPH", theme->nav.menu.glyph);
-    theme->nav.menu.glyph_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_ALPHA", theme->nav.menu.glyph_alpha);
-    theme->nav.menu.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_RECOLOUR_ALPHA", theme->nav.menu.glyph_recolour_alpha);
-    theme->nav.menu.text = get_ini_hex(muos_theme, "navigation", "NAV_MENU_TEXT", theme->nav.menu.text);
-    theme->nav.menu.text_alpha =
-        get_ini_int(muos_theme, "navigation", "NAV_MENU_TEXT_ALPHA", theme->nav.menu.text_alpha);
-
-    theme->grid.navigation_type = get_ini_int(muos_theme, "grid", "NAVIGATION_TYPE", theme->grid.navigation_type);
-    theme->grid.background = get_ini_hex(muos_theme, "grid", "BACKGROUND", theme->grid.background);
-    theme->grid.background_alpha = get_ini_int(muos_theme, "grid", "BACKGROUND_ALPHA", theme->grid.background_alpha);
-    theme->grid.alignment = get_ini_int(muos_theme, "grid", "ALIGNMENT", theme->grid.alignment);
-    theme->grid.alignment_x_offset =
-        get_ini_int(muos_theme, "grid", "ALIGNMENT_X_OFFSET", theme->grid.alignment_x_offset);
-    theme->grid.alignment_y_offset =
-        get_ini_int(muos_theme, "grid", "ALIGNMENT_Y_OFFSET", theme->grid.alignment_y_offset);
-    theme->grid.location_x = get_ini_int(muos_theme, "grid", "LOCATION_X", theme->grid.location_x);
-    theme->grid.location_y = get_ini_int(muos_theme, "grid", "LOCATION_Y", theme->grid.location_y);
-    theme->grid.column_count = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", theme->grid.column_count);
-    theme->grid.column_padding = get_ini_int(muos_theme, "grid", "COLUMN_PADDING", theme->grid.column_padding);
-    theme->grid.row_count = get_ini_int(muos_theme, "grid", "ROW_COUNT", theme->grid.row_count);
-    theme->grid.row_padding = get_ini_int(muos_theme, "grid", "ROW_PADDING", theme->grid.row_padding);
-
-    theme->grid.current_item_label.alignment =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT", theme->grid.current_item_label.alignment);
-    theme->grid.current_item_label.width =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_WIDTH", theme->grid.current_item_label.width);
-    theme->grid.current_item_label.height =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_HEIGHT", theme->grid.current_item_label.height);
-    theme->grid.current_item_label.offset_x =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_X", theme->grid.current_item_label.offset_x);
-    theme->grid.current_item_label.offset_y =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_Y", theme->grid.current_item_label.offset_y);
-    theme->grid.current_item_label.radius =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_RADIUS", theme->grid.current_item_label.radius);
-    theme->grid.current_item_label.border_width =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_WIDTH", theme->grid.current_item_label.border_width);
-    theme->grid.current_item_label.border =
-        get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER", theme->grid.current_item_label.border);
-    theme->grid.current_item_label.border_alpha =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA", theme->grid.current_item_label.border_alpha);
-    theme->grid.current_item_label.background =
-        get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND", theme->grid.current_item_label.background);
-    theme->grid.current_item_label.background_alpha = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", theme->grid.current_item_label.background_alpha
-    );
-    theme->grid.current_item_label.background_gradient_color = get_ini_hex(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_COLOR",
-        theme->grid.current_item_label.background_gradient_color
-    );
-    theme->grid.current_item_label.background_gradient_start = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_START",
-        theme->grid.current_item_label.background_gradient_start
-    );
-    theme->grid.current_item_label.background_gradient_stop = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_STOP",
-        theme->grid.current_item_label.background_gradient_stop
-    );
-    theme->grid.current_item_label.background_gradient_direction = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_GRADIENT_DIRECTION",
-        theme->grid.current_item_label.background_gradient_direction
-    );
-    theme->grid.current_item_label.shadow =
-        get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW", theme->grid.current_item_label.shadow);
-    theme->grid.current_item_label.shadow_width =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_WIDTH", theme->grid.current_item_label.shadow_width);
-    theme->grid.current_item_label.shadow_x_offset = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_X_OFFSET", theme->grid.current_item_label.shadow_x_offset
-    );
-    theme->grid.current_item_label.shadow_y_offset = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_SHADOW_Y_OFFSET", theme->grid.current_item_label.shadow_y_offset
-    );
-    theme->grid.current_item_label.label_long_mode = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_LABEL_LONG_MODE", theme->grid.current_item_label.label_long_mode
-    );
-    theme->grid.current_item_label.text =
-        get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT", theme->grid.current_item_label.text);
-    theme->grid.current_item_label.text_alpha =
-        get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA", theme->grid.current_item_label.text_alpha);
-    theme->grid.current_item_label.text_alignment = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT", theme->grid.current_item_label.text_alignment
-    );
-    theme->grid.current_item_label.text_line_spacing = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", theme->grid.current_item_label.text_line_spacing
-    );
-    theme->grid.current_item_label.text_padding_bottom = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", theme->grid.current_item_label.text_padding_bottom
-    );
-    theme->grid.current_item_label.text_padding_left = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", theme->grid.current_item_label.text_padding_left
-    );
-    theme->grid.current_item_label.text_padding_right = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", theme->grid.current_item_label.text_padding_right
-    );
-    theme->grid.current_item_label.text_padding_top = get_ini_int(
-        muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", theme->grid.current_item_label.text_padding_top
-    );
-
-    theme->grid.row_height = get_ini_int(muos_theme, "grid", "ROW_HEIGHT", theme->grid.row_height);
-    theme->grid.column_width = get_ini_int(muos_theme, "grid", "COLUMN_WIDTH", theme->grid.column_width);
-
-    theme->grid.cell.column_align = get_ini_int(muos_theme, "grid", "CELL_COLUMN_ALIGN", theme->grid.cell.column_align);
-    theme->grid.cell.row_align = get_ini_int(muos_theme, "grid", "CELL_ROW_ALIGN", theme->grid.cell.row_align);
-    theme->grid.cell.width = get_ini_int(muos_theme, "grid", "CELL_WIDTH", theme->grid.cell.width);
-    theme->grid.cell.height = get_ini_int(muos_theme, "grid", "CELL_HEIGHT", theme->grid.cell.height);
-    theme->grid.cell.radius = get_ini_int(muos_theme, "grid", "CELL_RADIUS", theme->grid.cell.radius);
-    theme->grid.cell.border_width = get_ini_int(muos_theme, "grid", "CELL_BORDER_WIDTH", theme->grid.cell.border_width);
-    theme->grid.cell.image_padding_top =
-        get_ini_int(muos_theme, "grid", "CELL_IMAGE_PADDING_TOP", theme->grid.cell.image_padding_top);
-    theme->grid.cell.text_padding_bottom =
-        get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM", theme->grid.cell.text_padding_bottom);
-    theme->grid.cell.text_padding_side =
-        get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_SIDE", theme->grid.cell.text_padding_side);
-    theme->grid.cell.text_line_spacing =
-        get_ini_int(muos_theme, "grid", "CELL_TEXT_LINE_SPACING", theme->grid.cell.text_line_spacing);
-    theme->grid.cell.shadow = get_ini_hex(muos_theme, "grid", "CELL_SHADOW", theme->grid.cell.shadow);
-    theme->grid.cell.shadow_width = get_ini_int(muos_theme, "grid", "CELL_SHADOW_WIDTH", theme->grid.cell.shadow_width);
-    theme->grid.cell.shadow_x_offset =
-        get_ini_int(muos_theme, "grid", "CELL_SHADOW_X_OFFSET", theme->grid.cell.shadow_x_offset);
-    theme->grid.cell.shadow_y_offset =
-        get_ini_int(muos_theme, "grid", "CELL_SHADOW_Y_OFFSET", theme->grid.cell.shadow_y_offset);
-
-    theme->grid.cell_default.background =
-        get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND", theme->grid.cell_default.background);
-    theme->grid.cell_default.background_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_ALPHA", theme->grid.cell_default.background_alpha);
-    theme->grid.cell_default.background_gradient_color = get_ini_hex(
-        muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR", theme->grid.cell_default.background_gradient_color
-    );
-    theme->grid.cell_default.background_gradient_start = get_ini_int(
-        muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_START", theme->grid.cell_default.background_gradient_start
-    );
-    theme->grid.cell_default.background_gradient_stop = get_ini_int(
-        muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_STOP", theme->grid.cell_default.background_gradient_stop
-    );
-    theme->grid.cell_default.background_gradient_direction = get_ini_int(
-        muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION",
-        theme->grid.cell_default.background_gradient_direction
-    );
-    theme->grid.cell_default.border =
-        get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BORDER", theme->grid.cell_default.border);
-    theme->grid.cell_default.border_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA", theme->grid.cell_default.border_alpha);
-    theme->grid.cell_default.image_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA", theme->grid.cell_default.image_alpha);
-    theme->grid.cell_default.image_recolour =
-        get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR", theme->grid.cell_default.image_recolour);
-    theme->grid.cell_default.image_recolour_alpha = get_ini_int(
-        muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", theme->grid.cell_default.image_recolour_alpha
-    );
-    theme->grid.cell_default.text = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_TEXT", theme->grid.cell_default.text);
-    theme->grid.cell_default.text_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA", theme->grid.cell_default.text_alpha);
-
-    theme->grid.cell_focus.background =
-        get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND", theme->grid.cell_focus.background);
-    theme->grid.cell_focus.background_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_ALPHA", theme->grid.cell_focus.background_alpha);
-    theme->grid.cell_focus.background_gradient_color = get_ini_hex(
-        muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_COLOR", theme->grid.cell_focus.background_gradient_color
-    );
-    theme->grid.cell_focus.background_gradient_start = get_ini_int(
-        muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_START", theme->grid.cell_focus.background_gradient_start
-    );
-    theme->grid.cell_focus.background_gradient_stop = get_ini_int(
-        muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_STOP", theme->grid.cell_focus.background_gradient_stop
-    );
-    theme->grid.cell_focus.background_gradient_direction = get_ini_int(
-        muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION",
-        theme->grid.cell_focus.background_gradient_direction
-    );
-    theme->grid.cell_focus.border = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BORDER", theme->grid.cell_focus.border);
-    theme->grid.cell_focus.border_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_FOCUS_BORDER_ALPHA", theme->grid.cell_focus.border_alpha);
-    theme->grid.cell_focus.image_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_ALPHA", theme->grid.cell_focus.image_alpha);
-    theme->grid.cell_focus.image_recolour =
-        get_ini_hex(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR", theme->grid.cell_focus.image_recolour);
-    theme->grid.cell_focus.image_recolour_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR_ALPHA", theme->grid.cell_focus.image_recolour_alpha);
-    theme->grid.cell_focus.text = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_TEXT", theme->grid.cell_focus.text);
-    theme->grid.cell_focus.text_alpha =
-        get_ini_int(muos_theme, "grid", "CELL_FOCUS_TEXT_ALPHA", theme->grid.cell_focus.text_alpha);
-
-    theme->list_default.radius = get_ini_int(muos_theme, "list", "LIST_DEFAULT_RADIUS", theme->list_default.radius);
-    theme->list_default.background =
-        get_ini_hex(muos_theme, "list", "LIST_DEFAULT_BACKGROUND", theme->list_default.background);
-    theme->list_default.background_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_BACKGROUND_ALPHA", theme->list_default.background_alpha);
-    theme->list_default.gradient_start =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_START", theme->list_default.gradient_start);
-    theme->list_default.gradient_stop =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_STOP", theme->list_default.gradient_stop);
-    theme->list_default.gradient_direction =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_DIRECTION", theme->list_default.gradient_direction);
-    theme->list_default.border_width =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_WIDTH", theme->list_default.border_width);
-    theme->list_default.border_side =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_SIDE", theme->list_default.border_side);
-    theme->list_default.indicator =
-        get_ini_hex(muos_theme, "list", "LIST_DEFAULT_INDICATOR", theme->list_default.indicator);
-    theme->list_default.indicator_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_INDICATOR_ALPHA", theme->list_default.indicator_alpha);
-    theme->list_default.text = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_TEXT", theme->list_default.text);
-    theme->list_default.text_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_TEXT_ALPHA", theme->list_default.text_alpha);
-    theme->list_default.background_gradient =
-        theme->list_default.gradient_start == 255 ? theme->list_default.background : theme->system.background;
-    theme->list_default.glyph_padding_left =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT", theme->list_default.glyph_padding_left);
-    theme->list_default.glyph_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", theme->list_default.glyph_alpha);
-    theme->list_default.glyph_recolour =
-        get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR", theme->list_default.glyph_recolour);
-    theme->list_default.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", theme->list_default.glyph_recolour_alpha);
-    theme->list_default.label_long_mode =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE", theme->list_default.label_long_mode);
-    theme->list_default.shadow_colour =
-        get_ini_hex(muos_theme, "list", "LIST_DEFAULT_SHADOW_COLOUR", theme->list_default.shadow_colour);
-    theme->list_default.shadow_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_SHADOW_ALPHA", theme->list_default.shadow_alpha);
-    if (theme->list_default.shadow_alpha < 0) theme->list_default.shadow_alpha = 0;
-    if (theme->list_default.shadow_alpha > 255) theme->list_default.shadow_alpha = 255;
-    theme->list_default.shadow_x_offset =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_SHADOW_X_OFFSET", theme->list_default.shadow_x_offset);
-    theme->list_default.shadow_y_offset =
-        get_ini_int(muos_theme, "list", "LIST_DEFAULT_SHADOW_Y_OFFSET", theme->list_default.shadow_y_offset);
-
-    theme->list_disabled.text = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT", theme->list_disabled.text);
-    theme->list_disabled.text_alpha =
-        get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA", theme->list_disabled.text_alpha);
-
-    theme->list_focus.background =
-        get_ini_hex(muos_theme, "list", "LIST_FOCUS_BACKGROUND", theme->list_focus.background);
-    theme->list_focus.background_alpha =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_BACKGROUND_ALPHA", theme->list_focus.background_alpha);
-    theme->list_focus.gradient_start =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_START", theme->list_focus.gradient_start);
-    theme->list_focus.gradient_stop =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_STOP", theme->list_focus.gradient_stop);
-    theme->list_focus.gradient_direction =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_DIRECTION", theme->list_focus.gradient_direction);
-    theme->list_focus.border_width =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_WIDTH", theme->list_focus.border_width);
-    theme->list_focus.border_side =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_SIDE", theme->list_focus.border_side);
-    theme->list_focus.indicator = get_ini_hex(muos_theme, "list", "LIST_FOCUS_INDICATOR", theme->list_focus.indicator);
-    theme->list_focus.indicator_alpha =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_INDICATOR_ALPHA", theme->list_focus.indicator_alpha);
-    theme->list_focus.text = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT", theme->list_focus.text);
-    theme->list_focus.text_alpha =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_TEXT_ALPHA", theme->list_focus.text_alpha);
-    theme->list_focus.background_gradient =
-        theme->list_focus.gradient_start == 255 ? theme->list_focus.background : theme->system.background;
-    theme->list_focus.glyph_alpha =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_ALPHA", theme->list_focus.glyph_alpha);
-    theme->list_focus.glyph_recolour =
-        get_ini_hex(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR", theme->list_focus.glyph_recolour);
-    theme->list_focus.glyph_recolour_alpha =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA", theme->list_focus.glyph_recolour_alpha);
-    theme->list_focus.shadow_colour =
-        get_ini_hex(muos_theme, "list", "LIST_FOCUS_SHADOW_COLOUR", theme->list_focus.shadow_colour);
-    theme->list_focus.shadow_alpha =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_SHADOW_ALPHA", theme->list_focus.shadow_alpha);
-    if (theme->list_focus.shadow_alpha < 0) theme->list_focus.shadow_alpha = 0;
-    if (theme->list_focus.shadow_alpha > 255) theme->list_focus.shadow_alpha = 255;
-    theme->list_focus.shadow_x_offset =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_SHADOW_X_OFFSET", theme->list_focus.shadow_x_offset);
-    theme->list_focus.shadow_y_offset =
-        get_ini_int(muos_theme, "list", "LIST_FOCUS_SHADOW_Y_OFFSET", theme->list_focus.shadow_y_offset);
-
-    theme->image_list.alpha = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_ALPHA", theme->image_list.alpha);
-    theme->image_list.radius = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RADIUS", theme->image_list.radius);
-    theme->image_list.recolour =
-        get_ini_hex(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR", theme->image_list.recolour);
-    theme->image_list.recolour_alpha =
-        get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR_ALPHA", theme->image_list.recolour_alpha);
-    theme->image_list.pad_top = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_TOP", theme->image_list.pad_top);
-    theme->image_list.pad_bottom =
-        get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_BOTTOM", theme->image_list.pad_bottom);
-    theme->image_list.pad_left =
-        get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_LEFT", theme->image_list.pad_left);
-    theme->image_list.pad_right =
-        get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_RIGHT", theme->image_list.pad_right);
-
-    theme->image_preview.alpha =
-        get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_ALPHA", theme->image_preview.alpha);
-    theme->image_preview.radius =
-        get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RADIUS", theme->image_preview.radius);
-    theme->image_preview.recolour =
-        get_ini_hex(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR", theme->image_preview.recolour);
-    theme->image_preview.recolour_alpha =
-        get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR_ALPHA", theme->image_preview.recolour_alpha);
-
-    theme->charger.background = get_ini_hex(muos_theme, "charging", "CHARGER_BACKGROUND", theme->charger.background);
-    theme->charger.background_alpha =
-        get_ini_int(muos_theme, "charging", "CHARGER_BACKGROUND_ALPHA", theme->charger.background_alpha);
-    theme->charger.text = get_ini_hex(muos_theme, "charging", "CHARGER_TEXT", theme->charger.text);
-    theme->charger.text_alpha = get_ini_int(muos_theme, "charging", "CHARGER_TEXT_ALPHA", theme->charger.text_alpha);
-    theme->charger.y_pos = get_ini_int(muos_theme, "charging", "CHARGER_Y_POS", theme->charger.y_pos);
-
-    theme->verbose_boot.background =
-        get_ini_hex(muos_theme, "verbose", "VERBOSE_BOOT_BACKGROUND", theme->verbose_boot.background);
-    theme->verbose_boot.background_alpha =
-        get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_BACKGROUND_ALPHA", theme->verbose_boot.background_alpha);
-    theme->verbose_boot.text = get_ini_hex(muos_theme, "verbose", "VERBOSE_BOOT_TEXT", theme->verbose_boot.text);
-    theme->verbose_boot.text_alpha =
-        get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_TEXT_ALPHA", theme->verbose_boot.text_alpha);
-    theme->verbose_boot.y_pos = get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_Y_POS", theme->verbose_boot.y_pos);
-
-    theme->osk.background = get_ini_hex(muos_theme, "keyboard", "OSK_BACKGROUND", theme->osk.background);
-    theme->osk.background_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_BACKGROUND_ALPHA", theme->osk.background_alpha);
-    theme->osk.border = get_ini_hex(muos_theme, "keyboard", "OSK_BORDER", theme->osk.border);
-    theme->osk.border_alpha = get_ini_int(muos_theme, "keyboard", "OSK_BORDER_ALPHA", theme->osk.border_alpha);
-    theme->osk.radius = get_ini_int(muos_theme, "keyboard", "OSK_RADIUS", theme->osk.radius);
-    theme->osk.text = get_ini_hex(muos_theme, "keyboard", "OSK_TEXT", theme->osk.text);
-    theme->osk.text_alpha = get_ini_int(muos_theme, "keyboard", "OSK_TEXT_ALPHA", theme->osk.text_alpha);
-    theme->osk.text_focus = get_ini_hex(muos_theme, "keyboard", "OSK_TEXT_FOCUS", theme->osk.text_focus);
-    theme->osk.text_focus_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_TEXT_FOCUS_ALPHA", theme->osk.text_focus_alpha);
-    theme->osk.item.background = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND", theme->osk.item.background);
-    theme->osk.item.background_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_ALPHA", theme->osk.item.background_alpha);
-    theme->osk.item.background_focus =
-        get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS", theme->osk.item.background_focus);
-    theme->osk.item.background_focus_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS_ALPHA", theme->osk.item.background_focus_alpha);
-    theme->osk.item.border = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER", theme->osk.item.border);
-    theme->osk.item.border_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_ALPHA", theme->osk.item.border_alpha);
-    theme->osk.item.border_focus =
-        get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS", theme->osk.item.border_focus);
-    theme->osk.item.border_focus_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS_ALPHA", theme->osk.item.border_focus_alpha);
-    theme->osk.item.radius = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_RADIUS", theme->osk.item.radius);
-    theme->osk.item.shadow_colour =
-        get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_SHADOW_COLOUR", theme->osk.item.shadow_colour);
-    theme->osk.item.shadow_alpha =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_ALPHA", theme->osk.item.shadow_alpha);
-    if (theme->osk.item.shadow_alpha < 0) theme->osk.item.shadow_alpha = 0;
-    if (theme->osk.item.shadow_alpha > 255) theme->osk.item.shadow_alpha = 255;
-    theme->osk.item.shadow_x_offset =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_X_OFFSET", theme->osk.item.shadow_x_offset);
-    theme->osk.item.shadow_y_offset =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_Y_OFFSET", theme->osk.item.shadow_y_offset);
-    theme->osk.item.shadow_colour_focus =
-        get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_SHADOW_COLOUR_FOCUS", theme->osk.item.shadow_colour_focus);
-    theme->osk.item.shadow_alpha_focus =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_ALPHA_FOCUS", theme->osk.item.shadow_alpha_focus);
-    if (theme->osk.item.shadow_alpha_focus < 0) theme->osk.item.shadow_alpha_focus = 0;
-    if (theme->osk.item.shadow_alpha_focus > 255) theme->osk.item.shadow_alpha_focus = 255;
-    theme->osk.item.shadow_x_offset_focus =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_X_OFFSET_FOCUS", theme->osk.item.shadow_x_offset_focus);
-    theme->osk.item.shadow_y_offset_focus =
-        get_ini_int(muos_theme, "keyboard", "OSK_ITEM_SHADOW_Y_OFFSET_FOCUS", theme->osk.item.shadow_y_offset_focus);
-
-    theme->message.background = get_ini_hex(muos_theme, "notification", "MSG_BACKGROUND", theme->message.background);
-    theme->message.background_alpha =
-        get_ini_int(muos_theme, "notification", "MSG_BACKGROUND_ALPHA", theme->message.background_alpha);
-    theme->message.border = get_ini_hex(muos_theme, "notification", "MSG_BORDER", theme->message.border);
-    theme->message.border_alpha =
-        get_ini_int(muos_theme, "notification", "MSG_BORDER_ALPHA", theme->message.border_alpha);
-    theme->message.radius = get_ini_int(muos_theme, "notification", "MSG_RADIUS", theme->message.radius);
-    theme->message.text = get_ini_hex(muos_theme, "notification", "MSG_TEXT", theme->message.text);
-    theme->message.text_alpha = get_ini_int(muos_theme, "notification", "MSG_TEXT_ALPHA", theme->message.text_alpha);
-
-    theme->bar.panel_width = get_ini_int(muos_theme, "bar", "BAR_WIDTH", theme->bar.panel_width);
-    theme->bar.panel_height = get_ini_int(muos_theme, "bar", "BAR_HEIGHT", theme->bar.panel_height);
-    theme->bar.panel_background = get_ini_hex(muos_theme, "bar", "BAR_BACKGROUND", theme->bar.panel_background);
-    theme->bar.panel_background_alpha =
-        get_ini_int(muos_theme, "bar", "BAR_BACKGROUND_ALPHA", theme->bar.panel_background_alpha);
-    theme->bar.panel_border = get_ini_hex(muos_theme, "bar", "BAR_BORDER", theme->bar.panel_border);
-    theme->bar.panel_border_alpha = get_ini_int(muos_theme, "bar", "BAR_BORDER_ALPHA", theme->bar.panel_border_alpha);
-    theme->bar.panel_border_radius = get_ini_int(muos_theme, "bar", "BAR_RADIUS", theme->bar.panel_border_radius);
-    theme->bar.progress_width = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_WIDTH", theme->bar.progress_width);
-    theme->bar.progress_height = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_HEIGHT", theme->bar.progress_height);
-    theme->bar.progress_main_background =
-        get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND", theme->bar.progress_main_background);
-    theme->bar.progress_main_background_alpha =
-        get_ini_int(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND_ALPHA", theme->bar.progress_main_background_alpha);
-    theme->bar.progress_active_background =
-        get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND", theme->bar.progress_active_background);
-    theme->bar.progress_active_background_alpha = get_ini_int(
-        muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND_ALPHA", theme->bar.progress_active_background_alpha
-    );
-    theme->bar.progress_radius = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_RADIUS", theme->bar.progress_radius);
-    theme->bar.icon = get_ini_hex(muos_theme, "bar", "BAR_ICON", theme->bar.icon);
-    theme->bar.icon_alpha = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", theme->bar.icon_alpha);
-    theme->bar.y_pos = get_ini_int(muos_theme, "bar", "BAR_Y_POS", theme->bar.y_pos);
-
-    theme->roll.text = get_ini_hex(muos_theme, "roll", "ROLL_TEXT", theme->roll.text);
-    theme->roll.text_alpha = get_ini_int(muos_theme, "roll", "ROLL_TEXT_ALPHA", theme->roll.text_alpha);
-    theme->roll.background = get_ini_hex(muos_theme, "roll", "ROLL_BACKGROUND", theme->roll.background);
-    theme->roll.background_alpha =
-        get_ini_int(muos_theme, "roll", "ROLL_BACKGROUND_ALPHA", theme->roll.background_alpha);
-    theme->roll.radius = get_ini_int(muos_theme, "roll", "ROLL_RADIUS", theme->roll.radius);
-    theme->roll.select_text = get_ini_hex(muos_theme, "roll", "ROLL_SELECT_TEXT", theme->roll.select_text);
-    theme->roll.select_text_alpha =
-        get_ini_int(muos_theme, "roll", "ROLL_SELECT_TEXT_ALPHA", theme->roll.select_text_alpha);
-    theme->roll.select_background =
-        get_ini_hex(muos_theme, "roll", "ROLL_SELECT_BACKGROUND", theme->roll.select_background);
-    theme->roll.select_background_alpha =
-        get_ini_int(muos_theme, "roll", "ROLL_SELECT_BACKGROUND_ALPHA", theme->roll.select_background_alpha);
-    theme->roll.select_radius = get_ini_int(muos_theme, "roll", "ROLL_SELECT_RADIUS", theme->roll.select_radius);
-    theme->roll.border_colour = get_ini_hex(muos_theme, "roll", "ROLL_BORDER_COLOUR", theme->roll.border_colour);
-    theme->roll.border_alpha = get_ini_int(muos_theme, "roll", "ROLL_BORDER_ALPHA", theme->roll.border_alpha);
-    theme->roll.border_radius = get_ini_int(muos_theme, "roll", "ROLL_BORDER_RADIUS", theme->roll.border_radius);
-
-    theme->counter.alignment = get_ini_uint(muos_theme, "counter", "COUNTER_ALIGNMENT", theme->counter.alignment);
-    theme->counter.padding_around =
-        get_ini_int(muos_theme, "counter", "COUNTER_PADDING_AROUND", theme->counter.padding_around);
-    theme->counter.padding_side =
-        get_ini_int(muos_theme, "counter", "COUNTER_PADDING_SIDE", theme->counter.padding_side);
-    theme->counter.padding_top = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_TOP", theme->counter.padding_top);
-    theme->counter.border_colour =
-        get_ini_hex(muos_theme, "counter", "COUNTER_BORDER_COLOUR", theme->counter.border_colour);
-    theme->counter.border_alpha =
-        get_ini_int(muos_theme, "counter", "COUNTER_BORDER_ALPHA", theme->counter.border_alpha);
-    theme->counter.border_width =
-        get_ini_int(muos_theme, "counter", "COUNTER_BORDER_WIDTH", theme->counter.border_width);
-    theme->counter.radius = get_ini_int(muos_theme, "counter", "COUNTER_RADIUS", theme->counter.radius);
-    theme->counter.background = get_ini_hex(muos_theme, "counter", "COUNTER_BACKGROUND", theme->counter.background);
-    theme->counter.background_alpha =
-        get_ini_int(muos_theme, "counter", "COUNTER_BACKGROUND_ALPHA", theme->counter.background_alpha);
-    theme->counter.text = get_ini_hex(muos_theme, "counter", "COUNTER_TEXT", theme->counter.text);
-    theme->counter.text_alpha = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", theme->counter.text_alpha);
-    theme->counter.text_fade_time =
-        get_ini_int(muos_theme, "counter", "COUNTER_TEXT_FADE_TIME", theme->counter.text_fade_time);
-    snprintf(
-        theme->counter.text_separator, MAX_BUFFER_SIZE, "%s",
-        get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->counter.text_separator)
-    );
-
-    theme->misc.static_alignment = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", theme->misc.static_alignment);
-    theme->mux.item.count = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_COUNT", theme->mux.item.count);
-    theme->mux.item.height = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_HEIGHT", theme->mux.item.height);
-    theme->misc.content.size_to_content =
-        get_ini_int(muos_theme, "misc", "CONTENT_SIZE_TO_CONTENT", theme->misc.content.size_to_content);
-    theme->misc.content.alignment = get_ini_int(muos_theme, "misc", "CONTENT_ALIGNMENT", theme->misc.content.alignment);
-    theme->misc.content.padding_left =
-        get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT", theme->misc.content.padding_left);
-    theme->misc.content.padding_top =
-        get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP", theme->misc.content.padding_top);
-    theme->misc.content.height = get_ini_int(muos_theme, "misc", "CONTENT_HEIGHT", theme->misc.content.height);
     theme->misc.content.width = get_ini_int(
         muos_theme, "misc", "CONTENT_WIDTH",
         config.visual.content_width ? device->screen.width : theme->misc.content.width
     );
-    theme->misc.animated_background =
-        get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND", theme->misc.animated_background);
-    theme->misc.random_background = get_ini_int(muos_theme, "misc", "RANDOM_BACKGROUND", theme->misc.random_background);
-    theme->misc.image_overlay = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", theme->misc.image_overlay);
-    theme->misc.navigation_type = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->misc.navigation_type);
-    theme->misc.antialiasing = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->misc.antialiasing);
-    theme->misc.label_width = get_ini_int(muos_theme, "misc", "LABEL_WIDTH", theme->misc.label_width);
-
-    theme->glyph.list = get_ini_int(muos_theme, "glyph", "LIST", theme->glyph.list);
-    theme->glyph.footer = get_ini_int(muos_theme, "glyph", "FOOTER", theme->glyph.footer);
-    theme->glyph.header = get_ini_int(muos_theme, "glyph", "HEADER", theme->glyph.header);
-    theme->glyph.grid = get_ini_int(muos_theme, "glyph", "GRID", theme->glyph.grid);
-
-    snprintf(
-        theme->terminal.font_size, MAX_BUFFER_SIZE, "%s",
-        get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->terminal.font_size)
-    );
-    snprintf(
-        theme->terminal.foreground, MAX_BUFFER_SIZE, "%s",
-        get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->terminal.foreground)
-    );
-    snprintf(
-        theme->terminal.background, MAX_BUFFER_SIZE, "%s",
-        get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->terminal.background)
-    );
-
-    theme->sdl.texture_blend_mode = get_ini_int(muos_theme, "sdl", "TEXTURE_BLEND_MODE", theme->sdl.texture_blend_mode);
-    theme->sdl.draw_blend_mode = get_ini_int(muos_theme, "sdl", "DRAW_BLEND_MODE", theme->sdl.draw_blend_mode);
-    theme->sdl.render.offset_x = get_ini_float(muos_theme, "sdl", "RENDER_OFFSET_X", theme->sdl.render.offset_x);
-    theme->sdl.render.offset_y = get_ini_float(muos_theme, "sdl", "RENDER_OFFSET_Y", theme->sdl.render.offset_y);
-    theme->sdl.solid.r = get_ini_int(muos_theme, "sdl", "SOLID_R", theme->sdl.solid.r);
-    theme->sdl.solid.g = get_ini_int(muos_theme, "sdl", "SOLID_G", theme->sdl.solid.g);
-    theme->sdl.solid.b = get_ini_int(muos_theme, "sdl", "SOLID_B", theme->sdl.solid.b);
 
     mini_free(muos_theme);
 }
