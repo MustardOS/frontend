@@ -835,9 +835,6 @@ static void list_nav_move(const int steps, const int direction) {
     const int static_list = !grid_mode_enabled && item_count <= visible_count;
     const int multi_list = !grid_mode_enabled && item_count > visible_count;
 
-    const int items_before = (visible_count - visible_count % 2) / 2;
-    const int items_after = (visible_count - 1) / 2;
-
     if (!grid_mode_enabled) apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
 
     if (static_list) {
@@ -875,29 +872,10 @@ static void list_nav_move(const int steps, const int direction) {
         }
 
         if (multi_list) {
-            if (direction < 0) {
-                if (current_item_index == item_count - 1) {
-                    update_list_items((int) item_count - visible_count);
-                } else if (current_item_index >= items_before && current_item_index < item_count - items_after - 1) {
-                    lv_obj_t *last = lv_obj_get_child(ui_pnl_content, visible_count - 1);
-                    lv_obj_move_to_index(last, 0);
-
-                    update_list_item(
-                        lv_obj_get_child(last, 0), lv_obj_get_child(last, 1), current_item_index - items_before
-                    );
-                }
-            } else {
-                if (current_item_index == 0) {
-                    update_list_items(0);
-                } else if (current_item_index > items_before && current_item_index < item_count - items_after) {
-                    lv_obj_t *first = lv_obj_get_child(ui_pnl_content, 0);
-                    lv_obj_move_to_index(first, visible_count - 1);
-
-                    update_list_item(
-                        lv_obj_get_child(first, 0), lv_obj_get_child(first, 1), current_item_index + items_after
-                    );
-                }
-            }
+            update_windowed_list(
+                ui_pnl_content, direction, current_item_index, (int) item_count, visible_count, update_list_item,
+                update_list_items
+            );
         } else if (grid_mode_enabled) {
             update_grid(direction);
         }

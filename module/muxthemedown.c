@@ -217,41 +217,10 @@ static void list_nav_move(const int steps, const int direction) {
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
 
-        if (theme_item_count > theme.mux.item.count) {
-            const int items_before_selected = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
-            const int items_after_selected = (theme.mux.item.count - 1) / 2;
-
-            if (direction < 0) {
-                if (current_item_index == theme_item_count - 1) {
-                    update_list_items((int) theme_item_count - theme.mux.item.count);
-                } else {
-                    if (current_item_index >= items_before_selected
-                        && current_item_index < theme_item_count - items_after_selected - 1) {
-                        lv_obj_t *last_item =
-                            lv_obj_get_child(ui_pnl_content, theme.mux.item.count - 1); // Get the last child
-                        lv_obj_move_to_index(last_item, 0);
-                        update_list_item(
-                            lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
-                            current_item_index - items_before_selected
-                        );
-                    }
-                }
-            } else {
-                if (current_item_index == 0) {
-                    update_list_items(0);
-                } else {
-                    if (current_item_index > items_before_selected
-                        && current_item_index < theme_item_count - items_after_selected) {
-                        lv_obj_t *first_item = lv_obj_get_child(ui_pnl_content, 0);
-                        lv_obj_move_to_index(first_item, theme.mux.item.count - 1);
-                        update_list_item(
-                            lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
-                            current_item_index + items_after_selected
-                        );
-                    }
-                }
-            }
-        }
+        update_windowed_list(
+            ui_pnl_content, direction, current_item_index, (int) theme_item_count, theme.mux.item.count,
+            update_list_item, update_list_items
+        );
     }
 
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);

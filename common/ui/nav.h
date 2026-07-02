@@ -38,6 +38,12 @@ void update_scroll_position(
     int mux_item_count, int mux_item_panel, int ui_count_static, int current_item_index, lv_obj_t *ui_pnl_content
 );
 
+void update_windowed_list(
+    const lv_obj_t *ui_pnl_content, int direction, int current_item_index, int total_count, int visible_count,
+    void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index),
+    void (*update_items_cb)(int start_index)
+);
+
 void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], int count);
 
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);

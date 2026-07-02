@@ -403,6 +403,39 @@ void update_scroll_position(
     lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
 }
 
+void update_windowed_list(
+    const lv_obj_t *ui_pnl_content, const int direction, const int current_item_index, const int total_count,
+    const int visible_count, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index),
+    void (*update_items_cb)(int start_index)
+) {
+    if (total_count <= visible_count) return;
+
+    const int items_before = (visible_count - visible_count % 2) / 2;
+    const int items_after = (visible_count - 1) / 2;
+
+    if (direction < 0) {
+        if (current_item_index == total_count - 1) {
+            update_items_cb(total_count - visible_count);
+        } else if (current_item_index >= items_before && current_item_index < total_count - items_after - 1) {
+            lv_obj_t *last_item = lv_obj_get_child(ui_pnl_content, visible_count - 1);
+            lv_obj_move_to_index(last_item, 0);
+            update_item_cb(
+                lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1), current_item_index - items_before
+            );
+        }
+    } else {
+        if (current_item_index == 0) {
+            update_items_cb(0);
+        } else if (current_item_index > items_before && current_item_index < total_count - items_after) {
+            lv_obj_t *first_item = lv_obj_get_child(ui_pnl_content, 0);
+            lv_obj_move_to_index(first_item, visible_count - 1);
+            update_item_cb(
+                lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1), current_item_index + items_after
+            );
+        }
+    }
+}
+
 void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], const int count) {
     lv_dropdown_clear_options(ui_lbl_item_drop_down);
 
