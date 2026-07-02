@@ -6,7 +6,10 @@ enum { ui_count_dynamic = E_SIZE(SEARCH_ELEMENTS) };
 #undef SEARCH
 
 static int starter_image = 0;
+static int splash_valid = 0;
 static int got_results = 0;
+
+static lv_obj_t *ui_img_splash;
 
 static char sd1[MAX_BUFFER_SIZE];
 static char sd2[MAX_BUFFER_SIZE];
@@ -48,64 +51,58 @@ static void init_navigation_group(void) {
 static void image_refresh() {
     if (config.visual.box_art == 8) return;
 
-    char extra_no_ext[MAX_BUFFER_SIZE];
-    snprintf(extra_no_ext, sizeof(extra_no_ext), "%s", all_items[current_item_index].extra_data);
+    char *item_dir = get_content_path(all_items[current_item_index].extra_data);
 
-    char *dot = strrchr(extra_no_ext, '.');
+    char item_file_name_buf[MAX_BUFFER_SIZE];
+    snprintf(
+        item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(all_items[current_item_index].extra_data)
+    );
+
+    char core_artwork[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name_buf, core_artwork, sizeof(core_artwork));
+
+    char item_no_ext[MAX_BUFFER_SIZE];
+    snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
+    char *dot = strrchr(item_no_ext, '.');
     if (dot) *dot = '\0';
 
-    char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
+    render_image_refresh(
+        "box", core_artwork, item_no_ext, ui_img_splash, ui_viewport_objects, &starter_image, &splash_valid
+    );
+}
+
+static void video_refresh(void) {
+    if (!ui_count_static || all_items[current_item_index].content_type == FOLDER) return;
+
+    char *item_dir = get_content_path(all_items[current_item_index].extra_data);
+
+    char item_file_name_buf[MAX_BUFFER_SIZE];
+    snprintf(
+        item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(all_items[current_item_index].extra_data)
+    );
+
     char core_artwork[MAX_BUFFER_SIZE];
+    get_catalogue_name(item_dir, item_file_name_buf, core_artwork, sizeof(core_artwork));
 
-    const char *file_name = get_last_subdir(extra_no_ext, '/', 4);
-    char *last_dir = get_last_dir(extra_no_ext);
+    char item_no_ext[MAX_BUFFER_SIZE];
+    snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
+    char *dot = strrchr(item_no_ext, '.');
+    if (dot) *dot = '\0';
 
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s.cfg", str_replace(file_name, last_dir, ""));
+    char mux_dim[MAX_BUFFER_SIZE];
+    snprintf(mux_dim, sizeof(mux_dim), "%dx%d", device.mux.width, device.mux.height);
 
-    if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%score.cfg", str_replace(file_name, last_dir, ""));
-        snprintf(core_artwork, sizeof(core_artwork), "%s", read_line_char_from(core_file, 2));
-    } else {
-        snprintf(core_artwork, sizeof(core_artwork), "%s", read_line_char_from(core_file, 3));
-    }
+    char vpath[MAX_BUFFER_SIZE];
+    if (!load_video_catalogue(core_artwork, item_no_ext, item_no_ext, mux_dim, vpath, sizeof(vpath))) return;
 
-    LOG_INFO(mux_module, "Reading Configuration: %s", core_file);
+    const int delay_ms = config.visual.video_preview == 3 ? 10000 : config.visual.video_preview == 2 ? 5000 : 3000;
+    video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
+}
 
-    if (strlen(core_artwork) <= 1) {
-        snprintf(image, sizeof(image), "%s/%simage/none_%s.png", theme_base, mux_dim, "box");
-        if (!file_exist(image)) {
-            snprintf(image, sizeof(image), "%s/image/none_%s.png", theme_base, "box");
-        }
-    } else {
-        load_image_catalogue(core_artwork, last_dir, "", "default", mux_dim, "box", image, sizeof(image));
-    }
-
-    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", "box", image);
-
-    if (strcasecmp(box_image_previous_path, image) != 0) {
-        char artwork_config_path[MAX_BUFFER_SIZE];
-        snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini", INFO_CAT_PATH, core_artwork);
-        if (!file_exist(artwork_config_path)) {
-            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini", INFO_CAT_PATH);
-        }
-
-        if (file_exist(artwork_config_path)) {
-            viewport_refresh(ui_viewport_objects, artwork_config_path, core_artwork, last_dir);
-            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-        } else {
-            if (file_exist(image)) {
-                starter_image = 1;
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-                lv_img_set_src(ui_img_box, image_path);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-            } else {
-                lv_img_set_src(ui_img_box, &ui_img_blank);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
-            }
-        }
-    }
+static void image_refresh_transition(void) {
+    image_refresh();
+    transition_box_art_apply_in(config.visual.box_art_transition);
+    if (config.visual.video_preview > 0) video_refresh();
 }
 
 static void gen_result(const char *item_glyph, const char *item_text, char *item_data, const char *item_value) {
@@ -188,11 +185,24 @@ static void list_nav_move(const int steps, const int direction) {
 
     scroll_object_to_middle(ui_pnl_content, lv_group_get_focused(ui_group_panel));
 
+    video_preview_cancel();
+
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
-        if (config.visual.box_art < 4) image_refresh();
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+
+        if (config.visual.box_art < 4) {
+            if (config.visual.box_art_transition != TSN_DISABLED) {
+                transition_box_art_nav_activity();
+            } else {
+                image_refresh();
+                if (config.visual.video_preview > 0) video_refresh();
+            }
+        }
     } else {
         lv_img_set_src(ui_img_box, &ui_img_blank);
+        for (int i = 1; i < 6; i++) {
+            if (ui_viewport_objects[i]) lv_img_set_src(ui_viewport_objects[i], &ui_img_blank);
+        }
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
     }
 
@@ -510,7 +520,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_random_select(void) {
-    if (msgbox_active || ui_count_static <= 3 || hold_call) return;
+    if (msgbox_active || ui_count_static <= 3 || hold_call || video_preview_active()) return;
 
     const uint32_t random_select = random() % ui_count_static;
     const int selected_index = (int) (random_select & INT16_MAX);
@@ -519,6 +529,7 @@ static void handle_random_select(void) {
 }
 
 static void handle_back(void) {
+    video_preview_cancel();
     play_sound(snd_back);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
@@ -528,12 +539,17 @@ static void handle_back(void) {
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
 
     key_show ? handle_keyboard_press() : handle_confirm();
 }
 
 static void handle_b(void) {
+    if (key_show) {
+        key_backspace(ui_txt_entry_search);
+        return;
+    }
+
     if (hold_call) return;
 
     if (msgbox_active) {
@@ -541,8 +557,9 @@ static void handle_b(void) {
         return;
     }
 
-    if (key_show) {
-        key_backspace(ui_txt_entry_search);
+    if (video_preview_active()) {
+        video_preview_cancel();
+        play_sound(snd_back);
         return;
     }
 
@@ -554,7 +571,7 @@ static void handle_b_hold(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
 
     if (key_show) {
         close_osk(key_entry, ui_group, ui_txt_entry_search, ui_pnl_entry_search);
@@ -571,7 +588,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || video_preview_active()) return;
 
     if (key_show) key_space(ui_txt_entry_search);
 
@@ -579,7 +596,8 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call || video_preview_active())
+        return;
 
     if (all_items[current_item_index].content_type != ITEM) {
         play_sound(snd_info_open);
@@ -635,6 +653,14 @@ static void handle_r1(void) {
     }
 
     handle_list_nav_page_down();
+}
+
+static void handle_nav_key_released(void) {
+    if (key_show) return;
+
+    if (config.visual.box_art_transition != TSN_DISABLED) {
+        transition_box_art_key_released();
+    }
 }
 
 static void adjust_panels(void) {
@@ -751,6 +777,8 @@ int muxsearch_main(char *dir) {
     init_fonts();
     init_navigation_group();
 
+    transition_box_art_init(image_refresh_transition);
+
     if (got_results) {
         process_results(json_content);
         lv_label_set_text(ui_val_lookup_search, lookup_value);
@@ -780,6 +808,12 @@ int muxsearch_main(char *dir) {
         .release_handler =
             {
                 [mux_input_menu] = handle_help,
+                [mux_input_dpad_up] = handle_nav_key_released,
+                [mux_input_dpad_down] = handle_nav_key_released,
+                [mux_input_dpad_left] = handle_nav_key_released,
+                [mux_input_dpad_right] = handle_nav_key_released,
+                [mux_input_l1] = handle_nav_key_released,
+                [mux_input_r1] = handle_nav_key_released,
             },
         .hold_handler = {
             [mux_input_b] = handle_b_hold,
@@ -797,6 +831,9 @@ int muxsearch_main(char *dir) {
     init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
+
+    transition_box_art_destroy();
+    video_preview_destroy();
 
     free_items(&all_items, &all_item_count);
 
