@@ -473,7 +473,7 @@ static void handle_dpad_right_hold(void) {
 }
 
 static void handle_a(void) {
-    if (hold_call || video_preview_active()) return;
+    if (hold_call) return;
 
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
@@ -492,7 +492,8 @@ static void handle_a(void) {
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active || hold_call || remove_mode || video_preview_active()) return;
+    if (msgbox_active || hold_call || remove_mode) return;
+    video_preview_cancel();
     process_load(launch_flag(config.visual.launch_swap, 1));
 }
 

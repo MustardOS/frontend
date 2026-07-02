@@ -1104,13 +1104,14 @@ load_end:
 }
 
 static void handle_a(void) {
-    if (hold_call || video_preview_active()) return;
+    if (hold_call) return;
     video_preview_cancel();
     process_load(launch_flag(config.visual.launch_swap, 0));
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active || hold_call || video_preview_active()) return;
+    if (msgbox_active || hold_call) return;
+    video_preview_cancel();
     process_load(launch_flag(config.visual.launch_swap, 1));
 }
 
