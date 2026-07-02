@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,78 +7,363 @@
 #include "config.h"
 #include "options.h"
 
-#define CFG_STR(field, d, name, fallback)                                                                              \
-    do {                                                                                                               \
-        const char *_v = cfg_dir_get((d), (name));                                                                     \
-        snprintf((field), sizeof(field), "%s", (_v && *_v) ? _v : (fallback));                                         \
-    } while (0)
+typedef struct {
+    const char *dir;
+    const char *key;
+    size_t offset;
+    int is_str; // 0 = int16_t, 1 = char
+    union {
+        int16_t i;
+        const char *s;
+    } fallback;
+} cfg_field;
 
-#define CFG_INT(field, d, name, fallback)                                                                              \
-    do {                                                                                                               \
-        (field) = (int16_t) cfg_dir_int((d), (name), (fallback));                                                      \
-    } while (0)
+#define CFG_OFF(member) offsetof(struct mux_config, member)
+
+static const cfg_field cfg_fields[] = {
+    // system/
+    {CONF_CONFIG_PATH "system", "build", CFG_OFF(system.build), 1, {.s = "Unknown"}},
+    {CONF_CONFIG_PATH "system", "version", CFG_OFF(system.version), 1, {.s = "Edge"}},
+    {CONF_CONFIG_PATH "system", "debug_mode", CFG_OFF(settings.advanced.debug_log), 0, {.i = 0}},
+
+    // backup/
+    {CONF_CONFIG_PATH "backup", "application", CFG_OFF(backup.apps), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "bios", CFG_OFF(backup.bios), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "catalogue", CFG_OFF(backup.catalogue), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "cheats", CFG_OFF(backup.cheats), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "collection", CFG_OFF(backup.collection), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "config", CFG_OFF(backup.config), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "content", CFG_OFF(backup.content), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "history", CFG_OFF(backup.history), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "init", CFG_OFF(backup.init), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "merge", CFG_OFF(backup.merge), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "music", CFG_OFF(backup.music), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "name", CFG_OFF(backup.name), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "network", CFG_OFF(backup.network), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "overlays", CFG_OFF(backup.overlays), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "override", CFG_OFF(backup.override), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "package", CFG_OFF(backup.package), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "save", CFG_OFF(backup.save), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "screenshot", CFG_OFF(backup.screenshot), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "shaders", CFG_OFF(backup.shaders), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "syncthing", CFG_OFF(backup.syncthing), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "theme", CFG_OFF(backup.theme), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "track", CFG_OFF(backup.track), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "start", CFG_OFF(backup.start), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "backup", "target", CFG_OFF(backup.target), 0, {.i = 0}},
+
+    // boot/
+    {CONF_CONFIG_PATH "boot", "factory_reset", CFG_OFF(boot.factory_reset), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "boot", "device_mode", CFG_OFF(boot.device_mode), 0, {.i = 0}},
+
+    // clock/
+    {CONF_CONFIG_PATH "clock", "notation", CFG_OFF(clock.notation), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "clock", "pool", CFG_OFF(clock.pool), 1, {.s = "pool.ntp.org"}},
+    {CONF_CONFIG_PATH "clock", "custom", CFG_OFF(clock.custom), 1, {.s = "%H%P %Z"}},
+
+    // network/
+    {CONF_CONFIG_PATH "network", "type", CFG_OFF(network.type), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "network", "interface", CFG_OFF(network.interface), 1, {.s = "wlan0"}},
+    {CONF_CONFIG_PATH "network", "ssid", CFG_OFF(network.ssid), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "network", "pass", CFG_OFF(network.pass), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "network", "address", CFG_OFF(network.address), 1, {.s = "192.168.0.123"}},
+    {CONF_CONFIG_PATH "network", "gateway", CFG_OFF(network.gateway), 1, {.s = "192.168.0.1"}},
+    {CONF_CONFIG_PATH "network", "subnet", CFG_OFF(network.subnet), 1, {.s = "24"}},
+    {CONF_CONFIG_PATH "network", "dns", CFG_OFF(network.dns), 1, {.s = "1.1.1.1"}},
+
+    // theme/
+    {CONF_CONFIG_PATH "theme", "active", CFG_OFF(theme.active), 1, {.s = "MustardOS"}},
+
+    // theme/filter/
+    {CONF_CONFIG_PATH "theme/filter", "allthemes", CFG_OFF(theme.filter.all_themes), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "theme/filter", "grid", CFG_OFF(theme.filter.grid), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "theme/filter", "hdmi", CFG_OFF(theme.filter.hdmi), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "theme/filter", "language", CFG_OFF(theme.filter.language), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "theme/filter", "lookup", CFG_OFF(theme.filter.lookup), 1, {.s = ""}},
+
+    // theme/download/
+    {CONF_CONFIG_PATH "theme/download", "data", CFG_OFF(theme.download.data), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "theme/download", "preview", CFG_OFF(theme.download.preview), 1, {.s = ""}},
+
+    // extra/download/
+    {CONF_CONFIG_PATH "extra/download", "data", CFG_OFF(extra.download.data), 1, {.s = ""}},
+
+    // extra/language/
+    {CONF_CONFIG_PATH "extra/language", "data", CFG_OFF(extra.language.data), 1, {.s = ""}},
+
+    // settings/advanced/
+    {CONF_CONFIG_PATH "settings/advanced", "accelerate", CFG_OFF(settings.advanced.accelerate), 0, {.i = 96}},
+    {CONF_CONFIG_PATH "settings/advanced", "repeat_delay", CFG_OFF(settings.advanced.repeat_delay), 0, {.i = 208}},
+    {CONF_CONFIG_PATH "settings/advanced", "sticknav", CFG_OFF(settings.advanced.stick_nav), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "thermal", CFG_OFF(settings.advanced.thermal), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "font", CFG_OFF(settings.advanced.font), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "led", CFG_OFF(settings.advanced.led), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "random_theme", CFG_OFF(settings.advanced.random_theme), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "retrowait", CFG_OFF(settings.advanced.retro_wait), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "retrofree", CFG_OFF(settings.advanced.retro_free), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "retrocache", CFG_OFF(settings.advanced.retro_cache), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "activity", CFG_OFF(settings.advanced.activity), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "usb_function", CFG_OFF(settings.advanced.usb_function), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "verbose", CFG_OFF(settings.advanced.verbose), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "rumble", CFG_OFF(settings.advanced.rumble), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "volume", CFG_OFF(settings.advanced.volume), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "brightness", CFG_OFF(settings.advanced.brightness), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "user_init", CFG_OFF(settings.advanced.user_init), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "dpad_swap", CFG_OFF(settings.advanced.dpad_swap), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "overdrive", CFG_OFF(settings.advanced.overdrive), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "swapfile", CFG_OFF(settings.advanced.swapfile), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "zramfile", CFG_OFF(settings.advanced.zramfile), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "lidswitch", CFG_OFF(settings.advanced.lid_switch), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "disp_suspend", CFG_OFF(settings.advanced.disp_suspend), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "stage_overlay", CFG_OFF(settings.advanced.stage_overlay), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "incbright", CFG_OFF(settings.advanced.inc_bright), 0, {.i = 16}},
+    {CONF_CONFIG_PATH "settings/advanced", "incvolume", CFG_OFF(settings.advanced.inc_volume), 0, {.i = 8}},
+    {CONF_CONFIG_PATH "settings/advanced", "maxgpu", CFG_OFF(settings.advanced.max_gpu), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "double_buffer", CFG_OFF(settings.advanced.double_buffer), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "audio_ready", CFG_OFF(settings.advanced.audio_ready), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "audio_swap", CFG_OFF(settings.advanced.audio_swap), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "audio_suspend", CFG_OFF(settings.advanced.audio_suspend), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "bt_scan_timeout", CFG_OFF(settings.advanced.bt_scan_timeout), 0, {.i = 20}},
+    {CONF_CONFIG_PATH "settings/advanced", "part_external", CFG_OFF(settings.advanced.usb_part), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "part_secondary", CFG_OFF(settings.advanced.second_part), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "trust_modify", CFG_OFF(settings.advanced.trust_modify), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "trust_power", CFG_OFF(settings.advanced.trust_power), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "trust_remove", CFG_OFF(settings.advanced.trust_remove), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "boxartpaddiv", CFG_OFF(settings.advanced.box_art_pad_div), 0, {.i = 3}},
+
+    // settings/colour/
+    {CONF_CONFIG_PATH "settings/colour", "schedule_mode", CFG_OFF(settings.colour.schedule_mode), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/colour",
+     "sunrise_temp",
+     CFG_OFF(settings.colour.sunrise_temp),
+     0,
+     {.i = DEFAULT_TEMPERATURE}},
+    {CONF_CONFIG_PATH "settings/colour",
+     "sunset_temp",
+     CFG_OFF(settings.colour.sunset_temp),
+     0,
+     {.i = DEFAULT_TEMPERATURE}},
+    {CONF_CONFIG_PATH "settings/colour", "sunrise_time", CFG_OFF(settings.colour.sunrise_time), 0, {.i = 24}},
+    {CONF_CONFIG_PATH "settings/colour", "sunset_time", CFG_OFF(settings.colour.sunset_time), 0, {.i = 72}},
+
+    // settings/general/
+    {CONF_CONFIG_PATH "settings/general", "sound", CFG_OFF(settings.general.sound), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "soundvol", CFG_OFF(settings.general.soundvol), 0, {.i = 100}},
+    {CONF_CONFIG_PATH "settings/general", "chime", CFG_OFF(settings.general.chime), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "bgm", CFG_OFF(settings.general.bgm), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "bgmvol", CFG_OFF(settings.general.bgmvol), 0, {.i = 35}},
+    {CONF_CONFIG_PATH "settings/general", "brightness", CFG_OFF(settings.general.brightness), 0, {.i = 90}},
+    {CONF_CONFIG_PATH "settings/general", "volume", CFG_OFF(settings.general.volume), 0, {.i = 75}},
+    {CONF_CONFIG_PATH "settings/general", "rgb", CFG_OFF(settings.general.rgb), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "audiosink", CFG_OFF(settings.general.audiosink), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "theme_resolution", CFG_OFF(settings.general.theme_resolution), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "theme_scaling", CFG_OFF(settings.general.theme_scaling), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/general", "startup", CFG_OFF(settings.general.startup), 1, {.s = "launcher"}},
+    {CONF_CONFIG_PATH "settings/general", "language", CFG_OFF(settings.general.language), 1, {.s = "English"}},
+
+    // settings/hotkey/
+    {CONF_CONFIG_PATH "settings/hotkey", "dpad_toggle", CFG_OFF(settings.general.hkdpad), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/hotkey", "screenshot", CFG_OFF(settings.general.hkshot), 0, {.i = 0}},
+
+    // settings/hdmi/
+    {CONF_CONFIG_PATH "settings/hdmi", "resolution", CFG_OFF(settings.hdmi.resolution), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "space", CFG_OFF(settings.hdmi.space), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "depth", CFG_OFF(settings.hdmi.depth), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "range", CFG_OFF(settings.hdmi.range), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "scan", CFG_OFF(settings.hdmi.scan), 0, {.i = 0}},
+
+    // settings/network/
+    {CONF_CONFIG_PATH "settings/network", "monitor", CFG_OFF(settings.network.monitor), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/network", "boot", CFG_OFF(settings.network.boot), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/network", "wake", CFG_OFF(settings.network.wake), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/network", "compat", CFG_OFF(settings.network.compat), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/network", "async_load", CFG_OFF(settings.network.async_load), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/network", "con_retry", CFG_OFF(settings.network.con_retry), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/network", "wait_timer", CFG_OFF(settings.network.wait), 0, {.i = 5}},
+    {CONF_CONFIG_PATH "settings/network", "mod_retry", CFG_OFF(settings.network.mod_retry), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/network", "proxy_enabled", CFG_OFF(settings.network.proxy_enabled), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/network", "proxy_type", CFG_OFF(settings.network.proxy_type), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/network", "proxy_server", CFG_OFF(settings.network.proxy_server), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "settings/network",
+     "proxy_noproxy",
+     CFG_OFF(settings.network.proxy_noproxy),
+     1,
+     {.s = "localhost,127.0.0.1,::1"}},
+
+    // settings/overlay/
+    {CONF_CONFIG_PATH "settings/overlay", "gen_alpha", CFG_OFF(settings.overlay.gen_alpha), 0, {.i = 255}},
+    {CONF_CONFIG_PATH "settings/overlay", "gen_anchor", CFG_OFF(settings.overlay.gen_anchor), 0, {.i = 4}},
+    {CONF_CONFIG_PATH "settings/overlay", "gen_scale", CFG_OFF(settings.overlay.gen_scale), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/overlay", "bat_alpha", CFG_OFF(settings.overlay.bat_alpha), 0, {.i = 255}},
+    {CONF_CONFIG_PATH "settings/overlay", "bat_anchor", CFG_OFF(settings.overlay.bat_anchor), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/overlay", "bat_scale", CFG_OFF(settings.overlay.bat_scale), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/overlay", "vol_alpha", CFG_OFF(settings.overlay.vol_alpha), 0, {.i = 255}},
+    {CONF_CONFIG_PATH "settings/overlay", "vol_anchor", CFG_OFF(settings.overlay.vol_anchor), 0, {.i = 2}},
+    {CONF_CONFIG_PATH "settings/overlay", "vol_scale", CFG_OFF(settings.overlay.vol_scale), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/overlay", "bri_alpha", CFG_OFF(settings.overlay.bri_alpha), 0, {.i = 255}},
+    {CONF_CONFIG_PATH "settings/overlay", "bri_anchor", CFG_OFF(settings.overlay.bri_anchor), 0, {.i = 2}},
+    {CONF_CONFIG_PATH "settings/overlay", "bri_scale", CFG_OFF(settings.overlay.bri_scale), 0, {.i = 0}},
+
+    // settings/power/
+    {CONF_CONFIG_PATH "settings/power", "low_battery", CFG_OFF(settings.power.low_battery), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/power", "shutdown", CFG_OFF(settings.power.shutdown), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/power", "idle_display", CFG_OFF(settings.power.idle.display), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/power", "idle_sleep", CFG_OFF(settings.power.idle.sleep), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/power", "idle_mute", CFG_OFF(settings.power.idle.mute), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/power", "saver_type", CFG_OFF(settings.power.saver_type), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/power", "saver_speed", CFG_OFF(settings.power.saver_speed), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/power", "gov_idle", CFG_OFF(settings.power.gov.idle), 1, {.s = "powersave"}},
+
+    // cpu/ (SETTINGS.power.gov.dflt lives in the device config, not user config)
+    {CONF_DEVICE_PATH "cpu", "default", CFG_OFF(settings.power.gov.dflt), 1, {.s = "ondemand"}},
+
+    // settings/rgb/
+    {CONF_CONFIG_PATH "settings/rgb", "mode", CFG_OFF(settings.rgb.mode), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "bright", CFG_OFF(settings.rgb.bright), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "breath_speed", CFG_OFF(settings.rgb.breath_speed), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "colour_l", CFG_OFF(settings.rgb.colour_l), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "colour_r", CFG_OFF(settings.rgb.colour_r), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "colour_m", CFG_OFF(settings.rgb.colour_m), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "colour_f1", CFG_OFF(settings.rgb.colour_f1), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "colour_f2", CFG_OFF(settings.rgb.colour_f2), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "combo", CFG_OFF(settings.rgb.combo), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "backend", CFG_OFF(settings.rgb.backend), 0, {.i = 0}},
+
+    // settings/font/
+    {CONF_CONFIG_PATH "settings/font", "list_size", CFG_OFF(settings.font.list_size), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "header_size", CFG_OFF(settings.font.header_size), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "footer_size", CFG_OFF(settings.font.footer_size), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "panel_size", CFG_OFF(settings.font.panel_size), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "name", CFG_OFF(settings.font.name), 1, {.s = ""}},
+
+    // settings/theme/ (theme option overrides - distinct from theme/filter/)
+    {CONF_CONFIG_PATH "settings/theme", "header_height", CFG_OFF(settings.themeopt.header_height), 0, {.i = -1}},
+    {CONF_CONFIG_PATH "settings/theme", "footer_height", CFG_OFF(settings.themeopt.footer_height), 0, {.i = -1}},
+    {CONF_CONFIG_PATH "settings/theme",
+     "content_item_count",
+     CFG_OFF(settings.themeopt.content_item_count),
+     0,
+     {.i = 0}},
+    {CONF_CONFIG_PATH "settings/theme", "glyph_size_list", CFG_OFF(settings.themeopt.glyph_size_list), 0, {.i = -2}},
+    {CONF_CONFIG_PATH "settings/theme",
+     "glyph_size_footer",
+     CFG_OFF(settings.themeopt.glyph_size_footer),
+     0,
+     {.i = -2}},
+    {CONF_CONFIG_PATH "settings/theme",
+     "glyph_size_header",
+     CFG_OFF(settings.themeopt.glyph_size_header),
+     0,
+     {.i = -2}},
+    {CONF_CONFIG_PATH "settings/theme", "glyph_size_grid", CFG_OFF(settings.themeopt.glyph_size_grid), 0, {.i = -2}},
+    {CONF_CONFIG_PATH "settings/theme", "label_width", CFG_OFF(settings.themeopt.label_width), 0, {.i = 0}},
+
+    // settings/remap/
+    {CONF_CONFIG_PATH "settings/remap", "layout", CFG_OFF(settings.remap.layout), 0, {.i = 0}},
+
+    // sort/
+    {CONF_CONFIG_PATH "sort", "default", CFG_OFF(sort.dflt), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "sort", "collection", CFG_OFF(sort.collection), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "sort", "history", CFG_OFF(sort.history), 0, {.i = 0}},
+
+    // visual/
+    {CONF_CONFIG_PATH "visual", "battery", CFG_OFF(visual.battery), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "network", CFG_OFF(visual.network), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "headertitle", CFG_OFF(visual.header_title), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "dialoguetransition", CFG_OFF(visual.dialogue_transition), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "bluetooth", CFG_OFF(visual.bluetooth), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "clock", CFG_OFF(visual.clock), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "overlayimage", CFG_OFF(visual.overlay_image), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "overlaytransparency", CFG_OFF(visual.overlay_transparency), 0, {.i = 85}},
+    {CONF_CONFIG_PATH "visual", "gridmodecontent", CFG_OFF(visual.grid_mode_content), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "boxart", CFG_OFF(visual.box_art), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "boxartalign", CFG_OFF(visual.box_art_align), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "boxarthide", CFG_OFF(visual.box_art_hide), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "boxartscale", CFG_OFF(visual.box_art_scale), 0, {.i = 100}},
+    {CONF_CONFIG_PATH "visual", "boxartpadding", CFG_OFF(visual.box_art_padding), 0, {.i = 15}},
+    {CONF_CONFIG_PATH "visual", "boxartplaceholder", CFG_OFF(visual.box_art_placeholder), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "boxarttransition", CFG_OFF(visual.box_art_transition), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "videopreview", CFG_OFF(visual.video_preview), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "contentwidth", CFG_OFF(visual.content_width), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "name", CFG_OFF(visual.name), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "dash", CFG_OFF(visual.dash), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "launch_swap", CFG_OFF(visual.launch_swap), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "hidden", CFG_OFF(visual.hidden), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "shuffle", CFG_OFF(visual.shuffle), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "friendlyfolder", CFG_OFF(visual.friendly_folder), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "thetitleformat", CFG_OFF(visual.the_title_format), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "titleincluderootdrive", CFG_OFF(visual.title_include_root_drive), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "folderitemcount", CFG_OFF(visual.folder_item_count), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "folderempty", CFG_OFF(visual.display_empty_folder), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "counterfolder", CFG_OFF(visual.menu_counter_folder), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "counterfile", CFG_OFF(visual.menu_counter_file), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "video_wallpaper", CFG_OFF(visual.video_wallpaper), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "background_scale", CFG_OFF(visual.background_scale), 0, {.i = 2}},
+    {CONF_CONFIG_PATH "visual", "launchsplash", CFG_OFF(visual.launchsplash), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "blackfade", CFG_OFF(visual.blackfade), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "contentcollect", CFG_OFF(visual.content_collect), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "contenthistory", CFG_OFF(visual.content_history), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "mixedcontent", CFG_OFF(visual.mixed_content), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "forwardhistory", CFG_OFF(visual.forward_history), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "namescroll", CFG_OFF(visual.name_scroll), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "labelscrollspeed", CFG_OFF(visual.label_scroll_speed), 0, {.i = 2}},
+    {CONF_CONFIG_PATH "visual", "listglyph", CFG_OFF(visual.list_glyph), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "visual", "selectionanimation", CFG_OFF(visual.selection_animation), 0, {.i = 2}},
+    {CONF_CONFIG_PATH "visual", "selectionstyle", CFG_OFF(visual.selection_style), 0, {.i = 4}},
+    {CONF_CONFIG_PATH "visual", "shadow", CFG_OFF(visual.render_shadows), 0, {.i = 1}},
+
+    // bluetooth/
+    {CONF_CONFIG_PATH "bluetooth", "autoconnect", CFG_OFF(bluetooth.auto_connect), 0, {.i = 0}},
+
+    // web/
+    {CONF_CONFIG_PATH "web", "sshd", CFG_OFF(web.sshd), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "web", "sftpgo", CFG_OFF(web.sftp_go), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "web", "ttyd", CFG_OFF(web.ttyd), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "web", "syncthing", CFG_OFF(web.syncthing), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "web", "tailscaled", CFG_OFF(web.tailscaled), 0, {.i = 0}},
+
+    // danger/
+    {CONF_CONFIG_PATH "danger", "vmswap", CFG_OFF(danger.vm_swap), 0, {.i = 8}},
+    {CONF_CONFIG_PATH "danger", "dirty_ratio", CFG_OFF(danger.dirty_ratio), 0, {.i = 16}},
+    {CONF_CONFIG_PATH "danger", "dirty_back_ratio", CFG_OFF(danger.dirty_back), 0, {.i = 4}},
+    {CONF_CONFIG_PATH "danger", "cache_pressure", CFG_OFF(danger.cache), 0, {.i = 64}},
+    {CONF_CONFIG_PATH "danger", "nomerges", CFG_OFF(danger.merge), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "danger", "nr_requests", CFG_OFF(danger.requests), 0, {.i = 128}},
+    {CONF_CONFIG_PATH "danger", "read_ahead", CFG_OFF(danger.read_ahead), 0, {.i = 4096}},
+    {CONF_CONFIG_PATH "danger", "page_cluster", CFG_OFF(danger.page_cluster), 0, {.i = 3}},
+    {CONF_CONFIG_PATH "danger", "time_slice", CFG_OFF(danger.time_slice), 0, {.i = 10}},
+    {CONF_CONFIG_PATH "danger", "iostats", CFG_OFF(danger.io_stats), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "danger", "idle_flush", CFG_OFF(danger.idle_flush), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "danger", "child_first", CFG_OFF(danger.child_first), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "danger", "tune_scale", CFG_OFF(danger.tune_scale), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "danger", "cardmode", CFG_OFF(danger.card_mode), 1, {.s = "noop"}},
+    {CONF_CONFIG_PATH "danger", "state", CFG_OFF(danger.state), 1, {.s = "mem"}},
+};
+
+#undef CFG_OFF
 
 void load_config(struct mux_config *config) {
     cfg_dir_t d;
+    const char *cur_dir = NULL;
 
-    // system/ - build, version, debug_mode
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "system");
-    CFG_STR(config->system.build, &d, "build", "Unknown");
-    CFG_STR(config->system.version, &d, "version", "Edge");
-    CFG_INT(config->settings.advanced.debug_log, &d, "debug_mode", 0);
+    for (size_t i = 0; i < sizeof(cfg_fields) / sizeof(cfg_fields[0]); i++) {
+        const cfg_field *f = &cfg_fields[i];
 
-    // backup/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "backup");
-    CFG_INT(config->backup.apps, &d, "application", 1);
-    CFG_INT(config->backup.bios, &d, "bios", 1);
-    CFG_INT(config->backup.catalogue, &d, "catalogue", 1);
-    CFG_INT(config->backup.cheats, &d, "cheats", 1);
-    CFG_INT(config->backup.collection, &d, "collection", 1);
-    CFG_INT(config->backup.config, &d, "config", 1);
-    CFG_INT(config->backup.content, &d, "content", 1);
-    CFG_INT(config->backup.history, &d, "history", 1);
-    CFG_INT(config->backup.init, &d, "init", 1);
-    CFG_INT(config->backup.merge, &d, "merge", 1);
-    CFG_INT(config->backup.music, &d, "music", 1);
-    CFG_INT(config->backup.name, &d, "name", 1);
-    CFG_INT(config->backup.network, &d, "network", 1);
-    CFG_INT(config->backup.overlays, &d, "overlays", 1);
-    CFG_INT(config->backup.override, &d, "override", 1);
-    CFG_INT(config->backup.package, &d, "package", 1);
-    CFG_INT(config->backup.save, &d, "save", 1);
-    CFG_INT(config->backup.screenshot, &d, "screenshot", 1);
-    CFG_INT(config->backup.shaders, &d, "shaders", 1);
-    CFG_INT(config->backup.syncthing, &d, "syncthing", 1);
-    CFG_INT(config->backup.theme, &d, "theme", 1);
-    CFG_INT(config->backup.track, &d, "track", 1);
-    CFG_INT(config->backup.start, &d, "start", 0);
-    CFG_INT(config->backup.target, &d, "target", 0);
+        if (!cur_dir || strcmp(f->dir, cur_dir) != 0) {
+            cfg_dir_scan(&d, f->dir);
+            cur_dir = f->dir;
+        }
 
-    // boot/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "boot");
-    CFG_INT(config->boot.factory_reset, &d, "factory_reset", 0);
-    CFG_INT(config->boot.device_mode, &d, "device_mode", 0);
+        void *field_ptr = (char *) config + f->offset;
+        if (f->is_str) {
+            const char *v = cfg_dir_get(&d, f->key);
+            snprintf((char *) field_ptr, MAX_BUFFER_SIZE, "%s", v && *v ? v : f->fallback.s);
+        } else {
+            *(int16_t *) field_ptr = (int16_t) cfg_dir_int(&d, f->key, f->fallback.i);
+        }
+    }
 
-    // clock/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "clock");
-    CFG_INT(config->clock.notation, &d, "notation", 0);
-    CFG_STR(config->clock.pool, &d, "pool", "pool.ntp.org");
-    CFG_STR(config->clock.custom, &d, "custom", "%H%P %Z");
-
-    // network/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "network");
-    CFG_INT(config->network.type, &d, "type", 0);
-    CFG_STR(config->network.interface, &d, "interface", "wlan0");
-    CFG_STR(config->network.ssid, &d, "ssid", "");
-    CFG_STR(config->network.pass, &d, "pass", "");
-    CFG_STR(config->network.address, &d, "address", "192.168.0.123");
-    CFG_STR(config->network.gateway, &d, "gateway", "192.168.0.1");
-    CFG_STR(config->network.subnet, &d, "subnet", "24");
-    CFG_STR(config->network.dns, &d, "dns", "1.1.1.1");
-
-    // theme/ (top level - contains the "active" file; subdirs handled separately)
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "theme");
-    CFG_STR(config->theme.active, &d, "active", "MustardOS");
+    // theme/ - storage_theme and theme_cat_path are built from the "active" theme name
     snprintf(
         config->theme.storage_theme, sizeof(config->theme.storage_theme), RUN_STORAGE_PATH "theme/%s",
         config->theme.active
@@ -86,14 +372,7 @@ void load_config(struct mux_config *config) {
         config->theme.theme_cat_path, sizeof(config->theme.theme_cat_path), "%s/catalogue", config->theme.storage_theme
     );
 
-    // theme/filter/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "theme/filter");
-    CFG_INT(config->theme.filter.all_themes, &d, "allthemes", 0);
-    CFG_INT(config->theme.filter.grid, &d, "grid", 0);
-    CFG_INT(config->theme.filter.hdmi, &d, "hdmi", 0);
-    CFG_INT(config->theme.filter.language, &d, "language", 0);
-    CFG_STR(config->theme.filter.lookup, &d, "lookup", "");
-
+    // theme/filter/ - resolution flags are derived from the active device resolution
     if (!config->theme.filter.all_themes) {
         cfg_dir_scan(&d, CONF_DEVICE_PATH "mux");
         const int width = cfg_dir_int(&d, "width", 0);
@@ -112,88 +391,6 @@ void load_config(struct mux_config *config) {
         config->theme.filter.resolution_1280_x720 = 0;
         config->theme.filter.resolution_1920_x1080 = 0;
     }
-
-    // theme/download/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "theme/download");
-    CFG_STR(config->theme.download.data, &d, "data", "");
-    CFG_STR(config->theme.download.preview, &d, "preview", "");
-
-    // extra/download/ and extra/language/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "extra/download");
-    CFG_STR(config->extra.download.data, &d, "data", "");
-
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "extra/language");
-    CFG_STR(config->extra.language.data, &d, "data", "");
-
-    // settings/advanced/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/advanced");
-    CFG_INT(config->settings.advanced.accelerate, &d, "accelerate", 96);
-    CFG_INT(config->settings.advanced.repeat_delay, &d, "repeat_delay", 208);
-    CFG_INT(config->settings.advanced.stick_nav, &d, "sticknav", 0);
-    CFG_INT(config->settings.advanced.thermal, &d, "thermal", 1);
-    CFG_INT(config->settings.advanced.font, &d, "font", 0);
-    CFG_INT(config->settings.advanced.led, &d, "led", 0);
-    CFG_INT(config->settings.advanced.random_theme, &d, "random_theme", 0);
-    CFG_INT(config->settings.advanced.retro_wait, &d, "retrowait", 0);
-    CFG_INT(config->settings.advanced.retro_free, &d, "retrofree", 0);
-    CFG_INT(config->settings.advanced.retro_cache, &d, "retrocache", 0);
-    CFG_INT(config->settings.advanced.activity, &d, "activity", 1);
-    CFG_INT(config->settings.advanced.usb_function, &d, "usb_function", 0);
-    CFG_INT(config->settings.advanced.verbose, &d, "verbose", 0);
-    CFG_INT(config->settings.advanced.rumble, &d, "rumble", 0);
-    CFG_INT(config->settings.advanced.volume, &d, "volume", 0);
-    CFG_INT(config->settings.advanced.brightness, &d, "brightness", 0);
-    CFG_INT(config->settings.advanced.user_init, &d, "user_init", 0);
-    CFG_INT(config->settings.advanced.dpad_swap, &d, "dpad_swap", 1);
-    CFG_INT(config->settings.advanced.overdrive, &d, "overdrive", 0);
-    CFG_INT(config->settings.advanced.swapfile, &d, "swapfile", 0);
-    CFG_INT(config->settings.advanced.zramfile, &d, "zramfile", 0);
-    CFG_INT(config->settings.advanced.lid_switch, &d, "lidswitch", 1);
-    CFG_INT(config->settings.advanced.disp_suspend, &d, "disp_suspend", 0);
-    CFG_INT(config->settings.advanced.stage_overlay, &d, "stage_overlay", 1);
-    CFG_INT(config->settings.advanced.inc_bright, &d, "incbright", 16);
-    CFG_INT(config->settings.advanced.inc_volume, &d, "incvolume", 8);
-    CFG_INT(config->settings.advanced.max_gpu, &d, "maxgpu", 0);
-    CFG_INT(config->settings.advanced.double_buffer, &d, "double_buffer", 0);
-    CFG_INT(config->settings.advanced.audio_ready, &d, "audio_ready", 0);
-    CFG_INT(config->settings.advanced.audio_swap, &d, "audio_swap", 0);
-    CFG_INT(config->settings.advanced.audio_suspend, &d, "audio_suspend", 1);
-    CFG_INT(config->settings.advanced.bt_scan_timeout, &d, "bt_scan_timeout", 20);
-    CFG_INT(config->settings.advanced.usb_part, &d, "part_external", 0);
-    CFG_INT(config->settings.advanced.second_part, &d, "part_secondary", 0);
-    CFG_INT(config->settings.advanced.trust_modify, &d, "trust_modify", 0);
-    CFG_INT(config->settings.advanced.trust_power, &d, "trust_power", 1);
-    CFG_INT(config->settings.advanced.trust_remove, &d, "trust_remove", 0);
-    CFG_INT(config->settings.advanced.box_art_pad_div, &d, "boxartpaddiv", 3);
-
-    // settings/colour/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/colour");
-    CFG_INT(config->settings.colour.schedule_mode, &d, "schedule_mode", 0);
-    CFG_INT(config->settings.colour.sunrise_temp, &d, "sunrise_temp", DEFAULT_TEMPERATURE);
-    CFG_INT(config->settings.colour.sunset_temp, &d, "sunset_temp", DEFAULT_TEMPERATURE);
-    CFG_INT(config->settings.colour.sunrise_time, &d, "sunrise_time", 24);
-    CFG_INT(config->settings.colour.sunset_time, &d, "sunset_time", 72);
-
-    // settings/general/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/general");
-    CFG_INT(config->settings.general.sound, &d, "sound", 0);
-    CFG_INT(config->settings.general.soundvol, &d, "soundvol", 100);
-    CFG_INT(config->settings.general.chime, &d, "chime", 0);
-    CFG_INT(config->settings.general.bgm, &d, "bgm", 0);
-    CFG_INT(config->settings.general.bgmvol, &d, "bgmvol", 35);
-    CFG_INT(config->settings.general.brightness, &d, "brightness", 90);
-    CFG_INT(config->settings.general.volume, &d, "volume", 75);
-    CFG_INT(config->settings.general.rgb, &d, "rgb", 0);
-    CFG_INT(config->settings.general.audiosink, &d, "audiosink", 0);
-    CFG_INT(config->settings.general.theme_resolution, &d, "theme_resolution", 0);
-    CFG_INT(config->settings.general.theme_scaling, &d, "theme_scaling", 1);
-    CFG_STR(config->settings.general.startup, &d, "startup", "launcher");
-    CFG_STR(config->settings.general.language, &d, "language", "English");
-
-    // settings/hotkey/ (fields logically grouped under SETTINGS.general)
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/hotkey");
-    CFG_INT(config->settings.general.hkdpad, &d, "dpad_toggle", 1);
-    CFG_INT(config->settings.general.hkshot, &d, "screenshot", 0);
 
     // Compute theme resolution dimensions
     config->settings.general.theme_resolution_width = 0;
@@ -230,182 +427,7 @@ void load_config(struct mux_config *config) {
         default:
             break;
     }
-
-    // settings/hdmi/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/hdmi");
-    CFG_INT(config->settings.hdmi.resolution, &d, "resolution", 0);
-    CFG_INT(config->settings.hdmi.space, &d, "space", 0);
-    CFG_INT(config->settings.hdmi.depth, &d, "depth", 0);
-    CFG_INT(config->settings.hdmi.range, &d, "range", 0);
-    CFG_INT(config->settings.hdmi.scan, &d, "scan", 0);
-
-    // settings/network/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/network");
-    CFG_INT(config->settings.network.monitor, &d, "monitor", 0);
-    CFG_INT(config->settings.network.boot, &d, "boot", 1);
-    CFG_INT(config->settings.network.wake, &d, "wake", 1);
-    CFG_INT(config->settings.network.compat, &d, "compat", 0);
-    CFG_INT(config->settings.network.async_load, &d, "async_load", 1);
-    CFG_INT(config->settings.network.con_retry, &d, "con_retry", 1);
-    CFG_INT(config->settings.network.wait, &d, "wait_timer", 5);
-    CFG_INT(config->settings.network.mod_retry, &d, "mod_retry", 1);
-    CFG_INT(config->settings.network.proxy_enabled, &d, "proxy_enabled", 0);
-    CFG_INT(config->settings.network.proxy_type, &d, "proxy_type", 0);
-    CFG_STR(config->settings.network.proxy_server, &d, "proxy_server", "");
-    CFG_STR(config->settings.network.proxy_noproxy, &d, "proxy_noproxy", "localhost,127.0.0.1,::1");
-
-    // settings/overlay/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/overlay");
-    CFG_INT(config->settings.overlay.gen_alpha, &d, "gen_alpha", 255);
-    CFG_INT(config->settings.overlay.gen_anchor, &d, "gen_anchor", 4);
-    CFG_INT(config->settings.overlay.gen_scale, &d, "gen_scale", 0);
-    CFG_INT(config->settings.overlay.bat_alpha, &d, "bat_alpha", 255);
-    CFG_INT(config->settings.overlay.bat_anchor, &d, "bat_anchor", 0);
-    CFG_INT(config->settings.overlay.bat_scale, &d, "bat_scale", 0);
-    CFG_INT(config->settings.overlay.vol_alpha, &d, "vol_alpha", 255);
-    CFG_INT(config->settings.overlay.vol_anchor, &d, "vol_anchor", 2);
-    CFG_INT(config->settings.overlay.vol_scale, &d, "vol_scale", 0);
-    CFG_INT(config->settings.overlay.bri_alpha, &d, "bri_alpha", 255);
-    CFG_INT(config->settings.overlay.bri_anchor, &d, "bri_anchor", 2);
-    CFG_INT(config->settings.overlay.bri_scale, &d, "bri_scale", 0);
-
-    // settings/power/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/power");
-    CFG_INT(config->settings.power.low_battery, &d, "low_battery", 0);
-    CFG_INT(config->settings.power.shutdown, &d, "shutdown", 0);
-    CFG_INT(config->settings.power.idle.display, &d, "idle_display", 0);
-    CFG_INT(config->settings.power.idle.sleep, &d, "idle_sleep", 0);
-    CFG_INT(config->settings.power.idle.mute, &d, "idle_mute", 1);
-    CFG_INT(config->settings.power.saver_type, &d, "saver_type", 0);
-    CFG_INT(config->settings.power.saver_speed, &d, "saver_speed", 0);
-    CFG_STR(config->settings.power.gov.idle, &d, "gov_idle", "powersave");
-
-    // SETTINGS.power.gov.dflt lives in the device config, not user config
-    cfg_dir_scan(&d, CONF_DEVICE_PATH "cpu");
-    CFG_STR(config->settings.power.gov.dflt, &d, "default", "ondemand");
-
-    // settings/rgb/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/rgb");
-    CFG_INT(config->settings.rgb.mode, &d, "mode", 0);
-    CFG_INT(config->settings.rgb.bright, &d, "bright", 0);
-    CFG_INT(config->settings.rgb.breath_speed, &d, "breath_speed", 0);
-    CFG_INT(config->settings.rgb.colour_l, &d, "colour_l", 0);
-    CFG_INT(config->settings.rgb.colour_r, &d, "colour_r", 0);
-    CFG_INT(config->settings.rgb.colour_m, &d, "colour_m", 0);
-    CFG_INT(config->settings.rgb.colour_f1, &d, "colour_f1", 0);
-    CFG_INT(config->settings.rgb.colour_f2, &d, "colour_f2", 0);
-    CFG_INT(config->settings.rgb.combo, &d, "combo", 0);
-    CFG_INT(config->settings.rgb.backend, &d, "backend", 0);
-
-    // settings/font/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/font");
-    CFG_INT(config->settings.font.list_size, &d, "list_size", 0);
-    CFG_INT(config->settings.font.header_size, &d, "header_size", 0);
-    CFG_INT(config->settings.font.footer_size, &d, "footer_size", 0);
-    CFG_INT(config->settings.font.panel_size, &d, "panel_size", 0);
-    CFG_STR(config->settings.font.name, &d, "name", "");
-
-    // settings/theme/ (theme option overrides - distinct from theme/filter/)
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/theme");
-    CFG_INT(config->settings.themeopt.header_height, &d, "header_height", -1);
-    CFG_INT(config->settings.themeopt.footer_height, &d, "footer_height", -1);
-    CFG_INT(config->settings.themeopt.content_item_count, &d, "content_item_count", 0);
-    CFG_INT(config->settings.themeopt.glyph_size_list, &d, "glyph_size_list", -2);
-    CFG_INT(config->settings.themeopt.glyph_size_footer, &d, "glyph_size_footer", -2);
-    CFG_INT(config->settings.themeopt.glyph_size_header, &d, "glyph_size_header", -2);
-    CFG_INT(config->settings.themeopt.glyph_size_grid, &d, "glyph_size_grid", -2);
-    CFG_INT(config->settings.themeopt.label_width, &d, "label_width", 0);
-
-    // settings/remap/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "settings/remap");
-    CFG_INT(config->settings.remap.layout, &d, "layout", 0);
-
-    // sort/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "sort");
-    CFG_INT(config->sort.dflt, &d, "default", 0);
-    CFG_INT(config->sort.collection, &d, "collection", 0);
-    CFG_INT(config->sort.history, &d, "history", 0);
-
-    // visual/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "visual");
-    CFG_INT(config->visual.battery, &d, "battery", 0);
-    CFG_INT(config->visual.network, &d, "network", 0);
-    CFG_INT(config->visual.header_title, &d, "headertitle", 0);
-    CFG_INT(config->visual.dialogue_transition, &d, "dialoguetransition", 1);
-    CFG_INT(config->visual.bluetooth, &d, "bluetooth", 0);
-    CFG_INT(config->visual.clock, &d, "clock", 1);
-    CFG_INT(config->visual.overlay_image, &d, "overlayimage", 1);
-    CFG_INT(config->visual.overlay_transparency, &d, "overlaytransparency", 85);
-    CFG_INT(config->visual.grid_mode_content, &d, "gridmodecontent", 0);
-    CFG_INT(config->visual.box_art, &d, "boxart", 0);
-    CFG_INT(config->visual.box_art_align, &d, "boxartalign", 0);
-    CFG_INT(config->visual.box_art_hide, &d, "boxarthide", 0);
-    CFG_INT(config->visual.box_art_scale, &d, "boxartscale", 100);
-    CFG_INT(config->visual.box_art_padding, &d, "boxartpadding", 15);
-    CFG_INT(config->visual.box_art_placeholder, &d, "boxartplaceholder", 0);
-    CFG_INT(config->visual.box_art_transition, &d, "boxarttransition", 1);
-    CFG_INT(config->visual.video_preview, &d, "videopreview", 0);
-    CFG_INT(config->visual.content_width, &d, "contentwidth", 0);
-    CFG_INT(config->visual.name, &d, "name", 0);
-    CFG_INT(config->visual.dash, &d, "dash", 0);
-    CFG_INT(config->visual.launch_swap, &d, "launch_swap", 0);
-    CFG_INT(config->visual.hidden, &d, "hidden", 0);
-    CFG_INT(config->visual.shuffle, &d, "shuffle", 1);
-    CFG_INT(config->visual.friendly_folder, &d, "friendlyfolder", 1);
-    CFG_INT(config->visual.the_title_format, &d, "thetitleformat", 0);
-    CFG_INT(config->visual.title_include_root_drive, &d, "titleincluderootdrive", 0);
-    CFG_INT(config->visual.folder_item_count, &d, "folderitemcount", 0);
-    CFG_INT(config->visual.display_empty_folder, &d, "folderempty", 0);
-    CFG_INT(config->visual.menu_counter_folder, &d, "counterfolder", 1);
-    CFG_INT(config->visual.menu_counter_file, &d, "counterfile", 1);
-    CFG_INT(config->visual.video_wallpaper, &d, "video_wallpaper", 1);
-    CFG_INT(config->visual.background_scale, &d, "background_scale", 2);
-    CFG_INT(config->visual.launchsplash, &d, "launchsplash", 0);
-    CFG_INT(config->visual.blackfade, &d, "blackfade", 1);
-    CFG_INT(config->visual.content_collect, &d, "contentcollect", 0);
-    CFG_INT(config->visual.content_history, &d, "contenthistory", 0);
-    CFG_INT(config->visual.mixed_content, &d, "mixedcontent", 0);
-    CFG_INT(config->visual.forward_history, &d, "forwardhistory", 1);
-    CFG_INT(config->visual.name_scroll, &d, "namescroll", 1);
-    CFG_INT(config->visual.label_scroll_speed, &d, "labelscrollspeed", 2);
-    CFG_INT(config->visual.list_glyph, &d, "listglyph", 1);
-    CFG_INT(config->visual.selection_animation, &d, "selectionanimation", 2);
-    CFG_INT(config->visual.selection_style, &d, "selectionstyle", 4);
-    CFG_INT(config->visual.render_shadows, &d, "shadow", 1);
-
-    // bluetooth/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "bluetooth");
-    CFG_INT(config->bluetooth.auto_connect, &d, "autoconnect", 0);
-
-    // web/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "web");
-    CFG_INT(config->web.sshd, &d, "sshd", 0);
-    CFG_INT(config->web.sftp_go, &d, "sftpgo", 0);
-    CFG_INT(config->web.ttyd, &d, "ttyd", 0);
-    CFG_INT(config->web.syncthing, &d, "syncthing", 0);
-    CFG_INT(config->web.tailscaled, &d, "tailscaled", 0);
-
-    // danger/
-    cfg_dir_scan(&d, CONF_CONFIG_PATH "danger");
-    CFG_INT(config->danger.vm_swap, &d, "vmswap", 8);
-    CFG_INT(config->danger.dirty_ratio, &d, "dirty_ratio", 16);
-    CFG_INT(config->danger.dirty_back, &d, "dirty_back_ratio", 4);
-    CFG_INT(config->danger.cache, &d, "cache_pressure", 64);
-    CFG_INT(config->danger.merge, &d, "nomerges", 0);
-    CFG_INT(config->danger.requests, &d, "nr_requests", 128);
-    CFG_INT(config->danger.read_ahead, &d, "read_ahead", 4096);
-    CFG_INT(config->danger.page_cluster, &d, "page_cluster", 3);
-    CFG_INT(config->danger.time_slice, &d, "time_slice", 10);
-    CFG_INT(config->danger.io_stats, &d, "iostats", 0);
-    CFG_INT(config->danger.idle_flush, &d, "idle_flush", 0);
-    CFG_INT(config->danger.child_first, &d, "child_first", 0);
-    CFG_INT(config->danger.tune_scale, &d, "tune_scale", 1);
-    CFG_STR(config->danger.card_mode, &d, "cardmode", "noop");
-    CFG_STR(config->danger.state, &d, "state", "mem");
 }
-
-#undef CFG_STR
-#undef CFG_INT
 
 void cfg_dir_scan(cfg_dir_t *d, const char *dir_path) {
     d->count = 0;
