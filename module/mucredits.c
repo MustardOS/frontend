@@ -82,13 +82,13 @@ static const char *wizards[] = {
 };
 
 static const char *heroes[] = {
-    "amildinconvenience.", "amos_06286", "asiaclonk", "bazkart", "benjaminbercy", "bigbossman0816", "bigolpeewee",
-    "brohsnbluffs", "btreecat", "chiefwally_73445", "cjiiio", ".dririan", "exe0237", "foamygames",
-    "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "izzythefool", "jimmycrackedcorn_4711", "jmtn070",
-    "kaeltis", "kentonftw", "kernelkritic", "lmarcomiranda", "losermatic", "luckyphil", "luzfcb",
-    "mach5682", "meanagar", "meowman_", "milkworlds", "misfitsorbet", "mrwhistles", "msx6011",
-    "mxdamp", "nahck", "ownedmumbles", "paletochen", "pr0j3kt2501", "qpla", "rabite890",
-    "robbiet480", "romus85", "rosemelody254", "roundpi", "scy0n", "snesfan1", "sol6_vi",
+    "amildinconvenience.", "amos_06286", "asiaclonk", "bazkart", "benjaminbercy", "bigbossman0816",
+    "bigolpeewee", "brohsnbluffs", "btreecat", "chiefwally_73445", "cjiiio", ".dririan", "exe0237",
+    "foamygames", "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "izzythefool",
+    "jimmycrackedcorn_4711", "jmtn070", "kaeltis", "kentonftw", "kernelkritic", "lmarcomiranda",
+    "losermatic", "luckyphil", "luzfcb", "mach5682", "meanagar", "meowman_", "milkworlds", "misfitsorbet",
+    "mrwhistles", "msx6011", "mxdamp", "nahck", "ownedmumbles", "paletochen", "pr0j3kt2501", "qpla",
+    "rabite890", "robbiet480", "romus85", "rosemelody254", "roundpi", "scy0n", "snesfan1", "sol6_vi",
     "spivvmeister", "superzu", "suribii", "techagent", "teggydave", "timecarp", "turner74.",
     "verctexius", "warlordwossman", "x_tremis", "xraygoggles", "zazouboy", ".zerohalo"
 };
@@ -99,12 +99,12 @@ static const char *knights[] = {
     "galloc", "hai6266", "jdanteq_18123", "johnunsc", "julas8799",
     "jupyter.", "kiko_lake", "_maxwellsdemon", "mrcee1503", "notflacko",
     "nuke_67641", "penpen2crayon", "rbndr_", "retrogamecorps", "sanelessone",
-    "skyarcher", "smittywerbenjaegermanjensen9250", "stin87", "surge_84306", "wizardfights",
+    "skyarcher", "stin87", "surge_84306", "thewalruzz", "wizardfights",
     "_wizdude", "zauberpony"
 };
 
 static const char *contributors[] = {
-    "0xada.3", "antikk", "artur_ditu", "bitter_bizarro", "corey", "imcokeman",
+    "0xada.3", "antikk", "artur_ditu", "bgelmini", "bitter_bizarro", "corey", "imcokeman",
     "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xikteny", "xonglebongle"
 };
 // clang-format on
