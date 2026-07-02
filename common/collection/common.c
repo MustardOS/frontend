@@ -103,8 +103,8 @@ int bucket_item_compare(const void *a, const void *b) {
 
     if (item_a->sort_bucket != item_b->sort_bucket) return item_b->sort_bucket - item_a->sort_bucket;
 
-    // Use strverscmp for natural sorting on sort_name
-    return strverscmp(str_tolower(item_a->sort_name), str_tolower(item_b->sort_name));
+    // Case-insensitive natural sort on sort_name, allocation-free
+    return str_compare(&item_a->sort_name, &item_b->sort_name);
 }
 
 int content_item_compare(const void *a, const void *b) {
@@ -115,8 +115,8 @@ int content_item_compare(const void *a, const void *b) {
     if (item_a->content_type < item_b->content_type) return -1;
     if (item_a->content_type > item_b->content_type) return 1;
 
-    // Use strverscmp for natural sorting on sort_name
-    return strverscmp(str_tolower(item_a->sort_name), str_tolower(item_b->sort_name));
+    // Case-insensitive natural sort on sort_name, allocation-free
+    return str_compare(&item_a->sort_name, &item_b->sort_name);
 }
 
 int time_compare_for_history(const void *a, const void *b) {

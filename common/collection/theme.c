@@ -37,8 +37,8 @@ int theme_item_compare(const void *a, const void *b) {
     const theme_item *item_a = (theme_item *) a;
     const theme_item *item_b = (theme_item *) b;
 
-    // Use strverscmp for natural sorting on sort_name
-    return strverscmp(str_tolower(item_a->name), str_tolower(item_b->name));
+    // Case-insensitive natural sort on name, allocation-free
+    return str_compare(&item_a->name, &item_b->name);
 }
 
 int theme_item_exists(const theme_item *theme_items, const size_t count, const char *name) {
