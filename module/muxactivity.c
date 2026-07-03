@@ -997,9 +997,10 @@ static void refresh_activity_labels(void) {
         last_sort_mode = activity_display_mode;
     }
 
-    for (size_t i = 0; i < activity_count; ++i) {
-        ui_count_static++;
+    ui_count_static = (int) activity_count;
 
+    const size_t limit = theme.mux.item.count;
+    for (size_t i = 0; i < activity_count && i < limit; ++i) {
         char label_buffer[MAX_BUFFER_SIZE];
         format_activity_row(&activity_items[i], activity_display_mode, label_buffer);
 
@@ -1594,9 +1595,65 @@ static void generate_activity_items(void) {
     turbo_time(0, 1);
 }
 
+static void update_activity_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
+    char label_buffer[MAX_BUFFER_SIZE];
+    format_activity_row(&activity_items[index], activity_display_mode, label_buffer);
+    lv_label_set_text(ui_lbl_item, label_buffer);
+
+    char glyph_image_embed[MAX_BUFFER_SIZE];
+    if (config.visual.list_glyph && theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {
+        get_glyph_path(mux_module, "rom", glyph_image_embed, MAX_BUFFER_SIZE);
+        set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
+    }
+
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, label_buffer);
+    apply_text_long_dot(&theme, ui_lbl_item);
+}
+
+static void update_activity_list_items(const int start_index) {
+    const int max = (int) activity_count - start_index;
+    if (max <= 0) return;
+
+    int count = theme.mux.item.count;
+    if (count > max) count = max;
+
+    for (int index = 0; index < count; ++index) {
+        const lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_content, index);
+        update_activity_list_item(
+            lv_obj_get_child(panel_item, 0), lv_obj_get_child(panel_item, 1), start_index + index
+        );
+    }
+}
+
+static void focus_activity_group(const int index) {
+    if (index < 0 || index >= theme.mux.item.count) return;
+    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
+
+    if (!panel) return;
+
+    lv_group_focus_obj(panel);
+    lv_group_focus_obj(lv_obj_get_child(panel, 0));
+    lv_group_focus_obj(lv_obj_get_child(panel, 1));
+}
+
+static int focus_activity_list_index(void) {
+    const int before = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
+    const int after = (theme.mux.item.count - 1) / 2;
+
+    if (current_item_index < before) return current_item_index;
+    if (current_item_index >= (int) activity_count - after)
+        return theme.mux.item.count - ((int) activity_count - current_item_index);
+
+    return before;
+}
+
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
     first_open ? (first_open = 0) : play_sound(snd_navigate);
+
+    const int overview = !in_detail_view && !in_global_view;
+    const int visible_count = theme.mux.item.count;
+    const int multi_list = overview && (int) activity_count > visible_count;
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
@@ -1611,15 +1668,25 @@ static void list_nav_move(const int steps, const int direction) {
             current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
         }
 
-        nav_move(ui_group, direction);
-        nav_move(ui_group_glyph, direction);
-        nav_move(ui_group_panel, direction);
-        nav_move(ui_group_value, direction);
+        if (multi_list) {
+            update_windowed_list(
+                ui_pnl_content, direction, current_item_index, (int) activity_count, visible_count,
+                update_activity_list_item, update_activity_list_items
+            );
+            focus_activity_group(focus_activity_list_index());
+        } else {
+            nav_move(ui_group, direction);
+            nav_move(ui_group_glyph, direction);
+            nav_move(ui_group_panel, direction);
+            nav_move(ui_group_value, direction);
+        }
     }
 
-    update_scroll_position(
-        theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
-    );
+    if (!multi_list) {
+        update_scroll_position(
+            theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
+        );
+    }
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
 
     update_label_scroll();

@@ -182,19 +182,6 @@ static void gen_item(const int file_count, char **file_names) {
     gen_item_from_files(INFO_HIS_PATH, file_count, file_names);
 
     sort_items_time(items, item_count);
-
-    char *glyph_icons[item_count];
-    for (size_t i = 0; i < item_count; i++) {
-        glyph_icons[i] = items[i].content_type == ITEM ? get_glyph_name(i) : "unknown";
-    }
-
-    if (grid_mode_enabled) return;
-
-    for (size_t i = 0; i < item_count; i++) {
-        if (items[i].content_type == ITEM) {
-            gen_label(mux_module, glyph_icons[i], items[i].display_name);
-        }
-    }
 }
 
 static void create_history_items(void) {
@@ -210,6 +197,16 @@ static void create_history_items(void) {
 
     if (file_count > 0) {
         gen_item(file_count, file_names);
+
+        if (!grid_mode_enabled) {
+            const size_t limit = theme.mux.item.count;
+            for (size_t i = 0; i < item_count && i < limit; i++) {
+                if (items[i].content_type == ITEM) {
+                    gen_label(mux_module, get_glyph_name(i), items[i].display_name);
+                }
+            }
+        }
+
         lv_obj_update_layout(ui_pnl_content);
     }
 
@@ -220,34 +217,140 @@ static void create_history_items(void) {
     turbo_time(0, 1);
 }
 
+static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
+    lv_label_set_text(ui_lbl_item, items[index].display_name);
+
+    char glyph_image_embed[MAX_BUFFER_SIZE];
+    if (config.visual.list_glyph && theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {
+        get_glyph_path(
+            mux_module, items[index].content_type == ITEM ? get_glyph_name(index) : "unknown", glyph_image_embed,
+            MAX_BUFFER_SIZE
+        );
+        set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
+    }
+
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, items[index].display_name);
+    apply_text_long_dot(&theme, ui_lbl_item);
+}
+
+static void update_list_items(const int start_index) {
+    const int max = (int) item_count - start_index;
+    if (max <= 0) return;
+
+    int count = theme.mux.item.count;
+    if (count > max) count = max;
+
+    for (int index = 0; index < count; ++index) {
+        const lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_content, index);
+        update_list_item(lv_obj_get_child(panel_item, 0), lv_obj_get_child(panel_item, 1), start_index + index);
+    }
+}
+
+static void focus_group(const int index) {
+    if (index < 0 || index >= theme.mux.item.count) return;
+    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
+
+    if (!panel) return;
+
+    lv_group_focus_obj(panel);
+    lv_group_focus_obj(lv_obj_get_child(panel, 0));
+    lv_group_focus_obj(lv_obj_get_child(panel, 1));
+}
+
+static int focus_list_index(void) {
+    const int before = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
+    const int after = (theme.mux.item.count - 1) / 2;
+
+    if (current_item_index < before) return current_item_index;
+    if (current_item_index >= (int) item_count - after)
+        return theme.mux.item.count - ((int) item_count - current_item_index);
+
+    return before;
+}
+
+static void move_index(const int direction) {
+    if (direction < 0) {
+        current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+    } else {
+        current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+    }
+}
+
+static void focus_initial(void) {
+    const int count = theme.mux.item.count;
+
+    if ((int) item_count <= count) {
+        focus_group(current_item_index);
+    } else {
+        const int before = (count - count % 2) / 2;
+        const int after = (count - 1) / 2;
+
+        int start_index;
+        if (current_item_index < before) {
+            start_index = 0;
+        } else if (current_item_index >= (int) item_count - after) {
+            start_index = (int) item_count - count;
+        } else {
+            start_index = current_item_index - before;
+        }
+
+        update_list_items(start_index);
+
+        int new_item_index = current_item_index - start_index;
+        if (new_item_index < 0) new_item_index = 0;
+        if (new_item_index >= count) new_item_index = count - 1;
+
+        focus_group(new_item_index);
+    }
+
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+    lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].display_name);
+
+    if (config.visual.box_art < 4) {
+        image_refresh("box");
+        if (config.visual.video_preview > 0) video_refresh();
+    }
+}
+
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
     first_open ? (first_open = 0) : play_sound(snd_navigate);
 
-    for (int step = 0; step < steps; ++step) {
-        if (!grid_mode_enabled) apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
+    const int visible_count = theme.mux.item.count;
+    const int static_list = !grid_mode_enabled && (int) item_count <= visible_count;
+    const int multi_list = !grid_mode_enabled && (int) item_count > visible_count;
 
-        if (direction < 0) {
-            current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
-        } else {
-            current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+    if (!grid_mode_enabled) apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
+
+    if (static_list) {
+        for (int step = 0; step < steps; ++step) {
+            move_index(direction);
         }
+        focus_group(current_item_index);
+    } else {
+        for (int step = 0; step < steps; ++step) {
+            move_index(direction);
 
-        if (!is_carousel_grid_mode()) {
-            nav_move(ui_group, direction);
-            nav_move(ui_group_glyph, direction);
-            nav_move(ui_group_panel, direction);
+            if (!is_carousel_grid_mode()) {
+                nav_move(ui_group, direction);
+                nav_move(ui_group_glyph, direction);
+                nav_move(ui_group_panel, direction);
+            }
+
+            if (multi_list) {
+                update_windowed_list(
+                    ui_pnl_content, direction, current_item_index, (int) item_count, visible_count, update_list_item,
+                    update_list_items
+                );
+            } else if (grid_mode_enabled) {
+                update_grid(direction);
+            }
+
+            if (multi_list) focus_group(focus_list_index());
         }
-
-        if (grid_mode_enabled) update_grid(direction);
     }
 
-    if (!grid_mode_enabled) {
-        update_scroll_position(
-            theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
-        );
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
-    }
+    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
     lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].display_name);
 
     video_preview_cancel();
@@ -665,7 +768,12 @@ int muxhistory_main(const int his_index) {
     if (ui_count_static > 0) {
         nav_vis = 1;
         if (his_index > -1 && his_index <= ui_count_static && current_item_index < ui_count_static) {
-            list_nav_move(his_index, +1);
+            if (grid_mode_enabled) {
+                list_nav_move(his_index, +1);
+            } else {
+                current_item_index = his_index;
+                focus_initial();
+            }
         } else {
             if (!grid_mode_enabled)
                 set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
