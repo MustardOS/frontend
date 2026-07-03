@@ -180,16 +180,7 @@ static void bsod_generate_text(char *out) {
     }
 
     if (len > 0 && (size_t) len < BSOD_TEXT_BUF_SIZE) {
-        len += snprintf(out + len, BSOD_TEXT_BUF_SIZE - (size_t) len, " It may be possible to continue normally.");
-    }
-
-    if (len > 0 && (size_t) len < BSOD_TEXT_BUF_SIZE) {
-        len += snprintf(
-            out + len, BSOD_TEXT_BUF_SIZE - (size_t) len,
-            "\n\n"
-            "* Press any button to attempt to continue\n"
-            "* Press the RESET button to restart, you may lose unsaved progress"
-        );
+        len += snprintf(out + len, BSOD_TEXT_BUF_SIZE - (size_t) len, "\n\n* Press any button to attempt to continue");
     }
 
     char *msg = bsod_pick_message_line();
@@ -262,7 +253,7 @@ static void bsod_build_title(SDL_Renderer *renderer) {
 
 static void bsod_build_footer(SDL_Renderer *renderer) {
     const SDL_Color white = {255, 255, 255, 255};
-    SDL_Surface *surf = TTF_RenderUTF8_Blended(mod.font, "Press any key to continue", white);
+    SDL_Surface *surf = TTF_RenderUTF8_Blended(mod.font, "Press any button to continue", white);
     if (surf) {
         mod.tex_footer = SDL_CreateTextureFromSurface(renderer, surf);
         mod.footer_w = surf->w;
