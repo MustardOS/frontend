@@ -1295,6 +1295,7 @@ static const lang_field lang_fields[] = {
     {"muxpower", LANG_OFF(muxpower.saver.type.video), lang_specific, "Video Wallpaper"},
     {"muxpower", LANG_OFF(muxpower.saver.type.slideshow), lang_specific, "Image Slideshow"},
     {"muxpower", LANG_OFF(muxpower.saver.type.boxart), lang_specific, "Flying Box Art"},
+    {"muxpower", LANG_OFF(muxpower.saver.type.bsod), lang_specific, "Blue Screen"},
     {"muxpower", LANG_OFF(muxpower.saver.speed.title), lang_specific, "Screensaver Speed"},
     {"muxpower", LANG_OFF(muxpower.saver.speed.crawl), lang_specific, "Crawl"},
     {"muxpower", LANG_OFF(muxpower.saver.speed.cruise), lang_specific, "Cruise"},

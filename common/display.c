@@ -30,6 +30,7 @@
 #include "saver/datetime.h"
 #include "saver/slideshow.h"
 #include "saver/boxart.h"
+#include "saver/bsod.h"
 
 typedef struct {
     // Just the default base stuff we need
@@ -204,6 +205,7 @@ enum {
     saver_type_video = 12,
     saver_type_slideshow = 13,
     saver_type_boxart = 14,
+    saver_type_bsod = 15,
 };
 
 static char video_saver_path[MAX_BUFFER_SIZE];
@@ -215,6 +217,7 @@ static int saver_speed_override = 0;
 static int active_saver = -1;
 
 static int saver_active(void) {
+    if (active_saver == saver_type_bsod) return bsod_active();
     if (active_saver == saver_type_boxart) return boxart_active();
     if (active_saver == saver_type_slideshow) return slideshow_active();
     if (active_saver == saver_type_video) return saver_active_base(&video_saver_base);
@@ -270,6 +273,8 @@ static void saver_update(void) {
         slideshow_update();
     else if (active_saver == saver_type_boxart)
         boxart_update();
+    else if (active_saver == saver_type_bsod)
+        bsod_update();
 }
 
 static void saver_render(SDL_Renderer *r) {
@@ -303,6 +308,8 @@ static void saver_render(SDL_Renderer *r) {
         slideshow_render(r);
     else if (active_saver == saver_type_boxart)
         boxart_render(r);
+    else if (active_saver == saver_type_bsod)
+        bsod_render(r);
 }
 
 static void saver_stop(void) {
@@ -342,6 +349,8 @@ static void saver_stop(void) {
         slideshow_stop();
     else if (active_saver == saver_type_boxart)
         boxart_stop();
+    else if (active_saver == saver_type_bsod)
+        bsod_stop();
 }
 
 int get_saver_speed(const int fallback) {
@@ -377,6 +386,7 @@ static void reload_saver() {
     datetime_shutdown();
     slideshow_shutdown();
     boxart_shutdown();
+    bsod_shutdown();
 
     const int type = config.settings.power.saver_type;
 
@@ -458,6 +468,8 @@ static void reload_saver() {
         slideshow_init(monitor.renderer, slide_dir_ptrs, slide_dir_count, device.screen.width, device.screen.height);
     } else if (type == saver_type_boxart) {
         boxart_init(monitor.renderer, INFO_CAT_PATH, device.screen.width, device.screen.height);
+    } else if (type == saver_type_bsod) {
+        bsod_init(monitor.renderer, device.screen.width, device.screen.height);
     }
 
     active_saver = type;
@@ -659,6 +671,7 @@ void sdl_cleanup(void) {
     datetime_shutdown();
     slideshow_shutdown();
     boxart_shutdown();
+    bsod_shutdown();
 
     if (monitor.shadow_layer) {
         SDL_DestroyTexture(monitor.shadow_layer);
