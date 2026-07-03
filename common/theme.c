@@ -1,5 +1,8 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include "init.h"
 #include "options.h"
 #include "theme.h"
@@ -14,6 +17,17 @@
 
 const char *theme_base;
 char *theme_back_compat[theme_compat];
+
+static int ini_cache_count = 0;
+static int ini_cache_capacity = 0;
+
+typedef struct {
+    char path[MAX_BUFFER_SIZE];
+    time_t mtime;
+    mini_t *scheme;
+} theme_ini_cache_entry;
+
+static theme_ini_cache_entry *ini_cache = NULL;
 
 static void compat_theme_init(void) {
     theme_back_compat[0] = config.system.version;
@@ -994,8 +1008,39 @@ static const theme_field theme_fields[] = {
 };
 // clang-format on
 
+static mini_t *theme_cache_load(const char *path) {
+    struct stat st;
+    const int exists = stat(path, &st) == 0;
+
+    for (int i = 0; i < ini_cache_count; i++) {
+        if (strcmp(ini_cache[i].path, path) != 0) continue;
+
+        if (exists && ini_cache[i].mtime == st.st_mtime) return ini_cache[i].scheme;
+
+        mini_free(ini_cache[i].scheme);
+        ini_cache[i].scheme = mini_try_load(path);
+        ini_cache[i].mtime = exists ? st.st_mtime : 0;
+        return ini_cache[i].scheme;
+    }
+
+    mini_t *scheme = mini_try_load(path);
+    if (!scheme) return NULL;
+
+    if (ini_cache_count == ini_cache_capacity) {
+        ini_cache_capacity = ini_cache_capacity ? ini_cache_capacity * 2 : 16;
+        ini_cache = realloc(ini_cache, ini_cache_capacity * sizeof(theme_ini_cache_entry));
+    }
+
+    theme_ini_cache_entry *e = &ini_cache[ini_cache_count++];
+    snprintf(e->path, sizeof(e->path), "%s", path);
+    e->mtime = exists ? st.st_mtime : 0;
+    e->scheme = scheme;
+
+    return scheme;
+}
+
 void load_theme_from_scheme(const char *scheme, struct theme_config *theme, const struct mux_device *device) {
-    mini_t *muos_theme = mini_try_load(scheme);
+    mini_t *muos_theme = theme_cache_load(scheme);
 
     for (size_t i = 0; i < sizeof(theme_fields) / sizeof(theme_fields[0]); i++) {
         const theme_field *f = &theme_fields[i];
@@ -1035,8 +1080,6 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, cons
         muos_theme, "misc", "CONTENT_WIDTH",
         config.visual.content_width ? device->screen.width : theme->misc.content.width
     );
-
-    mini_free(muos_theme);
 }
 
 int get_alt_scheme_path(char *alt_scheme_path, const size_t alt_scheme_path_size) {
