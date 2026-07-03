@@ -1793,8 +1793,6 @@ static void handle_b(void) {
         return;
     }
 
-    if (in_detail_view) skip_confirm = 0;
-
     if (hold_call && !track_delete) return;
 
     if (msgbox_active) {
@@ -1838,6 +1836,7 @@ static void handle_b(void) {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "activity");
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -1974,7 +1973,6 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 }
 
 int muxactivity_main() {
-    skip_confirm = 0;
     starter_image = 0;
 
     init_module(__func__);

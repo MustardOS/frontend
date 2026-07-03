@@ -213,6 +213,7 @@ static void handle_b(void) {
     play_sound(snd_back);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "screenshot");
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -276,7 +277,6 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 }
 
 int muxshot_main(void) {
-    skip_confirm = 0;
     is_fullscreen = 0;
 
     init_module(__func__);

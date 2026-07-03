@@ -63,6 +63,7 @@ struct mux_lang {
         char extract[MAX_BUFFER_SIZE];
         char extracting_archive[MAX_BUFFER_SIZE];
         char filter[MAX_BUFFER_SIZE];
+        char forget[MAX_BUFFER_SIZE];
         char hidden[MAX_BUFFER_SIZE];
         char hold_remove[MAX_BUFFER_SIZE];
         char hold_reset[MAX_BUFFER_SIZE];

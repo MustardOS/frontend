@@ -541,6 +541,7 @@ static void handle_keyboard_ok_press(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txt_entry_collect));
     load_mux("collection");
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -721,6 +722,7 @@ load_end:
         load_mux("collection");
     }
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -795,6 +797,7 @@ static void handle_b(void) {
         }
     }
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -1062,7 +1065,6 @@ static void on_key_event(const struct input_event ev) {
 }
 
 int muxcollect_main(const int add, const char *dir, const int last_index) {
-    skip_confirm = 0;
     exit_status = 0;
     add_mode = add;
     sys_index = last_index;

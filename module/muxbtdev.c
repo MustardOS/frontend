@@ -112,12 +112,11 @@ static void check_focus(void) {
     } else {
         nav_show_a(0, NULL);
         nav_show_lr(0);
-        nav_show_x(1, lang.generic.remove);
+        nav_show_x(1, lang.generic.forget);
     }
 }
 
 static int forget_mode = 0;
-static int skip_confirm = 0;
 static mux_dialogue forget_dlg;
 
 static void show_forget_dialog(void) {
@@ -195,14 +194,9 @@ static void status_change(const char *method) {
 
 static void handle_a(void) {
     if (forget_mode) {
-        const mux_remove_opt opt = (mux_remove_opt) forget_dlg.selected;
+        const mux_confirm_opt opt = (mux_confirm_opt) forget_dlg.selected;
         hide_forget_dialog();
-        if (opt == mux_remove_yep) {
-            do_forget();
-        } else if (opt == mux_remove_skip) {
-            skip_confirm = 1;
-            do_forget();
-        }
+        if (opt == mux_confirm_yep) do_forget();
         return;
     }
 
@@ -280,7 +274,7 @@ static void handle_x(void) {
 
     if (msgbox_active || current_item_index != BTDEV_FRGT_IDX || forget_mode) return;
 
-    if (config.settings.advanced.trust_remove || skip_confirm) {
+    if (config.settings.advanced.trust_remove) {
         do_forget();
         return;
     }
@@ -532,7 +526,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.generic.remove, 0},
+                                  {ui_lbl_nav_x, lang.generic.forget, 0},
                                   {NULL, NULL, 0}});
 
 #define BTDEV(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_btdev, UDATA);
@@ -544,7 +538,6 @@ static void init_elements(void) {
 }
 
 int muxbtdev_main(void) {
-    skip_confirm = 0;
     selected_mac[0] = '\0';
 
     FILE *f = fopen(CONF_CONFIG_PATH "bluetooth/selected", "r");
@@ -575,10 +568,9 @@ int muxbtdev_main(void) {
 
     init_osk(ui_pnl_entry_btdev, ui_txt_entry_btdev, 1, 0, OSK_MAX);
 
-    const char *forget_opts[mux_remove_cnt] = {lang.muxbtdev.forget, lang.generic.skip_confirm, lang.generic.cancel};
-    dialogue_init(
-        &forget_dlg, &theme, ui_screen, lang.generic.confirm, NULL, forget_opts, mux_remove_cnt, lang.generic.select,
-        lang.generic.back
+    dialogue_init_confirm(
+        &forget_dlg, &theme, ui_screen, lang.generic.confirm, lang.muxbtdev.forget_confirm, lang.muxbtdev.forget,
+        lang.generic.cancel, lang.generic.select, lang.generic.back
     );
     init_timer(ui_gen_refresh_task, NULL);
 

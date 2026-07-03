@@ -269,6 +269,7 @@ static void handle_a(void) {
 
         load_mux("archive");
 
+        skip_confirm = 0;
         mux_input_stop();
     }
 }
@@ -300,6 +301,7 @@ static void handle_b(void) {
 
     play_sound(snd_back);
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -347,7 +349,6 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 }
 
 int muxarchive_main(void) {
-    skip_confirm = 0;
     init_module(__func__);
     init_theme(1, 1);
 

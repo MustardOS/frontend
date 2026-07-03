@@ -478,6 +478,7 @@ static void process_load(const int from_start) {
 load_end:
     load_mux("history");
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -624,6 +625,7 @@ static void handle_b(void) {
     play_sound(snd_back);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
 
+    skip_confirm = 0;
     mux_input_stop();
 }
 
@@ -727,7 +729,6 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 }
 
 int muxhistory_main(const int his_index) {
-    skip_confirm = 0;
     exit_status = 0;
     file_count = 0;
     starter_image = 0;
