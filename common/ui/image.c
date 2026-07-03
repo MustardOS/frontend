@@ -551,33 +551,55 @@ static void scale_and_set_raster(
         return;
     }
 
+    int *sx0 = lv_mem_alloc(sizeof(int) * (size_t) tw);
+    int *sx1 = lv_mem_alloc(sizeof(int) * (size_t) tw);
+    int *sy0 = lv_mem_alloc(sizeof(int) * (size_t) th);
+    int *sy1 = lv_mem_alloc(sizeof(int) * (size_t) th);
+
+    if (!sx0 || !sx1 || !sy0 || !sy1) {
+        lv_mem_free(sx0);
+        lv_mem_free(sx1);
+        lv_mem_free(sy0);
+        lv_mem_free(sy1);
+        if (src_allocated) lv_mem_free(src_buf);
+        lv_img_buf_free(scaled_dsc);
+        lv_img_decoder_close(&decode_dsc);
+        return;
+    }
+
+    for (int dx = 0; dx < tw; dx++) {
+        sx0[dx] = dx * sw / tw;
+        sx1[dx] = (dx + 1) * sw / tw;
+        if (sx1[dx] <= sx0[dx]) sx1[dx] = sx0[dx] + 1;
+    }
+    for (int dy = 0; dy < th; dy++) {
+        sy0[dy] = dy * sh / th;
+        sy1[dy] = (dy + 1) * sh / th;
+        if (sy1[dy] <= sy0[dy]) sy1[dy] = sy0[dy] + 1;
+    }
+
     uint8_t *dst = (uint8_t *) scaled_dsc->data;
     for (int dy = 0; dy < th; dy++) {
+        uint8_t *out_row = dst + (size_t) dy * tw * LV_IMG_PX_SIZE_ALPHA_BYTE;
+
         for (int dx = 0; dx < tw; dx++) {
-            const int sx0 = dx * sw / tw;
-            const int sy0 = dy * sh / th;
+            uint32_t acc0 = 0, acc1 = 0, acc2 = 0, acc3 = 0;
 
-            int sx1 = (dx + 1) * sw / tw;
-            int sy1 = (dy + 1) * sh / th;
+            for (int sy = sy0[dy]; sy < sy1[dy]; sy++) {
+                const uint8_t *row = src_buf + (size_t) sy * sw * LV_IMG_PX_SIZE_ALPHA_BYTE;
 
-            if (sx1 <= sx0) sx1 = sx0 + 1;
-            if (sy1 <= sy0) sy1 = sy0 + 1;
-
-            uint32_t acc0 = 0, acc1 = 0, acc2 = 0, acc3 = 0, n = 0;
-            for (int sy = sy0; sy < sy1; sy++) {
-                for (int sx = sx0; sx < sx1; sx++) {
-                    const uint8_t *px = src_buf + ((size_t) sy * sw + sx) * LV_IMG_PX_SIZE_ALPHA_BYTE;
+                for (int sx = sx0[dx]; sx < sx1[dx]; sx++) {
+                    const uint8_t *px = row + (size_t) sx * LV_IMG_PX_SIZE_ALPHA_BYTE;
 
                     acc0 += px[0];
                     acc1 += px[1];
                     acc2 += px[2];
                     acc3 += px[3];
-
-                    n++;
                 }
             }
 
-            uint8_t *out = dst + ((size_t) dy * tw + dx) * LV_IMG_PX_SIZE_ALPHA_BYTE;
+            const uint32_t n = (uint32_t) (sx1[dx] - sx0[dx]) * (uint32_t) (sy1[dy] - sy0[dy]);
+            uint8_t *out = out_row + (size_t) dx * LV_IMG_PX_SIZE_ALPHA_BYTE;
 
             out[0] = (uint8_t) (acc0 / n);
             out[1] = (uint8_t) (acc1 / n);
@@ -585,6 +607,11 @@ static void scale_and_set_raster(
             out[3] = (uint8_t) (acc3 / n);
         }
     }
+
+    lv_mem_free(sx0);
+    lv_mem_free(sx1);
+    lv_mem_free(sy0);
+    lv_mem_free(sy1);
 
     if (src_allocated) lv_mem_free(src_buf);
     lv_img_decoder_close(&decode_dsc);
