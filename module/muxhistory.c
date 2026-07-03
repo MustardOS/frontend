@@ -392,6 +392,7 @@ static void do_remove(void) {
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
         play_sound(snd_muos);
         remove(history_file);
+        mark_history_dirty();
         load_mux("history");
         mux_input_stop();
     } else {

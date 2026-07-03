@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,12 +12,6 @@
 #include "input.h"
 #include "../module/muxshare.h"
 
-char **history_items = NULL;
-int history_item_count = 0;
-
-char **collection_items = NULL;
-int collection_item_count = 0;
-
 typedef struct {
     const char **slots;
     int cap;
@@ -25,10 +20,19 @@ typedef struct {
 static path_set_t collection_set;
 static path_set_t history_set;
 
+char **collection_items = NULL;
+int collection_item_count = 0;
+
+char **history_items = NULL;
+int history_item_count = 0;
+
+static int collection_dirty = 1;
+static int history_dirty = 1;
+
 static uint32_t path_hash(const char *s) {
     uint32_t h = 2166136261U;
     for (; *s; s++) {
-        h ^= (uint8_t) *s;
+        h ^= (uint8_t) tolower((unsigned char) *s);
         h *= 16777619U;
     }
 
@@ -65,7 +69,7 @@ static int path_set_contains(const path_set_t *s, const char *path) {
 
     int h = (int) (path_hash(path) & (uint32_t) (s->cap - 1));
     while (s->slots[h]) {
-        if (strcmp(s->slots[h], path) == 0) return 1;
+        if (strcasecmp(s->slots[h], path) == 0) return 1;
         h = (h + 1) & (s->cap - 1);
     }
 
@@ -235,18 +239,44 @@ char *get_application_line(char *dir, char *ext, const size_t line) {
     return "";
 }
 
-void populate_history_items(void) {
-    int cap = 0;
+void mark_history_dirty(void) {
+    history_dirty = 1;
+}
 
+void mark_collection_dirty(void) {
+    collection_dirty = 1;
+}
+
+void populate_history_items(void) {
+    if (!history_dirty) return;
+
+    static int cap = 0;
+
+    free_item_list(&history_items, &history_item_count);
     populate_items(INFO_HIS_PATH, &history_items, &history_item_count, &cap);
     path_set_build(&history_set, history_items, history_item_count);
+
+    history_dirty = 0;
 }
 
 void populate_collection_items(void) {
-    int cap = 0;
+    if (!collection_dirty) return;
 
+    static int cap = 0;
+
+    free_item_list(&collection_items, &collection_item_count);
     populate_items(INFO_COL_PATH, &collection_items, &collection_item_count, &cap);
     path_set_build(&collection_set, collection_items, collection_item_count);
+
+    collection_dirty = 0;
+}
+
+int history_set_contains(const char *path) {
+    return path_set_contains(&history_set, path);
+}
+
+int collection_set_contains(const char *path) {
+    return path_set_contains(&collection_set, path);
 }
 
 char *get_content_explorer_glyph_name(const char *file_path) {
@@ -434,6 +464,7 @@ int load_content(int add_collection, char *file_path) {
         snprintf(pointer, sizeof(pointer), "%s\n%s\n%s", file_path, system_sub, content_name);
 
         write_text_to_file(new_history, "w", CHAR, pointer);
+        mark_history_dirty();
 
         write_text_to_file(LAST_PLAY_FILE, "w", CHAR, content_loader_file);
         write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
@@ -617,10 +648,12 @@ void migrate_history_entry(const char *old_file, const char *new_path, const cha
 
     if (file_exist(new_file)) {
         remove(old_file);
+        mark_history_dirty();
         return;
     }
 
     rename(old_file, new_file);
+    mark_history_dirty();
 }
 
 void check_collection(const char *col_file) {
@@ -672,6 +705,7 @@ void check_collection(const char *col_file) {
         if (existing_hash == new_hash) {
             LOG_INFO(mux_module, "Removing duplicate collection entry: %s", cfg_path);
             remove(cfg_path);
+            mark_collection_dirty();
         }
     }
 

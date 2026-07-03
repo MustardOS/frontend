@@ -27,17 +27,6 @@ void reformat_display_name(char *display_name) {
     }
 }
 
-int is_in_list(char **list, const int count, const char *sys_dir, const char *name) {
-    char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s/%s", sys_dir, name);
-
-    for (int i = 0; i < count; i++) {
-        if (strcasecmp(path, list[i]) == 0) return 1;
-    }
-
-    return 0;
-}
-
 content_item *add_item(
     content_item **content_items, size_t *count, const char *name, const char *sort_name, const char *extra_data,
     const content_type content_type

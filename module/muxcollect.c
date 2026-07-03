@@ -399,6 +399,7 @@ static void do_remove(void) {
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
         play_sound(snd_muos);
         remove(collection_dir);
+        mark_collection_dirty();
     } else {
         char coll_name_no_ext[MAX_BUFFER_SIZE];
         snprintf(coll_name_no_ext, sizeof(coll_name_no_ext), "%s", items[current_item_index].name);
@@ -418,6 +419,7 @@ static void do_remove(void) {
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
         play_sound(snd_muos);
         remove(collection_file);
+        mark_collection_dirty();
     }
 
     load_mux("collection");
@@ -470,6 +472,7 @@ static void add_collection_item(void) {
     );
 
     write_text_to_file(collection_file, "w", CHAR, collection_content);
+    mark_collection_dirty();
 
     if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
 

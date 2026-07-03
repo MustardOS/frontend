@@ -23,20 +23,21 @@ static int union_dir_item_count_len = 0;
 static void navigate_to_dir(const char *new_dir, int restore_index);
 
 static void assign_item_buckets(void) {
+    char path[PATH_MAX];
+
     for (size_t i = 0; i < item_count; i++) {
         content_item *it = &items[i];
         it->sort_bucket = config.sort.dflt;
         it->group_tag[0] = '\0';
 
         int sort_special = -1;
+        snprintf(path, sizeof(path), "%s/%s", sys_dir, it->name);
 
-        if (config.sort.collection != config.sort.dflt
-            && is_in_list(collection_items, collection_item_count, sys_dir, it->name)) {
+        if (config.sort.collection != config.sort.dflt && collection_set_contains(path)) {
             sort_special = config.sort.collection;
         }
 
-        if (config.sort.history != config.sort.dflt
-            && is_in_list(history_items, history_item_count, sys_dir, it->name)) {
+        if (config.sort.history != config.sort.dflt && history_set_contains(path)) {
             if (config.sort.history > sort_special) sort_special = config.sort.history;
         }
 
@@ -280,10 +281,9 @@ static int filter_path_search(const void *key, const void *elem) {
 }
 
 static void remove_match_items(
-    const char *filter_name, const int mode, char ***filter_list, int *filter_count, void (*pop_func)(void),
+    const char *filter_name, const int mode, char ***filter_list, const int *filter_count, void (*pop_func)(void),
     content_item **items, size_t *item_count, const char *sys_dir
 ) {
-    free_item_list(filter_list, filter_count);
     pop_func();
 
     if (mode != 2 || !*filter_list || *filter_count == 0) return;

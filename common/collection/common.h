@@ -18,8 +18,6 @@ typedef struct {
     char group_tag[64];
 } content_item;
 
-int is_in_list(char **list, int count, const char *sys_dir, const char *name);
-
 content_item *add_item(
     content_item **content_items, size_t *count, const char *name, const char *sort_name, const char *extra_data,
     content_type content_type

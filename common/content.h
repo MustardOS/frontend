@@ -39,6 +39,14 @@ void populate_history_items(void);
 
 void populate_collection_items(void);
 
+int history_set_contains(const char *path);
+
+int collection_set_contains(const char *path);
+
+void mark_history_dirty(void);
+
+void mark_collection_dirty(void);
+
 char *get_content_explorer_glyph_name(const char *file_path);
 
 uint32_t fnv_hash_str(const char *str);
