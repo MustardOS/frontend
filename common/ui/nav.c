@@ -14,6 +14,8 @@ char progress_bar_message[MAX_BUFFER_SIZE];
 volatile int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
+static int progress_bar_last_value = -1;
+
 static lv_timer_t *timer_bounce_progress = NULL;
 static int bounce_pos = 0;
 static int bounce_direction = 1;
@@ -467,14 +469,15 @@ int map_drop_down_to_value(const int selected_index, const int *options, const i
 
 void show_progress_bar(char *message) {
     progress_bar_value = 0;
+    progress_bar_last_value = -1; // reset so a fresh session always renders its first tick
     snprintf(progress_bar_message, sizeof(progress_bar_message), "%s", message);
     timer_update_progress = lv_timer_create(update_progress_bar, TIMER_REFRESH, NULL);
 }
 
 void update_progress_bar(lv_timer_t *timer) {
     (void) timer;
-    static int last_value = -1;
-    if (last_value == progress_bar_value) return;
+    if (progress_bar_last_value == progress_bar_value) return;
+    progress_bar_last_value = progress_bar_value;
     lv_bar_set_value(ui_bar_progress, progress_bar_value, LV_ANIM_OFF);
 
     char buf[256];
