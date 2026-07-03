@@ -19,6 +19,10 @@ static int storage_available(void) {
     return is_partition_mounted(device.storage.sdcard.mount);
 }
 
+static int overlay_available(void) {
+    return !hdmi_mode && config.settings.advanced.stage_overlay;
+}
+
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
@@ -55,10 +59,14 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[] = {
-        {"tweakgen", &kiosk.setting.general, NULL},    {"connect", &kiosk.config.connectivity, NULL},
-        {"custom", &kiosk.config.customisation, NULL}, {"visual", &kiosk.setting.visual, NULL},
-        {"overlay", &kiosk.setting.overlay, NULL},     {"language", &kiosk.config.language, NULL},
-        {"power", &kiosk.setting.power, NULL},         {"storage", &kiosk.config.storage, storage_available},
+        {"tweakgen", &kiosk.setting.general, NULL},
+        {"connect", &kiosk.config.connectivity, NULL},
+        {"custom", &kiosk.config.customisation, NULL},
+        {"visual", &kiosk.setting.visual, NULL},
+        {"overlay", &kiosk.setting.overlay, overlay_available},
+        {"language", &kiosk.config.language, NULL},
+        {"power", &kiosk.setting.power, NULL},
+        {"storage", &kiosk.config.storage, storage_available},
         {"backup", &kiosk.config.backup, NULL},
     };
 
