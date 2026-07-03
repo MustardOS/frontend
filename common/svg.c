@@ -176,6 +176,15 @@ static lv_res_t svg_info_cb(lv_img_decoder_t *decoder, const void *src, lv_img_h
     return LV_RES_OK;
 }
 
+static uint32_t recip255[256];
+static int recip255_ready = 0;
+
+static void recip255_init(void) {
+    for (int a = 1; a < 255; a++)
+        recip255[a] = (255u * 65536u + (uint32_t) a / 2u) / (uint32_t) a;
+    recip255_ready = 1;
+}
+
 static lv_res_t svg_open_cb(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *dsc) {
     LV_UNUSED(decoder);
 
@@ -213,6 +222,8 @@ static lv_res_t svg_open_cb(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *dsc
         return LV_RES_INV;
     }
 
+    if (!recip255_ready) recip255_init();
+
     // PlutoVG uses premultiplied BGRA so we'll just reverse it for LVGL
     for (int y = 0; y < h; y++) {
         const uint8_t *row = pixels + y * stride;
@@ -222,9 +233,10 @@ static lv_res_t svg_open_cb(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *dsc
             uint8_t b = row[x * 4], g = row[x * 4 + 1], r = row[x * 4 + 2], a = row[x * 4 + 3];
 
             if (a > 0 && a < 255) {
-                b = (uint8_t) ((b * 255u + a / 2u) / a);
-                g = (uint8_t) ((g * 255u + a / 2u) / a);
-                r = (uint8_t) ((r * 255u + a / 2u) / a);
+                const uint32_t rc = recip255[a];
+                b = (uint8_t) (((uint32_t) b * rc + 32768u) >> 16);
+                g = (uint8_t) (((uint32_t) g * rc + 32768u) >> 16);
+                r = (uint8_t) (((uint32_t) r * rc + 32768u) >> 16);
             }
 
             dst[x * 4] = b;
