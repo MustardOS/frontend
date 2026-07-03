@@ -1185,7 +1185,10 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         }
 
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", theme_base, mux_dim);
-        if (!dir_exist(theme_device_folder)) scale_theme(device);
+        if (!dir_exist(theme_device_folder)) {
+            scale_theme(device);
+            snprintf(mux_dim, sizeof(mux_dim), "%dx%d/", device->mux.width, device->mux.height);
+        }
 
         LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->mux.width, device->mux.height);
     }
