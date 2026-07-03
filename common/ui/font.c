@@ -38,7 +38,7 @@ static int cached_has_theme_font = -1;
 // Must be a power-of-2 and at least 2× FONT_CACHE_MAX so load factor stays ≤ 50%
 #define FONT_CACHE_SLOTS 512
 _Static_assert(FONT_CACHE_SLOTS >= FONT_CACHE_MAX * 2, "FONT_CACHE_SLOTS must be >= 2 * FONT_CACHE_MAX");
-_Static_assert((FONT_CACHE_SLOTS & FONT_CACHE_SLOTS - 1) == 0, "FONT_CACHE_SLOTS must be a power of 2");
+_Static_assert((FONT_CACHE_SLOTS & (FONT_CACHE_SLOTS - 1)) == 0, "FONT_CACHE_SLOTS must be a power of 2");
 
 typedef struct {
     uint32_t hash;
@@ -256,10 +256,10 @@ static uint32_t font_key_hash(const char *path, const int size) {
 
 static lv_font_t *cache_lookup(const char *path, const int size) {
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
+    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        const font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
+        const font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
         if (e->path[0] == '\0') return NULL;
         if (e->hash == h && e->size == size && strcmp(e->path, path) == 0) return e->font;
     }
@@ -280,10 +280,10 @@ static void cache_store(const char *path, const int size, lv_font_t *font, void 
     }
 
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
+    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
+        font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
 
         if (e->path[0] != '\0') continue;
         e->hash = h;

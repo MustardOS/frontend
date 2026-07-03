@@ -123,6 +123,21 @@ static lv_coord_t *grid_row_dsc = NULL;
 static int grid_col_alloc = 0;
 static int grid_row_alloc = 0;
 
+// Not unused, just likes to complain that it is...
+struct gradient_signature {
+    int16_t width;
+    int16_t height;
+
+    uint32_t background;
+    uint32_t gradient_colour;
+
+    int16_t direction;
+    int16_t dither;
+    int16_t start;
+    int16_t stop;
+    int16_t blur;
+};
+
 // Global buffer for the canvas
 static lv_color_t *canvas_buffer;
 
@@ -260,6 +275,12 @@ void generate_gradient_with_bayer_dither(
     }
 }
 
+static int gradient_signature_equal(const struct gradient_signature *a, const struct gradient_signature *b) {
+    return a->width == b->width && a->height == b->height && a->background == b->background
+           && a->gradient_colour == b->gradient_colour && a->direction == b->direction && a->dither == b->dither
+           && a->start == b->start && a->stop == b->stop && a->blur == b->blur;
+}
+
 void apply_gradient_to_ui_screen(
     lv_obj_t *ui_screen, const struct theme_config *theme, const struct mux_device *device
 ) {
@@ -268,6 +289,23 @@ void apply_gradient_to_ui_screen(
     const size_t buf_size = (size_t) device->mux.width * (size_t) device->mux.height * sizeof(lv_color_t);
 
     static size_t canvas_buf_size = 0;
+    static struct gradient_signature last_sig;
+    static int have_sig = 0;
+
+    const struct gradient_signature sig = {
+        .width = device->mux.width,
+        .height = device->mux.height,
+        .background = theme->system.background,
+        .gradient_colour = theme->system.background_gradient_color,
+        .direction = theme->system.background_gradient_direction,
+        .dither = theme->system.background_gradient_dither,
+        .start = theme->system.background_gradient_start,
+        .stop = theme->system.background_gradient_stop,
+        .blur = theme->system.background_gradient_blur,
+    };
+
+    const int needs_regen =
+        !have_sig || !canvas_buffer || canvas_buf_size != buf_size || !gradient_signature_equal(&sig, &last_sig);
 
     // Allocate memory for the canvas buffer and reuse
     if (!canvas_buffer || canvas_buf_size != buf_size) {
@@ -275,7 +313,7 @@ void apply_gradient_to_ui_screen(
         canvas_buffer = lv_mem_alloc(buf_size);
 
         if (!canvas_buffer) {
-            LV_LOG_ERROR("Canvas buffer alloc failed");
+            LOG_ERROR(mux_module, "Canvas buffer allocation failure!");
             return;
         }
 
@@ -283,7 +321,7 @@ void apply_gradient_to_ui_screen(
     }
 
     if (!canvas_buffer) {
-        LV_LOG_ERROR("Failed to allocate memory for canvas buffer!");
+        LOG_ERROR(mux_module, "Failed to allocate memory for canvas buffer!");
         return;
     }
 
@@ -296,20 +334,26 @@ void apply_gradient_to_ui_screen(
     lv_obj_align(canvas, LV_ALIGN_CENTER, 0, 0); // Center on the screen
     lv_obj_clear_flag(canvas, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Define gradient colors
-    const lv_color_t start_color = lv_color_hex(theme->system.background);              // Black
-    const lv_color_t end_color = lv_color_hex(theme->system.background_gradient_color); // Dark Gray
+    if (needs_regen) {
+        // Define gradient colors
+        const lv_color_t start_color = lv_color_hex(theme->system.background);              // Black
+        const lv_color_t end_color = lv_color_hex(theme->system.background_gradient_color); // Dark Gray
 
-    // Generate the gradient with dithering
-    generate_gradient_with_bayer_dither(
-        canvas_buffer, device->mux.width, device->mux.height, start_color, end_color,
-        theme->system.background_gradient_dither == 1, theme->system.background_gradient_direction == LV_GRAD_DIR_VER,
-        theme->system.background_gradient_start, theme->system.background_gradient_stop
-    );
+        // Generate the gradient with dithering
+        generate_gradient_with_bayer_dither(
+            canvas_buffer, device->mux.width, device->mux.height, start_color, end_color,
+            theme->system.background_gradient_dither == 1,
+            theme->system.background_gradient_direction == LV_GRAD_DIR_VER, theme->system.background_gradient_start,
+            theme->system.background_gradient_stop
+        );
 
-    // Refresh the canvas
-    if (theme->system.background_gradient_blur > 0)
-        blur_gradient(canvas_buffer, device->mux.width, device->mux.height, theme->system.background_gradient_blur);
+        // Refresh the canvas
+        if (theme->system.background_gradient_blur > 0)
+            blur_gradient(canvas_buffer, device->mux.width, device->mux.height, theme->system.background_gradient_blur);
+
+        last_sig = sig;
+        have_sig = 1;
+    }
 
     lv_obj_invalidate(canvas);
 }
@@ -1249,7 +1293,7 @@ static void progress_fade_exec_cb(void *var, const int32_t value) {
     lv_obj_set_style_opa(var, (lv_opa_t) value, MU_OBJ_MAIN_DEFAULT);
 }
 
-static void progress_fade_ready_cb(const lv_anim_t *a) {
+static void progress_fade_ready_cb(lv_anim_t *a) {
     lv_obj_t *obj = a->var;
     lv_obj_add_flag(obj, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_set_style_opa(obj, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
@@ -1666,7 +1710,7 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
     update_status_glyph(ui_sta_network, theme, "header", network_status_filename, 75);
 }
 
-static void hide_message(const lv_timer_t *msg_timer) {
+static void hide_message(lv_timer_t *msg_timer) {
     lv_obj_t *target_obj = msg_timer->user_data;
     lv_obj_set_style_opa(target_obj, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
