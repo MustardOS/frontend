@@ -57,6 +57,7 @@
 #include "../common/ui/image.h"
 #include "../common/ui/grid.h"
 #include "../common/ui/glyph.h"
+#include "../common/ui/cache.h"
 #include "../common/overlay.h"
 #include "../common/colour.h"
 #include "../common/language.h"

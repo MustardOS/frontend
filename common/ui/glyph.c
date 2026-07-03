@@ -8,6 +8,7 @@
 #include "../fileio.h"
 #include "../image.h"
 #include "glyph.h"
+#include "cache.h"
 
 int resolve_glyph_size(const int16_t runtime_size, const int16_t section_size, const int auto_px) {
     const int size = runtime_size == -2 ? section_size : runtime_size;
@@ -94,85 +95,109 @@ void set_list_glyph_image(lv_obj_t *img, const char *embed) {
 int get_glyph_path(
     const char *mux_module, const char *glyph_name, char *glyph_image_embed, const size_t glyph_image_embed_size
 ) {
-    const char *bases[] = {theme_base, INTERNAL_THEME};
-    int ext_count;
-    const char **exts = image_ext_list(&ext_count);
+    char cache_key[MAX_BUFFER_SIZE];
+    snprintf(cache_key, sizeof(cache_key), "glyph:%s/%s", mux_module, glyph_name);
 
     char glyph_image_path[MAX_BUFFER_SIZE];
+    const int cached = asset_cache_get(cache_key, glyph_image_path, sizeof(glyph_image_path));
 
-    for (size_t b = 0; b < A_SIZE(bases); b++) {
-        for (int e = 0; e < ext_count; e++) {
-            for (int with_dim = 1; with_dim >= 0; with_dim--) {
-                if (with_dim) {
-                    snprintf(
-                        glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.%s", bases[b], mux_dim,
-                        mux_module, glyph_name, exts[e]
-                    );
-                } else {
-                    snprintf(
-                        glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.%s", bases[b], mux_module,
-                        glyph_name, exts[e]
-                    );
+    if (cached < 0) {
+        const char *bases[] = {theme_base, INTERNAL_THEME};
+        int ext_count;
+        const char **exts = image_ext_list(&ext_count);
+
+        int found = 0;
+        for (size_t b = 0; b < A_SIZE(bases) && !found; b++) {
+            for (int e = 0; e < ext_count && !found; e++) {
+                for (int with_dim = 1; with_dim >= 0 && !found; with_dim--) {
+                    if (with_dim) {
+                        snprintf(
+                            glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.%s", bases[b], mux_dim,
+                            mux_module, glyph_name, exts[e]
+                        );
+                    } else {
+                        snprintf(
+                            glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.%s", bases[b], mux_module,
+                            glyph_name, exts[e]
+                        );
+                    }
+
+                    LOG_DEBUG(mux_module, "Glyph path check: %s", glyph_image_path);
+                    if (file_exist(glyph_image_path)) found = 1;
                 }
-
-                LOG_DEBUG(mux_module, "Glyph path check: %s", glyph_image_path);
-                if (!file_exist(glyph_image_path)) continue;
-
-                LOG_DEBUG(mux_module, "Glyph found at: %s", glyph_image_path);
-                snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path);
-                append_glyph_size_hint(
-                    glyph_image_embed, glyph_image_embed_size,
-                    resolve_glyph_size(
-                        config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height * 3 / 4
-                    )
-                );
-
-                return 1;
             }
         }
+
+        asset_cache_put(cache_key, glyph_image_path, found);
+        if (!found) {
+            LOG_DEBUG(mux_module, "Glyph not found: %s/%s", mux_module, glyph_name);
+            return 0;
+        }
+    } else if (cached == 0) {
+        LOG_DEBUG(mux_module, "Glyph not found (cached): %s/%s", mux_module, glyph_name);
+        return 0;
     }
 
-    LOG_DEBUG(mux_module, "Glyph not found: %s/%s", mux_module, glyph_name);
-    return 0;
+    LOG_DEBUG(mux_module, "Glyph found at: %s", glyph_image_path);
+    snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path);
+    append_glyph_size_hint(
+        glyph_image_embed, glyph_image_embed_size,
+        resolve_glyph_size(config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height * 3 / 4)
+    );
+
+    return 1;
 }
 
 void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *ui_lbl_item_glyph) {
-    int ext_count;
-    const char **exts = image_ext_list(&ext_count);
+    char cache_key[MAX_BUFFER_SIZE];
+    snprintf(cache_key, sizeof(cache_key), "app_glyph:%s/%s", app_folder, glyph_name);
 
     char glyph_image_path[MAX_BUFFER_SIZE];
+    const int cached = asset_cache_get(cache_key, glyph_image_path, sizeof(glyph_image_path));
 
-    for (int e = 0; e < ext_count; e++) {
-        for (int with_dim = 1; with_dim >= 0; with_dim--) {
-            if (with_dim) {
-                snprintf(
-                    glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s%s.%s", app_folder, mux_dim, glyph_name,
-                    exts[e]
-                );
-            } else {
-                snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s.%s", app_folder, glyph_name, exts[e]);
+    if (cached < 0) {
+        int ext_count;
+        const char **exts = image_ext_list(&ext_count);
+
+        int found = 0;
+        for (int e = 0; e < ext_count && !found; e++) {
+            for (int with_dim = 1; with_dim >= 0 && !found; with_dim--) {
+                if (with_dim) {
+                    snprintf(
+                        glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s%s.%s", app_folder, mux_dim, glyph_name,
+                        exts[e]
+                    );
+                } else {
+                    snprintf(
+                        glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s.%s", app_folder, glyph_name, exts[e]
+                    );
+                }
+
+                LOG_DEBUG(mux_module, "Application glyph path check: %s", glyph_image_path);
+                if (file_exist(glyph_image_path)) found = 1;
             }
+        }
 
-            LOG_DEBUG(mux_module, "Application glyph path check: %s", glyph_image_path);
-            if (!file_exist(glyph_image_path)) continue;
-
-            LOG_DEBUG(mux_module, "Application glyph found at: %s", glyph_image_path);
-
-            char glyph_image_embed[MAX_BUFFER_SIZE];
-            snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
-            append_glyph_size_hint(
-                glyph_image_embed, sizeof(glyph_image_embed),
-                resolve_glyph_size(
-                    config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height * 3 / 4
-                )
-            );
-
-            set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
+        asset_cache_put(cache_key, glyph_image_path, found);
+        if (!found) {
+            LOG_DEBUG(mux_module, "Application glyph not found: %s/%s", app_folder, glyph_name);
             return;
         }
+    } else if (cached == 0) {
+        LOG_DEBUG(mux_module, "Application glyph not found (cached): %s/%s", app_folder, glyph_name);
+        return;
     }
 
-    LOG_DEBUG(mux_module, "Application glyph not found: %s/%s", app_folder, glyph_name);
+    LOG_DEBUG(mux_module, "Application glyph found at: %s", glyph_image_path);
+
+    char glyph_image_embed[MAX_BUFFER_SIZE];
+    snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
+    append_glyph_size_hint(
+        glyph_image_embed, sizeof(glyph_image_embed),
+        resolve_glyph_size(config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height * 3 / 4)
+    );
+
+    set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
 }
 
 void get_app_grid_glyph(
@@ -196,28 +221,39 @@ void get_app_grid_glyph(
         }
     }
 
-    int ext_count;
-    const char **exts = image_ext_list(&ext_count);
+    char cache_key[MAX_BUFFER_SIZE];
+    snprintf(cache_key, sizeof(cache_key), "app_grid:%s/%s/%s", app_folder, dim_clean, glyph_name);
 
     char image_path[MAX_BUFFER_SIZE];
+    const int cached = asset_cache_get(cache_key, image_path, sizeof(image_path));
 
-    for (int e = 0; e < ext_count; e++) {
-        if (dim_clean[0]) {
-            snprintf(image_path, sizeof(image_path), "%s/grid/%s/%s.%s", app_folder, dim_clean, glyph_name, exts[e]);
-            LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);
-            if (file_exist(image_path)) {
-                LOG_DEBUG(mux_module, "Application grid image found: %s", image_path);
-                snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path);
-                return;
+    if (cached < 0) {
+        int ext_count;
+        const char **exts = image_ext_list(&ext_count);
+
+        int found = 0;
+        for (int e = 0; e < ext_count && !found; e++) {
+            if (dim_clean[0]) {
+                snprintf(
+                    image_path, sizeof(image_path), "%s/grid/%s/%s.%s", app_folder, dim_clean, glyph_name, exts[e]
+                );
+                LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);
+                if (file_exist(image_path)) found = 1;
+            }
+
+            if (!found) {
+                snprintf(image_path, sizeof(image_path), "%s/grid/%s.%s", app_folder, glyph_name, exts[e]);
+                LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);
+                if (file_exist(image_path)) found = 1;
             }
         }
 
-        snprintf(image_path, sizeof(image_path), "%s/grid/%s.%s", app_folder, glyph_name, exts[e]);
-        LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);
-        if (file_exist(image_path)) {
-            LOG_DEBUG(mux_module, "Application grid image found: %s", image_path);
-            snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path);
-            return;
-        }
+        asset_cache_put(cache_key, image_path, found);
+        if (!found) return;
+    } else if (cached == 0) {
+        return;
     }
+
+    LOG_DEBUG(mux_module, "Application grid image found: %s", image_path);
+    snprintf(glyph_image_path, glyph_image_path_size, "%s", image_path);
 }

@@ -4,6 +4,7 @@
 #include "../init.h"
 #include "common.h"
 #include "image.h"
+#include "cache.h"
 #include "../video.h"
 #include "../config.h"
 #include "../device.h"
@@ -19,15 +20,25 @@ int load_element_image_specifics(
     const char *mux_dim, const char *program, const char *image_type, const char *element, const char *element_fallback,
     const char *image_extension, char *image_path, const size_t path_size
 ) {
+    const char *curr_lang = config.settings.general.language;
+
+    char cache_key[MAX_BUFFER_SIZE];
+    snprintf(
+        cache_key, sizeof(cache_key), "img_elem:%s/%s/%s/%s/%s/%s/%s", mux_dim, curr_lang, program, image_type, element,
+        element_fallback, image_extension
+    );
+
+    const int cached = asset_cache_get(cache_key, image_path, path_size);
+    if (cached >= 0) return cached;
+
     const char *dims[] = {mux_dim, ""};
     const char *elements[] = {element, element_fallback};
 
-    const char *curr_lang = config.settings.general.language;
-
-    for (size_t i = 0; i < A_SIZE(dims); ++i) {
+    int found = 0;
+    for (size_t i = 0; i < A_SIZE(dims) && !found; ++i) {
         const char *paths[] = {"%s/%simage/%s/%s/%s/%s.%s", "%s/%simage/%s/%s/%s.%s"};
-        for (size_t j = 0; j < A_SIZE(paths); ++j) {
-            for (size_t k = 0; k < A_SIZE(elements); ++k) {
+        for (size_t j = 0; j < A_SIZE(paths) && !found; ++j) {
+            for (size_t k = 0; k < A_SIZE(elements) && !found; ++k) {
                 int written;
 
                 switch (j) {
@@ -46,26 +57,36 @@ int load_element_image_specifics(
                         break;
                 }
 
-                if (written >= 0 && file_exist(image_path)) return 1;
+                if (written >= 0 && file_exist(image_path)) found = 1;
             }
         }
     }
 
-    return 0;
+    asset_cache_put(cache_key, image_path, found);
+    return found;
 }
 
 int load_image_specifics(
     const char *mux_dim, const char *program, const char *image_type, const char *image_extension, char *image_path,
     const size_t path_size
 ) {
+    const char *curr_lang = config.settings.general.language;
+
+    char cache_key[MAX_BUFFER_SIZE];
+    snprintf(
+        cache_key, sizeof(cache_key), "img:%s/%s/%s/%s/%s", mux_dim, curr_lang, program, image_type, image_extension
+    );
+
+    const int cached = asset_cache_get(cache_key, image_path, path_size);
+    if (cached >= 0) return cached;
+
     const char *paths[] = {
         "%s/%simage/%s.%s", "%s/%simage/%s/%s/%s.%s", "%s/%simage/%s/%s.%s", "%s/%simage/%s/%s/default.%s",
         "%s/%simage/%s/default.%s"
     };
 
-    const char *curr_lang = config.settings.general.language;
-
-    for (size_t i = 0; i < A_SIZE(paths); ++i) {
+    int found = 0;
+    for (size_t i = 0; i < A_SIZE(paths) && !found; ++i) {
         int written;
 
         switch (i) {
@@ -94,10 +115,11 @@ int load_image_specifics(
                 break;
         }
 
-        if (written >= 0 && file_exist(image_path)) return 1;
+        if (written >= 0 && file_exist(image_path)) found = 1;
     }
 
-    return 0;
+    asset_cache_put(cache_key, image_path, found);
+    return found;
 }
 
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wall_type) {

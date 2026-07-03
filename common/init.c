@@ -11,6 +11,7 @@
 #include "input.h"
 #include "inotify.h"
 #include "ui/font.h"
+#include "ui/cache.h"
 #include "log.h"
 #include "ui/common.h"
 #include "language.h"
@@ -156,9 +157,10 @@ void init_module(const char *module) {
     load_lang(&lang);
     crash_init(mux_module);
     common_var_init();
+    asset_cache_clear();
 }
 
-static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, uint32_t size) {
+static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, const uint32_t size) {
     LV_UNUSED(drv);
     memset(buf, 0, size);
 }
@@ -451,6 +453,8 @@ void init_fonts(void) {
 void init_theme(const int panel_init, const int long_mode) {
     theme_base = get_theme_base();
     load_theme(&theme, &config, &device);
+
+    if (asset_cache_context_changed()) asset_cache_clear();
 
     if (panel_init) {
         init_panel_style(&theme);
