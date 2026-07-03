@@ -57,9 +57,9 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
     char *hdmi_resolution[] = {
-        "480i",         "576i",          "480p",          "576p",        "720p + 50hz",
-        "720p + 60hz",  "1080i + 50hz",  "1080i + 60hz",  "1080p + 24hz",
-        "1080p + 50hz", "1080p + 60hz",
+        "480i",        "576i",       "480p", "576p",
+        "720p + 50hz", "720p + 60hz"
+        //"1080i + 50hz",  "1080i + 60hz",  "1080p + 24hz", "1080p + 50hz", "1080p + 60hz",
     };
 
     char *hdmi_space[] = {"RGB", "YUV444", "YUV422", "YUV420"};
@@ -68,7 +68,7 @@ static void init_navigation_group(void) {
 
     char *hdmi_scan[] = {lang.muxhdmi.scan_scale.over, lang.muxhdmi.scan_scale.under};
 
-    INIT_OPTION_ITEM(-1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, 11);
+    INIT_OPTION_ITEM(-1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, 6);
     INIT_OPTION_ITEM(-1, hdmi, space, lang.muxhdmi.colour.space, "space", hdmi_space, 4);
     INIT_OPTION_ITEM(-1, hdmi, depth, lang.muxhdmi.colour.depth, "depth", NULL, 0);
     INIT_OPTION_ITEM(-1, hdmi, range, lang.muxhdmi.colour.range.title, "range", hdmi_range, 2);
