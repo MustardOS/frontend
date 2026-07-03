@@ -69,8 +69,6 @@ static void init_elements(void) {
                                   {ui_lbl_nav_x, lang.generic.top, 0},
                                   {NULL, NULL, 0}});
 
-    lv_obj_set_user_data(ui_txt_document_text, "document");
-
     overlay_display();
 }
 

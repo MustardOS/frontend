@@ -9,6 +9,8 @@
 #include "../audio.h"
 #include "../fileio.h"
 #include "../config.h"
+#include "../theme.h"
+#include "../../module/muxshare.h"
 
 char progress_bar_message[MAX_BUFFER_SIZE];
 volatile int progress_bar_value = 0;
@@ -436,6 +438,130 @@ void update_windowed_list(
             );
         }
     }
+}
+
+void list_win_focus_group(const int index) {
+    if (index < 0 || index >= theme.mux.item.count) return;
+    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
+
+    if (!panel) return;
+
+    lv_group_focus_obj(panel);
+    lv_group_focus_obj(lv_obj_get_child(panel, 0));
+    lv_group_focus_obj(lv_obj_get_child(panel, 1));
+}
+
+int list_win_focus_index(void) {
+    const int before = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
+    const int after = (theme.mux.item.count - 1) / 2;
+
+    if (current_item_index < before) return current_item_index;
+    if (current_item_index >= (int) item_count - after)
+        return theme.mux.item.count - ((int) item_count - current_item_index);
+
+    return before;
+}
+
+void list_win_move_index(const int direction) {
+    if (direction < 0) {
+        current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+    } else {
+        current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+    }
+}
+
+void list_win_update_items(
+    const int start_index, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+) {
+    const int max = (int) item_count - start_index;
+    if (max <= 0) return;
+
+    int count = theme.mux.item.count;
+    if (count > max) count = max;
+
+    for (int index = 0; index < count; ++index) {
+        const lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_content, index);
+        update_item_cb(lv_obj_get_child(panel_item, 0), lv_obj_get_child(panel_item, 1), start_index + index);
+    }
+}
+
+void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)) {
+    const int count = theme.mux.item.count;
+
+    if ((int) item_count <= count) {
+        list_win_focus_group(current_item_index);
+    } else {
+        const int before = (count - count % 2) / 2;
+        const int after = (count - 1) / 2;
+
+        int start_index;
+        if (current_item_index < before) {
+            start_index = 0;
+        } else if (current_item_index >= (int) item_count - after) {
+            start_index = (int) item_count - count;
+        } else {
+            start_index = current_item_index - before;
+        }
+
+        list_win_update_items(start_index, update_item_cb);
+
+        int new_item_index = current_item_index - start_index;
+        if (new_item_index < 0) new_item_index = 0;
+        if (new_item_index >= count) new_item_index = count - 1;
+
+        list_win_focus_group(new_item_index);
+    }
+
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+
+    nav_moved = 1;
+}
+
+static void (*list_win_active_update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index) = NULL;
+
+static void list_win_update_items_trampoline(const int start_index) {
+    list_win_update_items(start_index, list_win_active_update_item_cb);
+}
+
+void list_win_nav_move(
+    const int steps, const int direction,
+    void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+) {
+    if (!ui_count_static) return;
+    first_open ? (first_open = 0) : play_sound(snd_navigate);
+
+    const int visible_count = theme.mux.item.count;
+    const int static_list = (int) item_count <= visible_count;
+
+    apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
+
+    if (static_list) {
+        for (int step = 0; step < steps; ++step) {
+            list_win_move_index(direction);
+        }
+        list_win_focus_group(current_item_index);
+    } else {
+        list_win_active_update_item_cb = update_item_cb;
+
+        for (int step = 0; step < steps; ++step) {
+            list_win_move_index(direction);
+
+            nav_move(ui_group, direction);
+            nav_move(ui_group_glyph, direction);
+            nav_move(ui_group_panel, direction);
+
+            update_windowed_list(
+                ui_pnl_content, direction, current_item_index, (int) item_count, visible_count, update_item_cb,
+                list_win_update_items_trampoline
+            );
+
+            list_win_focus_group(list_win_focus_index());
+        }
+    }
+
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+
+    nav_moved = 1;
 }
 
 void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], const int count) {

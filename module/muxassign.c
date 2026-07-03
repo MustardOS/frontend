@@ -157,7 +157,6 @@ static void create_system_items(void) {
 
         lv_obj_t *ui_lbl_system_item = lv_label_create(ui_pnl_system);
         apply_theme_list_item(&theme, ui_lbl_system_item, items[i].name);
-        lv_obj_set_user_data(ui_lbl_system_item, items[i].name);
 
         lv_obj_t *ui_lbl_system_item_glyph = lv_img_create(ui_pnl_system);
         apply_theme_list_glyph(

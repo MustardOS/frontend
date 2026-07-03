@@ -44,6 +44,22 @@ void update_windowed_list(
     void (*update_items_cb)(int start_index)
 );
 
+void list_win_focus_group(int index);
+
+int list_win_focus_index(void);
+
+void list_win_move_index(int direction);
+
+void list_win_update_items(
+    int start_index, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+);
+
+void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index));
+
+void list_win_nav_move(
+    int steps, int direction, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+);
+
 void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], int count);
 
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);

@@ -117,8 +117,6 @@ static void generate_available_governors(const char *default_governor) {
         lv_obj_t *ui_pnl_gov = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_gov);
 
-        lv_obj_set_user_data(ui_pnl_gov, raw_name);
-
         lv_obj_t *ui_lbl_gov_item = lv_label_create(ui_pnl_gov);
         apply_theme_list_item(&theme, ui_lbl_gov_item, cap_name);
 
@@ -126,6 +124,7 @@ static void generate_available_governors(const char *default_governor) {
 
         const char *glyph = strcasecmp(raw_name, default_governor) == 0 ? "default" : str_remchar(raw_name, ' ');
         apply_theme_list_glyph(&theme, ui_lbl_gov_item_glyph, mux_module, glyph);
+        free(raw_name);
 
         lv_group_add_obj(ui_group, ui_lbl_gov_item);
         lv_group_add_obj(ui_group_glyph, ui_lbl_gov_item_glyph);

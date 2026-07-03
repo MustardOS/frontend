@@ -8,13 +8,22 @@ static int is_dir = 0;
 static int is_app = 0;
 
 static char *get_selected_filter(void) {
-    lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (!e_focused) return NULL;
+    if (!ui_count_static) return NULL;
 
-    const char *text = lv_label_get_text(e_focused);
-    if (!text) return NULL;
+    return items[current_item_index].name;
+}
 
-    return str_tolower(str_trim(str_replace(text, " ", "_")));
+static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
+    const char *filter_store = items[index].name;
+
+    char filter_display[MAX_BUFFER_SIZE];
+    snprintf(filter_display, sizeof(filter_display), "%s", str_capital_all(str_replace(filter_store, "_", " ")));
+
+    lv_label_set_text(ui_lbl_item, filter_display);
+    apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, "filter");
+
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, filter_display);
+    apply_text_long_dot(&theme, ui_lbl_item);
 }
 
 static char *read_filter_info(const char *filter_store) {
@@ -189,18 +198,18 @@ static void generate_available_filters(void) {
         char filter_store[MAX_BUFFER_SIZE];
         snprintf(filter_store, sizeof(filter_store), "%s", strip_ext(filter_name));
 
-        char filter_display[MAX_BUFFER_SIZE];
-        snprintf(filter_display, sizeof(filter_display), "%s", str_capital_all(str_replace(filter_store, "_", " ")));
-
-        ui_count_static++;
         add_item(&items, &item_count, filter_store, filter_store, "", ITEM);
+    }
 
+    ui_count_static += (int) item_count;
+
+    const size_t limit = theme.mux.item.count;
+    for (size_t i = 0; i < item_count && i < limit; i++) {
         lv_obj_t *ui_pnl_filter = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_filter);
-        lv_obj_set_user_data(ui_pnl_filter, strdup(filter_store));
 
         lv_obj_t *ui_lbl_filter_item = lv_label_create(ui_pnl_filter);
-        apply_theme_list_item(&theme, ui_lbl_filter_item, filter_display);
+        apply_theme_list_item(&theme, ui_lbl_filter_item, items[i].display_name);
 
         lv_obj_t *ui_lbl_filter_item_glyph = lv_img_create(ui_pnl_filter);
         apply_theme_list_glyph(&theme, ui_lbl_filter_item_glyph, mux_module, "filter");
@@ -209,12 +218,19 @@ static void generate_available_filters(void) {
         lv_group_add_obj(ui_group_glyph, ui_lbl_filter_item_glyph);
         lv_group_add_obj(ui_group_panel, ui_pnl_filter);
 
-        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_filter_item, ui_lbl_filter_item_glyph, filter_display);
-        apply_text_long_dot(&theme, ui_lbl_filter_item);
+        update_list_item(ui_lbl_filter_item, ui_lbl_filter_item_glyph, (int) i);
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
     free_array(files, file_count);
+}
+
+static void list_nav_prev(const int steps) {
+    list_win_nav_move(steps, -1, update_list_item);
+}
+
+static void list_nav_next(const int steps) {
+    list_win_nav_move(steps, +1, update_list_item);
 }
 
 static void handle_a(void) {
@@ -342,7 +358,7 @@ void muxcolfilter_main(int auto_assign, const char *name, const char *dir, const
 
     if (ui_count_static > 0) {
         LOG_SUCCESS(mux_module, "%d Colour Filter%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
-        gen_step_movement(0, +1, 1, 0, 1);
+        list_win_focus_initial(update_list_item);
     } else {
         LOG_ERROR(mux_module, "No Colour Filters Detected!");
         lv_label_set_text(ui_lbl_screen_message, lang.muxcolfilter.none);
@@ -375,7 +391,7 @@ void muxcolfilter_main(int auto_assign, const char *name, const char *dir, const
         }
     };
 
-    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 

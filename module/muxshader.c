@@ -8,10 +8,31 @@ static int is_dir = 0;
 static int is_app = 0;
 
 static char *get_selected_shader(void) {
-    lv_obj_t *e_focused = lv_group_get_focused(ui_group_panel);
-    if (!e_focused) return NULL;
+    if (!ui_count_static) return NULL;
 
-    return lv_obj_get_user_data(e_focused);
+    return items[current_item_index].name;
+}
+
+static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
+    const char *shader_store = items[index].name;
+
+    char *meta_name = read_shader_info(shader_store, "Name");
+
+    char shader_display[MAX_BUFFER_SIZE];
+    if (meta_name && *meta_name) {
+        snprintf(shader_display, sizeof(shader_display), "%s", meta_name);
+    } else {
+        char *shd_spaced = str_replace(shader_store, "_", " ");
+        snprintf(shader_display, sizeof(shader_display), "%s", str_capital_all(shd_spaced));
+        free(shd_spaced);
+    }
+    if (meta_name) free(meta_name);
+
+    lv_label_set_text(ui_lbl_item, shader_display);
+    apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, "shader");
+
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, shader_display);
+    apply_text_long_dot(&theme, ui_lbl_item);
 }
 
 static void show_help(void) {
@@ -170,29 +191,18 @@ static void generate_available_shaders(void) {
         snprintf(shader_store, sizeof(shader_store), "%s", shd_no_ext);
         free(shd_no_ext);
 
-        char *meta_name = read_shader_info(shader_store, "Name");
-
-        char shader_display[MAX_BUFFER_SIZE];
-        if (meta_name && *meta_name) {
-            snprintf(shader_display, sizeof(shader_display), "%s", meta_name);
-        } else {
-            char *shd_spaced = str_replace(shader_store, "_", " ");
-            snprintf(shader_display, sizeof(shader_display), "%s", str_capital_all(shd_spaced));
-            free(shd_spaced);
-        }
-
-        if (meta_name) free(meta_name);
-
-        ui_count_static++;
         add_item(&items, &item_count, shader_store, shader_store, "", ITEM);
+    }
 
+    ui_count_static += (int) item_count;
+
+    const size_t limit = theme.mux.item.count;
+    for (size_t i = 0; i < item_count && i < limit; i++) {
         lv_obj_t *ui_pnl_filter = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_filter);
 
-        lv_obj_set_user_data(ui_pnl_filter, strdup(shader_store));
-
         lv_obj_t *ui_lbl_filter_item = lv_label_create(ui_pnl_filter);
-        apply_theme_list_item(&theme, ui_lbl_filter_item, shader_display);
+        apply_theme_list_item(&theme, ui_lbl_filter_item, items[i].display_name);
 
         lv_obj_t *ui_lbl_filter_item_glyph = lv_img_create(ui_pnl_filter);
         apply_theme_list_glyph(&theme, ui_lbl_filter_item_glyph, mux_module, "shader");
@@ -201,13 +211,20 @@ static void generate_available_shaders(void) {
         lv_group_add_obj(ui_group_glyph, ui_lbl_filter_item_glyph);
         lv_group_add_obj(ui_group_panel, ui_pnl_filter);
 
-        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_filter_item, ui_lbl_filter_item_glyph, shader_display);
-        apply_text_long_dot(&theme, ui_lbl_filter_item);
+        update_list_item(ui_lbl_filter_item, ui_lbl_filter_item_glyph, (int) i);
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 
     free_array(files, file_count);
+}
+
+static void list_nav_prev(const int steps) {
+    list_win_nav_move(steps, -1, update_list_item);
+}
+
+static void list_nav_next(const int steps) {
+    list_win_nav_move(steps, +1, update_list_item);
 }
 
 static void handle_a(void) {
@@ -335,7 +352,7 @@ void muxshader_main(int auto_assign, const char *name, const char *dir, const ch
 
     if (ui_count_static > 0) {
         LOG_SUCCESS(mux_module, "%d Shader%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
-        gen_step_movement(0, +1, 1, 0, 1);
+        list_win_focus_initial(update_list_item);
     } else {
         LOG_ERROR(mux_module, "No Shaders Detected!");
         lv_label_set_text(ui_lbl_screen_message, lang.muxshader.none);
@@ -368,7 +385,7 @@ void muxshader_main(int auto_assign, const char *name, const char *dir, const ch
         }
     };
 
-    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 

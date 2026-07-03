@@ -419,10 +419,6 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
 
-#define SPACE(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_space, UDATA);
-    SPACE_ELEMENTS
-#undef SPACE
-
     overlay_display();
 }
 

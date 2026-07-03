@@ -72,9 +72,10 @@ static void create_picker_items(void) {
 
     reset_ui_groups();
 
-    for (size_t i = 0; i < item_count; i++) {
-        ui_count_static++;
+    ui_count_static += (int) item_count;
 
+    const size_t limit = theme.mux.item.count;
+    for (size_t i = 0; i < item_count && i < limit; i++) {
         lv_obj_t *ui_pnl_picker = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_picker);
 
@@ -100,6 +101,28 @@ static void create_picker_items(void) {
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
+}
+
+static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
+    lv_label_set_text(ui_lbl_item, items[index].display_name);
+
+    apply_theme_list_glyph(
+        &theme, ui_lbl_item_glyph, mux_module,
+        items[index].content_type == menu     ? "download"
+        : items[index].content_type == FOLDER ? "folder"
+                                              : get_last_subdir(picker_type, '/', 1)
+    );
+
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, items[index].display_name);
+    apply_text_long_dot(&theme, ui_lbl_item);
+}
+
+static void list_nav_prev(const int steps) {
+    list_win_nav_move(steps, -1, update_list_item);
+}
+
+static void list_nav_next(const int steps) {
+    list_win_nav_move(steps, +1, update_list_item);
 }
 
 static void do_remove(void) {
@@ -381,8 +404,10 @@ int muxpicker_main(char *type, char *ex_dir) {
     }
 
     if (ui_count_static > 0) {
-        if (sys_index > -1 && sys_index <= ui_count_static && current_item_index < ui_count_static)
-            gen_step_movement(sys_index, +1, 1, 0, 1);
+        if (sys_index > -1 && sys_index <= ui_count_static && current_item_index < ui_count_static) {
+            current_item_index = sys_index;
+            list_win_focus_initial(update_list_item);
+        }
     } else {
         lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -426,7 +451,7 @@ int muxpicker_main(char *type, char *ex_dir) {
         }
     };
 
-    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
 

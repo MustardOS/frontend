@@ -33,7 +33,6 @@ static void populate_network_items(void) {
 
         lv_obj_t *ui_pnl_net_scan = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_net_scan);
-        lv_obj_set_user_data(ui_pnl_net_scan, strdup(str_nonew(ssid)));
 
         lv_obj_t *ui_lbl_net_scan_item = lv_label_create(ui_pnl_net_scan);
         apply_theme_list_item(&theme, ui_lbl_net_scan_item, str_nonew(ssid));
