@@ -101,22 +101,22 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, danger, state, lang.muxdanger.state, "state", state_options, 2);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_vm_swap_danger, four_values);
-    apply_theme_list_drop_down(&theme, ui_dro_dirty_ratio_danger, four_values);
-    apply_theme_list_drop_down(&theme, ui_dro_dirty_back_danger, four_values);
-    apply_theme_list_drop_down(&theme, ui_dro_cache_pressure_danger, four_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_vm_swap_danger, ui_dro_vm_swap_danger, four_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_dirty_ratio_danger, ui_dro_dirty_ratio_danger, four_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_dirty_back_danger, ui_dro_dirty_back_danger, four_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_cache_pressure_danger, ui_dro_cache_pressure_danger, four_values);
     free(four_values);
 
     char *merge_values = generate_number_string(0, 2, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_no_merge_danger, merge_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_no_merge_danger, ui_dro_no_merge_danger, merge_values);
     free(merge_values);
 
     char *request_values = generate_number_string(64, 512, 64, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_nr_requests_danger, request_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_nr_requests_danger, ui_dro_nr_requests_danger, request_values);
     free(request_values);
 
     char *cluster_values = generate_number_string(0, 10, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_page_cluster_danger, cluster_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_page_cluster_danger, ui_dro_page_cluster_danger, cluster_values);
     free(cluster_values);
 
     reset_ui_groups();

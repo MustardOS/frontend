@@ -232,7 +232,9 @@ static void init_navigation_group(void) {
     overlay_count = load_overlay_set(ui_dro_overlay_image_visual, has_theme_overlay);
 
     char *pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_overlay_transparency_visual, pct_values);
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_overlay_transparency_visual, ui_dro_overlay_transparency_visual, pct_values
+    );
     free(pct_values);
 
     reset_ui_groups();

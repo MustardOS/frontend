@@ -561,8 +561,10 @@ void gen_step_movement(
     for (int step = 0; step < steps; ++step) {
         if (long_dot == 1)
             apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
-        else if (long_dot == 2)
+        else if (long_dot == 2) {
             apply_option_label_long_dot(lv_group_get_focused(ui_group));
+            apply_option_value_long_dot(lv_group_get_focused(ui_group_value));
+        }
 
         if (direction < 0) {
             current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
@@ -584,6 +586,7 @@ void gen_step_movement(
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
     } else if (long_dot == 2) {
         set_option_label_scroll_mode(lv_group_get_focused(ui_group));
+        set_option_value_scroll_mode(lv_group_get_focused(ui_group_value));
     }
 
     nav_moved = 1;

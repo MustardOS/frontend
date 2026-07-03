@@ -251,36 +251,40 @@ static void init_navigation_group(void) {
 
     char pad_div_values[MAX_BUFFER_SIZE];
     snprintf(pad_div_values, sizeof(pad_div_values), "50\n100\n200\n400\n600\n800");
-    apply_theme_list_drop_down(&theme, ui_dro_box_art_pad_div_tweakadv, pad_div_values);
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_box_art_pad_div_tweakadv, ui_dro_box_art_pad_div_tweakadv, pad_div_values
+    );
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.generic.disabled, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_accelerate_tweakadv, accelerate_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_accelerate_tweakadv, ui_dro_accelerate_tweakadv, accelerate_values);
     free(accelerate_values);
 
     char *repeat_delay_values = generate_number_string(16, 512, 16, lang.generic.disabled, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_repeat_delay_tweakadv, repeat_delay_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_repeat_delay_tweakadv, ui_dro_repeat_delay_tweakadv, repeat_delay_values);
     free(repeat_delay_values);
 
     char *swap_values = generate_number_string(128, 1024, 128, lang.generic.disabled, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_swapfile_tweakadv, swap_values);
-    apply_theme_list_drop_down(&theme, ui_dro_zramfile_tweakadv, swap_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_swapfile_tweakadv, ui_dro_swapfile_tweakadv, swap_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_zramfile_tweakadv, ui_dro_zramfile_tweakadv, swap_values);
     free(swap_values);
 
     char *partition_values = generate_number_string(1, 128, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_second_part_tweakadv, partition_values);
-    apply_theme_list_drop_down(&theme, ui_dro_usb_part_tweakadv, partition_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_second_part_tweakadv, ui_dro_second_part_tweakadv, partition_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_usb_part_tweakadv, ui_dro_usb_part_tweakadv, partition_values);
     free(partition_values);
 
     char *increment_values = generate_number_string(1, 32, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_inc_bright_tweakadv, increment_values);
-    apply_theme_list_drop_down(&theme, ui_dro_inc_volume_tweakadv, increment_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_inc_bright_tweakadv, ui_dro_inc_bright_tweakadv, increment_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_inc_volume_tweakadv, ui_dro_inc_volume_tweakadv, increment_values);
     free(increment_values);
 
     char bt_scan_seconds[MAX_BUFFER_SIZE];
     snprintf(bt_scan_seconds, sizeof(bt_scan_seconds), " %s", lang.muxtweakadv.seconds);
 
     char *bt_scan_timeout_values = generate_number_string(5, 30, 5, NULL, bt_scan_seconds, NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_bt_scan_timeout_tweakadv, bt_scan_timeout_values);
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_bt_scan_timeout_tweakadv, ui_dro_bt_scan_timeout_tweakadv, bt_scan_timeout_values
+    );
     free(bt_scan_timeout_values);
 
     reset_ui_groups();

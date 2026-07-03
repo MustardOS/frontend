@@ -164,23 +164,23 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, distemp, sunrise_temp, lang.muxdistemp.sunrise_temp, "sunrisetemp", NULL, 0);
     char *temp_values = generate_number_string(-255, 255, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_sunrise_temp_distemp, temp_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_sunrise_temp_distemp, ui_dro_sunrise_temp_distemp, temp_values);
 
     INIT_OPTION_ITEM(-1, distemp, sunset_temp, lang.muxdistemp.sunset_temp, "sunsettemp", NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_sunset_temp_distemp, temp_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_sunset_temp_distemp, ui_dro_sunset_temp_distemp, temp_values);
     free(temp_values);
 
     INIT_OPTION_ITEM(-1, distemp, sunrise_time, lang.muxdistemp.sunrise_time, "sunrisetime", NULL, 0);
     char *time_values = generate_time_string(15);
-    apply_theme_list_drop_down(&theme, ui_dro_sunrise_time_distemp, time_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_sunrise_time_distemp, ui_dro_sunrise_time_distemp, time_values);
 
     INIT_OPTION_ITEM(-1, distemp, sunset_time, lang.muxdistemp.sunset_time, "sunsettime", NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_sunset_time_distemp, time_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_sunset_time_distemp, ui_dro_sunset_time_distemp, time_values);
     free(time_values);
 
     INIT_OPTION_ITEM(-1, distemp, temp, lang.muxdistemp.temperature, "temp", NULL, 0);
     temp_values = generate_number_string(-255, 255, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_temp_distemp, temp_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_temp_distemp, ui_dro_temp_distemp, temp_values);
     free(temp_values);
 
     reset_ui_groups();

@@ -363,9 +363,9 @@ void resolve_grid_item_images(
         int _idx = ((INDEX) < 0) ? ui_count_static : (ui_count_static + (INDEX));                                      \
                                                                                                                        \
         apply_theme_list_panel(ui_pnl_##NAME##_##MODULE);                                                              \
-        apply_theme_option_item_label(&theme, ui_lbl_##NAME##_##MODULE, LABEL);                                        \
+        apply_theme_option_item_label(&theme, ui_lbl_##NAME##_##MODULE, LABEL, (OPTION) != NULL && (COUNT) > 0);       \
         apply_theme_list_glyph(&theme, ui_ico_##NAME##_##MODULE, mux_module, GLYPH);                                   \
-        apply_theme_list_drop_down(&theme, ui_dro_##NAME##_##MODULE, NULL);                                            \
+        apply_theme_list_drop_down(&theme, ui_lbl_##NAME##_##MODULE, ui_dro_##NAME##_##MODULE, NULL);                  \
                                                                                                                        \
         if ((OPTION) != NULL && (COUNT) > 0) {                                                                         \
             add_drop_down_options(ui_dro_##NAME##_##MODULE, OPTION, COUNT);                                            \
@@ -442,7 +442,7 @@ void resolve_grid_item_images(
         int _idx = ((INDEX) < 0) ? ui_count_static : (ui_count_static + (INDEX));                                      \
                                                                                                                        \
         apply_theme_list_panel(ui_pnl_##NAME##_##MODULE);                                                              \
-        apply_theme_option_item_label(&theme, ui_lbl_##NAME##_##MODULE, LABEL);                                        \
+        apply_theme_option_item_label(&theme, ui_lbl_##NAME##_##MODULE, LABEL, 1);                                     \
         apply_theme_list_glyph(&theme, ui_ico_##NAME##_##MODULE, mux_module, GLYPH);                                   \
         apply_theme_list_value(&theme, ui_val_##NAME##_##MODULE, VALUE);                                               \
                                                                                                                        \

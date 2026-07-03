@@ -125,7 +125,7 @@ static void add_tag_item(const int index, const char *label, const char *glyph, 
     apply_theme_list_panel(ui_pnl_item);
     apply_theme_list_item(&theme, ui_lbl_item, label);
     apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, glyph);
-    apply_theme_list_drop_down(&theme, ui_dro_item, options);
+    apply_theme_list_drop_down(&theme, ui_lbl_item, ui_dro_item, options);
 
     lv_group_add_obj(ui_group, ui_lbl_item);
     lv_group_add_obj(ui_group_value, ui_dro_item);

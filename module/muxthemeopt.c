@@ -190,14 +190,16 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, themeopt, glyph_grid, lang.muxthemeopt.glyph_grid, "glyphgrid", NULL, 0);
     INIT_OPTION_ITEM(-1, themeopt, label_width, lang.muxthemeopt.label_width, "labelwidth", NULL, 0);
 
-    apply_theme_list_drop_down(&theme, ui_dro_header_height_themeopt, height_options);
-    apply_theme_list_drop_down(&theme, ui_dro_footer_height_themeopt, height_options);
-    apply_theme_list_drop_down(&theme, ui_dro_content_item_count_themeopt, count_options);
-    apply_theme_list_drop_down(&theme, ui_dro_glyph_list_themeopt, glyph_options);
-    apply_theme_list_drop_down(&theme, ui_dro_glyph_footer_themeopt, glyph_options);
-    apply_theme_list_drop_down(&theme, ui_dro_glyph_header_themeopt, glyph_options);
-    apply_theme_list_drop_down(&theme, ui_dro_glyph_grid_themeopt, glyph_options);
-    apply_theme_list_drop_down(&theme, ui_dro_label_width_themeopt, width_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_header_height_themeopt, ui_dro_header_height_themeopt, height_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_footer_height_themeopt, ui_dro_footer_height_themeopt, height_options);
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_content_item_count_themeopt, ui_dro_content_item_count_themeopt, count_options
+    );
+    apply_theme_list_drop_down(&theme, ui_lbl_glyph_list_themeopt, ui_dro_glyph_list_themeopt, glyph_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_glyph_footer_themeopt, ui_dro_glyph_footer_themeopt, glyph_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_glyph_header_themeopt, ui_dro_glyph_header_themeopt, glyph_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_glyph_grid_themeopt, ui_dro_glyph_grid_themeopt, glyph_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_label_width_themeopt, ui_dro_label_width_themeopt, width_options);
 
     free(height_options);
     free(count_options);

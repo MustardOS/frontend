@@ -441,7 +441,7 @@ static void init_navigation_group(void) {
     );
 
     char *battery_pct = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_battery_power, battery_pct);
+    apply_theme_list_drop_down(&theme, ui_lbl_battery_power, ui_dro_battery_power, battery_pct);
     free(battery_pct);
 
     reset_ui_groups();
@@ -449,7 +449,7 @@ static void init_navigation_group(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 0, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 

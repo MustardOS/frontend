@@ -528,15 +528,23 @@ void apply_theme_list_panel(lv_obj_t *ui_pnl_list);
 
 void apply_theme_list_item(const struct theme_config *theme, lv_obj_t *ui_lbl_item, const char *item_text);
 
-void apply_theme_option_item_label(const struct theme_config *theme, lv_obj_t *ui_lbl_item, const char *item_text);
+void apply_theme_option_item_label(
+    const struct theme_config *theme, lv_obj_t *ui_lbl_item, const char *item_text, int has_value
+);
 
 void apply_option_label_long_dot(lv_obj_t *ui_lbl_item);
 
 void set_option_label_scroll_mode(lv_obj_t *ui_lbl_item);
 
+void apply_option_value_long_dot(lv_obj_t *ui_value_item);
+
+void set_option_value_scroll_mode(lv_obj_t *ui_value_item);
+
 void apply_theme_list_value(const struct theme_config *lv_theme, lv_obj_t *ui_lbl_item_value, const char *item_text);
 
-void apply_theme_list_drop_down(const struct theme_config *d_theme, lv_obj_t *ui_lbl_item_value, const char *options);
+void apply_theme_list_drop_down(
+    const struct theme_config *d_theme, lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_value, const char *options
+);
 
 void apply_theme_list_glyph(
     const struct theme_config *theme, lv_obj_t *ui_lbl_item_glyph, const char *screen_name, const char *item_glyph

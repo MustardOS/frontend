@@ -161,14 +161,16 @@ static void init_navigation_group(void) {
         boxart_scale_values, sizeof(boxart_scale_values), "%s\n%s", lang.generic.disabled,
         generate_number_string(1, 100, 1, NULL, "%", NULL, 1)
     );
-    apply_theme_list_drop_down(&theme, ui_dro_box_art_scale_content, boxart_scale_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_box_art_scale_content, ui_dro_box_art_scale_content, boxart_scale_values);
 
     char boxart_padding_values[MAX_BUFFER_SIZE];
     snprintf(
         boxart_padding_values, sizeof(boxart_padding_values), "%s\n%s", lang.generic.disabled,
         generate_number_string(1, 100, 1, NULL, "%", NULL, 1)
     );
-    apply_theme_list_drop_down(&theme, ui_dro_box_art_padding_content, boxart_padding_values);
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_box_art_padding_content, ui_dro_box_art_padding_content, boxart_padding_values
+    );
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

@@ -704,12 +704,12 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, rgb, backend, lang.muxrgb.backend, "backend", backend_options, 4);
 
     char *bright_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_bright_rgb, bright_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_bright_rgb, ui_dro_bright_rgb, bright_values);
     free(bright_values);
 
     if (joypad_speed_dropdown) {
         char *speed_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-        apply_theme_list_drop_down(&theme, ui_dro_breath_speed_rgb, speed_values);
+        apply_theme_list_drop_down(&theme, ui_lbl_breath_speed_rgb, ui_dro_breath_speed_rgb, speed_values);
         free(speed_values);
     }
 

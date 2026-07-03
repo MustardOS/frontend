@@ -29,6 +29,9 @@
 
 #define LV_DROPDOWN_PR_NONE 0xFFFF
 
+#define LV_DROPDOWN_SCROLL_DELAY   768
+#define LV_DROPDOWN_BOUNCE_PADDING 24
+
 /**********************
  *      TYPEDEFS
  **********************/
@@ -55,6 +58,9 @@ static void list_press_handler(lv_obj_t *page);
 static uint16_t get_id_on_point(lv_obj_t *dropdown_obj, lv_coord_t y);
 static void position_to_selected(lv_obj_t *obj);
 static lv_obj_t *get_label(const lv_obj_t *obj);
+
+static lv_coord_t get_symbol_width(lv_obj_t *obj);
+static void set_dropdown_ofs_x_anim(void *obj, int32_t v);
 
 /**********************
  *  STATIC VARIABLES
@@ -306,6 +312,75 @@ void lv_dropdown_set_selected_highlight(lv_obj_t *obj, int en) {
     lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
     dropdown->selected_highlight = en;
     if (dropdown->list) lv_obj_invalidate(dropdown->list);
+}
+
+void lv_dropdown_set_text_scroll(lv_obj_t *obj, int scroll_mode) {
+    LV_ASSERT_OBJ(obj, MY_CLASS);
+
+    lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
+
+    lv_anim_del(obj, set_dropdown_ofs_x_anim);
+    dropdown->scroll_ofs = 0;
+    dropdown->scroll_bounce = 0;
+    lv_obj_invalidate(obj);
+
+    if (scroll_mode == 0) return;
+
+    lv_coord_t border_width = lv_obj_get_style_border_width(obj, LV_PART_MAIN);
+    lv_coord_t left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN) + border_width;
+    lv_coord_t right = lv_obj_get_style_pad_right(obj, LV_PART_MAIN) + border_width;
+
+    lv_draw_label_dsc_t label_dsc;
+    lv_draw_label_dsc_init(&label_dsc);
+    lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &label_dsc);
+
+    char buf[128];
+    const char *opt_txt;
+    if (dropdown->text) {
+        opt_txt = dropdown->text;
+    } else {
+        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
+        opt_txt = buf;
+    }
+
+    lv_point_t size;
+    lv_txt_get_size(
+        &size, opt_txt, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag
+    );
+
+    lv_coord_t avail_w = lv_obj_get_width(obj) - left - right - get_symbol_width(obj);
+    if (avail_w < 0) avail_w = 0;
+    if (size.x <= avail_w) return; /*Already fits, nothing to scroll*/
+
+    const lv_anim_t *anim_template = lv_obj_get_style_anim(obj, LV_PART_MAIN);
+    uint16_t anim_speed = lv_obj_get_style_anim_speed(obj, LV_PART_MAIN);
+    if (anim_speed == 0) anim_speed = (uint16_t) (lv_disp_get_dpi(lv_obj_get_disp(obj)) / 3);
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_set_exec_cb(&a, set_dropdown_ofs_x_anim);
+
+    if (scroll_mode == 2) {
+        dropdown->scroll_bounce = 1;
+        lv_anim_set_playback_delay(&a, LV_DROPDOWN_SCROLL_DELAY);
+        lv_anim_set_repeat_delay(&a, a.playback_delay);
+        lv_anim_set_values(&a, 0, avail_w - size.x - LV_DROPDOWN_BOUNCE_PADDING);
+        lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
+        lv_anim_set_playback_time(&a, a.time);
+    } else {
+        lv_coord_t gap = lv_font_get_glyph_width(label_dsc.font, ' ', ' ') * LV_LABEL_WAIT_CHAR_COUNT;
+        lv_anim_set_values(&a, 0, -(size.x + gap));
+        lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
+    }
+
+    if (anim_template) {
+        a.act_time = anim_template->act_time;
+        a.repeat_delay = anim_template->repeat_delay;
+    }
+
+    lv_anim_start(&a);
 }
 
 /*=====================
@@ -573,6 +648,8 @@ static void lv_dropdown_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj
     dropdown->pr_opt_id = LV_DROPDOWN_PR_NONE;
     dropdown->option_cnt = 0;
     dropdown->dir = LV_DIR_BOTTOM;
+    dropdown->scroll_ofs = 0;
+    dropdown->scroll_bounce = 0;
 
     lv_obj_add_flag(obj, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_dropdown_set_options_static(obj, "Option 1\nOption 2\nOption 3");
@@ -587,6 +664,8 @@ static void lv_dropdown_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj
 static void lv_dropdown_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
     LV_UNUSED(class_p);
     lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
+
+    lv_anim_del(obj, set_dropdown_ofs_x_anim);
 
     if (dropdown->list) {
         lv_obj_del(dropdown->list);
@@ -729,6 +808,34 @@ static void lv_dropdown_list_event(const lv_obj_class_t *class_p, lv_event_t *e)
     }
 }
 
+static lv_coord_t get_symbol_width(lv_obj_t *obj) {
+    lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
+    if (!dropdown->symbol) return 0;
+
+    lv_img_src_t symbol_type = lv_img_src_get_type(dropdown->symbol);
+    if (symbol_type == LV_IMG_SRC_SYMBOL) {
+        lv_draw_label_dsc_t symbol_dsc;
+        lv_draw_label_dsc_init(&symbol_dsc);
+        lv_obj_init_draw_label_dsc(obj, LV_PART_INDICATOR, &symbol_dsc);
+
+        lv_point_t size;
+        lv_txt_get_size(
+            &size, dropdown->symbol, symbol_dsc.font, symbol_dsc.letter_space, symbol_dsc.line_space, LV_COORD_MAX,
+            symbol_dsc.flag
+        );
+        return size.x;
+    }
+
+    lv_img_header_t header;
+    return lv_img_decoder_get_info(dropdown->symbol, &header) == LV_RES_OK ? header.w : 0;
+}
+
+static void set_dropdown_ofs_x_anim(void *obj, int32_t v) {
+    lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
+    dropdown->scroll_ofs = (lv_coord_t) v;
+    lv_obj_invalidate((lv_obj_t *) obj);
+}
+
 static void draw_main(lv_event_t *e) {
     lv_obj_t *obj = lv_event_get_target(e);
     lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
@@ -757,9 +864,10 @@ static void draw_main(lv_event_t *e) {
     if (dropdown->dir == LV_DIR_LEFT) symbol_to_left = 1;
     if (lv_obj_get_style_base_dir(obj, LV_PART_MAIN) == LV_BASE_DIR_RTL) symbol_to_left = 1;
 
+    lv_coord_t symbol_w = 0;
+
     if (dropdown->symbol) {
         lv_img_src_t symbol_type = lv_img_src_get_type(dropdown->symbol);
-        lv_coord_t symbol_w;
         lv_coord_t symbol_h;
         if (symbol_type == LV_IMG_SRC_SYMBOL) {
             lv_point_t size;
@@ -816,6 +924,69 @@ static void draw_main(lv_event_t *e) {
         &size, opt_txt, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag
     );
 
+    int opt_txt_is_buf = dropdown->text == NULL;
+
+    if (lv_anim_get(obj, set_dropdown_ofs_x_anim)) {
+        lv_area_t scroll_area;
+        scroll_area.y1 = obj->coords.y1 + top;
+        scroll_area.y2 = scroll_area.y1 + size.y;
+        if (dropdown->symbol == NULL) {
+            scroll_area.x1 = obj->coords.x1 + left;
+            scroll_area.x2 = obj->coords.x2 - right;
+        } else if (symbol_to_left) {
+            scroll_area.x1 = obj->coords.x1 + left + symbol_w;
+            scroll_area.x2 = obj->coords.x2 - right;
+        } else {
+            scroll_area.x1 = obj->coords.x1 + left;
+            scroll_area.x2 = obj->coords.x2 - right - symbol_w;
+        }
+
+        label_dsc.flag |= LV_TEXT_FLAG_EXPAND;
+        label_dsc.align = LV_TEXT_ALIGN_LEFT;
+
+        label_dsc.ofs_x = dropdown->scroll_ofs;
+        lv_draw_label(draw_ctx, &label_dsc, &scroll_area, opt_txt, NULL);
+
+        if (!dropdown->scroll_bounce) {
+            const lv_coord_t gap = lv_font_get_glyph_width(label_dsc.font, ' ', ' ') * LV_LABEL_WAIT_CHAR_COUNT;
+            label_dsc.ofs_x = dropdown->scroll_ofs + size.x + gap;
+            lv_draw_label(draw_ctx, &label_dsc, &scroll_area, opt_txt, NULL);
+        }
+
+        if (opt_txt_is_buf) lv_mem_buf_release((char *) opt_txt);
+        return;
+    }
+
+    lv_coord_t avail_w = lv_obj_get_width(obj) - left - right - (dropdown->symbol ? symbol_w : 0);
+    if (avail_w < 0) avail_w = 0;
+
+    if (size.x > avail_w) {
+        const lv_coord_t dot_w = lv_txt_get_width("...", 3, label_dsc.font, label_dsc.letter_space, label_dsc.flag);
+        const lv_coord_t target_w = avail_w > dot_w ? avail_w - dot_w : 0;
+
+        uint32_t cut = (uint32_t) strlen(opt_txt);
+        while (cut > 0
+               && lv_txt_get_width(opt_txt, cut, label_dsc.font, label_dsc.letter_space, label_dsc.flag) > target_w) {
+            _lv_txt_encoded_prev(opt_txt, &cut);
+        }
+
+        char *trunc_buf = lv_mem_buf_get(cut + 4);
+        if (trunc_buf) {
+            memcpy(trunc_buf, opt_txt, cut);
+            memcpy(trunc_buf + cut, "...", 4); /* includes the terminating NUL */
+
+            if (opt_txt_is_buf) lv_mem_buf_release((char *) opt_txt);
+
+            opt_txt = trunc_buf;
+            opt_txt_is_buf = 1;
+
+            lv_txt_get_size(
+                &size, opt_txt, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX,
+                label_dsc.flag
+            );
+        }
+    }
+
     lv_area_t txt_area;
     txt_area.y1 = obj->coords.y1 + top;
     txt_area.y2 = txt_area.y1 + size.y;
@@ -835,7 +1006,7 @@ static void draw_main(lv_event_t *e) {
     }
     lv_draw_label(draw_ctx, &label_dsc, &txt_area, opt_txt, NULL);
 
-    if (dropdown->text == NULL) {
+    if (opt_txt_is_buf) {
         lv_mem_buf_release((char *) opt_txt);
     }
 }

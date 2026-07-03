@@ -174,6 +174,7 @@ static int get_custom_section_size(const char *section) {
 }
 
 static lv_font_t *load_font_cached_ttf_lang(const char *path, int size);
+static lv_font_t *load_font_cached_ttf(const char *path, int size, int set_fallback);
 
 static lv_font_t *create_language_font(const int size) {
     const char *curr_lang = config.settings.general.language;
@@ -191,6 +192,13 @@ static lv_font_t *create_language_font(const int size) {
 
 lv_font_t *get_language_font(void) {
     return create_language_font(get_font_size());
+}
+
+static lv_font_t *guaranteed_font(const int size) {
+    lv_font_t *font = create_language_font(size);
+    if (font) return font;
+
+    return load_font_cached_ttf(DEFAULT_FONT, size, 1);
 }
 
 void font_cache_clear(void) {
@@ -420,7 +428,7 @@ lv_font_t *load_font_pass_roller(void) {
         if (f) return f;
     }
 
-    return create_language_font(size);
+    return guaranteed_font(size);
 }
 
 static void build_font_candidate(
@@ -453,18 +461,23 @@ find_theme_font(const char *curr_lang, const char *section, const int use_grid, 
     char base[MAX_BUFFER_SIZE];
     lv_font_t *font = NULL;
 
-    for (int i = 0; i < 2 && !font; i++) {
-        build_font_candidate(base, dims[i], curr_lang, section, use_grid, mux_module);
-        if ((font = try_font_at(base, resolved, size))) break;
+    const char *sections[2] = {section, NULL};
+    const int section_count = section && section[0] ? 2 : 1;
 
-        build_font_candidate(base, dims[i], curr_lang, section, use_grid, "default");
-        if ((font = try_font_at(base, resolved, size))) break;
+    for (int s = 0; s < section_count && !font; s++) {
+        for (int i = 0; i < 2 && !font; i++) {
+            build_font_candidate(base, dims[i], curr_lang, sections[s], use_grid, mux_module);
+            if ((font = try_font_at(base, resolved, size))) break;
 
-        build_font_candidate(base, dims[i], NULL, section, use_grid, mux_module);
-        if ((font = try_font_at(base, resolved, size))) break;
+            build_font_candidate(base, dims[i], curr_lang, sections[s], use_grid, "default");
+            if ((font = try_font_at(base, resolved, size))) break;
 
-        build_font_candidate(base, dims[i], NULL, section, use_grid, "default");
-        font = try_font_at(base, resolved, size);
+            build_font_candidate(base, dims[i], NULL, sections[s], use_grid, mux_module);
+            if ((font = try_font_at(base, resolved, size))) break;
+
+            build_font_candidate(base, dims[i], NULL, sections[s], use_grid, "default");
+            font = try_font_at(base, resolved, size);
+        }
     }
 
     return font;
@@ -481,8 +494,6 @@ void load_font_text(lv_obj_t *screen) {
     } else {
         lang_size = get_font_size();
     }
-
-    lv_font_t *language_font = create_language_font(lang_size);
 
     if (eff_type == 2) {
         const char *name = config.settings.font.name[0] ? config.settings.font.name : DEFAULT_NAME;
@@ -531,7 +542,7 @@ void load_font_text(lv_obj_t *screen) {
     }
 
     LOG_INFO(mux_module, "Loading Default Language Font");
-    apply_font(screen, language_font);
+    apply_font(screen, guaranteed_font(lang_size));
 }
 
 void load_font_section(const char *section, lv_obj_t *element) {
@@ -557,7 +568,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
         }
 
         if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
-            apply_font(element, create_language_font(get_custom_section_size(section)));
+            apply_font(element, guaranteed_font(get_custom_section_size(section)));
         } else {
             lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
         }
@@ -568,7 +579,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
     if (!eff_type) {
         const int size = get_custom_section_size(section);
         if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
-            apply_font(element, create_language_font(size));
+            apply_font(element, guaranteed_font(size));
         } else {
             lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
         }
@@ -592,7 +603,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
     }
 
     if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
-        apply_font(element, create_language_font(get_section_ttf_size(section)));
+        apply_font(element, guaranteed_font(get_section_ttf_size(section)));
     } else {
         lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
     }

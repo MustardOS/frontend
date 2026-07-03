@@ -48,6 +48,8 @@ typedef struct {
     lv_dir_t dir : 4;               /**< Direction in which the list should open*/
     uint8_t static_txt : 1;         /**< 1: Only a pointer is saved in `options`*/
     uint8_t selected_highlight : 1; /**< 1: Make the selected option highlighted in the list*/
+    lv_coord_t scroll_ofs;          /**< Animated draw offset for closed-state text scroll*/
+    uint8_t scroll_bounce : 1;      /**< 1: If the active scroll animation is bounce, not circular*/
 } lv_dropdown_t;
 
 typedef struct {
@@ -141,6 +143,18 @@ void lv_dropdown_set_symbol(lv_obj_t *obj, const void *symbol);
  * @param en        1: highlight enabled; 0: disabled
  */
 void lv_dropdown_set_selected_highlight(lv_obj_t *obj, int en);
+
+/**
+ * Enable or disable a scrolling marquee for the closed-state selected-option text, mirroring the
+ * lv_label's LV_LABEL_LONG_SCROLL / LV_LABEL_LONG_SCROLL_CIRCULAR. Uses the objects LV_PART_MAIN
+ * anim/anim_speed style (see lv_obj_set_style_anim / lv_obj_set_style_anim_speed) for timing, same
+ * as lv_label. No-op if the current selected text already fits without truncation.
+ * @param obj           pointer to drop-down list object
+ * @param scroll_mode   0: disabled, reset to the static (ellipsis) display
+ *                      1: continuous scroll, wraps around seamlessly (like LV_LABEL_LONG_SCROLL_CIRCULAR)
+ *                      2: bounce, scrolls to reveal the end then reverses (like LV_LABEL_LONG_SCROLL)
+ */
+void lv_dropdown_set_text_scroll(lv_obj_t *obj, int scroll_mode);
 
 /*=====================
  * Getter functions

@@ -152,10 +152,10 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, overlay, bri_scale, lang.muxoverlay.briscale, "bri_scale", scale_options, 3);
 
     char *alpha_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_gen_alpha_overlay, alpha_values);
-    apply_theme_list_drop_down(&theme, ui_dro_bat_alpha_overlay, alpha_values);
-    apply_theme_list_drop_down(&theme, ui_dro_vol_alpha_overlay, alpha_values);
-    apply_theme_list_drop_down(&theme, ui_dro_bri_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_gen_alpha_overlay, ui_dro_gen_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_bat_alpha_overlay, ui_dro_bat_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_vol_alpha_overlay, ui_dro_vol_alpha_overlay, alpha_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_bri_alpha_overlay, ui_dro_bri_alpha_overlay, alpha_values);
     free(alpha_values);
 
     reset_ui_groups();

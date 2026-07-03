@@ -188,8 +188,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, chime, lang.muxcustom.chime, "chime", disabled_enabled, 2);
 
     char *pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_music_volume_custom, pct_values);
-    apply_theme_list_drop_down(&theme, ui_dro_sound_volume_custom, pct_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_music_volume_custom, ui_dro_music_volume_custom, pct_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_sound_volume_custom, ui_dro_sound_volume_custom, pct_values);
     free(pct_values);
 
     lv_dropdown_clear_options(ui_dro_theme_resolution_custom);

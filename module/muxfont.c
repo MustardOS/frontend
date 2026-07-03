@@ -316,10 +316,10 @@ static void init_navigation_group(void) {
 
     populate_font_names();
 
-    apply_theme_list_drop_down(&theme, ui_dro_list_size_font, size_options);
-    apply_theme_list_drop_down(&theme, ui_dro_header_size_font, size_options);
-    apply_theme_list_drop_down(&theme, ui_dro_footer_size_font, size_options);
-    apply_theme_list_drop_down(&theme, ui_dro_panel_size_font, size_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_list_size_font, ui_dro_list_size_font, size_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_header_size_font, ui_dro_header_size_font, size_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_footer_size_font, ui_dro_footer_size_font, size_options);
+    apply_theme_list_drop_down(&theme, ui_lbl_panel_size_font, ui_dro_panel_size_font, size_options);
 
     free(size_options);
 

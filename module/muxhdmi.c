@@ -75,7 +75,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, hdmi, scan, lang.muxhdmi.scan_scale.title, "scan", hdmi_scan, 2);
 
     char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_dro_depth_hdmi, depth_string);
+    apply_theme_list_drop_down(&theme, ui_lbl_depth_hdmi, ui_dro_depth_hdmi, depth_string);
     free(depth_string);
 
     reset_ui_groups();

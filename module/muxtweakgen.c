@@ -320,11 +320,11 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, startup, lang.muxtweakgen.startup.title, "startup", startup_options, 6);
 
     char *bright_pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_brightness_tweakgen, bright_pct_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_brightness_tweakgen, ui_dro_brightness_tweakgen, bright_pct_values);
     free(bright_pct_values);
 
     char *volume_pct_values = generate_number_string(0, audio_overdrive, 1, NULL, "%", NULL, 1);
-    apply_theme_list_drop_down(&theme, ui_dro_volume_tweakgen, volume_pct_values);
+    apply_theme_list_drop_down(&theme, ui_lbl_volume_tweakgen, ui_dro_volume_tweakgen, volume_pct_values);
     free(volume_pct_values);
 
     reset_ui_groups();
@@ -392,7 +392,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 0, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 

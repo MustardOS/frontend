@@ -1330,13 +1330,20 @@ void apply_theme_list_item(const struct theme_config *theme, lv_obj_t *ui_lbl_it
     }
 }
 
-void apply_theme_option_item_label(const struct theme_config *theme, lv_obj_t *ui_lbl_item, const char *item_text) {
+static lv_coord_t option_label_max_width(const struct theme_config *theme) {
+    return theme->misc.content.width * OPTION_COLUMN_PCT / 100;
+}
+
+void apply_theme_option_item_label(
+    const struct theme_config *theme, lv_obj_t *ui_lbl_item, const char *item_text, const int has_value
+) {
     apply_theme_list_item(theme, ui_lbl_item, item_text);
 
-    const int label_pct =
-        config.settings.themeopt.label_width > 0 ? config.settings.themeopt.label_width : theme->misc.label_width;
+    const int label_pct = has_value ? OPTION_COLUMN_PCT : OPTION_LABEL_ONLY_PCT;
     const lv_coord_t max_w = theme->misc.content.width * label_pct / 100;
+
     lv_obj_set_style_max_width(ui_lbl_item, max_w, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_width(ui_lbl_item, max_w);
 
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);
     lv_obj_set_height(ui_lbl_item, lv_font_get_line_height(lv_obj_get_style_text_font(ui_lbl_item, LV_PART_MAIN)));
@@ -1350,19 +1357,53 @@ void set_option_label_scroll_mode(lv_obj_t *ui_lbl_item) {
     const int scroll_mode = config.visual.name_scroll;
     if (scroll_mode == 0 || config.visual.label_scroll_speed == 0) return;
 
+    const int is_bounce = scroll_mode == 2;
+    apply_label_scroll_speed(ui_lbl_item, is_bounce);
+
     lv_obj_update_layout(ui_lbl_item);
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);
     if (!lv_label_is_text_dotted(ui_lbl_item)) return;
 
-    const int is_bounce = scroll_mode == 2;
-    apply_label_scroll_speed(ui_lbl_item, is_bounce);
     lv_label_set_long_mode(ui_lbl_item, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
+}
+
+void apply_option_value_long_dot(lv_obj_t *ui_value_item) {
+    if (!ui_value_item) return;
+
+    if (lv_obj_check_type(ui_value_item, &lv_dropdown_class)) {
+        lv_dropdown_set_text_scroll(ui_value_item, 0);
+    } else {
+        lv_label_set_long_mode(ui_value_item, LV_LABEL_LONG_DOT);
+    }
+}
+
+void set_option_value_scroll_mode(lv_obj_t *ui_value_item) {
+    if (!ui_value_item) return;
+
+    const int scroll_mode = config.visual.name_scroll;
+    if (scroll_mode == 0 || config.visual.label_scroll_speed == 0) return;
+
+    const int is_bounce = scroll_mode == 2;
+
+    if (lv_obj_check_type(ui_value_item, &lv_dropdown_class)) {
+        apply_label_scroll_speed(ui_value_item, is_bounce);
+        lv_dropdown_set_text_scroll(ui_value_item, scroll_mode);
+        return;
+    }
+
+    apply_label_scroll_speed(ui_value_item, is_bounce);
+
+    lv_obj_update_layout(ui_value_item);
+    lv_label_set_long_mode(ui_value_item, LV_LABEL_LONG_DOT);
+    if (!lv_label_is_text_dotted(ui_value_item)) return;
+
+    lv_label_set_long_mode(ui_value_item, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
 }
 
 void apply_theme_list_value(const struct theme_config *lv_theme, lv_obj_t *ui_lbl_item_value, const char *item_text) {
     lv_label_set_text(ui_lbl_item_value, item_text);
 
-    lv_obj_set_width(ui_lbl_item_value, lv_theme->misc.content.width);
+    lv_obj_set_width(ui_lbl_item_value, option_label_max_width(lv_theme));
     const lv_font_t *font = lv_obj_get_style_text_font(ui_lbl_item_value, LV_PART_MAIN);
     const lv_coord_t font_height = lv_font_get_line_height(font);
     lv_obj_set_height(ui_lbl_item_value, font_height);
@@ -1381,16 +1422,28 @@ void apply_theme_list_value(const struct theme_config *lv_theme, lv_obj_t *ui_lb
 
     lv_obj_set_style_text_line_space(ui_lbl_item_value, 16, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_align(ui_lbl_item_value, LV_TEXT_ALIGN_RIGHT, MU_OBJ_MAIN_DEFAULT);
-    lv_label_set_long_mode(ui_lbl_item_value, LV_LABEL_LONG_WRAP);
+    lv_label_set_long_mode(ui_lbl_item_value, LV_LABEL_LONG_DOT);
 
     lv_obj_set_style_radius(ui_lbl_item_value, lv_theme->list_default.radius, MU_OBJ_MAIN_DEFAULT);
 }
 
-void apply_theme_list_drop_down(const struct theme_config *d_theme, lv_obj_t *ui_lbl_item_value, const char *options) {
+void apply_theme_list_drop_down(
+    const struct theme_config *d_theme, lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_value, const char *options
+) {
     lv_dropdown_set_dir(ui_lbl_item_value, LV_DIR_LEFT);
     if (options != NULL) lv_dropdown_set_options(ui_lbl_item_value, options);
     lv_dropdown_set_selected_highlight(ui_lbl_item_value, 0);
-    lv_obj_set_width(ui_lbl_item_value, d_theme->misc.content.width);
+
+    lv_obj_set_width(ui_lbl_item_value, option_label_max_width(d_theme));
+
+    if (ui_lbl_item) {
+        const int label_pct =
+            lv_dropdown_get_option_cnt(ui_lbl_item_value) > 0 ? OPTION_COLUMN_PCT : OPTION_LABEL_ONLY_PCT;
+        const lv_coord_t label_w = d_theme->misc.content.width * label_pct / 100;
+        lv_obj_set_style_max_width(ui_lbl_item, label_w, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_width(ui_lbl_item, label_w);
+    }
+
     const lv_font_t *font = lv_obj_get_style_text_font(ui_lbl_item_value, LV_PART_MAIN);
     const lv_coord_t font_height = lv_font_get_line_height(font);
     lv_obj_set_height(ui_lbl_item_value, font_height);
