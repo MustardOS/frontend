@@ -232,8 +232,7 @@ static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {
         lv_label_set_text(ui_lbl_item, items[index].display_name);
     if (ui_lbl_item && items[index].glyph_icon) lv_obj_set_user_data(ui_lbl_item, items[index].glyph_icon);
 
-    if (!items[index].grid_image || !items[index].grid_image[0] || !items[index].grid_image_focused
-        || !items[index].grid_image_focused[0]) {
+    if (!items[index].grid_image || !items[index].grid_image_focused) {
         update_grid_image_paths(index);
     }
 
@@ -362,8 +361,7 @@ void update_grid(const int direction) {
 static void gen_grid_item_common(const int item_index, const int panel_index, const int focus_index) {
     if (item_index < 0 || (size_t) item_index >= item_count) return;
 
-    if (!items[item_index].grid_image || !items[item_index].grid_image[0] || !items[item_index].grid_image_focused
-        || !items[item_index].grid_image_focused[0]) {
+    if (!items[item_index].grid_image || !items[item_index].grid_image_focused) {
         update_grid_image_paths(item_index);
     }
 

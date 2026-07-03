@@ -157,7 +157,6 @@ void init_module(const char *module) {
     load_lang(&lang);
     crash_init(mux_module);
     common_var_init();
-    asset_cache_clear();
 }
 
 static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, const uint32_t size) {
