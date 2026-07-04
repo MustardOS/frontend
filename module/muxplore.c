@@ -309,11 +309,14 @@ static int tag_name_search(const void *key, const void *elem) {
     return strcasecmp(key, *(const char **) elem);
 }
 
-static void gen_item(char **file_names, char **file_paths, const int file_count) {
-    char init_meta_dir[MAX_BUFFER_SIZE];
-    char sub_path[PATH_MAX];
+typedef struct {
+    char *name;
+    char *full_path;
+    char display[MAX_BUFFER_SIZE];
+} temp_item;
 
-    union_get_relative_path(sys_dir, sub_path, sizeof(sub_path));
+static void resolve_content_sub_path(char *sub_path) {
+    union_get_relative_path(sys_dir, sub_path, PATH_MAX);
 
     if (strncasecmp(sub_path, MAIN_ROM_DIR, 4) == 0) {
         const char *p = sub_path + 4;
@@ -321,25 +324,25 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
             p++;
         memmove(sub_path, p, strlen(p) + 1);
     }
+}
 
+static void ensure_content_meta_dir(const char *sub_path) {
+    char init_meta_dir[MAX_BUFFER_SIZE];
     snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
 
     remove_double_slashes(init_meta_dir);
     create_directories(init_meta_dir, 0);
+}
 
+static int collect_filtered_items(char **file_names, char **file_paths, const int file_count, temp_item **out_tmp) {
     skip_list skiplist;
     init_skiplist(&skiplist);
-
-    typedef struct {
-        char *name;
-        char *full_path;
-        char display[MAX_BUFFER_SIZE];
-    } temp_item;
 
     temp_item *tmp = malloc((size_t) file_count * sizeof(temp_item));
     if (!tmp) {
         free_skiplist(&skiplist);
-        return;
+        *out_tmp = NULL;
+        return 0;
     }
 
     int tmp_count = 0;
@@ -392,6 +395,11 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
 
     free_skiplist(&skiplist);
 
+    *out_tmp = tmp;
+    return tmp_count;
+}
+
+static void build_items_from_temp(temp_item *tmp, const int tmp_count) {
     for (int i = 0; i < tmp_count; i++) {
         add_item(&items, &item_count, tmp[i].name, tmp[i].display, tmp[i].full_path, ITEM);
         free(tmp[i].full_path);
@@ -400,19 +408,24 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
     free(tmp);
 
     sort_items(items, item_count);
+}
 
+static void restore_explorer_index(void) {
     char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
-    if (e_name_line) {
-        for (size_t i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].name, e_name_line) == 0) {
-                sys_index = (int) i;
-                remove(EXPLORE_NAME);
-                break;
-            }
+    if (!e_name_line) return;
+
+    for (size_t i = 0; i < item_count; i++) {
+        if (strcasecmp(items[i].name, e_name_line) == 0) {
+            sys_index = (int) i;
+            remove(EXPLORE_NAME);
+            break;
         }
-        free(e_name_line);
     }
 
+    free(e_name_line);
+}
+
+static void merge_history_and_collection(void) {
     remove_match_items(
         "History", config.visual.content_history, &history_items, &history_item_count, populate_history_items, &items,
         &item_count, sys_dir
@@ -422,7 +435,19 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
         "Collected", config.visual.content_collect, &collection_items, &collection_item_count,
         populate_collection_items, &items, &item_count, sys_dir
     );
+}
 
+static int grow_tagged_names(char ***tagged_names, int *cap) {
+    *cap *= 2;
+
+    char **grown = realloc(*tagged_names, (size_t) *cap * sizeof(char *));
+    if (!grown) return 0;
+
+    *tagged_names = grown;
+    return 1;
+}
+
+static void assign_content_glyphs(const char *sub_path) {
     char tag_dir[PATH_MAX];
     snprintf(tag_dir, sizeof(tag_dir), INFO_CON_PATH "/%s", sub_path);
     remove_double_slashes(tag_dir);
@@ -446,14 +471,9 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
                 char *dot = strrchr(nm, '.');
                 if (dot) *dot = '\0';
 
-                if (tagged_count >= cap) {
-                    cap *= 2;
-                    char **tmp1 = realloc(tagged_names, (size_t) cap * sizeof(char *));
-                    if (!tmp1) {
-                        free(nm);
-                        break;
-                    }
-                    tagged_names = tmp1;
+                if (tagged_count >= cap && !grow_tagged_names(&tagged_names, &cap)) {
+                    free(nm);
+                    break;
                 }
 
                 tagged_names[tagged_count++] = nm;
@@ -461,7 +481,7 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
         }
 
         closedir(td);
-        qsort(tagged_names, (size_t) tagged_count, sizeof(char *), tag_name_sort);
+        if (tagged_names) qsort(tagged_names, (size_t) tagged_count, sizeof(char *), tag_name_sort);
     }
 
     char content_tag[PATH_MAX];
@@ -497,11 +517,29 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
         }
     }
 
-    for (int i = 0; i < tagged_count; i++) {
-        free(tagged_names[i]);
-    }
+    if (tagged_names) {
+        for (int i = 0; i < tagged_count; i++) {
+            free(tagged_names[i]);
+        }
 
-    free(tagged_names);
+        free(tagged_names);
+    }
+}
+
+static void gen_item(char **file_names, char **file_paths, const int file_count) {
+    char sub_path[PATH_MAX];
+    resolve_content_sub_path(sub_path);
+    ensure_content_meta_dir(sub_path);
+
+    temp_item *tmp = NULL;
+    const int tmp_count = collect_filtered_items(file_names, file_paths, file_count, &tmp);
+    if (!tmp) return;
+
+    build_items_from_temp(tmp, tmp_count);
+
+    restore_explorer_index();
+    merge_history_and_collection();
+    assign_content_glyphs(sub_path);
 }
 
 static int get_visible_dir_count(const char *base_dir, const char *name, const int idx) {
