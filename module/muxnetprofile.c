@@ -46,6 +46,12 @@ static int save_dlg_active = 0;
 static mux_dialogue forget_dlg;
 static int forget_dlg_active = 0;
 
+static void reset_connect_state(void) {
+    connecting_phase = 0;
+    connect_grace_ticks = 0;
+    connect_settle_ticks = 0;
+}
+
 static void list_nav_move(int steps, int direction);
 
 static void save_profile_ini(void);
@@ -306,14 +312,11 @@ static void show_connect_failure(const int exit_code) {
     const int id = status_from_connect_exit_code(exit_code);
 
     ui_network_locked = 0;
-    connecting_phase = 0;
-    connect_grace_ticks = 0;
-    connect_settle_ticks = 0;
+    reset_connect_state();
     viewing_active_profile = 0;
 
     clear_current_active_profile();
-
-    if (id >= 0) set_connect_value(net_status_label(id));
+    set_connect_value(net_status_label(id));
 
     lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.connect);
     nav_scan_hide(0);
@@ -398,9 +401,7 @@ static void update_network_label(void) {
         if (id == status_connected) {
             if (get_current_ip()) {
                 ui_network_locked = 0;
-                connecting_phase = 0;
-                connect_grace_ticks = 0;
-                connect_settle_ticks = 0;
+                reset_connect_state();
                 free(status);
                 return;
             }
@@ -430,9 +431,7 @@ static void update_network_label(void) {
 
     if (get_current_ip()) {
         ui_network_locked = 0;
-        connecting_phase = 0;
-        connect_grace_ticks = 0;
-        connect_settle_ticks = 0;
+        reset_connect_state();
         return;
     }
 
@@ -760,136 +759,148 @@ int handle_navigate(void) {
     return 0;
 }
 
+static void handle_connect_toggle(void) {
+    play_sound(snd_confirm);
+    write_text_to_file_atomic(address_file, CHAR, "");
+    clear_current_active_profile();
+    run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
+    viewing_active_profile = 0;
+    can_scan_check(1);
+    check_focus();
+}
+
+static void handle_profile_save(void) {
+    if (active_profile_blocks_connect()) {
+        play_sound(snd_error);
+        toast_message(lang.muxnetprofile.connect_deny, tst_wait_s);
+        return;
+    }
+
+    int valid_info = 0;
+    const char *cv_ssid = lv_label_get_text(ui_val_identifier_network);
+
+    char password_buf[MAX_BUFFER_SIZE];
+    snprintf(password_buf, sizeof(password_buf), "%s", pending_password);
+    const size_t cv_pass_len = strlen(password_buf);
+
+    // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password; 64 bytes is an
+    // already-derived PSK hash carried over unchanged from a previously saved profile
+    const int cv_pass_ok = cv_pass_len == 0 || cv_pass_len == 64 || (cv_pass_len >= 8 && cv_pass_len <= 63);
+
+    if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) {
+        const char *cv_address = lv_label_get_text(ui_val_address_network);
+        const char *cv_subnet = lv_label_get_text(ui_val_subnet_network);
+        const char *cv_gateway = lv_label_get_text(ui_val_gateway_network);
+        const char *cv_dns = lv_label_get_text(ui_val_dns_network);
+
+        if (strlen(cv_ssid) > 0 && cv_pass_ok && strlen(cv_address) > 0 && strlen(cv_subnet) > 0
+            && strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
+            valid_info = 1;
+        }
+    } else {
+        if (strlen(cv_ssid) > 0 && cv_pass_ok) valid_info = 1;
+    }
+
+    if (!valid_info) {
+        play_sound(snd_error);
+        toast_message(lang.muxnetprofile.check, tst_wait_s);
+        return;
+    }
+
+    play_sound(snd_confirm);
+    save_network_config();
+    save_profile_ini();
+    network_saved = 1;
+
+    if (cv_pass_len > 0) {
+        lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.encrypt_password);
+    } else {
+        lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.no_password);
+    }
+
+    lv_label_set_text(ui_val_password_network, PASS_ENCODE);
+    set_connect_value(lang.muxnetprofile.connect_try);
+    lv_task_handler();
+
+    viewing_active_profile = 0;
+    write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, "");
+
+    ui_network_locked = 1;
+
+    last_status[0] = '\0';
+    connect_process_done = 0;
+    connect_exit_code = 0;
+    connecting_phase = 1;
+    connect_grace_ticks = 0;
+    connect_settle_ticks = 0;
+
+    clear_profile_status_file();
+
+    run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
+
+    memset(password_buf, 0, sizeof(password_buf));
+    lv_textarea_set_text(ui_txt_entry_network, "");
+
+    lv_task_handler();
+
+    // Connect the specific profile so the script tracks its active status independently!
+    const char *net_c_prof_args[] = {OPT_PATH NET_SCRIPT, "connect", current_profile, NULL};
+    run_exec(net_c_prof_args, A_SIZE(net_c_prof_args), 1, 0, NULL, net_connect_check);
+    lv_task_handler();
+}
+
+static void handle_osk_dispatch(const struct _lv_obj_t *e_focused) {
+    if (!lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
+        play_sound(snd_confirm);
+        key_curr = 0;
+        if (e_focused == ui_lbl_profile_name_network || e_focused == ui_lbl_identifier_network
+            || e_focused == ui_lbl_password_network) {
+            lv_textarea_set_password_mode(ui_txt_entry_network, e_focused == ui_lbl_password_network);
+
+            lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+
+            lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_state(num_entry, LV_STATE_DISABLED);
+
+            key_show = 1;
+        } else {
+            lv_textarea_set_password_mode(ui_txt_entry_network, 0);
+
+            lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
+
+            lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_state(key_entry, LV_STATE_DISABLED);
+
+            key_show = 2;
+        }
+
+        osk_show(ui_pnl_entry_network);
+        osk_refresh_labels();
+
+        lv_textarea_set_text(
+            ui_txt_entry_network,
+            e_focused == ui_lbl_password_network ? "" : lv_label_get_text(lv_group_get_focused(ui_group_value))
+        );
+    } else {
+        play_sound(snd_error);
+        toast_message(lang.muxnetprofile.deny_modify, tst_wait_s);
+    }
+}
+
 static void handle_confirm(void) {
     if (handle_navigate()) return;
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lbl_connect_network) {
         if (lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound(snd_confirm);
-            write_text_to_file_atomic(address_file, CHAR, "");
-            clear_current_active_profile();
-            run_exec(net_d_args, A_SIZE(net_d_args), 0, 0, NULL, NULL);
-            viewing_active_profile = 0;
-            can_scan_check(1);
-            check_focus();
+            handle_connect_toggle();
         } else {
-            if (active_profile_blocks_connect()) {
-                play_sound(snd_error);
-                toast_message(lang.muxnetprofile.connect_deny, tst_wait_s);
-                return;
-            }
-
-            int valid_info = 0;
-            const char *cv_ssid = lv_label_get_text(ui_val_identifier_network);
-
-            char password_buf[MAX_BUFFER_SIZE];
-            snprintf(password_buf, sizeof(password_buf), "%s", pending_password);
-            const size_t cv_pass_len = strlen(password_buf);
-
-            // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password; 64 bytes is an
-            // already-derived PSK hash carried over unchanged from a previously saved profile
-            const int cv_pass_ok = cv_pass_len == 0 || cv_pass_len == 64 || (cv_pass_len >= 8 && cv_pass_len <= 63);
-
-            if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) {
-                const char *cv_address = lv_label_get_text(ui_val_address_network);
-                const char *cv_subnet = lv_label_get_text(ui_val_subnet_network);
-                const char *cv_gateway = lv_label_get_text(ui_val_gateway_network);
-                const char *cv_dns = lv_label_get_text(ui_val_dns_network);
-
-                if (strlen(cv_ssid) > 0 && cv_pass_ok && strlen(cv_address) > 0 && strlen(cv_subnet) > 0
-                    && strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
-                    valid_info = 1;
-                }
-            } else {
-                if (strlen(cv_ssid) > 0 && cv_pass_ok) valid_info = 1;
-            }
-
-            if (valid_info) {
-                play_sound(snd_confirm);
-                save_network_config();
-                save_profile_ini();
-                network_saved = 1;
-
-                if (cv_pass_len > 0) {
-                    lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.encrypt_password);
-                } else {
-                    lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.no_password);
-                }
-
-                lv_label_set_text(ui_val_password_network, PASS_ENCODE);
-                set_connect_value(lang.muxnetprofile.connect_try);
-                lv_task_handler();
-
-                connecting_phase = 1;
-                connect_grace_ticks = 0;
-                viewing_active_profile = 0;
-                write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, "");
-
-                ui_network_locked = 1;
-
-                last_status[0] = '\0';
-                connect_process_done = 0;
-                connect_exit_code = 0;
-                connect_grace_ticks = 0;
-                connect_settle_ticks = 0;
-
-                clear_profile_status_file();
-
-                run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
-
-                memset(password_buf, 0, sizeof(password_buf));
-                lv_textarea_set_text(ui_txt_entry_network, "");
-
-                lv_task_handler();
-
-                // Connect the specific profile so the script tracks its active status independently!
-                const char *net_c_prof_args[] = {OPT_PATH NET_SCRIPT, "connect", current_profile, NULL};
-                run_exec(net_c_prof_args, A_SIZE(net_c_prof_args), 1, 0, NULL, net_connect_check);
-                lv_task_handler();
-            } else {
-                play_sound(snd_error);
-                toast_message(lang.muxnetprofile.check, tst_wait_s);
-            }
+            handle_profile_save();
         }
     } else {
-        if (!lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound(snd_confirm);
-            key_curr = 0;
-            if (e_focused == ui_lbl_profile_name_network || e_focused == ui_lbl_identifier_network
-                || e_focused == ui_lbl_password_network) {
-                lv_textarea_set_password_mode(ui_txt_entry_network, e_focused == ui_lbl_password_network);
-
-                lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
-
-                lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_state(num_entry, LV_STATE_DISABLED);
-
-                key_show = 1;
-            } else {
-                lv_textarea_set_password_mode(ui_txt_entry_network, 0);
-
-                lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
-
-                lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_state(key_entry, LV_STATE_DISABLED);
-
-                key_show = 2;
-            }
-
-            osk_show(ui_pnl_entry_network);
-            osk_refresh_labels();
-
-            lv_textarea_set_text(
-                ui_txt_entry_network,
-                e_focused == ui_lbl_password_network ? "" : lv_label_get_text(lv_group_get_focused(ui_group_value))
-            );
-        } else {
-            play_sound(snd_error);
-            toast_message(lang.muxnetprofile.deny_modify, tst_wait_s);
-        }
+        handle_osk_dispatch(e_focused);
     }
 }
 
@@ -1402,9 +1413,8 @@ int muxnetprofile_main(void) {
     network_saved = 0;
     save_dlg_active = 0;
     forget_dlg_active = 0;
-    connecting_phase = 0;
+    reset_connect_state();
     ui_network_locked = 0;
-    connect_grace_ticks = 0;
     viewing_active_profile = 0;
 
     last_status[0] = '\0';
