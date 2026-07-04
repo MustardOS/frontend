@@ -530,6 +530,14 @@ static void free_string_array(char **arr, const int count) {
     free(arr);
 }
 
+#define SET_OPTION_VISIBLE(MODULE, NAME, SHOULD_SHOW)                                                                  \
+    do {                                                                                                               \
+        if (SHOULD_SHOW)                                                                                               \
+            SHOW_OPTION_ITEM(MODULE, NAME);                                                                            \
+        else                                                                                                           \
+            HIDE_OPTION_ITEM(MODULE, NAME);                                                                            \
+    } while (0)
+
 static void apply_mode_visibility(const int ui_mode) {
     const int single = rgb_caps && rgb_caps->zones & RGB_ZONE_SINGLE;
     const int is_sysfs = rgb_caps && rgb_caps->backend == rgb_backend_sysfs;
@@ -603,42 +611,15 @@ static void apply_mode_visibility(const int ui_mode) {
             break;
     }
 
-    if (show_bright)
-        SHOW_OPTION_ITEM(rgb, bright);
-    else
-        HIDE_OPTION_ITEM(rgb, bright);
-    if (show_breath_speed)
-        SHOW_OPTION_ITEM(rgb, breath_speed);
-    else
-        HIDE_OPTION_ITEM(rgb, breath_speed);
-    if (show_colour_l)
-        SHOW_OPTION_ITEM(rgb, colour_l);
-    else
-        HIDE_OPTION_ITEM(rgb, colour_l);
-    if (show_colour_r)
-        SHOW_OPTION_ITEM(rgb, colour_r);
-    else
-        HIDE_OPTION_ITEM(rgb, colour_r);
-    if (show_colour_m)
-        SHOW_OPTION_ITEM(rgb, colour_m);
-    else
-        HIDE_OPTION_ITEM(rgb, colour_m);
-    if (show_colour_f1)
-        SHOW_OPTION_ITEM(rgb, colour_f1);
-    else
-        HIDE_OPTION_ITEM(rgb, colour_f1);
-    if (show_colour_f2)
-        SHOW_OPTION_ITEM(rgb, colour_f2);
-    else
-        HIDE_OPTION_ITEM(rgb, colour_f2);
-    if (show_combo)
-        SHOW_OPTION_ITEM(rgb, combo);
-    else
-        HIDE_OPTION_ITEM(rgb, combo);
-    if (show_backend)
-        SHOW_OPTION_ITEM(rgb, backend);
-    else
-        HIDE_OPTION_ITEM(rgb, backend);
+    SET_OPTION_VISIBLE(rgb, bright, show_bright);
+    SET_OPTION_VISIBLE(rgb, breath_speed, show_breath_speed);
+    SET_OPTION_VISIBLE(rgb, colour_l, show_colour_l);
+    SET_OPTION_VISIBLE(rgb, colour_r, show_colour_r);
+    SET_OPTION_VISIBLE(rgb, colour_m, show_colour_m);
+    SET_OPTION_VISIBLE(rgb, colour_f1, show_colour_f1);
+    SET_OPTION_VISIBLE(rgb, colour_f2, show_colour_f2);
+    SET_OPTION_VISIBLE(rgb, combo, show_combo);
+    SET_OPTION_VISIBLE(rgb, backend, show_backend);
 
     if (is_joypad) {
         if (ui_mode == RGB_MODE_BREATHING) {
@@ -746,10 +727,6 @@ static void init_navigation_group(void) {
 
 static int save_mode = 0;
 static mux_dialogue save_dlg;
-
-static void show_save_dialog(void) {
-    dialogue_open(&save_mode, &save_dlg, &theme);
-}
 
 static void hide_save_dialog(void) {
     dialogue_dismiss(&save_mode, &save_dlg);
