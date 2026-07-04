@@ -1215,6 +1215,35 @@ int profile_matches_connected_ssid(const char *profile_name, const char *ssid) {
     return match;
 }
 
+void refresh_theme_preview_image(char *base_path, char *name, int *preview_index) {
+    char preview_path[MAX_BUFFER_SIZE];
+    if (get_theme_preview_path(base_path, name, preview_path, sizeof(preview_path), *preview_index) != 0) {
+        *preview_index = -1;
+    }
+
+    lv_img_cache_invalidate_src(lv_img_get_src(ui_img_box));
+
+    if (strcasecmp(box_image_previous_path, preview_path) != 0) {
+        if (!file_exist(preview_path)) {
+            lv_img_set_src(ui_img_box, &ui_img_blank);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+        } else {
+            const struct image_settings image_settings = {
+                preview_path,
+                6,
+                validate_int16((int16_t) (device.mux.width * .45), "width"),
+                validate_int16(device.mux.height, "height"),
+                theme.image_list.pad_left,
+                theme.image_list.pad_right,
+                theme.image_list.pad_top,
+                theme.image_list.pad_bottom
+            };
+            update_image(ui_img_box, image_settings);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", preview_path);
+        }
+    }
+}
+
 void resolve_grid_item_images(
     const char *mux_dim, const char *mux_module, const char *glyph_name, char *grid_img, const size_t img_size,
     char *grid_img_foc, const size_t foc_size
