@@ -133,37 +133,10 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, usb_function, "settings/advanced/usb_function", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, box_art_pad_div, "settings/advanced/boxartpaddiv", INT, 0);
 
-    do {
-        const int sd2_current = lv_dropdown_get_selected(ui_dro_second_part_tweakadv);
-        if (sd2_current != second_part_original) {
-            is_modified++;
-            write_text_to_file(CONF_DEVICE_PATH "storage/sdcard/num", "w", INT, sd2_current + 1);
-        }
-    } while (0);
-
-    do {
-        const int usb_current = lv_dropdown_get_selected(ui_dro_usb_part_tweakadv);
-        if (usb_current != usb_part_original) {
-            is_modified++;
-            write_text_to_file(CONF_DEVICE_PATH "storage/usb/num", "w", INT, usb_current + 1);
-        }
-    } while (0);
-
-    do {
-        const int bright_current = lv_dropdown_get_selected(ui_dro_inc_bright_tweakadv);
-        if (bright_current != inc_bright_original) {
-            is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/incbright", "w", INT, bright_current + 1);
-        }
-    } while (0);
-
-    do {
-        const int volume_current = lv_dropdown_get_selected(ui_dro_inc_volume_tweakadv);
-        if (volume_current != inc_volume_original) {
-            is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/incvolume", "w", INT, volume_current + 1);
-        }
-    } while (0);
+    CHECK_AND_SAVE_DEV(tweakadv, second_part, "storage/sdcard/num", INT, 1);
+    CHECK_AND_SAVE_DEV(tweakadv, usb_part, "storage/usb/num", INT, 1);
+    CHECK_AND_SAVE_STD(tweakadv, inc_bright, "settings/advanced/incbright", INT, 1);
+    CHECK_AND_SAVE_STD(tweakadv, inc_volume, "settings/advanced/incvolume", INT, 1);
 
     do {
         const int overdrive_current = lv_dropdown_get_selected(ui_dro_overdrive_tweakadv);
