@@ -491,49 +491,88 @@ static int get_rgb_path(char *rgb_path) {
     return dir_exist(rgb_path);
 }
 
-static int dispatch_restore(void) {
-    int saved_mode = read_config_int("settings/rgb/mode", 0);
-    int saved_backend = read_config_int("settings/rgb/backend", 0);
-    int saved_bright_raw;
+typedef struct {
+    int mode;
+    int backend;
+    int bright_raw;
     rgb_colour_t col_l, col_r, col_m, col_f1, col_f2;
+} rgb_restore_state_t;
 
-    if (saved_mode == 4) {
+static void load_saved_rgb_state(rgb_restore_state_t *st) {
+    st->mode = read_config_int("settings/rgb/mode", 0);
+    st->backend = read_config_int("settings/rgb/backend", 0);
+
+    if (st->mode == 4) {
         char settings_path[MAX_BUFFER_SIZE];
 
         char base_path[MAX_BUFFER_SIZE];
         get_rgb_path(base_path);
 
         snprintf(settings_path, sizeof(settings_path), "%smode", base_path);
-        saved_mode = read_line_int_from(settings_path, 1);
+        st->mode = read_line_int_from(settings_path, 1);
 
         snprintf(settings_path, sizeof(settings_path), "%sbackend", base_path);
-        saved_backend = read_line_int_from(settings_path, 1);
+        st->backend = read_line_int_from(settings_path, 1);
 
         snprintf(settings_path, sizeof(settings_path), "%sbright", base_path);
-        saved_bright_raw = read_line_int_from(settings_path, 1);
+        st->bright_raw = read_line_int_from(settings_path, 1);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_l", base_path);
-        read_rgb_colour_from_file(settings_path, &col_l, &rgb_colours[0]);
+        read_rgb_colour_from_file(settings_path, &st->col_l, &rgb_colours[0]);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_r", base_path);
-        read_rgb_colour_from_file(settings_path, &col_r, &col_l);
+        read_rgb_colour_from_file(settings_path, &st->col_r, &st->col_l);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_m", base_path);
-        read_rgb_colour_from_file(settings_path, &col_m, &col_l);
+        read_rgb_colour_from_file(settings_path, &st->col_m, &st->col_l);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_f1", base_path);
-        read_rgb_colour_from_file(settings_path, &col_f1, &col_l);
+        read_rgb_colour_from_file(settings_path, &st->col_f1, &st->col_l);
 
         snprintf(settings_path, sizeof(settings_path), "%scolour_f2", base_path);
-        read_rgb_colour_from_file(settings_path, &col_f2, &col_r);
+        read_rgb_colour_from_file(settings_path, &st->col_f2, &st->col_r);
     } else {
-        saved_bright_raw = read_config_int("settings/rgb/bright", 6);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &col_l, &rgb_colours[0]);
-        col_r = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r", 0), &col_l);
-        col_m = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m", 0), &col_l);
-        col_f1 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f1", 0), &col_l);
-        col_f2 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f2", 0), &col_r);
+        st->bright_raw = read_config_int("settings/rgb/bright", 6);
+        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &st->col_l, &rgb_colours[0]);
+        st->col_r = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r", 0), &st->col_l);
+        st->col_m = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m", 0), &st->col_l);
+        st->col_f1 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f1", 0), &st->col_l);
+        st->col_f2 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f2", 0), &st->col_r);
     }
+}
+
+static int dispatch_wire_command(
+    const backend_t use, const int wire_mode, const int bright_byte, const int n, char **argv_buf, const flags_t *fl
+) {
+    if (use == be_joypad) {
+        if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present!", JOY_SYS);
+        return apply_joypad(wire_mode, bright_byte, n, argv_buf);
+    }
+
+    if (use == be_sysfs) {
+        if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present!", LED_SYS);
+        return apply_sysfs(wire_mode, bright_byte, n, argv_buf, fl);
+    }
+
+    if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present!", SER_DEV);
+    const int rc = apply_serial(wire_mode, bright_byte, n, argv_buf);
+
+    if (serial_fd >= 0) {
+        close(serial_fd);
+        serial_fd = -1;
+    }
+
+    return rc;
+}
+
+static int dispatch_restore(void) {
+    rgb_restore_state_t st;
+    load_saved_rgb_state(&st);
+
+    int saved_mode = st.mode;
+    int saved_backend = st.backend;
+    int saved_bright_raw = st.bright_raw;
+    rgb_colour_t col_l = st.col_l, col_r = st.col_r, col_m = st.col_m, col_f1 = st.col_f1, col_f2 = st.col_f2;
 
     if (saved_mode == 6) return 0;
     if (saved_mode == 5) saved_mode = 0;
@@ -669,25 +708,7 @@ static int dispatch_restore(void) {
 
 #undef PUSH
 
-    if (use == be_joypad) {
-        if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
-        return apply_joypad(wire_mode, bright_byte, n, argv_buf);
-    }
-
-    if (use == be_sysfs) {
-        if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
-        return apply_sysfs(wire_mode, bright_byte, n, argv_buf, &fl);
-    }
-
-    if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present.", SER_DEV);
-    int rc = apply_serial(wire_mode, bright_byte, n, argv_buf);
-
-    if (serial_fd >= 0) {
-        close(serial_fd);
-        serial_fd = -1;
-    }
-
-    return rc;
+    return dispatch_wire_command(use, wire_mode, bright_byte, n, argv_buf, &fl);
 }
 
 static int apply_sysfs(const int mode, const int brightness_raw, const int argc, char **argv, const flags_t *fl) {
@@ -1129,24 +1150,5 @@ int main(const int argc, char **argv) {
 
     const backend_t use = detect_backend(be);
 
-    if (use == be_joypad) {
-        if (!dir_exists(JOY_SYS)) die("Error: JOYPAD backend selected but %s not present.", JOY_SYS);
-        return apply_joypad(mode, brightness, rest_argc, rest_argv);
-    }
-
-    if (use == be_sysfs) {
-        if (!dir_exists(LED_SYS)) die("Error: SYSFS backend selected but %s not present.", LED_SYS);
-        return apply_sysfs(mode, brightness, rest_argc, rest_argv, &fl);
-    }
-
-    if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present.", SER_DEV);
-
-    const int rc = apply_serial(mode, brightness, rest_argc, rest_argv);
-
-    if (serial_fd >= 0) {
-        close(serial_fd);
-        serial_fd = -1;
-    }
-
-    return rc;
+    return dispatch_wire_command(use, mode, brightness, rest_argc, rest_argv, &fl);
 }
