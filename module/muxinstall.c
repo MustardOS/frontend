@@ -142,22 +142,13 @@ static void handle_up(void) {
 
     set_nav_input_dir(nav_dir_up);
 
-    // Grid mode.  Wrap on Row.
-    if (theme.grid.enabled && theme.grid.navigation_type == 4 && !get_grid_column_index(current_item_index)) {
-        list_nav_next(
-            get_grid_row_index(current_item_index) == grid_info.last_row_index ? grid_info.last_row_item_count - 1
-                                                                               : grid_info.column_count - 1
-        );
-        // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    } else if (!theme.grid.enabled && theme.misc.navigation_type == 4
-               && (!current_item_index || current_item_index == 4)) {
-        list_nav_next(3);
-        // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
-    } else if (theme.misc.navigation_type == 5 && !current_item_index) {
-        list_nav_next(2);
-    } else if (theme.misc.navigation_type == 5 && current_item_index == 3) {
-        list_nav_next(4);
-        // Regular Navigation
+    const int grid_steps = theme.grid.enabled ? grid_row_wrap_up_steps() : -1;
+    const int misc_steps = !theme.grid.enabled ? misc_even_row_wrap_up_steps(ui_count_dynamic) : -1;
+
+    if (grid_steps >= 0) {
+        list_nav_next(grid_steps);
+    } else if (misc_steps >= 0) {
+        list_nav_next(misc_steps);
     } else {
         list_nav_prev(1);
     }
@@ -168,20 +159,13 @@ static void handle_down(void) {
 
     set_nav_input_dir(nav_dir_down);
 
-    // Grid Navigation.  Wrap on Row.
-    if (theme.grid.enabled && theme.grid.navigation_type == 4
-        && get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1) {
-        list_nav_prev(get_grid_row_item_count(current_item_index) - 1);
-        // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    } else if (!theme.grid.enabled && theme.misc.navigation_type == 4
-               && (current_item_index == 3 || current_item_index == 7)) {
-        list_nav_prev(3);
-        // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
-    } else if (theme.misc.navigation_type == 5 && current_item_index == 2) {
-        list_nav_prev(2);
-    } else if (theme.misc.navigation_type == 5 && current_item_index == 7) {
-        list_nav_prev(4);
-        // Regular Navigation
+    const int grid_steps = theme.grid.enabled ? grid_row_wrap_down_steps() : -1;
+    const int misc_steps = !theme.grid.enabled ? misc_even_row_wrap_down_steps(ui_count_dynamic) : -1;
+
+    if (grid_steps >= 0) {
+        list_nav_prev(grid_steps);
+    } else if (misc_steps >= 0) {
+        list_nav_prev(misc_steps);
     } else {
         list_nav_next(1);
     }
@@ -190,14 +174,12 @@ static void handle_down(void) {
 static void handle_up_hold(void) { // prev
     if (msgbox_active) return;
 
+    const int grid_hold_ok = theme.grid.enabled && grid_row_hold_up_ok();
+    const int misc_hold_ok = !theme.grid.enabled && misc_even_row_hold_up_ok(ui_count_dynamic);
+    const int regular_ok = theme.misc.navigation_type < nav_even_rows && current_item_index > 0;
+
     // Don't wrap around when scrolling on hold.
-    if ((theme.grid.enabled && theme.grid.navigation_type == 4 && get_grid_column_index(current_item_index) > 0)
-        || (theme.grid.enabled && theme.grid.navigation_type < 4 && current_item_index > 0)
-        || (!theme.grid.enabled && theme.misc.navigation_type == 4 && current_item_index > 0 && current_item_index <= 3)
-        || (!theme.grid.enabled && theme.misc.navigation_type == 4 && current_item_index > 4)
-        || (theme.misc.navigation_type == 5 && current_item_index > 0 && current_item_index <= 2)
-        || (theme.misc.navigation_type == 5 && current_item_index > 3)
-        || (theme.misc.navigation_type < 4 && current_item_index > 0) || is_carousel_grid_mode()) {
+    if (grid_hold_ok || misc_hold_ok || regular_ok || is_carousel_grid_mode()) {
         handle_up();
     }
 }
@@ -205,16 +187,12 @@ static void handle_up_hold(void) { // prev
 static void handle_down_hold(void) { // next
     if (msgbox_active) return;
 
+    const int grid_hold_ok = theme.grid.enabled && grid_row_hold_down_ok(ui_count_dynamic);
+    const int misc_hold_ok = !theme.grid.enabled && misc_even_row_hold_down_ok(ui_count_dynamic);
+    const int regular_ok = theme.misc.navigation_type < nav_even_rows && current_item_index < ui_count_dynamic - 1;
+
     // Don't wrap around when scrolling on hold.
-    if ((theme.grid.enabled && theme.grid.navigation_type == 4
-         && get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1)
-        || (theme.grid.enabled && theme.grid.navigation_type < 4 && current_item_index < ui_count_dynamic - 1)
-        || (!theme.grid.enabled && theme.misc.navigation_type == 4 && current_item_index < ui_count_dynamic - 1
-            && current_item_index > 3)
-        || (!theme.grid.enabled && theme.misc.navigation_type == 4 && current_item_index < 3)
-        || (theme.misc.navigation_type == 5 && current_item_index < ui_count_dynamic - 1 && current_item_index > 2)
-        || (theme.misc.navigation_type == 5 && current_item_index < 2)
-        || (theme.misc.navigation_type < 4 && current_item_index < ui_count_dynamic - 1) || is_carousel_grid_mode()) {
+    if (grid_hold_ok || misc_hold_ok || regular_ok || is_carousel_grid_mode()) {
         handle_down();
     }
 }
@@ -224,35 +202,10 @@ static void handle_left(void) {
 
     set_nav_input_dir(nav_dir_left);
 
-    // Horizontal Navigation with 2 rows of 4 items
-    if (theme.grid.enabled && (theme.grid.navigation_type == 2 || theme.grid.navigation_type == 4)) {
-        const int column_index = current_item_index % grid_info.column_count;
-
-        if (current_item_index < grid_info.column_count) {
-            list_nav_prev(LV_MAX(column_index + 1, grid_info.last_row_item_count));
-        } else {
-            list_nav_prev(grid_info.column_count);
-        }
-    } else if (!theme.grid.enabled && (theme.misc.navigation_type == 2 || theme.misc.navigation_type == 4)) {
-        list_nav_prev(4);
-    }
-    // Horizontal Navigation with 3 item first row, 5 item second row
-    if (theme.misc.navigation_type == 3 || theme.misc.navigation_type == 5) {
-        switch (current_item_index) {
-            case 3:
-            case 4:
-                list_nav_prev(3);
-                break;
-            case 5:
-                list_nav_prev(4);
-                break;
-            case 6:
-            case 7:
-                list_nav_prev(5);
-                break;
-            default:
-                break;
-        }
+    if (theme.grid.enabled && is_horizontal_grid_nav()) {
+        list_nav_prev(grid_row_left_steps());
+    } else if (!theme.grid.enabled && is_horizontal_misc_nav()) {
+        list_nav_prev(ui_count_dynamic / 2);
     }
 }
 
@@ -261,59 +214,23 @@ static void handle_right(void) {
 
     set_nav_input_dir(nav_dir_right);
 
-    // Horizontal Navigation with 2 rows of 4 items
-    if (theme.grid.enabled && (theme.grid.navigation_type == 2 || theme.grid.navigation_type == 4)) {
-        const uint8_t row_index = current_item_index / grid_info.column_count;
-
-        // when on 2nd to last row do not go past last item
-        if (row_index == grid_info.last_row_index - 1) {
-            const int new_item_index = LV_MIN(current_item_index + grid_info.column_count, ui_count_dynamic - 1);
-            list_nav_next(new_item_index - current_item_index);
-            // when on the last row only move based on amount of items in that row
-        } else if (row_index == grid_info.last_row_index) {
-            list_nav_next(grid_info.last_row_item_count);
-        } else {
-            list_nav_next(grid_info.column_count);
-        }
-    } else if (!theme.grid.enabled && (theme.misc.navigation_type == 2 || theme.misc.navigation_type == 4)) {
-        list_nav_next(4);
-    }
-    // Horizontal Navigation with 3 item first row, 5 item second row
-    if (theme.misc.navigation_type == 3 || theme.misc.navigation_type == 5) {
-        switch (current_item_index) {
-            case 0:
-                list_nav_next(3);
-                break;
-            case 1:
-                list_nav_next(4);
-                break;
-            case 2:
-                list_nav_next(5);
-                break;
-            default:
-                break;
-        }
+    if (theme.grid.enabled && is_horizontal_grid_nav()) {
+        list_nav_next(grid_row_right_steps(ui_count_dynamic));
+    } else if (!theme.grid.enabled && is_horizontal_misc_nav()) {
+        list_nav_next(ui_count_dynamic / 2);
     }
 }
 
 static void handle_left_hold(void) {
     if (msgbox_active) return;
 
-    // Don't wrap around when scrolling on hold.
-    if (grid_mode_enabled && (theme.grid.navigation_type == 2 || theme.grid.navigation_type == 4)
-        && (get_grid_row_index(current_item_index) > 0 || is_carousel_grid_mode())) {
-        handle_left();
-    }
+    if (grid_row_hold_left_ok()) handle_left();
 }
 
 static void handle_right_hold(void) {
     if (msgbox_active) return;
 
-    // Don't wrap around when scrolling on hold.
-    if (grid_mode_enabled && (theme.grid.navigation_type == 2 || theme.grid.navigation_type == 4)
-        && (get_grid_row_index(current_item_index) < grid_info.last_row_index || is_carousel_grid_mode())) {
-        handle_right();
-    }
+    if (grid_row_hold_right_ok()) handle_right();
 }
 
 static void init_elements(void) {

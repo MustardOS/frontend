@@ -70,6 +70,7 @@
 #include "../common/verify.h"
 #include "../common/core/common.h"
 #include "../common/input/list_nav.h"
+#include "../common/input/grid_nav.h"
 #include "../common/json/json.h"
 #include "../common/lookup.h"
 // IWYU pragma: end_exports
