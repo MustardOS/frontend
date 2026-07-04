@@ -384,6 +384,88 @@ static int save_custom_options(void) {
     return 0;
 }
 
+typedef enum {
+    menu_option = 0,
+    menu_theme,
+    menu_catalogue,
+    menu_config,
+    menu_content,
+    menu_font,
+    menu_themeopt,
+    menu_music_volume,
+    menu_sound_volume,
+    menu_theme_alternate,
+} menu_action;
+
+typedef int (*visible_fn)(void);
+
+typedef struct {
+    const char *mux_name;
+    const char *launch_path;
+    int16_t *kiosk_flag;
+    menu_action action;
+    visible_fn visible;
+} menu_entry;
+
+static int16_t kiosk_pass = 0;
+
+static const menu_entry custom_menu_entries[ui_count_dynamic] = {
+    {"catalogue", "package/catalogue", &kiosk.custom.catalogue, menu_catalogue, NULL},
+    {"config", "package/config", &kiosk.custom.raconfig, menu_config, NULL},
+    {"content", NULL, &kiosk_pass, menu_content, NULL},   // Content Options
+    {"font", NULL, &kiosk_pass, menu_font, NULL},         // Font Settings
+    {"themeopt", NULL, &kiosk_pass, menu_themeopt, NULL}, // Theme Options
+    {"theme", "/theme", &kiosk.custom.theme, menu_theme, NULL},
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Theme Resolution
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Theme Scaling
+    {NULL, NULL, &kiosk_pass, menu_theme_alternate, visible_theme_alternate},
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Video Wallpaper
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Background Scale
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Background Music
+    {NULL, NULL, &kiosk_pass, menu_music_volume, NULL},
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Black Fade Animation
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Navigation Sound
+    {NULL, NULL, &kiosk_pass, menu_sound_volume, NULL},
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Startup Chime
+};
+
+// Shared shape for every "navigate to a submenu" menu action: kiosk check, then either defer via the
+// pending-save dialog (if options are unsaved) or save immediately and load the target submenu.
+static void navigate_to_submenu(const menu_entry *entry, const char *target_mux) {
+    if (is_ksk(*entry->kiosk_flag)) {
+        kiosk_denied();
+        return;
+    }
+
+    if (!config.settings.advanced.trust_modify && any_custom_modified()) {
+        snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
+
+        if (entry->launch_path) {
+            snprintf(pending_pik, sizeof(pending_pik), "%s", entry->launch_path);
+        } else {
+            pending_pik[0] = '\0';
+        }
+
+        snprintf(pending_mux_load, sizeof(pending_mux_load), "%s", target_mux);
+        pending_submenu = 1;
+        show_save_dialog();
+
+        return;
+    }
+
+    save_custom_options();
+
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
+    if (entry->launch_path) write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, entry->launch_path);
+
+    play_sound(snd_confirm);
+    toast_message(lang.generic.loading, tst_wait_f);
+
+    load_mux(target_mux);
+
+    mux_input_stop();
+}
+
 static void handle_a(void) {
     if (msg_mode || msgbox_active || hold_call) return;
 
@@ -425,57 +507,12 @@ static void handle_a(void) {
         return;
     }
 
-    static int16_t kiosk_pass = 0;
-
-    typedef enum {
-        menu_option = 0,
-        menu_theme,
-        menu_catalogue,
-        menu_config,
-        menu_content,
-        menu_font,
-        menu_themeopt,
-        menu_music_volume,
-        menu_sound_volume,
-        menu_theme_alternate,
-    } menu_action;
-
-    typedef int (*visible_fn)(void);
-
-    typedef struct {
-        const char *mux_name;
-        const char *launch_path;
-        int16_t *kiosk_flag;
-        menu_action action;
-        visible_fn visible;
-    } menu_entry;
-
-    static const menu_entry entries[ui_count_dynamic] = {
-        {"catalogue", "package/catalogue", &kiosk.custom.catalogue, menu_catalogue, NULL},
-        {"config", "package/config", &kiosk.custom.raconfig, menu_config, NULL},
-        {"content", NULL, &kiosk_pass, menu_content, NULL},   // Content Options
-        {"font", NULL, &kiosk_pass, menu_font, NULL},         // Font Settings
-        {"themeopt", NULL, &kiosk_pass, menu_themeopt, NULL}, // Theme Options
-        {"theme", "/theme", &kiosk.custom.theme, menu_theme, NULL},
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Theme Resolution
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Theme Scaling
-        {NULL, NULL, &kiosk_pass, menu_theme_alternate, visible_theme_alternate},
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Video Wallpaper
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Background Scale
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Background Music
-        {NULL, NULL, &kiosk_pass, menu_music_volume, NULL},
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Black Fade Animation
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Navigation Sound
-        {NULL, NULL, &kiosk_pass, menu_sound_volume, NULL},
-        {NULL, NULL, &kiosk_pass, menu_option, NULL}, // Startup Chime
-    };
-
     const menu_entry *visible_entries[ui_count_dynamic];
     size_t visible_count = 0;
 
-    for (size_t i = 0; i < A_SIZE(entries); i++) {
-        if (entries[i].visible && !entries[i].visible()) continue;
-        visible_entries[visible_count++] = &entries[i];
+    for (size_t i = 0; i < A_SIZE(custom_menu_entries); i++) {
+        if (custom_menu_entries[i].visible && !custom_menu_entries[i].visible()) continue;
+        visible_entries[visible_count++] = &custom_menu_entries[i];
     }
 
     if ((unsigned) current_item_index >= visible_count) return;
@@ -485,119 +522,16 @@ static void handle_a(void) {
         case menu_catalogue:
         case menu_config:
         case menu_theme:
-            if (is_ksk(*entry->kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            if (!config.settings.advanced.trust_modify && any_custom_modified()) {
-                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
-                snprintf(pending_pik, sizeof(pending_pik), "%s", entry->launch_path);
-                snprintf(
-                    pending_mux_load, sizeof(pending_mux_load), "%s", entry->action == menu_theme ? "theme" : "picker"
-                );
-
-                pending_submenu = 1;
-                show_save_dialog();
-
-                return;
-            }
-
-            save_custom_options();
-
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
-            write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, entry->launch_path);
-
-            play_sound(snd_confirm);
-            toast_message(lang.generic.loading, tst_wait_f);
-
-            load_mux(entry->action == menu_theme ? "theme" : "picker");
-
-            mux_input_stop();
+            navigate_to_submenu(entry, entry->action == menu_theme ? "theme" : "picker");
             break;
         case menu_content:
-            if (is_ksk(*entry->kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            if (!config.settings.advanced.trust_modify && any_custom_modified()) {
-                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
-                pending_pik[0] = '\0';
-
-                snprintf(pending_mux_load, sizeof(pending_mux_load), "content");
-                pending_submenu = 1;
-
-                show_save_dialog();
-
-                return;
-            }
-
-            save_custom_options();
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
-
-            play_sound(snd_confirm);
-            toast_message(lang.generic.loading, tst_wait_f);
-
-            load_mux("content");
-
-            mux_input_stop();
+            navigate_to_submenu(entry, "content");
             break;
         case menu_font:
-            if (is_ksk(*entry->kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            if (!config.settings.advanced.trust_modify && any_custom_modified()) {
-                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
-                pending_pik[0] = '\0';
-
-                snprintf(pending_mux_load, sizeof(pending_mux_load), "font");
-                pending_submenu = 1;
-
-                show_save_dialog();
-
-                return;
-            }
-
-            save_custom_options();
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
-
-            play_sound(snd_confirm);
-            toast_message(lang.generic.loading, tst_wait_f);
-
-            load_mux("font");
-
-            mux_input_stop();
+            navigate_to_submenu(entry, "font");
             break;
         case menu_themeopt:
-            if (is_ksk(*entry->kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-
-            if (!config.settings.advanced.trust_modify && any_custom_modified()) {
-                snprintf(pending_pdi, sizeof(pending_pdi), "%s", entry->mux_name);
-                pending_pik[0] = '\0';
-
-                snprintf(pending_mux_load, sizeof(pending_mux_load), "themeopt");
-                pending_submenu = 1;
-
-                show_save_dialog();
-
-                return;
-            }
-
-            save_custom_options();
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, entry->mux_name);
-
-            play_sound(snd_confirm);
-            toast_message(lang.generic.loading, tst_wait_f);
-
-            load_mux("themeopt");
-
-            mux_input_stop();
+            navigate_to_submenu(entry, "themeopt");
             break;
         case menu_music_volume:
             toast_message(lang.muxcustom.music.set, tst_wait_s);
