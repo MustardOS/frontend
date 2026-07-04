@@ -7,10 +7,6 @@ static mux_dialogue save_dlg;
 static int wr_dlg_active = 0;
 static mux_dialogue wr_dlg;
 
-static void show_save_dialog(void) {
-    dialogue_open(&save_mode, &save_dlg, &theme);
-}
-
 static void hide_save_dialog(void) {
     dialogue_dismiss(&save_mode, &save_dlg);
 }

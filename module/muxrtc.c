@@ -31,10 +31,6 @@ static const char *notation[NOTATION_COUNT];
 static int save_mode = 0;
 static mux_dialogue save_dlg;
 
-static void show_save_dialog(void) {
-    dialogue_open(&save_mode, &save_dlg, &theme);
-}
-
 static void hide_save_dialog(void) {
     dialogue_dismiss(&save_mode, &save_dlg);
 }
