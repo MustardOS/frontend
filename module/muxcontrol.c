@@ -11,83 +11,8 @@ static void show_help(void) {
     show_info_box(lang.muxcontrol.title, lang.muxcontrol.help, 0);
 }
 
-static void write_control_file(char *path, const char *control, char *log) {
-    FILE *file = fopen(path, "w");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
-        return;
-    }
-
-    LOG_INFO(mux_module, "%s: %s", log, control);
-
-    fprintf(file, "%s", control);
-    fclose(file);
-}
-
-static void assign_control_single(char *core_dir, const char *control, const char *rom) {
-    char control_path[MAX_BUFFER_SIZE];
-    snprintf(control_path, sizeof(control_path), "%s/%s.con", core_dir, strip_ext(rom));
-
-    if (file_exist(control_path)) remove(control_path);
-
-    write_control_file(control_path, control, "Assign Control (Single)");
-}
-
-static void assign_control_directory(const char *core_dir, const char *control, const int purge) {
-    if (purge) delete_files_of_type(core_dir, ".con", NULL, 0);
-
-    char control_path[MAX_BUFFER_SIZE];
-    snprintf(control_path, sizeof(control_path), INFO_CON_PATH "/%s/core.con", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(control_path);
-
-    write_control_file(control_path, control, "Assign Control (Directory)");
-}
-
-static void assign_control_parent(char *core_dir, const char *control) {
-    delete_files_of_type(core_dir, ".con", NULL, 1);
-    assign_control_directory(core_dir, control, 0);
-
-    char **subdirs = get_subdirectories(rom_dir);
-    if (!subdirs) return;
-
-    for (int i = 0; subdirs[i]; i++) {
-        char control_path[MAX_BUFFER_SIZE];
-        snprintf(control_path, sizeof(control_path), "%s%s/core.con", core_dir, subdirs[i]);
-
-        create_directories(strip_dir(control_path), 0);
-        write_control_file(control_path, control, "Assign Control (Recursive)");
-    }
-
-    free_subdirectories(subdirs);
-}
-
 static void create_control_assignment(const char *control, const char *rom, const enum gen_type method) {
-    char core_dir[MAX_BUFFER_SIZE];
-
-    if (is_app) {
-        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
-    } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
-    }
-
-    remove_double_slashes(core_dir);
-    create_directories(core_dir, 0);
-
-    switch (method) {
-        case SINGLE:
-            assign_control_single(core_dir, control, rom);
-            break;
-        case PARENT:
-            assign_control_parent(core_dir, control);
-            break;
-        case DIRECTORY:
-            assign_control_directory(core_dir, control, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-        default:
-            assign_control_directory(core_dir, control, 0);
-            break;
-    }
+    create_marker_assignment("con", "Assign Control", control, rom, rom_dir, is_app, method);
 
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }

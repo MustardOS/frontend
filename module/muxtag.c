@@ -8,79 +8,8 @@ static void show_help(void) {
     show_info_box(lang.muxtag.title, lang.muxtag.help, 0);
 }
 
-static void write_tag_file(char *path, char *tag, char *log) {
-    if (strcasecmp(tag, "none") == 0) return;
-
-    FILE *file = fopen(path, "w");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
-        return;
-    }
-
-    LOG_INFO(mux_module, "%s: %s", log, tag);
-
-    fprintf(file, "%s", tag);
-    fclose(file);
-}
-
-static void assign_tag_single(char *core_dir, char *tag, const char *rom) {
-    char tag_path[MAX_BUFFER_SIZE];
-    char *rom_no_ext = strip_ext(rom);
-
-    snprintf(tag_path, sizeof(tag_path), "%s/%s.tag", core_dir, rom_no_ext);
-    free(rom_no_ext);
-
-    if (file_exist(tag_path)) remove(tag_path);
-    write_tag_file(tag_path, tag, "Assign Tag (Single)");
-}
-
-static void assign_tag_directory(const char *core_dir, char *tag, const int purge) {
-    if (purge) delete_files_of_type(core_dir, ".tag", NULL, 0);
-
-    char tag_path[MAX_BUFFER_SIZE];
-    snprintf(tag_path, sizeof(tag_path), INFO_CON_PATH "/%s/core.tag", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(tag_path);
-
-    write_tag_file(tag_path, tag, "Assign Tag (Directory)");
-}
-
-static void assign_tag_parent(char *core_dir, char *tag) {
-    delete_files_of_type(core_dir, ".tag", NULL, 1);
-
-    if (strcasecmp(tag, "none") == 0) return;
-
-    assign_tag_directory(core_dir, tag, 0);
-
-    char **subdirs = get_subdirectories(rom_dir);
-    if (!subdirs) return;
-
-    for (int i = 0; subdirs[i]; i++) {
-        char tag_path[MAX_BUFFER_SIZE];
-        snprintf(tag_path, sizeof(tag_path), "%s%s/core.tag", core_dir, subdirs[i]);
-
-        char *tag_parent = strip_dir(tag_path);
-        create_directories(tag_parent, 0);
-        free(tag_parent);
-        write_tag_file(tag_path, tag, "Assign Tag (Recursive)");
-    }
-
-    free_subdirectories(subdirs);
-}
-
 static void create_tag_assignment(char *tag, const char *rom, const enum gen_type method) {
-    char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(core_dir);
-
-    create_directories(core_dir, 0);
-
-    if (method == SINGLE) {
-        assign_tag_single(core_dir, tag, rom);
-    } else if (method == PARENT) {
-        assign_tag_parent(core_dir, tag);
-    } else {
-        assign_tag_directory(core_dir, tag, 1);
-    }
+    create_marker_assignment("tag", "Assign Tag", tag, rom, rom_dir, 0, method);
 }
 
 static void generate_available_tags(void) {

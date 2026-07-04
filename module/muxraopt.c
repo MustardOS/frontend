@@ -11,88 +11,8 @@ static void show_help(void) {
     show_info_box(lang.muxraopt.title, lang.muxraopt.help, 0);
 }
 
-static void write_rac_file(char *path, const char *rac, char *log) {
-    FILE *file = fopen(path, "w");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
-        return;
-    }
-
-    LOG_INFO(mux_module, "%s: %s", log, rac);
-
-    fprintf(file, "%s", rac);
-    fclose(file);
-}
-
-static void assign_rac_single(char *core_dir, const char *rac, const char *rom) {
-    char rac_path[MAX_BUFFER_SIZE];
-    char *rom_no_ext = strip_ext(rom);
-
-    snprintf(rac_path, sizeof(rac_path), "%s/%s.rac", core_dir, rom_no_ext);
-    free(rom_no_ext);
-
-    if (file_exist(rac_path)) remove(rac_path);
-
-    write_rac_file(rac_path, rac, "Assign RetroArch Config (Single)");
-}
-
-static void assign_rac_directory(const char *core_dir, const char *rac, const int purge) {
-    if (purge) delete_files_of_type(core_dir, ".rac", NULL, 0);
-
-    char rac_path[MAX_BUFFER_SIZE];
-    snprintf(rac_path, sizeof(rac_path), INFO_CON_PATH "/%s/core.rac", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(rac_path);
-
-    write_rac_file(rac_path, rac, "Assign RetroArch Config (Directory)");
-}
-
-static void assign_rac_parent(char *core_dir, const char *rac) {
-    delete_files_of_type(core_dir, ".rac", NULL, 1);
-    assign_rac_directory(core_dir, rac, 0);
-
-    char **subdirs = get_subdirectories(rom_dir);
-    if (!subdirs) return;
-
-    for (int i = 0; subdirs[i]; i++) {
-        char rac_path[MAX_BUFFER_SIZE];
-        snprintf(rac_path, sizeof(rac_path), "%s%s/core.rac", core_dir, subdirs[i]);
-
-        char *rac_parent = strip_dir(rac_path);
-        create_directories(rac_parent, 0);
-        free(rac_parent);
-        write_rac_file(rac_path, rac, "Assign RetroArch Config (Recursive)");
-    }
-
-    free_subdirectories(subdirs);
-}
-
 static void create_rac_assignment(const char *rac, const char *rom, const enum gen_type method) {
-    char core_dir[MAX_BUFFER_SIZE];
-
-    if (is_app) {
-        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
-    } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
-    }
-
-    remove_double_slashes(core_dir);
-    create_directories(core_dir, 0);
-
-    switch (method) {
-        case SINGLE:
-            assign_rac_single(core_dir, rac, rom);
-            break;
-        case PARENT:
-            assign_rac_parent(core_dir, rac);
-            break;
-        case DIRECTORY:
-            assign_rac_directory(core_dir, rac, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-        default:
-            assign_rac_directory(core_dir, rac, 0);
-            break;
-    }
+    create_marker_assignment("rac", "Assign RetroArch Config", rac, rom, rom_dir, is_app, method);
 
     if (file_exist(MUOS_SAR_LOAD)) remove(MUOS_SAR_LOAD);
 }

@@ -89,80 +89,8 @@ static void show_help(void) {
     show_info_box(lang.muxcolfilter.title, lang.muxcolfilter.help, 0);
 }
 
-static void write_filter_file(char *path, char *filter, char *log) {
-    if (strcasecmp(filter, "none") == 0) return;
-
-    FILE *file = fopen(path, "w");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
-        return;
-    }
-
-    LOG_INFO(mux_module, "%s: %s", log, filter);
-
-    fprintf(file, "%s", filter);
-    fclose(file);
-}
-
-static void assign_filter_single(char *core_dir, char *filter, const char *rom) {
-    char filter_path[MAX_BUFFER_SIZE];
-    snprintf(filter_path, sizeof(filter_path), "%s/%s.flt", core_dir, strip_ext(rom));
-
-    if (file_exist(filter_path)) remove(filter_path);
-    write_filter_file(filter_path, filter, "Assign Colour Filter (Single)");
-}
-
-static void assign_filter_directory(const char *core_dir, char *filter, const int purge) {
-    if (purge) delete_files_of_type(core_dir, ".flt", NULL, 0);
-
-    char filter_path[MAX_BUFFER_SIZE];
-    snprintf(filter_path, sizeof(filter_path), INFO_CON_PATH "/%s/core.flt", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(filter_path);
-
-    write_filter_file(filter_path, filter, "Assign Colour Filter (Directory)");
-}
-
-static void assign_filter_parent(char *core_dir, char *filter) {
-    delete_files_of_type(core_dir, ".flt", NULL, 1);
-
-    if (strcasecmp(filter, "none") == 0) return;
-
-    assign_filter_directory(core_dir, filter, 0);
-
-    char **subdirs = get_subdirectories(rom_dir);
-    if (!subdirs) return;
-
-    for (int i = 0; subdirs[i]; i++) {
-        char filter_path[MAX_BUFFER_SIZE];
-        snprintf(filter_path, sizeof(filter_path), "%s%s/core.flt", core_dir, subdirs[i]);
-
-        create_directories(strip_dir(filter_path), 0);
-        write_filter_file(filter_path, filter, "Assign Colour Filter (Recursive)");
-    }
-
-    free_subdirectories(subdirs);
-}
-
 static void create_filter_assignment(char *filter, const char *rom, const enum gen_type method) {
-    char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(core_dir);
-
-    create_directories(core_dir, 0);
-
-    switch (method) {
-        case SINGLE:
-            assign_filter_single(core_dir, filter, rom);
-            break;
-        case PARENT:
-            assign_filter_parent(core_dir, filter);
-            break;
-        case DIRECTORY:
-            assign_filter_directory(core_dir, filter, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-            break;
-    }
+    create_marker_assignment("flt", "Assign Colour Filter", filter, rom, rom_dir, 0, method);
 }
 
 static void generate_available_filters(void) {

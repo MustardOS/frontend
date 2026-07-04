@@ -76,79 +76,8 @@ static void show_help(void) {
     if (author) free(author);
 }
 
-static void write_shader_file(char *path, char *shader, char *log) {
-    if (strcasecmp(shader, "none") == 0) return;
-
-    FILE *file = fopen(path, "w");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
-        return;
-    }
-
-    LOG_INFO(mux_module, "%s: %s", log, shader);
-
-    fprintf(file, "%s", shader);
-    fclose(file);
-}
-
-static void assign_shader_single(char *core_dir, char *shader, const char *rom) {
-    char shader_path[MAX_BUFFER_SIZE];
-    char *rom_no_ext = strip_ext(rom);
-
-    snprintf(shader_path, sizeof(shader_path), "%s/%s.shd", core_dir, rom_no_ext);
-    free(rom_no_ext);
-
-    if (file_exist(shader_path)) remove(shader_path);
-    write_shader_file(shader_path, shader, "Assign Shader (Single)");
-}
-
-static void assign_shader_directory(const char *core_dir, char *shader, const int purge) {
-    if (purge) delete_files_of_type(core_dir, ".shd", NULL, 0);
-
-    char shader_path[MAX_BUFFER_SIZE];
-    snprintf(shader_path, sizeof(shader_path), INFO_CON_PATH "/%s/core.shd", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(shader_path);
-
-    write_shader_file(shader_path, shader, "Assign Shader (Directory)");
-}
-
-static void assign_shader_parent(char *core_dir, char *shader) {
-    delete_files_of_type(core_dir, ".shd", NULL, 1);
-
-    if (strcasecmp(shader, "none") == 0) return;
-
-    assign_shader_directory(core_dir, shader, 0);
-
-    char **subdirs = get_subdirectories(rom_dir);
-    if (!subdirs) return;
-
-    for (int i = 0; subdirs[i]; i++) {
-        char shader_path[MAX_BUFFER_SIZE];
-        snprintf(shader_path, sizeof(shader_path), "%s%s/core.shd", core_dir, subdirs[i]);
-
-        char *shader_parent = strip_dir(shader_path);
-        create_directories(shader_parent, 0);
-        free(shader_parent);
-        write_shader_file(shader_path, shader, "Assign Shader (Recursive)");
-    }
-
-    free_subdirectories(subdirs);
-}
-
 static void create_shader_assignment(char *shader, const char *rom, const enum gen_type method) {
-    char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(core_dir);
-
-    create_directories(core_dir, 0);
-
-    if (method == SINGLE) {
-        assign_shader_single(core_dir, shader, rom);
-    } else if (method == PARENT) {
-        assign_shader_parent(core_dir, shader);
-    } else {
-        assign_shader_directory(core_dir, shader, 1);
-    }
+    create_marker_assignment("shd", "Assign Shader", shader, rom, rom_dir, 0, method);
 }
 
 static void generate_available_shaders(void) {

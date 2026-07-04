@@ -11,88 +11,8 @@ static void show_help(void) {
     show_info_box(lang.muxgov.title, lang.muxgov.help, 0);
 }
 
-static void write_gov_file(char *path, const char *gov, char *log) {
-    FILE *file = fopen(path, "w");
-    if (!file) {
-        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
-        return;
-    }
-
-    LOG_INFO(mux_module, "%s: %s", log, gov);
-
-    fprintf(file, "%s", gov);
-    fclose(file);
-}
-
-static void assign_gov_single(char *core_dir, const char *gov, const char *rom) {
-    char gov_path[MAX_BUFFER_SIZE];
-    char *rom_no_ext = strip_ext(rom);
-    snprintf(gov_path, sizeof(gov_path), "%s/%s.gov", core_dir, rom_no_ext);
-    free(rom_no_ext);
-
-    if (file_exist(gov_path)) remove(gov_path);
-
-    write_gov_file(gov_path, gov, "Assign Governor (Single)");
-}
-
-static void assign_gov_directory(const char *core_dir, const char *gov, const int purge) {
-    if (purge) delete_files_of_type(core_dir, ".gov", NULL, 0);
-
-    char gov_path[MAX_BUFFER_SIZE];
-    snprintf(gov_path, sizeof(gov_path), INFO_CON_PATH "/%s/core.gov", get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(gov_path);
-
-    write_gov_file(gov_path, gov, "Assign Governor (Directory)");
-}
-
-static void assign_gov_parent(char *core_dir, const char *gov) {
-    delete_files_of_type(core_dir, ".gov", NULL, 1);
-    assign_gov_directory(core_dir, gov, 0);
-
-    char **subdirs = get_subdirectories(rom_dir);
-    if (!subdirs) return;
-
-    for (int i = 0; subdirs[i]; i++) {
-        char gov_path[MAX_BUFFER_SIZE];
-        snprintf(gov_path, sizeof(gov_path), "%s%s/core.gov", core_dir, subdirs[i]);
-
-        char *gov_parent = strip_dir(gov_path);
-        create_directories(gov_parent, 0);
-        free(gov_parent);
-
-        write_gov_file(gov_path, gov, "Assign Governor (Recursive)");
-    }
-
-    free_subdirectories(subdirs);
-}
-
 static void create_gov_assignment(const char *gov, const char *rom, const enum gen_type method) {
-    char core_dir[MAX_BUFFER_SIZE];
-
-    if (is_app) {
-        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
-    } else {
-        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
-    }
-
-    remove_double_slashes(core_dir);
-    create_directories(core_dir, 0);
-
-    switch (method) {
-        case SINGLE:
-            assign_gov_single(core_dir, gov, rom);
-            break;
-        case PARENT:
-            assign_gov_parent(core_dir, gov);
-            break;
-        case DIRECTORY:
-            assign_gov_directory(core_dir, gov, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-        default:
-            assign_gov_directory(core_dir, gov, 0);
-            break;
-    }
+    create_marker_assignment("gov", "Assign Governor", gov, rom, rom_dir, is_app, method);
 
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }

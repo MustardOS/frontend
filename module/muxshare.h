@@ -201,6 +201,11 @@ void clear_box_image();
 
 void render_video_refresh(const char *h_core_artwork, const char *h_file_name);
 
+void create_marker_assignment(
+    const char *ext, const char *op_label, const char *value, const char *rom, char *rom_dir, int is_app,
+    enum gen_type method
+);
+
 char *read_shader_info(const char *shader_store, const char *key);
 
 int muxactivity_main();

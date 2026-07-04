@@ -1044,6 +1044,108 @@ void render_video_refresh(const char *h_core_artwork, const char *h_file_name) {
     video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
 }
 
+static void write_marker_file(const char *path, const char *value, const char *op_label, const char *op_suffix) {
+    if (strcasecmp(value, "none") == 0) return;
+
+    FILE *file = fopen(path, "w");
+    if (!file) {
+        LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
+        return;
+    }
+
+    LOG_INFO(mux_module, "%s (%s): %s", op_label, op_suffix, value);
+
+    fprintf(file, "%s", value);
+    fclose(file);
+}
+
+static void
+assign_marker_single(const char *core_dir, const char *ext, const char *op_label, const char *value, const char *rom) {
+    char marker_path[MAX_BUFFER_SIZE];
+    char *rom_no_ext = strip_ext(rom);
+
+    snprintf(marker_path, sizeof(marker_path), "%s/%s.%s", core_dir, rom_no_ext, ext);
+    free(rom_no_ext);
+
+    if (file_exist(marker_path)) remove(marker_path);
+    write_marker_file(marker_path, value, op_label, "Single");
+}
+
+static void assign_marker_directory(
+    char *core_dir, char *rom_dir, const char *ext, const char *op_label, const char *value, const int purge
+) {
+    if (purge) {
+        char dot_ext[16];
+        snprintf(dot_ext, sizeof(dot_ext), ".%s", ext);
+        delete_files_of_type(core_dir, dot_ext, NULL, 0);
+    }
+
+    char marker_path[MAX_BUFFER_SIZE];
+    snprintf(marker_path, sizeof(marker_path), INFO_CON_PATH "/%s/core.%s", get_last_subdir(rom_dir, '/', 4), ext);
+    remove_double_slashes(marker_path);
+
+    write_marker_file(marker_path, value, op_label, "Directory");
+}
+
+static void
+assign_marker_parent(char *core_dir, char *rom_dir, const char *ext, const char *op_label, const char *value) {
+    char dot_ext[16];
+    snprintf(dot_ext, sizeof(dot_ext), ".%s", ext);
+    delete_files_of_type(core_dir, dot_ext, NULL, 1);
+
+    if (strcasecmp(value, "none") == 0) return;
+
+    assign_marker_directory(core_dir, rom_dir, ext, op_label, value, 0);
+
+    char **subdirs = get_subdirectories(rom_dir);
+    if (!subdirs) return;
+
+    for (int i = 0; subdirs[i]; i++) {
+        char marker_path[MAX_BUFFER_SIZE];
+        snprintf(marker_path, sizeof(marker_path), "%s%s/core.%s", core_dir, subdirs[i], ext);
+
+        char *marker_parent = strip_dir(marker_path);
+        create_directories(marker_parent, 0);
+        free(marker_parent);
+
+        write_marker_file(marker_path, value, op_label, "Recursive");
+    }
+
+    free_subdirectories(subdirs);
+}
+
+void create_marker_assignment(
+    const char *ext, const char *op_label, const char *value, const char *rom, char *rom_dir, const int is_app,
+    const enum gen_type method
+) {
+    char core_dir[MAX_BUFFER_SIZE];
+
+    if (is_app) {
+        snprintf(core_dir, sizeof(core_dir), "%s/", rom_dir);
+    } else {
+        snprintf(core_dir, sizeof(core_dir), INFO_CON_PATH "/%s/", get_last_subdir(rom_dir, '/', 4));
+    }
+
+    remove_double_slashes(core_dir);
+    create_directories(core_dir, 0);
+
+    switch (method) {
+        case SINGLE:
+            assign_marker_single(core_dir, ext, op_label, value, rom);
+            break;
+        case PARENT:
+            assign_marker_parent(core_dir, rom_dir, ext, op_label, value);
+            break;
+        case DIRECTORY:
+            assign_marker_directory(core_dir, rom_dir, ext, op_label, value, 1);
+            break;
+        case DIRECTORY_NO_WIPE:
+        default:
+            assign_marker_directory(core_dir, rom_dir, ext, op_label, value, 0);
+            break;
+    }
+}
+
 void resolve_grid_item_images(
     const char *mux_dim, const char *mux_module, const char *glyph_name, char *grid_img, const size_t img_size,
     char *grid_img_foc, const size_t foc_size
