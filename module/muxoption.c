@@ -756,6 +756,7 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
     (void) auto_assign;
     (void) app;
 
+    nav_silent = 1;
     rem_config = 0;
     current_view = view_options;
 
