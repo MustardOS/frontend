@@ -184,7 +184,8 @@ void power_loss_ui_check(struct theme_config *t, const struct mux_lang *l, lv_ob
     remove(MUOS_PWR_LOSS);
 
     dialogue_init_message(
-        &power_loss_dlg, t, layer, l->generic.power_loss_title, NULL, l->generic.power_loss_message, l->generic.confirm
+        &power_loss_dlg, t, layer, l->generic.power_loss_title, NULL, l->generic.power_loss_message,
+        l->generic.understand
     );
     dialogue_show(&power_loss_dlg);
 
