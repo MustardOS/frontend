@@ -30,21 +30,11 @@ static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
 static char *load_content_description(void) {
-    char *item_dir = get_content_path(items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
-
     char core_desc[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, core_desc, sizeof(core_desc));
+    char item_no_ext[MAX_BUFFER_SIZE];
+    resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));
 
     if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.generic.no_info;
-
-    char item_no_ext[MAX_BUFFER_SIZE];
-    snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
-
-    char *dot = strrchr(item_no_ext, '.');
-    if (dot) *dot = '\0';
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), INFO_CAT_PATH "/%s/text/%s.txt", core_desc, item_no_ext);
@@ -59,19 +49,9 @@ static void image_refresh(const char *image_type) {
     if (!ui_count_static) return;
     if (strcasecmp(image_type, "box") == 0 && config.visual.box_art == 8) return;
 
-    char *item_dir = get_content_path(items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
-
     char h_core_artwork[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, h_core_artwork, sizeof(h_core_artwork));
-
     char h_file_name[MAX_BUFFER_SIZE];
-    snprintf(h_file_name, sizeof(h_file_name), "%s", item_file_name_buf);
-
-    char *dot = strrchr(h_file_name, '.');
-    if (dot) *dot = '\0';
+    resolve_content_artwork_names(h_core_artwork, sizeof(h_core_artwork), h_file_name, sizeof(h_file_name));
 
     render_image_refresh(
         image_type, h_core_artwork, h_file_name, ui_img_splash, ui_viewport_objects, &starter_image, &splash_valid
@@ -81,18 +61,9 @@ static void image_refresh(const char *image_type) {
 static void video_refresh(void) {
     if (!ui_count_static) return;
 
-    char *item_dir = get_content_path(items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
-
     char h_core_artwork[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, h_core_artwork, sizeof(h_core_artwork));
-
     char h_file_name[MAX_BUFFER_SIZE];
-    snprintf(h_file_name, sizeof(h_file_name), "%s", item_file_name_buf);
-    char *dot = strrchr(h_file_name, '.');
-    if (dot) *dot = '\0';
+    resolve_content_artwork_names(h_core_artwork, sizeof(h_core_artwork), h_file_name, sizeof(h_file_name));
 
     render_video_refresh(h_core_artwork, h_file_name);
 }

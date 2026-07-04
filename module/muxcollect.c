@@ -23,30 +23,18 @@ static char current_content_label[MAX_BUFFER_SIZE];
 char *access_mode = NULL;
 
 static char *load_content_description(void) {
-    char *item_dir = get_content_path(items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
-
     char core_desc[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, core_desc, sizeof(core_desc));
+    char item_no_ext[MAX_BUFFER_SIZE];
+    resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));
 
     if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.generic.no_info;
 
-    const char *h_core_artwork;
-    const char *h_file_name_ptr;
-    char item_no_ext[MAX_BUFFER_SIZE];
+    const char *h_core_artwork = core_desc;
+    const char *h_file_name_ptr = item_no_ext;
 
     if (items[current_item_index].content_type == FOLDER) {
         h_core_artwork = "Collection";
         h_file_name_ptr = items[current_item_index].name;
-    } else {
-        snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
-        char *dot = strrchr(item_no_ext, '.');
-        if (dot) *dot = '\0';
-
-        h_core_artwork = core_desc;
-        h_file_name_ptr = item_no_ext;
     }
 
     char content_desc[MAX_BUFFER_SIZE];
@@ -62,29 +50,16 @@ static void image_refresh(const char *image_type) {
     if (!ui_count_static) return;
     if (strcasecmp(image_type, "box") == 0 && config.visual.box_art == 8) return;
 
-    char *item_dir = get_content_path(items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
-
     char core_desc[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, core_desc, sizeof(core_desc));
-
-    char *h_core_artwork;
-    char *h_file_name_ptr;
-
     char item_no_ext[MAX_BUFFER_SIZE];
+    resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));
+
+    char *h_core_artwork = core_desc;
+    char *h_file_name_ptr = item_no_ext;
 
     if (items[current_item_index].content_type == FOLDER) {
         h_core_artwork = "Collection";
         h_file_name_ptr = items[current_item_index].name;
-    } else {
-        snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
-        char *dot = strrchr(item_no_ext, '.');
-        if (dot) *dot = '\0';
-
-        h_core_artwork = core_desc;
-        h_file_name_ptr = item_no_ext;
     }
 
     render_image_refresh(
@@ -95,18 +70,9 @@ static void image_refresh(const char *image_type) {
 static void video_refresh(void) {
     if (!ui_count_static || items[current_item_index].content_type == FOLDER) return;
 
-    char *item_dir = get_content_path(items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
-
     char core_desc[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, core_desc, sizeof(core_desc));
-
     char item_no_ext[MAX_BUFFER_SIZE];
-    snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
-    char *dot = strrchr(item_no_ext, '.');
-    if (dot) *dot = '\0';
+    resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));
 
     render_video_refresh(core_desc, item_no_ext);
 }

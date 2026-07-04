@@ -1215,6 +1215,21 @@ int profile_matches_connected_ssid(const char *profile_name, const char *ssid) {
     return match;
 }
 
+void resolve_content_artwork_names(
+    char *h_core_artwork, const size_t core_size, char *h_file_name, const size_t file_size
+) {
+    char *item_dir = get_content_path(items[current_item_index].extra_data);
+
+    char item_file_name_buf[MAX_BUFFER_SIZE];
+    snprintf(item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(items[current_item_index].extra_data));
+
+    get_catalogue_name(item_dir, item_file_name_buf, h_core_artwork, core_size);
+
+    snprintf(h_file_name, file_size, "%s", item_file_name_buf);
+    char *dot = strrchr(h_file_name, '.');
+    if (dot) *dot = '\0';
+}
+
 void refresh_theme_preview_image(char *base_path, char *name, int *preview_index) {
     char preview_path[MAX_BUFFER_SIZE];
     if (get_theme_preview_path(base_path, name, preview_path, sizeof(preview_path), *preview_index) != 0) {

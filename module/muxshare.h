@@ -216,6 +216,8 @@ int read_connected_ssid(char *ssid);
 
 int profile_matches_connected_ssid(const char *profile_name, const char *ssid);
 
+void resolve_content_artwork_names(char *h_core_artwork, size_t core_size, char *h_file_name, size_t file_size);
+
 void refresh_theme_preview_image(char *base_path, char *name, int *preview_index);
 
 int muxactivity_main();
