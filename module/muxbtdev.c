@@ -60,27 +60,6 @@ static void handle_keyboard_press(void) {
     }
 }
 
-static void nav_show_a(const int show, const char *text) {
-    if (show) {
-        lv_label_set_text(ui_lbl_nav_a, text);
-        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else {
-        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    }
-}
-
-static void nav_show_lr(const int show) {
-    if (show) {
-        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else {
-        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    }
-}
-
 static void nav_show_x(const int show, const char *text) {
     if (show) {
         lv_label_set_text(ui_lbl_nav_x, text);

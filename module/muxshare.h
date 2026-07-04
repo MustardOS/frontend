@@ -126,6 +126,10 @@ void set_nav_input_dir(enum nav_direction direction);
 
 void setup_nav(const struct nav_bar *nav_items);
 
+void nav_show_a(int show, const char *text);
+
+void nav_show_lr(int show);
+
 void header_and_footer_setup();
 
 void overlay_display();
