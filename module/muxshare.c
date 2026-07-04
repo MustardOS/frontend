@@ -422,38 +422,42 @@ char *get_friendly_folder_name(char *folder_name, const int fn_valid, const stru
     return friendly_folder_name;
 }
 
+static int register_launch_item(const char *file_path, const char *item_name) {
+    if (!file_exist(file_path)) return 0;
+
+    char fn_name[MAX_BUFFER_SIZE];
+    resolve_friendly_name(file_path, fn_name);
+    add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
+
+    return 1;
+}
+
 int folder_has_launch_file_with_extension(char *base_dir, char *dir_name, char *ext) {
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s/%s.%s", base_dir, dir_name, dir_name, ext);
-    if (file_exist(file_path)) {
-        char item_name[MAX_BUFFER_SIZE];
-        snprintf(item_name, sizeof(item_name), "%s/%s.%s", dir_name, dir_name, ext);
-        char fn_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(file_path, fn_name);
-        add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
-        return 1;
-    }
-    return 0;
+
+    char item_name[MAX_BUFFER_SIZE];
+    snprintf(item_name, sizeof(item_name), "%s/%s.%s", dir_name, dir_name, ext);
+
+    return register_launch_item(file_path, item_name);
 }
 
 int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
     if (strchr(dir_name, '.') == NULL) {
         return 0;
     }
+
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s/%s", base_dir, dir_name, dir_name);
+
     if (ends_with(dir_name, ".scummvm") && !file_exist(file_path)) {
         write_text_to_file(file_path, "w", CHAR, "");
     }
-    if (file_exist(file_path)) {
-        char item_name[MAX_BUFFER_SIZE];
-        snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, dir_name);
-        char fn_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(file_path, fn_name);
-        add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
-        return 1;
-    }
-    return 0;
+
+    char item_name[MAX_BUFFER_SIZE];
+    snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, dir_name);
+
+    return register_launch_item(file_path, item_name);
 }
 
 int folder_has_launch_file(char *base_dir, char *dir_name) {
