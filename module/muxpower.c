@@ -8,15 +8,11 @@ static int wr_dlg_active = 0;
 static mux_dialogue wr_dlg;
 
 static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
+    dialogue_open(&save_mode, &save_dlg, &theme);
 }
 
 static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
+    dialogue_dismiss(&save_mode, &save_dlg);
 }
 
 #define POWER(NAME, UDATA) 1,
@@ -75,10 +71,10 @@ enum saver_type {
 };
 
 static const int saver_type_values[SAVER_TYPE_COUNT] = {
-    saver_type_disabled,  saver_type_dvd,      saver_type_star,          saver_type_matrix,    saver_type_firefly,
-    saver_type_pulse,     saver_type_trace,    saver_type_constellation, saver_type_mystify,   saver_type_maze,
-    saver_type_blockfall, saver_type_datetime, saver_type_video,         saver_type_slideshow, saver_type_boxart,
-    saver_type_bsod,
+    saver_type_disabled, saver_type_dvd,       saver_type_star,      saver_type_matrix,
+    saver_type_firefly,  saver_type_pulse,     saver_type_trace,     saver_type_constellation,
+    saver_type_mystify,  saver_type_maze,      saver_type_blockfall, saver_type_datetime,
+    saver_type_video,    saver_type_slideshow, saver_type_boxart,    saver_type_bsod,
 };
 
 char **gov_values_lower = NULL;
@@ -464,10 +460,7 @@ static void list_nav_next(const int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
     if (save_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
 
@@ -480,10 +473,7 @@ static void handle_option_prev(void) {
 static void handle_option_next(void) {
     if (msgbox_active) return;
     if (save_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
 
@@ -540,10 +530,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.settings.advanced.trust_modify && any_power_modified()) {
-        show_save_dialog();
-        return;
-    }
+    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_power_modified())) return;
 
     if (save_power_options()) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
@@ -554,10 +541,7 @@ static void handle_b(void) {
 
 static void handle_dpad_up(void) {
     if (save_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
 
@@ -566,10 +550,7 @@ static void handle_dpad_up(void) {
 
 static void handle_dpad_down(void) {
     if (save_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
 

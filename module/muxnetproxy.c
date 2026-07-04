@@ -245,10 +245,7 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     if (fields_modified) {
         play_sound(snd_confirm);
-        save_dlg_active = 1;
-        save_dlg.selected = 0;
-        dialogue_show(&save_dlg);
-        dialogue_refresh(&save_dlg, &theme);
+        dialogue_open(&save_dlg_active, &save_dlg, &theme);
         return;
     }
 
@@ -270,8 +267,7 @@ static void handle_a(void) {
 
     if (save_dlg_active) {
         const mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
-        save_dlg_active = 0;
-        dialogue_hide(&save_dlg);
+        dialogue_dismiss(&save_dlg_active, &save_dlg);
 
         if (opt == mux_confirm_yep && !save_proxy_options()) return;
 
@@ -292,8 +288,7 @@ static void handle_b(void) {
     if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
-        save_dlg_active = 0;
-        dialogue_hide(&save_dlg);
+        dialogue_dismiss(&save_dlg_active, &save_dlg);
         play_sound(snd_back);
         return;
     }
@@ -339,10 +334,7 @@ static void handle_up(void) {
     if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
 
@@ -358,10 +350,7 @@ static void handle_down(void) {
     if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
 
@@ -377,10 +366,7 @@ static void handle_left(void) {
     if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
 
@@ -403,10 +389,7 @@ static void handle_right(void) {
     if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
 

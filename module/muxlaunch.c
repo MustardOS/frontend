@@ -14,8 +14,7 @@ static void show_confirm_dialog(const char *title) {
 }
 
 static void hide_confirm_dialog(void) {
-    confirm_mode = 0;
-    dialogue_hide(&confirm_dlg);
+    dialogue_dismiss(&confirm_mode, &confirm_dlg);
 }
 
 #define LAUNCH(NAME, UDATA) 1,
@@ -242,10 +241,7 @@ static void handle_up(void) {
     if (msgbox_active) return;
 
     if (confirm_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&confirm_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&confirm_dlg, &theme, -1, !swap_axis);
         return;
     }
 
@@ -276,10 +272,7 @@ static void handle_down(void) {
     if (msgbox_active) return;
 
     if (confirm_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&confirm_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&confirm_dlg, &theme, +1, !swap_axis);
         return;
     }
 
@@ -340,10 +333,7 @@ static void handle_left(void) {
     if (msgbox_active) return;
 
     if (confirm_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&confirm_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&confirm_dlg, &theme, -1, swap_axis);
         return;
     }
 
@@ -389,10 +379,7 @@ static void handle_right(void) {
     if (msgbox_active) return;
 
     if (confirm_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&confirm_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&confirm_dlg, &theme, +1, swap_axis);
         return;
     }
 

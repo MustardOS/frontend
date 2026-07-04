@@ -13,15 +13,11 @@ static int save_mode = 0;
 static mux_dialogue save_dlg;
 
 static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
+    dialogue_open(&save_mode, &save_dlg, &theme);
 }
 
 static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
+    dialogue_dismiss(&save_mode, &save_dlg);
 }
 
 static int any_overlay_modified(void) {
@@ -48,15 +44,11 @@ static int reset_mode = 0;
 static mux_dialogue reset_dlg;
 
 static void show_reset_dialog(void) {
-    reset_mode = 1;
-    reset_dlg.selected = 0;
-    dialogue_show(&reset_dlg);
-    dialogue_refresh(&reset_dlg, &theme);
+    dialogue_open(&reset_mode, &reset_dlg, &theme);
 }
 
 static void hide_reset_dialog(void) {
-    reset_mode = 0;
-    dialogue_hide(&reset_dlg);
+    dialogue_dismiss(&reset_mode, &reset_dlg);
 }
 
 static void do_reset(void) {
@@ -164,18 +156,12 @@ static void init_navigation_group(void) {
 
 static void handle_option_prev(void) {
     if (save_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
 
     if (reset_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&reset_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&reset_dlg, &theme, -1, swap_axis);
         return;
     }
 
@@ -186,18 +172,12 @@ static void handle_option_prev(void) {
 
 static void handle_option_next(void) {
     if (save_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
 
     if (reset_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&reset_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&reset_dlg, &theme, +1, swap_axis);
         return;
     }
 
@@ -208,18 +188,12 @@ static void handle_option_next(void) {
 
 static void handle_dpad_up(void) {
     if (save_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
 
     if (reset_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&reset_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&reset_dlg, &theme, -1, !swap_axis);
         return;
     }
 
@@ -228,18 +202,12 @@ static void handle_dpad_up(void) {
 
 static void handle_dpad_down(void) {
     if (save_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
 
     if (reset_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&reset_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&reset_dlg, &theme, +1, !swap_axis);
         return;
     }
 
@@ -302,10 +270,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.settings.advanced.trust_modify && any_overlay_modified()) {
-        show_save_dialog();
-        return;
-    }
+    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_overlay_modified())) return;
 
     play_sound(snd_back);
     save_tweak_options();

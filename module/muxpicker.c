@@ -9,15 +9,11 @@ static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
 
 static void show_remove_dialog(void) {
-    remove_mode = 1;
-    remove_dlg.selected = 0;
-    dialogue_show(&remove_dlg);
-    dialogue_refresh(&remove_dlg, &theme);
+    dialogue_open(&remove_mode, &remove_dlg, &theme);
 }
 
 static void hide_remove_dialog(void) {
-    remove_mode = 0;
-    dialogue_hide(&remove_dlg);
+    dialogue_dismiss(&remove_mode, &remove_dlg);
 }
 
 #define TEMP_VERSION "version.txt"
@@ -287,10 +283,7 @@ static void handle_y(void) {
 
 static void handle_dpad_up(void) {
     if (remove_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&remove_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&remove_dlg, &theme, -1, !swap_axis);
         return;
     }
     handle_list_nav_up();
@@ -298,10 +291,7 @@ static void handle_dpad_up(void) {
 
 static void handle_dpad_down(void) {
     if (remove_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&remove_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&remove_dlg, &theme, +1, !swap_axis);
         return;
     }
     handle_list_nav_down();

@@ -748,15 +748,11 @@ static int save_mode = 0;
 static mux_dialogue save_dlg;
 
 static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
+    dialogue_open(&save_mode, &save_dlg, &theme);
 }
 
 static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
+    dialogue_dismiss(&save_mode, &save_dlg);
 }
 
 static int any_rgb_modified(void) {
@@ -778,10 +774,7 @@ static int any_rgb_modified(void) {
 
 static void handle_option_prev(void) {
     if (save_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
 
@@ -793,10 +786,7 @@ static void handle_option_prev(void) {
 
 static void handle_option_next(void) {
     if (save_mode) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
 
@@ -808,10 +798,7 @@ static void handle_option_next(void) {
 
 static void handle_dpad_up(void) {
     if (save_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
 
@@ -820,10 +807,7 @@ static void handle_dpad_up(void) {
 
 static void handle_dpad_down(void) {
     if (save_mode) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
 
@@ -874,10 +858,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (!config.settings.advanced.trust_modify && any_rgb_modified()) {
-        show_save_dialog();
-        return;
-    }
+    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_rgb_modified())) return;
 
     play_sound(snd_back);
     save_rgb_options(tst_wait_f);

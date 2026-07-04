@@ -1,5 +1,6 @@
 #include "dialogue.h"
 #include "common.h"
+#include "../audio.h"
 #include "../config.h"
 #include "transition.h"
 #include "../language.h"
@@ -584,4 +585,30 @@ void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t) {
             lv_obj_clear_state(dlg->options[i], LV_STATE_CHECKED);
         }
     }
+}
+
+void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t) {
+    *active = 1;
+    dlg->selected = 0;
+    dialogue_show(dlg);
+    dialogue_refresh(dlg, t);
+}
+
+void dialogue_dismiss(int *active, const mux_dialogue *dlg) {
+    *active = 0;
+    dialogue_hide(dlg);
+}
+
+void dialogue_handle_dpad(mux_dialogue *dlg, struct theme_config *t, const int direction, const int should_fire) {
+    if (!should_fire) return;
+
+    dialogue_navigate(dlg, t, direction);
+    play_sound(snd_navigate);
+}
+
+int dialogue_guard_unsaved(int *active, mux_dialogue *dlg, struct theme_config *t, const int is_modified) {
+    if (config.settings.advanced.trust_modify || !is_modified) return 0;
+
+    dialogue_open(active, dlg, t);
+    return 1;
 }

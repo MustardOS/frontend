@@ -65,3 +65,11 @@ void dialogue_hide(const mux_dialogue *dlg);
 void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, int delta);
 
 void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t);
+
+void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t);
+
+void dialogue_dismiss(int *active, const mux_dialogue *dlg);
+
+void dialogue_handle_dpad(mux_dialogue *dlg, struct theme_config *t, int direction, int should_fire);
+
+int dialogue_guard_unsaved(int *active, mux_dialogue *dlg, struct theme_config *t, int is_modified);

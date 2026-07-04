@@ -963,12 +963,7 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     if (fields_modified && !network_saved) {
         play_sound(snd_confirm);
-
-        save_dlg_active = 1;
-        save_dlg.selected = 0;
-
-        dialogue_show(&save_dlg);
-        dialogue_refresh(&save_dlg, &theme);
+        dialogue_open(&save_dlg_active, &save_dlg, &theme);
         return;
     }
 
@@ -1154,8 +1149,7 @@ static void save_profile_ini(void) {
 static void handle_a(void) {
     if (forget_dlg_active) {
         const mux_confirm_opt opt = (mux_confirm_opt) forget_dlg.selected;
-        forget_dlg_active = 0;
-        dialogue_hide(&forget_dlg);
+        dialogue_dismiss(&forget_dlg_active, &forget_dlg);
 
         if (opt == mux_confirm_yep) {
             do_forget_profile();
@@ -1171,8 +1165,7 @@ static void handle_a(void) {
 
     if (save_dlg_active) {
         const mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
-        save_dlg_active = 0;
-        dialogue_hide(&save_dlg);
+        dialogue_dismiss(&save_dlg_active, &save_dlg);
 
         if (opt == mux_confirm_yep) {
             if (viewing_active_profile) save_network_config();
@@ -1196,16 +1189,14 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (forget_dlg_active) {
-        forget_dlg_active = 0;
-        dialogue_hide(&forget_dlg);
+        dialogue_dismiss(&forget_dlg_active, &forget_dlg);
 
         play_sound(snd_back);
         return;
     }
 
     if (save_dlg_active) {
-        save_dlg_active = 0;
-        dialogue_hide(&save_dlg);
+        dialogue_dismiss(&save_dlg_active, &save_dlg);
 
         play_sound(snd_back);
         return;
@@ -1261,12 +1252,7 @@ static void handle_y(void) {
     }
 
     play_sound(snd_info_open);
-
-    forget_dlg_active = 1;
-    forget_dlg.selected = 0;
-
-    dialogue_show(&forget_dlg);
-    dialogue_refresh(&forget_dlg, &theme);
+    dialogue_open(&forget_dlg_active, &forget_dlg, &theme);
 }
 
 static void handle_help(void) {
@@ -1279,18 +1265,12 @@ static void handle_help(void) {
 
 static void handle_up(void) {
     if (forget_dlg_active) {
-        if (!swap_axis) {
-            dialogue_navigate(&forget_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&forget_dlg, &theme, -1, !swap_axis);
         return;
     }
 
     if (save_dlg_active) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
 
@@ -1305,18 +1285,12 @@ static void handle_up_hold(void) {
 
 static void handle_down(void) {
     if (forget_dlg_active) {
-        if (!swap_axis) {
-            dialogue_navigate(&forget_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&forget_dlg, &theme, +1, !swap_axis);
         return;
     }
 
     if (save_dlg_active) {
-        if (!swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
 
@@ -1331,18 +1305,12 @@ static void handle_down_hold(void) {
 
 static void handle_left(void) {
     if (forget_dlg_active) {
-        if (swap_axis) {
-            dialogue_navigate(&forget_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&forget_dlg, &theme, -1, swap_axis);
         return;
     }
 
     if (save_dlg_active) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
 
@@ -1358,18 +1326,12 @@ static void handle_left(void) {
 
 static void handle_right(void) {
     if (forget_dlg_active) {
-        if (swap_axis) {
-            dialogue_navigate(&forget_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&forget_dlg, &theme, +1, swap_axis);
         return;
     }
 
     if (save_dlg_active) {
-        if (swap_axis) {
-            dialogue_navigate(&save_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
+        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
 
@@ -1464,7 +1426,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_x, lang.generic.scan, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
                                   {ui_lbl_nav_y, lang.muxnetprofile.forget, 0},
-                                  {NULL, NULL, 0}});
+      {NULL, NULL, 0}});
 
     lv_obj_t *connect_items[] = {ui_pnl_profile_name_network, ui_pnl_identifier_network, ui_pnl_password_network,
                                  ui_pnl_type_network,         ui_pnl_connect_network,    NULL};
@@ -1586,12 +1548,11 @@ int muxnetprofile_main(void) {
             [mux_input_b] = handle_b_hold,
             [mux_input_dpad_up] = handle_up_hold,
             [mux_input_dpad_down] = handle_down_hold,
-            [mux_input_dpad_left] = handle_left_hold,
-            [mux_input_dpad_right] = handle_right_hold,
-            [mux_input_l1] = handle_l1,
-            [mux_input_r1] = handle_r1,
-        }
-    };
+             [mux_input_dpad_left] = handle_left_hold,
+             [mux_input_dpad_right] = handle_right_hold,
+             [mux_input_l1] = handle_l1,
+             [mux_input_r1] = handle_r1,
+         }};
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
