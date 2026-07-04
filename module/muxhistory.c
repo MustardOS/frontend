@@ -683,6 +683,8 @@ int muxhistory_main(const int his_index) {
                 if (config.visual.video_preview > 0) video_refresh();
             }
         }
+
+        first_open = 0;
         nav_moved = 1;
     } else {
         lv_label_set_text(ui_lbl_screen_message, lang.muxhistory.none);

@@ -545,6 +545,8 @@ int muxapp_main(void) {
                 focus_initial();
             }
         }
+
+        first_open = 0;
     } else {
         lv_label_set_text(ui_lbl_screen_message, lang.muxapp.no_app);
     }
