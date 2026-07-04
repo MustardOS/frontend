@@ -27,11 +27,13 @@ static void show_help(void) {
     show_info_box(items[current_item_index].name, items[current_item_index].help, 0);
 }
 
+static void resolve_muxzip_path(const char *name, char *out) {
+    snprintf(out, MAX_BUFFER_SIZE, "%s/%s/%s.muxzip", device.storage.rom.mount, MUOS_ARCH_PATH, name);
+}
+
 static int is_downloaded(const int index) {
     char file_path[MAX_BUFFER_SIZE];
-    snprintf(
-        file_path, sizeof(file_path), "%s/%s/%s.muxzip", device.storage.rom.mount, MUOS_ARCH_PATH, items[index].name
-    );
+    resolve_muxzip_path(items[index].name, file_path);
     return file_exist(file_path);
 }
 
@@ -113,10 +115,7 @@ static void download_finished(const int result) {
 
     if (result == 0) {
         char file_path[MAX_BUFFER_SIZE];
-        snprintf(
-            file_path, sizeof(file_path), "%s/%s/%s.muxzip", device.storage.rom.mount, MUOS_ARCH_PATH,
-            items[current_item_index].name
-        );
+        resolve_muxzip_path(items[current_item_index].name, file_path);
         extract_archive(file_path, "coredown");
     } else {
         play_sound(snd_error);
@@ -150,10 +149,7 @@ static void handle_a(void) {
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
     char file_path[MAX_BUFFER_SIZE];
-    snprintf(
-        file_path, sizeof(file_path), "%s/%s/%s.muxzip", device.storage.rom.mount, MUOS_ARCH_PATH,
-        items[current_item_index].name
-    );
+    resolve_muxzip_path(items[current_item_index].name, file_path);
 
     if (file_exist(file_path)) {
         remove(file_path);
@@ -179,10 +175,7 @@ static void handle_b(void) {
         cancel_download = 1;
 
         char file_path[MAX_BUFFER_SIZE];
-        snprintf(
-            file_path, sizeof(file_path), "%s/%s/%s.muxzip", device.storage.rom.mount, MUOS_ARCH_PATH,
-            items[current_item_index].name
-        );
+        resolve_muxzip_path(items[current_item_index].name, file_path);
 
         if (file_exist(file_path)) remove(file_path);
     } else {
