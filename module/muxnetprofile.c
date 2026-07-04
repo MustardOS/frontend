@@ -27,6 +27,7 @@ int ui_network_locked = 0;
 static char last_status[IP_OCTET] = "";
 static char address_file[MAX_BUFFER_SIZE];
 static char current_profile[MAX_BUFFER_SIZE] = "";
+static char pending_password[MAX_BUFFER_SIZE] = "";
 
 static unsigned connect_grace_ticks = 0;
 
@@ -574,7 +575,8 @@ static void restore_network_values(void) {
         lv_label_set_text(ui_val_priority_network, priority_buf);
         ui_count_static = is_static ? UI_STATIC : UI_DHCP;
         lv_label_set_text(ui_val_identifier_network, ssid);
-        lv_label_set_text(ui_val_password_network, strlen(pass) >= IP_OCTET ? PASS_ENCODE : pass);
+        snprintf(pending_password, sizeof(pending_password), "%s", pass);
+        lv_label_set_text(ui_val_password_network, *pending_password ? PASS_ENCODE : "");
         lv_label_set_text(ui_val_address_network, mini_get_string(net, "network", "address", ""));
         lv_label_set_text(ui_val_subnet_network, mini_get_string(net, "network", "subnet", ""));
         lv_label_set_text(ui_val_gateway_network, mini_get_string(net, "network", "gateway", ""));
@@ -591,6 +593,7 @@ static void restore_network_values(void) {
         lv_label_set_text(ui_val_priority_network, "5");
         ui_count_static = UI_DHCP;
         lv_label_set_text(ui_val_identifier_network, ssid_buf);
+        pending_password[0] = '\0';
         lv_label_set_text(ui_val_password_network, "");
         lv_label_set_text(ui_val_address_network, "");
         lv_label_set_text(ui_val_subnet_network, "");
@@ -619,32 +622,12 @@ static void save_network_config(void) {
     if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) idx_type = 1;
 
     const char *ssid = lv_label_get_text(ui_val_identifier_network);
-    const char *pass = lv_label_get_text(ui_val_password_network);
 
     char esc_ssid[MAX_BUFFER_SIZE];
-    char pass_buf[MAX_BUFFER_SIZE] = {0};
+    char pass_buf[MAX_BUFFER_SIZE];
 
     escape_wpa_string(ssid ? ssid : "", esc_ssid);
-
-    if (pass && strcasecmp(pass, PASS_ENCODE) == 0) {
-        char *profile_name_raw = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
-
-        if (profile_name_raw && *profile_name_raw) {
-            char profile_file[MAX_BUFFER_SIZE];
-            const int pf_len =
-                snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name_raw);
-
-            if (pf_len >= 0 && (size_t) pf_len < sizeof(profile_file)) {
-                mini_t *net = mini_try_load(profile_file);
-                snprintf(pass_buf, sizeof(pass_buf), "%s", mini_get_string(net, "network", "pass", ""));
-                mini_free(net);
-            }
-        }
-
-        free(profile_name_raw);
-    } else {
-        snprintf(pass_buf, sizeof(pass_buf), "%s", pass ? pass : "");
-    }
+    snprintf(pass_buf, sizeof(pass_buf), "%s", pending_password);
 
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type);
     write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, ssid ? ssid : "");
@@ -735,7 +718,9 @@ static void handle_keyboard_ok_press(void) {
             lv_label_set_text(ui_val_profile_name_network, new_ssid);
         lv_label_set_text(ui_val_identifier_network, new_ssid);
     } else if (e_focused == ui_lbl_password_network) {
-        lv_label_set_text(ui_val_password_network, lv_textarea_get_text(ui_txt_entry_network));
+        const char *typed = lv_textarea_get_text(ui_txt_entry_network);
+        snprintf(pending_password, sizeof(pending_password), "%s", typed ? typed : "");
+        lv_label_set_text(ui_val_password_network, *pending_password ? PASS_ENCODE : "");
     } else if (e_focused == ui_lbl_address_network) {
         lv_label_set_text(ui_val_address_network, lv_textarea_get_text(ui_txt_entry_network));
     } else if (e_focused == ui_lbl_subnet_network) {
@@ -866,11 +851,12 @@ static void handle_confirm(void) {
             const char *cv_ssid = lv_label_get_text(ui_val_identifier_network);
 
             char password_buf[MAX_BUFFER_SIZE];
-            snprintf(password_buf, sizeof(password_buf), "%s", lv_label_get_text(ui_val_password_network));
+            snprintf(password_buf, sizeof(password_buf), "%s", pending_password);
             const size_t cv_pass_len = strlen(password_buf);
 
-            // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
-            const int cv_pass_ok = cv_pass_len == 0 || (cv_pass_len >= 8 && cv_pass_len <= 63);
+            // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password; 64 bytes is an
+            // already-derived PSK hash carried over unchanged from a previously saved profile
+            const int cv_pass_ok = cv_pass_len == 0 || cv_pass_len == 64 || (cv_pass_len >= 8 && cv_pass_len <= 63);
 
             if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) {
                 const char *cv_address = lv_label_get_text(ui_val_address_network);
@@ -893,9 +879,7 @@ static void handle_confirm(void) {
                 network_saved = 1;
 
                 if (cv_pass_len > 0) {
-                    if (strcasecmp(password_buf, PASS_ENCODE) != 0 && strcasecmp(password_buf, "") != 0) {
-                        lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.encrypt_password);
-                    }
+                    lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.encrypt_password);
                 } else {
                     lv_label_set_text(ui_val_connect_network, lang.muxnetprofile.no_password);
                 }
@@ -910,12 +894,6 @@ static void handle_confirm(void) {
                 write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, "");
 
                 ui_network_locked = 1;
-                run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
-
-                memset(password_buf, 0, sizeof(password_buf));
-                lv_textarea_set_text(ui_txt_entry_network, "");
-
-                lv_task_handler();
 
                 last_status[0] = '\0';
                 connect_process_done = 0;
@@ -924,6 +902,13 @@ static void handle_confirm(void) {
                 connect_settle_ticks = 0;
 
                 clear_profile_status_file();
+
+                run_exec(pass_args, A_SIZE(pass_args), 0, 0, NULL, NULL);
+
+                memset(password_buf, 0, sizeof(password_buf));
+                lv_textarea_set_text(ui_txt_entry_network, "");
+
+                lv_task_handler();
 
                 // Connect the specific profile so the script tracks its active status independently!
                 const char *net_c_prof_args[] = {OPT_PATH NET_SCRIPT, "connect", current_profile, NULL};
@@ -1130,12 +1115,7 @@ static void save_profile_ini(void) {
     mini_t *net = mini_try_load(profile_file);
 
     char pass_buf[MAX_BUFFER_SIZE];
-    const char *pass_label = lv_label_get_text(ui_val_password_network);
-    if (strcasecmp(pass_label, PASS_ENCODE) == 0) {
-        snprintf(pass_buf, sizeof(pass_buf), "%s", mini_get_string(net, "network", "pass", ""));
-    } else {
-        snprintf(pass_buf, sizeof(pass_buf), "%s", pass_label ? pass_label : "");
-    }
+    snprintf(pass_buf, sizeof(pass_buf), "%s", pending_password);
 
     if (*pass_buf && strlen(pass_buf) != 64) {
         char psk[65] = {0};

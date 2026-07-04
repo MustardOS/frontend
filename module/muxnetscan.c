@@ -6,7 +6,7 @@ static int scan_pending = 0;
 static time_t scan_start = 0;
 static lv_timer_t *scan_poll_timer = NULL;
 
-#define NET_SCAN_TIMEOUT 30
+#define SCANNER_TIMEOUT 30
 
 static void show_help(void) {
     show_info_box(lang.muxnetscan.title, lang.muxnetscan.help, 0);
@@ -62,7 +62,7 @@ static void net_scan_poll_task(lv_timer_t *t) {
     struct stat st;
     const int file_ready = stat("/tmp/net_scan", &st) == 0;
     const int elapsed = (int) (time(NULL) - scan_start);
-    const int timed_out = elapsed >= NET_SCAN_TIMEOUT;
+    const int timed_out = elapsed >= SCANNER_TIMEOUT;
 
     if (!file_ready && !timed_out) return;
 
@@ -84,7 +84,7 @@ static void create_network_items(void) {
     scan_start = time(NULL);
     scan_pending = 1;
 
-    show_bounce_progress_bar(lang.muxnetscan.scan);
+    show_bounce_progress_bar(lang.muxnetscan.scan, SCANNER_TIMEOUT);
 
     const char *args[] = {OPT_PATH "script/web/ssid.sh", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
