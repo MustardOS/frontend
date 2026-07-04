@@ -325,11 +325,11 @@ void dialogue_init_message(
     lv_obj_set_style_flex_main_place(footer_row, LV_FLEX_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_flex_cross_place(footer_row, LV_FLEX_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
-    const lv_obj_t *glyph_a = create_footer_glyph(footer_row, t, "a", t->nav.a, 0);
-    lv_obj_t *label_a = create_footer_text(footer_row, t, t->nav.a.text, t->nav.a.text_alpha, 0);
-    lv_label_set_text(label_a, nav_b);
+    const lv_obj_t *glyph_b = create_footer_glyph(footer_row, t, "b", t->nav.b, 0);
+    lv_obj_t *label_b = create_footer_text(footer_row, t, t->nav.b.text, t->nav.b.text_alpha, 0);
+    lv_label_set_text(label_b, nav_b);
 
-    (void) glyph_a;
+    (void) glyph_b;
 }
 
 void dialogue_init_accept(
