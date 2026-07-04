@@ -80,12 +80,9 @@ static void apply_colour_temp(const int temp) {
     char *dev_path = read_all_char_from(CONF_DEVICE_PATH "screen/colour");
     if (!dev_path) return;
 
-    char *end = dev_path + strlen(dev_path) - 1;
-    while (end > dev_path && (*end == '\n' || *end == '\r' || *end == ' '))
-        *end-- = '\0';
-
-    if (dev_path[0] && file_exist(dev_path)) {
-        write_text_to_file(dev_path, "w", INT, temp);
+    const char *trimmed = str_trim(dev_path);
+    if (trimmed[0] && file_exist(trimmed)) {
+        write_text_to_file(trimmed, "w", INT, temp);
     }
 
     free(dev_path);
