@@ -117,9 +117,12 @@ static void bt_poll_task(lv_timer_t *t) {
         return;
     }
 
+    const int list_timeout =
+        config.settings.advanced.bt_scan_timeout > 0 ? config.settings.advanced.bt_scan_timeout : 10;
+
     struct stat st;
     const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0 && st.st_mtime >= bt_list_start;
-    const int timed_out = time(NULL) - bt_list_start >= 10;
+    const int timed_out = time(NULL) - bt_list_start >= list_timeout;
 
     if (!file_ready && !timed_out) return;
 
@@ -127,6 +130,7 @@ static void bt_poll_task(lv_timer_t *t) {
     lv_timer_del(t);
     bt_poll_timer = NULL;
 
+    hide_bounce_progress_bar();
     populate_paired_device_list();
 
     lv_label_set_text(ui_lbl_screen_message, ui_count_static <= ui_count_dynamic ? lang.muxbtall.none : "");
@@ -140,12 +144,12 @@ static void bt_poll_task(lv_timer_t *t) {
 }
 
 static void create_paired_device_items(void) {
-    lv_label_set_text(ui_lbl_screen_message, lang.muxbtall.loading);
-    lv_obj_invalidate(ui_screen);
-    lv_refr_now(NULL);
-
     bt_list_start = time(NULL);
     bt_list_pending = 1;
+
+    const int list_timeout =
+        config.settings.advanced.bt_scan_timeout > 0 ? config.settings.advanced.bt_scan_timeout : 10;
+    show_bounce_progress_bar(lang.muxbtall.loading, list_timeout);
 
     const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "list", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
@@ -277,6 +281,7 @@ static void cancel_bt_poll(void) {
     }
 
     bt_list_pending = 0;
+    hide_bounce_progress_bar();
 }
 
 static void handle_x(void) {
