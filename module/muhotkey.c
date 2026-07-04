@@ -299,34 +299,36 @@ static void run_command(combo_config *c) {
     run_exec(argv, c->exec_argc + 1, 1, 0, NULL, NULL);
 }
 
-static void run_raw_power_short_release(void) {
+// Finds the first non-sequence combo matching `type_bit` whose negate_mask isn't currently held.
+// Shared by the simplified 'one raw event w/ one combo' dispatchers below.
+static combo_config *find_matching_combo(const uint64_t type_bit, const int exact_match) {
     for (int i = 0; i < combo_count; ++i) {
         combo_config *c = &combo[i];
 
         if (c->is_sequence) continue;
+        if (exact_match ? c->type_mask != type_bit : !(c->type_mask & type_bit)) continue;
         if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
-        if (c->type_mask != SAFE_BIT(mux_input_power_short)) continue;
 
-        printf("%s\n", c->name);
-        run_command(c);
-        break;
+        return c;
     }
+
+    return NULL;
+}
+
+static void run_raw_power_short_release(void) {
+    combo_config *c = find_matching_combo(SAFE_BIT(mux_input_power_short), 1);
+    if (!c) return;
+
+    printf("%s\n", c->name);
+    run_command(c);
 }
 
 static void run_raw_lid_action(const mux_input_type type) {
-    const uint64_t lid_bit = SAFE_BIT(type);
+    combo_config *c = find_matching_combo(SAFE_BIT(type), 1);
+    if (!c) return;
 
-    for (int i = 0; i < combo_count; ++i) {
-        combo_config *c = &combo[i];
-
-        if (c->is_sequence) continue;
-        if (c->type_mask != lid_bit) continue;
-        if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
-
-        printf("%s\n", c->name);
-        run_command(c);
-        break;
-    }
+    printf("%s\n", c->name);
+    run_command(c);
 }
 
 static void handle_raw_lid(void) {
@@ -356,20 +358,12 @@ static void handle_raw_lid(void) {
 }
 
 static void run_raw_power_long_action(void) {
-    const uint64_t pwr_long_bit = SAFE_BIT(mux_input_power_long);
+    combo_config *c = find_matching_combo(SAFE_BIT(mux_input_power_long), 0);
+    if (!c) return;
 
-    for (int i = 0; i < combo_count; ++i) {
-        combo_config *c = &combo[i];
-
-        if (c->is_sequence) continue;
-        if (!(c->type_mask & pwr_long_bit)) continue;
-        if (c->negate_mask && mux_input_pressed_any(c->negate_mask)) continue;
-
-        printf("%s\n", c->name);
-        run_command(c);
-        raw_power_long_active = 1;
-        break;
-    }
+    printf("%s\n", c->name);
+    run_command(c);
+    raw_power_long_active = 1;
 }
 
 static void run_raw_volume_action(const mux_input_type type, const mux_input_action action) {
