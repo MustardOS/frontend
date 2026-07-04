@@ -93,34 +93,32 @@ void adjust_box_art(void) {
 
     switch (config.visual.box_art) {
         case 0: // Behind — within content area, behind content; header/footer clip
-            lv_obj_set_x(ui_pnl_box, 0);
-            lv_obj_set_y(ui_pnl_box, content_y);
-            lv_obj_set_width(ui_pnl_box, device.mux.width);
-            lv_obj_set_height(ui_pnl_box, content_h > 0 ? content_h : device.mux.height);
-            lv_obj_move_background(ui_pnl_box);
-            lv_obj_move_background(ui_pnl_wall);
-            break;
         case 1: // Front — within content area, in front of content; header/footer always on top
             lv_obj_set_x(ui_pnl_box, 0);
             lv_obj_set_y(ui_pnl_box, content_y);
             lv_obj_set_width(ui_pnl_box, device.mux.width);
             lv_obj_set_height(ui_pnl_box, content_h > 0 ? content_h : device.mux.height);
-            lv_obj_move_foreground(ui_pnl_box);
+
+            if (config.visual.box_art == 0) {
+                lv_obj_move_background(ui_pnl_box);
+                lv_obj_move_background(ui_pnl_wall);
+            } else {
+                lv_obj_move_foreground(ui_pnl_box);
+            }
             break;
         case 2: // Fullscreen + Behind — full screen, behind content; header/footer render on top but do not clip
-            lv_obj_set_x(ui_pnl_box, 0);
-            lv_obj_set_y(ui_pnl_box, 0);
-            lv_obj_set_width(ui_pnl_box, device.mux.width);
-            lv_obj_set_height(ui_pnl_box, device.mux.height);
-            lv_obj_move_background(ui_pnl_box);
-            lv_obj_move_background(ui_pnl_wall);
-            break;
         case 3: // Fullscreen + Front — full screen, in front of everything including header/footer
             lv_obj_set_x(ui_pnl_box, 0);
             lv_obj_set_y(ui_pnl_box, 0);
             lv_obj_set_width(ui_pnl_box, device.mux.width);
             lv_obj_set_height(ui_pnl_box, device.mux.height);
-            lv_obj_move_foreground(ui_pnl_box);
+
+            if (config.visual.box_art == 2) {
+                lv_obj_move_background(ui_pnl_box);
+                lv_obj_move_background(ui_pnl_wall);
+            } else {
+                lv_obj_move_foreground(ui_pnl_box);
+            }
             break;
         case 4: // Disabled
             lv_obj_add_flag(ui_pnl_box, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -701,24 +699,22 @@ static void fn_build_table(const struct json root) {
     fn_name_table_count = count;
 }
 
-void resolve_friendly_name(const char *file_path, char *out) {
-    char stripped[MAX_BUFFER_SIZE];
+static void strip_and_lower_basename(const char *file_path, char *stripped_out, char *lowered_out) {
     const char *base = strrchr(file_path, '/');
 
     base = base ? base + 1 : file_path;
-    snprintf(stripped, sizeof(stripped), "%s", base);
+    snprintf(stripped_out, MAX_BUFFER_SIZE, "%s", base);
 
-    char *dot = strrchr(stripped, '.');
+    char *dot = strrchr(stripped_out, '.');
     if (dot) *dot = '\0';
 
-    char lowered[MAX_BUFFER_SIZE];
     size_t idx = 0;
-    for (; stripped[idx]; idx++)
-        lowered[idx] = (char) tolower((unsigned char) stripped[idx]);
-    lowered[idx] = '\0';
+    for (; stripped_out[idx]; idx++)
+        lowered_out[idx] = (char) tolower((unsigned char) stripped_out[idx]);
+    lowered_out[idx] = '\0';
+}
 
-    int has_custom = 0;
-
+static const char *resolve_name_json_for_parent(const char *file_path) {
     static char cached_file_parent[PATH_MAX];
     static char cached_name_only[MAX_BUFFER_SIZE];
 
@@ -750,42 +746,52 @@ void resolve_friendly_name(const char *file_path, char *out) {
         snprintf(last_specific_rel, sizeof(last_specific_rel), "%s", specific_rel);
     }
 
+    return last_lookup_path;
+}
+
+static int lookup_custom_name(const char *lookup_path, const char *lowered, char *out) {
     static char cache_path[PATH_MAX];
     static char *cache_str = NULL;
     static struct json cache_root;
     static int cache_valid = 0;
 
-    const char *lookup_path = last_lookup_path;
+    if (!lookup_path) return 0;
 
-    if (lookup_path) {
-        if (strcmp(cache_path, lookup_path) != 0) {
-            free(cache_str);
-            cache_str = read_all_char_from(lookup_path);
-            cache_valid = cache_str != NULL && json_valid(cache_str);
+    if (strcmp(cache_path, lookup_path) != 0) {
+        free(cache_str);
+        cache_str = read_all_char_from(lookup_path);
+        cache_valid = cache_str != NULL && json_valid(cache_str);
 
-            if (cache_valid) {
-                cache_root = json_parse(cache_str);
-                fn_build_table(cache_root);
-            } else {
-                fn_build_table((struct json) {0});
-            }
-
-            snprintf(cache_path, sizeof(cache_path), "%s", lookup_path);
+        if (cache_valid) {
+            cache_root = json_parse(cache_str);
+            fn_build_table(cache_root);
+        } else {
+            fn_build_table((struct json) {0});
         }
 
-        if (cache_valid && fn_name_table_count > 0) {
-            const fn_entry_t needle = {(char *) lowered, NULL};
-            const fn_entry_t *found =
-                bsearch(&needle, fn_name_table, (size_t) fn_name_table_count, sizeof(fn_entry_t), fn_entry_cmp);
-
-            if (found) {
-                snprintf(out, MAX_BUFFER_SIZE, "%s", found->val);
-                has_custom = 1;
-            }
-        }
+        snprintf(cache_path, sizeof(cache_path), "%s", lookup_path);
     }
 
-    if (!has_custom) {
+    if (!cache_valid || fn_name_table_count == 0) return 0;
+
+    const fn_entry_t needle = {(char *) lowered, NULL};
+    const fn_entry_t *found =
+        bsearch(&needle, fn_name_table, (size_t) fn_name_table_count, sizeof(fn_entry_t), fn_entry_cmp);
+
+    if (!found) return 0;
+
+    snprintf(out, MAX_BUFFER_SIZE, "%s", found->val);
+    return 1;
+}
+
+void resolve_friendly_name(const char *file_path, char *out) {
+    char stripped[MAX_BUFFER_SIZE];
+    char lowered[MAX_BUFFER_SIZE];
+    strip_and_lower_basename(file_path, stripped, lowered);
+
+    const char *lookup_path = resolve_name_json_for_parent(file_path);
+
+    if (!lookup_custom_name(lookup_path, lowered, out)) {
         const char *lk = lookup(stripped);
         snprintf(out, MAX_BUFFER_SIZE, "%s", lk ? lk : stripped);
     }
@@ -885,8 +891,10 @@ static void apply_box_blank_or_fallback(lv_obj_t *ui_viewport_objects[], int *st
 
     if (none_box[0] && file_exist(none_box)) {
         *starter_image = 1;
+
         char image_path[MAX_BUFFER_SIZE];
         snprintf(image_path, sizeof(image_path), "M:%s", none_box);
+
         lv_img_set_src(ui_img_box, image_path);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", none_box);
     } else {
@@ -898,6 +906,124 @@ static void apply_box_blank_or_fallback(lv_obj_t *ui_viewport_objects[], int *st
         }
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
     }
+}
+
+static int refresh_cached_image(char *previous_path, char *image, const int is_loaded) {
+    if (strcasecmp(previous_path, image) == 0) return 0;
+
+    snprintf(previous_path, MAX_BUFFER_SIZE, "%s", is_loaded ? image : " ");
+    return 1;
+}
+
+static void render_preview_refresh(char *image) {
+    const int is_loaded = file_exist(image);
+    if (!refresh_cached_image(preview_image_previous_path, image, is_loaded)) {
+        return;
+    }
+
+    if (!is_loaded) {
+        lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
+        return;
+    }
+
+    const struct image_settings image_settings = {
+        image,
+        LV_ALIGN_CENTER,
+        validate_int16((int16_t) (device.mux.width * .9) - 60, "width"),
+        validate_int16((int16_t) (device.mux.height * .9) - 120, "height"),
+        0,
+        0,
+        0,
+        0
+    };
+
+    update_image(ui_img_help_preview_image, image_settings);
+}
+
+static void render_splash_refresh(lv_obj_t *ui_img_splash, char *image, int *splash_valid) {
+    const int is_loaded = file_exist(image);
+    if (!refresh_cached_image(splash_image_previous_path, image, is_loaded)) {
+        return;
+    }
+
+    *splash_valid = is_loaded;
+
+    if (!is_loaded) {
+        lv_img_set_src(ui_img_splash, &ui_img_blank);
+        return;
+    }
+
+    char image_path[MAX_BUFFER_SIZE];
+    snprintf(image_path, sizeof(image_path), "M:%s", image);
+    lv_img_set_src(ui_img_splash, image_path);
+}
+
+static void render_box_refresh(
+    char *image, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_viewport_objects[], int *starter_image
+) {
+    if (strcasecmp(box_image_previous_path, image) == 0) return;
+
+    char artwork_config_path[MAX_BUFFER_SIZE];
+    snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/%s.ini", h_core_artwork);
+
+    if (!file_exist(artwork_config_path))
+        snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/default.ini");
+
+    if (file_exist(artwork_config_path)) {
+        viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+        return;
+    }
+
+    if (!file_exist(image)) {
+        apply_box_blank_or_fallback(NULL, starter_image);
+        return;
+    }
+
+    *starter_image = 1;
+
+    const int box_w = device.mux.width;
+    const int fullscreen = config.visual.box_art == 2 || config.visual.box_art == 3;
+
+    int box_h = fullscreen ? device.mux.height : device.mux.height - theme.header.height - theme.footer.height - 4;
+    if (box_h <= 0) box_h = device.mux.height;
+
+    const int16_t max_w = (int16_t) (config.visual.box_art_scale > 0 ? box_w * config.visual.box_art_scale / 100 : 0);
+
+    const int explicit_align = config.visual.box_art_align > 0;
+    static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
+
+    const int pad_div_idx = config.settings.advanced.box_art_pad_div;
+    const int pad_div = pad_div_idx >= 0 && pad_div_idx < 6 ? pad_div_map[pad_div_idx] : 400;
+
+    const int user_pad = config.visual.box_art_padding > 0 ? box_h * config.visual.box_art_padding / pad_div : 0;
+
+    const int pad_l = (explicit_align ? 0 : theme.image_list.pad_left) + user_pad;
+    const int pad_r = (explicit_align ? 0 : theme.image_list.pad_right) + user_pad;
+    const int pad_t = (explicit_align ? 0 : theme.image_list.pad_top) + user_pad;
+    const int pad_b = (explicit_align ? 0 : theme.image_list.pad_bottom) + user_pad;
+
+    char image_path[MAX_BUFFER_SIZE];
+    const size_t ilen = strlen(image);
+    if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {
+        const int svg_w = max_w > 0 ? max_w : box_w;
+        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, svg_w, box_h);
+
+        lv_img_set_size_mode(ui_img_box, LV_IMG_SIZE_MODE_VIRTUAL);
+        lv_img_set_zoom(ui_img_box, LV_IMG_ZOOM_NONE);
+
+        lv_obj_set_style_pad_left(ui_img_box, pad_l, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_right(ui_img_box, pad_r, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_top(ui_img_box, pad_t, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_img_box, pad_b, MU_OBJ_MAIN_DEFAULT);
+
+        lv_img_set_src(ui_img_box, image_path);
+    } else {
+        const struct image_settings image_settings = {image, -1, max_w, (int16_t) box_h, pad_l, pad_r, pad_t, pad_b};
+        update_image(ui_img_box, image_settings);
+    }
+
+    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
 }
 
 void render_image_refresh(
@@ -931,103 +1057,11 @@ void render_image_refresh(
     }
 
     if (strcasecmp(image_type, "preview") == 0) {
-        if (strcasecmp(preview_image_previous_path, image) != 0) {
-            if (file_exist(image)) {
-                const struct image_settings image_settings = {
-                    image,
-                    LV_ALIGN_CENTER,
-                    validate_int16((int16_t) (device.mux.width * .9) - 60, "width"),
-                    validate_int16((int16_t) (device.mux.height * .9) - 120, "height"),
-                    0,
-                    0,
-                    0,
-                    0
-                };
-
-                update_image(ui_img_help_preview_image, image_settings);
-                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
-            } else {
-                lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
-                snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
-            }
-        }
+        render_preview_refresh(image);
     } else if (strcasecmp(image_type, "splash") == 0) {
-        if (strcasecmp(splash_image_previous_path, image) != 0) {
-            char image_path[MAX_BUFFER_SIZE];
-
-            if (file_exist(image)) {
-                *splash_valid = 1;
-
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-                lv_img_set_src(ui_img_splash, image_path);
-
-                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
-            } else {
-                *splash_valid = 0;
-                lv_img_set_src(ui_img_splash, &ui_img_blank);
-                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
-            }
-        }
+        render_splash_refresh(ui_img_splash, image, splash_valid);
     } else {
-        if (strcasecmp(box_image_previous_path, image) != 0) {
-            char artwork_config_path[MAX_BUFFER_SIZE];
-            snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/%s.ini", h_core_artwork);
-
-            if (!file_exist(artwork_config_path))
-                snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/default.ini");
-
-            if (file_exist(artwork_config_path)) {
-                viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-            } else {
-                char image_path[MAX_BUFFER_SIZE];
-
-                if (file_exist(image)) {
-                    *starter_image = 1;
-
-                    const int box_w = device.mux.width;
-                    const int fullscreen = config.visual.box_art == 2 || config.visual.box_art == 3;
-                    int box_h = fullscreen ? device.mux.height
-                                           : device.mux.height - theme.header.height - theme.footer.height - 4;
-                    if (box_h <= 0) box_h = device.mux.height;
-
-                    const int16_t max_w =
-                        (int16_t) (config.visual.box_art_scale > 0 ? box_w * config.visual.box_art_scale / 100 : 0);
-
-                    const int explicit_align = config.visual.box_art_align > 0;
-                    static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
-                    const int pad_div_idx = config.settings.advanced.box_art_pad_div;
-                    const int pad_div = pad_div_idx >= 0 && pad_div_idx < 6 ? pad_div_map[pad_div_idx] : 400;
-                    const int user_pad =
-                        config.visual.box_art_padding > 0 ? box_h * config.visual.box_art_padding / pad_div : 0;
-                    const int pad_l = (explicit_align ? 0 : theme.image_list.pad_left) + user_pad;
-                    const int pad_r = (explicit_align ? 0 : theme.image_list.pad_right) + user_pad;
-                    const int pad_t = (explicit_align ? 0 : theme.image_list.pad_top) + user_pad;
-                    const int pad_b = (explicit_align ? 0 : theme.image_list.pad_bottom) + user_pad;
-
-                    const size_t ilen = strlen(image);
-                    if (ilen > 4 && strcmp(image + ilen - 4, ".svg") == 0) {
-                        const int svg_w = max_w > 0 ? max_w : box_w;
-                        snprintf(image_path, sizeof(image_path), "M:%s?%dx%d", image, svg_w, box_h);
-                        lv_img_set_size_mode(ui_img_box, LV_IMG_SIZE_MODE_VIRTUAL);
-                        lv_img_set_zoom(ui_img_box, LV_IMG_ZOOM_NONE);
-                        lv_obj_set_style_pad_left(ui_img_box, pad_l, MU_OBJ_MAIN_DEFAULT);
-                        lv_obj_set_style_pad_right(ui_img_box, pad_r, MU_OBJ_MAIN_DEFAULT);
-                        lv_obj_set_style_pad_top(ui_img_box, pad_t, MU_OBJ_MAIN_DEFAULT);
-                        lv_obj_set_style_pad_bottom(ui_img_box, pad_b, MU_OBJ_MAIN_DEFAULT);
-                        lv_img_set_src(ui_img_box, image_path);
-                    } else {
-                        const struct image_settings image_settings = {image, -1,    max_w, (int16_t) box_h,
-                                                                      pad_l, pad_r, pad_t, pad_b};
-                        update_image(ui_img_box, image_settings);
-                    }
-
-                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-                } else {
-                    apply_box_blank_or_fallback(NULL, starter_image);
-                }
-            }
-        }
+        render_box_refresh(image, h_core_artwork, h_file_name, ui_viewport_objects, starter_image);
     }
 }
 
