@@ -134,14 +134,7 @@ static void video_refresh(void) {
     char core_artwork[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, file_name, core_artwork, sizeof(core_artwork));
 
-    char mux_dim[MAX_BUFFER_SIZE];
-    snprintf(mux_dim, sizeof(mux_dim), "%dx%d", device.mux.width, device.mux.height);
-
-    char vpath[MAX_BUFFER_SIZE];
-    if (!load_video_catalogue(core_artwork, file_name_no_ext, file_name_no_ext, mux_dim, vpath, sizeof(vpath))) return;
-
-    const int delay_ms = config.visual.video_preview == 3 ? 10000 : config.visual.video_preview == 2 ? 5000 : 3000;
-    video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
+    render_video_refresh(core_artwork, file_name_no_ext);
 }
 
 static void image_refresh_transition(void) {

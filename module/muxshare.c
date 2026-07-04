@@ -532,7 +532,7 @@ void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_
 
 void adjust_gen_panel(void) {
     adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_pnl_help, ui_pnl_progress_brightness,
-                                          ui_pnl_progress_volume, NULL});
+                                          ui_pnl_progress_volume, ui_pnl_progress, NULL});
     if (config.visual.box_art == 3) lv_obj_move_foreground(ui_pnl_box);
 }
 
@@ -1034,6 +1034,14 @@ void render_image_refresh(
 void clear_box_image() {
     lv_img_set_src(ui_img_box, &ui_img_blank);
     snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+}
+
+void render_video_refresh(const char *h_core_artwork, const char *h_file_name) {
+    char vpath[MAX_BUFFER_SIZE];
+    if (!load_video_catalogue(h_core_artwork, h_file_name, h_file_name, mux_dim, vpath, sizeof(vpath))) return;
+
+    const int delay_ms = config.visual.video_preview == 3 ? 10000 : config.visual.video_preview == 2 ? 5000 : 3000;
+    video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
 }
 
 void resolve_grid_item_images(

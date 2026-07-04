@@ -94,14 +94,7 @@ static void video_refresh(void) {
     char *dot = strrchr(h_file_name, '.');
     if (dot) *dot = '\0';
 
-    char mux_dim[MAX_BUFFER_SIZE];
-    snprintf(mux_dim, sizeof(mux_dim), "%dx%d", device.mux.width, device.mux.height);
-
-    char vpath[MAX_BUFFER_SIZE];
-    if (!load_video_catalogue(h_core_artwork, h_file_name, h_file_name, mux_dim, vpath, sizeof(vpath))) return;
-
-    const int delay_ms = config.visual.video_preview == 3 ? 10000 : config.visual.video_preview == 2 ? 5000 : 3000;
-    video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
+    render_video_refresh(h_core_artwork, h_file_name);
 }
 
 static void image_refresh_transition(void) {
