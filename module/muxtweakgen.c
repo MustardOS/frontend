@@ -502,114 +502,106 @@ static void handle_option_next_multi(void) {
     move_option(lv_group_get_focused(ui_group_value), +get_multi_count());
 }
 
-static void handle_a(void) {
-    if (msgbox_active || block_input || hold_call) return;
+typedef enum {
+    menu_toggle = 0,
+    menu_option,
+    menu_clock,
+    menu_hdmi,
+    menu_rgb,
+    menu_remap,
+    menu_advanced,
+    menu_passcode,
+    menu_display,
+} menu_action;
 
-    if (warn_mode) {
-        const int idx = warn_dlg.selected;
-        char target[64];
-        snprintf(target, sizeof(target), "%s", warn_pending);
-        hide_warn_dialog();
+typedef int (*visible_fn)(void);
 
-        if (idx == 0) {
-            if (strcmp(target, "danger") == 0) {
-                char c_path[MAX_BUFFER_SIZE];
-                snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_danger");
+typedef struct {
+    const char *mux_name;
+    int16_t *kiosk_flag;
+    menu_action action;
+    visible_fn visible;
+} menu_entry;
 
-                create_directories(c_path, 1);
+static int16_t kiosk_pass = 0;
 
-                write_text_to_file(c_path, "w", INT, read_line_int_from(c_path, 1) + 1);
-                play_sound(snd_confirm);
+static const menu_entry tweakgen_menu_entries[ui_count_dynamic] = {
+    {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
+    {"hdmi", &kiosk.setting.hdmi, menu_hdmi, visible_hdmi},
+    {"rgb", &kiosk.setting.rgb, menu_rgb, visible_rgb},
+    {"remap", &kiosk_pass, menu_remap, NULL},
+    {"tweakadv", &kiosk.setting.advanced, menu_advanced, NULL},
+    {"passcfg", &kiosk_pass, menu_passcode, NULL},
+    {"distemp", &kiosk_pass, menu_display, visible_distemp}, // Display Temperature
+    {NULL, &kiosk_pass, menu_option, visible_brightness},    // Brightness
+    {NULL, &kiosk_pass, menu_option, visible_volume},        // Volume
+    {NULL, &kiosk_pass, menu_toggle, visible_audiosink},
+    {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey DPAD
+    {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey Screenshot
+    {NULL, &kiosk_pass, menu_toggle, NULL}, // Startup Mode
+};
 
-                load_mux("danger");
-                mux_input_stop();
-            } else if (strcmp(target, "tweakadv") == 0) {
-                char c_path[MAX_BUFFER_SIZE];
-                snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_tweakadv");
+static void handle_warn_mode(void) {
+    const int idx = warn_dlg.selected;
+    char target[64];
+    snprintf(target, sizeof(target), "%s", warn_pending);
+    hide_warn_dialog();
 
-                create_directories(c_path, 1);
-                write_text_to_file(c_path, "w", INT, read_line_int_from(c_path, 1) + 1);
+    if (idx != 0) return;
 
-                if (!config.settings.advanced.trust_modify && any_tweakgen_modified()) {
-                    snprintf(pending_submenu, sizeof(pending_submenu), "%s", "tweakadv");
-                    show_save_dialog();
-                } else {
-                    play_sound(snd_confirm);
-                    save_tweak_options();
+    if (strcmp(target, "danger") == 0) {
+        char c_path[MAX_BUFFER_SIZE];
+        snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_danger");
+        increment_counter_file(c_path);
 
-                    load_mux("tweakadv");
-                    mux_input_stop();
-                }
-            }
-        }
-        return;
-    }
+        play_sound(snd_confirm);
 
-    if (save_mode) {
-        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        char submenu[64];
-        snprintf(submenu, sizeof(submenu), "%s", pending_submenu);
-        hide_save_dialog();
-
-        if (opt == mux_unsaved_save) save_tweak_options();
-
-        if (submenu[0]) {
-            play_sound(snd_confirm);
-            load_mux(submenu);
-        } else {
-            play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
-        }
-
+        load_mux("danger");
         mux_input_stop();
-        return;
+    } else if (strcmp(target, "tweakadv") == 0) {
+        char c_path[MAX_BUFFER_SIZE];
+        snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_tweakadv");
+        increment_counter_file(c_path);
+
+        if (!config.settings.advanced.trust_modify && any_tweakgen_modified()) {
+            snprintf(pending_submenu, sizeof(pending_submenu), "%s", "tweakadv");
+            show_save_dialog();
+        } else {
+            play_sound(snd_confirm);
+            save_tweak_options();
+
+            load_mux("tweakadv");
+            mux_input_stop();
+        }
+    }
+}
+
+static void handle_save_mode(void) {
+    const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+    char submenu[64];
+    snprintf(submenu, sizeof(submenu), "%s", pending_submenu);
+    hide_save_dialog();
+
+    if (opt == mux_unsaved_save) save_tweak_options();
+
+    if (submenu[0]) {
+        play_sound(snd_confirm);
+        load_mux(submenu);
+    } else {
+        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
     }
 
-    static int16_t kiosk_pass = 0;
+    mux_input_stop();
+}
 
-    typedef enum {
-        menu_toggle = 0,
-        menu_option,
-        menu_clock,
-        menu_hdmi,
-        menu_rgb,
-        menu_remap,
-        menu_advanced,
-        menu_passcode,
-        menu_display,
-    } menu_action;
-
-    typedef int (*visible_fn)(void);
-
-    typedef struct {
-        const char *mux_name;
-        int16_t *kiosk_flag;
-        menu_action action;
-        visible_fn visible;
-    } menu_entry;
-
-    static const menu_entry entries[ui_count_dynamic] = {
-        {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
-        {"hdmi", &kiosk.setting.hdmi, menu_hdmi, visible_hdmi},
-        {"rgb", &kiosk.setting.rgb, menu_rgb, visible_rgb},
-        {"remap", &kiosk_pass, menu_remap, NULL},
-        {"tweakadv", &kiosk.setting.advanced, menu_advanced, NULL},
-        {"passcfg", &kiosk_pass, menu_passcode, NULL},
-        {"distemp", &kiosk_pass, menu_display, visible_distemp}, // Display Temperature
-        {NULL, &kiosk_pass, menu_option, visible_brightness},    // Brightness
-        {NULL, &kiosk_pass, menu_option, visible_volume},        // Volume
-        {NULL, &kiosk_pass, menu_toggle, visible_audiosink},
-        {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey DPAD
-        {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey Screenshot
-        {NULL, &kiosk_pass, menu_toggle, NULL}, // Startup Mode
-    };
-
+static void handle_menu_dispatch(void) {
     const menu_entry *visible_entries[ui_count_dynamic];
     size_t visible_count = 0;
 
-    for (size_t i = 0; i < A_SIZE(entries); i++) {
-        if (entries[i].visible && !entries[i].visible()) continue;
-        visible_entries[visible_count++] = &entries[i];
+    for (size_t i = 0; i < A_SIZE(tweakgen_menu_entries); i++) {
+        if (tweakgen_menu_entries[i].visible && !tweakgen_menu_entries[i].visible()) continue;
+        visible_entries[visible_count++] = &tweakgen_menu_entries[i];
     }
 
     if ((unsigned) current_item_index >= visible_count) return;
@@ -655,6 +647,22 @@ static void handle_a(void) {
         default:
             break;
     }
+}
+
+static void handle_a(void) {
+    if (msgbox_active || block_input || hold_call) return;
+
+    if (warn_mode) {
+        handle_warn_mode();
+        return;
+    }
+
+    if (save_mode) {
+        handle_save_mode();
+        return;
+    }
+
+    handle_menu_dispatch();
 }
 
 static void handle_b(void) {
