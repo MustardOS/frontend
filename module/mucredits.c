@@ -8,6 +8,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include "muxshare.h"
+#include "text.h"
 
 #define SHARE_DIR "/opt/muos/share/"
 #define MEDIA_DIR SHARE_DIR "media/credits"
@@ -16,6 +17,7 @@
 
 #define REF_H 480
 
+#define MIN_COLUMNS   2
 #define PAGE_PAD_FRAC 0.06f
 
 #define INTRO_HOLD_S 0.8f
@@ -62,8 +64,7 @@
 #define COL_CON_G 201
 #define COL_CON_B 124
 
-#define BG_DARKEN_ALPHA  0
-#define TXT_SHADOW_ALPHA 160
+#define BG_DARKEN_ALPHA 0
 
 // clang-format off
 static const char *commanders[] = {
@@ -232,11 +233,6 @@ static int g_factory_music_fading = 0;
 
 static int sx(const int v) {
     return (int) lroundf((float) v * g_scale);
-}
-
-static void die(const char *msg) {
-    LOG_ERROR(mux_module, "%s: %s", msg, SDL_GetError());
-    exit(1);
 }
 
 static SDL_Texture *load_image_scaled(const char *path, const int target_w, int *out_w, int *out_h) {
@@ -431,13 +427,6 @@ static void bg_set_active(const char *key) {
     if (g_bg_kb_dir == 0.0f) g_bg_kb_dir = 1.0f;
 }
 
-static float smoothstep01(const float t) {
-    if (t <= 0.0f) return 0.0f;
-    if (t >= 1.0f) return 1.0f;
-
-    return t * t * (3.0f - 2.0f * t);
-}
-
 static void bg_render_one(const bg_image_t *bg, const float kb_t, const float kb_dir, const Uint8 alpha) {
     if (!bg->tex) return;
 
@@ -470,7 +459,7 @@ static void bg_render_one(const bg_image_t *bg, const float kb_t, const float kb
     src.x = (bg->w - src.w) / 2;
     src.y = (bg->h - src.h) / 2;
 
-    const float t = smoothstep01(kb_t);
+    const float t = sdl_smoothstep01(kb_t);
 
     const float zoom = kb_dir > 0 ? 1.0f + KB_ZOOM * t : 1.0f + KB_ZOOM * (1.0f - t);
 
@@ -508,11 +497,11 @@ static void render_backgrounds(const float dt) {
     if (g_bg_kb_t > 1.0f) g_bg_kb_t = 1.0f;
 
     if (g_bg_previous && g_bg_fade < 1.0f) {
-        const float eased_out = smoothstep01(g_bg_fade);
+        const float eased_out = sdl_smoothstep01(g_bg_fade);
         bg_render_one(g_bg_previous, g_bg_prev_kb_frozen, g_bg_prev_dir, (Uint8) ((1.0f - eased_out) * 255));
     }
     if (g_bg_current) {
-        const float eased_in = smoothstep01(g_bg_fade);
+        const float eased_in = sdl_smoothstep01(g_bg_fade);
         bg_render_one(g_bg_current, g_bg_kb_t, g_bg_kb_dir, (Uint8) (eased_in * 255));
     }
 }
@@ -529,133 +518,16 @@ static int text_shadow_offset(void) {
 }
 
 static SDL_Surface *render_text_surface(TTF_Font *font, const char *text, const SDL_Color col) {
-    if (!text || !*text) return NULL;
-
-    const int offset = text_shadow_offset();
-
-    const SDL_Color shadow_col = {0, 0, 0, 255};
-
-    SDL_Surface *shadow = TTF_RenderUTF8_Blended(font, text, shadow_col);
-    if (!shadow) return NULL;
-
-    SDL_Surface *front = TTF_RenderUTF8_Blended(font, text, col);
-    if (!front) {
-        SDL_FreeSurface(shadow);
-        return NULL;
-    }
-
-    SDL_Surface *out =
-        SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
-    if (!out) {
-        SDL_FreeSurface(front);
-        SDL_FreeSurface(shadow);
-        return NULL;
-    }
-
-    SDL_FillRect(out, NULL, SDL_MapRGBA(out->format, 0, 0, 0, 0));
-
-    SDL_Rect dst;
-    dst.x = offset;
-    dst.y = offset;
-    dst.w = shadow->w;
-    dst.h = shadow->h;
-
-    SDL_SetSurfaceBlendMode(shadow, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(shadow, TXT_SHADOW_ALPHA);
-    SDL_BlitSurface(shadow, NULL, out, &dst);
-
-    dst.x = 0;
-    dst.y = 0;
-    dst.w = front->w;
-    dst.h = front->h;
-
-    SDL_SetSurfaceBlendMode(front, SDL_BLENDMODE_BLEND);
-    SDL_BlitSurface(front, NULL, out, &dst);
-
-    SDL_FreeSurface(front);
-    SDL_FreeSurface(shadow);
-
-    return out;
-}
-
-static SDL_Surface *
-render_text_wrapped_surface(TTF_Font *font, const char *text, const SDL_Color col, const int wrap_w) {
-    if (!*text) return NULL;
-
-    const int offset = text_shadow_offset();
-
-    const SDL_Color shadow_col = {0, 0, 0, 255};
-
-    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
-
-    SDL_Surface *shadow = TTF_RenderUTF8_Blended_Wrapped(font, text, shadow_col, wrap_w);
-    if (!shadow) return NULL;
-
-    SDL_Surface *front = TTF_RenderUTF8_Blended_Wrapped(font, text, col, wrap_w);
-    if (!front) {
-        SDL_FreeSurface(shadow);
-        return NULL;
-    }
-
-    SDL_Surface *out =
-        SDL_CreateRGBSurfaceWithFormat(0, front->w + offset, front->h + offset, 32, SDL_PIXELFORMAT_RGBA32);
-    if (!out) {
-        SDL_FreeSurface(front);
-        SDL_FreeSurface(shadow);
-        return NULL;
-    }
-
-    SDL_FillRect(out, NULL, SDL_MapRGBA(out->format, 0, 0, 0, 0));
-
-    SDL_Rect dst;
-    dst.x = offset;
-    dst.y = offset;
-    dst.w = shadow->w;
-    dst.h = shadow->h;
-
-    SDL_SetSurfaceBlendMode(shadow, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(shadow, TXT_SHADOW_ALPHA);
-    SDL_BlitSurface(shadow, NULL, out, &dst);
-
-    dst.x = 0;
-    dst.y = 0;
-    dst.w = front->w;
-    dst.h = front->h;
-
-    SDL_SetSurfaceBlendMode(front, SDL_BLENDMODE_BLEND);
-    SDL_BlitSurface(front, NULL, out, &dst);
-
-    SDL_FreeSurface(front);
-    SDL_FreeSurface(shadow);
-
-    return out;
+    return sdl_render_text_surface(font, text, col, text_shadow_offset());
 }
 
 static SDL_Texture *render_text(TTF_Font *font, const char *text, const SDL_Color col, int *out_w, int *out_h) {
-    SDL_Surface *surf = render_text_surface(font, text, col);
-    if (!surf) return NULL;
-
-    SDL_Texture *t = SDL_CreateTextureFromSurface(g_renderer, surf);
-    *out_w = surf->w;
-    *out_h = surf->h;
-
-    SDL_FreeSurface(surf);
-
-    return t;
+    return sdl_render_text(g_renderer, font, text, col, text_shadow_offset(), out_w, out_h);
 }
 
 static SDL_Texture *
 render_text_wrapped(TTF_Font *font, const char *text, const SDL_Color col, const int wrap_w, int *out_w, int *out_h) {
-    SDL_Surface *surf = render_text_wrapped_surface(font, text, col, wrap_w);
-    if (!surf) return NULL;
-
-    SDL_Texture *t = SDL_CreateTextureFromSurface(g_renderer, surf);
-    *out_w = surf->w;
-    *out_h = surf->h;
-
-    SDL_FreeSurface(surf);
-
-    return t;
+    return sdl_render_text_wrapped(g_renderer, font, text, col, wrap_w, text_shadow_offset(), out_w, out_h);
 }
 
 static block_t *new_block(const block_kind_t kind, const char *bg_key) {
@@ -839,19 +711,18 @@ static void add_names_impl(const char **names, const int n, const SDL_Color col,
     int line_h = TTF_FontHeight(g_font_sml) + sx(4) + text_shadow_offset();
     if (line_h < 1) line_h = 1;
 
-    int cols;
+    int desired_cols;
     if (f_cols > 0) {
-        cols = f_cols;
+        desired_cols = f_cols;
     } else {
-        cols = avail / (avg_name_w + cell_inset);
-        if (cols < 1) cols = 1;
-        if (cols > 4) cols = 4;
+        desired_cols = avail / (avg_name_w + cell_inset);
+        if (desired_cols > 4) desired_cols = 4;
     }
 
-    if (cols < 1) cols = 1;
+    if (desired_cols < MIN_COLUMNS) desired_cols = MIN_COLUMNS;
 
-    const int cell_w = avail / cols;
-    int cell_budget = cell_w - cell_inset;
+    const int lenient_cell_w = avail / MIN_COLUMNS;
+    int cell_budget = lenient_cell_w - cell_inset;
     if (cell_budget < 1) cell_budget = 1;
 
     regular = malloc(sizeof(*regular) * (size_t) n);
@@ -864,6 +735,22 @@ static void add_names_impl(const char **names, const int n, const SDL_Color col,
             oversized[over_n++] = i;
         else
             regular[reg_n++] = i;
+    }
+
+    int cols = MIN_COLUMNS;
+    for (int c = desired_cols; c > cols; c--) {
+        const int budget_c = avail / c - cell_inset;
+        int all_fit = 1;
+        for (int i = 0; i < reg_n; ++i) {
+            if (widths[regular[i]] > budget_c) {
+                all_fit = 0;
+                break;
+            }
+        }
+        if (all_fit) {
+            cols = c;
+            break;
+        }
     }
 
     if (reg_n < cols) cols = reg_n > 0 ? reg_n : 1;
@@ -1266,7 +1153,7 @@ static void render_quit_fade(const float dt) {
     g_quit_fade += dt / QUIT_FADE_S;
     if (g_quit_fade > 1.0f) g_quit_fade = 1.0f;
 
-    const float eased = smoothstep01(g_quit_fade);
+    const float eased = sdl_smoothstep01(g_quit_fade);
     const Uint8 alpha = (Uint8) lroundf(eased * 255.0f);
 
     SDL_SetRenderDrawBlendMode(g_renderer, SDL_BLENDMODE_BLEND);
@@ -1292,8 +1179,9 @@ static void handle_event(const SDL_Event *ev) {
 }
 
 static void init_sdl(void) {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) die("SDL_Init");
-    if (TTF_Init() < 0) die("TTF_Init");
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0)
+        sdl_text_die("SDL_Init");
+    if (TTF_Init() < 0) sdl_text_die("TTF_Init");
 
     const int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
     if ((IMG_Init(img_flags) & img_flags) != img_flags) LOG_WARN(mux_module, "IMG_Init partial: %s", IMG_GetError());
@@ -1310,13 +1198,13 @@ static void init_sdl(void) {
         SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS
     );
 
-    if (!g_window) die("SDL_CreateWindow");
+    if (!g_window) sdl_text_die("SDL_CreateWindow");
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!g_renderer) g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_SOFTWARE);
-    if (!g_renderer) die("SDL_CreateRenderer");
+    if (!g_renderer) sdl_text_die("SDL_CreateRenderer");
 
     SDL_GetRendererOutputSize(g_renderer, &g_screen_w, &g_screen_h);
     g_scale = (float) g_screen_h / (float) REF_H;
@@ -1342,7 +1230,7 @@ static void load_fonts(void) {
     g_font_med = TTF_OpenFont(FONT_FILE, s_med);
     g_font_sml = TTF_OpenFont(FONT_FILE, s_sml);
 
-    if (!g_font_huge || !g_font_big || !g_font_med || !g_font_sml) die("TTF_OpenFont");
+    if (!g_font_huge || !g_font_big || !g_font_med || !g_font_sml) sdl_text_die("TTF_OpenFont");
 }
 
 static void main_loop(void) {
