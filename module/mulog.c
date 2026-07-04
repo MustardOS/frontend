@@ -334,43 +334,42 @@ static void make_date_time(char *date_buf, const size_t date_sz, char *time_buf,
     }
 }
 
-static int build_line(char *line, const log_level_t level, const char *module, const char *message) {
+typedef struct {
     char time_buffer[20];
     char truncated_module[20];
-    struct timespec ts;
-    double uptime = 0.0;
+    double uptime;
+} log_line_preamble_t;
 
-    make_date_time(NULL, 0, time_buffer, sizeof(time_buffer));
+static void build_log_preamble(log_line_preamble_t *pre, const char *module) {
+    struct timespec ts;
+    pre->uptime = 0.0;
+
+    make_date_time(NULL, 0, pre->time_buffer, sizeof(pre->time_buffer));
 
     if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-        uptime = (double) ts.tv_sec + (double) ts.tv_nsec / 1000000000.0;
+        pre->uptime = (double) ts.tv_sec + (double) ts.tv_nsec / 1000000000.0;
     }
 
-    snprintf(truncated_module, sizeof(truncated_module), "%.19s", module);
+    snprintf(pre->truncated_module, sizeof(pre->truncated_module), "%.19s", module);
+}
+
+static int build_line(char *line, const log_level_t level, const char *module, const char *message) {
+    log_line_preamble_t pre;
+    build_log_preamble(&pre, module);
 
     return snprintf(
-        line, MAX_LINE_SIZE, "[%.2f]\t[%s] [%s] [%s]\t%s\n", uptime, time_buffer, level_plain_symbol(level),
-        truncated_module, message
+        line, MAX_LINE_SIZE, "[%.2f]\t[%s] [%s] [%s]\t%s\n", pre.uptime, pre.time_buffer, level_plain_symbol(level),
+        pre.truncated_module, message
     );
 }
 
 static void emit_stderr(const log_level_t level, const char *module, const char *message) {
-    char time_buffer[20];
-    char truncated_module[20];
-    struct timespec ts;
-    double uptime = 0.0;
-
-    make_date_time(NULL, 0, time_buffer, sizeof(time_buffer));
-
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-        uptime = (double) ts.tv_sec + (double) ts.tv_nsec / 1000000000.0;
-    }
-
-    snprintf(truncated_module, sizeof(truncated_module), "%.19s", module);
+    log_line_preamble_t pre;
+    build_log_preamble(&pre, module);
 
     fprintf(
-        stderr, "[%.2f]\t[%s] [%s] [%s]\t%s\n", uptime, time_buffer, level_colour_symbol(level), truncated_module,
-        message
+        stderr, "[%.2f]\t[%s] [%s] [%s]\t%s\n", pre.uptime, pre.time_buffer, level_colour_symbol(level),
+        pre.truncated_module, message
     );
     fflush(stderr);
 }
