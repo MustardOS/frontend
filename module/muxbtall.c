@@ -143,7 +143,17 @@ static void bt_poll_task(lv_timer_t *t) {
     }
 }
 
+static int has_paired_bt_devices(void) {
+    struct stat st;
+    return stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0 && st.st_size > 0;
+}
+
 static void create_paired_device_items(void) {
+    if (!has_paired_bt_devices()) {
+        lv_label_set_text(ui_lbl_screen_message, lang.muxbtall.none);
+        return;
+    }
+
     bt_list_start = time(NULL);
     bt_list_pending = 1;
 
