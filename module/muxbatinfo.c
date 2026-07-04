@@ -35,20 +35,10 @@ static int read_bat_file_trim(const char *path, char *out, const size_t out_sz) 
     }
     fclose(fp);
 
-    const char *start = out;
-    while (*start && isspace((unsigned char) *start))
-        start++;
+    const char *trimmed = str_trim(out);
+    if (trimmed != out) memmove(out, trimmed, strlen(trimmed) + 1);
 
-    const char *end = start + strlen(start);
-    while (end > start && isspace((unsigned char) end[-1]))
-        end--;
-
-    const size_t len = (size_t) (end - start);
-    if (start != out) memmove(out, start, len);
-
-    out[len] = '\0';
-
-    return len > 0 ? 0 : -1;
+    return out[0] != '\0' ? 0 : -1;
 }
 
 static const char *get_bat_capacity(void) {
