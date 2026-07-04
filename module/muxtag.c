@@ -8,7 +8,7 @@ static void show_help(void) {
     show_info_box(lang.muxtag.title, lang.muxtag.help, 0);
 }
 
-static void create_tag_assignment(char *tag, const char *rom, const enum gen_type method) {
+static void create_tag_assignment(const char *tag, const char *rom, const enum gen_type method) {
     create_marker_assignment("tag", "Assign Tag", tag, rom, rom_dir, 0, method);
 }
 
@@ -63,7 +63,7 @@ static void handle_a(void) {
     LOG_INFO(mux_module, "Single Tag Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, SINGLE);
 
     mux_input_stop();
@@ -89,7 +89,7 @@ static void handle_x(void) {
     LOG_INFO(mux_module, "Directory Tag Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, DIRECTORY);
 
     mux_input_stop();
@@ -101,7 +101,7 @@ static void handle_y(void) {
     LOG_INFO(mux_module, "Parent Tag Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, PARENT);
 
     mux_input_stop();

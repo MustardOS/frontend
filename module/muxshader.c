@@ -76,7 +76,7 @@ static void show_help(void) {
     if (author) free(author);
 }
 
-static void create_shader_assignment(char *shader, const char *rom, const enum gen_type method) {
+static void create_shader_assignment(const char *shader, const char *rom, const enum gen_type method) {
     create_marker_assignment("shd", "Assign Shader", shader, rom, rom_dir, 0, method);
 }
 
@@ -162,7 +162,7 @@ static void handle_a(void) {
     LOG_INFO(mux_module, "Single Shader Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = get_selected_shader();
+    const char *selected = get_selected_shader();
     create_shader_assignment(selected, rom_name, SINGLE);
 
     mux_input_stop();
@@ -188,7 +188,7 @@ static void handle_x(void) {
     LOG_INFO(mux_module, "Directory Shader Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = get_selected_shader();
+    const char *selected = get_selected_shader();
     create_shader_assignment(selected, rom_name, DIRECTORY);
 
     mux_input_stop();
@@ -200,7 +200,7 @@ static void handle_y(void) {
     LOG_INFO(mux_module, "Parent Shader Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = get_selected_shader();
+    const char *selected = get_selected_shader();
     create_shader_assignment(selected, rom_name, PARENT);
 
     mux_input_stop();

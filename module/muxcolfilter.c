@@ -89,7 +89,7 @@ static void show_help(void) {
     show_info_box(lang.muxcolfilter.title, lang.muxcolfilter.help, 0);
 }
 
-static void create_filter_assignment(char *filter, const char *rom, const enum gen_type method) {
+static void create_filter_assignment(const char *filter, const char *rom, const enum gen_type method) {
     create_marker_assignment("flt", "Assign Colour Filter", filter, rom, rom_dir, 0, method);
 }
 
@@ -167,7 +167,7 @@ static void handle_a(void) {
     LOG_INFO(mux_module, "Single Colour Filter Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = get_selected_filter();
+    const char *selected = get_selected_filter();
     create_filter_assignment(selected, rom_name, SINGLE);
 
     mux_input_stop();
@@ -193,7 +193,7 @@ static void handle_x(void) {
     LOG_INFO(mux_module, "Directory Colour Filter Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = get_selected_filter();
+    const char *selected = get_selected_filter();
     create_filter_assignment(selected, rom_name, DIRECTORY);
 
     mux_input_stop();
@@ -205,7 +205,7 @@ static void handle_y(void) {
     LOG_INFO(mux_module, "Parent Colour Filter Assignment Triggered");
     play_sound(snd_confirm);
 
-    char *selected = get_selected_filter();
+    const char *selected = get_selected_filter();
     create_filter_assignment(selected, rom_name, PARENT);
 
     mux_input_stop();
