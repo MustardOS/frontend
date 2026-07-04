@@ -19,6 +19,17 @@ static char selected_mac[18];
 static int is_connected;
 static int type_original;
 
+static void resolve_bt_type_override_path(const char *mac, char *out) {
+    char mac_clean[18];
+    snprintf(mac_clean, sizeof(mac_clean), "%s", mac);
+
+    for (char *p = mac_clean; *p; p++) {
+        if (*p == ':') *p = '_';
+    }
+
+    snprintf(out, MAX_BUFFER_SIZE, CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
+}
+
 static void show_help(void) {
     const struct help_msg help_messages[] = {
 #define BTDEV(NAME, UDATA) {UDATA, lang.muxbtdev.help.NAME},
@@ -150,14 +161,9 @@ static void save_btdev_options(void) {
 
     if (!*selected_mac || current_type == type_original) return;
 
-    char mac_clean[18];
-    snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
-    for (char *p = mac_clean; *p; p++) {
-        if (*p == ':') *p = '_';
-    }
-
     char override_path[MAX_BUFFER_SIZE];
-    snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
+    resolve_bt_type_override_path(selected_mac, override_path);
+
     write_text_to_file(override_path, "w", CHAR, bt_type_keys[current_type]);
 }
 
@@ -435,15 +441,8 @@ static void init_navigation_group(void) {
     bt_type_t type;
 
     if (*selected_mac) {
-        char mac_clean[18];
-
-        snprintf(mac_clean, sizeof(mac_clean), "%s", selected_mac);
-        for (char *p = mac_clean; *p; p++) {
-            if (*p == ':') *p = '_';
-        }
-
         char override_path[MAX_BUFFER_SIZE];
-        snprintf(override_path, sizeof(override_path), CONF_CONFIG_PATH "bluetooth/type_%s", mac_clean);
+        resolve_bt_type_override_path(selected_mac, override_path);
 
         char override_key[64] = {0};
         FILE *of = fopen(override_path, "r");
