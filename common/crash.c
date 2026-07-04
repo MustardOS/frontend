@@ -125,6 +125,8 @@ void crash_ui_check(struct theme_config *t, const struct mux_lang *l, lv_obj_t *
     remove(MUOS_CRS_LOAD);
 
     if (crashed && *crashed) {
+        increment_counter_file(CONF_CONFIG_PATH "count/crash");
+
         dialogue_init_message(
             &crash_dlg, t, layer, l->generic.crash_title, crashed, l->generic.crash_message, l->generic.confirm
         );
@@ -182,6 +184,8 @@ void power_loss_ui_apply_font(const lv_obj_t *source) {
 void power_loss_ui_check(struct theme_config *t, const struct mux_lang *l, lv_obj_t *layer, int *msgbox_active) {
     if (!file_exist(MUOS_PWR_LOSS)) return;
     remove(MUOS_PWR_LOSS);
+
+    increment_counter_file(CONF_CONFIG_PATH "count/power_loss");
 
     dialogue_init_message(
         &power_loss_dlg, t, layer, l->generic.power_loss_title, NULL, l->generic.power_loss_message,

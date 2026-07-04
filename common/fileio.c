@@ -298,6 +298,11 @@ void create_directories(const char *path, const int parent_only) {
     mkdir(tmp_path, 0777);
 }
 
+void increment_counter_file(const char *path) {
+    create_directories(path, 1);
+    write_text_to_file(path, "w", INT, read_line_int_from(path, 1) + 1);
+}
+
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], const int recursive) {
     struct dirent *entry;
     DIR *dir = opendir(dir_path);

@@ -38,6 +38,8 @@ void write_text_to_file_atomic(const char *filename, int type, ...);
 
 void create_directories(const char *path, int parent_only);
 
+void increment_counter_file(const char *path);
+
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 
 void delete_files_of_name(const char *dir_path, const char *filename);
