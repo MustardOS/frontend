@@ -5,9 +5,17 @@
 enum { ui_count_dynamic = E_SIZE(SEARCH_ELEMENTS) };
 #undef SEARCH
 
+#define SEARCH_RUNNER  "/run/muos/search_run"
+#define SEARCH_TIMEOUT 30
+
 static int starter_image = 0;
 static int splash_valid = 0;
 static int got_results = 0;
+
+static int search_pending = 0;
+static int search_use_global = 0;
+static time_t search_start = 0;
+static lv_timer_t *search_poll_timer = NULL;
 
 static lv_obj_t *ui_img_splash;
 
@@ -89,14 +97,7 @@ static void video_refresh(void) {
     char *dot = strrchr(item_no_ext, '.');
     if (dot) *dot = '\0';
 
-    char mux_dim[MAX_BUFFER_SIZE];
-    snprintf(mux_dim, sizeof(mux_dim), "%dx%d", device.mux.width, device.mux.height);
-
-    char vpath[MAX_BUFFER_SIZE];
-    if (!load_video_catalogue(core_artwork, item_no_ext, item_no_ext, mux_dim, vpath, sizeof(vpath))) return;
-
-    const int delay_ms = config.visual.video_preview == 3 ? 10000 : config.visual.video_preview == 2 ? 5000 : 3000;
-    video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
+    render_video_refresh(core_artwork, item_no_ext);
 }
 
 static void image_refresh_transition(void) {
@@ -386,6 +387,65 @@ static void process_results(const char *json_results) {
     free_items(&t_all_items, &t_all_item_count);
 }
 
+// This is more of a visual thing otherwise it'll select "Lookup" in the background so
+// we just pop the search type in the pending file to highlight the correct one...
+static void focus_search_button(const int use_global) {
+    lv_obj_t *panel = use_global ? ui_pnl_search_global_search : ui_pnl_search_local_search;
+    lv_obj_t *label = use_global ? ui_lbl_search_global_search : ui_lbl_search_local_search;
+    lv_obj_t *glyph = use_global ? ui_ico_search_global_search : ui_ico_search_local_search;
+    lv_obj_t *value = use_global ? ui_val_search_global_search : ui_val_search_local_search;
+
+    lv_group_focus_obj(panel);
+    lv_group_focus_obj(label);
+    lv_group_focus_obj(glyph);
+    lv_group_focus_obj(value);
+
+    current_item_index = use_global ? 2 : 1;
+
+    set_label_long_mode(&theme, label, config.visual.name_scroll);
+    nav_moved = 1;
+}
+
+static void cancel_search(void) {
+    if (search_poll_timer) {
+        lv_timer_del(search_poll_timer);
+        search_poll_timer = NULL;
+    }
+
+    search_pending = 0;
+    hide_bounce_progress_bar();
+}
+
+static void search_poll_task(lv_timer_t *t) {
+    if (!search_pending) {
+        lv_timer_del(t);
+        search_poll_timer = NULL;
+        return;
+    }
+
+    const int file_ready = file_exist(search_result);
+    const int elapsed = (int) (time(NULL) - search_start);
+    const int timed_out = elapsed >= SEARCH_TIMEOUT;
+
+    if (!file_ready && !timed_out) return;
+
+    search_pending = 0;
+    lv_timer_del(t);
+    search_poll_timer = NULL;
+
+    hide_bounce_progress_bar();
+
+    if (file_ready) {
+        char *json_content = read_all_char_from(search_result);
+        if (json_content) {
+            process_results(json_content);
+            lv_label_set_text(ui_val_lookup_search, lookup_value);
+            focus_search_button(search_use_global);
+            free(json_content);
+        }
+    }
+}
+
 static void handle_keyboard_ok_press(void) {
     key_show = 0;
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -431,6 +491,8 @@ static void handle_confirm(void) {
     }
 
     if (e_focused == ui_lbl_search_local_search || e_focused == ui_lbl_search_global_search) {
+        if (search_pending) return;
+
         char *lookup_value = lv_label_get_text(ui_val_lookup_search);
 
         if (strlen(lookup_value) <= 2) {
@@ -441,11 +503,13 @@ static void handle_confirm(void) {
         }
 
         play_sound(snd_confirm);
-        toast_message(lang.muxsearch.search, tst_wait_f);
+
+        if (file_exist(search_result)) remove(search_result);
+        write_text_to_file(SEARCH_RUNNER, "w", CHAR, e_focused == ui_lbl_search_global_search ? "global" : "local");
 
         if (e_focused == ui_lbl_search_local_search) {
             const char *args[] = {OPT_PATH "script/mux/find.sh", "--local", str_trim(lookup_value), rom_dir, NULL};
-            run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+            run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
         } else {
             const char *args[6];
             int idx = 0;
@@ -470,7 +534,7 @@ static void handle_confirm(void) {
             if (mounts & 4) args[idx++] = e_usb;
 
             args[idx] = NULL;
-            run_exec(args, idx, 0, 1, NULL, NULL);
+            run_exec(args, idx, 1, 0, NULL, NULL);
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
@@ -532,6 +596,8 @@ static void handle_back(void) {
     video_preview_cancel();
     play_sound(snd_back);
 
+    cancel_search();
+
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     load_mux("explore");
 
@@ -577,6 +643,8 @@ static void handle_x(void) {
         close_osk(key_entry, ui_group, ui_txt_entry_search, ui_pnl_entry_search);
         return;
     }
+
+    cancel_search();
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (file_exist(search_result)) remove(search_result);
@@ -665,7 +733,8 @@ static void handle_nav_key_released(void) {
 
 static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_pnl_help, ui_pnl_entry_search,
-                                          ui_pnl_progress_brightness, ui_pnl_progress_volume, ui_pnl_message, NULL});
+                                          ui_pnl_progress_brightness, ui_pnl_progress_volume, ui_pnl_message,
+                                          ui_pnl_progress, NULL});
     if (config.visual.box_art == 3) lv_obj_move_foreground(ui_pnl_box);
 }
 
@@ -783,6 +852,18 @@ int muxsearch_main(char *dir) {
         process_results(json_content);
         lv_label_set_text(ui_val_lookup_search, lookup_value);
         free(json_content);
+    } else if (file_exist(SEARCH_RUNNER)) {
+        const char *pending_mode = read_line_char_from(SEARCH_RUNNER, 1);
+        search_use_global = pending_mode && strcasecmp(pending_mode, "global") == 0;
+        remove(SEARCH_RUNNER);
+
+        search_start = time(NULL);
+        search_pending = 1;
+
+        focus_search_button(search_use_global);
+
+        show_bounce_progress_bar(lang.muxsearch.search, SEARCH_TIMEOUT);
+        search_poll_timer = lv_timer_create(search_poll_task, 500, NULL);
     }
 
     init_osk(ui_pnl_entry_search, ui_txt_entry_search, 0, 0, OSK_MAX);

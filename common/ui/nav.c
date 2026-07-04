@@ -22,6 +22,11 @@ static lv_timer_t *timer_bounce_progress = NULL;
 static int bounce_pos = 0;
 static int bounce_direction = 1;
 
+static char bounce_base_message[MAX_BUFFER_SIZE];
+static int bounce_timeout = 0;
+static time_t bounce_start = 0;
+static int bounce_last_remaining = -1;
+
 #define FOOTER_SCROLL_PAUSE_MS   1500
 #define FOOTER_SCROLL_PX_PER_SEC 60
 #define FOOTER_SCROLL_PAD_RIGHT  16
@@ -639,10 +644,35 @@ static void update_bounce_progress_bar(lv_timer_t *timer) {
 
     lv_bar_set_start_value(ui_bar_progress, bounce_pos, LV_ANIM_OFF);
     lv_bar_set_value(ui_bar_progress, bounce_pos + BOUNCE_SEGMENT_WIDTH, LV_ANIM_OFF);
+
+    if (bounce_timeout > 0) {
+        const int elapsed = (int) (time(NULL) - bounce_start);
+        const int remaining = bounce_timeout - elapsed > 0 ? bounce_timeout - elapsed : 0;
+
+        if (remaining != bounce_last_remaining) {
+            bounce_last_remaining = remaining;
+
+            char buf[MAX_BUFFER_SIZE];
+            snprintf(buf, sizeof(buf), "%s (%ds)", bounce_base_message, remaining);
+            lv_label_set_text(ui_lbl_progress, buf);
+        }
+    }
 }
 
-void show_bounce_progress_bar(const char *message) {
-    lv_label_set_text(ui_lbl_progress, message);
+void show_bounce_progress_bar(const char *message, const int timeout_seconds) {
+    snprintf(bounce_base_message, sizeof(bounce_base_message), "%s", message);
+    bounce_timeout = timeout_seconds;
+    bounce_start = time(NULL);
+    bounce_last_remaining = -1;
+
+    if (bounce_timeout > 0) {
+        char buf[MAX_BUFFER_SIZE];
+        snprintf(buf, sizeof(buf), "%s (%ds)", bounce_base_message, bounce_timeout);
+        lv_label_set_text(ui_lbl_progress, buf);
+        bounce_last_remaining = bounce_timeout;
+    } else {
+        lv_label_set_text(ui_lbl_progress, bounce_base_message);
+    }
 
     lv_bar_set_mode(ui_bar_progress, LV_BAR_MODE_RANGE);
 
@@ -663,6 +693,8 @@ void hide_bounce_progress_bar(void) {
         lv_timer_del(timer_bounce_progress);
         timer_bounce_progress = NULL;
     }
+
+    bounce_timeout = 0;
 
     lv_bar_set_mode(ui_bar_progress, LV_BAR_MODE_NORMAL);
     lv_obj_add_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN);

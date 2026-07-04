@@ -72,7 +72,7 @@ void update_progress_bar(lv_timer_t *timer);
 
 void hide_progress_bar(void);
 
-void show_bounce_progress_bar(const char *message);
+void show_bounce_progress_bar(const char *message, int timeout_seconds);
 
 void hide_bounce_progress_bar(void);
 
