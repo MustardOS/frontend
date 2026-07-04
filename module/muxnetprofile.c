@@ -83,73 +83,6 @@ static void profile_status_path(char *buf) {
     snprintf(buf, MAX_BUFFER_SIZE, NET_STATUS_DIR "/%s.status", *current_profile ? current_profile : "_none_");
 }
 
-static void net_trim(char *value) {
-    const char *start = value;
-    while (*start && isspace((unsigned char) *start))
-        start++;
-
-    if (start != value) memmove(value, start, strlen(start) + 1);
-
-    size_t len = strlen(value);
-    while (len > 0 && isspace((unsigned char) value[len - 1])) {
-        value[--len] = '\0';
-    }
-}
-
-static int read_wpa_status_value(const char *key, char *value) {
-    if (!*key) return 0;
-
-    value[0] = '\0';
-
-    FILE *fp = popen("wpa_cli status 2>/dev/null", "r");
-    if (!fp) return 0;
-
-    char line[MAX_BUFFER_SIZE];
-    const size_t key_len = strlen(key);
-    int found = 0;
-
-    while (fgets(line, sizeof(line), fp)) {
-        net_trim(line);
-
-        if (strncmp(line, key, key_len) == 0 && line[key_len] == '=') {
-            snprintf(value, MAX_BUFFER_SIZE, "%s", line + key_len + 1);
-            net_trim(value);
-            found = *value;
-            break;
-        }
-    }
-
-    pclose(fp);
-    return found;
-}
-
-static int read_connected_ssid(char *ssid) {
-    ssid[0] = '\0';
-
-    char state[MAX_BUFFER_SIZE];
-    if (!read_wpa_status_value("wpa_state", state)) return 0;
-    if (strcmp(state, "COMPLETED") != 0) return 0;
-
-    return read_wpa_status_value("ssid", ssid);
-}
-
-static int current_profile_matches_ssid(const char *ssid) {
-    if (!*current_profile || !*ssid) return 0;
-
-    if (strcmp(current_profile, ssid) == 0) return 1;
-
-    char profile_file[MAX_BUFFER_SIZE];
-    const int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", current_profile);
-    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return 0;
-
-    mini_t *net = mini_try_load(profile_file);
-    const char *profile_ssid = mini_get_string(net, "network", "ssid", "");
-    const int match = profile_ssid && *profile_ssid && strcmp(profile_ssid, ssid) == 0;
-    mini_free(net);
-
-    return match;
-}
-
 static void clear_current_active_profile(void) {
     char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
     const int match = active && *active && *current_profile && strcmp(active, current_profile) == 0;
@@ -165,7 +98,7 @@ static int profile_is_active(void) {
     if (read_wpa_status_value("wpa_state", state)) {
         if (strcmp(state, "COMPLETED") == 0) {
             char ssid[MAX_BUFFER_SIZE];
-            return read_wpa_status_value("ssid", ssid) && current_profile_matches_ssid(ssid);
+            return read_wpa_status_value("ssid", ssid) && profile_matches_connected_ssid(current_profile, ssid);
         }
 
         return 0;
@@ -1426,7 +1359,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_x, lang.generic.scan, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
                                   {ui_lbl_nav_y, lang.muxnetprofile.forget, 0},
-      {NULL, NULL, 0}});
+                                  {NULL, NULL, 0}});
 
     lv_obj_t *connect_items[] = {ui_pnl_profile_name_network, ui_pnl_identifier_network, ui_pnl_password_network,
                                  ui_pnl_type_network,         ui_pnl_connect_network,    NULL};
@@ -1548,11 +1481,12 @@ int muxnetprofile_main(void) {
             [mux_input_b] = handle_b_hold,
             [mux_input_dpad_up] = handle_up_hold,
             [mux_input_dpad_down] = handle_down_hold,
-             [mux_input_dpad_left] = handle_left_hold,
-             [mux_input_dpad_right] = handle_right_hold,
-             [mux_input_l1] = handle_l1,
-             [mux_input_r1] = handle_r1,
-         }};
+            [mux_input_dpad_left] = handle_left_hold,
+            [mux_input_dpad_right] = handle_right_hold,
+            [mux_input_l1] = handle_l1,
+            [mux_input_r1] = handle_r1,
+        }
+    };
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);

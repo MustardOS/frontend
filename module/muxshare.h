@@ -208,6 +208,14 @@ void create_marker_assignment(
 
 char *read_shader_info(const char *shader_store, const char *key);
 
+void net_trim(char *value);
+
+int read_wpa_status_value(const char *key, char *value);
+
+int read_connected_ssid(char *ssid);
+
+int profile_matches_connected_ssid(const char *profile_name, const char *ssid);
+
 int muxactivity_main();
 
 int muxapp_main();

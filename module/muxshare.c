@@ -1072,7 +1072,7 @@ assign_marker_single(const char *core_dir, const char *ext, const char *op_label
 }
 
 static void assign_marker_directory(
-    char *core_dir, char *rom_dir, const char *ext, const char *op_label, const char *value, const int purge
+    const char *core_dir, char *rom_dir, const char *ext, const char *op_label, const char *value, const int purge
 ) {
     if (purge) {
         char dot_ext[16];
@@ -1144,6 +1144,75 @@ void create_marker_assignment(
             assign_marker_directory(core_dir, rom_dir, ext, op_label, value, 0);
             break;
     }
+}
+
+void net_trim(char *value) {
+    if (!value) return;
+
+    const char *start = value;
+    while (*start && isspace((unsigned char) *start))
+        start++;
+
+    if (start != value) memmove(value, start, strlen(start) + 1);
+
+    size_t len = strlen(value);
+    while (len > 0 && isspace((unsigned char) value[len - 1])) {
+        value[--len] = '\0';
+    }
+}
+
+int read_wpa_status_value(const char *key, char *value) {
+    if (!*key) return 0;
+
+    value[0] = '\0';
+
+    FILE *fp = popen("wpa_cli status 2>/dev/null", "r");
+    if (!fp) return 0;
+
+    char line[MAX_BUFFER_SIZE];
+    const size_t key_len = strlen(key);
+    int found = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        net_trim(line);
+
+        if (strncmp(line, key, key_len) == 0 && line[key_len] == '=') {
+            snprintf(value, MAX_BUFFER_SIZE, "%s", line + key_len + 1);
+            net_trim(value);
+            found = *value;
+            break;
+        }
+    }
+
+    pclose(fp);
+    return found;
+}
+
+int read_connected_ssid(char *ssid) {
+    ssid[0] = '\0';
+
+    char state[MAX_BUFFER_SIZE];
+    if (!read_wpa_status_value("wpa_state", state)) return 0;
+    if (strcmp(state, "COMPLETED") != 0) return 0;
+
+    return read_wpa_status_value("ssid", ssid);
+}
+
+int profile_matches_connected_ssid(const char *profile_name, const char *ssid) {
+    if (!*profile_name || !*ssid) return 0;
+
+    if (strcmp(profile_name, ssid) == 0) return 1;
+
+    char profile_file[MAX_BUFFER_SIZE];
+    const int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name);
+    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return 0;
+
+    mini_t *net = mini_try_load(profile_file);
+    const char *profile_ssid = mini_get_string(net, "network", "ssid", "");
+    const int match = profile_ssid && *profile_ssid && strcmp(profile_ssid, ssid) == 0;
+    mini_free(net);
+
+    return match;
 }
 
 void resolve_grid_item_images(
