@@ -70,16 +70,7 @@ static void handle_a(void) {
         {"backup", &kiosk.config.backup, NULL},
     };
 
-    const menu_entry *visible_entries[ui_count_dynamic];
-    size_t visible_count = 0;
-
-    for (size_t i = 0; i < A_SIZE(entries); i++) {
-        if (entries[i].visible && !entries[i].visible()) continue;
-        visible_entries[visible_count++] = &entries[i];
-    }
-
-    if ((unsigned) current_item_index >= visible_count) return;
-    const menu_entry *entry = visible_entries[current_item_index];
+    SELECT_VISIBLE_ENTRY(entries, entry);
 
     if (is_ksk(*entry->kiosk_flag)) {
         kiosk_denied();

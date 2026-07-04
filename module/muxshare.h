@@ -577,6 +577,19 @@ void resolve_grid_item_images(
         }                                                                                                              \
     } while (0)
 
+#define SELECT_VISIBLE_ENTRY(ENTRIES, ENTRY_VAR)                                                                       \
+    const menu_entry *ENTRY_VAR;                                                                                       \
+    do {                                                                                                               \
+        const menu_entry *visible_entries[ui_count_dynamic];                                                           \
+        size_t visible_count = 0;                                                                                      \
+        for (size_t _sve_i = 0; _sve_i < A_SIZE(ENTRIES); _sve_i++) {                                                  \
+            if ((ENTRIES)[_sve_i].visible && !(ENTRIES)[_sve_i].visible()) continue;                                   \
+            visible_entries[visible_count++] = &(ENTRIES)[_sve_i];                                                     \
+        }                                                                                                              \
+        if ((unsigned) current_item_index >= visible_count) return;                                                    \
+        ENTRY_VAR = visible_entries[current_item_index];                                                               \
+    } while (0)
+
 #define OPTION_APPLY_WIDTH(NAME)                                                                                       \
     adjust_label_value_width(ui_pnl_##NAME##_option, ui_val_##NAME##_option, ui_lbl_##NAME##_option)
 

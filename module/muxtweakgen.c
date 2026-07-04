@@ -575,16 +575,7 @@ static void handle_save_mode(void) {
 }
 
 static void handle_menu_dispatch(void) {
-    const menu_entry *visible_entries[ui_count_dynamic];
-    size_t visible_count = 0;
-
-    for (size_t i = 0; i < A_SIZE(tweakgen_menu_entries); i++) {
-        if (tweakgen_menu_entries[i].visible && !tweakgen_menu_entries[i].visible()) continue;
-        visible_entries[visible_count++] = &tweakgen_menu_entries[i];
-    }
-
-    if ((unsigned) current_item_index >= visible_count) return;
-    const menu_entry *entry = visible_entries[current_item_index];
+    SELECT_VISIBLE_ENTRY(tweakgen_menu_entries, entry);
 
     switch (entry->action) {
         case menu_clock:
