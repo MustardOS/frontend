@@ -196,6 +196,7 @@ static const lang_field lang_fields[] = {
     {"generic", LANG_OFF(generic.no_help), lang_generic, "No Help Information Found"},
     {"generic", LANG_OFF(generic.no_info), lang_generic, "No Information Found"},
     {"generic", LANG_OFF(generic.no_load), lang_generic, "Cannot find original launch content…"},
+    {"generic", LANG_OFF(generic.no_slideshow_image), lang_generic, "No Images Found…\n\nPlace images in 'MUOS/slideshow' folder!"},
     {"generic", LANG_OFF(generic.offline), lang_generic, "Offline"},
     {"generic", LANG_OFF(generic.online), lang_generic, "Online"},
     {"generic", LANG_OFF(generic.open), lang_generic, "Open"},

@@ -83,6 +83,7 @@ struct mux_lang {
         char no_help[MAX_BUFFER_SIZE];
         char no_info[MAX_BUFFER_SIZE];
         char no_load[MAX_BUFFER_SIZE];
+        char no_slideshow_image[MAX_BUFFER_SIZE];
         char offline[MAX_BUFFER_SIZE];
         char online[MAX_BUFFER_SIZE];
         char open[MAX_BUFFER_SIZE];
