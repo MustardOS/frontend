@@ -224,7 +224,20 @@ static backend_t detect_backend(const backend_t requested) {
 
 static int serial_fd = -1;
 
+static int mcu_already_powered(void) {
+    FILE *f = fopen(MCU_DEV, "r");
+    if (!f) return 0;
+
+    char buf[8] = {0};
+    const char *got = fgets(buf, sizeof buf, f);
+    fclose(f);
+
+    return got && buf[0] == '1';
+}
+
 static void serial_prepare(void) {
+    const int mcu_was_on = mcu_already_powered();
+
     if (access(MCU_DEV, W_OK) == 0) write_string(MCU_DEV, "1\n");
 
     serial_fd = open(SER_DEV, O_WRONLY | O_NOCTTY);
@@ -245,7 +258,7 @@ static void serial_prepare(void) {
         tcsetattr(serial_fd, TCSANOW, &tio);
     }
 
-    sleep(1);
+    if (!mcu_was_on) sleep(1);
 }
 
 static uint8_t checksum_u8(const uint8_t *bytes, const size_t n) {
