@@ -253,6 +253,8 @@ void populate_history_items(void) {
     static int cap = 0;
 
     free_item_list(&history_items, &history_item_count);
+    cap = 0;
+
     populate_items(INFO_HIS_PATH, &history_items, &history_item_count, &cap);
     path_set_build(&history_set, history_items, history_item_count);
 
@@ -265,6 +267,8 @@ void populate_collection_items(void) {
     static int cap = 0;
 
     free_item_list(&collection_items, &collection_item_count);
+    cap = 0;
+
     populate_items(INFO_COL_PATH, &collection_items, &collection_item_count, &cap);
     path_set_build(&collection_set, collection_items, collection_item_count);
 

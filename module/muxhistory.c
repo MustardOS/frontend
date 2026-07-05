@@ -617,7 +617,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);
 
-        if (!lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) {
+        if (!toast_timer && !lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
         }
 
@@ -718,6 +718,7 @@ int muxhistory_main(const int his_index) {
 
             free(col_file);
             refresh_screen(ui_screen, 1);
+            toast_message(lang.generic.add_collect, tst_wait_s);
         }
 
         free(done_content);

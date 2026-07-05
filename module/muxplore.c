@@ -1370,7 +1370,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
             current_content_label[0] = '\0';
         }
 
-        if (!lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) {
+        if (!toast_timer && !lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
         }
 
@@ -1597,6 +1597,7 @@ int muxplore_main(const int index, char *dir) {
 
             free(col_file);
             refresh_screen(ui_screen, 1);
+            toast_message(lang.generic.add_collect, tst_wait_s);
         }
 
         free(done_content);

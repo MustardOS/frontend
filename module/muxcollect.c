@@ -963,6 +963,7 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
     exit_status = 0;
     add_mode = add;
     sys_index = last_index;
+    current_item_index = 0;
     file_count = 0;
     dir_count = 0;
     starter_image = 0;
@@ -1012,7 +1013,7 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
     transition_box_art_init(image_refresh_transition);
 
     if (ui_count_static > 0) {
-        if (sys_index > -1 && sys_index <= ui_count_static && current_item_index < ui_count_static) {
+        if (sys_index > -1 && sys_index < ui_count_static) {
             if (grid_mode_enabled) {
                 list_nav_move(sys_index, +1);
             } else {
