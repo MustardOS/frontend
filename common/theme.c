@@ -1526,6 +1526,8 @@ void apply_theme_list_glyph(
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (get_glyph_path(screen_name, item_glyph, glyph_image_embed, MAX_BUFFER_SIZE)) {
         set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
+    } else {
+        lv_img_set_src(ui_lbl_item_glyph, NULL);
     }
 
     lv_obj_add_style(ui_lbl_item_glyph, &style_list_glyph_default, MU_OBJ_MAIN_DEFAULT);
