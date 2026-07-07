@@ -92,6 +92,27 @@ void set_list_glyph_image(lv_obj_t *img, const char *embed) {
     apply_glyph_scale(img, embed, px, px);
 }
 
+static int glyph_dir_exists(const char *base, const int with_dim, const char *mux_module) {
+    char glyph_dir[MAX_BUFFER_SIZE];
+    if (with_dim) {
+        snprintf(glyph_dir, sizeof(glyph_dir), "%s/%sglyph/%s", base, mux_dim, mux_module);
+    } else {
+        snprintf(glyph_dir, sizeof(glyph_dir), "%s/glyph/%s", base, mux_module);
+    }
+
+    char cache_key[MAX_BUFFER_SIZE];
+    snprintf(cache_key, sizeof(cache_key), "glyphdir:%s", glyph_dir);
+
+    char cached_path[MAX_BUFFER_SIZE];
+    const int cached = asset_cache_get(cache_key, cached_path, sizeof(cached_path));
+    if (cached >= 0) return cached > 0;
+
+    const int exists = dir_exist(glyph_dir);
+    asset_cache_put(cache_key, glyph_dir, exists);
+
+    return exists;
+}
+
 int get_glyph_path(
     const char *mux_module, const char *glyph_name, char *glyph_image_embed, const size_t glyph_image_embed_size
 ) {
@@ -106,10 +127,16 @@ int get_glyph_path(
         int ext_count;
         const char **exts = image_ext_list(&ext_count);
 
+        int dir_ok[A_SIZE(bases)][2] = {{-1, -1}, {-1, -1}};
+        glyph_image_path[0] = '\0';
+
         int found = 0;
         for (size_t b = 0; b < A_SIZE(bases) && !found; b++) {
             for (int e = 0; e < ext_count && !found; e++) {
                 for (int with_dim = 1; with_dim >= 0 && !found; with_dim--) {
+                    if (dir_ok[b][with_dim] < 0) dir_ok[b][with_dim] = glyph_dir_exists(bases[b], with_dim, mux_module);
+                    if (!dir_ok[b][with_dim]) continue;
+
                     if (with_dim) {
                         snprintf(
                             glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.%s", bases[b], mux_dim,
