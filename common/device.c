@@ -40,6 +40,7 @@ void load_device(struct mux_device *device) {
     DEV_STR(device->board.led, "led");
     DEV_STR(device->board.rtc_clock, "rtc_clock");
     DEV_STR(device->board.rtc_wake, "rtc_wake");
+    DEV_STR(device->board.rumble, "rumble");
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "led");
     DEV_INT(device->board.has_rgb, "rgb");
