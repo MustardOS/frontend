@@ -54,6 +54,10 @@ OPT_LEVEL ?= 2
 
 DEBUGSYM ?= 0
 
+ifeq ($(DEVICE), NATIVE)
+    FFMPEG_CFLAGS := $(shell pkg-config --cflags libavformat libavcodec libavutil libavdevice libswscale libswresample 2>/dev/null)
+endif
+
 BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -ffunction-sections -fdata-sections \
               -Wall -Wno-format-zero-length \
@@ -61,7 +65,7 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -fstack-protector-strong -fstack-clash-protection \
               -D_FORTIFY_SOURCE=3 -D_GNU_SOURCE -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
-              $(BUILD_FLAGS)
+              $(BUILD_FLAGS) $(FFMPEG_CFLAGS)
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm \
               -lavformat -lavcodec -lavutil -lavdevice -lswscale -lswresample
