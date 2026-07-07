@@ -1100,7 +1100,7 @@ static void show_detail_view(const activity_item_t *it) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", it->core);
-                snprintf(detail_value, sizeof(detail_value), "%s", format_core_name(core_tmp, 0));
+                snprintf(detail_value, sizeof(detail_value), "%s", format_core_name(core_tmp, 0, 0));
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_core");
                 break;
@@ -1247,7 +1247,7 @@ static void show_global_view(void) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", gs.core);
-                snprintf(global_value, sizeof(global_value), "%s", format_core_name(core_tmp, 0));
+                snprintf(global_value, sizeof(global_value), "%s", format_core_name(core_tmp, 0, 0));
 
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_core");
                 break;
@@ -1457,7 +1457,7 @@ static void export_activity_html(void) {
     snprintf(tmp_device, sizeof(tmp_device), "%s", gs.device);
     snprintf(tmp_mode, sizeof(tmp_mode), "%s", gs.mode);
 
-    snprintf(global_core_value, sizeof(global_core_value), "%s", format_core_name(tmp_core, 0));
+    snprintf(global_core_value, sizeof(global_core_value), "%s", format_core_name(tmp_core, 0, 0));
     snprintf(global_device_value, sizeof(global_device_value), "%s", str_toupper(tmp_device));
     snprintf(global_mode_value, sizeof(global_mode_value), "%s", str_capital(tmp_mode));
 
@@ -1550,7 +1550,7 @@ static void export_activity_html(void) {
         const local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
 
         snprintf(tmp_core, sizeof(tmp_core), "%s", it->core);
-        snprintf(core_value, sizeof(core_value), "%s", format_core_name(core_value, 0));
+        snprintf(core_value, sizeof(core_value), "%s", format_core_name(core_value, 0, 0));
 
         snprintf(tmp_device, sizeof(tmp_device), "%s", it->device);
         snprintf(device_value, sizeof(device_value), "%s", str_toupper(tmp_device));

@@ -273,6 +273,7 @@ struct mux_lang {
         char none[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
         char core_down[MAX_BUFFER_SIZE];
+        char misconfigured[MAX_BUFFER_SIZE];
     } muxassign;
 
     struct {

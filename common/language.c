@@ -369,6 +369,7 @@ static const lang_field lang_fields[] = {
     {"muxassign", LANG_OFF(muxassign.none), lang_specific, "No Cores Found…"},
     {"muxassign", LANG_OFF(muxassign.help), lang_specific, "This is where you can assign a core or external emulator to content"},
     {"muxassign", LANG_OFF(muxassign.core_down), lang_specific, "Core Downloader"},
+    {"muxassign", LANG_OFF(muxassign.misconfigured), lang_specific, "Core Incorrectly Configured"},
 
     // muxbackup
     {"muxbackup", LANG_OFF(muxbackup.title), lang_specific, "DEVICE BACKUP"},

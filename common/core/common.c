@@ -533,7 +533,7 @@ static const char *format_external_core(const char *ext_core) {
     return NULL;
 }
 
-const char *format_core_name(const char *core, const int use_lang) {
+const char *format_core_name(const char *core, const int use_lang, const int is_muxretro) {
     static char buf[CORE_BUFFER];
 
     const char *ext = format_external_core(core);
@@ -544,7 +544,7 @@ const char *format_core_name(const char *core, const int use_lang) {
 
     const char *ra = format_retroarch_core(core);
     if (ra) {
-        snprintf(buf, sizeof(buf), "%s (RetroArch)", ra);
+        snprintf(buf, sizeof(buf), "%s (%s)", ra, is_muxretro ? "muRetro" : "RetroArch");
         return buf;
     }
 

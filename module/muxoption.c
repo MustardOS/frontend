@@ -111,7 +111,7 @@ static void add_info_item_type(
         if (strcmp(value, lang.muxoption.not_assigned) == 0) {
             snprintf(cap_value, sizeof(cap_value), "%s", lang.muxoption.not_assigned);
         } else {
-            snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1));
+            snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1, 0));
         }
     } else if (is_rac) {
         if (strcmp(value, "false") == 0) {

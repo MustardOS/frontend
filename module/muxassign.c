@@ -10,6 +10,18 @@ static int is_dir = 0;
 
 static lv_obj_t *ui_lbl_core_downloader;
 
+static int assign_uses_muxretro(const char *assign_dir, const char *item_name) {
+    char core_file[FILENAME_MAX];
+    snprintf(core_file, sizeof(core_file), "%s/%s.ini", assign_dir, item_name);
+
+    mini_t *core_config = mini_load(core_file);
+    char exec_path[FILENAME_MAX];
+    snprintf(exec_path, sizeof(exec_path), "%s", get_ini_string(core_config, "launch", "exec", ""));
+    mini_free(core_config);
+
+    return strstr(exec_path, "mux-general.sh") != NULL;
+}
+
 static int find_assigned_system(char *out_system) {
     // File Spec CFG: line 3 = sys
     // Directory CFG: line 2 = sys
@@ -225,6 +237,9 @@ static void create_core_items(const char *target) {
 
                 if (strcmp(assign_core, "none") != 0) {
                     add_item(&items, &item_count, assign_name, af->d_name, assign_core, ITEM);
+                } else {
+                    LOG_ERROR(mux_module, "Assign ini missing/mismatched [%s] core= in: %s", af->d_name, core_file);
+                    toast_message(lang.muxassign.misconfigured, tst_wait_l);
                 }
             }
         }
@@ -240,7 +255,8 @@ static void create_core_items(const char *target) {
 
         const char *directory_core = get_content_line(rom_dir, NULL, "cfg", 1);
         const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
-        const char *core_name = format_core_name(items[i].extra_data, 1);
+        const char *core_name =
+            format_core_name(items[i].extra_data, 1, assign_uses_muxretro(assign_dir, items[i].name));
 
         char display_name[MAX_BUFFER_SIZE];
         if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, items[i].extra_data) == 0) {
@@ -599,6 +615,4 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
-
-    nav_silent = 1;
 }

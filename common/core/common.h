@@ -15,7 +15,7 @@ void create_core_assignment(
 
 int automatic_assign_core(char *rom_dir);
 
-const char *format_core_name(const char *core, int use_lang);
+const char *format_core_name(const char *core, int use_lang, int is_muxretro);
 
 int remove_content_config(const char *name, const char *core);
 
