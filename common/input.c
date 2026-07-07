@@ -993,6 +993,97 @@ void append_combo(mux_input_options *opts, const mux_input_combo combo) {
     opts->combo[opts->combo_count++] = combo;
 }
 
+static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick, int *retry_count) {
+    static const uint32_t retry_interval_fast_ms = 750U;
+
+    switch (ev->type) {
+        case SDL_CONTROLLERBUTTONDOWN:
+            if (is_tracked_as_controller(ev->cbutton.which)) process_sdl_button(ev->cbutton.button, 1);
+            break;
+        case SDL_CONTROLLERBUTTONUP:
+            if (is_tracked_as_controller(ev->cbutton.which)) process_sdl_button(ev->cbutton.button, 0);
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            if (is_tracked_as_controller(ev->caxis.which)) process_sdl_axis(ev->caxis.axis, ev->caxis.value);
+            break;
+        case SDL_JOYBUTTONDOWN:
+            if (ev->jbutton.which == primary_instance) process_sdl_joy_button(ev->jbutton.button, 1);
+            break;
+        case SDL_JOYBUTTONUP:
+            if (ev->jbutton.which == primary_instance) process_sdl_joy_button(ev->jbutton.button, 0);
+            break;
+        case SDL_JOYAXISMOTION:
+            if (is_tracked_instance(ev->jaxis.which) && !is_tracked_as_controller(ev->jaxis.which)) {
+                process_sdl_joy_axis(ev->jaxis.which, ev->jaxis.axis, ev->jaxis.value);
+            }
+            break;
+        case SDL_CONTROLLERDEVICEADDED:
+        case SDL_JOYDEVICEADDED:
+            if (device_count < MAX_INPUT_DEVICES) {
+                LOG_INFO("input", "Input device connected");
+                open_all_input_devices();
+                if (retry_count) *retry_count = 0;
+                if (next_retry_tick) *next_retry_tick = tick + retry_interval_fast_ms;
+            }
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            if (is_tracked_as_controller(ev->cdevice.which)) {
+                LOG_INFO("input", "Controller removed");
+                close_device_by_instance(ev->cdevice.which);
+                if (device_count == 0) {
+                    pressed = 0;
+                    held = 0;
+                    reset_raw_analog();
+                    if (next_retry_tick) *next_retry_tick = 0;
+                }
+                open_all_input_devices();
+            }
+            break;
+        case SDL_JOYDEVICEREMOVED:
+            if (is_tracked_instance(ev->jdevice.which) && !is_tracked_as_controller(ev->jdevice.which)) {
+                LOG_INFO("input", "Joystick removed");
+                close_device_by_instance(ev->jdevice.which);
+                if (device_count == 0) {
+                    pressed = 0;
+                    held = 0;
+                    reset_raw_analog();
+                    if (next_retry_tick) *next_retry_tick = 0;
+                }
+                open_all_input_devices();
+            }
+            break;
+        case SDL_KEYDOWN:
+            process_sdl_key(&ev->key, 1);
+            break;
+        case SDL_KEYUP:
+            process_sdl_key(&ev->key, 0);
+            break;
+        default:
+            break;
+    }
+}
+
+void mux_input_open(void) {
+    init_input_maps();
+
+    pressed = 0;
+    held = 0;
+    primary_instance = -1;
+
+    reset_raw_analog();
+
+    open_all_input_devices();
+}
+
+void mux_input_close(void) {
+    close_all_devices();
+}
+
+void mux_input_poll(void) {
+    SDL_Event ev;
+    while (SDL_PollEvent(&ev)) dispatch_input_event(&ev, NULL, NULL);
+}
+
 void mux_input_task(const mux_input_options *opts) {
     init_input_maps();
 
@@ -1038,71 +1129,7 @@ void mux_input_task(const mux_input_options *opts) {
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         do {
-            switch (ev.type) {
-                case SDL_CONTROLLERBUTTONDOWN:
-                    if (is_tracked_as_controller(ev.cbutton.which)) process_sdl_button(ev.cbutton.button, 1);
-                    break;
-                case SDL_CONTROLLERBUTTONUP:
-                    if (is_tracked_as_controller(ev.cbutton.which)) process_sdl_button(ev.cbutton.button, 0);
-                    break;
-                case SDL_CONTROLLERAXISMOTION:
-                    if (is_tracked_as_controller(ev.caxis.which)) process_sdl_axis(ev.caxis.axis, ev.caxis.value);
-                    break;
-                case SDL_JOYBUTTONDOWN:
-                    if (ev.jbutton.which == primary_instance) process_sdl_joy_button(ev.jbutton.button, 1);
-                    break;
-                case SDL_JOYBUTTONUP:
-                    if (ev.jbutton.which == primary_instance) process_sdl_joy_button(ev.jbutton.button, 0);
-                    break;
-                case SDL_JOYAXISMOTION:
-                    if (is_tracked_instance(ev.jaxis.which) && !is_tracked_as_controller(ev.jaxis.which)) {
-                        process_sdl_joy_axis(ev.jaxis.which, ev.jaxis.axis, ev.jaxis.value);
-                    }
-                    break;
-                case SDL_CONTROLLERDEVICEADDED:
-                case SDL_JOYDEVICEADDED:
-                    if (device_count < MAX_INPUT_DEVICES) {
-                        LOG_INFO("input", "Input device connected");
-                        open_all_input_devices();
-                        retry_count = 0;
-                        next_retry_tick = tick + retry_interval_fast_ms;
-                    }
-                    break;
-                case SDL_CONTROLLERDEVICEREMOVED:
-                    if (is_tracked_as_controller(ev.cdevice.which)) {
-                        LOG_INFO("input", "Controller removed");
-                        close_device_by_instance(ev.cdevice.which);
-                        if (device_count == 0) {
-                            pressed = 0;
-                            held = 0;
-                            reset_raw_analog();
-                            next_retry_tick = 0;
-                        }
-                        open_all_input_devices();
-                    }
-                    break;
-                case SDL_JOYDEVICEREMOVED:
-                    if (is_tracked_instance(ev.jdevice.which) && !is_tracked_as_controller(ev.jdevice.which)) {
-                        LOG_INFO("input", "Joystick removed");
-                        close_device_by_instance(ev.jdevice.which);
-                        if (device_count == 0) {
-                            pressed = 0;
-                            held = 0;
-                            reset_raw_analog();
-                            next_retry_tick = 0;
-                        }
-                        open_all_input_devices();
-                    }
-                    break;
-                case SDL_KEYDOWN:
-                    process_sdl_key(&ev.key, 1);
-                    break;
-                case SDL_KEYUP:
-                    process_sdl_key(&ev.key, 0);
-                    break;
-                default:
-                    break;
-            }
+            dispatch_input_event(&ev, &next_retry_tick, &retry_count);
             if (opts->raw_event_handler) opts->raw_event_handler(&ev);
         } while (!stop_flag && SDL_PollEvent(&ev));
 

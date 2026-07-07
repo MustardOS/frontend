@@ -182,6 +182,12 @@ void mux_input_reload_mappings(void);
 
 void mux_input_task(const mux_input_options *opts);
 
+void mux_input_open(void);
+
+void mux_input_close(void);
+
+void mux_input_poll(void);
+
 void mux_input_stop(void);
 
 void mux_input_flush_all(void);
