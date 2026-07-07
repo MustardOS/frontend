@@ -674,6 +674,10 @@ static void open_all_input_devices(void) {
     }
 }
 
+void mux_input_scan_devices(void) {
+    open_all_input_devices();
+}
+
 void mux_input_reload_mappings(void) {
     close_all_devices();
 
@@ -1081,7 +1085,8 @@ void mux_input_close(void) {
 
 void mux_input_poll(void) {
     SDL_Event ev;
-    while (SDL_PollEvent(&ev)) dispatch_input_event(&ev, NULL, NULL);
+    while (SDL_PollEvent(&ev))
+        dispatch_input_event(&ev, NULL, NULL);
 }
 
 void mux_input_task(const mux_input_options *opts) {
@@ -1114,7 +1119,6 @@ void mux_input_task(const mux_input_options *opts) {
 
     SDL_Event ev;
     while (!stop_flag) {
-        const uint32_t retry_interval_fast_ms = 750U;
         const uint32_t retry_interval_slow_ms = 5000U;
         const int retry_fast_count = 5;
         int timeout = held ? timeout_hold : timeout_idle;
@@ -1140,6 +1144,7 @@ void mux_input_task(const mux_input_options *opts) {
         tick = (uint32_t) mux_tick();
 
         if (device_count == 0 && tick >= next_retry_tick) {
+            const uint32_t retry_interval_fast_ms = 750U;
             retry_count++;
             const uint32_t interval = retry_count <= retry_fast_count ? retry_interval_fast_ms : retry_interval_slow_ms;
             LOG_DEBUG("input", "Retrying input device detection...");

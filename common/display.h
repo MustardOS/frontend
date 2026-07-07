@@ -2,7 +2,6 @@
 
 #include <SDL2/SDL.h>
 #include "../lvgl/lvgl.h"
-#include "../lvgl/lv_drv_conf.h"
 
 void check_theme_change(void);
 

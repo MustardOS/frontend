@@ -777,6 +777,11 @@ static void run_saver_loop(int preview) {
 
         if (SDL_WaitEventTimeout(&ev, timeout)) {
             do {
+                if (ev.type == SDL_CONTROLLERDEVICEADDED || ev.type == SDL_JOYDEVICEADDED) {
+                    mux_input_scan_devices();
+                    continue;
+                }
+
                 if (saver_event_should_stop(&ev)) {
                     saver_stop();
                     preview = 0;

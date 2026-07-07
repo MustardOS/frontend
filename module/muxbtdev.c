@@ -167,11 +167,31 @@ static void save_btdev_options(void) {
     write_text_to_file(override_path, "w", CHAR, bt_type_keys[current_type]);
 }
 
+static void read_device_info_field(const char *key, char *dest);
+
 static void status_change(const char *method) {
     lv_refr_now(NULL);
 
     const char *args[] = {OPT_PATH "script/mux/bt_device.sh", method, selected_mac, NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    const char *info_args[] = {OPT_PATH "script/mux/bt_device.sh", "info", selected_mac, NULL};
+    run_exec(info_args, A_SIZE(info_args), 0, 1, NULL, NULL);
+
+    char val_conn[MAX_BUFFER_SIZE];
+    read_device_info_field("Connected", val_conn);
+
+    const int expected_connected = strcmp(method, "connect") == 0;
+    const int now_connected = strcmp(val_conn, "yes") == 0;
+
+    if (now_connected != expected_connected) {
+        toast_message(expected_connected ? lang.muxbtdev.connect_failed : lang.muxbtdev.disconnect_failed, tst_wait_l);
+
+        is_connected = now_connected;
+        lv_dropdown_set_selected(ui_dro_status_btdev, is_connected ? 1 : 0);
+        check_focus();
+        return;
+    }
 
     load_mux("btall");
     mux_input_stop();

@@ -572,6 +572,8 @@ static const lang_field lang_fields[] = {
     {"muxbtdev", LANG_OFF(muxbtdev.disconnect), lang_specific, "Disconnect"},
     {"muxbtdev", LANG_OFF(muxbtdev.connecting), lang_specific, "Connecting to device…"},
     {"muxbtdev", LANG_OFF(muxbtdev.disconnecting), lang_specific, "Disconnecting device…"},
+    {"muxbtdev", LANG_OFF(muxbtdev.connect_failed), lang_specific, "Failed to connect to device"},
+    {"muxbtdev", LANG_OFF(muxbtdev.disconnect_failed), lang_specific, "Failed to disconnect device"},
     {"muxbtdev", LANG_OFF(muxbtdev.forget), lang_specific, "Forget Device"},
     {"muxbtdev", LANG_OFF(muxbtdev.forget_confirm), lang_specific, "Forget this device?"},
     {"muxbtdev", LANG_OFF(muxbtdev.type_name.audio_headset), lang_specific, "Headset"},

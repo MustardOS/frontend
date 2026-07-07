@@ -528,6 +528,8 @@ struct mux_lang {
         char disconnect[MAX_BUFFER_SIZE];
         char connecting[MAX_BUFFER_SIZE];
         char disconnecting[MAX_BUFFER_SIZE];
+        char connect_failed[MAX_BUFFER_SIZE];
+        char disconnect_failed[MAX_BUFFER_SIZE];
         char forget[MAX_BUFFER_SIZE];
         char forget_confirm[MAX_BUFFER_SIZE];
         struct {
