@@ -667,7 +667,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call || video_preview_active())
         return;
 
-    if (all_items[current_item_index].content_type != ITEM) {
+    if (!all_item_count || all_items[current_item_index].content_type != ITEM) {
         play_sound(snd_info_open);
         show_help();
     }
