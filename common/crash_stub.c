@@ -5,7 +5,7 @@ void crash_init(const char *module_name) {
 }
 
 void crash_ui_check(
-    const struct theme_config *t, const struct mux_lang *l, const lv_obj_t *layer, const int *msgbox_active
+    struct theme_config *t, const struct mux_lang *l, lv_obj_t *layer, int *msgbox_active
 ) {
     (void) t;
     (void) l;
@@ -26,7 +26,7 @@ void power_loss_ui_apply_font(const lv_obj_t *source) {
 }
 
 void power_loss_ui_check(
-    const struct theme_config *t, const struct mux_lang *l, const lv_obj_t *layer, const int *msgbox_active
+    struct theme_config *t, const struct mux_lang *l, lv_obj_t *layer, int *msgbox_active
 ) {
     (void) t;
     (void) l;
