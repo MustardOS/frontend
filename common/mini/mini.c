@@ -496,9 +496,19 @@ int mini_delete_group(mini_t *mini, const char *group) {
     free(tmp);
 
     if (grp) {
-        free_group_children(grp);
+        mini_value_t *cval = grp->head;
+        while (cval) {
+            mini_value_t *nval = cval->next;
+            free_value(cval);
+            cval = nval;
+        }
+
         if (grp->next) grp->next->prev = grp->prev;
         if (grp->prev) grp->prev->next = grp->next;
+
+        if (mini->head == grp) mini->head = grp->next;
+        if (mini->tail == grp) mini->tail = grp->prev;
+
         free_group(grp);
     } else {
         result = MINI_GROUP_NOT_FOUND;
