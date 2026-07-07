@@ -595,6 +595,11 @@ void sdl_init(void) {
         exit(EXIT_FAILURE);
     }
 
+    SDL_DisplayMode display_mode;
+    if (SDL_GetWindowDisplayMode(monitor.window, &display_mode) == 0) {
+        LOG_INFO("video", "Display reports %dx%d @ %dHz", display_mode.w, display_mode.h, display_mode.refresh_rate);
+    }
+
     monitor.renderer = SDL_CreateRenderer(
         monitor.window, -1, hdmi_mode ? SDL_RENDERER_ACCELERATED : SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
@@ -882,14 +887,11 @@ void display_composite_frame(void) {
             }
         }
         anim_tick(monitor.renderer);
-        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     } else if (video_bg_fn_ptr) {
         gradient_captured = 0;
         video_bg_fn_ptr(monitor.renderer);
-        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     } else {
         gradient_captured = 0;
-        SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
     }
 
     if (monitor.shadow_layer) {
