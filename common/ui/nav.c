@@ -520,6 +520,7 @@ void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
 
     nav_moved = 1;
+    first_open = 0;
 }
 
 static void (*list_win_active_update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index) = NULL;

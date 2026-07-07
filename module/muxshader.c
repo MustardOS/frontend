@@ -319,6 +319,4 @@ void muxshader_main(int auto_assign, const char *name, const char *dir, const ch
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);
-
-    nav_silent = 1;
 }

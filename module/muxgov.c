@@ -361,6 +361,4 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
-
-    nav_silent = 1;
 }
