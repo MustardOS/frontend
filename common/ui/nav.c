@@ -281,6 +281,7 @@ void move_option(lv_obj_t *element, const int count) {
     next %= total;
 
     lv_dropdown_set_selected(element, (uint16_t) next);
+    nav_play_shake(element, count < 0 ? nav_dir_left : nav_dir_right);
 }
 
 void watermark(lv_obj_t *screen) {
@@ -410,6 +411,39 @@ void update_scroll_position(
     const int content_panel_y = (int) round(scroll_multiplier * mux_item_panel);
     lv_obj_scroll_to_y(ui_pnl_content, content_panel_y, LV_ANIM_OFF);
     lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
+}
+
+static void blank_overflow_rows_cb(lv_event_t *e) {
+    const lv_obj_t *panel = lv_event_get_target(e);
+
+    lv_area_t panel_area;
+    lv_obj_get_coords(panel, &panel_area);
+
+    const uint32_t child_count = lv_obj_get_child_cnt(panel);
+    for (uint32_t i = 0; i < child_count; i++) {
+        lv_obj_t *child = lv_obj_get_child(panel, (int32_t) i);
+        if (!child) continue;
+
+        lv_area_t child_area;
+        lv_obj_get_coords(child, &child_area);
+
+        const lv_coord_t tr_y = lv_obj_get_style_translate_y(child, LV_PART_MAIN);
+        const lv_coord_t y1 = child_area.y1 - tr_y;
+        const lv_coord_t y2 = child_area.y2 - tr_y;
+
+        // 2px grace covers row padding, hopefully it is enough!
+        const int outside = y1 < panel_area.y1 - 2 || y2 > panel_area.y2 + 2;
+        const lv_opa_t want = outside ? LV_OPA_TRANSP : LV_OPA_COVER;
+
+        if (lv_obj_get_style_opa(child, LV_PART_MAIN) != want) {
+            lv_obj_set_style_opa(child, want, MU_OBJ_MAIN_DEFAULT);
+        }
+    }
+}
+
+void nav_watch_list_overflow(lv_obj_t *panel) {
+    lv_obj_add_event_cb(panel, blank_overflow_rows_cb, LV_EVENT_SCROLL, NULL);
+    lv_obj_add_event_cb(panel, blank_overflow_rows_cb, LV_EVENT_LAYOUT_CHANGED, NULL);
 }
 
 void update_windowed_list(
@@ -772,25 +806,22 @@ void nav_set_last_dir(const enum nav_direction dir) {
     last_nav_dir = dir;
 }
 
-void nav_focus_shake_cb(const lv_group_t *group) {
-    if (shake_prev_focused && lv_obj_is_valid(shake_prev_focused)) {
-        lv_anim_del(shake_prev_focused, shake_prev_exec_cb);
-        reset_shake_styles(shake_prev_focused);
+static void bring_shake_ancestor_forward(lv_obj_t *obj) {
+    lv_obj_t *ancestor = obj;
+    while (ancestor && lv_obj_get_parent(ancestor) != ui_screen) {
+        ancestor = lv_obj_get_parent(ancestor);
     }
+    if (ancestor) lv_obj_move_foreground(ancestor);
+}
 
-    lv_obj_t *focused = lv_group_get_focused(group);
-    shake_prev_focused = focused;
-
-    static const int shake_travel[] = {0, 2, 4, 6, 8, 10, 30};
-
+static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hint) {
     const int level = config.visual.selection_animation;
-    if (shake_suppress || level <= 0 || level > 6) return;
-
-    if (!focused || !lv_obj_is_valid(focused)) return;
+    if (level <= 0 || level > 6) return NULL;
+    if (!obj || !lv_obj_is_valid(obj)) return NULL;
 
     int dir = config.visual.selection_style;
     if (dir == sel_dir_all) {
-        switch (last_nav_dir) {
+        switch (hint) {
             case nav_dir_up:
                 dir = sel_dir_up;
                 break;
@@ -806,6 +837,8 @@ void nav_focus_shake_cb(const lv_group_t *group) {
                 break;
         }
     }
+
+    bring_shake_ancestor_forward(obj);
 
     lv_anim_exec_xcb_t exec_cb;
     int sign;
@@ -829,16 +862,16 @@ void nav_focus_shake_cb(const lv_group_t *group) {
             break;
     }
 
-    shake_prev_exec_cb = exec_cb;
+    static const int shake_travel[] = {0, 2, 4, 6, 8, 10, 30};
 
-    lv_anim_del(focused, exec_cb);
-    reset_shake_styles(focused);
+    lv_anim_del(obj, exec_cb);
+    reset_shake_styles(obj);
 
     const int travel = sign * shake_travel[level];
 
     lv_anim_t a;
     lv_anim_init(&a);
-    lv_anim_set_var(&a, focused);
+    lv_anim_set_var(&a, obj);
     lv_anim_set_exec_cb(&a, exec_cb);
     lv_anim_set_values(&a, 0, travel);
     lv_anim_set_time(&a, 80);
@@ -846,4 +879,25 @@ void nav_focus_shake_cb(const lv_group_t *group) {
     lv_anim_set_playback_delay(&a, 20);
     lv_anim_set_playback_time(&a, 130);
     lv_anim_start(&a);
+
+    return exec_cb;
+}
+
+void nav_focus_shake_cb(const lv_group_t *group) {
+    if (shake_prev_focused && lv_obj_is_valid(shake_prev_focused)) {
+        lv_anim_del(shake_prev_focused, shake_prev_exec_cb);
+        reset_shake_styles(shake_prev_focused);
+    }
+
+    lv_obj_t *focused = lv_group_get_focused(group);
+    shake_prev_focused = focused;
+
+    if (shake_suppress) return;
+
+    const lv_anim_exec_xcb_t exec_cb = play_shake(focused, last_nav_dir);
+    if (exec_cb) shake_prev_exec_cb = exec_cb;
+}
+
+void nav_play_shake(lv_obj_t *obj, const enum nav_direction hint) {
+    play_shake(obj, hint);
 }

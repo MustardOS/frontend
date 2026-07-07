@@ -93,3 +93,7 @@ enum nav_direction { nav_dir_up, nav_dir_down, nav_dir_left, nav_dir_right };
 void nav_set_last_dir(enum nav_direction dir);
 
 void nav_focus_shake_cb(const lv_group_t *group);
+
+void nav_play_shake(lv_obj_t *obj, enum nav_direction hint);
+
+void nav_watch_list_overflow(lv_obj_t *panel);
