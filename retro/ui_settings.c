@@ -1,0 +1,335 @@
+#include <stdio.h>
+#include "../common/audio.h"
+#include "../common/config.h"
+#include "../common/input.h"
+#include "../common/ui/common.h"
+#include "../common/ui/dialogue.h"
+#include "../module/muxshare.h"
+#include "muxretro.h"
+#include "settings.h"
+
+static int active = 0;
+static uint64_t prev_nav_mask = 0;
+
+static uint32_t hold_delay_up = 0;
+static uint32_t hold_tick_up = 0;
+static uint32_t hold_delay_down = 0;
+static uint32_t hold_tick_down = 0;
+static uint32_t hold_delay_left = 0;
+static uint32_t hold_tick_left = 0;
+static uint32_t hold_delay_right = 0;
+static uint32_t hold_tick_right = 0;
+
+enum {
+    row_scaling = 0,
+    row_filter,
+    row_rumble,
+    row_volume,
+    row_fps,
+    row_border,
+    row_sample_rate,
+    row_fps_limit,
+    row_count
+};
+
+static const char *row_labels[row_count] = {
+    lang.muxretro.settings_screen.scaling_mode, lang.muxretro.settings_screen.texture_filter,
+    lang.muxretro.settings_screen.rumble,       lang.muxretro.settings_screen.volume,
+    lang.muxretro.settings_screen.show_fps,     lang.muxretro.settings_screen.border_colour,
+    lang.muxretro.settings_screen.sample_rate,  lang.muxretro.settings_screen.fps_limit
+};
+
+static const char *row_glyphs[row_count] = {"scaling", "filter", "rumble",     "volume",
+                                            "fps",     "border", "samplerate", "fpslimit"};
+
+static int save_dialogue_active = 0;
+static mux_dialogue save_dlg;
+
+typedef enum { save_opt_content = 0, save_opt_core, save_opt_directory, save_opt_discard } save_opt_t;
+
+static uint64_t current_nav_mask(void) {
+    const int up = mux_input_pressed(mux_input_dpad_up);
+    const int down = mux_input_pressed(mux_input_dpad_down);
+    const int left = mux_input_pressed(mux_input_dpad_left);
+    const int right = mux_input_pressed(mux_input_dpad_right);
+    const int confirm = mux_input_pressed(mux_input_a);
+    const int back = mux_input_pressed(mux_input_b);
+
+    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0) | (confirm ? BIT(4) : 0)
+           | (back ? BIT(5) : 0);
+}
+
+static void row_value_text(const int index, char *buf) {
+    switch (index) {
+        case row_scaling:
+            snprintf(buf, 32, "%s", session_settings_scale_name(session_settings.scaling_mode));
+            break;
+        case row_filter:
+            snprintf(buf, 32, "%s", session_settings_filter_name(session_settings.texture_filter));
+            break;
+        case row_rumble:
+            snprintf(buf, 32, "%s", session_settings.rumble_enabled ? lang.generic.enabled : lang.generic.disabled);
+            break;
+        case row_volume:
+            snprintf(buf, 32, "%d%%", session_settings.volume);
+            break;
+        case row_fps:
+            snprintf(buf, 32, "%s", session_settings.show_fps ? lang.generic.enabled : lang.generic.disabled);
+            break;
+        case row_border:
+            snprintf(buf, 32, "%s", session_settings_border_name(session_settings.border_color));
+            break;
+        case row_sample_rate:
+            snprintf(buf, 32, "%s", session_settings_sample_rate_name(session_settings.sample_rate));
+            break;
+        case row_fps_limit:
+            snprintf(buf, 32, "%s", session_settings_fps_limit_name(session_settings.fps_limit));
+            break;
+        default:
+            buf[0] = '\0';
+            break;
+    }
+}
+
+static void cycle_row(const int index, const int direction) {
+    switch (index) {
+        case row_scaling:
+            session_settings_cycle_scaling(direction);
+            break;
+        case row_filter:
+            session_settings_cycle_filter(direction);
+            break;
+        case row_rumble:
+            session_settings_cycle_rumble(direction);
+            break;
+        case row_volume:
+            session_settings_cycle_volume(direction);
+            break;
+        case row_fps:
+            session_settings_cycle_fps(direction);
+            break;
+        case row_border:
+            session_settings_cycle_border(direction);
+            break;
+        case row_sample_rate:
+            session_settings_cycle_sample_rate(direction);
+            break;
+        case row_fps_limit:
+            session_settings_cycle_fps_limit(direction);
+            break;
+        default:
+            break;
+    }
+}
+
+// shake_dir matches the physical Left/Right press that triggered the cycle -
+// nav_play_shake() (common/ui/nav.c) reuses the exact same intensity
+// (config.visual.selection_animation) and direction preference (config.
+// visual.selection_style, "All" included) as every focus-driven shake
+// elsewhere in the OS, so cycling a value gets the same configurable tactile
+// feedback as moving between rows does, rather than a silent text swap.
+static void refresh_row(const int index, const enum nav_direction shake_dir) {
+    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
+    if (!panel) return;
+
+    lv_obj_t *value = lv_obj_get_child(panel, 2);
+    if (!value) return;
+
+    char value_text[32];
+    row_value_text(index, value_text);
+    lv_label_set_text(value, value_text);
+    nav_play_shake(value, shake_dir);
+}
+
+static void build_settings_row(const int index) {
+    lv_obj_t *panel = lv_obj_create(ui_pnl_content);
+    lv_obj_t *label = lv_label_create(panel);
+    lv_obj_t *icon = lv_img_create(panel);
+    lv_obj_t *value = lv_label_create(panel);
+
+    char value_text[32];
+    row_value_text(index, value_text);
+
+    apply_theme_list_panel(panel);
+    apply_theme_option_item_label(&theme, label, row_labels[index], 1);
+    apply_theme_list_glyph(&theme, icon, "muxretro", row_glyphs[index]);
+    apply_theme_list_value(&theme, value, value_text);
+    apply_size_to_content(&theme, ui_pnl_content, label, icon, row_labels[index]);
+    apply_text_long_dot(&theme, label);
+
+    lv_group_add_obj(ui_group, label);
+    lv_group_add_obj(ui_group_glyph, icon);
+    lv_group_add_obj(ui_group_panel, panel);
+    lv_group_add_obj(ui_group_value, value);
+}
+
+static void rebuild_rows(void) {
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+
+    ui_count_static = 0;
+    current_item_index = 0;
+
+    for (int i = 0; i < row_count; i++)
+        build_settings_row(i);
+
+    ui_count_static = row_count;
+    first_open = 0;
+}
+
+static void close_settings(void) {
+    active = 0;
+
+    pause_menu_rebuild();
+    pause_menu_focus_settings_item();
+    pause_menu_show_nav_hints();
+
+    pause_menu_sync_input_mask();
+}
+
+void settings_menu_init(void) {
+    static const char *save_options[] = {
+        lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
+        lang.generic.discard
+    };
+    dialogue_init(
+        &save_dlg, &theme, ui_screen, lang.muxretro.save.settings_title, lang.muxretro.save.settings_desc, save_options,
+        4, lang.generic.select, lang.generic.cancel
+    );
+}
+
+void settings_menu_open(void) {
+    active = 1;
+    prev_nav_mask = current_nav_mask();
+
+    rebuild_rows();
+
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
+    pause_menu_fix_nav_order();
+}
+
+int settings_menu_is_active(void) {
+    return active;
+}
+
+void settings_menu_tick(void) {
+    const uint64_t mask = current_nav_mask();
+    const uint64_t edge = mask & ~prev_nav_mask;
+    prev_nav_mask = mask;
+
+    if (save_dialogue_active) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&save_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const save_opt_t opt = (save_opt_t) save_dlg.selected;
+            dialogue_dismiss(&save_dialogue_active, &save_dlg);
+            play_sound(snd_confirm);
+
+            switch (opt) {
+                case save_opt_content:
+                    session_settings_save_content();
+                    break;
+                case save_opt_core:
+                    session_settings_save_core();
+                    break;
+                case save_opt_directory:
+                    session_settings_save_directory();
+                    break;
+                case save_opt_discard:
+                    session_settings_discard();
+                    break;
+            }
+
+            close_settings();
+        } else if (edge & BIT(5)) {
+            dialogue_dismiss(&save_dialogue_active, &save_dlg);
+        }
+        return;
+    }
+
+    const uint32_t now = SDL_GetTicks();
+
+    int do_up = 0;
+    int do_down = 0;
+    int do_left = 0;
+    int do_right = 0;
+
+    if (edge & BIT(0)) {
+        do_up = 1;
+        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
+        hold_tick_up = now;
+    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
+        if (current_item_index > 0) do_up = 1;
+        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
+        hold_tick_up = now;
+    }
+
+    if (edge & BIT(1)) {
+        do_down = 1;
+        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
+        hold_tick_down = now;
+    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
+        if (current_item_index < ui_count_static - 1) do_down = 1;
+        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
+        hold_tick_down = now;
+    }
+
+    if (edge & BIT(2)) {
+        do_left = 1;
+        hold_delay_left = (uint32_t) config.settings.advanced.repeat_delay;
+        hold_tick_left = now;
+    } else if ((mask & BIT(2)) && now - hold_tick_left >= hold_delay_left) {
+        do_left = 1;
+        hold_delay_left = (uint32_t) config.settings.advanced.accelerate;
+        hold_tick_left = now;
+    }
+
+    if (edge & BIT(3)) {
+        do_right = 1;
+        hold_delay_right = (uint32_t) config.settings.advanced.repeat_delay;
+        hold_tick_right = now;
+    } else if ((mask & BIT(3)) && now - hold_tick_right >= hold_delay_right) {
+        do_right = 1;
+        hold_delay_right = (uint32_t) config.settings.advanced.accelerate;
+        hold_tick_right = now;
+    }
+
+    // nav_set_last_dir()+nav_unsuppress_shake() before every real step - same
+    // pairing common/input/list_nav.c's handle_list_nav_prev/next() do before
+    // calling back into whichever screen they're navigating. This screen
+    // doesn't go through that shared handler (it calls gen_step_movement()
+    // itself), so without this the row shake configured in muxvisual.c
+    // (Settings > Selection Animation/Style) never played: reset_ui_groups()
+    // (called every rebuild_rows()) leaves shake_suppress permanently set
+    // via nav_suppress_next_shake() until something explicitly lifts it, and
+    // nothing ever did on this path.
+    if (do_up) {
+        nav_set_last_dir(nav_dir_up);
+        nav_unsuppress_shake();
+        gen_step_movement(1, -1, 1, 0, 1);
+    } else if (do_down) {
+        nav_set_last_dir(nav_dir_down);
+        nav_unsuppress_shake();
+        gen_step_movement(1, +1, 1, 0, 1);
+    } else if (do_left) {
+        cycle_row(current_item_index, -1);
+        refresh_row(current_item_index, nav_dir_left);
+        play_sound(snd_option);
+    } else if (do_right) {
+        cycle_row(current_item_index, +1);
+        refresh_row(current_item_index, nav_dir_right);
+        play_sound(snd_option);
+    } else if (edge & BIT(5)) {
+        if (session_settings_is_dirty()) {
+            play_sound(snd_confirm);
+            dialogue_open(&save_dialogue_active, &save_dlg, &theme);
+        } else {
+            play_sound(snd_back);
+            close_settings();
+        }
+    }
+}

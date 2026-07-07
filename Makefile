@@ -40,6 +40,8 @@ prebuild:
 		echo "Building Dependency: $$DEP"; \
 		$(MAKE) -C $$DEP DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1; \
 	done
+	@echo "Building Libretro Host: muxretro"
+	$(VERBOSE)$(MAKE) -C retro DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
 clean:
 	$(VERBOSE)rm -rf .build_count
