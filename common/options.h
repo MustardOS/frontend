@@ -121,6 +121,7 @@
 
 #define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
 #define STORAGE_MUSIC RUN_STORAGE_PATH "music"
+#define STORAGE_BIOS  RUN_STORAGE_PATH "bios"
 
 #define STORAGE_HOTKEY  OPT_SHARE_PATH "hotkey"
 #define STORAGE_SOUND   OPT_SHARE_PATH "media/sound"

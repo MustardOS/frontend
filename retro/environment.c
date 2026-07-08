@@ -90,7 +90,12 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
-        case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
+        case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
+            static const char *dir = STORAGE_BIOS;
+            *(const char **) data = dir;
+            return true;
+        }
+
         case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
             static const char *dir = RETRO_SRM_PATH;
             *(const char **) data = dir;
