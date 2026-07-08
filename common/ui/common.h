@@ -36,6 +36,8 @@ void fade_reset(void);
 
 void fade_in_screen(void);
 
+void fade_in_instant(void);
+
 void fade_out_screen(void);
 
 void init_ui_common_screen(
@@ -94,7 +96,7 @@ void create_grid_panel(const struct theme_config *theme, int item_count);
 
 void create_grid_item(
     const struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image, int16_t col,
-    int16_t row, char *item_image_path, char *item_image_focused_path, const char *item_text
+    int16_t row, const char *item_image_path, const char *item_image_focused_path, const char *item_text
 );
 
 void scroll_help_content(int direction, int page_down);

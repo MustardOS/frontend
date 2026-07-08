@@ -122,7 +122,7 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION: {
-            *(unsigned *) data = 1;
+            *(unsigned *) data = 2;
             return true;
         }
 
@@ -134,6 +134,17 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL: {
             const struct retro_core_options_intl *intl = data;
             if (intl && intl->us) options_store_v1(intl->us);
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
+            options_store_v2(data);
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL: {
+            const struct retro_core_options_v2_intl *intl = data;
+            if (intl && intl->us) options_store_v2(intl->us);
             return true;
         }
 

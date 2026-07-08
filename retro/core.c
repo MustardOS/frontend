@@ -11,13 +11,15 @@
 #include "../common/log.h"
 #include "muxretro.h"
 #include "core.h"
+#include "paths.h"
+#include "patch.h"
 #include "vfs.h"
-
-#define ARCHIVE_EXTRACT_DIR "/opt/muos/muretro_extract"
 
 struct core_cbs current_core = {0};
 char core_content_path[PATH_MAX] = "";
 char core_content_load_method[32] = "";
+char core_active_patches[1024] = "";
+int core_active_patch_count = 0;
 static char core_file_path[PATH_MAX] = "";
 
 static int open_core(const char *corefile) {
@@ -206,7 +208,7 @@ static int extract_archive_to_dir(const char *archive_path, const char *output_d
 }
 
 static int find_content_in_archive(const char *archive_path, char *out_path) {
-    if (extract_archive_to_dir(archive_path, ARCHIVE_EXTRACT_DIR) != 0) {
+    if (extract_archive_to_dir(archive_path, RETRO_EXT_PATH) != 0) {
         LOG_ERROR(mux_module, "Failed to extract archive: %s", archive_path);
         return -1;
     }
@@ -225,7 +227,7 @@ static int find_content_in_archive(const char *archive_path, char *out_path) {
             ext_buf[ext_count++] = strdup(with_dot);
         }
 
-        const char *dirs[] = {ARCHIVE_EXTRACT_DIR};
+        const char *dirs[] = {RETRO_EXT_PATH};
         const char *exts[32];
         for (size_t i = 0; i < ext_count; i++)
             exts[i] = ext_buf[i];
@@ -246,7 +248,7 @@ static int find_content_in_archive(const char *archive_path, char *out_path) {
         if (matched) return 0;
     }
 
-    if (find_first_file(ARCHIVE_EXTRACT_DIR, out_path) == 0) return 0;
+    if (find_first_file(RETRO_EXT_PATH, out_path) == 0) return 0;
 
     LOG_ERROR(mux_module, "No matching content found inside archive: %s", archive_path);
     return -1;
@@ -339,9 +341,40 @@ static int read_whole_file(const char *path, void **out_data, size_t *out_size) 
     return 0;
 }
 
+static int write_whole_file(const char *path, const void *data, const size_t size) {
+    FILE *f = fopen(path, "wb");
+    if (!f) {
+        LOG_ERROR(mux_module, "Failed to create patched content file: %s", path);
+        return -1;
+    }
+
+    const int ok = fwrite(data, 1, size, f) == size;
+    fclose(f);
+
+    if (!ok) {
+        LOG_ERROR(mux_module, "Failed to write patched content: %s", path);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int write_patched_content(const void *data, const size_t size, const char *orig_path, char *out_path) {
+    create_directories(RETRO_PAT_PATH, 0);
+
+    const char *name = strrchr(orig_path, '/');
+    name = name ? name + 1 : orig_path;
+    snprintf(out_path, PATH_MAX, "%s/%s", RETRO_PAT_PATH, name);
+
+    return write_whole_file(out_path, data, size);
+}
+
 int core_load_content(const char *content_path) {
     snprintf(core_content_path, sizeof(core_content_path), "%s", content_path);
-    if (dir_exist(ARCHIVE_EXTRACT_DIR)) remove_directory_recursive(ARCHIVE_EXTRACT_DIR);
+    core_active_patches[0] = '\0';
+    core_active_patch_count = 0;
+    if (dir_exist(RETRO_EXT_PATH)) remove_directory_recursive(RETRO_EXT_PATH);
+    if (dir_exist(RETRO_PAT_PATH)) remove_directory_recursive(RETRO_PAT_PATH);
 
     // These archive extensions should be plenty but libarchive supports a
     // heck of a lot more than these, unfortunately no arj or ace!
@@ -359,8 +392,59 @@ int core_load_content(const char *content_path) {
     }
 
     if (!is_archive || current_core.block_extract) {
+        if (patch_exists(content_path)) {
+            void *data = NULL;
+            size_t size = 0;
+            if (read_whole_file(content_path, &data, &size) != 0) return -1;
+
+            core_active_patch_count =
+                patch_apply(content_path, &data, &size, core_active_patches, sizeof(core_active_patches));
+
+            struct retro_game_info game_info = {0};
+            char patched_path[PATH_MAX] = "";
+
+            if (current_core.need_fullpath) {
+                if (write_patched_content(data, size, content_path, patched_path) != 0) {
+                    free(data);
+                    return -1;
+                }
+
+                game_info.path = patched_path;
+                game_info.data = data;
+                game_info.size = size;
+                game_info.path = content_path;
+            }
+
+            const int ok = current_core.retro_load_game(&game_info);
+            free(data);
+
+            if (!ok) {
+                LOG_ERROR(mux_module, "Core rejected patched content: %s", content_path);
+                return -1;
+            }
+
+            snprintf(
+                core_content_load_method, sizeof(core_content_load_method), "%s",
+                lang.muxretro.information_screen.direct
+            );
+            LOG_SUCCESS(mux_module, "Content loaded (patched): %s", content_path);
+            return 0;
+        }
+
         struct retro_game_info game_info = {.path = content_path};
-        if (!current_core.retro_load_game(&game_info)) {
+        void *direct_data = NULL;
+        size_t direct_size = 0;
+
+        if (!current_core.need_fullpath) {
+            if (read_whole_file(content_path, &direct_data, &direct_size) != 0) return -1;
+            game_info.data = direct_data;
+            game_info.size = direct_size;
+        }
+
+        const int ok = current_core.retro_load_game(&game_info);
+        free(direct_data);
+
+        if (!ok) {
             LOG_ERROR(mux_module, "Core rejected content: %s", content_path);
             return -1;
         }
@@ -371,9 +455,10 @@ int core_load_content(const char *content_path) {
         return 0;
     }
 
+    const int has_patch = patch_exists(content_path);
     char resolved_path[PATH_MAX] = "";
 
-    if (current_core.need_fullpath && vfs_bridge_is_active()) {
+    if (!has_patch && current_core.need_fullpath && vfs_bridge_is_active()) {
         char entry_name[PATH_MAX];
         if (find_entry_in_archive(content_path, entry_name) == 0) {
             snprintf(resolved_path, sizeof(resolved_path), "%s#%s", content_path, entry_name);
@@ -397,15 +482,35 @@ int core_load_content(const char *content_path) {
 
     if (find_content_in_archive(content_path, resolved_path) != 0) return -1;
 
-    struct retro_game_info game_info = {.path = resolved_path};
+    struct retro_game_info game_info = {0};
     void *heap_data = NULL;
+    size_t heap_size = 0;
 
-    if (!current_core.need_fullpath) {
-        if (read_whole_file(resolved_path, &heap_data, &game_info.size) != 0) return -1;
-        game_info.data = heap_data;
+    if (has_patch || !current_core.need_fullpath) {
+        if (read_whole_file(resolved_path, &heap_data, &heap_size) != 0) return -1;
+        if (has_patch) {
+            core_active_patch_count =
+                patch_apply(content_path, &heap_data, &heap_size, core_active_patches, sizeof(core_active_patches));
+        }
     }
 
-    const bool ok = current_core.retro_load_game(&game_info);
+    if (current_core.need_fullpath) {
+        if (has_patch) {
+            if (write_whole_file(resolved_path, heap_data, heap_size) != 0) {
+                free(heap_data);
+                return -1;
+            }
+            free(heap_data);
+            heap_data = NULL;
+        }
+        game_info.path = resolved_path;
+    } else {
+        game_info.data = heap_data;
+        game_info.size = heap_size;
+        game_info.path = resolved_path;
+    }
+
+    const int ok = current_core.retro_load_game(&game_info);
     free(heap_data);
 
     if (!ok) {

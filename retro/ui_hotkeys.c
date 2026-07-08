@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "../common/audio.h"
 #include "../common/config.h"
 #include "../common/input.h"
 #include "../common/ui/common.h"
@@ -21,31 +20,23 @@ static uint32_t hold_delay_right = 0;
 static uint32_t hold_tick_right = 0;
 
 enum {
-    row_scaling = 0,
-    row_aspect_ratio,
-    row_integer_scale,
-    row_filter,
-    row_rumble,
-    row_volume,
-    row_fps,
-    row_header_visibility,
-    row_border,
-    row_sample_rate,
-    row_fps_limit,
+    row_ff_enabled = 0,
+    row_ff_speed,
+    row_slowmo_enabled,
+    row_slowmo_speed,
+    row_quicksave_enabled,
+    row_quickload_enabled,
     row_count
 };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.scaling_mode,  lang.muxretro.settings_screen.aspect_ratio_mode,
-    lang.muxretro.settings_screen.integer_scale, lang.muxretro.settings_screen.texture_filter,
-    lang.muxretro.settings_screen.rumble,        lang.muxretro.settings_screen.volume,
-    lang.muxretro.settings_screen.show_fps,      lang.muxretro.settings_screen.header_visibility,
-    lang.muxretro.settings_screen.border_colour, lang.muxretro.settings_screen.sample_rate,
-    lang.muxretro.settings_screen.fps_limit
+    lang.muxretro.hotkeys_screen.fast_forward, lang.muxretro.hotkeys_screen.ff_speed,
+    lang.muxretro.hotkeys_screen.slow_motion,  lang.muxretro.hotkeys_screen.slowmo_speed,
+    lang.muxretro.hotkeys_screen.quick_save,   lang.muxretro.hotkeys_screen.quick_load
 };
 
-static const char *row_glyphs[row_count] = {"scaling", "aspectratio", "integerscale", "filter",     "rumble",  "volume",
-                                            "fps",     "header",      "border",       "samplerate", "fpslimit"};
+static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",   "slowmotion",
+                                            "slowmospeed", "quicksave", "quickload"};
 
 static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
@@ -64,40 +55,33 @@ static uint64_t current_nav_mask(void) {
            | (back ? BIT(5) : 0);
 }
 
+static void enabled_text(char *buf, const int enabled, const char *combo) {
+    if (enabled) {
+        snprintf(buf, 32, "%s (%s)", lang.generic.enabled, combo);
+    } else {
+        snprintf(buf, 32, "%s", lang.generic.disabled);
+    }
+}
+
 static void row_value_text(const int index, char *buf) {
     switch (index) {
-        case row_aspect_ratio:
-            snprintf(buf, 32, "%s", session_settings_aspect_ratio_name(session_settings.aspect_ratio));
+        case row_ff_enabled:
+            enabled_text(buf, session_settings.hotkey_ff_enabled, "M+R1");
             break;
-        case row_scaling:
-            snprintf(buf, 32, "%s", session_settings_scale_name(session_settings.scaling_mode));
+        case row_ff_speed:
+            snprintf(buf, 32, "%s", session_settings_ff_speed_name(session_settings.ff_speed));
             break;
-        case row_integer_scale:
-            snprintf(buf, 32, "%s", session_settings_integer_scale_name(session_settings.integer_scale));
+        case row_slowmo_enabled:
+            enabled_text(buf, session_settings.hotkey_slowmo_enabled, "M+L1");
             break;
-        case row_filter:
-            snprintf(buf, 32, "%s", session_settings_filter_name(session_settings.texture_filter));
+        case row_slowmo_speed:
+            snprintf(buf, 32, "%s", session_settings_slowmo_speed_name(session_settings.slowmo_speed));
             break;
-        case row_rumble:
-            snprintf(buf, 32, "%s", session_settings.rumble_enabled ? lang.generic.enabled : lang.generic.disabled);
+        case row_quicksave_enabled:
+            enabled_text(buf, session_settings.hotkey_quicksave_enabled, "M+R2");
             break;
-        case row_volume:
-            snprintf(buf, 32, "%d%%", session_settings.volume);
-            break;
-        case row_fps:
-            snprintf(buf, 32, "%s", session_settings.show_fps ? lang.generic.enabled : lang.generic.disabled);
-            break;
-        case row_header_visibility:
-            snprintf(buf, 32, "%s", session_settings_header_visibility_name(session_settings.header_visibility));
-            break;
-        case row_border:
-            snprintf(buf, 32, "%s", session_settings_border_name(session_settings.border_color));
-            break;
-        case row_sample_rate:
-            snprintf(buf, 32, "%s", session_settings_sample_rate_name(session_settings.sample_rate));
-            break;
-        case row_fps_limit:
-            snprintf(buf, 32, "%s", session_settings_fps_limit_name(session_settings.fps_limit));
+        case row_quickload_enabled:
+            enabled_text(buf, session_settings.hotkey_quickload_enabled, "M+L2");
             break;
         default:
             buf[0] = '\0';
@@ -107,38 +91,23 @@ static void row_value_text(const int index, char *buf) {
 
 static void cycle_row(const int index, const int direction) {
     switch (index) {
-        case row_aspect_ratio:
-            session_settings_cycle_aspect_ratio(direction);
+        case row_ff_enabled:
+            session_settings_cycle_hotkey_ff_enabled(direction);
             break;
-        case row_scaling:
-            session_settings_cycle_scaling(direction);
+        case row_ff_speed:
+            session_settings_cycle_ff_speed(direction);
             break;
-        case row_integer_scale:
-            session_settings_cycle_integer_scale(direction);
+        case row_slowmo_enabled:
+            session_settings_cycle_hotkey_slowmo_enabled(direction);
             break;
-        case row_filter:
-            session_settings_cycle_filter(direction);
+        case row_slowmo_speed:
+            session_settings_cycle_slowmo_speed(direction);
             break;
-        case row_rumble:
-            session_settings_cycle_rumble(direction);
+        case row_quicksave_enabled:
+            session_settings_cycle_hotkey_quicksave_enabled(direction);
             break;
-        case row_volume:
-            session_settings_cycle_volume(direction);
-            break;
-        case row_fps:
-            session_settings_cycle_fps(direction);
-            break;
-        case row_header_visibility:
-            session_settings_cycle_header_visibility(direction);
-            break;
-        case row_border:
-            session_settings_cycle_border(direction);
-            break;
-        case row_sample_rate:
-            session_settings_cycle_sample_rate(direction);
-            break;
-        case row_fps_limit:
-            session_settings_cycle_fps_limit(direction);
+        case row_quickload_enabled:
+            session_settings_cycle_hotkey_quickload_enabled(direction);
             break;
         default:
             break;
@@ -158,7 +127,7 @@ static void refresh_row(const int index, const enum nav_direction shake_dir) {
     nav_play_shake(value, shake_dir);
 }
 
-static void build_settings_row(const int index) {
+static void build_hotkeys_row(const int index) {
     lv_obj_t *panel = lv_obj_create(ui_pnl_content);
     lv_obj_t *label = lv_label_create(panel);
     lv_obj_t *icon = lv_img_create(panel);
@@ -188,34 +157,34 @@ static void rebuild_rows(void) {
     current_item_index = 0;
 
     for (int i = 0; i < row_count; i++)
-        build_settings_row(i);
+        build_hotkeys_row(i);
 
     ui_count_static = row_count;
     first_open = 0;
 }
 
-static void close_settings(void) {
+static void close_hotkeys(void) {
     active = 0;
 
     pause_menu_rebuild();
-    pause_menu_focus_settings_item();
+    pause_menu_focus_hotkeys_item();
     pause_menu_show_nav_hints();
 
     pause_menu_sync_input_mask();
 }
 
-void settings_menu_init(void) {
+void hotkeys_menu_init(void) {
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
         lang.generic.discard
     };
     dialogue_init(
-        &save_dlg, &theme, ui_screen, lang.muxretro.save.settings_title, lang.muxretro.save.settings_desc, save_options,
+        &save_dlg, &theme, ui_screen, lang.muxretro.save.hotkeys_title, lang.muxretro.save.hotkeys_desc, save_options,
         4, lang.generic.select, lang.generic.cancel
     );
 }
 
-void settings_menu_open(void) {
+void hotkeys_menu_open(void) {
     active = 1;
     prev_nav_mask = current_nav_mask();
 
@@ -229,11 +198,11 @@ void settings_menu_open(void) {
     pause_menu_fix_nav_order();
 }
 
-int settings_menu_is_active(void) {
+int hotkeys_menu_is_active(void) {
     return active;
 }
 
-void settings_menu_tick(void) {
+void hotkeys_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
@@ -261,7 +230,7 @@ void settings_menu_tick(void) {
                     break;
             }
 
-            close_settings();
+            close_hotkeys();
         } else if (edge & BIT(5)) {
             dialogue_dismiss(&save_dialogue_active, &save_dlg);
         }
@@ -337,7 +306,7 @@ void settings_menu_tick(void) {
             dialogue_open(&save_dialogue_active, &save_dlg, &theme);
         } else {
             play_sound(snd_back);
-            close_settings();
+            close_hotkeys();
         }
     }
 }

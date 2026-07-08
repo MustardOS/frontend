@@ -13,6 +13,7 @@ static Uint32 bytes_per_ms = 0;
 static int opened_freq = 0;
 static int opened_channels = 0;
 static int device_paused = 0;
+static int audio_muted = 0;
 
 static double core_native_rate = 48000.0;
 static SDL_AudioStream *resampler = NULL;
@@ -139,6 +140,14 @@ void audio_bridge_set_paused(const int pause) {
     SDL_PauseAudioDevice(audio_dev, pause);
 }
 
+void audio_bridge_set_muted(const int mute) {
+    audio_muted = mute;
+}
+
+int audio_bridge_is_muted(void) {
+    return audio_muted;
+}
+
 void audio_bridge_clear_queued(void) {
     if (audio_dev) SDL_ClearQueuedAudio(audio_dev);
     if (resampler) SDL_AudioStreamClear(resampler);
@@ -150,14 +159,14 @@ Uint32 audio_bridge_queued_ms(void) {
 }
 
 void mux_retro_audio_sample_cb(const int16_t left, const int16_t right) {
-    if (!audio_dev) return;
+    if (!audio_dev || audio_muted) return;
 
     const int16_t frame[2] = {scale_sample(left), scale_sample(right)};
     queue_samples(frame, 1);
 }
 
 size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames) {
-    if (!audio_dev || !data) return frames;
+    if (!audio_dev || !data || audio_muted) return frames;
 
     if (session_settings.volume >= 100) {
         queue_samples(data, frames);

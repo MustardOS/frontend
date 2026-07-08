@@ -9,9 +9,11 @@
 #include "../common/init.h"
 #include "../common/input.h"
 #include "../common/inotify.h"
+#include "../common/language.h"
 #include "../common/log.h"
 #include "../common/ui/common.h"
 #include "gamestate.h"
+#include "hotkeys.h"
 #include "muxretro.h"
 #include "options.h"
 #include "core.h"
@@ -134,6 +136,7 @@ int main(const int argc, char *argv[]) {
 
     struct retro_system_av_info av_info = {0};
     current_core.retro_get_system_av_info(&av_info);
+    video_bridge_set_core_aspect(av_info.geometry.aspect_ratio);
 
     const double fps = av_info.timing.fps > 0 ? av_info.timing.fps : 60.0;
 
@@ -161,6 +164,15 @@ int main(const int argc, char *argv[]) {
         (void *) ui_screen, (void *) ui_pnl_header, (void *) ui_pnl_content, (void *) ui_pnl_footer
     );
 
+    if (core_active_patch_count > 0) {
+        char patch_toast[64];
+        snprintf(
+            patch_toast, sizeof(patch_toast), lang.muxretro.information_screen.loaded_patches_toast,
+            core_active_patch_count
+        );
+        pause_menu_show_toast(patch_toast);
+    }
+
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", fps, av_info.timing.sample_rate);
 
     int quit = 0;
@@ -182,18 +194,30 @@ int main(const int argc, char *argv[]) {
             lv_obj_invalidate(ui_screen);
 
             SDL_Delay(10);
-        } else if (mux_input_pressed(mux_input_menu)) {
-            LOG_DEBUG(mux_module, "main: menu button pressed while unpaused, toggling pause");
+        } else if (hotkeys_task()) {
+            LOG_DEBUG(mux_module, "main: menu released without a hotkey chord, toggling pause");
             pause_menu_toggle();
         } else {
             current_core.retro_run();
             int frames_run = 1;
 
-            if (session_settings.fps_limit == fps_limit_50) {
+            const int ff_active = hotkeys_is_fast_forward_active();
+            const int slowmo_active = hotkeys_is_slow_motion_active();
+
+            if (ff_active) {
+                const int batch = (int) session_settings_ff_speed_value(session_settings.ff_speed);
+                while (frames_run < batch) {
+                    current_core.retro_run();
+                    frames_run++;
+                }
+                fps_limit_deadline = 0.0;
+            } else if (session_settings.fps_limit == fps_limit_50 || slowmo_active) {
                 while (audio_bridge_queued_ms() > AUDIO_HIGH_WATER_MS)
                     SDL_Delay(2);
 
-                const double target_ms = 20.0;
+                double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0 : 1000.0 / fps;
+                if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
+
                 const double now = SDL_GetTicks();
 
                 if (fps_limit_deadline < now - target_ms) fps_limit_deadline = now;
@@ -224,10 +248,14 @@ int main(const int argc, char *argv[]) {
                     snprintf(fps_text, sizeof(fps_text), "%.2f", vfps);
                     pause_menu_set_fps_text(fps_text);
                 }
+                pause_menu_update_header();
                 fps_frame_count = 0;
                 fps_last_update = now_ticks;
             }
         }
+
+        pause_menu_toast_tick();
+        pause_menu_header_fade_tick();
 
         video_bridge_flush_frame();
         lv_refr_now(NULL);

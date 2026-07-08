@@ -1454,6 +1454,7 @@ struct mux_lang {
         char game_state[MAX_BUFFER_SIZE];
         char core_options[MAX_BUFFER_SIZE];
         char disc_control[MAX_BUFFER_SIZE];
+        char hotkeys[MAX_BUFFER_SIZE];
         char settings[MAX_BUFFER_SIZE];
         char information[MAX_BUFFER_SIZE];
         char restart[MAX_BUFFER_SIZE];
@@ -1466,6 +1467,7 @@ struct mux_lang {
             char delete_title[MAX_BUFFER_SIZE];
             char delete_desc[MAX_BUFFER_SIZE];
             char auto_save[MAX_BUFFER_SIZE];
+            char quick_save[MAX_BUFFER_SIZE];
             char state[MAX_BUFFER_SIZE];
             char list[MAX_BUFFER_SIZE];
         } gamestate;
@@ -1474,6 +1476,8 @@ struct mux_lang {
             char options_desc[MAX_BUFFER_SIZE];
             char settings_title[MAX_BUFFER_SIZE];
             char settings_desc[MAX_BUFFER_SIZE];
+            char hotkeys_title[MAX_BUFFER_SIZE];
+            char hotkeys_desc[MAX_BUFFER_SIZE];
             char content_save[MAX_BUFFER_SIZE];
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
@@ -1491,14 +1495,20 @@ struct mux_lang {
             char show_fps[MAX_BUFFER_SIZE];
             char border_colour[MAX_BUFFER_SIZE];
             char aspect_ratio[MAX_BUFFER_SIZE];
-            char integer_x1[MAX_BUFFER_SIZE];
-            char integer_x2[MAX_BUFFER_SIZE];
-            char integer_x3[MAX_BUFFER_SIZE];
-            char integer_auto[MAX_BUFFER_SIZE];
+            char aspect_ratio_mode[MAX_BUFFER_SIZE];
+            char ratio_4_3[MAX_BUFFER_SIZE];
+            char ratio_8_7[MAX_BUFFER_SIZE];
+            char ratio_16_9[MAX_BUFFER_SIZE];
+            char ratio_16_10[MAX_BUFFER_SIZE];
+            char pixel_perfect[MAX_BUFFER_SIZE];
+            char integer_mode[MAX_BUFFER_SIZE];
+            char integer_scale[MAX_BUFFER_SIZE];
             char stretch[MAX_BUFFER_SIZE];
             char nearest[MAX_BUFFER_SIZE];
             char smooth[MAX_BUFFER_SIZE];
             char scale2_x[MAX_BUFFER_SIZE];
+            char scale3_x[MAX_BUFFER_SIZE];
+            char sharp_bilinear[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
             char black[MAX_BUFFER_SIZE];
             char dark_grey[MAX_BUFFER_SIZE];
@@ -1509,13 +1519,33 @@ struct mux_lang {
             char fps_60[MAX_BUFFER_SIZE];
             char fps_50[MAX_BUFFER_SIZE];
             char fps_none[MAX_BUFFER_SIZE];
+            char header_visibility[MAX_BUFFER_SIZE];
+            char header_none[MAX_BUFFER_SIZE];
+            char header_clock[MAX_BUFFER_SIZE];
+            char header_battery[MAX_BUFFER_SIZE];
+            char header_both[MAX_BUFFER_SIZE];
         } settings_screen;
+        struct {
+            char fast_forward[MAX_BUFFER_SIZE];
+            char slow_motion[MAX_BUFFER_SIZE];
+            char quick_save[MAX_BUFFER_SIZE];
+            char quick_load[MAX_BUFFER_SIZE];
+            char ff_speed[MAX_BUFFER_SIZE];
+            char slowmo_speed[MAX_BUFFER_SIZE];
+            char no_quicksave[MAX_BUFFER_SIZE];
+        } hotkeys_screen;
+        struct {
+            char miscellaneous[MAX_BUFFER_SIZE];
+        } options_screen;
         struct {
             char core_name[MAX_BUFFER_SIZE];
             char core_version[MAX_BUFFER_SIZE];
-            char libretro_api[MAX_BUFFER_SIZE];
             char content_hash[MAX_BUFFER_SIZE];
             char loaded_via[MAX_BUFFER_SIZE];
+            char active_patches[MAX_BUFFER_SIZE];
+            char patches_none[MAX_BUFFER_SIZE];
+            char loaded_patches_toast[MAX_BUFFER_SIZE];
+            char calculating[MAX_BUFFER_SIZE];
             char resolution[MAX_BUFFER_SIZE];
             char display_output[MAX_BUFFER_SIZE];
             char target_fps[MAX_BUFFER_SIZE];

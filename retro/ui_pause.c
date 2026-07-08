@@ -1,28 +1,42 @@
 #include "../common/audio.h"
+#include "../common/battery.h"
 #include "../common/config.h"
 #include "../common/datetime.h"
 #include "../common/display.h"
 #include "../common/init.h"
 #include "../common/input.h"
 #include "../common/log.h"
+#include "../common/theme.h"
 #include "../common/ui/common.h"
 #include "../module/muxshare.h"
 #include "gamestate.h"
+#include "hotkeys.h"
 #include "muxretro.h"
 #include "core.h"
 #include "settings.h"
+
+#define TOAST_DURATION_MS 2048
+#define HEADER_FADE_MS    256
+
+static uint32_t toast_expire_tick = 0;
+static int toast_active = 0;
+
+static uint32_t header_fade_start_tick = 0;
+static int header_fading = 0;
 
 static int active = 0;
 
 static uint64_t prev_nav_mask = 0;
 static lv_obj_t *dim_overlay = NULL;
 static lv_obj_t *ui_lbl_fps = NULL;
+static lv_obj_t *ui_lbl_speed_mode = NULL;
 
 static int has_disc_control = 0;
 static int row_resume;
 static int row_game_state;
 static int row_options;
 static int row_disc_control;
+static int row_hotkeys;
 static int row_settings;
 static int row_information;
 static int row_restart;
@@ -37,6 +51,7 @@ static void compute_row_indices(void) {
     row_game_state = i++;
     row_options = i++;
     row_disc_control = has_disc_control ? i++ : -1;
+    row_hotkeys = i++;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -84,7 +99,7 @@ static void create_fps_label(void) {
     lv_obj_set_style_pad_all(ui_lbl_fps, 4, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(ui_lbl_fps, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     lv_label_set_text(ui_lbl_fps, "");
-    lv_obj_align(ui_lbl_fps, LV_ALIGN_TOP_LEFT, 4, 4);
+    lv_obj_align(ui_lbl_fps, LV_ALIGN_BOTTOM_LEFT, 4, -4);
 
     lv_obj_move_foreground(ui_lbl_fps);
 
@@ -105,6 +120,140 @@ void pause_menu_set_fps_text(const char *text) {
     lv_label_set_text(ui_lbl_fps, text);
 }
 
+static void create_speed_mode_label(void) {
+    ui_lbl_speed_mode = lv_label_create(ui_screen);
+    lv_obj_set_style_text_color(ui_lbl_speed_mode, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lbl_speed_mode, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lbl_speed_mode, 140, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_lbl_speed_mode, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_label_set_text(ui_lbl_speed_mode, "");
+    lv_obj_align(ui_lbl_speed_mode, LV_ALIGN_BOTTOM_RIGHT, -4, -4);
+
+    lv_obj_move_foreground(ui_lbl_speed_mode);
+
+    lv_obj_add_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_HIDDEN);
+}
+
+void pause_menu_set_speed_indicator(const char *text) {
+    if (!ui_lbl_speed_mode) return;
+
+    if (!text || !text[0]) {
+        lv_obj_add_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    lv_label_set_text(ui_lbl_speed_mode, text);
+    lv_obj_clear_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_HIDDEN);
+}
+
+void pause_menu_show_toast(const char *msg) {
+    if (!ui_pnl_message || !ui_lbl_message) return;
+
+    lv_label_set_text(ui_lbl_message, msg);
+    lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(ui_pnl_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_move_foreground(ui_pnl_message);
+
+    toast_expire_tick = SDL_GetTicks() + TOAST_DURATION_MS;
+    toast_active = 1;
+}
+
+void pause_menu_toast_tick(void) {
+    if (!toast_active) return;
+    if (SDL_GetTicks() < toast_expire_tick) return;
+
+    lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    toast_active = 0;
+}
+
+static void apply_gameplay_header_overlay(void) {
+    if (session_settings.header_visibility == header_visibility_none) {
+        lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+        header_fading = 0;
+        return;
+    }
+
+    lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_bg_opa(ui_pnl_header, 0, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_add_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_sta_bluetooth, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_sta_network, LV_OBJ_FLAG_HIDDEN);
+
+    const int show_clock = session_settings.header_visibility == header_visibility_clock
+                           || session_settings.header_visibility == header_visibility_both;
+    const int show_battery = session_settings.header_visibility == header_visibility_battery
+                             || session_settings.header_visibility == header_visibility_both;
+
+    if (show_clock) {
+        lv_obj_clear_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    if (show_battery) {
+        if (config.visual.battery == 1) {
+            lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+        }
+    } else {
+        lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    datetime_task(NULL);
+    battery_capacity_task(NULL);
+
+    header_fade_start_tick = SDL_GetTicks();
+    header_fading = 1;
+    lv_obj_set_style_opa(ui_pnl_header, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+}
+
+void pause_menu_header_fade_tick(void) {
+    if (!header_fading) return;
+
+    const uint32_t elapsed = SDL_GetTicks() - header_fade_start_tick;
+    if (elapsed >= HEADER_FADE_MS) {
+        lv_obj_set_style_opa(ui_pnl_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+        header_fading = 0;
+        return;
+    }
+
+    lv_obj_set_style_opa(ui_pnl_header, (lv_opa_t) (255 * elapsed / HEADER_FADE_MS), MU_OBJ_MAIN_DEFAULT);
+}
+
+static void restore_header_chrome(void) {
+    header_fading = 0;
+    lv_obj_set_style_opa(ui_pnl_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnl_header, theme.header.background_alpha, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_clear_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_sta_bluetooth, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_sta_network, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+
+    process_visual_element(vis_headertitle, ui_lbl_title);
+    process_visual_element(vis_bluetooth, ui_sta_bluetooth);
+    process_visual_element(vis_network, ui_sta_network);
+    process_visual_element(vis_clock, ui_lbl_datetime);
+    process_visual_element(vis_battery, ui_sta_capacity);
+
+    lv_label_set_text(ui_lbl_datetime, get_datetime());
+    update_battery_capacity(ui_sta_capacity, &theme);
+    update_battery_percent_label(ui_lbl_battery_percent, &theme);
+}
+
+void pause_menu_update_header(void) {
+    if (session_settings.header_visibility == header_visibility_none) return;
+    datetime_task(NULL);
+    battery_capacity_task(NULL);
+}
+
 void pause_menu_rebuild(void) {
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();
@@ -118,6 +267,7 @@ void pause_menu_rebuild(void) {
     gen_label("muxretro", "state", lang.muxretro.game_state);
     gen_label("muxretro", "core", lang.muxretro.core_options);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
+    gen_label("muxretro", "hotkeys", lang.muxretro.hotkeys);
     gen_label("muxretro", "settings", lang.muxretro.settings);
     gen_label("muxretro", "info", lang.muxretro.information);
     gen_label("muxretro", "restart", lang.muxretro.restart);
@@ -135,13 +285,15 @@ static void set_chrome_visible(const int visible) {
         lv_obj_clear_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
         if (ui_lbl_fps) lv_obj_add_flag(ui_lbl_fps, LV_OBJ_FLAG_HIDDEN);
+        pause_menu_set_speed_indicator(NULL);
+        restore_header_chrome();
     } else {
-        lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
         pause_menu_set_fps_visible(session_settings.show_fps);
+        apply_gameplay_header_overlay();
     }
 }
 
@@ -176,6 +328,10 @@ void pause_menu_focus_gamestate_item(void) {
 
 void pause_menu_focus_diskcontrol_item(void) {
     focus_item(row_disc_control);
+}
+
+void pause_menu_focus_hotkeys_item(void) {
+    focus_item(row_hotkeys);
 }
 
 void pause_menu_focus_settings_item(void) {
@@ -217,8 +373,10 @@ void pause_menu_init(void) {
 
     create_dim_overlay();
     create_fps_label();
+    create_speed_mode_label();
     gamestate_menu_init();
     settings_menu_init();
+    hotkeys_menu_init();
     options_menu_init();
 
     pause_menu_rebuild();
@@ -230,7 +388,7 @@ void pause_menu_init(void) {
     lv_label_set_text(ui_lbl_datetime, get_datetime());
 
     set_chrome_visible(0);
-    fade_in_screen();
+    fade_in_instant();
 }
 
 void pause_menu_shutdown(void) {
@@ -250,6 +408,7 @@ void pause_menu_toggle(void) {
         lv_refr_now(NULL);
         display_composite_frame();
         gamestate_capture_pending();
+        hotkeys_reset();
     } else {
         input_bridge_suppress_held();
     }
@@ -277,6 +436,11 @@ int pause_menu_tick(void) {
 
     if (diskcontrol_menu_is_active()) {
         diskcontrol_menu_tick();
+        return 0;
+    }
+
+    if (hotkeys_menu_is_active()) {
+        hotkeys_menu_tick();
         return 0;
     }
 
@@ -347,6 +511,9 @@ int pause_menu_tick(void) {
         } else if (has_disc_control && current_item_index == row_disc_control) {
             play_sound(snd_confirm);
             diskcontrol_menu_open();
+        } else if (current_item_index == row_hotkeys) {
+            play_sound(snd_confirm);
+            hotkeys_menu_open();
         } else if (current_item_index == row_settings) {
             play_sound(snd_confirm);
             settings_menu_open();
@@ -359,6 +526,7 @@ int pause_menu_tick(void) {
             pause_menu_toggle();
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
+            gamestate_autosave_save();
             return 1;
         }
     }

@@ -18,11 +18,16 @@ int gamestate_slot_count = 0;
 struct gamestate_slot gamestate_autosave;
 int gamestate_autosave_exists = 0;
 
+struct gamestate_slot gamestate_quicksave;
+int gamestate_quicksave_exists = 0;
+
 static char base_dir[MAX_STATE_SIZE] = "";
 static char manifest_path[MAX_STATE_SIZE] = "";
 static char pending_path[MAX_STATE_SIZE] = "";
 static char autosave_state_path[MAX_STATE_SIZE] = "";
 static char autosave_thumb_path[MAX_STATE_SIZE] = "";
+static char quicksave_state_path[MAX_STATE_SIZE] = "";
+static char quicksave_thumb_path[MAX_STATE_SIZE] = "";
 
 static void slot_paths(const int index, char *state_path, char *thumb_path) {
     snprintf(state_path, MAX_STATE_SIZE, "%s/slot_%d.state", base_dir, index);
@@ -69,11 +74,14 @@ void gamestate_init(const char *state_dir) {
     snprintf(pending_path, sizeof(pending_path), "%s/.pending.png", base_dir);
     snprintf(autosave_state_path, sizeof(autosave_state_path), "%s/autosave.state", base_dir);
     snprintf(autosave_thumb_path, sizeof(autosave_thumb_path), "%s/autosave.png", base_dir);
+    snprintf(quicksave_state_path, sizeof(quicksave_state_path), "%s/quicksave.state", base_dir);
+    snprintf(quicksave_thumb_path, sizeof(quicksave_thumb_path), "%s/quicksave.png", base_dir);
 
     create_directories(manifest_path, 1);
 
     gamestate_slot_count = 0;
     gamestate_autosave_exists = 0;
+    gamestate_quicksave_exists = 0;
 
     mini_t *ini = mini_try_load(manifest_path);
     if (!ini) return;
@@ -92,6 +100,23 @@ void gamestate_init(const char *state_dir) {
             snprintf(gamestate_autosave.state_path, sizeof(gamestate_autosave.state_path), "%s", autosave_state_path);
             snprintf(gamestate_autosave.thumb_path, sizeof(gamestate_autosave.thumb_path), "%s", autosave_thumb_path);
             gamestate_autosave_exists = 1;
+            continue;
+        }
+
+        if (strcmp(group->id, "quicksave") == 0) {
+            gamestate_quicksave.index = -1;
+            snprintf(
+                gamestate_quicksave.name, sizeof(gamestate_quicksave.name), "%s",
+                get_ini_string(ini, group->id, "name", lang.muxretro.gamestate.quick_save)
+            );
+            gamestate_quicksave.created = mini_get_int(ini, group->id, "created", 0);
+            snprintf(
+                gamestate_quicksave.state_path, sizeof(gamestate_quicksave.state_path), "%s", quicksave_state_path
+            );
+            snprintf(
+                gamestate_quicksave.thumb_path, sizeof(gamestate_quicksave.thumb_path), "%s", quicksave_thumb_path
+            );
+            gamestate_quicksave_exists = 1;
             continue;
         }
 
@@ -114,7 +139,7 @@ void gamestate_init(const char *state_dir) {
 
 void gamestate_capture_pending(void) {
     if (!base_dir[0]) return;
-    screenshot_save(pending_path, screenshot_auto, (screenshot_hue) {0, 0, 0});
+    screenshot_save(pending_path, screenshot_auto, (screenshot_hue){0, 0, 0});
 }
 
 static int next_free_index(void) {
@@ -242,6 +267,56 @@ int gamestate_autosave_delete(void) {
     }
 
     gamestate_autosave_exists = 0;
+
+    return 0;
+}
+
+int gamestate_quicksave_save(void) {
+    if (!base_dir[0]) return -1;
+
+    if (state_save(quicksave_state_path) != 0) {
+        LOG_ERROR(mux_module, "gamestate_quicksave_save: failed to save state to '%s'", quicksave_state_path);
+        return -1;
+    }
+
+    screenshot_save(quicksave_thumb_path, screenshot_auto, (screenshot_hue){0, 0, 0});
+    gamestate_quicksave.created = (long long) time(NULL);
+
+    char created_str[32];
+    format_epoch(gamestate_quicksave.created, created_str, sizeof(created_str));
+    snprintf(
+        gamestate_quicksave.name, sizeof(gamestate_quicksave.name), "%s - %s", lang.muxretro.gamestate.quick_save,
+        created_str
+    );
+    gamestate_quicksave.index = -1;
+    snprintf(gamestate_quicksave.state_path, sizeof(gamestate_quicksave.state_path), "%s", quicksave_state_path);
+    snprintf(gamestate_quicksave.thumb_path, sizeof(gamestate_quicksave.thumb_path), "%s", quicksave_thumb_path);
+
+    write_manifest_group("quicksave", gamestate_quicksave.name, gamestate_quicksave.created);
+
+    gamestate_quicksave_exists = 1;
+    return 0;
+}
+
+int gamestate_quicksave_load(void) {
+    if (!gamestate_quicksave_exists) return -1;
+    return state_load(gamestate_quicksave.state_path);
+}
+
+int gamestate_quicksave_delete(void) {
+    if (!gamestate_quicksave_exists) return -1;
+
+    remove(gamestate_quicksave.state_path);
+    remove(gamestate_quicksave.thumb_path);
+
+    mini_t *ini = mini_try_load(manifest_path);
+    if (ini) {
+        mini_delete_group(ini, "quicksave");
+        mini_save(ini, 0);
+        mini_free(ini);
+    }
+
+    gamestate_quicksave_exists = 0;
 
     return 0;
 }

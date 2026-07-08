@@ -19,7 +19,8 @@ INCLUDES := -I. -I../module -I../module/ui -I../common \
 
 SRC := main.c core.c environment.c video.c audio.c input_bridge.c state.c \
        ui_pause.c options.c ui_options.c gamestate.c ui_gamestate.c vfs.c rumble.c \
-       ui_diskcontrol.c ui_information.c settings.c ui_settings.c
+       ui_diskcontrol.c ui_information.c settings.c ui_settings.c patch.c hotkeys.c ui_hotkeys.c \
+       content_hash.c
 
 OBJ := $(SRC:.c=.o)
 

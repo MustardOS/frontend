@@ -1,6 +1,5 @@
 #include "../common/audio.h"
 #include "../common/config.h"
-#include "../common/display.h"
 #include "../common/init.h"
 #include "../common/input.h"
 #include "../common/log.h"
@@ -78,18 +77,32 @@ static void nav_show_y(const int show, const char *text) {
     }
 }
 
+static int quicksave_row_offset(void) {
+    return gamestate_quicksave_exists ? 1 : 0;
+}
+
+static int pinned_row_offset(void) {
+    return quicksave_row_offset() + (gamestate_autosave_exists ? 1 : 0);
+}
+
 static void refresh_preview(void) {
     const char *state_name = NULL;
     char *thumb_path = NULL;
 
-    int is_autosave_row = 0;
+    int is_live_row = 0;
 
-    if (gamestate_autosave_exists && current_item_index == 0) {
+    const int qs_offset = quicksave_row_offset();
+
+    if (gamestate_quicksave_exists && current_item_index == 0) {
+        thumb_path = gamestate_quicksave.thumb_path;
+        state_name = gamestate_quicksave.name;
+        is_live_row = 1;
+    } else if (gamestate_autosave_exists && current_item_index == qs_offset) {
         thumb_path = gamestate_autosave.thumb_path;
         state_name = gamestate_autosave.name;
-        is_autosave_row = 1;
+        is_live_row = 1;
     } else {
-        const int slot_index = current_item_index - (gamestate_autosave_exists ? 1 : 0);
+        const int slot_index = current_item_index - pinned_row_offset();
         if (slot_index >= 0 && slot_index < gamestate_slot_count) {
             thumb_path = gamestate_slots[slot_index].thumb_path;
             state_name = gamestate_slots[slot_index].name;
@@ -110,7 +123,7 @@ static void refresh_preview(void) {
         return;
     }
 
-    if (is_autosave_row) lv_img_cache_invalidate_src(NULL);
+    if (is_live_row) lv_img_cache_invalidate_src(NULL);
 
     const struct image_settings settings = {
         .image_path = thumb_path,
@@ -126,7 +139,7 @@ static void refresh_preview(void) {
 static void set_preview_mode(int enabled);
 
 static void refresh_empty_state(void) {
-    const int has_anything = gamestate_autosave_exists || gamestate_slot_count > 0;
+    const int has_anything = gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0;
 
     if (!has_anything && preview_mode) set_preview_mode(0);
     lv_label_set_text(ui_lbl_screen_message, has_anything ? "" : lang.muxretro.gamestate.none_found);
@@ -143,6 +156,10 @@ static void rebuild_rows(void) {
     ui_count_static = 0;
     current_item_index = 0;
 
+    if (gamestate_quicksave_exists) {
+        gen_label("muxretro", "state", gamestate_quicksave.name);
+    }
+
     if (gamestate_autosave_exists) {
         gen_label("muxretro", "state", gamestate_autosave.name);
     }
@@ -151,7 +168,7 @@ static void rebuild_rows(void) {
         gen_label("muxretro", "state", gamestate_slots[i].name);
     }
 
-    ui_count_static = (gamestate_autosave_exists ? 1 : 0) + gamestate_slot_count;
+    ui_count_static = pinned_row_offset() + gamestate_slot_count;
     first_open = 0;
 
     refresh_preview();
@@ -390,10 +407,13 @@ void gamestate_menu_tick(void) {
         pending_action = pending_none;
         pending_index = -1;
 
-        const int offset = gamestate_autosave_exists ? 1 : 0;
+        const int qs_offset = quicksave_row_offset();
+        const int offset = pinned_row_offset();
 
         if (action == pending_load) {
-            if (gamestate_autosave_exists && index == 0) {
+            if (gamestate_quicksave_exists && index == 0) {
+                gamestate_quicksave_load();
+            } else if (gamestate_autosave_exists && index == qs_offset) {
                 gamestate_autosave_load();
             } else {
                 gamestate_load(index - offset);
@@ -401,7 +421,15 @@ void gamestate_menu_tick(void) {
             close_gamestate();
             pause_menu_toggle();
         } else if (action == pending_delete) {
-            if (gamestate_autosave_exists && index == 0) {
+            if (gamestate_quicksave_exists && index == 0) {
+                gamestate_quicksave_delete();
+                rebuild_rows();
+
+                if (ui_count_static > 0) {
+                    focus_row(0);
+                    refresh_preview();
+                }
+            } else if (gamestate_autosave_exists && index == qs_offset) {
                 gamestate_autosave_delete();
                 rebuild_rows();
 
@@ -509,12 +537,12 @@ void gamestate_menu_tick(void) {
         gen_step_movement(1, +1, 1, 0, 1);
         refresh_preview();
     } else if (edge & (BIT(2) | BIT(3))) {
-        if (gamestate_autosave_exists || gamestate_slot_count > 0) {
+        if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {
             play_sound(snd_option);
             set_preview_mode(!preview_mode);
         }
     } else if (edge & BIT(6)) {
-        if (gamestate_autosave_exists || gamestate_slot_count > 0) {
+        if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {
             play_sound(snd_confirm);
             dialogue_open(&delete_confirm_active, &delete_dlg, &theme);
         }
@@ -524,7 +552,7 @@ void gamestate_menu_tick(void) {
         play_sound(snd_back);
         close_gamestate();
     } else if (edge & BIT(4)) {
-        if (gamestate_autosave_exists || gamestate_slot_count > 0) {
+        if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {
             play_sound(snd_confirm);
             dialogue_open(&load_confirm_active, &load_dlg, &theme);
         }

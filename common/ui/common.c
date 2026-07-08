@@ -468,6 +468,18 @@ void fade_in_screen(void) {
     }
 }
 
+void fade_in_instant(void) {
+    if (fade_in_done) return;
+    fade_in_done = 1;
+
+    if (ui_black && lv_obj_is_valid(ui_black)) {
+        lv_obj_del(ui_black);
+        ui_black = NULL;
+    }
+
+    display_set_fade_alpha(0);
+}
+
 void fade_out_screen(void) {
     if (!config.visual.blackfade) {
         unload_image_animation();
@@ -2076,7 +2088,7 @@ void grid_item_focus_event_cb(lv_event_t *e) {
 
 void create_grid_item(
     const struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image, const int16_t col,
-    const int16_t row, char *item_image_path, char *item_image_focused_path, const char *item_text
+    const int16_t row, const char *item_image_path, const char *item_image_focused_path, const char *item_text
 ) {
     if (!grid_cell_shadow_style_ready) {
         lv_style_init(&grid_cell_shadow_style);

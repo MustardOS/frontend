@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "../common/input.h"
 #include "libretro.h"
 
 bool mux_retro_environment_cb(unsigned cmd, void *data);
@@ -26,6 +27,8 @@ void video_bridge_init(void);
 void video_bridge_shutdown(void);
 
 void video_bridge_apply_scaling(void);
+
+void video_bridge_set_core_aspect(double aspect_ratio);
 
 void video_bridge_apply_filter(void);
 
@@ -55,6 +58,10 @@ uint32_t audio_bridge_queued_ms(void);
 
 void audio_bridge_clear_queued(void);
 
+void audio_bridge_set_muted(int mute);
+
+int audio_bridge_is_muted(void);
+
 void audio_bridge_get_info(int *freq, int *channels);
 
 void mux_retro_input_poll_cb(void);
@@ -62,6 +69,8 @@ void mux_retro_input_poll_cb(void);
 int16_t mux_retro_input_state_cb(unsigned port, unsigned device, unsigned index, unsigned id);
 
 void input_bridge_suppress_held(void);
+
+void input_bridge_suppress(mux_input_type type);
 
 int state_save(const char *path);
 
@@ -89,6 +98,8 @@ void pause_menu_focus_gamestate_item(void);
 
 void pause_menu_focus_diskcontrol_item(void);
 
+void pause_menu_focus_hotkeys_item(void);
+
 void pause_menu_focus_settings_item(void);
 
 void pause_menu_focus_information_item(void);
@@ -96,6 +107,16 @@ void pause_menu_focus_information_item(void);
 void pause_menu_set_fps_visible(int visible);
 
 void pause_menu_set_fps_text(const char *text);
+
+void pause_menu_set_speed_indicator(const char *text);
+
+void pause_menu_show_toast(const char *msg);
+
+void pause_menu_toast_tick(void);
+
+void pause_menu_header_fade_tick(void);
+
+void pause_menu_update_header(void);
 
 int pause_menu_tick(void);
 
@@ -128,6 +149,14 @@ void settings_menu_open(void);
 int settings_menu_is_active(void);
 
 void settings_menu_tick(void);
+
+void hotkeys_menu_init(void);
+
+void hotkeys_menu_open(void);
+
+int hotkeys_menu_is_active(void);
+
+void hotkeys_menu_tick(void);
 
 void information_menu_open(void);
 

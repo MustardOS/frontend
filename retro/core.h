@@ -33,6 +33,10 @@ extern char core_content_path[PATH_MAX];
 
 extern char core_content_load_method[32];
 
+extern char core_active_patches[1024];
+
+extern int core_active_patch_count;
+
 int core_open(const char *corefile);
 
 int core_load_content(const char *content_path);

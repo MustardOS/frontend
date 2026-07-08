@@ -13,6 +13,10 @@ void input_bridge_suppress_held(void) {
     }
 }
 
+void input_bridge_suppress(const mux_input_type type) {
+    suppress_until_released[type] = 1;
+}
+
 int16_t mux_retro_input_state_cb(const unsigned port, const unsigned device, const unsigned index, const unsigned id) {
     if (port != 0 || device != RETRO_DEVICE_JOYPAD) return 0;
     (void) index;

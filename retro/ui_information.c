@@ -3,15 +3,18 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
-#include "../common/miniz/miniz.h"
 #include "../common/ui/common.h"
 #include "../module/muxshare.h"
+#include "content_hash.h"
 #include "muxretro.h"
 #include "core.h"
 #include "settings.h"
 
+#define HASH_ROW_INDEX 3
+
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
+static int hash_row_shown_ready = 0;
 
 static uint32_t hold_delay_up = 0;
 static uint32_t hold_tick_up = 0;
@@ -24,26 +27,6 @@ static uint64_t current_nav_mask(void) {
     const int back = mux_input_pressed(mux_input_b);
 
     return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (back ? BIT(2) : 0);
-}
-
-static void format_content_hash(char *out, const size_t out_size) {
-    FILE *f = fopen(core_content_path, "rb");
-    if (!f) {
-        snprintf(out, out_size, "%s", lang.generic.unknown);
-        return;
-    }
-
-    mz_ulong crc = MZ_CRC32_INIT;
-    unsigned char buf[65536];
-    size_t n;
-
-    while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
-        crc = mz_crc32(crc, buf, n);
-    }
-
-    fclose(f);
-
-    snprintf(out, out_size, "%08lX", (unsigned long) crc);
 }
 
 static void build_info_row(const char *label, const char *value) {
@@ -81,14 +64,14 @@ static void rebuild_rows(void) {
     const char *content_name = strrchr(core_content_path, '/');
     content_name = content_name ? content_name + 1 : core_content_path;
 
-    char hash[16];
-    format_content_hash(hash, sizeof(hash));
+    content_hash_request(core_content_path);
+    hash_row_shown_ready = content_hash_is_ready();
 
-    char api_version[16];
-    snprintf(api_version, sizeof(api_version), "%s", lang.generic.unknown);
-    if (current_core.retro_api_version) {
-        snprintf(api_version, sizeof(api_version), "%u", current_core.retro_api_version());
-    }
+    char hash[16];
+    snprintf(
+        hash, sizeof(hash), "%s",
+        hash_row_shown_ready ? content_hash_get() : lang.muxretro.information_screen.calculating
+    );
 
     build_info_row(
         lang.muxretro.information_screen.core_name, info.library_name ? info.library_name : lang.generic.unknown
@@ -97,12 +80,15 @@ static void rebuild_rows(void) {
         lang.muxretro.information_screen.core_version,
         info.library_version ? info.library_version : lang.generic.unknown
     );
-    build_info_row(lang.muxretro.information_screen.libretro_api, api_version);
     build_info_row(lang.generic.content, content_name);
     build_info_row(lang.muxretro.information_screen.content_hash, hash);
     build_info_row(
         lang.muxretro.information_screen.loaded_via,
         core_content_load_method[0] ? core_content_load_method : lang.generic.unknown
+    );
+    build_info_row(
+        lang.muxretro.information_screen.active_patches,
+        core_active_patches[0] ? core_active_patches : lang.muxretro.information_screen.patches_none
     );
 
     int frame_w = 0, frame_h = 0;
@@ -181,6 +167,14 @@ int information_menu_is_active(void) {
 }
 
 void information_menu_tick(void) {
+    if (!hash_row_shown_ready && content_hash_is_ready()) {
+        hash_row_shown_ready = 1;
+
+        lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, HASH_ROW_INDEX);
+        lv_obj_t *value = panel ? lv_obj_get_child(panel, 2) : NULL;
+        if (value) lv_label_set_text(value, content_hash_get());
+    }
+
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;

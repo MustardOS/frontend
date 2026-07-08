@@ -9,6 +9,8 @@
 
 struct core_option_entry options_list[OPTIONS_MAX];
 int options_count = 0;
+struct core_option_category options_categories[OPTIONS_MAX_CATEGORIES];
+int options_category_count = 0;
 bool options_dirty = false;
 
 static char core_ini_path[MAX_BUFFER_SIZE] = "";
@@ -58,6 +60,8 @@ static void apply_override(struct core_option_entry *e) {
 void options_reset(void) {
     options_count = 0;
     memset(options_list, 0, sizeof(options_list));
+    options_category_count = 0;
+    memset(options_categories, 0, sizeof(options_categories));
 }
 
 void options_store_v1(const struct retro_core_option_definition *defs) {
@@ -68,6 +72,68 @@ void options_store_v1(const struct retro_core_option_definition *defs) {
         struct core_option_entry *e = &options_list[options_count];
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
         snprintf(e->label, sizeof(e->label), "%s", defs[i].desc ? defs[i].desc : defs[i].key);
+
+        e->value_count = 0;
+        int default_index = 0;
+
+        for (int v = 0; defs[i].values[v].value && e->value_count < OPTIONS_MAX_VALUES; v++) {
+            snprintf(e->values[e->value_count], sizeof(e->values[e->value_count]), "%s", defs[i].values[v].value);
+
+            if (defs[i].default_value && strcmp(defs[i].values[v].value, defs[i].default_value) == 0) {
+                default_index = e->value_count;
+            }
+
+            e->value_count++;
+        }
+
+        e->current_index = default_index;
+        apply_override(e);
+        options_count++;
+    }
+
+    close_overrides();
+    options_dirty = true;
+}
+
+static int category_key_is_valid(const char *key, const struct retro_core_option_v2_category *categories) {
+    if (!key || !*key || !categories) return 0;
+
+    for (int i = 0; categories[i].key; i++) {
+        if (strcmp(categories[i].key, key) == 0) return 1;
+    }
+
+    return 0;
+}
+
+void options_store_v2(const struct retro_core_options_v2 *opts) {
+    options_reset();
+    open_overrides();
+
+    if (opts->categories) {
+        for (int i = 0; opts->categories[i].key && options_category_count < OPTIONS_MAX_CATEGORIES; i++) {
+            struct core_option_category *c = &options_categories[options_category_count];
+            snprintf(c->key, sizeof(c->key), "%s", opts->categories[i].key);
+            snprintf(
+                c->label, sizeof(c->label), "%s",
+                opts->categories[i].desc ? opts->categories[i].desc : opts->categories[i].key
+            );
+            options_category_count++;
+        }
+    }
+
+    const struct retro_core_option_v2_definition *defs = opts->definitions;
+
+    for (int i = 0; defs[i].key && options_count < OPTIONS_MAX; i++) {
+        struct core_option_entry *e = &options_list[options_count];
+        snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
+
+        const int categorized = category_key_is_valid(defs[i].category_key, opts->categories);
+        if (categorized) snprintf(e->category_key, sizeof(e->category_key), "%s", defs[i].category_key);
+
+        const char *label = categorized && defs[i].desc_categorized && *defs[i].desc_categorized
+                                ? defs[i].desc_categorized
+                                : defs[i].desc;
+        snprintf(e->label, sizeof(e->label), "%s", label ? label : defs[i].key);
 
         e->value_count = 0;
         int default_index = 0;
