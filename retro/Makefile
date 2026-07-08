@@ -6,7 +6,13 @@ TARGET  := $(BIN_DIR)/muxretro
 
 CFLAGS  := $(BASE_CFLAGS) -fPIE
 LDFLAGS := $(COMMON_LIBS) $(BIN_LDFLAGS) $(LIB_LDFLAGS) -ldl
-LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
+
+ifeq ($(DEVICE), NATIVE)
+LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg -lz -llzma -lbz2
+else
+LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg \
+           -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic -lbz2
+endif
 
 INCLUDES := -I. -I../module -I../module/ui -I../common \
             -I../common/input -I../common/mini
@@ -17,16 +23,24 @@ SRC := main.c core.c environment.c video.c audio.c input_bridge.c state.c \
 
 OBJ := $(SRC:.c=.o)
 
+LA_DIR     := ../common/libarchive
+LA_SRC     := $(wildcard $(LA_DIR)/*.c)
+LA_OBJ     := $(LA_SRC:.c=.o)
+LA_CFLAGS  := $(BASE_CFLAGS) -DHAVE_CONFIG_H -DLIBARCHIVE_STATIC -I$(LA_DIR)
+
 .PHONY: all clean
 
 all: $(TARGET) clean
 
-$(TARGET): $(OBJ)
+$(TARGET): $(OBJ) $(LA_OBJ)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(OBJ) $(LA_OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
+$(LA_DIR)/%.o: $(LA_DIR)/%.c
+	$(CC) $(LA_CFLAGS) -c $< -o $@
+
 clean: | $(TARGET)
-	rm -f $(OBJ)
+	rm -f $(OBJ) $(LA_OBJ)

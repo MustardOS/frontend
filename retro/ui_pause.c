@@ -324,17 +324,6 @@ int pause_menu_tick(void) {
         do_down = 0;
     }
 
-    // nav_set_last_dir()+nav_unsuppress_shake() before every real step -
-    // the same pairing common/input/list_nav.c's handle_list_nav_prev/next()
-    // already do before calling back into whichever screen they're
-    // navigating, which is how the rest of the frontend's row shake
-    // (muxvisual.c's Selection Animation/Style) ends up armed. Every muxretro
-    // screen calls gen_step_movement() directly instead of going through
-    // that shared handler, so without this pairing here (and at every other
-    // gen_step_movement() call site across retro/*.c) the shake never
-    // played: reset_ui_groups() (called from every rebuild_rows()) leaves
-    // shake_suppress permanently set via nav_suppress_next_shake() until
-    // something explicitly lifts it, and nothing on this path ever did.
     if (do_up) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();

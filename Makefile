@@ -58,7 +58,7 @@ $(MODULES):
 	UI_OBJ="$(MODULE_DIR)/ui/ui_$@.o"; \
 	if [ -f "$$UI_FILE" ]; then \
 		rm -f "$$UI_OBJ"; \
-		$(MAKE) -C $(MODULE_DIR)/ui DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" ui_$@.o $(QUIET) || { echo "Error building UI object"; exit 1; }; \
+		$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) -c "$$UI_FILE" -o "$$UI_OBJ" $(QUIET) || { echo "Error building UI object"; exit 1; }; \
 	else \
 		UI_OBJ=""; \
 	fi; \

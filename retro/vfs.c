@@ -7,8 +7,9 @@
 #include <unistd.h>
 #include "../common/fileio.h"
 #include "../common/init.h"
+#include "../common/libarchive/archive.h"
+#include "../common/libarchive/archive_entry.h"
 #include "../common/log.h"
-#include "../common/miniz/miniz.h"
 #include "vfs.h"
 
 #define ARCHIVE_SEPARATOR '#'
@@ -28,17 +29,16 @@ struct retro_vfs_dir_handle {
 
 static int vfs_active = 0;
 
-static int
-split_archive_path(const char *path, char *zip_path, const size_t zip_size, char *entry_name, const size_t entry_size) {
+static int split_archive_path(const char *path, char *zip_path, char *entry_name) {
     const char *sep = strrchr(path, ARCHIVE_SEPARATOR);
     if (!sep) return -1;
 
     const size_t prefix_len = (size_t) (sep - path);
-    if (prefix_len == 0 || prefix_len >= zip_size) return -1;
+    if (prefix_len == 0 || prefix_len >= 512) return -1;
 
     memcpy(zip_path, path, prefix_len);
     zip_path[prefix_len] = '\0';
-    snprintf(entry_name, entry_size, "%s", sep + 1);
+    snprintf(entry_name, 256, "%s", sep + 1);
 
     return 0;
 }
@@ -59,7 +59,7 @@ static struct retro_vfs_file_handle *vfs_open(const char *path, const unsigned m
     char zip_path[512];
     char entry_name[256];
 
-    if (split_archive_path(path, zip_path, sizeof(zip_path), entry_name, sizeof(entry_name)) == 0) {
+    if (split_archive_path(path, zip_path, entry_name) == 0) {
         if (mode & RETRO_VFS_FILE_ACCESS_WRITE) {
             LOG_ERROR(mux_module, "vfs_open: write access requested for archive entry '%s'", path);
             free(handle->path);
@@ -67,19 +67,53 @@ static struct retro_vfs_file_handle *vfs_open(const char *path, const unsigned m
             return NULL;
         }
 
-        mz_zip_archive zip;
-        mz_zip_zero_struct(&zip);
+        struct archive *a = archive_read_new();
+        archive_read_support_format_all(a);
+        archive_read_support_filter_all(a);
 
-        if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
-            LOG_ERROR(mux_module, "vfs_open: failed to open archive '%s'", zip_path);
+        if (archive_read_open_filename(a, zip_path, 65536) != ARCHIVE_OK) {
+            LOG_ERROR(mux_module, "vfs_open: failed to open archive '%s': %s", zip_path, archive_error_string(a));
+            archive_read_free(a);
             free(handle->path);
             free(handle);
             return NULL;
         }
 
+        void *data = NULL;
         size_t size = 0;
-        void *data = mz_zip_reader_extract_file_to_heap(&zip, entry_name, &size, 0);
-        mz_zip_reader_end(&zip);
+
+        struct archive_entry *entry;
+        while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+            const char *name = archive_entry_pathname(entry);
+            if (!name || strcmp(name, entry_name) != 0) {
+                archive_read_data_skip(a);
+                continue;
+            }
+
+            const la_int64_t entry_size = archive_entry_size(entry);
+            if (entry_size <= 0) break;
+
+            data = malloc((size_t) entry_size);
+            if (!data) break;
+
+            size_t total = 0;
+            while (total < (size_t) entry_size) {
+                const la_ssize_t got = archive_read_data(a, (char *) data + total, (size_t) entry_size - total);
+                if (got <= 0) break;
+                total += (size_t) got;
+            }
+
+            if (total != (size_t) entry_size) {
+                free(data);
+                data = NULL;
+            } else {
+                size = total;
+            }
+
+            break;
+        }
+
+        archive_read_free(a);
 
         if (!data) {
             LOG_ERROR(mux_module, "vfs_open: failed to extract '%s' from '%s'", entry_name, zip_path);

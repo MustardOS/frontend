@@ -242,14 +242,6 @@ void gamestate_menu_init(void) {
 
     create_osk_objects();
 
-    // A direct child of ui_screen, not ui_pnl_box - the same reasoning
-    // ui_pause.c's create_fps_label() already uses for ui_lbl_fps. ui_pnl_box
-    // clips its children to its own bounds (header.height + 2 downward), but
-    // matching row 0's real position needs an offset of theme.misc.content.
-    // padding_top *from the header*, which on any theme that uses a negative
-    // padding_top to tuck rows up snug against the header lands above that
-    // boundary - clipped to invisible at the top on ui_pnl_box, but fully
-    // visible living on the screen directly instead.
     ui_pnl_preview_name = lv_obj_create(ui_screen);
     ui_lbl_preview_name = lv_label_create(ui_pnl_preview_name);
 
@@ -257,10 +249,6 @@ void gamestate_menu_init(void) {
     apply_theme_list_item(&theme, ui_lbl_preview_name, "");
     apply_text_long_dot(&theme, ui_lbl_preview_name);
 
-    // The exact same absolute-Y formula ui_pnl_content itself is built from
-    // (common/ui/common.c) - this is what "matches row 0" actually means,
-    // computed fresh rather than as an offset from some other panel's own
-    // top edge (which is how the previous attempt ended up clipped).
     lv_obj_align(ui_pnl_preview_name, LV_ALIGN_TOP_MID, 0, theme.header.height + 2 + theme.misc.content.padding_top);
     lv_obj_move_foreground(ui_pnl_preview_name);
 
@@ -510,11 +498,6 @@ void gamestate_menu_tick(void) {
         do_down = 0;
     }
 
-    // See ui_pause.c's own gen_step_movement() call site for why this pairing
-    // is needed on every muxretro screen - without it, this screen's row
-    // shake (muxvisual.c's Selection Animation/Style) never plays. Applies
-    // in both List and Preview mode - both read/step current_item_index
-    // through this same block regardless of which is active.
     if (do_up) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();

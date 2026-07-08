@@ -3,17 +3,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../common/archive.h"
 #include "../common/fileio.h"
 #include "../common/init.h"
 #include "../common/language.h"
+#include "../common/libarchive/archive.h"
+#include "../common/libarchive/archive_entry.h"
 #include "../common/log.h"
-#include "../common/miniz/miniz.h"
 #include "muxretro.h"
 #include "core.h"
 #include "vfs.h"
 
-#define ARCHIVE_EXTRACT_DIR "/tmp/muxretro_archive"
+#define ARCHIVE_EXTRACT_DIR "/opt/muos/muretro_extract"
 
 struct core_cbs current_core = {0};
 char core_content_path[PATH_MAX] = "";
@@ -120,10 +120,93 @@ static int find_first_file(const char *dir, char *out_path) {
     return found;
 }
 
-static int find_content_in_archive(const char *archive_path, char *out_path) {
-    remove_directory_recursive(ARCHIVE_EXTRACT_DIR);
+static int extract_archive_to_dir(const char *archive_path, const char *output_dir) {
+    remove_directory_recursive(output_dir);
+    create_directories(output_dir, 0);
 
-    if (extract_zip_to_dir(archive_path, ARCHIVE_EXTRACT_DIR) != MUX_EXTRACT_OK) {
+    char resolved_output[PATH_MAX];
+    if (!realpath(output_dir, resolved_output)) {
+        LOG_ERROR(mux_module, "Cannot resolve output path: '%s'", output_dir);
+        return -1;
+    }
+    const size_t resolved_len = strlen(resolved_output);
+
+    struct archive *a = archive_read_new();
+    archive_read_support_format_all(a);
+    archive_read_support_filter_all(a);
+
+    if (archive_read_open_filename(a, archive_path, 65536) != ARCHIVE_OK) {
+        LOG_ERROR(mux_module, "Failed to open archive '%s': %s", archive_path, archive_error_string(a));
+        archive_read_free(a);
+        return -1;
+    }
+
+    struct archive_entry *entry;
+    int rc = 0;
+
+    while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+        const char *name = archive_entry_pathname(entry);
+        if (!name) continue;
+
+        if (name[0] == '/' || strstr(name, "..")) {
+            LOG_ERROR(mux_module, "Blocked unsafe path in archive: '%s'", name);
+            rc = -1;
+            break;
+        }
+
+        char dest_file[PATH_MAX];
+        snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, name);
+
+        if (strncmp(dest_file, resolved_output, resolved_len) != 0
+            || (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
+            LOG_ERROR(mux_module, "Blocked path escape in archive: '%s'", name);
+            rc = -1;
+            break;
+        }
+
+        if (archive_entry_filetype(entry) == AE_IFDIR) {
+            create_directories(dest_file, 0);
+            continue;
+        }
+
+        if (archive_entry_filetype(entry) != AE_IFREG) {
+            archive_read_data_skip(a);
+            continue;
+        }
+
+        create_directories(dest_file, 1);
+
+        FILE *out = fopen(dest_file, "wb");
+        if (!out) {
+            LOG_ERROR(mux_module, "Could not create '%s'", dest_file);
+            rc = -1;
+            break;
+        }
+
+        char buf[65536];
+        la_ssize_t got;
+        int write_failed = 0;
+        while ((got = archive_read_data(a, buf, sizeof(buf))) > 0) {
+            if (fwrite(buf, 1, (size_t) got, out) != (size_t) got) {
+                write_failed = 1;
+                break;
+            }
+        }
+        fclose(out);
+
+        if (got < 0 || write_failed) {
+            LOG_ERROR(mux_module, "Failed extracting '%s' from archive: %s", name, archive_error_string(a));
+            rc = -1;
+            break;
+        }
+    }
+
+    archive_read_free(a);
+    return rc;
+}
+
+static int find_content_in_archive(const char *archive_path, char *out_path) {
+    if (extract_archive_to_dir(archive_path, ARCHIVE_EXTRACT_DIR) != 0) {
         LOG_ERROR(mux_module, "Failed to extract archive: %s", archive_path);
         return -1;
     }
@@ -170,29 +253,33 @@ static int find_content_in_archive(const char *archive_path, char *out_path) {
 }
 
 static int find_entry_in_archive(const char *archive_path, char *out_entry) {
-    mz_zip_archive zip;
-    mz_zip_zero_struct(&zip);
+    struct archive *a = archive_read_new();
+    archive_read_support_format_all(a);
+    archive_read_support_filter_all(a);
 
-    if (!mz_zip_reader_init_file(&zip, archive_path, 0)) {
-        LOG_ERROR(mux_module, "Failed to open archive: %s", archive_path);
+    if (archive_read_open_filename(a, archive_path, 65536) != ARCHIVE_OK) {
+        LOG_ERROR(mux_module, "Failed to open archive '%s': %s", archive_path, archive_error_string(a));
+        archive_read_free(a);
         return -1;
     }
 
-    const mz_uint file_count = mz_zip_reader_get_num_files(&zip);
     char fallback_entry[256] = "";
     int has_fallback = 0;
     int found = -1;
 
-    for (mz_uint i = 0; i < file_count && found != 0; i++) {
-        mz_zip_archive_file_stat file_stat;
-        if (!mz_zip_reader_file_stat(&zip, i, &file_stat) || file_stat.m_is_directory) continue;
+    struct archive_entry *entry;
+    while (found != 0 && archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+        if (archive_entry_filetype(entry) != AE_IFREG) continue;
+
+        const char *name = archive_entry_pathname(entry);
+        if (!name) continue;
 
         if (!has_fallback) {
-            snprintf(fallback_entry, sizeof(fallback_entry), "%s", file_stat.m_filename);
+            snprintf(fallback_entry, sizeof(fallback_entry), "%s", name);
             has_fallback = 1;
         }
 
-        const char *dot = strrchr(file_stat.m_filename, '.');
+        const char *dot = strrchr(name, '.');
         if (!dot || !current_core.valid_extensions || !current_core.valid_extensions[0]) continue;
 
         char list_copy[512];
@@ -201,14 +288,14 @@ static int find_entry_in_archive(const char *archive_path, char *out_entry) {
         char *saveptr = NULL;
         for (const char *tok = strtok_r(list_copy, "|", &saveptr); tok; tok = strtok_r(NULL, "|", &saveptr)) {
             if (strcasecmp(dot + 1, tok) == 0) {
-                snprintf(out_entry, PATH_MAX, "%s", file_stat.m_filename);
+                snprintf(out_entry, PATH_MAX, "%s", name);
                 found = 0;
                 break;
             }
         }
     }
 
-    mz_zip_reader_end(&zip);
+    archive_read_free(a);
 
     if (found == 0) return 0;
 
@@ -254,9 +341,22 @@ static int read_whole_file(const char *path, void **out_data, size_t *out_size) 
 
 int core_load_content(const char *content_path) {
     snprintf(core_content_path, sizeof(core_content_path), "%s", content_path);
+    if (dir_exist(ARCHIVE_EXTRACT_DIR)) remove_directory_recursive(ARCHIVE_EXTRACT_DIR);
+
+    // These archive extensions should be plenty but libarchive supports a
+    // heck of a lot more than these, unfortunately no arj or ace!
+    static const char *archive_exts[] = {".zip", ".7z", ".gz", ".tar", ".rar"};
 
     const char *ext = strrchr(content_path, '.');
-    const int is_archive = ext && strcasecmp(ext, ".zip") == 0;
+    int is_archive = 0;
+    if (ext) {
+        for (size_t i = 0; i < A_SIZE(archive_exts); i++) {
+            if (strcasecmp(ext, archive_exts[i]) == 0) {
+                is_archive = 1;
+                break;
+            }
+        }
+    }
 
     if (!is_archive || current_core.block_extract) {
         struct retro_game_info game_info = {.path = content_path};
@@ -274,7 +374,7 @@ int core_load_content(const char *content_path) {
     char resolved_path[PATH_MAX] = "";
 
     if (current_core.need_fullpath && vfs_bridge_is_active()) {
-        char entry_name[256];
+        char entry_name[PATH_MAX];
         if (find_entry_in_archive(content_path, entry_name) == 0) {
             snprintf(resolved_path, sizeof(resolved_path), "%s#%s", content_path, entry_name);
 

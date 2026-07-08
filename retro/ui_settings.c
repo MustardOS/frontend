@@ -122,12 +122,6 @@ static void cycle_row(const int index, const int direction) {
     }
 }
 
-// shake_dir matches the physical Left/Right press that triggered the cycle -
-// nav_play_shake() (common/ui/nav.c) reuses the exact same intensity
-// (config.visual.selection_animation) and direction preference (config.
-// visual.selection_style, "All" included) as every focus-driven shake
-// elsewhere in the OS, so cycling a value gets the same configurable tactile
-// feedback as moving between rows does, rather than a silent text swap.
 static void refresh_row(const int index, const enum nav_direction shake_dir) {
     lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
     if (!panel) return;
@@ -298,23 +292,14 @@ void settings_menu_tick(void) {
         hold_tick_right = now;
     }
 
-    // nav_set_last_dir()+nav_unsuppress_shake() before every real step - same
-    // pairing common/input/list_nav.c's handle_list_nav_prev/next() do before
-    // calling back into whichever screen they're navigating. This screen
-    // doesn't go through that shared handler (it calls gen_step_movement()
-    // itself), so without this the row shake configured in muxvisual.c
-    // (Settings > Selection Animation/Style) never played: reset_ui_groups()
-    // (called every rebuild_rows()) leaves shake_suppress permanently set
-    // via nav_suppress_next_shake() until something explicitly lifts it, and
-    // nothing ever did on this path.
     if (do_up) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
-        gen_step_movement(1, -1, 1, 0, 1);
+        gen_step_movement(1, -1, 2, 0, 1);
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
-        gen_step_movement(1, +1, 1, 0, 1);
+        gen_step_movement(1, +1, 2, 0, 1);
     } else if (do_left) {
         cycle_row(current_item_index, -1);
         refresh_row(current_item_index, nav_dir_left);

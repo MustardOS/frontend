@@ -66,12 +66,6 @@ static void rebuild_rows(void) {
     first_open = 0;
 }
 
-// shake_dir matches the physical Left/Right press that triggered the cycle -
-// nav_play_shake() (common/ui/nav.c) reuses the exact same intensity
-// (config.visual.selection_animation) and direction preference (config.
-// visual.selection_style, "All" included) as every focus-driven shake
-// elsewhere in the OS, so cycling a value gets the same configurable tactile
-// feedback as moving between rows does, rather than a silent text swap.
 static void refresh_row(const int index, const enum nav_direction shake_dir) {
     lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
     if (!panel) return;
@@ -221,17 +215,14 @@ void options_menu_tick(void) {
         do_down = 0;
     }
 
-    // See ui_pause.c's own gen_step_movement() call site for why this pairing
-    // is needed on every muxretro screen - without it, this screen's row
-    // shake (muxvisual.c's Selection Animation/Style) never plays.
     if (do_up) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
-        gen_step_movement(1, -1, 1, 0, 1);
+        gen_step_movement(1, -1, 2, 0, 1);
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
-        gen_step_movement(1, +1, 1, 0, 1);
+        gen_step_movement(1, +1, 2, 0, 1);
     } else if (do_left) {
         options_cycle(current_item_index, -1);
         refresh_row(current_item_index, nav_dir_left);

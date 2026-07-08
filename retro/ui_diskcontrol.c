@@ -161,17 +161,14 @@ void diskcontrol_menu_tick(void) {
         do_down = 0;
     }
 
-    // See ui_pause.c's own gen_step_movement() call site for why this pairing
-    // is needed on every muxretro screen - without it, this screen's row
-    // shake (muxvisual.c's Selection Animation/Style) never plays.
     if (do_up) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
-        gen_step_movement(1, -1, 1, 0, 1);
+        gen_step_movement(1, -1, 2, 0, 1);
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
-        gen_step_movement(1, +1, 1, 0, 1);
+        gen_step_movement(1, +1, 2, 0, 1);
     } else if (edge & BIT(3)) {
         play_sound(snd_back);
         close_diskcontrol();
