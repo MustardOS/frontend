@@ -67,6 +67,7 @@ typedef struct {
 typedef struct {
     char core[64];
     int core_count;
+    int core_is_muxretro;
 
     char device[64];
     int device_count;
@@ -126,6 +127,27 @@ static int playtime_json_loaded = 0;
 #define CORE_MAP_MAX   256
 #define DEVICE_MAP_MAX 256
 #define MODE_MAP_MAX   256
+
+static int activity_item_uses_muxretro(const activity_item_t *it) {
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s", it->path);
+
+    char *sys_dir = get_content_path(file_path);
+    const char *file_name = get_file_name(file_path);
+
+    const char *def_core = get_content_line(sys_dir, file_name, "cfg", 6);
+    const char *sys = get_content_line(sys_dir, file_name, "cfg", 3);
+    if (!*def_core) {
+        def_core = get_content_line(sys_dir, NULL, "cfg", 5);
+        sys = get_content_line(sys_dir, NULL, "cfg", 2);
+    }
+    if (!*def_core || !*sys) return 0;
+
+    char assign_dir[MAX_BUFFER_SIZE];
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", sys);
+
+    return core_uses_muxretro(assign_dir, def_core);
+}
 
 static void show_help(void) {
     show_info_box(lang.muxactivity.title, lang.muxactivity.help, 0);
@@ -639,6 +661,7 @@ static void compute_global_stats(global_stats_t *gs) {
     struct {
         char key[64];
         int count;
+        int muxretro_count;
     } core_map[CORE_MAP_MAX];
 
     struct {
@@ -720,10 +743,13 @@ static void compute_global_stats(global_stats_t *gs) {
             char norm_core[64];
             normalise_json_values(norm_core, sizeof(norm_core), it->core);
 
+            const int item_is_muxretro = activity_item_uses_muxretro(it) ? it->core_count : 0;
+
             int found = 0;
             for (int j = 0; j < core_used; j++) {
                 if (strcmp(core_map[j].key, norm_core) == 0) {
                     core_map[j].count += it->core_count;
+                    core_map[j].muxretro_count += item_is_muxretro;
                     found = 1;
                     break;
                 }
@@ -733,6 +759,7 @@ static void compute_global_stats(global_stats_t *gs) {
                 if (core_used < CORE_MAP_MAX) {
                     snprintf(core_map[core_used].key, sizeof(core_map[core_used].key), "%s", norm_core);
                     core_map[core_used].count = it->core_count;
+                    core_map[core_used].muxretro_count = item_is_muxretro;
                     core_used++;
                 } else {
                     core_overflow = 1;
@@ -796,6 +823,7 @@ static void compute_global_stats(global_stats_t *gs) {
                 max = core_map[i].count;
                 snprintf(gs->core, sizeof(gs->core), "%s", core_map[i].key);
                 gs->core_count = core_map[i].count;
+                gs->core_is_muxretro = core_map[i].muxretro_count * 2 > core_map[i].count;
             }
         }
     }
@@ -1100,7 +1128,10 @@ static void show_detail_view(const activity_item_t *it) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", it->core);
-                snprintf(detail_value, sizeof(detail_value), "%s", format_core_name(core_tmp, 0, 0));
+                snprintf(
+                    detail_value, sizeof(detail_value), "%s",
+                    format_core_name(core_tmp, 0, activity_item_uses_muxretro(it))
+                );
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_core");
                 break;
@@ -1247,7 +1278,7 @@ static void show_global_view(void) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", gs.core);
-                snprintf(global_value, sizeof(global_value), "%s", format_core_name(core_tmp, 0, 0));
+                snprintf(global_value, sizeof(global_value), "%s", format_core_name(core_tmp, 0, gs.core_is_muxretro));
 
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_core");
                 break;
@@ -1457,7 +1488,7 @@ static void export_activity_html(void) {
     snprintf(tmp_device, sizeof(tmp_device), "%s", gs.device);
     snprintf(tmp_mode, sizeof(tmp_mode), "%s", gs.mode);
 
-    snprintf(global_core_value, sizeof(global_core_value), "%s", format_core_name(tmp_core, 0, 0));
+    snprintf(global_core_value, sizeof(global_core_value), "%s", format_core_name(tmp_core, 0, gs.core_is_muxretro));
     snprintf(global_device_value, sizeof(global_device_value), "%s", str_toupper(tmp_device));
     snprintf(global_mode_value, sizeof(global_mode_value), "%s", str_capital(tmp_mode));
 
@@ -1550,7 +1581,7 @@ static void export_activity_html(void) {
         const local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
 
         snprintf(tmp_core, sizeof(tmp_core), "%s", it->core);
-        snprintf(core_value, sizeof(core_value), "%s", format_core_name(core_value, 0, 0));
+        snprintf(core_value, sizeof(core_value), "%s", format_core_name(tmp_core, 0, activity_item_uses_muxretro(it)));
 
         snprintf(tmp_device, sizeof(tmp_device), "%s", it->device);
         snprintf(device_value, sizeof(device_value), "%s", str_toupper(tmp_device));

@@ -10,18 +10,6 @@ static int is_dir = 0;
 
 static lv_obj_t *ui_lbl_core_downloader;
 
-static int assign_uses_muxretro(const char *assign_dir, const char *item_name) {
-    char core_file[FILENAME_MAX];
-    snprintf(core_file, sizeof(core_file), "%s/%s.ini", assign_dir, item_name);
-
-    mini_t *core_config = mini_load(core_file);
-    char exec_path[FILENAME_MAX];
-    snprintf(exec_path, sizeof(exec_path), "%s", get_ini_string(core_config, "launch", "exec", ""));
-    mini_free(core_config);
-
-    return strstr(exec_path, "mux-general.sh") != NULL;
-}
-
 static int find_assigned_system(char *out_system) {
     // File Spec CFG: line 3 = sys
     // Directory CFG: line 2 = sys
@@ -69,11 +57,15 @@ static int find_system_item_index(const char *system_name) {
 }
 
 static int find_core_item_index(const char *system) {
+    const char *file_def_core = get_content_line(rom_dir, rom_name, "cfg", 6);
+    const char *dir_def_core = get_content_line(rom_dir, NULL, "cfg", 5);
+    const char *def_core = file_def_core && *file_def_core ? file_def_core : dir_def_core;
+
     const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
     const char *dir_core = get_content_line(rom_dir, NULL, "cfg", 1);
     const char *target = file_core && *file_core ? file_core : dir_core;
 
-    if (!target || !*target) return 0;
+    if ((!def_core || !*def_core) && (!target || !*target)) return 0;
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", system);
@@ -125,7 +117,17 @@ static int find_core_item_index(const char *system) {
 
     sort_items(tmp_items, tmp_count);
 
-    int idx = get_item_index_by_extra_data(tmp_items, tmp_count, target);
+    int idx = -1;
+    if (def_core && *def_core) {
+        for (size_t i = 0; i < tmp_count; i++) {
+            if (strcasecmp(tmp_items[i].sort_name, def_core) == 0) {
+                idx = (int) i;
+                break;
+            }
+        }
+    }
+
+    if (idx < 0 && target && *target) idx = get_item_index_by_extra_data(tmp_items, tmp_count, target);
     if (idx < 0) idx = 0;
 
     free_items(&tmp_items, &tmp_count);
@@ -253,15 +255,15 @@ static void create_core_items(const char *target) {
     for (size_t i = 0; i < item_count; i++) {
         ui_count_static++;
 
-        const char *directory_core = get_content_line(rom_dir, NULL, "cfg", 1);
-        const char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
+        const char *directory_def_core = get_content_line(rom_dir, NULL, "cfg", 5);
+        const char *file_def_core = get_content_line(rom_dir, rom_name, "cfg", 6);
         const char *core_name =
-            format_core_name(items[i].extra_data, 1, assign_uses_muxretro(assign_dir, items[i].name));
+            format_core_name(items[i].extra_data, 1, core_uses_muxretro(assign_dir, items[i].sort_name));
 
         char display_name[MAX_BUFFER_SIZE];
-        if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, items[i].extra_data) == 0) {
+        if (strcasecmp(file_def_core, directory_def_core) != 0 && strcasecmp(file_def_core, items[i].sort_name) == 0) {
             snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.muxassign.file);
-        } else if (strcasecmp(directory_core, items[i].extra_data) == 0) {
+        } else if (strcasecmp(directory_def_core, items[i].sort_name) == 0) {
             snprintf(display_name, sizeof(display_name), "%s (%s)", core_name, lang.muxassign.dir);
         } else {
             snprintf(display_name, sizeof(display_name), "%s", core_name);
@@ -272,10 +274,10 @@ static void create_core_items(const char *target) {
 
         lv_obj_t *ui_lbl_core_item = lv_label_create(ui_pnl_core);
         apply_theme_list_item(&theme, ui_lbl_core_item, display_name);
-        lv_obj_set_user_data(ui_lbl_core_item, strdup(items[i].name));
+        lv_obj_set_user_data(ui_lbl_core_item, strdup(items[i].sort_name));
 
         lv_obj_t *ui_lbl_core_item_glyph = lv_img_create(ui_pnl_core);
-        const char *glyph = strcasecmp(items[i].name, default_assign) == 0 ? "default" : "core";
+        const char *glyph = strcasecmp(items[i].sort_name, default_assign) == 0 ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lbl_core_item_glyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lbl_core_item);
@@ -428,7 +430,7 @@ static void handle_a(void) {
             load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
         } else {
             if (is_dir) return;
-            handle_core_assignment("Single Core Assignment Triggered", SINGLE);
+            handle_core_assignment("Single Core Assignment Triggered", casn_single);
         }
     }
 
@@ -443,7 +445,7 @@ static void handle_a(void) {
 static void handle_x(void) {
     if (msgbox_active || strcasecmp(rom_system, "none") == 0 || hold_call) return;
 
-    handle_core_assignment("Directory Core Assignment Triggered", DIRECTORY);
+    handle_core_assignment("Directory Core Assignment Triggered", casn_dir);
 
     mux_input_stop();
 }
@@ -451,7 +453,7 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || strcasecmp(rom_system, "none") == 0 || at_base(rom_dir, MAIN_ROM_DIR) || hold_call) return;
 
-    handle_core_assignment("Parent Core Assignment Triggered", PARENT);
+    handle_core_assignment("Parent Core Assignment Triggered", casn_parent);
 
     mux_input_stop();
 }

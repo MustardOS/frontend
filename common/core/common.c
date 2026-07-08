@@ -26,7 +26,9 @@ static int read_catalogue(const char *path, const int line, char *out, const siz
     return 1;
 }
 
-void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, const size_t catalogue_name_size) {
+void get_catalogue_name(
+    char *sys_dir, const char *content_label, char *catalogue_name, const size_t catalogue_name_size
+) {
     char sys_dir_lower[MAX_BUFFER_SIZE];
     char *raw = get_last_subdir(sys_dir, '/', 4);
 
@@ -308,16 +310,16 @@ void create_core_assignment(
     create_directories(core_dir, 0);
 
     switch (method) {
-        case SINGLE:
+        case casn_single:
             assign_core_single(def_core, rom_dir, core_dir, core, sys, cat, rom, gov, con, rac, lookup);
             break;
-        case PARENT:
+        case casn_parent:
             assign_core_parent(def_core, rom_dir, core_dir, core, sys, cat, gov, con, rac, lookup);
             break;
-        case DIRECTORY:
+        case casn_dir:
             assign_core_directory(def_core, core_dir, core, sys, cat, gov, con, rac, lookup, 1);
             break;
-        case DIRECTORY_NO_WIPE:
+        case casn_dir_nowipe:
             assign_core_directory(def_core, core_dir, core, sys, cat, gov, con, rac, lookup, 0);
             break;
     }
@@ -466,7 +468,7 @@ int automatic_assign_core(char *rom_dir) {
 
                     create_core_assignment(
                         def_core, rom_dir, auto_core, ass_config, core_catalogue, "", core_governor, core_control,
-                        core_retroarch, core_lookup, DIRECTORY
+                        core_retroarch, core_lookup, casn_dir
                     );
 
                     auto_assign_good = 1;
@@ -494,6 +496,18 @@ int automatic_assign_core(char *rom_dir) {
     }
 
     return auto_assign_good == 1;
+}
+
+int core_uses_muxretro(const char *assign_dir, const char *item_name) {
+    char core_file[FILENAME_MAX];
+    snprintf(core_file, sizeof(core_file), "%s/%s.ini", assign_dir, item_name);
+
+    mini_t *core_config = mini_load(core_file);
+    char exec_path[FILENAME_MAX];
+    snprintf(exec_path, sizeof(exec_path), "%s", get_ini_string(core_config, "launch", "exec", ""));
+    mini_free(core_config);
+
+    return strstr(exec_path, "mu-general.sh") != NULL;
 }
 
 static const char *format_retroarch_core(const char *ra_core) {

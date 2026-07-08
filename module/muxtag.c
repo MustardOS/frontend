@@ -64,7 +64,7 @@ static void handle_a(void) {
     play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_tag_assignment(selected, rom_name, SINGLE);
+    create_tag_assignment(selected, rom_name, casn_single);
 
     mux_input_stop();
 }
@@ -90,7 +90,7 @@ static void handle_x(void) {
     play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_tag_assignment(selected, rom_name, DIRECTORY);
+    create_tag_assignment(selected, rom_name, casn_dir);
 
     mux_input_stop();
 }
@@ -102,7 +102,7 @@ static void handle_y(void) {
     play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_tag_assignment(selected, rom_name, PARENT);
+    create_tag_assignment(selected, rom_name, casn_parent);
 
     mux_input_stop();
 }

@@ -102,7 +102,7 @@ static void handle_a(void) {
     play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_gov_assignment(selected, is_app ? "mux_option" : rom_name, SINGLE);
+    create_gov_assignment(selected, is_app ? "mux_option" : rom_name, casn_single);
 
     if (is_app) load_mux("appcon");
 
@@ -132,7 +132,7 @@ static void handle_x(void) {
     play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_gov_assignment(selected, rom_name, DIRECTORY);
+    create_gov_assignment(selected, rom_name, casn_dir);
 
     mux_input_stop();
 }
@@ -144,7 +144,7 @@ static void handle_y(void) {
     play_sound(snd_confirm);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_gov_assignment(selected, rom_name, PARENT);
+    create_gov_assignment(selected, rom_name, casn_parent);
 
     mux_input_stop();
 }
@@ -267,11 +267,11 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
 
                     mini_free(local_ini);
 
-                    create_gov_assignment(core_governor, rom_name, DIRECTORY_NO_WIPE);
+                    create_gov_assignment(core_governor, rom_name, casn_dir_nowipe);
                     LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful");
                 } else {
                     LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.cpu.dflt);
-                    create_gov_assignment(device.cpu.dflt, rom_name, DIRECTORY_NO_WIPE);
+                    create_gov_assignment(device.cpu.dflt, rom_name, casn_dir_nowipe);
                 }
 
                 mini_free(global_ini);
@@ -279,7 +279,7 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
                 return;
             }
             LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.cpu.dflt);
-            create_gov_assignment(device.cpu.dflt, rom_name, DIRECTORY_NO_WIPE);
+            create_gov_assignment(device.cpu.dflt, rom_name, casn_dir_nowipe);
 
             return;
         }

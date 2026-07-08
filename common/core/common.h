@@ -2,9 +2,9 @@
 
 #include "../mini/mini.h"
 
-enum gen_type { SINGLE, DIRECTORY, PARENT, DIRECTORY_NO_WIPE };
+enum gen_type { casn_single, casn_dir, casn_parent, casn_dir_nowipe };
 
-void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size);
+void get_catalogue_name(char *sys_dir, const char *content_label, char *catalogue_name, size_t catalogue_name_size);
 
 char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label);
 
@@ -14,6 +14,8 @@ void create_core_assignment(
 );
 
 int automatic_assign_core(char *rom_dir);
+
+int core_uses_muxretro(const char *assign_dir, const char *item_name);
 
 const char *format_core_name(const char *core, int use_lang, int is_muxretro);
 

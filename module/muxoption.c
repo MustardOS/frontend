@@ -82,7 +82,8 @@ static void refresh_option_row_widths(void) {
 }
 
 static void add_info_item_type(
-    lv_obj_t *ui_lbl_item_value, const char *get_file, const char *get_dir, const char *opt_type, const int cap_label
+    lv_obj_t *ui_lbl_item_value, const char *get_file, const char *get_dir, const char *opt_type, const int cap_label,
+    const int is_muxretro
 ) {
     const char *value = get_file;
     if (!*value) value = get_dir;
@@ -111,7 +112,7 @@ static void add_info_item_type(
         if (strcmp(value, lang.muxoption.not_assigned) == 0) {
             snprintf(cap_value, sizeof(cap_value), "%s", lang.muxoption.not_assigned);
         } else {
-            snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1, 0));
+            snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1, is_muxretro));
         }
     } else if (is_rac) {
         if (strcmp(value, "false") == 0) {
@@ -209,32 +210,44 @@ static void populate_info_values(void) {
 
     core_file = get_content_line(sys_dir, file_name, "cfg", 2);
     const char *core_dir = get_content_line(sys_dir, NULL, "cfg", 1);
-    add_info_item_type(ui_val_core_option, core_file, core_dir, "core", 0);
+
+    const char *def_core = get_content_line(sys_dir, file_name, "cfg", 6);
+    const char *assign_sys = get_content_line(sys_dir, file_name, "cfg", 3);
+    if (!*def_core) {
+        def_core = get_content_line(sys_dir, NULL, "cfg", 5);
+        assign_sys = get_content_line(sys_dir, NULL, "cfg", 2);
+    }
+
+    char assign_dir[MAX_BUFFER_SIZE];
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", assign_sys);
+    const int is_muxretro = *def_core && *assign_sys ? core_uses_muxretro(assign_dir, def_core) : 0;
+
+    add_info_item_type(ui_val_core_option, core_file, core_dir, "core", 0, is_muxretro);
 
     const char *gov_file = get_content_line(sys_dir, file_name, "gov", 1);
     const char *gov_dir = get_content_line(sys_dir, NULL, "gov", 1);
-    add_info_item_type(ui_val_governor_option, gov_file, gov_dir, "governor", 1);
+    add_info_item_type(ui_val_governor_option, gov_file, gov_dir, "governor", 1, 0);
 
     const char *control_file = get_content_line(sys_dir, file_name, "con", 1);
     const char *control_dir = get_content_line(sys_dir, NULL, "con", 1);
-    add_info_item_type(ui_val_control_option, control_file, control_dir, "control", 1);
+    add_info_item_type(ui_val_control_option, control_file, control_dir, "control", 1, 0);
 
     const char *rac_file = get_content_line(sys_dir, file_name, "rac", 1);
     const char *rac_dir = get_content_line(sys_dir, NULL, "rac", 1);
-    add_info_item_type(ui_val_retro_arch_option, rac_file, rac_dir, "retroarch", 1);
+    add_info_item_type(ui_val_retro_arch_option, rac_file, rac_dir, "retroarch", 1, 0);
 
     const char *flt_file = get_content_line(sys_dir, file_name, "flt", 1);
     const char *flt_dir = get_content_line(sys_dir, NULL, "flt", 1);
-    add_info_item_type(ui_val_col_filter_option, flt_file, flt_dir, "filter", 1);
+    add_info_item_type(ui_val_col_filter_option, flt_file, flt_dir, "filter", 1, 0);
 
     const char *shd_file = get_content_line(sys_dir, file_name, "shd", 1);
     const char *shd_dir = get_content_line(sys_dir, NULL, "shd", 1);
-    add_info_item_type(ui_val_shader_option, shd_file, shd_dir, "shader", 1);
+    add_info_item_type(ui_val_shader_option, shd_file, shd_dir, "shader", 1, 0);
 
     if (!is_dir) {
         const char *tag_file = get_content_line(sys_dir, file_name, "tag", 1);
         const char *tag_dir = get_content_line(sys_dir, NULL, "tag", 1);
-        add_info_item_type(ui_val_tag_option, tag_file, tag_dir, "tag", 1);
+        add_info_item_type(ui_val_tag_option, tag_file, tag_dir, "tag", 1, 0);
     }
 
     lv_label_set_text(

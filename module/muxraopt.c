@@ -61,7 +61,7 @@ static void handle_a(void) {
     play_sound(snd_confirm);
 
     const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
-    create_rac_assignment(selected, is_app ? "mux_option" : rom_name, SINGLE);
+    create_rac_assignment(selected, is_app ? "mux_option" : rom_name, casn_single);
 
     if (is_app) load_mux("appcon");
 
@@ -91,7 +91,7 @@ static void handle_x(void) {
     play_sound(snd_confirm);
 
     const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
-    create_rac_assignment(selected, rom_name, DIRECTORY);
+    create_rac_assignment(selected, rom_name, casn_dir);
 
     mux_input_stop();
 }
@@ -103,7 +103,7 @@ static void handle_y(void) {
     play_sound(snd_confirm);
 
     const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
-    create_rac_assignment(selected, rom_name, PARENT);
+    create_rac_assignment(selected, rom_name, casn_parent);
 
     mux_input_stop();
 }
@@ -227,11 +227,11 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
 
                     mini_free(local_ini);
 
-                    create_rac_assignment(core_retroarch, rom_name, DIRECTORY_NO_WIPE);
+                    create_rac_assignment(core_retroarch, rom_name, casn_dir_nowipe);
                     LOG_SUCCESS(mux_module, "\tRetroArch Config Assignment Successful");
                 } else {
                     LOG_INFO(mux_module, "\tAssigned RetroArch Config To Default: %s", "false");
-                    create_rac_assignment("false", rom_name, DIRECTORY_NO_WIPE);
+                    create_rac_assignment("false", rom_name, casn_dir_nowipe);
                 }
 
                 mini_free(global_ini);
@@ -239,7 +239,7 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
                 return;
             }
             LOG_INFO(mux_module, "\tAssigned RetroArch Config To Default: %s", "false");
-            create_rac_assignment("false", rom_name, DIRECTORY_NO_WIPE);
+            create_rac_assignment("false", rom_name, casn_dir_nowipe);
 
             return;
         }

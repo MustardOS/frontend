@@ -1189,16 +1189,16 @@ void create_marker_assignment(
     create_directories(core_dir, 0);
 
     switch (method) {
-        case SINGLE:
+        case casn_single:
             assign_marker_single(core_dir, ext, op_label, value, rom);
             break;
-        case PARENT:
+        case casn_parent:
             assign_marker_parent(core_dir, rom_dir, ext, op_label, value);
             break;
-        case DIRECTORY:
+        case casn_dir:
             assign_marker_directory(core_dir, rom_dir, ext, op_label, value, 1);
             break;
-        case DIRECTORY_NO_WIPE:
+        case casn_dir_nowipe:
         default:
             assign_marker_directory(core_dir, rom_dir, ext, op_label, value, 0);
             break;

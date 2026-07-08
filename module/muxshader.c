@@ -163,7 +163,7 @@ static void handle_a(void) {
     play_sound(snd_confirm);
 
     const char *selected = get_selected_shader();
-    create_shader_assignment(selected, rom_name, SINGLE);
+    create_shader_assignment(selected, rom_name, casn_single);
 
     mux_input_stop();
 }
@@ -189,7 +189,7 @@ static void handle_x(void) {
     play_sound(snd_confirm);
 
     const char *selected = get_selected_shader();
-    create_shader_assignment(selected, rom_name, DIRECTORY);
+    create_shader_assignment(selected, rom_name, casn_dir);
 
     mux_input_stop();
 }
@@ -201,7 +201,7 @@ static void handle_y(void) {
     play_sound(snd_confirm);
 
     const char *selected = get_selected_shader();
-    create_shader_assignment(selected, rom_name, PARENT);
+    create_shader_assignment(selected, rom_name, casn_parent);
 
     mux_input_stop();
 }
