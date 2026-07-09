@@ -16,44 +16,16 @@ static nav_repeat_t rpt_down = {0};
 static nav_repeat_t rpt_left = {0};
 static nav_repeat_t rpt_right = {0};
 
-enum {
-    row_hotkey_controls = 0,
-    row_visual_settings,
-    row_scaling,
-    row_aspect_ratio,
-    row_integer_scale,
-    row_filter,
-    row_rumble,
-    row_volume,
-    row_fps,
-    row_header_visibility,
-    row_border,
-    row_sample_rate,
-    row_fps_limit,
-    row_sram_flush,
-    row_count
-};
+enum { row_filter = 0, row_shader, row_brightness, row_contrast, row_saturation, row_hue_shift, row_gamma, row_count };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.hotkeys,
-    lang.muxretro.display,
-    lang.muxretro.settings_screen.scaling_mode,
-    lang.muxretro.settings_screen.aspect_ratio_mode,
-    lang.muxretro.settings_screen.integer_scale,
-    lang.muxretro.settings_screen.texture_filter,
-    lang.muxretro.settings_screen.rumble,
-    lang.muxretro.settings_screen.volume,
-    lang.muxretro.settings_screen.show_fps,
-    lang.muxretro.settings_screen.header_visibility,
-    lang.muxretro.settings_screen.border_colour,
-    lang.muxretro.settings_screen.sample_rate,
-    lang.muxretro.settings_screen.fps_limit,
-    lang.muxretro.settings_screen.sram_flush
+    lang.muxretro.display_screen.filter,     lang.muxretro.display_screen.shaders,
+    lang.muxretro.display_screen.brightness, lang.muxretro.display_screen.contrast,
+    lang.muxretro.display_screen.saturation, lang.muxretro.display_screen.hue_shift,
+    lang.muxretro.display_screen.gamma
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys", "display",    "scaling",  "aspectratio", "integerscale",
-                                            "filter",  "rumble",     "volume",   "fps",         "header",
-                                            "border",  "samplerate", "fpslimit", "sram"};
+static const char *row_glyphs[row_count] = {"filter", "shader", "brightness", "contrast", "saturation", "hue", "gamma"};
 
 static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
@@ -64,43 +36,28 @@ static uint64_t current_nav_mask(void) {
     return nav_mask_standard();
 }
 
-static void row_value_text(const int index, char *buf) {
+static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
-        case row_aspect_ratio:
-            snprintf(buf, 32, "%s", session_settings_aspect_ratio_name(session_settings.aspect_ratio));
-            break;
-        case row_scaling:
-            snprintf(buf, 32, "%s", session_settings_scale_name(session_settings.scaling_mode));
-            break;
-        case row_integer_scale:
-            snprintf(buf, 32, "%s", session_settings_integer_scale_name(session_settings.integer_scale));
-            break;
         case row_filter:
-            snprintf(buf, 32, "%s", session_settings_filter_name(session_settings.texture_filter));
+            snprintf(buf, buf_len, "%s", session_settings_colour_filter_name(session_settings.colour_filter));
             break;
-        case row_rumble:
-            snprintf(buf, 32, "%s", session_settings.rumble_enabled ? lang.generic.enabled : lang.generic.disabled);
+        case row_shader:
+            snprintf(buf, buf_len, "%s", session_settings_colour_shader_name(session_settings.colour_shader));
             break;
-        case row_volume:
-            snprintf(buf, 32, "%d%%", session_settings.volume);
+        case row_brightness:
+            snprintf(buf, buf_len, "%s", session_settings_colour_brightness_name(session_settings.colour_brightness));
             break;
-        case row_fps:
-            snprintf(buf, 32, "%s", session_settings.show_fps ? lang.generic.enabled : lang.generic.disabled);
+        case row_contrast:
+            snprintf(buf, buf_len, "%s", session_settings_colour_contrast_name(session_settings.colour_contrast));
             break;
-        case row_header_visibility:
-            snprintf(buf, 32, "%s", session_settings_header_visibility_name(session_settings.header_visibility));
+        case row_saturation:
+            snprintf(buf, buf_len, "%s", session_settings_colour_saturation_name(session_settings.colour_saturation));
             break;
-        case row_border:
-            snprintf(buf, 32, "%s", session_settings_border_name(session_settings.border_color));
+        case row_hue_shift:
+            snprintf(buf, buf_len, "%s", session_settings_colour_hueshift_name(session_settings.colour_hueshift));
             break;
-        case row_sample_rate:
-            snprintf(buf, 32, "%s", session_settings_sample_rate_name(session_settings.sample_rate));
-            break;
-        case row_fps_limit:
-            snprintf(buf, 32, "%s", session_settings_fps_limit_name(session_settings.fps_limit));
-            break;
-        case row_sram_flush:
-            snprintf(buf, 32, "%s", session_settings_sram_flush_name(session_settings.sram_flush_seconds));
+        case row_gamma:
+            snprintf(buf, buf_len, "%s", session_settings_colour_gamma_name(session_settings.colour_gamma));
             break;
         default:
             buf[0] = '\0';
@@ -110,41 +67,20 @@ static void row_value_text(const int index, char *buf) {
 
 static void cycle_row(const int index, const int direction) {
     switch (index) {
-        case row_aspect_ratio:
-            session_settings_cycle_aspect_ratio(direction);
+        case row_brightness:
+            session_settings_cycle_colour_brightness(direction);
             break;
-        case row_scaling:
-            session_settings_cycle_scaling(direction);
+        case row_contrast:
+            session_settings_cycle_colour_contrast(direction);
             break;
-        case row_integer_scale:
-            session_settings_cycle_integer_scale(direction);
+        case row_saturation:
+            session_settings_cycle_colour_saturation(direction);
             break;
-        case row_filter:
-            session_settings_cycle_filter(direction);
+        case row_hue_shift:
+            session_settings_cycle_colour_hueshift(direction);
             break;
-        case row_rumble:
-            session_settings_cycle_rumble(direction);
-            break;
-        case row_volume:
-            session_settings_cycle_volume(direction);
-            break;
-        case row_fps:
-            session_settings_cycle_fps(direction);
-            break;
-        case row_header_visibility:
-            session_settings_cycle_header_visibility(direction);
-            break;
-        case row_border:
-            session_settings_cycle_border(direction);
-            break;
-        case row_sample_rate:
-            session_settings_cycle_sample_rate(direction);
-            break;
-        case row_fps_limit:
-            session_settings_cycle_fps_limit(direction);
-            break;
-        case row_sram_flush:
-            session_settings_cycle_sram_flush(direction);
+        case row_gamma:
+            session_settings_cycle_colour_gamma(direction);
             break;
         default:
             break;
@@ -158,20 +94,20 @@ static void refresh_row(const int index, const enum nav_direction shake_dir) {
     lv_obj_t *value = lv_obj_get_child(panel, 2);
     if (!value) return;
 
-    char value_text[32];
-    row_value_text(index, value_text);
+    char value_text[64];
+    row_value_text(index, value_text, sizeof(value_text));
     lv_label_set_text(value, value_text);
     nav_play_shake(value, shake_dir);
 }
 
-static void build_settings_row(const int index) {
+static void build_display_row(const int index) {
     lv_obj_t *panel = lv_obj_create(ui_pnl_content);
     lv_obj_t *label = lv_label_create(panel);
     lv_obj_t *icon = lv_img_create(panel);
     lv_obj_t *value = lv_label_create(panel);
 
-    char value_text[32];
-    row_value_text(index, value_text);
+    char value_text[64];
+    row_value_text(index, value_text, sizeof(value_text));
 
     apply_theme_list_panel(panel);
     apply_theme_option_item_label(&theme, label, row_labels[index], 1);
@@ -194,7 +130,7 @@ static void rebuild_rows(void) {
     current_item_index = 0;
 
     for (int i = 0; i < row_count; i++)
-        build_settings_row(i);
+        build_display_row(i);
 
     ui_count_static = row_count;
     first_open = 0;
@@ -225,12 +161,12 @@ static void focus_row(const int index) {
 
 static int nav_row_class = -1;
 
-static void settings_nav(const int index, const int force) {
-    const int value_row = index >= row_scaling;
-    if (!force && value_row == nav_row_class) return;
-    nav_row_class = value_row;
+static void display_nav(const int index, const int force) {
+    const int slider_row = index >= row_brightness;
+    if (!force && slider_row == nav_row_class) return;
+    nav_row_class = slider_row;
 
-    if (value_row) {
+    if (slider_row) {
         nav_show_a(0, "");
         setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                       {ui_lbl_nav_lr, lang.generic.change, 0},
@@ -248,63 +184,61 @@ static void settings_nav(const int index, const int force) {
     pause_menu_fix_nav_order();
 }
 
-static void close_settings(void) {
+static void close_display(void) {
     active = 0;
-
-    pause_menu_rebuild();
-    pause_menu_focus_settings_item();
-    pause_menu_show_nav_hints();
-
-    pause_menu_sync_input_mask();
+    settings_menu_reopen_display();
 }
 
 static void reopen_at_row(const int index) {
     rebuild_rows();
     focus_row(index);
-    settings_nav(index, 1);
+    display_nav(index, 1);
     prev_nav_mask = current_nav_mask();
     pause_menu_sync_input_mask();
 }
 
-void settings_menu_reopen_hotkeys(void) {
-    reopen_at_row(row_hotkey_controls);
+void display_menu_reopen_filter(void) {
+    reopen_at_row(row_filter);
 }
 
-void settings_menu_reopen_display(void) {
-    reopen_at_row(row_visual_settings);
+void display_menu_reopen_shader(void) {
+    reopen_at_row(row_shader);
 }
 
-void settings_menu_init(void) {
+void display_menu_init(void) {
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
         lang.generic.discard
     };
     dialogue_init(
-        &save_dlg, &theme, ui_screen, lang.muxretro.save.settings_title, lang.muxretro.save.settings_desc, save_options,
+        &save_dlg, &theme, ui_screen, lang.muxretro.save.display_title, lang.muxretro.save.display_desc, save_options,
         4, lang.generic.select, lang.generic.cancel
     );
+
+    colfilter_menu_init();
+    shader_menu_init();
 }
 
-void settings_menu_open(void) {
+void display_menu_open(void) {
     active = 1;
     prev_nav_mask = current_nav_mask();
 
     rebuild_rows();
-    settings_nav(current_item_index, 1);
+    display_nav(current_item_index, 1);
 }
 
-int settings_menu_is_active(void) {
+int display_menu_is_active(void) {
     return active;
 }
 
-void settings_menu_tick(void) {
-    if (hotkeys_menu_is_active()) {
-        hotkeys_menu_tick();
+void display_menu_tick(void) {
+    if (colfilter_menu_is_active()) {
+        colfilter_menu_tick();
         return;
     }
 
-    if (display_menu_is_active()) {
-        display_menu_tick();
+    if (shader_menu_is_active()) {
+        shader_menu_tick();
         return;
     }
 
@@ -335,7 +269,7 @@ void settings_menu_tick(void) {
                     break;
             }
 
-            close_settings();
+            close_display();
         } else if (edge & BIT(5)) {
             dialogue_dismiss(&save_dialogue_active, &save_dlg);
         }
@@ -347,7 +281,7 @@ void settings_menu_tick(void) {
     const int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
     const int do_down =
         nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
-    const int cycle_allowed = current_item_index >= row_scaling;
+    const int cycle_allowed = current_item_index >= row_brightness;
     const int do_left = nav_repeat_step(&rpt_left, edge & BIT(2), mask & BIT(2), cycle_allowed, now);
     const int do_right = nav_repeat_step(&rpt_right, edge & BIT(3), mask & BIT(3), cycle_allowed, now);
 
@@ -355,12 +289,12 @@ void settings_menu_tick(void) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
         gen_step_movement(1, -1, 2, 0, 1);
-        settings_nav(current_item_index, 0);
+        display_nav(current_item_index, 0);
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
-        settings_nav(current_item_index, 0);
+        display_nav(current_item_index, 0);
     } else if (do_left && cycle_allowed) {
         cycle_row(current_item_index, -1);
         refresh_row(current_item_index, nav_dir_left);
@@ -370,12 +304,12 @@ void settings_menu_tick(void) {
         refresh_row(current_item_index, nav_dir_right);
         play_sound(snd_option);
     } else if (edge & BIT(4)) {
-        if (current_item_index == row_hotkey_controls) {
+        if (current_item_index == row_filter) {
             play_sound(snd_confirm);
-            hotkeys_menu_open();
-        } else if (current_item_index == row_visual_settings) {
+            colfilter_menu_open();
+        } else if (current_item_index == row_shader) {
             play_sound(snd_confirm);
-            display_menu_open();
+            shader_menu_open();
         }
     } else if (edge & BIT(5)) {
         if (session_settings_is_dirty()) {
@@ -383,7 +317,7 @@ void settings_menu_tick(void) {
             dialogue_open(&save_dialogue_active, &save_dlg, &theme);
         } else {
             play_sound(snd_back);
-            close_settings();
+            close_display();
         }
     }
 }

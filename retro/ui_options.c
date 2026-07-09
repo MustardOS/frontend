@@ -1,25 +1,21 @@
 #include <stdio.h>
 #include <string.h>
 #include "../common/audio.h"
-#include "../common/config.h"
 #include "../common/input.h"
 #include "../common/ui/common.h"
 #include "../common/ui/dialogue.h"
 #include "../module/muxshare.h"
 #include "muxretro.h"
+#include "nav_repeat.h"
 #include "options.h"
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
 
-static uint32_t hold_delay_up = 0;
-static uint32_t hold_tick_up = 0;
-static uint32_t hold_delay_down = 0;
-static uint32_t hold_tick_down = 0;
-static uint32_t hold_delay_left = 0;
-static uint32_t hold_tick_left = 0;
-static uint32_t hold_delay_right = 0;
-static uint32_t hold_tick_right = 0;
+static nav_repeat_t rpt_up = {0};
+static nav_repeat_t rpt_down = {0};
+static nav_repeat_t rpt_left = {0};
+static nav_repeat_t rpt_right = {0};
 
 static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
@@ -178,15 +174,7 @@ static void open_category_picker(void) {
 }
 
 static uint64_t current_nav_mask(void) {
-    const int up = mux_input_pressed(mux_input_dpad_up);
-    const int down = mux_input_pressed(mux_input_dpad_down);
-    const int left = mux_input_pressed(mux_input_dpad_left);
-    const int right = mux_input_pressed(mux_input_dpad_right);
-    const int confirm = mux_input_pressed(mux_input_a);
-    const int back = mux_input_pressed(mux_input_b);
-
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0) | (confirm ? BIT(4) : 0)
-           | (back ? BIT(5) : 0);
+    return nav_mask_standard();
 }
 
 static void close_options(void) {
@@ -243,28 +231,9 @@ int options_menu_is_active(void) {
 static void tick_category_picker(const uint64_t edge, const uint64_t mask) {
     const uint32_t now = SDL_GetTicks();
 
-    int do_up = 0;
-    int do_down = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
+    int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
 
     if (ui_count_static < 2) {
         do_up = 0;
@@ -297,50 +266,11 @@ static void tick_category_picker(const uint64_t edge, const uint64_t mask) {
 static void tick_options(const uint64_t edge, const uint64_t mask) {
     const uint32_t now = SDL_GetTicks();
 
-    int do_up = 0;
-    int do_down = 0;
-    int do_left = 0;
-    int do_right = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
-
-    if (edge & BIT(2)) {
-        do_left = 1;
-        hold_delay_left = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_left = now;
-    } else if ((mask & BIT(2)) && now - hold_tick_left >= hold_delay_left) {
-        do_left = 1;
-        hold_delay_left = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_left = now;
-    }
-
-    if (edge & BIT(3)) {
-        do_right = 1;
-        hold_delay_right = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_right = now;
-    } else if ((mask & BIT(3)) && now - hold_tick_right >= hold_delay_right) {
-        do_right = 1;
-        hold_delay_right = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_right = now;
-    }
+    int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
+    const int do_left = nav_repeat_step(&rpt_left, edge & BIT(2), mask & BIT(2), 1, now);
+    const int do_right = nav_repeat_step(&rpt_right, edge & BIT(3), mask & BIT(3), 1, now);
 
     if (ui_count_static < 2) {
         do_up = 0;

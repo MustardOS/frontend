@@ -1414,13 +1414,7 @@ void ui_common_handle_volume_down(void) {
     adjust_volume(-1);
 }
 
-void ui_common_handle_idle(void) {
-    if (strcmp(mux_module, "mucredits") == 0 || strcmp(mux_module, "muxcharge") == 0) {
-        lv_task_handler();
-        return;
-    }
-
-    inotify_check(ino_proc);
+int ui_common_progress_tick(void) {
     int need_update = 0;
 
     if (brightness_changed || last_brightness != current_brightness) {
@@ -1447,6 +1441,18 @@ void ui_common_handle_idle(void) {
 
         need_update = 1;
     }
+
+    return need_update;
+}
+
+void ui_common_handle_idle(void) {
+    if (strcmp(mux_module, "mucredits") == 0 || strcmp(mux_module, "muxcharge") == 0) {
+        lv_task_handler();
+        return;
+    }
+
+    inotify_check(ino_proc);
+    int need_update = ui_common_progress_tick();
 
     if (hdmi_refresh_exists) {
         remove(HDMI_REFRESH);
@@ -2247,8 +2253,7 @@ void scroll_help_content(const int direction, const int page_down) {
 
     if (scroll_y - total_line_height * direction < 0) {
         lv_obj_scroll_to_y(ui_pnl_help_content, 0, LV_ANIM_ON);
-    } else if (scroll_y - total_line_height * direction
-               >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
+    } else if (scroll_y - total_line_height * direction >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
         lv_obj_scroll_to_y(ui_pnl_help_content, lv_obj_get_content_height(ui_lbl_help_content), LV_ANIM_ON);
     } else {
         lv_obj_scroll_by(ui_pnl_help_content, 0, total_line_height * direction, LV_ANIM_ON);

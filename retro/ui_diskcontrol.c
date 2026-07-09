@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "../common/audio.h"
-#include "../common/config.h"
 #include "../common/input.h"
 #include "../common/ui/common.h"
 #include "../module/muxshare.h"
 #include "muxretro.h"
+#include "nav_repeat.h"
 
 #define DISKCONTROL_MAX_DISCS 32
 #define DISKCONTROL_LABEL_MAX 128
@@ -12,10 +12,8 @@
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
 
-static uint32_t hold_delay_up = 0;
-static uint32_t hold_tick_up = 0;
-static uint32_t hold_delay_down = 0;
-static uint32_t hold_tick_down = 0;
+static nav_repeat_t rpt_up = {0};
+static nav_repeat_t rpt_down = {0};
 
 static char disc_labels[DISKCONTROL_MAX_DISCS][DISKCONTROL_LABEL_MAX];
 static int disc_count = 0;
@@ -133,28 +131,9 @@ void diskcontrol_menu_tick(void) {
     prev_nav_mask = mask;
 
     const uint32_t now = SDL_GetTicks();
-    int do_up = 0;
-    int do_down = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
+    int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
 
     if (ui_count_static < 2) {
         do_up = 0;

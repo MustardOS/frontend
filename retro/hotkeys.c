@@ -3,9 +3,11 @@
 #include "../common/input.h"
 #include "../common/language.h"
 #include "../common/log.h"
+#include "../common/ui/common.h"
 #include "gamestate.h"
 #include "hotkeys.h"
 #include "muxretro.h"
+#include "nav_repeat.h"
 #include "settings.h"
 
 static int menu_held = 0;
@@ -34,11 +36,11 @@ static void sync_audio_mute(void) {
 
 static void sync_speed_indicator(void) {
     if (fast_forward_active) {
-        pause_menu_set_speed_indicator("FF");
+        pause_menu_set_speed_indicator(session_settings_ff_speed_name(session_settings.ff_speed), "fastforward");
     } else if (slow_motion_active) {
-        pause_menu_set_speed_indicator("SM");
+        pause_menu_set_speed_indicator(session_settings_slowmo_speed_name(session_settings.slowmo_speed), "slowmotion");
     } else {
-        pause_menu_set_speed_indicator(NULL);
+        pause_menu_set_speed_indicator(NULL, NULL);
     }
 }
 
@@ -48,12 +50,6 @@ static void toggle_fast_forward(void) {
     sync_audio_mute();
     sync_speed_indicator();
     LOG_INFO(mux_module, "Fast Forward %s (hotkey)", fast_forward_active ? "enabled" : "disabled");
-
-    if (fast_forward_active) {
-        char msg[64];
-        snprintf(msg, sizeof(msg), "%s: %s (M+R1)", lang.muxretro.hotkeys_screen.fast_forward, lang.generic.enabled);
-        pause_menu_show_toast(msg);
-    }
 }
 
 static void toggle_slow_motion(void) {
@@ -62,12 +58,6 @@ static void toggle_slow_motion(void) {
     sync_audio_mute();
     sync_speed_indicator();
     LOG_INFO(mux_module, "Slow Motion %s (hotkey)", slow_motion_active ? "enabled" : "disabled");
-
-    if (slow_motion_active) {
-        char msg[64];
-        snprintf(msg, sizeof(msg), "%s: %s (M+L1)", lang.muxretro.hotkeys_screen.slow_motion, lang.generic.enabled);
-        pause_menu_show_toast(msg);
-    }
 }
 
 void hotkeys_reset(void) {
@@ -135,4 +125,42 @@ int hotkeys_task(void) {
     prev_l2 = l2_now;
 
     return open_pause;
+}
+
+static nav_repeat_t rpt_vol_up = {0};
+static nav_repeat_t rpt_vol_down = {0};
+
+static int prev_vol_up = 0;
+static int prev_vol_down = 0;
+
+void hotkeys_volume_bright_task(void) {
+    const int bright_mod = mux_input_pressed(mux_input_menu) || mux_input_pressed(mux_input_switch);
+
+    const int vol_up_now = mux_input_pressed(mux_input_vol_up);
+    const int vol_down_now = mux_input_pressed(mux_input_vol_down);
+
+    const uint32_t now = SDL_GetTicks();
+
+    if (nav_repeat_step(&rpt_vol_up, vol_up_now && !prev_vol_up, vol_up_now, 1, now)) {
+        if (bright_mod) {
+            ui_common_handle_bright_up();
+        } else {
+            ui_common_handle_volume_up();
+        }
+        ui_common_progress_tick();
+        if (menu_held) menu_chord_consumed = 1;
+    }
+
+    if (nav_repeat_step(&rpt_vol_down, vol_down_now && !prev_vol_down, vol_down_now, 1, now)) {
+        if (bright_mod) {
+            ui_common_handle_bright_down();
+        } else {
+            ui_common_handle_volume_down();
+        }
+        ui_common_progress_tick();
+        if (menu_held) menu_chord_consumed = 1;
+    }
+
+    prev_vol_up = vol_up_now;
+    prev_vol_down = vol_down_now;
 }

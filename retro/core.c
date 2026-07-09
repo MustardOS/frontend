@@ -20,7 +20,7 @@ char core_content_path[PATH_MAX] = "";
 char core_content_load_method[32] = "";
 char core_active_patches[1024] = "";
 int core_active_patch_count = 0;
-static char core_file_path[PATH_MAX] = "";
+char core_file_path[PATH_MAX] = "";
 
 static int open_core(const char *corefile) {
     if (current_core.initialized) {
@@ -57,6 +57,10 @@ static int open_core(const char *corefile) {
     current_core.retro_unserialize = dlsym(current_core.handle, "retro_unserialize");
     current_core.retro_load_game = dlsym(current_core.handle, "retro_load_game");
     current_core.retro_unload_game = dlsym(current_core.handle, "retro_unload_game");
+    current_core.retro_get_memory_data = dlsym(current_core.handle, "retro_get_memory_data");
+    current_core.retro_get_memory_size = dlsym(current_core.handle, "retro_get_memory_size");
+    current_core.retro_cheat_reset = dlsym(current_core.handle, "retro_cheat_reset");
+    current_core.retro_cheat_set = dlsym(current_core.handle, "retro_cheat_set");
 
     set_environment = dlsym(current_core.handle, "retro_set_environment");
     set_video_refresh = dlsym(current_core.handle, "retro_set_video_refresh");
@@ -99,6 +103,16 @@ static int open_core(const char *corefile) {
 int core_open(const char *corefile) {
     snprintf(core_file_path, sizeof(core_file_path), "%s", corefile);
     return open_core(corefile);
+}
+
+void core_get_name(const char *core_path, char *out, const size_t out_size) {
+    const char *base = strrchr(core_path, '/');
+    base = base ? base + 1 : core_path;
+
+    snprintf(out, out_size, "%s", base);
+
+    char *ext = strstr(out, "_libretro.so");
+    if (ext) *ext = '\0';
 }
 
 static int reopen_core(void) {
@@ -408,8 +422,8 @@ int core_load_content(const char *content_path) {
                     free(data);
                     return -1;
                 }
-
                 game_info.path = patched_path;
+            } else {
                 game_info.data = data;
                 game_info.size = size;
                 game_info.path = content_path;

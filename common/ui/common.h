@@ -56,6 +56,8 @@ void ui_common_handle_volume_down();
 
 void ui_common_handle_idle();
 
+int ui_common_progress_tick(void);
+
 void ui_common_progress_fade_out(lv_obj_t *obj);
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, const struct theme_config *theme);

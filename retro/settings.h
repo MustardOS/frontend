@@ -79,6 +79,14 @@ struct session_settings_t {
     int hotkey_slowmo_enabled;
     int hotkey_quicksave_enabled;
     int hotkey_quickload_enabled;
+    int sram_flush_seconds;
+    int colour_brightness;
+    int colour_contrast;
+    int colour_saturation;
+    int colour_hueshift;
+    int colour_gamma;
+    int colour_filter;
+    int colour_shader;
 };
 
 extern struct session_settings_t session_settings;
@@ -108,6 +116,22 @@ const char *session_settings_slowmo_speed_name(int mode);
 double session_settings_ff_speed_value(int mode);
 
 double session_settings_slowmo_speed_value(int mode);
+
+const char *session_settings_sram_flush_name(int seconds);
+
+const char *session_settings_colour_brightness_name(int value);
+
+const char *session_settings_colour_contrast_name(int value);
+
+const char *session_settings_colour_saturation_name(int value);
+
+const char *session_settings_colour_hueshift_name(int value);
+
+const char *session_settings_colour_gamma_name(int value);
+
+const char *session_settings_colour_filter_name(int index);
+
+const char *session_settings_colour_shader_name(int index);
 
 void session_settings_init(const char *core_path_arg, const char *content_path);
 
@@ -144,6 +168,24 @@ void session_settings_cycle_hotkey_slowmo_enabled(int direction);
 void session_settings_cycle_hotkey_quicksave_enabled(int direction);
 
 void session_settings_cycle_hotkey_quickload_enabled(int direction);
+
+void session_settings_cycle_sram_flush(int direction);
+
+void session_settings_cycle_colour_brightness(int direction);
+
+void session_settings_cycle_colour_contrast(int direction);
+
+void session_settings_cycle_colour_saturation(int direction);
+
+void session_settings_cycle_colour_hueshift(int direction);
+
+void session_settings_cycle_colour_gamma(int direction);
+
+void session_settings_cycle_colour_filter(int direction);
+
+void session_settings_set_colour_filter(int index);
+
+void session_settings_set_colour_shader(int index);
 
 int session_settings_is_dirty(void);
 

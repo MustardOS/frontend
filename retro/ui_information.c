@@ -1,35 +1,38 @@
 #include <stdio.h>
 #include "../common/audio.h"
-#include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
 #include "../common/ui/common.h"
 #include "../module/muxshare.h"
+#include "bios_check.h"
 #include "content_hash.h"
 #include "muxretro.h"
 #include "core.h"
+#include "nav_repeat.h"
 #include "settings.h"
-
-#define HASH_ROW_INDEX 3
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
 static int hash_row_shown_ready = 0;
+static int hash_row_index = 0;
+static int bios_count = 0;
 
-static uint32_t hold_delay_up = 0;
-static uint32_t hold_tick_up = 0;
-static uint32_t hold_delay_down = 0;
-static uint32_t hold_tick_down = 0;
+typedef enum { screen_main, screen_bios } screen_state_t;
+static screen_state_t screen_state = screen_main;
+
+static nav_repeat_t rpt_up = {0};
+static nav_repeat_t rpt_down = {0};
 
 static uint64_t current_nav_mask(void) {
     const int up = mux_input_pressed(mux_input_dpad_up);
     const int down = mux_input_pressed(mux_input_dpad_down);
+    const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
 
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (back ? BIT(2) : 0);
+    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0);
 }
 
-static void build_info_row(const char *label, const char *value) {
+static void build_info_row(const char *label, const char *value, const char *glyph) {
     lv_obj_t *panel = lv_obj_create(ui_pnl_content);
     lv_obj_t *label_obj = lv_label_create(panel);
     lv_obj_t *icon = lv_img_create(panel);
@@ -37,7 +40,7 @@ static void build_info_row(const char *label, const char *value) {
 
     apply_theme_list_panel(panel);
     apply_theme_option_item_label(&theme, label_obj, label, 1);
-    apply_theme_list_glyph(&theme, icon, "muxretro", "info");
+    apply_theme_list_glyph(&theme, icon, "muxretro", glyph);
     apply_theme_list_value(&theme, value_obj, value);
     apply_size_to_content(&theme, ui_pnl_content, label_obj, icon, label);
     apply_text_long_dot(&theme, label_obj);
@@ -54,6 +57,28 @@ static void rebuild_rows(void) {
 
     ui_count_static = 0;
     current_item_index = 0;
+
+    bios_count = bios_check_scan(core_file_path);
+    const int row_offset = bios_count > 0 ? 1 : 0;
+    hash_row_index = row_offset + 3;
+
+    if (bios_count > 0) {
+        int missing = 0;
+        for (int i = 0; i < bios_count; i++) {
+            const bios_entry_t *e = bios_check_get(i);
+            if (e && !e->present) missing++;
+        }
+
+        char bios_summary[32];
+        if (missing > 0) {
+            snprintf(
+                bios_summary, sizeof(bios_summary), "%d %s", missing, lang.muxretro.information_screen.bios_missing
+            );
+        } else {
+            snprintf(bios_summary, sizeof(bios_summary), "%s", lang.muxretro.information_screen.bios_valid);
+        }
+        build_info_row(lang.muxretro.information_screen.system_bios, bios_summary, "folder");
+    }
 
     struct retro_system_info info = {0};
     if (current_core.retro_get_system_info) current_core.retro_get_system_info(&info);
@@ -74,29 +99,33 @@ static void rebuild_rows(void) {
     );
 
     build_info_row(
-        lang.muxretro.information_screen.core_name, info.library_name ? info.library_name : lang.generic.unknown
+        lang.muxretro.information_screen.core_name, info.library_name ? info.library_name : lang.generic.unknown, "core"
     );
     build_info_row(
         lang.muxretro.information_screen.core_version,
-        info.library_version ? info.library_version : lang.generic.unknown
+        info.library_version ? info.library_version : lang.generic.unknown, "version"
     );
-    build_info_row(lang.generic.content, content_name);
-    build_info_row(lang.muxretro.information_screen.content_hash, hash);
+    build_info_row(lang.generic.content, content_name, "content");
+    build_info_row(lang.muxretro.information_screen.content_hash, hash, "hash");
     build_info_row(
         lang.muxretro.information_screen.loaded_via,
-        core_content_load_method[0] ? core_content_load_method : lang.generic.unknown
+        core_content_load_method[0] ? core_content_load_method : lang.generic.unknown, "loaded"
     );
-    build_info_row(
-        lang.muxretro.information_screen.active_patches,
-        core_active_patches[0] ? core_active_patches : lang.muxretro.information_screen.patches_none
-    );
+
+    char patches_text[16];
+    if (core_active_patch_count > 0) {
+        snprintf(patches_text, sizeof(patches_text), "%d", core_active_patch_count);
+    } else {
+        snprintf(patches_text, sizeof(patches_text), "%s", lang.muxretro.information_screen.patches_none);
+    }
+    build_info_row(lang.muxretro.information_screen.active_patches, patches_text, "patch");
 
     int frame_w = 0, frame_h = 0;
     video_bridge_get_frame_size(&frame_w, &frame_h);
     char resolution[32];
     snprintf(resolution, sizeof(resolution), "%s", lang.generic.unknown);
     if (frame_w > 0 && frame_h > 0) snprintf(resolution, sizeof(resolution), "%dx%d", frame_w, frame_h);
-    build_info_row(lang.muxretro.information_screen.resolution, resolution);
+    build_info_row(lang.muxretro.information_screen.resolution, resolution, "resolution");
 
     int dest_w = 0, dest_h = 0;
     video_bridge_get_dest_size(&dest_w, &dest_h);
@@ -108,12 +137,12 @@ static void rebuild_rows(void) {
             session_settings_scale_name(session_settings.scaling_mode)
         );
     }
-    build_info_row(lang.muxretro.information_screen.display_output, display_output);
+    build_info_row(lang.muxretro.information_screen.display_output, display_output, "display");
 
     char fps[16];
     snprintf(fps, sizeof(fps), "%s", lang.generic.unknown);
     if (av_info.timing.fps > 0) snprintf(fps, sizeof(fps), "%.2f", av_info.timing.fps);
-    build_info_row(lang.muxretro.information_screen.target_fps, fps);
+    build_info_row(lang.muxretro.information_screen.target_fps, fps, "fps");
 
     int audio_freq = 0, audio_channels = 0;
     audio_bridge_get_info(&audio_freq, &audio_channels);
@@ -125,21 +154,46 @@ static void rebuild_rows(void) {
             audio_channels >= 2 ? lang.muxretro.information_screen.stereo : lang.muxretro.information_screen.mono
         );
     }
-    build_info_row(lang.muxretro.information_screen.audio_output, audio_output);
+    build_info_row(lang.muxretro.information_screen.audio_output, audio_output, "audio");
 
     build_info_row(
         lang.muxretro.information_screen.rumble_support,
-        device.board.rumble[0] ? lang.generic.enabled : lang.generic.disabled
+        device.board.rumble[0] ? lang.generic.enabled : lang.generic.disabled, "rumble"
     );
 
     const int disc_count = mux_retro_disk_get_num_images();
     if (disc_count > 1) {
         char discs[8];
         snprintf(discs, sizeof(discs), "%d", disc_count);
-        build_info_row(lang.muxretro.information_screen.disc_count, discs);
+        build_info_row(lang.muxretro.information_screen.disc_count, discs, "disc");
     }
 
-    ui_count_static = disc_count > 1 ? 12 : 11;
+    ui_count_static = row_offset + (disc_count > 1 ? 12 : 11);
+    first_open = 0;
+}
+
+static void build_bios_rows(void) {
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+
+    ui_count_static = 0;
+    current_item_index = 0;
+
+    for (int i = 0; i < bios_count; i++) {
+        const bios_entry_t *e = bios_check_get(i);
+        if (!e) continue;
+
+        char value[64];
+        snprintf(
+            value, sizeof(value), "%s (%s)",
+            e->present ? lang.muxretro.information_screen.bios_valid : lang.muxretro.information_screen.bios_missing,
+            e->optional ? lang.muxretro.information_screen.bios_optional
+                        : lang.muxretro.information_screen.bios_required
+        );
+        build_info_row(e->desc, value, e->present ? "valid" : "missing");
+    }
+
+    ui_count_static = bios_count;
     first_open = 0;
 }
 
@@ -152,8 +206,16 @@ static void close_information(void) {
     pause_menu_sync_input_mask();
 }
 
+static void close_bios_screen(void) {
+    screen_state = screen_main;
+    rebuild_rows();
+
+    nav_show_a(1, lang.generic.select);
+}
+
 void information_menu_open(void) {
     active = 1;
+    screen_state = screen_main;
     prev_nav_mask = current_nav_mask();
 
     rebuild_rows();
@@ -167,10 +229,10 @@ int information_menu_is_active(void) {
 }
 
 void information_menu_tick(void) {
-    if (!hash_row_shown_ready && content_hash_is_ready()) {
+    if (screen_state == screen_main && !hash_row_shown_ready && content_hash_is_ready()) {
         hash_row_shown_ready = 1;
 
-        lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, HASH_ROW_INDEX);
+        const lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, hash_row_index);
         lv_obj_t *value = panel ? lv_obj_get_child(panel, 2) : NULL;
         if (value) lv_label_set_text(value, content_hash_get());
     }
@@ -180,28 +242,9 @@ void information_menu_tick(void) {
     prev_nav_mask = mask;
 
     const uint32_t now = SDL_GetTicks();
-    int do_up = 0;
-    int do_down = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
+    int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
 
     if (ui_count_static < 2) {
         do_up = 0;
@@ -217,7 +260,18 @@ void information_menu_tick(void) {
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
     } else if (edge & BIT(2)) {
+        if (screen_state == screen_main && bios_count > 0 && current_item_index == 0) {
+            play_sound(snd_confirm);
+            screen_state = screen_bios;
+            build_bios_rows();
+            nav_show_a(0, "");
+        }
+    } else if (edge & BIT(3)) {
         play_sound(snd_back);
-        close_information();
+        if (screen_state == screen_bios) {
+            close_bios_screen();
+        } else {
+            close_information();
+        }
     }
 }

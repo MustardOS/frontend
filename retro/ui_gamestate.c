@@ -1,5 +1,4 @@
 #include "../common/audio.h"
-#include "../common/config.h"
 #include "../common/init.h"
 #include "../common/input.h"
 #include "../common/log.h"
@@ -10,17 +9,15 @@
 #include "../module/muxshare.h"
 #include "gamestate.h"
 #include "muxretro.h"
+#include "nav_repeat.h"
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
 
-static uint32_t hold_delay_up = 0;
-static uint32_t hold_tick_up = 0;
-static uint32_t hold_delay_down = 0;
-static uint32_t hold_tick_down = 0;
+static nav_repeat_t rpt_up = {0};
+static nav_repeat_t rpt_down = {0};
 
-static uint32_t hold_delay_backspace = 0;
-static uint32_t hold_tick_backspace = 0;
+static nav_repeat_t rpt_backspace = {0};
 
 static int load_confirm_active = 0;
 static mux_dialogue load_dlg;
@@ -384,17 +381,7 @@ static void tick_osk(const uint64_t edge, const uint64_t mask) {
         key_space(ui_txt_entry_gamestate);
     } else {
         const uint32_t now = SDL_GetTicks();
-        int do_backspace = 0;
-
-        if (edge & BIT(5)) {
-            do_backspace = 1;
-            hold_delay_backspace = (uint32_t) config.settings.advanced.repeat_delay;
-            hold_tick_backspace = now;
-        } else if ((mask & BIT(5)) && now - hold_tick_backspace >= hold_delay_backspace) {
-            do_backspace = 1;
-            hold_delay_backspace = (uint32_t) config.settings.advanced.accelerate;
-            hold_tick_backspace = now;
-        }
+        const int do_backspace = nav_repeat_step(&rpt_backspace, edge & BIT(5), mask & BIT(5), 1, now);
 
         if (do_backspace) key_backspace(ui_txt_entry_gamestate);
     }
@@ -498,28 +485,9 @@ void gamestate_menu_tick(void) {
 
     const uint32_t now = SDL_GetTicks();
 
-    int do_up = 0;
-    int do_down = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
+    int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
 
     if (ui_count_static < 2) {
         do_up = 0;

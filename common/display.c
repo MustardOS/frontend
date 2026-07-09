@@ -162,7 +162,7 @@ static void reload_background(const char *active_theme) {
             // back to a solid black colour, otherwise we'll get some lovely
             // overlap graphic glitches!
             monitor.background_solid = 1;
-            monitor.background_colour = (SDL_Color) {theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255};
+            monitor.background_colour = (SDL_Color){theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255};
             monitor.theme_name[0] = '\0';
 
             // The good news is that a failure to find an image fails gracefully!
@@ -536,12 +536,12 @@ static void update_render_state(void) {
     const int offset_theme_x = pct_offset(scale_width, scale_width, theme.sdl.render.offset_x);
     const int offset_theme_y = pct_offset(scale_height, scale_height, theme.sdl.render.offset_y);
 
-    monitor.dest_rect =
-        (SDL_Rect) {offset_render_x + offset_theme_x + underscan, offset_render_y + offset_theme_y + underscan,
-                    scale_width - underscan * 2, scale_height - underscan * 2};
+    monitor.dest_rect = (SDL_Rect
+    ){offset_render_x + offset_theme_x + underscan, offset_render_y + offset_theme_y + underscan,
+      scale_width - underscan * 2, scale_height - underscan * 2};
 
     if (monitor.dest_rect.w <= 0 || monitor.dest_rect.h <= 0) {
-        monitor.dest_rect = (SDL_Rect) {0, 0, device.screen.width, device.screen.height};
+        monitor.dest_rect = (SDL_Rect){0, 0, device.screen.width, device.screen.height};
     }
 
     if (hdmi_mode) {
@@ -549,7 +549,7 @@ static void update_render_state(void) {
         monitor.pivot_ptr = NULL;
     } else {
         monitor.angle = device.screen.rotate <= 3 ? device.screen.rotate * 90.0 : device.screen.rotate;
-        monitor.pivot = (SDL_Point) {device.screen.rotate_pivot_x, device.screen.rotate_pivot_y};
+        monitor.pivot = (SDL_Point){device.screen.rotate_pivot_x, device.screen.rotate_pivot_y};
         monitor.pivot_ptr = monitor.pivot.x > 0 && monitor.pivot.y > 0 ? &monitor.pivot : NULL;
     }
 
@@ -948,19 +948,8 @@ void display_composite_frame(void) {
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
-void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
-    (void) area;
-    (void) color_p;
-
-    if (!monitor.renderer) {
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
-
-    if (!lv_disp_flush_is_last(disp_drv)) {
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
+void display_check_idle_saver(void) {
+    if (!monitor.renderer) return;
 
     {
         static unsigned last_saver_type_seen = 0;
@@ -998,6 +987,23 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
             }
         }
     }
+}
+
+void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
+    (void) area;
+    (void) color_p;
+
+    if (!monitor.renderer) {
+        lv_disp_flush_ready(disp_drv);
+        return;
+    }
+
+    if (!lv_disp_flush_is_last(disp_drv)) {
+        lv_disp_flush_ready(disp_drv);
+        return;
+    }
+
+    display_check_idle_saver();
 
     display_composite_frame();
     lv_disp_flush_ready(disp_drv);

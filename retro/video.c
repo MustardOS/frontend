@@ -6,6 +6,7 @@
 #include "../common/display.h"
 #include "../common/init.h"
 #include "../common/log.h"
+#include "colour.h"
 #include "muxretro.h"
 #include "settings.h"
 
@@ -86,7 +87,7 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
     }
 
     if (!sharp_bilinear_tex) {
-        SDL_RenderCopy(renderer, frame_tex, NULL, &dest_rect);
+        colour_render_pass(renderer, frame_tex, &dest_rect);
         return;
     }
 
@@ -94,7 +95,7 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
     SDL_RenderCopy(renderer, frame_tex, NULL, NULL);
     SDL_SetRenderTarget(renderer, NULL);
 
-    SDL_RenderCopy(renderer, sharp_bilinear_tex, NULL, &dest_rect);
+    colour_render_pass(renderer, sharp_bilinear_tex, &dest_rect);
 }
 
 static void draw_video_background(SDL_Renderer *renderer) {
@@ -109,7 +110,7 @@ static void draw_video_background(SDL_Renderer *renderer) {
     if (session_settings.texture_filter == texture_filter_sharp_bilinear) {
         draw_sharp_bilinear(renderer);
     } else {
-        SDL_RenderCopy(renderer, frame_tex, NULL, &dest_rect);
+        colour_render_pass(renderer, frame_tex, &dest_rect);
     }
 }
 

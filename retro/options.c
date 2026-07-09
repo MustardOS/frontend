@@ -4,6 +4,7 @@
 #include "../common/miniz/miniz.h"
 #include "../common/options.h"
 #include "../common/strutil.h"
+#include "core.h"
 #include "options.h"
 #include "paths.h"
 
@@ -243,13 +244,8 @@ static void snapshot_baseline(void) {
 
 void options_init_paths(const char *core_path_arg, const char *content_path) {
     char core_name[MAX_BUFFER_SIZE];
-    const char *core_base = strrchr(core_path_arg, '/');
-    core_base = core_base ? core_base + 1 : core_path_arg;
-    snprintf(core_name, sizeof(core_name), "%s", core_base);
-
-    char *ext = strstr(core_name, "_libretro.so");
-    if (ext) *ext = '\0';
-    snprintf(core_ini_path, sizeof(core_ini_path), "%s/%s.ini", RETRO_OPT_PATH, core_name);
+    core_get_name(core_path_arg, core_name, sizeof(core_name));
+    snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_OPT_PATH, core_name);
     create_directories(core_ini_path, 1);
 
     const char *content_base = strrchr(content_path, '/');

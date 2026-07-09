@@ -1455,7 +1455,9 @@ struct mux_lang {
         char core_options[MAX_BUFFER_SIZE];
         char disc_control[MAX_BUFFER_SIZE];
         char hotkeys[MAX_BUFFER_SIZE];
+        char cheats[MAX_BUFFER_SIZE];
         char settings[MAX_BUFFER_SIZE];
+        char display[MAX_BUFFER_SIZE];
         char information[MAX_BUFFER_SIZE];
         char restart[MAX_BUFFER_SIZE];
         char quit[MAX_BUFFER_SIZE];
@@ -1478,6 +1480,8 @@ struct mux_lang {
             char settings_desc[MAX_BUFFER_SIZE];
             char hotkeys_title[MAX_BUFFER_SIZE];
             char hotkeys_desc[MAX_BUFFER_SIZE];
+            char display_title[MAX_BUFFER_SIZE];
+            char display_desc[MAX_BUFFER_SIZE];
             char content_save[MAX_BUFFER_SIZE];
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
@@ -1524,6 +1528,7 @@ struct mux_lang {
             char header_clock[MAX_BUFFER_SIZE];
             char header_battery[MAX_BUFFER_SIZE];
             char header_both[MAX_BUFFER_SIZE];
+            char sram_flush[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
             char fast_forward[MAX_BUFFER_SIZE];
@@ -1537,6 +1542,18 @@ struct mux_lang {
         struct {
             char miscellaneous[MAX_BUFFER_SIZE];
         } options_screen;
+        struct {
+            char no_cheats[MAX_BUFFER_SIZE];
+        } cheats_screen;
+        struct {
+            char brightness[MAX_BUFFER_SIZE];
+            char contrast[MAX_BUFFER_SIZE];
+            char saturation[MAX_BUFFER_SIZE];
+            char hue_shift[MAX_BUFFER_SIZE];
+            char gamma[MAX_BUFFER_SIZE];
+            char filter[MAX_BUFFER_SIZE];
+            char shaders[MAX_BUFFER_SIZE];
+        } display_screen;
         struct {
             char core_name[MAX_BUFFER_SIZE];
             char core_version[MAX_BUFFER_SIZE];
@@ -1557,6 +1574,11 @@ struct mux_lang {
             char extracted[MAX_BUFFER_SIZE];
             char stereo[MAX_BUFFER_SIZE];
             char mono[MAX_BUFFER_SIZE];
+            char system_bios[MAX_BUFFER_SIZE];
+            char bios_valid[MAX_BUFFER_SIZE];
+            char bios_missing[MAX_BUFFER_SIZE];
+            char bios_optional[MAX_BUFFER_SIZE];
+            char bios_required[MAX_BUFFER_SIZE];
         } information_screen;
     } muxretro;
 

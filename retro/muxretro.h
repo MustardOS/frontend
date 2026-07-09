@@ -98,7 +98,7 @@ void pause_menu_focus_gamestate_item(void);
 
 void pause_menu_focus_diskcontrol_item(void);
 
-void pause_menu_focus_hotkeys_item(void);
+void pause_menu_focus_cheats_item(void);
 
 void pause_menu_focus_settings_item(void);
 
@@ -108,9 +108,11 @@ void pause_menu_set_fps_visible(int visible);
 
 void pause_menu_set_fps_text(const char *text);
 
-void pause_menu_set_speed_indicator(const char *text);
+void pause_menu_set_speed_indicator(const char *text, const char *glyph);
 
 void pause_menu_show_toast(const char *msg);
+
+void pause_menu_show_toast_timed(const char *msg, uint32_t duration_ms);
 
 void pause_menu_toast_tick(void);
 
@@ -150,6 +152,38 @@ int settings_menu_is_active(void);
 
 void settings_menu_tick(void);
 
+void settings_menu_reopen_hotkeys(void);
+
+void settings_menu_reopen_display(void);
+
+void display_menu_init(void);
+
+void display_menu_open(void);
+
+int display_menu_is_active(void);
+
+void display_menu_tick(void);
+
+void display_menu_reopen_filter(void);
+
+void display_menu_reopen_shader(void);
+
+void colfilter_menu_init(void);
+
+void colfilter_menu_open(void);
+
+int colfilter_menu_is_active(void);
+
+void colfilter_menu_tick(void);
+
+void shader_menu_init(void);
+
+void shader_menu_open(void);
+
+int shader_menu_is_active(void);
+
+void shader_menu_tick(void);
+
 void hotkeys_menu_init(void);
 
 void hotkeys_menu_open(void);
@@ -157,6 +191,14 @@ void hotkeys_menu_open(void);
 int hotkeys_menu_is_active(void);
 
 void hotkeys_menu_tick(void);
+
+void cheats_menu_init(void);
+
+void cheats_menu_open(void);
+
+int cheats_menu_is_active(void);
+
+void cheats_menu_tick(void);
 
 void information_menu_open(void);
 

@@ -1,23 +1,19 @@
 #include <stdio.h>
-#include "../common/config.h"
 #include "../common/input.h"
 #include "../common/ui/common.h"
 #include "../common/ui/dialogue.h"
 #include "../module/muxshare.h"
 #include "muxretro.h"
+#include "nav_repeat.h"
 #include "settings.h"
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
 
-static uint32_t hold_delay_up = 0;
-static uint32_t hold_tick_up = 0;
-static uint32_t hold_delay_down = 0;
-static uint32_t hold_tick_down = 0;
-static uint32_t hold_delay_left = 0;
-static uint32_t hold_tick_left = 0;
-static uint32_t hold_delay_right = 0;
-static uint32_t hold_tick_right = 0;
+static nav_repeat_t rpt_up = {0};
+static nav_repeat_t rpt_down = {0};
+static nav_repeat_t rpt_left = {0};
+static nav_repeat_t rpt_right = {0};
 
 enum {
     row_ff_enabled = 0,
@@ -44,15 +40,7 @@ static mux_dialogue save_dlg;
 typedef enum { save_opt_content = 0, save_opt_core, save_opt_directory, save_opt_discard } save_opt_t;
 
 static uint64_t current_nav_mask(void) {
-    const int up = mux_input_pressed(mux_input_dpad_up);
-    const int down = mux_input_pressed(mux_input_dpad_down);
-    const int left = mux_input_pressed(mux_input_dpad_left);
-    const int right = mux_input_pressed(mux_input_dpad_right);
-    const int confirm = mux_input_pressed(mux_input_a);
-    const int back = mux_input_pressed(mux_input_b);
-
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0) | (confirm ? BIT(4) : 0)
-           | (back ? BIT(5) : 0);
+    return nav_mask_standard();
 }
 
 static void enabled_text(char *buf, const int enabled, const char *combo) {
@@ -165,12 +153,7 @@ static void rebuild_rows(void) {
 
 static void close_hotkeys(void) {
     active = 0;
-
-    pause_menu_rebuild();
-    pause_menu_focus_hotkeys_item();
-    pause_menu_show_nav_hints();
-
-    pause_menu_sync_input_mask();
+    settings_menu_reopen_hotkeys();
 }
 
 void hotkeys_menu_init(void) {
@@ -190,6 +173,7 @@ void hotkeys_menu_open(void) {
 
     rebuild_rows();
 
+    nav_show_a(0, "");
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                   {ui_lbl_nav_lr, lang.generic.change, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
@@ -239,50 +223,11 @@ void hotkeys_menu_tick(void) {
 
     const uint32_t now = SDL_GetTicks();
 
-    int do_up = 0;
-    int do_down = 0;
-    int do_left = 0;
-    int do_right = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
-
-    if (edge & BIT(2)) {
-        do_left = 1;
-        hold_delay_left = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_left = now;
-    } else if ((mask & BIT(2)) && now - hold_tick_left >= hold_delay_left) {
-        do_left = 1;
-        hold_delay_left = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_left = now;
-    }
-
-    if (edge & BIT(3)) {
-        do_right = 1;
-        hold_delay_right = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_right = now;
-    } else if ((mask & BIT(3)) && now - hold_tick_right >= hold_delay_right) {
-        do_right = 1;
-        hold_delay_right = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_right = now;
-    }
+    const int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    const int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
+    const int do_left = nav_repeat_step(&rpt_left, edge & BIT(2), mask & BIT(2), 1, now);
+    const int do_right = nav_repeat_step(&rpt_right, edge & BIT(3), mask & BIT(3), 1, now);
 
     if (do_up) {
         nav_set_last_dir(nav_dir_up);

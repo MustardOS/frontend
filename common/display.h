@@ -15,6 +15,8 @@ void preview_saver(int type, int speed);
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
 
+void display_check_idle_saver(void);
+
 void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);

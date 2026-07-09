@@ -7,6 +7,8 @@
 #include "../common/miniz/miniz.h"
 #include "../common/options.h"
 #include "../common/strutil.h"
+#include "colour.h"
+#include "core.h"
 #include "muxretro.h"
 #include "paths.h"
 #include "settings.h"
@@ -29,7 +31,27 @@ static const struct session_settings_t defaults = {
     .hotkey_slowmo_enabled = 1,
     .hotkey_quicksave_enabled = 1,
     .hotkey_quickload_enabled = 1,
+    .sram_flush_seconds = 60,
+    .colour_brightness = 0,
+    .colour_contrast = 100,
+    .colour_saturation = 100,
+    .colour_hueshift = 0,
+    .colour_gamma = 100,
+    .colour_filter = 0,
+    .colour_shader = 0,
 };
+
+#define COLOUR_BRIGHTNESS_MIN -100
+#define COLOUR_BRIGHTNESS_MAX 100
+#define COLOUR_CONTRAST_MIN   0
+#define COLOUR_CONTRAST_MAX   200
+#define COLOUR_SATURATION_MIN 0
+#define COLOUR_SATURATION_MAX 200
+#define COLOUR_HUESHIFT_MIN   -180
+#define COLOUR_HUESHIFT_MAX   180
+#define COLOUR_GAMMA_MIN      10
+#define COLOUR_GAMMA_MAX      400
+#define COLOUR_STEP           5
 
 struct session_settings_t session_settings;
 static struct session_settings_t baseline_settings;
@@ -64,6 +86,9 @@ static const char *border_names[border_color_count] = {
 
 static const int sample_rate_choices[] = {0, 44100, 48000};
 #define SAMPLE_RATE_CHOICE_COUNT ((int) (sizeof(sample_rate_choices) / sizeof(sample_rate_choices[0])))
+
+static const int sram_flush_choices[] = {15, 30, 60, 90, 120, 240, 300};
+#define SRAM_FLUSH_CHOICE_COUNT ((int) (sizeof(sram_flush_choices) / sizeof(sram_flush_choices[0])))
 
 static const char *fps_limit_names[fps_limit_count] = {
     lang.muxretro.settings_screen.fps_60, lang.muxretro.settings_screen.fps_50, lang.muxretro.settings_screen.fps_none
@@ -164,6 +189,50 @@ double session_settings_slowmo_speed_value(const int mode) {
     return slowmo_speed_values[mode];
 }
 
+const char *session_settings_sram_flush_name(const int seconds) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%ds", seconds);
+    return buf;
+}
+
+const char *session_settings_colour_brightness_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%+d%%", value);
+    return buf;
+}
+
+const char *session_settings_colour_contrast_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
+const char *session_settings_colour_saturation_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
+const char *session_settings_colour_hueshift_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%+d\xC2\xB0", value);
+    return buf;
+}
+
+const char *session_settings_colour_gamma_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
+const char *session_settings_colour_filter_name(const int index) {
+    return colour_filter_preset_label(index);
+}
+
+const char *session_settings_colour_shader_name(const int index) {
+    return colour_shader_label(index);
+}
+
 static void apply_ini(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) return;
@@ -224,6 +293,35 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "hotkey_quickload_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_quickload_enabled = (int) v;
 
+    v = mini_get_int(ini, "settings", "sram_flush_seconds", -1);
+    for (int i = 0; v >= 0 && i < SRAM_FLUSH_CHOICE_COUNT; i++) {
+        if (sram_flush_choices[i] == (int) v) {
+            session_settings.sram_flush_seconds = (int) v;
+            break;
+        }
+    }
+
+    v = mini_get_int(ini, "settings", "colour_brightness", COLOUR_BRIGHTNESS_MIN - 1);
+    if (v >= COLOUR_BRIGHTNESS_MIN && v <= COLOUR_BRIGHTNESS_MAX) session_settings.colour_brightness = (int) v;
+
+    v = mini_get_int(ini, "settings", "colour_contrast", COLOUR_CONTRAST_MIN - 1);
+    if (v >= COLOUR_CONTRAST_MIN && v <= COLOUR_CONTRAST_MAX) session_settings.colour_contrast = (int) v;
+
+    v = mini_get_int(ini, "settings", "colour_saturation", COLOUR_SATURATION_MIN - 1);
+    if (v >= COLOUR_SATURATION_MIN && v <= COLOUR_SATURATION_MAX) session_settings.colour_saturation = (int) v;
+
+    v = mini_get_int(ini, "settings", "colour_hueshift", COLOUR_HUESHIFT_MIN - 1);
+    if (v >= COLOUR_HUESHIFT_MIN && v <= COLOUR_HUESHIFT_MAX) session_settings.colour_hueshift = (int) v;
+
+    v = mini_get_int(ini, "settings", "colour_gamma", COLOUR_GAMMA_MIN - 1);
+    if (v >= COLOUR_GAMMA_MIN && v <= COLOUR_GAMMA_MAX) session_settings.colour_gamma = (int) v;
+
+    v = mini_get_int(ini, "settings", "colour_filter", -1);
+    if (v >= 0 && v < colour_filter_preset_count()) session_settings.colour_filter = (int) v;
+
+    v = mini_get_int(ini, "settings", "colour_shader", -1);
+    if (v >= 0 && v < colour_shader_count()) session_settings.colour_shader = (int) v;
+
     mini_free(ini);
 }
 
@@ -249,22 +347,27 @@ static void write_ini(const char *path) {
     mini_set_int(ini, "settings", "hotkey_slowmo_enabled", session_settings.hotkey_slowmo_enabled);
     mini_set_int(ini, "settings", "hotkey_quicksave_enabled", session_settings.hotkey_quicksave_enabled);
     mini_set_int(ini, "settings", "hotkey_quickload_enabled", session_settings.hotkey_quickload_enabled);
+    mini_set_int(ini, "settings", "sram_flush_seconds", session_settings.sram_flush_seconds);
+    mini_set_int(ini, "settings", "colour_brightness", session_settings.colour_brightness);
+    mini_set_int(ini, "settings", "colour_contrast", session_settings.colour_contrast);
+    mini_set_int(ini, "settings", "colour_saturation", session_settings.colour_saturation);
+    mini_set_int(ini, "settings", "colour_hueshift", session_settings.colour_hueshift);
+    mini_set_int(ini, "settings", "colour_gamma", session_settings.colour_gamma);
+    mini_set_int(ini, "settings", "colour_filter", session_settings.colour_filter);
+    mini_set_int(ini, "settings", "colour_shader", session_settings.colour_shader);
 
     mini_save(ini, 0);
     mini_free(ini);
 }
 
 void session_settings_init(const char *core_path_arg, const char *content_path) {
+    colour_init();
+
     session_settings = defaults;
 
     char core_name[MAX_BUFFER_SIZE];
-    const char *core_base = strrchr(core_path_arg, '/');
-    core_base = core_base ? core_base + 1 : core_path_arg;
-    snprintf(core_name, sizeof(core_name), "%s", core_base);
-
-    char *ext = strstr(core_name, "_libretro.so");
-    if (ext) *ext = '\0';
-    snprintf(core_ini_path, sizeof(core_ini_path), "%s/%s.ini", RETRO_SET_PATH, core_name);
+    core_get_name(core_path_arg, core_name, sizeof(core_name));
+    snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_SET_PATH, core_name);
     create_directories(core_ini_path, 1);
 
     const char *content_base = strrchr(content_path, '/');
@@ -388,6 +491,75 @@ void session_settings_cycle_hotkey_quickload_enabled(const int direction) {
     session_settings.hotkey_quickload_enabled = !session_settings.hotkey_quickload_enabled;
 }
 
+void session_settings_cycle_sram_flush(const int direction) {
+    int idx = 0;
+    for (int i = 0; i < SRAM_FLUSH_CHOICE_COUNT; i++) {
+        if (sram_flush_choices[i] == session_settings.sram_flush_seconds) {
+            idx = i;
+            break;
+        }
+    }
+
+    idx = (idx + direction + SRAM_FLUSH_CHOICE_COUNT) % SRAM_FLUSH_CHOICE_COUNT;
+    session_settings.sram_flush_seconds = sram_flush_choices[idx];
+}
+
+void session_settings_cycle_colour_brightness(const int direction) {
+    session_settings.colour_brightness += direction * COLOUR_STEP;
+    if (session_settings.colour_brightness < COLOUR_BRIGHTNESS_MIN)
+        session_settings.colour_brightness = COLOUR_BRIGHTNESS_MIN;
+    if (session_settings.colour_brightness > COLOUR_BRIGHTNESS_MAX)
+        session_settings.colour_brightness = COLOUR_BRIGHTNESS_MAX;
+    colour_refresh();
+}
+
+void session_settings_cycle_colour_contrast(const int direction) {
+    session_settings.colour_contrast += direction * COLOUR_STEP;
+    if (session_settings.colour_contrast < COLOUR_CONTRAST_MIN) session_settings.colour_contrast = COLOUR_CONTRAST_MIN;
+    if (session_settings.colour_contrast > COLOUR_CONTRAST_MAX) session_settings.colour_contrast = COLOUR_CONTRAST_MAX;
+    colour_refresh();
+}
+
+void session_settings_cycle_colour_saturation(const int direction) {
+    session_settings.colour_saturation += direction * COLOUR_STEP;
+    if (session_settings.colour_saturation < COLOUR_SATURATION_MIN)
+        session_settings.colour_saturation = COLOUR_SATURATION_MIN;
+    if (session_settings.colour_saturation > COLOUR_SATURATION_MAX)
+        session_settings.colour_saturation = COLOUR_SATURATION_MAX;
+    colour_refresh();
+}
+
+void session_settings_cycle_colour_hueshift(const int direction) {
+    session_settings.colour_hueshift += direction * COLOUR_STEP;
+    if (session_settings.colour_hueshift < COLOUR_HUESHIFT_MIN) session_settings.colour_hueshift = COLOUR_HUESHIFT_MAX;
+    if (session_settings.colour_hueshift > COLOUR_HUESHIFT_MAX) session_settings.colour_hueshift = COLOUR_HUESHIFT_MIN;
+    colour_refresh();
+}
+
+void session_settings_cycle_colour_gamma(const int direction) {
+    session_settings.colour_gamma += direction * COLOUR_STEP;
+    if (session_settings.colour_gamma < COLOUR_GAMMA_MIN) session_settings.colour_gamma = COLOUR_GAMMA_MIN;
+    if (session_settings.colour_gamma > COLOUR_GAMMA_MAX) session_settings.colour_gamma = COLOUR_GAMMA_MAX;
+    colour_refresh();
+}
+
+void session_settings_cycle_colour_filter(const int direction) {
+    const int count = colour_filter_preset_count();
+    session_settings.colour_filter = (session_settings.colour_filter + direction + count) % count;
+    colour_refresh();
+}
+
+void session_settings_set_colour_filter(const int index) {
+    if (index < 0 || index >= colour_filter_preset_count()) return;
+    session_settings.colour_filter = index;
+    colour_refresh();
+}
+
+void session_settings_set_colour_shader(const int index) {
+    if (index < 0 || index >= colour_shader_count()) return;
+    session_settings.colour_shader = index;
+}
+
 int session_settings_is_dirty(void) {
     return memcmp(&session_settings, &baseline_settings, sizeof(session_settings)) != 0;
 }
@@ -399,6 +571,7 @@ void session_settings_discard(void) {
     pause_menu_set_fps_visible(session_settings.show_fps);
     audio_bridge_apply_sample_rate();
     video_bridge_apply_fps_limit();
+    colour_refresh();
 }
 
 void session_settings_save_content(void) {

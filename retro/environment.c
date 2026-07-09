@@ -1,8 +1,9 @@
 #include <stdarg.h>
 #include <stdio.h>
-#include "../common/ui/common.h"
+#include "../common/fileio.h"
 #include "../common/init.h"
 #include "../common/log.h"
+#include "core.h"
 #include "muxretro.h"
 #include "options.h"
 #include "paths.h"
@@ -97,7 +98,13 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
-            static const char *dir = RETRO_SRM_PATH;
+            static char dir[PATH_MAX] = "";
+            if (!dir[0]) {
+                char core_name[MAX_BUFFER_SIZE];
+                core_get_name(core_file_path, core_name, sizeof(core_name));
+                snprintf(dir, sizeof(dir), "%s/%s", RETRO_SRM_PATH, core_name);
+                create_directories(dir, 0);
+            }
             *(const char **) data = dir;
             return true;
         }
@@ -173,13 +180,15 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_SET_MESSAGE: {
             const struct retro_message *msg = data;
-            if (msg && msg->msg && ui_pnl_message) toast_message(msg->msg, msg->frames > 0 ? msg->frames * 16 : 3000);
+            if (msg && msg->msg && ui_pnl_message)
+                pause_menu_show_toast_timed(msg->msg, msg->frames > 0 ? (uint32_t) msg->frames * 16 : 3000);
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_MESSAGE_EXT: {
             const struct retro_message_ext *msg = data;
-            if (msg && msg->msg && ui_pnl_message) toast_message(msg->msg, msg->duration > 0 ? msg->duration : 3000);
+            if (msg && msg->msg && ui_pnl_message)
+                pause_menu_show_toast_timed(msg->msg, msg->duration > 0 ? (uint32_t) msg->duration : 3000);
             return true;
         }
 

@@ -80,7 +80,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/system/os_release.sh", "f887d3813502b8e0" },
     { "/opt/muos/script/system/reset.sh", "10c0ca283d6b0e1e" },
     { "/opt/muos/script/system/serial.sh", "fd299732230cf472" },
-    { "/opt/muos/script/system/suspend.sh", "8c97431eb23dc25c" },
+    { "/opt/muos/script/system/suspend.sh", "cbfde7c5b31587eb" },
     { "/opt/muos/script/system/swap.sh", "cd67778a2c08c706" },
     { "/opt/muos/script/system/usb_gadget.sh", "8dd676a2701adf8a" },
     { "/opt/muos/script/system/user_init.sh", "c25a63c50bf5fbd2" },

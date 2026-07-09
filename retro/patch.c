@@ -279,7 +279,7 @@ static enum patch_error ups_apply_patch(
     *targetlength = data.source_length == source_read_length ? target_read_length : source_read_length;
 
     if (data.target_length < *targetlength) {
-        uint8_t *prov = malloc((size_t) *targetlength);
+        uint8_t *prov = malloc(*targetlength);
         if (!prov) return patch_target_alloc_failed;
         free(*targetdata);
         *targetdata = prov;
@@ -471,13 +471,14 @@ static int try_one_patch(
     size_t patch_size = 0;
     if (!read_whole_file(path, &patch_data, &patch_size)) return 1;
 
-    uint8_t *target_data = *data;
-    uint64_t target_size = *size;
+    uint8_t *target_data = NULL;
+    uint64_t target_size = 0;
     const enum patch_error err = func(patch_data, patch_size, *data, *size, &target_data, &target_size);
     free(patch_data);
 
     if (err != patch_success) {
         LOG_ERROR(mux_module, "%s patch failed to apply (error %d): %s", desc, (int) err, path);
+        free(target_data);
         return 1;
     }
 

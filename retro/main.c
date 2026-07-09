@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -12,6 +13,7 @@
 #include "../common/language.h"
 #include "../common/log.h"
 #include "../common/ui/common.h"
+#include "cheats.h"
 #include "gamestate.h"
 #include "hotkeys.h"
 #include "muxretro.h"
@@ -20,6 +22,7 @@
 #include "paths.h"
 #include "rumble.h"
 #include "settings.h"
+#include "sram.h"
 
 #define RESUME_COOLDOWN_MS     1500
 #define AUTOLOAD_WARMUP_FRAMES 5
@@ -33,10 +36,56 @@ static unsigned mux_idle_state_changes = 0;
 static unsigned last_seen_changes = 0;
 static char state_dir[MAX_BUFFER_SIZE];
 
-static void build_state_dir(const char *content_path) {
+static volatile sig_atomic_t pending_sleep_signal = 0;
+static volatile sig_atomic_t pending_wake_signal = 0;
+
+static void handle_sleep_signal(const int sig) {
+    (void) sig;
+    pending_sleep_signal = 1;
+}
+
+static void handle_wake_signal(const int sig) {
+    (void) sig;
+    pending_wake_signal = 1;
+}
+
+static void install_suspend_signal_handlers(void) {
+    struct sigaction sa = {0};
+    sa.sa_flags = SA_RESTART;
+
+    sa.sa_handler = handle_sleep_signal;
+    sigaction(SIGUSR1, &sa, NULL);
+
+    sa.sa_handler = handle_wake_signal;
+    sigaction(SIGUSR2, &sa, NULL);
+}
+
+static void handle_pending_suspend_signals(void) {
+    if (pending_sleep_signal) {
+        pending_sleep_signal = 0;
+        LOG_INFO(mux_module, "Received sleep-prepare signal (SIGUSR1): saving state and SRAM");
+
+        gamestate_autosave_save();
+        sram_bridge_save();
+        if (!pause_menu_is_active()) pause_menu_toggle();
+    }
+
+    if (pending_wake_signal) {
+        pending_wake_signal = 0;
+        LOG_INFO(mux_module, "Received resume signal (SIGUSR2)");
+
+        if (pause_menu_is_active()) pause_menu_toggle();
+    }
+}
+
+static void build_state_dir(const char *core_path_arg, const char *content_path) {
+    char core_name[MAX_BUFFER_SIZE];
+    core_get_name(core_path_arg, core_name, sizeof(core_name));
+
     const char *base = strrchr(content_path, '/');
     base = base ? base + 1 : content_path;
-    snprintf(state_dir, sizeof(state_dir), "%s/%s", RETRO_STA_PATH, base);
+
+    snprintf(state_dir, sizeof(state_dir), "%s/%s/%s", RETRO_STA_PATH, core_name, base);
     create_directories(state_dir, 0);
 }
 
@@ -75,6 +124,7 @@ static void idle_poll(void) {
         LOG_DEBUG(mux_module, "idle_poll: triggering pause_menu_toggle + gamestate_autosave_save");
         pause_menu_toggle();
         gamestate_autosave_save();
+        sram_bridge_save();
     }
     last_seen_changes = mux_idle_state_changes;
 }
@@ -89,6 +139,8 @@ int main(const int argc, char *argv[]) {
     const char *content_path = argv[2];
 
     const int start_fresh = argc >= 4 && strcmp(argv[3], "--fresh") == 0;
+
+    install_suspend_signal_handlers();
 
     load_device(&device);
     load_config(&config);
@@ -126,7 +178,10 @@ int main(const int argc, char *argv[]) {
     }
     LOG_DEBUG(mux_module, "core_load_content done");
 
-    build_state_dir(content_path);
+    sram_bridge_init(core_path_arg, content_path);
+    cheats_init(core_path_arg, content_path);
+
+    build_state_dir(core_path_arg, content_path);
     gamestate_init(state_dir);
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
@@ -181,10 +236,25 @@ int main(const int argc, char *argv[]) {
     uint32_t fps_last_update = SDL_GetTicks();
 
     double fps_limit_deadline = 0.0;
+    uint32_t sram_flush_deadline = SDL_GetTicks() + (uint32_t) session_settings.sram_flush_seconds * 1000;
+    uint32_t status_deadline = SDL_GetTicks() + TIMER_STATUS;
 
     while (!quit) {
         mux_input_poll();
         idle_poll();
+        handle_pending_suspend_signals();
+        display_check_idle_saver();
+        hotkeys_volume_bright_task();
+
+        if (SDL_GetTicks() >= status_deadline) {
+            status_task(NULL);
+            status_deadline = SDL_GetTicks() + TIMER_STATUS;
+        }
+
+        if (SDL_GetTicks() >= sram_flush_deadline) {
+            sram_bridge_save();
+            sram_flush_deadline = SDL_GetTicks() + (uint32_t) session_settings.sram_flush_seconds * 1000;
+        }
 
         const int paused = pause_menu_is_active();
         audio_bridge_set_paused(paused);
@@ -268,6 +338,8 @@ int main(const int argc, char *argv[]) {
     video_bridge_shutdown();
     audio_bridge_close();
     rumble_bridge_shutdown();
+
+    sram_bridge_save();
 
     core_unload_content();
     core_unload();

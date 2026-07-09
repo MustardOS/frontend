@@ -8,11 +8,13 @@
 #include "../common/log.h"
 #include "../common/theme.h"
 #include "../common/ui/common.h"
+#include "../common/ui/glyph.h"
 #include "../module/muxshare.h"
 #include "gamestate.h"
 #include "hotkeys.h"
 #include "muxretro.h"
 #include "core.h"
+#include "nav_repeat.h"
 #include "settings.h"
 
 #define TOAST_DURATION_MS 2048
@@ -23,20 +25,23 @@ static int toast_active = 0;
 
 static uint32_t header_fade_start_tick = 0;
 static int header_fading = 0;
+static int header_fade_played = 0;
 
 static int active = 0;
 
 static uint64_t prev_nav_mask = 0;
 static lv_obj_t *dim_overlay = NULL;
 static lv_obj_t *ui_lbl_fps = NULL;
+static lv_obj_t *ui_img_fps_glyph = NULL;
 static lv_obj_t *ui_lbl_speed_mode = NULL;
+static lv_obj_t *ui_img_speed_glyph = NULL;
 
 static int has_disc_control = 0;
 static int row_resume;
 static int row_game_state;
 static int row_options;
 static int row_disc_control;
-static int row_hotkeys;
+static int row_cheats;
 static int row_settings;
 static int row_information;
 static int row_restart;
@@ -51,7 +56,7 @@ static void compute_row_indices(void) {
     row_game_state = i++;
     row_options = i++;
     row_disc_control = has_disc_control ? i++ : -1;
-    row_hotkeys = i++;
+    row_cheats = i++;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -59,10 +64,8 @@ static void compute_row_indices(void) {
     row_count = i;
 }
 
-static uint32_t hold_delay_up = 0;
-static uint32_t hold_tick_up = 0;
-static uint32_t hold_delay_down = 0;
-static uint32_t hold_tick_down = 0;
+static nav_repeat_t rpt_up = {0};
+static nav_repeat_t rpt_down = {0};
 
 static uint64_t current_nav_mask(void) {
     const int up = mux_input_pressed(mux_input_dpad_up);
@@ -91,27 +94,54 @@ static void create_dim_overlay(void) {
     lv_obj_move_background(dim_overlay);
 }
 
+static void set_corner_glyph(lv_obj_t *img, const char *glyph_name) {
+    char embed[MAX_BUFFER_SIZE];
+    if (get_glyph_path("muxretro", glyph_name, embed, sizeof(embed))) {
+        set_list_glyph_image(img, embed);
+        lv_obj_clear_flag(img, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+static lv_obj_t *create_corner_indicator(const lv_align_t align, const lv_coord_t x_ofs, lv_obj_t **out_glyph) {
+    lv_obj_t *panel = lv_obj_create(ui_screen);
+    lv_obj_set_size(panel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(panel, 140, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_align(panel, align, x_ofs, -4);
+
+    lv_obj_move_foreground(panel);
+
+    *out_glyph = lv_img_create(panel);
+
+    return panel;
+}
+
 static void create_fps_label(void) {
-    ui_lbl_fps = lv_label_create(ui_screen);
+    lv_obj_t *ui_pnl_fps = create_corner_indicator(LV_ALIGN_BOTTOM_LEFT, 4, &ui_img_fps_glyph);
+    set_corner_glyph(ui_img_fps_glyph, "fps");
+
+    ui_lbl_fps = lv_label_create(ui_pnl_fps);
     lv_obj_set_style_text_color(ui_lbl_fps, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_color(ui_lbl_fps, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lbl_fps, 140, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_all(ui_lbl_fps, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_clear_flag(ui_lbl_fps, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     lv_label_set_text(ui_lbl_fps, "");
-    lv_obj_align(ui_lbl_fps, LV_ALIGN_BOTTOM_LEFT, 4, -4);
 
-    lv_obj_move_foreground(ui_lbl_fps);
-
-    if (!session_settings.show_fps) lv_obj_add_flag(ui_lbl_fps, LV_OBJ_FLAG_HIDDEN);
+    if (!session_settings.show_fps) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
 }
 
 void pause_menu_set_fps_visible(const int visible) {
     if (!ui_lbl_fps) return;
+    lv_obj_t *panel = lv_obj_get_parent(ui_lbl_fps);
     if (visible) {
-        lv_obj_clear_flag(ui_lbl_fps, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
     } else {
-        lv_obj_add_flag(ui_lbl_fps, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -121,33 +151,31 @@ void pause_menu_set_fps_text(const char *text) {
 }
 
 static void create_speed_mode_label(void) {
-    ui_lbl_speed_mode = lv_label_create(ui_screen);
+    lv_obj_t *ui_pnl_speed_mode = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, &ui_img_speed_glyph);
+
+    ui_lbl_speed_mode = lv_label_create(ui_pnl_speed_mode);
     lv_obj_set_style_text_color(ui_lbl_speed_mode, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_color(ui_lbl_speed_mode, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lbl_speed_mode, 140, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_all(ui_lbl_speed_mode, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_clear_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     lv_label_set_text(ui_lbl_speed_mode, "");
-    lv_obj_align(ui_lbl_speed_mode, LV_ALIGN_BOTTOM_RIGHT, -4, -4);
 
-    lv_obj_move_foreground(ui_lbl_speed_mode);
-
-    lv_obj_add_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_pnl_speed_mode, LV_OBJ_FLAG_HIDDEN);
 }
 
-void pause_menu_set_speed_indicator(const char *text) {
+void pause_menu_set_speed_indicator(const char *text, const char *glyph) {
     if (!ui_lbl_speed_mode) return;
+    lv_obj_t *panel = lv_obj_get_parent(ui_lbl_speed_mode);
 
     if (!text || !text[0]) {
-        lv_obj_add_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
+    if (glyph) set_corner_glyph(ui_img_speed_glyph, glyph);
+
     lv_label_set_text(ui_lbl_speed_mode, text);
-    lv_obj_clear_flag(ui_lbl_speed_mode, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
 }
 
-void pause_menu_show_toast(const char *msg) {
+void pause_menu_show_toast_timed(const char *msg, const uint32_t duration_ms) {
     if (!ui_pnl_message || !ui_lbl_message) return;
 
     lv_label_set_text(ui_lbl_message, msg);
@@ -155,8 +183,15 @@ void pause_menu_show_toast(const char *msg) {
     lv_obj_set_style_opa(ui_pnl_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_move_foreground(ui_pnl_message);
 
-    toast_expire_tick = SDL_GetTicks() + TOAST_DURATION_MS;
+    lv_obj_mark_layout_as_dirty(ui_pnl_message);
+    lv_obj_update_layout(ui_pnl_message);
+
+    toast_expire_tick = SDL_GetTicks() + duration_ms;
     toast_active = 1;
+}
+
+void pause_menu_show_toast(const char *msg) {
+    pause_menu_show_toast_timed(msg, TOAST_DURATION_MS);
 }
 
 void pause_menu_toast_tick(void) {
@@ -207,6 +242,12 @@ static void apply_gameplay_header_overlay(void) {
 
     datetime_task(NULL);
     battery_capacity_task(NULL);
+
+    if (header_fade_played) {
+        lv_obj_set_style_opa(ui_pnl_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+        return;
+    }
+    header_fade_played = 1;
 
     header_fade_start_tick = SDL_GetTicks();
     header_fading = 1;
@@ -267,7 +308,7 @@ void pause_menu_rebuild(void) {
     gen_label("muxretro", "state", lang.muxretro.game_state);
     gen_label("muxretro", "core", lang.muxretro.core_options);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
-    gen_label("muxretro", "hotkeys", lang.muxretro.hotkeys);
+    gen_label("muxretro", "cheat", lang.muxretro.cheats);
     gen_label("muxretro", "settings", lang.muxretro.settings);
     gen_label("muxretro", "info", lang.muxretro.information);
     gen_label("muxretro", "restart", lang.muxretro.restart);
@@ -284,8 +325,8 @@ static void set_chrome_visible(const int visible) {
         lv_obj_clear_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
-        if (ui_lbl_fps) lv_obj_add_flag(ui_lbl_fps, LV_OBJ_FLAG_HIDDEN);
-        pause_menu_set_speed_indicator(NULL);
+        if (ui_lbl_fps) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
+        pause_menu_set_speed_indicator(NULL, NULL);
         restore_header_chrome();
     } else {
         lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
@@ -330,8 +371,8 @@ void pause_menu_focus_diskcontrol_item(void) {
     focus_item(row_disc_control);
 }
 
-void pause_menu_focus_hotkeys_item(void) {
-    focus_item(row_hotkeys);
+void pause_menu_focus_cheats_item(void) {
+    focus_item(row_cheats);
 }
 
 void pause_menu_focus_settings_item(void) {
@@ -358,9 +399,11 @@ void pause_menu_fix_nav_order(void) {
 void pause_menu_show_nav_hints(void) {
     nav_show_lr(0);
 
-    setup_nav(
-        (struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.muxretro.resume, 0}, {NULL, NULL, 0}}
-    );
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.muxretro.resume, 0},
+                                  {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
 }
 
@@ -377,6 +420,8 @@ void pause_menu_init(void) {
     gamestate_menu_init();
     settings_menu_init();
     hotkeys_menu_init();
+    cheats_menu_init();
+    display_menu_init();
     options_menu_init();
 
     pause_menu_rebuild();
@@ -439,8 +484,8 @@ int pause_menu_tick(void) {
         return 0;
     }
 
-    if (hotkeys_menu_is_active()) {
-        hotkeys_menu_tick();
+    if (cheats_menu_is_active()) {
+        cheats_menu_tick();
         return 0;
     }
 
@@ -460,28 +505,9 @@ int pause_menu_tick(void) {
 
     const uint32_t now = SDL_GetTicks();
 
-    int do_up = 0;
-    int do_down = 0;
-
-    if (edge & BIT(0)) {
-        do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_up = now;
-    } else if ((mask & BIT(0)) && now - hold_tick_up >= hold_delay_up) {
-        if (current_item_index > 0) do_up = 1;
-        hold_delay_up = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_up = now;
-    }
-
-    if (edge & BIT(1)) {
-        do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.repeat_delay;
-        hold_tick_down = now;
-    } else if ((mask & BIT(1)) && now - hold_tick_down >= hold_delay_down) {
-        if (current_item_index < ui_count_static - 1) do_down = 1;
-        hold_delay_down = (uint32_t) config.settings.advanced.accelerate;
-        hold_tick_down = now;
-    }
+    int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    int do_down =
+        nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
 
     if (ui_count_static < 2) {
         do_up = 0;
@@ -511,9 +537,9 @@ int pause_menu_tick(void) {
         } else if (has_disc_control && current_item_index == row_disc_control) {
             play_sound(snd_confirm);
             diskcontrol_menu_open();
-        } else if (current_item_index == row_hotkeys) {
+        } else if (current_item_index == row_cheats) {
             play_sound(snd_confirm);
-            hotkeys_menu_open();
+            cheats_menu_open();
         } else if (current_item_index == row_settings) {
             play_sound(snd_confirm);
             settings_menu_open();

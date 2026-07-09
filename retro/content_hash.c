@@ -20,22 +20,28 @@ static char hash_active_path[PATH_MAX] = "";
 
 static char cache_path[MAX_BUFFER_SIZE] = "";
 
-static void cache_group_key(const char *content_path, char *out, const size_t out_size) {
-    const mz_ulong crc = mz_crc32(MZ_CRC32_INIT, (const unsigned char *) content_path, strlen(content_path));
-    snprintf(out, out_size, "%08lX", (unsigned long) crc);
+#define CACHE_SECTION "hash"
+
+static void set_cache_path(const char *content_path) {
+    const char *name = strrchr(content_path, '/');
+    name = name ? name + 1 : content_path;
+
+    char stem[MAX_BUFFER_SIZE];
+    snprintf(stem, sizeof(stem), "%s", name);
+    char *dot = strrchr(stem, '.');
+    if (dot) *dot = '\0';
+
+    snprintf(cache_path, sizeof(cache_path), "%s/%s.ini", RETRO_HSH_PATH, stem);
+    create_directories(cache_path, 1);
 }
 
-static int
-cache_read(const char *content_path, const long long size, const long long mtime, char *out, const size_t out_size) {
+static int cache_read(const long long size, const long long mtime, char *out, const size_t out_size) {
     mini_t *ini = mini_try_load(cache_path);
     if (!ini) return 0;
 
-    char group[16];
-    cache_group_key(content_path, group, sizeof(group));
-
-    const long long cached_size = mini_get_int(ini, group, "size", -1);
-    const long long cached_mtime = mini_get_int(ini, group, "mtime", -1);
-    const char *cached_crc = mini_get_string(ini, group, "crc32", "");
+    const long long cached_size = mini_get_int(ini, CACHE_SECTION, "size", -1);
+    const long long cached_mtime = mini_get_int(ini, CACHE_SECTION, "mtime", -1);
+    const char *cached_crc = mini_get_string(ini, CACHE_SECTION, "crc32", "");
 
     int ok = 0;
     if (cached_size == size && cached_mtime == mtime && *cached_crc) {
@@ -47,17 +53,14 @@ cache_read(const char *content_path, const long long size, const long long mtime
     return ok;
 }
 
-static void cache_write(const char *content_path, const long long size, const long long mtime, const char *crc) {
+static void cache_write(const long long size, const long long mtime, const char *crc) {
     mini_t *ini = mini_try_load(cache_path);
     if (!ini) ini = mini_create(cache_path);
     if (!ini) return;
 
-    char group[16];
-    cache_group_key(content_path, group, sizeof(group));
-
-    mini_set_int(ini, group, "size", size);
-    mini_set_int(ini, group, "mtime", mtime);
-    mini_set_string(ini, group, "crc32", crc);
+    mini_set_int(ini, CACHE_SECTION, "size", size);
+    mini_set_int(ini, CACHE_SECTION, "mtime", mtime);
+    mini_set_string(ini, CACHE_SECTION, "crc32", crc);
 
     mini_save(ini, 0);
     mini_free(ini);
@@ -80,7 +83,7 @@ static void *compute_thread(void *arg) {
     }
 
     char cached[16];
-    if (cache_read(path, st.st_size, st.st_mtime, cached, sizeof(cached))) {
+    if (cache_read(st.st_size, st.st_mtime, cached, sizeof(cached))) {
         finish(path, cached);
         return NULL;
     }
@@ -103,20 +106,17 @@ static void *compute_thread(void *arg) {
 
     char result[16];
     snprintf(result, sizeof(result), "%08lX", (unsigned long) crc);
-    cache_write(path, st.st_size, st.st_mtime, result);
+    cache_write(st.st_size, st.st_mtime, result);
 
     finish(path, result);
     return NULL;
 }
 
 void content_hash_request(const char *content_path) {
-    if (!cache_path[0]) {
-        snprintf(cache_path, sizeof(cache_path), "%s/cache.ini", RETRO_HSH_PATH);
-        create_directories(cache_path, 1);
-    }
-
     if (hash_running) return;
     if (hash_ready && strcmp(hash_active_path, content_path) == 0) return;
+
+    set_cache_path(content_path);
 
     snprintf(hash_active_path, sizeof(hash_active_path), "%s", content_path);
     hash_ready = 0;
