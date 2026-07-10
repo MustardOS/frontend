@@ -287,7 +287,14 @@ int main(const int argc, char *argv[]) {
 
             if (ff_active) {
                 const int batch = (int) session_settings_ff_speed_value(session_settings.ff_speed);
-                while (frames_run < batch) {
+                if (frames_run < batch) {
+                    video_bridge_set_frame_skip(1);
+                    while (frames_run < batch - 1) {
+                        current_core.retro_run();
+                        frames_run++;
+                    }
+                    video_bridge_set_frame_skip(0);
+
                     current_core.retro_run();
                     frames_run++;
                 }

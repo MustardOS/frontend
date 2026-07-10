@@ -746,7 +746,7 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
 
     ensure_program();
 
-    if (!prog_ready || !ensure_target(renderer, &adjusted_tex, &adjusted_w, &adjusted_h, dest_rect->w, dest_rect->h)) {
+    if (!prog_ready) {
         SDL_RenderCopy(renderer, tex, NULL, dest_rect);
         return;
     }
@@ -756,12 +756,18 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         shader_prog != 0 && ensure_target(renderer, &work_tex, &work_w, &work_h, dest_rect->w, dest_rect->h);
 
     SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
-    if (SDL_SetRenderTarget(renderer, adjusted_tex) != 0) {
-        SDL_RenderCopy(renderer, tex, NULL, dest_rect);
-        return;
+    SDL_Texture *gl_src = tex;
+
+    if (mux_retro_get_pixel_format() != RETRO_PIXEL_FORMAT_XRGB8888) {
+        if (!ensure_target(renderer, &adjusted_tex, &adjusted_w, &adjusted_h, dest_rect->w, dest_rect->h)
+            || SDL_SetRenderTarget(renderer, adjusted_tex) != 0) {
+            SDL_RenderCopy(renderer, tex, NULL, dest_rect);
+            return;
+        }
+        SDL_RenderCopy(renderer, tex, NULL, NULL);
+        SDL_SetRenderTarget(renderer, prev_target);
+        gl_src = adjusted_tex;
     }
-    SDL_RenderCopy(renderer, tex, NULL, NULL);
-    SDL_SetRenderTarget(renderer, prev_target);
 
     int out_w = 0, out_h = 0;
     if (prev_target) {
@@ -796,7 +802,7 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     if (use_shader) {
         if (SDL_SetRenderTarget(renderer, work_tex) == 0) {
             const int colour_ok =
-                draw_gl_pass(adjusted_tex, 0, -1.0f, 1.0f, 1.0f, -1.0f, 1, dest_rect->w, dest_rect->h, 0, 0);
+                draw_gl_pass(gl_src, 0, -1.0f, 1.0f, 1.0f, -1.0f, 1, dest_rect->w, dest_rect->h, 0, 0);
             SDL_SetRenderTarget(renderer, prev_target);
 
             if (colour_ok) {
@@ -808,7 +814,7 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         }
     }
 
-    if (!drew) drew = draw_gl_pass(adjusted_tex, 0, ndc_left, ndc_right, ndc_top, ndc_bottom, 0, out_w, out_h, 0, 0);
+    if (!drew) drew = draw_gl_pass(gl_src, 0, ndc_left, ndc_right, ndc_top, ndc_bottom, 0, out_w, out_h, 0, 0);
 
     p_glUseProgram((GLuint) prev_program);
     p_glViewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);

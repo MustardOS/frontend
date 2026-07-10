@@ -37,6 +37,7 @@ static int rotate_canvas_w = 0;
 static int rotate_canvas_h = 0;
 
 static int frame_dirty = 0;
+static int frame_skip = 0;
 
 static void upload_frame(void);
 
@@ -315,6 +316,23 @@ void video_bridge_get_dest_size(int *w, int *h) {
 }
 
 #define SCALE2_X_IMPL(NAME, TYPE)                                                                                      \
+    static inline void NAME##_px(                                                                                      \
+        const TYPE b, const TYPE d, const TYPE e, const TYPE f, const TYPE h, TYPE *out0, TYPE *out1                   \
+    ) {                                                                                                                \
+        TYPE e0 = e, e1 = e, e2 = e, e3 = e;                                                                           \
+        if (b != h && d != f) {                                                                                        \
+            e0 = (d == b) ? d : e;                                                                                     \
+            e1 = (b == f) ? f : e;                                                                                     \
+            e2 = (d == h) ? d : e;                                                                                     \
+            e3 = (h == f) ? f : e;                                                                                     \
+        }                                                                                                              \
+                                                                                                                       \
+        out0[0] = e0;                                                                                                  \
+        out0[1] = e1;                                                                                                  \
+        out1[0] = e2;                                                                                                  \
+        out1[1] = e3;                                                                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
     static void NAME(                                                                                                  \
         const TYPE *src, TYPE *dst, const int width, const int height, const int src_pitch_px, const int dst_pitch_px  \
     ) {                                                                                                                \
@@ -325,25 +343,14 @@ void video_bridge_get_dest_size(int *w, int *h) {
             TYPE *out0 = dst + (size_t) (y * 2) * dst_pitch_px;                                                        \
             TYPE *out1 = dst + (size_t) (y * 2 + 1) * dst_pitch_px;                                                    \
                                                                                                                        \
-            for (int x = 0; x < width; x++) {                                                                          \
-                const TYPE e = row[x];                                                                                 \
-                const TYPE b = row_up[x];                                                                              \
-                const TYPE h = row_down[x];                                                                            \
-                const TYPE d = row[x > 0 ? x - 1 : x];                                                                 \
-                const TYPE f = row[x < width - 1 ? x + 1 : x];                                                         \
+            NAME##_px(row_up[0], row[0], row[0], row[width > 1 ? 1 : 0], row_down[0], out0, out1);                     \
                                                                                                                        \
-                TYPE e0 = e, e1 = e, e2 = e, e3 = e;                                                                   \
-                if (b != h && d != f) {                                                                                \
-                    e0 = (d == b) ? d : e;                                                                             \
-                    e1 = (b == f) ? f : e;                                                                             \
-                    e2 = (d == h) ? d : e;                                                                             \
-                    e3 = (h == f) ? f : e;                                                                             \
-                }                                                                                                      \
+            for (int x = 1; x + 1 < width; x++)                                                                        \
+                NAME##_px(row_up[x], row[x - 1], row[x], row[x + 1], row_down[x], out0 + x * 2, out1 + x * 2);         \
                                                                                                                        \
-                out0[x * 2] = e0;                                                                                      \
-                out0[x * 2 + 1] = e1;                                                                                  \
-                out1[x * 2] = e2;                                                                                      \
-                out1[x * 2 + 1] = e3;                                                                                  \
+            if (width > 1) {                                                                                           \
+                const int x = width - 1;                                                                               \
+                NAME##_px(row_up[x], row[x - 1], row[x], row[x], row_down[x], out0 + x * 2, out1 + x * 2);             \
             }                                                                                                          \
         }                                                                                                              \
     }
@@ -352,6 +359,33 @@ SCALE2_X_IMPL(scale2x_16, uint16_t)
 SCALE2_X_IMPL(scale2x_32, uint32_t)
 
 #define SCALE3_X_IMPL(NAME, TYPE)                                                                                      \
+    static inline void NAME##_px(                                                                                      \
+        const TYPE a, const TYPE b, const TYPE c, const TYPE d, const TYPE e, const TYPE f, const TYPE g,              \
+        const TYPE h, const TYPE ii, TYPE *out0, TYPE *out1, TYPE *out2                                                \
+    ) {                                                                                                                \
+        TYPE e0 = e, e1 = e, e2 = e, e3 = e, e5 = e, e6 = e, e7 = e, e8 = e;                                           \
+        if (b != h && d != f) {                                                                                        \
+            e0 = (d == b) ? d : e;                                                                                     \
+            e1 = ((d == b && e != c) || (b == f && e != a)) ? b : e;                                                   \
+            e2 = (b == f) ? f : e;                                                                                     \
+            e3 = ((d == b && e != g) || (d == h && e != a)) ? d : e;                                                   \
+            e5 = ((b == f && e != ii) || (h == f && e != c)) ? f : e;                                                  \
+            e6 = (d == h) ? d : e;                                                                                     \
+            e7 = ((d == h && e != ii) || (h == f && e != g)) ? h : e;                                                  \
+            e8 = (h == f) ? f : e;                                                                                     \
+        }                                                                                                              \
+                                                                                                                       \
+        out0[0] = e0;                                                                                                  \
+        out0[1] = e1;                                                                                                  \
+        out0[2] = e2;                                                                                                  \
+        out1[0] = e3;                                                                                                  \
+        out1[1] = e;                                                                                                   \
+        out1[2] = e5;                                                                                                  \
+        out2[0] = e6;                                                                                                  \
+        out2[1] = e7;                                                                                                  \
+        out2[2] = e8;                                                                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
     static void NAME(                                                                                                  \
         const TYPE *src, TYPE *dst, const int width, const int height, const int src_pitch_px, const int dst_pitch_px  \
     ) {                                                                                                                \
@@ -363,41 +397,26 @@ SCALE2_X_IMPL(scale2x_32, uint32_t)
             TYPE *out1 = dst + (size_t) (y * 3 + 1) * dst_pitch_px;                                                    \
             TYPE *out2 = dst + (size_t) (y * 3 + 2) * dst_pitch_px;                                                    \
                                                                                                                        \
-            for (int x = 0; x < width; x++) {                                                                          \
-                const int xl = x > 0 ? x - 1 : x;                                                                      \
-                const int xr = x < width - 1 ? x + 1 : x;                                                              \
+            {                                                                                                          \
+                const int xr = width > 1 ? 1 : 0;                                                                      \
+                NAME##_px(                                                                                             \
+                    row_up[0], row_up[0], row_up[xr], row[0], row[0], row[xr], row_down[0], row_down[0], row_down[xr], \
+                    out0, out1, out2                                                                                   \
+                );                                                                                                     \
+            }                                                                                                          \
                                                                                                                        \
-                const TYPE a = row_up[xl];                                                                             \
-                const TYPE b = row_up[x];                                                                              \
-                const TYPE c = row_up[xr];                                                                             \
-                const TYPE d = row[xl];                                                                                \
-                const TYPE e = row[x];                                                                                 \
-                const TYPE f = row[xr];                                                                                \
-                const TYPE g = row_down[xl];                                                                           \
-                const TYPE h = row_down[x];                                                                            \
-                const TYPE ii = row_down[xr];                                                                          \
+            for (int x = 1; x + 1 < width; x++)                                                                        \
+                NAME##_px(                                                                                             \
+                    row_up[x - 1], row_up[x], row_up[x + 1], row[x - 1], row[x], row[x + 1], row_down[x - 1],          \
+                    row_down[x], row_down[x + 1], out0 + x * 3, out1 + x * 3, out2 + x * 3                             \
+                );                                                                                                     \
                                                                                                                        \
-                TYPE e0 = e, e1 = e, e2 = e, e3 = e, e5 = e, e6 = e, e7 = e, e8 = e;                                   \
-                if (b != h && d != f) {                                                                                \
-                    e0 = (d == b) ? d : e;                                                                             \
-                    e1 = ((d == b && e != c) || (b == f && e != a)) ? b : e;                                           \
-                    e2 = (b == f) ? f : e;                                                                             \
-                    e3 = ((d == b && e != g) || (d == h && e != a)) ? d : e;                                           \
-                    e5 = ((b == f && e != ii) || (h == f && e != c)) ? f : e;                                          \
-                    e6 = (d == h) ? d : e;                                                                             \
-                    e7 = ((d == h && e != ii) || (h == f && e != g)) ? h : e;                                          \
-                    e8 = (h == f) ? f : e;                                                                             \
-                }                                                                                                      \
-                                                                                                                       \
-                out0[x * 3] = e0;                                                                                      \
-                out0[x * 3 + 1] = e1;                                                                                  \
-                out0[x * 3 + 2] = e2;                                                                                  \
-                out1[x * 3] = e3;                                                                                      \
-                out1[x * 3 + 1] = e;                                                                                   \
-                out1[x * 3 + 2] = e5;                                                                                  \
-                out2[x * 3] = e6;                                                                                      \
-                out2[x * 3 + 1] = e7;                                                                                  \
-                out2[x * 3 + 2] = e8;                                                                                  \
+            if (width > 1) {                                                                                           \
+                const int x = width - 1;                                                                               \
+                NAME##_px(                                                                                             \
+                    row_up[x - 1], row_up[x], row_up[x], row[x - 1], row[x], row[x], row_down[x - 1], row_down[x],     \
+                    row_down[x], out0 + x * 3, out1 + x * 3, out2 + x * 3                                              \
+                );                                                                                                     \
             }                                                                                                          \
         }                                                                                                              \
     }
@@ -523,8 +542,16 @@ void video_bridge_shutdown(void) {
     tex_h = 0;
 }
 
+void video_bridge_set_frame_skip(const int skip) {
+    frame_skip = skip;
+}
+
+int video_bridge_get_frame_skip(void) {
+    return frame_skip;
+}
+
 void mux_retro_video_refresh_cb(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
-    if (!data || width == 0 || height == 0) return;
+    if (frame_skip || !data || width == 0 || height == 0) return;
 
     const size_t needed = pitch * height;
     if (needed > raw_frame_buf_cap) {

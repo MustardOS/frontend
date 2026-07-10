@@ -36,6 +36,10 @@ void video_bridge_apply_fps_limit(void);
 
 void video_bridge_flush_frame(void);
 
+void video_bridge_set_frame_skip(int skip);
+
+int video_bridge_get_frame_skip(void);
+
 void video_bridge_get_frame_size(int *w, int *h);
 
 void video_bridge_get_dest_size(int *w, int *h);

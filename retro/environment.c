@@ -192,6 +192,15 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
+        case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE: {
+            if (data) {
+                int flags = RETRO_AV_ENABLE_AUDIO;
+                if (!video_bridge_get_frame_skip()) flags |= RETRO_AV_ENABLE_VIDEO;
+                *(int *) data = flags;
+            }
+            return true;
+        }
+
         case RETRO_ENVIRONMENT_GET_VFS_INTERFACE: {
             return vfs_bridge_get_interface(data);
         }
