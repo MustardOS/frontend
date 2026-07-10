@@ -633,7 +633,6 @@ void init_ui_common_screen(
     lv_obj_set_scrollbar_mode(ui_pnl_content, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnl_content, LV_DIR_VER);
 
-    lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
     nav_watch_list_overflow(ui_pnl_content);
 
     lv_obj_set_style_bg_color(ui_pnl_content, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
@@ -1970,7 +1969,7 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
     lv_obj_set_style_pad_row(ui_pnl_grid, theme->grid.row_padding, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnl_grid, theme->grid.column_padding, MU_OBJ_MAIN_DEFAULT);
 
-    lv_obj_add_flag(ui_pnl_grid, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+    nav_watch_list_overflow(ui_pnl_grid);
 
     lv_obj_clear_flag(ui_pnl_grid_current_item, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align(
@@ -2253,7 +2252,8 @@ void scroll_help_content(const int direction, const int page_down) {
 
     if (scroll_y - total_line_height * direction < 0) {
         lv_obj_scroll_to_y(ui_pnl_help_content, 0, LV_ANIM_ON);
-    } else if (scroll_y - total_line_height * direction >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
+    } else if (scroll_y - total_line_height * direction
+               >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
         lv_obj_scroll_to_y(ui_pnl_help_content, lv_obj_get_content_height(ui_lbl_help_content), LV_ANIM_ON);
     } else {
         lv_obj_scroll_by(ui_pnl_help_content, 0, total_line_height * direction, LV_ANIM_ON);

@@ -413,9 +413,7 @@ void update_scroll_position(
     lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
 }
 
-static void blank_overflow_rows_cb(lv_event_t *e) {
-    const lv_obj_t *panel = lv_event_get_target(e);
-
+static void blank_overflow_rows(const lv_obj_t *panel) {
     lv_area_t panel_area;
     lv_obj_get_coords(panel, &panel_area);
 
@@ -432,7 +430,7 @@ static void blank_overflow_rows_cb(lv_event_t *e) {
         const lv_coord_t y2 = child_area.y2 - tr_y;
 
         // 2px grace covers row padding, hopefully it is enough!
-        const int outside = y1 < panel_area.y1 - 2 || y2 > panel_area.y2 + 2;
+        const int outside = y2 <= panel_area.y1 + 2 || y1 >= panel_area.y2 - 2;
         const lv_opa_t want = outside ? LV_OPA_TRANSP : LV_OPA_COVER;
 
         if (lv_obj_get_style_opa(child, LV_PART_MAIN) != want) {
@@ -441,9 +439,18 @@ static void blank_overflow_rows_cb(lv_event_t *e) {
     }
 }
 
+static void blank_overflow_rows_cb(lv_event_t *e) {
+    blank_overflow_rows(lv_event_get_target(e));
+}
+
+static lv_obj_t *raise_row = NULL;
+
+static void raise_row_draw_cb(lv_event_t *e);
+
 void nav_watch_list_overflow(lv_obj_t *panel) {
     lv_obj_add_event_cb(panel, blank_overflow_rows_cb, LV_EVENT_SCROLL, NULL);
     lv_obj_add_event_cb(panel, blank_overflow_rows_cb, LV_EVENT_LAYOUT_CHANGED, NULL);
+    lv_obj_add_event_cb(panel, raise_row_draw_cb, LV_EVENT_DRAW_POST, NULL);
 }
 
 void update_windowed_list(
@@ -806,12 +813,42 @@ void nav_set_last_dir(const enum nav_direction dir) {
     last_nav_dir = dir;
 }
 
-static void bring_shake_ancestor_forward(lv_obj_t *obj) {
+static lv_obj_t *shake_screen_ancestor(lv_obj_t *obj) {
     lv_obj_t *ancestor = obj;
     while (ancestor && lv_obj_get_parent(ancestor) != ui_screen) {
         ancestor = lv_obj_get_parent(ancestor);
     }
-    if (ancestor) lv_obj_move_foreground(ancestor);
+    return ancestor;
+}
+
+static void raise_row_draw_cb(lv_event_t *e) {
+    if (!raise_row || !lv_obj_is_valid(raise_row)) return;
+    if (lv_obj_get_parent(raise_row) != lv_event_get_target(e)) return;
+    if (lv_obj_has_flag(raise_row, LV_OBJ_FLAG_HIDDEN)) return;
+
+    lv_obj_redraw(lv_event_get_draw_ctx(e), raise_row);
+}
+
+static void shake_cleanup_cb(lv_anim_t *a) {
+    lv_obj_t *obj = a->var;
+    if (!obj || !lv_obj_is_valid(obj)) return;
+
+    lv_obj_t *ancestor = shake_screen_ancestor(obj);
+    if (!ancestor) return;
+
+    if (lv_obj_has_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE)) {
+        lv_obj_clear_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+        lv_obj_invalidate(ancestor);
+    }
+
+    lv_obj_t *row = obj;
+    while (row && lv_obj_get_parent(row) != ancestor)
+        row = lv_obj_get_parent(row);
+
+    if (row && row == raise_row) {
+        lv_obj_invalidate(raise_row);
+        raise_row = NULL;
+    }
 }
 
 static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hint) {
@@ -837,8 +874,6 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
                 break;
         }
     }
-
-    bring_shake_ancestor_forward(obj);
 
     lv_anim_exec_xcb_t exec_cb;
     int sign;
@@ -869,6 +904,35 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
 
     const int travel = sign * shake_travel[level];
 
+    lv_obj_t *ancestor = shake_screen_ancestor(obj);
+    if (ancestor) {
+        int poke = 0;
+        lv_obj_move_foreground(ancestor);
+
+        if (exec_cb == focus_shake_y_cb) {
+            lv_area_t obj_area;
+            lv_area_t panel_area;
+            lv_obj_get_coords(obj, &obj_area);
+            lv_obj_get_coords(ancestor, &panel_area);
+
+            poke = sign < 0 ? obj_area.y1 + travel < panel_area.y1 : obj_area.y2 + travel > panel_area.y2;
+        }
+
+        if (poke) {
+            lv_obj_add_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+            blank_overflow_rows(ancestor);
+        }
+
+        lv_obj_t *row = obj;
+        while (row && lv_obj_get_parent(row) != ancestor)
+            row = lv_obj_get_parent(row);
+
+        if (row && row != ancestor) {
+            if (raise_row && raise_row != row && lv_obj_is_valid(raise_row)) lv_obj_invalidate(raise_row);
+            raise_row = row;
+        }
+    }
+
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, obj);
@@ -878,6 +942,7 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
     lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
     lv_anim_set_playback_delay(&a, 20);
     lv_anim_set_playback_time(&a, 130);
+    lv_anim_set_deleted_cb(&a, shake_cleanup_cb);
     lv_anim_start(&a);
 
     return exec_cb;
