@@ -195,8 +195,7 @@ static void draw_video_background(SDL_Renderer *renderer) {
         (device.mux.width - canvas_w) / 2, (device.mux.height - canvas_h) / 2, canvas_w, canvas_h
     };
 
-    SDL_RendererFlip flip = SDL_FLIP_VERTICAL;
-    if (session_settings.mirrored) flip = (SDL_RendererFlip) (flip ^ SDL_FLIP_HORIZONTAL);
+    const SDL_RendererFlip flip = session_settings.mirrored ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
     SDL_RenderCopyEx(
         renderer, rotate_canvas_tex, NULL, &final_dst, (double) session_settings.rotate * 90.0, NULL, flip
