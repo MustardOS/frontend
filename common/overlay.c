@@ -47,27 +47,52 @@ static overlay_resolution overlay_map[] = {
     {1920, 1080, overlay_1920_x1080, 0},
 };
 
-int load_overlay_set(lv_obj_t *overlay_element, const int include_theme) {
-    char *overlay_patterns[] = {
-        lang.muxvisual.overlay.checkerboard.t1, lang.muxvisual.overlay.checkerboard.t4,
-        lang.muxvisual.overlay.diagonal.t1,     lang.muxvisual.overlay.diagonal.t2,
-        lang.muxvisual.overlay.diagonal.t4,     lang.muxvisual.overlay.lattice.t1,
-        lang.muxvisual.overlay.lattice.t4,      lang.muxvisual.overlay.horizontal.t1,
-        lang.muxvisual.overlay.horizontal.t2,   lang.muxvisual.overlay.horizontal.t4,
-        lang.muxvisual.overlay.vertical.t1,     lang.muxvisual.overlay.vertical.t2,
-        lang.muxvisual.overlay.vertical.t4,
-    };
+static char *overlay_patterns[] = {
+    lang.muxvisual.overlay.checkerboard.t1, lang.muxvisual.overlay.checkerboard.t4,
+    lang.muxvisual.overlay.diagonal.t1,     lang.muxvisual.overlay.diagonal.t2,
+    lang.muxvisual.overlay.diagonal.t4,     lang.muxvisual.overlay.lattice.t1,
+    lang.muxvisual.overlay.lattice.t4,      lang.muxvisual.overlay.horizontal.t1,
+    lang.muxvisual.overlay.horizontal.t2,   lang.muxvisual.overlay.horizontal.t4,
+    lang.muxvisual.overlay.vertical.t1,     lang.muxvisual.overlay.vertical.t2,
+    lang.muxvisual.overlay.vertical.t4,
+};
 
-    char **selected_overlay = NULL;
-    size_t res_overlay_count = 0;
-
+static char **current_res_overlay_list(size_t *count) {
     for (size_t i = 0; i < A_SIZE(overlay_map); i++) {
         if (overlay_map[i].width == device.screen.width && overlay_map[i].height == device.screen.height) {
-            selected_overlay = overlay_map[i].overlay_list;
-            res_overlay_count = overlay_map[i].overlay_count;
-            break;
+            *count = overlay_map[i].overlay_count;
+            return overlay_map[i].overlay_list;
         }
     }
+
+    *count = 0;
+    return NULL;
+}
+
+int overlay_pattern_count(void) {
+    size_t res_overlay_count = 0;
+    current_res_overlay_list(&res_overlay_count);
+    return (int) A_SIZE(overlay_patterns) + (int) res_overlay_count;
+}
+
+const char *overlay_pattern_name(const int index) {
+    if (index < 0) return "";
+    if ((size_t) index < A_SIZE(overlay_patterns)) return overlay_patterns[index];
+
+    size_t res_overlay_count = 0;
+    char **selected_overlay = current_res_overlay_list(&res_overlay_count);
+    const size_t res_index = (size_t) index - A_SIZE(overlay_patterns);
+
+    return res_index < res_overlay_count ? selected_overlay[res_index] : "";
+}
+
+int overlay_pattern_to_value(const int index) {
+    return index + 2;
+}
+
+int load_overlay_set(lv_obj_t *overlay_element, const int include_theme) {
+    size_t res_overlay_count = 0;
+    char **selected_overlay = current_res_overlay_list(&res_overlay_count);
 
     lv_dropdown_clear_options(overlay_element);
 

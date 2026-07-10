@@ -21,7 +21,7 @@ SRC := main.c core.c environment.c video.c audio.c input_bridge.c state.c \
        ui_pause.c options.c ui_options.c gamestate.c ui_gamestate.c vfs.c rumble.c \
        ui_diskcontrol.c ui_information.c settings.c ui_settings.c patch.c hotkeys.c ui_hotkeys.c \
        content_hash.c nav_repeat.c bios_check.c sram.c cheats.c ui_cheats.c colour.c ui_display.c \
-       ui_colfilter.c ui_shader.c
+       ui_colfilter.c ui_shader.c overlay_bridge.c ui_viewport.c
 
 OBJ := $(SRC:.c=.o)
 

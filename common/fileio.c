@@ -601,7 +601,7 @@ int copy_file(const char *from, const char *to) {
 
     if (fstat(fd_from, &st) < 0) goto out_error;
 
-    fd_to = open(to, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, st.st_mode & 0777);
+    fd_to = open(to, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, st.st_mode & 0777);
     if (fd_to < 0) goto out_error;
 
     char buf[65536];

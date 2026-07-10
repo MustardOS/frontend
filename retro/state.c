@@ -42,6 +42,7 @@ int state_save(const char *path) {
 
 int state_load(const char *path) {
     if (!current_core.retro_unserialize) return -1;
+    if (current_core.retro_serialize_size) current_core.retro_serialize_size();
 
     FILE *f = fopen(path, "rb");
     if (!f) {

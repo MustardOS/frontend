@@ -1,6 +1,15 @@
 #pragma once
 
-enum video_scale_mode { video_scale_aspect = 0, video_scale_integer, video_scale_stretch, video_scale_count };
+enum video_scale_mode {
+    video_scale_aspect = 0,
+    video_scale_integer,
+    video_scale_stretch,
+    video_scale_full_height,
+    video_scale_full_width,
+    video_scale_count
+};
+
+enum video_rotate_mode { video_rotate_0 = 0, video_rotate_90, video_rotate_180, video_rotate_270, video_rotate_count };
 
 enum integer_scale_mode {
     integer_scale_auto = 0,
@@ -61,8 +70,19 @@ enum ff_speed_mode { ff_speed_2_x = 0, ff_speed_3_x, ff_speed_4_x, ff_speed_8_x,
 
 enum slowmo_speed_mode { slowmo_speed_1_2_x = 0, slowmo_speed_1_4_x, slowmo_speed_1_8_x, slowmo_speed_count };
 
+enum overlay_source_mode {
+    overlay_source_off = 0,
+    overlay_source_pattern,
+    overlay_source_catalogue,
+    overlay_source_count
+};
+
+enum auto_save_mode { auto_save_off = 0, auto_save_idle, auto_save_quit, auto_save_idle_quit, auto_save_count };
+
 struct session_settings_t {
     int scaling_mode;
+    int rotate;
+    int mirrored;
     int aspect_ratio;
     int integer_scale;
     int texture_filter;
@@ -76,9 +96,15 @@ struct session_settings_t {
     int ff_speed;
     int slowmo_speed;
     int hotkey_ff_enabled;
+    int hotkey_ff_glyph_enabled;
     int hotkey_slowmo_enabled;
+    int hotkey_slowmo_glyph_enabled;
     int hotkey_quicksave_enabled;
     int hotkey_quickload_enabled;
+    int hotkey_toggle_fps_enabled;
+    int hotkey_header_toggle_enabled;
+    int hotkey_quit_enabled;
+    int auto_save;
     int sram_flush_seconds;
     int colour_brightness;
     int colour_contrast;
@@ -87,11 +113,19 @@ struct session_settings_t {
     int colour_gamma;
     int colour_filter;
     int colour_shader;
+    int overlay_source;
+    int overlay_pattern;
+    int overlay_opacity;
+    int viewport_offset_x;
+    int viewport_offset_y;
+    int viewport_zoom;
 };
 
 extern struct session_settings_t session_settings;
 
 const char *session_settings_scale_name(int mode);
+
+const char *session_settings_rotate_name(int mode);
 
 const char *session_settings_aspect_ratio_name(int mode);
 
@@ -119,6 +153,12 @@ double session_settings_slowmo_speed_value(int mode);
 
 const char *session_settings_sram_flush_name(int seconds);
 
+const char *session_settings_auto_save_name(int mode);
+
+int session_settings_auto_save_on_idle(void);
+
+int session_settings_auto_save_on_quit(void);
+
 const char *session_settings_colour_brightness_name(int value);
 
 const char *session_settings_colour_contrast_name(int value);
@@ -133,9 +173,25 @@ const char *session_settings_colour_filter_name(int index);
 
 const char *session_settings_colour_shader_name(int index);
 
+const char *session_settings_overlay_source_name(int mode);
+
+const char *session_settings_overlay_pattern_name(int index);
+
+const char *session_settings_overlay_opacity_name(int value);
+
+const char *session_settings_viewport_offset_x_name(int value);
+
+const char *session_settings_viewport_offset_y_name(int value);
+
+const char *session_settings_viewport_zoom_name(int value);
+
 void session_settings_init(const char *core_path_arg, const char *content_path);
 
 void session_settings_cycle_scaling(int direction);
+
+void session_settings_cycle_rotate(int direction);
+
+void session_settings_cycle_mirrored(int direction);
 
 void session_settings_cycle_aspect_ratio(int direction);
 
@@ -163,11 +219,23 @@ void session_settings_cycle_slowmo_speed(int direction);
 
 void session_settings_cycle_hotkey_ff_enabled(int direction);
 
+void session_settings_cycle_hotkey_ff_glyph_enabled(int direction);
+
 void session_settings_cycle_hotkey_slowmo_enabled(int direction);
+
+void session_settings_cycle_hotkey_slowmo_glyph_enabled(int direction);
 
 void session_settings_cycle_hotkey_quicksave_enabled(int direction);
 
 void session_settings_cycle_hotkey_quickload_enabled(int direction);
+
+void session_settings_cycle_hotkey_toggle_fps_enabled(int direction);
+
+void session_settings_cycle_hotkey_header_toggle_enabled(int direction);
+
+void session_settings_cycle_hotkey_quit_enabled(int direction);
+
+void session_settings_cycle_auto_save(int direction);
 
 void session_settings_cycle_sram_flush(int direction);
 
@@ -186,6 +254,20 @@ void session_settings_cycle_colour_filter(int direction);
 void session_settings_set_colour_filter(int index);
 
 void session_settings_set_colour_shader(int index);
+
+void session_settings_cycle_overlay_source(int direction);
+
+void session_settings_cycle_overlay_pattern(int direction);
+
+void session_settings_cycle_overlay_opacity(int direction);
+
+void session_settings_cycle_viewport_offset_x(int direction);
+
+void session_settings_cycle_viewport_offset_y(int direction);
+
+void session_settings_cycle_viewport_zoom(int direction);
+
+void session_settings_reset_viewport(void);
 
 int session_settings_is_dirty(void);
 

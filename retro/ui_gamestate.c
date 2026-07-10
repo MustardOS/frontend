@@ -398,15 +398,17 @@ void gamestate_menu_tick(void) {
         const int offset = pinned_row_offset();
 
         if (action == pending_load) {
+            int load_ok;
             if (gamestate_quicksave_exists && index == 0) {
-                gamestate_quicksave_load();
+                load_ok = gamestate_quicksave_load() == 0;
             } else if (gamestate_autosave_exists && index == qs_offset) {
-                gamestate_autosave_load();
+                load_ok = gamestate_autosave_load() == 0;
             } else {
-                gamestate_load(index - offset);
+                load_ok = gamestate_load(index - offset) == 0;
             }
             close_gamestate();
             pause_menu_toggle();
+            if (!load_ok) pause_menu_show_toast(lang.muxretro.gamestate.load_failed);
         } else if (action == pending_delete) {
             if (gamestate_quicksave_exists && index == 0) {
                 gamestate_quicksave_delete();

@@ -120,6 +120,8 @@ void pause_menu_header_fade_tick(void);
 
 void pause_menu_update_header(void);
 
+void pause_menu_apply_header_visibility(void);
+
 int pause_menu_tick(void);
 
 void options_menu_init(void);
@@ -156,6 +158,8 @@ void settings_menu_reopen_hotkeys(void);
 
 void settings_menu_reopen_display(void);
 
+void settings_menu_reopen_viewport(void);
+
 void display_menu_init(void);
 
 void display_menu_open(void);
@@ -183,6 +187,14 @@ void shader_menu_open(void);
 int shader_menu_is_active(void);
 
 void shader_menu_tick(void);
+
+void viewport_menu_init(void);
+
+void viewport_menu_open(void);
+
+int viewport_menu_is_active(void);
+
+void viewport_menu_tick(void);
 
 void hotkeys_menu_init(void);
 

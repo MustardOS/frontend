@@ -4,6 +4,12 @@
 
 int load_overlay_set(lv_obj_t *overlay_element, int include_theme);
 
+int overlay_pattern_count(void);
+
+const char *overlay_pattern_name(int index);
+
+int overlay_pattern_to_value(int index);
+
 #define OVR_PACK_FMT                                                                                                   \
     "\x62\x32\x35\x6e\x49\x48\x64\x70\x64\x47\x67\x67\x64\x47\x68\x6c\x49\x48\x64\x76\x63\x6d\x78\x6b"                 \
     "\x4c\x69\x42\x5a\x62\x33\x55\x67\x5a\x47\x39\x75\x4a\x33\x51\x67\x61\x32\x35\x76\x64\x79\x42\x33"

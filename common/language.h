@@ -1472,6 +1472,7 @@ struct mux_lang {
             char quick_save[MAX_BUFFER_SIZE];
             char state[MAX_BUFFER_SIZE];
             char list[MAX_BUFFER_SIZE];
+            char load_failed[MAX_BUFFER_SIZE];
         } gamestate;
         struct {
             char options_title[MAX_BUFFER_SIZE];
@@ -1482,6 +1483,8 @@ struct mux_lang {
             char hotkeys_desc[MAX_BUFFER_SIZE];
             char display_title[MAX_BUFFER_SIZE];
             char display_desc[MAX_BUFFER_SIZE];
+            char viewport_title[MAX_BUFFER_SIZE];
+            char viewport_desc[MAX_BUFFER_SIZE];
             char content_save[MAX_BUFFER_SIZE];
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
@@ -1493,6 +1496,10 @@ struct mux_lang {
         } diskcontrol;
         struct {
             char scaling_mode[MAX_BUFFER_SIZE];
+            char rotate[MAX_BUFFER_SIZE];
+            char mirrored[MAX_BUFFER_SIZE];
+            char full_height[MAX_BUFFER_SIZE];
+            char full_width[MAX_BUFFER_SIZE];
             char texture_filter[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
@@ -1529,6 +1536,12 @@ struct mux_lang {
             char header_battery[MAX_BUFFER_SIZE];
             char header_both[MAX_BUFFER_SIZE];
             char sram_flush[MAX_BUFFER_SIZE];
+            char auto_save[MAX_BUFFER_SIZE];
+            char auto_save_idle[MAX_BUFFER_SIZE];
+            char auto_save_quit[MAX_BUFFER_SIZE];
+            char auto_save_idle_quit[MAX_BUFFER_SIZE];
+            char overlay_pattern_mode[MAX_BUFFER_SIZE];
+            char overlay_catalogue_mode[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
             char fast_forward[MAX_BUFFER_SIZE];
@@ -1538,6 +1551,10 @@ struct mux_lang {
             char ff_speed[MAX_BUFFER_SIZE];
             char slowmo_speed[MAX_BUFFER_SIZE];
             char no_quicksave[MAX_BUFFER_SIZE];
+            char toggle_fps[MAX_BUFFER_SIZE];
+            char toggle_header[MAX_BUFFER_SIZE];
+            char ff_glyph[MAX_BUFFER_SIZE];
+            char slowmo_glyph[MAX_BUFFER_SIZE];
         } hotkeys_screen;
         struct {
             char miscellaneous[MAX_BUFFER_SIZE];
@@ -1553,7 +1570,32 @@ struct mux_lang {
             char gamma[MAX_BUFFER_SIZE];
             char filter[MAX_BUFFER_SIZE];
             char shaders[MAX_BUFFER_SIZE];
+            char overlay[MAX_BUFFER_SIZE];
+            char overlay_pattern[MAX_BUFFER_SIZE];
+            char overlay_opacity[MAX_BUFFER_SIZE];
+            char viewport[MAX_BUFFER_SIZE];
         } display_screen;
+        struct {
+            char offset_x[MAX_BUFFER_SIZE];
+            char offset_y[MAX_BUFFER_SIZE];
+            char zoom[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
+        } viewport_screen;
+        struct {
+            char checkerboard_1[MAX_BUFFER_SIZE];
+            char checkerboard_4[MAX_BUFFER_SIZE];
+            char diagonal_1[MAX_BUFFER_SIZE];
+            char diagonal_2[MAX_BUFFER_SIZE];
+            char diagonal_4[MAX_BUFFER_SIZE];
+            char lattice_1[MAX_BUFFER_SIZE];
+            char lattice_4[MAX_BUFFER_SIZE];
+            char horizontal_1[MAX_BUFFER_SIZE];
+            char horizontal_2[MAX_BUFFER_SIZE];
+            char horizontal_4[MAX_BUFFER_SIZE];
+            char vertical_1[MAX_BUFFER_SIZE];
+            char vertical_2[MAX_BUFFER_SIZE];
+            char vertical_4[MAX_BUFFER_SIZE];
+        } overlay_screen;
         struct {
             char core_name[MAX_BUFFER_SIZE];
             char core_version[MAX_BUFFER_SIZE];

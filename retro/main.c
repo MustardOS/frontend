@@ -19,13 +19,14 @@
 #include "muxretro.h"
 #include "options.h"
 #include "core.h"
+#include "overlay_bridge.h"
 #include "paths.h"
 #include "rumble.h"
 #include "settings.h"
 #include "sram.h"
 
 #define RESUME_COOLDOWN_MS     1500
-#define AUTOLOAD_WARMUP_FRAMES 5
+#define AUTOLOAD_WARMUP_FRAMES 60
 #define AUDIO_LOW_WATER_MS     64
 #define AUDIO_HIGH_WATER_MS    80
 #define AUDIO_MAX_CATCHUP      3
@@ -63,10 +64,12 @@ static void install_suspend_signal_handlers(void) {
 static void handle_pending_suspend_signals(void) {
     if (pending_sleep_signal) {
         pending_sleep_signal = 0;
-        LOG_INFO(mux_module, "Received sleep-prepare signal (SIGUSR1): saving state and SRAM");
 
-        gamestate_autosave_save();
-        sram_bridge_save();
+        if (session_settings_auto_save_on_idle()) {
+            LOG_INFO(mux_module, "Received sleep-prepare signal (SIGUSR1): saving state and SRAM");
+            gamestate_autosave_save();
+            sram_bridge_save();
+        }
         if (!pause_menu_is_active()) pause_menu_toggle();
     }
 
@@ -123,8 +126,11 @@ static void idle_poll(void) {
         && SDL_GetTicks() >= resume_cooldown_until) {
         LOG_DEBUG(mux_module, "idle_poll: triggering pause_menu_toggle + gamestate_autosave_save");
         pause_menu_toggle();
-        gamestate_autosave_save();
-        sram_bridge_save();
+
+        if (session_settings_auto_save_on_idle()) {
+            gamestate_autosave_save();
+            sram_bridge_save();
+        }
     }
     last_seen_changes = mux_idle_state_changes;
 }
@@ -180,6 +186,7 @@ int main(const int argc, char *argv[]) {
 
     sram_bridge_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
+    overlay_bridge_init(core_path_arg, content_path);
 
     build_state_dir(core_path_arg, content_path);
     gamestate_init(state_dir);
@@ -200,6 +207,8 @@ int main(const int argc, char *argv[]) {
 
     video_bridge_init();
     LOG_DEBUG(mux_module, "video_bridge_init done");
+
+    overlay_bridge_apply();
 
     if (!start_fresh) {
         for (int i = 0; i < AUTOLOAD_WARMUP_FRAMES; i++)
@@ -265,8 +274,10 @@ int main(const int argc, char *argv[]) {
 
             SDL_Delay(10);
         } else if (hotkeys_task()) {
-            LOG_DEBUG(mux_module, "main: menu released without a hotkey chord, toggling pause");
+            LOG_DEBUG(mux_module, "main: menu released without a hotkey combo, toggling pause");
             pause_menu_toggle();
+        } else if (hotkeys_is_quit_requested()) {
+            quit = 1;
         } else {
             current_core.retro_run();
             int frames_run = 1;
@@ -336,10 +347,11 @@ int main(const int argc, char *argv[]) {
 
     pause_menu_shutdown();
     video_bridge_shutdown();
+    overlay_bridge_shutdown();
     audio_bridge_close();
     rumble_bridge_shutdown();
 
-    sram_bridge_save();
+    if (session_settings_auto_save_on_quit()) sram_bridge_save();
 
     core_unload_content();
     core_unload();

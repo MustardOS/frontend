@@ -1,4 +1,5 @@
 #include <string.h>
+#include "../common/device.h"
 #include "../common/fileio.h"
 #include "../common/init.h"
 #include "../common/language.h"
@@ -6,15 +7,19 @@
 #include "../common/mini/mini.h"
 #include "../common/miniz/miniz.h"
 #include "../common/options.h"
+#include "../common/overlay.h"
 #include "../common/strutil.h"
 #include "colour.h"
 #include "core.h"
 #include "muxretro.h"
+#include "overlay_bridge.h"
 #include "paths.h"
 #include "settings.h"
 
 static const struct session_settings_t defaults = {
     .scaling_mode = video_scale_aspect,
+    .rotate = video_rotate_0,
+    .mirrored = 0,
     .aspect_ratio = aspect_ratio_auto,
     .integer_scale = integer_scale_auto,
     .texture_filter = texture_filter_nearest,
@@ -28,9 +33,15 @@ static const struct session_settings_t defaults = {
     .ff_speed = ff_speed_4_x,
     .slowmo_speed = slowmo_speed_1_2_x,
     .hotkey_ff_enabled = 1,
+    .hotkey_ff_glyph_enabled = 1,
     .hotkey_slowmo_enabled = 1,
+    .hotkey_slowmo_glyph_enabled = 1,
     .hotkey_quicksave_enabled = 1,
     .hotkey_quickload_enabled = 1,
+    .hotkey_toggle_fps_enabled = 1,
+    .hotkey_header_toggle_enabled = 1,
+    .hotkey_quit_enabled = 1,
+    .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
     .colour_brightness = 0,
     .colour_contrast = 100,
@@ -39,6 +50,12 @@ static const struct session_settings_t defaults = {
     .colour_gamma = 100,
     .colour_filter = 0,
     .colour_shader = 0,
+    .overlay_source = overlay_source_catalogue,
+    .overlay_pattern = 0,
+    .overlay_opacity = 100,
+    .viewport_offset_x = 0,
+    .viewport_offset_y = 0,
+    .viewport_zoom = 100,
 };
 
 #define COLOUR_BRIGHTNESS_MIN -100
@@ -53,6 +70,11 @@ static const struct session_settings_t defaults = {
 #define COLOUR_GAMMA_MAX      400
 #define COLOUR_STEP           5
 
+#define VIEWPORT_OFFSET_STEP 1
+#define VIEWPORT_ZOOM_MIN    50
+#define VIEWPORT_ZOOM_MAX    200
+#define VIEWPORT_ZOOM_STEP   5
+
 struct session_settings_t session_settings;
 static struct session_settings_t baseline_settings;
 
@@ -62,8 +84,11 @@ static char directory_ini_path[MAX_BUFFER_SIZE] = "";
 
 static const char *scale_names[video_scale_count] = {
     lang.muxretro.settings_screen.aspect_ratio, lang.muxretro.settings_screen.integer_mode,
-    lang.muxretro.settings_screen.stretch
+    lang.muxretro.settings_screen.stretch, lang.muxretro.settings_screen.full_height,
+    lang.muxretro.settings_screen.full_width
 };
+
+static const int rotate_degrees[video_rotate_count] = {0, 90, 180, 270};
 
 static const double integer_scale_values[integer_scale_count] = {0.0,  1.00, 1.25, 1.50, 1.75, 2.00, 2.25,
                                                                  2.50, 2.75, 3.00, 3.25, 3.50, 3.75, 4.00};
@@ -99,13 +124,41 @@ static const char *header_visibility_names[header_visibility_count] = {
     lang.muxretro.settings_screen.header_battery, lang.muxretro.settings_screen.header_both
 };
 
+static const char *auto_save_names[auto_save_count] = {
+    lang.generic.disabled, lang.muxretro.settings_screen.auto_save_idle, lang.muxretro.settings_screen.auto_save_quit,
+    lang.muxretro.settings_screen.auto_save_idle_quit
+};
+
 static const double ff_speed_values[ff_speed_count] = {2.0, 3.0, 4.0, 8.0};
 
 static const double slowmo_speed_values[slowmo_speed_count] = {0.5, 0.25, 0.125};
 
+static const char *overlay_source_names[overlay_source_count] = {
+    lang.generic.disabled, lang.muxretro.settings_screen.overlay_pattern_mode,
+    lang.muxretro.settings_screen.overlay_catalogue_mode
+};
+
+static const char *overlay_pattern_names[] = {
+    lang.muxretro.overlay_screen.checkerboard_1, lang.muxretro.overlay_screen.checkerboard_4,
+    lang.muxretro.overlay_screen.diagonal_1,     lang.muxretro.overlay_screen.diagonal_2,
+    lang.muxretro.overlay_screen.diagonal_4,     lang.muxretro.overlay_screen.lattice_1,
+    lang.muxretro.overlay_screen.lattice_4,      lang.muxretro.overlay_screen.horizontal_1,
+    lang.muxretro.overlay_screen.horizontal_2,   lang.muxretro.overlay_screen.horizontal_4,
+    lang.muxretro.overlay_screen.vertical_1,     lang.muxretro.overlay_screen.vertical_2,
+    lang.muxretro.overlay_screen.vertical_4,
+};
+#define OVERLAY_PATTERN_NAME_COUNT ((int) (sizeof(overlay_pattern_names) / sizeof(overlay_pattern_names[0])))
+
 const char *session_settings_scale_name(const int mode) {
     if (mode < 0 || mode >= video_scale_count) return scale_names[video_scale_aspect];
     return scale_names[mode];
+}
+
+const char *session_settings_rotate_name(const int mode) {
+    static char buf[8];
+    const int clamped = mode < 0 || mode >= video_rotate_count ? video_rotate_0 : mode;
+    snprintf(buf, sizeof(buf), "%d\xC2\xB0", rotate_degrees[clamped]);
+    return buf;
 }
 
 const char *session_settings_aspect_ratio_name(const int mode) {
@@ -195,6 +248,19 @@ const char *session_settings_sram_flush_name(const int seconds) {
     return buf;
 }
 
+const char *session_settings_auto_save_name(const int mode) {
+    if (mode < 0 || mode >= auto_save_count) return auto_save_names[auto_save_off];
+    return auto_save_names[mode];
+}
+
+int session_settings_auto_save_on_idle(void) {
+    return session_settings.auto_save == auto_save_idle || session_settings.auto_save == auto_save_idle_quit;
+}
+
+int session_settings_auto_save_on_quit(void) {
+    return session_settings.auto_save == auto_save_quit || session_settings.auto_save == auto_save_idle_quit;
+}
+
 const char *session_settings_colour_brightness_name(const int value) {
     static char buf[16];
     snprintf(buf, sizeof(buf), "%+d%%", value);
@@ -233,12 +299,52 @@ const char *session_settings_colour_shader_name(const int index) {
     return colour_shader_label(index);
 }
 
+const char *session_settings_overlay_source_name(const int mode) {
+    if (mode < 0 || mode >= overlay_source_count) return overlay_source_names[overlay_source_off];
+    return overlay_source_names[mode];
+}
+
+const char *session_settings_overlay_pattern_name(const int index) {
+    if (index >= 0 && index < OVERLAY_PATTERN_NAME_COUNT) return overlay_pattern_names[index];
+    return overlay_pattern_name(index);
+}
+
+const char *session_settings_overlay_opacity_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
+const char *session_settings_viewport_offset_x_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%+dpx", value);
+    return buf;
+}
+
+const char *session_settings_viewport_offset_y_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%+dpx", value);
+    return buf;
+}
+
+const char *session_settings_viewport_zoom_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
 static void apply_ini(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) return;
 
     long long v = mini_get_int(ini, "settings", "scaling_mode", -1);
     if (v >= 0 && v < video_scale_count) session_settings.scaling_mode = (int) v;
+
+    v = mini_get_int(ini, "settings", "rotate", -1);
+    if (v >= 0 && v < video_rotate_count) session_settings.rotate = (int) v;
+
+    v = mini_get_int(ini, "settings", "mirrored", -1);
+    if (v == 0 || v == 1) session_settings.mirrored = (int) v;
 
     v = mini_get_int(ini, "settings", "aspect_ratio", -1);
     if (v >= 0 && v < aspect_ratio_count) session_settings.aspect_ratio = (int) v;
@@ -284,14 +390,32 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "hotkey_ff_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_ff_enabled = (int) v;
 
+    v = mini_get_int(ini, "settings", "hotkey_ff_glyph_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_ff_glyph_enabled = (int) v;
+
     v = mini_get_int(ini, "settings", "hotkey_slowmo_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_slowmo_enabled = (int) v;
+
+    v = mini_get_int(ini, "settings", "hotkey_slowmo_glyph_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_slowmo_glyph_enabled = (int) v;
 
     v = mini_get_int(ini, "settings", "hotkey_quicksave_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_quicksave_enabled = (int) v;
 
     v = mini_get_int(ini, "settings", "hotkey_quickload_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_quickload_enabled = (int) v;
+
+    v = mini_get_int(ini, "settings", "hotkey_toggle_fps_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_toggle_fps_enabled = (int) v;
+
+    v = mini_get_int(ini, "settings", "hotkey_header_toggle_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_header_toggle_enabled = (int) v;
+
+    v = mini_get_int(ini, "settings", "hotkey_quit_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_quit_enabled = (int) v;
+
+    v = mini_get_int(ini, "settings", "auto_save", -1);
+    if (v >= 0 && v < auto_save_count) session_settings.auto_save = (int) v;
 
     v = mini_get_int(ini, "settings", "sram_flush_seconds", -1);
     for (int i = 0; v >= 0 && i < SRAM_FLUSH_CHOICE_COUNT; i++) {
@@ -322,6 +446,26 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "colour_shader", -1);
     if (v >= 0 && v < colour_shader_count()) session_settings.colour_shader = (int) v;
 
+    v = mini_get_int(ini, "settings", "overlay_source", -1);
+    if (v >= 0 && v < overlay_source_count) session_settings.overlay_source = (int) v;
+
+    v = mini_get_int(ini, "settings", "overlay_pattern", -1);
+    if (v >= 0 && v < overlay_pattern_count()) session_settings.overlay_pattern = (int) v;
+
+    v = mini_get_int(ini, "settings", "overlay_opacity", -1);
+    if (v >= 0 && v <= 100) session_settings.overlay_opacity = (int) v;
+
+    const int offset_x_max = device.mux.width / 2;
+    v = mini_get_int(ini, "settings", "viewport_offset_x", offset_x_max + 1);
+    if (v >= -offset_x_max && v <= offset_x_max) session_settings.viewport_offset_x = (int) v;
+
+    const int offset_y_max = device.mux.height / 2;
+    v = mini_get_int(ini, "settings", "viewport_offset_y", offset_y_max + 1);
+    if (v >= -offset_y_max && v <= offset_y_max) session_settings.viewport_offset_y = (int) v;
+
+    v = mini_get_int(ini, "settings", "viewport_zoom", VIEWPORT_ZOOM_MIN - 1);
+    if (v >= VIEWPORT_ZOOM_MIN && v <= VIEWPORT_ZOOM_MAX) session_settings.viewport_zoom = (int) v;
+
     mini_free(ini);
 }
 
@@ -331,6 +475,8 @@ static void write_ini(const char *path) {
     if (!ini) return;
 
     mini_set_int(ini, "settings", "scaling_mode", session_settings.scaling_mode);
+    mini_set_int(ini, "settings", "rotate", session_settings.rotate);
+    mini_set_int(ini, "settings", "mirrored", session_settings.mirrored);
     mini_set_int(ini, "settings", "aspect_ratio", session_settings.aspect_ratio);
     mini_set_int(ini, "settings", "integer_scale", session_settings.integer_scale);
     mini_set_int(ini, "settings", "texture_filter", session_settings.texture_filter);
@@ -344,9 +490,15 @@ static void write_ini(const char *path) {
     mini_set_int(ini, "settings", "ff_speed", session_settings.ff_speed);
     mini_set_int(ini, "settings", "slowmo_speed", session_settings.slowmo_speed);
     mini_set_int(ini, "settings", "hotkey_ff_enabled", session_settings.hotkey_ff_enabled);
+    mini_set_int(ini, "settings", "hotkey_ff_glyph_enabled", session_settings.hotkey_ff_glyph_enabled);
     mini_set_int(ini, "settings", "hotkey_slowmo_enabled", session_settings.hotkey_slowmo_enabled);
+    mini_set_int(ini, "settings", "hotkey_slowmo_glyph_enabled", session_settings.hotkey_slowmo_glyph_enabled);
     mini_set_int(ini, "settings", "hotkey_quicksave_enabled", session_settings.hotkey_quicksave_enabled);
     mini_set_int(ini, "settings", "hotkey_quickload_enabled", session_settings.hotkey_quickload_enabled);
+    mini_set_int(ini, "settings", "hotkey_toggle_fps_enabled", session_settings.hotkey_toggle_fps_enabled);
+    mini_set_int(ini, "settings", "hotkey_header_toggle_enabled", session_settings.hotkey_header_toggle_enabled);
+    mini_set_int(ini, "settings", "hotkey_quit_enabled", session_settings.hotkey_quit_enabled);
+    mini_set_int(ini, "settings", "auto_save", session_settings.auto_save);
     mini_set_int(ini, "settings", "sram_flush_seconds", session_settings.sram_flush_seconds);
     mini_set_int(ini, "settings", "colour_brightness", session_settings.colour_brightness);
     mini_set_int(ini, "settings", "colour_contrast", session_settings.colour_contrast);
@@ -355,6 +507,12 @@ static void write_ini(const char *path) {
     mini_set_int(ini, "settings", "colour_gamma", session_settings.colour_gamma);
     mini_set_int(ini, "settings", "colour_filter", session_settings.colour_filter);
     mini_set_int(ini, "settings", "colour_shader", session_settings.colour_shader);
+    mini_set_int(ini, "settings", "overlay_source", session_settings.overlay_source);
+    mini_set_int(ini, "settings", "overlay_pattern", session_settings.overlay_pattern);
+    mini_set_int(ini, "settings", "overlay_opacity", session_settings.overlay_opacity);
+    mini_set_int(ini, "settings", "viewport_offset_x", session_settings.viewport_offset_x);
+    mini_set_int(ini, "settings", "viewport_offset_y", session_settings.viewport_offset_y);
+    mini_set_int(ini, "settings", "viewport_zoom", session_settings.viewport_zoom);
 
     mini_save(ini, 0);
     mini_free(ini);
@@ -393,6 +551,16 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
 void session_settings_cycle_scaling(const int direction) {
     session_settings.scaling_mode = (session_settings.scaling_mode + direction + video_scale_count) % video_scale_count;
     video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_rotate(const int direction) {
+    session_settings.rotate = (session_settings.rotate + direction + video_rotate_count) % video_rotate_count;
+    video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_mirrored(const int direction) {
+    (void) direction;
+    session_settings.mirrored = !session_settings.mirrored;
 }
 
 void session_settings_cycle_aspect_ratio(const int direction) {
@@ -476,9 +644,19 @@ void session_settings_cycle_hotkey_ff_enabled(const int direction) {
     session_settings.hotkey_ff_enabled = !session_settings.hotkey_ff_enabled;
 }
 
+void session_settings_cycle_hotkey_ff_glyph_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_ff_glyph_enabled = !session_settings.hotkey_ff_glyph_enabled;
+}
+
 void session_settings_cycle_hotkey_slowmo_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_slowmo_enabled = !session_settings.hotkey_slowmo_enabled;
+}
+
+void session_settings_cycle_hotkey_slowmo_glyph_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_slowmo_glyph_enabled = !session_settings.hotkey_slowmo_glyph_enabled;
 }
 
 void session_settings_cycle_hotkey_quicksave_enabled(const int direction) {
@@ -489,6 +667,25 @@ void session_settings_cycle_hotkey_quicksave_enabled(const int direction) {
 void session_settings_cycle_hotkey_quickload_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_quickload_enabled = !session_settings.hotkey_quickload_enabled;
+}
+
+void session_settings_cycle_hotkey_toggle_fps_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_toggle_fps_enabled = !session_settings.hotkey_toggle_fps_enabled;
+}
+
+void session_settings_cycle_hotkey_header_toggle_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_header_toggle_enabled = !session_settings.hotkey_header_toggle_enabled;
+}
+
+void session_settings_cycle_hotkey_quit_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_quit_enabled = !session_settings.hotkey_quit_enabled;
+}
+
+void session_settings_cycle_auto_save(const int direction) {
+    session_settings.auto_save = (session_settings.auto_save + direction + auto_save_count) % auto_save_count;
 }
 
 void session_settings_cycle_sram_flush(const int direction) {
@@ -560,6 +757,55 @@ void session_settings_set_colour_shader(const int index) {
     session_settings.colour_shader = index;
 }
 
+void session_settings_cycle_overlay_source(const int direction) {
+    session_settings.overlay_source =
+        (session_settings.overlay_source + direction + overlay_source_count) % overlay_source_count;
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_pattern(const int direction) {
+    const int count = overlay_pattern_count();
+    session_settings.overlay_pattern = (session_settings.overlay_pattern + direction + count) % count;
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_opacity(const int direction) {
+    session_settings.overlay_opacity += direction * 5;
+    if (session_settings.overlay_opacity < 0) session_settings.overlay_opacity = 0;
+    if (session_settings.overlay_opacity > 100) session_settings.overlay_opacity = 100;
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_viewport_offset_x(const int direction) {
+    const int max = device.mux.width / 2;
+    session_settings.viewport_offset_x += direction * VIEWPORT_OFFSET_STEP;
+    if (session_settings.viewport_offset_x < -max) session_settings.viewport_offset_x = -max;
+    if (session_settings.viewport_offset_x > max) session_settings.viewport_offset_x = max;
+    video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_viewport_offset_y(const int direction) {
+    const int max = device.mux.height / 2;
+    session_settings.viewport_offset_y += direction * VIEWPORT_OFFSET_STEP;
+    if (session_settings.viewport_offset_y < -max) session_settings.viewport_offset_y = -max;
+    if (session_settings.viewport_offset_y > max) session_settings.viewport_offset_y = max;
+    video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_viewport_zoom(const int direction) {
+    session_settings.viewport_zoom += direction * VIEWPORT_ZOOM_STEP;
+    if (session_settings.viewport_zoom < VIEWPORT_ZOOM_MIN) session_settings.viewport_zoom = VIEWPORT_ZOOM_MIN;
+    if (session_settings.viewport_zoom > VIEWPORT_ZOOM_MAX) session_settings.viewport_zoom = VIEWPORT_ZOOM_MAX;
+    video_bridge_apply_scaling();
+}
+
+void session_settings_reset_viewport(void) {
+    session_settings.viewport_offset_x = 0;
+    session_settings.viewport_offset_y = 0;
+    session_settings.viewport_zoom = 100;
+    video_bridge_apply_scaling();
+}
+
 int session_settings_is_dirty(void) {
     return memcmp(&session_settings, &baseline_settings, sizeof(session_settings)) != 0;
 }
@@ -572,6 +818,7 @@ void session_settings_discard(void) {
     audio_bridge_apply_sample_rate();
     video_bridge_apply_fps_limit();
     colour_refresh();
+    overlay_bridge_apply();
 }
 
 void session_settings_save_content(void) {

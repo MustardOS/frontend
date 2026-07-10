@@ -19,7 +19,10 @@ static nav_repeat_t rpt_right = {0};
 enum {
     row_hotkey_controls = 0,
     row_visual_settings,
+    row_viewport,
     row_scaling,
+    row_rotate,
+    row_mirrored,
     row_aspect_ratio,
     row_integer_scale,
     row_filter,
@@ -30,6 +33,7 @@ enum {
     row_border,
     row_sample_rate,
     row_fps_limit,
+    row_auto_save,
     row_sram_flush,
     row_count
 };
@@ -37,7 +41,10 @@ enum {
 static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys,
     lang.muxretro.display,
+    lang.muxretro.display_screen.viewport,
     lang.muxretro.settings_screen.scaling_mode,
+    lang.muxretro.settings_screen.rotate,
+    lang.muxretro.settings_screen.mirrored,
     lang.muxretro.settings_screen.aspect_ratio_mode,
     lang.muxretro.settings_screen.integer_scale,
     lang.muxretro.settings_screen.texture_filter,
@@ -48,12 +55,14 @@ static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.border_colour,
     lang.muxretro.settings_screen.sample_rate,
     lang.muxretro.settings_screen.fps_limit,
+    lang.muxretro.settings_screen.auto_save,
     lang.muxretro.settings_screen.sram_flush
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys", "display",    "scaling",  "aspectratio", "integerscale",
-                                            "filter",  "rumble",     "volume",   "fps",         "header",
-                                            "border",  "samplerate", "fpslimit", "sram"};
+static const char *row_glyphs[row_count] = {"hotkeys",  "display",     "viewport",     "scaling", "rotate",
+                                            "mirrored", "aspectratio", "integerscale", "filter",  "rumble",
+                                            "volume",   "fps",         "header",       "border",  "samplerate",
+                                            "fpslimit", "autosave",    "sram"};
 
 static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
@@ -71,6 +80,12 @@ static void row_value_text(const int index, char *buf) {
             break;
         case row_scaling:
             snprintf(buf, 32, "%s", session_settings_scale_name(session_settings.scaling_mode));
+            break;
+        case row_rotate:
+            snprintf(buf, 32, "%s", session_settings_rotate_name(session_settings.rotate));
+            break;
+        case row_mirrored:
+            snprintf(buf, 32, "%s", session_settings.mirrored ? lang.generic.enabled : lang.generic.disabled);
             break;
         case row_integer_scale:
             snprintf(buf, 32, "%s", session_settings_integer_scale_name(session_settings.integer_scale));
@@ -99,6 +114,9 @@ static void row_value_text(const int index, char *buf) {
         case row_fps_limit:
             snprintf(buf, 32, "%s", session_settings_fps_limit_name(session_settings.fps_limit));
             break;
+        case row_auto_save:
+            snprintf(buf, 32, "%s", session_settings_auto_save_name(session_settings.auto_save));
+            break;
         case row_sram_flush:
             snprintf(buf, 32, "%s", session_settings_sram_flush_name(session_settings.sram_flush_seconds));
             break;
@@ -115,6 +133,12 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_scaling:
             session_settings_cycle_scaling(direction);
+            break;
+        case row_rotate:
+            session_settings_cycle_rotate(direction);
+            break;
+        case row_mirrored:
+            session_settings_cycle_mirrored(direction);
             break;
         case row_integer_scale:
             session_settings_cycle_integer_scale(direction);
@@ -142,6 +166,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_fps_limit:
             session_settings_cycle_fps_limit(direction);
+            break;
+        case row_auto_save:
+            session_settings_cycle_auto_save(direction);
             break;
         case row_sram_flush:
             session_settings_cycle_sram_flush(direction);
@@ -274,6 +301,10 @@ void settings_menu_reopen_display(void) {
     reopen_at_row(row_visual_settings);
 }
 
+void settings_menu_reopen_viewport(void) {
+    reopen_at_row(row_viewport);
+}
+
 void settings_menu_init(void) {
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
@@ -283,6 +314,8 @@ void settings_menu_init(void) {
         &save_dlg, &theme, ui_screen, lang.muxretro.save.settings_title, lang.muxretro.save.settings_desc, save_options,
         4, lang.generic.select, lang.generic.cancel
     );
+
+    viewport_menu_init();
 }
 
 void settings_menu_open(void) {
@@ -305,6 +338,11 @@ void settings_menu_tick(void) {
 
     if (display_menu_is_active()) {
         display_menu_tick();
+        return;
+    }
+
+    if (viewport_menu_is_active()) {
+        viewport_menu_tick();
         return;
     }
 
@@ -376,6 +414,9 @@ void settings_menu_tick(void) {
         } else if (current_item_index == row_visual_settings) {
             play_sound(snd_confirm);
             display_menu_open();
+        } else if (current_item_index == row_viewport) {
+            play_sound(snd_confirm);
+            viewport_menu_open();
         }
     } else if (edge & BIT(5)) {
         if (session_settings_is_dirty()) {

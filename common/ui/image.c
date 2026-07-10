@@ -351,6 +351,14 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wal
     return "";
 }
 
+int resolve_overlay_pattern_image(const int value, char *path, const size_t path_size) {
+    snprintf(path, path_size, "%s/%s%d.png", STORAGE_OVERLAY, mux_dim, value);
+    if (!file_exist(path)) {
+        snprintf(path, path_size, "%s/standard/%d.png", STORAGE_OVERLAY, value);
+    }
+    return file_exist(path);
+}
+
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
     if (config.visual.overlay_image == 0) return;
 
@@ -370,16 +378,7 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
             }
             break;
         default: {
-            snprintf(
-                static_image_path, sizeof(static_image_path), "%s/%s%d.png", STORAGE_OVERLAY, mux_dim,
-                config.visual.overlay_image
-            );
-            if (!file_exist(static_image_path)) {
-                snprintf(
-                    static_image_path, sizeof(static_image_path), "%s/standard/%d.png", STORAGE_OVERLAY,
-                    config.visual.overlay_image
-                );
-            }
+            resolve_overlay_pattern_image(config.visual.overlay_image, static_image_path, sizeof(static_image_path));
             const int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
             if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
             break;
@@ -418,14 +417,7 @@ void load_overlay_image_sdl(void) {
             }
             break;
         default:
-            snprintf(
-                image_path, sizeof(image_path), "%s/%s%d.png", STORAGE_OVERLAY, mux_dim, config.visual.overlay_image
-            );
-            if (!file_exist(image_path)) {
-                snprintf(
-                    image_path, sizeof(image_path), "%s/standard/%d.png", STORAGE_OVERLAY, config.visual.overlay_image
-                );
-            }
+            resolve_overlay_pattern_image(config.visual.overlay_image, image_path, sizeof(image_path));
             break;
     }
 

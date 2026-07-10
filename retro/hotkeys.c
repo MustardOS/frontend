@@ -11,15 +11,19 @@
 #include "settings.h"
 
 static int menu_held = 0;
-static int menu_chord_consumed = 0;
+static int menu_combo_consumed = 0;
 
 static int prev_r1 = 0;
 static int prev_r2 = 0;
 static int prev_l1 = 0;
 static int prev_l2 = 0;
+static int prev_y = 0;
+static int prev_x = 0;
+static int prev_start = 0;
 
 static int fast_forward_active = 0;
 static int slow_motion_active = 0;
+static int quit_requested = 0;
 
 int hotkeys_is_fast_forward_active(void) {
     return fast_forward_active;
@@ -29,15 +33,19 @@ int hotkeys_is_slow_motion_active(void) {
     return slow_motion_active;
 }
 
+int hotkeys_is_quit_requested(void) {
+    return quit_requested;
+}
+
 static void sync_audio_mute(void) {
     audio_bridge_set_muted(fast_forward_active || slow_motion_active);
     audio_bridge_clear_queued();
 }
 
 static void sync_speed_indicator(void) {
-    if (fast_forward_active) {
+    if (fast_forward_active && session_settings.hotkey_ff_glyph_enabled) {
         pause_menu_set_speed_indicator(session_settings_ff_speed_name(session_settings.ff_speed), "fastforward");
-    } else if (slow_motion_active) {
+    } else if (slow_motion_active && session_settings.hotkey_slowmo_glyph_enabled) {
         pause_menu_set_speed_indicator(session_settings_slowmo_speed_name(session_settings.slowmo_speed), "slowmotion");
     } else {
         pause_menu_set_speed_indicator(NULL, NULL);
@@ -74,22 +82,25 @@ int hotkeys_task(void) {
     const int r2_now = mux_input_pressed(mux_input_r2);
     const int l1_now = mux_input_pressed(mux_input_l1);
     const int l2_now = mux_input_pressed(mux_input_l2);
+    const int y_now = mux_input_pressed(mux_input_y);
+    const int x_now = mux_input_pressed(mux_input_x);
+    const int start_now = mux_input_pressed(mux_input_start);
 
     int open_pause = 0;
 
     if (!menu_held && menu_now) {
         menu_held = 1;
-        menu_chord_consumed = 0;
+        menu_combo_consumed = 0;
     } else if (menu_held && !menu_now) {
         menu_held = 0;
-        open_pause = !menu_chord_consumed;
+        open_pause = !menu_combo_consumed;
     }
 
     if (menu_held) {
         if (r1_now && !prev_r1 && session_settings.hotkey_ff_enabled) {
             toggle_fast_forward();
             input_bridge_suppress(mux_input_r1);
-            menu_chord_consumed = 1;
+            menu_combo_consumed = 1;
         }
 
         if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled) {
@@ -97,13 +108,13 @@ int hotkeys_task(void) {
             LOG_INFO(mux_module, "Quick Save (hotkey)");
             pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
             input_bridge_suppress(mux_input_r2);
-            menu_chord_consumed = 1;
+            menu_combo_consumed = 1;
         }
 
         if (l1_now && !prev_l1 && session_settings.hotkey_slowmo_enabled) {
             toggle_slow_motion();
             input_bridge_suppress(mux_input_l1);
-            menu_chord_consumed = 1;
+            menu_combo_consumed = 1;
         }
 
         if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled) {
@@ -115,7 +126,34 @@ int hotkeys_task(void) {
                 pause_menu_show_toast(lang.muxretro.hotkeys_screen.no_quicksave);
             }
             input_bridge_suppress(mux_input_l2);
-            menu_chord_consumed = 1;
+            menu_combo_consumed = 1;
+        }
+
+        if (y_now && !prev_y && session_settings.hotkey_toggle_fps_enabled) {
+            session_settings_cycle_fps(0);
+            LOG_INFO(mux_module, "Toggle FPS %s (hotkey)", session_settings.show_fps ? "enabled" : "disabled");
+            input_bridge_suppress(mux_input_y);
+            menu_combo_consumed = 1;
+        }
+
+        if (x_now && !prev_x && session_settings.hotkey_header_toggle_enabled) {
+            session_settings_cycle_header_visibility(1);
+            pause_menu_apply_header_visibility();
+            LOG_INFO(
+                mux_module, "Header Visibility: %s (hotkey)",
+                session_settings_header_visibility_name(session_settings.header_visibility)
+            );
+
+            input_bridge_suppress(mux_input_x);
+            menu_combo_consumed = 1;
+        }
+
+        if (start_now && !prev_start && session_settings.hotkey_quit_enabled) {
+            if (session_settings_auto_save_on_quit()) gamestate_autosave_save();
+            LOG_INFO(mux_module, "Quit (hotkey)");
+            quit_requested = 1;
+            input_bridge_suppress(mux_input_start);
+            menu_combo_consumed = 1;
         }
     }
 
@@ -123,6 +161,9 @@ int hotkeys_task(void) {
     prev_r2 = r2_now;
     prev_l1 = l1_now;
     prev_l2 = l2_now;
+    prev_y = y_now;
+    prev_x = x_now;
+    prev_start = start_now;
 
     return open_pause;
 }
@@ -148,7 +189,7 @@ void hotkeys_volume_bright_task(void) {
             ui_common_handle_volume_up();
         }
         ui_common_progress_tick();
-        if (menu_held) menu_chord_consumed = 1;
+        if (menu_held) menu_combo_consumed = 1;
     }
 
     if (nav_repeat_step(&rpt_vol_down, vol_down_now && !prev_vol_down, vol_down_now, 1, now)) {
@@ -158,7 +199,7 @@ void hotkeys_volume_bright_task(void) {
             ui_common_handle_volume_down();
         }
         ui_common_progress_tick();
-        if (menu_held) menu_chord_consumed = 1;
+        if (menu_held) menu_combo_consumed = 1;
     }
 
     prev_vol_up = vol_up_now;

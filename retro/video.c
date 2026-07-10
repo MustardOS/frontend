@@ -8,6 +8,7 @@
 #include "../common/log.h"
 #include "colour.h"
 #include "muxretro.h"
+#include "overlay_bridge.h"
 #include "settings.h"
 
 static SDL_Texture *frame_tex = NULL;
@@ -30,6 +31,10 @@ static size_t scaled_buf_cap = 0;
 static SDL_Texture *sharp_bilinear_tex = NULL;
 static int sharp_bilinear_tex_w = 0;
 static int sharp_bilinear_tex_h = 0;
+
+static SDL_Texture *rotate_canvas_tex = NULL;
+static int rotate_canvas_w = 0;
+static int rotate_canvas_h = 0;
 
 static int frame_dirty = 0;
 
@@ -57,6 +62,34 @@ static const SDL_Color border_colors[border_color_count] = {
     {32, 32, 32, 255},
     {255, 255, 255, 255},
 };
+
+static void get_canvas_size(int *w, int *h) {
+    if (session_settings.rotate == video_rotate_90 || session_settings.rotate == video_rotate_270) {
+        *w = device.mux.height;
+        *h = device.mux.width;
+    } else {
+        *w = device.mux.width;
+        *h = device.mux.height;
+    }
+}
+
+static double compute_src_aspect(void) {
+    switch (session_settings.aspect_ratio) {
+        case aspect_ratio_4_3:
+            return 4.0 / 3.0;
+        case aspect_ratio_8_7:
+            return 8.0 / 7.0;
+        case aspect_ratio_16_9:
+            return 16.0 / 9.0;
+        case aspect_ratio_16_10:
+            return 16.0 / 10.0;
+        case aspect_ratio_pixel_perfect:
+            return (double) frame_w / (double) frame_h;
+        case aspect_ratio_auto:
+        default:
+            return core_aspect_ratio > 0.0 ? core_aspect_ratio : (double) frame_w / (double) frame_h;
+    }
+}
 
 static void draw_sharp_bilinear(SDL_Renderer *renderer) {
     int int_scale = frame_w > 0 ? dest_rect.w / frame_w : 1;
@@ -91,16 +124,15 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
         return;
     }
 
+    SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
     SDL_SetRenderTarget(renderer, sharp_bilinear_tex);
     SDL_RenderCopy(renderer, frame_tex, NULL, NULL);
-    SDL_SetRenderTarget(renderer, NULL);
+    SDL_SetRenderTarget(renderer, prev_target);
 
     colour_render_pass(renderer, sharp_bilinear_tex, &dest_rect);
 }
 
-static void draw_video_background(SDL_Renderer *renderer) {
-    if (!frame_tex) return;
-
+static void draw_video_content(SDL_Renderer *renderer) {
     if (session_settings.border_color != border_color_theme) {
         const SDL_Color *c = &border_colors[session_settings.border_color];
         SDL_SetRenderDrawColor(renderer, c->r, c->g, c->b, c->a);
@@ -112,22 +144,81 @@ static void draw_video_background(SDL_Renderer *renderer) {
     } else {
         colour_render_pass(renderer, frame_tex, &dest_rect);
     }
+
+    int canvas_w, canvas_h;
+    get_canvas_size(&canvas_w, &canvas_h);
+    overlay_bridge_render(renderer, canvas_w, canvas_h);
+}
+
+static void draw_video_background(SDL_Renderer *renderer) {
+    if (!frame_tex) return;
+
+    if (session_settings.rotate == video_rotate_0 && !session_settings.mirrored) {
+        draw_video_content(renderer);
+        return;
+    }
+
+    int canvas_w, canvas_h;
+    get_canvas_size(&canvas_w, &canvas_h);
+
+    if (!rotate_canvas_tex || rotate_canvas_w != canvas_w || rotate_canvas_h != canvas_h) {
+        if (rotate_canvas_tex) SDL_DestroyTexture(rotate_canvas_tex);
+
+        rotate_canvas_tex =
+            SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, canvas_w, canvas_h);
+
+        if (rotate_canvas_tex) {
+            SDL_SetTextureBlendMode(rotate_canvas_tex, SDL_BLENDMODE_NONE);
+            rotate_canvas_w = canvas_w;
+            rotate_canvas_h = canvas_h;
+        } else {
+            LOG_ERROR(mux_module, "Failed to create rotate canvas texture: %s", SDL_GetError());
+            rotate_canvas_w = 0;
+            rotate_canvas_h = 0;
+        }
+    }
+
+    if (!rotate_canvas_tex) {
+        draw_video_content(renderer);
+        return;
+    }
+
+    SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
+    SDL_SetRenderTarget(renderer, rotate_canvas_tex);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    draw_video_content(renderer);
+    SDL_SetRenderTarget(renderer, prev_target);
+
+    const SDL_Rect final_dst = {
+        (device.mux.width - canvas_w) / 2, (device.mux.height - canvas_h) / 2, canvas_w, canvas_h
+    };
+
+    SDL_RendererFlip flip = SDL_FLIP_VERTICAL;
+    if (session_settings.mirrored) flip = (SDL_RendererFlip) (flip ^ SDL_FLIP_HORIZONTAL);
+
+    SDL_RenderCopyEx(
+        renderer, rotate_canvas_tex, NULL, &final_dst, (double) session_settings.rotate * 90.0, NULL, flip
+    );
 }
 
 static void recompute_dest_rect(void) {
     if (frame_w == 0 || frame_h == 0) return;
 
+    int canvas_w, canvas_h;
+    get_canvas_size(&canvas_w, &canvas_h);
+
     switch (session_settings.scaling_mode) {
         case video_scale_stretch:
-            dest_rect.w = device.mux.width;
-            dest_rect.h = device.mux.height;
+            dest_rect.w = canvas_w;
+            dest_rect.h = canvas_h;
             break;
 
         case video_scale_integer: {
             double scale;
             if (session_settings.integer_scale == integer_scale_auto) {
-                int auto_scale = device.mux.width / frame_w;
-                const int auto_scale_h = device.mux.height / frame_h;
+                int auto_scale = canvas_w / frame_w;
+                const int auto_scale_h = canvas_h / frame_h;
                 if (auto_scale_h < auto_scale) auto_scale = auto_scale_h;
                 if (auto_scale < 1) auto_scale = 1;
                 scale = (double) auto_scale;
@@ -140,36 +231,29 @@ static void recompute_dest_rect(void) {
             break;
         }
 
+        case video_scale_full_height: {
+            const double src_aspect = compute_src_aspect();
+            dest_rect.h = canvas_h;
+            dest_rect.w = (int) ((double) dest_rect.h * src_aspect);
+            break;
+        }
+
+        case video_scale_full_width: {
+            const double src_aspect = compute_src_aspect();
+            dest_rect.w = canvas_w;
+            dest_rect.h = (int) ((double) dest_rect.w / src_aspect);
+            break;
+        }
+
         case video_scale_aspect:
         default: {
-            double src_aspect;
-            switch (session_settings.aspect_ratio) {
-                case aspect_ratio_4_3:
-                    src_aspect = 4.0 / 3.0;
-                    break;
-                case aspect_ratio_8_7:
-                    src_aspect = 8.0 / 7.0;
-                    break;
-                case aspect_ratio_16_9:
-                    src_aspect = 16.0 / 9.0;
-                    break;
-                case aspect_ratio_16_10:
-                    src_aspect = 16.0 / 10.0;
-                    break;
-                case aspect_ratio_pixel_perfect:
-                    src_aspect = (double) frame_w / (double) frame_h;
-                    break;
-                case aspect_ratio_auto:
-                default:
-                    src_aspect = core_aspect_ratio > 0.0 ? core_aspect_ratio : (double) frame_w / (double) frame_h;
-                    break;
-            }
+            const double src_aspect = compute_src_aspect();
 
             double height_scale;
             if (session_settings.integer_scale == integer_scale_auto) {
-                int scale = device.mux.height / frame_h;
+                int scale = canvas_h / frame_h;
                 if (scale < 1) scale = 1;
-                while (scale > 1 && (double) frame_h * scale * src_aspect > (double) device.mux.width)
+                while (scale > 1 && (double) frame_h * scale * src_aspect > (double) canvas_w)
                     scale--;
                 height_scale = (double) scale;
             } else {
@@ -182,8 +266,13 @@ static void recompute_dest_rect(void) {
         }
     }
 
-    dest_rect.x = (device.mux.width - dest_rect.w) / 2;
-    dest_rect.y = (device.mux.height - dest_rect.h) / 2;
+    if (session_settings.viewport_zoom != 100) {
+        dest_rect.w = dest_rect.w * session_settings.viewport_zoom / 100;
+        dest_rect.h = dest_rect.h * session_settings.viewport_zoom / 100;
+    }
+
+    dest_rect.x = (canvas_w - dest_rect.w) / 2 + session_settings.viewport_offset_x;
+    dest_rect.y = (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y;
 }
 
 void video_bridge_apply_scaling(void) {
@@ -411,6 +500,14 @@ void video_bridge_shutdown(void) {
 
     sharp_bilinear_tex_w = 0;
     sharp_bilinear_tex_h = 0;
+
+    if (rotate_canvas_tex) {
+        SDL_DestroyTexture(rotate_canvas_tex);
+        rotate_canvas_tex = NULL;
+    }
+
+    rotate_canvas_w = 0;
+    rotate_canvas_h = 0;
 
     free(raw_frame_buf);
     raw_frame_buf = NULL;

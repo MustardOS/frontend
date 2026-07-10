@@ -295,6 +295,11 @@ void pause_menu_update_header(void) {
     battery_capacity_task(NULL);
 }
 
+void pause_menu_apply_header_visibility(void) {
+    if (active) return;
+    apply_gameplay_header_overlay();
+}
+
 void pause_menu_rebuild(void) {
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();
@@ -552,7 +557,7 @@ int pause_menu_tick(void) {
             pause_menu_toggle();
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
-            gamestate_autosave_save();
+            if (session_settings_auto_save_on_quit()) gamestate_autosave_save();
             return 1;
         }
     }

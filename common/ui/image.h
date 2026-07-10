@@ -40,6 +40,8 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image);
 
 void load_overlay_image_sdl(void);
 
+int resolve_overlay_pattern_image(int value, char *path, size_t path_size);
+
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size);

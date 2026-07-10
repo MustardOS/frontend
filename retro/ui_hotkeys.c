@@ -18,21 +18,35 @@ static nav_repeat_t rpt_right = {0};
 enum {
     row_ff_enabled = 0,
     row_ff_speed,
+    row_ff_glyph_enabled,
     row_slowmo_enabled,
     row_slowmo_speed,
+    row_slowmo_glyph_enabled,
     row_quicksave_enabled,
     row_quickload_enabled,
+    row_toggle_fps_enabled,
+    row_header_toggle_enabled,
+    row_quit_enabled,
     row_count
 };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.hotkeys_screen.fast_forward, lang.muxretro.hotkeys_screen.ff_speed,
-    lang.muxretro.hotkeys_screen.slow_motion,  lang.muxretro.hotkeys_screen.slowmo_speed,
-    lang.muxretro.hotkeys_screen.quick_save,   lang.muxretro.hotkeys_screen.quick_load
+    lang.muxretro.hotkeys_screen.fast_forward,
+    lang.muxretro.hotkeys_screen.ff_speed,
+    lang.muxretro.hotkeys_screen.ff_glyph,
+    lang.muxretro.hotkeys_screen.slow_motion,
+    lang.muxretro.hotkeys_screen.slowmo_speed,
+    lang.muxretro.hotkeys_screen.slowmo_glyph,
+    lang.muxretro.hotkeys_screen.quick_save,
+    lang.muxretro.hotkeys_screen.quick_load,
+    lang.muxretro.hotkeys_screen.toggle_fps,
+    lang.muxretro.hotkeys_screen.toggle_header,
+    lang.muxretro.quit
 };
 
-static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",   "slowmotion",
-                                            "slowmospeed", "quicksave", "quickload"};
+static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",      "ffglyph",   "slowmotion",
+                                            "slowmospeed", "slowmoglyph",  "quicksave", "quickload",
+                                            "togglefps",   "toggleheader", "quit"};
 
 static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
@@ -59,17 +73,37 @@ static void row_value_text(const int index, char *buf) {
         case row_ff_speed:
             snprintf(buf, 32, "%s", session_settings_ff_speed_name(session_settings.ff_speed));
             break;
+        case row_ff_glyph_enabled:
+            snprintf(
+                buf, 32, "%s", session_settings.hotkey_ff_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
+            break;
         case row_slowmo_enabled:
             enabled_text(buf, session_settings.hotkey_slowmo_enabled, "M+L1");
             break;
         case row_slowmo_speed:
             snprintf(buf, 32, "%s", session_settings_slowmo_speed_name(session_settings.slowmo_speed));
             break;
+        case row_slowmo_glyph_enabled:
+            snprintf(
+                buf, 32, "%s",
+                session_settings.hotkey_slowmo_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
+            break;
         case row_quicksave_enabled:
             enabled_text(buf, session_settings.hotkey_quicksave_enabled, "M+R2");
             break;
         case row_quickload_enabled:
             enabled_text(buf, session_settings.hotkey_quickload_enabled, "M+L2");
+            break;
+        case row_toggle_fps_enabled:
+            enabled_text(buf, session_settings.hotkey_toggle_fps_enabled, "M+Y");
+            break;
+        case row_header_toggle_enabled:
+            enabled_text(buf, session_settings.hotkey_header_toggle_enabled, "M+X");
+            break;
+        case row_quit_enabled:
+            enabled_text(buf, session_settings.hotkey_quit_enabled, "M+START");
             break;
         default:
             buf[0] = '\0';
@@ -85,17 +119,32 @@ static void cycle_row(const int index, const int direction) {
         case row_ff_speed:
             session_settings_cycle_ff_speed(direction);
             break;
+        case row_ff_glyph_enabled:
+            session_settings_cycle_hotkey_ff_glyph_enabled(direction);
+            break;
         case row_slowmo_enabled:
             session_settings_cycle_hotkey_slowmo_enabled(direction);
             break;
         case row_slowmo_speed:
             session_settings_cycle_slowmo_speed(direction);
             break;
+        case row_slowmo_glyph_enabled:
+            session_settings_cycle_hotkey_slowmo_glyph_enabled(direction);
+            break;
         case row_quicksave_enabled:
             session_settings_cycle_hotkey_quicksave_enabled(direction);
             break;
         case row_quickload_enabled:
             session_settings_cycle_hotkey_quickload_enabled(direction);
+            break;
+        case row_toggle_fps_enabled:
+            session_settings_cycle_hotkey_toggle_fps_enabled(direction);
+            break;
+        case row_header_toggle_enabled:
+            session_settings_cycle_hotkey_header_toggle_enabled(direction);
+            break;
+        case row_quit_enabled:
+            session_settings_cycle_hotkey_quit_enabled(direction);
             break;
         default:
             break;

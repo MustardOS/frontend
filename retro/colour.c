@@ -764,7 +764,11 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     SDL_SetRenderTarget(renderer, prev_target);
 
     int out_w = 0, out_h = 0;
-    SDL_GetRendererOutputSize(renderer, &out_w, &out_h);
+    if (prev_target) {
+        SDL_QueryTexture(prev_target, NULL, NULL, &out_w, &out_h);
+    } else {
+        SDL_GetRendererOutputSize(renderer, &out_w, &out_h);
+    }
     if (out_w <= 0 || out_h <= 0) {
         SDL_RenderCopy(renderer, tex, NULL, dest_rect);
         return;
