@@ -587,6 +587,18 @@ static int dispatch_restore(void) {
     int saved_bright_raw = st.bright_raw;
     rgb_colour_t col_l = st.col_l, col_r = st.col_r, col_m = st.col_m, col_f1 = st.col_f1, col_f2 = st.col_f2;
 
+    if (saved_mode == 10) {
+        // Screen React: the rgb_react daemon drives the LEDs itself. Start it
+        // if it is not already running (it records its PID and exits on its
+        // own when the mode changes).
+        system(
+            "P=$(cat /run/muos/rgb_react.pid 2>/dev/null); "
+            "{ [ -n \"$P\" ] && kill -0 \"$P\" 2>/dev/null; } || "
+            "setsid -f /opt/muos/script/device/rgb_react.sh </dev/null >/dev/null 2>&1"
+        );
+        return 0;
+    }
+
     if (saved_mode == 6) return 0;
     if (saved_mode == 5) saved_mode = 0;
 
