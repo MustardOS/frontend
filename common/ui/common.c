@@ -1969,7 +1969,7 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
     lv_obj_set_style_pad_row(ui_pnl_grid, theme->grid.row_padding, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnl_grid, theme->grid.column_padding, MU_OBJ_MAIN_DEFAULT);
 
-    nav_watch_list_overflow(ui_pnl_grid);
+    lv_obj_add_flag(ui_pnl_grid, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
 
     lv_obj_clear_flag(ui_pnl_grid_current_item, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align(

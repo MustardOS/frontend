@@ -829,6 +829,9 @@ static void raise_row_draw_cb(lv_event_t *e) {
     lv_obj_redraw(lv_event_get_draw_ctx(e), raise_row);
 }
 
+static lv_obj_t *hoist_panel = NULL;
+static uint32_t hoist_index = 0;
+
 static void shake_cleanup_cb(lv_anim_t *a) {
     lv_obj_t *obj = a->var;
     if (!obj || !lv_obj_is_valid(obj)) return;
@@ -836,12 +839,17 @@ static void shake_cleanup_cb(lv_anim_t *a) {
     lv_obj_t *ancestor = shake_screen_ancestor(obj);
     if (!ancestor) return;
 
-    if (lv_obj_has_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE)) {
+    if (ancestor == ui_pnl_content && lv_obj_has_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE)) {
         lv_obj_clear_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
         lv_obj_invalidate(ancestor);
+
+        if (hoist_panel && lv_obj_is_valid(hoist_panel)) {
+            lv_obj_move_to_index(hoist_panel, (int32_t) hoist_index);
+        }
+        hoist_panel = NULL;
     }
 
-    lv_obj_t *row = obj;
+    const lv_obj_t *row = obj;
     while (row && lv_obj_get_parent(row) != ancestor)
         row = lv_obj_get_parent(row);
 
@@ -907,9 +915,8 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
     lv_obj_t *ancestor = shake_screen_ancestor(obj);
     if (ancestor) {
         int poke = 0;
-        lv_obj_move_foreground(ancestor);
 
-        if (exec_cb == focus_shake_y_cb) {
+        if (exec_cb == focus_shake_y_cb && ancestor == ui_pnl_content) {
             lv_area_t obj_area;
             lv_area_t panel_area;
             lv_obj_get_coords(obj, &obj_area);
@@ -919,6 +926,12 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
         }
 
         if (poke) {
+            if (!hoist_panel) {
+                hoist_index = lv_obj_get_index(ancestor);
+                hoist_panel = ancestor;
+                lv_obj_move_foreground(ancestor);
+            }
+
             lv_obj_add_flag(ancestor, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
             blank_overflow_rows(ancestor);
         }
