@@ -19,6 +19,8 @@ void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);
 
+void display_set_ui_hidden(int hidden);
+
 SDL_Renderer *display_get_renderer(void);
 
 SDL_Texture *display_get_shadow_layer(void);

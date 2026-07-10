@@ -162,7 +162,7 @@ static void reload_background(const char *active_theme) {
             // back to a solid black colour, otherwise we'll get some lovely
             // overlap graphic glitches!
             monitor.background_solid = 1;
-            monitor.background_colour = (SDL_Color){theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255};
+            monitor.background_colour = (SDL_Color) {theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255};
             monitor.theme_name[0] = '\0';
 
             // The good news is that a failure to find an image fails gracefully!
@@ -544,12 +544,12 @@ static void update_render_state(void) {
     const int offset_theme_x = pct_offset(scale_width, scale_width, theme.sdl.render.offset_x);
     const int offset_theme_y = pct_offset(scale_height, scale_height, theme.sdl.render.offset_y);
 
-    monitor.dest_rect = (SDL_Rect
-    ){offset_render_x + offset_theme_x + underscan, offset_render_y + offset_theme_y + underscan,
-      scale_width - underscan * 2, scale_height - underscan * 2};
+    monitor.dest_rect =
+        (SDL_Rect) {offset_render_x + offset_theme_x + underscan, offset_render_y + offset_theme_y + underscan,
+                    scale_width - underscan * 2, scale_height - underscan * 2};
 
     if (monitor.dest_rect.w <= 0 || monitor.dest_rect.h <= 0) {
-        monitor.dest_rect = (SDL_Rect){0, 0, device.screen.width, device.screen.height};
+        monitor.dest_rect = (SDL_Rect) {0, 0, device.screen.width, device.screen.height};
     }
 
     if (hdmi_mode) {
@@ -557,7 +557,7 @@ static void update_render_state(void) {
         monitor.pivot_ptr = NULL;
     } else {
         monitor.angle = device.screen.rotate <= 3 ? device.screen.rotate * 90.0 : device.screen.rotate;
-        monitor.pivot = (SDL_Point){device.screen.rotate_pivot_x, device.screen.rotate_pivot_y};
+        monitor.pivot = (SDL_Point) {device.screen.rotate_pivot_x, device.screen.rotate_pivot_y};
         monitor.pivot_ptr = monitor.pivot.x > 0 && monitor.pivot.y > 0 ? &monitor.pivot : NULL;
     }
 
@@ -865,6 +865,12 @@ void preview_saver(const int type, const int speed) {
     monitor.refresh = 1;
 }
 
+static int ui_layer_hidden = 0;
+
+void display_set_ui_hidden(const int hidden) {
+    ui_layer_hidden = hidden;
+}
+
 void display_composite_frame(void) {
     if (!monitor.renderer || !monitor.texture) return;
 
@@ -907,30 +913,33 @@ void display_composite_frame(void) {
         gradient_captured = 0;
     }
 
-    if (monitor.shadow_layer) {
+    if (!ui_layer_hidden) {
+        if (monitor.shadow_layer) {
+            if (monitor.angle == 0.0) {
+                SDL_RenderCopy(monitor.renderer, monitor.shadow_layer, NULL, &monitor.dest_rect);
+            } else {
+                SDL_RenderCopyEx(
+                    monitor.renderer, monitor.shadow_layer, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr,
+                    SDL_FLIP_NONE
+                );
+            }
+        }
+
+        SDL_SetTextureBlendMode(
+            monitor.texture, SDL_ComposeCustomBlendMode(
+                                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
+                                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
+                             )
+        );
+
         if (monitor.angle == 0.0) {
-            SDL_RenderCopy(monitor.renderer, monitor.shadow_layer, NULL, &monitor.dest_rect);
+            SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
         } else {
             SDL_RenderCopyEx(
-                monitor.renderer, monitor.shadow_layer, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr,
+                monitor.renderer, monitor.texture, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr,
                 SDL_FLIP_NONE
             );
         }
-    }
-
-    SDL_SetTextureBlendMode(
-        monitor.texture, SDL_ComposeCustomBlendMode(
-                             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
-                             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
-                         )
-    );
-
-    if (monitor.angle == 0.0) {
-        SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
-    } else {
-        SDL_RenderCopyEx(
-            monitor.renderer, monitor.texture, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE
-        );
     }
 
     if (anim_fg) anim_tick(monitor.renderer);

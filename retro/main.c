@@ -240,6 +240,7 @@ int main(const int argc, char *argv[]) {
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", fps, av_info.timing.sample_rate);
 
     int quit = 0;
+    int peeking = 0;
 
     uint32_t fps_frame_count = 0;
     uint32_t fps_last_update = SDL_GetTicks();
@@ -269,10 +270,22 @@ int main(const int argc, char *argv[]) {
         audio_bridge_set_paused(paused);
 
         if (paused) {
-            if (pause_menu_tick()) quit = 1;
-            lv_obj_invalidate(ui_screen);
+            const int peek = mux_input_pressed(mux_input_menu);
+            if (peek != peeking) {
+                peeking = peek;
+                display_set_ui_hidden(peek);
+                if (!peek) pause_menu_sync_input_mask();
+            }
+
+            if (!peek) {
+                if (pause_menu_tick()) quit = 1;
+                lv_obj_invalidate(ui_screen);
+            }
 
             SDL_Delay(10);
+        } else if (peeking) {
+            peeking = 0;
+            display_set_ui_hidden(0);
         } else if (hotkeys_task()) {
             LOG_DEBUG(mux_module, "main: menu released without a hotkey combo, toggling pause");
             pause_menu_toggle();
