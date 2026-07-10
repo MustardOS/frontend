@@ -162,7 +162,7 @@ static void restore_rgb_options(void) {
         case 9:
             new_mode = RGB_MODE_STICK_FOLLOW;
             break;
-        case RGB_MODE_SCREEN_REACT:
+        case 10:
             new_mode = RGB_MODE_SCREEN_REACT;
             break;
         default:
