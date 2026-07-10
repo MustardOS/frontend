@@ -589,9 +589,9 @@ static int dispatch_restore(void) {
     rgb_colour_t col_l = st.col_l, col_r = st.col_r, col_m = st.col_m, col_f1 = st.col_f1, col_f2 = st.col_f2;
 
     if (saved_mode == 10) {
-        // Screen React: the rgb_react daemon drives the LEDs itself. It records
-        // its PID and exits on its own if already running or when the mode
-        // changes, so a redundant launch is harmless.
+        // Screen React: the rgb_react daemon drives the LEDs itself. It keeps to
+        // a single instance and exits when the mode changes, so launching it on
+        // every restore is harmless.
         const char *args[] = {OPT_PATH "script/device/rgb_react.sh", NULL};
         run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
         return 0;
