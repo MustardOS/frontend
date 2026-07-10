@@ -65,7 +65,7 @@ void saver_init_base(
     uint8_t default_b, saver_speed_changed_cb on_speed_changed, saver_idle_enter_cb on_idle_enter, void *user
 );
 
-int saver_poll_idle(saver_state_t *s, uint32_t now);
+int saver_poll_idle(saver_state_t *s, uint32_t sp_now);
 
 int saver_active_base(const saver_state_t *s);
 

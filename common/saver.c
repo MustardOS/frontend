@@ -58,7 +58,7 @@ int saver_read_speed(void) {
     int speed = saver_speed_override;
 
     if (speed <= 0 && file_exist(SAVER_SPEED_PATH)) {
-        speed = read_line_int_from(SAVER_SPEED_PATH, SAVER_SPEED_DEFAULT);
+        speed = read_line_int_from(SAVER_SPEED_PATH, 1);
     }
 
     if (speed <= 0) speed = SAVER_SPEED_DEFAULT;
@@ -100,20 +100,23 @@ void saver_init_base(
     s->was_idle_active = 0;
 
     s->last_tick = SDL_GetTicks();
-    s->last_idle_poll = 0;
+
+    s->last_idle_poll = SDL_GetTicks() - TIMER_IDLE;
+    s->last_idle_changes = idle_state_changes - 1;
+
     s->suppress_until = 0;
 
     s->speed = saver_read_speed();
 }
 
-int saver_poll_idle(saver_state_t *s, const uint32_t now) {
+int saver_poll_idle(saver_state_t *s, const uint32_t sp_now) {
     if (!s->enabled) return 0;
 
-    if (now < s->suppress_until) {
+    if (sp_now < s->suppress_until) {
         s->idle_active = 0;
         s->was_idle_active = 0;
-        s->last_tick = now;
-        s->last_idle_poll = now;
+        s->last_tick = sp_now;
+        s->last_idle_poll = sp_now;
         return 0;
     }
 
@@ -122,13 +125,13 @@ int saver_poll_idle(saver_state_t *s, const uint32_t now) {
         should_poll = idle_state_changes != s->last_idle_changes;
         if (should_poll) s->last_idle_changes = idle_state_changes;
     } else {
-        should_poll = now - s->last_idle_poll >= TIMER_IDLE;
+        should_poll = sp_now - s->last_idle_poll >= TIMER_IDLE;
     }
 
     if (should_poll) {
         s->was_idle_active = s->idle_active;
         s->idle_active = read_line_int_from(IDLE_STATE, 1);
-        s->last_idle_poll = now;
+        s->last_idle_poll = sp_now;
 
         if (s->idle_active && !s->was_idle_active) {
             const int new_speed = saver_read_speed();
@@ -143,12 +146,12 @@ int saver_poll_idle(saver_state_t *s, const uint32_t now) {
 
             if (s->on_idle_enter) s->on_idle_enter(s->user);
 
-            s->last_tick = now;
+            s->last_tick = sp_now;
         }
     }
 
     if (!s->idle_active) {
-        s->last_tick = now;
+        s->last_tick = sp_now;
         return 0;
     }
 

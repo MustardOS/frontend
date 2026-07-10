@@ -353,16 +353,6 @@ static void saver_stop(void) {
         bsod_stop();
 }
 
-int get_saver_speed(const int fallback) {
-    int speed = saver_speed_override;
-
-    if (speed <= 0) speed = config.settings.power.saver_speed;
-    if (speed <= 0) speed = read_line_int_from(CONF_CONFIG_PATH "settings/power/saver_speed", fallback);
-    if (speed <= 0) speed = fallback;
-
-    return speed;
-}
-
 static void reload_saver() {
     if (active_saver == saver_type_video && video_saver_running) {
         video_wallpaper_stop();
@@ -390,89 +380,107 @@ static void reload_saver() {
 
     const int type = config.settings.power.saver_type;
 
-    if (type == saver_type_datetime) {
-        const uint32_t tc = theme.list_default.text;
-        const uint8_t dt_r = (uint8_t) (tc >> 16 & 0xFF);
-        const uint8_t dt_g = (uint8_t) (tc >> 8 & 0xFF);
-        const uint8_t dt_b = (uint8_t) (tc & 0xFF);
-        const uint8_t dt_a = theme.list_default.text_alpha < 0 ? 255 : (uint8_t) theme.list_default.text_alpha;
-        datetime_init(monitor.renderer, device.screen.width, device.screen.height, dt_r, dt_g, dt_b, dt_a);
-    } else if (type == saver_type_blockfall) {
-        blockfall_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_maze) {
-        maze_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_mystify) {
-        mystify_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_constellation) {
-        constellation_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_trace) {
-        trace_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_pulse) {
-        pulse_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_firefly) {
-        firefly_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_matrix) {
-        matrix_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_star) {
-        star_init(monitor.renderer, device.screen.width, device.screen.height);
-    } else if (type == saver_type_video) {
-        char saver_video[MAX_BUFFER_SIZE];
-        snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
+    int init_ok = 1;
 
-        if (!file_exist(saver_video)) {
-            snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
-            if (!file_exist(saver_video)) snprintf(saver_video, sizeof(saver_video), OPT_SHARE_PATH "media/logo.mp4");
-        }
+    for (int attempt = 0; attempt < 2; attempt++) {
+        init_ok = 1;
 
-        snprintf(video_saver_path, sizeof(video_saver_path), "%s", saver_video);
-        saver_init_base(
-            &video_saver_base, device.screen.width, device.screen.height, "Video Wallpaper", 0, 0, 0, NULL, NULL, NULL
-        );
-    } else if (type == saver_type_dvd) {
-        char saver_image[MAX_BUFFER_SIZE];
-        snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
+        if (type == saver_type_datetime) {
+            const uint32_t tc = theme.list_default.text;
+            const uint8_t dt_r = (uint8_t) (tc >> 16 & 0xFF);
+            const uint8_t dt_g = (uint8_t) (tc >> 8 & 0xFF);
+            const uint8_t dt_b = (uint8_t) (tc & 0xFF);
+            const uint8_t dt_a = theme.list_default.text_alpha < 0 ? 255 : (uint8_t) theme.list_default.text_alpha;
+            init_ok =
+                datetime_init(monitor.renderer, device.screen.width, device.screen.height, dt_r, dt_g, dt_b, dt_a);
+        } else if (type == saver_type_blockfall) {
+            init_ok = blockfall_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_maze) {
+            init_ok = maze_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_mystify) {
+            init_ok = mystify_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_constellation) {
+            init_ok = constellation_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_trace) {
+            init_ok = trace_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_pulse) {
+            init_ok = pulse_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_firefly) {
+            init_ok = firefly_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_matrix) {
+            init_ok = matrix_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_star) {
+            init_ok = star_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_video) {
+            char saver_video[MAX_BUFFER_SIZE];
+            snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
 
-        if (!file_exist(saver_image)) {
-            snprintf(saver_image, sizeof(saver_image), "%s/image/screensaver.png", theme_base);
-            if (!file_exist(saver_image)) snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
-        }
+            if (!file_exist(saver_video)) {
+                snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
+                if (!file_exist(saver_video))
+                    snprintf(saver_video, sizeof(saver_video), OPT_SHARE_PATH "media/logo.mp4");
+            }
 
-        dvd_init(monitor.renderer, saver_image, device.screen.width, device.screen.height);
-    } else if (type == saver_type_slideshow) {
-        char slide_dirs[4][MAX_BUFFER_SIZE];
-        const char *slide_dir_ptrs[4];
-        int slide_dir_count = 0;
-
-        snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/%simage/slideshow", theme_base, mux_dim);
-        slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
-        slide_dir_count++;
-
-        snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/image/slideshow", theme_base);
-        slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
-        slide_dir_count++;
-
-        if (device.storage.sdcard.mount[0]) {
-            snprintf(
-                slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/MUOS/slideshow", device.storage.sdcard.mount
+            snprintf(video_saver_path, sizeof(video_saver_path), "%s", saver_video);
+            saver_init_base(
+                &video_saver_base, device.screen.width, device.screen.height, "Video Wallpaper", 0, 0, 0, NULL, NULL,
+                NULL
             );
+        } else if (type == saver_type_dvd) {
+            char saver_image[MAX_BUFFER_SIZE];
+            snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
+
+            if (!file_exist(saver_image)) {
+                snprintf(saver_image, sizeof(saver_image), "%s/image/screensaver.png", theme_base);
+                if (!file_exist(saver_image))
+                    snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
+            }
+
+            init_ok = dvd_init(monitor.renderer, saver_image, device.screen.width, device.screen.height);
+        } else if (type == saver_type_slideshow) {
+            char slide_dirs[4][MAX_BUFFER_SIZE];
+            const char *slide_dir_ptrs[4];
+            int slide_dir_count = 0;
+
+            snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/%simage/slideshow", theme_base, mux_dim);
             slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
             slide_dir_count++;
-        }
 
-        if (device.storage.rom.mount[0]) {
-            snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/MUOS/slideshow", device.storage.rom.mount);
+            snprintf(slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/image/slideshow", theme_base);
             slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
             slide_dir_count++;
+
+            if (device.storage.sdcard.mount[0]) {
+                snprintf(
+                    slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/MUOS/slideshow", device.storage.sdcard.mount
+                );
+                slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
+                slide_dir_count++;
+            }
+
+            if (device.storage.rom.mount[0]) {
+                snprintf(
+                    slide_dirs[slide_dir_count], sizeof(slide_dirs[0]), "%s/MUOS/slideshow", device.storage.rom.mount
+                );
+                slide_dir_ptrs[slide_dir_count] = slide_dirs[slide_dir_count];
+                slide_dir_count++;
+            }
+
+            init_ok = slideshow_init(
+                monitor.renderer, slide_dir_ptrs, slide_dir_count, device.screen.width, device.screen.height
+            );
+        } else if (type == saver_type_boxart) {
+            init_ok = boxart_init(monitor.renderer, INFO_CAT_PATH, device.screen.width, device.screen.height);
+        } else if (type == saver_type_bsod) {
+            init_ok = bsod_init(monitor.renderer, device.screen.width, device.screen.height);
         }
 
-        slideshow_init(monitor.renderer, slide_dir_ptrs, slide_dir_count, device.screen.width, device.screen.height);
-    } else if (type == saver_type_boxart) {
-        boxart_init(monitor.renderer, INFO_CAT_PATH, device.screen.width, device.screen.height);
-    } else if (type == saver_type_bsod) {
-        bsod_init(monitor.renderer, device.screen.width, device.screen.height);
+        if (init_ok) break;
+
+        LOG_WARN("saver", "Saver type %d failed to initialise (attempt %d), retrying", type, attempt + 1);
     }
 
-    active_saver = type;
+    active_saver = init_ok ? type : -1;
 }
 
 void check_theme_change(void) {
@@ -820,7 +828,7 @@ void preview_saver(const int type, const int speed) {
 
     const int old_type = config.settings.power.saver_type;
     const int old_speed = config.settings.power.saver_speed;
-    const int old_idle = read_line_int_from(IDLE_STATE, 0);
+    const int old_idle = read_line_int_from(IDLE_STATE, 1);
 
     saver_set_speed_override(speed);
 
