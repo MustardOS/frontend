@@ -37,6 +37,7 @@ static int creating_save = 0;
 static int preview_mode = 0;
 static lv_obj_t *ui_pnl_preview_name = NULL;
 static lv_obj_t *ui_lbl_preview_name = NULL;
+static lv_obj_t *ui_img_preview_glyph = NULL;
 
 static uint64_t current_nav_mask(void) {
     const int up = mux_input_pressed(mux_input_dpad_up);
@@ -258,9 +259,11 @@ void gamestate_menu_init(void) {
 
     ui_pnl_preview_name = lv_obj_create(ui_screen);
     ui_lbl_preview_name = lv_label_create(ui_pnl_preview_name);
+    ui_img_preview_glyph = lv_img_create(ui_pnl_preview_name);
 
     apply_theme_list_panel(ui_pnl_preview_name);
     apply_theme_list_item(&theme, ui_lbl_preview_name, "");
+    apply_theme_list_glyph(&theme, ui_img_preview_glyph, "muxretro", "state");
     apply_text_long_dot(&theme, ui_lbl_preview_name);
 
     lv_obj_align(ui_pnl_preview_name, LV_ALIGN_TOP_MID, 0, theme.header.height + 2 + theme.misc.content.padding_top);
@@ -268,6 +271,7 @@ void gamestate_menu_init(void) {
 
     lv_obj_add_state(ui_pnl_preview_name, LV_STATE_FOCUSED);
     lv_obj_add_state(ui_lbl_preview_name, LV_STATE_FOCUSED);
+    lv_obj_add_state(ui_img_preview_glyph, LV_STATE_FOCUSED);
 
     lv_obj_clear_flag(ui_pnl_preview_name, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_flag(ui_pnl_preview_name, LV_OBJ_FLAG_HIDDEN);

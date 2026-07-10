@@ -98,6 +98,11 @@ static void set_corner_glyph(lv_obj_t *img, const char *glyph_name) {
     char embed[MAX_BUFFER_SIZE];
     if (get_glyph_path("muxretro", glyph_name, embed, sizeof(embed))) {
         set_list_glyph_image(img, embed);
+
+        lv_obj_set_style_img_opa(img, (lv_opa_t) theme.list_default.glyph_alpha, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor(img, lv_color_hex(theme.list_default.glyph_recolour), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(img, (lv_opa_t) theme.list_default.glyph_recolour_alpha, MU_OBJ_MAIN_DEFAULT);
+
         lv_obj_clear_flag(img, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
