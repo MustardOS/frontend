@@ -14,14 +14,23 @@ LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg \
            -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic -lbz2
 endif
 
-INCLUDES := -I. -I../module -I../module/ui -I../common \
+INCLUDES := -I../module -I../module/ui -I../common \
             -I../common/input -I../common/mini
 
-SRC := main.c core.c environment.c video.c audio.c input_bridge.c state.c \
-       ui_pause.c options.c ui_options.c gamestate.c ui_gamestate.c vfs.c rumble.c \
-       ui_diskcontrol.c ui_information.c settings.c ui_settings.c patch.c hotkeys.c ui_hotkeys.c \
-       content_hash.c nav_repeat.c bios_check.c sram.c cheats.c ui_cheats.c colour.c ui_display.c \
-       ui_colfilter.c ui_shader.c overlay_bridge.c ui_viewport.c
+SRC := core/main.c core/core.c core/environment.c \
+       video/video.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
+       video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_viewport.c \
+       video/ui_videosettings.c \
+       audio/audio.c audio/ui_soundsettings.c \
+       input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
+       input/ui_inputsettings.c input/nav_repeat.c \
+       state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
+       state/content_hash.c state/bios_check.c state/sram.c \
+       state/patch.c state/ui_storagesettings.c \
+       settings/settings.c settings/ui_settings.c settings/ui_performancesettings.c \
+       settings/ui_hudsettings.c \
+       ui/ui_pause.c ui/options.c ui/ui_options.c ui/ui_information.c \
+       ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c
 
 OBJ := $(SRC:.c=.o)
 

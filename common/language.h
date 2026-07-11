@@ -1485,6 +1485,18 @@ struct mux_lang {
             char display_desc[MAX_BUFFER_SIZE];
             char viewport_title[MAX_BUFFER_SIZE];
             char viewport_desc[MAX_BUFFER_SIZE];
+            char video_title[MAX_BUFFER_SIZE];
+            char video_desc[MAX_BUFFER_SIZE];
+            char sound_title[MAX_BUFFER_SIZE];
+            char sound_desc[MAX_BUFFER_SIZE];
+            char input_title[MAX_BUFFER_SIZE];
+            char input_desc[MAX_BUFFER_SIZE];
+            char performance_title[MAX_BUFFER_SIZE];
+            char performance_desc[MAX_BUFFER_SIZE];
+            char hud_title[MAX_BUFFER_SIZE];
+            char hud_desc[MAX_BUFFER_SIZE];
+            char storage_title[MAX_BUFFER_SIZE];
+            char storage_desc[MAX_BUFFER_SIZE];
             char content_save[MAX_BUFFER_SIZE];
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
@@ -1501,6 +1513,7 @@ struct mux_lang {
             char full_height[MAX_BUFFER_SIZE];
             char full_width[MAX_BUFFER_SIZE];
             char texture_filter[MAX_BUFFER_SIZE];
+            char shimmer_fix[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];
@@ -1542,6 +1555,21 @@ struct mux_lang {
             char auto_save_idle_quit[MAX_BUFFER_SIZE];
             char overlay_pattern_mode[MAX_BUFFER_SIZE];
             char overlay_catalogue_mode[MAX_BUFFER_SIZE];
+            char frame_delay[MAX_BUFFER_SIZE];
+            char analog_deadzone[MAX_BUFFER_SIZE];
+            char analog_anti_deadzone[MAX_BUFFER_SIZE];
+            char analog_sensitivity[MAX_BUFFER_SIZE];
+            char analog_invert_y[MAX_BUFFER_SIZE];
+            char audio_latency[MAX_BUFFER_SIZE];
+            char audio_latency_low[MAX_BUFFER_SIZE];
+            char audio_latency_balanced[MAX_BUFFER_SIZE];
+            char audio_latency_compat[MAX_BUFFER_SIZE];
+            char category_video[MAX_BUFFER_SIZE];
+            char category_sound[MAX_BUFFER_SIZE];
+            char category_input[MAX_BUFFER_SIZE];
+            char category_performance[MAX_BUFFER_SIZE];
+            char category_hud[MAX_BUFFER_SIZE];
+            char category_storage[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
             char fast_forward[MAX_BUFFER_SIZE];

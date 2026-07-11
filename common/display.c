@@ -70,6 +70,7 @@ static uint8_t display_fade_alpha = 0;
 static int gradient_captured = 0;
 static display_overlay_fn video_overlay_fn_ptr = NULL;
 static display_overlay_fn video_bg_fn_ptr = NULL;
+static int monitor_blend_configured = 0;
 
 SDL_Renderer *display_get_renderer(void) {
     return monitor.renderer;
@@ -925,12 +926,15 @@ void display_composite_frame(void) {
             }
         }
 
-        SDL_SetTextureBlendMode(
-            monitor.texture, SDL_ComposeCustomBlendMode(
-                                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
-                                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
-                             )
-        );
+        if (!monitor_blend_configured) {
+            SDL_SetTextureBlendMode(
+                monitor.texture, SDL_ComposeCustomBlendMode(
+                                     SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
+                                     SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
+                                 )
+            );
+            monitor_blend_configured = 1;
+        }
 
         if (monitor.angle == 0.0) {
             SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &monitor.dest_rect);
