@@ -498,6 +498,30 @@ int automatic_assign_core(char *rom_dir) {
     return auto_assign_good == 1;
 }
 
+int core_external_uses_stage_overlay(const char *core) {
+    if (!core || !*core) return 0;
+
+    const char *key;
+
+    // There is an enum key for external "cores" that determine if the
+    // stage overlay is to be used or not, much easier that way!
+    if (strcmp(core, "external") == 0) {
+        key = core;
+    } else if (strncmp(core, "ext-", 4) == 0) {
+        key = core + 4;
+    } else {
+        // muRetro and RetroArch don't bother with stage overlay,
+        // RetroArch has its own system and muRetro has predefined stuff.
+        return 0;
+    }
+
+    for (int i = 0; ext_core_names[i].core; i++) {
+        if (strcmp(key, ext_core_names[i].core) == 0) return ext_core_names[i].stage_overlay == stage_overlay_enabled;
+    }
+
+    return 0;
+}
+
 int core_uses_muxretro(const char *assign_dir, const char *item_name) {
     char core_file[FILENAME_MAX];
     snprintf(core_file, sizeof(core_file), "%s/%s.ini", assign_dir, item_name);

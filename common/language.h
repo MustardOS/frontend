@@ -1473,6 +1473,7 @@ struct mux_lang {
             char state[MAX_BUFFER_SIZE];
             char list[MAX_BUFFER_SIZE];
             char load_failed[MAX_BUFFER_SIZE];
+            char not_supported[MAX_BUFFER_SIZE];
         } gamestate;
         struct {
             char options_title[MAX_BUFFER_SIZE];
@@ -1505,6 +1506,10 @@ struct mux_lang {
             char swap[MAX_BUFFER_SIZE];
             char inserted[MAX_BUFFER_SIZE];
             char disc[MAX_BUFFER_SIZE];
+            char eject[MAX_BUFFER_SIZE];
+            char insert[MAX_BUFFER_SIZE];
+            char ejected[MAX_BUFFER_SIZE];
+            char eject_first[MAX_BUFFER_SIZE];
         } diskcontrol;
         struct {
             char scaling_mode[MAX_BUFFER_SIZE];
@@ -1512,6 +1517,7 @@ struct mux_lang {
             char mirrored[MAX_BUFFER_SIZE];
             char full_height[MAX_BUFFER_SIZE];
             char full_width[MAX_BUFFER_SIZE];
+            char fit_screen[MAX_BUFFER_SIZE];
             char texture_filter[MAX_BUFFER_SIZE];
             char shimmer_fix[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];

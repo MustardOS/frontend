@@ -17,6 +17,8 @@ int automatic_assign_core(char *rom_dir);
 
 int core_uses_muxretro(const char *assign_dir, const char *item_name);
 
+int core_external_uses_stage_overlay(const char *core);
+
 const char *format_core_name(const char *core, int use_lang, int is_muxretro);
 
 int remove_content_config(const char *name, const char *core);

@@ -19,6 +19,7 @@
 #include "muxretro.h"
 #include "../ui/options.h"
 #include "core.h"
+#include "../video/hw_render.h"
 #include "../video/overlay_bridge.h"
 #include "paths.h"
 #include "../input/rumble.h"
@@ -138,7 +139,11 @@ static void idle_poll(void) {
     last_seen_changes = mux_idle_state_changes;
 }
 
+static double core_run_ema_ms = 0.0;
+
 static void run_core_batch(const unsigned frames) {
+    hw_render_bridge_context_save();
+
     for (unsigned i = 0; i < frames; i++) {
         const int visible = i + 1 == frames;
         video_bridge_set_frame_skip(!visible);
@@ -146,9 +151,17 @@ static void run_core_batch(const unsigned frames) {
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
         environment_notify_frame_time();
+
+        const uint64_t run_start = SDL_GetPerformanceCounter();
         current_core.retro_run();
+        const double run_ms =
+            (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+        core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
+
         audio_bridge_flush_sample_fifo();
     }
+
+    hw_render_bridge_context_restore();
     video_bridge_set_frame_skip(0);
 }
 
@@ -161,6 +174,7 @@ void core_prime_audio(void) {
     video_bridge_set_frame_skip(1);
 
     unsigned primed = 0;
+    hw_render_bridge_context_save();
     while (primed < max_frames && audio_bridge_queued_ms() < target) {
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
@@ -168,6 +182,7 @@ void core_prime_audio(void) {
         audio_bridge_flush_sample_fifo();
         primed++;
     }
+    hw_render_bridge_context_restore();
 
     video_bridge_set_frame_skip(0);
 }
@@ -212,6 +227,8 @@ int main(const int argc, char *argv[]) {
     }
     LOG_DEBUG(mux_module, "core_open done");
 
+    state_saves_init(core_path_arg);
+
     if (core_load_content(content_path) != 0) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
         core_unload();
@@ -237,6 +254,11 @@ int main(const int argc, char *argv[]) {
     current_core.retro_get_system_av_info(&av_info);
     video_bridge_set_core_aspect(av_info.geometry.aspect_ratio);
 
+    if (hw_render_bridge_active()) {
+        hw_render_bridge_configure(av_info.geometry.max_width, av_info.geometry.max_height);
+        LOG_DEBUG(mux_module, "hw_render_bridge_configure done");
+    }
+
     target_fps = av_info.timing.fps > 0 ? av_info.timing.fps : 60.0;
 
     audio_bridge_open(av_info.timing.sample_rate > 0 ? av_info.timing.sample_rate : 48000.0);
@@ -247,15 +269,19 @@ int main(const int argc, char *argv[]) {
 
     overlay_bridge_apply();
 
-    if (!start_fresh) {
+    // The warm-up run exists solely to get the core into a loadable state for the
+    // most-recent-save auto-load, so skip the whole block when saves are off.
+    if (!start_fresh && state_saves_supported()) {
         video_bridge_set_frame_skip(1);
         audio_bridge_set_muted(1);
         rumble_bridge_set_suppressed(1);
 
+        hw_render_bridge_context_save();
         for (int i = 0; i < AUTOLOAD_WARMUP_FRAMES; i++) {
             input_bridge_begin_run();
             current_core.retro_run();
         }
+        hw_render_bridge_context_restore();
         audio_bridge_clear_queued();
 
         video_bridge_set_frame_skip(0);
@@ -354,7 +380,16 @@ int main(const int argc, char *argv[]) {
                 frames = ff_batch > 0 ? ff_batch : 1;
             } else if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_bridge_is_active()
                        && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
-                frames = 1 + AUDIO_MAX_CATCHUP;
+                unsigned extra = AUDIO_MAX_CATCHUP;
+                if (core_run_ema_ms > 0.0) {
+                    const double headroom = 1000.0 / target_fps / core_run_ema_ms - 1.0;
+                    if (headroom <= 0.0) {
+                        extra = 0;
+                    } else if (headroom < (double) AUDIO_MAX_CATCHUP) {
+                        extra = (unsigned) headroom;
+                    }
+                }
+                frames = 1 + extra;
             }
 
             run_core_batch(frames);

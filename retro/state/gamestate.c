@@ -138,7 +138,7 @@ void gamestate_init(const char *state_dir) {
 }
 
 void gamestate_capture_pending(void) {
-    if (!base_dir[0]) return;
+    if (!base_dir[0] || !state_saves_supported()) return;
     screenshot_save(pending_path, screenshot_auto, (screenshot_hue) {0, 0, 0});
 }
 
@@ -222,7 +222,7 @@ int gamestate_load(const int index) {
 }
 
 void gamestate_autosave_save(void) {
-    if (!base_dir[0]) return;
+    if (!base_dir[0] || !state_saves_supported()) return;
 
     if (state_save(autosave_state_path) != 0) {
         LOG_ERROR(mux_module, "gamestate_autosave_save: failed to save state to '%s'", autosave_state_path);

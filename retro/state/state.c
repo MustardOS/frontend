@@ -1,20 +1,92 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../../common/init.h"
 #include "../../common/log.h"
+#include "../../common/options.h"
+#include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../video/hw_render.h"
+
+#define CORE_INFO_PATH OPT_SHARE_PATH "emulator/retroarch/info/"
+
+static int saves_supported = 1;
+void state_saves_init(const char *core_file_path) {
+    saves_supported = 1;
+
+    const char *base = strrchr(core_file_path, '/');
+    base = base ? base + 1 : core_file_path;
+
+    char core_name[128];
+    snprintf(core_name, sizeof(core_name), "%s", base);
+    char *ext = strstr(core_name, ".so");
+    if (ext) *ext = '\0';
+
+    char info_path[MAX_BUFFER_SIZE];
+    snprintf(info_path, sizeof(info_path), "%s%s.info", CORE_INFO_PATH, core_name);
+
+    FILE *f = fopen(info_path, "r");
+    if (!f) return;
+
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char *eq = strchr(line, '=');
+        if (!eq) continue;
+        *eq = '\0';
+
+        const char *key = str_trim(line);
+        if (strcmp(key, "savestate_support") != 0) continue;
+
+        char *val = str_trim(eq + 1);
+        const size_t vlen = strlen(val);
+        if (vlen >= 2 && val[0] == '"' && val[vlen - 1] == '"') {
+            val[vlen - 1] = '\0';
+            val++;
+        }
+
+        if (strcmp(val, "disabled") == 0) {
+            saves_supported = 0;
+            LOG_INFO(mux_module, "Save states disabled for this core (savestate_support=disabled in %s)", info_path);
+        }
+        break;
+    }
+    fclose(f);
+}
+
+int state_saves_supported(void) {
+    return saves_supported;
+}
 
 int state_save(const char *path) {
+    if (!saves_supported) return -1;
     if (!current_core.retro_serialize_size || !current_core.retro_serialize) return -1;
 
+    hw_render_bridge_enter_core_call();
+
     const size_t size = current_core.retro_serialize_size();
-    if (size == 0) return -1;
+    if (size == 0) {
+        hw_render_bridge_exit_core_call();
+        return -1;
+    }
 
-    void *buf = malloc(size);
-    if (!buf) return -1;
+    LOG_DEBUG(mux_module, "state_save: serialize_size=%zu", size);
 
-    if (!current_core.retro_serialize(buf, size)) {
+    static size_t alloc_high_water = 0;
+    size_t alloc = size + size / 4 + (1 << 20);
+    if (alloc < alloc_high_water) alloc = alloc_high_water;
+    alloc_high_water = alloc;
+
+    void *buf = malloc(alloc);
+    if (!buf) {
+        hw_render_bridge_exit_core_call();
+        return -1;
+    }
+
+    const int ok = current_core.retro_serialize(buf, alloc);
+    hw_render_bridge_exit_core_call();
+
+    if (!ok) {
         LOG_ERROR(mux_module, "Core failed to serialize state");
         free(buf);
         return -1;
@@ -27,22 +99,22 @@ int state_save(const char *path) {
         return -1;
     }
 
-    const size_t written = fwrite(buf, 1, size, f);
+    const size_t written = fwrite(buf, 1, alloc, f);
     fclose(f);
     free(buf);
 
-    if (written != size) {
+    if (written != alloc) {
         LOG_ERROR(mux_module, "Short write saving state to '%s'", path);
         return -1;
     }
 
-    LOG_SUCCESS(mux_module, "Saved state to '%s' (%zu bytes)", path, size);
+    LOG_SUCCESS(mux_module, "Saved state to '%s' (%zu bytes)", path, alloc);
     return 0;
 }
 
 int state_load(const char *path) {
+    if (!saves_supported) return -1;
     if (!current_core.retro_unserialize) return -1;
-    if (current_core.retro_serialize_size) current_core.retro_serialize_size();
 
     FILE *f = fopen(path, "rb");
     if (!f) {
@@ -74,7 +146,12 @@ int state_load(const char *path) {
         return -1;
     }
 
+    hw_render_bridge_enter_core_call();
+    if (current_core.retro_serialize_size) current_core.retro_serialize_size();
+
     const int ok = current_core.retro_unserialize(buf, (size_t) size);
+    hw_render_bridge_exit_core_call();
+
     free(buf);
 
     if (!ok) {

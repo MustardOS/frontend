@@ -120,6 +120,10 @@ void input_bridge_suppress_held(void);
 
 void input_bridge_suppress(mux_input_type type);
 
+void state_saves_init(const char *core_file_path);
+
+int state_saves_supported(void);
+
 int state_save(const char *path);
 
 int state_load(const char *path);

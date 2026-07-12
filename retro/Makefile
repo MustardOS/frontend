@@ -20,7 +20,7 @@ INCLUDES := -I../module -I../module/ui -I../common \
 SRC := core/main.c core/core.c core/environment.c \
        video/video.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_viewport.c \
-       video/ui_videosettings.c \
+       video/ui_videosettings.c video/hw_render.c \
        audio/audio.c audio/ui_soundsettings.c \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
        input/ui_inputsettings.c input/nav_repeat.c \

@@ -113,9 +113,13 @@ int hotkeys_task(void) {
         }
 
         if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled) {
-            gamestate_quicksave_save();
-            LOG_INFO(mux_module, "Quick Save (hotkey)");
-            pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
+            if (state_saves_supported()) {
+                gamestate_quicksave_save();
+                LOG_INFO(mux_module, "Quick Save (hotkey)");
+                pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
+            } else {
+                pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
+            }
             input_bridge_suppress(mux_input_r2);
             menu_combo_consumed = 1;
         }
@@ -127,7 +131,9 @@ int hotkeys_task(void) {
         }
 
         if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled) {
-            if (gamestate_quicksave_load() == 0) {
+            if (!state_saves_supported()) {
+                pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
+            } else if (gamestate_quicksave_load() == 0) {
                 LOG_INFO(mux_module, "Quick Load (hotkey)");
                 pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_load);
             } else {

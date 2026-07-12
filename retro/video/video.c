@@ -7,6 +7,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
+#include "hw_render.h"
 #include "../core/muxretro.h"
 #include "overlay_bridge.h"
 #include "../settings/settings.h"
@@ -148,7 +149,9 @@ static void draw_video_content(SDL_Renderer *renderer) {
         SDL_RenderFillRect(renderer, NULL);
     }
 
-    if (session_settings.texture_filter == texture_filter_sharp_bilinear) {
+    if (hw_render_bridge_active()) {
+        hw_render_bridge_draw(renderer, &dest_rect);
+    } else if (session_settings.texture_filter == texture_filter_sharp_bilinear) {
         draw_sharp_bilinear(renderer);
     } else {
         colour_render_pass(renderer, frame_tex, &dest_rect);
@@ -160,7 +163,7 @@ static void draw_video_content(SDL_Renderer *renderer) {
 }
 
 static void draw_video_background(SDL_Renderer *renderer) {
-    if (!frame_tex) return;
+    if (!frame_tex && !hw_render_bridge_active()) return;
 
     const int rot = effective_rotation();
 
@@ -250,6 +253,19 @@ static void recompute_dest_rect(void) {
             const double src_aspect = compute_src_aspect();
             dest_rect.w = canvas_w;
             dest_rect.h = (int) ((double) dest_rect.w / src_aspect);
+            break;
+        }
+
+        case video_scale_fit: {
+            const double src_aspect = compute_src_aspect();
+
+            dest_rect.h = canvas_h;
+            dest_rect.w = (int) ((double) dest_rect.h * src_aspect);
+
+            if (dest_rect.w > canvas_w) {
+                dest_rect.w = canvas_w;
+                dest_rect.h = (int) ((double) dest_rect.w / src_aspect);
+            }
             break;
         }
 
@@ -572,6 +588,8 @@ void video_bridge_shutdown(void) {
     tex_w = 0;
     tex_h = 0;
     tex_format = 0;
+
+    hw_render_bridge_shutdown();
 }
 
 void video_bridge_set_frame_skip(const int skip) {
@@ -583,7 +601,21 @@ int video_bridge_get_frame_skip(void) {
 }
 
 void mux_retro_video_refresh_cb(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
-    if (frame_skip || !data || width == 0 || height == 0) return;
+    if (frame_skip) return;
+
+    if (data == RETRO_HW_FRAME_BUFFER_VALID) {
+        if (width == 0 || height == 0) return;
+
+        const int size_changed = (int) width != frame_w || (int) height != frame_h;
+        frame_w = (int) width;
+        frame_h = (int) height;
+        if (size_changed) recompute_dest_rect();
+
+        hw_render_bridge_notify_frame(width, height);
+        return;
+    }
+
+    if (!data || width == 0 || height == 0) return;
 
     raw_frame_pitch = pitch;
     raw_frame_bpp = bpp_for_pixel_format();

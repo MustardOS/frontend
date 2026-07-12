@@ -6,6 +6,7 @@ enum video_scale_mode {
     video_scale_stretch,
     video_scale_full_height,
     video_scale_full_width,
+    video_scale_fit,
     video_scale_count
 };
 

@@ -30,6 +30,8 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static int rem_config = 0;
 static int options_item_index = 0;
 static int info_item_index = 0;
+static int core_is_muxretro = 0;
+static int core_on_stage_overlay = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -220,9 +222,10 @@ static void populate_info_values(void) {
 
     char assign_dir[MAX_BUFFER_SIZE];
     snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", assign_sys);
-    const int is_muxretro = *def_core && *assign_sys ? core_uses_muxretro(assign_dir, def_core) : 0;
+    core_is_muxretro = *def_core && *assign_sys ? core_uses_muxretro(assign_dir, def_core) : 0;
+    core_on_stage_overlay = core_external_uses_stage_overlay(*core_file ? core_file : core_dir);
 
-    add_info_item_type(ui_val_core_option, core_file, core_dir, "core", 0, is_muxretro);
+    add_info_item_type(ui_val_core_option, core_file, core_dir, "core", 0, core_is_muxretro);
 
     const char *gov_file = get_content_line(sys_dir, file_name, "gov", 1);
     const char *gov_dir = get_content_line(sys_dir, NULL, "gov", 1);
@@ -352,7 +355,11 @@ static void build_options_view(void) {
         HIDE_VALUE_ITEM(option, rem_config);
     }
 
-    if (hdmi_mode) {
+    // Colour filter/shader belong to the stage overlay pipeline, which only externally
+    // launched cores flagged stage_overlay_enabled in ext_core_names actually render
+    // through - RetroArch has its own filter/shader system, muRetro carries in-app
+    // display settings, and unassigned content has no launcher at all.
+    if (hdmi_mode || !core_on_stage_overlay) {
         HIDE_VALUE_ITEM(option, col_filter);
         HIDE_VALUE_ITEM(option, shader);
     }

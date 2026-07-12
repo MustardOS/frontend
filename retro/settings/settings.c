@@ -17,7 +17,7 @@
 #include "settings.h"
 
 static const struct session_settings_t defaults = {
-    .scaling_mode = video_scale_aspect,
+    .scaling_mode = video_scale_fit,
     .rotate = video_rotate_0,
     .mirrored = 0,
     .aspect_ratio = aspect_ratio_auto,
@@ -99,8 +99,8 @@ static char directory_ini_path[MAX_BUFFER_SIZE] = "";
 
 static const char *scale_names[video_scale_count] = {
     lang.muxretro.settings_screen.aspect_ratio, lang.muxretro.settings_screen.integer_mode,
-    lang.muxretro.settings_screen.stretch, lang.muxretro.settings_screen.full_height,
-    lang.muxretro.settings_screen.full_width
+    lang.muxretro.settings_screen.stretch,      lang.muxretro.settings_screen.full_height,
+    lang.muxretro.settings_screen.full_width,   lang.muxretro.settings_screen.fit_screen
 };
 
 static const int rotate_degrees[video_rotate_count] = {0, 90, 180, 270};

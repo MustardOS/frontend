@@ -12,6 +12,7 @@
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../state/vfs.h"
+#include "../video/hw_render.h"
 
 static enum retro_pixel_format pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
 
@@ -323,6 +324,10 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         case RETRO_ENVIRONMENT_SHUTDOWN: {
             hotkeys_request_quit();
             return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_HW_RENDER: {
+            return hw_render_bridge_negotiate((struct retro_hw_render_callback *) data);
         }
 
         default:

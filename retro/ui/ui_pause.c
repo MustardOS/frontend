@@ -15,7 +15,9 @@
 #include "../core/muxretro.h"
 #include "../core/core.h"
 #include "../input/nav_repeat.h"
+#include "../input/rumble.h"
 #include "../settings/settings.h"
+#include "../video/hw_render.h"
 
 #define TOAST_DURATION_MS 2048
 #define HEADER_FADE_MS    256
@@ -53,7 +55,7 @@ static void compute_row_indices(void) {
 
     int i = 0;
     row_resume = i++;
-    row_game_state = i++;
+    row_game_state = state_saves_supported() ? i++ : -1;
     row_options = i++;
     row_disc_control = has_disc_control ? i++ : -1;
     row_cheats = i++;
@@ -349,7 +351,7 @@ void pause_menu_rebuild(void) {
     compute_row_indices();
 
     gen_label("muxretro", "resume", lang.muxretro.resume);
-    gen_label("muxretro", "state", lang.muxretro.game_state);
+    if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
     gen_label("muxretro", "core", lang.muxretro.core_options);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
     gen_label("muxretro", "cheat", lang.muxretro.cheats);
@@ -383,7 +385,7 @@ static void set_chrome_visible(const int visible) {
 }
 
 static void focus_item(const int index) {
-    if (index >= ui_count_static) return;
+    if (index < 0 || index >= ui_count_static) return;
     current_item_index = index;
 
     lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
@@ -491,7 +493,9 @@ int pause_menu_is_active(void) {
 void pause_menu_toggle(void) {
     active = !active;
     LOG_DEBUG(mux_module, "pause_menu_toggle: active=%d", active);
+
     pause_menu_sync_input_mask();
+    rumble_bridge_set_suppressed(active);
 
     if (active) {
         lv_refr_now(NULL);
@@ -592,7 +596,11 @@ int pause_menu_tick(void) {
             information_menu_open();
         } else if (current_item_index == row_restart) {
             play_sound(snd_confirm);
-            if (current_core.retro_reset) current_core.retro_reset();
+            if (current_core.retro_reset) {
+                hw_render_bridge_enter_core_call();
+                current_core.retro_reset();
+                hw_render_bridge_exit_core_call();
+            }
             pause_menu_toggle();
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
