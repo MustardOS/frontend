@@ -44,6 +44,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "backup", "overlays", CFG_OFF(backup.overlays), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "override", CFG_OFF(backup.override), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "package", CFG_OFF(backup.package), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "retro", CFG_OFF(backup.retro), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "save", CFG_OFF(backup.save), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "screenshot", CFG_OFF(backup.screenshot), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "shaders", CFG_OFF(backup.shaders), 0, {.i = 1}},

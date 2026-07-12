@@ -352,7 +352,7 @@ static void build_options_view(void) {
     const char *core_label = lv_label_get_text(ui_val_core_option);
     if (core_label && !strcasestr(core_label, "RetroArch")) {
         HIDE_VALUE_ITEM(option, retro_arch);
-        HIDE_VALUE_ITEM(option, rem_config);
+        if (!core_is_muxretro) HIDE_VALUE_ITEM(option, rem_config);
     }
 
     // Colour filter/shader belong to the stage overlay pipeline, which only externally
@@ -524,6 +524,37 @@ static void hide_remove_dialog(void) {
 
 static void do_remove(void) {
     play_sound(snd_muos);
+
+    if (core_is_muxretro) {
+        char content_full[MAX_BUFFER_SIZE];
+        snprintf(content_full, sizeof(content_full), "%s/%s", rom_dir, rom_name);
+        const char *settings_dir = is_dir ? rom_dir : get_content_path(content_full);
+
+        switch (rem_config) {
+            case 0:
+                if (is_dir) {
+                    remove_muxretro_dir_config(settings_dir);
+                } else {
+                    remove_muxretro_content_config(rom_name);
+                }
+                break;
+            case 1:
+                if (is_dir) {
+                    remove_muxretro_core_config(core_file);
+                } else {
+                    remove_muxretro_dir_config(settings_dir);
+                }
+                break;
+            case 2:
+                remove_muxretro_core_config(core_file);
+                break;
+            default:
+                break;
+        }
+
+        refresh_option_view();
+        return;
+    }
 
     switch (rem_config) {
         case 0:

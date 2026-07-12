@@ -13,6 +13,7 @@
 #include "../state/gamestate.h"
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
+#include "../core/runahead.h"
 #include "../core/core.h"
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
@@ -465,9 +466,7 @@ void pause_menu_init(void) {
     create_speed_mode_label();
     gamestate_menu_init();
     settings_menu_init();
-    hotkeys_menu_init();
     cheats_menu_init();
-    display_menu_init();
     options_menu_init();
 
     pause_menu_rebuild();
@@ -600,6 +599,7 @@ int pause_menu_tick(void) {
                 hw_render_bridge_enter_core_call();
                 current_core.retro_reset();
                 hw_render_bridge_exit_core_call();
+                runahead_invalidate();
             }
             pause_menu_toggle();
         } else if (current_item_index == row_quit) {

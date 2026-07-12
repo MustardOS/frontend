@@ -132,6 +132,7 @@ struct session_settings_t {
     int analog_invert_y;
     int audio_latency_profile;
     int shimmer_fix;
+    int run_ahead;
 };
 
 extern struct session_settings_t session_settings;
@@ -304,9 +305,13 @@ void session_settings_cycle_audio_latency(int direction);
 
 void session_settings_cycle_shimmer_fix(int direction);
 
+void session_settings_cycle_run_ahead(int direction);
+
 void session_settings_reset_viewport(void);
 
 int session_settings_is_dirty(void);
+
+void session_settings_apply_save_choice(int choice);
 
 void session_settings_discard(void);
 

@@ -19,6 +19,7 @@
 #include "muxretro.h"
 #include "../ui/options.h"
 #include "core.h"
+#include "runahead.h"
 #include "../video/hw_render.h"
 #include "../video/overlay_bridge.h"
 #include "paths.h"
@@ -153,6 +154,7 @@ static void run_core_batch(const unsigned frames) {
         environment_notify_frame_time();
 
         const uint64_t run_start = SDL_GetPerformanceCounter();
+        if (visible) runahead_before_frame(frames == 1);
         current_core.retro_run();
         const double run_ms =
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
@@ -165,8 +167,35 @@ static void run_core_batch(const unsigned frames) {
     video_bridge_set_frame_skip(0);
 }
 
+static void pace_core_output(void) {
+    static double fps_limit_deadline = 0.0;
+
+    if (hotkeys_is_fast_forward_active()) {
+        fps_limit_deadline = 0.0;
+        return;
+    }
+
+    audio_bridge_wait_for_headroom();
+
+    const int slowmo_active = hotkeys_is_slow_motion_active();
+    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active) {
+        fps_limit_deadline = 0.0;
+        return;
+    }
+
+    double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0 : 1000.0 / target_fps;
+    if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
+
+    const double now = SDL_GetTicks();
+    if (fps_limit_deadline < now - target_ms) fps_limit_deadline = now;
+
+    fps_limit_deadline += target_ms;
+    if (fps_limit_deadline > now) SDL_Delay((uint32_t) (fps_limit_deadline - now));
+}
+
 void core_prime_audio(void) {
     if (!audio_bridge_is_active()) return;
+    runahead_invalidate();
 
     const uint32_t target = audio_bridge_low_water_ms();
     const unsigned max_frames = AUDIO_MAX_CATCHUP * 8;
@@ -269,8 +298,6 @@ int main(const int argc, char *argv[]) {
 
     overlay_bridge_apply();
 
-    // The warm-up run exists solely to get the core into a loadable state for the
-    // most-recent-save auto-load, so skip the whole block when saves are off.
     if (!start_fresh && state_saves_supported()) {
         video_bridge_set_frame_skip(1);
         audio_bridge_set_muted(1);
@@ -319,11 +346,12 @@ int main(const int argc, char *argv[]) {
     uint32_t fps_frame_count = 0;
     uint32_t fps_last_update = SDL_GetTicks();
 
-    double fps_limit_deadline = 0.0;
     uint32_t sram_flush_deadline = SDL_GetTicks() + (uint32_t) session_settings.sram_flush_seconds * 1000;
     uint32_t status_deadline = SDL_GetTicks() + TIMER_STATUS;
 
     while (!quit) {
+        int core_ran = 0;
+
         mux_input_poll();
         idle_poll();
         handle_pending_suspend_signals();
@@ -393,28 +421,9 @@ int main(const int argc, char *argv[]) {
             }
 
             run_core_batch(frames);
-            int frames_run = (int) frames;
+            core_ran = 1;
 
-            if (ff_active) {
-                fps_limit_deadline = 0.0;
-            } else if (session_settings.fps_limit == fps_limit_50 || slowmo_active) {
-                audio_bridge_wait_for_headroom();
-
-                double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0 : 1000.0 / target_fps;
-                if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
-
-                const double now = SDL_GetTicks();
-
-                if (fps_limit_deadline < now - target_ms) fps_limit_deadline = now;
-
-                fps_limit_deadline += target_ms;
-                if (fps_limit_deadline > now) SDL_Delay((uint32_t) (fps_limit_deadline - now));
-            } else {
-                fps_limit_deadline = 0.0;
-                audio_bridge_wait_for_headroom();
-            }
-
-            fps_frame_count += (uint32_t) frames_run;
+            fps_frame_count += frames;
             const uint32_t now_ticks = SDL_GetTicks();
             const uint32_t fps_elapsed = now_ticks - fps_last_update;
             if (fps_elapsed >= 1000) {
@@ -450,9 +459,12 @@ int main(const int argc, char *argv[]) {
         if (paused_now) lv_task_handler();
         display_composite_frame();
         frame_pacer_after_present();
+
+        if (core_ran) pace_core_output();
     }
 
     pause_menu_shutdown();
+    runahead_shutdown();
     video_bridge_shutdown();
     overlay_bridge_shutdown();
     audio_bridge_close();

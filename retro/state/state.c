@@ -7,6 +7,7 @@
 #include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../core/runahead.h"
 #include "../video/hw_render.h"
 
 #define CORE_INFO_PATH OPT_SHARE_PATH "emulator/retroarch/info/"
@@ -160,6 +161,7 @@ int state_load(const char *path) {
     }
 
     audio_bridge_clear_queued();
+    runahead_invalidate();
 
     LOG_SUCCESS(mux_module, "Loaded state from '%s'", path);
     return 0;

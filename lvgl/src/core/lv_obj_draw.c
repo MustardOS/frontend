@@ -46,7 +46,7 @@ extern int16_t g_glyph_shadow_y_offset_focus;
  *  STATIC VARIABLES
  **********************/
 
-#define LV_SHADOW_ZONE_MAX 16
+#define LV_SHADOW_ZONE_MAX 64
 
 static lv_shadow_zone_t g_shadow_zones[LV_SHADOW_ZONE_MAX];
 static int g_shadow_zone_count = 0;

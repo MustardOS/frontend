@@ -293,6 +293,7 @@ struct mux_lang {
         char overlays[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
+        char retro[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
         char shaders[MAX_BUFFER_SIZE];
@@ -318,6 +319,7 @@ struct mux_lang {
             char overlays[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
+            char retro[MAX_BUFFER_SIZE];
             char save[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
             char shaders[MAX_BUFFER_SIZE];
@@ -1520,6 +1522,8 @@ struct mux_lang {
             char fit_screen[MAX_BUFFER_SIZE];
             char texture_filter[MAX_BUFFER_SIZE];
             char shimmer_fix[MAX_BUFFER_SIZE];
+            char run_ahead[MAX_BUFFER_SIZE];
+            char run_ahead_failed[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];

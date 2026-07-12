@@ -19,8 +19,6 @@ static nav_repeat_t rpt_down = {0};
 static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
 
-typedef enum { save_opt_content = 0, save_opt_core, save_opt_directory, save_opt_discard } save_opt_t;
-
 static uint64_t current_nav_mask(void) {
     return nav_mask_standard();
 }
@@ -127,24 +125,11 @@ void shader_menu_tick(void) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&save_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
-            const save_opt_t opt = (save_opt_t) save_dlg.selected;
+            const int opt = save_dlg.selected;
             dialogue_dismiss(&save_dialogue_active, &save_dlg);
             play_sound(snd_confirm);
 
-            switch (opt) {
-                case save_opt_content:
-                    session_settings_save_content();
-                    break;
-                case save_opt_core:
-                    session_settings_save_core();
-                    break;
-                case save_opt_directory:
-                    session_settings_save_directory();
-                    break;
-                case save_opt_discard:
-                    session_settings_discard();
-                    break;
-            }
+            session_settings_apply_save_choice(opt);
 
             close_screen();
         } else if (edge & BIT(5)) {

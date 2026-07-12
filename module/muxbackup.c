@@ -79,6 +79,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, bios, lang.muxbackup.bios, "bios", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, init, lang.muxbackup.init, "init", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, retro, lang.muxbackup.retro, "retro", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);
     INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);

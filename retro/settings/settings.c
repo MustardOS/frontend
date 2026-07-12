@@ -63,6 +63,7 @@ static const struct session_settings_t defaults = {
     .analog_invert_y = 0,
     .audio_latency_profile = audio_latency_balanced,
     .shimmer_fix = 0,
+    .run_ahead = 0,
 };
 
 #define COLOUR_BRIGHTNESS_MIN -100
@@ -547,6 +548,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "shimmer_fix", -1);
     if (v == 0 || v == 1) session_settings.shimmer_fix = (int) v;
 
+    v = mini_get_int(ini, "settings", "run_ahead", -1);
+    if (v == 0 || v == 1) session_settings.run_ahead = (int) v;
+
     mini_free(ini);
 }
 
@@ -601,6 +605,7 @@ static void write_ini(const char *path) {
     mini_set_int(ini, "settings", "analog_invert_y", session_settings.analog_invert_y);
     mini_set_int(ini, "settings", "audio_latency_profile", session_settings.audio_latency_profile);
     mini_set_int(ini, "settings", "shimmer_fix", session_settings.shimmer_fix);
+    mini_set_int(ini, "settings", "run_ahead", session_settings.run_ahead);
 
     mini_save(ini, 0);
     mini_free(ini);
@@ -938,6 +943,11 @@ void session_settings_cycle_shimmer_fix(const int direction) {
     video_bridge_apply_scaling();
 }
 
+void session_settings_cycle_run_ahead(const int direction) {
+    (void) direction;
+    session_settings.run_ahead = !session_settings.run_ahead;
+}
+
 void session_settings_reset_viewport(void) {
     session_settings.viewport_offset_x = 0;
     session_settings.viewport_offset_y = 0;
@@ -947,6 +957,23 @@ void session_settings_reset_viewport(void) {
 
 int session_settings_is_dirty(void) {
     return memcmp(&session_settings, &baseline_settings, sizeof(session_settings)) != 0;
+}
+
+void session_settings_apply_save_choice(const int choice) {
+    switch (choice) {
+        case 0:
+            session_settings_save_content();
+            break;
+        case 1:
+            session_settings_save_core();
+            break;
+        case 2:
+            session_settings_save_directory();
+            break;
+        default:
+            session_settings_discard();
+            break;
+    }
 }
 
 void session_settings_discard(void) {

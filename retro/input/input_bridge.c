@@ -152,6 +152,20 @@ void mux_retro_input_poll_cb(void) {
     input_polled_epoch = input_epoch;
 }
 
+uint64_t input_bridge_snapshot_signature(void) {
+    uint64_t sig = 1469598103934665603ull;
+
+    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
+        sig = (sig ^ port_retropad_mask[port]) * 1099511628211ull;
+        for (int index = 0; index < 2; index++) {
+            sig = (sig ^ (uint16_t) port_stick_x[port][index]) * 1099511628211ull;
+            sig = (sig ^ (uint16_t) port_stick_y[port][index]) * 1099511628211ull;
+        }
+    }
+
+    return sig;
+}
+
 void input_bridge_suppress_held(void) {
     for (int i = 0; i < mux_input_count; i++) {
         suppress_until_released[i] = mux_input_pressed((mux_input_type) i) ? 1 : 0;

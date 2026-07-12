@@ -100,6 +100,8 @@ int16_t mux_retro_input_state_cb(unsigned port, unsigned device, unsigned index,
 
 void input_bridge_begin_run(void);
 
+uint64_t input_bridge_snapshot_signature(void);
+
 void input_bridge_set_controller_info(const struct retro_controller_info *info);
 
 void environment_apply_pending_av_info(void);

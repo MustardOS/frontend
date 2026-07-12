@@ -55,6 +55,7 @@ struct mux_config {
         int16_t overlays;
         int16_t override;
         int16_t package;
+        int16_t retro;
         int16_t save;
         int16_t screenshot;
         int16_t shaders;
