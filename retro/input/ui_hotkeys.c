@@ -15,6 +15,7 @@ enum {
     row_quickload_enabled,
     row_toggle_fps_enabled,
     row_header_toggle_enabled,
+    row_analog_toggle_enabled,
     row_quit_enabled,
     row_count
 };
@@ -30,12 +31,13 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.quick_load,
     lang.muxretro.hotkeys_screen.toggle_fps,
     lang.muxretro.hotkeys_screen.toggle_header,
+    lang.muxretro.hotkeys_screen.toggle_controller,
     lang.muxretro.quit
 };
 
 static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",      "ffglyph",   "slowmotion",
                                             "slowmospeed", "slowmoglyph",  "quicksave", "quickload",
-                                            "togglefps",   "toggleheader", "quit"};
+                                            "togglefps",   "toggleheader", "togglecontroller", "quit"};
 
 static void enabled_text(char *buf, const size_t buf_len, const int enabled, const char *combo) {
     if (enabled) {
@@ -83,6 +85,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
         case row_header_toggle_enabled:
             enabled_text(buf, buf_len, session_settings.hotkey_header_toggle_enabled, "M+X");
             break;
+        case row_analog_toggle_enabled:
+            enabled_text(buf, buf_len, session_settings.hotkey_analog_toggle_enabled, "M+A");
+            break;
         case row_quit_enabled:
             enabled_text(buf, buf_len, session_settings.hotkey_quit_enabled, "M+START");
             break;
@@ -123,6 +128,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_header_toggle_enabled:
             session_settings_cycle_hotkey_header_toggle_enabled(direction);
+            break;
+        case row_analog_toggle_enabled:
+            session_settings_cycle_hotkey_analog_toggle_enabled(direction);
             break;
         case row_quit_enabled:
             session_settings_cycle_hotkey_quit_enabled(direction);

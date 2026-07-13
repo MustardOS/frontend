@@ -15,7 +15,7 @@ static uint16_t port_retropad_mask[MUX_RETRO_PORT_COUNT];
 static int16_t port_stick_x[MUX_RETRO_PORT_COUNT][2];
 static int16_t port_stick_y[MUX_RETRO_PORT_COUNT][2];
 
-static unsigned port_device_id[MUX_RETRO_PORT_COUNT];
+static unsigned port_analog_id[MUX_RETRO_PORT_COUNT];
 static int port_last_connected[MUX_RETRO_PORT_COUNT];
 
 static const mux_input_type joypad_id_to_mux[16] = {
@@ -67,25 +67,42 @@ static int16_t invert_y_if_needed(const int16_t y) {
     return y == INT16_MIN ? INT16_MAX : (int16_t) -y;
 }
 
+static unsigned port_applied_device[MUX_RETRO_PORT_COUNT] = {
+    [0 ... MUX_RETRO_PORT_COUNT - 1] = (unsigned) -1
+};
+
 static void apply_controller_ports(void) {
     if (!current_core.retro_set_controller_port_device) return;
 
     for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
-        const unsigned device = port_last_connected[port] ? port_device_id[port] : RETRO_DEVICE_NONE;
+        unsigned device = RETRO_DEVICE_NONE;
+
+        if (port_last_connected[port]) {
+            device = session_settings.analog_controller && port_analog_id[port] ? port_analog_id[port]
+                                                                                : RETRO_DEVICE_JOYPAD;
+        }
+
+        if (device == port_applied_device[port]) continue;
+
         current_core.retro_set_controller_port_device((unsigned) port, device);
+        port_applied_device[port] = device;
     }
+}
+
+void input_bridge_apply_controller_ports(void) {
+    apply_controller_ports();
 }
 
 void input_bridge_set_controller_info(const struct retro_controller_info *info) {
     for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++)
-        port_device_id[port] = RETRO_DEVICE_JOYPAD;
+        port_analog_id[port] = 0;
 
     if (!info) return;
 
     for (int port = 0; port < MUX_RETRO_PORT_COUNT && info[port].types; port++) {
         for (unsigned t = 0; t < info[port].num_types; t++) {
             if ((info[port].types[t].id & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG) {
-                port_device_id[port] = info[port].types[t].id;
+                port_analog_id[port] = info[port].types[t].id;
                 break;
             }
         }

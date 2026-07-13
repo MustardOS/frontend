@@ -110,6 +110,7 @@ struct session_settings_t {
     int hotkey_toggle_fps_enabled;
     int hotkey_header_toggle_enabled;
     int hotkey_quit_enabled;
+    int hotkey_analog_toggle_enabled;
     int auto_save;
     int sram_flush_seconds;
     int colour_brightness;
@@ -133,6 +134,7 @@ struct session_settings_t {
     int audio_latency_profile;
     int shimmer_fix;
     int run_ahead;
+    int analog_controller;
 };
 
 extern struct session_settings_t session_settings;
@@ -259,6 +261,8 @@ void session_settings_cycle_hotkey_header_toggle_enabled(int direction);
 
 void session_settings_cycle_hotkey_quit_enabled(int direction);
 
+void session_settings_cycle_hotkey_analog_toggle_enabled(int direction);
+
 void session_settings_cycle_auto_save(int direction);
 
 void session_settings_cycle_sram_flush(int direction);
@@ -306,6 +310,8 @@ void session_settings_cycle_audio_latency(int direction);
 void session_settings_cycle_shimmer_fix(int direction);
 
 void session_settings_cycle_run_ahead(int direction);
+
+void session_settings_cycle_analog_controller(int direction);
 
 void session_settings_reset_viewport(void);
 

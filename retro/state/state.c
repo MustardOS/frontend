@@ -65,7 +65,7 @@ int state_save(const char *path) {
 
     hw_render_bridge_enter_core_call();
 
-    const size_t size = current_core.retro_serialize_size();
+    size_t size = current_core.retro_serialize_size();
     if (size == 0) {
         hw_render_bridge_exit_core_call();
         return -1;
@@ -84,7 +84,16 @@ int state_save(const char *path) {
         return -1;
     }
 
-    const int ok = current_core.retro_serialize(buf, alloc);
+    int ok = current_core.retro_serialize(buf, size);
+
+    if (!ok) {
+        const size_t regrown = current_core.retro_serialize_size();
+        if (regrown > 0 && regrown != size && regrown <= alloc) {
+            size = regrown;
+            ok = current_core.retro_serialize(buf, size);
+        }
+    }
+
     hw_render_bridge_exit_core_call();
 
     if (!ok) {
@@ -100,16 +109,16 @@ int state_save(const char *path) {
         return -1;
     }
 
-    const size_t written = fwrite(buf, 1, alloc, f);
+    const size_t written = fwrite(buf, 1, size, f);
     fclose(f);
     free(buf);
 
-    if (written != alloc) {
+    if (written != size) {
         LOG_ERROR(mux_module, "Short write saving state to '%s'", path);
         return -1;
     }
 
-    LOG_SUCCESS(mux_module, "Saved state to '%s' (%zu bytes)", path, alloc);
+    LOG_SUCCESS(mux_module, "Saved state to '%s' (%zu bytes)", path, size);
     return 0;
 }
 

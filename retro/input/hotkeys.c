@@ -13,6 +13,7 @@
 static int menu_held = 0;
 static int menu_combo_consumed = 0;
 
+static int prev_a = 0;
 static int prev_r1 = 0;
 static int prev_r2 = 0;
 static int prev_l1 = 0;
@@ -94,6 +95,7 @@ int hotkeys_task(void) {
     const int y_now = mux_input_pressed(mux_input_y);
     const int x_now = mux_input_pressed(mux_input_x);
     const int start_now = mux_input_pressed(mux_input_start);
+    const int a_now = mux_input_pressed(mux_input_a);
 
     int open_pause = 0;
 
@@ -163,6 +165,24 @@ int hotkeys_task(void) {
             menu_combo_consumed = 1;
         }
 
+        if (a_now && !prev_a && session_settings.hotkey_analog_toggle_enabled) {
+            session_settings_cycle_analog_controller(0);
+
+            char toast[MAX_BUFFER_SIZE];
+            snprintf(
+                toast, sizeof(toast), "%s: %s", lang.muxretro.settings_screen.controller_type,
+                session_settings.analog_controller ? lang.muxretro.settings_screen.controller_analog
+                                                   : lang.muxretro.settings_screen.controller_digital
+            );
+            pause_menu_show_toast(toast);
+
+            LOG_INFO(
+                mux_module, "Controller Type %s (hotkey)", session_settings.analog_controller ? "analog" : "digital"
+            );
+            input_bridge_suppress(mux_input_a);
+            menu_combo_consumed = 1;
+        }
+
         if (start_now && !prev_start && session_settings.hotkey_quit_enabled) {
             if (session_settings_auto_save_on_quit()) gamestate_autosave_save();
             LOG_INFO(mux_module, "Quit (hotkey)");
@@ -172,6 +192,7 @@ int hotkeys_task(void) {
         }
     }
 
+    prev_a = a_now;
     prev_r1 = r1_now;
     prev_r2 = r2_now;
     prev_l1 = l1_now;

@@ -274,9 +274,11 @@ settings/directory/<crc32-of-content-directory>.ini
 settings/content/<content_basename>.ini
 ```
 
-Applied in that order - **core → directory → content** - so the most specific tier wins. `session_settings_init`
-snapshots a baseline right after loading; dirty-checking against it drives the "save changes?" dialogue on leaving any
-settings screen, and saving writes only the tier the user picked.
+Applied in that order - **core → directory → content** - so the most specific tier wins. Each tier stores only a
+**delta**: saving writes just the keys that differ from the tiers beneath it (and removes the file entirely when
+nothing differs), so a content-level override never pins unrelated settings against later core- or directory-level
+changes. `session_settings_init` snapshots a baseline right after loading; dirty-checking against it drives the "save
+changes?" dialogue on leaving any settings screen, and saving writes only the tier the user picked.
 
 ### Content loading
 

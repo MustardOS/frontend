@@ -1524,6 +1524,9 @@ struct mux_lang {
             char shimmer_fix[MAX_BUFFER_SIZE];
             char run_ahead[MAX_BUFFER_SIZE];
             char run_ahead_failed[MAX_BUFFER_SIZE];
+            char controller_type[MAX_BUFFER_SIZE];
+            char controller_digital[MAX_BUFFER_SIZE];
+            char controller_analog[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];
@@ -1591,6 +1594,7 @@ struct mux_lang {
             char no_quicksave[MAX_BUFFER_SIZE];
             char toggle_fps[MAX_BUFFER_SIZE];
             char toggle_header[MAX_BUFFER_SIZE];
+            char toggle_controller[MAX_BUFFER_SIZE];
             char ff_glyph[MAX_BUFFER_SIZE];
             char slowmo_glyph[MAX_BUFFER_SIZE];
         } hotkeys_screen;

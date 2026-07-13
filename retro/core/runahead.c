@@ -12,6 +12,8 @@
 
 static void *anchor_buf = NULL;
 static size_t anchor_cap = 0;
+static size_t anchor_size = 0;
+static size_t anchor_written_size = 0;
 static int anchor_valid = 0;
 static uint64_t anchor_sig = 0;
 
@@ -32,6 +34,8 @@ static void runahead_fail(const char *reason) {
 static int ensure_anchor_buf(void) {
     const size_t size = current_core.retro_serialize_size();
     if (size == 0) return 0;
+
+    anchor_size = size;
 
     if (size + size / 8 > anchor_cap) {
         const size_t want = size + size / 8 + (64 << 10);
@@ -63,7 +67,7 @@ void runahead_before_frame(const int allow_replay) {
     const uint64_t sig = input_bridge_snapshot_signature();
 
     if (allow_replay && anchor_valid && sig != anchor_sig) {
-        if (current_core.retro_unserialize(anchor_buf, anchor_cap)) {
+        if (current_core.retro_unserialize(anchor_buf, anchor_written_size)) {
             rumble_bridge_set_suppressed(1);
             audio_bridge_set_muted(1);
             video_bridge_set_frame_skip(1);
@@ -80,11 +84,12 @@ void runahead_before_frame(const int allow_replay) {
         }
     }
 
-    if (!current_core.retro_serialize(anchor_buf, anchor_cap)) {
+    if (!current_core.retro_serialize(anchor_buf, anchor_size)) {
         runahead_fail("retro_serialize failed");
         return;
     }
 
+    anchor_written_size = anchor_size;
     anchor_valid = 1;
     anchor_sig = sig;
 }
@@ -97,6 +102,8 @@ void runahead_shutdown(void) {
     free(anchor_buf);
     anchor_buf = NULL;
     anchor_cap = 0;
+    anchor_size = 0;
+    anchor_written_size = 0;
     anchor_valid = 0;
     failed = 0;
     failure_announced = 0;

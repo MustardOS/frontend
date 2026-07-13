@@ -226,18 +226,21 @@ static void recompute_dest_rect(void) {
             break;
 
         case video_scale_integer: {
+            const double src_aspect = compute_src_aspect();
+            const double base_w = (double) frame_h * src_aspect;
+
             double scale;
             if (session_settings.integer_scale == integer_scale_auto) {
-                int auto_scale = canvas_w / frame_w;
-                const int auto_scale_h = canvas_h / frame_h;
-                if (auto_scale_h < auto_scale) auto_scale = auto_scale_h;
+                int auto_scale = canvas_h / frame_h;
                 if (auto_scale < 1) auto_scale = 1;
+                while (auto_scale > 1 && base_w * auto_scale > (double) canvas_w)
+                    auto_scale--;
                 scale = (double) auto_scale;
             } else {
                 scale = session_settings_integer_scale_value(session_settings.integer_scale);
             }
 
-            dest_rect.w = (int) ((double) frame_w * scale);
+            dest_rect.w = (int) (base_w * scale);
             dest_rect.h = (int) ((double) frame_h * scale);
             break;
         }
@@ -290,11 +293,6 @@ static void recompute_dest_rect(void) {
         }
     }
 
-    if (session_settings.viewport_zoom != 100) {
-        dest_rect.w = dest_rect.w * session_settings.viewport_zoom / 100;
-        dest_rect.h = dest_rect.h * session_settings.viewport_zoom / 100;
-    }
-
     if (session_settings.shimmer_fix) {
         int width_scale = (dest_rect.w + frame_w / 2) / frame_w;
         if (width_scale < 1) width_scale = 1;
@@ -303,6 +301,11 @@ static void recompute_dest_rect(void) {
 
         dest_rect.w = frame_w * width_scale;
         dest_rect.h = frame_h * height_scale;
+    }
+
+    if (session_settings.viewport_zoom != 100) {
+        dest_rect.w = dest_rect.w * session_settings.viewport_zoom / 100;
+        dest_rect.h = dest_rect.h * session_settings.viewport_zoom / 100;
     }
 
     dest_rect.x = (canvas_w - dest_rect.w) / 2 + session_settings.viewport_offset_x;

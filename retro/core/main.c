@@ -297,6 +297,8 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "video_bridge_init done");
 
     overlay_bridge_apply();
+    mux_input_poll();
+    input_bridge_suppress_held();
 
     if (!start_fresh && state_saves_supported()) {
         video_bridge_set_frame_skip(1);

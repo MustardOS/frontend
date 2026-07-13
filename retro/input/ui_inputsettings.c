@@ -5,7 +5,8 @@
 #include "../settings/submenu.h"
 
 enum {
-    row_rumble = 0,
+    row_controller_type = 0,
+    row_rumble,
     row_analog_deadzone,
     row_analog_anti_deadzone,
     row_analog_sensitivity,
@@ -14,17 +15,25 @@ enum {
 };
 
 static const char *row_labels[row_count] = {
+    lang.muxretro.settings_screen.controller_type,
     lang.muxretro.settings_screen.rumble, lang.muxretro.settings_screen.analog_deadzone,
     lang.muxretro.settings_screen.analog_anti_deadzone, lang.muxretro.settings_screen.analog_sensitivity,
     lang.muxretro.settings_screen.analog_invert_y
 };
 
 static const char *row_glyphs[row_count] = {
-    "rumble", "analogdeadzone", "analogantideadzone", "analogsensitivity", "analoginverty"
+    "controllertype", "rumble", "analogdeadzone", "analogantideadzone", "analogsensitivity", "analoginverty"
 };
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
+        case row_controller_type:
+            snprintf(
+                buf, buf_len, "%s",
+                session_settings.analog_controller ? lang.muxretro.settings_screen.controller_analog
+                                                   : lang.muxretro.settings_screen.controller_digital
+            );
+            break;
         case row_rumble:
             snprintf(
                 buf, buf_len, "%s", session_settings.rumble_enabled ? lang.generic.enabled : lang.generic.disabled
@@ -54,6 +63,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
 
 static void cycle_row(const int index, const int direction) {
     switch (index) {
+        case row_controller_type:
+            session_settings_cycle_analog_controller(direction);
+            break;
         case row_rumble:
             session_settings_cycle_rumble(direction);
             break;

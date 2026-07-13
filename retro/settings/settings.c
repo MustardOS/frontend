@@ -41,6 +41,7 @@ static const struct session_settings_t defaults = {
     .hotkey_toggle_fps_enabled = 1,
     .hotkey_header_toggle_enabled = 1,
     .hotkey_quit_enabled = 1,
+    .hotkey_analog_toggle_enabled = 1,
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
     .colour_brightness = 0,
@@ -64,6 +65,7 @@ static const struct session_settings_t defaults = {
     .audio_latency_profile = audio_latency_balanced,
     .shimmer_fix = 0,
     .run_ahead = 0,
+    .analog_controller = 0,
 };
 
 #define COLOUR_BRIGHTNESS_MIN -100
@@ -470,6 +472,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "hotkey_quit_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_quit_enabled = (int) v;
 
+    v = mini_get_int(ini, "settings", "hotkey_analog_toggle_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_analog_toggle_enabled = (int) v;
+
     v = mini_get_int(ini, "settings", "auto_save", -1);
     if (v >= 0 && v < auto_save_count) session_settings.auto_save = (int) v;
 
@@ -551,61 +556,89 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "run_ahead", -1);
     if (v == 0 || v == 1) session_settings.run_ahead = (int) v;
 
+    v = mini_get_int(ini, "settings", "analog_controller", -1);
+    if (v == 0 || v == 1) session_settings.analog_controller = (int) v;
+
     mini_free(ini);
 }
 
-static void write_ini(const char *path) {
-    mini_t *ini = mini_try_load(path);
-    if (!ini) ini = mini_create(path);
+static struct session_settings_t tier_base(const int with_core, const int with_directory) {
+    const struct session_settings_t live = session_settings;
+
+    session_settings = defaults;
+    if (with_core) apply_ini(core_ini_path);
+    if (with_directory) apply_ini(directory_ini_path);
+
+    const struct session_settings_t base = session_settings;
+    session_settings = live;
+
+    return base;
+}
+
+static void write_ini_delta(const char *path, const struct session_settings_t *base) {
+    remove(path);
+
+    if (memcmp(&session_settings, base, sizeof(session_settings)) == 0) return;
+
+    mini_t *ini = mini_create(path);
     if (!ini) return;
 
-    mini_set_int(ini, "settings", "scaling_mode", session_settings.scaling_mode);
-    mini_set_int(ini, "settings", "rotate", session_settings.rotate);
-    mini_set_int(ini, "settings", "mirrored", session_settings.mirrored);
-    mini_set_int(ini, "settings", "aspect_ratio", session_settings.aspect_ratio);
-    mini_set_int(ini, "settings", "integer_scale", session_settings.integer_scale);
-    mini_set_int(ini, "settings", "texture_filter", session_settings.texture_filter);
-    mini_set_int(ini, "settings", "rumble_enabled", session_settings.rumble_enabled);
-    mini_set_int(ini, "settings", "volume", session_settings.volume);
-    mini_set_int(ini, "settings", "show_fps", session_settings.show_fps);
-    mini_set_int(ini, "settings", "border_color", session_settings.border_color);
-    mini_set_int(ini, "settings", "sample_rate", session_settings.sample_rate);
-    mini_set_int(ini, "settings", "fps_limit", session_settings.fps_limit);
-    mini_set_int(ini, "settings", "header_visibility", session_settings.header_visibility);
-    mini_set_int(ini, "settings", "ff_speed", session_settings.ff_speed);
-    mini_set_int(ini, "settings", "slowmo_speed", session_settings.slowmo_speed);
-    mini_set_int(ini, "settings", "hotkey_ff_enabled", session_settings.hotkey_ff_enabled);
-    mini_set_int(ini, "settings", "hotkey_ff_glyph_enabled", session_settings.hotkey_ff_glyph_enabled);
-    mini_set_int(ini, "settings", "hotkey_slowmo_enabled", session_settings.hotkey_slowmo_enabled);
-    mini_set_int(ini, "settings", "hotkey_slowmo_glyph_enabled", session_settings.hotkey_slowmo_glyph_enabled);
-    mini_set_int(ini, "settings", "hotkey_quicksave_enabled", session_settings.hotkey_quicksave_enabled);
-    mini_set_int(ini, "settings", "hotkey_quickload_enabled", session_settings.hotkey_quickload_enabled);
-    mini_set_int(ini, "settings", "hotkey_toggle_fps_enabled", session_settings.hotkey_toggle_fps_enabled);
-    mini_set_int(ini, "settings", "hotkey_header_toggle_enabled", session_settings.hotkey_header_toggle_enabled);
-    mini_set_int(ini, "settings", "hotkey_quit_enabled", session_settings.hotkey_quit_enabled);
-    mini_set_int(ini, "settings", "auto_save", session_settings.auto_save);
-    mini_set_int(ini, "settings", "sram_flush_seconds", session_settings.sram_flush_seconds);
-    mini_set_int(ini, "settings", "colour_brightness", session_settings.colour_brightness);
-    mini_set_int(ini, "settings", "colour_contrast", session_settings.colour_contrast);
-    mini_set_int(ini, "settings", "colour_saturation", session_settings.colour_saturation);
-    mini_set_int(ini, "settings", "colour_hueshift", session_settings.colour_hueshift);
-    mini_set_int(ini, "settings", "colour_gamma", session_settings.colour_gamma);
-    mini_set_int(ini, "settings", "colour_filter", session_settings.colour_filter);
-    mini_set_int(ini, "settings", "colour_shader", session_settings.colour_shader);
-    mini_set_int(ini, "settings", "overlay_source", session_settings.overlay_source);
-    mini_set_int(ini, "settings", "overlay_pattern", session_settings.overlay_pattern);
-    mini_set_int(ini, "settings", "overlay_opacity", session_settings.overlay_opacity);
-    mini_set_int(ini, "settings", "viewport_offset_x", session_settings.viewport_offset_x);
-    mini_set_int(ini, "settings", "viewport_offset_y", session_settings.viewport_offset_y);
-    mini_set_int(ini, "settings", "viewport_zoom", session_settings.viewport_zoom);
-    mini_set_int(ini, "settings", "frame_delay_ms", session_settings.frame_delay_ms);
-    mini_set_int(ini, "settings", "analog_deadzone", session_settings.analog_deadzone);
-    mini_set_int(ini, "settings", "analog_anti_deadzone", session_settings.analog_anti_deadzone);
-    mini_set_int(ini, "settings", "analog_sensitivity", session_settings.analog_sensitivity);
-    mini_set_int(ini, "settings", "analog_invert_y", session_settings.analog_invert_y);
-    mini_set_int(ini, "settings", "audio_latency_profile", session_settings.audio_latency_profile);
-    mini_set_int(ini, "settings", "shimmer_fix", session_settings.shimmer_fix);
-    mini_set_int(ini, "settings", "run_ahead", session_settings.run_ahead);
+#define DELTA(FIELD)                                                                                                   \
+    do {                                                                                                               \
+        if (session_settings.FIELD != base->FIELD) mini_set_int(ini, "settings", #FIELD, session_settings.FIELD);      \
+    } while (0)
+
+    DELTA(scaling_mode);
+    DELTA(rotate);
+    DELTA(mirrored);
+    DELTA(aspect_ratio);
+    DELTA(integer_scale);
+    DELTA(texture_filter);
+    DELTA(rumble_enabled);
+    DELTA(volume);
+    DELTA(show_fps);
+    DELTA(border_color);
+    DELTA(sample_rate);
+    DELTA(fps_limit);
+    DELTA(header_visibility);
+    DELTA(ff_speed);
+    DELTA(slowmo_speed);
+    DELTA(hotkey_ff_enabled);
+    DELTA(hotkey_ff_glyph_enabled);
+    DELTA(hotkey_slowmo_enabled);
+    DELTA(hotkey_slowmo_glyph_enabled);
+    DELTA(hotkey_quicksave_enabled);
+    DELTA(hotkey_quickload_enabled);
+    DELTA(hotkey_toggle_fps_enabled);
+    DELTA(hotkey_header_toggle_enabled);
+    DELTA(hotkey_quit_enabled);
+    DELTA(hotkey_analog_toggle_enabled);
+    DELTA(auto_save);
+    DELTA(sram_flush_seconds);
+    DELTA(colour_brightness);
+    DELTA(colour_contrast);
+    DELTA(colour_saturation);
+    DELTA(colour_hueshift);
+    DELTA(colour_gamma);
+    DELTA(colour_filter);
+    DELTA(colour_shader);
+    DELTA(overlay_source);
+    DELTA(overlay_pattern);
+    DELTA(overlay_opacity);
+    DELTA(viewport_offset_x);
+    DELTA(viewport_offset_y);
+    DELTA(viewport_zoom);
+    DELTA(frame_delay_ms);
+    DELTA(analog_deadzone);
+    DELTA(analog_anti_deadzone);
+    DELTA(analog_sensitivity);
+    DELTA(analog_invert_y);
+    DELTA(audio_latency_profile);
+    DELTA(shimmer_fix);
+    DELTA(run_ahead);
+    DELTA(analog_controller);
+
+#undef DELTA
 
     mini_save(ini, 0);
     mini_free(ini);
@@ -770,6 +803,11 @@ void session_settings_cycle_hotkey_toggle_fps_enabled(const int direction) {
 void session_settings_cycle_hotkey_header_toggle_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_header_toggle_enabled = !session_settings.hotkey_header_toggle_enabled;
+}
+
+void session_settings_cycle_hotkey_analog_toggle_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_analog_toggle_enabled = !session_settings.hotkey_analog_toggle_enabled;
 }
 
 void session_settings_cycle_hotkey_quit_enabled(const int direction) {
@@ -948,6 +986,12 @@ void session_settings_cycle_run_ahead(const int direction) {
     session_settings.run_ahead = !session_settings.run_ahead;
 }
 
+void session_settings_cycle_analog_controller(const int direction) {
+    (void) direction;
+    session_settings.analog_controller = !session_settings.analog_controller;
+    input_bridge_apply_controller_ports();
+}
+
 void session_settings_reset_viewport(void) {
     session_settings.viewport_offset_x = 0;
     session_settings.viewport_offset_y = 0;
@@ -988,16 +1032,19 @@ void session_settings_discard(void) {
 }
 
 void session_settings_save_content(void) {
-    write_ini(content_ini_path);
+    const struct session_settings_t base = tier_base(1, 1);
+    write_ini_delta(content_ini_path, &base);
     baseline_settings = session_settings;
 }
 
 void session_settings_save_core(void) {
-    write_ini(core_ini_path);
+    const struct session_settings_t base = tier_base(0, 0);
+    write_ini_delta(core_ini_path, &base);
     baseline_settings = session_settings;
 }
 
 void session_settings_save_directory(void) {
-    write_ini(directory_ini_path);
+    const struct session_settings_t base = tier_base(1, 0);
+    write_ini_delta(directory_ini_path, &base);
     baseline_settings = session_settings;
 }
