@@ -583,7 +583,7 @@ const char *format_core_name(const char *core, const int use_lang, const int is_
 
     const char *ra = format_retroarch_core(core);
     if (ra) {
-        snprintf(buf, sizeof(buf), "%s (%s)", ra, is_muxretro ? "muRetro" : "RetroArch");
+        snprintf(buf, sizeof(buf), "%s (%s)", ra, is_muxretro ? "Pickles" : "RetroArch");
         return buf;
     }
 
