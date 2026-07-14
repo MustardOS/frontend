@@ -4,14 +4,29 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_offset_x = 0, row_offset_y, row_zoom, row_reset, row_count };
+enum {
+    row_offset_x = 0,
+    row_offset_y,
+    row_zoom,
+    row_crop_top,
+    row_crop_bottom,
+    row_crop_left,
+    row_crop_right,
+    row_centre_crop,
+    row_reset,
+    row_count
+};
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.viewport_screen.offset_x, lang.muxretro.viewport_screen.offset_y, lang.muxretro.viewport_screen.zoom,
+    lang.muxretro.viewport_screen.offset_x,    lang.muxretro.viewport_screen.offset_y,
+    lang.muxretro.viewport_screen.zoom,        lang.muxretro.viewport_screen.crop_top,
+    lang.muxretro.viewport_screen.crop_bottom, lang.muxretro.viewport_screen.crop_left,
+    lang.muxretro.viewport_screen.crop_right,  lang.muxretro.viewport_screen.centre_crop,
     lang.muxretro.viewport_screen.reset
 };
 
-static const char *row_glyphs[row_count] = {"viewportx", "viewporty", "viewportzoom", "viewportreset"};
+static const char *row_glyphs[row_count] = {"viewportx", "viewporty", "viewportzoom", "croptop",      "cropbottom",
+                                            "cropleft",  "cropright", "centrecrop",   "viewportreset"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -23,6 +38,23 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_zoom:
             snprintf(buf, buf_len, "%s", session_settings_viewport_zoom_name(session_settings.viewport_zoom));
+            break;
+        case row_crop_top:
+            snprintf(buf, buf_len, "%s", session_settings_viewport_crop_name(session_settings.viewport_crop_top));
+            break;
+        case row_crop_bottom:
+            snprintf(buf, buf_len, "%s", session_settings_viewport_crop_name(session_settings.viewport_crop_bottom));
+            break;
+        case row_crop_left:
+            snprintf(buf, buf_len, "%s", session_settings_viewport_crop_name(session_settings.viewport_crop_left));
+            break;
+        case row_crop_right:
+            snprintf(buf, buf_len, "%s", session_settings_viewport_crop_name(session_settings.viewport_crop_right));
+            break;
+        case row_centre_crop:
+            snprintf(
+                buf, buf_len, "%s", session_settings.viewport_centre_crop ? lang.generic.enabled : lang.generic.disabled
+            );
             break;
         default:
             buf[0] = '\0';
@@ -40,6 +72,21 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_zoom:
             session_settings_cycle_viewport_zoom(direction);
+            break;
+        case row_crop_top:
+            session_settings_cycle_viewport_crop_top(direction);
+            break;
+        case row_crop_bottom:
+            session_settings_cycle_viewport_crop_bottom(direction);
+            break;
+        case row_crop_left:
+            session_settings_cycle_viewport_crop_left(direction);
+            break;
+        case row_crop_right:
+            session_settings_cycle_viewport_crop_right(direction);
+            break;
+        case row_centre_crop:
+            session_settings_cycle_viewport_centre_crop(direction);
             break;
         default:
             break;

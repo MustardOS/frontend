@@ -180,6 +180,8 @@ void submenu_tick(submenu *m) {
     const uint64_t edge = mask & ~m->prev_nav_mask;
     m->prev_nav_mask = mask;
 
+    if (nav_input_halted()) return;
+
     if (m->save_dialogue_active) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&m->save_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
@@ -223,6 +225,8 @@ void submenu_tick(submenu *m) {
         m->def->cycle(current_item_index, +1);
         refresh_row(m, current_item_index, nav_dir_right);
         play_sound(snd_option);
+    } else if (nav_page_tick(edge, mask, 2)) {
+        submenu_nav(m, 0);
     } else if (edge & BIT(4)) {
         if (row_is_action(m, current_item_index) && m->def->action) {
             play_sound(snd_confirm);

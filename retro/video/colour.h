@@ -23,4 +23,4 @@ void colour_refresh(void);
 
 int colour_pass_needed(void);
 
-void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *dest_rect);
+void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect);

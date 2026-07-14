@@ -107,6 +107,8 @@ void cheats_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    if (nav_input_halted()) return;
+
     const uint32_t now = SDL_GetTicks();
 
     int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
@@ -132,6 +134,8 @@ void cheats_menu_tick(void) {
         play_sound(snd_option);
         cheats_toggle(current_item_index);
         refresh_row(current_item_index, do_left ? nav_dir_left : nav_dir_right);
+    } else if (nav_page_tick(edge, mask, 2)) {
+        // do nothing!
     } else if (edge & BIT(5)) {
         play_sound(snd_back);
         close_cheats();

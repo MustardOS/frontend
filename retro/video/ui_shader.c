@@ -121,6 +121,8 @@ void shader_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    if (nav_input_halted()) return;
+
     if (save_dialogue_active) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&save_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
@@ -153,6 +155,8 @@ void shader_menu_tick(void) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
+        session_settings_set_colour_shader(current_item_index);
+    } else if (nav_page_tick(edge, mask, 2)) {
         session_settings_set_colour_shader(current_item_index);
     } else if (edge & BIT(4)) {
         play_sound(snd_confirm);

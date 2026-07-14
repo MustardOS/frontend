@@ -248,6 +248,8 @@ static void tick_category_picker(const uint64_t edge, const uint64_t mask) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 1, 0, 1);
+    } else if (nav_page_tick(edge, mask, 1)) {
+        // do nothing!
     } else if (edge & BIT(4)) {
         play_sound(snd_confirm);
         category_cursor = current_item_index;
@@ -293,6 +295,8 @@ static void tick_options(const uint64_t edge, const uint64_t mask) {
         options_cycle(visible_indices[current_item_index], +1);
         refresh_row(current_item_index, nav_dir_right);
         play_sound(snd_option);
+    } else if (nav_page_tick(edge, mask, 2)) {
+        // do nothing!
     } else if (edge & BIT(5)) {
         if (options_category_count > 0) {
             play_sound(snd_back);
@@ -311,6 +315,8 @@ void options_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
+
+    if (nav_input_halted()) return;
 
     if (save_dialogue_active) {
         if (edge & (BIT(0) | BIT(1))) {

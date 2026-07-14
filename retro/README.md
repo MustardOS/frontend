@@ -53,7 +53,7 @@ retro/
 | `frame_pacer.c`                         | Frame Delay: adaptive pre-run wait (p95 of recent frame costs) so input is sampled as late as possible before each frame.                                    |
 | `ui_display.c`                          | Display screen (filter/shader pickers, colour grading, overlay).                                                                                             |
 | `ui_videosettings.c`                    | Video screen (viewport entry, scaling, rotation, mirror, aspect, integer scale, texture filter, shimmer fix, border).                                        |
-| `ui_viewport.c`                         | Viewport Offsets screen (X/Y offset, zoom, reset).                                                                                                           |
+| `ui_viewport.c`                         | Viewport Offsets screen (X/Y offset, zoom, edge cropping, centre crop, reset).                                                                               |
 | `ui_colfilter.c` / `ui_shader.c`        | Colour filter / shader picker screens.                                                                                                                       |
 
 ### audio/
@@ -122,6 +122,8 @@ retro/
   Core-requested
   rotation (`SET_ROTATION`) combines with the user's setting.
 - **Viewport Offsets**: X/Y pixel offset and zoom with one-tap reset, applied on top of any scaling mode.
+- **Viewport Cropping**: per-edge source pixel cropping (top/bottom/left/right) with an optional Centre Crop mode
+  that recentres the cropped image on the display, ignoring the X/Y offsets.
 - **Texture filters**: nearest, smooth (linear), scale2x, scale3x, sharp bilinear.
 - **Colour grading**: brightness/contrast/saturation/hue-shift/gamma, plus drop-in filter presets (`.ini`) and shader
   presets (`.frag`) scanned from `/opt/muos/share/{filter,shader}/`. Works for software and hardware-rendered cores.

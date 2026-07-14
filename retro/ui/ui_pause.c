@@ -76,7 +76,7 @@ static uint64_t current_nav_mask(void) {
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
 
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0);
+    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
 }
 
 void pause_menu_sync_input_mask(void) {
@@ -550,6 +550,8 @@ int pause_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    if (nav_input_halted()) return 0;
+
     const uint32_t now = SDL_GetTicks();
 
     int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
@@ -569,6 +571,8 @@ int pause_menu_tick(void) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 1, 0, 1);
+    } else if (nav_page_tick(edge, mask, 1)) {
+        // do nothing!
     } else if (edge & BIT(3)) {
         play_sound(snd_back);
         pause_menu_toggle();

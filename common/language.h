@@ -1621,6 +1621,11 @@ struct mux_lang {
             char offset_x[MAX_BUFFER_SIZE];
             char offset_y[MAX_BUFFER_SIZE];
             char zoom[MAX_BUFFER_SIZE];
+            char crop_top[MAX_BUFFER_SIZE];
+            char crop_bottom[MAX_BUFFER_SIZE];
+            char crop_left[MAX_BUFFER_SIZE];
+            char crop_right[MAX_BUFFER_SIZE];
+            char centre_crop[MAX_BUFFER_SIZE];
             char reset[MAX_BUFFER_SIZE];
         } viewport_screen;
         struct {

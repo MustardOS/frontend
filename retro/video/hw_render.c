@@ -555,13 +555,13 @@ void hw_render_bridge_exit_core_call(void) {
 }
 
 static void draw_hw_quad(
-    const float l, const float r, const float t, const float b, const float u_max, const float v_at_top,
-    const float v_at_bottom, const int vp_w, const int vp_h, const int swap_channels
+    const float l, const float r, const float t, const float b, const float u_min, const float u_max,
+    const float v_at_top, const float v_at_bottom, const int vp_w, const int vp_h, const int swap_channels
 ) {
     const GLfloat verts[] = {
-        l, t, 0.0f,  v_at_top,    // top left
+        l, t, u_min, v_at_top,    // top left
         r, t, u_max, v_at_top,    // top right
-        l, b, 0.0f,  v_at_bottom, // bottom left
+        l, b, u_min, v_at_bottom, // bottom left
         r, b, u_max, v_at_bottom, // bottom right
     };
 
@@ -644,7 +644,7 @@ static int ensure_filter_src(SDL_Renderer *renderer) {
     return 1;
 }
 
-void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect) {
+void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, const SDL_Rect *src_rect) {
     if (!active || !context_ready || !colour_tex || target_w == 0 || target_h == 0) return;
     if (!prog) return;
 
@@ -659,10 +659,10 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect) {
             const float v_at_top = flip_needed ? 0.0f : v_max;
             const float v_at_bottom = flip_needed ? v_max : 0.0f;
 
-            draw_hw_quad(-1.0f, 1.0f, 1.0f, -1.0f, u_max, v_at_top, v_at_bottom, filter_src_w, filter_src_h, 1);
+            draw_hw_quad(-1.0f, 1.0f, 1.0f, -1.0f, 0.0f, u_max, v_at_top, v_at_bottom, filter_src_w, filter_src_h, 1);
             SDL_SetRenderTarget(renderer, prev_target);
 
-            colour_render_pass(renderer, filter_src_tex, dest_rect);
+            colour_render_pass(renderer, filter_src_tex, src_rect, dest_rect);
             return;
         }
         SDL_SetRenderTarget(renderer, prev_target);
@@ -682,10 +682,18 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect) {
     const float ndc_top = 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
     const float ndc_bottom = 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
 
-    const float v_at_top = flip_needed ? v_max : 0.0f;
-    const float v_at_bottom = flip_needed ? 0.0f : v_max;
+    float u0 = 0.0f, u1 = u_max, v0 = 0.0f, v1 = v_max;
+    if (src_rect) {
+        u0 = (float) src_rect->x / (float) target_w;
+        u1 = (float) (src_rect->x + src_rect->w) / (float) target_w;
+        v0 = (float) src_rect->y / (float) target_h;
+        v1 = (float) (src_rect->y + src_rect->h) / (float) target_h;
+    }
 
-    draw_hw_quad(ndc_left, ndc_right, ndc_top, ndc_bottom, u_max, v_at_top, v_at_bottom, out_w, out_h, 0);
+    const float v_at_top = flip_needed ? v_max - v0 : v0;
+    const float v_at_bottom = flip_needed ? v_max - v1 : v1;
+
+    draw_hw_quad(ndc_left, ndc_right, ndc_top, ndc_bottom, u0, u1, v_at_top, v_at_bottom, out_w, out_h, 0);
 }
 
 void hw_render_bridge_shutdown(void) {

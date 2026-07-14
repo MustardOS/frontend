@@ -50,7 +50,7 @@ static uint64_t current_nav_mask(void) {
     const int save = mux_input_pressed(mux_input_y);
 
     return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0) | (confirm ? BIT(4) : 0)
-           | (back ? BIT(5) : 0) | (del ? BIT(6) : 0) | (save ? BIT(7) : 0);
+           | (back ? BIT(5) : 0) | (del ? BIT(6) : 0) | (save ? BIT(7) : 0) | nav_mask_page();
 }
 
 static void nav_show_x(const int show, const char *text) {
@@ -383,6 +383,10 @@ static void tick_osk(const uint64_t edge, const uint64_t mask) {
         finish_new_save_cancel();
     } else if (edge & BIT(7)) {
         key_space(ui_txt_entry_gamestate);
+    } else if (edge & NAV_PAGE_UP_BIT) {
+        key_swap_back();
+    } else if (edge & NAV_PAGE_DOWN_BIT) {
+        key_swap();
     } else {
         const uint32_t now = SDL_GetTicks();
         const int do_backspace = nav_repeat_step(&rpt_backspace, edge & BIT(5), mask & BIT(5), 1, now);
@@ -450,6 +454,8 @@ void gamestate_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    if (nav_input_halted()) return;
+
     if (key_show) {
         tick_osk(edge, mask);
         return;
@@ -509,6 +515,8 @@ void gamestate_menu_tick(void) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 1, 0, 1);
+        refresh_preview();
+    } else if (nav_page_tick(edge, mask, 1)) {
         refresh_preview();
     } else if (edge & (BIT(2) | BIT(3))) {
         if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {

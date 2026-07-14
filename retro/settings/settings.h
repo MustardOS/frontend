@@ -126,6 +126,11 @@ struct session_settings_t {
     int viewport_offset_x;
     int viewport_offset_y;
     int viewport_zoom;
+    int viewport_crop_top;
+    int viewport_crop_bottom;
+    int viewport_crop_left;
+    int viewport_crop_right;
+    int viewport_centre_crop;
     int frame_delay_ms;
     int analog_deadzone;
     int analog_anti_deadzone;
@@ -200,6 +205,8 @@ const char *session_settings_viewport_offset_x_name(int value);
 const char *session_settings_viewport_offset_y_name(int value);
 
 const char *session_settings_viewport_zoom_name(int value);
+
+const char *session_settings_viewport_crop_name(int value);
 
 const char *session_settings_frame_delay_name(int value);
 
@@ -294,6 +301,16 @@ void session_settings_cycle_viewport_offset_x(int direction);
 void session_settings_cycle_viewport_offset_y(int direction);
 
 void session_settings_cycle_viewport_zoom(int direction);
+
+void session_settings_cycle_viewport_crop_top(int direction);
+
+void session_settings_cycle_viewport_crop_bottom(int direction);
+
+void session_settings_cycle_viewport_crop_left(int direction);
+
+void session_settings_cycle_viewport_crop_right(int direction);
+
+void session_settings_cycle_viewport_centre_crop(int direction);
 
 void session_settings_cycle_frame_delay(int direction);
 

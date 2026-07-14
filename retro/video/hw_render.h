@@ -24,6 +24,6 @@ void hw_render_bridge_enter_core_call(void);
 
 void hw_render_bridge_exit_core_call(void);
 
-void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect);
+void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, const SDL_Rect *src_rect);
 
 void hw_render_bridge_shutdown(void);

@@ -57,6 +57,11 @@ static const struct session_settings_t defaults = {
     .viewport_offset_x = 0,
     .viewport_offset_y = 0,
     .viewport_zoom = 100,
+    .viewport_crop_top = 0,
+    .viewport_crop_bottom = 0,
+    .viewport_crop_left = 0,
+    .viewport_crop_right = 0,
+    .viewport_centre_crop = 0,
     .frame_delay_ms = FRAME_DELAY_OFF,
     .analog_deadzone = 15,
     .analog_anti_deadzone = 0,
@@ -80,10 +85,13 @@ static const struct session_settings_t defaults = {
 #define COLOUR_GAMMA_MAX      400
 #define COLOUR_STEP           5
 
-#define VIEWPORT_OFFSET_STEP 1
-#define VIEWPORT_ZOOM_MIN    50
-#define VIEWPORT_ZOOM_MAX    200
-#define VIEWPORT_ZOOM_STEP   5
+#define VIEWPORT_OFFSET_STEP   1
+#define VIEWPORT_ZOOM_MIN      25
+#define VIEWPORT_ZOOM_MAX      300
+#define VIEWPORT_ZOOM_STEP     5
+#define VIEWPORT_CROP_STEP     1
+#define VIEWPORT_CROP_MAX      512
+#define VIEWPORT_CROP_MIN_KEEP 16
 
 #define ANALOG_DEADZONE_MIN      0
 #define ANALOG_DEADZONE_MAX      50
@@ -359,6 +367,12 @@ const char *session_settings_viewport_zoom_name(const int value) {
     return buf;
 }
 
+const char *session_settings_viewport_crop_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%dpx", value);
+    return buf;
+}
+
 const char *session_settings_frame_delay_name(const int value) {
     if (value == FRAME_DELAY_AUTO) return lang.muxretro.settings_screen.auto_rate;
     if (value <= FRAME_DELAY_OFF) return lang.generic.disabled;
@@ -527,6 +541,21 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "viewport_zoom", VIEWPORT_ZOOM_MIN - 1);
     if (v >= VIEWPORT_ZOOM_MIN && v <= VIEWPORT_ZOOM_MAX) session_settings.viewport_zoom = (int) v;
 
+    v = mini_get_int(ini, "settings", "viewport_crop_top", -1);
+    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_top = (int) v;
+
+    v = mini_get_int(ini, "settings", "viewport_crop_bottom", -1);
+    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_bottom = (int) v;
+
+    v = mini_get_int(ini, "settings", "viewport_crop_left", -1);
+    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_left = (int) v;
+
+    v = mini_get_int(ini, "settings", "viewport_crop_right", -1);
+    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_right = (int) v;
+
+    v = mini_get_int(ini, "settings", "viewport_centre_crop", -1);
+    if (v == 0 || v == 1) session_settings.viewport_centre_crop = (int) v;
+
     v = mini_get_int(ini, "settings", "frame_delay_ms", FRAME_DELAY_OFF - 1);
     for (int i = 0; i < FRAME_DELAY_CHOICE_COUNT; i++) {
         if (frame_delay_choices[i] == (int) v) {
@@ -628,6 +657,11 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(viewport_offset_x);
     DELTA(viewport_offset_y);
     DELTA(viewport_zoom);
+    DELTA(viewport_crop_top);
+    DELTA(viewport_crop_bottom);
+    DELTA(viewport_crop_left);
+    DELTA(viewport_crop_right);
+    DELTA(viewport_centre_crop);
     DELTA(frame_delay_ms);
     DELTA(analog_deadzone);
     DELTA(analog_anti_deadzone);
@@ -930,6 +964,52 @@ void session_settings_cycle_viewport_zoom(const int direction) {
     video_bridge_apply_scaling();
 }
 
+static int viewport_crop_limit(const int frame_dim, const int opposite) {
+    int max = VIEWPORT_CROP_MAX;
+    if (frame_dim > 0 && frame_dim - opposite - VIEWPORT_CROP_MIN_KEEP < max)
+        max = frame_dim - opposite - VIEWPORT_CROP_MIN_KEEP;
+    if (max < 0) max = 0;
+    return max;
+}
+
+static void cycle_viewport_crop(int *value, const int direction, const int frame_dim, const int opposite) {
+    const int max = viewport_crop_limit(frame_dim, opposite);
+    *value += direction * VIEWPORT_CROP_STEP;
+    if (*value < 0) *value = 0;
+    if (*value > max) *value = max;
+    video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_viewport_crop_top(const int direction) {
+    int frame_w, frame_h;
+    video_bridge_get_frame_size(&frame_w, &frame_h);
+    cycle_viewport_crop(&session_settings.viewport_crop_top, direction, frame_h, session_settings.viewport_crop_bottom);
+}
+
+void session_settings_cycle_viewport_crop_bottom(const int direction) {
+    int frame_w, frame_h;
+    video_bridge_get_frame_size(&frame_w, &frame_h);
+    cycle_viewport_crop(&session_settings.viewport_crop_bottom, direction, frame_h, session_settings.viewport_crop_top);
+}
+
+void session_settings_cycle_viewport_crop_left(const int direction) {
+    int frame_w, frame_h;
+    video_bridge_get_frame_size(&frame_w, &frame_h);
+    cycle_viewport_crop(&session_settings.viewport_crop_left, direction, frame_w, session_settings.viewport_crop_right);
+}
+
+void session_settings_cycle_viewport_crop_right(const int direction) {
+    int frame_w, frame_h;
+    video_bridge_get_frame_size(&frame_w, &frame_h);
+    cycle_viewport_crop(&session_settings.viewport_crop_right, direction, frame_w, session_settings.viewport_crop_left);
+}
+
+void session_settings_cycle_viewport_centre_crop(const int direction) {
+    (void) direction;
+    session_settings.viewport_centre_crop = !session_settings.viewport_centre_crop;
+    video_bridge_apply_scaling();
+}
+
 void session_settings_cycle_frame_delay(const int direction) {
     int idx = 0;
     for (int i = 0; i < FRAME_DELAY_CHOICE_COUNT; i++) {
@@ -996,6 +1076,11 @@ void session_settings_reset_viewport(void) {
     session_settings.viewport_offset_x = 0;
     session_settings.viewport_offset_y = 0;
     session_settings.viewport_zoom = 100;
+    session_settings.viewport_crop_top = 0;
+    session_settings.viewport_crop_bottom = 0;
+    session_settings.viewport_crop_left = 0;
+    session_settings.viewport_crop_right = 0;
+    session_settings.viewport_centre_crop = 0;
     video_bridge_apply_scaling();
 }
 

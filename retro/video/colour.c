@@ -738,16 +738,16 @@ static int draw_gl_pass(
     return 1;
 }
 
-void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *dest_rect) {
+void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect) {
     if (!colour_pass_needed()) {
-        SDL_RenderCopy(renderer, tex, NULL, dest_rect);
+        SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
         return;
     }
 
     ensure_program();
 
     if (!prog_ready) {
-        SDL_RenderCopy(renderer, tex, NULL, dest_rect);
+        SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
         return;
     }
 
@@ -758,13 +758,13 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
     SDL_Texture *gl_src = tex;
 
-    if (mux_retro_get_pixel_format() != RETRO_PIXEL_FORMAT_XRGB8888) {
+    if (mux_retro_get_pixel_format() != RETRO_PIXEL_FORMAT_XRGB8888 || src_rect) {
         if (!ensure_target(renderer, &adjusted_tex, &adjusted_w, &adjusted_h, dest_rect->w, dest_rect->h)
             || SDL_SetRenderTarget(renderer, adjusted_tex) != 0) {
-            SDL_RenderCopy(renderer, tex, NULL, dest_rect);
+            SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
             return;
         }
-        SDL_RenderCopy(renderer, tex, NULL, NULL);
+        SDL_RenderCopy(renderer, tex, src_rect, NULL);
         SDL_SetRenderTarget(renderer, prev_target);
         gl_src = adjusted_tex;
     }
@@ -776,7 +776,11 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         SDL_GetRendererOutputSize(renderer, &out_w, &out_h);
     }
     if (out_w <= 0 || out_h <= 0) {
-        SDL_RenderCopy(renderer, tex, NULL, dest_rect);
+        if (gl_src == adjusted_tex) {
+            SDL_RenderCopy(renderer, adjusted_tex, NULL, dest_rect);
+        } else {
+            SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+        }
         return;
     }
 

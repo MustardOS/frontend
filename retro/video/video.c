@@ -19,6 +19,8 @@ static int tex_w = 0;
 static int tex_h = 0;
 static Uint32 tex_format = 0;
 static SDL_Rect dest_rect = {0};
+static SDL_Rect crop_src_rect = {0};
+static int crop_active = 0;
 
 static double core_aspect_ratio = 0.0;
 static int core_rotation_quarters = 0;
@@ -67,6 +69,66 @@ static const SDL_Color border_colors[border_color_count] = {
     {255, 255, 255, 255},
 };
 
+static int clamp_crop(int value, const int max) {
+    if (value < 0) value = 0;
+    if (value > max) value = max;
+    return value;
+}
+
+static void apply_viewport_crop(const int canvas_w, const int canvas_h) {
+    crop_active = 0;
+
+    crop_src_rect.x = 0;
+    crop_src_rect.y = 0;
+    crop_src_rect.w = frame_w;
+    crop_src_rect.h = frame_h;
+
+    const int crop_left = clamp_crop(session_settings.viewport_crop_left, frame_w - 1);
+    const int crop_right = clamp_crop(session_settings.viewport_crop_right, frame_w - 1 - crop_left);
+    const int crop_top = clamp_crop(session_settings.viewport_crop_top, frame_h - 1);
+    const int crop_bottom = clamp_crop(session_settings.viewport_crop_bottom, frame_h - 1 - crop_top);
+
+    if (crop_left || crop_right || crop_top || crop_bottom) {
+        crop_active = 1;
+
+        crop_src_rect.x = crop_left;
+        crop_src_rect.y = crop_top;
+        crop_src_rect.w = frame_w - crop_left - crop_right;
+        crop_src_rect.h = frame_h - crop_top - crop_bottom;
+
+        const double scale_x = (double) dest_rect.w / (double) frame_w;
+        const double scale_y = (double) dest_rect.h / (double) frame_h;
+
+        const int left_px = (int) ((double) crop_left * scale_x + 0.5);
+        const int right_px = (int) ((double) crop_right * scale_x + 0.5);
+        const int top_px = (int) ((double) crop_top * scale_y + 0.5);
+        const int bottom_px = (int) ((double) crop_bottom * scale_y + 0.5);
+
+        dest_rect.x += left_px;
+        dest_rect.y += top_px;
+        dest_rect.w -= left_px + right_px;
+        dest_rect.h -= top_px + bottom_px;
+
+        if (dest_rect.w < 1) dest_rect.w = 1;
+        if (dest_rect.h < 1) dest_rect.h = 1;
+    }
+
+    if (session_settings.viewport_centre_crop) {
+        dest_rect.x = (canvas_w - dest_rect.w) / 2;
+        dest_rect.y = (canvas_h - dest_rect.h) / 2;
+    }
+}
+
+static const SDL_Rect *crop_tex_rect(SDL_Rect *out, const int scale) {
+    if (!crop_active || scale < 1) return NULL;
+
+    out->x = crop_src_rect.x * scale;
+    out->y = crop_src_rect.y * scale;
+    out->w = crop_src_rect.w * scale;
+    out->h = crop_src_rect.h * scale;
+    return out;
+}
+
 static int effective_rotation(void) {
     return ((session_settings.rotate + core_rotation_quarters) % video_rotate_count + video_rotate_count)
            % video_rotate_count;
@@ -102,8 +164,11 @@ static double compute_src_aspect(void) {
 }
 
 static void draw_sharp_bilinear(SDL_Renderer *renderer) {
-    int int_scale = frame_w > 0 ? dest_rect.w / frame_w : 1;
-    const int int_scale_h = frame_h > 0 ? dest_rect.h / frame_h : 1;
+    const int vis_w = crop_active ? crop_src_rect.w : frame_w;
+    const int vis_h = crop_active ? crop_src_rect.h : frame_h;
+
+    int int_scale = vis_w > 0 ? dest_rect.w / vis_w : 1;
+    const int int_scale_h = vis_h > 0 ? dest_rect.h / vis_h : 1;
     if (int_scale_h < int_scale) int_scale = int_scale_h;
     if (int_scale < 1) int_scale = 1;
 
@@ -129,8 +194,10 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
         }
     }
 
+    SDL_Rect crop_src;
+
     if (!sharp_bilinear_tex) {
-        colour_render_pass(renderer, frame_tex, &dest_rect);
+        colour_render_pass(renderer, frame_tex, crop_tex_rect(&crop_src, 1), &dest_rect);
         return;
     }
 
@@ -139,7 +206,7 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
     SDL_RenderCopy(renderer, frame_tex, NULL, NULL);
     SDL_SetRenderTarget(renderer, prev_target);
 
-    colour_render_pass(renderer, sharp_bilinear_tex, &dest_rect);
+    colour_render_pass(renderer, sharp_bilinear_tex, crop_tex_rect(&crop_src, int_scale), &dest_rect);
 }
 
 static void draw_video_content(SDL_Renderer *renderer) {
@@ -150,11 +217,14 @@ static void draw_video_content(SDL_Renderer *renderer) {
     }
 
     if (hw_render_bridge_active()) {
-        hw_render_bridge_draw(renderer, &dest_rect);
+        hw_render_bridge_draw(renderer, &dest_rect, crop_active ? &crop_src_rect : NULL);
     } else if (session_settings.texture_filter == texture_filter_sharp_bilinear) {
         draw_sharp_bilinear(renderer);
     } else {
-        colour_render_pass(renderer, frame_tex, &dest_rect);
+        SDL_Rect crop_src;
+        colour_render_pass(
+            renderer, frame_tex, crop_tex_rect(&crop_src, frame_w > 0 ? tex_w / frame_w : 1), &dest_rect
+        );
     }
 
     int canvas_w, canvas_h;
@@ -310,6 +380,8 @@ static void recompute_dest_rect(void) {
 
     dest_rect.x = (canvas_w - dest_rect.w) / 2 + session_settings.viewport_offset_x;
     dest_rect.y = (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y;
+
+    apply_viewport_crop(canvas_w, canvas_h);
 }
 
 void video_bridge_apply_scaling(void) {
