@@ -37,7 +37,8 @@ void overlay_bridge_init(const char *core_path_arg, const char *content_path) {
     free(program_no_ext);
 
     if (load_image_catalogue(
-            catalogue_name, program, program, "", "", "overlay", catalogue_overlay_path, sizeof(catalogue_overlay_path)
+            catalogue_name, program, program, "default", "", "overlay/base", catalogue_overlay_path,
+            sizeof(catalogue_overlay_path)
         )) {
         LOG_INFO(mux_module, "Catalogue overlay found: %s", catalogue_overlay_path);
     }
