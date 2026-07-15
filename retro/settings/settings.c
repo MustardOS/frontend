@@ -1105,8 +1105,8 @@ void session_settings_apply_save_choice(const int choice) {
     }
 }
 
-void session_settings_discard(void) {
-    session_settings = baseline_settings;
+void session_settings_discard_to(const struct session_settings_t *snapshot) {
+    session_settings = *snapshot;
     video_bridge_apply_scaling();
     video_bridge_apply_filter();
     pause_menu_set_fps_visible(session_settings.show_fps);
@@ -1114,6 +1114,10 @@ void session_settings_discard(void) {
     video_bridge_apply_fps_limit();
     colour_refresh();
     overlay_bridge_apply();
+}
+
+void session_settings_discard(void) {
+    session_settings_discard_to(&baseline_settings);
 }
 
 void session_settings_save_content(void) {

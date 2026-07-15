@@ -338,6 +338,8 @@ void session_settings_apply_save_choice(int choice);
 
 void session_settings_discard(void);
 
+void session_settings_discard_to(const struct session_settings_t *snapshot);
+
 void session_settings_save_content(void);
 
 void session_settings_save_core(void);

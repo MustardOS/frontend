@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "../../common/audio.h"
 #include "../../common/input.h"
 #include "../../common/ui/common.h"
@@ -8,6 +9,10 @@
 #include "submenu.h"
 
 #define SUBMENU_VALUE_MAX 64
+#define SUBMENU_STACK_MAX 8
+
+static submenu *submenu_stack[SUBMENU_STACK_MAX];
+static int submenu_stack_depth = 0;
 
 static int row_is_action(const submenu *m, const int index) {
     return m->def->row_is_action ? m->def->row_is_action(index) : 0;
@@ -129,7 +134,13 @@ static void submenu_nav(submenu *m, const int force) {
 
 static void close_menu(submenu *m) {
     m->active = 0;
+    if (submenu_stack_depth > 0 && submenu_stack[submenu_stack_depth - 1] == m) submenu_stack_depth--;
     if (m->def->closed) m->def->closed();
+}
+
+void submenu_stack_resync(void) {
+    for (int i = 0; i < submenu_stack_depth; i++)
+        submenu_stack[i]->entry_snapshot = session_settings;
 }
 
 void submenu_init(submenu *m, const submenu_def *def) {
@@ -154,6 +165,9 @@ void submenu_open(submenu *m) {
     m->active = 1;
     m->prev_nav_mask = nav_mask_standard();
     m->nav_row_class = -1;
+    m->entry_snapshot = session_settings;
+
+    if (submenu_stack_depth < SUBMENU_STACK_MAX) submenu_stack[submenu_stack_depth++] = m;
 
     rebuild_rows(m);
     focus_row(current_item_index);
@@ -190,7 +204,12 @@ void submenu_tick(submenu *m) {
             dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
             play_sound(snd_confirm);
 
-            session_settings_apply_save_choice(opt);
+            if (opt == 3) {
+                session_settings_discard_to(&m->entry_snapshot);
+            } else {
+                session_settings_apply_save_choice(opt);
+                submenu_stack_resync();
+            }
             close_menu(m);
         } else if (edge & BIT(5)) {
             dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
@@ -233,7 +252,7 @@ void submenu_tick(submenu *m) {
             m->def->action(current_item_index);
         }
     } else if (edge & BIT(5)) {
-        if (session_settings_is_dirty()) {
+        if (memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {
             play_sound(snd_confirm);
             dialogue_open(&m->save_dialogue_active, &m->save_dlg, &theme);
         } else {

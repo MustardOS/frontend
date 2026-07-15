@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "../../common/ui/dialogue.h"
 #include "../input/nav_repeat.h"
+#include "settings.h"
 
 typedef struct {
     const char *const *labels;
@@ -30,6 +31,7 @@ typedef struct {
     int nav_row_class;
     int save_dialogue_active;
     mux_dialogue save_dlg;
+    struct session_settings_t entry_snapshot;
 } submenu;
 
 void submenu_init(submenu *m, const submenu_def *def);
@@ -43,3 +45,5 @@ int submenu_is_active(const submenu *m);
 void submenu_tick(submenu *m);
 
 void submenu_refresh_values(const submenu *m);
+
+void submenu_stack_resync(void);
