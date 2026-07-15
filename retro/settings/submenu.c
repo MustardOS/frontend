@@ -154,6 +154,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->active = 0;
     m->save_dialogue_active = 0;
     m->nav_row_class = -1;
+    m->pending_action_row = -1;
 
     dialogue_init(
         &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 4, lang.generic.select,
@@ -210,8 +211,16 @@ void submenu_tick(submenu *m) {
                 session_settings_apply_save_choice(opt);
                 submenu_stack_resync();
             }
-            close_menu(m);
+
+            if (m->pending_action_row >= 0) {
+                const int row = m->pending_action_row;
+                m->pending_action_row = -1;
+                if (m->def->action) m->def->action(row);
+            } else {
+                close_menu(m);
+            }
         } else if (edge & BIT(5)) {
+            m->pending_action_row = -1;
             dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
         }
         return;
@@ -248,8 +257,14 @@ void submenu_tick(submenu *m) {
         submenu_nav(m, 0);
     } else if (edge & BIT(4)) {
         if (row_is_action(m, current_item_index) && m->def->action) {
-            play_sound(snd_confirm);
-            m->def->action(current_item_index);
+            if (m->def->child_tick && memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {
+                play_sound(snd_confirm);
+                m->pending_action_row = current_item_index;
+                dialogue_open(&m->save_dialogue_active, &m->save_dlg, &theme);
+            } else {
+                play_sound(snd_confirm);
+                m->def->action(current_item_index);
+            }
         }
     } else if (edge & BIT(5)) {
         if (memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {

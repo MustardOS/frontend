@@ -32,6 +32,7 @@ typedef struct {
     int save_dialogue_active;
     mux_dialogue save_dlg;
     struct session_settings_t entry_snapshot;
+    int pending_action_row;
 } submenu;
 
 void submenu_init(submenu *m, const submenu_def *def);
