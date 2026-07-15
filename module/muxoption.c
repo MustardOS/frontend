@@ -875,7 +875,7 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
 
     dialogue_init_confirm(
         &remove_dlg, &theme, ui_screen, lang.generic.confirm, NULL, lang.generic.remove, lang.generic.cancel,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
     init_timer(ui_gen_refresh_task, NULL);
 

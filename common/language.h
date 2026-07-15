@@ -134,6 +134,7 @@ struct mux_lang {
         char unsafe_archive[MAX_BUFFER_SIZE];
         char clean[MAX_BUFFER_SIZE];
         char discard[MAX_BUFFER_SIZE];
+        char assign_desc[MAX_BUFFER_SIZE];
         char modified[MAX_BUFFER_SIZE];
         char icon_only[MAX_BUFFER_SIZE];
         char text_only[MAX_BUFFER_SIZE];

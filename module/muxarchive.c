@@ -405,7 +405,7 @@ int muxarchive_main(void) {
     const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_hidden}, {ui_lbl_nav_a_glyph, nav_hidden}};
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.back);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

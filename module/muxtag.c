@@ -4,6 +4,9 @@ static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
+static mux_dialogue assign_dlg;
+static int assign_dialogue_active = 0;
+
 static void show_help(void) {
     show_info_box(lang.muxtag.title, lang.muxtag.help, 0);
 }
@@ -57,20 +60,47 @@ static void generate_available_tags(void) {
     }
 }
 
-static void handle_a(void) {
-    if (msgbox_active || !ui_count_static || hold_call) return;
-
-    LOG_INFO(mux_module, "Single Tag Assignment Triggered");
-    play_sound(snd_confirm);
-
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_tag_assignment(selected, rom_name, casn_single);
+static void close_screen(void) {
+    remove(MUOS_SAG_LOAD);
 
     mux_input_stop();
 }
 
+static void handle_a(void) {
+    if (assign_dialogue_active) {
+        const int method = assign_dlg.option_data[assign_dlg.selected];
+        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+
+        if (method < 0) {
+            play_sound(snd_back);
+            close_screen();
+            return;
+        }
+
+        LOG_INFO(mux_module, "Tag Assignment Triggered (method %d)", method);
+        play_sound(snd_confirm);
+
+        const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+        create_tag_assignment(selected, rom_name, (enum gen_type) method);
+
+        mux_input_stop();
+        return;
+    }
+
+    if (msgbox_active || !ui_count_static || hold_call) return;
+
+    play_sound(snd_confirm);
+    dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
+}
+
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (assign_dialogue_active) {
+        play_sound(snd_back);
+        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+        return;
+    }
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -78,37 +108,53 @@ static void handle_b(void) {
     }
 
     play_sound(snd_back);
-    remove(MUOS_SAG_LOAD);
-
-    mux_input_stop();
+    close_screen();
 }
 
-static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || hold_call) return;
+static void handle_dpad_up(void) {
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad(&assign_dlg, &theme, -1, 1);
+        return;
+    }
 
-    LOG_INFO(mux_module, "Directory Tag Assignment Triggered");
-    play_sound(snd_confirm);
-
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_tag_assignment(selected, rom_name, casn_dir);
-
-    mux_input_stop();
+    handle_list_nav_up();
 }
 
-static void handle_y(void) {
-    if (msgbox_active || !ui_count_static || hold_call) return;
+static void handle_dpad_down(void) {
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad(&assign_dlg, &theme, +1, 1);
+        return;
+    }
 
-    LOG_INFO(mux_module, "Parent Tag Assignment Triggered");
-    play_sound(snd_confirm);
+    handle_list_nav_down();
+}
 
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_tag_assignment(selected, rom_name, casn_parent);
+static void handle_dpad_up_hold(void) {
+    if (assign_dialogue_active) return;
 
-    mux_input_stop();
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_down_hold();
+}
+
+static void handle_page_up(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_page_up();
+}
+
+static void handle_page_down(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_page_down();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || assign_dialogue_active) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -117,14 +163,10 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 1},
-                                  {ui_lbl_nav_a, lang.generic.content, 1},
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {ui_lbl_nav_x_glyph, "", 1},
-                                  {ui_lbl_nav_x, lang.generic.directory, 1},
-                                  {ui_lbl_nav_y_glyph, "", 1},
-                                  {ui_lbl_nav_y, lang.generic.recursive, 1},
                                   {NULL, NULL, 0}});
 
     overlay_display();
@@ -157,6 +199,10 @@ void muxtag_main(int auto_assign, const char *name, const char *dir, const char 
 
     generate_available_tags();
 
+    dialogue_init_assign_scope(
+        &assign_dlg, &theme, ui_screen, lang.muxoption.tag, 0, 0, 0, lang.generic.select, lang.generic.cancel
+    );
+
     if (ui_count_static > 0) {
         LOG_SUCCESS(mux_module, "%d Tag%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         gen_step_movement(0, +1, 1, 0, 1);
@@ -173,22 +219,20 @@ void muxtag_main(int auto_assign, const char *name, const char *dir, const char 
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
-                [mux_input_x] = handle_x,
-                [mux_input_y] = handle_y,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
         .release_handler =
             {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_page_up,
+            [mux_input_r1] = handle_page_down,
         }
     };
 

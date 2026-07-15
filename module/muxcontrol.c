@@ -7,6 +7,9 @@ static int is_dir = 0;
 
 static int is_app = 0;
 
+static mux_dialogue assign_dlg;
+static int assign_dialogue_active = 0;
+
 static void show_help(void) {
     show_info_box(lang.muxcontrol.title, lang.muxcontrol.help, 0);
 }
@@ -112,29 +115,7 @@ static void create_control_items(const char *target) {
     generate_available_controls(default_control);
 }
 
-static void handle_a(void) {
-    if (msgbox_active || hold_call || is_dir) return;
-
-    LOG_INFO(mux_module, "Single Control Assignment Triggered");
-    play_sound(snd_confirm);
-
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_control_assignment(selected, is_app ? "mux_option" : rom_name, casn_single);
-
-    if (is_app) load_mux("appcon");
-
-    mux_input_stop();
-}
-
-static void handle_b(void) {
-    if (hold_call) return;
-
-    if (msgbox_active) {
-        handle_msgbox_dismiss();
-        return;
-    }
-
-    play_sound(snd_back);
+static void close_screen(void) {
     remove(MUOS_SAG_LOAD);
 
     if (is_app) load_mux("appcon");
@@ -142,32 +123,97 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_x(void) {
-    if (msgbox_active || is_app || hold_call) return;
+static void handle_a(void) {
+    if (assign_dialogue_active) {
+        const int method = assign_dlg.option_data[assign_dlg.selected];
+        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
 
-    LOG_INFO(mux_module, "Directory Control Assignment Triggered");
+        if (method < 0) {
+            play_sound(snd_back);
+            close_screen();
+            return;
+        }
+
+        LOG_INFO(mux_module, "Control Assignment Triggered (method %d)", method);
+        play_sound(snd_confirm);
+
+        const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+        create_control_assignment(selected, is_app ? "mux_option" : rom_name, (enum gen_type) method);
+
+        if (is_app) load_mux("appcon");
+
+        mux_input_stop();
+        return;
+    }
+
+    if (msgbox_active || hold_call) return;
+
     play_sound(snd_confirm);
-
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_control_assignment(selected, rom_name, casn_dir);
-
-    mux_input_stop();
+    dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
 }
 
-static void handle_y(void) {
-    if (msgbox_active || is_app || at_base(rom_dir, MAIN_ROM_DIR) || hold_call) return;
+static void handle_b(void) {
+    if (hold_call) return;
 
-    LOG_INFO(mux_module, "Parent Control Assignment Triggered");
-    play_sound(snd_confirm);
+    if (assign_dialogue_active) {
+        play_sound(snd_back);
+        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+        return;
+    }
 
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_control_assignment(selected, rom_name, casn_parent);
+    if (msgbox_active) {
+        handle_msgbox_dismiss();
+        return;
+    }
 
-    mux_input_stop();
+    play_sound(snd_back);
+    close_screen();
+}
+
+static void handle_dpad_up(void) {
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad(&assign_dlg, &theme, -1, 1);
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad(&assign_dlg, &theme, +1, 1);
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_down_hold();
+}
+
+static void handle_page_up(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_page_up();
+}
+
+static void handle_page_down(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_page_down();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || assign_dialogue_active) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -176,29 +222,11 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    struct nav_bar nav_items[9];
-    int i = 0;
-
-    if (!is_dir) {
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
-    }
-    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b_glyph, "", 0};
-    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b, lang.generic.back, 0};
-
-    if (!is_app) {
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
-
-        if (!at_base(rom_dir, MAIN_ROM_DIR)) {
-            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
-        }
-    }
-
-    nav_items[i] = (struct nav_bar) {NULL, NULL, 0}; // Null-terminate
-
-    setup_nav(nav_items);
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
     overlay_display();
 }
@@ -337,6 +365,11 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
     create_control_items(rom_system);
     init_elements();
 
+    dialogue_init_assign_scope(
+        &assign_dlg, &theme, ui_screen, lang.muxoption.control, is_dir, is_app, at_base(rom_dir, MAIN_ROM_DIR),
+        lang.generic.select, lang.generic.cancel
+    );
+
     if (ui_count_static > 0) {
         LOG_SUCCESS(mux_module, "%d Control%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         gen_step_movement(0, +1, 1, 0, 1);
@@ -353,22 +386,20 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
-                [mux_input_x] = handle_x,
-                [mux_input_y] = handle_y,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
         .release_handler =
             {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_page_up,
+            [mux_input_r1] = handle_page_down,
         }
     };
 

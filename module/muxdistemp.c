@@ -397,7 +397,7 @@ int muxdistemp_main(void) {
 
     dialogue_init_unsaved(
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
 
     init_timer(ui_gen_refresh_task, NULL);

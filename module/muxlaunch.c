@@ -438,7 +438,7 @@ int muxlaunch_main(void) {
 
     dialogue_init_confirm(
         &confirm_dlg, &theme, ui_screen, lang.muxlaunch.confirm_reboot, NULL, lang.generic.confirm, lang.generic.cancel,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
 
     adjust_wallpaper_element(ui_group, 0, wall_general);

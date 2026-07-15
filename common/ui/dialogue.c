@@ -2,6 +2,7 @@
 #include "common.h"
 #include "../audio.h"
 #include "../config.h"
+#include "../core/common.h"
 #include "transition.h"
 #include "../language.h"
 #include "../init.h"
@@ -190,6 +191,38 @@ void dialogue_init_confirm(
 ) {
     const char *opts[mux_confirm_cnt] = {confirm_label, cancel_label};
     dialogue_init(dlg, t, parent, title, description, opts, mux_confirm_cnt, nav_a, nav_b);
+}
+
+void dialogue_init_assign_scope(
+    mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, const int is_dir, const int is_app,
+    const int at_root, const char *nav_a, const char *nav_b
+) {
+    const char *opts[4];
+    int n = 0;
+
+    if (!is_dir) {
+        dlg->option_data[n] = casn_single;
+        opts[n] = lang.generic.content;
+        n++;
+    }
+
+    if (!is_app) {
+        dlg->option_data[n] = casn_dir;
+        opts[n] = lang.generic.directory;
+        n++;
+
+        if (!at_root) {
+            dlg->option_data[n] = casn_parent;
+            opts[n] = lang.generic.recursive;
+            n++;
+        }
+    }
+
+    dlg->option_data[n] = -1;
+    opts[n] = lang.generic.discard;
+    n++;
+
+    dialogue_init(dlg, t, parent, title, lang.generic.assign_desc, opts, n, nav_a, nav_b);
 }
 
 void dialogue_init_warn(

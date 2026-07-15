@@ -425,11 +425,11 @@ int muxthemeopt_main(void) {
 
     dialogue_init_unsaved(
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
     dialogue_init_confirm(
         &reset_dlg, &theme, ui_screen, lang.generic.confirm, NULL, lang.generic.reset, lang.generic.cancel,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 2, 0, 1);

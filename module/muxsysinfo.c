@@ -673,7 +673,7 @@ int muxsysinfo_main(void) {
     sysinfo(&sysinfo_cache);
     init_navigation_group();
 
-    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.muxsysinfo.warn, lang.generic.select, lang.generic.back);
+    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.muxsysinfo.warn, lang.generic.select, lang.generic.cancel);
     init_timer(ui_gen_refresh_task, update_system_info);
     gen_step_movement(0, +1, 2, 0, 1);
 

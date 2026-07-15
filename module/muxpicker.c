@@ -413,7 +413,7 @@ int muxpicker_main(char *type, char *ex_dir) {
         lv_label_set_text(ui_lbl_screen_message, message_text);
     }
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.back);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

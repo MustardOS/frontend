@@ -336,7 +336,7 @@ int muxshot_main(void) {
         list_win_focus_initial(update_list_item);
     }
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.back);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

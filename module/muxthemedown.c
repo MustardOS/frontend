@@ -503,7 +503,7 @@ int muxthemedown_main(void) {
     adjust_panels();
 
     dialogue_init_message(
-        &msg_dlg, &theme, ui_screen, lang.generic.warning, NULL, lang.generic.unsafe_archive, lang.generic.back
+        &msg_dlg, &theme, ui_screen, lang.generic.warning, NULL, lang.generic.unsafe_archive, lang.generic.cancel
     );
 
     if (ui_count_static > 0) list_nav_move(theme_down_index, 1);

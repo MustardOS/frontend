@@ -672,10 +672,10 @@ int muxcustom_main(void) {
 
     dialogue_init_unsaved(
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
     dialogue_init_message(
-        &msg_dlg, &theme, ui_screen, lang.generic.warning, NULL, lang.generic.unsafe_archive, lang.generic.back
+        &msg_dlg, &theme, ui_screen, lang.generic.warning, NULL, lang.generic.unsafe_archive, lang.generic.cancel
     );
     init_timer(ui_gen_refresh_task, NULL);
 

@@ -578,7 +578,7 @@ int muxnetproxy_main(void) {
 
     dialogue_init_confirm(
         &save_dlg, &theme, ui_screen, lang.generic.confirm, NULL, lang.generic.save, lang.generic.cancel,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
 
     init_timer(ui_refresh_task, NULL);

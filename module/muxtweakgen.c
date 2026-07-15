@@ -776,9 +776,9 @@ int muxtweakgen_main(void) {
 
     dialogue_init_unsaved(
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
-        lang.generic.select, lang.generic.back
+        lang.generic.select, lang.generic.cancel
     );
-    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.muxtweakgen.warn, lang.generic.select, lang.generic.back);
+    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.muxtweakgen.warn, lang.generic.select, lang.generic.cancel);
 
     init_timer(tweakgen_refresh_task, NULL);
 

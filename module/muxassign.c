@@ -10,6 +10,9 @@ static int is_dir = 0;
 
 static lv_obj_t *ui_lbl_core_downloader;
 
+static mux_dialogue assign_dlg;
+static int assign_dialogue_active = 0;
+
 static int find_assigned_system(char *out_system) {
     // File Spec CFG: line 3 = sys
     // Directory CFG: line 2 = sys
@@ -306,6 +309,12 @@ static void load_return_module() {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (assign_dialogue_active) {
+        play_sound(snd_back);
+        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+        return;
+    }
+
     if (msgbox_active) {
         handle_msgbox_dismiss();
         return;
@@ -412,6 +421,28 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
 }
 
 static void handle_a(void) {
+    if (assign_dialogue_active) {
+        const int method = assign_dlg.option_data[assign_dlg.selected];
+        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+
+        if (method < 0) {
+            handle_b();
+            return;
+        }
+
+        char log_msg[64];
+        snprintf(log_msg, sizeof(log_msg), "Core Assignment Triggered (method %d)", method);
+        handle_core_assignment(log_msg, method);
+
+        remove(MUOS_SYS_LOAD);
+        remove(OPTION_SKIP);
+
+        write_text_to_file(MUOS_AIX_LOAD, "w", INT, current_item_index);
+
+        mux_input_stop();
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     if (lv_group_get_focused(ui_group) == ui_lbl_core_downloader) {
@@ -424,14 +455,13 @@ static void handle_a(void) {
             toast_message(lang.generic.need_connect, tst_wait_m);
             return;
         }
+    } else if (strcasecmp(rom_system, "none") == 0) {
+        play_sound(snd_confirm);
+        load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
     } else {
-        if (strcasecmp(rom_system, "none") == 0) {
-            play_sound(snd_confirm);
-            load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
-        } else {
-            if (is_dir) return;
-            handle_core_assignment("Single Core Assignment Triggered", casn_single);
-        }
+        play_sound(snd_confirm);
+        dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
+        return;
     }
 
     remove(MUOS_SYS_LOAD);
@@ -442,24 +472,50 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
-static void handle_x(void) {
-    if (msgbox_active || strcasecmp(rom_system, "none") == 0 || hold_call) return;
+static void handle_dpad_up(void) {
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad(&assign_dlg, &theme, -1, 1);
+        return;
+    }
 
-    handle_core_assignment("Directory Core Assignment Triggered", casn_dir);
-
-    mux_input_stop();
+    handle_list_nav_up();
 }
 
-static void handle_y(void) {
-    if (msgbox_active || strcasecmp(rom_system, "none") == 0 || at_base(rom_dir, MAIN_ROM_DIR) || hold_call) return;
+static void handle_dpad_down(void) {
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad(&assign_dlg, &theme, +1, 1);
+        return;
+    }
 
-    handle_core_assignment("Parent Core Assignment Triggered", casn_parent);
+    handle_list_nav_down();
+}
 
-    mux_input_stop();
+static void handle_dpad_up_hold(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_down_hold();
+}
+
+static void handle_page_up(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_page_up();
+}
+
+static void handle_page_down(void) {
+    if (assign_dialogue_active) return;
+
+    handle_list_nav_page_down();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || assign_dialogue_active) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -468,39 +524,11 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    struct nav_bar nav_items[7];
-    int i = 0;
-
-    if (!is_dir) {
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.select, 1};
-    }
-
-    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b_glyph, "", 0};
-    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_b, lang.generic.back, 0};
-    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
-
-    setup_nav(nav_items);
-
-    if (strcasecmp(rom_system, "none") != 0) {
-        i = 0;
-
-        if (!is_dir) {
-            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
-        }
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
-        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
-
-        if (!at_base(rom_dir, MAIN_ROM_DIR)) {
-            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
-            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
-        }
-
-        nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
-
-        setup_nav(nav_items);
-    }
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
 
     overlay_display();
 }
@@ -571,6 +599,11 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
 
     init_elements();
 
+    dialogue_init_assign_scope(
+        &assign_dlg, &theme, ui_screen, lang.muxoption.core, is_dir, 0, at_base(rom_dir, MAIN_ROM_DIR),
+        lang.generic.select, lang.generic.cancel
+    );
+
     if (ui_count_static > 0) {
         if (strcasecmp(rom_system, "none") == 0) {
             LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
@@ -595,22 +628,20 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
-                [mux_input_x] = handle_x,
-                [mux_input_y] = handle_y,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
         .release_handler =
             {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_page_up,
+            [mux_input_r1] = handle_page_down,
         }
     };
 

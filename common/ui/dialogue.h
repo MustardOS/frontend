@@ -15,6 +15,7 @@ typedef struct {
     int selected;
     lv_opa_t dim_alpha;
     struct theme_config *theme;
+    int option_data[MUX_DIALOGUE_MAX_OPTIONS];
 } mux_dialogue;
 
 typedef enum { mux_unsaved_save = 0, mux_unsaved_discard, mux_unsaved_nope } mux_unsaved_opt;
@@ -56,6 +57,11 @@ void dialogue_init_message(
 void dialogue_init_accept(
     mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, const char *description,
     const char *nav_a
+);
+
+void dialogue_init_assign_scope(
+    mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, int is_dir, int is_app, int at_root,
+    const char *nav_a, const char *nav_b
 );
 
 void dialogue_show(mux_dialogue *dlg);

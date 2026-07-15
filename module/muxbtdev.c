@@ -568,7 +568,7 @@ int muxbtdev_main(void) {
 
     dialogue_init_confirm(
         &forget_dlg, &theme, ui_screen, lang.generic.confirm, lang.muxbtdev.forget_confirm, lang.muxbtdev.forget,
-        lang.generic.cancel, lang.generic.select, lang.generic.back
+        lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
     init_timer(ui_gen_refresh_task, NULL);
 

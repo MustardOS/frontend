@@ -448,7 +448,7 @@ int muxtheme_main(char *ex_dir) {
     if (ui_count_static > 0 && sys_index > -1 && sys_index <= ui_count_static && current_item_index < ui_count_static)
         list_nav_move(sys_index, +1);
 
-    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.back);
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
