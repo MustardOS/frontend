@@ -190,6 +190,7 @@
 #define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
+#define MUOS_OVO_LOAD "/tmp/ovo_go" // Content Overlay Options Blob
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
 #define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index

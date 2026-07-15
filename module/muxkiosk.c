@@ -46,6 +46,7 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_dro_tag_kiosk, kiosk.content.tag);
     lv_dropdown_set_selected(ui_dro_col_filter_kiosk, kiosk.content.colfilter);
     lv_dropdown_set_selected(ui_dro_shader_kiosk, kiosk.content.shader);
+    lv_dropdown_set_selected(ui_dro_overlay_kiosk, kiosk.content.overlay);
     lv_dropdown_set_selected(ui_dro_rem_config_kiosk, kiosk.content.remconfig);
     lv_dropdown_set_selected(ui_dro_catalogue_kiosk, kiosk.custom.catalogue);
     lv_dropdown_set_selected(ui_dro_ra_config_kiosk, kiosk.custom.raconfig);
@@ -70,7 +71,6 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_dro_hdmi_kiosk, kiosk.setting.hdmi);
     lv_dropdown_set_selected(ui_dro_power_kiosk, kiosk.setting.power);
     lv_dropdown_set_selected(ui_dro_visual_kiosk, kiosk.setting.visual);
-    lv_dropdown_set_selected(ui_dro_overlay_kiosk, kiosk.setting.overlay);
 }
 
 static void save_kiosk_options(void) {
@@ -93,6 +93,7 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, tag, "content/tag", INT);
     CHECK_AND_SAVE_KSK(kiosk, col_filter, "content/colfilter", INT);
     CHECK_AND_SAVE_KSK(kiosk, shader, "content/shader", INT);
+    CHECK_AND_SAVE_KSK(kiosk, overlay, "content/overlay", INT);
     CHECK_AND_SAVE_KSK(kiosk, rem_config, "content/remconfig", INT);
     CHECK_AND_SAVE_KSK(kiosk, option, "content/option", INT);
     CHECK_AND_SAVE_KSK(kiosk, retro_arch, "content/retroarch", INT);
@@ -120,7 +121,6 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, hdmi, "setting/hdmi", INT);
     CHECK_AND_SAVE_KSK(kiosk, power, "setting/power", INT);
     CHECK_AND_SAVE_KSK(kiosk, visual, "setting/visual", INT);
-    CHECK_AND_SAVE_KSK(kiosk, overlay, "setting/overlay", INT);
 
     if (is_modified > 0) {
         toast_message(lang.generic.saving, tst_wait_f);
@@ -158,6 +158,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, tag, lang.muxkiosk.tag, "tag", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, col_filter, lang.muxkiosk.colfilter, "colfilter", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, shader, lang.muxkiosk.shader, "shader", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, overlay, lang.muxkiosk.overlay, "overlay", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, rem_config, lang.muxkiosk.remconfig, "remconfig", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, catalogue, lang.muxkiosk.catalogue, "catalogue", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, ra_config, lang.muxkiosk.raconfig, "raconfig", allowed_restricted, 2);
@@ -182,7 +183,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, hdmi, lang.muxkiosk.hdmi, "hdmi", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, power, lang.muxkiosk.power, "power", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, visual, lang.muxkiosk.visual, "visual", allowed_restricted, 2);
-    INIT_OPTION_ITEM(-1, kiosk, overlay, lang.muxkiosk.overlay, "overlay", allowed_restricted, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

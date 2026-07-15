@@ -51,11 +51,11 @@ static void show_help(void) {
     }
 
 OPTION_VISIBLE(control, ui_pnl_control_option)
-
 OPTION_VISIBLE(retroarch, ui_pnl_retro_arch_option)
-
+OPTION_VISIBLE(col_filter, ui_pnl_col_filter_option)
+OPTION_VISIBLE(shader, ui_pnl_shader_option)
+OPTION_VISIBLE(overlay, ui_pnl_overlay_option)
 OPTION_VISIBLE(remconfig, ui_pnl_rem_config_option)
-
 OPTION_VISIBLE(tag, ui_pnl_tag_option)
 
 static void refresh_option_row_widths(void) {
@@ -247,6 +247,12 @@ static void populate_info_values(void) {
     const char *shd_dir = get_content_line(sys_dir, NULL, "shd", 1);
     add_info_item_type(ui_val_shader_option, shd_file, shd_dir, "shader", 1, 0);
 
+    const char *ovl_file = get_content_line(sys_dir, file_name, "ovl", 1);
+    const char *ovl_dir = get_content_line(sys_dir, NULL, "ovl", 1);
+    apply_theme_list_value(
+        &theme, ui_val_overlay_option, *ovl_file || *ovl_dir ? lang.muxoption.modified : lang.muxoption.dflt
+    );
+
     if (!is_dir) {
         const char *tag_file = get_content_line(sys_dir, file_name, "tag", 1);
         const char *tag_dir = get_content_line(sys_dir, NULL, "tag", 1);
@@ -311,6 +317,7 @@ static void build_all_items(void) {
     );
     INIT_VALUE_ITEM(-1, option, col_filter, lang.muxoption.colfilter, "colfilter", "");
     INIT_VALUE_ITEM(-1, option, shader, lang.muxoption.shader, "shader", "");
+    INIT_VALUE_ITEM(-1, option, overlay, lang.muxoption.overlay, "overlay", "");
     INIT_VALUE_ITEM(-1, option, tag, lang.muxoption.tag, "tag", "");
 
     INIT_VALUE_ITEM(-1, option, storage, lang.generic.storage, "storage", "");
@@ -339,6 +346,7 @@ static void build_options_view(void) {
     SHOW_VALUE_ITEM(option, rem_config);
     SHOW_VALUE_ITEM(option, col_filter);
     SHOW_VALUE_ITEM(option, shader);
+    SHOW_VALUE_ITEM(option, overlay);
     if (!is_dir) SHOW_VALUE_ITEM(option, tag);
 
     HIDE_VALUE_ITEM(option, storage);
@@ -350,7 +358,8 @@ static void build_options_view(void) {
     }
 
     const char *core_label = lv_label_get_text(ui_val_core_option);
-    if (core_label && !strcasestr(core_label, "RetroArch")) {
+    const int core_is_retroarch = core_label && strcasestr(core_label, "RetroArch");
+    if (!core_is_retroarch) {
         HIDE_VALUE_ITEM(option, retro_arch);
         if (!core_is_muxretro) HIDE_VALUE_ITEM(option, rem_config);
     }
@@ -359,9 +368,13 @@ static void build_options_view(void) {
     // launched cores flagged stage_overlay_enabled in ext_core_names actually render
     // through - RetroArch has its own filter/shader system, muRetro carries in-app
     // display settings, and unassigned content has no launcher at all.
-    if (hdmi_mode || !core_on_stage_overlay) {
+    if (hdmi_mode || !config.settings.advanced.stage_overlay || !core_on_stage_overlay) {
         HIDE_VALUE_ITEM(option, col_filter);
         HIDE_VALUE_ITEM(option, shader);
+    }
+
+    if (hdmi_mode || !config.settings.advanced.stage_overlay || !(core_on_stage_overlay || core_is_retroarch)) {
+        HIDE_VALUE_ITEM(option, overlay);
     }
 }
 
@@ -382,6 +395,7 @@ static void build_info_view(void) {
     HIDE_VALUE_ITEM(option, rem_config);
     HIDE_VALUE_ITEM(option, col_filter);
     HIDE_VALUE_ITEM(option, shader);
+    HIDE_VALUE_ITEM(option, overlay);
     if (!is_dir) HIDE_VALUE_ITEM(option, tag);
 }
 
@@ -695,8 +709,9 @@ static void handle_a(void) {
         {"control", &kiosk.content.control, visible_control},
         {"retroarch", &kiosk.content.retroarch, visible_retroarch},
         {"remconfig", &kiosk.content.remconfig, visible_remconfig},
-        {"filter", &kiosk.content.colfilter, NULL},
-        {"shader", &kiosk.content.shader, NULL},
+        {"filter", &kiosk.content.colfilter, visible_col_filter},
+        {"shader", &kiosk.content.shader, visible_shader},
+        {"overlay", &kiosk.content.overlay, visible_overlay},
         {"tag", &kiosk.content.tag, visible_tag},
     };
 

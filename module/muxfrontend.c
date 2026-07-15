@@ -396,6 +396,10 @@ static void module_filter(void) {
     module_run("option", muxcolfilter_main);
 }
 
+static void module_overlay(void) {
+    module_run("option", muxoverlay_main);
+}
+
 static void module_shader(void) {
     module_run("option", muxshader_main);
 }
@@ -520,6 +524,7 @@ static const module_entry modules[] = {
     {"tag", NULL, NULL, NULL, module_tag},
     {"filter", NULL, NULL, NULL, module_filter},
     {"shader", NULL, NULL, NULL, module_shader},
+    {"overlay", NULL, NULL, NULL, module_overlay},
     {"explore", NULL, NULL, NULL, module_explore},
     {"collection", NULL, NULL, NULL, module_collection},
     {"history", NULL, NULL, NULL, module_history},
@@ -543,7 +548,6 @@ static const module_entry modules[] = {
     {"info", "launcher", "muxinfo", muxinfo_main, NULL},
     {"archive", "app", "muxarchive", muxarchive_main, NULL},
     {"tweakgen", "config", "muxtweakgen", muxtweakgen_main, NULL},
-    {"overlay", "config", "muxoverlay", muxoverlay_main, NULL},
     {"distemp", "tweakgen", "muxdistemp", muxdistemp_main, NULL},
     {"connect", "config", "muxconnect", muxconnect_main, NULL},
     {"custom", "config", "muxcustom", muxcustom_main, NULL},

@@ -308,6 +308,10 @@ char *load_content_filter(char *sys_dir, const char *pointer, const int force, c
     return load_content_asset(sys_dir, pointer, force, run_quit, "flt", "Colour Filter", is_app);
 }
 
+char *load_content_overlay(char *sys_dir, const char *pointer, const int force, const int run_quit, const int is_app) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "ovl", "Overlay Options", is_app);
+}
+
 char *load_content_shader(char *sys_dir, const char *pointer, const int force, const int run_quit, const int is_app) {
     return load_content_asset(sys_dir, pointer, force, run_quit, "shd", "Shader", is_app);
 }

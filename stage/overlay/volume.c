@@ -44,11 +44,15 @@ int volume_disabled_gles = 0;
 gl_vtx_t vtx_volume[4];
 int vtx_volume_valid = 0;
 
-struct alpha_cache volume_alpha_cache = {.path = VOLUME_ALPHA, .mtime = 0, .value = 1.0f};
+struct alpha_cache volume_alpha_cache = {.path = VOLUME_ALPHA, .mtime = 0, .value = 1.0f, .field = opt_vol_alpha};
 
-struct anchor_cache volume_anchor_cache = {.path = VOLUME_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_RIGHT};
+struct anchor_cache volume_anchor_cache = {
+    .path = VOLUME_ANCHOR, .mtime = 0, .value = anchor_top_right, .field = opt_vol_anchor
+};
 
-struct scale_cache volume_scale_cache = {.path = VOLUME_SCALE, .mtime = 0, .value = scale_original};
+struct scale_cache volume_scale_cache = {
+    .path = VOLUME_SCALE, .mtime = 0, .value = scale_original, .field = opt_vol_scale
+};
 
 static int ensure_volume_path(const char *dim, int step) {
     if (step < 0) step = 0;

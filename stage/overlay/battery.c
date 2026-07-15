@@ -43,11 +43,15 @@ int vtx_battery_valid = 0;
 
 struct flag_cache battery_enable_cache = {.path = BATTERY_DETECT, .mtime = 0, .value = 0};
 
-struct alpha_cache battery_alpha_cache = {.path = BATTERY_ALPHA, .mtime = 0, .value = 1.0f};
+struct alpha_cache battery_alpha_cache = {.path = BATTERY_ALPHA, .mtime = 0, .value = 1.0f, .field = opt_bat_alpha};
 
-struct anchor_cache battery_anchor_cache = {.path = BATTERY_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_LEFT};
+struct anchor_cache battery_anchor_cache = {
+    .path = BATTERY_ANCHOR, .mtime = 0, .value = anchor_top_left, .field = opt_bat_anchor
+};
 
-struct scale_cache battery_scale_cache = {.path = BATTERY_SCALE, .mtime = 0, .value = scale_original};
+struct scale_cache battery_scale_cache = {
+    .path = BATTERY_SCALE, .mtime = 0, .value = scale_original, .field = opt_bat_scale
+};
 
 static void disable_sdl(void) {
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -219,7 +223,7 @@ static void reset_runtime_state(void) {
 }
 
 void battery_overlay_update(void) {
-    int enabled = battery_overlay_enabled();
+    const int enabled = battery_overlay_enabled();
 
     if (enabled != battery_last_enabled) {
         battery_last_enabled = enabled;

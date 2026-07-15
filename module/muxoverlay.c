@@ -5,55 +5,14 @@
 enum { ui_count_dynamic = E_SIZE(OVERLAY_ELEMENTS) };
 #undef OVERLAY
 
-#define OVERLAY(NAME, UDATA) static int NAME##_original;
-OVERLAY_ELEMENTS
-#undef OVERLAY
+static char rom_name[PATH_MAX];
+static char rom_dir[PATH_MAX];
+static char rom_system[PATH_MAX];
 
-static int save_mode = 0;
-static mux_dialogue save_dlg;
+static int is_dir = 0;
+static int is_app = 0;
 
-static void hide_save_dialog(void) {
-    dialogue_dismiss(&save_mode, &save_dlg);
-}
-
-static int any_overlay_modified(void) {
-    if (pct_to_int(lv_dropdown_get_selected(ui_dro_gen_alpha_overlay), 0, 255) != gen_alpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_gen_anchor_overlay) != gen_anchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_gen_scale_overlay) != gen_scale_original) return 1;
-
-    if (pct_to_int(lv_dropdown_get_selected(ui_dro_bat_alpha_overlay), 0, 255) != bat_alpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_bat_anchor_overlay) != bat_anchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_bat_scale_overlay) != bat_scale_original) return 1;
-
-    if (pct_to_int(lv_dropdown_get_selected(ui_dro_vol_alpha_overlay), 0, 255) != vol_alpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_vol_anchor_overlay) != vol_anchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_vol_scale_overlay) != vol_scale_original) return 1;
-
-    if (pct_to_int(lv_dropdown_get_selected(ui_dro_bri_alpha_overlay), 0, 255) != bri_alpha_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_bri_anchor_overlay) != bri_anchor_original) return 1;
-    if ((int) lv_dropdown_get_selected(ui_dro_bri_scale_overlay) != bri_scale_original) return 1;
-
-    return 0;
-}
-
-static int reset_mode = 0;
-static mux_dialogue reset_dlg;
-
-static void show_reset_dialog(void) {
-    dialogue_open(&reset_mode, &reset_dlg, &theme);
-}
-
-static void hide_reset_dialog(void) {
-    dialogue_dismiss(&reset_mode, &reset_dlg);
-}
-
-static void do_reset(void) {
-    remove_directory_recursive(CONF_CONFIG_PATH "settings/overlay");
-    refresh_config = 1;
-    play_sound(snd_muos);
-    load_mux("overlay");
-    mux_input_stop();
-}
+static int core_is_retroarch = 0;
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
@@ -65,48 +24,102 @@ static void show_help(void) {
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
-static void init_dropdown_settings(void) {
-#define OVERLAY(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_overlay);
-    OVERLAY_ELEMENTS
-#undef OVERLAY
+static int effective_field(char *sys_dir, const char *file_name, const int line, const int compiled_default) {
+    const char *val = get_content_line(sys_dir, file_name, "ovl", (size_t) line);
+    if (!*val) val = get_content_line(sys_dir, NULL, "ovl", (size_t) line);
 
-    gen_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_gen_alpha_overlay), 0, 255);
-    bat_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_bat_alpha_overlay), 0, 255);
-    vol_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_vol_alpha_overlay), 0, 255);
-    bri_alpha_original = pct_to_int(lv_dropdown_get_selected(ui_dro_bri_alpha_overlay), 0, 255);
+    return safe_atoi(val, compiled_default);
 }
 
 static void restore_tweak_options(void) {
-#define OVERLAY(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_overlay, config.settings.overlay.NAME);
-    OVERLAY_ELEMENTS
-#undef OVERLAY
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
 
-    lv_dropdown_set_selected(ui_dro_gen_alpha_overlay, int_to_pct(config.settings.overlay.gen_alpha, 0, 255));
-    lv_dropdown_set_selected(ui_dro_bat_alpha_overlay, int_to_pct(config.settings.overlay.bat_alpha, 0, 255));
-    lv_dropdown_set_selected(ui_dro_vol_alpha_overlay, int_to_pct(config.settings.overlay.vol_alpha, 0, 255));
-    lv_dropdown_set_selected(ui_dro_bri_alpha_overlay, int_to_pct(config.settings.overlay.bri_alpha, 0, 255));
+    char *sys_dir = get_content_path(file_path);
+    const char *file_name = get_file_name(file_path);
+
+    const int gen_alpha = effective_field(sys_dir, file_name, 1, config.settings.overlay.gen_alpha);
+    const int gen_anchor = effective_field(sys_dir, file_name, 2, config.settings.overlay.gen_anchor);
+    const int gen_scale = effective_field(sys_dir, file_name, 3, config.settings.overlay.gen_scale);
+
+    const int bat_alpha = effective_field(sys_dir, file_name, 4, config.settings.overlay.bat_alpha);
+    const int bat_anchor = effective_field(sys_dir, file_name, 5, config.settings.overlay.bat_anchor);
+    const int bat_scale = effective_field(sys_dir, file_name, 6, config.settings.overlay.bat_scale);
+
+    const int vol_alpha = effective_field(sys_dir, file_name, 7, config.settings.overlay.vol_alpha);
+    const int vol_anchor = effective_field(sys_dir, file_name, 8, config.settings.overlay.vol_anchor);
+    const int vol_scale = effective_field(sys_dir, file_name, 9, config.settings.overlay.vol_scale);
+
+    const int bri_alpha = effective_field(sys_dir, file_name, 10, config.settings.overlay.bri_alpha);
+    const int bri_anchor = effective_field(sys_dir, file_name, 11, config.settings.overlay.bri_anchor);
+    const int bri_scale = effective_field(sys_dir, file_name, 12, config.settings.overlay.bri_scale);
+
+    free(sys_dir);
+
+    lv_dropdown_set_selected(ui_dro_gen_alpha_overlay, int_to_pct(gen_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_gen_anchor_overlay, gen_anchor);
+    lv_dropdown_set_selected(ui_dro_gen_scale_overlay, gen_scale);
+
+    lv_dropdown_set_selected(ui_dro_bat_alpha_overlay, int_to_pct(bat_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_bat_anchor_overlay, bat_anchor);
+    lv_dropdown_set_selected(ui_dro_bat_scale_overlay, bat_scale);
+
+    lv_dropdown_set_selected(ui_dro_vol_alpha_overlay, int_to_pct(vol_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_vol_anchor_overlay, vol_anchor);
+    lv_dropdown_set_selected(ui_dro_vol_scale_overlay, vol_scale);
+
+    lv_dropdown_set_selected(ui_dro_bri_alpha_overlay, int_to_pct(bri_alpha, 0, 255));
+    lv_dropdown_set_selected(ui_dro_bri_anchor_overlay, bri_anchor);
+    lv_dropdown_set_selected(ui_dro_bri_scale_overlay, bri_scale);
 }
 
-static void save_tweak_options(void) {
-    int is_modified = 0;
+static void save_tweak_options(const enum gen_type method) {
+    char blob[MAX_BUFFER_SIZE];
+    snprintf(
+        blob, sizeof(blob), "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
+        pct_to_int(lv_dropdown_get_selected(ui_dro_gen_alpha_overlay), 0, 255),
+        (int) lv_dropdown_get_selected(ui_dro_gen_anchor_overlay),
+        (int) lv_dropdown_get_selected(ui_dro_gen_scale_overlay),
+        pct_to_int(lv_dropdown_get_selected(ui_dro_bat_alpha_overlay), 0, 255),
+        (int) lv_dropdown_get_selected(ui_dro_bat_anchor_overlay),
+        (int) lv_dropdown_get_selected(ui_dro_bat_scale_overlay),
+        pct_to_int(lv_dropdown_get_selected(ui_dro_vol_alpha_overlay), 0, 255),
+        (int) lv_dropdown_get_selected(ui_dro_vol_anchor_overlay),
+        (int) lv_dropdown_get_selected(ui_dro_vol_scale_overlay),
+        pct_to_int(lv_dropdown_get_selected(ui_dro_bri_alpha_overlay), 0, 255),
+        (int) lv_dropdown_get_selected(ui_dro_bri_anchor_overlay),
+        (int) lv_dropdown_get_selected(ui_dro_bri_scale_overlay)
+    );
 
-    CHECK_AND_SAVE_PCT(overlay, gen_alpha, "settings/overlay/gen_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, gen_anchor, "settings/overlay/gen_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, gen_scale, "settings/overlay/gen_scale", INT, 0);
+    create_marker_assignment("ovl", "Assign Overlay Options", blob, rom_name, rom_dir, is_app, method);
+}
 
-    CHECK_AND_SAVE_PCT(overlay, bat_alpha, "settings/overlay/bat_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, bat_anchor, "settings/overlay/bat_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, bat_scale, "settings/overlay/bat_scale", INT, 0);
+static void detect_core_is_retroarch(void) {
+    char file_path[MAX_BUFFER_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", rom_dir, rom_name);
 
-    CHECK_AND_SAVE_PCT(overlay, vol_alpha, "settings/overlay/vol_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, vol_anchor, "settings/overlay/vol_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, vol_scale, "settings/overlay/vol_scale", INT, 0);
+    char *sys_dir = get_content_path(file_path);
+    const char *file_name = get_file_name(file_path);
 
-    CHECK_AND_SAVE_PCT(overlay, bri_alpha, "settings/overlay/bri_alpha", INT, 0, 255);
-    CHECK_AND_SAVE_STD(overlay, bri_anchor, "settings/overlay/bri_anchor", INT, 0);
-    CHECK_AND_SAVE_STD(overlay, bri_scale, "settings/overlay/bri_scale", INT, 0);
+    const char *core_file = get_content_line(sys_dir, file_name, "cfg", 2);
+    const char *core_dir = get_content_line(sys_dir, NULL, "cfg", 1);
 
-    if (is_modified > 0) refresh_config = 1;
+    const char *def_core = get_content_line(sys_dir, file_name, "cfg", 6);
+    const char *assign_sys = get_content_line(sys_dir, file_name, "cfg", 3);
+    if (!*def_core) {
+        def_core = get_content_line(sys_dir, NULL, "cfg", 5);
+        assign_sys = get_content_line(sys_dir, NULL, "cfg", 2);
+    }
+
+    char assign_dir[MAX_BUFFER_SIZE];
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", assign_sys);
+    const int core_uses_pickles = *def_core && *assign_sys ? core_uses_muxretro(assign_dir, def_core) : 0;
+
+    const char *core_value = *core_file ? core_file : core_dir;
+    const char *core_label = *core_value ? format_core_name(core_value, 0, core_uses_pickles) : "";
+    core_is_retroarch = core_label && strcasestr(core_label, "RetroArch") ? 1 : 0;
+
+    free(sys_dir);
 }
 
 static void init_navigation_group(void) {
@@ -148,148 +161,74 @@ static void init_navigation_group(void) {
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
+
+    if (core_is_retroarch) {
+        HIDE_OPTION_ITEM(overlay, gen_alpha);
+        HIDE_OPTION_ITEM(overlay, gen_anchor);
+        HIDE_OPTION_ITEM(overlay, gen_scale);
+    }
 }
 
 static void handle_option_prev(void) {
-    if (save_mode) {
-        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
-        return;
-    }
-
-    if (reset_mode) {
-        dialogue_handle_dpad(&reset_dlg, &theme, -1, swap_axis);
-        return;
-    }
-
     if (msgbox_active) return;
 
     move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
-    if (save_mode) {
-        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
-        return;
-    }
-
-    if (reset_mode) {
-        dialogue_handle_dpad(&reset_dlg, &theme, +1, swap_axis);
-        return;
-    }
-
     if (msgbox_active) return;
 
     move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
-static void handle_dpad_up(void) {
-    if (save_mode) {
-        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
-        return;
-    }
-
-    if (reset_mode) {
-        dialogue_handle_dpad(&reset_dlg, &theme, -1, !swap_axis);
-        return;
-    }
-
-    handle_list_nav_up();
-}
-
-static void handle_dpad_down(void) {
-    if (save_mode) {
-        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
-        return;
-    }
-
-    if (reset_mode) {
-        dialogue_handle_dpad(&reset_dlg, &theme, +1, !swap_axis);
-        return;
-    }
-
-    handle_list_nav_down();
-}
-
-static void handle_dpad_up_hold(void) {
-    if (save_mode || reset_mode) return;
-
-    handle_list_nav_up_hold();
-}
-
-static void handle_dpad_down_hold(void) {
-    if (save_mode || reset_mode) return;
-
-    handle_list_nav_down_hold();
-}
-
 static void handle_a(void) {
-    if (save_mode) {
-        const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+    if (msgbox_active || hold_call || is_dir) return;
 
-        if (opt == mux_unsaved_save) save_tweak_options();
+    LOG_INFO(mux_module, "Single Overlay Options Assignment Triggered");
+    play_sound(snd_confirm);
 
-        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "overlay");
+    save_tweak_options(casn_single);
 
-        mux_input_stop();
-        return;
-    }
-
-    if (reset_mode) {
-        const mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
-        hide_reset_dialog();
-        if (opt == mux_confirm_yep) do_reset();
-        return;
-    }
-
-    if (msgbox_active || hold_call) return;
-
-    handle_option_next();
+    mux_input_stop();
 }
 
 static void handle_b(void) {
     if (hold_call) return;
-
-    if (save_mode) {
-        hide_save_dialog();
-        return;
-    }
-
-    if (reset_mode) {
-        hide_reset_dialog();
-        return;
-    }
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
         return;
     }
 
-    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_overlay_modified())) return;
-
     play_sound(snd_back);
-    save_tweak_options();
-
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "overlay");
 
     mux_input_stop();
 }
 
 static void handle_x(void) {
-    if (msgbox_active || save_mode || reset_mode) return;
+    if (msgbox_active || hold_call) return;
 
-    if (config.settings.advanced.trust_remove) {
-        do_reset();
-        return;
-    }
-
+    LOG_INFO(mux_module, "Directory Overlay Options Assignment Triggered");
     play_sound(snd_confirm);
-    show_reset_dialog();
+
+    save_tweak_options(casn_dir);
+
+    mux_input_stop();
+}
+
+static void handle_y(void) {
+    if (msgbox_active || hold_call) return;
+
+    LOG_INFO(mux_module, "Recursive Overlay Options Assignment Triggered");
+    play_sound(snd_confirm);
+
+    save_tweak_options(casn_parent);
+
+    mux_input_stop();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode || reset_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -298,13 +237,30 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
-                                  {ui_lbl_nav_lr, lang.generic.change, 0},
-                                  {ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.generic.reset, 0},
-                                  {NULL, NULL, 0}});
+    struct nav_bar nav_items[11];
+    int i = 0;
+
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_lr_glyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lbl_nav_lr, lang.generic.change, 0};
+
+    if (!is_dir) {
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_a, lang.generic.content, 1};
+    }
+
+    if (!is_app) {
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x_glyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lbl_nav_x, lang.generic.directory, 1};
+
+        if (!at_base(rom_dir, MAIN_ROM_DIR)) {
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y_glyph, "", 1};
+            nav_items[i++] = (struct nav_bar) {ui_lbl_nav_y, lang.generic.recursive, 1};
+        }
+    }
+
+    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};
+
+    setup_nav(nav_items);
 
 #define OVERLAY(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_overlay, UDATA);
     OVERLAY_ELEMENTS
@@ -313,8 +269,30 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxoverlay_main(void) {
+void muxoverlay_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    (void) auto_assign;
+
+    snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
+    is_dir = dir_exist(rom_dir) && !app;
+    if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+    snprintf(rom_name, sizeof(rom_name), "%s", get_file_name(name));
+    snprintf(rom_system, sizeof(rom_system), "%s", sys);
+
+    is_app = app;
+
     init_module(__func__);
+
+    if (is_app) {
+        LOG_INFO(mux_module, "Assign Overlay Options APP_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Overlay Options APP_DIR: \"%s\"", rom_dir);
+    } else {
+        LOG_INFO(mux_module, "Assign Overlay Options ROM_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Overlay Options ROM_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign Overlay Options ROM_SYS: \"%s\"", rom_system);
+    }
+
+    detect_core_is_retroarch();
+
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.muxoverlay.title);
@@ -330,16 +308,7 @@ int muxoverlay_main(void) {
     init_elements();
 
     restore_tweak_options();
-    init_dropdown_settings();
 
-    dialogue_init_unsaved(
-        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
-        lang.generic.select, lang.generic.back
-    );
-    dialogue_init_confirm(
-        &reset_dlg, &theme, ui_screen, lang.generic.confirm, NULL, lang.generic.reset, lang.generic.cancel,
-        lang.generic.select, lang.generic.back
-    );
     init_timer(ui_gen_refresh_task, NULL);
     gen_step_movement(0, +1, 2, 0, 1);
 
@@ -350,10 +319,11 @@ int muxoverlay_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
-                [mux_input_dpad_up] = handle_dpad_up,
-                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_dpad_up] = handle_list_nav_up,
+                [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
             },
@@ -364,8 +334,8 @@ int muxoverlay_main(void) {
         .hold_handler = {
             [mux_input_dpad_left] = handle_option_prev,
             [mux_input_dpad_right] = handle_option_next,
-            [mux_input_dpad_up] = handle_dpad_up_hold,
-            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_dpad_up] = handle_list_nav_up_hold,
+            [mux_input_dpad_down] = handle_list_nav_down_hold,
             [mux_input_l1] = handle_list_nav_page_up,
             [mux_input_r1] = handle_list_nav_page_down,
         }
@@ -374,6 +344,4 @@ int muxoverlay_main(void) {
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
     mux_input_task(&input_opts);
-
-    return 0;
 }

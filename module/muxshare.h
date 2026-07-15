@@ -151,6 +151,8 @@ char *load_content_filter(char *sys_dir, const char *pointer, int force, int run
 
 char *load_content_shader(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);
 
+char *load_content_overlay(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);
+
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
 void update_file_counter(lv_obj_t *counter, int file_count);
@@ -301,7 +303,7 @@ int muxnews_main();
 
 void muxoption_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxoverlay_main();
+void muxoverlay_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxpass_main(int auth_type);
 

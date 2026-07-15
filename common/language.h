@@ -435,7 +435,6 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char power[MAX_BUFFER_SIZE];
         char interface[MAX_BUFFER_SIZE];
-        char overlay[MAX_BUFFER_SIZE];
         char backup[MAX_BUFFER_SIZE];
         struct {
             char connect[MAX_BUFFER_SIZE];
@@ -445,7 +444,6 @@ struct mux_lang {
             char storage[MAX_BUFFER_SIZE];
             char power[MAX_BUFFER_SIZE];
             char interface[MAX_BUFFER_SIZE];
-            char overlay[MAX_BUFFER_SIZE];
             char backup[MAX_BUFFER_SIZE];
         } help;
     } muxconfig;
@@ -1222,11 +1220,14 @@ struct mux_lang {
         char retroarch[MAX_BUFFER_SIZE];
         char colfilter[MAX_BUFFER_SIZE];
         char shader[MAX_BUFFER_SIZE];
+        char overlay[MAX_BUFFER_SIZE];
         char remconfig[MAX_BUFFER_SIZE];
         char remcontent[MAX_BUFFER_SIZE];
         char remdir[MAX_BUFFER_SIZE];
         char remcore[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char dflt[MAX_BUFFER_SIZE];
+        char modified[MAX_BUFFER_SIZE];
         char not_assigned[MAX_BUFFER_SIZE];
         char storage[MAX_BUFFER_SIZE];
         char folder[MAX_BUFFER_SIZE];
@@ -1241,6 +1242,7 @@ struct mux_lang {
             char retro_arch[MAX_BUFFER_SIZE];
             char col_filter[MAX_BUFFER_SIZE];
             char shader[MAX_BUFFER_SIZE];
+            char overlay[MAX_BUFFER_SIZE];
             char rem_config[MAX_BUFFER_SIZE];
             char storage[MAX_BUFFER_SIZE];
             char folder[MAX_BUFFER_SIZE];

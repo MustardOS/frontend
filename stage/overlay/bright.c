@@ -44,11 +44,15 @@ int bright_disabled_gles = 0;
 gl_vtx_t vtx_bright[4];
 int vtx_bright_valid = 0;
 
-struct alpha_cache bright_alpha_cache = {.path = BRIGHT_ALPHA, .mtime = 0, .value = 1.0f};
+struct alpha_cache bright_alpha_cache = {.path = BRIGHT_ALPHA, .mtime = 0, .value = 1.0f, .field = opt_bri_alpha};
 
-struct anchor_cache bright_anchor_cache = {.path = BRIGHT_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_RIGHT};
+struct anchor_cache bright_anchor_cache = {
+    .path = BRIGHT_ANCHOR, .mtime = 0, .value = anchor_top_right, .field = opt_bri_anchor
+};
 
-struct scale_cache bright_scale_cache = {.path = BRIGHT_SCALE, .mtime = 0, .value = scale_original};
+struct scale_cache bright_scale_cache = {
+    .path = BRIGHT_SCALE, .mtime = 0, .value = scale_original, .field = opt_bri_scale
+};
 
 static int ensure_bright_path(const char *dim, int step) {
     if (step < 0) step = 0;

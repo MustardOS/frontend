@@ -1,7 +1,7 @@
 #include <sys/stat.h>
 #include "alpha.h"
 
-struct alpha_cache overlay_alpha_cache = {.path = OVERLAY_ALPHA, .mtime = 0, .value = 1.0f};
+struct alpha_cache overlay_alpha_cache = {.path = OVERLAY_ALPHA, .mtime = 0, .value = 1.0f, .field = opt_gen_alpha};
 
 static float clamp_alpha(const int v) {
     if (v < 0) return 0.0f;
@@ -11,6 +11,9 @@ static float clamp_alpha(const int v) {
 }
 
 float get_alpha_cached(struct alpha_cache *cache) {
+    int override_val;
+    if (get_overlay_option_override(cache->field, &override_val)) return clamp_alpha(override_val);
+
     struct stat st;
 
     if (stat(cache->path, &st) != 0) {

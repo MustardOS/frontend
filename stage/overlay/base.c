@@ -38,7 +38,7 @@ int base_nop_last = -1;
 __attribute__((used)) struct alpha_cache base_alpha_cache = {.path = BASE_ALPHA, .mtime = 0, .value = 1.0f};
 
 __attribute__((used)) struct anchor_cache base_anchor_cache = {
-    .path = BASE_ANCHOR, .mtime = 0, .value = ANCHOR_CENTRE_MIDDLE
+    .path = BASE_ANCHOR, .mtime = 0, .value = anchor_centre_middle
 };
 
 __attribute__((used)) struct scale_cache base_scale_cache = {.path = BASE_SCALE, .mtime = 0, .value = scale_original};

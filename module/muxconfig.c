@@ -19,10 +19,6 @@ static int storage_available(void) {
     return is_partition_mounted(device.storage.sdcard.mount);
 }
 
-static int overlay_available(void) {
-    return !hdmi_mode && config.settings.advanced.stage_overlay;
-}
-
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
@@ -32,7 +28,6 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, config, connect, lang.muxconfig.connect, "connect", 0);
     INIT_STATIC_ITEM(-1, config, custom, lang.muxconfig.custom, "custom", 0);
     INIT_STATIC_ITEM(-1, config, interface, lang.muxconfig.interface, "interface", 0);
-    INIT_STATIC_ITEM(-1, config, overlay, lang.muxconfig.overlay, "overlay", 0);
     INIT_STATIC_ITEM(-1, config, language, lang.muxconfig.language, "language", 0);
     INIT_STATIC_ITEM(-1, config, power, lang.muxconfig.power, "power", 0);
     INIT_STATIC_ITEM(-1, config, storage, lang.muxconfig.storage, "storage", 0);
@@ -42,7 +37,6 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
 
     if (!storage_available()) HIDE_STATIC_ITEM(config, storage);
-    if (hdmi_mode || !config.settings.advanced.stage_overlay) HIDE_STATIC_ITEM(config, overlay);
 
     gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 1, 0, 1);
 }
@@ -63,7 +57,6 @@ static void handle_a(void) {
         {"connect", &kiosk.config.connectivity, NULL},
         {"custom", &kiosk.config.customisation, NULL},
         {"visual", &kiosk.setting.visual, NULL},
-        {"overlay", &kiosk.setting.overlay, overlay_available},
         {"language", &kiosk.config.language, NULL},
         {"power", &kiosk.setting.power, NULL},
         {"storage", &kiosk.config.storage, storage_available},

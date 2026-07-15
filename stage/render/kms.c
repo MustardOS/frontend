@@ -751,63 +751,63 @@ static void k_build_quad_ndc(k_vtx_t out[4], int tex_w, int tex_h, int fb_w, int
     float x0, x1, y0, y1;
 
     switch (get_anchor_rotate(anchor, rot)) {
-        case ANCHOR_TOP_LEFT:
+        case anchor_top_left:
             x0 = -1.0f;
             x1 = x0 + w_ndc;
             y0 = 1.0f;
             y1 = y0 - h_ndc;
             break;
 
-        case ANCHOR_TOP_MIDDLE:
+        case anchor_top_middle:
             x0 = -w_ndc * 0.5f;
             x1 = w_ndc * 0.5f;
             y0 = 1.0f;
             y1 = y0 - h_ndc;
             break;
 
-        case ANCHOR_TOP_RIGHT:
+        case anchor_top_right:
             x1 = 1.0f;
             x0 = x1 - w_ndc;
             y0 = 1.0f;
             y1 = y0 - h_ndc;
             break;
 
-        case ANCHOR_CENTRE_LEFT:
+        case anchor_centre_left:
             x0 = -1.0f;
             x1 = x0 + w_ndc;
             y0 = h_ndc * 0.5f;
             y1 = -h_ndc * 0.5f;
             break;
 
-        case ANCHOR_CENTRE_MIDDLE:
+        case anchor_centre_middle:
             x0 = -w_ndc * 0.5f;
             x1 = w_ndc * 0.5f;
             y0 = h_ndc * 0.5f;
             y1 = -h_ndc * 0.5f;
             break;
 
-        case ANCHOR_CENTRE_RIGHT:
+        case anchor_centre_right:
             x1 = 1.0f;
             x0 = x1 - w_ndc;
             y0 = h_ndc * 0.5f;
             y1 = -h_ndc * 0.5f;
             break;
 
-        case ANCHOR_BOTTOM_LEFT:
+        case anchor_bottom_left:
             x0 = -1.0f;
             x1 = x0 + w_ndc;
             y1 = -1.0f;
             y0 = y1 + h_ndc;
             break;
 
-        case ANCHOR_BOTTOM_MIDDLE:
+        case anchor_bottom_middle:
             x0 = -w_ndc * 0.5f;
             x1 = w_ndc * 0.5f;
             y1 = -1.0f;
             y0 = y1 + h_ndc;
             break;
 
-        case ANCHOR_BOTTOM_RIGHT:
+        case anchor_bottom_right:
             x1 = 1.0f;
             x0 = x1 - w_ndc;
             y1 = -1.0f;
@@ -2434,39 +2434,39 @@ static void cpl_place_sprite(int tex_w, int tex_h, int fb_w, int fb_h, int ancho
     int x = 0, y = 0;
     const int r_anchor = get_anchor_rotate(anchor, rot);
     switch (r_anchor) {
-        case ANCHOR_TOP_LEFT:
+        case anchor_top_left:
             x = 0;
             y = 0;
             break;
-        case ANCHOR_TOP_MIDDLE:
+        case anchor_top_middle:
             x = (fb_w - draw_w) / 2;
             y = 0;
             break;
-        case ANCHOR_TOP_RIGHT:
+        case anchor_top_right:
             x = fb_w - draw_w;
             y = 0;
             break;
-        case ANCHOR_CENTRE_LEFT:
+        case anchor_centre_left:
             x = 0;
             y = (fb_h - draw_h) / 2;
             break;
-        case ANCHOR_CENTRE_MIDDLE:
+        case anchor_centre_middle:
             x = (fb_w - draw_w) / 2;
             y = (fb_h - draw_h) / 2;
             break;
-        case ANCHOR_CENTRE_RIGHT:
+        case anchor_centre_right:
             x = fb_w - draw_w;
             y = (fb_h - draw_h) / 2;
             break;
-        case ANCHOR_BOTTOM_LEFT:
+        case anchor_bottom_left:
             x = 0;
             y = fb_h - draw_h;
             break;
-        case ANCHOR_BOTTOM_MIDDLE:
+        case anchor_bottom_middle:
             x = (fb_w - draw_w) / 2;
             y = fb_h - draw_h;
             break;
-        case ANCHOR_BOTTOM_RIGHT:
+        case anchor_bottom_right:
             x = fb_w - draw_w;
             y = fb_h - draw_h;
             break;

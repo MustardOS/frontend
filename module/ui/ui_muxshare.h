@@ -133,7 +133,6 @@
     CONFIG(connect, "connect")                                                                                         \
     CONFIG(custom, "custom")                                                                                           \
     CONFIG(interface, "interface")                                                                                     \
-    CONFIG(overlay, "overlay")                                                                                         \
     CONFIG(language, "language")                                                                                       \
     CONFIG(power, "power")                                                                                             \
     CONFIG(storage, "storage")                                                                                         \
@@ -346,6 +345,7 @@
     OPTION(rem_config, "remconfig")                                                                                    \
     OPTION(col_filter, "colfilter")                                                                                    \
     OPTION(shader, "shader")                                                                                           \
+    OPTION(overlay, "overlay")                                                                                         \
     OPTION(tag, "tag")                                                                                                 \
     OPTION(storage, "storage")                                                                                         \
     OPTION(folder, "folder")                                                                                           \

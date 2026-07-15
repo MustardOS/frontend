@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "overlay.h"
 
 #define OVERLAY_SCALE OVERLAY_CONFIG "gen_scale"
 
@@ -8,6 +9,7 @@ struct scale_cache {
     const char *path;
     time_t mtime;
     int value;
+    enum overlay_option_field field;
 };
 
 extern int overlay_scale_cached;

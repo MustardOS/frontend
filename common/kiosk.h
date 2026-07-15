@@ -34,6 +34,7 @@ struct mux_kiosk {
         int16_t retroarch;
         int16_t colfilter;
         int16_t shader;
+        int16_t overlay;
         int16_t remconfig;
         int16_t search;
         int16_t history;
@@ -74,7 +75,6 @@ struct mux_kiosk {
         int16_t hdmi;
         int16_t power;
         int16_t visual;
-        int16_t overlay;
     } setting;
 };
 

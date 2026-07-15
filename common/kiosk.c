@@ -29,6 +29,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->content.retroarch, CONF_KIOSK_PATH "content/retroarch", 0);
     CFG_INT_FIELD(kiosk->content.colfilter, CONF_KIOSK_PATH "content/colfilter", 0);
     CFG_INT_FIELD(kiosk->content.shader, CONF_KIOSK_PATH "content/shader", 0);
+    CFG_INT_FIELD(kiosk->content.overlay, CONF_KIOSK_PATH "content/overlay", 0);
     CFG_INT_FIELD(kiosk->content.remconfig, CONF_KIOSK_PATH "content/remconfig", 0);
     CFG_INT_FIELD(kiosk->content.search, CONF_KIOSK_PATH "content/search", 0);
     CFG_INT_FIELD(kiosk->content.history, CONF_KIOSK_PATH "content/history", 0);
@@ -59,7 +60,6 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->setting.hdmi, CONF_KIOSK_PATH "setting/hdmi", 0);
     CFG_INT_FIELD(kiosk->setting.power, CONF_KIOSK_PATH "setting/power", 0);
     CFG_INT_FIELD(kiosk->setting.visual, CONF_KIOSK_PATH "setting/visual", 0);
-    CFG_INT_FIELD(kiosk->setting.overlay, CONF_KIOSK_PATH "setting/overlay", 0);
 }
 
 void kiosk_denied(void) {

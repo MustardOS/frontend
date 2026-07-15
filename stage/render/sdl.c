@@ -124,35 +124,35 @@ static void set_sdl_render(int tex_w, int tex_h, int anchor, int scale, int fb_w
     int y = 0;
 
     switch (get_anchor_rotate(anchor, rot)) {
-        case ANCHOR_TOP_LEFT:
+        case anchor_top_left:
             x = 0;
             y = 0;
             break;
-        case ANCHOR_TOP_MIDDLE:
+        case anchor_top_middle:
             x = (fb_w - draw_w) / 2;
             break;
-        case ANCHOR_TOP_RIGHT:
+        case anchor_top_right:
             x = fb_w - draw_w;
             break;
-        case ANCHOR_CENTRE_LEFT:
+        case anchor_centre_left:
             y = (fb_h - draw_h) / 2;
             break;
-        case ANCHOR_CENTRE_MIDDLE:
+        case anchor_centre_middle:
             x = (fb_w - draw_w) / 2;
             y = (fb_h - draw_h) / 2;
             break;
-        case ANCHOR_CENTRE_RIGHT:
+        case anchor_centre_right:
             x = fb_w - draw_w;
             y = (fb_h - draw_h) / 2;
             break;
-        case ANCHOR_BOTTOM_LEFT:
+        case anchor_bottom_left:
             y = fb_h - draw_h;
             break;
-        case ANCHOR_BOTTOM_MIDDLE:
+        case anchor_bottom_middle:
             x = (fb_w - draw_w) / 2;
             y = fb_h - draw_h;
             break;
-        case ANCHOR_BOTTOM_RIGHT:
+        case anchor_bottom_right:
             x = fb_w - draw_w;
             y = fb_h - draw_h;
             break;

@@ -4,18 +4,23 @@
 
 int overlay_anchor_cached = -1;
 
-struct anchor_cache overlay_anchor_cache = {.path = OVERLAY_ANCHOR, .mtime = 0, .value = ANCHOR_TOP_LEFT};
+struct anchor_cache overlay_anchor_cache = {
+    .path = OVERLAY_ANCHOR, .mtime = 0, .value = anchor_top_left, .field = opt_gen_anchor
+};
 
 static int clamp_anchor(const int v) {
-    return v >= 0 && v <= 8 ? v : ANCHOR_TOP_LEFT;
+    return v >= 0 && v <= 8 ? v : anchor_top_left;
 }
 
 int get_anchor_cached(struct anchor_cache *cache) {
+    int override_val;
+    if (get_overlay_option_override(cache->field, &override_val)) return clamp_anchor(override_val);
+
     struct stat st;
 
     if (stat(cache->path, &st) != 0) {
         cache->mtime = 0;
-        cache->value = ANCHOR_TOP_LEFT;
+        cache->value = anchor_top_left;
         return cache->value;
     }
 
@@ -24,7 +29,7 @@ int get_anchor_cached(struct anchor_cache *cache) {
 
     char buf[8];
     if (!read_line_from_file(cache->path, 1, buf, sizeof(buf))) {
-        cache->value = ANCHOR_TOP_LEFT;
+        cache->value = anchor_top_left;
         return cache->value;
     }
 
@@ -36,36 +41,36 @@ int get_anchor_rotate(const int anchor, const int rot) {
     if (rot == rotate_0) return anchor;
 
     static const int map_90[] = {
-        [ANCHOR_TOP_LEFT] = ANCHOR_TOP_RIGHT,         [ANCHOR_TOP_MIDDLE] = ANCHOR_CENTRE_RIGHT,
-        [ANCHOR_TOP_RIGHT] = ANCHOR_BOTTOM_RIGHT,
+        [anchor_top_left] = anchor_top_right,         [anchor_top_middle] = anchor_centre_right,
+        [anchor_top_right] = anchor_bottom_right,
 
-        [ANCHOR_CENTRE_LEFT] = ANCHOR_TOP_MIDDLE,     [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
-        [ANCHOR_CENTRE_RIGHT] = ANCHOR_BOTTOM_MIDDLE,
+        [anchor_centre_left] = anchor_top_middle,     [anchor_centre_middle] = anchor_centre_middle,
+        [anchor_centre_right] = anchor_bottom_middle,
 
-        [ANCHOR_BOTTOM_LEFT] = ANCHOR_TOP_LEFT,       [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_CENTRE_LEFT,
-        [ANCHOR_BOTTOM_RIGHT] = ANCHOR_BOTTOM_LEFT,
+        [anchor_bottom_left] = anchor_top_left,       [anchor_bottom_middle] = anchor_centre_left,
+        [anchor_bottom_right] = anchor_bottom_left,
     };
 
     static const int map_180[] = {
-        [ANCHOR_TOP_LEFT] = ANCHOR_BOTTOM_RIGHT,    [ANCHOR_TOP_MIDDLE] = ANCHOR_BOTTOM_MIDDLE,
-        [ANCHOR_TOP_RIGHT] = ANCHOR_BOTTOM_LEFT,
+        [anchor_top_left] = anchor_bottom_right,    [anchor_top_middle] = anchor_bottom_middle,
+        [anchor_top_right] = anchor_bottom_left,
 
-        [ANCHOR_CENTRE_LEFT] = ANCHOR_CENTRE_RIGHT, [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
-        [ANCHOR_CENTRE_RIGHT] = ANCHOR_CENTRE_LEFT,
+        [anchor_centre_left] = anchor_centre_right, [anchor_centre_middle] = anchor_centre_middle,
+        [anchor_centre_right] = anchor_centre_left,
 
-        [ANCHOR_BOTTOM_LEFT] = ANCHOR_TOP_RIGHT,    [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_TOP_MIDDLE,
-        [ANCHOR_BOTTOM_RIGHT] = ANCHOR_TOP_LEFT,
+        [anchor_bottom_left] = anchor_top_right,    [anchor_bottom_middle] = anchor_top_middle,
+        [anchor_bottom_right] = anchor_top_left,
     };
 
     static const int map_270[] = {
-        [ANCHOR_TOP_LEFT] = ANCHOR_BOTTOM_LEFT,      [ANCHOR_TOP_MIDDLE] = ANCHOR_CENTRE_LEFT,
-        [ANCHOR_TOP_RIGHT] = ANCHOR_TOP_LEFT,
+        [anchor_top_left] = anchor_bottom_left,      [anchor_top_middle] = anchor_centre_left,
+        [anchor_top_right] = anchor_top_left,
 
-        [ANCHOR_CENTRE_LEFT] = ANCHOR_BOTTOM_MIDDLE, [ANCHOR_CENTRE_MIDDLE] = ANCHOR_CENTRE_MIDDLE,
-        [ANCHOR_CENTRE_RIGHT] = ANCHOR_TOP_MIDDLE,
+        [anchor_centre_left] = anchor_bottom_middle, [anchor_centre_middle] = anchor_centre_middle,
+        [anchor_centre_right] = anchor_top_middle,
 
-        [ANCHOR_BOTTOM_LEFT] = ANCHOR_BOTTOM_RIGHT,  [ANCHOR_BOTTOM_MIDDLE] = ANCHOR_CENTRE_RIGHT,
-        [ANCHOR_BOTTOM_RIGHT] = ANCHOR_TOP_RIGHT,
+        [anchor_bottom_left] = anchor_bottom_right,  [anchor_bottom_middle] = anchor_centre_right,
+        [anchor_bottom_right] = anchor_top_right,
     };
 
     switch (rot) {

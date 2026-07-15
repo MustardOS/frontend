@@ -422,6 +422,8 @@ int load_content(int add_collection, char *file_path) {
         char *assigned_flt =
             specify_asset(load_content_filter(content_path, content_name, 0, 1, 0), "none", "Colour Filter");
         char *assigned_shd = specify_asset(load_content_shader(content_path, content_name, 0, 1, 0), "none", "Shader");
+        char *assigned_ovl =
+            specify_asset(load_content_overlay(content_path, content_name, 0, 1, 0), "none", "Overlay Options");
 
         unsigned int new_hash = fnv_hash_str(file_path);
         char new_history[PATH_MAX];
@@ -476,6 +478,7 @@ int load_content(int add_collection, char *file_path) {
         write_text_to_file(MUOS_RAC_LOAD, "w", CHAR, assigned_rac);
         write_text_to_file(MUOS_FLT_LOAD, "w", CHAR, assigned_flt);
         write_text_to_file(MUOS_SHD_LOAD, "w", CHAR, assigned_shd);
+        write_text_to_file(MUOS_OVO_LOAD, "w", CHAR, assigned_ovl);
 
         char *loader_text = read_all_char_from(content_loader_file);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, loader_text);
