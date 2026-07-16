@@ -1068,6 +1068,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char system_dns[MAX_BUFFER_SIZE];
         char monitor[MAX_BUFFER_SIZE];
         char boot[MAX_BUFFER_SIZE];
         char wake[MAX_BUFFER_SIZE];
@@ -1077,6 +1078,13 @@ struct mux_lang {
         char wait[MAX_BUFFER_SIZE];
         char modretry[MAX_BUFFER_SIZE];
         struct {
+            char def[MAX_BUFFER_SIZE];
+            char cloudflare[MAX_BUFFER_SIZE];
+            char google[MAX_BUFFER_SIZE];
+            char quad9[MAX_BUFFER_SIZE];
+        } dns_name;
+        struct {
+            char system_dns[MAX_BUFFER_SIZE];
             char monitor[MAX_BUFFER_SIZE];
             char boot[MAX_BUFFER_SIZE];
             char wake[MAX_BUFFER_SIZE];

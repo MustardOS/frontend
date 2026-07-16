@@ -179,6 +179,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/network", "proxy_type", CFG_OFF(settings.network.proxy_type), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/network", "proxy_server", CFG_OFF(settings.network.proxy_server), 1, {.s = ""}},
     {CONF_CONFIG_PATH "settings/network", "proxy_noproxy", CFG_OFF(settings.network.proxy_noproxy), 1, {.s = "localhost,127.0.0.1,::1"}},
+    {CONF_CONFIG_PATH "settings/network", "system_dns", CFG_OFF(settings.network.system_dns), 0, {.i = 0}},
 
     // settings/overlay/
     {CONF_CONFIG_PATH "settings/overlay", "gen_alpha", CFG_OFF(settings.overlay.gen_alpha), 0, {.i = 255}},

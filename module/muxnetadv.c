@@ -53,6 +53,7 @@ static void restore_netadv_options(void) {
 static void save_netadv_options(void) {
     int is_modified = 0;
 
+    CHECK_AND_SAVE_STD(netadv, system_dns, "settings/network/system_dns", INT, 0);
     CHECK_AND_SAVE_STD(netadv, monitor, "settings/network/monitor", INT, 0);
     CHECK_AND_SAVE_STD(netadv, boot, "settings/network/boot", INT, 0);
     CHECK_AND_SAVE_STD(netadv, wake, "settings/network/wake", INT, 0);
@@ -75,6 +76,10 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
+    char *dns_options[] = {lang.muxnetadv.dns_name.def, lang.muxnetadv.dns_name.cloudflare,
+                           lang.muxnetadv.dns_name.google, lang.muxnetadv.dns_name.quad9};
+
+    INIT_OPTION_ITEM(-1, netadv, system_dns, lang.muxnetadv.system_dns, "systemdns", dns_options, 4);
     INIT_OPTION_ITEM(-1, netadv, monitor, lang.muxnetadv.monitor, "monitor", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, boot, lang.muxnetadv.boot, "boot", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, netadv, wake, lang.muxnetadv.wake, "wake", disabled_enabled, 2);

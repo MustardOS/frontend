@@ -1019,6 +1019,7 @@ static const lang_field lang_fields[] = {
 
     // muxnetadv
     {"muxnetadv", LANG_OFF(muxnetadv.title), lang_specific, "NETWORK SETTINGS"},
+    {"muxnetadv", LANG_OFF(muxnetadv.system_dns), lang_specific, "System DNS"},
     {"muxnetadv", LANG_OFF(muxnetadv.monitor), lang_specific, "Connection Monitor"},
     {"muxnetadv", LANG_OFF(muxnetadv.boot), lang_specific, "Start Network on Boot"},
     {"muxnetadv", LANG_OFF(muxnetadv.wake), lang_specific, "Start Network on Wake"},
@@ -1027,6 +1028,11 @@ static const lang_field lang_fields[] = {
     {"muxnetadv", LANG_OFF(muxnetadv.conretry), lang_specific, "Connection Retry"},
     {"muxnetadv", LANG_OFF(muxnetadv.wait), lang_specific, "Module Wait Timer"},
     {"muxnetadv", LANG_OFF(muxnetadv.modretry), lang_specific, "Module Retry"},
+    {"muxnetadv", LANG_OFF(muxnetadv.dns_name.def), lang_specific, "Default"},
+    {"muxnetadv", LANG_OFF(muxnetadv.dns_name.cloudflare), lang_specific, "Cloudflare (1.1.1.1)"},
+    {"muxnetadv", LANG_OFF(muxnetadv.dns_name.google), lang_specific, "Google (8.8.8.8)"},
+    {"muxnetadv", LANG_OFF(muxnetadv.dns_name.quad9), lang_specific, "Quad9 (9.9.9.9)"},
+    {"muxnetadv", LANG_OFF(muxnetadv.help.system_dns), lang_specific, "Overrides the DNS server for all connections (both DHCP and Static)\n\nDefault uses whatever DNS the profile or DHCP provides"},
     {"muxnetadv", LANG_OFF(muxnetadv.help.monitor), lang_specific, "Enables periodic connectivity checks and triggers reconnection if network loss is detected"},
     {"muxnetadv", LANG_OFF(muxnetadv.help.boot), lang_specific, "Enables network connection to be established automatically at boot"},
     {"muxnetadv", LANG_OFF(muxnetadv.help.wake), lang_specific, "Enables network connection to be re-established automatically upon suspend wake"},

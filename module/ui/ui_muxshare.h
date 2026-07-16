@@ -303,6 +303,7 @@
     LAUNCH(shutdown, "shutdown")
 
 #define NETADV_ELEMENTS                                                                                                \
+    NETADV(system_dns, "systemdns")                                                                                    \
     NETADV(monitor, "monitor")                                                                                         \
     NETADV(boot, "boot")                                                                                               \
     NETADV(wake, "wake")                                                                                               \
