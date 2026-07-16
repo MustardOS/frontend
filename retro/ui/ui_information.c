@@ -206,11 +206,15 @@ static void close_information(void) {
     pause_menu_sync_input_mask();
 }
 
+static void update_a_hint(void) {
+    nav_show_a(screen_state == screen_main && bios_count > 0 && current_item_index == 0, lang.generic.select);
+}
+
 static void close_bios_screen(void) {
     screen_state = screen_main;
     rebuild_rows();
 
-    nav_show_a(1, lang.generic.select);
+    update_a_hint();
 }
 
 void information_menu_open(void) {
@@ -221,6 +225,7 @@ void information_menu_open(void) {
     rebuild_rows();
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
+    update_a_hint();
     pause_menu_fix_nav_order();
 }
 
@@ -257,18 +262,20 @@ void information_menu_tick(void) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
         gen_step_movement(1, -1, 2, 0, 1);
+        update_a_hint();
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
+        update_a_hint();
     } else if (nav_page_tick(edge, mask, 2)) {
-        // do nothing!
+        update_a_hint();
     } else if (edge & BIT(2)) {
         if (screen_state == screen_main && bios_count > 0 && current_item_index == 0) {
             play_sound(snd_confirm);
             screen_state = screen_bios;
             build_bios_rows();
-            nav_show_a(0, "");
+            update_a_hint();
         }
     } else if (edge & BIT(3)) {
         play_sound(snd_back);
