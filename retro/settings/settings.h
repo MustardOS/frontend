@@ -110,6 +110,7 @@ struct session_settings_t {
     int hotkey_toggle_fps_enabled;
     int hotkey_header_toggle_enabled;
     int hotkey_quit_enabled;
+    int hotkey_manual_enabled;
     int hotkey_analog_toggle_enabled;
     int auto_save;
     int sram_flush_seconds;
@@ -268,6 +269,8 @@ void session_settings_cycle_hotkey_toggle_fps_enabled(int direction);
 void session_settings_cycle_hotkey_header_toggle_enabled(int direction);
 
 void session_settings_cycle_hotkey_quit_enabled(int direction);
+
+void session_settings_cycle_hotkey_manual_enabled(int direction);
 
 void session_settings_cycle_hotkey_analog_toggle_enabled(int direction);
 

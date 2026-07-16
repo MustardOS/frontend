@@ -14,3 +14,4 @@
 #define RETRO_PAT_PATH RETRO_SHARE_PATH "patched"
 #define RETRO_CHT_PATH RETRO_SHARE_PATH "cheats"
 #define RETRO_PTC_PATH RETRO_SHARE_PATH "patchopt"
+#define RETRO_MAN_PATH RETRO_SHARE_PATH "manual"

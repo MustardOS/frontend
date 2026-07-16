@@ -5,6 +5,7 @@
 #include "../../common/log.h"
 #include "../../common/ui/common.h"
 #include "../state/gamestate.h"
+#include "../state/manual.h"
 #include "hotkeys.h"
 #include "../core/muxretro.h"
 #include "nav_repeat.h"
@@ -21,10 +22,12 @@ static int prev_l2 = 0;
 static int prev_y = 0;
 static int prev_x = 0;
 static int prev_start = 0;
+static int prev_select = 0;
 
 static int fast_forward_active = 0;
 static int slow_motion_active = 0;
 static int quit_requested = 0;
+static int manual_requested = 0;
 
 int hotkeys_is_fast_forward_active(void) {
     return fast_forward_active;
@@ -40,6 +43,12 @@ int hotkeys_is_quit_requested(void) {
 
 void hotkeys_request_quit(void) {
     quit_requested = 1;
+}
+
+int hotkeys_is_manual_requested(void) {
+    const int r = manual_requested;
+    manual_requested = 0;
+    return r;
 }
 
 static void sync_audio_mute(void) {
@@ -96,6 +105,7 @@ int hotkeys_task(void) {
     const int x_now = mux_input_pressed(mux_input_x);
     const int start_now = mux_input_pressed(mux_input_start);
     const int a_now = mux_input_pressed(mux_input_a);
+    const int select_now = mux_input_pressed(mux_input_select);
 
     int open_pause = 0;
 
@@ -190,6 +200,17 @@ int hotkeys_task(void) {
             input_bridge_suppress(mux_input_start);
             menu_combo_consumed = 1;
         }
+
+        if (select_now && !prev_select && session_settings.hotkey_manual_enabled) {
+            if (manual_is_available()) {
+                LOG_INFO(mux_module, "Manual (hotkey)");
+                manual_requested = 1;
+            } else {
+                pause_menu_show_toast(lang.muxretro.manual_screen.not_found);
+            }
+            input_bridge_suppress(mux_input_select);
+            menu_combo_consumed = 1;
+        }
     }
 
     prev_a = a_now;
@@ -200,6 +221,7 @@ int hotkeys_task(void) {
     prev_y = y_now;
     prev_x = x_now;
     prev_start = start_now;
+    prev_select = select_now;
 
     return open_pause;
 }

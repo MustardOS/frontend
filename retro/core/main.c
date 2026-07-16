@@ -18,6 +18,7 @@
 #include "../../common/ui/common.h"
 #include "../ui/cheats.h"
 #include "../state/gamestate.h"
+#include "../state/manual.h"
 #include "../state/patch.h"
 #include "../input/hotkeys.h"
 #include "muxretro.h"
@@ -279,6 +280,7 @@ int main(const int argc, char *argv[]) {
 
     sram_bridge_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
+    manual_init(core_path_arg, content_path);
     overlay_bridge_init(core_path_arg, content_path);
 
     build_state_dir(core_path_arg, content_path);
@@ -405,6 +407,9 @@ int main(const int argc, char *argv[]) {
         } else if (hotkeys_task()) {
             LOG_DEBUG(mux_module, "main: menu released without a hotkey combo, toggling pause");
             pause_menu_toggle();
+        } else if (hotkeys_is_manual_requested()) {
+            pause_menu_toggle();
+            manual_menu_open();
         } else if (hotkeys_is_quit_requested()) {
             quit = 1;
         } else {

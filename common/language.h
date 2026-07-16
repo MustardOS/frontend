@@ -1600,6 +1600,7 @@ struct mux_lang {
             char toggle_controller[MAX_BUFFER_SIZE];
             char ff_glyph[MAX_BUFFER_SIZE];
             char slowmo_glyph[MAX_BUFFER_SIZE];
+            char manual[MAX_BUFFER_SIZE];
         } hotkeys_screen;
         struct {
             char miscellaneous[MAX_BUFFER_SIZE];
@@ -1610,6 +1611,10 @@ struct mux_lang {
         struct {
             char restart_required[MAX_BUFFER_SIZE];
         } patches_screen;
+        struct {
+            char not_found[MAX_BUFFER_SIZE];
+            char wrap[MAX_BUFFER_SIZE];
+        } manual_screen;
         struct {
             char brightness[MAX_BUFFER_SIZE];
             char contrast[MAX_BUFFER_SIZE];

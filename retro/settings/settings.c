@@ -39,6 +39,7 @@ static const struct session_settings_t defaults = {
     .hotkey_toggle_fps_enabled = 1,
     .hotkey_header_toggle_enabled = 1,
     .hotkey_quit_enabled = 1,
+    .hotkey_manual_enabled = 1,
     .hotkey_analog_toggle_enabled = 1,
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
@@ -485,6 +486,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "hotkey_quit_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_quit_enabled = (int) v;
 
+    v = mini_get_int(ini, "settings", "hotkey_manual_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_manual_enabled = (int) v;
+
     v = mini_get_int(ini, "settings", "hotkey_analog_toggle_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_analog_toggle_enabled = (int) v;
 
@@ -643,6 +647,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(hotkey_toggle_fps_enabled);
     DELTA(hotkey_header_toggle_enabled);
     DELTA(hotkey_quit_enabled);
+    DELTA(hotkey_manual_enabled);
     DELTA(hotkey_analog_toggle_enabled);
     DELTA(auto_save);
     DELTA(sram_flush_seconds);
@@ -862,6 +867,11 @@ void session_settings_cycle_hotkey_analog_toggle_enabled(const int direction) {
 void session_settings_cycle_hotkey_quit_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_quit_enabled = !session_settings.hotkey_quit_enabled;
+}
+
+void session_settings_cycle_hotkey_manual_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_manual_enabled = !session_settings.hotkey_manual_enabled;
 }
 
 void session_settings_cycle_auto_save(const int direction) {

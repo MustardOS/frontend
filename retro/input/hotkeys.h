@@ -12,4 +12,6 @@ int hotkeys_is_quit_requested(void);
 
 void hotkeys_request_quit(void);
 
+int hotkeys_is_manual_requested(void);
+
 void hotkeys_reset(void);

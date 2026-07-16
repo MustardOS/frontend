@@ -344,6 +344,14 @@ int patch_menu_is_active(void);
 
 void patch_menu_tick(void);
 
+void manual_menu_init(void);
+
+void manual_menu_open(void);
+
+int manual_menu_is_active(void);
+
+void manual_menu_tick(void);
+
 void information_menu_open(void);
 
 int information_menu_is_active(void);

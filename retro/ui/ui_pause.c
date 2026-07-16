@@ -85,7 +85,7 @@ void pause_menu_sync_input_mask(void) {
 }
 
 int pause_menu_peek_allowed(void) {
-    return active && settings_menu_is_active();
+    return active && (settings_menu_is_active() || manual_menu_is_active());
 }
 
 static void create_dim_overlay(void) {
@@ -474,6 +474,7 @@ void pause_menu_init(void) {
     settings_menu_init();
     cheats_menu_init();
     patch_menu_init();
+    manual_menu_init();
     options_menu_init();
 
     pause_menu_rebuild();
@@ -545,6 +546,11 @@ int pause_menu_tick(void) {
 
     if (patch_menu_is_active()) {
         patch_menu_tick();
+        return 0;
+    }
+
+    if (manual_menu_is_active()) {
+        manual_menu_tick();
         return 0;
     }
 

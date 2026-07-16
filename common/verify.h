@@ -71,7 +71,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/package/theme.sh", "985e7bb8de835195" },
     { "/opt/muos/script/system/assign.sh", "ee8eafb4ee663850" },
     { "/opt/muos/script/system/battery.sh", "9ab00ccecb8c0340" },
-    { "/opt/muos/script/system/catalogue.sh", "482b507a6161533c" },
+    { "/opt/muos/script/system/catalogue.sh", "0a198fb4e53b38a3" },
     { "/opt/muos/script/system/checkmsd.sh", "4c6b08bcedc28e16" },
     { "/opt/muos/script/system/factory.sh", "515420e3dc65d735" },
     { "/opt/muos/script/system/fixdisk.sh", "7e6ea5e7e8bc4335" },

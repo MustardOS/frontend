@@ -13,6 +13,10 @@ int load_image_catalogue(
     const char *mux_dim, const char *image_type, char *image_path, size_t path_size
 );
 
+int load_manual_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, char *manual_path, size_t path_size
+);
+
 int load_video_catalogue(
     const char *catalogue_name, const char *program, const char *program_alt, const char *mux_dim, char *video_path,
     size_t path_size
