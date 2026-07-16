@@ -9,6 +9,7 @@ typedef enum {
     RGB_MODE_COLOUR_CYCLE = 7,
     RGB_MODE_RAINBOW = 8,
     RGB_MODE_STICK_FOLLOW = 9,
+    RGB_MODE_SCREEN_REACT = 10,
 } rgb_mode_t;
 
 typedef enum {

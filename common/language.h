@@ -1715,6 +1715,7 @@ struct mux_lang {
             char stick_follow[MAX_BUFFER_SIZE];
             char preset_combo[MAX_BUFFER_SIZE];
             char theme_supplied[MAX_BUFFER_SIZE];
+            char screen_react[MAX_BUFFER_SIZE];
         } mode_name;
         struct {
             char fast[MAX_BUFFER_SIZE];

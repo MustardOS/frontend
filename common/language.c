@@ -1595,6 +1595,7 @@ static const lang_field lang_fields[] = {
     {"muxrgb", LANG_OFF(muxrgb.mode_name.stick_follow), lang_specific, "Stick Follow"},
     {"muxrgb", LANG_OFF(muxrgb.mode_name.preset_combo), lang_specific, "Preset Combo"},
     {"muxrgb", LANG_OFF(muxrgb.mode_name.theme_supplied), lang_specific, "Theme Supplied"},
+    {"muxrgb", LANG_OFF(muxrgb.mode_name.screen_react), lang_specific, "Screen React"},
     {"muxrgb", LANG_OFF(muxrgb.breath_speed_name.fast), lang_specific, "Fast"},
     {"muxrgb", LANG_OFF(muxrgb.breath_speed_name.medium), lang_specific, "Medium"},
     {"muxrgb", LANG_OFF(muxrgb.breath_speed_name.slow), lang_specific, "Slow"},

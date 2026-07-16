@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include "../common/colour.h"
 #include "../common/config.h"
+#include "../common/exec.h"
 #include "../common/fileio.h"
 #include "../common/strutil.h"
 #include "../common/theme.h"
@@ -586,6 +587,15 @@ static int dispatch_restore(void) {
     int saved_backend = st.backend;
     int saved_bright_raw = st.bright_raw;
     rgb_colour_t col_l = st.col_l, col_r = st.col_r, col_m = st.col_m, col_f1 = st.col_f1, col_f2 = st.col_f2;
+
+    if (saved_mode == 10) {
+        // Screen React: the rgb_react daemon drives the LEDs itself. It keeps to
+        // a single instance and exits when the mode changes, so launching it on
+        // every restore is harmless.
+        const char *args[] = {OPT_PATH "script/device/rgb_react.sh", NULL};
+        run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+        return 0;
+    }
 
     if (saved_mode == 6) return 0;
     if (saved_mode == 5) saved_mode = 0;

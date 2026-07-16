@@ -20,11 +20,11 @@ RGB_ELEMENTS
 
 #define MODES_SERIAL                                                                                                   \
     (M_BIT(RGB_MODE_OFF) | M_BIT(RGB_MODE_STATIC) | M_BIT(RGB_MODE_BREATHING) | M_BIT(RGB_MODE_PRESET_COMBO)           \
-     | M_BIT(RGB_MODE_THEME_SUPPLIED))
+     | M_BIT(RGB_MODE_THEME_SUPPLIED) | M_BIT(RGB_MODE_SCREEN_REACT))
 
 #define MODES_SYSFS                                                                                                    \
     (M_BIT(RGB_MODE_OFF) | M_BIT(RGB_MODE_STATIC) | M_BIT(RGB_MODE_BREATHING) | M_BIT(RGB_MODE_PRESET_COMBO)           \
-     | M_BIT(RGB_MODE_THEME_SUPPLIED))
+     | M_BIT(RGB_MODE_THEME_SUPPLIED) | M_BIT(RGB_MODE_SCREEN_REACT))
 
 #define MODES_JOYPAD                                                                                                   \
     (M_BIT(RGB_MODE_OFF) | M_BIT(RGB_MODE_STATIC) | M_BIT(RGB_MODE_BREATHING) | M_BIT(RGB_MODE_THEME_SUPPLIED)         \
@@ -161,6 +161,9 @@ static void restore_rgb_options(void) {
             break;
         case 9:
             new_mode = RGB_MODE_STICK_FOLLOW;
+            break;
+        case 10:
+            new_mode = RGB_MODE_SCREEN_REACT;
             break;
         default:
             new_mode = RGB_MODE_OFF;
@@ -418,6 +421,7 @@ static char **build_mode_options(int *count) {
         {RGB_MODE_STICK_FOLLOW, 1, lang.muxrgb.mode_name.stick_follow},
         {RGB_MODE_PRESET_COMBO, 1, lang.muxrgb.mode_name.preset_combo},
         {RGB_MODE_THEME_SUPPLIED, 0, lang.muxrgb.mode_name.theme_supplied},
+        {RGB_MODE_SCREEN_REACT, 1, lang.muxrgb.mode_name.screen_react},
     };
     const size_t slot_count = sizeof(slots) / sizeof(slots[0]);
 
@@ -603,6 +607,10 @@ static void apply_mode_visibility(const int ui_mode) {
         case RGB_MODE_STICK_FOLLOW:
             show_bright = 1;
             show_colour_l = is_joypad;
+            show_backend = 1;
+            break;
+        case RGB_MODE_SCREEN_REACT:
+            show_bright = 1;
             show_backend = 1;
             break;
         case RGB_MODE_THEME_SUPPLIED:
