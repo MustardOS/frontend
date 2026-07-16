@@ -5,10 +5,8 @@
 #include "../../common/language.h"
 #include "../../common/log.h"
 #include "../../common/mini/mini.h"
-#include "../../common/miniz/miniz.h"
 #include "../../common/options.h"
 #include "../../common/overlay.h"
-#include "../../common/strutil.h"
 #include "../video/colour.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
@@ -44,6 +42,7 @@ static const struct session_settings_t defaults = {
     .hotkey_analog_toggle_enabled = 1,
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
+    .sram_backup_enabled = 1,
     .colour_brightness = 0,
     .colour_contrast = 100,
     .colour_saturation = 100,
@@ -500,6 +499,9 @@ static void apply_ini(const char *path) {
         }
     }
 
+    v = mini_get_int(ini, "settings", "sram_backup_enabled", -1);
+    if (v == 0 || v == 1) session_settings.sram_backup_enabled = (int) v;
+
     v = mini_get_int(ini, "settings", "colour_brightness", COLOUR_BRIGHTNESS_MIN - 1);
     if (v >= COLOUR_BRIGHTNESS_MIN && v <= COLOUR_BRIGHTNESS_MAX) session_settings.colour_brightness = (int) v;
 
@@ -644,6 +646,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(hotkey_analog_toggle_enabled);
     DELTA(auto_save);
     DELTA(sram_flush_seconds);
+    DELTA(sram_backup_enabled);
     DELTA(colour_brightness);
     DELTA(colour_contrast);
     DELTA(colour_saturation);
@@ -688,17 +691,23 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_SET_PATH, core_name);
     create_directories(core_ini_path, 1);
 
+    char rel_dir[MAX_BUFFER_SIZE];
+    core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir));
+
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
-    snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_SET_PATH, content_base);
+    if (*rel_dir) {
+        snprintf(
+            content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_SET_PATH, rel_dir, content_base
+        );
+        snprintf(
+            directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_SET_PATH, rel_dir
+        );
+    } else {
+        snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_SET_PATH, content_base);
+        snprintf(directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_SET_PATH);
+    }
     create_directories(content_ini_path, 1);
-
-    const char *content_dir = get_content_path((char *) content_path);
-    const mz_ulong dir_crc = mz_crc32(MZ_CRC32_INIT, (const unsigned char *) content_dir, strlen(content_dir));
-    snprintf(
-        directory_ini_path, sizeof(directory_ini_path), "%s/directory/%08lX.ini", RETRO_SET_PATH,
-        (unsigned long) dir_crc
-    );
     create_directories(directory_ini_path, 1);
 
     apply_ini(core_ini_path);
@@ -864,6 +873,11 @@ void session_settings_cycle_sram_flush(const int direction) {
 
     idx = (idx + direction + SRAM_FLUSH_CHOICE_COUNT) % SRAM_FLUSH_CHOICE_COUNT;
     session_settings.sram_flush_seconds = sram_flush_choices[idx];
+}
+
+void session_settings_cycle_sram_backup_enabled(const int direction) {
+    (void) direction;
+    session_settings.sram_backup_enabled = !session_settings.sram_backup_enabled;
 }
 
 void session_settings_cycle_colour_brightness(const int direction) {

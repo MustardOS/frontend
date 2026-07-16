@@ -27,7 +27,7 @@ int remove_dir_config(const char *dir, const char *core);
 
 int remove_core_config(const char *core);
 
-int remove_muxretro_content_config(const char *content_name);
+int remove_muxretro_content_config(const char *content_path);
 
 int remove_muxretro_dir_config(const char *dir);
 

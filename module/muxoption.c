@@ -549,7 +549,7 @@ static void do_remove(void) {
                 if (is_dir) {
                     remove_muxretro_dir_config(settings_dir);
                 } else {
-                    remove_muxretro_content_config(rom_name);
+                    remove_muxretro_content_config(content_full);
                 }
                 break;
             case 1:

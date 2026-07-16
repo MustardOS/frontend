@@ -30,7 +30,7 @@ SRC := core/main.c core/core.c core/environment.c core/runahead.c \
        settings/settings.c settings/submenu.c settings/ui_settings.c \
        settings/ui_performancesettings.c settings/ui_hudsettings.c \
        ui/ui_pause.c ui/options.c ui/ui_options.c ui/ui_information.c \
-       ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c
+       ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c ui/ui_patch.c
 
 OBJ := $(SRC:.c=.o)
 

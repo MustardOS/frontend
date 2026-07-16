@@ -9,6 +9,8 @@
 #include "../../common/libarchive/archive.h"
 #include "../../common/libarchive/archive_entry.h"
 #include "../../common/log.h"
+#include "../../common/strutil.h"
+#include "../../common/union.h"
 #include "muxretro.h"
 #include "core.h"
 #include "paths.h"
@@ -21,6 +23,7 @@ char core_content_load_method[32] = "";
 char core_active_patches[1024] = "";
 int core_active_patch_count = 0;
 char core_file_path[PATH_MAX] = "";
+int core_restart_requested = 0;
 
 static int open_core(const char *corefile) {
     if (current_core.initialized) {
@@ -113,6 +116,36 @@ void core_get_name(const char *core_path, char *out, const size_t out_size) {
 
     char *ext = strstr(out, "_libretro.so");
     if (ext) *ext = '\0';
+}
+
+void core_content_rel_dir(const char *content_path, char *out, const size_t out_size) {
+    char *content_dir = get_content_path((char *) content_path);
+    char rel_path[PATH_MAX];
+    union_get_relative_path(content_dir, rel_path, sizeof(rel_path));
+    free(content_dir);
+
+    char *sub = rel_path;
+    if (strncasecmp(sub, MAIN_ROM_DIR, strlen(MAIN_ROM_DIR)) == 0) {
+        sub += strlen(MAIN_ROM_DIR);
+        while (*sub == '/')
+            sub++;
+    }
+
+    snprintf(out, out_size, "%s", sub);
+}
+
+void core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, const size_t out_size) {
+    char core_name[MAX_BUFFER_SIZE];
+    core_get_name(core_path_arg, core_name, sizeof(core_name));
+
+    char rel_dir[PATH_MAX];
+    core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir));
+
+    if (*rel_dir) {
+        snprintf(out, out_size, "%s/%s", core_name, rel_dir);
+    } else {
+        snprintf(out, out_size, "%s", core_name);
+    }
 }
 
 static int reopen_core(void) {

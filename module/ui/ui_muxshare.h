@@ -79,7 +79,6 @@
     BACKUP(bios, "bios")                                                                                               \
     BACKUP(theme, "theme")                                                                                             \
     BACKUP(init, "init")                                                                                               \
-    BACKUP(retro, "retro")                                                                                             \
     BACKUP(target, "target")                                                                                           \
     BACKUP(merge, "merge")                                                                                             \
     BACKUP(start, "start")

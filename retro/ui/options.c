@@ -1,9 +1,7 @@
 #include <string.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
-#include "../../common/miniz/miniz.h"
 #include "../../common/options.h"
-#include "../../common/strutil.h"
 #include "../core/core.h"
 #include "options.h"
 #include "../core/paths.h"
@@ -248,17 +246,23 @@ void options_init_paths(const char *core_path_arg, const char *content_path) {
     snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_OPT_PATH, core_name);
     create_directories(core_ini_path, 1);
 
+    char rel_dir[MAX_BUFFER_SIZE];
+    core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir));
+
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
-    snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_OPT_PATH, content_base);
+    if (*rel_dir) {
+        snprintf(
+            content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_OPT_PATH, rel_dir, content_base
+        );
+        snprintf(
+            directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_OPT_PATH, rel_dir
+        );
+    } else {
+        snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_OPT_PATH, content_base);
+        snprintf(directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_OPT_PATH);
+    }
     create_directories(content_ini_path, 1);
-
-    const char *content_dir = get_content_path((char *) content_path);
-    const mz_ulong dir_crc = mz_crc32(MZ_CRC32_INIT, (const unsigned char *) content_dir, strlen(content_dir));
-    snprintf(
-        directory_ini_path, sizeof(directory_ini_path), "%s/directory/%08lX.ini", RETRO_OPT_PATH,
-        (unsigned long) dir_crc
-    );
     create_directories(directory_ini_path, 1);
 }
 

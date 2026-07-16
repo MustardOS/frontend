@@ -1,7 +1,6 @@
 #include <limits.h>
 #include "common.h"
 #include "../init.h"
-#include "../miniz/miniz.h"
 #include "retroarch.h"
 #include "external.h"
 #include "../json/json.h"
@@ -14,6 +13,7 @@
 #include "../content.h"
 #include "../strutil.h"
 #include "../ini.h"
+#include "../union.h"
 
 #define CORE_BUFFER 256
 
@@ -609,7 +609,7 @@ static const char *get_ra_config_dir(const char *core) {
     return core_id;
 }
 
-#define MURETRO_SET_PATH OPT_SHARE_PATH "retro/settings"
+#define MURETRO_SET_PATH RUN_STORAGE_PATH "save/pickles/settings"
 
 static void muxretro_core_name(const char *core, char *out, const size_t out_size) {
     const char *base = strrchr(core, '/');
@@ -621,11 +621,37 @@ static void muxretro_core_name(const char *core, char *out, const size_t out_siz
     if (ext) *ext = '\0';
 }
 
-int remove_muxretro_content_config(const char *content_name) {
+static void muxretro_rel_dir(const char *dir, char *out, const size_t out_size) {
+    char rel_path[MAX_BUFFER_SIZE];
+    union_get_relative_path(dir, rel_path, sizeof(rel_path));
+
+    char *sub = rel_path;
+    if (strncasecmp(sub, MAIN_ROM_DIR, strlen(MAIN_ROM_DIR)) == 0) {
+        sub += strlen(MAIN_ROM_DIR);
+        while (*sub == '/')
+            sub++;
+    }
+
+    snprintf(out, out_size, "%s", sub);
+}
+
+int remove_muxretro_content_config(const char *content_path) {
     toast_message(lang.muxoption.remcontent, tst_wait_m);
 
+    char *content_dir = get_content_path((char *) content_path);
+    char rel_dir[MAX_BUFFER_SIZE];
+    muxretro_rel_dir(content_dir, rel_dir, sizeof(rel_dir));
+    free(content_dir);
+
+    const char *content_base = strrchr(content_path, '/');
+    content_base = content_base ? content_base + 1 : content_path;
+
     char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s.ini", content_name);
+    if (*rel_dir) {
+        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s/%s.ini", rel_dir, content_base);
+    } else {
+        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s.ini", content_base);
+    }
 
     LOG_INFO(mux_module, "Removing muRetro Content Settings: %s", path);
     if (file_exist(path)) remove(path);
@@ -636,10 +662,15 @@ int remove_muxretro_content_config(const char *content_name) {
 int remove_muxretro_dir_config(const char *dir) {
     toast_message(lang.muxoption.remdir, tst_wait_m);
 
-    const mz_ulong dir_crc = mz_crc32(MZ_CRC32_INIT, (const unsigned char *) dir, strlen(dir));
+    char rel_dir[MAX_BUFFER_SIZE];
+    muxretro_rel_dir(dir, rel_dir, sizeof(rel_dir));
 
     char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), MURETRO_SET_PATH "/directory/%08lX.ini", (unsigned long) dir_crc);
+    if (*rel_dir) {
+        snprintf(path, sizeof(path), MURETRO_SET_PATH "/directory/%s/directory.ini", rel_dir);
+    } else {
+        snprintf(path, sizeof(path), MURETRO_SET_PATH "/directory/directory.ini");
+    }
 
     LOG_INFO(mux_module, "Removing muRetro Directory Settings (%s): %s", dir, path);
     if (file_exist(path)) remove(path);

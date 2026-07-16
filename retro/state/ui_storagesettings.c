@@ -4,13 +4,14 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_auto_save = 0, row_sram_flush, row_count };
+enum { row_auto_save = 0, row_sram_flush, row_sram_backup, row_count };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.auto_save, lang.muxretro.settings_screen.sram_flush
+    lang.muxretro.settings_screen.auto_save, lang.muxretro.settings_screen.sram_flush,
+    lang.muxretro.settings_screen.sram_backup
 };
 
-static const char *row_glyphs[row_count] = {"autosave", "sram"};
+static const char *row_glyphs[row_count] = {"autosave", "sram", "sram"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -19,6 +20,11 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_sram_flush:
             snprintf(buf, buf_len, "%s", session_settings_sram_flush_name(session_settings.sram_flush_seconds));
+            break;
+        case row_sram_backup:
+            snprintf(
+                buf, buf_len, "%s", session_settings.sram_backup_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
             break;
         default:
             buf[0] = '\0';
@@ -33,6 +39,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_sram_flush:
             session_settings_cycle_sram_flush(direction);
+            break;
+        case row_sram_backup:
+            session_settings_cycle_sram_backup_enabled(direction);
             break;
         default:
             break;

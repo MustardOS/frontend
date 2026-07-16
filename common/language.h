@@ -294,7 +294,6 @@ struct mux_lang {
         char overlays[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
-        char retro[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
         char shaders[MAX_BUFFER_SIZE];
@@ -320,7 +319,6 @@ struct mux_lang {
             char overlays[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
-            char retro[MAX_BUFFER_SIZE];
             char save[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
             char shaders[MAX_BUFFER_SIZE];
@@ -1461,6 +1459,7 @@ struct mux_lang {
         char disc_control[MAX_BUFFER_SIZE];
         char hotkeys[MAX_BUFFER_SIZE];
         char cheats[MAX_BUFFER_SIZE];
+        char patches[MAX_BUFFER_SIZE];
         char settings[MAX_BUFFER_SIZE];
         char display[MAX_BUFFER_SIZE];
         char information[MAX_BUFFER_SIZE];
@@ -1565,6 +1564,7 @@ struct mux_lang {
             char header_battery[MAX_BUFFER_SIZE];
             char header_both[MAX_BUFFER_SIZE];
             char sram_flush[MAX_BUFFER_SIZE];
+            char sram_backup[MAX_BUFFER_SIZE];
             char auto_save[MAX_BUFFER_SIZE];
             char auto_save_idle[MAX_BUFFER_SIZE];
             char auto_save_quit[MAX_BUFFER_SIZE];
@@ -1607,6 +1607,9 @@ struct mux_lang {
         struct {
             char no_cheats[MAX_BUFFER_SIZE];
         } cheats_screen;
+        struct {
+            char restart_required[MAX_BUFFER_SIZE];
+        } patches_screen;
         struct {
             char brightness[MAX_BUFFER_SIZE];
             char contrast[MAX_BUFFER_SIZE];

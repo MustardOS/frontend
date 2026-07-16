@@ -113,6 +113,7 @@ struct session_settings_t {
     int hotkey_analog_toggle_enabled;
     int auto_save;
     int sram_flush_seconds;
+    int sram_backup_enabled;
     int colour_brightness;
     int colour_contrast;
     int colour_saturation;
@@ -273,6 +274,8 @@ void session_settings_cycle_hotkey_analog_toggle_enabled(int direction);
 void session_settings_cycle_auto_save(int direction);
 
 void session_settings_cycle_sram_flush(int direction);
+
+void session_settings_cycle_sram_backup_enabled(int direction);
 
 void session_settings_cycle_colour_brightness(int direction);
 

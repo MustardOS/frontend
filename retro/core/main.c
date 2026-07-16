@@ -1,6 +1,9 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include <SDL2/SDL.h>
 #include "../../common/board.h"
 #include "../../common/config.h"
@@ -15,6 +18,7 @@
 #include "../../common/ui/common.h"
 #include "../ui/cheats.h"
 #include "../state/gamestate.h"
+#include "../state/patch.h"
 #include "../input/hotkeys.h"
 #include "muxretro.h"
 #include "../ui/options.h"
@@ -89,13 +93,13 @@ static void handle_pending_suspend_signals(void) {
 }
 
 static void build_state_dir(const char *core_path_arg, const char *content_path) {
-    char core_name[MAX_BUFFER_SIZE];
-    core_get_name(core_path_arg, core_name, sizeof(core_name));
-
     const char *base = strrchr(content_path, '/');
     base = base ? base + 1 : content_path;
 
-    snprintf(state_dir, sizeof(state_dir), "%s/%s/%s", RETRO_STA_PATH, core_name, base);
+    char save_prefix[MAX_BUFFER_SIZE];
+    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+
+    snprintf(state_dir, sizeof(state_dir), "%s/%s/%s", RETRO_STA_PATH, save_prefix, base);
     create_directories(state_dir, 0);
 }
 
@@ -257,6 +261,7 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "core_open done");
 
     state_saves_init(core_path_arg);
+    patch_manual_init(core_path_arg, content_path);
 
     if (core_load_content(content_path) != 0) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
@@ -478,8 +483,19 @@ int main(const int argc, char *argv[]) {
     core_unload_content();
     core_unload();
 
+    if (dir_exist(RETRO_EXT_PATH)) remove_directory_recursive(RETRO_EXT_PATH);
+
     mux_input_close();
     sdl_cleanup();
+
+    if (core_restart_requested) {
+        // Force a (re)start of pickles with '--fresh'.
+        // A restart must NEVER auto load anything otherwise it just reloads the exact frame we quit on
+        // and it'll essentially undo the reset and cause all sorts of funky stuff to happen...
+        char *restart_argv[] = {argv[0], core_file_path, core_content_path, "--fresh", NULL};
+        execvp(restart_argv[0], restart_argv);
+        LOG_ERROR(mux_module, "Failed to re-exec for restart (%s), exiting instead", strerror(errno));
+    }
 
     return EXIT_SUCCESS;
 }

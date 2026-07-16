@@ -1,12 +1,16 @@
-#include <limits.h>
+#include <ctype.h>
+#include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../../common/fileio.h"
+#include "../../common/ini.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../../common/miniz/miniz.h"
+#include "../core/core.h"
+#include "../core/paths.h"
 #include "patch.h"
 
 enum bps_mode { source_read = 0, target_read, source_copy, target_copy };
@@ -505,6 +509,53 @@ static void patch_stem(const char *base_path, char *stem) {
     if (last_dot) *last_dot = '\0';
 }
 
+static void patch_dirname(const char *base_path, char *dir, const size_t dir_size) {
+    snprintf(dir, dir_size, "%s", base_path);
+
+    char *last_slash = strrchr(dir, '/');
+    if (last_slash) {
+        *last_slash = '\0';
+    } else {
+        snprintf(dir, dir_size, ".");
+    }
+}
+
+static int patch_ext_is_valid(const char *ext) {
+    return strcasecmp(ext, ".ips") == 0 || strcasecmp(ext, ".bps") == 0 || strcasecmp(ext, ".ups") == 0;
+}
+
+static int patch_ext_func(const char *ext, const char **desc, patch_func_t *func) {
+    if (strcasecmp(ext, ".ips") == 0) {
+        *desc = "IPS";
+        *func = ips_apply_patch;
+        return 1;
+    }
+    if (strcasecmp(ext, ".bps") == 0) {
+        *desc = "BPS";
+        *func = bps_apply_patch;
+        return 1;
+    }
+    if (strcasecmp(ext, ".ups") == 0) {
+        *desc = "UPS";
+        *func = ups_apply_patch;
+        return 1;
+    }
+    return 0;
+}
+
+static int patch_name_is_auto(const char *name_no_ext, const char *stem_no_ext) {
+    const size_t stem_len = strlen(stem_no_ext);
+    if (strncasecmp(name_no_ext, stem_no_ext, stem_len) != 0) return 0;
+
+    const char *suffix = name_no_ext + stem_len;
+    if (!*suffix) return 1;
+
+    for (const char *p = suffix; *p; p++) {
+        if (!isdigit((unsigned char) *p)) return 0;
+    }
+    return 1;
+}
+
 int patch_exists(const char *base_path) {
     char stem[PATH_MAX];
     patch_stem(base_path, stem);
@@ -515,7 +566,13 @@ int patch_exists(const char *base_path) {
     snprintf(name, sizeof(name), "%s.bps", stem);
     if (file_exist(name)) return 1;
     snprintf(name, sizeof(name), "%s.ups", stem);
-    return file_exist(name);
+    if (file_exist(name)) return 1;
+
+    for (int i = 0; i < patch_manual_count; i++) {
+        if (patch_manual_list[i].enabled) return 1;
+    }
+
+    return 0;
 }
 
 int patch_apply(const char *base_path, void **data, size_t *size, char *patch_list, const size_t patch_list_size) {
@@ -541,35 +598,166 @@ int patch_apply(const char *base_path, void **data, size_t *size, char *patch_li
         || try_one_patch(name_ups, "UPS", ups_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied);
 
     if (base_claimed) {
-        const size_t ips_len = strlen(name_ips);
-        const size_t bps_len = strlen(name_bps);
-        const size_t ups_len = strlen(name_ups);
+        for (int index = 1; index < 1000; index++) {
+            char indexed_ips[PATH_MAX + 16];
+            char indexed_bps[PATH_MAX + 16];
+            char indexed_ups[PATH_MAX + 16];
 
-        for (int index = 1; index < 10; index++) {
-            const char index_char = (char) ('0' + index);
-            name_ips[ips_len] = index_char;
-            name_ips[ips_len + 1] = '\0';
-            name_bps[bps_len] = index_char;
-            name_bps[bps_len + 1] = '\0';
-            name_ups[ups_len] = index_char;
-            name_ups[ups_len + 1] = '\0';
+            snprintf(indexed_ips, sizeof(indexed_ips), "%s%d.ips", stem, index);
+            snprintf(indexed_bps, sizeof(indexed_bps), "%s%d.bps", stem, index);
+            snprintf(indexed_ups, sizeof(indexed_ups), "%s%d.ups", stem, index);
 
             const int claimed =
                 try_one_patch(
-                    name_ips, "IPS", ips_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied
+                    indexed_ips, "IPS", ips_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied
                 )
                 || try_one_patch(
-                    name_bps, "BPS", bps_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied
+                    indexed_bps, "BPS", bps_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied
                 )
                 || try_one_patch(
-                    name_ups, "UPS", ups_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied
+                    indexed_ups, "UPS", ups_apply_patch, &cur_data, &cur_size, patch_list, patch_list_size, &applied
                 );
             if (!claimed) break;
         }
+    }
+
+    char content_dir[PATH_MAX];
+    patch_dirname(base_path, content_dir, sizeof(content_dir));
+
+    for (int i = 0; i < patch_manual_count; i++) {
+        if (!patch_manual_list[i].enabled) continue;
+
+        const char *ext = strrchr(patch_manual_list[i].filename, '.');
+        const char *desc;
+        patch_func_t func;
+        if (!ext || !patch_ext_func(ext, &desc, &func)) continue;
+
+        char manual_path[PATH_MAX];
+        snprintf(manual_path, sizeof(manual_path), "%s/%s", content_dir, patch_manual_list[i].filename);
+
+        try_one_patch(manual_path, desc, func, &cur_data, &cur_size, patch_list, patch_list_size, &applied);
     }
 
     *data = cur_data;
     *size = cur_size;
 
     return applied;
+}
+
+struct patch_manual_entry patch_manual_list[PATCH_MANUAL_MAX];
+int patch_manual_count = 0;
+
+static char patch_ini_path[PATH_MAX] = "";
+
+static int patch_manual_cmp(const void *a, const void *b) {
+    return strcasecmp(
+        ((const struct patch_manual_entry *) a)->filename, ((const struct patch_manual_entry *) b)->filename
+    );
+}
+
+static void write_patch_manual(void) {
+    if (!patch_ini_path[0]) return;
+
+    mini_t *ini = mini_create(patch_ini_path);
+    if (!ini) return;
+
+    for (int i = 0; i < patch_manual_count; i++) {
+        char group_id[32];
+        snprintf(group_id, sizeof(group_id), "patch_%d", i);
+
+        mini_set_string(ini, group_id, "filename", patch_manual_list[i].filename);
+        mini_set_bool(ini, group_id, "enabled", patch_manual_list[i].enabled);
+    }
+
+    create_directories(patch_ini_path, 1);
+    mini_save(ini, 0);
+    mini_free(ini);
+}
+
+void patch_manual_init(const char *core_path_arg, const char *content_path) {
+    patch_manual_count = 0;
+    patch_ini_path[0] = '\0';
+
+    char content_dir[PATH_MAX];
+    patch_dirname(content_path, content_dir, sizeof(content_dir));
+
+    char stem[PATH_MAX];
+    patch_stem(content_path, stem);
+    const char *stem_base = strrchr(stem, '/');
+    stem_base = stem_base ? stem_base + 1 : stem;
+
+    // Only scan for the generalised name patches when content is within the confines
+    // of its own named folder (including extension).  Otherwise the patches and stuff
+    // will get shared by other content and would load patches for content that it isn't
+    // meant for.  However the same numbered, "traditional" soft patching still works.
+    const char *content_base = strrchr(content_path, '/');
+    content_base = content_base ? content_base + 1 : content_path;
+
+    const char *dir_base = strrchr(content_dir, '/');
+    dir_base = dir_base ? dir_base + 1 : content_dir;
+
+    const int in_wrapper_folder = strcmp(dir_base, content_base) == 0;
+
+    DIR *d = in_wrapper_folder ? opendir(content_dir) : NULL;
+    if (d) {
+        struct dirent *ent;
+        while ((ent = readdir(d)) && patch_manual_count < PATCH_MANUAL_MAX) {
+            if (ent->d_type != DT_REG && ent->d_type != DT_UNKNOWN) continue;
+
+            const char *ext = strrchr(ent->d_name, '.');
+            if (!ext || !patch_ext_is_valid(ext)) continue;
+
+            char name_no_ext[PATCH_NAME_MAX];
+            snprintf(name_no_ext, sizeof(name_no_ext), "%s", ent->d_name);
+            char *nd = strrchr(name_no_ext, '.');
+            if (nd) *nd = '\0';
+
+            if (patch_name_is_auto(name_no_ext, stem_base)) continue;
+
+            struct patch_manual_entry *entry = &patch_manual_list[patch_manual_count];
+            snprintf(entry->filename, sizeof(entry->filename), "%s", ent->d_name);
+            entry->enabled = 1;
+            patch_manual_count++;
+        }
+        closedir(d);
+    }
+
+    qsort(patch_manual_list, (size_t) patch_manual_count, sizeof(struct patch_manual_entry), patch_manual_cmp);
+
+    char content_stem[PATH_MAX];
+    snprintf(content_stem, sizeof(content_stem), "%s", stem_base);
+
+    char save_prefix[PATH_MAX];
+    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+
+    snprintf(patch_ini_path, sizeof(patch_ini_path), "%s/%s/%s.ini", RETRO_PTC_PATH, save_prefix, content_stem);
+
+    mini_t *ini = mini_try_load(patch_ini_path);
+    if (ini) {
+        for (const mini_group_t *group = ini->head; group; group = group->next) {
+            if (!group->id) continue;
+
+            const char *saved_name = get_ini_string(ini, group->id, "filename", "");
+            if (!*saved_name) continue;
+
+            for (int i = 0; i < patch_manual_count; i++) {
+                if (strcmp(patch_manual_list[i].filename, saved_name) == 0) {
+                    patch_manual_list[i].enabled = (int) mini_get_bool(ini, group->id, "enabled", 1);
+                    break;
+                }
+            }
+        }
+        mini_free(ini);
+    }
+
+    LOG_INFO(mux_module, "Discovered %d manual patch(es) in '%s'", patch_manual_count, content_dir);
+
+    write_patch_manual();
+}
+
+void patch_manual_toggle(const int index) {
+    if (index < 0 || index >= patch_manual_count) return;
+
+    patch_manual_list[index].enabled = !patch_manual_list[index].enabled;
+    write_patch_manual();
 }

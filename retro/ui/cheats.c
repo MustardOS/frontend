@@ -32,9 +32,6 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
     cheats_path[0] = '\0';
     cheats_count = 0;
 
-    char core_name[MAX_BUFFER_SIZE];
-    core_get_name(core_path_arg, core_name, sizeof(core_name));
-
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
 
@@ -43,7 +40,10 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
     char *dot = strrchr(content_stem, '.');
     if (dot) *dot = '\0';
 
-    snprintf(cheats_path, sizeof(cheats_path), "%s/%s/%s.ini", RETRO_CHT_PATH, core_name, content_stem);
+    char save_prefix[MAX_BUFFER_SIZE];
+    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+
+    snprintf(cheats_path, sizeof(cheats_path), "%s/%s/%s.ini", RETRO_CHT_PATH, save_prefix, content_stem);
 
     mini_t *ini = mini_try_load(cheats_path);
     if (!ini) return;

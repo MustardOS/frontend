@@ -11,14 +11,13 @@
 #include "../../common/ui/glyph.h"
 #include "../../module/muxshare.h"
 #include "../state/gamestate.h"
+#include "../state/patch.h"
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
-#include "../core/runahead.h"
 #include "../core/core.h"
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
-#include "../video/hw_render.h"
 
 #define TOAST_DURATION_MS 2048
 #define HEADER_FADE_MS    256
@@ -45,6 +44,7 @@ static int row_game_state;
 static int row_options;
 static int row_disc_control;
 static int row_cheats;
+static int row_patches;
 static int row_settings;
 static int row_information;
 static int row_restart;
@@ -60,6 +60,7 @@ static void compute_row_indices(void) {
     row_options = i++;
     row_disc_control = has_disc_control ? i++ : -1;
     row_cheats = i++;
+    row_patches = patch_manual_count > 0 ? i++ : -1;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -356,6 +357,7 @@ void pause_menu_rebuild(void) {
     gen_label("muxretro", "core", lang.muxretro.core_options);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
     gen_label("muxretro", "cheat", lang.muxretro.cheats);
+    if (row_patches >= 0) gen_label("muxretro", "patch", lang.muxretro.patches);
     gen_label("muxretro", "settings", lang.muxretro.settings);
     gen_label("muxretro", "info", lang.muxretro.information);
     gen_label("muxretro", "restart", lang.muxretro.restart);
@@ -422,6 +424,10 @@ void pause_menu_focus_cheats_item(void) {
     focus_item(row_cheats);
 }
 
+void pause_menu_focus_patches_item(void) {
+    focus_item(row_patches);
+}
+
 void pause_menu_focus_settings_item(void) {
     focus_item(row_settings);
 }
@@ -467,6 +473,7 @@ void pause_menu_init(void) {
     gamestate_menu_init();
     settings_menu_init();
     cheats_menu_init();
+    patch_menu_init();
     options_menu_init();
 
     pause_menu_rebuild();
@@ -536,6 +543,11 @@ int pause_menu_tick(void) {
         return 0;
     }
 
+    if (patch_menu_is_active()) {
+        patch_menu_tick();
+        return 0;
+    }
+
     if (settings_menu_is_active()) {
         settings_menu_tick();
         return 0;
@@ -591,6 +603,9 @@ int pause_menu_tick(void) {
         } else if (current_item_index == row_cheats) {
             play_sound(snd_confirm);
             cheats_menu_open();
+        } else if (row_patches >= 0 && current_item_index == row_patches) {
+            play_sound(snd_confirm);
+            patch_menu_open();
         } else if (current_item_index == row_settings) {
             play_sound(snd_confirm);
             settings_menu_open();
@@ -599,13 +614,8 @@ int pause_menu_tick(void) {
             information_menu_open();
         } else if (current_item_index == row_restart) {
             play_sound(snd_confirm);
-            if (current_core.retro_reset) {
-                hw_render_bridge_enter_core_call();
-                current_core.retro_reset();
-                hw_render_bridge_exit_core_call();
-                runahead_invalidate();
-            }
-            pause_menu_toggle();
+            core_restart_requested = 1;
+            return 1;
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
             if (session_settings_auto_save_on_quit()) gamestate_autosave_save();

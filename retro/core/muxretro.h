@@ -158,6 +158,8 @@ void pause_menu_focus_diskcontrol_item(void);
 
 void pause_menu_focus_cheats_item(void);
 
+void pause_menu_focus_patches_item(void);
+
 void pause_menu_focus_settings_item(void);
 
 void pause_menu_focus_information_item(void);
@@ -333,6 +335,14 @@ void cheats_menu_open(void);
 int cheats_menu_is_active(void);
 
 void cheats_menu_tick(void);
+
+void patch_menu_init(void);
+
+void patch_menu_open(void);
+
+int patch_menu_is_active(void);
+
+void patch_menu_tick(void);
 
 void information_menu_open(void);
 
