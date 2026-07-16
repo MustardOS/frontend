@@ -251,15 +251,21 @@ void options_init_paths(const char *core_path_arg, const char *content_path) {
 
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
+
+    char content_stem[MAX_BUFFER_SIZE];
+    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    char *content_dot = strrchr(content_stem, '.');
+    if (content_dot) *content_dot = '\0';
+
     if (*rel_dir) {
         snprintf(
-            content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_OPT_PATH, rel_dir, content_base
+            content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_OPT_PATH, rel_dir, content_stem
         );
         snprintf(
             directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_OPT_PATH, rel_dir
         );
     } else {
-        snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_OPT_PATH, content_base);
+        snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_OPT_PATH, content_stem);
         snprintf(directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_OPT_PATH);
     }
     create_directories(content_ini_path, 1);

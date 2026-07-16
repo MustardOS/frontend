@@ -646,11 +646,16 @@ int remove_muxretro_content_config(const char *content_path) {
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
 
+    char content_stem[MAX_BUFFER_SIZE];
+    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    char *content_dot = strrchr(content_stem, '.');
+    if (content_dot) *content_dot = '\0';
+
     char path[MAX_BUFFER_SIZE];
     if (*rel_dir) {
-        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s/%s.ini", rel_dir, content_base);
+        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s/%s.ini", rel_dir, content_stem);
     } else {
-        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s.ini", content_base);
+        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s.ini", content_stem);
     }
 
     LOG_INFO(mux_module, "Removing muRetro Content Settings: %s", path);

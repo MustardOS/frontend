@@ -96,10 +96,15 @@ static void build_state_dir(const char *core_path_arg, const char *content_path)
     const char *base = strrchr(content_path, '/');
     base = base ? base + 1 : content_path;
 
+    char content_stem[MAX_BUFFER_SIZE];
+    snprintf(content_stem, sizeof(content_stem), "%s", base);
+    char *dot = strrchr(content_stem, '.');
+    if (dot) *dot = '\0';
+
     char save_prefix[MAX_BUFFER_SIZE];
     core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
 
-    snprintf(state_dir, sizeof(state_dir), "%s/%s/%s", RETRO_STA_PATH, save_prefix, base);
+    snprintf(state_dir, sizeof(state_dir), "%s/%s/%s", RETRO_STA_PATH, save_prefix, content_stem);
     create_directories(state_dir, 0);
 }
 
