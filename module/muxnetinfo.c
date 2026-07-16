@@ -165,26 +165,17 @@ static const char *get_signal_strength(void) {
         return lang.generic.unknown;
     }
 
-    const int dbm = safe_atoi(result, 0);
+    const int dbm = safe_atoi(result, -100);
     free(result);
 
-    const int index = dbm <= -100 ? 0 : dbm >= 0 ? 100 : -dbm;
-
-    // I think these values are correct?
-    // https://www.intuitibits.com/2016/03/23/dbm-to-percent-conversion/
-    static const uint8_t dbm_perc[101] = {1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   // -100 to -91
-                                          1,   3,   6,   10,  13,  17,  20,  22,  24,  26,  // -90 to -81
-                                          28,  30,  32,  34,  36,  38,  40,  42,  44,  46,  // -80 to -71
-                                          48,  50,  51,  53,  55,  56,  58,  60,  61,  63,  // -70 to -61
-                                          64,  66,  67,  69,  70,  71,  73,  74,  75,  76,  // -60 to -51
-                                          78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  // -50 to -41
-                                          88,  89,  90,  90,  91,  92,  93,  93,  94,  95,  // -40 to -31
-                                          95,  96,  96,  97,  97,  98,  98,  99,  99,  100, // -30 to -21
-                                          100, 100, 100, 100, 100, 100, 100, 100, 100, 100, // -20 to -11
-                                          100, 100, 100, 100, 100, 100, 100, 100, 100, 100, // -10 to -1
-                                          100};
-
-    const int percent = dbm_perc[index];
+    int percent;
+    if (dbm <= -100) {
+        percent = 0;
+    } else if (dbm >= -10) {
+        percent = 100;
+    } else {
+        percent = (dbm + 100) * 100 / 90;
+    }
 
     static char signal[32];
     snprintf(signal, sizeof(signal), "%d%% (%d dBm)", percent, dbm);
