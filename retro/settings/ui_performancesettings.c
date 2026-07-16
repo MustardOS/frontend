@@ -4,14 +4,14 @@
 #include "settings.h"
 #include "submenu.h"
 
-enum { row_fps_limit = 0, row_frame_delay, row_run_ahead, row_count };
+enum { row_fps_limit = 0, row_frame_delay, row_run_ahead, row_gpu_hard_sync, row_count };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.fps_limit, lang.muxretro.settings_screen.frame_delay,
-    lang.muxretro.settings_screen.run_ahead
+    lang.muxretro.settings_screen.run_ahead, lang.muxretro.settings_screen.gpu_hard_sync
 };
 
-static const char *row_glyphs[row_count] = {"fpslimit", "framedelay", "runahead"};
+static const char *row_glyphs[row_count] = {"fpslimit", "framedelay", "runahead", "hardsync"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -23,6 +23,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_run_ahead:
             snprintf(buf, buf_len, "%s", session_settings.run_ahead ? lang.generic.enabled : lang.generic.disabled);
+            break;
+        case row_gpu_hard_sync:
+            snprintf(buf, buf_len, "%s", session_settings.gpu_hard_sync ? lang.generic.enabled : lang.generic.disabled);
             break;
         default:
             buf[0] = '\0';
@@ -40,6 +43,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_run_ahead:
             session_settings_cycle_run_ahead(direction);
+            break;
+        case row_gpu_hard_sync:
+            session_settings_cycle_gpu_hard_sync(direction);
             break;
         default:
             break;

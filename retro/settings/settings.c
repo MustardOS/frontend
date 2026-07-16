@@ -62,14 +62,16 @@ static const struct session_settings_t defaults = {
     .viewport_crop_left = 0,
     .viewport_crop_right = 0,
     .viewport_centre_crop = 0,
-    .frame_delay_ms = FRAME_DELAY_OFF,
+    .frame_delay_ms = FRAME_DELAY_AUTO,
     .analog_deadzone = 15,
     .analog_anti_deadzone = 0,
     .analog_sensitivity = 100,
     .analog_invert_y = 0,
     .audio_latency_profile = audio_latency_balanced,
+    .audio_period_frames = 512,
     .shimmer_fix = 0,
     .run_ahead = 0,
+    .gpu_hard_sync = 0,
     .analog_controller = 0,
 };
 
@@ -137,6 +139,9 @@ static const char *border_names[border_color_count] = {
 
 static const int sample_rate_choices[] = {0, 44100, 48000};
 #define SAMPLE_RATE_CHOICE_COUNT ((int) (sizeof(sample_rate_choices) / sizeof(sample_rate_choices[0])))
+
+static const int audio_period_choices[] = {128, 256, 512, 1024, 2048};
+#define AUDIO_PERIOD_CHOICE_COUNT ((int) (sizeof(audio_period_choices) / sizeof(audio_period_choices[0])))
 
 static const int sram_flush_choices[] = {15, 30, 60, 90, 120, 240, 300};
 #define SRAM_FLUSH_CHOICE_COUNT ((int) (sizeof(sram_flush_choices) / sizeof(sram_flush_choices[0])))
@@ -405,6 +410,12 @@ const char *session_settings_audio_latency_name(const int mode) {
     return audio_latency_names[mode];
 }
 
+const char *session_settings_audio_period_name(const int frames) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d", frames);
+    return buf;
+}
+
 static void apply_ini(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) return;
@@ -585,11 +596,22 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "audio_latency_profile", -1);
     if (v >= 0 && v < audio_latency_count) session_settings.audio_latency_profile = (int) v;
 
+    v = mini_get_int(ini, "settings", "audio_period_frames", -1);
+    for (int i = 0; v > 0 && i < AUDIO_PERIOD_CHOICE_COUNT; i++) {
+        if (audio_period_choices[i] == (int) v) {
+            session_settings.audio_period_frames = (int) v;
+            break;
+        }
+    }
+
     v = mini_get_int(ini, "settings", "shimmer_fix", -1);
     if (v == 0 || v == 1) session_settings.shimmer_fix = (int) v;
 
     v = mini_get_int(ini, "settings", "run_ahead", -1);
     if (v == 0 || v == 1) session_settings.run_ahead = (int) v;
+
+    v = mini_get_int(ini, "settings", "gpu_hard_sync", -1);
+    if (v == 0 || v == 1) session_settings.gpu_hard_sync = (int) v;
 
     v = mini_get_int(ini, "settings", "analog_controller", -1);
     if (v == 0 || v == 1) session_settings.analog_controller = (int) v;
@@ -676,8 +698,10 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(analog_sensitivity);
     DELTA(analog_invert_y);
     DELTA(audio_latency_profile);
+    DELTA(audio_period_frames);
     DELTA(shimmer_fix);
     DELTA(run_ahead);
+    DELTA(gpu_hard_sync);
     DELTA(analog_controller);
 
 #undef DELTA
@@ -796,6 +820,22 @@ void session_settings_cycle_sample_rate(const int direction) {
     session_settings.sample_rate = sample_rate_choices[idx];
 
     LOG_INFO(mux_module, "Sample Rate changed to %s", session_settings_sample_rate_name(session_settings.sample_rate));
+    audio_bridge_apply_sample_rate();
+}
+
+void session_settings_cycle_audio_period(const int direction) {
+    int idx = 0;
+    for (int i = 0; i < AUDIO_PERIOD_CHOICE_COUNT; i++) {
+        if (audio_period_choices[i] == session_settings.audio_period_frames) {
+            idx = i;
+            break;
+        }
+    }
+
+    idx = (idx + direction + AUDIO_PERIOD_CHOICE_COUNT) % AUDIO_PERIOD_CHOICE_COUNT;
+    session_settings.audio_period_frames = audio_period_choices[idx];
+
+    LOG_INFO(mux_module, "Audio Period changed to %d frames", session_settings.audio_period_frames);
     audio_bridge_apply_sample_rate();
 }
 
@@ -1094,6 +1134,11 @@ void session_settings_cycle_shimmer_fix(const int direction) {
 void session_settings_cycle_run_ahead(const int direction) {
     (void) direction;
     session_settings.run_ahead = !session_settings.run_ahead;
+}
+
+void session_settings_cycle_gpu_hard_sync(const int direction) {
+    (void) direction;
+    session_settings.gpu_hard_sync = !session_settings.gpu_hard_sync;
 }
 
 void session_settings_cycle_analog_controller(const int direction) {

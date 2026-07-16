@@ -199,11 +199,11 @@ int audio_bridge_open(const double core_sample_rate) {
     want.freq = (int) want_rate;
     want.format = AUDIO_S16SYS;
     want.channels = 2;
-    want.samples = 1024;
+    want.samples = (Uint16) (session_settings.audio_period_frames > 0 ? session_settings.audio_period_frames : 512);
     want.callback = audio_callback;
     want.userdata = NULL;
 
-    audio_dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+    audio_dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_SAMPLES_CHANGE);
     if (audio_dev == 0) {
         LOG_ERROR(mux_module, "Failed to open audio device: %s", SDL_GetError());
         return -1;

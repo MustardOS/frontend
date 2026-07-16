@@ -723,7 +723,23 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
         SDL_UpdateTexture(frame_tex, NULL, data, (int) pitch);
 }
 
+static int video_output_is_opaque(void) {
+    if (!frame_tex && !hw_render_bridge_active()) return 0;
+
+    if (session_settings.border_color != border_color_theme) return 1;
+
+    if (effective_rotation() != video_rotate_0 || session_settings.mirrored) return 0;
+
+    int canvas_w, canvas_h;
+    get_canvas_size(&canvas_w, &canvas_h);
+
+    return dest_rect.x <= 0 && dest_rect.y <= 0 && dest_rect.x + dest_rect.w >= canvas_w
+           && dest_rect.y + dest_rect.h >= canvas_h;
+}
+
 void video_bridge_flush_frame(void) {
+    display_set_video_background_opaque(video_output_is_opaque());
+
     if (!frame_dirty) return;
     frame_dirty = 0;
     upload_frame();

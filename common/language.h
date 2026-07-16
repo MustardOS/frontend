@@ -1580,6 +1580,8 @@ struct mux_lang {
             char audio_latency_low[MAX_BUFFER_SIZE];
             char audio_latency_balanced[MAX_BUFFER_SIZE];
             char audio_latency_compat[MAX_BUFFER_SIZE];
+            char audio_period[MAX_BUFFER_SIZE];
+            char gpu_hard_sync[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];
             char category_sound[MAX_BUFFER_SIZE];
             char category_input[MAX_BUFFER_SIZE];

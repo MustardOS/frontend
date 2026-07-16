@@ -70,6 +70,8 @@ static uint8_t display_fade_alpha = 0;
 static int gradient_captured = 0;
 static display_overlay_fn video_overlay_fn_ptr = NULL;
 static display_overlay_fn video_bg_fn_ptr = NULL;
+static int video_bg_opaque = 0;
+static int (*hard_sync_query_fn)(void) = NULL;
 static int monitor_blend_configured = 0;
 
 SDL_Renderer *display_get_renderer(void) {
@@ -94,6 +96,15 @@ void display_set_video_background(const display_overlay_fn fn) {
 
 void display_clear_video_background(void) {
     video_bg_fn_ptr = NULL;
+    video_bg_opaque = 0;
+}
+
+void display_set_video_background_opaque(const int opaque) {
+    video_bg_opaque = opaque;
+}
+
+void display_set_hard_sync_query(int (*fn)(void)) {
+    hard_sync_query_fn = fn;
 }
 
 void display_set_fade_alpha(const uint8_t alpha) {
@@ -880,8 +891,9 @@ void display_composite_frame(void) {
     const int animating = anim_is_active();
     const int anim_fg = animating && anim_is_foreground();
     const int anim_bg = animating && !anim_fg;
+    const int skip_wallpaper = !anim_bg && video_bg_fn_ptr && video_bg_opaque;
 
-    if (monitor.background_image) {
+    if (monitor.background_image && !skip_wallpaper) {
         const SDL_Rect full = {0, 0, device.screen.width, device.screen.height};
         SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
     } else {
@@ -966,6 +978,13 @@ void display_composite_frame(void) {
     }
 
     SDL_RenderPresent(monitor.renderer);
+
+    if (hard_sync_query_fn && hard_sync_query_fn()) {
+        static void (*p_gl_finish)(void) = NULL;
+        if (!p_gl_finish) p_gl_finish = (void (*)(void)) SDL_GL_GetProcAddress("glFinish");
+        if (p_gl_finish) p_gl_finish();
+    }
+
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 

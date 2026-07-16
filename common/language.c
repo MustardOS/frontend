@@ -1483,6 +1483,8 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.settings_screen.audio_latency_low), lang_specific, "Low Latency"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.audio_latency_balanced), lang_specific, "Balanced"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.audio_latency_compat), lang_specific, "Compatibility"},
+    {"muxretro", LANG_OFF(muxretro.settings_screen.audio_period), lang_specific, "Audio Period"},
+    {"muxretro", LANG_OFF(muxretro.settings_screen.gpu_hard_sync), lang_specific, "GPU Hard Sync"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.category_video), lang_specific, "Video"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.category_sound), lang_specific, "Sound"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.category_input), lang_specific, "Input"},

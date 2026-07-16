@@ -4,14 +4,14 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_volume = 0, row_sample_rate, row_audio_latency, row_count };
+enum { row_volume = 0, row_sample_rate, row_audio_latency, row_audio_period, row_count };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.volume, lang.muxretro.settings_screen.sample_rate,
-    lang.muxretro.settings_screen.audio_latency
+    lang.muxretro.settings_screen.audio_latency, lang.muxretro.settings_screen.audio_period
 };
 
-static const char *row_glyphs[row_count] = {"volume", "samplerate", "audiolatency"};
+static const char *row_glyphs[row_count] = {"volume", "samplerate", "audiolatency", "audioperiod"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -23,6 +23,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_audio_latency:
             snprintf(buf, buf_len, "%s", session_settings_audio_latency_name(session_settings.audio_latency_profile));
+            break;
+        case row_audio_period:
+            snprintf(buf, buf_len, "%s", session_settings_audio_period_name(session_settings.audio_period_frames));
             break;
         default:
             buf[0] = '\0';
@@ -40,6 +43,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_audio_latency:
             session_settings_cycle_audio_latency(direction);
+            break;
+        case row_audio_period:
+            session_settings_cycle_audio_period(direction);
             break;
         default:
             break;

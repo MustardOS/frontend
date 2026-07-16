@@ -93,6 +93,10 @@ static void handle_pending_suspend_signals(void) {
     }
 }
 
+static int hard_sync_enabled(void) {
+    return session_settings.gpu_hard_sync;
+}
+
 static void build_state_dir(const char *core_path_arg, const char *content_path) {
     const char *base = strrchr(content_path, '/');
     base = base ? base + 1 : content_path;
@@ -290,6 +294,7 @@ int main(const int argc, char *argv[]) {
 
     session_settings_init(core_path_arg, content_path);
     video_bridge_apply_fps_limit();
+    display_set_hard_sync_query(hard_sync_enabled);
 
     struct retro_system_av_info av_info = {0};
     current_core.retro_get_system_av_info(&av_info);
