@@ -119,9 +119,10 @@
 #define RUN_STORAGE_PATH RUN_PATH "storage/"
 #define OPT_SHARE_PATH   OPT_PATH "share/"
 
-#define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
-#define STORAGE_MUSIC RUN_STORAGE_PATH "music"
-#define STORAGE_BIOS  RUN_STORAGE_PATH "bios"
+#define STORAGE_SHOTS   RUN_STORAGE_PATH "screenshot"
+#define STORAGE_MUSIC   RUN_STORAGE_PATH "music"
+#define STORAGE_BIOS    RUN_STORAGE_PATH "bios"
+#define STORAGE_NETWORK RUN_STORAGE_PATH "network"
 
 #define STORAGE_HOTKEY  OPT_SHARE_PATH "hotkey"
 #define STORAGE_SOUND   OPT_SHARE_PATH "media/sound"
@@ -129,7 +130,6 @@
 #define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
 #define STORAGE_FILTER  OPT_SHARE_PATH "filter"
 #define STORAGE_SHADER  OPT_SHARE_PATH "shader"
-#define STORAGE_NETWORK OPT_SHARE_PATH "network"
 
 #define FWD_HIST_FILE OPT_SHARE_PATH "info/fwd_hist.txt"
 
