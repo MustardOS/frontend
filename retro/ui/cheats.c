@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
@@ -12,6 +13,8 @@ struct cheat_entry cheats_list[CHEAT_MAX];
 int cheats_count = 0;
 
 static char cheats_path[MAX_BUFFER_SIZE] = "";
+
+static int write_cheats(void);
 
 static int cheat_index_from_group_id(const char *group_id) {
     int index = -1;
@@ -49,6 +52,51 @@ static void trim_value(char *s) {
     if (start != s) memmove(s, start, strlen(start) + 1);
 }
 
+static void html_unescape(char *s) {
+    char *out = s;
+
+    for (const char *p = s; *p;) {
+        if (*p != '&') {
+            *out++ = *p++;
+            continue;
+        }
+
+        if (strncmp(p, "&quot;", 6) == 0) {
+            *out++ = '"';
+            p += 6;
+        } else if (strncmp(p, "&apos;", 6) == 0) {
+            *out++ = '\'';
+            p += 6;
+        } else if (strncmp(p, "&amp;", 5) == 0) {
+            *out++ = '&';
+            p += 5;
+        } else if (strncmp(p, "&lt;", 4) == 0) {
+            *out++ = '<';
+            p += 4;
+        } else if (strncmp(p, "&gt;", 4) == 0) {
+            *out++ = '>';
+            p += 4;
+        } else if (p[1] == '#') {
+            const char *num = p + 2;
+            const int base = (*num == 'x' || *num == 'X') ? (num++, 16) : 10;
+
+            char *end = NULL;
+            const long code = strtol(num, &end, base);
+
+            if (end && *end == ';' && code > 0 && code < 128) {
+                *out++ = (char) code;
+                p = end + 1;
+            } else {
+                *out++ = *p++;
+            }
+        } else {
+            *out++ = *p++;
+        }
+    }
+
+    *out = '\0';
+}
+
 static int cheat_code_exists(const char *code) {
     for (int i = 0; i < cheats_count; i++) {
         if (strcmp(cheats_list[i].code, code) == 0) return 1;
@@ -57,12 +105,12 @@ static int cheat_code_exists(const char *code) {
     return 0;
 }
 
-static void load_ra_cht(const char *save_prefix, const char *content_stem) {
+static int load_ra_cht(const char *save_prefix, const char *content_stem) {
     char cht_path[MAX_BUFFER_SIZE];
     snprintf(cht_path, sizeof(cht_path), "%s/%s/%s.cht", RETRO_CHT_PATH, save_prefix, content_stem);
 
     FILE *f = fopen(cht_path, "r");
-    if (!f) return;
+    if (!f) return 0;
 
     static char cht_desc[CHEAT_MAX][CHEAT_DESC_MAX];
     static char cht_code[CHEAT_MAX][CHEAT_CODE_MAX];
@@ -86,6 +134,7 @@ static void load_ra_cht(const char *save_prefix, const char *content_stem) {
 
         trim_value(key);
         trim_value(value);
+        html_unescape(value);
 
         int index = -1;
         char field[16];
@@ -104,10 +153,12 @@ static void load_ra_cht(const char *save_prefix, const char *content_stem) {
 
     fclose(f);
 
-    int added = 0;
-    for (int i = 0; i < CHEAT_MAX && cheats_count < CHEAT_MAX; i++) {
+    int parsed = 0;
+    for (int i = 0; i < CHEAT_MAX; i++) {
         if (!cht_have[i] || !cht_code[i][0]) continue;
-        if (cheat_code_exists(cht_code[i])) continue;
+        parsed++;
+
+        if (cheats_count >= CHEAT_MAX || cheat_code_exists(cht_code[i])) continue;
 
         struct cheat_entry *entry = &cheats_list[cheats_count];
         snprintf(entry->desc, sizeof(entry->desc), "%s", cht_desc[i][0] ? cht_desc[i] : cht_code[i]);
@@ -115,10 +166,10 @@ static void load_ra_cht(const char *save_prefix, const char *content_stem) {
         entry->enabled = cht_enable[i];
 
         cheats_count++;
-        added++;
     }
 
-    if (added > 0) LOG_INFO(mux_module, "Merged %d cheat(s) from '%s'", added, cht_path);
+    if (parsed > 0) LOG_INFO(mux_module, "Merged %d cheat(s) from '%s'", parsed, cht_path);
+    return parsed;
 }
 
 void cheats_init(const char *core_path_arg, const char *content_path) {
@@ -159,19 +210,26 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
         mini_free(ini);
     }
 
-    load_ra_cht(save_prefix, content_stem);
+    const int converted = load_ra_cht(save_prefix, content_stem);
+
+    if (converted > 0 && write_cheats()) {
+        char cht_path[MAX_BUFFER_SIZE];
+        snprintf(cht_path, sizeof(cht_path), "%s/%s/%s.cht", RETRO_CHT_PATH, save_prefix, content_stem);
+        if (remove(cht_path) == 0) LOG_INFO(mux_module, "Converted and removed '%s'", cht_path);
+    }
+
     if (cheats_count == 0) return;
 
     LOG_INFO(mux_module, "Loaded %d cheat(s) from '%s'", cheats_count, cheats_path);
     apply_enabled_cheats();
 }
 
-static void write_cheats(void) {
-    if (!cheats_path[0]) return;
+static int write_cheats(void) {
+    if (!cheats_path[0]) return 0;
 
     mini_t *ini = mini_try_load(cheats_path);
     if (!ini) ini = mini_create(cheats_path);
-    if (!ini) return;
+    if (!ini) return 0;
 
     mini_set_bool(ini, "meta", "managed", 1);
 
@@ -185,8 +243,10 @@ static void write_cheats(void) {
     }
 
     create_directories(cheats_path, 1);
-    mini_save(ini, 0);
+    const int ok = mini_save(ini, 0) == MINI_OK;
     mini_free(ini);
+
+    return ok;
 }
 
 void cheats_toggle(const int index) {
