@@ -21,7 +21,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/device/module.sh", "353706f69c8dca82" },
     { "/opt/muos/script/device/rgb.sh", "264087d72e45527d" },
     { "/opt/muos/script/device/speaker.sh", "4eacb634df758ffa" },
-    { "/opt/muos/script/device/storage.sh", "021b0c0b0ec0baed" },
+    { "/opt/muos/script/device/storage.sh", "4f712d5deb1ec06e" },
     { "/opt/muos/script/init/S10udev.sh", "a3890cbbaec5fb1a" },
     { "/opt/muos/script/init/S30dbus.sh", "9a003d1c4f82a056" },
     { "/opt/muos/script/init/S75bluetooth.sh", "dc44510ecfa235b2" },
