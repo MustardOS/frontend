@@ -4,6 +4,50 @@ static void show_help(void) {
     show_info_box(lang.muxnetwork.title, lang.muxnetwork.help, 0);
 }
 
+// Some of the older network scripts are going to cause issues, so we'll
+// check for both the 'ssid' and the 'priority' lines and move them into
+// the migration directory so people do not lose their network data!
+static void migrate_incompatible_profiles(void) {
+    const char *dirs[] = {STORAGE_NETWORK};
+    const char *exts[] = {".ini"};
+
+    char **files = NULL;
+    size_t file_count = 0;
+
+    if (scan_directory_list(dirs, exts, &files, A_SIZE(dirs), A_SIZE(exts), &file_count) < 0) return;
+
+    for (size_t i = 0; i < file_count; ++i) {
+        const char *profile_file = files[i];
+
+        mini_t *net = mini_try_load(profile_file);
+
+        const char *ssid = mini_get_string(net, "network", "ssid", "");
+        const int no_ssid = !ssid || !*ssid;
+
+        int priority_err = MINI_OK;
+        mini_get_int_ex(net, "network", "priority", 5, &priority_err);
+        const int no_priority = priority_err == MINI_VALUE_NOT_FOUND || priority_err == MINI_GROUP_NOT_FOUND;
+
+        mini_free(net);
+
+        if (!no_ssid && !no_priority) continue;
+
+        mkdir(STORAGE_NETWORK "/migrate", 0755);
+
+        const char *base_name = strrchr(profile_file, '/');
+        base_name = base_name ? base_name + 1 : profile_file;
+
+        char dest_file[MAX_BUFFER_SIZE];
+        snprintf(dest_file, sizeof(dest_file), STORAGE_NETWORK "/migrate/%s", base_name);
+
+        if (rename(profile_file, dest_file) == 0) {
+            LOG_WARN(mux_module, "Migrated incompatible network profile '%s'", base_name);
+        }
+    }
+
+    free_array(files, file_count);
+}
+
 static int find_connected_profile(char *buf) {
     buf[0] = '\0';
 
@@ -339,6 +383,8 @@ static void handle_help(void) {
 
 static void init_navigation_group(void) {
     reset_ui_groups();
+
+    migrate_incompatible_profiles();
     populate_profile_list();
 
     if (ui_count_static > 0) {

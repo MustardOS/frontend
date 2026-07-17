@@ -104,6 +104,9 @@ static void populate_paired_device_list(void) {
 
         apply_size_to_content(&theme, ui_pnl_content, ui_lbl_device, ui_ico_device, name);
         apply_text_long_dot(&theme, ui_lbl_device);
+
+        const lv_coord_t name_max_w = theme.misc.content.width * OPTION_COLUMN_PCT / 100;
+        if (lv_obj_get_width(ui_lbl_device) > name_max_w) lv_obj_set_width(ui_lbl_device, name_max_w);
     }
     fclose(file);
 
