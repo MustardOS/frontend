@@ -7,6 +7,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
+#include "filters/filters.h"
 #include "hw_render.h"
 #include "../core/muxretro.h"
 #include "overlay_bridge.h"
@@ -249,7 +250,7 @@ static void draw_video_background(SDL_Renderer *renderer) {
         if (rotate_canvas_tex) SDL_DestroyTexture(rotate_canvas_tex);
 
         rotate_canvas_tex =
-            SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, canvas_w, canvas_h);
+            SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_TARGET, canvas_w, canvas_h);
 
         if (rotate_canvas_tex) {
             SDL_SetTextureBlendMode(rotate_canvas_tex, SDL_BLENDMODE_NONE);
@@ -403,9 +404,9 @@ void video_bridge_apply_fps_limit(void) {
 
 static void apply_texture_filter(void) {
     if (!frame_tex) return;
-    SDL_SetTextureScaleMode(
-        frame_tex, session_settings.texture_filter == texture_filter_smooth ? SDL_ScaleModeLinear : SDL_ScaleModeNearest
-    );
+
+    const int linear = texture_filter_wants_linear_sample(session_settings.texture_filter);
+    SDL_SetTextureScaleMode(frame_tex, linear ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
 }
 
 void video_bridge_apply_filter(void) {
@@ -423,122 +424,8 @@ void video_bridge_get_dest_size(int *w, int *h) {
     *h = dest_rect.h;
 }
 
-#define SCALE2_X_IMPL(NAME, TYPE)                                                                                      \
-    static inline void NAME##_px(                                                                                      \
-        const TYPE b, const TYPE d, const TYPE e, const TYPE f, const TYPE h, TYPE *out0, TYPE *out1                   \
-    ) {                                                                                                                \
-        TYPE e0 = e, e1 = e, e2 = e, e3 = e;                                                                           \
-        if (b != h && d != f) {                                                                                        \
-            e0 = (d == b) ? d : e;                                                                                     \
-            e1 = (b == f) ? f : e;                                                                                     \
-            e2 = (d == h) ? d : e;                                                                                     \
-            e3 = (h == f) ? f : e;                                                                                     \
-        }                                                                                                              \
-                                                                                                                       \
-        out0[0] = e0;                                                                                                  \
-        out0[1] = e1;                                                                                                  \
-        out1[0] = e2;                                                                                                  \
-        out1[1] = e3;                                                                                                  \
-    }                                                                                                                  \
-                                                                                                                       \
-    static void NAME(                                                                                                  \
-        const TYPE *src, TYPE *dst, const int width, const int height, const int src_pitch_px, const int dst_pitch_px  \
-    ) {                                                                                                                \
-        for (int y = 0; y < height; y++) {                                                                             \
-            const TYPE *row = src + (size_t) y * src_pitch_px;                                                         \
-            const TYPE *row_up = src + (size_t) (y > 0 ? y - 1 : y) * src_pitch_px;                                    \
-            const TYPE *row_down = src + (size_t) (y < height - 1 ? y + 1 : y) * src_pitch_px;                         \
-            TYPE *out0 = dst + (size_t) (y * 2) * dst_pitch_px;                                                        \
-            TYPE *out1 = dst + (size_t) (y * 2 + 1) * dst_pitch_px;                                                    \
-                                                                                                                       \
-            NAME##_px(row_up[0], row[0], row[0], row[width > 1 ? 1 : 0], row_down[0], out0, out1);                     \
-                                                                                                                       \
-            for (int x = 1; x + 1 < width; x++)                                                                        \
-                NAME##_px(row_up[x], row[x - 1], row[x], row[x + 1], row_down[x], out0 + x * 2, out1 + x * 2);         \
-                                                                                                                       \
-            if (width > 1) {                                                                                           \
-                const int x = width - 1;                                                                               \
-                NAME##_px(row_up[x], row[x - 1], row[x], row[x], row_down[x], out0 + x * 2, out1 + x * 2);             \
-            }                                                                                                          \
-        }                                                                                                              \
-    }
-
-SCALE2_X_IMPL(scale2x_16, uint16_t)
-SCALE2_X_IMPL(scale2x_32, uint32_t)
-
-#define SCALE3_X_IMPL(NAME, TYPE)                                                                                      \
-    static inline void NAME##_px(                                                                                      \
-        const TYPE a, const TYPE b, const TYPE c, const TYPE d, const TYPE e, const TYPE f, const TYPE g,              \
-        const TYPE h, const TYPE ii, TYPE *out0, TYPE *out1, TYPE *out2                                                \
-    ) {                                                                                                                \
-        TYPE e0 = e, e1 = e, e2 = e, e3 = e, e5 = e, e6 = e, e7 = e, e8 = e;                                           \
-        if (b != h && d != f) {                                                                                        \
-            e0 = (d == b) ? d : e;                                                                                     \
-            e1 = ((d == b && e != c) || (b == f && e != a)) ? b : e;                                                   \
-            e2 = (b == f) ? f : e;                                                                                     \
-            e3 = ((d == b && e != g) || (d == h && e != a)) ? d : e;                                                   \
-            e5 = ((b == f && e != ii) || (h == f && e != c)) ? f : e;                                                  \
-            e6 = (d == h) ? d : e;                                                                                     \
-            e7 = ((d == h && e != ii) || (h == f && e != g)) ? h : e;                                                  \
-            e8 = (h == f) ? f : e;                                                                                     \
-        }                                                                                                              \
-                                                                                                                       \
-        out0[0] = e0;                                                                                                  \
-        out0[1] = e1;                                                                                                  \
-        out0[2] = e2;                                                                                                  \
-        out1[0] = e3;                                                                                                  \
-        out1[1] = e;                                                                                                   \
-        out1[2] = e5;                                                                                                  \
-        out2[0] = e6;                                                                                                  \
-        out2[1] = e7;                                                                                                  \
-        out2[2] = e8;                                                                                                  \
-    }                                                                                                                  \
-                                                                                                                       \
-    static void NAME(                                                                                                  \
-        const TYPE *src, TYPE *dst, const int width, const int height, const int src_pitch_px, const int dst_pitch_px  \
-    ) {                                                                                                                \
-        for (int y = 0; y < height; y++) {                                                                             \
-            const TYPE *row = src + (size_t) y * src_pitch_px;                                                         \
-            const TYPE *row_up = src + (size_t) (y > 0 ? y - 1 : y) * src_pitch_px;                                    \
-            const TYPE *row_down = src + (size_t) (y < height - 1 ? y + 1 : y) * src_pitch_px;                         \
-            TYPE *out0 = dst + (size_t) (y * 3) * dst_pitch_px;                                                        \
-            TYPE *out1 = dst + (size_t) (y * 3 + 1) * dst_pitch_px;                                                    \
-            TYPE *out2 = dst + (size_t) (y * 3 + 2) * dst_pitch_px;                                                    \
-                                                                                                                       \
-            {                                                                                                          \
-                const int xr = width > 1 ? 1 : 0;                                                                      \
-                NAME##_px(                                                                                             \
-                    row_up[0], row_up[0], row_up[xr], row[0], row[0], row[xr], row_down[0], row_down[0], row_down[xr], \
-                    out0, out1, out2                                                                                   \
-                );                                                                                                     \
-            }                                                                                                          \
-                                                                                                                       \
-            for (int x = 1; x + 1 < width; x++)                                                                        \
-                NAME##_px(                                                                                             \
-                    row_up[x - 1], row_up[x], row_up[x + 1], row[x - 1], row[x], row[x + 1], row_down[x - 1],          \
-                    row_down[x], row_down[x + 1], out0 + x * 3, out1 + x * 3, out2 + x * 3                             \
-                );                                                                                                     \
-                                                                                                                       \
-            if (width > 1) {                                                                                           \
-                const int x = width - 1;                                                                               \
-                NAME##_px(                                                                                             \
-                    row_up[x - 1], row_up[x], row_up[x], row[x - 1], row[x], row[x], row_down[x - 1], row_down[x],     \
-                    row_down[x], out0 + x * 3, out1 + x * 3, out2 + x * 3                                              \
-                );                                                                                                     \
-            }                                                                                                          \
-        }                                                                                                              \
-    }
-
-SCALE3_X_IMPL(scale3x_16, uint16_t)
-SCALE3_X_IMPL(scale3x_32, uint32_t)
-
 static void compute_target_tex_size(int *w, int *h) {
-    int scale = 1;
-    if (session_settings.texture_filter == texture_filter_scale2_x) {
-        scale = 2;
-    } else if (session_settings.texture_filter == texture_filter_scale3_x) {
-        scale = 3;
-    }
+    const int scale = texture_filter_scale_factor(session_settings.texture_filter);
     *w = frame_w * scale;
     *h = frame_h * scale;
 }
@@ -583,21 +470,11 @@ static void upload_frame(void) {
     if (!scaled_buf) return;
 
     const int src_pitch_px = (int) (raw_frame_pitch / raw_frame_bpp);
-    const int is_scale3_x = session_settings.texture_filter == texture_filter_scale3_x;
 
-    if (raw_frame_bpp == 4) {
-        if (is_scale3_x) {
-            scale3x_32(raw_frame_buf, (uint32_t *) scaled_buf, frame_w, frame_h, src_pitch_px, want_w);
-        } else {
-            scale2x_32(raw_frame_buf, (uint32_t *) scaled_buf, frame_w, frame_h, src_pitch_px, want_w);
-        }
-    } else {
-        if (is_scale3_x) {
-            scale3x_16(raw_frame_buf, (uint16_t *) scaled_buf, frame_w, frame_h, src_pitch_px, want_w);
-        } else {
-            scale2x_16(raw_frame_buf, (uint16_t *) scaled_buf, frame_w, frame_h, src_pitch_px, want_w);
-        }
-    }
+    texture_filter_apply(
+        session_settings.texture_filter, raw_frame_buf, scaled_buf, frame_w, frame_h, src_pitch_px, want_w,
+        raw_frame_bpp, mux_retro_get_pixel_format()
+    );
 
     SDL_UpdateTexture(frame_tex, NULL, scaled_buf, want_w * (int) raw_frame_bpp);
 }
@@ -700,9 +577,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     frame_h = (int) height;
 
     if (size_changed) recompute_dest_rect();
-
-    const int cpu_filter = session_settings.texture_filter == texture_filter_scale2_x
-                           || session_settings.texture_filter == texture_filter_scale3_x;
+    const int cpu_filter = texture_filter_is_cpu_scaled(session_settings.texture_filter);
 
     if (cpu_filter) {
         const size_t needed = pitch * height;

@@ -94,6 +94,8 @@ int audio_bridge_is_muted(void);
 
 void audio_bridge_get_info(int *freq, int *channels);
 
+void audio_bridge_apply_filter(void);
+
 void mux_retro_input_poll_cb(void);
 
 int16_t mux_retro_input_state_cb(unsigned port, unsigned device, unsigned index, unsigned id);

@@ -60,6 +60,66 @@ static int16_t scale_sample(const int16_t sample) {
     return (int16_t) ((int32_t) sample * session_settings.volume / 100);
 }
 
+typedef struct {
+    float prev_in;
+    float prev_out;
+} audio_filter_state_t;
+
+static audio_filter_state_t filter_state_l = {0};
+static audio_filter_state_t filter_state_r = {0};
+static float filter_coeff = 0.0f;
+
+static void audio_filter_recompute(void) {
+    double cutoff_hz;
+    switch (session_settings.audio_filter) {
+        case audio_filter_low_pass:
+            cutoff_hz = 8000.0;
+            break;
+        case audio_filter_high_pass:
+            cutoff_hz = 400.0;
+            break;
+        default:
+            filter_coeff = 0.0f;
+            return;
+    }
+
+    const int freq = opened_freq > 0 ? opened_freq : 48000;
+    const double dt = 1.0 / (double) freq;
+    const double rc = 1.0 / (2.0 * 3.14159265358979323846 * cutoff_hz);
+
+    filter_coeff = (float) (session_settings.audio_filter == audio_filter_high_pass ? rc / (rc + dt) : dt / (rc + dt));
+}
+
+static void audio_filter_reset(void) {
+    filter_state_l.prev_in = 0.0f;
+    filter_state_l.prev_out = 0.0f;
+    filter_state_r.prev_in = 0.0f;
+    filter_state_r.prev_out = 0.0f;
+}
+
+static int16_t apply_audio_filter(const int16_t sample, audio_filter_state_t *st) {
+    const float in = sample;
+    float out;
+
+    if (session_settings.audio_filter == audio_filter_high_pass) {
+        out = filter_coeff * (st->prev_out + in - st->prev_in);
+    } else {
+        out = st->prev_out + filter_coeff * (in - st->prev_out);
+    }
+
+    st->prev_in = in;
+    st->prev_out = out;
+
+    if (out > 32767.0f) out = 32767.0f;
+    if (out < -32768.0f) out = -32768.0f;
+    return (int16_t) out;
+}
+
+void audio_bridge_apply_filter(void) {
+    audio_filter_recompute();
+    audio_filter_reset();
+}
+
 static void free_resampler(void) {
     if (resampler) {
         SDL_FreeAudioStream(resampler);
@@ -144,7 +204,10 @@ static void queue_samples(const int16_t *data, const size_t frames) {
 }
 
 static void submit_audio_frames(const int16_t *data, const size_t frames) {
-    if (session_settings.volume >= 100) {
+    const int need_volume = session_settings.volume < 100;
+    const int need_filter = session_settings.audio_filter != audio_filter_none;
+
+    if (!need_volume && !need_filter) {
         queue_samples(data, frames);
         return;
     }
@@ -155,8 +218,23 @@ static void submit_audio_frames(const int16_t *data, const size_t frames) {
     while (remaining > 0) {
         const size_t chunk = remaining > AUDIO_SCRATCH_FRAMES ? AUDIO_SCRATCH_FRAMES : remaining;
 
-        for (size_t i = 0; i < chunk * 2; i++)
-            scratch_buf[i] = scale_sample(src[i]);
+        for (size_t i = 0; i < chunk; i++) {
+            int16_t l = src[i * 2 + 0];
+            int16_t r = src[i * 2 + 1];
+
+            if (need_volume) {
+                l = scale_sample(l);
+                r = scale_sample(r);
+            }
+
+            if (need_filter) {
+                l = apply_audio_filter(l, &filter_state_l);
+                r = apply_audio_filter(r, &filter_state_r);
+            }
+
+            scratch_buf[i * 2 + 0] = l;
+            scratch_buf[i * 2 + 1] = r;
+        }
 
         queue_samples(scratch_buf, chunk);
         src += chunk * 2;
@@ -212,6 +290,9 @@ int audio_bridge_open(const double core_sample_rate) {
     opened_freq = have.freq;
     opened_channels = have.channels;
     opened_period_frames = (int) have.samples;
+
+    audio_filter_recompute();
+    audio_filter_reset();
 
     atomic_store_explicit(&ring_write_index, 0, memory_order_relaxed);
     atomic_store_explicit(&ring_read_index, 0, memory_order_relaxed);

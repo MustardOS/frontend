@@ -1556,6 +1556,8 @@ struct mux_lang {
             char scale2_x[MAX_BUFFER_SIZE];
             char scale3_x[MAX_BUFFER_SIZE];
             char sharp_bilinear[MAX_BUFFER_SIZE];
+            char scale2_x_smooth[MAX_BUFFER_SIZE];
+            char super_eagle[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
             char black[MAX_BUFFER_SIZE];
             char dark_grey[MAX_BUFFER_SIZE];
@@ -1589,6 +1591,10 @@ struct mux_lang {
             char audio_latency_balanced[MAX_BUFFER_SIZE];
             char audio_latency_compat[MAX_BUFFER_SIZE];
             char audio_period[MAX_BUFFER_SIZE];
+            char audio_filter[MAX_BUFFER_SIZE];
+            char audio_filter_none[MAX_BUFFER_SIZE];
+            char audio_filter_low_pass[MAX_BUFFER_SIZE];
+            char audio_filter_high_pass[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];
             char category_sound[MAX_BUFFER_SIZE];

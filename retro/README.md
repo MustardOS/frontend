@@ -44,24 +44,27 @@ retro/
 
 ### video/
 
-| File                                    | Purpose                                                                                                                                                      |
-|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `video.c`                               | SDL2 texture pipeline: raw frame upload/conversion, all scaling modes (including Fit Screen and the Shimmer Fix snap), rotation, mirroring, texture filters. |
-| `hw_render.c` / `hw_render.h`           | `RETRO_ENVIRONMENT_SET_HW_RENDER` support for GLES2 cores (see [Hardware render](#hardware-render)).                                                         |
-| `colour.c` / `colour.h`                 | GLES2 colour grading (brightness/contrast/saturation/hue/gamma) plus filter/shader preset loading.                                                           |
-| `overlay_bridge.c` / `overlay_bridge.h` | Predefined pattern overlays and per-game catalogue overlays, composited into the video content layer.                                                        |
-| `frame_pacer.c`                         | Frame Delay: adaptive pre-run wait (p95 of recent frame costs) so input is sampled as late as possible before each frame.                                    |
-| `ui_display.c`                          | Display screen (filter/shader pickers, colour grading, overlay).                                                                                             |
-| `ui_videosettings.c`                    | Video screen (viewport entry, scaling, rotation, mirror, aspect, integer scale, texture filter, shimmer fix, border).                                        |
-| `ui_viewport.c`                         | Viewport Offsets screen (X/Y offset, zoom, edge cropping, centre crop, reset).                                                                               |
-| `ui_colfilter.c` / `ui_shader.c`        | Colour filter / shader picker screens.                                                                                                                       |
+| File                                      | Purpose                                                                                                                                                                                                                 |
+|-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `video.c`                                 | SDL2 texture pipeline: raw frame upload/conversion, all scaling modes (including Fit Screen and the Shimmer Fix snap), rotation, mirroring. Dispatches CPU texture filters to `filters/` rather than implementing them. |
+| `filters/filters.c` / `filters.h`         | CPU texture filter dispatch layer - the only part of `filters/` video.c talks to (scale factor, CPU-scaled/linear-sample queries, apply).                                                                               |
+| `filters/scale2x.c` / `scale2x.h`         | Scale2x / Scale3x (EPX-style edge-detect upscalers).                                                                                                                                                                    |
+| `filters/super_eagle.c` / `super_eagle.h` | Super Eagle (2xSaI-family, sharper diagonals than 2xSaI).                                                                                                                                                               |
+| `hw_render.c` / `hw_render.h`             | `RETRO_ENVIRONMENT_SET_HW_RENDER` support for GLES2 cores (see [Hardware render](#hardware-render)).                                                                                                                    |
+| `colour.c` / `colour.h`                   | GLES2 colour grading (brightness/contrast/saturation/hue/gamma) plus filter/shader preset loading.                                                                                                                      |
+| `overlay_bridge.c` / `overlay_bridge.h`   | Predefined pattern overlays and per-game catalogue overlays, composited into the video content layer.                                                                                                                   |
+| `frame_pacer.c`                           | Frame Delay: adaptive pre-run wait (p95 of recent frame costs) so input is sampled as late as possible before each frame.                                                                                               |
+| `ui_display.c`                            | Display screen (filter/shader pickers, colour grading, overlay).                                                                                                                                                        |
+| `ui_videosettings.c`                      | Video screen (viewport entry, scaling, rotation, mirror, aspect, integer scale, texture filter, shimmer fix, border).                                                                                                   |
+| `ui_viewport.c`                           | Viewport Offsets screen (X/Y offset, zoom, edge cropping, centre crop, reset).                                                                                                                                          |
+| `ui_colfilter.c` / `ui_shader.c`          | Colour filter / shader picker screens.                                                                                                                                                                                  |
 
 ### audio/
 
-| File                 | Purpose                                                                                                            |
-|----------------------|--------------------------------------------------------------------------------------------------------------------|
-| `audio.c`            | SDL audio device, lock-free SPSC sample ring, latency profiles, queued-ms watermarking, underrun fade, mute/pause. |
-| `ui_soundsettings.c` | Sound screen (volume, sample rate, audio latency profile).                                                         |
+| File                 | Purpose                                                                                                                                           |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `audio.c`            | SDL audio device, lock-free SPSC sample ring, latency profiles, queued-ms watermarking, underrun fade, mute/pause, one-pole low/high-pass filter. |
+| `ui_soundsettings.c` | Sound screen (volume, sample rate, audio latency profile, audio filter).                                                                          |
 
 ### input/
 
@@ -124,7 +127,8 @@ retro/
 - **Viewport Offsets**: X/Y pixel offset and zoom with one-tap reset, applied on top of any scaling mode.
 - **Viewport Cropping**: per-edge source pixel cropping (top/bottom/left/right) with an optional Centre Crop mode
   that recentres the cropped image on the display, ignoring the X/Y offsets.
-- **Texture filters**: nearest, smooth (linear), scale2x, scale3x, sharp bilinear.
+- **Texture filters**: none (nearest), smooth (linear), scale2x, scale3x, sharp bilinear, scale2x smooth, super eagle.
+  Implemented in `filters/`, not `video.c` - see the table above.
 - **Colour grading**: brightness/contrast/saturation/hue-shift/gamma, plus drop-in filter presets (`.ini`) and shader
   presets (`.frag`) scanned from `/opt/muos/share/{filter,shader}/`. Works for software and hardware-rendered cores.
 - **Border colour**: theme / black / dark grey / white, filled outside the game's `dest_rect`.
@@ -265,7 +269,8 @@ SRAM one last time → unload content and the core → close input → `sdl_clea
 
 `session_settings_t` (in `settings/settings.h`) holds every per-session setting - video (scaling/rotate/mirror/aspect/
 integer scale/texture filter/shimmer fix/border), viewport, colour grading + filter/shader, overlays, sound (volume/
-sample rate/latency profile), input (rumble, analog tuning), performance (fps limit, frame delay, run ahead), screen
+sample rate/latency profile/filter), input (rumble, analog tuning), performance (fps limit, frame delay, run ahead),
+screen
 info, hotkey enables and speeds, auto-save mode, and SRAM flush interval.
 
 Settings are stored as three `.ini` tiers under `RETRO_SET_PATH` (`<share>/retro/settings/`):

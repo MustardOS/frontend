@@ -46,8 +46,12 @@ enum texture_filter_mode {
     texture_filter_scale2_x,
     texture_filter_scale3_x,
     texture_filter_sharp_bilinear,
+    texture_filter_scale2_x_smooth,
+    texture_filter_super_eagle,
     texture_filter_count
 };
+
+enum audio_filter_mode { audio_filter_none = 0, audio_filter_low_pass, audio_filter_high_pass, audio_filter_count };
 
 enum border_color_mode {
     border_color_theme = 0,
@@ -140,6 +144,7 @@ struct session_settings_t {
     int analog_invert_y;
     int audio_latency_profile;
     int audio_period_frames;
+    int audio_filter;
     int shimmer_fix;
     int run_ahead;
     int gpu_hard_sync;
@@ -159,6 +164,8 @@ const char *session_settings_integer_scale_name(int mode);
 double session_settings_integer_scale_value(int mode);
 
 const char *session_settings_filter_name(int mode);
+
+const char *session_settings_audio_filter_name(int mode);
 
 const char *session_settings_border_name(int mode);
 
@@ -237,6 +244,8 @@ void session_settings_cycle_aspect_ratio(int direction);
 void session_settings_cycle_integer_scale(int direction);
 
 void session_settings_cycle_filter(int direction);
+
+void session_settings_cycle_audio_filter(int direction);
 
 void session_settings_cycle_rumble(int direction);
 

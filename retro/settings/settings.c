@@ -69,6 +69,7 @@ static const struct session_settings_t defaults = {
     .analog_invert_y = 0,
     .audio_latency_profile = audio_latency_balanced,
     .audio_period_frames = 512,
+    .audio_filter = audio_filter_none,
     .shimmer_fix = 0,
     .run_ahead = 0,
     .gpu_hard_sync = 0,
@@ -128,8 +129,15 @@ static const char *aspect_ratio_names[aspect_ratio_count] = {
 };
 
 static const char *filter_names[texture_filter_count] = {
-    lang.muxretro.settings_screen.nearest, lang.muxretro.settings_screen.smooth, lang.muxretro.settings_screen.scale2_x,
-    lang.muxretro.settings_screen.scale3_x, lang.muxretro.settings_screen.sharp_bilinear
+    lang.muxretro.settings_screen.nearest,        lang.muxretro.settings_screen.smooth,
+    lang.muxretro.settings_screen.scale2_x,       lang.muxretro.settings_screen.scale3_x,
+    lang.muxretro.settings_screen.sharp_bilinear, lang.muxretro.settings_screen.scale2_x_smooth,
+    lang.muxretro.settings_screen.super_eagle
+};
+
+static const char *audio_filter_names[audio_filter_count] = {
+    lang.muxretro.settings_screen.audio_filter_none, lang.muxretro.settings_screen.audio_filter_low_pass,
+    lang.muxretro.settings_screen.audio_filter_high_pass
 };
 
 static const char *border_names[border_color_count] = {
@@ -221,6 +229,11 @@ double session_settings_integer_scale_value(const int mode) {
 const char *session_settings_filter_name(const int mode) {
     if (mode < 0 || mode >= texture_filter_count) return filter_names[texture_filter_nearest];
     return filter_names[mode];
+}
+
+const char *session_settings_audio_filter_name(const int mode) {
+    if (mode < 0 || mode >= audio_filter_count) return audio_filter_names[audio_filter_none];
+    return audio_filter_names[mode];
 }
 
 const char *session_settings_border_name(const int mode) {
@@ -596,6 +609,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "audio_latency_profile", -1);
     if (v >= 0 && v < audio_latency_count) session_settings.audio_latency_profile = (int) v;
 
+    v = mini_get_int(ini, "settings", "audio_filter", -1);
+    if (v >= 0 && v < audio_filter_count) session_settings.audio_filter = (int) v;
+
     v = mini_get_int(ini, "settings", "audio_period_frames", -1);
     for (int i = 0; v > 0 && i < AUDIO_PERIOD_CHOICE_COUNT; i++) {
         if (audio_period_choices[i] == (int) v) {
@@ -699,6 +715,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(analog_invert_y);
     DELTA(audio_latency_profile);
     DELTA(audio_period_frames);
+    DELTA(audio_filter);
     DELTA(shimmer_fix);
     DELTA(run_ahead);
     DELTA(gpu_hard_sync);
@@ -783,6 +800,15 @@ void session_settings_cycle_filter(const int direction) {
     session_settings.texture_filter =
         (session_settings.texture_filter + direction + texture_filter_count) % texture_filter_count;
     video_bridge_apply_filter();
+}
+
+void session_settings_cycle_audio_filter(const int direction) {
+    session_settings.audio_filter =
+        (session_settings.audio_filter + direction + audio_filter_count) % audio_filter_count;
+    LOG_INFO(
+        mux_module, "Audio Filter changed to %s", session_settings_audio_filter_name(session_settings.audio_filter)
+    );
+    audio_bridge_apply_filter();
 }
 
 void session_settings_cycle_rumble(const int direction) {

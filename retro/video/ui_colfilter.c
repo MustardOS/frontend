@@ -8,6 +8,7 @@
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
 #include "../settings/settings.h"
+#include "../settings/submenu.h"
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
@@ -132,6 +133,7 @@ void colfilter_menu_tick(void) {
             play_sound(snd_confirm);
 
             session_settings_apply_save_choice(opt);
+            submenu_stack_resync();
 
             close_screen();
         } else if (edge & BIT(5)) {

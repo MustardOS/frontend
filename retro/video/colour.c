@@ -751,6 +751,8 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         return;
     }
 
+    SDL_RenderFlush(renderer);
+
     ensure_shader_program();
     const int use_shader =
         shader_prog != 0 && ensure_target(renderer, &work_tex, &work_w, &work_h, dest_rect->w, dest_rect->h);
@@ -786,8 +788,13 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
 
     const float ndc_left = ((float) dest_rect->x / (float) out_w) * 2.0f - 1.0f;
     const float ndc_right = ((float) (dest_rect->x + dest_rect->w) / (float) out_w) * 2.0f - 1.0f;
-    const float ndc_top = 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
-    const float ndc_bottom = 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
+
+    const int to_offscreen_target = prev_target != NULL;
+    const float ndc_top = to_offscreen_target ? ((float) dest_rect->y / (float) out_h) * 2.0f - 1.0f
+                                              : 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
+    const float ndc_bottom = to_offscreen_target
+                                 ? ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f - 1.0f
+                                 : 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
 
     GLint prev_program = 0;
     p_glGetIntegerv(GL_CURRENT_PROGRAM, &prev_program);
