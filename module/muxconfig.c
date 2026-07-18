@@ -19,6 +19,10 @@ static int storage_available(void) {
     return is_partition_mounted(device.storage.sdcard.mount);
 }
 
+static int connectivity_available(void) {
+    return device.board.has_network || device.board.has_bluetooth;
+}
+
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
@@ -37,6 +41,7 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
 
     if (!storage_available()) HIDE_STATIC_ITEM(config, storage);
+    if (!connectivity_available()) HIDE_STATIC_ITEM(config, connect);
 
     gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 1, 0, 1);
 }
@@ -54,7 +59,7 @@ static void handle_a(void) {
 
     static const menu_entry entries[] = {
         {"tweakgen", &kiosk.setting.general, NULL},
-        {"connect", &kiosk.config.connectivity, NULL},
+        {"connect", &kiosk.config.connectivity, connectivity_available},
         {"custom", &kiosk.config.customisation, NULL},
         {"visual", &kiosk.setting.visual, NULL},
         {"language", &kiosk.config.language, NULL},
