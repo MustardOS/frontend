@@ -4,6 +4,7 @@ typedef enum {
     board_special_none = 0,
     board_special_g350,
     board_special_tui_brick,
+    board_special_tui_brick_pro,
     board_special_tui_spoon,
     board_special_vita_pro,
 } board_special_t;

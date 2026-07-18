@@ -31,6 +31,7 @@ static const board_info_t board_table[] = {
     {"GKD Pixel 2", "rk-pixel-2", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
 
     {"TrimUI Brick", "tui-brick", board_special_tui_brick, nop, ev1, nop, NO_EVENT_OFFSET, goofy},
+    {"TrimUI Brick Pro", "tui-brick-pro", board_special_tui_brick_pro, nop, ev1, nop, NO_EVENT_OFFSET, goofy},
     {"TrimUI Smart Pro", "tui-spoon", board_special_tui_spoon, ev0, ev1, nop, NO_EVENT_OFFSET, goofy},
 };
 

@@ -319,6 +319,9 @@ static void init_input_maps(void) {
         case board_special_tui_brick:
             map_vol_buttons(joy_button_map, 0, 1);
             break;
+        case board_special_tui_brick_pro:
+            map_vol_buttons(joy_button_map, 2, 3);
+            break;
         case board_special_vita_pro:
             map_vol_buttons(joy_button_map, 13, 14);
             break;
