@@ -562,6 +562,7 @@ static const module_entry modules[] = {
     {"btdev", "btall", "muxbtdev", muxbtdev_main, NULL},
     {"hdmi", "tweakgen", "muxhdmi", muxhdmi_main, NULL},
     {"rgb", "tweakgen", "muxrgb", muxrgb_main, NULL},
+    {"rgbzone", "rgb", "muxrgbzone", muxrgbzone_main, NULL},
     {"remap", "tweakgen", "muxremap", muxremap_main, NULL},
     {"passcfg", "tweakgen", "muxpasscfg", muxpasscfg_main, NULL},
     {"storage", "config", "muxstorage", muxstorage_main, NULL},

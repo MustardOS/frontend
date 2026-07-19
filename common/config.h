@@ -238,14 +238,28 @@ struct mux_config {
         } power;
         struct {
             int16_t mode;
-            int16_t bright;
-            int16_t breath_speed;
             int16_t colour_l;
+            int16_t bright_l;
             int16_t colour_r;
+            int16_t bright_r;
             int16_t colour_m;
+            int16_t bright_m;
             int16_t colour_f1;
+            int16_t bright_f1;
             int16_t colour_f2;
-            int16_t combo;
+            int16_t bright_f2;
+            int16_t colour_rs1;
+            int16_t bright_rs1;
+            int16_t colour_rs2;
+            int16_t bright_rs2;
+            int16_t colour_shl1;
+            int16_t bright_shl1;
+            int16_t colour_shl2;
+            int16_t bright_shl2;
+            int16_t colour_shr2;
+            int16_t bright_shr2;
+            int16_t colour_shr1;
+            int16_t bright_shr1;
             int16_t backend;
         } rgb;
         struct {

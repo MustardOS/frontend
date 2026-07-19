@@ -395,16 +395,21 @@
     PROXY(test, "test")
 
 #define RGB_ELEMENTS                                                                                                   \
-    RGB(mode, "mode")                                                                                                  \
-    RGB(bright, "bright")                                                                                              \
-    RGB(breath_speed, "breath_speed")                                                                                  \
-    RGB(colour_l, "colour_l")                                                                                          \
-    RGB(colour_r, "colour_r")                                                                                          \
-    RGB(colour_m, "colour_m")                                                                                          \
-    RGB(colour_f1, "colour_f1")                                                                                        \
-    RGB(colour_f2, "colour_f2")                                                                                        \
-    RGB(combo, "combo")                                                                                                \
-    RGB(backend, "backend")
+    RGB(zone_l, "zone_l")                                                                                              \
+    RGB(zone_r, "zone_r")                                                                                              \
+    RGB(zone_m, "zone_m")                                                                                              \
+    RGB(zone_f1, "zone_f1")                                                                                            \
+    RGB(zone_f2, "zone_f2")                                                                                            \
+    RGB(zone_rs1, "zone_rs1")                                                                                          \
+    RGB(zone_rs2, "zone_rs2")                                                                                          \
+    RGB(zone_shl1, "zone_shl1")                                                                                        \
+    RGB(zone_shl2, "zone_shl2")                                                                                        \
+    RGB(zone_shr2, "zone_shr2")                                                                                        \
+    RGB(zone_shr1, "zone_shr1")
+
+#define RGBZONE_ELEMENTS                                                                                               \
+    RGBZONE(colour, "colour")                                                                                          \
+    RGBZONE(bright, "bright")
 
 #define RTC_ELEMENTS                                                                                                   \
     RTC(timezone, "timezone")                                                                                          \

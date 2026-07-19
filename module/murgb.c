@@ -11,8 +11,6 @@
 #include "../common/colour.h"
 #include "../common/config.h"
 #include "../common/fileio.h"
-#include "../common/strutil.h"
-#include "../common/theme.h"
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 
@@ -132,53 +130,6 @@ static int joypad_level_from_byte(const int brightness) {
     return clamp((clamp(brightness, MCU_BRI) * JOY_BRI + MCU_BRI / 2) / MCU_BRI, JOY_BRI);
 }
 
-static int joypad_mode_from_protocol(const int mode) {
-    switch (mode) {
-        case 1:
-            return 1;
-        case 2:
-        case 3:
-        case 4:
-        case 8:
-            return 2;
-        case 7:
-            return 3;
-        case 5:
-            return 4;
-        case 6:
-            return 5;
-        default:
-            return 1;
-    }
-}
-
-static int joypad_speed_pct_to_reg(int pct) {
-    if (pct < 0) pct = 0;
-    if (pct > 100) pct = 100;
-
-    return pct;
-}
-
-static int joypad_breathing_speed_invert(int ui_pct) {
-    if (ui_pct < 0) ui_pct = 0;
-    if (ui_pct > 100) ui_pct = 100;
-
-    return 100 - ui_pct;
-}
-
-static int joypad_breathing_speed_pct_for_protocol(const int mode) {
-    switch (mode) {
-        case 2:
-            return 80;
-        case 3:
-            return 50;
-        case 4:
-            return 20;
-        default:
-            return 50;
-    }
-}
-
 static int joypad_commit(void) {
     if (joypad_writable()) joypad_write_int("led_set", 1);
 
@@ -190,8 +141,8 @@ static backend_t detect_device_backend(void) {
         const char *code;
         backend_t backend;
     } map[] = {
-        {"gcs-h36s", be_serial},    {"rg40xx-h", be_serial}, {"rg40xx-v", be_serial}, {"rgcubexx-h", be_serial},
-        {"rg-vita-pro", be_joypad}, {"tui-brick", be_sysfs}, {"tui-spoon", be_sysfs},
+        {"gcs-h36s", be_serial},    {"rg40xx-h", be_serial}, {"rg40xx-v", be_serial},     {"rgcubexx-h", be_serial},
+        {"rg-vita-pro", be_joypad}, {"tui-brick", be_sysfs}, {"tui-brick-pro", be_sysfs}, {"tui-spoon", be_sysfs},
     };
 
     const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
@@ -221,6 +172,107 @@ static backend_t detect_backend(const backend_t requested) {
 
     return be_auto;
 }
+
+#define LEDC_RAW_TOTAL 23
+
+#define BRICK_F2_LED 8
+#define BRICK_F1_LED 9
+
+#define BRICK_PRO_RSTICK1_LED_LO 14
+#define BRICK_PRO_RSTICK1_LED_HI 15
+#define BRICK_PRO_RSTICK2_LED_LO 16
+#define BRICK_PRO_RSTICK2_LED_HI 17
+
+#define BRICK_PRO_SHOULDER_L1_LED 18
+#define BRICK_PRO_SHOULDER_L2_LED 19
+#define BRICK_PRO_SHOULDER_R2_LED 20
+#define BRICK_PRO_SHOULDER_R1_LED 21
+
+#define BRICK_SHOULDER_L1_LED 10
+#define BRICK_SHOULDER_L2_LED 11
+#define BRICK_SHOULDER_R2_LED 12
+#define BRICK_SHOULDER_R1_LED 13
+
+static int board_is_tui_brick_pro(void) {
+    const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    return board && strcmp(board, "tui-brick-pro") == 0;
+}
+
+static int board_is_tui_brick(void) {
+    const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    return board && strcmp(board, "tui-brick") == 0;
+}
+
+static void swap_rg(int *r, int *g) {
+    const int t = *r;
+    *r = *g;
+    *g = t;
+}
+
+static int scale_channel(const int v, const int brightness_raw) {
+    return clamp(clamp(v, MCU_BRI) * clamp(brightness_raw, MCU_BRI) / MCU_BRI, MCU_BRI);
+}
+
+static void write_raw_zone_frame(
+    const int rs1_r, const int rs1_g, const int rs1_b, const int rs2_r, const int rs2_g, const int rs2_b,
+    const int shoulder_rgb[4][3], const int shoulder_led[4]
+) {
+    char frame[LEDC_RAW_TOTAL * 7 + 1];
+    char *p = frame;
+
+    for (int i = 0; i < LEDC_RAW_TOTAL; i++) {
+        int r = 0, g = 0, b = 0;
+
+        if (i >= BRICK_PRO_RSTICK1_LED_LO && i <= BRICK_PRO_RSTICK1_LED_HI) {
+            r = rs1_r;
+            g = rs1_g;
+            b = rs1_b;
+        } else if (i >= BRICK_PRO_RSTICK2_LED_LO && i <= BRICK_PRO_RSTICK2_LED_HI) {
+            r = rs2_r;
+            g = rs2_g;
+            b = rs2_b;
+        } else {
+            for (int k = 0; k < 4; k++) {
+                if (i != shoulder_led[k]) continue;
+                r = shoulder_rgb[k][0];
+                g = shoulder_rgb[k][1];
+                b = shoulder_rgb[k][2];
+                break;
+            }
+        }
+
+        p += snprintf(p, 8, "%02X%02X%02X ", clamp(r, MCU_BRI), clamp(g, MCU_BRI), clamp(b, MCU_BRI));
+    }
+
+    sysfs_write("frame_hex", frame);
+}
+
+static void write_brick_raw_frame(const int f1_rgb[3], const int f2_rgb[3], const int shoulder_rgb[4][3]) {
+    static const int led_index[6] = {BRICK_F2_LED,          BRICK_F1_LED,          BRICK_SHOULDER_L1_LED,
+                                     BRICK_SHOULDER_L2_LED, BRICK_SHOULDER_R2_LED, BRICK_SHOULDER_R1_LED};
+    const int *const rgb[6] = {f2_rgb, f1_rgb, shoulder_rgb[0], shoulder_rgb[1], shoulder_rgb[2], shoulder_rgb[3]};
+
+    char frame[LEDC_RAW_TOTAL * 7 + 1];
+    char *p = frame;
+
+    for (int i = 0; i < LEDC_RAW_TOTAL; i++) {
+        int r = 0, g = 0, b = 0;
+
+        for (int k = 0; k < 6; k++) {
+            if (i != led_index[k]) continue;
+            r = rgb[k][0];
+            g = rgb[k][1];
+            b = rgb[k][2];
+            break;
+        }
+
+        p += snprintf(p, 8, "%02X%02X%02X ", clamp(r, MCU_BRI), clamp(g, MCU_BRI), clamp(b, MCU_BRI));
+    }
+
+    sysfs_write("frame_hex", frame);
+}
+
+static void hex3(char *out, int r, int g, int b);
 
 static int serial_fd = -1;
 
@@ -300,70 +352,8 @@ static void serial_send_static(
     serial_write_bytes(buf, i + 1);
 }
 
-static void serial_send_breath(const int mode, const int brightness, const int r, const int g, const int b) {
-    uint8_t buf[51];
-    size_t i = 0;
-
-    buf[i++] = (uint8_t) mode;
-    buf[i++] = (uint8_t) clamp(brightness, MCU_BRI);
-
-    for (int k = 0; k < 16; k++) {
-        buf[i++] = (uint8_t) clamp(r, MCU_BRI);
-        buf[i++] = (uint8_t) clamp(g, MCU_BRI);
-        buf[i++] = (uint8_t) clamp(b, MCU_BRI);
-    }
-
-    buf[i] = checksum_u8(buf, i);
-    serial_write_bytes(buf, i + 1);
-}
-
-static void serial_send_rainbow(const int mode, const int brightness, const int speed) {
-    uint8_t buf[6];
-
-    buf[0] = (uint8_t) mode;
-    buf[1] = (uint8_t) clamp(brightness, MCU_BRI);
-    buf[2] = 1;
-    buf[3] = 1;
-    buf[4] = (uint8_t) clamp(speed, MCU_BRI);
-    buf[5] = checksum_u8(buf, 5);
-
-    serial_write_bytes(buf, 6);
-}
-
 static int effect_map_sysfs(const int mode) {
-    switch (mode) {
-        case 1:
-            return 4;
-        case 2:
-        case 3:
-        case 4:
-            return 2;
-        case 5:
-            return 5;
-        case 6:
-            return 6;
-        case 7:
-            return 7;
-        case 8:
-            return 1;
-        case 9:
-            return 3;
-        default:
-            return -1;
-    }
-}
-
-static int duration_map_sysfs(const int mode, const int fallback) {
-    switch (mode) {
-        case 2:
-            return 3000;
-        case 3:
-            return 5000;
-        case 4:
-            return 10000;
-        default:
-            return fallback;
-    }
+    return mode == 1 ? 4 : -1;
 }
 
 static int env_int(const char *name, const int fallback) {
@@ -407,8 +397,8 @@ static int read_config_int(const char *leaf, const int fallback) {
     return (int) v;
 }
 
-static int dispatch_off(const backend_t requested) {
-    const backend_t use = detect_backend(requested);
+static void dispatch_off(void) {
+    const backend_t use = detect_backend(be_auto);
     flags_t fl;
 
     fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
@@ -420,7 +410,7 @@ static int dispatch_off(const backend_t requested) {
         joypad_write_int("led_switch", 0);
         joypad_commit();
 
-        return 0;
+        return;
     }
 
     if (use == be_sysfs) {
@@ -430,20 +420,19 @@ static int dispatch_off(const backend_t requested) {
             "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0",
         };
 
-        return apply_sysfs(1, 0, 15, zero_argv, &fl);
+        apply_sysfs(1, 0, 15, zero_argv, &fl);
+        return;
     }
 
     if (!char_dev_exists(SER_DEV)) die("Error: SERIAL backend selected but %s not present.", SER_DEV);
 
     char *zero_argv[] = {"0", "0", "0", "0", "0", "0"};
-    const int rc = apply_serial(1, 0, 6, zero_argv);
+    apply_serial(1, 0, 6, zero_argv);
 
     if (serial_fd >= 0) {
         close(serial_fd);
         serial_fd = -1;
     }
-
-    return rc;
 }
 
 static backend_t restore_backend_from_config(const int saved) {
@@ -459,99 +448,49 @@ static backend_t restore_backend_from_config(const int saved) {
     }
 }
 
-static int restore_breath_wire_mode(const int saved) {
-    switch (saved) {
-        case 0:
-            return 2;
-        case 2:
-            return 4;
-        default:
-            return 3;
-    }
-}
-
-static int joypad_speed_pct_from_saved(int bs) {
-    if (bs > 2) {
-        if (bs > 100) bs = 100;
-        return bs;
-    }
-    switch (bs) {
-        case 0:
-            return 80;
-        case 2:
-            return 20;
-        default:
-            return 50;
-    }
-}
-
-static int restore_brightness_to_byte(const int b) {
-    return clamp(b, MCU_BRI);
-}
-
-static int get_rgb_path(char *rgb_path) {
-    theme_base = get_theme_base();
-    char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
-    if (file_exist(active_path)) {
-        snprintf(
-            rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", theme_base,
-            str_replace(read_line_char_from(active_path, 1), "\r", "")
-        );
-        return dir_exist(rgb_path);
-    }
-    snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/rgb/", theme_base);
-    return dir_exist(rgb_path);
-}
-
 typedef struct {
-    int mode;
     int backend;
-    int bright_raw;
-    rgb_colour_t col_l, col_r, col_m, col_f1, col_f2;
+    rgb_colour_t col_l, col_r, col_m, col_f1, col_f2, col_rs1, col_rs2;
+    rgb_colour_t col_shl1, col_shl2, col_shr2, col_shr1;
+    int bright_l, bright_r, bright_m, bright_f1, bright_f2, bright_rs1, bright_rs2;
+    int bright_shl1, bright_shl2, bright_shr2, bright_shr1;
 } rgb_restore_state_t;
 
 static void load_saved_rgb_state(rgb_restore_state_t *st) {
-    st->mode = read_config_int("settings/rgb/mode", 0);
     st->backend = read_config_int("settings/rgb/backend", 0);
 
-    if (st->mode == 4) {
-        char settings_path[MAX_BUFFER_SIZE];
+    st->col_l = *rgb_colour_at(read_config_int("settings/rgb/colour_l", 0));
+    st->bright_l = read_config_int("settings/rgb/bright_l", 255);
 
-        char base_path[MAX_BUFFER_SIZE];
-        get_rgb_path(base_path);
+    st->col_r = *rgb_colour_at(read_config_int("settings/rgb/colour_r", 0));
+    st->bright_r = read_config_int("settings/rgb/bright_r", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%smode", base_path);
-        st->mode = read_line_int_from(settings_path, 1);
+    st->col_m = *rgb_colour_at(read_config_int("settings/rgb/colour_m", 0));
+    st->bright_m = read_config_int("settings/rgb/bright_m", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%sbackend", base_path);
-        st->backend = read_line_int_from(settings_path, 1);
+    st->col_f1 = *rgb_colour_at(read_config_int("settings/rgb/colour_f1", 0));
+    st->bright_f1 = read_config_int("settings/rgb/bright_f1", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%sbright", base_path);
-        st->bright_raw = read_line_int_from(settings_path, 1);
+    st->col_f2 = *rgb_colour_at(read_config_int("settings/rgb/colour_f2", 0));
+    st->bright_f2 = read_config_int("settings/rgb/bright_f2", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%scolour_l", base_path);
-        read_rgb_colour_from_file(settings_path, &st->col_l, &rgb_colours[0]);
+    st->col_rs1 = *rgb_colour_at(read_config_int("settings/rgb/colour_rs1", 0));
+    st->bright_rs1 = read_config_int("settings/rgb/bright_rs1", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%scolour_r", base_path);
-        read_rgb_colour_from_file(settings_path, &st->col_r, &st->col_l);
+    st->col_rs2 = *rgb_colour_at(read_config_int("settings/rgb/colour_rs2", 0));
+    st->bright_rs2 = read_config_int("settings/rgb/bright_rs2", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%scolour_m", base_path);
-        read_rgb_colour_from_file(settings_path, &st->col_m, &st->col_l);
+    st->col_shl1 = *rgb_colour_at(read_config_int("settings/rgb/colour_shl1", 0));
+    st->bright_shl1 = read_config_int("settings/rgb/bright_shl1", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%scolour_f1", base_path);
-        read_rgb_colour_from_file(settings_path, &st->col_f1, &st->col_l);
+    st->col_shl2 = *rgb_colour_at(read_config_int("settings/rgb/colour_shl2", 0));
+    st->bright_shl2 = read_config_int("settings/rgb/bright_shl2", 255);
 
-        snprintf(settings_path, sizeof(settings_path), "%scolour_f2", base_path);
-        read_rgb_colour_from_file(settings_path, &st->col_f2, &st->col_r);
-    } else {
-        st->bright_raw = read_config_int("settings/rgb/bright", 6);
-        read_rgb_colour_from_file(MUOS_CONFIG_PATH "settings/rgb/colour_l", &st->col_l, &rgb_colours[0]);
-        st->col_r = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_r", 0), &st->col_l);
-        st->col_m = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_m", 0), &st->col_l);
-        st->col_f1 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f1", 0), &st->col_l);
-        st->col_f2 = *rgb_colour_or_fallback(read_config_int("settings/rgb/colour_f2", 0), &st->col_r);
-    }
+    st->col_shr2 = *rgb_colour_at(read_config_int("settings/rgb/colour_shr2", 0));
+    st->bright_shr2 = read_config_int("settings/rgb/bright_shr2", 255);
+
+    st->col_shr1 = *rgb_colour_at(read_config_int("settings/rgb/colour_shr1", 0));
+    st->bright_shr1 = read_config_int("settings/rgb/bright_shr1", 255);
 }
 
 static int dispatch_wire_command(
@@ -582,31 +521,14 @@ static int dispatch_restore(void) {
     rgb_restore_state_t st;
     load_saved_rgb_state(&st);
 
-    int saved_mode = st.mode;
-    int saved_backend = st.backend;
-    int saved_bright_raw = st.bright_raw;
-    rgb_colour_t col_l = st.col_l, col_r = st.col_r, col_m = st.col_m, col_f1 = st.col_f1, col_f2 = st.col_f2;
-
-    if (saved_mode == 6) return 0;
-    if (saved_mode == 5) saved_mode = 0;
-
-    backend_t use = detect_backend(restore_backend_from_config(saved_backend));
-
-    if (saved_mode == 0) return dispatch_off(restore_backend_from_config(saved_backend));
+    backend_t use = detect_backend(restore_backend_from_config(st.backend));
 
     flags_t fl;
     fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
     fl.cyc_all = fl.cyc_l = fl.cyc_r = fl.cyc_m = fl.cyc_f1 = fl.cyc_f2 = INT32_MIN;
 
-    int bright_byte = restore_brightness_to_byte(saved_bright_raw);
-
-    int combo_idx = read_config_int("settings/rgb/combo", 0);
-    const rgb_colour_combo_t *kc = rgb_colour_combo_at(combo_idx);
-
-    char num_buf[15][8];
-    char *argv_buf[15];
-
-    int wire_mode;
+    char num_buf[33][8];
+    char *argv_buf[33];
     int n = 0;
 
 #define PUSH(v)                                                                                                        \
@@ -615,123 +537,46 @@ static int dispatch_restore(void) {
         argv_buf[n] = num_buf[n];                                                                                      \
         n++;                                                                                                           \
     } while (0)
+#define PUSH_ZONE(col, bri)                                                                                            \
+    do {                                                                                                               \
+        PUSH(scale_channel((col).r, (bri)));                                                                           \
+        PUSH(scale_channel((col).g, (bri)));                                                                           \
+        PUSH(scale_channel((col).b, (bri)));                                                                           \
+    } while (0)
 
-    if (saved_mode == 3) {
-        wire_mode = 1;
-        PUSH(kc->a_r);
-        PUSH(kc->a_g);
-        PUSH(kc->a_b);
-        PUSH(kc->b_r);
-        PUSH(kc->b_g);
-        PUSH(kc->b_b);
-    } else if (saved_mode == 2) {
-        int bs = read_config_int("settings/rgb/breath_speed", 1);
-
-        if (use == be_joypad) {
-            int sec_r, sec_g, sec_b;
-            //
-            // TODO: by Xongle
-            //
-            // if (idx_r <= 0) {
-            //     sec_r = sec_g = sec_b = 0;
-            // } else {
-            sec_r = col_r.r;
-            sec_g = col_r.g;
-            sec_b = col_r.b;
-            // }
-
-            wire_mode = 8;
-            PUSH(joypad_speed_pct_from_saved(bs));
-            PUSH(col_l.r);
-            PUSH(col_l.g);
-            PUSH(col_l.b);
-            PUSH(sec_r);
-            PUSH(sec_g);
-            PUSH(sec_b);
-        } else {
-            wire_mode = restore_breath_wire_mode(bs);
-
-            if (use == be_sysfs) {
-                PUSH(col_l.r);
-                PUSH(col_l.g);
-                PUSH(col_l.b);
-                PUSH(col_r.r);
-                PUSH(col_r.g);
-                PUSH(col_r.b);
-                PUSH(col_m.r);
-                PUSH(col_m.g);
-                PUSH(col_m.b);
-                PUSH(col_f1.r);
-                PUSH(col_f1.g);
-                PUSH(col_f1.b);
-                PUSH(col_f2.r);
-                PUSH(col_f2.g);
-                PUSH(col_f2.b);
-            } else {
-                PUSH(col_l.r);
-                PUSH(col_l.g);
-                PUSH(col_l.b);
-            }
-        }
-    } else if (saved_mode == 7) {
-        int bs = read_config_int("settings/rgb/breath_speed", 50);
-        wire_mode = 7;
-        PUSH(joypad_speed_pct_from_saved(bs));
-    } else if (saved_mode == 8) {
-        int bs = read_config_int("settings/rgb/breath_speed", 50);
-        wire_mode = 5;
-        PUSH(joypad_speed_pct_from_saved(bs));
-    } else if (saved_mode == 9) {
-        if (col_l.r || col_l.g || col_l.b) {
-            wire_mode = 6;
-            PUSH(col_l.r);
-            PUSH(col_l.g);
-            PUSH(col_l.b);
-        } else {
-            return dispatch_off(restore_backend_from_config(saved_backend));
-        }
+    if (use == be_sysfs) {
+        PUSH_ZONE(st.col_l, st.bright_l);
+        PUSH_ZONE(st.col_r, st.bright_r);
+        PUSH_ZONE(st.col_m, st.bright_m);
+        PUSH_ZONE(st.col_f1, st.bright_f1);
+        PUSH_ZONE(st.col_f2, st.bright_f2);
+        PUSH_ZONE(st.col_rs1, st.bright_rs1);
+        PUSH_ZONE(st.col_rs2, st.bright_rs2);
+        PUSH_ZONE(st.col_shl1, st.bright_shl1);
+        PUSH_ZONE(st.col_shl2, st.bright_shl2);
+        PUSH_ZONE(st.col_shr2, st.bright_shr2);
+        PUSH_ZONE(st.col_shr1, st.bright_shr1);
     } else {
-        wire_mode = 1;
-
-        if (use == be_sysfs) {
-            PUSH(col_l.r);
-            PUSH(col_l.g);
-            PUSH(col_l.b);
-            PUSH(col_r.r);
-            PUSH(col_r.g);
-            PUSH(col_r.b);
-            PUSH(col_m.r);
-            PUSH(col_m.g);
-            PUSH(col_m.b);
-            PUSH(col_f1.r);
-            PUSH(col_f1.g);
-            PUSH(col_f1.b);
-            PUSH(col_f2.r);
-            PUSH(col_f2.g);
-            PUSH(col_f2.b);
-        } else {
-            PUSH(col_l.r);
-            PUSH(col_l.g);
-            PUSH(col_l.b);
-            PUSH(col_r.r);
-            PUSH(col_r.g);
-            PUSH(col_r.b);
-        }
+        PUSH_ZONE(st.col_l, st.bright_l);
+        PUSH_ZONE(st.col_r, st.bright_r);
     }
 
+#undef PUSH_ZONE
 #undef PUSH
 
-    return dispatch_wire_command(use, wire_mode, bright_byte, n, argv_buf, &fl);
+    return dispatch_wire_command(use, 1, MCU_BRI, n, argv_buf, &fl);
 }
 
 static int apply_sysfs(const int mode, const int brightness_raw, const int argc, char **argv, const flags_t *fl) {
-    if (effect_map_sysfs(mode) < 0) die("Invalid mode for SYSFS: %d (1-9)", mode);
+    if (effect_map_sysfs(mode) < 0) die("Invalid mode for SYSFS: %d (1)", mode);
     const int bri = clamp(brightness_raw * SER_BRI / MCU_BRI, SER_BRI);
 
     if (argc < 3) {
         fprintf(
-            stderr, "SYSFS usage: murgb -b sysfs <mode 1-9> <brightness 0-255> "
-                    "<L_r L_g L_b> [<R_r R_g R_b>] [M_r M_g M_b] [F1_r F1_g F1_b] [F2_r F2_g F2_b]\n"
+            stderr, "SYSFS usage: murgb -b sysfs 1 <brightness 0-255> "
+                    "<L_r L_g L_b> [<R_r R_g R_b>] [M_r M_g M_b] [F1_r F1_g F1_b] [F2_r F2_g F2_b] "
+                    "[RS1_r RS1_g RS1_b] [RS2_r RS2_g RS2_b] "
+                    "[SHL1_r SHL1_g SHL1_b] [SHL2_r SHL2_g SHL2_b] [SHR2_r SHR2_g SHR2_b] [SHR1_r SHR1_g SHR1_b]\n"
         );
         return 1;
     }
@@ -756,14 +601,48 @@ static int apply_sysfs(const int mode, const int brightness_raw, const int argc,
     const int f2_g = argc >= 15 ? parse_int(argv[13], "F2_g") : rg;
     const int f2_b = argc >= 15 ? parse_int(argv[14], "F2_b") : rb;
 
+    const int rs1_r = argc >= 18 ? parse_int(argv[15], "RS1_r") : rr;
+    const int rs1_g = argc >= 18 ? parse_int(argv[16], "RS1_g") : rg;
+    const int rs1_b = argc >= 18 ? parse_int(argv[17], "RS1_b") : rb;
+
+    const int rs2_r = argc >= 21 ? parse_int(argv[18], "RS2_r") : rs1_r;
+    const int rs2_g = argc >= 21 ? parse_int(argv[19], "RS2_g") : rs1_g;
+    const int rs2_b = argc >= 21 ? parse_int(argv[20], "RS2_b") : rs1_b;
+
+    const int shl1_r = argc >= 24 ? parse_int(argv[21], "SHL1_r") : f1_r;
+    const int shl1_g = argc >= 24 ? parse_int(argv[22], "SHL1_g") : f1_g;
+    const int shl1_b = argc >= 24 ? parse_int(argv[23], "SHL1_b") : f1_b;
+
+    const int shl2_r = argc >= 27 ? parse_int(argv[24], "SHL2_r") : shl1_r;
+    const int shl2_g = argc >= 27 ? parse_int(argv[25], "SHL2_g") : shl1_g;
+    const int shl2_b = argc >= 27 ? parse_int(argv[26], "SHL2_b") : shl1_b;
+
+    const int shr2_r = argc >= 30 ? parse_int(argv[27], "SHR2_r") : f2_r;
+    const int shr2_g = argc >= 30 ? parse_int(argv[28], "SHR2_g") : f2_g;
+    const int shr2_b = argc >= 30 ? parse_int(argv[29], "SHR2_b") : f2_b;
+
+    const int shr1_r = argc >= 33 ? parse_int(argv[30], "SHR1_r") : shr2_r;
+    const int shr1_g = argc >= 33 ? parse_int(argv[31], "SHR1_g") : shr2_g;
+    const int shr1_b = argc >= 33 ? parse_int(argv[32], "SHR1_b") : shr2_b;
+
     char hex_l[16];
     char hex_r[16];
     char hex_m[16];
     char hex_f1[16];
     char hex_f2[16];
 
-    hex3(hex_l, lr, lg, lb);
-    hex3(hex_r, rr, rg, rb);
+    const int tui_brick_pro = board_is_tui_brick_pro();
+    const int tui_brick = board_is_tui_brick();
+
+    int hex_lr_r = lr, hex_lr_g = lg;
+    int hex_rr_r = rr, hex_rr_g = rg;
+    if (tui_brick_pro) {
+        swap_rg(&hex_lr_r, &hex_lr_g);
+        swap_rg(&hex_rr_r, &hex_rr_g);
+    }
+
+    hex3(hex_l, hex_lr_r, hex_lr_g, lb);
+    hex3(hex_r, hex_rr_r, hex_rr_g, rb);
     hex3(hex_m, mr, mg, mb);
     hex3(hex_f1, f1_r, f1_g, f1_b);
     hex3(hex_f2, f2_r, f2_g, f2_b);
@@ -782,8 +661,7 @@ static int apply_sysfs(const int mode, const int brightness_raw, const int argc,
     sysfs_write("effect_rgb_hex_f1", hex_f1);
     sysfs_write("effect_rgb_hex_f2", hex_f2);
 
-    int dur_all = fl->dur_all >= 0 ? fl->dur_all : env_int("LED_DUR", 1000);
-    dur_all = duration_map_sysfs(mode, dur_all);
+    const int dur_all = fl->dur_all >= 0 ? fl->dur_all : env_int("LED_DUR", 1000);
 
     const int dur_l = fl->dur_l >= 0 ? fl->dur_l : env_int("LED_DUR_L", dur_all);
     const int dur_r = fl->dur_r >= 0 ? fl->dur_r : env_int("LED_DUR_R", dur_all);
@@ -821,7 +699,13 @@ static int apply_sysfs(const int mode, const int brightness_raw, const int argc,
     sysfs_write_int("effect_cycles_f2", cyc_f2);
 
     const int effect = effect_map_sysfs(mode);
-    if (sysfs_writable("effect_lr")) {
+
+    if (tui_brick) {
+        sysfs_write_int("effect_l", 0);
+        sysfs_write_int("effect_r", 0);
+        sysfs_write_int("effect_f1", 0);
+        sysfs_write_int("effect_f2", 0);
+    } else if (same_lr && sysfs_writable("effect_lr")) {
         sysfs_write_int("effect_lr", effect);
     } else {
         sysfs_write_int("effect_l", effect);
@@ -829,10 +713,58 @@ static int apply_sysfs(const int mode, const int brightness_raw, const int argc,
     }
 
     sysfs_write_int("effect_m", effect);
-    sysfs_write_int("effect_f1", effect);
-    sysfs_write_int("effect_f2", effect);
+
+    if (!tui_brick) {
+        sysfs_write_int("effect_f1", effect);
+        sysfs_write_int("effect_f2", effect);
+    }
 
     sysfs_write("effect_enable", "1\n");
+
+    if (tui_brick_pro || tui_brick) {
+        const int shoulder_rgb[4][3] = {
+            {scale_channel(shl1_r, brightness_raw), scale_channel(shl1_g, brightness_raw),
+             scale_channel(shl1_b, brightness_raw)},
+            {scale_channel(shl2_r, brightness_raw), scale_channel(shl2_g, brightness_raw),
+             scale_channel(shl2_b, brightness_raw)},
+            {scale_channel(shr2_r, brightness_raw), scale_channel(shr2_g, brightness_raw),
+             scale_channel(shr2_b, brightness_raw)},
+            {scale_channel(shr1_r, brightness_raw), scale_channel(shr1_g, brightness_raw),
+             scale_channel(shr1_b, brightness_raw)},
+        };
+
+        if (tui_brick_pro) {
+            static const int pro_shoulder_led[4] = {
+                BRICK_PRO_SHOULDER_L1_LED, BRICK_PRO_SHOULDER_L2_LED, BRICK_PRO_SHOULDER_R2_LED,
+                BRICK_PRO_SHOULDER_R1_LED
+            };
+
+            int sc_rs1_r = scale_channel(rs1_r, brightness_raw);
+            int sc_rs1_g = scale_channel(rs1_g, brightness_raw);
+            const int sc_rs1_b = scale_channel(rs1_b, brightness_raw);
+            swap_rg(&sc_rs1_r, &sc_rs1_g);
+
+            int sc_rs2_r = scale_channel(rs2_r, brightness_raw);
+            int sc_rs2_g = scale_channel(rs2_g, brightness_raw);
+            const int sc_rs2_b = scale_channel(rs2_b, brightness_raw);
+            swap_rg(&sc_rs2_r, &sc_rs2_g);
+
+            write_raw_zone_frame(
+                sc_rs1_r, sc_rs1_g, sc_rs1_b, sc_rs2_r, sc_rs2_g, sc_rs2_b, shoulder_rgb, pro_shoulder_led
+            );
+        } else {
+            const int f1_rgb[3] = {
+                scale_channel(f1_r, brightness_raw), scale_channel(f1_g, brightness_raw),
+                scale_channel(f1_b, brightness_raw)
+            };
+            const int f2_rgb[3] = {
+                scale_channel(f2_r, brightness_raw), scale_channel(f2_g, brightness_raw),
+                scale_channel(f2_b, brightness_raw)
+            };
+
+            write_brick_raw_frame(f1_rgb, f2_rgb, shoulder_rgb);
+        }
+    }
 
     printf("LED mode %d applied (SYSFS) brightness=%d\n", mode, bri);
 
@@ -840,7 +772,7 @@ static int apply_sysfs(const int mode, const int brightness_raw, const int argc,
 }
 
 static int apply_joypad(const int mode, const int brightness, const int argc, char **argv) {
-    if (mode < 1 || mode > 8) die("Invalid mode for JOYPAD: %d (1-8)", mode);
+    if (mode != 1) die("Invalid mode for JOYPAD: %d (1)", mode);
 
     const int level = joypad_level_from_byte(brightness);
 
@@ -853,100 +785,8 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
         return 0;
     }
 
-    if (mode == 6) {
-        joypad_write_int("led_switch", 1);
-        joypad_write_int("led_level", level);
-
-        if (argc >= 3) {
-            const int sr = clamp(parse_int(argv[0], "R"), MCU_BRI);
-            const int sg = clamp(parse_int(argv[1], "G"), MCU_BRI);
-            const int sb = clamp(parse_int(argv[2], "B"), MCU_BRI);
-
-            joypad_write_int("Led_rgb_r1", sr);
-            joypad_write_int("Led_rgb_g1", sg);
-            joypad_write_int("Led_rgb_b1", sb);
-
-            joypad_write_int("Led_rgb_r2", 0);
-            joypad_write_int("Led_rgb_g2", 0);
-            joypad_write_int("Led_rgb_b2", 0);
-        }
-
-        joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
-        joypad_commit();
-
-        printf("LED mode %d set with brightness %d (JOYPAD, stick-follow)\n", mode, level);
-        return 0;
-    }
-
-    if (mode == 5) {
-        joypad_write_int("led_switch", 1);
-        joypad_write_int("led_level", level);
-
-        if (argc >= 1) {
-            const int speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
-            joypad_write_int("led_speed", speed_pct);
-        }
-
-        joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
-        joypad_commit();
-
-        printf("LED mode %d set with brightness %d (JOYPAD, rainbow)\n", mode, level);
-        return 0;
-    }
-
-    if (mode == 7 || mode == 8) {
-        const int mode8_argc_ok = mode == 8 && (argc == 4 || argc == 7);
-        if (!(mode == 7 && argc == 1) && !mode8_argc_ok) {
-            fprintf(
-                stderr, "JOYPAD usage:\n"
-                        "  murgb -b joypad 7 <brightness> <speed 0-100>\n"
-                        "  murgb -b joypad 8 <brightness> <speed 0-100> <R1> <G1> <B1> [<R2> <G2> <B2>]\n"
-            );
-            return 1;
-        }
-
-        const int ui_speed_pct = joypad_speed_pct_to_reg(parse_int(argv[0], "speed"));
-        const int reg_speed_pct = mode == 8 ? joypad_breathing_speed_invert(ui_speed_pct) : ui_speed_pct;
-
-        joypad_write_int("led_switch", 1);
-        joypad_write_int("led_level", level);
-        joypad_write_int("led_sync_colour", 1);
-        joypad_write_int("led_speed", reg_speed_pct);
-
-        if (mode == 8) {
-            const int r1 = clamp(parse_int(argv[1], "R1"), MCU_BRI);
-            const int g1 = clamp(parse_int(argv[2], "G1"), MCU_BRI);
-            const int b1 = clamp(parse_int(argv[3], "B1"), MCU_BRI);
-
-            int r2, g2, b2;
-            if (argc == 7) {
-                r2 = clamp(parse_int(argv[4], "R2"), MCU_BRI);
-                g2 = clamp(parse_int(argv[5], "G2"), MCU_BRI);
-                b2 = clamp(parse_int(argv[6], "B2"), MCU_BRI);
-            } else {
-                r2 = r1;
-                g2 = g1;
-                b2 = b1;
-            }
-
-            joypad_write_int("Led_rgb_r1", r1);
-            joypad_write_int("Led_rgb_g1", g1);
-            joypad_write_int("Led_rgb_b1", b1);
-
-            joypad_write_int("Led_rgb_r2", r2);
-            joypad_write_int("Led_rgb_g2", g2);
-            joypad_write_int("Led_rgb_b2", b2);
-        }
-
-        joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
-        joypad_commit();
-
-        printf("LED mode %d set with brightness %d speed %d%% (JOYPAD)\n", mode, level, ui_speed_pct);
-        return 0;
-    }
-
     if (argc < 3) {
-        fprintf(stderr, "JOYPAD usage: murgb -b joypad <mode 1-4> <brightness> <R G B>\n");
+        fprintf(stderr, "JOYPAD usage: murgb -b joypad 1 <brightness> <R G B>\n");
         return 1;
     }
 
@@ -967,12 +807,7 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
 
     joypad_write_int("led_switch", 1);
     joypad_write_int("led_level", level);
-    joypad_write_int("led_sync_colour", mode == 1 ? 0 : 1);
-
-    if (mode >= 2 && mode <= 4) {
-        const int ui_pct = joypad_breathing_speed_pct_for_protocol(mode);
-        joypad_write_int("led_speed", joypad_breathing_speed_invert(ui_pct));
-    }
+    joypad_write_int("led_sync_colour", 0);
 
     joypad_write_int("Led_rgb_r1", lr);
     joypad_write_int("Led_rgb_g1", lg);
@@ -986,7 +821,7 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
     joypad_write_int("Led_rgb_g2", lg2);
     joypad_write_int("Led_rgb_b2", lb2);
 
-    joypad_write_int("led_mode", joypad_mode_from_protocol(mode));
+    joypad_write_int("led_mode", 1);
     joypad_commit();
 
     printf("LED mode %d set with brightness %d (JOYPAD)\n", mode, level);
@@ -995,58 +830,28 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
 }
 
 static int apply_serial(const int mode, const int brightness, const int argc, char **argv) {
-    if (mode < 1 || mode > 6) die("Invalid mode for SERIAL: %d (1-6)", mode);
+    if (mode != 1) die("Invalid mode for SERIAL: %d (1)", mode);
 
     const int bri = clamp(brightness, MCU_BRI);
     serial_prepare();
 
-    if (mode >= 5 && mode <= 6) {
-        if (argc != 1) {
-            fprintf(stderr, "SERIAL usage (5-6): murgb -b serial <5|6> <brightness> <speed 0-255>\n");
-            return 1;
-        }
-
-        const int speed = clamp(parse_int(argv[0], "speed"), MCU_BRI);
-        serial_send_rainbow(mode, bri, speed);
-
-        printf("LED mode %d set with brightness %d (SERIAL)\n", mode, bri);
-
-        return 0;
-    }
-
-    if (mode == 1) {
-        if (argc != 6) {
-            fprintf(
-                stderr, "SERIAL usage (1): murgb -b serial 1 <brightness> "
-                        "<right_r> <right_g> <right_b> <left_r> <left_g> <left_b>\n"
-            );
-            return 1;
-        }
-
-        const int rr = parse_int(argv[0], "right_r");
-        const int rg = parse_int(argv[1], "right_g");
-        const int rb = parse_int(argv[2], "right_b");
-
-        const int lr = parse_int(argv[3], "left_r");
-        const int lg = parse_int(argv[4], "left_g");
-        const int lb = parse_int(argv[5], "left_b");
-
-        serial_send_static(bri, rr, rg, rb, lr, lg, lb);
-        printf("LED mode %d set with brightness %d (SERIAL)\n", mode, bri);
-
-        return 0;
-    }
-
-    if (argc != 3) {
-        fprintf(stderr, "SERIAL usage (2-4): murgb -b serial <2|3|4> <brightness> <r> <g> <b>\n");
+    if (argc != 6) {
+        fprintf(
+            stderr, "SERIAL usage: murgb -b serial 1 <brightness> "
+                    "<right_r> <right_g> <right_b> <left_r> <left_g> <left_b>\n"
+        );
         return 1;
     }
 
-    const int r = parse_int(argv[0], "r");
-    const int g = parse_int(argv[1], "g");
-    const int b = parse_int(argv[2], "b");
+    const int rr = parse_int(argv[0], "right_r");
+    const int rg = parse_int(argv[1], "right_g");
+    const int rb = parse_int(argv[2], "right_b");
 
-    serial_send_breath(mode, bri, r, g, b);
+    const int lr = parse_int(argv[3], "left_r");
+    const int lg = parse_int(argv[4], "left_g");
+    const int lb = parse_int(argv[5], "left_b");
+
+    serial_send_static(bri, rr, rg, rb, lr, lg, lb);
     printf("LED mode %d set with brightness %d (SERIAL)\n", mode, bri);
 
     return 0;
@@ -1096,7 +901,10 @@ int main(const int argc, char **argv) {
             fprintf(stderr, "Error: '%s' takes no other arguments\n", argv[1]);
             return 1;
         }
-        if (strcmp(argv[1], "off") == 0) return dispatch_off(be_auto);
+        if (strcmp(argv[1], "off") == 0) {
+            dispatch_off();
+            return 0;
+        }
         return dispatch_restore();
     }
 

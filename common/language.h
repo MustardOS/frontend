@@ -1700,39 +1700,25 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
-        char mode[MAX_BUFFER_SIZE];
+        char colour[MAX_BUFFER_SIZE];
         char bright[MAX_BUFFER_SIZE];
-        char speed[MAX_BUFFER_SIZE];
-        char breath_speed[MAX_BUFFER_SIZE];
-        char colourl[MAX_BUFFER_SIZE];
-        char colourr[MAX_BUFFER_SIZE];
-        char colourm[MAX_BUFFER_SIZE];
-        char colourf1[MAX_BUFFER_SIZE];
-        char colourf2[MAX_BUFFER_SIZE];
-        char combo[MAX_BUFFER_SIZE];
         char backend[MAX_BUFFER_SIZE];
-        char same_as_l[MAX_BUFFER_SIZE];
-        struct {
-            char off[MAX_BUFFER_SIZE];
-            char statc[MAX_BUFFER_SIZE];
-            char breathing[MAX_BUFFER_SIZE];
-            char colour_cycle[MAX_BUFFER_SIZE];
-            char rainbow[MAX_BUFFER_SIZE];
-            char stick_follow[MAX_BUFFER_SIZE];
-            char preset_combo[MAX_BUFFER_SIZE];
-            char theme_supplied[MAX_BUFFER_SIZE];
-        } mode_name;
-        struct {
-            char fast[MAX_BUFFER_SIZE];
-            char medium[MAX_BUFFER_SIZE];
-            char slow[MAX_BUFFER_SIZE];
-        } breath_speed_name;
-        struct {
-            char primary[MAX_BUFFER_SIZE];
-            char secondary[MAX_BUFFER_SIZE];
-            char single[MAX_BUFFER_SIZE];
-            char both[MAX_BUFFER_SIZE];
-        } stick;
+        char zone_l[MAX_BUFFER_SIZE];
+        char zone_l_arc1[MAX_BUFFER_SIZE];
+        char zone_l_arc2[MAX_BUFFER_SIZE];
+        char zone_r[MAX_BUFFER_SIZE];
+        char zone_m[MAX_BUFFER_SIZE];
+        char zone_f1[MAX_BUFFER_SIZE];
+        char zone_f2[MAX_BUFFER_SIZE];
+        char zone_rs1[MAX_BUFFER_SIZE];
+        char zone_rs2[MAX_BUFFER_SIZE];
+        char zone_shl1[MAX_BUFFER_SIZE];
+        char zone_shl2[MAX_BUFFER_SIZE];
+        char zone_shr2[MAX_BUFFER_SIZE];
+        char zone_shr1[MAX_BUFFER_SIZE];
+        char reset_confirm[MAX_BUFFER_SIZE];
+        char reset_done[MAX_BUFFER_SIZE];
+        char random_toast[MAX_BUFFER_SIZE];
         struct {
             char autom[MAX_BUFFER_SIZE];
             char sysfs[MAX_BUFFER_SIZE];
@@ -1740,16 +1726,8 @@ struct mux_lang {
             char joypad[MAX_BUFFER_SIZE];
         } backend_name;
         struct {
-            char mode[MAX_BUFFER_SIZE];
+            char colour[MAX_BUFFER_SIZE];
             char bright[MAX_BUFFER_SIZE];
-            char breath_speed[MAX_BUFFER_SIZE];
-            char colour_l[MAX_BUFFER_SIZE];
-            char colour_r[MAX_BUFFER_SIZE];
-            char colour_m[MAX_BUFFER_SIZE];
-            char colour_f1[MAX_BUFFER_SIZE];
-            char colour_f2[MAX_BUFFER_SIZE];
-            char combo[MAX_BUFFER_SIZE];
-            char backend[MAX_BUFFER_SIZE];
         } help;
     } muxrgb;
 

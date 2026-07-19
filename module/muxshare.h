@@ -323,6 +323,8 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
 
 int muxrgb_main();
 
+int muxrgbzone_main();
+
 int muxrtc_main();
 
 int muxsearch_main(char *dir);
