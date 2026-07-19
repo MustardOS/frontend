@@ -361,6 +361,7 @@ static void draw_stick_static(const stick_state_t *stick) {
     draw_stick_crosshair(stick->static_canvas, target, centre, ring_col);
     draw_deadzone_guides(stick->static_canvas, centre, deadzone, ring_col);
 
+    canvas_invalidate_gpu_texture(stick->static_canvas);
     lv_obj_invalidate(stick->static_canvas);
 }
 
