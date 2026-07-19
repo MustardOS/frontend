@@ -227,8 +227,8 @@ static void init_navigation_group(void) {
 
     char *bright_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
 
-    INIT_OPTION_ITEM(-1, rgbzone, colour, lang.muxrgb.colour, "colour_l", colour_options, colour_count);
-    INIT_OPTION_ITEM(-1, rgbzone, bright, lang.muxrgb.bright, "colour_l", NULL, 0);
+    INIT_OPTION_ITEM(-1, rgbzone, colour, lang.muxrgb.colour, "colour", colour_options, colour_count);
+    INIT_OPTION_ITEM(-1, rgbzone, bright, lang.muxrgb.bright, "bright", NULL, 0);
 
     apply_theme_list_drop_down(&theme, ui_lbl_bright_rgbzone, ui_dro_bright_rgbzone, bright_values);
     free(bright_values);
