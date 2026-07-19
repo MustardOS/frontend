@@ -1581,6 +1581,7 @@ static const lang_field lang_fields[] = {
 
     // muxrgb
     {"muxrgb", LANG_OFF(muxrgb.title), lang_specific, "RGB LIGHTS"},
+    {"muxrgb", LANG_OFF(muxrgb.mode), lang_specific, "Mode"},
     {"muxrgb", LANG_OFF(muxrgb.colour), lang_specific, "Colour"},
     {"muxrgb", LANG_OFF(muxrgb.bright), lang_specific, "Brightness"},
     {"muxrgb", LANG_OFF(muxrgb.backend), lang_specific, "Backend"},
@@ -1600,6 +1601,9 @@ static const lang_field lang_fields[] = {
     {"muxrgb", LANG_OFF(muxrgb.reset_confirm), lang_specific, "Set every zone to Off and 100% brightness?"},
     {"muxrgb", LANG_OFF(muxrgb.reset_done), lang_specific, "All Zones Reset"},
     {"muxrgb", LANG_OFF(muxrgb.random_toast), lang_specific, "Feeling Lucky!"},
+    {"muxrgb", LANG_OFF(muxrgb.mode_name.off), lang_specific, "Off"},
+    {"muxrgb", LANG_OFF(muxrgb.mode_name.zone), lang_specific, "Zone"},
+    {"muxrgb", LANG_OFF(muxrgb.mode_name.theme), lang_specific, "Theme"},
     {"muxrgb", LANG_OFF(muxrgb.backend_name.autom), lang_specific, "Auto"},
     {"muxrgb", LANG_OFF(muxrgb.backend_name.sysfs), lang_specific, "SysFS"},
     {"muxrgb", LANG_OFF(muxrgb.backend_name.serial), lang_specific, "Serial"},

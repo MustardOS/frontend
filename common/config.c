@@ -209,7 +209,8 @@ static const cfg_field cfg_fields[] = {
     {CONF_DEVICE_PATH "cpu", "default", CFG_OFF(settings.power.gov.dflt), 1, {.s = "ondemand"}},
 
     // settings/rgb/
-    {CONF_CONFIG_PATH "settings/rgb", "mode", CFG_OFF(settings.rgb.mode), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/rgb", "mode", CFG_OFF(settings.rgb.mode), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/rgb", "bright_theme", CFG_OFF(settings.rgb.bright_theme), 0, {.i = 255}},
     {CONF_CONFIG_PATH "settings/rgb", "colour_l", CFG_OFF(settings.rgb.colour_l), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/rgb", "bright_l", CFG_OFF(settings.rgb.bright_l), 0, {.i = 255}},
     {CONF_CONFIG_PATH "settings/rgb", "colour_r", CFG_OFF(settings.rgb.colour_r), 0, {.i = 0}},

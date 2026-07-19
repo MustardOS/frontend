@@ -394,6 +394,10 @@
     PROXY(no_proxy, "noproxy")                                                                                         \
     PROXY(test, "test")
 
+#define RGBMODE_ELEMENTS                                                                                               \
+    RGBMODE(mode, "mode")                                                                                              \
+    RGBMODE(bright, "bright")
+
 #define RGB_ELEMENTS                                                                                                   \
     RGB(zone_l, "zone_l")                                                                                              \
     RGB(zone_r, "zone_r")                                                                                              \

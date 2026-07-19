@@ -1,9 +1,12 @@
 #include "muxshare.h"
 #include "ui/ui_muxrgb.h"
+#include "../common/rgb.h"
 
-#define RGB(NAME, UDATA) 1,
-enum { ui_count_dynamic = E_SIZE(RGB_ELEMENTS) };
+#define RGB(NAME, UDATA)     1,
+#define RGBMODE(NAME, UDATA) 1,
+enum { ui_count_dynamic = E_SIZE(RGB_ELEMENTS) + E_SIZE(RGBMODE_ELEMENTS) };
 #undef RGB
+#undef RGBMODE
 
 #define RGB_ZONE_L      (1u << 0)
 #define RGB_ZONE_R      (1u << 1)
@@ -34,8 +37,8 @@ static const rgb_device_caps_t rgb_devices[] = {
 
     {"rg-vita-pro", RGB_ZONE_L | RGB_ZONE_SINGLE},
 
-    {"tui-brick", RGB_ZONE_M | RGB_ZONE_F1 | RGB_ZONE_F2 | RGB_ZONE_SHL1 | RGB_ZONE_SHL2 | RGB_ZONE_SHR2
-                      | RGB_ZONE_SHR1},
+    {"tui-brick",
+     RGB_ZONE_M | RGB_ZONE_F1 | RGB_ZONE_F2 | RGB_ZONE_SHL1 | RGB_ZONE_SHL2 | RGB_ZONE_SHR2 | RGB_ZONE_SHR1},
 
     {"tui-brick-pro", RGB_ZONE_L | RGB_ZONE_R | RGB_ZONE_M | RGB_ZONE_F1 | RGB_ZONE_F2 | RGB_ZONE_RS1 | RGB_ZONE_RS2
                           | RGB_ZONE_SHL1 | RGB_ZONE_SHL2 | RGB_ZONE_SHR2 | RGB_ZONE_SHR1},
@@ -53,6 +56,29 @@ static const rgb_device_caps_t *rgb_caps_for(const char *code) {
 }
 
 static const rgb_device_caps_t *rgb_caps = NULL;
+static int current_mode = RGB_MODE_OFF;
+
+static int mode_raw_to_dropdown(const int raw) {
+    switch (raw) {
+        case RGB_MODE_STATIC:
+            return 1;
+        case RGB_MODE_THEME_SUPPLIED:
+            return 2;
+        default:
+            return 0;
+    }
+}
+
+static int mode_dropdown_to_raw(const int idx) {
+    switch (idx) {
+        case 1:
+            return RGB_MODE_STATIC;
+        case 2:
+            return RGB_MODE_THEME_SUPPLIED;
+        default:
+            return RGB_MODE_OFF;
+    }
+}
 
 #define RGBZONE_SEL_PATH "/tmp/rgb_zone_sel"
 
@@ -81,7 +107,7 @@ typedef struct {
 static zone_entry_t zones[zone_count];
 
 static int zone_visible(const zone_entry_t *z) {
-    return rgb_caps && (rgb_caps->zones & z->cap_bit);
+    return current_mode == RGB_MODE_STATIC && rgb_caps && (rgb_caps->zones & z->cap_bit);
 }
 
 static void build_zone_table(void) {
@@ -207,10 +233,13 @@ static void show_static_obj(lv_obj_t *pnl, lv_obj_t *lbl, lv_obj_t *ico) {
 }
 
 static int zone_at_visible_position(const int pos) {
+    const int zone_pos = pos - 1;
+    if (zone_pos < 0) return -1;
+
     int n = 0;
     for (int i = 0; i < zone_count; i++) {
         if (!zone_visible(&zones[i])) continue;
-        if (n == pos) return i;
+        if (n == zone_pos) return i;
         n++;
     }
     return -1;
@@ -272,6 +301,10 @@ static void init_navigation_group(void) {
 
     build_zone_table();
 
+    char *mode_options[3] = {lang.muxrgb.mode_name.off, lang.muxrgb.mode_name.zone, lang.muxrgb.mode_name.theme};
+    INIT_OPTION_ITEM(-1, rgb, mode, lang.muxrgb.mode, "colour_l", mode_options, 3);
+    lv_dropdown_set_selected(ui_dro_mode_rgb, mode_raw_to_dropdown(current_mode));
+
     INIT_STATIC_ITEM(-1, rgb, zone_l, zones[zone_l].label, "colour_l", 0);
     INIT_STATIC_ITEM(-1, rgb, zone_r, zones[zone_r].label, "colour_l", 0);
     INIT_STATIC_ITEM(-1, rgb, zone_m, zones[zone_m].label, "colour_l", 0);
@@ -284,12 +317,23 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, rgb, zone_shr2, zones[zone_shr2].label, "colour_l", 0);
     INIT_STATIC_ITEM(-1, rgb, zone_shr1, zones[zone_shr1].label, "colour_l", 0);
 
+    INIT_OPTION_ITEM(-1, rgb, bright, lang.muxrgb.bright, "colour_l", NULL, 0);
+    char *bright_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
+    apply_theme_list_drop_down(&theme, ui_lbl_bright_rgb, ui_dro_bright_rgb, bright_values);
+    free(bright_values);
+    lv_dropdown_set_selected(ui_dro_bright_rgb, int_to_pct(config.settings.rgb.bright_theme, 0, 255));
+
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
     if (!rgb_caps) LOG_WARN(mux_module, "No caps entry for board '%s'; showing all rows", device.board.name);
 
     show_zone_list();
+    if (current_mode == RGB_MODE_THEME_SUPPLIED) {
+        SHOW_OPTION_ITEM(rgb, bright);
+    } else {
+        HIDE_OPTION_ITEM(rgb, bright);
+    }
 
     gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 2, 0, 1);
 }
@@ -325,6 +369,55 @@ static void handle_dpad_down_hold(void) {
     if (reset_dlg_active) return;
 
     handle_list_nav_down_hold();
+}
+
+static void apply_option_change(void) {
+    if (current_item_index == 0) {
+        const int new_mode = mode_dropdown_to_raw(lv_dropdown_get_selected(ui_dro_mode_rgb));
+        if (new_mode == current_mode) return;
+
+        current_mode = new_mode;
+        write_text_to_file(CONF_CONFIG_PATH "settings/rgb/mode", "w", INT, current_mode);
+
+        show_zone_list();
+        if (current_mode == RGB_MODE_THEME_SUPPLIED) {
+            SHOW_OPTION_ITEM(rgb, bright);
+        } else {
+            HIDE_OPTION_ITEM(rgb, bright);
+        }
+    } else if (current_mode == RGB_MODE_THEME_SUPPLIED) {
+        const int bright_val = pct_to_int(lv_dropdown_get_selected(ui_dro_bright_rgb), 0, 255);
+        write_text_to_file(CONF_CONFIG_PATH "settings/rgb/bright_theme", "w", INT, bright_val);
+    } else {
+        return;
+    }
+
+    const char *argv[2] = {RGBLED_BIN, "restore"};
+    run_exec(argv, 2, 0, 0, NULL, NULL);
+}
+
+static void handle_option_prev(void) {
+    if (reset_dlg_active) {
+        dialogue_handle_dpad(&reset_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
+    if (msgbox_active || block_input) return;
+
+    move_option(lv_group_get_focused(ui_group_value), -1);
+    apply_option_change();
+}
+
+static void handle_option_next(void) {
+    if (reset_dlg_active) {
+        dialogue_handle_dpad(&reset_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
+    if (msgbox_active || block_input) return;
+
+    move_option(lv_group_get_focused(ui_group_value), +1);
+    apply_option_change();
 }
 
 static void handle_a(void) {
@@ -410,11 +503,16 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
                                   {ui_lbl_nav_x, lang.generic.reset, 0},
+                                  {ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
                                   {NULL, NULL, 0}});
 
 #define RGB(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_rgb, UDATA);
     RGB_ELEMENTS
 #undef RGB
+#define RGBMODE(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_rgb, UDATA);
+    RGBMODE_ELEMENTS
+#undef RGBMODE
 
     dialogue_init_confirm(
         &reset_dlg, &theme, ui_screen, lang.generic.confirm, lang.muxrgb.reset_confirm, lang.generic.reset,
@@ -429,6 +527,7 @@ int muxrgb_main(void) {
     init_theme(1, 0);
 
     rgb_caps = rgb_caps_for(device.board.name);
+    current_mode = config.settings.rgb.mode;
 
     init_ui_common_screen(&theme, &device, &lang, lang.muxrgb.title);
     init_muxrgb(ui_pnl_content);
@@ -457,6 +556,8 @@ int muxrgb_main(void) {
                 [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_dpad_left] = handle_option_prev,
+                [mux_input_dpad_right] = handle_option_next,
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
             },
@@ -468,6 +569,8 @@ int muxrgb_main(void) {
         .hold_handler = {
             [mux_input_dpad_up] = handle_dpad_up_hold,
             [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_dpad_left] = handle_option_prev,
+            [mux_input_dpad_right] = handle_option_next,
             [mux_input_l1] = handle_list_nav_page_up,
             [mux_input_r1] = handle_list_nav_page_down,
             [mux_input_y] = handle_y_hold,

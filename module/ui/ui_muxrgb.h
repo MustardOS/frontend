@@ -12,3 +12,12 @@ void init_muxrgb(lv_obj_t *ui_pnl_content);
 
 RGB_ELEMENTS
 #undef RGB
+
+#define RGBMODE(NAME, UDATA)                                                                                           \
+    extern lv_obj_t *ui_pnl_##NAME##_rgb;                                                                              \
+    extern lv_obj_t *ui_lbl_##NAME##_rgb;                                                                              \
+    extern lv_obj_t *ui_ico_##NAME##_rgb;                                                                              \
+    extern lv_obj_t *ui_dro_##NAME##_rgb;
+
+RGBMODE_ELEMENTS
+#undef RGBMODE

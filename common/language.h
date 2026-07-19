@@ -1700,6 +1700,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char mode[MAX_BUFFER_SIZE];
         char colour[MAX_BUFFER_SIZE];
         char bright[MAX_BUFFER_SIZE];
         char backend[MAX_BUFFER_SIZE];
@@ -1719,6 +1720,11 @@ struct mux_lang {
         char reset_confirm[MAX_BUFFER_SIZE];
         char reset_done[MAX_BUFFER_SIZE];
         char random_toast[MAX_BUFFER_SIZE];
+        struct {
+            char off[MAX_BUFFER_SIZE];
+            char zone[MAX_BUFFER_SIZE];
+            char theme[MAX_BUFFER_SIZE];
+        } mode_name;
         struct {
             char autom[MAX_BUFFER_SIZE];
             char sysfs[MAX_BUFFER_SIZE];

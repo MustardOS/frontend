@@ -11,6 +11,8 @@
 #include "../common/colour.h"
 #include "../common/config.h"
 #include "../common/fileio.h"
+#include "../common/rgb.h"
+#include "../common/theme.h"
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 
@@ -456,6 +458,32 @@ typedef struct {
     int bright_shl1, bright_shl2, bright_shr2, bright_shr1;
 } rgb_restore_state_t;
 
+static void trim_trailing_cr(char *s) {
+    size_t n = strlen(s);
+    while (n > 0 && (s[n - 1] == '\r' || s[n - 1] == '\n'))
+        s[--n] = '\0';
+}
+
+static int get_theme_rgb_path(char *rgb_path) {
+    const char *base = get_theme_base();
+
+    char active_path[MAX_BUFFER_SIZE];
+    snprintf(active_path, sizeof active_path, "%s/active.txt", base);
+
+    if (file_exist(active_path)) {
+        const char *line = read_line_char_from(active_path, 1);
+        char alt[MAX_BUFFER_SIZE];
+        snprintf(alt, sizeof alt, "%s", line ? line : "");
+        trim_trailing_cr(alt);
+
+        snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", base, alt);
+        return dir_exists(rgb_path);
+    }
+
+    snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/rgb/", base);
+    return dir_exists(rgb_path);
+}
+
 static void load_saved_rgb_state(rgb_restore_state_t *st) {
     st->backend = read_config_int("settings/rgb/backend", 0);
 
@@ -517,9 +545,57 @@ static int dispatch_wire_command(
     return rc;
 }
 
+static void load_theme_rgb_state(rgb_restore_state_t *st) {
+    char rgb_path[MAX_BUFFER_SIZE];
+    rgb_colour_t col_l = rgb_colours[0];
+    rgb_colour_t col_r = rgb_colours[0];
+
+    if (get_theme_rgb_path(rgb_path)) {
+        char path[MAX_BUFFER_SIZE];
+
+        snprintf(path, sizeof path, "%scolour_l", rgb_path);
+        read_rgb_colour_from_file(path, &col_l, &rgb_colours[0]);
+
+        snprintf(path, sizeof path, "%scolour_r", rgb_path);
+        read_rgb_colour_from_file(path, &col_r, &col_l);
+    }
+
+    const int bright_theme = read_config_int("settings/rgb/bright_theme", 255);
+
+    st->backend = read_config_int("settings/rgb/backend", 0);
+
+    st->col_l = col_l;
+    st->col_m = col_l;
+    st->col_f1 = col_l;
+    st->col_shl1 = col_l;
+    st->col_shl2 = col_l;
+
+    st->col_r = col_r;
+    st->col_f2 = col_r;
+    st->col_rs1 = col_r;
+    st->col_rs2 = col_r;
+    st->col_shr2 = col_r;
+    st->col_shr1 = col_r;
+
+    st->bright_l = st->bright_r = st->bright_m = st->bright_f1 = st->bright_f2 = bright_theme;
+    st->bright_rs1 = st->bright_rs2 = st->bright_shl1 = st->bright_shl2 = bright_theme;
+    st->bright_shr2 = st->bright_shr1 = bright_theme;
+}
+
 static int dispatch_restore(void) {
+    const int saved_mode = read_config_int("settings/rgb/mode", RGB_MODE_OFF);
+
+    if (saved_mode == RGB_MODE_OFF) {
+        dispatch_off();
+        return 0;
+    }
+
     rgb_restore_state_t st;
-    load_saved_rgb_state(&st);
+    if (saved_mode == RGB_MODE_THEME_SUPPLIED) {
+        load_theme_rgb_state(&st);
+    } else {
+        load_saved_rgb_state(&st);
+    }
 
     backend_t use = detect_backend(restore_backend_from_config(st.backend));
 

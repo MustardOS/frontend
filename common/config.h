@@ -238,6 +238,7 @@ struct mux_config {
         } power;
         struct {
             int16_t mode;
+            int16_t bright_theme;
             int16_t colour_l;
             int16_t bright_l;
             int16_t colour_r;
