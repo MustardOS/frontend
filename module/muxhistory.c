@@ -132,14 +132,15 @@ static char *get_glyph_name(const size_t index) {
     char history_file[PATH_MAX];
     snprintf(history_file, sizeof(history_file), INFO_HIS_PATH "/%s.cfg", name_no_ext);
 
-    const char *system_name = read_line_char_from(history_file, cache_core_dir);
+    char *system_name = read_line_char_from(history_file, cache_core_dir);
 
     const char *collection_path =
         is_ksk(kiosk.collect.access) && dir_exist(INFO_CKS_PATH) ? INFO_CKS_PATH : INFO_COL_PATH;
 
-    if (search_for_config(collection_path, name_no_ext, system_name)) return "collection";
+    const int in_collection = search_for_config(collection_path, name_no_ext, system_name);
+    free(system_name);
 
-    return "history";
+    return in_collection ? "collection" : "history";
 }
 
 static void gen_item(const int file_count, char **file_names) {

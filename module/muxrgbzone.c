@@ -27,6 +27,7 @@ static char current_zone_udata[32];
 static void resolve_current_zone(void) {
     char *code = read_line_char_from(RGBZONE_SEL_PATH, 1);
     if (!code || !*code) {
+        free(code);
         current_zone_valid = 0;
         return;
     }
@@ -134,9 +135,12 @@ static void resolve_current_zone(void) {
             "settings/rgb/bright_shr1",
         };
     } else {
+        free(code);
         current_zone_valid = 0;
         return;
     }
+
+    free(code);
 
     snprintf(current_zone_udata, sizeof current_zone_udata, "zone_%s", current_zone.code);
     current_zone_valid = 1;

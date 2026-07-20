@@ -2,6 +2,7 @@
 #include "fileio.h"
 #include "passcode.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #define PASSCODE_CFG_PATH CONF_CONFIG_PATH "passcode/"
 
@@ -9,8 +10,9 @@ static void load_code_file(char *dst, const char *filename, const char *fallback
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s%s", PASSCODE_CFG_PATH, filename);
 
-    const char *val = read_line_char_from(path, 1);
+    char *val = read_line_char_from(path, 1);
     snprintf(dst, MAX_BUFFER_SIZE, "%s", val && val[0] != '\0' ? val : fallback);
+    free(val);
 }
 
 void load_passcode(struct mux_passcode *passcode) {

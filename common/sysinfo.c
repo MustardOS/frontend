@@ -11,7 +11,11 @@
 
 int is_network_connected(void) {
     if (file_exist(device.network.state)) {
-        if (strcasecmp("up", read_all_char_from(device.network.state)) == 0) return 1;
+        char *state = read_all_char_from(device.network.state);
+        const int up = strcasecmp("up", state) == 0;
+        free(state);
+
+        if (up) return 1;
     }
 
     return 0;

@@ -188,8 +188,9 @@ int main(const int argc, char *argv[]) {
             if (live_exists && live_changed != last_time) {
                 last_time = live_changed;
 
-                const char *line = read_line_char_from(live_file, 1);
+                char *line = read_line_char_from(live_file, 1);
                 if (line && *line) lv_label_set_text_fmt(ui_lbl_message, "%s", parse_newline(line));
+                free(line);
                 if (file_exist(PROGRESS_FILE))
                     lv_bar_set_value(ui_bar_progress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
 

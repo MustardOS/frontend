@@ -366,12 +366,13 @@ int automatic_assign_core(char *rom_dir) {
     char assign_file[MAX_BUFFER_SIZE];
     snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
-    if (json_valid(read_all_char_from(assign_file))) {
+    char *assign_content = read_all_char_from(assign_file);
+    if (json_valid(assign_content)) {
         static char assign_check[MAX_BUFFER_SIZE];
         snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
         str_remchars(assign_check, " -_+");
 
-        struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
+        struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
         if (json_exists(auto_assign_config)) {
             char ass_config[MAX_BUFFER_SIZE];
@@ -495,6 +496,8 @@ int automatic_assign_core(char *rom_dir) {
             }
         }
     }
+
+    free(assign_content);
 
     return auto_assign_good == 1;
 }

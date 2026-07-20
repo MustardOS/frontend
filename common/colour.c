@@ -131,8 +131,9 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
         return 0;
     }
 
-    const char *line = read_line_char_from(filepath, 1);
+    char *line = read_line_char_from(filepath, 1);
     if (!line || *line == '\0') {
+        free(line);
         *out = *fallback;
         return 0;
     }
@@ -148,8 +149,10 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
 
         if (idx >= 0 && (size_t) idx < count) {
             *out = rgb_colours[idx];
+            free(line);
             return 1;
         }
+        free(line);
         *out = *fallback;
         return 0;
     }
@@ -162,12 +165,14 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
     }
 
     if (strlen(hex) != 6) {
+        free(line);
         *out = *fallback;
         return 0;
     }
 
     for (int i = 0; i < 6; i++) {
         if (!isxdigit((unsigned char) hex[i])) {
+            free(line);
             *out = *fallback;
             return 0;
         }
@@ -176,6 +181,7 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
     uint8_t r, g, b;
 
     if (!hex_to_byte(hex, &r) || !hex_to_byte(hex + 2, &g) || !hex_to_byte(hex + 4, &b)) {
+        free(line);
         *out = *fallback;
         return 0;
     }
@@ -185,6 +191,7 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
     out->g = g;
     out->b = b;
 
+    free(line);
     return 1;
 }
 

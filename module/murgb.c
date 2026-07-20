@@ -147,13 +147,20 @@ static backend_t detect_device_backend(void) {
         {"rg-vita-pro", be_joypad}, {"tui-brick", be_sysfs}, {"tui-brick-pro", be_sysfs}, {"tui-spoon", be_sysfs},
     };
 
-    const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
-    if (!board || !*board) return be_auto;
-
-    for (size_t i = 0; i < sizeof map / sizeof map[0]; i++) {
-        if (strcmp(board, map[i].code) == 0) return map[i].backend;
+    char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    if (!board || !*board) {
+        free(board);
+        return be_auto;
     }
 
+    for (size_t i = 0; i < sizeof map / sizeof map[0]; i++) {
+        if (strcmp(board, map[i].code) == 0) {
+            free(board);
+            return map[i].backend;
+        }
+    }
+
+    free(board);
     return be_auto;
 }
 
@@ -196,13 +203,17 @@ static backend_t detect_backend(const backend_t requested) {
 #define BRICK_SHOULDER_R1_LED 13
 
 static int board_is_tui_brick_pro(void) {
-    const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
-    return board && strcmp(board, "tui-brick-pro") == 0;
+    char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    const int match = board && strcmp(board, "tui-brick-pro") == 0;
+    free(board);
+    return match;
 }
 
 static int board_is_tui_brick(void) {
-    const char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
-    return board && strcmp(board, "tui-brick") == 0;
+    char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    const int match = board && strcmp(board, "tui-brick") == 0;
+    free(board);
+    return match;
 }
 
 static void swap_rg(int *r, int *g) {
@@ -471,9 +482,10 @@ static int get_theme_rgb_path(char *rgb_path) {
     snprintf(active_path, sizeof active_path, "%s/active.txt", base);
 
     if (file_exist(active_path)) {
-        const char *line = read_line_char_from(active_path, 1);
+        char *line = read_line_char_from(active_path, 1);
         char alt[MAX_BUFFER_SIZE];
         snprintf(alt, sizeof alt, "%s", line ? line : "");
+        free(line);
         trim_trailing_cr(alt);
 
         snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", base, alt);

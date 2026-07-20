@@ -246,14 +246,15 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
-        if (json_valid(read_all_char_from(assign_file))) {
+        char *assign_content = read_all_char_from(assign_file);
+        if (json_valid(assign_content)) {
             static char assign_check[MAX_BUFFER_SIZE];
             char *last_dir_lower = str_tolower(get_last_dir(rom_dir));
             snprintf(assign_check, sizeof(assign_check), "%s", last_dir_lower);
             free(last_dir_lower);
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
+            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -304,13 +305,17 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
 
                 mini_free(global_ini);
 
+                free(assign_content);
                 return;
             }
             LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.cpu.dflt);
             create_gov_assignment(device.cpu.dflt, rom_name, casn_dir_nowipe);
 
+            free(assign_content);
             return;
         }
+
+        free(assign_content);
     }
 
     init_theme(1, 0);
@@ -327,14 +332,15 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
 
-        if (json_valid(read_all_char_from(assign_file))) {
+        char *assign_content = read_all_char_from(assign_file);
+        if (json_valid(assign_content)) {
             static char assign_check[MAX_BUFFER_SIZE];
             char *last_dir_lower2 = str_tolower(get_last_dir(rom_dir));
             snprintf(assign_check, sizeof(assign_check), "%s", last_dir_lower2);
             free(last_dir_lower2);
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(read_all_char_from(assign_file)), assign_check);
+            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -346,6 +352,8 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
                 free(sys_no_ext);
             }
         }
+
+        free(assign_content);
     }
 
     create_gov_items(rom_system);

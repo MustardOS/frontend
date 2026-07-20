@@ -531,6 +531,8 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 
             lv_label_set_text(ui_val_test_proxy, msg);
         }
+
+        free(result);
     }
 
     if (nav_moved) {

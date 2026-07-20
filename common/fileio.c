@@ -733,7 +733,10 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
     fclose(file);
 
-    if (value == NULL || value[0] == '\0') value = strdup(not_found);
+    if (value == NULL || value[0] == '\0') {
+        free(value);
+        value = strdup(not_found);
+    }
     return value;
 }
 
@@ -761,8 +764,11 @@ int search_for_config(const char *base_path, const char *file_name, const char *
 
         if (entry->d_type == DT_REG) {
             if (strstr(entry->d_name, file_name)) {
-                const char *line = read_line_char_from(full_path, 2);
-                if (line && strcmp(line, system_name) == 0) {
+                char *line = read_line_char_from(full_path, 2);
+                const int matched = line && strcmp(line, system_name) == 0;
+                free(line);
+
+                if (matched) {
                     closedir(dir);
                     return 1;
                 }
