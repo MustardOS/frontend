@@ -277,12 +277,15 @@ static void handle_option_next(void) {
 static void restore_custom_options(void) {
     char theme_active_txt_path[MAX_BUFFER_SIZE];
     snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
-    snprintf(
-        theme_alt_original, sizeof(theme_alt_original), "%s",
-        str_replace(read_line_char_from(theme_active_txt_path, 1), "\r", "")
-    );
+
+    char *active_line = read_line_char_from(theme_active_txt_path, 1);
+    char *trimmed_line = str_replace(active_line, "\r", "");
+    free(active_line);
+
+    snprintf(theme_alt_original, sizeof(theme_alt_original), "%s", trimmed_line ? trimmed_line : "");
+    free(trimmed_line);
     const int32_t option_index = lv_dropdown_get_option_index(ui_dro_theme_alternate_custom, theme_alt_original);
-    if (option_index > 0) lv_dropdown_set_selected(ui_dro_theme_alternate_custom, option_index);
+    if (option_index >= 0) lv_dropdown_set_selected(ui_dro_theme_alternate_custom, option_index);
 
     restore_theme_resolution();
     lv_dropdown_set_selected(ui_dro_video_wallpaper_custom, config.visual.video_wallpaper);
@@ -534,14 +537,25 @@ static void handle_a(void) {
             set_nav_volume(pct_to_int(lv_dropdown_get_selected(ui_dro_sound_volume_custom), 0, 100));
             sound_volume_original = pct_to_int(lv_dropdown_get_selected(ui_dro_sound_volume_custom), 0, 100);
             break;
-        case menu_theme_alternate:
+        case menu_theme_alternate: {
+            char theme_alt[MAX_BUFFER_SIZE];
+            lv_dropdown_get_selected_str(ui_dro_theme_alternate_custom, theme_alt, sizeof(theme_alt));
+            if (strcasecmp(theme_alt, theme_alt_original) == 0) break;
+
+            if (save_custom_options() < 0) {
+                show_message_dialog();
+                break;
+            }
+
+            mux_input_flush_queue();
+
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
-            save_custom_options();
             init_dropdown_settings();
             load_mux("custom");
 
             mux_input_stop();
             break;
+        }
         case menu_option:
             handle_option_next();
             break;

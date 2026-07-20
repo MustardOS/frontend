@@ -1098,6 +1098,11 @@ void mux_input_flush_all(void) {
     ep_wait_wake();
 }
 
+void mux_input_flush_queue(void) {
+    clear_input_state();
+    flush_input_events();
+}
+
 void mux_input_resume(void) {
     pressed = 0;
     held = 0;

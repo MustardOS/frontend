@@ -197,6 +197,8 @@ void mux_input_stop(void);
 
 void mux_input_flush_all(void);
 
+void mux_input_flush_queue(void);
+
 void mux_input_resume(void);
 
 uint32_t mux_input_tick(void);
