@@ -30,7 +30,9 @@ void load_tag_items(tag_item **tag_items, size_t *count) {
             cap = new_cap;
         }
 
-        char *glyph_name = str_tolower(str_remchar(str_trim(strdup(tags[i])), ' '));
+        char *glyph_name_dup = strdup(tags[i]);
+        char *glyph_name = str_tolower(str_remchar(str_trim(glyph_name_dup), ' '));
+        free(glyph_name_dup);
 
         (*tag_items)[*count].name = str_capital(strdup(tags[i]));
         (*tag_items)[*count].glyph = glyph_name;

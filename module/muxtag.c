@@ -34,7 +34,10 @@ static void generate_available_tags(void) {
         ui_count_static++;
 
         const char *cap_name = str_capital(items[i].display_name);
-        char *raw_name = str_tolower(str_remchar(str_trim(strdup(items[i].display_name)), ' '));
+
+        char *raw_name_dup = strdup(items[i].display_name);
+        char *raw_name = str_tolower(str_remchar(str_trim(raw_name_dup), ' '));
+        free(raw_name_dup);
 
         lv_obj_t *ui_pnl_tag = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_tag);
@@ -80,8 +83,9 @@ static void handle_a(void) {
         LOG_INFO(mux_module, "Tag Assignment Triggered (method %d)", method);
         play_sound(snd_confirm);
 
-        const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+        char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
         create_tag_assignment(selected, rom_name, (enum gen_type) method);
+        free(selected);
 
         mux_input_stop();
         return;

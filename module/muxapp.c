@@ -59,8 +59,9 @@ static int get_app_base(char *out_base, const char *app_name) {
 }
 
 static void show_help(void) {
-    const char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
-    const mux_apps *mux_app = get_mux_app(item_name);
+    char *extra_data_dup = strdup(items[current_item_index].extra_data);
+    const mux_apps *mux_app = get_mux_app(get_last_dir(extra_data_dup));
+    free(extra_data_dup);
 
     if (mux_app && mux_app->help) {
         char message[MAX_BUFFER_SIZE];
@@ -303,8 +304,9 @@ clean_up:
 }
 
 static void check_focus(void) {
-    const char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
-    const mux_apps *mux_app = get_mux_app(item_name);
+    char *extra_data_dup = strdup(items[current_item_index].extra_data);
+    const mux_apps *mux_app = get_mux_app(get_last_dir(extra_data_dup));
+    free(extra_data_dup);
 
     if (mux_app) {
         lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -470,13 +472,18 @@ static void handle_help(void) {
 static void handle_x(void) {
     if (msgbox_active || !ui_count_static || hold_call) return;
 
-    const char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+    char *extra_data_dup = strdup(items[current_item_index].extra_data);
+    const char *item_name = get_last_dir(extra_data_dup);
 
     for (size_t i = 0; i < A_SIZE(app); i++) {
-        if (strcasecmp(item_name, app[i].name) == 0) return;
+        if (strcasecmp(item_name, app[i].name) == 0) {
+            free(extra_data_dup);
+            return;
+        }
     }
 
     load_assign(MUOS_APL_LOAD, item_name, items[current_item_index].extra_data, "none", 0, 1);
+    free(extra_data_dup);
 
     play_sound(snd_confirm);
     write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
@@ -505,7 +512,9 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-            char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+            char *item_name = strdup(get_last_dir(items[current_item_index].extra_data));
+
+            free(lv_obj_get_user_data(e_focused));
             lv_obj_set_user_data(e_focused, item_name);
 
             adjust_wallpaper_element(ui_group, 0, wall_application);
@@ -539,7 +548,7 @@ int muxapp_main(void) {
         remove(MUOS_AIN_LOAD);
     }
 
-    char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+    char *item_name = strdup(get_last_dir(items[current_item_index].extra_data));
     lv_obj_set_user_data(lv_group_get_focused(ui_group), item_name);
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_application);
 

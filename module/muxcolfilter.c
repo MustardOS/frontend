@@ -120,14 +120,18 @@ static void generate_available_filters(void) {
         assert(files[i] != NULL);
         const char *base_filename = files[i];
 
-        char filter_name[MAX_BUFFER_SIZE];
-        snprintf(
-            filter_name, sizeof(filter_name), "%s",
-            str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/')
-        );
+        char *base_dir = strip_dir(base_filename);
+        char *stripped_name = str_replace(base_filename, base_dir, "");
+        free(base_dir);
 
+        char filter_name[MAX_BUFFER_SIZE];
+        snprintf(filter_name, sizeof(filter_name), "%s", stripped_name ? str_remchar(stripped_name, '/') : "");
+        free(stripped_name);
+
+        char *filter_no_ext = strip_ext(filter_name);
         char filter_store[MAX_BUFFER_SIZE];
-        snprintf(filter_store, sizeof(filter_store), "%s", strip_ext(filter_name));
+        snprintf(filter_store, sizeof(filter_store), "%s", filter_no_ext);
+        free(filter_no_ext);
 
         add_item(&items, &item_count, filter_store, filter_store, "", ITEM);
     }

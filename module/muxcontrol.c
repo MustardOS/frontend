@@ -48,7 +48,10 @@ static void generate_available_controls(const char *default_control) {
         ui_count_static++;
 
         const char *cap_name = str_capital_all(items[i].display_name);
-        char *raw_name = str_tolower(str_trim(strdup(items[i].display_name)));
+
+        char *raw_name_dup = strdup(items[i].display_name);
+        char *raw_name = str_tolower(str_trim(raw_name_dup));
+        free(raw_name_dup);
 
         lv_obj_t *ui_pnl_control = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_control);
@@ -137,8 +140,9 @@ static void handle_a(void) {
         LOG_INFO(mux_module, "Control Assignment Triggered (method %d)", method);
         play_sound(snd_confirm);
 
-        const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+        char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
         create_control_assignment(selected, is_app ? "mux_option" : rom_name, (enum gen_type) method);
+        free(selected);
 
         if (is_app) load_mux("appcon");
 

@@ -339,7 +339,9 @@ static int find_recursive_core_file(const char *start_path, char *recursive_core
     char current_dir[MAX_BUFFER_SIZE];
     snprintf(current_dir, sizeof(current_dir), "%s", start_path);
     while (1) {
-        snprintf(current_dir, sizeof(current_dir), "%s", strip_dir(current_dir));
+        char *stripped_dir = strip_dir(current_dir);
+        snprintf(current_dir, sizeof(current_dir), "%s", stripped_dir);
+        free(stripped_dir);
 
         snprintf(
             recursive_core_file, MAX_BUFFER_SIZE, INFO_CON_PATH "/%s/core_recursive.cfg",

@@ -67,14 +67,18 @@ static int find_connected_profile(char *buf) {
     for (size_t i = 0; i < file_count; ++i) {
         const char *base_filename = files[i];
 
-        char profile_name[MAX_BUFFER_SIZE];
-        snprintf(
-            profile_name, sizeof(profile_name), "%s",
-            str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/')
-        );
+        char *base_dir = strip_dir(base_filename);
+        char *stripped_name = str_replace(base_filename, base_dir, "");
+        free(base_dir);
 
+        char profile_name[MAX_BUFFER_SIZE];
+        snprintf(profile_name, sizeof(profile_name), "%s", stripped_name ? str_remchar(stripped_name, '/') : "");
+        free(stripped_name);
+
+        char *profile_no_ext = strip_ext(profile_name);
         char profile_store[MAX_BUFFER_SIZE];
-        snprintf(profile_store, sizeof(profile_store), "%s", strip_ext(profile_name));
+        snprintf(profile_store, sizeof(profile_store), "%s", profile_no_ext);
+        free(profile_no_ext);
 
         if (profile_matches_connected_ssid(profile_store, ssid)) {
             snprintf(buf, MAX_BUFFER_SIZE, "%s", profile_store);
@@ -202,13 +206,17 @@ static void populate_profile_list(void) {
     for (size_t i = 0; i < file_count; ++i) {
         const char *base_filename = files[i];
 
-        char profile_name[MAX_BUFFER_SIZE];
-        snprintf(
-            profile_name, sizeof(profile_name), "%s",
-            str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/')
-        );
+        char *base_dir = strip_dir(base_filename);
+        char *stripped_name = str_replace(base_filename, base_dir, "");
+        free(base_dir);
 
-        snprintf(entries[i].name, sizeof(entries[i].name), "%s", strip_ext(profile_name));
+        char profile_name[MAX_BUFFER_SIZE];
+        snprintf(profile_name, sizeof(profile_name), "%s", stripped_name ? str_remchar(stripped_name, '/') : "");
+        free(stripped_name);
+
+        char *profile_no_ext = strip_ext(profile_name);
+        snprintf(entries[i].name, sizeof(entries[i].name), "%s", profile_no_ext);
+        free(profile_no_ext);
 
         char profile_file[MAX_BUFFER_SIZE];
         snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", entries[i].name);

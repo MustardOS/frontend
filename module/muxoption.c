@@ -15,7 +15,7 @@ static char rom_system[MAX_BUFFER_SIZE];
 
 static int is_dir = 0;
 
-static const char *curr_dir = "";
+static char curr_dir[PATH_MAX] = "";
 static const char *core_file = "";
 
 static char *playtime_json_str = NULL;
@@ -131,13 +131,17 @@ static void add_info_item_type(
             if (meta_name && *meta_name) {
                 snprintf(cap_value, sizeof(cap_value), "%s", meta_name);
             } else {
-                snprintf(cap_value, sizeof(cap_value), "%s", str_replace(value, "_", " "));
+                char *display_value = str_replace(value, "_", " ");
+                snprintf(cap_value, sizeof(cap_value), "%s", display_value);
+                free(display_value);
             }
 
             if (meta_name) free(meta_name);
         }
     } else if (is_flt) {
-        snprintf(cap_value, sizeof(cap_value), "%s", str_replace(value, "_", " "));
+        char *display_value = str_replace(value, "_", " ");
+        snprintf(cap_value, sizeof(cap_value), "%s", display_value);
+        free(display_value);
     } else {
         snprintf(cap_value, sizeof(cap_value), "%s", value);
     }
@@ -274,7 +278,10 @@ static void populate_info_values(void) {
         memmove(rel_path, p, strlen(p) + 1);
     }
 
-    curr_dir = get_last_subdir(strip_dir(file_path), '/', rel_path[0] ? 4 : 3);
+    char *file_dir = strip_dir(file_path);
+    snprintf(curr_dir, sizeof(curr_dir), "%s", get_last_subdir(file_dir, '/', rel_path[0] ? 4 : 3));
+    free(file_dir);
+
     lv_label_set_text(ui_val_folder_option, curr_dir);
 
     if (!is_dir) {

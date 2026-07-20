@@ -337,7 +337,7 @@ static void process_results(const char *json_results) {
         init_skiplist(&skiplist);
         for (int i = 0; i < folder_item_count; i++) {
             char *item_dir = strip_dir(folder_items[i].extra_data);
-            char *item_file = get_last_dir(strdup(folder_items[i].extra_data));
+            char *item_file = get_last_dir(folder_items[i].extra_data);
             if (ends_with(item_file, ".cue")) {
                 process_cue_file(item_dir, item_file, &skiplist);
             } else if (ends_with(item_file, ".gdi")) {
@@ -345,6 +345,7 @@ static void process_results(const char *json_results) {
             } else if (ends_with(item_file, ".m3u")) {
                 process_m3u_file(item_dir, item_file, &skiplist);
             }
+            free(item_dir);
         }
 
         for (size_t i = 0; i < folder_item_count; i++) {

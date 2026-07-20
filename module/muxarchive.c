@@ -130,11 +130,13 @@ static void create_archive_items(void) {
 
         if (!prefix) continue;
 
+        char *base_dir = strip_dir(base_filename);
+        char *stripped_name = str_replace(base_filename, base_dir, "");
+        free(base_dir);
+
         char archive_name[MAX_BUFFER_SIZE];
-        snprintf(
-            archive_name, sizeof(archive_name), "%s",
-            str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/')
-        );
+        snprintf(archive_name, sizeof(archive_name), "%s", stripped_name ? str_remchar(stripped_name, '/') : "");
+        free(stripped_name);
 
         char install_check[MAX_BUFFER_SIZE];
         const int ic_len =
@@ -148,8 +150,9 @@ static void create_archive_items(void) {
         char item_glyph[MAX_BUFFER_SIZE];
         snprintf(item_glyph, sizeof(item_glyph), "%s", is_installed ? "installed" : "archive");
 
-        const char *display_name = strip_ext(archive_store);
+        char *display_name = strip_ext(archive_store);
         add_item(&items, &item_count, base_filename, display_name, item_glyph, ITEM);
+        free(display_name);
     }
 
     ui_count_static += (int) item_count;

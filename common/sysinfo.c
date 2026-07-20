@@ -85,7 +85,9 @@ int volume_to_percent(const int val) {
 
 char *get_version(const int verify) {
     static char version[64];
-    snprintf(version, sizeof(version), "%s%s", str_replace(config.system.version, "_", " "), verify ? "*" : "");
+    char *display_version = str_replace(config.system.version, "_", " ");
+    snprintf(version, sizeof(version), "%s%s", display_version, verify ? "*" : "");
+    free(display_version);
     return version;
 }
 
