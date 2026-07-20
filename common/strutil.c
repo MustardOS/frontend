@@ -426,14 +426,26 @@ char *get_content_path(char *path) {
 
     const char *directory_name = get_last_dir(directory_path);
 
-    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0)
-        return strip_dir(directory_path);
+    if (strchr(directory_name, '.') != NULL && strcasecmp(directory_name, get_file_name(path)) == 0) {
+        char *result = strip_dir(directory_path);
+        free(directory_path);
+        return result;
+    }
     if (!ends_with(path, ".scummvm") && !ends_with(path, ".m3u") && !ends_with(path, ".cue")
         && !ends_with(path, ".gdi"))
         return directory_path;
 
-    const char *path_no_ext = strip_ext(get_file_name(path));
-    return strcasecmp(directory_name, path_no_ext) == 0 ? strip_dir(directory_path) : directory_path;
+    char *path_no_ext = strip_ext(get_file_name(path));
+    const int matches = strcasecmp(directory_name, path_no_ext) == 0;
+    free(path_no_ext);
+
+    if (matches) {
+        char *result = strip_dir(directory_path);
+        free(directory_path);
+        return result;
+    }
+
+    return directory_path;
 }
 
 char *strip_dir(const char *text) {

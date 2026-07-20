@@ -13,6 +13,7 @@ static int file_count = 0;
 static int dir_count = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
+static int content_is_pico8 = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -334,6 +335,13 @@ static void ensure_content_meta_dir(const char *sub_path) {
     create_directories(init_meta_dir, 0);
 }
 
+static void strip_pico8_extension(char *file_path, const char *display) {
+    if (!ends_with(file_path, ".p8.png") && !ends_with(file_path, ".png.p8")) return;
+
+    char *dot = strrchr(display, '.');
+    if (dot) *dot = '\0';
+}
+
 static int collect_filtered_items(char **file_names, char **file_paths, const int file_count, temp_item **out_tmp) {
     skip_list skiplist;
     init_skiplist(&skiplist);
@@ -387,6 +395,7 @@ static int collect_filtered_items(char **file_names, char **file_paths, const in
         if (dot) *dot = '\0';
 
         resolve_friendly_name(full_path, tmp[tmp_count].display);
+        if (content_is_pico8) strip_pico8_extension(full_path, tmp[tmp_count].display);
 
         tmp[tmp_count].name = name;
         tmp[tmp_count].full_path = full_path;
@@ -560,6 +569,7 @@ static void create_content_items(void) {
     char item_curr_dir[PATH_MAX];
     snprintf(item_curr_dir, sizeof(item_curr_dir), "%s", sys_dir);
     automatic_assign_core(item_curr_dir);
+    content_is_pico8 = system_uses_pico8_core(item_curr_dir);
 
     char **dir_names = NULL;
     char **dir_paths = NULL;

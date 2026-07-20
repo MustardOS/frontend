@@ -389,6 +389,7 @@ int load_content(int add_collection, char *file_path) {
         if (!write_content_loader_file(
                 content_loader_file, content_name, core, sys1, sys2, zero, launch, roms_path, system_sub, file_name
             )) {
+            free(content_path);
             free(content_name);
             free(item_dir);
             free(assigned_core);
@@ -399,6 +400,7 @@ int load_content(int add_collection, char *file_path) {
     }
 
     if (!file_exist(content_loader_file)) {
+        free(content_path);
         free(content_name);
         free(item_dir);
         free(assigned_core);
@@ -444,7 +446,10 @@ int load_content(int add_collection, char *file_path) {
                 if (strcmp(old_file, new_history) == 0) continue;
 
                 char *line1 = read_line_char_from(old_file, 1);
-                if (!*line1) continue;
+                if (!*line1) {
+                    free(line1);
+                    continue;
+                }
 
                 char resolved_old[PATH_MAX];
                 if (union_resolve_to_real(line1, resolved_old, sizeof(resolved_old))
@@ -480,6 +485,13 @@ int load_content(int add_collection, char *file_path) {
         write_text_to_file(MUOS_SHD_LOAD, "w", CHAR, assigned_shd);
         write_text_to_file(MUOS_OVO_LOAD, "w", CHAR, assigned_ovl);
 
+        free(assigned_gov);
+        free(assigned_con);
+        free(assigned_rac);
+        free(assigned_flt);
+        free(assigned_shd);
+        free(assigned_ovl);
+
         char *loader_text = read_all_char_from(content_loader_file);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, loader_text);
         free(loader_text);
@@ -487,6 +499,7 @@ int load_content(int add_collection, char *file_path) {
 
     LOG_SUCCESS(mux_module, "Content Loaded Successfully");
 
+    free(content_path);
     free(content_name);
     free(item_dir);
     free(assigned_core);

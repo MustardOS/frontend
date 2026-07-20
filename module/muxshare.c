@@ -219,6 +219,7 @@ void overlay_display(void) {
 
 char *specify_asset(char *val, const char *def_val, const char *label) {
     if (!val || strlen(val) == 0 || strcasecmp(val, "(null)") == 0) {
+        free(val);
         LOG_INFO(mux_module, "Using Default %s: %s", label, def_val);
         return strdup(def_val);
     }

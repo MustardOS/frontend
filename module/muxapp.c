@@ -397,13 +397,15 @@ static void handle_a(void) {
     if (ui_count_static > 0) {
         int skip_toast = 0;
 
-        char *item_name = get_last_dir(strdup(items[current_item_index].extra_data));
+        char *extra_data_dup = strdup(items[current_item_index].extra_data);
+        char *item_name = get_last_dir(extra_data_dup);
         for (size_t i = 0; i < A_SIZE(app); i++) {
             if (strcasecmp(item_name, app[i].name) == 0) {
                 const int16_t *kf = app[i].kiosk_flag ? app[i].kiosk_flag() : NULL;
 
                 if (kf && is_ksk(*kf)) {
                     kiosk_denied();
+                    free(extra_data_dup);
                     return;
                 }
 
@@ -429,11 +431,16 @@ static void handle_a(void) {
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
 
+            free(assigned_gov);
+            free(assigned_con);
+
             fade_out_screen();
         }
 
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, skip_toast ? item_name : items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
+
+        free(extra_data_dup);
 
         mux_input_stop();
     }

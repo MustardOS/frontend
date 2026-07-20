@@ -499,6 +499,23 @@ int automatic_assign_core(char *rom_dir) {
     return auto_assign_good == 1;
 }
 
+int system_uses_pico8_core(char *rom_dir) {
+    char core_file[MAX_BUFFER_SIZE];
+    snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.cfg", get_last_subdir(rom_dir, '/', 4));
+
+    remove_double_slashes(core_file);
+
+    if (!file_exist(core_file)) return 0;
+
+    char *core = read_line_char_from(core_file, global_core);
+    const int is_pico8 = core
+        && (strncmp(core, "ext-pico8", 9) == 0 || strcasecmp(core, "fake08_libretro.so") == 0
+            || strcasecmp(core, "retro8_libretro.so") == 0);
+    free(core);
+
+    return is_pico8;
+}
+
 int core_external_uses_stage_overlay(const char *core) {
     if (!core || !*core) return 0;
 
