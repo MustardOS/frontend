@@ -142,6 +142,9 @@ static int process_action(const char *action, const char *module) {
     char *sys = read_line_char_from(action, 3);
 
     if (!name || !dir || !sys) {
+        free(name);
+        free(dir);
+        free(sys);
         remove(action);
         return 0;
     }
@@ -149,6 +152,10 @@ static int process_action(const char *action, const char *module) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_sys, sizeof(rom_sys), "%s", sys);
+
+    free(name);
+    free(dir);
+    free(sys);
 
     forced_flag = read_line_int_from(action, 4);
     is_app = read_line_int_from(action, 5);
@@ -181,7 +188,7 @@ void last_index_check(void) {
     char *raw = read_line_char_from(index_path, 1);
     last_index = safe_atoi(raw, 0);
 
-    if (*raw) free(raw);
+    free(raw);
     remove(index_path);
 }
 
@@ -298,6 +305,8 @@ static void module_explore(void) {
         free(explore_pdi);
     }
 
+    free(explore_src);
+
     muxassign_main(1, rom_name, explore_dir, "none", 0);
     muxgov_main(1, rom_name, explore_dir, "none", 0);
     muxcontrol_main(1, rom_name, explore_dir, "none", 0);
@@ -320,7 +329,11 @@ void module_content_list(const char *path, const char *max_depth, const int is_c
         const int add_mode = file_exist(ADD_MODE_WORK);
         if (add_mode) last_index = 0;
 
-        if (muxcollect_main(add_mode, read_line_char_from(COLLECTION_DIR, 1), last_index) == 1) safe_quit(0);
+        char *collection_dir = read_line_char_from(COLLECTION_DIR, 1);
+        const int result = muxcollect_main(add_mode, collection_dir, last_index);
+        free(collection_dir);
+
+        if (result == 1) safe_quit(0);
     } else {
         if (muxhistory_main(last_index) == 1) safe_quit(0);
     }
@@ -338,14 +351,20 @@ static void module_history(void) {
 
 static void module_search(void) {
     load_mux("option");
-    muxsearch_main(read_line_char_from(EXPLORE_DIR, 1));
+
+    char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
+    muxsearch_main(explore_dir);
+    free(explore_dir);
 
     if (file_exist(MUOS_RES_LOAD)) {
-        const char *file_path = read_line_char_from(MUOS_RES_LOAD, 1);
+        char *file_path = read_line_char_from(MUOS_RES_LOAD, 1);
         char *ex_directory = strip_dir(file_path);
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, ex_directory);
         write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_dir(file_path));
+
+        free(ex_directory);
+        free(file_path);
 
         cleanup_screen();
         load_mux("explore");
@@ -354,12 +373,20 @@ static void module_search(void) {
 
 static void module_picker(void) {
     load_mux("custom");
-    muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
+
+    char *pik_type = read_line_char_from(MUOS_PIK_LOAD, 1);
+    char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
+    muxpicker_main(pik_type, explore_dir);
+    free(pik_type);
+    free(explore_dir);
 }
 
 static void module_theme(void) {
     load_mux("custom");
-    muxtheme_main(read_line_char_from(EXPLORE_DIR, 1));
+
+    char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
+    muxtheme_main(explore_dir);
+    free(explore_dir);
 }
 
 void module_run(const char *mux, void (*func_to_exec)(int, const char *, const char *, const char *, int)) {
@@ -430,7 +457,7 @@ static void module_app(void) {
         exec_mux("launcher", "muxapp", muxapp_main);
 
         if (file_exist(MUOS_APP_LOAD)) {
-            const char *app = read_line_char_from(MUOS_APP_LOAD, 1);
+            char *app = read_line_char_from(MUOS_APP_LOAD, 1);
 
             if (strcmp(app, "Archive Manager") == 0) {
                 remove(MUOS_APP_LOAD);
@@ -442,13 +469,18 @@ static void module_app(void) {
                 load_mux("app");
                 safe_quit(0);
             }
+
+            free(app);
         }
     }
 }
 
 static void module_task(void) {
     load_mux("app");
-    muxtask_main(read_line_char_from(EXPLORE_DIR, 1));
+
+    char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
+    muxtask_main(explore_dir);
+    free(explore_dir);
 }
 
 static void module_config(void) {
@@ -629,6 +661,7 @@ static int module_dispatch(void) {
         if (strcmp(action, dispatch_map[slot].action) == 0) {
             const size_t i = dispatch_map[slot].index;
             screen_clean = 0;
+            free(action);
 
             if (modules[i].mux_func) {
                 modules[i].mux_func();
@@ -643,6 +676,7 @@ static int module_dispatch(void) {
         slot &= DISPATCH_MASK;
     }
 
+    free(action);
     return 0;
 }
 
