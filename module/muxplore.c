@@ -502,18 +502,23 @@ static void assign_content_glyphs(const char *sub_path) {
 
             char *line = read_line_char_from(content_tag, 1);
 
+            free(items[i].glyph_icon);
             if (line && *line) {
                 str_remchar(line, ' ');
                 items[i].glyph_icon = line;
             } else {
                 if (line) free(line);
-                items[i].glyph_icon = "default";
+                items[i].glyph_icon = strdup("default");
             }
 
-            items[i].use_module = "muxtag";
+            free(items[i].use_module);
+            items[i].use_module = strdup("muxtag");
         } else {
-            items[i].glyph_icon = get_content_explorer_glyph_name(items[i].extra_data);
-            items[i].use_module = mux_module;
+            free(items[i].glyph_icon);
+            items[i].glyph_icon = strdup(get_content_explorer_glyph_name(items[i].extra_data));
+
+            free(items[i].use_module);
+            items[i].use_module = strdup(mux_module);
         }
     }
 
@@ -639,7 +644,7 @@ static void create_content_items(void) {
             add_item(&items, &item_count, dir_names[i], friendly_folder_name, dir_paths[i], FOLDER);
 
         if (new_item) {
-            new_item->glyph_icon = "folder";
+            new_item->glyph_icon = strdup("folder");
             new_item->folder_item_count = cnt;
             adjust_visual_label(new_item->display_name, config.visual.name, config.visual.dash);
 
@@ -648,7 +653,10 @@ static void create_content_items(void) {
                 snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name, cnt);
 
                 char *new_display = strdup(display_name);
-                if (new_display) new_item->display_name = new_display;
+                if (new_display) {
+                    free(new_item->display_name);
+                    new_item->display_name = new_display;
+                }
             }
         }
 

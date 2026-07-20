@@ -43,10 +43,13 @@ content_item *add_item(
     (*content_items)[*count].content_type = content_type;
     (*content_items)[*count].extra_data = strdup(extra_data);
     (*content_items)[*count].use_module = strdup(mux_module);
+    (*content_items)[*count].help = NULL;
     (*content_items)[*count].glyph_icon = NULL;
     (*content_items)[*count].grid_image = NULL;
     (*content_items)[*count].grid_image_focused = NULL;
+    (*content_items)[*count].sort_bucket = 0;
     (*content_items)[*count].folder_item_count = 0;
+    (*content_items)[*count].group_tag[0] = '\0';
 
     if (config.visual.the_title_format) {
         reformat_display_name((*content_items)[*count].display_name);
@@ -59,17 +62,22 @@ content_item *add_item(
     return &(*content_items)[*count - 1];
 }
 
+static void free_item_fields(content_item *item) {
+    free(item->name);
+    free(item->display_name);
+    free(item->sort_name);
+    free(item->extra_data);
+    free(item->use_module);
+    free(item->help);
+    free(item->glyph_icon);
+    free(item->grid_image);
+    free(item->grid_image_focused);
+}
+
 void remove_item(content_item **content_items, size_t *count, const size_t index) {
     if (!content_items || !*content_items || index >= *count) return;
 
-    free((*content_items)[index].name);
-    free((*content_items)[index].display_name);
-    free((*content_items)[index].sort_name);
-    free((*content_items)[index].extra_data);
-    free((*content_items)[index].use_module);
-    free((*content_items)[index].glyph_icon);
-    free((*content_items)[index].grid_image);
-    free((*content_items)[index].grid_image_focused);
+    free_item_fields(&(*content_items)[index]);
 
     if (index < *count - 1) {
         memmove(&(*content_items)[index], &(*content_items)[index + 1], (*count - index - 1) * sizeof(content_item));
@@ -181,10 +189,7 @@ int get_item_index_by_extra_data(const content_item *content_items, const size_t
 
 void free_items(content_item **content_items, size_t *count) {
     for (size_t i = 0; i < *count; i++) {
-        free((*content_items)[i].name);
-        free((*content_items)[i].display_name);
-        free((*content_items)[i].sort_name); // Freeing all dynamically allocated strings
-        free((*content_items)[i].extra_data);
+        free_item_fields(&(*content_items)[i]);
     }
     free(*content_items);  // Free the array itself
     *content_items = NULL; // Set the pointer to NULL
