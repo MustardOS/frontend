@@ -403,6 +403,10 @@ static void handle_option_next(void) {
     apply_current_font_settings();
 }
 
+static void handle_option_release(void) {
+    mux_input_flush_queue();
+}
+
 static void handle_dpad_up(void) {
     if (save_mode) {
         if (!swap_axis) {
@@ -605,6 +609,8 @@ int muxfont_main(void) {
         .release_handler =
             {
                 [mux_input_menu] = handle_help,
+                [mux_input_dpad_left] = handle_option_release,
+                [mux_input_dpad_right] = handle_option_release,
             },
         .hold_handler = {
             [mux_input_dpad_left] = handle_option_prev,

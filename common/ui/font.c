@@ -271,7 +271,7 @@ static lv_font_t *cache_lookup(const char *path, const int size) {
     return NULL;
 }
 
-static void cache_store(const char *path, const int size, lv_font_t *font, void *data, const int is_ttf) {
+static int cache_store(const char *path, const int size, lv_font_t *font, void *data, const int is_ttf) {
     if (font_cache_count >= FONT_CACHE_MAX) {
         if (is_ttf) {
             lv_tiny_ttf_destroy(font);
@@ -280,7 +280,7 @@ static void cache_store(const char *path, const int size, lv_font_t *font, void 
             lv_font_free(font);
         }
         LOG_WARN(mux_module, "Font cache full; discarding: %s", path);
-        return;
+        return 0;
     }
 
     const uint32_t h = font_key_hash(path, size);
@@ -301,7 +301,7 @@ static void cache_store(const char *path, const int size, lv_font_t *font, void 
         e->is_ttf = is_ttf;
         font_cache_count++;
 
-        return;
+        return 1;
     }
 
     LOG_WARN(mux_module, "Font hash table unexpectedly full; discarding: %s", path);
@@ -311,6 +311,8 @@ static void cache_store(const char *path, const int size, lv_font_t *font, void 
     } else {
         lv_font_free(font);
     }
+
+    return 0;
 }
 
 static lv_font_t *load_font_cached_bin(const char *path) {
@@ -320,7 +322,7 @@ static lv_font_t *load_font_cached_bin(const char *path) {
     lv_font_t *font = load_font_from_bin(path);
     if (!font) return NULL;
 
-    cache_store(path, 0, font, NULL, 0);
+    if (!cache_store(path, 0, font, NULL, 0)) return NULL;
     font->fallback = get_language_font();
 
     return font;
@@ -370,7 +372,7 @@ static lv_font_t *load_ttf_impl(const char *path, int size, int set_fallback) {
 
     LOG_INFO(mux_module, "TTF font loaded (%ld KB, glyph cache %d KB): %s", file_size / 1024, 524288 / 1024, path);
 
-    cache_store(path, size, font, data, 1);
+    if (!cache_store(path, size, font, data, 1)) return NULL;
     prewarm_ascii(font);
 
     if (set_fallback) font->fallback = get_language_font();
@@ -619,22 +621,7 @@ int font_context_changed(void) {
     h ^= fnv_hash_str(config.settings.general.language);
     h *= 16777619u;
 
-    h ^= fnv_hash_str(config.settings.font.name);
-    h *= 16777619u;
-
     h ^= (uint32_t) config.settings.advanced.font;
-    h *= 16777619u;
-
-    h ^= (uint32_t) config.settings.font.list_size;
-    h *= 16777619u;
-
-    h ^= (uint32_t) config.settings.font.header_size;
-    h *= 16777619u;
-
-    h ^= (uint32_t) config.settings.font.footer_size;
-    h *= 16777619u;
-
-    h ^= (uint32_t) config.settings.font.panel_size;
     h *= 16777619u;
 
     if (h == last_font_key_hash) return 0;
