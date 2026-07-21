@@ -110,7 +110,11 @@ static void handle_b(void) {
         load_mux("app");
     } else {
         const char *base_dir = strrchr(sys_dir, '/');
-        if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
+        if (base_dir) {
+            char parent_dir[MAX_BUFFER_SIZE];
+            snprintf(parent_dir, sizeof(parent_dir), "%.*s", (int) (base_dir - sys_dir), sys_dir);
+            write_text_to_file(EXPLORE_DIR, "w", CHAR, parent_dir);
+        }
         write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_subdir(sys_dir, '/', 5));
         load_mux("task");
     }
