@@ -277,7 +277,7 @@ static void create_core_items(const char *target) {
 
         lv_obj_t *ui_lbl_core_item = lv_label_create(ui_pnl_core);
         apply_theme_list_item(&theme, ui_lbl_core_item, display_name);
-        lv_obj_set_user_data(ui_lbl_core_item, strdup(items[i].sort_name));
+        set_owned_user_data(ui_lbl_core_item, strdup(items[i].sort_name));
 
         lv_obj_t *ui_lbl_core_item_glyph = lv_img_create(ui_pnl_core);
         const char *glyph = strcasecmp(items[i].sort_name, default_assign) == 0 ? "default" : "core";

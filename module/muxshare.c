@@ -45,6 +45,15 @@ int is_ksk(const int k) {
     return kiosk.enable ? k : 0;
 }
 
+static void free_user_data_on_delete(lv_event_t *e) {
+    free(lv_obj_get_user_data(lv_event_get_target(e)));
+}
+
+void set_owned_user_data(lv_obj_t *obj, void *data) {
+    lv_obj_set_user_data(obj, data);
+    lv_obj_add_event_cb(obj, free_user_data_on_delete, LV_EVENT_DELETE, NULL);
+}
+
 void hold_call_set(void) {
     hold_call = 1;
 }

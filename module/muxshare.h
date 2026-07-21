@@ -113,6 +113,8 @@ enum passcode_type { pct_boot, pct_config, pct_launch };
 
 int is_ksk(int k);
 
+void set_owned_user_data(lv_obj_t *obj, void *data);
+
 void hold_call_set(void);
 
 void hold_call_release(void);

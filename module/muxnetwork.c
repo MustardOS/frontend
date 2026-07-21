@@ -246,7 +246,7 @@ static void populate_profile_list(void) {
 
         lv_obj_t *ui_pnl_profile = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_profile);
-        lv_obj_set_user_data(ui_pnl_profile, strdup(profile_store));
+        set_owned_user_data(ui_pnl_profile, strdup(profile_store));
 
         lv_obj_t *ui_lbl_profile = lv_label_create(ui_pnl_profile);
         apply_theme_list_item(&theme, ui_lbl_profile, profile_store);

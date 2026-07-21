@@ -100,7 +100,7 @@ static void populate_paired_device_list(void) {
         lv_group_add_obj(ui_group_glyph, ui_ico_device);
         lv_group_add_obj(ui_group_panel, ui_pnl_device);
 
-        lv_obj_set_user_data(ui_pnl_device, strdup(mac));
+        set_owned_user_data(ui_pnl_device, strdup(mac));
 
         apply_size_to_content(&theme, ui_pnl_content, ui_lbl_device, ui_ico_device, name);
         apply_text_long_dot(&theme, ui_lbl_device);

@@ -29,7 +29,7 @@ static void populate_bt_scan_items(void) {
 
         lv_obj_t *ui_pnl_bt_scan = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_bt_scan);
-        lv_obj_set_user_data(ui_pnl_bt_scan, strdup(mac));
+        set_owned_user_data(ui_pnl_bt_scan, strdup(mac));
 
         lv_obj_t *ui_lbl_bt_scan_item = lv_label_create(ui_pnl_bt_scan);
         apply_theme_list_item(&theme, ui_lbl_bt_scan_item, name);
@@ -51,11 +51,6 @@ static void populate_bt_scan_items(void) {
 }
 
 static void refresh_scan_list(void) {
-    const uint32_t child_cnt = lv_obj_get_child_cnt(ui_pnl_content);
-    for (uint32_t i = 0; i < child_cnt; i++) {
-        free(lv_obj_get_user_data(lv_obj_get_child(ui_pnl_content, (int32_t) i)));
-    }
-
     lv_obj_clean(ui_pnl_content);
 
     if (ui_group) lv_group_del(ui_group);

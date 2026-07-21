@@ -123,6 +123,7 @@ static void gen_app_label(const size_t index) {
     if (ui_lbl_app_item) {
         apply_theme_list_item(&theme, ui_lbl_app_item, items[index].display_name);
         lv_group_add_obj(ui_group, ui_lbl_app_item);
+        set_owned_user_data(ui_lbl_app_item, NULL);
     }
 
     lv_obj_t *ui_lbl_app_item_glyph = lv_img_create(ui_pnl_app);
@@ -549,7 +550,9 @@ int muxapp_main(void) {
     }
 
     char *item_name = strdup(get_last_dir(items[current_item_index].extra_data));
-    lv_obj_set_user_data(lv_group_get_focused(ui_group), item_name);
+    struct _lv_obj_t *initial_focus = lv_group_get_focused(ui_group);
+    free(lv_obj_get_user_data(initial_focus));
+    lv_obj_set_user_data(initial_focus, item_name);
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_application);
 
     if (ui_count_static > 0) {

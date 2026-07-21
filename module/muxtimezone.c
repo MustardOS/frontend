@@ -79,7 +79,7 @@ static void create_list_item(const char *base_key, const char *label) {
 
     lv_obj_t *ui_pnl_timezone = lv_obj_create(ui_pnl_content);
     apply_theme_list_panel(ui_pnl_timezone);
-    lv_obj_set_user_data(ui_pnl_timezone, strdup(base_key));
+    set_owned_user_data(ui_pnl_timezone, strdup(base_key));
 
     lv_obj_t *ui_lbl_timezone_item = lv_label_create(ui_pnl_timezone);
     apply_theme_list_item(&theme, ui_lbl_timezone_item, label_display);
