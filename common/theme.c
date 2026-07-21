@@ -1027,8 +1027,15 @@ static mini_t *theme_cache_load(const char *path) {
     if (!scheme) return NULL;
 
     if (ini_cache_count == ini_cache_capacity) {
-        ini_cache_capacity = ini_cache_capacity ? ini_cache_capacity * 2 : 16;
-        ini_cache = realloc(ini_cache, ini_cache_capacity * sizeof(theme_ini_cache_entry));
+        const int new_capacity = ini_cache_capacity ? ini_cache_capacity * 2 : 16;
+        theme_ini_cache_entry *new_cache = realloc(ini_cache, (size_t) new_capacity * sizeof(theme_ini_cache_entry));
+        if (!new_cache) {
+            mini_free(scheme);
+            return NULL;
+        }
+
+        ini_cache = new_cache;
+        ini_cache_capacity = new_capacity;
     }
 
     theme_ini_cache_entry *e = &ini_cache[ini_cache_count++];

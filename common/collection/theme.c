@@ -11,9 +11,13 @@ theme_item *add_theme_item(
 ) {
 
     if (*theme_items == NULL) {
-        *theme_items = malloc(sizeof(theme_item));
+        theme_item *new_items = malloc(sizeof(theme_item));
+        if (!new_items) return NULL;
+        *theme_items = new_items;
     } else {
-        *theme_items = realloc(*theme_items, (*count + 1) * sizeof(theme_item));
+        theme_item *new_items = realloc(*theme_items, (*count + 1) * sizeof(theme_item));
+        if (!new_items) return NULL;
+        *theme_items = new_items;
     }
 
     (*theme_items)[*count].name = strdup(name);

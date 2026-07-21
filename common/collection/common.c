@@ -32,9 +32,13 @@ content_item *add_item(
     const content_type content_type
 ) {
     if (*content_items == NULL) {
-        *content_items = malloc(sizeof(content_item));
+        content_item *new_items = malloc(sizeof(content_item));
+        if (!new_items) return NULL;
+        *content_items = new_items;
     } else if (*count > 0 && (*count & (*count - 1)) == 0) {
-        *content_items = realloc(*content_items, *count * 2 * sizeof(content_item));
+        content_item *new_items = realloc(*content_items, *count * 2 * sizeof(content_item));
+        if (!new_items) return NULL;
+        *content_items = new_items;
     }
 
     (*content_items)[*count].name = strdup(name);

@@ -102,13 +102,20 @@ static void union_entry_list_free_arrays(union_entry_list *l) {
 static int union_entry_list_push(union_entry_list *l, char *name, char *path) {
     if (l->count >= l->capacity) {
         const int new_cap = l->capacity * 2;
-        char **new_names = realloc(l->names, (size_t) new_cap * sizeof(char *));
-        char **new_paths = realloc(l->paths, (size_t) new_cap * sizeof(char *));
+
+        char **new_names = malloc((size_t) new_cap * sizeof(char *));
+        char **new_paths = malloc((size_t) new_cap * sizeof(char *));
         if (!new_names || !new_paths) {
             free(new_names);
             free(new_paths);
             return 0;
         }
+
+        memcpy(new_names, l->names, (size_t) l->count * sizeof(char *));
+        memcpy(new_paths, l->paths, (size_t) l->count * sizeof(char *));
+
+        free(l->names);
+        free(l->paths);
 
         l->names = new_names;
         l->paths = new_paths;

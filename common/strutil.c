@@ -656,7 +656,10 @@ char **split_command(const char *cmd, size_t *argc_out) {
             const size_t new_cap = cap * 2;
 
             char **tmp = realloc(argv, new_cap * sizeof(char *));
-            if (!tmp) FREE_ARGV;
+            if (!tmp) {
+                free(arg);
+                FREE_ARGV;
+            }
 
             argv = tmp;
             cap = new_cap;
