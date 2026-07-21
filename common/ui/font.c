@@ -68,38 +68,42 @@ int theme_has_font(void) {
         if (n < 0) continue;
 
         int found = 0;
-        for (int i = 0; i < n && !found; i++) {
-            const char *exts[] = {".ttf", ".bin"};
-            const char *name = entries[i]->d_name;
-            const size_t len = strlen(name);
+        for (int i = 0; i < n; i++) {
+            if (!found) {
+                const char *exts[] = {".ttf", ".bin"};
+                const char *name = entries[i]->d_name;
+                const size_t len = strlen(name);
 
-            for (int e = 0; e < 2; e++) {
-                if (len > 4 && strcasecmp(name + len - 4, exts[e]) == 0) {
-                    found = 1;
-                    break;
-                }
-            }
-
-            if (!found && entries[i]->d_type == DT_DIR && name[0] != '.') {
-                char sub[MAX_BUFFER_SIZE];
-                snprintf(sub, sizeof(sub), "%s/%s", dir, name);
-
-                struct dirent **sub_entries;
-                const int m = scandir(sub, &sub_entries, NULL, NULL);
-
-                if (m >= 0) {
-                    for (int j = 0; j < m && !found; j++) {
-                        const char *s_name = sub_entries[j]->d_name;
-                        const size_t s_len = strlen(s_name);
-                        for (int e = 0; e < 2; e++) {
-                            if (s_len > 4 && strcasecmp(s_name + s_len - 4, exts[e]) == 0) {
-                                found = 1;
-                                break;
-                            }
-                        }
-                        free(sub_entries[j]);
+                for (int e = 0; e < 2; e++) {
+                    if (len > 4 && strcasecmp(name + len - 4, exts[e]) == 0) {
+                        found = 1;
+                        break;
                     }
-                    free(sub_entries);
+                }
+
+                if (!found && entries[i]->d_type == DT_DIR && name[0] != '.') {
+                    char sub[MAX_BUFFER_SIZE];
+                    snprintf(sub, sizeof(sub), "%s/%s", dir, name);
+
+                    struct dirent **sub_entries;
+                    const int m = scandir(sub, &sub_entries, NULL, NULL);
+
+                    if (m >= 0) {
+                        for (int j = 0; j < m; j++) {
+                            if (!found) {
+                                const char *s_name = sub_entries[j]->d_name;
+                                const size_t s_len = strlen(s_name);
+                                for (int e = 0; e < 2; e++) {
+                                    if (s_len > 4 && strcasecmp(s_name + s_len - 4, exts[e]) == 0) {
+                                        found = 1;
+                                        break;
+                                    }
+                                }
+                            }
+                            free(sub_entries[j]);
+                        }
+                        free(sub_entries);
+                    }
                 }
             }
             free(entries[i]);
