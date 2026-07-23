@@ -17,6 +17,11 @@ static uint64_t prev_nav_mask = 0;
 static nav_repeat_t rpt_up = {0};
 static nav_repeat_t rpt_down = {0};
 
+static nav_repeat_t rpt_osk_up = {0};
+static nav_repeat_t rpt_osk_down = {0};
+static nav_repeat_t rpt_osk_left = {0};
+static nav_repeat_t rpt_osk_right = {0};
+
 static nav_repeat_t rpt_backspace = {0};
 
 static int load_confirm_active = 0;
@@ -364,35 +369,55 @@ static void finish_new_save_cancel(void) {
 }
 
 static void tick_osk(const uint64_t edge, const uint64_t mask) {
-    if (edge & BIT(0))
-        key_up();
-    else if (edge & BIT(1))
-        key_down();
-    else if (edge & BIT(2))
-        key_left();
-    else if (edge & BIT(3))
-        key_right();
-    else if (edge & BIT(4)) {
+    if (edge & BIT(4)) {
         play_sound(snd_keypress);
         const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
         if (is_key && strcasecmp(is_key, OSK_DONE) == 0)
             finish_new_save_confirm();
         else
             lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
-    } else if (edge & BIT(6)) {
-        finish_new_save_cancel();
-    } else if (edge & BIT(7)) {
-        key_space(ui_txt_entry_gamestate);
-    } else if (edge & NAV_PAGE_UP_BIT) {
-        key_swap_back();
-    } else if (edge & NAV_PAGE_DOWN_BIT) {
-        key_swap();
-    } else {
-        const uint32_t now = SDL_GetTicks();
-        const int do_backspace = nav_repeat_step(&rpt_backspace, edge & BIT(5), mask & BIT(5), 1, now);
-
-        if (do_backspace) key_backspace(ui_txt_entry_gamestate);
+        return;
     }
+
+    if (edge & BIT(6)) {
+        finish_new_save_cancel();
+        return;
+    }
+
+    if (edge & BIT(7)) {
+        key_space(ui_txt_entry_gamestate);
+        return;
+    }
+
+    if (edge & NAV_PAGE_UP_BIT) {
+        key_swap_back();
+        return;
+    }
+
+    if (edge & NAV_PAGE_DOWN_BIT) {
+        key_swap();
+        return;
+    }
+
+    const uint32_t now = SDL_GetTicks();
+
+    const int do_up = nav_repeat_step(&rpt_osk_up, edge & BIT(0), mask & BIT(0), 1, now);
+    const int do_down = nav_repeat_step(&rpt_osk_down, edge & BIT(1), mask & BIT(1), 1, now);
+    const int do_left = nav_repeat_step(&rpt_osk_left, edge & BIT(2), mask & BIT(2), 1, now);
+    const int do_right = nav_repeat_step(&rpt_osk_right, edge & BIT(3), mask & BIT(3), 1, now);
+
+    const int do_backspace = nav_repeat_step(&rpt_backspace, edge & BIT(5), mask & BIT(5), 1, now);
+
+    if (do_up)
+        key_up();
+    else if (do_down)
+        key_down();
+    else if (do_left)
+        key_left();
+    else if (do_right)
+        key_right();
+    else if (do_backspace)
+        key_backspace(ui_txt_entry_gamestate);
 }
 
 void gamestate_menu_tick(void) {

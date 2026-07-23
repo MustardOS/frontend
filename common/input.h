@@ -14,8 +14,9 @@
 // Maximum number of combos allowed per input task.
 #define MUX_INPUT_COMBO_COUNT 32
 
-// Number of expected extra controllers ever connected at one time.
-#define MUX_INPUT_MAX_EXTRA_PLAYERS 4
+// Number of expected extra controllers ever connected at one time!
+// Exclude the built-in device...
+#define MUX_INPUT_MAX_EXTRA_PLAYERS 3
 
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {
@@ -216,6 +217,23 @@ uint64_t mux_input_extra_player_pressed_mask(int index);
 void mux_input_extra_player_stick(int index, int stick, int16_t *x, int16_t *y);
 
 void mux_input_get_raw_sticks(int16_t *ls_x, int16_t *ls_y, int16_t *rs_x, int16_t *rs_y);
+
+typedef struct {
+    char stable_key[64];
+    char name[128];
+    int is_builtin;
+    int connected;
+} mux_input_source_info;
+
+int mux_input_source_count(void);
+
+int mux_input_source_get(int index, mux_input_source_info *out);
+
+uint64_t mux_input_source_pressed_mask(int index);
+
+void mux_input_source_stick(int index, int stick, int16_t *x, int16_t *y);
+
+uint32_t mux_input_source_generation(void);
 
 void append_combo(mux_input_options *opts, mux_input_combo combo);
 

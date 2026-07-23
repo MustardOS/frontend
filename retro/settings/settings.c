@@ -10,6 +10,7 @@
 #include "../video/colour.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../input/core_input_meta.h"
 #include "../video/overlay_bridge.h"
 #include "../core/paths.h"
 #include "settings.h"
@@ -40,7 +41,6 @@ static const struct session_settings_t defaults = {
     .hotkey_header_toggle_enabled = 1,
     .hotkey_quit_enabled = 1,
     .hotkey_manual_enabled = 1,
-    .hotkey_analog_toggle_enabled = 1,
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
     .sram_backup_enabled = 1,
@@ -73,7 +73,30 @@ static const struct session_settings_t defaults = {
     .shimmer_fix = 0,
     .run_ahead = 0,
     .gpu_hard_sync = 0,
-    .analog_controller = 0,
+    .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
+    .port_device_key = {"builtin", "", "", ""},
+    .port_device_id = {0, 0, 0, 0},
+    .port_button_map = {
+        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
+         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
+         mux_input_r2, mux_input_l3, mux_input_r3},
+        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
+         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
+         mux_input_r2, mux_input_l3, mux_input_r3},
+        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
+         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
+         mux_input_r2, mux_input_l3, mux_input_r3},
+        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
+         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
+         mux_input_r2, mux_input_l3, mux_input_r3}
+    },
+};
+
+static const int default_button_map[16] = {
+    mux_input_b,       mux_input_y,         mux_input_select,    mux_input_start,
+    mux_input_dpad_up, mux_input_dpad_down, mux_input_dpad_left, mux_input_dpad_right,
+    mux_input_a,       mux_input_x,         mux_input_l1,        mux_input_r1,
+    mux_input_l2,      mux_input_r2,        mux_input_l3,        mux_input_r3,
 };
 
 #define COLOUR_BRIGHTNESS_MIN -100
@@ -513,9 +536,6 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "hotkey_manual_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_manual_enabled = (int) v;
 
-    v = mini_get_int(ini, "settings", "hotkey_analog_toggle_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_analog_toggle_enabled = (int) v;
-
     v = mini_get_int(ini, "settings", "auto_save", -1);
     if (v >= 0 && v < auto_save_count) session_settings.auto_save = (int) v;
 
@@ -629,8 +649,34 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "gpu_hard_sync", -1);
     if (v == 0 || v == 1) session_settings.gpu_hard_sync = (int) v;
 
-    v = mini_get_int(ini, "settings", "analog_controller", -1);
-    if (v == 0 || v == 1) session_settings.analog_controller = (int) v;
+    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
+        char key[32];
+
+        snprintf(key, sizeof(key), "port%d_assignment", i);
+        v = mini_get_int(ini, "settings", key, -1);
+        if (v >= port_assignment_auto && v <= port_assignment_remembered) session_settings.port_assignment[i] = (int) v;
+
+        snprintf(key, sizeof(key), "port%d_device_key", i);
+        const char *device_key = mini_get_string(ini, "settings", key, NULL);
+        if (device_key)
+            snprintf(
+                session_settings.port_device_key[i], sizeof(session_settings.port_device_key[i]), "%s", device_key
+            );
+
+        snprintf(key, sizeof(key), "port%d_device_id", i);
+        v = mini_get_int(ini, "settings", key, -1);
+        if (v >= 0) session_settings.port_device_id[i] = (int) v;
+
+        for (int t = 0; t < 16; t++) {
+            snprintf(key, sizeof(key), "port%d_map_%d", i, t);
+            v = mini_get_int(ini, "settings", key, -1);
+            if (v >= 0 && v <= mux_input_count) session_settings.port_button_map[i][t] = (int) v;
+
+            snprintf(key, sizeof(key), "port%d_turbo_%d", i, t);
+            v = mini_get_int(ini, "settings", key, -1);
+            if (v >= 0 && v <= 3) session_settings.port_turbo_rate[i][t] = (int) v;
+        }
+    }
 
     mini_free(ini);
 }
@@ -686,7 +732,6 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(hotkey_header_toggle_enabled);
     DELTA(hotkey_quit_enabled);
     DELTA(hotkey_manual_enabled);
-    DELTA(hotkey_analog_toggle_enabled);
     DELTA(auto_save);
     DELTA(sram_flush_seconds);
     DELTA(sram_backup_enabled);
@@ -719,9 +764,39 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(shimmer_fix);
     DELTA(run_ahead);
     DELTA(gpu_hard_sync);
-    DELTA(analog_controller);
 
 #undef DELTA
+
+    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
+        char key[32];
+
+        if (session_settings.port_assignment[i] != base->port_assignment[i]) {
+            snprintf(key, sizeof(key), "port%d_assignment", i);
+            mini_set_int(ini, "settings", key, session_settings.port_assignment[i]);
+        }
+
+        if (strcmp(session_settings.port_device_key[i], base->port_device_key[i]) != 0) {
+            snprintf(key, sizeof(key), "port%d_device_key", i);
+            mini_set_string(ini, "settings", key, session_settings.port_device_key[i]);
+        }
+
+        if (session_settings.port_device_id[i] != base->port_device_id[i]) {
+            snprintf(key, sizeof(key), "port%d_device_id", i);
+            mini_set_int(ini, "settings", key, session_settings.port_device_id[i]);
+        }
+
+        for (int t = 0; t < 16; t++) {
+            if (session_settings.port_button_map[i][t] != base->port_button_map[i][t]) {
+                snprintf(key, sizeof(key), "port%d_map_%d", i, t);
+                mini_set_int(ini, "settings", key, session_settings.port_button_map[i][t]);
+            }
+
+            if (session_settings.port_turbo_rate[i][t] != base->port_turbo_rate[i][t]) {
+                snprintf(key, sizeof(key), "port%d_turbo_%d", i, t);
+                mini_set_int(ini, "settings", key, session_settings.port_turbo_rate[i][t]);
+            }
+        }
+    }
 
     mini_save(ini, 0);
     mini_free(ini);
@@ -923,11 +998,6 @@ void session_settings_cycle_hotkey_toggle_fps_enabled(const int direction) {
 void session_settings_cycle_hotkey_header_toggle_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_header_toggle_enabled = !session_settings.hotkey_header_toggle_enabled;
-}
-
-void session_settings_cycle_hotkey_analog_toggle_enabled(const int direction) {
-    (void) direction;
-    session_settings.hotkey_analog_toggle_enabled = !session_settings.hotkey_analog_toggle_enabled;
 }
 
 void session_settings_cycle_hotkey_quit_enabled(const int direction) {
@@ -1167,9 +1237,352 @@ void session_settings_cycle_gpu_hard_sync(const int direction) {
     session_settings.gpu_hard_sync = !session_settings.gpu_hard_sync;
 }
 
-void session_settings_cycle_analog_controller(const int direction) {
-    (void) direction;
-    session_settings.analog_controller = !session_settings.analog_controller;
+static int port_claimed_elsewhere(const char *stable_key, const int for_port) {
+    for (int p = 0; p < MUX_INPUT_PORT_COUNT; p++) {
+        if (p == for_port) continue;
+        if (session_settings.port_assignment[p] != port_assignment_remembered) continue;
+        if (strcmp(session_settings.port_device_key[p], stable_key) == 0) return 1;
+    }
+    return 0;
+}
+
+static int port_choice_count(int *modes, char keys[][64], const int max_choices, const int for_port) {
+    int count = 0;
+
+    modes[count] = port_assignment_auto;
+    keys[count][0] = '\0';
+    count++;
+
+    for (int s = 0; s < mux_input_source_count() && count < max_choices - 1; s++) {
+        mux_input_source_info info;
+        if (!mux_input_source_get(s, &info) || !info.connected) continue;
+        if (port_claimed_elsewhere(info.stable_key, for_port)) continue;
+
+        modes[count] = port_assignment_remembered;
+        snprintf(keys[count], 64, "%s", info.stable_key);
+        count++;
+    }
+
+    modes[count] = port_assignment_none;
+    keys[count][0] = '\0';
+    count++;
+
+    return count;
+}
+
+void session_settings_cycle_port_controller(const int port, const int direction) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return;
+
+    int modes[2 + MUX_INPUT_PORT_COUNT];
+    char keys[2 + MUX_INPUT_PORT_COUNT][64];
+    const int count = port_choice_count(modes, keys, 2 + MUX_INPUT_PORT_COUNT, port);
+
+    int current = 0;
+    for (int i = 0; i < count; i++) {
+        if (modes[i] != session_settings.port_assignment[port]) continue;
+        if (modes[i] != port_assignment_remembered || strcmp(keys[i], session_settings.port_device_key[port]) == 0) {
+            current = i;
+            break;
+        }
+    }
+
+    int next = current + (direction > 0 ? 1 : -1);
+    if (next < 0) next = count - 1;
+    if (next >= count) next = 0;
+
+    session_settings.port_assignment[port] = modes[next];
+    snprintf(session_settings.port_device_key[port], sizeof(session_settings.port_device_key[port]), "%s", keys[next]);
+}
+
+void session_settings_port_summary(const int port, char *buf, const size_t len) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) {
+        if (len) buf[0] = '\0';
+        return;
+    }
+
+    switch (session_settings.port_assignment[port]) {
+        case port_assignment_none:
+            snprintf(buf, len, "%s", lang.muxretro.settings_screen.port_none);
+            return;
+
+        case port_assignment_remembered:
+            for (int s = 0; s < mux_input_source_count(); s++) {
+                mux_input_source_info info;
+                if (!mux_input_source_get(s, &info)) continue;
+                if (strcmp(info.stable_key, session_settings.port_device_key[port]) != 0) continue;
+
+                if (!info.connected) {
+                    snprintf(buf, len, "%s", lang.generic.not_connected);
+                    return;
+                }
+
+                snprintf(buf, len, "%s", info.is_builtin ? lang.muxretro.settings_screen.built_in_controls : info.name);
+                return;
+            }
+
+            snprintf(buf, len, "%s", lang.generic.not_connected);
+            return;
+
+        default:
+            snprintf(buf, len, "%s", lang.muxretro.settings_screen.port_auto);
+    }
+}
+
+#define PORT_DEVICE_CHOICE_MAX 17
+
+void session_settings_cycle_port_device(const int port, const int direction) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return;
+
+    unsigned ids[PORT_DEVICE_CHOICE_MAX];
+    int count = 0;
+
+    ids[count++] = 0; // "Default (Joypad)"
+
+    const int type_count = core_input_meta_port_type_count(port);
+    for (int i = 0; i < type_count && count < PORT_DEVICE_CHOICE_MAX; i++) {
+        unsigned id;
+        if (!core_input_meta_port_type_get(port, i, NULL, 0, &id)) continue;
+
+        const unsigned masked = id & RETRO_DEVICE_MASK;
+        if (masked != RETRO_DEVICE_JOYPAD && masked != RETRO_DEVICE_ANALOG) continue;
+
+        ids[count++] = id;
+    }
+
+    int current = 0;
+    for (int i = 0; i < count; i++) {
+        if (ids[i] == (unsigned) session_settings.port_device_id[port]) {
+            current = i;
+            break;
+        }
+    }
+
+    int next = current + (direction > 0 ? 1 : -1);
+    if (next < 0) next = count - 1;
+    if (next >= count) next = 0;
+
+    session_settings.port_device_id[port] = (int) ids[next];
+    input_bridge_apply_controller_ports();
+}
+
+void session_settings_port_device_summary(const int port, char *buf, const size_t len) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) {
+        if (len) buf[0] = '\0';
+        return;
+    }
+
+    const int id = session_settings.port_device_id[port];
+    if (id == 0) {
+        snprintf(buf, len, "%s", lang.muxretro.settings_screen.core_device_default);
+        return;
+    }
+
+    const int type_count = core_input_meta_port_type_count(port);
+    for (int i = 0; i < type_count; i++) {
+        char desc[64];
+        unsigned type_id;
+        if (!core_input_meta_port_type_get(port, i, desc, sizeof(desc), &type_id)) continue;
+        if ((int) type_id == id) {
+            snprintf(buf, len, "%s", desc);
+            return;
+        }
+    }
+
+    snprintf(buf, len, "#%d", id);
+}
+
+int session_settings_resolve_port_source(const int port) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return -1;
+
+    int resolved[MUX_INPUT_PORT_COUNT];
+    int claimed[MUX_INPUT_PORT_COUNT] = {0};
+
+    for (int p = 0; p < MUX_INPUT_PORT_COUNT; p++) {
+        resolved[p] = -1;
+        if (session_settings.port_assignment[p] != port_assignment_remembered) continue;
+
+        for (int s = 0; s < mux_input_source_count(); s++) {
+            mux_input_source_info info;
+            if (!mux_input_source_get(s, &info) || !info.connected || claimed[s]) continue;
+
+            if (strcmp(info.stable_key, session_settings.port_device_key[p]) == 0) {
+                resolved[p] = s;
+                claimed[s] = 1;
+                break;
+            }
+        }
+    }
+
+    for (int p = 0; p < MUX_INPUT_PORT_COUNT; p++) {
+        if (session_settings.port_assignment[p] != port_assignment_auto) continue;
+
+        for (int s = 0; s < mux_input_source_count(); s++) {
+            mux_input_source_info info;
+            if (!mux_input_source_get(s, &info) || !info.connected || claimed[s]) continue;
+
+            resolved[p] = s;
+            claimed[s] = 1;
+            break;
+        }
+    }
+
+    return resolved[port];
+}
+
+const char *session_settings_button_type_label(const int type) {
+    switch (type) {
+        case mux_input_b:
+            return lang.muxretro.settings_screen.target_b;
+        case mux_input_y:
+            return lang.muxretro.settings_screen.target_y;
+        case mux_input_select:
+            return lang.muxretro.settings_screen.target_select;
+        case mux_input_start:
+            return lang.muxretro.settings_screen.target_start;
+        case mux_input_dpad_up:
+            return lang.muxretro.settings_screen.target_dpad_up;
+        case mux_input_dpad_down:
+            return lang.muxretro.settings_screen.target_dpad_down;
+        case mux_input_dpad_left:
+            return lang.muxretro.settings_screen.target_dpad_left;
+        case mux_input_dpad_right:
+            return lang.muxretro.settings_screen.target_dpad_right;
+        case mux_input_a:
+            return lang.muxretro.settings_screen.target_a;
+        case mux_input_x:
+            return lang.muxretro.settings_screen.target_x;
+        case mux_input_l1:
+            return lang.muxretro.settings_screen.target_l1;
+        case mux_input_r1:
+            return lang.muxretro.settings_screen.target_r1;
+        case mux_input_l2:
+            return lang.muxretro.settings_screen.target_l2;
+        case mux_input_r2:
+            return lang.muxretro.settings_screen.target_r2;
+        case mux_input_l3:
+            return lang.muxretro.settings_screen.target_l3;
+        case mux_input_r3:
+            return lang.muxretro.settings_screen.target_r3;
+        case mux_input_ls_up:
+            return lang.muxretro.settings_screen.stick_ls_up;
+        case mux_input_ls_down:
+            return lang.muxretro.settings_screen.stick_ls_down;
+        case mux_input_ls_left:
+            return lang.muxretro.settings_screen.stick_ls_left;
+        case mux_input_ls_right:
+            return lang.muxretro.settings_screen.stick_ls_right;
+        case mux_input_rs_up:
+            return lang.muxretro.settings_screen.stick_rs_up;
+        case mux_input_rs_down:
+            return lang.muxretro.settings_screen.stick_rs_down;
+        case mux_input_rs_left:
+            return lang.muxretro.settings_screen.stick_rs_left;
+        case mux_input_rs_right:
+            return lang.muxretro.settings_screen.stick_rs_right;
+        default:
+            return lang.muxretro.settings_screen.unbound;
+    }
+}
+
+void session_settings_button_map_value(const int port, const int target_id, char *buf, const size_t len) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) {
+        if (len) buf[0] = '\0';
+        return;
+    }
+
+    const char *source_label = session_settings_button_type_label(session_settings.port_button_map[port][target_id]);
+    const int rate = session_settings.port_turbo_rate[port][target_id];
+
+    if (rate > 0) {
+        snprintf(buf, len, "%s (%s)", source_label, session_settings_turbo_rate_name(rate));
+    } else {
+        snprintf(buf, len, "%s", source_label);
+    }
+}
+
+void session_settings_capture_button(const int port, const int target_id, const int source_type) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
+
+    for (int i = 0; i < 16; i++) {
+        if (i != target_id && session_settings.port_button_map[port][i] == source_type) {
+            session_settings.port_button_map[port][i] = session_settings.port_button_map[port][target_id];
+            break;
+        }
+    }
+
+    session_settings.port_button_map[port][target_id] = source_type;
+}
+
+void session_settings_clear_button(const int port, const int target_id) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
+    session_settings.port_button_map[port][target_id] = mux_input_count;
+}
+
+void session_settings_reset_button(const int port, const int target_id) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
+    session_settings.port_button_map[port][target_id] = default_button_map[target_id];
+    session_settings.port_turbo_rate[port][target_id] = 0;
+}
+
+static void reset_button_map(const int port) {
+    for (int i = 0; i < 16; i++) {
+        session_settings.port_button_map[port][i] = default_button_map[i];
+        session_settings.port_turbo_rate[port][i] = 0;
+    }
+}
+
+void session_settings_cycle_turbo_rate(const int port, const int target_id, const int direction) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
+
+    int next = session_settings.port_turbo_rate[port][target_id] + (direction > 0 ? 1 : -1);
+    if (next < 0) next = 3;
+    if (next > 3) next = 0;
+
+    session_settings.port_turbo_rate[port][target_id] = next;
+}
+
+const char *session_settings_turbo_rate_name(const int rate) {
+    switch (rate) {
+        case 1:
+            return lang.muxretro.settings_screen.turbo_10_hz;
+        case 2:
+            return lang.muxretro.settings_screen.turbo_15_hz;
+        case 3:
+            return lang.muxretro.settings_screen.turbo_20_hz;
+        default:
+            return lang.muxretro.settings_screen.turbo_off;
+    }
+}
+
+void session_settings_reset_input_port(const int port) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return;
+
+    if (port == 0) {
+        session_settings.port_assignment[port] = port_assignment_remembered;
+        snprintf(session_settings.port_device_key[port], sizeof(session_settings.port_device_key[port]), "builtin");
+    } else {
+        session_settings.port_assignment[port] = port_assignment_auto;
+        session_settings.port_device_key[port][0] = '\0';
+    }
+
+    session_settings.port_device_id[port] = 0;
+    reset_button_map(port);
+}
+
+void session_settings_auto_assign_controllers(void) {
+    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++)
+        session_settings_reset_input_port(i);
+}
+
+void session_settings_reset_input(void) {
+    session_settings_auto_assign_controllers();
+
+    session_settings.rumble_enabled = defaults.rumble_enabled;
+    session_settings.analog_deadzone = defaults.analog_deadzone;
+    session_settings.analog_anti_deadzone = defaults.analog_anti_deadzone;
+    session_settings.analog_sensitivity = defaults.analog_sensitivity;
+    session_settings.analog_invert_y = defaults.analog_invert_y;
+
     input_bridge_apply_controller_ports();
 }
 

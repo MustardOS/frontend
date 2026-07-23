@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <signal.h>
+#include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "init.h"
@@ -13,11 +14,17 @@
 #include "display.h"
 #include "anim.h"
 
-#define INPUT_COOLDOWN          256
+#define INPUT_COOLDOWN 256
+
+#define AXIS_THRESHOLD    ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
+#define TRIGGER_THRESHOLD ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
+
+#define AXIS_MAX 32767
+
 #define AXIS_THRESHOLD_FRACTION 0.80f
-#define AXIS_MAX                32767
-#define AXIS_THRESHOLD          ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
-#define TRIGGER_THRESHOLD       ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
+
+#define CONTENT_AXIS_THRESHOLD_FRACTION 0.50f
+#define CONTENT_AXIS_THRESHOLD          ((int16_t) ((float) AXIS_MAX * CONTENT_AXIS_THRESHOLD_FRACTION))
 
 int swap_axis = 0;
 int input_init_done = 0;
@@ -60,7 +67,8 @@ static int16_t raw_rs_y = 0;
 static uint32_t controller_axis_log_mask = 0;
 static uint32_t raw_axis_log_mask = 0;
 
-#define MAX_INPUT_DEVICES 4
+// Sized to fit the actual device plus every extra player slot simultaneously open
+#define MAX_INPUT_DEVICES (1 + MUX_INPUT_MAX_EXTRA_PLAYERS)
 
 typedef struct {
     SDL_GameController *controller;
@@ -110,6 +118,12 @@ static int guid_equal(const SDL_JoystickGUID a, const SDL_JoystickGUID b) {
     return memcmp(&a, &b, sizeof(SDL_JoystickGUID)) == 0;
 }
 
+static uint32_t source_generation = 0;
+
+static void bump_source_generation(void) {
+    source_generation++;
+}
+
 static void assign_extra_player_slot(const SDL_JoystickID id, const SDL_JoystickGUID guid) {
     if (!extra_players_init_done) init_extra_players();
     if (find_extra_player_by_instance(id) >= 0) return;
@@ -118,6 +132,7 @@ static void assign_extra_player_slot(const SDL_JoystickID id, const SDL_Joystick
         if (extra_players[i].instance < 0 && extra_players[i].guid_valid && guid_equal(extra_players[i].guid, guid)) {
             extra_players[i].instance = id;
             LOG_INFO("input", "Extra player %d reconnected (instance %d)", i + 1, id);
+            bump_source_generation();
             return;
         }
     }
@@ -128,6 +143,7 @@ static void assign_extra_player_slot(const SDL_JoystickID id, const SDL_Joystick
             extra_players[i].guid = guid;
             extra_players[i].guid_valid = 1;
             LOG_INFO("input", "Extra player %d assigned (instance %d)", i + 1, id);
+            bump_source_generation();
             return;
         }
     }
@@ -138,6 +154,8 @@ static void assign_extra_player_slot(const SDL_JoystickID id, const SDL_Joystick
 static void release_extra_player_slot(const SDL_JoystickID id) {
     const int idx = find_extra_player_by_instance(id);
     if (idx < 0) return;
+
+    bump_source_generation();
 
     extra_players[idx].instance = -1;
     extra_players[idx].pressed = 0;
@@ -181,6 +199,85 @@ void mux_input_extra_player_stick(const int index, const int stick, int16_t *x, 
 
     if (x) *x = extra_players[index].stick_x[stick];
     if (y) *y = extra_players[index].stick_y[stick];
+}
+
+static struct {
+    volatile uint64_t pressed;
+    int16_t stick_x[2];
+    int16_t stick_y[2];
+} primary_source;
+
+static void update_primary_pressed(const SDL_JoystickID id, const mux_input_type t, const int down) {
+    if (t == mux_input_count || id != primary_instance) return;
+    primary_source.pressed = down ? primary_source.pressed | BIT(t) : primary_source.pressed & ~BIT(t);
+}
+
+static void update_primary_axis(const SDL_JoystickID id, const int stick, const int is_y, const int16_t value) {
+    if (id != primary_instance) return;
+    if (is_y)
+        primary_source.stick_y[stick] = value;
+    else
+        primary_source.stick_x[stick] = value;
+}
+
+static int compute_axis_direction(const int16_t value, mux_input_type *neg, mux_input_type *pos) {
+    if (swap_axis && !key_show) {
+        if (*neg == mux_input_ls_up) {
+            *neg = mux_input_ls_left;
+            *pos = mux_input_ls_right;
+        } else if (*neg == mux_input_ls_left) {
+            *neg = mux_input_ls_up;
+            *pos = mux_input_ls_down;
+        } else if (*neg == mux_input_rs_up) {
+            *neg = mux_input_rs_left;
+            *pos = mux_input_rs_right;
+        } else if (*neg == mux_input_rs_left) {
+            *neg = mux_input_rs_up;
+            *pos = mux_input_rs_down;
+        }
+    }
+
+    if (value <= -CONTENT_AXIS_THRESHOLD) return -1;
+    if (value >= CONTENT_AXIS_THRESHOLD) return 1;
+    return 0;
+}
+
+static void
+apply_source_dir(volatile uint64_t *bits, const mux_input_type neg, const mux_input_type pos, const int direction) {
+    const uint64_t clear_mask = BIT(neg) | BIT(pos);
+    *bits &= ~clear_mask;
+    if (direction < 0)
+        *bits |= BIT(neg);
+    else if (direction > 0)
+        *bits |= BIT(pos);
+}
+
+static void update_primary_dir(const SDL_JoystickID id, mux_input_type neg, mux_input_type pos, const int16_t value) {
+    if (id != primary_instance) return;
+    const int direction = compute_axis_direction(value, &neg, &pos);
+    apply_source_dir(&primary_source.pressed, neg, pos, direction);
+}
+
+static void
+update_extra_player_dir(const SDL_JoystickID id, mux_input_type neg, mux_input_type pos, const int16_t value) {
+    const int idx = find_extra_player_by_instance(id);
+    if (idx < 0) return;
+    const int direction = compute_axis_direction(value, &neg, &pos);
+    apply_source_dir(&extra_players[idx].pressed, neg, pos, direction);
+}
+
+static void update_primary_trigger(const SDL_JoystickID id, const mux_input_type type, const int16_t value) {
+    if (id != primary_instance) return;
+    const uint64_t bit = BIT(type);
+    primary_source.pressed = value >= TRIGGER_THRESHOLD ? primary_source.pressed | bit : primary_source.pressed & ~bit;
+}
+
+static void update_extra_player_trigger(const SDL_JoystickID id, const mux_input_type type, const int16_t value) {
+    const int idx = find_extra_player_by_instance(id);
+    if (idx < 0) return;
+    const uint64_t bit = BIT(type);
+    extra_players[idx].pressed =
+        value >= TRIGGER_THRESHOLD ? extra_players[idx].pressed | bit : extra_players[idx].pressed & ~bit;
 }
 
 static int find_device_by_instance(const SDL_JoystickID id) {
@@ -646,6 +743,10 @@ static void clear_input_state(void) {
     menu_short_pressed = 0;
     menu_short_consumed = 0;
 
+    primary_source.pressed = 0;
+    primary_source.stick_x[0] = primary_source.stick_x[1] = 0;
+    primary_source.stick_y[0] = primary_source.stick_y[1] = 0;
+
     reset_raw_analog();
 }
 
@@ -787,6 +888,7 @@ static void open_all_input_devices(void) {
     if (was_empty && device_count > 0 && primary_instance < 0) {
         primary_instance = devices[0].instance;
         LOG_INFO("input", "Primary input device set (instance %d)", primary_instance);
+        bump_source_generation();
     }
 
     for (int i = 0; i < device_count; i++) {
@@ -803,6 +905,7 @@ void mux_input_reload_mappings(void) {
 
     primary_instance = -1;
     mappings_loaded = 0;
+    bump_source_generation();
 
     clear_input_state();
     flush_input_events();
@@ -1129,15 +1232,19 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
         case SDL_CONTROLLERBUTTONDOWN:
             if (is_tracked_as_controller(ev->cbutton.which)) {
                 process_sdl_button(ev->cbutton.button, 1);
-                if (ev->cbutton.button < SDL_CONTROLLER_BUTTON_MAX)
+                if (ev->cbutton.button < SDL_CONTROLLER_BUTTON_MAX) {
                     update_extra_player_button(ev->cbutton.which, controller_button_map[ev->cbutton.button], 1);
+                    update_primary_pressed(ev->cbutton.which, controller_button_map[ev->cbutton.button], 1);
+                }
             }
             break;
         case SDL_CONTROLLERBUTTONUP:
             if (is_tracked_as_controller(ev->cbutton.which)) {
                 process_sdl_button(ev->cbutton.button, 0);
-                if (ev->cbutton.button < SDL_CONTROLLER_BUTTON_MAX)
+                if (ev->cbutton.button < SDL_CONTROLLER_BUTTON_MAX) {
                     update_extra_player_button(ev->cbutton.which, controller_button_map[ev->cbutton.button], 0);
+                    update_primary_pressed(ev->cbutton.which, controller_button_map[ev->cbutton.button], 0);
+                }
             }
             break;
         case SDL_CONTROLLERAXISMOTION:
@@ -1147,15 +1254,39 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
                 switch (ev->caxis.axis) {
                     case SDL_CONTROLLER_AXIS_LEFTX:
                         update_extra_player_axis(ev->caxis.which, 0, 0, ev->caxis.value);
+                        update_primary_axis(ev->caxis.which, 0, 0, ev->caxis.value);
+                        update_extra_player_dir(
+                            ev->caxis.which, mux_input_ls_left, mux_input_ls_right, ev->caxis.value
+                        );
+                        update_primary_dir(ev->caxis.which, mux_input_ls_left, mux_input_ls_right, ev->caxis.value);
                         break;
                     case SDL_CONTROLLER_AXIS_LEFTY:
                         update_extra_player_axis(ev->caxis.which, 0, 1, ev->caxis.value);
+                        update_primary_axis(ev->caxis.which, 0, 1, ev->caxis.value);
+                        update_extra_player_dir(ev->caxis.which, mux_input_ls_up, mux_input_ls_down, ev->caxis.value);
+                        update_primary_dir(ev->caxis.which, mux_input_ls_up, mux_input_ls_down, ev->caxis.value);
                         break;
                     case SDL_CONTROLLER_AXIS_RIGHTX:
                         update_extra_player_axis(ev->caxis.which, 1, 0, ev->caxis.value);
+                        update_primary_axis(ev->caxis.which, 1, 0, ev->caxis.value);
+                        update_extra_player_dir(
+                            ev->caxis.which, mux_input_rs_left, mux_input_rs_right, ev->caxis.value
+                        );
+                        update_primary_dir(ev->caxis.which, mux_input_rs_left, mux_input_rs_right, ev->caxis.value);
                         break;
                     case SDL_CONTROLLER_AXIS_RIGHTY:
                         update_extra_player_axis(ev->caxis.which, 1, 1, ev->caxis.value);
+                        update_primary_axis(ev->caxis.which, 1, 1, ev->caxis.value);
+                        update_extra_player_dir(ev->caxis.which, mux_input_rs_up, mux_input_rs_down, ev->caxis.value);
+                        update_primary_dir(ev->caxis.which, mux_input_rs_up, mux_input_rs_down, ev->caxis.value);
+                        break;
+                    case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+                        update_extra_player_trigger(ev->caxis.which, mux_input_l2, ev->caxis.value);
+                        update_primary_trigger(ev->caxis.which, mux_input_l2, ev->caxis.value);
+                        break;
+                    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+                        update_extra_player_trigger(ev->caxis.which, mux_input_r2, ev->caxis.value);
+                        update_primary_trigger(ev->caxis.which, mux_input_r2, ev->caxis.value);
                         break;
                     default:
                         break;
@@ -1163,14 +1294,45 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
             }
             break;
         case SDL_JOYBUTTONDOWN:
-            if (ev->jbutton.which == primary_instance) process_sdl_joy_button(ev->jbutton.button, 1);
+            if (ev->jbutton.which == primary_instance) {
+                process_sdl_joy_button(ev->jbutton.button, 1);
+                if (ev->jbutton.button < 32)
+                    update_primary_pressed(ev->jbutton.which, joy_button_map[ev->jbutton.button], 1);
+            }
             break;
         case SDL_JOYBUTTONUP:
-            if (ev->jbutton.which == primary_instance) process_sdl_joy_button(ev->jbutton.button, 0);
+            if (ev->jbutton.which == primary_instance) {
+                process_sdl_joy_button(ev->jbutton.button, 0);
+                if (ev->jbutton.button < 32)
+                    update_primary_pressed(ev->jbutton.which, joy_button_map[ev->jbutton.button], 0);
+            }
             break;
         case SDL_JOYAXISMOTION:
             if (is_tracked_instance(ev->jaxis.which) && !is_tracked_as_controller(ev->jaxis.which)) {
                 process_sdl_joy_axis(ev->jaxis.which, ev->jaxis.axis, ev->jaxis.value);
+
+                if (ev->jaxis.which == primary_instance) {
+                    switch (ev->jaxis.axis) {
+                        case 0:
+                            update_primary_axis(ev->jaxis.which, 0, 0, ev->jaxis.value);
+                            update_primary_dir(ev->jaxis.which, mux_input_ls_left, mux_input_ls_right, ev->jaxis.value);
+                            break;
+                        case 1:
+                            update_primary_axis(ev->jaxis.which, 0, 1, ev->jaxis.value);
+                            update_primary_dir(ev->jaxis.which, mux_input_ls_up, mux_input_ls_down, ev->jaxis.value);
+                            break;
+                        case 2:
+                            update_primary_axis(ev->jaxis.which, 1, 0, ev->jaxis.value);
+                            update_primary_dir(ev->jaxis.which, mux_input_rs_left, mux_input_rs_right, ev->jaxis.value);
+                            break;
+                        case 3:
+                            update_primary_axis(ev->jaxis.which, 1, 1, ev->jaxis.value);
+                            update_primary_dir(ev->jaxis.which, mux_input_rs_up, mux_input_rs_down, ev->jaxis.value);
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
             break;
         case SDL_CONTROLLERDEVICEADDED:
@@ -1352,6 +1514,80 @@ void mux_input_get_raw_sticks(int16_t *ls_x, int16_t *ls_y, int16_t *rs_x, int16
     if (ls_y) *ls_y = raw_ls_y;
     if (rs_x) *rs_x = raw_rs_x;
     if (rs_y) *rs_y = raw_rs_y;
+}
+
+int mux_input_source_count(void) {
+    return 1 + MUX_INPUT_MAX_EXTRA_PLAYERS;
+}
+
+int mux_input_source_get(const int index, mux_input_source_info *out) {
+    if (!out || index < 0 || index >= mux_input_source_count()) return 0;
+
+    memset(out, 0, sizeof(*out));
+
+    if (index == 0) {
+        out->is_builtin = 1;
+        snprintf(out->stable_key, sizeof(out->stable_key), "builtin");
+        out->connected = primary_instance >= 0 && is_tracked_instance(primary_instance);
+
+        if (out->connected) {
+            const int idx = find_device_by_instance(primary_instance);
+            const char *name = devices[idx].controller ? SDL_GameControllerName(devices[idx].controller)
+                                                       : SDL_JoystickName(devices[idx].joystick);
+            if (name) snprintf(out->name, sizeof(out->name), "%s", name);
+        }
+
+        return 1;
+    }
+
+    if (!extra_players_init_done) init_extra_players();
+    const int slot = index - 1;
+
+    out->is_builtin = 0;
+    out->connected = extra_players[slot].instance >= 0;
+
+    if (extra_players[slot].guid_valid) {
+        char guid_str[64];
+        SDL_JoystickGetGUIDString(extra_players[slot].guid, guid_str, sizeof(guid_str));
+        snprintf(out->stable_key, sizeof(out->stable_key), "guid:%s", guid_str);
+    }
+
+    if (out->connected) {
+        const int idx = find_device_by_instance(extra_players[slot].instance);
+        if (idx >= 0) {
+            const char *name = devices[idx].controller ? SDL_GameControllerName(devices[idx].controller)
+                                                       : SDL_JoystickName(devices[idx].joystick);
+            if (name) snprintf(out->name, sizeof(out->name), "%s", name);
+        }
+    }
+
+    return 1;
+}
+
+uint64_t mux_input_source_pressed_mask(const int index) {
+    if (index == 0) return primary_source.pressed;
+    if (index < 1 || index >= mux_input_source_count()) return 0;
+    return extra_players[index - 1].pressed;
+}
+
+void mux_input_source_stick(const int index, const int stick, int16_t *x, int16_t *y) {
+    if (stick < 0 || stick > 1) {
+        if (x) *x = 0;
+        if (y) *y = 0;
+        return;
+    }
+
+    if (index == 0) {
+        if (x) *x = primary_source.stick_x[stick];
+        if (y) *y = primary_source.stick_y[stick];
+        return;
+    }
+
+    mux_input_extra_player_stick(index - 1, stick, x, y);
+}
+
+uint32_t mux_input_source_generation(void) {
+    return source_generation;
 }
 
 void mux_input_stop(void) {

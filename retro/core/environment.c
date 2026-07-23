@@ -5,6 +5,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "core.h"
+#include "../input/core_input_meta.h"
 #include "../input/hotkeys.h"
 #include "muxretro.h"
 #include "../ui/options.h"
@@ -227,16 +228,17 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO: {
-            input_bridge_set_controller_info((const struct retro_controller_info *) data);
+            core_input_meta_set_controller_info(data);
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS: {
+            core_input_meta_set_input_descriptors(data);
             return true;
         }
 
         case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES: {
-            if (data) *(uint64_t *) data = (UINT64_C(1) << RETRO_DEVICE_JOYPAD) | (UINT64_C(1) << RETRO_DEVICE_ANALOG);
+            if (data) *(uint64_t *) data = UINT64_C(1) << RETRO_DEVICE_JOYPAD | UINT64_C(1) << RETRO_DEVICE_ANALOG;
             return true;
         }
 
@@ -327,7 +329,7 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_HW_RENDER: {
-            return hw_render_bridge_negotiate((struct retro_hw_render_callback *) data);
+            return hw_render_bridge_negotiate(data);
         }
 
         default:

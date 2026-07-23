@@ -24,7 +24,8 @@ SRC := core/main.c core/core.c core/environment.c core/runahead.c \
        video/filters/filters.c video/filters/scale2x.c video/filters/super_eagle.c \
        audio/audio.c audio/ui_soundsettings.c \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
-       input/ui_inputsettings.c input/nav_repeat.c \
+       input/ui_inputsettings.c input/ui_controlleroptions.c input/ui_inputport.c \
+       input/ui_buttonmapping.c input/nav_repeat.c input/core_input_meta.c \
        state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
        state/content_hash.c state/bios_check.c state/sram.c \
        state/patch.c state/ui_storagesettings.c state/manual.c \

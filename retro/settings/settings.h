@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 enum video_scale_mode {
     video_scale_aspect = 0,
     video_scale_integer,
@@ -89,6 +91,10 @@ enum overlay_source_mode {
 
 enum auto_save_mode { auto_save_off = 0, auto_save_idle, auto_save_quit, auto_save_idle_quit, auto_save_count };
 
+#define MUX_INPUT_PORT_COUNT 4
+
+enum port_assignment_mode { port_assignment_auto = 0, port_assignment_none, port_assignment_remembered };
+
 struct session_settings_t {
     int scaling_mode;
     int rotate;
@@ -115,7 +121,6 @@ struct session_settings_t {
     int hotkey_header_toggle_enabled;
     int hotkey_quit_enabled;
     int hotkey_manual_enabled;
-    int hotkey_analog_toggle_enabled;
     int auto_save;
     int sram_flush_seconds;
     int sram_backup_enabled;
@@ -148,7 +153,11 @@ struct session_settings_t {
     int shimmer_fix;
     int run_ahead;
     int gpu_hard_sync;
-    int analog_controller;
+    int port_assignment[MUX_INPUT_PORT_COUNT];
+    char port_device_key[MUX_INPUT_PORT_COUNT][64];
+    int port_device_id[MUX_INPUT_PORT_COUNT];
+    int port_button_map[MUX_INPUT_PORT_COUNT][16]; // per RETRO_DEVICE_ID_JOYPAD_* target >> mux_input_type source
+    int port_turbo_rate[MUX_INPUT_PORT_COUNT][16]; // 0=off, 1=10Hz, 2=15Hz, 3=20Hz
 };
 
 extern struct session_settings_t session_settings;
@@ -285,8 +294,6 @@ void session_settings_cycle_hotkey_quit_enabled(int direction);
 
 void session_settings_cycle_hotkey_manual_enabled(int direction);
 
-void session_settings_cycle_hotkey_analog_toggle_enabled(int direction);
-
 void session_settings_cycle_auto_save(int direction);
 
 void session_settings_cycle_sram_flush(int direction);
@@ -351,7 +358,35 @@ void session_settings_cycle_run_ahead(int direction);
 
 void session_settings_cycle_gpu_hard_sync(int direction);
 
-void session_settings_cycle_analog_controller(int direction);
+void session_settings_cycle_port_controller(int port, int direction);
+
+void session_settings_port_summary(int port, char *buf, size_t len);
+
+void session_settings_cycle_port_device(int port, int direction);
+
+void session_settings_port_device_summary(int port, char *buf, size_t len);
+
+int session_settings_resolve_port_source(int port);
+
+const char *session_settings_button_type_label(int type);
+
+void session_settings_button_map_value(int port, int target_id, char *buf, size_t len);
+
+void session_settings_capture_button(int port, int target_id, int source_type);
+
+void session_settings_clear_button(int port, int target_id);
+
+void session_settings_reset_button(int port, int target_id);
+
+void session_settings_cycle_turbo_rate(int port, int target_id, int direction);
+
+const char *session_settings_turbo_rate_name(int rate);
+
+void session_settings_reset_input_port(int port);
+
+void session_settings_reset_input(void);
+
+void session_settings_auto_assign_controllers(void);
 
 void session_settings_reset_viewport(void);
 

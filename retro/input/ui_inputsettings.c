@@ -1,103 +1,95 @@
-#include <stdio.h>
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
 enum {
-    row_controller_type = 0,
-    row_rumble,
-    row_analog_deadzone,
-    row_analog_anti_deadzone,
-    row_analog_sensitivity,
-    row_analog_invert_y,
+    row_port_1 = 0,
+    row_port_2,
+    row_port_3,
+    row_port_4,
+    row_auto_assign,
+    row_controller_options,
+    row_reset_input,
     row_count
 };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.controller_type,
-    lang.muxretro.settings_screen.rumble, lang.muxretro.settings_screen.analog_deadzone,
-    lang.muxretro.settings_screen.analog_anti_deadzone, lang.muxretro.settings_screen.analog_sensitivity,
-    lang.muxretro.settings_screen.analog_invert_y
+    lang.muxretro.settings_screen.port_1,      lang.muxretro.settings_screen.port_2,
+    lang.muxretro.settings_screen.port_3,      lang.muxretro.settings_screen.port_4,
+    lang.muxretro.settings_screen.auto_assign, lang.muxretro.settings_screen.controller_options,
+    lang.muxretro.settings_screen.reset_input,
 };
 
-static const char *row_glyphs[row_count] = {
-    "controllertype", "rumble", "analogdeadzone", "analogantideadzone", "analogsensitivity", "analoginverty"
-};
+static const char *row_glyphs[row_count] = {"port1",     "port2", "port3", "port4", "autoassign", "controlleroptions",
+                                            "inputreset"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
+    if (index >= row_port_1 && index <= row_port_4) {
+        session_settings_port_summary(index - row_port_1, buf, buf_len);
+        return;
+    }
+
+    buf[0] = '\0';
+}
+
+static int row_is_action(const int index) {
+    (void) index;
+    return 1;
+}
+
+static submenu self;
+
+static void row_action(const int index) {
     switch (index) {
-        case row_controller_type:
-            snprintf(
-                buf, buf_len, "%s",
-                session_settings.analog_controller ? lang.muxretro.settings_screen.controller_analog
-                                                   : lang.muxretro.settings_screen.controller_digital
-            );
+        case row_port_1:
+        case row_port_2:
+        case row_port_3:
+        case row_port_4:
+            input_port_menu_open(index - row_port_1);
             break;
-        case row_rumble:
-            snprintf(
-                buf, buf_len, "%s", session_settings.rumble_enabled ? lang.generic.enabled : lang.generic.disabled
-            );
+        case row_auto_assign:
+            session_settings_auto_assign_controllers();
+            submenu_refresh_values(&self);
             break;
-        case row_analog_deadzone:
-            snprintf(buf, buf_len, "%s", session_settings_analog_deadzone_name(session_settings.analog_deadzone));
+        case row_controller_options:
+            controller_options_menu_open();
             break;
-        case row_analog_anti_deadzone:
-            snprintf(
-                buf, buf_len, "%s", session_settings_analog_anti_deadzone_name(session_settings.analog_anti_deadzone)
-            );
-            break;
-        case row_analog_sensitivity:
-            snprintf(buf, buf_len, "%s", session_settings_analog_sensitivity_name(session_settings.analog_sensitivity));
-            break;
-        case row_analog_invert_y:
-            snprintf(
-                buf, buf_len, "%s", session_settings.analog_invert_y ? lang.generic.enabled : lang.generic.disabled
-            );
+        case row_reset_input:
+            session_settings_reset_input();
+            submenu_refresh_values(&self);
             break;
         default:
-            buf[0] = '\0';
             break;
     }
 }
 
-static void cycle_row(const int index, const int direction) {
-    switch (index) {
-        case row_controller_type:
-            session_settings_cycle_analog_controller(direction);
-            break;
-        case row_rumble:
-            session_settings_cycle_rumble(direction);
-            break;
-        case row_analog_deadzone:
-            session_settings_cycle_analog_deadzone(direction);
-            break;
-        case row_analog_anti_deadzone:
-            session_settings_cycle_analog_anti_deadzone(direction);
-            break;
-        case row_analog_sensitivity:
-            session_settings_cycle_analog_sensitivity(direction);
-            break;
-        case row_analog_invert_y:
-            session_settings_cycle_analog_invert_y(direction);
-            break;
-        default:
-            break;
+static int child_tick(void) {
+    if (input_port_menu_is_active()) {
+        input_port_menu_tick();
+        return 1;
     }
+
+    if (controller_options_menu_is_active()) {
+        controller_options_menu_tick();
+        return 1;
+    }
+
+    return 0;
 }
 
 static void closed(void) {
     settings_menu_reopen_input();
 }
 
-static submenu self;
-
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
     .row_count = row_count,
     .value_text = row_value_text,
-    .cycle = cycle_row,
+    .row_is_action = row_is_action,
+    .action = row_action,
+    .child_tick = child_tick,
     .closed = closed,
     .save_title = lang.muxretro.save.input_title,
     .save_desc = lang.muxretro.save.input_desc,
@@ -105,6 +97,8 @@ static const submenu_def def = {
 
 void input_menu_init(void) {
     submenu_init(&self, &def);
+    controller_options_menu_init();
+    input_port_menu_init_all();
 }
 
 void input_menu_open(void) {
@@ -117,4 +111,12 @@ int input_menu_is_active(void) {
 
 void input_menu_tick(void) {
     submenu_tick(&self);
+}
+
+void input_menu_reopen_port(const int port) {
+    submenu_reopen_at(&self, row_port_1 + port);
+}
+
+void input_menu_reopen_controller_options(void) {
+    submenu_reopen_at(&self, row_controller_options);
 }

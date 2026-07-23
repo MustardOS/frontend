@@ -14,6 +14,7 @@
 #include "muxretro.h"
 #include "core.h"
 #include "paths.h"
+#include "../input/core_input_meta.h"
 #include "../state/patch.h"
 #include "../state/vfs.h"
 
@@ -574,6 +575,7 @@ int core_load_content(const char *content_path) {
 
 void core_unload_content(void) {
     if (current_core.retro_unload_game) current_core.retro_unload_game();
+    core_input_meta_clear();
 }
 
 void core_unload(void) {
@@ -583,4 +585,5 @@ void core_unload(void) {
     if (current_core.handle) dlclose(current_core.handle);
 
     memset(&current_core, 0, sizeof(current_core));
+    core_input_meta_clear();
 }

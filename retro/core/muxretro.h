@@ -106,8 +106,6 @@ uint64_t input_bridge_snapshot_signature(void);
 
 void input_bridge_apply_controller_ports(void);
 
-void input_bridge_set_controller_info(const struct retro_controller_info *info);
-
 void environment_apply_pending_av_info(void);
 
 void environment_notify_frame_time(void);
@@ -261,6 +259,36 @@ void input_menu_open(void);
 int input_menu_is_active(void);
 
 void input_menu_tick(void);
+
+void input_menu_reopen_port(int port);
+
+void input_menu_reopen_controller_options(void);
+
+void controller_options_menu_init(void);
+
+void controller_options_menu_open(void);
+
+int controller_options_menu_is_active(void);
+
+void controller_options_menu_tick(void);
+
+void input_port_menu_init_all(void);
+
+void input_port_menu_open(int port);
+
+int input_port_menu_is_active(void);
+
+void input_port_menu_tick(void);
+
+void input_port_menu_reopen_button_mapping(int port);
+
+void button_mapping_menu_init_all(void);
+
+void button_mapping_menu_open(int port);
+
+int button_mapping_menu_is_active(void);
+
+void button_mapping_menu_tick(void);
 
 void performance_menu_init(void);
 
