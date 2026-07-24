@@ -97,11 +97,11 @@ static void audio_filter_reset(void) {
     filter_state_r.prev_out = 0.0f;
 }
 
-static int16_t apply_audio_filter(const int16_t sample, audio_filter_state_t *st) {
+static inline int16_t apply_audio_filter(const int16_t sample, audio_filter_state_t *st, const int high_pass) {
     const float in = sample;
     float out;
 
-    if (session_settings.audio_filter == audio_filter_high_pass) {
+    if (high_pass) {
         out = filter_coeff * (st->prev_out + in - st->prev_in);
     } else {
         out = st->prev_out + filter_coeff * (in - st->prev_out);
@@ -212,6 +212,8 @@ static void submit_audio_frames(const int16_t *data, const size_t frames) {
         return;
     }
 
+    const int high_pass = session_settings.audio_filter == audio_filter_high_pass;
+
     size_t remaining = frames;
     const int16_t *src = data;
 
@@ -228,8 +230,8 @@ static void submit_audio_frames(const int16_t *data, const size_t frames) {
             }
 
             if (need_filter) {
-                l = apply_audio_filter(l, &filter_state_l);
-                r = apply_audio_filter(r, &filter_state_r);
+                l = apply_audio_filter(l, &filter_state_l, high_pass);
+                r = apply_audio_filter(r, &filter_state_r, high_pass);
             }
 
             scratch_buf[i * 2 + 0] = l;

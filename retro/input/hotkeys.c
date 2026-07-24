@@ -143,6 +143,10 @@ int hotkeys_task(void) {
         if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled) {
             if (!state_saves_supported()) {
                 pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
+            } else if (gamestate_quicksave_exists && !gamestate_metadata_matches(&gamestate_quicksave)) {
+                LOG_INFO(mux_module, "Quick Load (hotkey): blocked, quicksave metadata mismatch");
+                pause_menu_toggle();
+                gamestate_notice_open();
             } else if (gamestate_quicksave_load() == 0) {
                 LOG_INFO(mux_module, "Quick Load (hotkey)");
                 pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_load);

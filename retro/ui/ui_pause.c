@@ -18,6 +18,7 @@
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
+#include "cheats.h"
 
 #define TOAST_DURATION_MS 2048
 #define HEADER_FADE_MS    256
@@ -59,7 +60,7 @@ static void compute_row_indices(void) {
     row_game_state = state_saves_supported() ? i++ : -1;
     row_options = i++;
     row_disc_control = has_disc_control ? i++ : -1;
-    row_cheats = i++;
+    row_cheats = cheats_count > 0 ? i++ : -1;
     row_patches = patch_manual_count > 0 ? i++ : -1;
     row_settings = i++;
     row_information = i++;
@@ -72,12 +73,11 @@ static nav_repeat_t rpt_up = {0};
 static nav_repeat_t rpt_down = {0};
 
 static uint64_t current_nav_mask(void) {
-    const int up = mux_input_pressed(mux_input_dpad_up);
-    const int down = mux_input_pressed(mux_input_dpad_down);
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
 
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
+    // This screen only navigates vertically - keep just the up/down bits from the shared helper.
+    return (nav_dir_bits() & (BIT(0) | BIT(1))) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
 }
 
 void pause_menu_sync_input_mask(void) {
@@ -356,7 +356,7 @@ void pause_menu_rebuild(void) {
     if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
     gen_label("muxretro", "core", lang.muxretro.core_options);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
-    gen_label("muxretro", "cheat", lang.muxretro.cheats);
+    if (row_cheats >= 0) gen_label("muxretro", "cheat", lang.muxretro.cheats);
     if (row_patches >= 0) gen_label("muxretro", "patch", lang.muxretro.patches);
     gen_label("muxretro", "settings", lang.muxretro.settings);
     gen_label("muxretro", "info", lang.muxretro.information);
@@ -524,6 +524,11 @@ void pause_menu_toggle(void) {
 int pause_menu_tick(void) {
     if (!active) return 0;
 
+    if (gamestate_notice_is_active()) {
+        gamestate_notice_tick();
+        return 0;
+    }
+
     if (options_menu_is_active()) {
         options_menu_tick();
         return 0;
@@ -606,7 +611,7 @@ int pause_menu_tick(void) {
         } else if (has_disc_control && current_item_index == row_disc_control) {
             play_sound(snd_confirm);
             diskcontrol_menu_open();
-        } else if (current_item_index == row_cheats) {
+        } else if (row_cheats >= 0 && current_item_index == row_cheats) {
             play_sound(snd_confirm);
             cheats_menu_open();
         } else if (row_patches >= 0 && current_item_index == row_patches) {

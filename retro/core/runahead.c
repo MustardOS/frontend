@@ -31,11 +31,21 @@ static void runahead_fail(const char *reason) {
     }
 }
 
+#define SERIALIZE_SIZE_REFRESH_FRAMES 120
+
+static uint32_t size_refresh_countdown = 0;
+
 static int ensure_anchor_buf(void) {
+    if (anchor_valid && anchor_size > 0 && size_refresh_countdown > 0) {
+        size_refresh_countdown--;
+        return 1;
+    }
+
     const size_t size = current_core.retro_serialize_size();
     if (size == 0) return 0;
 
     anchor_size = size;
+    size_refresh_countdown = SERIALIZE_SIZE_REFRESH_FRAMES;
 
     if (size + size / 8 > anchor_cap) {
         const size_t want = size + size / 8 + (64 << 10);
@@ -85,8 +95,11 @@ void runahead_before_frame(const int allow_replay) {
     }
 
     if (!current_core.retro_serialize(anchor_buf, anchor_size)) {
-        runahead_fail("retro_serialize failed");
-        return;
+        size_refresh_countdown = 0;
+        if (!ensure_anchor_buf() || !current_core.retro_serialize(anchor_buf, anchor_size)) {
+            runahead_fail("retro_serialize failed");
+            return;
+        }
     }
 
     anchor_written_size = anchor_size;
@@ -96,6 +109,7 @@ void runahead_before_frame(const int allow_replay) {
 
 void runahead_invalidate(void) {
     anchor_valid = 0;
+    size_refresh_countdown = 0;
 }
 
 void runahead_shutdown(void) {

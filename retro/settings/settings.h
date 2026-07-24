@@ -124,6 +124,8 @@ struct session_settings_t {
     int auto_save;
     int sram_flush_seconds;
     int sram_backup_enabled;
+    int timeline_interval; // 0 = off, 1..6 -> {5,10,15,30,45,60} minutes
+
     int colour_brightness;
     int colour_contrast;
     int colour_saturation;
@@ -156,9 +158,13 @@ struct session_settings_t {
     int port_assignment[MUX_INPUT_PORT_COUNT];
     char port_device_key[MUX_INPUT_PORT_COUNT][64];
     int port_device_id[MUX_INPUT_PORT_COUNT];
-    int port_button_map[MUX_INPUT_PORT_COUNT][16]; // per RETRO_DEVICE_ID_JOYPAD_* target >> mux_input_type source
-    int port_turbo_rate[MUX_INPUT_PORT_COUNT][16]; // 0=off, 1=10Hz, 2=15Hz, 3=20Hz
+    int port_source_target[MUX_INPUT_PORT_COUNT][24];
+    int port_source_turbo[MUX_INPUT_PORT_COUNT][24];
 };
+
+#define PORT_SOURCE_COUNT 24
+
+extern const int session_settings_source_types[PORT_SOURCE_COUNT];
 
 extern struct session_settings_t session_settings;
 
@@ -193,6 +199,12 @@ double session_settings_ff_speed_value(int mode);
 double session_settings_slowmo_speed_value(int mode);
 
 const char *session_settings_sram_flush_name(int seconds);
+
+const char *session_settings_timeline_interval_name(int mode);
+
+int session_settings_timeline_interval_ms(void);
+
+void session_settings_cycle_timeline_interval(int direction);
 
 const char *session_settings_auto_save_name(int mode);
 
@@ -370,15 +382,15 @@ int session_settings_resolve_port_source(int port);
 
 const char *session_settings_button_type_label(int type);
 
-void session_settings_button_map_value(int port, int target_id, char *buf, size_t len);
+int session_settings_set_source_by_button(int port, int source, int pressed_type);
 
-void session_settings_capture_button(int port, int target_id, int source_type);
+void session_settings_cycle_source_turbo(int port, int source, int direction);
 
-void session_settings_clear_button(int port, int target_id);
+void session_settings_unbind_source(int port, int source);
 
-void session_settings_reset_button(int port, int target_id);
+void session_settings_reset_source(int port, int source);
 
-void session_settings_cycle_turbo_rate(int port, int target_id, int direction);
+void session_settings_source_value(int port, int source, char *buf, size_t len);
 
 const char *session_settings_turbo_rate_name(int rate);
 

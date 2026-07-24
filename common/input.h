@@ -235,6 +235,8 @@ void mux_input_source_stick(int index, int stick, int16_t *x, int16_t *y);
 
 uint32_t mux_input_source_generation(void);
 
+int mux_input_source_stick_count(int index);
+
 void append_combo(mux_input_options *opts, mux_input_combo combo);
 
 mux_nav_type get_sticknav_mask(int sticknav_setting);

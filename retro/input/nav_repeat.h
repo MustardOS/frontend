@@ -13,6 +13,8 @@ typedef struct {
 
 int nav_repeat_step(nav_repeat_t *state, int edge, int held, int repeat_allowed, uint32_t now);
 
+uint64_t nav_dir_bits(void);
+
 uint64_t nav_mask_standard(void);
 
 uint64_t nav_mask_page(void);

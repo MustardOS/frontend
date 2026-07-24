@@ -16,6 +16,8 @@ static char catalogue_overlay_path[MAX_BUFFER_SIZE];
 
 static SDL_Texture *current_overlay_tex = NULL;
 static uint8_t current_overlay_opacity = 0;
+static int current_overlay_w = 0;
+static int current_overlay_h = 0;
 
 void overlay_bridge_init(const char *core_path_arg, const char *content_path) {
     (void) core_path_arg;
@@ -68,18 +70,21 @@ void overlay_bridge_apply(void) {
         default:
             break;
     }
+
+    if (current_overlay_tex) {
+        SDL_QueryTexture(current_overlay_tex, NULL, NULL, &current_overlay_w, &current_overlay_h);
+        SDL_SetTextureBlendMode(current_overlay_tex, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(current_overlay_tex, current_overlay_opacity);
+    }
 }
 
 void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int canvas_h) {
     if (!current_overlay_tex) return;
 
-    int tex_w = 0, tex_h = 0;
-    SDL_QueryTexture(current_overlay_tex, NULL, NULL, &tex_w, &tex_h);
+    const SDL_Rect dst = {
+        (canvas_w - current_overlay_w) / 2, (canvas_h - current_overlay_h) / 2, current_overlay_w, current_overlay_h
+    };
 
-    const SDL_Rect dst = {(canvas_w - tex_w) / 2, (canvas_h - tex_h) / 2, tex_w, tex_h};
-
-    SDL_SetTextureBlendMode(current_overlay_tex, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(current_overlay_tex, current_overlay_opacity);
     SDL_RenderCopy(renderer, current_overlay_tex, NULL, &dst);
 }
 

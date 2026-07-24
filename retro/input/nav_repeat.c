@@ -19,16 +19,36 @@ int nav_repeat_step(nav_repeat_t *state, const int edge, const int held, const i
     return 0;
 }
 
+uint64_t nav_dir_bits(void) {
+    const mux_nav_type nav = get_sticknav_mask(config.settings.advanced.stick_nav);
+
+    int up = mux_input_pressed(mux_input_dpad_up);
+    int down = mux_input_pressed(mux_input_dpad_down);
+    int left = mux_input_pressed(mux_input_dpad_left);
+    int right = mux_input_pressed(mux_input_dpad_right);
+
+    if (nav & NAV_LEFT_STICK) {
+        up |= mux_input_pressed(mux_input_ls_up);
+        down |= mux_input_pressed(mux_input_ls_down);
+        left |= mux_input_pressed(mux_input_ls_left);
+        right |= mux_input_pressed(mux_input_ls_right);
+    }
+
+    if (nav & NAV_RIGHT_STICK) {
+        up |= mux_input_pressed(mux_input_rs_up);
+        down |= mux_input_pressed(mux_input_rs_down);
+        left |= mux_input_pressed(mux_input_rs_left);
+        right |= mux_input_pressed(mux_input_rs_right);
+    }
+
+    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0);
+}
+
 uint64_t nav_mask_standard(void) {
-    const int up = mux_input_pressed(mux_input_dpad_up);
-    const int down = mux_input_pressed(mux_input_dpad_down);
-    const int left = mux_input_pressed(mux_input_dpad_left);
-    const int right = mux_input_pressed(mux_input_dpad_right);
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
 
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0) | (confirm ? BIT(4) : 0)
-           | (back ? BIT(5) : 0) | nav_mask_page();
+    return nav_dir_bits() | (confirm ? BIT(4) : 0) | (back ? BIT(5) : 0) | nav_mask_page();
 }
 
 uint64_t nav_mask_page(void) {

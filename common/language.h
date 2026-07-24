@@ -1486,6 +1486,11 @@ struct mux_lang {
             char list[MAX_BUFFER_SIZE];
             char load_failed[MAX_BUFFER_SIZE];
             char not_supported[MAX_BUFFER_SIZE];
+            char timeline[MAX_BUFFER_SIZE];
+            char timeline_protected[MAX_BUFFER_SIZE];
+            char preserved[MAX_BUFFER_SIZE];
+            char mismatch_notice[MAX_BUFFER_SIZE];
+            char mismatch_load[MAX_BUFFER_SIZE];
         } gamestate;
         struct {
             char options_title[MAX_BUFFER_SIZE];
@@ -1513,6 +1518,7 @@ struct mux_lang {
             char content_save[MAX_BUFFER_SIZE];
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
+            char session_save[MAX_BUFFER_SIZE];
             char controller_options_title[MAX_BUFFER_SIZE];
             char controller_options_desc[MAX_BUFFER_SIZE];
             char input_port_title[MAX_BUFFER_SIZE];
@@ -1578,6 +1584,7 @@ struct mux_lang {
             char header_both[MAX_BUFFER_SIZE];
             char sram_flush[MAX_BUFFER_SIZE];
             char sram_backup[MAX_BUFFER_SIZE];
+            char timeline_saves[MAX_BUFFER_SIZE];
             char auto_save[MAX_BUFFER_SIZE];
             char auto_save_idle[MAX_BUFFER_SIZE];
             char auto_save_quit[MAX_BUFFER_SIZE];
@@ -1620,13 +1627,14 @@ struct mux_lang {
             char core_device[MAX_BUFFER_SIZE];
             char core_device_default[MAX_BUFFER_SIZE];
             char button_mapping[MAX_BUFFER_SIZE];
-            char press_button[MAX_BUFFER_SIZE];
             char unbound[MAX_BUFFER_SIZE];
             char turbo_off[MAX_BUFFER_SIZE];
             char turbo_10_hz[MAX_BUFFER_SIZE];
             char turbo_15_hz[MAX_BUFFER_SIZE];
             char turbo_20_hz[MAX_BUFFER_SIZE];
+            char target_a[MAX_BUFFER_SIZE];
             char target_b[MAX_BUFFER_SIZE];
+            char target_x[MAX_BUFFER_SIZE];
             char target_y[MAX_BUFFER_SIZE];
             char target_select[MAX_BUFFER_SIZE];
             char target_start[MAX_BUFFER_SIZE];
@@ -1634,8 +1642,6 @@ struct mux_lang {
             char target_dpad_down[MAX_BUFFER_SIZE];
             char target_dpad_left[MAX_BUFFER_SIZE];
             char target_dpad_right[MAX_BUFFER_SIZE];
-            char target_a[MAX_BUFFER_SIZE];
-            char target_x[MAX_BUFFER_SIZE];
             char target_l1[MAX_BUFFER_SIZE];
             char target_r1[MAX_BUFFER_SIZE];
             char target_l2[MAX_BUFFER_SIZE];
@@ -1650,6 +1656,10 @@ struct mux_lang {
             char stick_rs_down[MAX_BUFFER_SIZE];
             char stick_rs_left[MAX_BUFFER_SIZE];
             char stick_rs_right[MAX_BUFFER_SIZE];
+            char turbo_modes[MAX_BUFFER_SIZE];
+            char unbind[MAX_BUFFER_SIZE];
+            char press_button[MAX_BUFFER_SIZE];
+            char core_turbo_active[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
             char fast_forward[MAX_BUFFER_SIZE];

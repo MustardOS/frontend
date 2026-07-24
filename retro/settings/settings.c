@@ -44,6 +44,7 @@ static const struct session_settings_t defaults = {
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
     .sram_backup_enabled = 1,
+    .timeline_interval = 0,
     .colour_brightness = 0,
     .colour_contrast = 100,
     .colour_saturation = 100,
@@ -76,21 +77,22 @@ static const struct session_settings_t defaults = {
     .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
     .port_device_key = {"builtin", "", "", ""},
     .port_device_id = {0, 0, 0, 0},
-    .port_button_map = {
-        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
-         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
-         mux_input_r2, mux_input_l3, mux_input_r3},
-        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
-         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
-         mux_input_r2, mux_input_l3, mux_input_r3},
-        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
-         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
-         mux_input_r2, mux_input_l3, mux_input_r3},
-        {mux_input_b, mux_input_y, mux_input_select, mux_input_start, mux_input_dpad_up, mux_input_dpad_down,
-         mux_input_dpad_left, mux_input_dpad_right, mux_input_a, mux_input_x, mux_input_l1, mux_input_r1, mux_input_l2,
-         mux_input_r2, mux_input_l3, mux_input_r3}
-    },
+    .port_source_target = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {8,  0,  9,  1,  10, 11, 12, 13, 14, 15, 2,  3,
+                                                               4,  5,  6,  7,  -1, -1, -1, -1, -1, -1, -1, -1}},
 };
+
+// Physical control per source index
+const int session_settings_source_types[PORT_SOURCE_COUNT] = {
+    mux_input_a,        mux_input_b,         mux_input_x,         mux_input_y,        mux_input_l1,
+    mux_input_r1,       mux_input_l2,        mux_input_r2,        mux_input_l3,       mux_input_r3,
+    mux_input_select,   mux_input_start,     mux_input_dpad_up,   mux_input_dpad_down, mux_input_dpad_left,
+    mux_input_dpad_right, mux_input_ls_up,   mux_input_ls_down,   mux_input_ls_left,  mux_input_ls_right,
+    mux_input_rs_up,    mux_input_rs_down,   mux_input_rs_left,   mux_input_rs_right,
+};
+
+// Default core target per source index (-1 = unbound)
+static const int default_source_target[PORT_SOURCE_COUNT] = {8,  0,  9,  1,  10, 11, 12, 13, 14, 15, 2,  3,
+                                                             4,  5,  6,  7,  -1, -1, -1, -1, -1, -1, -1, -1};
 
 static const int default_button_map[16] = {
     mux_input_b,       mux_input_y,         mux_input_select,    mux_input_start,
@@ -323,6 +325,26 @@ const char *session_settings_sram_flush_name(const int seconds) {
     return buf;
 }
 
+static const int timeline_interval_minutes[7] = {0, 5, 10, 15, 30, 45, 60};
+
+const char *session_settings_timeline_interval_name(const int mode) {
+    if (mode <= 0 || mode > 6) return lang.generic.disabled;
+
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%dm", timeline_interval_minutes[mode]);
+    return buf;
+}
+
+int session_settings_timeline_interval_ms(void) {
+    const int mode = session_settings.timeline_interval;
+    if (mode <= 0 || mode > 6) return 0;
+    return timeline_interval_minutes[mode] * 60 * 1000;
+}
+
+void session_settings_cycle_timeline_interval(const int direction) {
+    session_settings.timeline_interval = (session_settings.timeline_interval + direction + 7) % 7;
+}
+
 const char *session_settings_auto_save_name(const int mode) {
     if (mode < 0 || mode >= auto_save_count) return auto_save_names[auto_save_off];
     return auto_save_names[mode];
@@ -550,6 +572,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "sram_backup_enabled", -1);
     if (v == 0 || v == 1) session_settings.sram_backup_enabled = (int) v;
 
+    v = mini_get_int(ini, "settings", "timeline_interval", -1);
+    if (v >= 0 && v <= 6) session_settings.timeline_interval = (int) v;
+
     v = mini_get_int(ini, "settings", "colour_brightness", COLOUR_BRIGHTNESS_MIN - 1);
     if (v >= COLOUR_BRIGHTNESS_MIN && v <= COLOUR_BRIGHTNESS_MAX) session_settings.colour_brightness = (int) v;
 
@@ -667,14 +692,14 @@ static void apply_ini(const char *path) {
         v = mini_get_int(ini, "settings", key, -1);
         if (v >= 0) session_settings.port_device_id[i] = (int) v;
 
-        for (int t = 0; t < 16; t++) {
-            snprintf(key, sizeof(key), "port%d_map_%d", i, t);
-            v = mini_get_int(ini, "settings", key, -1);
-            if (v >= 0 && v <= mux_input_count) session_settings.port_button_map[i][t] = (int) v;
+        for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+            snprintf(key, sizeof(key), "port%d_src_%d", i, s);
+            v = mini_get_int(ini, "settings", key, -99);
+            if (v >= -1 && v < 16) session_settings.port_source_target[i][s] = (int) v;
 
-            snprintf(key, sizeof(key), "port%d_turbo_%d", i, t);
+            snprintf(key, sizeof(key), "port%d_srct_%d", i, s);
             v = mini_get_int(ini, "settings", key, -1);
-            if (v >= 0 && v <= 3) session_settings.port_turbo_rate[i][t] = (int) v;
+            if (v >= 0 && v <= 3) session_settings.port_source_turbo[i][s] = (int) v;
         }
     }
 
@@ -735,6 +760,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(auto_save);
     DELTA(sram_flush_seconds);
     DELTA(sram_backup_enabled);
+    DELTA(timeline_interval);
     DELTA(colour_brightness);
     DELTA(colour_contrast);
     DELTA(colour_saturation);
@@ -785,15 +811,15 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
             mini_set_int(ini, "settings", key, session_settings.port_device_id[i]);
         }
 
-        for (int t = 0; t < 16; t++) {
-            if (session_settings.port_button_map[i][t] != base->port_button_map[i][t]) {
-                snprintf(key, sizeof(key), "port%d_map_%d", i, t);
-                mini_set_int(ini, "settings", key, session_settings.port_button_map[i][t]);
+        for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+            if (session_settings.port_source_target[i][s] != base->port_source_target[i][s]) {
+                snprintf(key, sizeof(key), "port%d_src_%d", i, s);
+                mini_set_int(ini, "settings", key, session_settings.port_source_target[i][s]);
             }
 
-            if (session_settings.port_turbo_rate[i][t] != base->port_turbo_rate[i][t]) {
-                snprintf(key, sizeof(key), "port%d_turbo_%d", i, t);
-                mini_set_int(ini, "settings", key, session_settings.port_turbo_rate[i][t]);
+            if (session_settings.port_source_turbo[i][s] != base->port_source_turbo[i][s]) {
+                snprintf(key, sizeof(key), "port%d_srct_%d", i, s);
+                mini_set_int(ini, "settings", key, session_settings.port_source_turbo[i][s]);
             }
         }
     }
@@ -1484,61 +1510,67 @@ const char *session_settings_button_type_label(const int type) {
     }
 }
 
-void session_settings_button_map_value(const int port, const int target_id, char *buf, const size_t len) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) {
+static const char *target_label(const int target_id) {
+    if (target_id < 0 || target_id >= 16) return lang.muxretro.settings_screen.unbound;
+    return session_settings_button_type_label(default_button_map[target_id]);
+}
+
+void session_settings_source_value(const int port, const int source, char *buf, const size_t len) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT || len == 0) {
         if (len) buf[0] = '\0';
         return;
     }
 
-    const char *source_label = session_settings_button_type_label(session_settings.port_button_map[port][target_id]);
-    const int rate = session_settings.port_turbo_rate[port][target_id];
+    const int target = session_settings.port_source_target[port][source];
+    const int rate = session_settings.port_source_turbo[port][source];
 
-    if (rate > 0) {
-        snprintf(buf, len, "%s (%s)", source_label, session_settings_turbo_rate_name(rate));
+    if (target >= 0 && rate > 0) {
+        snprintf(buf, len, "%s (%s)", target_label(target), session_settings_turbo_rate_name(rate));
     } else {
-        snprintf(buf, len, "%s", source_label);
+        snprintf(buf, len, "%s", target_label(target));
     }
 }
 
-void session_settings_capture_button(const int port, const int target_id, const int source_type) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
+int session_settings_set_source_by_button(const int port, const int source, const int pressed_type) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return 0;
 
     for (int i = 0; i < 16; i++) {
-        if (i != target_id && session_settings.port_button_map[port][i] == source_type) {
-            session_settings.port_button_map[port][i] = session_settings.port_button_map[port][target_id];
-            break;
+        if (session_settings_source_types[i] == pressed_type) {
+            session_settings.port_source_target[port][source] = default_source_target[i];
+            return 1;
         }
     }
 
-    session_settings.port_button_map[port][target_id] = source_type;
+    return 0;
 }
 
-void session_settings_clear_button(const int port, const int target_id) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
-    session_settings.port_button_map[port][target_id] = mux_input_count;
-}
+void session_settings_cycle_source_turbo(const int port, const int source, const int direction) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
 
-void session_settings_reset_button(const int port, const int target_id) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
-    session_settings.port_button_map[port][target_id] = default_button_map[target_id];
-    session_settings.port_turbo_rate[port][target_id] = 0;
-}
-
-static void reset_button_map(const int port) {
-    for (int i = 0; i < 16; i++) {
-        session_settings.port_button_map[port][i] = default_button_map[i];
-        session_settings.port_turbo_rate[port][i] = 0;
-    }
-}
-
-void session_settings_cycle_turbo_rate(const int port, const int target_id, const int direction) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || target_id < 0 || target_id >= 16) return;
-
-    int next = session_settings.port_turbo_rate[port][target_id] + (direction > 0 ? 1 : -1);
+    int next = session_settings.port_source_turbo[port][source] + (direction > 0 ? 1 : -1);
     if (next < 0) next = 3;
     if (next > 3) next = 0;
 
-    session_settings.port_turbo_rate[port][target_id] = next;
+    session_settings.port_source_turbo[port][source] = next;
+}
+
+void session_settings_unbind_source(const int port, const int source) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
+    session_settings.port_source_target[port][source] = -1;
+    session_settings.port_source_turbo[port][source] = 0;
+}
+
+void session_settings_reset_source(const int port, const int source) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
+    session_settings.port_source_target[port][source] = default_source_target[source];
+    session_settings.port_source_turbo[port][source] = 0;
+}
+
+static void reset_button_map(const int port) {
+    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+        session_settings.port_source_target[port][s] = default_source_target[s];
+        session_settings.port_source_turbo[port][s] = 0;
+    }
 }
 
 const char *session_settings_turbo_rate_name(const int rate) {

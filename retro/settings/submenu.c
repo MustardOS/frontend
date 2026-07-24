@@ -144,11 +144,12 @@ void submenu_stack_resync(void) {
 }
 
 void submenu_init(submenu *m, const submenu_def *def) {
-    static const char *save_options[4];
+    static const char *save_options[5];
     save_options[0] = lang.muxretro.save.content_save;
     save_options[1] = lang.muxretro.save.core_save;
     save_options[2] = lang.muxretro.save.directory_save;
-    save_options[3] = lang.generic.discard;
+    save_options[3] = lang.muxretro.save.session_save;
+    save_options[4] = lang.generic.discard;
 
     m->def = def;
     m->active = 0;
@@ -157,7 +158,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->pending_action_row = -1;
 
     dialogue_init(
-        &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 4, lang.generic.select,
+        &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 5, lang.generic.select,
         lang.generic.cancel
     );
 }
@@ -205,8 +206,10 @@ void submenu_tick(submenu *m) {
             dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
             play_sound(snd_confirm);
 
-            if (opt == 3) {
+            if (opt == 4) {
                 session_settings_discard_to(&m->entry_snapshot);
+            } else if (opt == 3) {
+                submenu_stack_resync();
             } else {
                 session_settings_apply_save_choice(opt);
                 submenu_stack_resync();

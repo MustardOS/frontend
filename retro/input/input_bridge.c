@@ -17,52 +17,72 @@ static int16_t port_stick_y[MUX_RETRO_PORT_COUNT][2];
 
 static int port_last_connected[MUX_RETRO_PORT_COUNT];
 
-static int turbo_held_prev[MUX_RETRO_PORT_COUNT][16];
-static uint32_t turbo_phase[MUX_RETRO_PORT_COUNT][16];
+static int turbo_held_prev[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static uint32_t turbo_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 
 static const int turbo_hz_table[4] = {0, 10, 15, 20};
+static int turbo_period[4] = {0, 6, 6, 6};
+
+static void refresh_turbo_periods(void) {
+    const double fps = core_get_target_fps();
+
+    for (int rate = 1; rate <= 3; rate++) {
+        int period = fps > 0.0 ? (int) (fps / turbo_hz_table[rate] + 0.5) : 6;
+        if (period < 2) period = 2;
+        turbo_period[rate] = period;
+    }
+}
 
 static uint16_t build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress) {
     uint16_t out = 0;
 
-    for (int id = 0; id < 16; id++) {
-        const int mapped = session_settings.port_button_map[port][id];
-        const mux_input_type mux_type = (mux_input_type) mapped;
+    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+        const int target = session_settings.port_source_target[port][s];
+        if (target < 0 || target >= 16) continue;
 
-        int raw_held = mapped < mux_input_count && (mask & BIT(mux_type)) != 0;
+        const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
 
-        if (apply_suppress && mapped < mux_input_count && suppress_until_released[mux_type]) {
+        int raw_held = (mask & BIT(mux_type)) != 0;
+
+        if (apply_suppress && suppress_until_released[mux_type]) {
             if (!raw_held) suppress_until_released[mux_type] = 0;
             raw_held = 0;
         }
 
         int held = raw_held;
-        const int rate = session_settings.port_turbo_rate[port][id];
+        const int rate = session_settings.port_source_turbo[port][s];
 
         if (rate > 0) {
             if (raw_held) {
-                if (!turbo_held_prev[port][id]) {
-                    turbo_phase[port][id] = 0; // immediate first press turbo go!
+                if (!turbo_held_prev[port][s]) {
+                    turbo_phase[port][s] = 0; // immediate first press turbo go!
                 } else {
-                    turbo_phase[port][id]++;
+                    turbo_phase[port][s]++;
                 }
 
-                const double fps = core_get_target_fps();
-                int period = fps > 0.0 ? (int) (fps / turbo_hz_table[rate] + 0.5) : 6;
-                if (period < 2) period = 2;
-
-                held = (turbo_phase[port][id] % (uint32_t) period) < (uint32_t) (period / 2);
+                const int period = turbo_period[rate];
+                held = turbo_phase[port][s] % (uint32_t) period < (uint32_t) (period / 2);
             } else {
-                turbo_phase[port][id] = 0;
+                turbo_phase[port][s] = 0;
             }
         }
 
-        turbo_held_prev[port][id] = raw_held;
+        turbo_held_prev[port][s] = raw_held;
 
-        if (held) out |= (uint16_t) (1u << id);
+        if (held) out |= (uint16_t) (1u << target);
     }
 
     return out;
+}
+
+static int stick_has_bound_direction(const int port, const int stick) {
+    const int first = 16 + stick * 4;
+
+    for (int s = first; s < first + 4; s++) {
+        if (session_settings.port_source_target[port][s] >= 0) return 1;
+    }
+
+    return 0;
 }
 
 static int16_t apply_analog_transform(const int16_t raw) {
@@ -148,8 +168,28 @@ static void resolve_port_assignments(void) {
     }
 }
 
-static void input_bridge_build_snapshot(void) {
+static uint32_t resolve_cached_generation = (uint32_t) -1;
+static int resolve_cached_assignment[MUX_RETRO_PORT_COUNT];
+static char resolve_cached_keys[MUX_RETRO_PORT_COUNT][64];
+
+static void resolve_port_assignments_cached(void) {
+    const uint32_t generation = mux_input_source_generation();
+
+    if (generation == resolve_cached_generation
+        && memcmp(resolve_cached_assignment, session_settings.port_assignment, sizeof(resolve_cached_assignment)) == 0
+        && memcmp(resolve_cached_keys, session_settings.port_device_key, sizeof(resolve_cached_keys)) == 0)
+        return;
+
     resolve_port_assignments();
+
+    resolve_cached_generation = generation;
+    memcpy(resolve_cached_assignment, session_settings.port_assignment, sizeof(resolve_cached_assignment));
+    memcpy(resolve_cached_keys, session_settings.port_device_key, sizeof(resolve_cached_keys));
+}
+
+static void input_bridge_build_snapshot(void) {
+    resolve_port_assignments_cached();
+    refresh_turbo_periods();
 
     int ports_changed = 0;
 
@@ -164,23 +204,27 @@ static void input_bridge_build_snapshot(void) {
             port_retropad_mask[port] = 0;
             port_stick_x[port][0] = port_stick_y[port][0] = 0;
             port_stick_x[port][1] = port_stick_y[port][1] = 0;
-            for (int id = 0; id < 16; id++) {
-                turbo_held_prev[port][id] = 0;
-                turbo_phase[port][id] = 0;
+            for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+                turbo_held_prev[port][s] = 0;
+                turbo_phase[port][s] = 0;
             }
             continue;
         }
 
         port_retropad_mask[port] = build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0);
 
-        int16_t x, y;
-        mux_input_source_stick(source, RETRO_DEVICE_INDEX_ANALOG_LEFT, &x, &y);
-        port_stick_x[port][RETRO_DEVICE_INDEX_ANALOG_LEFT] = apply_analog_transform(x);
-        port_stick_y[port][RETRO_DEVICE_INDEX_ANALOG_LEFT] = invert_y_if_needed(apply_analog_transform(y));
+        for (int s = 0; s < 2; s++) {
+            if (stick_has_bound_direction(port, s)) {
+                port_stick_x[port][s] = 0;
+                port_stick_y[port][s] = 0;
+                continue;
+            }
 
-        mux_input_source_stick(source, RETRO_DEVICE_INDEX_ANALOG_RIGHT, &x, &y);
-        port_stick_x[port][RETRO_DEVICE_INDEX_ANALOG_RIGHT] = apply_analog_transform(x);
-        port_stick_y[port][RETRO_DEVICE_INDEX_ANALOG_RIGHT] = invert_y_if_needed(apply_analog_transform(y));
+            int16_t x, y;
+            mux_input_source_stick(source, s, &x, &y);
+            port_stick_x[port][s] = apply_analog_transform(x);
+            port_stick_y[port][s] = invert_y_if_needed(apply_analog_transform(y));
+        }
     }
 
     if (ports_changed) apply_controller_ports();

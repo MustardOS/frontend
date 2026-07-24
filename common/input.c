@@ -716,6 +716,7 @@ static void close_device_by_instance(const SDL_JoystickID id) {
     }
 
     release_extra_player_slot(id);
+    bump_source_generation();
 
     devices[idx] = devices[device_count - 1];
     device_count--;
@@ -1588,6 +1589,36 @@ void mux_input_source_stick(const int index, const int stick, int16_t *x, int16_
 
 uint32_t mux_input_source_generation(void) {
     return source_generation;
+}
+
+int mux_input_source_stick_count(const int index) {
+    SDL_JoystickID instance = -1;
+
+    if (index == 0) {
+        instance = primary_instance;
+    } else if (index >= 1 && index < mux_input_source_count()) {
+        if (!extra_players_init_done) init_extra_players();
+        instance = extra_players[index - 1].instance;
+    }
+
+    if (instance < 0) return 0;
+
+    const int idx = find_device_by_instance(instance);
+    if (idx < 0) return 0;
+
+    if (devices[idx].controller) {
+        const int has_left =
+            SDL_GameControllerGetBindForAxis(devices[idx].controller, SDL_CONTROLLER_AXIS_LEFTX).bindType
+            != SDL_CONTROLLER_BINDTYPE_NONE;
+        const int has_right =
+            SDL_GameControllerGetBindForAxis(devices[idx].controller, SDL_CONTROLLER_AXIS_RIGHTX).bindType
+            != SDL_CONTROLLER_BINDTYPE_NONE;
+
+        return has_right ? 2 : has_left ? 1 : 0;
+    }
+
+    const int axes = devices[idx].joystick ? SDL_JoystickNumAxes(devices[idx].joystick) : 0;
+    return axes >= 4 ? 2 : axes >= 2 ? 1 : 0;
 }
 
 void mux_input_stop(void) {

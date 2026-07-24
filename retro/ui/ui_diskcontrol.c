@@ -22,12 +22,10 @@ static int disc_count = 0;
 #define DISC_ROW(index) ((index) + 1)
 
 static uint64_t current_nav_mask(void) {
-    const int up = mux_input_pressed(mux_input_dpad_up);
-    const int down = mux_input_pressed(mux_input_dpad_down);
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
 
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
+    return (nav_dir_bits() & (BIT(0) | BIT(1))) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
 }
 
 static void refresh_disc_labels(void) {

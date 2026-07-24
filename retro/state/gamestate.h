@@ -1,7 +1,8 @@
 #pragma once
 
-#define GAMESTATE_MAX_SLOTS 64
-#define GAMESTATE_NAME_MAX  128
+#define GAMESTATE_MAX_SLOTS      64
+#define GAMESTATE_NAME_MAX       128
+#define GAMESTATE_TIMELINE_DEPTH 3
 
 struct gamestate_slot {
     int index;
@@ -9,6 +10,9 @@ struct gamestate_slot {
     long long created;
     char state_path[512];
     char thumb_path[512];
+    char crc[16];
+    char core[64];
+    char core_version[64];
 };
 
 extern struct gamestate_slot gamestate_slots[GAMESTATE_MAX_SLOTS];
@@ -17,6 +21,8 @@ extern struct gamestate_slot gamestate_autosave;
 extern int gamestate_autosave_exists;
 extern struct gamestate_slot gamestate_quicksave;
 extern int gamestate_quicksave_exists;
+extern struct gamestate_slot gamestate_timeline[GAMESTATE_TIMELINE_DEPTH];
+extern int gamestate_timeline_exists[GAMESTATE_TIMELINE_DEPTH];
 
 void gamestate_init(const char *state_dir);
 
@@ -42,4 +48,14 @@ int gamestate_quicksave_load(void);
 
 int gamestate_quicksave_delete(void);
 
-int gamestate_load_most_recent(void);
+int gamestate_timeline_save(void);
+
+int gamestate_timeline_load(int slot);
+
+int gamestate_timeline_delete(int slot);
+
+int gamestate_metadata_matches(const struct gamestate_slot *slot);
+
+int gamestate_protect_mismatched_autosave(void);
+
+int gamestate_load_most_recent(int *mismatch_blocked);

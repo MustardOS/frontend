@@ -30,6 +30,13 @@ static mux_dialogue load_dlg;
 static int delete_confirm_active = 0;
 static mux_dialogue delete_dlg;
 
+static int mismatch_confirm_active = 0;
+static mux_dialogue mismatch_dlg;
+
+static int notice_active = 0;
+static mux_dialogue notice_dlg;
+static uint64_t notice_prev_mask = 0;
+
 typedef enum { pending_none, pending_load, pending_delete } pending_action_t;
 
 static pending_action_t pending_action = pending_none;
@@ -45,17 +52,13 @@ static lv_obj_t *ui_lbl_preview_name = NULL;
 static lv_obj_t *ui_img_preview_glyph = NULL;
 
 static uint64_t current_nav_mask(void) {
-    const int up = mux_input_pressed(mux_input_dpad_up);
-    const int down = mux_input_pressed(mux_input_dpad_down);
-    const int left = mux_input_pressed(mux_input_dpad_left);
-    const int right = mux_input_pressed(mux_input_dpad_right);
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
     const int del = mux_input_pressed(mux_input_x);
     const int save = mux_input_pressed(mux_input_y);
 
-    return (up ? BIT(0) : 0) | (down ? BIT(1) : 0) | (left ? BIT(2) : 0) | (right ? BIT(3) : 0) | (confirm ? BIT(4) : 0)
-           | (back ? BIT(5) : 0) | (del ? BIT(6) : 0) | (save ? BIT(7) : 0) | nav_mask_page();
+    return nav_dir_bits() | (confirm ? BIT(4) : 0) | (back ? BIT(5) : 0) | (del ? BIT(6) : 0) | (save ? BIT(7) : 0)
+           | nav_mask_page();
 }
 
 static void nav_show_x(const int show, const char *text) {
@@ -84,32 +87,74 @@ static int quicksave_row_offset(void) {
     return gamestate_quicksave_exists ? 1 : 0;
 }
 
-static int pinned_row_offset(void) {
+static int timeline_rows(int out[GAMESTATE_TIMELINE_DEPTH]) {
+    int count = 0;
+
+    for (int i = 0; i < GAMESTATE_TIMELINE_DEPTH; i++)
+        if (gamestate_timeline_exists[i]) out[count++] = i;
+
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = i + 1; j < count; j++) {
+            if (gamestate_timeline[out[j]].created > gamestate_timeline[out[i]].created) {
+                const int tmp = out[i];
+                out[i] = out[j];
+                out[j] = tmp;
+            }
+        }
+    }
+
+    return count;
+}
+
+static int timeline_row_count(void) {
+    int rows[GAMESTATE_TIMELINE_DEPTH];
+    return timeline_rows(rows);
+}
+
+static int timeline_base_row(void) {
     return quicksave_row_offset() + (gamestate_autosave_exists ? 1 : 0);
+}
+
+static int pinned_row_offset(void) {
+    return timeline_base_row() + timeline_row_count();
+}
+
+static int timeline_at_row(const int row) {
+    const int rel = row - timeline_base_row();
+    if (rel < 0) return -1;
+
+    int rows[GAMESTATE_TIMELINE_DEPTH];
+    const int count = timeline_rows(rows);
+    if (rel >= count) return -1;
+
+    return rows[rel];
+}
+
+static const struct gamestate_slot *state_at_row(const int row) {
+    if (gamestate_quicksave_exists && row == 0) return &gamestate_quicksave;
+    if (gamestate_autosave_exists && row == quicksave_row_offset()) return &gamestate_autosave;
+
+    const int timeline_slot = timeline_at_row(row);
+    if (timeline_slot >= 0) return &gamestate_timeline[timeline_slot];
+
+    const int slot_index = row - pinned_row_offset();
+    if (slot_index >= 0 && slot_index < gamestate_slot_count) return &gamestate_slots[slot_index];
+
+    return NULL;
 }
 
 static void refresh_preview(void) {
     const char *state_name = NULL;
-    char *thumb_path = NULL;
+    const char *thumb_path = NULL;
 
     int is_live_row = 0;
 
-    const int qs_offset = quicksave_row_offset();
+    const struct gamestate_slot *sel = state_at_row(current_item_index);
+    if (sel) {
+        thumb_path = sel->thumb_path;
+        state_name = sel->name;
 
-    if (gamestate_quicksave_exists && current_item_index == 0) {
-        thumb_path = gamestate_quicksave.thumb_path;
-        state_name = gamestate_quicksave.name;
-        is_live_row = 1;
-    } else if (gamestate_autosave_exists && current_item_index == qs_offset) {
-        thumb_path = gamestate_autosave.thumb_path;
-        state_name = gamestate_autosave.name;
-        is_live_row = 1;
-    } else {
-        const int slot_index = current_item_index - pinned_row_offset();
-        if (slot_index >= 0 && slot_index < gamestate_slot_count) {
-            thumb_path = gamestate_slots[slot_index].thumb_path;
-            state_name = gamestate_slots[slot_index].name;
-        }
+        is_live_row = current_item_index < pinned_row_offset();
     }
 
     if (ui_lbl_preview_name) lv_label_set_text(ui_lbl_preview_name, state_name ? state_name : "");
@@ -129,7 +174,7 @@ static void refresh_preview(void) {
     if (is_live_row) lv_img_cache_invalidate_src(NULL);
 
     const struct image_settings settings = {
-        .image_path = thumb_path,
+        .image_path = (char *) thumb_path,
         .align = LV_ALIGN_BOTTOM_MID,
         .max_width = (int16_t) (device.mux.width - 16),
         .max_height =
@@ -141,8 +186,13 @@ static void refresh_preview(void) {
 
 static void set_preview_mode(int enabled);
 
+static int has_any_state(void) {
+    return gamestate_quicksave_exists || gamestate_autosave_exists || timeline_row_count() > 0
+           || gamestate_slot_count > 0;
+}
+
 static void refresh_empty_state(void) {
-    const int has_anything = gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0;
+    const int has_anything = has_any_state();
 
     if (!has_anything && preview_mode) set_preview_mode(0);
     lv_label_set_text(ui_lbl_screen_message, has_anything ? "" : lang.muxretro.gamestate.none_found);
@@ -165,6 +215,12 @@ static void rebuild_rows(void) {
 
     if (gamestate_autosave_exists) {
         gen_label("muxretro", "state", gamestate_autosave.name);
+    }
+
+    int trows[GAMESTATE_TIMELINE_DEPTH];
+    const int tcount = timeline_rows(trows);
+    for (int i = 0; i < tcount; i++) {
+        gen_label("muxretro", "state", gamestate_timeline[trows[i]].name);
     }
 
     for (int i = 0; i < gamestate_slot_count; i++) {
@@ -258,6 +314,14 @@ void gamestate_menu_init(void) {
     dialogue_init_confirm(
         &delete_dlg, &theme, ui_screen, lang.muxretro.gamestate.delete_title, lang.muxretro.gamestate.delete_desc,
         lang.muxretro.gamestate.delete, lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
+    dialogue_init_confirm(
+        &mismatch_dlg, &theme, ui_screen, lang.generic.warning, lang.muxretro.gamestate.mismatch_load,
+        lang.generic.load, lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
+    dialogue_init_accept(
+        &notice_dlg, &theme, ui_screen, lang.generic.warning, lang.muxretro.gamestate.mismatch_notice,
+        lang.generic.understand
     );
 
     create_osk_objects();
@@ -429,6 +493,7 @@ void gamestate_menu_tick(void) {
 
         const int qs_offset = quicksave_row_offset();
         const int offset = pinned_row_offset();
+        const int timeline_slot = timeline_at_row(index);
 
         if (action == pending_load) {
             int load_ok;
@@ -436,6 +501,8 @@ void gamestate_menu_tick(void) {
                 load_ok = gamestate_quicksave_load() == 0;
             } else if (gamestate_autosave_exists && index == qs_offset) {
                 load_ok = gamestate_autosave_load() == 0;
+            } else if (timeline_slot >= 0) {
+                load_ok = gamestate_timeline_load(timeline_slot) == 0;
             } else {
                 load_ok = gamestate_load(index - offset) == 0;
             }
@@ -459,6 +526,14 @@ void gamestate_menu_tick(void) {
                     focus_row(0);
                     refresh_preview();
                 }
+            } else if (timeline_slot >= 0) {
+                gamestate_timeline_delete(timeline_slot);
+                rebuild_rows();
+
+                if (ui_count_static > 0) {
+                    focus_row(0);
+                    refresh_preview();
+                }
             } else {
                 const int slot_index = index - offset;
                 gamestate_delete(slot_index);
@@ -467,7 +542,7 @@ void gamestate_menu_tick(void) {
                 if (gamestate_slot_count > 0) {
                     const int next_slot_index =
                         slot_index < gamestate_slot_count ? slot_index : gamestate_slot_count - 1;
-                    focus_row(offset + next_slot_index);
+                    focus_row(pinned_row_offset() + next_slot_index);
                     refresh_preview();
                 }
             }
@@ -520,6 +595,23 @@ void gamestate_menu_tick(void) {
         return;
     }
 
+    if (mismatch_confirm_active) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&mismatch_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const mux_confirm_opt opt = (mux_confirm_opt) mismatch_dlg.selected;
+            dialogue_dismiss(&mismatch_confirm_active, &mismatch_dlg);
+            if (opt == mux_confirm_yep) {
+                play_sound(snd_confirm);
+                pending_action = pending_load;
+                pending_index = current_item_index;
+            }
+        } else if (edge & BIT(5)) {
+            dialogue_dismiss(&mismatch_confirm_active, &mismatch_dlg);
+        }
+        return;
+    }
+
     const uint32_t now = SDL_GetTicks();
 
     int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
@@ -544,12 +636,15 @@ void gamestate_menu_tick(void) {
     } else if (nav_page_tick(edge, mask, 1)) {
         refresh_preview();
     } else if (edge & (BIT(2) | BIT(3))) {
-        if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {
+        if (has_any_state()) {
             play_sound(snd_option);
             set_preview_mode(!preview_mode);
         }
     } else if (edge & BIT(6)) {
-        if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {
+        if (timeline_at_row(current_item_index) >= 0) {
+            play_sound(snd_error);
+            pause_menu_show_toast(lang.muxretro.gamestate.timeline_protected);
+        } else if (has_any_state()) {
             play_sound(snd_confirm);
             dialogue_open(&delete_confirm_active, &delete_dlg, &theme);
         }
@@ -559,9 +654,36 @@ void gamestate_menu_tick(void) {
         play_sound(snd_back);
         close_gamestate();
     } else if (edge & BIT(4)) {
-        if (gamestate_quicksave_exists || gamestate_autosave_exists || gamestate_slot_count > 0) {
+        if (has_any_state()) {
             play_sound(snd_confirm);
-            dialogue_open(&load_confirm_active, &load_dlg, &theme);
+
+            const struct gamestate_slot *sel = state_at_row(current_item_index);
+            if (sel && !gamestate_metadata_matches(sel)) {
+                dialogue_open(&mismatch_confirm_active, &mismatch_dlg, &theme);
+            } else {
+                dialogue_open(&load_confirm_active, &load_dlg, &theme);
+            }
         }
+    }
+}
+
+void gamestate_notice_open(void) {
+    notice_prev_mask = current_nav_mask();
+    dialogue_open(&notice_active, &notice_dlg, &theme);
+}
+
+int gamestate_notice_is_active(void) {
+    return notice_active;
+}
+
+void gamestate_notice_tick(void) {
+    const uint64_t mask = current_nav_mask();
+    const uint64_t edge = mask & ~notice_prev_mask;
+    notice_prev_mask = mask;
+
+    if (edge & (BIT(4) | BIT(5))) {
+        play_sound(snd_confirm);
+        dialogue_dismiss(&notice_active, &notice_dlg);
+        pause_menu_sync_input_mask();
     }
 }

@@ -17,6 +17,7 @@
 #include "../../common/log.h"
 #include "../../common/ui/common.h"
 #include "../ui/cheats.h"
+#include "../state/content_hash.h"
 #include "../state/gamestate.h"
 #include "../state/manual.h"
 #include "../state/patch.h"
@@ -125,6 +126,13 @@ static void idle_poll(void) {
     }
     if (!idle_ino) return;
 
+    static unsigned check_countdown = 0;
+    if (check_countdown > 0) {
+        check_countdown--;
+        return;
+    }
+    check_countdown = 15;
+
     inotify_check(idle_ino);
 
     static int was_paused = 0;
@@ -152,6 +160,21 @@ static void idle_poll(void) {
         if (session_settings_auto_save_on_idle()) gamestate_autosave_save();
     }
     last_seen_changes = mux_idle_state_changes;
+}
+
+static int core_turbo_option_active(void) {
+    for (int i = 0; i < options_count; i++) {
+        const struct core_option_entry *e = &options_list[i];
+        if (!strcasestr(e->key, "turbo") && !strcasestr(e->label, "turbo")) continue;
+
+        const char *value = e->values[e->current_index];
+        if (strcasecmp(value, "off") != 0 && strcasecmp(value, "disabled") != 0 && strcasecmp(value, "0") != 0
+            && strcasecmp(value, "none") != 0 && strcasecmp(value, "false") != 0) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 static double core_run_ema_ms = 0.0;
@@ -289,6 +312,9 @@ int main(const int argc, char *argv[]) {
 
     build_state_dir(core_path_arg, content_path);
     gamestate_init(state_dir);
+
+    content_hash_request(content_path);
+
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
 
@@ -317,6 +343,10 @@ int main(const int argc, char *argv[]) {
     mux_input_poll();
     input_bridge_suppress_held();
 
+    int state_preserved = 0;
+    int load_blocked = 0;
+    if (state_saves_supported()) state_preserved = gamestate_protect_mismatched_autosave();
+
     if (!start_fresh && state_saves_supported()) {
         video_bridge_set_frame_skip(1);
         audio_bridge_set_muted(1);
@@ -334,7 +364,7 @@ int main(const int argc, char *argv[]) {
         audio_bridge_set_muted(0);
         rumble_bridge_set_suppressed(0);
 
-        if (gamestate_load_most_recent() == 0) {
+        if (gamestate_load_most_recent(&load_blocked) == 0) {
             LOG_INFO(
                 mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", AUTOLOAD_WARMUP_FRAMES
             );
@@ -356,6 +386,15 @@ int main(const int argc, char *argv[]) {
         pause_menu_show_toast(patch_toast);
     }
 
+    if (core_turbo_option_active()) {
+        pause_menu_show_toast_timed(lang.muxretro.settings_screen.core_turbo_active, 4000);
+    }
+
+    if (state_preserved || load_blocked) {
+        pause_menu_toggle();
+        gamestate_notice_open();
+    }
+
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", target_fps, av_info.timing.sample_rate);
 
     int quit = 0;
@@ -368,8 +407,13 @@ int main(const int argc, char *argv[]) {
     uint32_t sram_flush_deadline = SDL_GetTicks() + (uint32_t) session_settings.sram_flush_seconds * 1000;
     uint32_t status_deadline = SDL_GetTicks() + TIMER_STATUS;
 
+    uint32_t timeline_deadline = 0;
+    int timeline_armed_ms = 0;
+
     while (!quit) {
         int core_ran = 0;
+
+        const uint32_t loop_now = SDL_GetTicks();
 
         mux_input_poll();
         idle_poll();
@@ -377,20 +421,31 @@ int main(const int argc, char *argv[]) {
         display_check_idle_saver();
         hotkeys_volume_bright_task();
 
-        if (SDL_GetTicks() >= status_deadline) {
+        if (loop_now >= status_deadline) {
             status_task(NULL);
-            status_deadline = SDL_GetTicks() + TIMER_STATUS;
+            status_deadline = loop_now + TIMER_STATUS;
         }
 
-        if (SDL_GetTicks() >= sram_flush_deadline) {
+        if (loop_now >= sram_flush_deadline) {
             sram_bridge_save();
-            sram_flush_deadline = SDL_GetTicks() + (uint32_t) session_settings.sram_flush_seconds * 1000;
+            sram_flush_deadline = loop_now + (uint32_t) session_settings.sram_flush_seconds * 1000;
         }
 
         const int paused = pause_menu_is_active();
         if (prev_paused && !paused) core_prime_audio();
         prev_paused = paused;
         audio_bridge_set_paused(paused);
+
+        const int timeline_ms = session_settings_timeline_interval_ms();
+        if (timeline_ms != timeline_armed_ms) {
+            timeline_armed_ms = timeline_ms;
+            timeline_deadline = timeline_ms > 0 ? loop_now + (uint32_t) timeline_ms : 0;
+        }
+
+        if (timeline_ms > 0 && !paused && state_saves_supported() && loop_now >= timeline_deadline) {
+            gamestate_timeline_save();
+            timeline_deadline = loop_now + (uint32_t) timeline_ms;
+        }
 
         if (paused) {
             const int peek = pause_menu_peek_allowed() && mux_input_pressed(mux_input_menu);

@@ -204,6 +204,12 @@ int gamestate_menu_is_active(void);
 
 void gamestate_menu_tick(void);
 
+void gamestate_notice_open(void);
+
+int gamestate_notice_is_active(void);
+
+void gamestate_notice_tick(void);
+
 void diskcontrol_menu_open(void);
 
 int diskcontrol_menu_is_active(void);
