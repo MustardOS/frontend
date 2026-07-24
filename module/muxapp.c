@@ -512,12 +512,6 @@ static void init_elements(void) {
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-            char *item_name = strdup(get_last_dir(items[current_item_index].extra_data));
-
-            free(lv_obj_get_user_data(e_focused));
-            lv_obj_set_user_data(e_focused, item_name);
-
             adjust_wallpaper_element(ui_group, 0, wall_application);
         }
         adjust_gen_panel();
@@ -549,10 +543,6 @@ int muxapp_main(void) {
         remove(MUOS_AIN_LOAD);
     }
 
-    char *item_name = strdup(get_last_dir(items[current_item_index].extra_data));
-    struct _lv_obj_t *initial_focus = lv_group_get_focused(ui_group);
-    free(lv_obj_get_user_data(initial_focus));
-    lv_obj_set_user_data(initial_focus, item_name);
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_application);
 
     if (ui_count_static > 0) {
