@@ -269,6 +269,14 @@ static void handle_right_hold(void) {
     if (key_show) key_right();
 }
 
+static void handle_select(void) {
+    if (key_show) key_clear(ui_txt_entry_passcfg);
+}
+
+static void handle_start(void) {
+    if (key_show) handle_keyboard_ok_press();
+}
+
 static void handle_l1(void) {
     if (key_show) return;
 
@@ -369,6 +377,8 @@ int muxpasscfg_main(void) {
                 [mux_input_dpad_right] = handle_right,
                 [mux_input_l1] = handle_l1,
                 [mux_input_r1] = handle_r1,
+                [mux_input_select] = handle_select,
+                [mux_input_start] = handle_start,
             },
         .release_handler =
             {

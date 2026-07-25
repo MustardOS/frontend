@@ -506,6 +506,14 @@ void init_osk(
     lv_obj_t *ui_pnl_entry, lv_obj_t *ui_txt_entry, const int include_numpad, const int is_password,
     const uint16_t max_len
 ) {
+    if (key_entry && lv_obj_is_valid(key_entry)) lv_obj_del(key_entry);
+    if (num_entry && lv_obj_is_valid(num_entry)) lv_obj_del(num_entry);
+    if (hex_entry && lv_obj_is_valid(hex_entry)) lv_obj_del(hex_entry);
+
+    key_entry = NULL;
+    num_entry = NULL;
+    hex_entry = NULL;
+
     osk_max_len = max_len;
     shift_once = 0;
     last_letter_btn = -1;
@@ -907,6 +915,13 @@ void key_swap_back(void) {
 void key_backspace(lv_obj_t *entry) {
     play_sound(snd_keypress);
     lv_textarea_del_char(entry);
+}
+
+void key_clear(lv_obj_t *entry) {
+    if (!entry || !lv_obj_is_valid(entry)) return;
+
+    play_sound(snd_keypress);
+    lv_textarea_set_text(entry, "");
 }
 
 void key_space(lv_obj_t *entry) {

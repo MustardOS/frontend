@@ -41,6 +41,8 @@ void key_swap_back(void);
 
 void key_backspace(lv_obj_t *entry);
 
+void key_clear(lv_obj_t *entry);
+
 void key_space(lv_obj_t *entry);
 
 void osk_show(lv_obj_t *panel);

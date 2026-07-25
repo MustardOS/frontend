@@ -704,6 +704,14 @@ static void handle_b_hold(void) {
     if (key_show) key_backspace(ui_txt_entry_collect);
 }
 
+static void handle_select(void) {
+    if (key_show) key_clear(ui_txt_entry_collect);
+}
+
+static void handle_start(void) {
+    if (key_show) handle_keyboard_ok_press();
+}
+
 static void handle_x(void) {
     if (key_show) {
         close_osk(key_entry, ui_group, ui_txt_entry_collect, ui_pnl_entry_collect);
@@ -1118,6 +1126,8 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
                 [mux_input_l1] = handle_l1,
                 [mux_input_r1] = handle_r1,
                 [mux_input_r2] = handle_random_select,
+                [mux_input_select] = handle_select,
+                [mux_input_start] = handle_start,
             },
         .release_handler =
             {
