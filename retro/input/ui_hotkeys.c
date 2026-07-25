@@ -11,6 +11,8 @@ enum {
     row_slowmo_enabled,
     row_slowmo_speed,
     row_slowmo_glyph_enabled,
+    row_pause_enabled,
+    row_pause_glyph_enabled,
     row_quicksave_enabled,
     row_quickload_enabled,
     row_toggle_fps_enabled,
@@ -27,6 +29,8 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.slow_motion,
     lang.muxretro.hotkeys_screen.slowmo_speed,
     lang.muxretro.hotkeys_screen.slowmo_glyph,
+    lang.muxretro.hotkeys_screen.pause_content,
+    lang.muxretro.hotkeys_screen.pause_glyph,
     lang.muxretro.hotkeys_screen.quick_save,
     lang.muxretro.hotkeys_screen.quick_load,
     lang.muxretro.hotkeys_screen.toggle_fps,
@@ -35,9 +39,9 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.manual
 };
 
-static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",      "ffglyph",   "slowmotion",
-                                            "slowmospeed", "slowmoglyph",  "quicksave", "quickload",
-                                            "togglefps",   "toggleheader", "quit",      "manual"};
+static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",      "ffglyph",    "slowmotion", "slowmospeed",
+                                            "slowmoglyph", "pause",        "pauseglyph", "quicksave",  "quickload",
+                                            "togglefps",   "toggleheader", "quit",       "manual"};
 
 static void enabled_text(char *buf, const size_t buf_len, const int enabled, const char *combo) {
     if (enabled) {
@@ -71,6 +75,15 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             snprintf(
                 buf, buf_len, "%s",
                 session_settings.hotkey_slowmo_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
+            break;
+        case row_pause_enabled:
+            enabled_text(buf, buf_len, session_settings.hotkey_pause_enabled, "M+B");
+            break;
+        case row_pause_glyph_enabled:
+            snprintf(
+                buf, buf_len, "%s",
+                session_settings.hotkey_pause_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
             );
             break;
         case row_quicksave_enabled:
@@ -116,6 +129,12 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_slowmo_glyph_enabled:
             session_settings_cycle_hotkey_slowmo_glyph_enabled(direction);
+            break;
+        case row_pause_enabled:
+            session_settings_cycle_hotkey_pause_enabled(direction);
+            break;
+        case row_pause_glyph_enabled:
+            session_settings_cycle_hotkey_pause_glyph_enabled(direction);
             break;
         case row_quicksave_enabled:
             session_settings_cycle_hotkey_quicksave_enabled(direction);

@@ -36,6 +36,8 @@ static const struct session_settings_t defaults = {
     .hotkey_ff_glyph_enabled = 1,
     .hotkey_slowmo_enabled = 1,
     .hotkey_slowmo_glyph_enabled = 1,
+    .hotkey_pause_enabled = 1,
+    .hotkey_pause_glyph_enabled = 1,
     .hotkey_quicksave_enabled = 1,
     .hotkey_quickload_enabled = 1,
     .hotkey_toggle_fps_enabled = 1,
@@ -550,6 +552,12 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "hotkey_slowmo_glyph_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_slowmo_glyph_enabled = (int) v;
 
+    v = mini_get_int(ini, "settings", "hotkey_pause_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_pause_enabled = (int) v;
+
+    v = mini_get_int(ini, "settings", "hotkey_pause_glyph_enabled", -1);
+    if (v == 0 || v == 1) session_settings.hotkey_pause_glyph_enabled = (int) v;
+
     v = mini_get_int(ini, "settings", "hotkey_quicksave_enabled", -1);
     if (v == 0 || v == 1) session_settings.hotkey_quicksave_enabled = (int) v;
 
@@ -768,6 +776,8 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(hotkey_ff_glyph_enabled);
     DELTA(hotkey_slowmo_enabled);
     DELTA(hotkey_slowmo_glyph_enabled);
+    DELTA(hotkey_pause_enabled);
+    DELTA(hotkey_pause_glyph_enabled);
     DELTA(hotkey_quicksave_enabled);
     DELTA(hotkey_quickload_enabled);
     DELTA(hotkey_toggle_fps_enabled);
@@ -1027,6 +1037,16 @@ void session_settings_cycle_hotkey_slowmo_enabled(const int direction) {
 void session_settings_cycle_hotkey_slowmo_glyph_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_slowmo_glyph_enabled = !session_settings.hotkey_slowmo_glyph_enabled;
+}
+
+void session_settings_cycle_hotkey_pause_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_pause_enabled = !session_settings.hotkey_pause_enabled;
+}
+
+void session_settings_cycle_hotkey_pause_glyph_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_pause_glyph_enabled = !session_settings.hotkey_pause_glyph_enabled;
 }
 
 void session_settings_cycle_hotkey_quicksave_enabled(const int direction) {

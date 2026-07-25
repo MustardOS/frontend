@@ -26,7 +26,7 @@ extern int gamestate_timeline_exists[GAMESTATE_TIMELINE_DEPTH];
 
 void gamestate_init(const char *state_dir);
 
-void gamestate_capture_pending(void);
+void gamestate_capture_pending(int restore_visibility);
 
 int gamestate_create(const char *name);
 

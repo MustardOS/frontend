@@ -6,8 +6,11 @@
 #include "../../common/init.h"
 #include "../../common/input.h"
 #include "../../common/log.h"
+#include "../../common/options.h"
+#include "../../common/screenshot.h"
 #include "../../common/theme.h"
 #include "../../common/ui/common.h"
+#include "../../common/ui/font.h"
 #include "../../common/ui/glyph.h"
 #include "../../module/muxshare.h"
 #include "../state/gamestate.h"
@@ -105,7 +108,7 @@ static void create_dim_overlay(void) {
 static void set_corner_glyph(lv_obj_t *img, const char *glyph_name) {
     char embed[MAX_BUFFER_SIZE];
     if (get_glyph_path("muxretro", glyph_name, embed, sizeof(embed))) {
-        set_list_glyph_image(img, embed);
+        set_footer_glyph_image(img, embed);
 
         lv_obj_set_style_img_opa(img, (lv_opa_t) theme.list_default.glyph_alpha, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_img_recolor(img, lv_color_hex(theme.list_default.glyph_recolour), MU_OBJ_MAIN_DEFAULT);
@@ -117,7 +120,9 @@ static void set_corner_glyph(lv_obj_t *img, const char *glyph_name) {
     }
 }
 
-static lv_obj_t *create_corner_indicator(const lv_align_t align, const lv_coord_t x_ofs, lv_obj_t **out_glyph) {
+static lv_obj_t *create_corner_indicator(
+    const lv_align_t align, const lv_coord_t x_ofs, const lv_coord_t y_ofs, lv_obj_t **out_glyph
+) {
     lv_obj_t *panel = lv_obj_create(ui_screen);
     lv_obj_set_size(panel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(panel, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
@@ -128,7 +133,7 @@ static lv_obj_t *create_corner_indicator(const lv_align_t align, const lv_coord_
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_align(panel, align, x_ofs, -4);
+    lv_obj_align(panel, align, x_ofs, y_ofs);
 
     lv_obj_move_foreground(panel);
 
@@ -138,11 +143,13 @@ static lv_obj_t *create_corner_indicator(const lv_align_t align, const lv_coord_
 }
 
 static void create_fps_label(void) {
-    lv_obj_t *ui_pnl_fps = create_corner_indicator(LV_ALIGN_BOTTOM_LEFT, 4, &ui_img_fps_glyph);
+    lv_obj_t *ui_pnl_fps = create_corner_indicator(LV_ALIGN_BOTTOM_LEFT, 4, -4, &ui_img_fps_glyph);
     set_corner_glyph(ui_img_fps_glyph, "fps");
+    load_font_section(FONT_FOOTER_DIR, ui_pnl_fps);
 
     ui_lbl_fps = lv_label_create(ui_pnl_fps);
-    lv_obj_set_style_text_color(ui_lbl_fps, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lbl_fps, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_fps, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_label_set_text(ui_lbl_fps, "");
 
     if (!session_settings.show_fps) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
@@ -164,10 +171,12 @@ void pause_menu_set_fps_text(const char *text) {
 }
 
 static void create_speed_mode_label(void) {
-    lv_obj_t *ui_pnl_speed_mode = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, &ui_img_speed_glyph);
+    lv_obj_t *ui_pnl_speed_mode = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, -4, &ui_img_speed_glyph);
+    load_font_section(FONT_FOOTER_DIR, ui_pnl_speed_mode);
 
     ui_lbl_speed_mode = lv_label_create(ui_pnl_speed_mode);
-    lv_obj_set_style_text_color(ui_lbl_speed_mode, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lbl_speed_mode, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_speed_mode, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_label_set_text(ui_lbl_speed_mode, "");
 
     lv_obj_add_flag(ui_pnl_speed_mode, LV_OBJ_FLAG_HIDDEN);
@@ -487,6 +496,31 @@ int pause_menu_is_active(void) {
     return active;
 }
 
+void pause_menu_capture_clean_screenshot(const char *path, const int restore_visibility) {
+    const int fps_was_visible = ui_lbl_fps && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
+    const int header_was_visible = ui_pnl_header && !lv_obj_has_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+
+    if (fps_was_visible) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
+    if (header_was_visible) lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+
+    lv_obj_invalidate(ui_screen);
+    lv_refr_now(NULL);
+    display_composite_frame();
+
+    screenshot_save(path, screenshot_auto, (screenshot_hue) {0, 0, 0});
+
+    if (!restore_visibility) return;
+
+    if (fps_was_visible) lv_obj_clear_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
+    if (header_was_visible) lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+
+    if (fps_was_visible || header_was_visible) {
+        lv_obj_invalidate(ui_screen);
+        lv_refr_now(NULL);
+        display_composite_frame();
+    }
+}
+
 void pause_menu_toggle(void) {
     active = !active;
     LOG_DEBUG(mux_module, "pause_menu_toggle: active=%d", active);
@@ -495,9 +529,7 @@ void pause_menu_toggle(void) {
     rumble_bridge_set_suppressed(active);
 
     if (active) {
-        lv_refr_now(NULL);
-        display_composite_frame();
-        gamestate_capture_pending();
+        gamestate_capture_pending(0);
         hotkeys_reset();
     } else {
         input_bridge_suppress_held();

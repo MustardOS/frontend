@@ -68,28 +68,35 @@ retro/
 
 ### input/
 
-| File                            | Purpose                                                                                                                                                                      |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `input_bridge.c`                | Input poll/state callbacks with epoch-based snapshotting (deterministic within a frame), analog deadzone/sensitivity transforms, multi-port support, suppress-until-release. |
-| `hotkeys.c` / `hotkeys.h`       | MENU+X combo dispatcher (see [Hotkeys](#hotkeys)).                                                                                                                           |
-| `rumble.c` / `rumble.h`         | Rumble bridge with board-specific on/off magnitude quirks and menu/replay suppression.                                                                                       |
-| `nav_repeat.c` / `nav_repeat.h` | Shared d-pad hold-to-repeat helper used by every UI screen.                                                                                                                  |
-| `ui_hotkeys.c`                  | Hotkey Controls screen.                                                                                                                                                      |
-| `ui_inputsettings.c`            | Input screen (rumble, analog deadzone/anti-deadzone/sensitivity/invert Y).                                                                                                   |
+| File                                      | Purpose                                                                                                                                                                                                    |
+|-------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `input_bridge.c`                          | Input poll/state callbacks with epoch-based snapshotting (deterministic within a frame), analog deadzone/sensitivity transforms, multi-port support, suppress-until-release, per-port macro step playback. |
+| `hotkeys.c` / `hotkeys.h`                 | MENU+X combo dispatcher (see [Hotkeys](#hotkeys)).                                                                                                                                                         |
+| `rumble.c` / `rumble.h`                   | Rumble bridge with board-specific on/off magnitude quirks and menu/replay suppression.                                                                                                                     |
+| `nav_repeat.c` / `nav_repeat.h`           | Shared d-pad hold-to-repeat helper used by every UI screen.                                                                                                                                                |
+| `core_input_meta.c` / `core_input_meta.h` | Captures the core's `SET_CONTROLLER_INFO`/`SET_INPUT_DESCRIPTORS` environment calls, exposing per-port device-type lists and per-button labels to the button mapper.                                       |
+| `ui_hotkeys.c`                            | Hotkey Controls screen.                                                                                                                                                                                    |
+| `ui_inputsettings.c`                      | Input hub screen (Port 1-4, Auto Assign, Controller Options, Reset Input).                                                                                                                                 |
+| `ui_inputport.c`                          | Per-port screen (Controller, Core Device, Button Mapping, Macros, Reset Port).                                                                                                                             |
+| `ui_buttonmapping.c`                      | Per-port physical-button -> RetroPad target mapping, with L/R turbo-rate cycling per row.                                                                                                                  |
+| `ui_controlleroptions.c`                  | Controller Options screen (rumble, analog deadzone/anti-deadzone/sensitivity/invert Y).                                                                                                                    |
+| `ui_macros.c`                             | Macros screen - per-port macro list and step editor (see [Macros](#macros)).                                                                                                                               |
 
 ### state/
 
-| File                                | Purpose                                                                                                          |
-|-------------------------------------|------------------------------------------------------------------------------------------------------------------|
-| `state.c`                           | `state_save`/`state_load` with hardware-render context bracketing, serialize buffer slack, per-core disablement. |
-| `gamestate.c` / `gamestate.h`       | Quicksave/autosave/numbered-slot save-state management, screenshot thumbnails, most-recent auto-load on launch.  |
-| `sram.c` / `sram.h`                 | SRAM (battery save) bridge: dirty-aware, atomic (tmp+rename+fsync), written on a background worker thread.       |
-| `vfs.c` / `vfs.h`                   | libretro VFS incl. reading content directly out of an archive member, with a persistent size/mtime-keyed cache.  |
-| `content_hash.c` / `content_hash.h` | Background-threaded CRC32 of the content file, cached by size+mtime.                                             |
-| `patch.c` / `patch.h`               | Softpatch engine - IPS, BPS, and UPS appliers, stacking numbered patches (`.ips`, `.1.ips`, ...).                |
-| `bios_check.c` / `bios_check.h`     | Reads the core's RetroArch-style `.info` file for `firmware*` entries and checks presence.                       |
-| `ui_gamestate.c`                    | Game State screen (slots, naming, preview mode).                                                                 |
-| `ui_storagesettings.c`              | Storage screen (auto save, SRAM flush interval).                                                                 |
+| File                                | Purpose                                                                                                                               |
+|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `state.c`                           | `state_save`/`state_load` with hardware-render context bracketing, serialize buffer slack, per-core disablement.                      |
+| `gamestate.c` / `gamestate.h`       | Quicksave/autosave/numbered-slot save-state management, screenshot thumbnails, most-recent auto-load on launch.                       |
+| `sram.c` / `sram.h`                 | SRAM (battery save) bridge: dirty-aware, atomic (tmp+rename+fsync), written on a background worker thread.                            |
+| `vfs.c` / `vfs.h`                   | libretro VFS incl. reading content directly out of an archive member, with a persistent size/mtime-keyed cache.                       |
+| `content_hash.c` / `content_hash.h` | Background-threaded CRC32 of the content file, cached by size+mtime.                                                                  |
+| `patch.c` / `patch.h`               | Softpatch engine - IPS, BPS, and UPS appliers, stacking numbered patches (`.ips`, `.1.ips`, ...).                                     |
+| `bios_check.c` / `bios_check.h`     | Reads the core's RetroArch-style `.info` file for `firmware*` entries and checks presence.                                            |
+| `macro.c` / `macro.h`               | Per-port macro definitions - named button sequences with a per-step Hz rate, persisted alongside save states (see [Macros](#macros)). |
+| `manual.c` / `manual.h`             | Locates a core/content's bundled manual and tracks read position, font size, and word-wrap preference.                                |
+| `ui_gamestate.c`                    | Game State screen (slots, naming, preview mode).                                                                                      |
+| `ui_storagesettings.c`              | Storage screen (auto save, SRAM flush interval).                                                                                      |
 
 ### settings/
 
@@ -103,15 +110,17 @@ retro/
 
 ### ui/
 
-| File                      | Purpose                                                                      |
-|---------------------------|------------------------------------------------------------------------------|
-| `ui_pause.c`              | Top-level pause menu: row list, FPS/speed corner indicators, header, toasts. |
-| `options.c` / `options.h` | Core options parsing/persistence with dirty/baseline tracking.               |
-| `ui_options.c`            | Core Options screen - categorized libretro core variables.                   |
-| `ui_information.c`        | Information screen - core/content/AV/BIOS details.                           |
-| `ui_diskcontrol.c`        | Disc Control screen (eject/insert + disc selection).                         |
-| `cheats.c` / `cheats.h`   | Cheat file (ini) load/apply via `retro_cheat_set`.                           |
-| `ui_cheats.c`             | Cheats screen.                                                               |
+| File                      | Purpose                                                                                                                                                               |
+|---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ui_pause.c`              | Top-level pause menu: row list, FPS/speed/pause corner indicators (footer-themed), header clock/battery (header-themed), toasts, clean save-state screenshot capture. |
+| `options.c` / `options.h` | Core options parsing/persistence with dirty/baseline tracking.                                                                                                        |
+| `ui_options.c`            | Core Options screen - categorized libretro core variables.                                                                                                            |
+| `ui_information.c`        | Information screen - core/content/AV/BIOS details.                                                                                                                    |
+| `ui_diskcontrol.c`        | Disc Control screen (eject/insert + disc selection).                                                                                                                  |
+| `cheats.c` / `cheats.h`   | Cheat file (ini) load/apply via `retro_cheat_set`.                                                                                                                    |
+| `ui_cheats.c`             | Cheats screen.                                                                                                                                                        |
+| `ui_patch.c`              | Patches screen - enable/disable stacked softpatches per content.                                                                                                      |
+| `ui_manual.c`             | Manual screen - renders a core/content's manual with adjustable font size and word wrap.                                                                              |
 
 ## Features
 
@@ -187,7 +196,10 @@ fast states.
 ### Save states & SRAM
 
 - Up to 64 numbered slots plus dedicated quicksave and autosave slots, each with a screenshot thumbnail; naming via
-  OSK; `L`/`R` preview mode; confirm-on-load/delete; auto-load of the most recent state on launch (unless `--fresh`).
+  OSK (SELECT clears the field, START confirms); `L`/`R` preview mode; confirm-on-load/delete; auto-load of the most
+  recent state on launch (unless `--fresh`).
+- **Clean thumbnails**: the FPS counter and header clock/battery are hidden for the single composited frame the
+  thumbnail is captured from, so none of the on-screen indicators end up baked into a save's screenshot.
 - **Per-core disablement**: setting `savestate_support = "disabled"` in the core's RetroArch-style `.info` file removes
   the entire save-state surface for that core (menu row, hotkeys, autosave, auto-load) - used for cores whose serialize
   is known-broken (e.g. old reicast-lineage flycast with threaded rendering).
@@ -195,6 +207,21 @@ fast states.
   query and the serialize call, so the state can grow in that window.
 - SRAM is dirty-checked and written atomically (tmp + rename + fsync) on a background worker thread, flushed on a
   configurable interval and on idle/quit per the **Auto Save** setting.
+
+### Macros
+
+Per-port, per-content button macros, reached from the port's **Macros** row alongside **Button Mapping**
+(`input/ui_inputport.c`):
+
+- A macro is a named, ordered list of steps; each step holds a RetroPad target and its own turbo-style Hz rate, which
+  sets that step's hold duration.
+- Pressing `A` on a macro offers **Edit** or **Bind**; Bind enters the same physical-button capture flow as Button
+  Mapping. Assigning a macro to a button is mutually exclusive with that button's normal target/turbo binding -
+  assigning one clears the other.
+- Holding the bound physical button loops the step sequence for as long as it's held; releasing stops playback
+  immediately, mid-step.
+- Macros persist per-content next to save states (`state/macro.c`), and the button mapper shows `Macro: <name>` in
+  place of the usual target label for any row bound to one.
 
 ### Settings screens
 
@@ -227,14 +254,17 @@ All hotkeys are `MENU + <button>` combos, each individually toggleable in the Ho
 | MENU+R2                           | Quick Save                                                                        |
 | MENU+L1                           | Toggle Slow Motion                                                                |
 | MENU+L2                           | Quick Load                                                                        |
+| MENU+B                            | Toggle Pause Content - freezes the core in place without opening the pause menu   |
 | MENU+Y                            | Toggle FPS display                                                                |
 | MENU+X                            | Cycle header visibility (None / Clock / Battery / Clock+Battery)                  |
 | MENU+START                        | Quit (autosaves first if Auto Save covers "On Quit")                              |
 | MENU (release, no combo)          | Open the pause menu                                                               |
 | MENU (hold, in a settings screen) | Peek at the content underneath for a live preview of the current display settings |
 
-Fast Forward and Slow Motion each have an independent on-screen glyph toggle, so a hotkey can keep working with its
-indicator hidden. All rumble is suppressed while the pause menu is open.
+Fast Forward, Slow Motion, and Pause Content each have an independent on-screen glyph toggle, so a hotkey can keep
+working with its indicator hidden. Pausing this way doesn't disturb Fast Forward/Slow Motion - resuming drops straight
+back into whichever of the two, if any, was active before the pause. All rumble is suppressed while the pause menu is
+open.
 
 ---
 

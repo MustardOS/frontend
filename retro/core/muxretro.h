@@ -184,6 +184,8 @@ int pause_menu_gameplay_hud_active(void);
 
 void pause_menu_apply_header_visibility(void);
 
+void pause_menu_capture_clean_screenshot(const char *path, int restore_visibility);
+
 int pause_menu_tick(void);
 
 void options_menu_init(void);

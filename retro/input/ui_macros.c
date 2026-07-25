@@ -3,6 +3,7 @@
 #include "../../common/ui/common.h"
 #include "../../common/ui/dialogue.h"
 #include "../../common/ui/osk.h"
+#include "../../common/randname.h"
 #include "../../module/muxshare.h"
 #include "../state/macro.h"
 #include "../core/muxretro.h"
@@ -80,8 +81,11 @@ static uint64_t current_nav_mask(void) {
     const int back = mux_input_pressed(mux_input_b);
     const int del = mux_input_pressed(mux_input_x);
     const int extra = mux_input_pressed(mux_input_y);
+    const int select_btn = mux_input_pressed(mux_input_select);
+    const int start_btn = mux_input_pressed(mux_input_start);
 
-    return nav_dir_bits() | (confirm ? BIT(4) : 0) | (back ? BIT(5) : 0) | (del ? BIT(6) : 0) | (extra ? BIT(7) : 0);
+    return nav_dir_bits() | (confirm ? BIT(4) : 0) | (back ? BIT(5) : 0) | (del ? BIT(6) : 0) | (extra ? BIT(7) : 0)
+           | (select_btn ? BIT(8) : 0) | (start_btn ? BIT(9) : 0);
 }
 
 static void build_row(const char *label_text, const char *value_text, const char *glyph) {
@@ -419,8 +423,6 @@ static void create_osk_objects(void) {
     lv_obj_set_style_border_color(ui_txt_entry_macro, lv_color_hex(theme.osk.border), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(ui_txt_entry_macro, theme.osk.border_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_txt_entry_macro, 2, MU_OBJ_MAIN_DEFAULT);
-
-    init_osk(ui_pnl_entry_macro, ui_txt_entry_macro, 0, 0, MACRO_NAME_MAX - 1);
 }
 
 static void start_new_macro(void) {
@@ -428,13 +430,14 @@ static void start_new_macro(void) {
 
     play_sound(snd_confirm);
 
-    lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+    init_osk(ui_pnl_entry_macro, ui_txt_entry_macro, 0, 0, MACRO_NAME_MAX - 1);
 
     key_show = 1;
     osk_show(ui_pnl_entry_macro);
 
-    lv_textarea_set_text(ui_txt_entry_macro, get_datetime());
+    char default_name[RANDNAME_MAX_LEN];
+    randname_generate_with_separator(default_name, sizeof(default_name), " ");
+    lv_textarea_set_text(ui_txt_entry_macro, default_name);
 }
 
 static void finish_new_macro_confirm(void) {
@@ -462,6 +465,11 @@ static void finish_new_macro_cancel(void) {
 }
 
 static void tick_osk(const uint64_t edge, const uint64_t mask) {
+    if (edge & BIT(9)) {
+        finish_new_macro_confirm();
+        return;
+    }
+
     if (edge & BIT(4)) {
         play_sound(snd_keypress);
         const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
@@ -479,6 +487,11 @@ static void tick_osk(const uint64_t edge, const uint64_t mask) {
 
     if (edge & BIT(7)) {
         key_space(ui_txt_entry_macro);
+        return;
+    }
+
+    if (edge & BIT(8)) {
+        key_clear(ui_txt_entry_macro);
         return;
     }
 

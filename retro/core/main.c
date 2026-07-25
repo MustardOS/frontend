@@ -471,7 +471,8 @@ int main(const int argc, char *argv[]) {
             timeline_deadline = timeline_ms > 0 ? loop_now + (uint32_t) timeline_ms : 0;
         }
 
-        if (timeline_ms > 0 && !paused && state_saves_supported() && loop_now >= timeline_deadline) {
+        if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported()
+            && loop_now >= timeline_deadline) {
             gamestate_timeline_save();
             timeline_deadline = loop_now + (uint32_t) timeline_ms;
         }
@@ -501,6 +502,8 @@ int main(const int argc, char *argv[]) {
             manual_menu_open();
         } else if (hotkeys_is_quit_requested()) {
             quit = 1;
+        } else if (hotkeys_is_content_paused()) {
+            SDL_Delay(10);
         } else {
             audio_bridge_apply_pending_min_latency();
             environment_apply_pending_av_info();

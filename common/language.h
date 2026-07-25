@@ -1685,6 +1685,9 @@ struct mux_lang {
             char toggle_header[MAX_BUFFER_SIZE];
             char ff_glyph[MAX_BUFFER_SIZE];
             char slowmo_glyph[MAX_BUFFER_SIZE];
+            char pause_content[MAX_BUFFER_SIZE];
+            char pause_glyph[MAX_BUFFER_SIZE];
+            char paused[MAX_BUFFER_SIZE];
             char manual[MAX_BUFFER_SIZE];
         } hotkeys_screen;
         struct {

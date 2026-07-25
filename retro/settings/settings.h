@@ -115,6 +115,8 @@ struct session_settings_t {
     int hotkey_ff_glyph_enabled;
     int hotkey_slowmo_enabled;
     int hotkey_slowmo_glyph_enabled;
+    int hotkey_pause_enabled;
+    int hotkey_pause_glyph_enabled;
     int hotkey_quicksave_enabled;
     int hotkey_quickload_enabled;
     int hotkey_toggle_fps_enabled;
@@ -296,6 +298,10 @@ void session_settings_cycle_hotkey_ff_glyph_enabled(int direction);
 void session_settings_cycle_hotkey_slowmo_enabled(int direction);
 
 void session_settings_cycle_hotkey_slowmo_glyph_enabled(int direction);
+
+void session_settings_cycle_hotkey_pause_enabled(int direction);
+
+void session_settings_cycle_hotkey_pause_glyph_enabled(int direction);
 
 void session_settings_cycle_hotkey_quicksave_enabled(int direction);
 

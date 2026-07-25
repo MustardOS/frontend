@@ -92,6 +92,12 @@ void set_list_glyph_image(lv_obj_t *img, const char *embed) {
     apply_glyph_scale(img, embed, px, px);
 }
 
+void set_footer_glyph_image(lv_obj_t *img, const char *embed) {
+    lv_img_set_src(img, embed);
+    const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer);
+    apply_glyph_scale(img, embed, px, px);
+}
+
 static int glyph_dir_exists(const char *base, const int with_dim, const char *mux_module) {
     char glyph_dir[MAX_BUFFER_SIZE];
     if (with_dim) {

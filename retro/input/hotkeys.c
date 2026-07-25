@@ -22,9 +22,11 @@ static int prev_y = 0;
 static int prev_x = 0;
 static int prev_start = 0;
 static int prev_select = 0;
+static int prev_b = 0;
 
 static int fast_forward_active = 0;
 static int slow_motion_active = 0;
+static int content_paused = 0;
 static int quit_requested = 0;
 static int manual_requested = 0;
 
@@ -34,6 +36,10 @@ int hotkeys_is_fast_forward_active(void) {
 
 int hotkeys_is_slow_motion_active(void) {
     return slow_motion_active;
+}
+
+int hotkeys_is_content_paused(void) {
+    return content_paused;
 }
 
 int hotkeys_is_quit_requested(void) {
@@ -51,7 +57,7 @@ int hotkeys_is_manual_requested(void) {
 }
 
 static void sync_audio_mute(void) {
-    const int should_mute = fast_forward_active || slow_motion_active;
+    const int should_mute = content_paused || fast_forward_active || slow_motion_active;
     const int was_muted = audio_bridge_is_muted();
 
     audio_bridge_set_muted(should_mute);
@@ -61,7 +67,9 @@ static void sync_audio_mute(void) {
 }
 
 static void sync_speed_indicator(void) {
-    if (fast_forward_active && session_settings.hotkey_ff_glyph_enabled) {
+    if (content_paused && session_settings.hotkey_pause_glyph_enabled) {
+        pause_menu_set_speed_indicator(lang.muxretro.hotkeys_screen.paused, "pause");
+    } else if (fast_forward_active && session_settings.hotkey_ff_glyph_enabled) {
         pause_menu_set_speed_indicator(session_settings_ff_speed_name(session_settings.ff_speed), "fastforward");
     } else if (slow_motion_active && session_settings.hotkey_slowmo_glyph_enabled) {
         pause_menu_set_speed_indicator(session_settings_slowmo_speed_name(session_settings.slowmo_speed), "slowmotion");
@@ -86,10 +94,18 @@ static void toggle_slow_motion(void) {
     LOG_INFO(mux_module, "Slow Motion %s (hotkey)", slow_motion_active ? "enabled" : "disabled");
 }
 
+static void toggle_content_pause(void) {
+    content_paused = !content_paused;
+    sync_audio_mute();
+    sync_speed_indicator();
+    LOG_INFO(mux_module, "Content Pause %s (hotkey)", content_paused ? "enabled" : "disabled");
+}
+
 void hotkeys_reset(void) {
-    if (!fast_forward_active && !slow_motion_active) return;
+    if (!fast_forward_active && !slow_motion_active && !content_paused) return;
     fast_forward_active = 0;
     slow_motion_active = 0;
+    content_paused = 0;
     sync_audio_mute();
     sync_speed_indicator();
 }
@@ -104,6 +120,7 @@ int hotkeys_task(void) {
     const int x_now = mux_input_pressed(mux_input_x);
     const int start_now = mux_input_pressed(mux_input_start);
     const int select_now = mux_input_pressed(mux_input_select);
+    const int b_now = mux_input_pressed(mux_input_b);
 
     int open_pause = 0;
 
@@ -137,6 +154,12 @@ int hotkeys_task(void) {
         if (l1_now && !prev_l1 && session_settings.hotkey_slowmo_enabled) {
             toggle_slow_motion();
             input_bridge_suppress(mux_input_l1);
+            menu_combo_consumed = 1;
+        }
+
+        if (b_now && !prev_b && session_settings.hotkey_pause_enabled) {
+            toggle_content_pause();
+            input_bridge_suppress(mux_input_b);
             menu_combo_consumed = 1;
         }
 
@@ -205,6 +228,7 @@ int hotkeys_task(void) {
     prev_x = x_now;
     prev_start = start_now;
     prev_select = select_now;
+    prev_b = b_now;
 
     return open_pause;
 }

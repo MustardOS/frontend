@@ -6,7 +6,6 @@
 #include "../../common/init.h"
 #include "../../common/language.h"
 #include "../../common/log.h"
-#include "../../common/screenshot.h"
 #include "gamestate.h"
 #include "content_hash.h"
 #include "../core/core.h"
@@ -219,9 +218,9 @@ void gamestate_init(const char *state_dir) {
     mini_free(ini);
 }
 
-void gamestate_capture_pending(void) {
+void gamestate_capture_pending(const int restore_visibility) {
     if (!base_dir[0] || !state_saves_supported()) return;
-    screenshot_save(pending_path, screenshot_auto, (screenshot_hue) {0, 0, 0});
+    pause_menu_capture_clean_screenshot(pending_path, restore_visibility);
 }
 
 static int next_free_index(void) {
@@ -363,7 +362,7 @@ int gamestate_quicksave_save(void) {
         return -1;
     }
 
-    screenshot_save(quicksave_thumb_path, screenshot_auto, (screenshot_hue) {0, 0, 0});
+    pause_menu_capture_clean_screenshot(quicksave_thumb_path, 1);
     gamestate_quicksave.created = (long long) time(NULL);
 
     char created_str[32];
@@ -440,7 +439,7 @@ int gamestate_timeline_save(void) {
         return -1;
     }
 
-    screenshot_save(t->thumb_path, screenshot_auto, (screenshot_hue) {0, 0, 0});
+    pause_menu_capture_clean_screenshot(t->thumb_path, 1);
     t->created = (long long) time(NULL);
 
     char created_str[32];
