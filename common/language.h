@@ -1493,6 +1493,14 @@ struct mux_lang {
             char mismatch_load[MAX_BUFFER_SIZE];
         } gamestate;
         struct {
+            char none_found[MAX_BUFFER_SIZE];
+            char no_steps[MAX_BUFFER_SIZE];
+            char delete[MAX_BUFFER_SIZE];
+            char delete_title[MAX_BUFFER_SIZE];
+            char delete_desc[MAX_BUFFER_SIZE];
+            char bind[MAX_BUFFER_SIZE];
+        } macros;
+        struct {
             char options_title[MAX_BUFFER_SIZE];
             char options_desc[MAX_BUFFER_SIZE];
             char settings_title[MAX_BUFFER_SIZE];
@@ -1585,6 +1593,7 @@ struct mux_lang {
             char sram_flush[MAX_BUFFER_SIZE];
             char sram_backup[MAX_BUFFER_SIZE];
             char timeline_saves[MAX_BUFFER_SIZE];
+            char timeline_count[MAX_BUFFER_SIZE];
             char auto_save[MAX_BUFFER_SIZE];
             char auto_save_idle[MAX_BUFFER_SIZE];
             char auto_save_quit[MAX_BUFFER_SIZE];
@@ -1627,6 +1636,7 @@ struct mux_lang {
             char core_device[MAX_BUFFER_SIZE];
             char core_device_default[MAX_BUFFER_SIZE];
             char button_mapping[MAX_BUFFER_SIZE];
+            char macros[MAX_BUFFER_SIZE];
             char unbound[MAX_BUFFER_SIZE];
             char turbo_off[MAX_BUFFER_SIZE];
             char turbo_10_hz[MAX_BUFFER_SIZE];
@@ -1660,6 +1670,8 @@ struct mux_lang {
             char unbind[MAX_BUFFER_SIZE];
             char press_button[MAX_BUFFER_SIZE];
             char core_turbo_active[MAX_BUFFER_SIZE];
+            char macro_label[MAX_BUFFER_SIZE];
+            char macro_turbo_blocked[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
             char fast_forward[MAX_BUFFER_SIZE];

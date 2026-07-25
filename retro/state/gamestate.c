@@ -11,6 +11,7 @@
 #include "content_hash.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../settings/settings.h"
 
 #define MAX_STATE_SIZE 512
 
@@ -114,9 +115,8 @@ static void write_manifest_group(
     mini_free(ini);
 }
 
-static void write_manifest_entry(
-    const int index, const char *name, const long long created, const struct gamestate_slot *meta
-) {
+static void
+write_manifest_entry(const int index, const char *name, const long long created, const struct gamestate_slot *meta) {
     char group_id[32];
     snprintf(group_id, sizeof(group_id), "slot_%d", index);
     write_manifest_group(group_id, name, created, meta);
@@ -407,10 +407,14 @@ int gamestate_quicksave_delete(void) {
 }
 
 static int timeline_next_slot(void) {
+    int cap = session_settings.timeline_count;
+    if (cap < 2) cap = 2;
+    if (cap > GAMESTATE_TIMELINE_DEPTH) cap = GAMESTATE_TIMELINE_DEPTH;
+
     int oldest = 0;
     long long oldest_created = -1;
 
-    for (int i = 0; i < GAMESTATE_TIMELINE_DEPTH; i++) {
+    for (int i = 0; i < cap; i++) {
         if (!gamestate_timeline_exists[i]) return i;
 
         if (oldest_created < 0 || gamestate_timeline[i].created < oldest_created) {

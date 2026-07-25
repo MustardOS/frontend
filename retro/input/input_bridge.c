@@ -3,6 +3,7 @@
 #include "../core/core.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "../state/macro.h"
 
 #define MUX_RETRO_PORT_COUNT (1 + MUX_INPUT_MAX_EXTRA_PLAYERS)
 
@@ -23,6 +24,13 @@ static uint32_t turbo_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static const int turbo_hz_table[4] = {0, 10, 15, 20};
 static int turbo_period[4] = {0, 6, 6, 6};
 
+#define MACRO_STEP_DEFAULT_FRAMES 6
+
+static int macro_held_prev[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static int macro_playing[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static int macro_step_at[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static uint32_t macro_step_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+
 static void refresh_turbo_periods(void) {
     const double fps = core_get_target_fps();
 
@@ -33,21 +41,70 @@ static void refresh_turbo_periods(void) {
     }
 }
 
+static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, const int apply_suppress) {
+    int raw_held = (mask & BIT(mux_type)) != 0;
+
+    if (apply_suppress && suppress_until_released[mux_type]) {
+        if (!raw_held) suppress_until_released[mux_type] = 0;
+        raw_held = 0;
+    }
+
+    return raw_held;
+}
+
+static uint16_t drive_macro(const int port, const int s, const int macro_index, const int raw_held) {
+    const int press_edge = raw_held && !macro_held_prev[port][s];
+    macro_held_prev[port][s] = raw_held;
+
+    const struct macro_entry *macro = macros_get_by_index(macro_index);
+    if (!macro || macro->step_count <= 0) {
+        macro_playing[port][s] = 0;
+        return 0;
+    }
+
+    if (press_edge) {
+        macro_playing[port][s] = 1;
+        macro_step_at[port][s] = 0;
+        macro_step_phase[port][s] = 0;
+    }
+
+    if (!macro_playing[port][s]) return 0;
+
+    const struct macro_step *step = &macro->steps[macro_step_at[port][s]];
+    const int rate = step->hz_rate;
+    const uint32_t duration = (uint32_t) (rate > 0 && rate <= 3 ? turbo_period[rate] : MACRO_STEP_DEFAULT_FRAMES);
+    const uint16_t bit_out = (uint16_t) (step->target_mask & 0xFFFF);
+
+    macro_step_phase[port][s]++;
+    if (macro_step_phase[port][s] >= duration) {
+        macro_step_phase[port][s] = 0;
+        macro_step_at[port][s]++;
+
+        if (macro_step_at[port][s] >= macro->step_count) {
+            macro_step_at[port][s] = 0;
+            macro_playing[port][s] = 0;
+        }
+    }
+
+    return bit_out;
+}
+
 static uint16_t build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress) {
     uint16_t out = 0;
 
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+        const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
+
+        const int macro_index = session_settings.port_source_macro[port][s];
+        if (macro_index >= 0) {
+            out |= drive_macro(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress));
+            continue;
+        }
+
         const int target = session_settings.port_source_target[port][s];
         if (target < 0 || target >= 16) continue;
 
-        const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
-
-        int raw_held = (mask & BIT(mux_type)) != 0;
-
-        if (apply_suppress && suppress_until_released[mux_type]) {
-            if (!raw_held) suppress_until_released[mux_type] = 0;
-            raw_held = 0;
-        }
+        const int raw_held = resolve_raw_held(mux_type, mask, apply_suppress);
 
         int held = raw_held;
         const int rate = session_settings.port_source_turbo[port][s];
@@ -207,6 +264,10 @@ static void input_bridge_build_snapshot(void) {
             for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
                 turbo_held_prev[port][s] = 0;
                 turbo_phase[port][s] = 0;
+                macro_held_prev[port][s] = 0;
+                macro_playing[port][s] = 0;
+                macro_step_at[port][s] = 0;
+                macro_step_phase[port][s] = 0;
             }
             continue;
         }

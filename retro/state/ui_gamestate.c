@@ -130,6 +130,10 @@ static int timeline_at_row(const int row) {
     return rows[rel];
 }
 
+static int timeline_slot_is_newest(const int slot) {
+    return slot >= 0 && slot == timeline_at_row(timeline_base_row());
+}
+
 static const struct gamestate_slot *state_at_row(const int row) {
     if (gamestate_quicksave_exists && row == 0) return &gamestate_quicksave;
     if (gamestate_autosave_exists && row == quicksave_row_offset()) return &gamestate_autosave;
@@ -641,7 +645,7 @@ void gamestate_menu_tick(void) {
             set_preview_mode(!preview_mode);
         }
     } else if (edge & BIT(6)) {
-        if (timeline_at_row(current_item_index) >= 0) {
+        if (timeline_slot_is_newest(timeline_at_row(current_item_index))) {
             play_sound(snd_error);
             pause_menu_show_toast(lang.muxretro.gamestate.timeline_protected);
         } else if (has_any_state()) {

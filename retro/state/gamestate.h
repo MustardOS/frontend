@@ -2,7 +2,7 @@
 
 #define GAMESTATE_MAX_SLOTS      64
 #define GAMESTATE_NAME_MAX       128
-#define GAMESTATE_TIMELINE_DEPTH 3
+#define GAMESTATE_TIMELINE_DEPTH 10
 
 struct gamestate_slot {
     int index;

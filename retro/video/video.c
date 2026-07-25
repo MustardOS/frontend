@@ -50,12 +50,12 @@ static void upload_frame(void);
 static Uint32 sdl_format_for_pixel_format(const enum retro_pixel_format fmt) {
     switch (fmt) {
         case RETRO_PIXEL_FORMAT_XRGB8888:
-            return SDL_PIXELFORMAT_ARGB8888;
+            return SDL_PIXELFORMAT_XRGB8888;
         case RETRO_PIXEL_FORMAT_RGB565:
             return SDL_PIXELFORMAT_RGB565;
         case RETRO_PIXEL_FORMAT_0RGB1555:
         default:
-            return SDL_PIXELFORMAT_ARGB1555;
+            return SDL_PIXELFORMAT_XRGB1555;
     }
 }
 

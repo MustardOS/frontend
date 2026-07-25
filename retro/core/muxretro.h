@@ -182,8 +182,6 @@ void pause_menu_update_header(void);
 
 int pause_menu_gameplay_hud_active(void);
 
-int pause_menu_gameplay_hud_dirty(void);
-
 void pause_menu_apply_header_visibility(void);
 
 int pause_menu_tick(void);
@@ -288,6 +286,8 @@ void input_port_menu_tick(void);
 
 void input_port_menu_reopen_button_mapping(int port);
 
+void input_port_menu_reopen_macros(int port);
+
 void button_mapping_menu_init_all(void);
 
 void button_mapping_menu_open(int port);
@@ -295,6 +295,14 @@ void button_mapping_menu_open(int port);
 int button_mapping_menu_is_active(void);
 
 void button_mapping_menu_tick(void);
+
+void macros_menu_init(void);
+
+void macros_menu_open(int port);
+
+int macros_menu_is_active(void);
+
+void macros_menu_tick(void);
 
 void performance_menu_init(void);
 

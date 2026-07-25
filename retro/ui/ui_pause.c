@@ -333,16 +333,6 @@ int pause_menu_gameplay_hud_active(void) {
     return 0;
 }
 
-int pause_menu_gameplay_hud_dirty(void) {
-    static int was_active = 0;
-
-    const int now_active = pause_menu_gameplay_hud_active();
-    const int dirty = now_active || was_active;
-    was_active = now_active;
-
-    return dirty;
-}
-
 void pause_menu_rebuild(void) {
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();

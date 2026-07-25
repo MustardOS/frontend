@@ -124,8 +124,8 @@ struct session_settings_t {
     int auto_save;
     int sram_flush_seconds;
     int sram_backup_enabled;
-    int timeline_interval; // 0 = off, 1..6 -> {5,10,15,30,45,60} minutes
-
+    int timeline_interval;
+    int timeline_count;
     int colour_brightness;
     int colour_contrast;
     int colour_saturation;
@@ -160,6 +160,7 @@ struct session_settings_t {
     int port_device_id[MUX_INPUT_PORT_COUNT];
     int port_source_target[MUX_INPUT_PORT_COUNT][24];
     int port_source_turbo[MUX_INPUT_PORT_COUNT][24];
+    int port_source_macro[MUX_INPUT_PORT_COUNT][24]; // -1 = none, else macro_entry.index
 };
 
 #define PORT_SOURCE_COUNT 24
@@ -205,6 +206,8 @@ const char *session_settings_timeline_interval_name(int mode);
 int session_settings_timeline_interval_ms(void);
 
 void session_settings_cycle_timeline_interval(int direction);
+
+void session_settings_cycle_timeline_count(int direction);
 
 const char *session_settings_auto_save_name(int mode);
 
@@ -382,6 +385,12 @@ int session_settings_resolve_port_source(int port);
 
 const char *session_settings_button_type_label(int type);
 
+const char *session_settings_target_label(int target_id);
+
+int session_settings_target_for_button(int pressed_type);
+
+int session_settings_source_for_button(int pressed_type);
+
 int session_settings_set_source_by_button(int port, int source, int pressed_type);
 
 void session_settings_cycle_source_turbo(int port, int source, int direction);
@@ -389,6 +398,10 @@ void session_settings_cycle_source_turbo(int port, int source, int direction);
 void session_settings_unbind_source(int port, int source);
 
 void session_settings_reset_source(int port, int source);
+
+void session_settings_assign_source_macro(int port, int source, int macro_index);
+
+void session_settings_clear_macro_references(int macro_index);
 
 void session_settings_source_value(int port, int source, char *buf, size_t len);
 

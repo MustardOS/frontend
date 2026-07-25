@@ -187,9 +187,14 @@ static void check_row_shortcuts(void) {
         session_settings_reset_source(active_port, current_item_index);
         submenu_refresh_values(&bm_self[active_port]);
     } else if (do_left || do_right) {
-        play_sound(snd_option);
-        session_settings_cycle_source_turbo(active_port, current_item_index, do_right ? 1 : -1);
-        submenu_refresh_values(&bm_self[active_port]);
+        if (session_settings.port_source_macro[active_port][current_item_index] >= 0) {
+            play_sound(snd_error);
+            pause_menu_show_toast(lang.muxretro.settings_screen.macro_turbo_blocked);
+        } else {
+            play_sound(snd_option);
+            session_settings_cycle_source_turbo(active_port, current_item_index, do_right ? 1 : -1);
+            submenu_refresh_values(&bm_self[active_port]);
+        }
     }
 }
 

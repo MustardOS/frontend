@@ -11,6 +11,7 @@
 #include "../core/core.h"
 #include "../core/muxretro.h"
 #include "../input/core_input_meta.h"
+#include "../state/macro.h"
 #include "../video/overlay_bridge.h"
 #include "../core/paths.h"
 #include "settings.h"
@@ -45,6 +46,7 @@ static const struct session_settings_t defaults = {
     .sram_flush_seconds = 60,
     .sram_backup_enabled = 1,
     .timeline_interval = 0,
+    .timeline_count = 3,
     .colour_brightness = 0,
     .colour_contrast = 100,
     .colour_saturation = 100,
@@ -79,6 +81,7 @@ static const struct session_settings_t defaults = {
     .port_device_id = {0, 0, 0, 0},
     .port_source_target = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {8,  0,  9,  1,  10, 11, 12, 13, 14, 15, 2,  3,
                                                                4,  5,  6,  7,  -1, -1, -1, -1, -1, -1, -1, -1}},
+    .port_source_macro = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {[0 ... PORT_SOURCE_COUNT - 1] = -1}},
 };
 
 // Physical control per source index
@@ -345,6 +348,13 @@ void session_settings_cycle_timeline_interval(const int direction) {
     session_settings.timeline_interval = (session_settings.timeline_interval + direction + 7) % 7;
 }
 
+void session_settings_cycle_timeline_count(const int direction) {
+    int next = session_settings.timeline_count + (direction > 0 ? 1 : -1);
+    if (next < 2) next = 10;
+    if (next > 10) next = 2;
+    session_settings.timeline_count = next;
+}
+
 const char *session_settings_auto_save_name(const int mode) {
     if (mode < 0 || mode >= auto_save_count) return auto_save_names[auto_save_off];
     return auto_save_names[mode];
@@ -575,6 +585,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "timeline_interval", -1);
     if (v >= 0 && v <= 6) session_settings.timeline_interval = (int) v;
 
+    v = mini_get_int(ini, "settings", "timeline_count", -1);
+    if (v >= 2 && v <= 10) session_settings.timeline_count = (int) v;
+
     v = mini_get_int(ini, "settings", "colour_brightness", COLOUR_BRIGHTNESS_MIN - 1);
     if (v >= COLOUR_BRIGHTNESS_MIN && v <= COLOUR_BRIGHTNESS_MAX) session_settings.colour_brightness = (int) v;
 
@@ -700,6 +713,10 @@ static void apply_ini(const char *path) {
             snprintf(key, sizeof(key), "port%d_srct_%d", i, s);
             v = mini_get_int(ini, "settings", key, -1);
             if (v >= 0 && v <= 3) session_settings.port_source_turbo[i][s] = (int) v;
+
+            snprintf(key, sizeof(key), "port%d_macro_%d", i, s);
+            v = mini_get_int(ini, "settings", key, -99);
+            if (v >= -1 && v < MACRO_MAX) session_settings.port_source_macro[i][s] = (int) v;
         }
     }
 
@@ -761,6 +778,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(sram_flush_seconds);
     DELTA(sram_backup_enabled);
     DELTA(timeline_interval);
+    DELTA(timeline_count);
     DELTA(colour_brightness);
     DELTA(colour_contrast);
     DELTA(colour_saturation);
@@ -820,6 +838,11 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
             if (session_settings.port_source_turbo[i][s] != base->port_source_turbo[i][s]) {
                 snprintf(key, sizeof(key), "port%d_srct_%d", i, s);
                 mini_set_int(ini, "settings", key, session_settings.port_source_turbo[i][s]);
+            }
+
+            if (session_settings.port_source_macro[i][s] != base->port_source_macro[i][s]) {
+                snprintf(key, sizeof(key), "port%d_macro_%d", i, s);
+                mini_set_int(ini, "settings", key, session_settings.port_source_macro[i][s]);
             }
         }
     }
@@ -1510,7 +1533,7 @@ const char *session_settings_button_type_label(const int type) {
     }
 }
 
-static const char *target_label(const int target_id) {
+const char *session_settings_target_label(const int target_id) {
     if (target_id < 0 || target_id >= 16) return lang.muxretro.settings_screen.unbound;
     return session_settings_button_type_label(default_button_map[target_id]);
 }
@@ -1521,27 +1544,47 @@ void session_settings_source_value(const int port, const int source, char *buf, 
         return;
     }
 
+    const int macro_index = session_settings.port_source_macro[port][source];
+    if (macro_index >= 0) {
+        snprintf(buf, len, "%s: %s", lang.muxretro.settings_screen.macro_label, macros_get_name_by_index(macro_index));
+        return;
+    }
+
     const int target = session_settings.port_source_target[port][source];
     const int rate = session_settings.port_source_turbo[port][source];
 
     if (target >= 0 && rate > 0) {
-        snprintf(buf, len, "%s (%s)", target_label(target), session_settings_turbo_rate_name(rate));
+        snprintf(buf, len, "%s (%s)", session_settings_target_label(target), session_settings_turbo_rate_name(rate));
     } else {
-        snprintf(buf, len, "%s", target_label(target));
+        snprintf(buf, len, "%s", session_settings_target_label(target));
     }
+}
+
+int session_settings_target_for_button(const int pressed_type) {
+    for (int i = 0; i < 16; i++) {
+        if (session_settings_source_types[i] == pressed_type) return default_source_target[i];
+    }
+
+    return -1;
+}
+
+int session_settings_source_for_button(const int pressed_type) {
+    for (int s = 0; s < 16; s++) {
+        if (session_settings_source_types[s] == pressed_type) return s;
+    }
+
+    return -1;
 }
 
 int session_settings_set_source_by_button(const int port, const int source, const int pressed_type) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return 0;
 
-    for (int i = 0; i < 16; i++) {
-        if (session_settings_source_types[i] == pressed_type) {
-            session_settings.port_source_target[port][source] = default_source_target[i];
-            return 1;
-        }
-    }
+    const int target = session_settings_target_for_button(pressed_type);
+    if (target < 0) return 0;
 
-    return 0;
+    session_settings.port_source_target[port][source] = target;
+    session_settings.port_source_macro[port][source] = -1;
+    return 1;
 }
 
 void session_settings_cycle_source_turbo(const int port, const int source, const int direction) {
@@ -1558,18 +1601,44 @@ void session_settings_unbind_source(const int port, const int source) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
     session_settings.port_source_target[port][source] = -1;
     session_settings.port_source_turbo[port][source] = 0;
+    session_settings.port_source_macro[port][source] = -1;
 }
 
 void session_settings_reset_source(const int port, const int source) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
     session_settings.port_source_target[port][source] = default_source_target[source];
     session_settings.port_source_turbo[port][source] = 0;
+    session_settings.port_source_macro[port][source] = -1;
+}
+
+void session_settings_assign_source_macro(const int port, const int source, const int macro_index) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
+
+    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+        if (s != source && session_settings.port_source_macro[port][s] == macro_index)
+            session_settings_reset_source(port, s);
+    }
+
+    session_settings.port_source_macro[port][source] = macro_index;
+    session_settings.port_source_target[port][source] = -1;
+    session_settings.port_source_turbo[port][source] = 0;
+}
+
+void session_settings_clear_macro_references(const int macro_index) {
+    if (macro_index < 0) return;
+
+    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
+        for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+            if (session_settings.port_source_macro[i][s] == macro_index) session_settings.port_source_macro[i][s] = -1;
+        }
+    }
 }
 
 static void reset_button_map(const int port) {
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         session_settings.port_source_target[port][s] = default_source_target[s];
         session_settings.port_source_turbo[port][s] = 0;
+        session_settings.port_source_macro[port][s] = -1;
     }
 }
 

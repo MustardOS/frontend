@@ -19,6 +19,7 @@
 #include "../ui/cheats.h"
 #include "../state/content_hash.h"
 #include "../state/gamestate.h"
+#include "../state/macro.h"
 #include "../state/manual.h"
 #include "../state/patch.h"
 #include "../input/hotkeys.h"
@@ -42,6 +43,7 @@ static int mux_idle_state_exists = 0;
 static unsigned mux_idle_state_changes = 0;
 static unsigned last_seen_changes = 0;
 static char state_dir[MAX_BUFFER_SIZE];
+static char macro_dir[MAX_BUFFER_SIZE];
 
 static volatile sig_atomic_t pending_sleep_signal = 0;
 static volatile sig_atomic_t pending_wake_signal = 0;
@@ -114,6 +116,22 @@ static void build_state_dir(const char *core_path_arg, const char *content_path)
     create_directories(state_dir, 0);
 }
 
+static void build_macro_dir(const char *core_path_arg, const char *content_path) {
+    const char *base = strrchr(content_path, '/');
+    base = base ? base + 1 : content_path;
+
+    char content_stem[MAX_BUFFER_SIZE];
+    snprintf(content_stem, sizeof(content_stem), "%s", base);
+    char *dot = strrchr(content_stem, '.');
+    if (dot) *dot = '\0';
+
+    char save_prefix[MAX_BUFFER_SIZE];
+    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+
+    snprintf(macro_dir, sizeof(macro_dir), "%s/%s/%s", RETRO_MAC_PATH, save_prefix, content_stem);
+    create_directories(macro_dir, 0);
+}
+
 static void idle_poll(void) {
     if (!config.settings.power.idle.display) return;
 
@@ -179,25 +197,33 @@ static int core_turbo_option_active(void) {
 
 static double core_run_ema_ms = 0.0;
 
-static void run_core_batch(const unsigned frames) {
+static void run_core_batch(const unsigned frames, const int present_every) {
     hw_render_bridge_context_save();
 
     for (unsigned i = 0; i < frames; i++) {
-        const int visible = i + 1 == frames;
-        video_bridge_set_frame_skip(!visible);
-        if (visible) frame_pacer_maybe_wait();
+        const int is_last = i + 1 == frames;
+        const int should_present = present_every || is_last;
+
+        video_bridge_set_frame_skip(!should_present);
+        if (is_last) frame_pacer_maybe_wait();
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
         environment_notify_frame_time();
 
         const uint64_t run_start = SDL_GetPerformanceCounter();
-        if (visible) runahead_before_frame(frames == 1);
+        if (is_last) runahead_before_frame(frames == 1);
         current_core.retro_run();
         const double run_ms =
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
         core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
 
         audio_bridge_flush_sample_fifo();
+
+        if (should_present && !is_last) {
+            video_bridge_flush_frame();
+            lv_obj_invalidate(ui_screen);
+            lv_refr_now(NULL);
+        }
     }
 
     hw_render_bridge_context_restore();
@@ -312,6 +338,9 @@ int main(const int argc, char *argv[]) {
 
     build_state_dir(core_path_arg, content_path);
     gamestate_init(state_dir);
+
+    build_macro_dir(core_path_arg, content_path);
+    macros_init(macro_dir);
 
     content_hash_request(content_path);
 
@@ -497,7 +526,7 @@ int main(const int argc, char *argv[]) {
                 frames = 1 + extra;
             }
 
-            run_core_batch(frames);
+            run_core_batch(frames, !ff_active);
             core_ran = 1;
 
             fps_frame_count += frames;
@@ -521,20 +550,19 @@ int main(const int argc, char *argv[]) {
 
         const int paused_now = pause_menu_is_active();
 
-        int hud_dirty = paused_now;
         if (paused_now) {
             if (!peeking) display_set_ui_hidden(0);
         } else {
             const int hud_active = pause_menu_gameplay_hud_active();
-            hud_dirty = pause_menu_gameplay_hud_dirty();
             display_set_ui_hidden(!hud_active);
         }
 
         video_bridge_flush_frame();
-        if (hud_dirty) lv_refr_now(NULL);
-
         if (paused_now) lv_task_handler();
-        display_composite_frame();
+
+        lv_obj_invalidate(ui_screen);
+        lv_refr_now(NULL);
+
         frame_pacer_after_present();
 
         if (core_ran) pace_core_output();
