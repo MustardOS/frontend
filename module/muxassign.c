@@ -7,6 +7,7 @@ static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
 static int is_dir = 0;
+static int prefer_directory_scope = 0;
 
 static lv_obj_t *ui_lbl_core_downloader;
 
@@ -461,6 +462,17 @@ static void handle_a(void) {
     } else {
         play_sound(snd_confirm);
         dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
+
+        if (prefer_directory_scope) {
+            for (int i = 0; i < assign_dlg.option_count; i++) {
+                if (assign_dlg.option_data[i] == casn_dir) {
+                    assign_dlg.selected = i;
+                    dialogue_refresh(&assign_dlg, &theme);
+                    break;
+                }
+            }
+        }
+
         return;
     }
 
@@ -540,6 +552,16 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
 
     is_dir = dir_exist(rom_dir);
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
+
+    prefer_directory_scope = 0;
+    if (file_exist(MUOS_ASS_FROM)) {
+        char *launched_from = read_all_char_from(MUOS_ASS_FROM);
+        if (launched_from) {
+            prefer_directory_scope =
+                strcasecmp(launched_from, "history") == 0 || strcasecmp(launched_from, "collection") == 0;
+            free(launched_from);
+        }
+    }
 
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(explore_dir, sizeof(explore_dir), "%s", dir);
