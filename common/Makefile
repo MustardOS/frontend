@@ -1,10 +1,10 @@
 include ../common.mk
 
-CFLAGS   = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Icollection -isystem miniz \
+CFLAGS   = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Icollection -Imojibake -isystem miniz \
            -I../plutosvg/source -I../plutosvg/plutovg/include
 LDFLAGS  = $(COMMON_LIBS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
-SRC_DIRS = . saver input json mini miniz core xxhash ui collection
+SRC_DIRS = . saver input json mini miniz core xxhash ui collection mojibake
 
 ifeq ($(BUILD),release)
     SRCS = $(filter-out %crash_stub.c, $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c)))

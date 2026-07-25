@@ -273,3 +273,13 @@ the framebuffer.
 - Author: Sean Barrett
 - License: Public domain
 - Location: `common/stb/stb_image_write.h`
+
+### [Mojibake](https://github.com/zaerl/mojibake)
+
+Unicode text processing library covering normalisation, collation, and case mapping without external dependencies.
+Used for locale-aware, Unicode-correct natural sorting of content and file lists.
+
+- Version: 0.3.3
+- Author: Francesco Bigiarini
+- License: MIT
+- Location: `common/mojibake/`

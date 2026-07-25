@@ -11,6 +11,7 @@
 #include "util.h"
 #include "log.h"
 #include "language.h"
+#include "mojibake.h"
 #include "skip.h"
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
@@ -99,29 +100,73 @@ int should_skip(const char *name, const int is_dir) {
     return 0;
 }
 
+static int ascii_run_compare(const char *a, const size_t a_len, const char *b, const size_t b_len) {
+    const size_t min_len = a_len < b_len ? a_len : b_len;
+
+    for (size_t i = 0; i < min_len; i++) {
+        const unsigned char c1 = tolower((unsigned char) a[i]);
+        const unsigned char c2 = tolower((unsigned char) b[i]);
+        if (c1 != c2) return (c1 > c2) - (c1 < c2);
+    }
+
+    return (int) a_len - (int) b_len;
+}
+
+// Unicode-aware, case-insensitive comparison of a run of non-digit text, so accented Latin,
+// Cyrillic, CJK, etc. sort in proper collation order rather than raw byte order.
+static int text_run_compare(const char *a, const size_t a_len, const char *b, const size_t b_len) {
+    if (a_len == 0 && b_len == 0) return 0;
+
+    char folded_a[MAX_BUFFER_SIZE];
+    char folded_b[MAX_BUFFER_SIZE];
+    size_t folded_a_size = sizeof(folded_a);
+    size_t folded_b_size = sizeof(folded_b);
+
+    if (mjb_map_case_into(a, a_len, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded_a, &folded_a_size)
+            != MJB_STATUS_OK
+        || mjb_map_case_into(b, b_len, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded_b, &folded_b_size)
+               != MJB_STATUS_OK) {
+        return ascii_run_compare(a, a_len, b, b_len);
+    }
+
+    int order = 0;
+    if (mjb_collation_compare(
+            folded_a, folded_a_size, MJB_ENC_UTF_8, folded_b, folded_b_size, MJB_ENC_UTF_8, MJB_COLLATION_SHIFTED,
+            &order
+        )
+        != MJB_STATUS_OK) {
+        return ascii_run_compare(a, a_len, b, b_len);
+    }
+
+    return order;
+}
+
 int str_compare(const void *a, const void *b) {
     const char *str1 = *(const char **) a;
     const char *str2 = *(const char **) b;
 
     while (*str1 && *str2) {
-        const unsigned char c1 = tolower((unsigned char) *str1);
-        const unsigned char c2 = tolower((unsigned char) *str2);
-
-        if (isdigit(c1) && isdigit(c2)) {
+        if (isdigit((unsigned char) *str1) && isdigit((unsigned char) *str2)) {
             unsigned long long n1 = 0, n2 = 0;
-            while (isdigit(*str1))
+            while (isdigit((unsigned char) *str1))
                 n1 = n1 * 10 + (*str1++ - '0');
-            while (isdigit(*str2))
+            while (isdigit((unsigned char) *str2))
                 n2 = n2 * 10 + (*str2++ - '0');
 
             if (n1 != n2) return (n1 > n2) - (n1 < n2);
             continue;
         }
 
-        if (c1 != c2) return (c1 > c2) - (c1 < c2);
+        const char *run1 = str1;
+        const char *run2 = str2;
 
-        str1++;
-        str2++;
+        while (*str1 && !isdigit((unsigned char) *str1))
+            str1++;
+        while (*str2 && !isdigit((unsigned char) *str2))
+            str2++;
+
+        const int order = text_run_compare(run1, (size_t) (str1 - run1), run2, (size_t) (str2 - run2));
+        if (order != 0) return order;
     }
 
     return (unsigned char) *str1 - (unsigned char) *str2;
