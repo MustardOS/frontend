@@ -121,8 +121,21 @@ BUTTON B HOLD 100
 ```
 NAME Hold To Repeat
 LABEL start
-BUTTON A HOLD 48 WAIT 48 REPEAT 4
+    IF NOT A HELD THEN GOTO stop
+    BUTTON A HOLD 48 WAIT 48 REPEAT 4
 GOTO start
+LABEL stop
+REM All Done!
+```
+
+Or alternatively:
+```
+NAME Hold To Repeat
+REM This uses a loop rather than label
+LOOP 65535
+    IF NOT A HELD THEN BREAK
+    BUTTON A HOLD 48 WAIT 48 REPEAT 4
+ENDLOOP
 ```
 
 **An extra step partway through a loop** - the "10th of 20" case: a bonus press only on one specific pass, guarded by
@@ -169,12 +182,16 @@ ENDLOOP
 ```
 NAME Modifier Speed
 LABEL start
+    IF NOT SELECT HELD THEN GOTO check_speed
+    GOTO stop
+LABEL check_speed
     IF R1 HELD THEN GOTO fast
     BUTTON A HOLD 96 WAIT 96
     GOTO start
 LABEL fast
     BUTTON A HOLD 32 WAIT 32
     GOTO start
+LABEL stop
 ```
 
 ## Jump Safety
