@@ -79,7 +79,6 @@ static uint64_t current_nav_mask(void) {
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
 
-    // This screen only navigates vertically - keep just the up/down bits from the shared helper.
     return (nav_dir_bits() & (BIT(0) | BIT(1))) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
 }
 
@@ -250,12 +249,19 @@ static void apply_gameplay_header_overlay(void) {
     }
 
     if (show_battery) {
-        if (config.visual.battery == 1) {
-            lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+        switch (config.visual.battery) {
+            case 1: // Text Only
+                lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+                break;
+            case 2: // Text + Icon
+                lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+                break;
+            default: // Icon Only (0)
+                lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+                break;
         }
     } else {
         lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);

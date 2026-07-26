@@ -101,7 +101,7 @@ static int ensure_font(const int size) {
     return 1;
 }
 
-static SDL_Color theme_text_color(void) {
+static SDL_Color theme_text_colour(void) {
     const uint32_t hex = theme.list_default.text;
     const SDL_Color col = {(hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF, 255};
     return col;
@@ -275,7 +275,7 @@ static void render_wrap_view(void) {
     estimate_metrics(NULL, &page_chars);
 
     const int wrap_w = content_wrap_width();
-    const SDL_Color col = theme_text_color();
+    const SDL_Color col = theme_text_colour();
 
     const size_t end = advance_offset(current_offset, page_chars);
     const size_t len = end > current_offset ? end - current_offset : 0;
@@ -332,7 +332,7 @@ static void render_nowrap_view(void) {
     if (current_line >= line_count) current_line = line_count - 1;
     if (current_line < 0) current_line = 0;
 
-    const SDL_Color col = theme_text_color();
+    const SDL_Color col = theme_text_colour();
 
     SDL_Surface *line_surf[MANUAL_MAX_VISIBLE_ROWS] = {0};
     int max_w = 0;

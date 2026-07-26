@@ -63,7 +63,7 @@ static unsigned bpp_for_pixel_format(void) {
     return mux_retro_get_pixel_format() == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
 }
 
-static const SDL_Color border_colors[border_color_count] = {
+static const SDL_Color border_colours[border_colour_count] = {
     {0, 0, 0, 255},
     {0, 0, 0, 255},
     {32, 32, 32, 255},
@@ -211,8 +211,8 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
 }
 
 static void draw_video_content(SDL_Renderer *renderer) {
-    if (session_settings.border_color != border_color_theme) {
-        const SDL_Color *c = &border_colors[session_settings.border_color];
+    if (session_settings.border_colour != border_colour_theme) {
+        const SDL_Color *c = &border_colours[session_settings.border_colour];
         SDL_SetRenderDrawColor(renderer, c->r, c->g, c->b, c->a);
         SDL_RenderFillRect(renderer, NULL);
     }
@@ -499,7 +499,7 @@ void video_bridge_set_geometry(const unsigned base_width, const unsigned base_he
 }
 
 void video_bridge_set_core_rotation(const int quarter_turns) {
-    core_rotation_quarters = ((quarter_turns % video_rotate_count) + video_rotate_count) % video_rotate_count;
+    core_rotation_quarters = (quarter_turns % video_rotate_count + video_rotate_count) % video_rotate_count;
     recompute_dest_rect();
 }
 
@@ -569,14 +569,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 
     if (!data || width == 0 || height == 0) return;
 
-    raw_frame_pitch = pitch;
     raw_frame_bpp = bpp_for_pixel_format();
-
-    const int size_changed = (int) width != frame_w || (int) height != frame_h;
-    frame_w = (int) width;
-    frame_h = (int) height;
-
-    if (size_changed) recompute_dest_rect();
     const int cpu_filter = texture_filter_is_cpu_scaled(session_settings.texture_filter);
 
     if (cpu_filter) {
@@ -589,10 +582,22 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
             raw_frame_buf_cap = needed;
         }
 
+        raw_frame_pitch = pitch;
+        const int size_changed = (int) width != frame_w || (int) height != frame_h;
+        frame_w = (int) width;
+        frame_h = (int) height;
+        if (size_changed) recompute_dest_rect();
+
         memcpy(raw_frame_buf, data, needed);
         frame_dirty = 1;
         return;
     }
+
+    raw_frame_pitch = pitch;
+    const int size_changed = (int) width != frame_w || (int) height != frame_h;
+    frame_w = (int) width;
+    frame_h = (int) height;
+    if (size_changed) recompute_dest_rect();
 
     if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format())))
         SDL_UpdateTexture(frame_tex, NULL, data, (int) pitch);
@@ -601,7 +606,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 static int video_output_is_opaque(void) {
     if (!frame_tex && !hw_render_bridge_active()) return 0;
 
-    if (session_settings.border_color != border_color_theme) return 1;
+    if (session_settings.border_colour != border_colour_theme) return 1;
 
     if (effective_rotation() != video_rotate_0 || session_settings.mirrored) return 0;
 

@@ -560,6 +560,9 @@ void gamestate_menu_tick(void) {
                         slot_index < gamestate_slot_count ? slot_index : gamestate_slot_count - 1;
                     focus_row(pinned_row_offset() + next_slot_index);
                     refresh_preview();
+                } else if (ui_count_static > 0) {
+                    focus_row(0);
+                    refresh_preview();
                 }
             }
         }

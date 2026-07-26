@@ -44,6 +44,7 @@ struct bps_data {
     uint32_t modify_checksum;
     uint32_t source_checksum;
     uint32_t target_checksum;
+    int error;
 };
 
 struct ups_data {
@@ -59,11 +60,16 @@ struct ups_data {
     uint32_t patch_checksum;
     uint32_t source_checksum;
     uint32_t target_checksum;
+    int patch_eof;
 };
 
 typedef enum patch_error (*patch_func_t)(const uint8_t *, uint64_t, const uint8_t *, uint64_t, uint8_t **, uint64_t *);
 
 static uint8_t bps_read(struct bps_data *bps) {
+    if (bps->modify_offset >= bps->modify_length) {
+        bps->error = 1;
+        return 0;
+    }
     const uint8_t data = bps->modify_data[bps->modify_offset++];
     bps->modify_checksum = ~(mz_crc32(~bps->modify_checksum, &data, 1));
     return data;
@@ -74,6 +80,7 @@ static uint64_t bps_decode(struct bps_data *bps) {
 
     for (;;) {
         const uint8_t x = bps_read(bps);
+        if (bps->error) return 0;
         data += (x & 0x7f) * shift;
         if (x & 0x80) break;
         shift <<= 7;
@@ -109,6 +116,7 @@ static enum patch_error bps_apply_patch(
         const uint64_t raw_target = bps_decode(&bps);
         const uint64_t raw_markup = bps_decode(&bps);
 
+        if (bps.error) return patch_patch_invalid;
         if (raw_markup > modify_length - bps.modify_offset) return patch_patch_invalid;
         if (raw_target > SIZE_MAX) return patch_target_alloc_failed;
         if (raw_source > SIZE_MAX) return patch_source_too_small;
@@ -120,6 +128,7 @@ static enum patch_error bps_apply_patch(
 
     for (size_t i = 0; i < modify_markup_size; i++)
         bps_read(&bps);
+    if (bps.error) return patch_patch_invalid;
 
     if (modify_source_size > bps.source_length) return patch_source_too_small;
 
@@ -135,6 +144,7 @@ static enum patch_error bps_apply_patch(
 
     while (bps.modify_offset < bps.modify_length - 12) {
         size_t len = bps_decode(&bps);
+        if (bps.error) return patch_patch_invalid;
         const unsigned mode = len & 3;
         len = (len >> 2) + 1;
 
@@ -158,11 +168,13 @@ static enum patch_error bps_apply_patch(
                     bps.target_data[bps.output_offset++] = data;
                     bps.target_checksum = ~(mz_crc32(~bps.target_checksum, &data, 1));
                 }
+                if (bps.error) return patch_patch_invalid;
                 break;
 
             case source_copy:
             case target_copy: {
                 int64_t offset = (int64_t) bps_decode(&bps);
+                if (bps.error) return patch_patch_invalid;
                 const int negative = offset & 1;
                 offset >>= 1;
                 if (negative) offset = -offset;
@@ -201,6 +213,8 @@ static enum patch_error bps_apply_patch(
     for (int i = 0; i < 32; i += 8)
         modify_modify_checksum |= (uint32_t) bps_read(&bps) << i;
 
+    if (bps.error) return patch_patch_invalid;
+
     bps.source_checksum = (uint32_t) mz_crc32(0, bps.source_data, bps.source_length);
     bps.target_checksum = ~bps.target_checksum;
 
@@ -218,6 +232,7 @@ static uint8_t ups_patch_read(struct ups_data *data) {
         data->patch_checksum = ~(mz_crc32(~data->patch_checksum, &n, 1));
         return n;
     }
+    data->patch_eof = 1;
     return 0;
 }
 
@@ -243,6 +258,7 @@ static uint64_t ups_decode(struct ups_data *data) {
 
     for (;;) {
         const uint8_t x = ups_patch_read(data);
+        if (data->patch_eof) return 0;
         offset += (x & 0x7f) * shift;
         if (x & 0x80) break;
         shift <<= 7;
@@ -276,6 +292,7 @@ static enum patch_error ups_apply_patch(
 
     const unsigned source_read_length = (unsigned) ups_decode(&data);
     const unsigned target_read_length = (unsigned) ups_decode(&data);
+    if (data.patch_eof) return patch_patch_invalid;
 
     if (data.source_length != source_read_length && data.source_length != target_read_length)
         return patch_source_invalid;
@@ -294,6 +311,7 @@ static enum patch_error ups_apply_patch(
 
     while (data.patch_offset < data.patch_length - 12) {
         unsigned len = (unsigned) ups_decode(&data);
+        if (data.patch_eof) return patch_patch_invalid;
         while (len--)
             ups_target_write(&data, ups_source_read(&data));
 
@@ -373,7 +391,7 @@ static enum patch_error ips_alloc_targetdata(
         len |= patchdata[offset++];
 
         if (len) {
-            if (offset > patchlen - len) break;
+            if (len > patchlen - offset) break;
             while (len--) {
                 address++;
                 offset++;
@@ -422,7 +440,7 @@ static enum patch_error ips_apply_patch(
         len |= patchdata[offset++];
 
         if (len) {
-            if (offset > patchlen - len) break;
+            if (len > patchlen - offset) break;
             while (len--)
                 (*targetdata)[address++] = patchdata[offset++];
         } else {

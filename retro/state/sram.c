@@ -93,11 +93,11 @@ static void write_checksum(const char *path, const void *data, const size_t size
     char sum_path[MAX_BUFFER_SIZE];
     sum_path_for(path, sum_path, sizeof(sum_path));
 
-    FILE *f = fopen(sum_path, "w");
-    if (!f) return;
+    char sum_text[16];
+    const int len = snprintf(sum_text, sizeof(sum_text), "%08X", compute_crc(data, size));
+    if (len < 0) return;
 
-    fprintf(f, "%08X", compute_crc(data, size));
-    fclose(f);
+    atomic_write_file(sum_path, sum_text, (size_t) len);
 }
 
 // Because of how this will work we'll only check the sum if the sum exists.

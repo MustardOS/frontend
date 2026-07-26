@@ -56,7 +56,7 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             snprintf(buf, buf_len, "%s", session_settings.shimmer_fix ? lang.generic.enabled : lang.generic.disabled);
             break;
         case row_border:
-            snprintf(buf, buf_len, "%s", session_settings_border_name(session_settings.border_color));
+            snprintf(buf, buf_len, "%s", session_settings_border_name(session_settings.border_colour));
             break;
         default:
             buf[0] = '\0';

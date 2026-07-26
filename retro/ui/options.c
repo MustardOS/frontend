@@ -126,10 +126,10 @@ void options_store_v2(const struct retro_core_options_v2 *opts) {
         struct core_option_entry *e = &options_list[options_count];
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
 
-        const int categorized = category_key_is_valid(defs[i].category_key, opts->categories);
-        if (categorized) snprintf(e->category_key, sizeof(e->category_key), "%s", defs[i].category_key);
+        const int categorised = category_key_is_valid(defs[i].category_key, opts->categories);
+        if (categorised) snprintf(e->category_key, sizeof(e->category_key), "%s", defs[i].category_key);
 
-        const char *label = categorized && defs[i].desc_categorized && *defs[i].desc_categorized
+        const char *label = categorised && defs[i].desc_categorized && *defs[i].desc_categorized
                                 ? defs[i].desc_categorized
                                 : defs[i].desc;
         snprintf(e->label, sizeof(e->label), "%s", label ? label : defs[i].key);

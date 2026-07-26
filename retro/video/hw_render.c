@@ -410,9 +410,9 @@ typedef struct {
     GLboolean dither_en;
     GLint blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha;
     GLint blend_eq_rgb, blend_eq_alpha;
-    GLboolean color_mask[4];
+    GLboolean colour_mask[4];
     GLboolean depth_mask;
-    GLfloat clear_color[4];
+    GLfloat clear_colour[4];
     GLint front_face;
     GLint cull_face_mode;
     GLint unpack_alignment;
@@ -456,9 +456,9 @@ static void gl_state_capture(gl_host_state_t *s) {
     p_glGetIntegerv(GL_BLEND_EQUATION_RGB, &s->blend_eq_rgb);
     p_glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &s->blend_eq_alpha);
 
-    p_glGetBooleanv(GL_COLOR_WRITEMASK, s->color_mask);
+    p_glGetBooleanv(GL_COLOR_WRITEMASK, s->colour_mask);
     p_glGetBooleanv(GL_DEPTH_WRITEMASK, &s->depth_mask);
-    p_glGetFloatv(GL_COLOR_CLEAR_VALUE, s->clear_color);
+    p_glGetFloatv(GL_COLOR_CLEAR_VALUE, s->clear_colour);
 
     p_glGetIntegerv(GL_FRONT_FACE, &s->front_face);
     p_glGetIntegerv(GL_CULL_FACE_MODE, &s->cull_face_mode);
@@ -503,9 +503,9 @@ static void gl_state_apply(const gl_host_state_t *s) {
     );
     p_glBlendEquationSeparate((GLenum) s->blend_eq_rgb, (GLenum) s->blend_eq_alpha);
 
-    p_glColorMask(s->color_mask[0], s->color_mask[1], s->color_mask[2], s->color_mask[3]);
+    p_glColorMask(s->colour_mask[0], s->colour_mask[1], s->colour_mask[2], s->colour_mask[3]);
     p_glDepthMask(s->depth_mask);
-    p_glClearColor(s->clear_color[0], s->clear_color[1], s->clear_color[2], s->clear_color[3]);
+    p_glClearColor(s->clear_colour[0], s->clear_colour[1], s->clear_colour[2], s->clear_colour[3]);
 
     p_glFrontFace((GLenum) s->front_face);
     p_glCullFace((GLenum) s->cull_face_mode);

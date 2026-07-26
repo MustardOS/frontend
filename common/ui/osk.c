@@ -509,10 +509,16 @@ void init_osk(
     if (key_entry && lv_obj_is_valid(key_entry)) lv_obj_del(key_entry);
     if (num_entry && lv_obj_is_valid(num_entry)) lv_obj_del(num_entry);
     if (hex_entry && lv_obj_is_valid(hex_entry)) lv_obj_del(hex_entry);
+    if (nav_hint_container && lv_obj_is_valid(nav_hint_container)) lv_obj_del(nav_hint_container);
 
     key_entry = NULL;
     num_entry = NULL;
     hex_entry = NULL;
+    nav_hint_container = NULL;
+    nav_hint_a = (osk_nav_hint_t) {NULL, NULL, NULL};
+    nav_hint_b = (osk_nav_hint_t) {NULL, NULL, NULL};
+    nav_hint_x = (osk_nav_hint_t) {NULL, NULL, NULL};
+    nav_hint_y = (osk_nav_hint_t) {NULL, NULL, NULL};
 
     osk_max_len = max_len;
     shift_once = 0;

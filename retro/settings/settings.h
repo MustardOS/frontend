@@ -55,12 +55,12 @@ enum texture_filter_mode {
 
 enum audio_filter_mode { audio_filter_none = 0, audio_filter_low_pass, audio_filter_high_pass, audio_filter_count };
 
-enum border_color_mode {
-    border_color_theme = 0,
-    border_color_black,
-    border_color_dark_grey,
-    border_color_white,
-    border_color_count
+enum border_colour_mode {
+    border_colour_theme = 0,
+    border_colour_black,
+    border_colour_dark_grey,
+    border_colour_white,
+    border_colour_count
 };
 
 enum fps_limit_mode { fps_limit_60 = 0, fps_limit_50, fps_limit_none, fps_limit_count };
@@ -105,7 +105,7 @@ struct session_settings_t {
     int rumble_enabled;
     int volume;
     int show_fps;
-    int border_color;
+    int border_colour;
     int sample_rate;
     int fps_limit;
     int header_visibility;
@@ -162,7 +162,7 @@ struct session_settings_t {
     int port_device_id[MUX_INPUT_PORT_COUNT];
     int port_source_target[MUX_INPUT_PORT_COUNT][24];
     int port_source_turbo[MUX_INPUT_PORT_COUNT][24];
-    int port_source_macro[MUX_INPUT_PORT_COUNT][24]; // -1 = none, else macro_entry.index
+    int port_source_macro[MUX_INPUT_PORT_COUNT][24];
 };
 
 #define PORT_SOURCE_COUNT 24
@@ -392,6 +392,8 @@ int session_settings_resolve_port_source(int port);
 const char *session_settings_button_type_label(int type);
 
 const char *session_settings_target_label(int target_id);
+
+int session_settings_mux_type_for_target(int target_id);
 
 int session_settings_target_for_button(int pressed_type);
 

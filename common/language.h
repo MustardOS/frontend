@@ -1499,6 +1499,16 @@ struct mux_lang {
             char delete_title[MAX_BUFFER_SIZE];
             char delete_desc[MAX_BUFFER_SIZE];
             char bind[MAX_BUFFER_SIZE];
+            char edit_bind_title[MAX_BUFFER_SIZE];
+            char timing[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
+            char wait[MAX_BUFFER_SIZE];
+            char hold[MAX_BUFFER_SIZE];
+            char repeat[MAX_BUFFER_SIZE];
+            char button[MAX_BUFFER_SIZE];
+            char pause[MAX_BUFFER_SIZE];
+            char add_title[MAX_BUFFER_SIZE];
+            char relish_broken[MAX_BUFFER_SIZE];
         } macros;
         struct {
             char options_title[MAX_BUFFER_SIZE];
@@ -1639,9 +1649,6 @@ struct mux_lang {
             char macros[MAX_BUFFER_SIZE];
             char unbound[MAX_BUFFER_SIZE];
             char turbo_off[MAX_BUFFER_SIZE];
-            char turbo_10_hz[MAX_BUFFER_SIZE];
-            char turbo_15_hz[MAX_BUFFER_SIZE];
-            char turbo_20_hz[MAX_BUFFER_SIZE];
             char target_a[MAX_BUFFER_SIZE];
             char target_b[MAX_BUFFER_SIZE];
             char target_x[MAX_BUFFER_SIZE];

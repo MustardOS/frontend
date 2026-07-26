@@ -287,11 +287,11 @@ static void tick_options(const uint64_t edge, const uint64_t mask) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
-    } else if (do_left) {
+    } else if (do_left && ui_count_static > 0) {
         options_cycle(visible_indices[current_item_index], -1);
         refresh_row(current_item_index, nav_dir_left);
         play_sound(snd_option);
-    } else if (do_right) {
+    } else if (do_right && ui_count_static > 0) {
         options_cycle(visible_indices[current_item_index], +1);
         refresh_row(current_item_index, nav_dir_right);
         play_sound(snd_option);

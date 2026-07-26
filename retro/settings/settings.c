@@ -26,7 +26,7 @@ static const struct session_settings_t defaults = {
     .rumble_enabled = 1,
     .volume = 100,
     .show_fps = 0,
-    .border_color = border_color_theme,
+    .border_colour = border_colour_theme,
     .sample_rate = 0,
     .fps_limit = fps_limit_60,
     .header_visibility = header_visibility_none,
@@ -170,7 +170,7 @@ static const char *audio_filter_names[audio_filter_count] = {
     lang.muxretro.settings_screen.audio_filter_high_pass
 };
 
-static const char *border_names[border_color_count] = {
+static const char *border_names[border_colour_count] = {
     lang.muxretro.settings_screen.theme, lang.muxretro.settings_screen.black, lang.muxretro.settings_screen.dark_grey,
     lang.muxretro.settings_screen.white
 };
@@ -267,7 +267,7 @@ const char *session_settings_audio_filter_name(const int mode) {
 }
 
 const char *session_settings_border_name(const int mode) {
-    if (mode < 0 || mode >= border_color_count) return border_names[border_color_theme];
+    if (mode < 0 || mode >= border_colour_count) return border_names[border_colour_theme];
     return border_names[mode];
 }
 
@@ -517,8 +517,8 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "show_fps", -1);
     if (v == 0 || v == 1) session_settings.show_fps = (int) v;
 
-    v = mini_get_int(ini, "settings", "border_color", -1);
-    if (v >= 0 && v < border_color_count) session_settings.border_color = (int) v;
+    v = mini_get_int(ini, "settings", "border_colour", -1);
+    if (v >= 0 && v < border_colour_count) session_settings.border_colour = (int) v;
 
     v = mini_get_int(ini, "settings", "sample_rate", -1);
     for (int i = 0; v >= 0 && i < SAMPLE_RATE_CHOICE_COUNT; i++) {
@@ -718,9 +718,9 @@ static void apply_ini(const char *path) {
             v = mini_get_int(ini, "settings", key, -99);
             if (v >= -1 && v < 16) session_settings.port_source_target[i][s] = (int) v;
 
-            snprintf(key, sizeof(key), "port%d_srct_%d", i, s);
+            snprintf(key, sizeof(key), "port%d_srcms_%d", i, s);
             v = mini_get_int(ini, "settings", key, -1);
-            if (v >= 0 && v <= 3) session_settings.port_source_turbo[i][s] = (int) v;
+            if (v >= 0 && v <= 65535) session_settings.port_source_turbo[i][s] = (int) v;
 
             snprintf(key, sizeof(key), "port%d_macro_%d", i, s);
             v = mini_get_int(ini, "settings", key, -99);
@@ -766,7 +766,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(rumble_enabled);
     DELTA(volume);
     DELTA(show_fps);
-    DELTA(border_color);
+    DELTA(border_colour);
     DELTA(sample_rate);
     DELTA(fps_limit);
     DELTA(header_visibility);
@@ -846,7 +846,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
             }
 
             if (session_settings.port_source_turbo[i][s] != base->port_source_turbo[i][s]) {
-                snprintf(key, sizeof(key), "port%d_srct_%d", i, s);
+                snprintf(key, sizeof(key), "port%d_srcms_%d", i, s);
                 mini_set_int(ini, "settings", key, session_settings.port_source_turbo[i][s]);
             }
 
@@ -963,8 +963,8 @@ void session_settings_cycle_fps(const int direction) {
 }
 
 void session_settings_cycle_border(const int direction) {
-    session_settings.border_color =
-        (session_settings.border_color + direction + border_color_count) % border_color_count;
+    session_settings.border_colour =
+        (session_settings.border_colour + direction + border_colour_count) % border_colour_count;
 }
 
 void session_settings_cycle_sample_rate(const int direction) {
@@ -1558,6 +1558,11 @@ const char *session_settings_target_label(const int target_id) {
     return session_settings_button_type_label(default_button_map[target_id]);
 }
 
+int session_settings_mux_type_for_target(const int target_id) {
+    if (target_id < 0 || target_id >= 16) return -1;
+    return default_button_map[target_id];
+}
+
 void session_settings_source_value(const int port, const int source, char *buf, const size_t len) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT || len == 0) {
         if (len) buf[0] = '\0';
@@ -1607,14 +1612,27 @@ int session_settings_set_source_by_button(const int port, const int source, cons
     return 1;
 }
 
+static const int turbo_ms_table[] = {48, 96, 192, 384, 768, 1536, 3072, 6144};
+#define TURBO_MS_TABLE_COUNT ((int) (sizeof(turbo_ms_table) / sizeof(turbo_ms_table[0])))
+
 void session_settings_cycle_source_turbo(const int port, const int source, const int direction) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
 
-    int next = session_settings.port_source_turbo[port][source] + (direction > 0 ? 1 : -1);
-    if (next < 0) next = 3;
-    if (next > 3) next = 0;
+    const int current = session_settings.port_source_turbo[port][source];
 
-    session_settings.port_source_turbo[port][source] = next;
+    int idx = -1;
+    for (int i = 0; i < TURBO_MS_TABLE_COUNT; i++) {
+        if (turbo_ms_table[i] == current) {
+            idx = i;
+            break;
+        }
+    }
+
+    idx += direction > 0 ? 1 : -1;
+    if (idx < -1) idx = TURBO_MS_TABLE_COUNT - 1;
+    if (idx >= TURBO_MS_TABLE_COUNT) idx = -1;
+
+    session_settings.port_source_turbo[port][source] = idx < 0 ? 0 : turbo_ms_table[idx];
 }
 
 void session_settings_unbind_source(const int port, const int source) {
@@ -1634,9 +1652,11 @@ void session_settings_reset_source(const int port, const int source) {
 void session_settings_assign_source_macro(const int port, const int source, const int macro_index) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
 
-    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-        if (s != source && session_settings.port_source_macro[port][s] == macro_index)
-            session_settings_reset_source(port, s);
+    if (macro_index >= 0) {
+        for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+            if (s != source && session_settings.port_source_macro[port][s] == macro_index)
+                session_settings_reset_source(port, s);
+        }
     }
 
     session_settings.port_source_macro[port][source] = macro_index;
@@ -1663,16 +1683,17 @@ static void reset_button_map(const int port) {
 }
 
 const char *session_settings_turbo_rate_name(const int rate) {
-    switch (rate) {
-        case 1:
-            return lang.muxretro.settings_screen.turbo_10_hz;
-        case 2:
-            return lang.muxretro.settings_screen.turbo_15_hz;
-        case 3:
-            return lang.muxretro.settings_screen.turbo_20_hz;
-        default:
-            return lang.muxretro.settings_screen.turbo_off;
+    static char buf[16];
+
+    if (rate <= 0) return lang.muxretro.settings_screen.turbo_off;
+
+    if (rate >= 1000 && rate % 1000 == 0) {
+        snprintf(buf, sizeof(buf), "%ds", rate / 1000);
+    } else {
+        snprintf(buf, sizeof(buf), "%dms", rate);
     }
+
+    return buf;
 }
 
 void session_settings_reset_input_port(const int port) {

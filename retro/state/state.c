@@ -1,6 +1,8 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../../common/options.h"
@@ -11,6 +13,48 @@
 #include "../video/hw_render.h"
 
 #define CORE_INFO_PATH OPT_SHARE_PATH "emulator/retroarch/info/"
+
+static int atomic_write_state(const char *path, const void *data, const size_t size) {
+    char tmp_path[MAX_BUFFER_SIZE];
+    snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", path);
+
+    FILE *f = fopen(tmp_path, "wb");
+    if (!f) {
+        LOG_ERROR(mux_module, "Failed to open '%s' for save state", tmp_path);
+        return -1;
+    }
+
+    const int ok = fwrite(data, 1, size, f) == size;
+    if (ok) {
+        fflush(f);
+        fdatasync(fileno(f));
+    }
+    fclose(f);
+
+    if (!ok) {
+        LOG_ERROR(mux_module, "Short write saving state to '%s'", tmp_path);
+        remove(tmp_path);
+        return -1;
+    }
+
+    if (rename(tmp_path, path) != 0) {
+        LOG_ERROR(mux_module, "Failed to rename '%s' to '%s'", tmp_path, path);
+        return -1;
+    }
+
+    char dir_path[MAX_BUFFER_SIZE];
+    snprintf(dir_path, sizeof(dir_path), "%s", path);
+    char *slash = strrchr(dir_path, '/');
+    if (slash) *slash = '\0';
+
+    const int dir_fd = open(dir_path, O_RDONLY);
+    if (dir_fd >= 0) {
+        fsync(dir_fd);
+        close(dir_fd);
+    }
+
+    return 0;
+}
 
 static int saves_supported = 1;
 void state_saves_init(const char *core_file_path) {
@@ -102,21 +146,10 @@ int state_save(const char *path) {
         return -1;
     }
 
-    FILE *f = fopen(path, "wb");
-    if (!f) {
-        LOG_ERROR(mux_module, "Failed to open '%s' for save state", path);
-        free(buf);
-        return -1;
-    }
-
-    const size_t written = fwrite(buf, 1, size, f);
-    fclose(f);
+    const int ok_write = atomic_write_state(path, buf, size) == 0;
     free(buf);
 
-    if (written != size) {
-        LOG_ERROR(mux_module, "Short write saving state to '%s'", path);
-        return -1;
-    }
+    if (!ok_write) return -1;
 
     LOG_SUCCESS(mux_module, "Saved state to '%s' (%zu bytes)", path, size);
     return 0;

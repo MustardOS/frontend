@@ -12,6 +12,7 @@ static int entry_count = 0;
 
 int bios_check_scan(const char *core_file_path) {
     entry_count = 0;
+    memset(entries, 0, sizeof(entries));
 
     const char *base = strrchr(core_file_path, '/');
     base = base ? base + 1 : core_file_path;

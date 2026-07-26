@@ -27,7 +27,7 @@ char core_file_path[PATH_MAX] = "";
 int core_restart_requested = 0;
 
 static int open_core(const char *corefile) {
-    if (current_core.initialized) {
+    if (current_core.initialised) {
         if (current_core.retro_deinit) current_core.retro_deinit();
     }
 
@@ -73,8 +73,9 @@ static int open_core(const char *corefile) {
     set_input_poll = dlsym(current_core.handle, "retro_set_input_poll");
     set_input_state = dlsym(current_core.handle, "retro_set_input_state");
 
-    if (!current_core.retro_init || !current_core.retro_run || !current_core.retro_load_game || !set_environment
-        || !set_video_refresh || !set_audio_sample_batch || !set_input_poll || !set_input_state) {
+    if (!current_core.retro_init || !current_core.retro_run || !current_core.retro_load_game
+        || !current_core.retro_get_system_av_info || !set_environment || !set_video_refresh || !set_audio_sample_batch
+        || !set_input_poll || !set_input_state) {
         LOG_ERROR(mux_module, "Core '%s' is missing required libretro symbols", corefile);
         dlclose(current_core.handle);
         memset(&current_core, 0, sizeof(current_core));
@@ -89,7 +90,7 @@ static int open_core(const char *corefile) {
     set_input_state(mux_retro_input_state_cb);
 
     current_core.retro_init();
-    current_core.initialized = true;
+    current_core.initialised = true;
 
     current_core.need_fullpath = true;
     if (current_core.retro_get_system_info) {
@@ -272,7 +273,8 @@ static int find_content_in_archive(const char *archive_path, char *out_path) {
         for (char *tok = strtok_r(list, "|", &saveptr); tok && ext_count < 32; tok = strtok_r(NULL, "|", &saveptr)) {
             char with_dot[64];
             snprintf(with_dot, sizeof(with_dot), ".%s", tok);
-            ext_buf[ext_count++] = strdup(with_dot);
+            char *dup = strdup(with_dot);
+            if (dup) ext_buf[ext_count++] = dup;
         }
 
         const char *dirs[] = {RETRO_EXT_PATH};
@@ -579,7 +581,7 @@ void core_unload_content(void) {
 }
 
 void core_unload(void) {
-    if (!current_core.initialized) return;
+    if (!current_core.initialised) return;
 
     if (current_core.retro_deinit) current_core.retro_deinit();
     if (current_core.handle) dlclose(current_core.handle);

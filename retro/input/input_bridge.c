@@ -21,24 +21,16 @@ static int port_last_connected[MUX_RETRO_PORT_COUNT];
 static int turbo_held_prev[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static uint32_t turbo_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 
-static const int turbo_hz_table[4] = {0, 10, 15, 20};
-static int turbo_period[4] = {0, 6, 6, 6};
-
-#define MACRO_STEP_DEFAULT_FRAMES 6
-
 static int macro_held_prev[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static int macro_playing[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static int macro_step_at[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static int macro_step_holding[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static int macro_step_repeat_at[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static uint32_t macro_step_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static int macro_loop_progress[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT][MACRO_STEP_MAX];
 
-static void refresh_turbo_periods(void) {
-    const double fps = core_get_target_fps();
-
-    for (int rate = 1; rate <= 3; rate++) {
-        int period = fps > 0.0 ? (int) (fps / turbo_hz_table[rate] + 0.5) : 6;
-        if (period < 2) period = 2;
-        turbo_period[rate] = period;
-    }
+static uint32_t ms_to_frames(const int ms, const double fps) {
+    return (uint32_t) (fps > 0.0 ? (double) ms / 1000.0 * fps + 0.5 : 6);
 }
 
 static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, const int apply_suppress) {
@@ -52,7 +44,33 @@ static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, 
     return raw_held;
 }
 
-static uint16_t drive_macro(const int port, const int s, const int macro_index, const int raw_held) {
+static int if_condition_true(const struct macro_step *step, const int port, const int s, const uint64_t mask) {
+    if (step->if_test == if_test_count_compare) {
+        const int count = macro_loop_progress[port][s][step->if_loop_ref] + 1;
+        switch (step->if_op) {
+            case if_op_equals:
+                return count == step->loop_count;
+            case if_op_notequals:
+                return count != step->loop_count;
+            case if_op_less:
+                return count < step->loop_count;
+            case if_op_greater:
+                return count > step->loop_count;
+            case if_op_atleast:
+                return count >= step->loop_count;
+            default: // if_op_atmost
+                return count <= step->loop_count;
+        }
+    }
+
+    if (step->target_mask == 0) return step->if_negate;
+
+    const int mux_type = session_settings_mux_type_for_target(__builtin_ctz((unsigned) step->target_mask));
+    const int held = mux_type >= 0 && (mask & BIT(mux_type)) != 0;
+    return step->if_negate ? !held : held;
+}
+
+static uint16_t drive_macro(const int port, const int s, const int macro_index, const int raw_held, const uint64_t mask) {
     const int press_edge = raw_held && !macro_held_prev[port][s];
     macro_held_prev[port][s] = raw_held;
 
@@ -65,24 +83,90 @@ static uint16_t drive_macro(const int port, const int s, const int macro_index, 
     if (press_edge) {
         macro_playing[port][s] = 1;
         macro_step_at[port][s] = 0;
+        macro_step_repeat_at[port][s] = 0;
         macro_step_phase[port][s] = 0;
+        macro_step_holding[port][s] = 1;
+        memset(macro_loop_progress[port][s], 0, sizeof(macro_loop_progress[port][s]));
     }
 
     if (!macro_playing[port][s]) return 0;
 
+    for (int guard = 0; guard < MACRO_STEP_MAX * 4 && macro_playing[port][s]; guard++) {
+        const struct macro_step *control = &macro->steps[macro_step_at[port][s]];
+        if (control->kind != macro_step_goto && control->kind != macro_step_loop && control->kind != macro_step_if)
+            break;
+
+        int take_jump = control->kind == macro_step_goto;
+        if (control->kind == macro_step_loop) {
+            if (macro_loop_progress[port][s][macro_step_at[port][s]] < control->loop_count) {
+                macro_loop_progress[port][s][macro_step_at[port][s]]++;
+                take_jump = 1;
+            } else {
+                macro_loop_progress[port][s][macro_step_at[port][s]] = 0;
+            }
+        } else if (control->kind == macro_step_if) {
+            take_jump = if_condition_true(control, port, s, mask);
+        }
+
+        if (take_jump) {
+            macro_step_at[port][s] = control->jump_target;
+        } else {
+            macro_step_at[port][s]++;
+            if (macro_step_at[port][s] >= macro->step_count) {
+                macro_step_at[port][s] = 0;
+                macro_playing[port][s] = 0;
+                break;
+            }
+        }
+
+        macro_step_repeat_at[port][s] = 0;
+        macro_step_phase[port][s] = 0;
+        macro_step_holding[port][s] = 1;
+    }
+
+    if (macro_playing[port][s]) {
+        const struct macro_step *landed = &macro->steps[macro_step_at[port][s]];
+        if (landed->kind != macro_step_button) {
+            macro_playing[port][s] = 0;
+            macro_step_at[port][s] = 0;
+        }
+    }
+
+    if (!macro_playing[port][s]) return 0;
+
+    const double fps = core_get_target_fps();
     const struct macro_step *step = &macro->steps[macro_step_at[port][s]];
-    const int rate = step->hz_rate;
-    const uint32_t duration = (uint32_t) (rate > 0 && rate <= 3 ? turbo_period[rate] : MACRO_STEP_DEFAULT_FRAMES);
-    const uint16_t bit_out = (uint16_t) (step->target_mask & 0xFFFF);
+
+    uint32_t hold_frames = ms_to_frames(step->hold_ms, fps);
+    if (hold_frames < 1) hold_frames = 1;
+
+    uint32_t wait_frames = ms_to_frames(step->wait_ms, fps);
+    if (wait_frames < 1) wait_frames = 1;
+
+    const uint16_t bit_out = macro_step_holding[port][s] ? (uint16_t) (step->target_mask & 0xFFFF) : 0;
+    const uint32_t current_target = macro_step_holding[port][s] ? hold_frames : wait_frames;
 
     macro_step_phase[port][s]++;
-    if (macro_step_phase[port][s] >= duration) {
+    if (macro_step_phase[port][s] >= current_target) {
         macro_step_phase[port][s] = 0;
-        macro_step_at[port][s]++;
 
-        if (macro_step_at[port][s] >= macro->step_count) {
-            macro_step_at[port][s] = 0;
-            macro_playing[port][s] = 0;
+        if (!macro_step_holding[port][s]) {
+            macro_step_holding[port][s] = 1;
+        } else {
+            macro_step_repeat_at[port][s]++;
+
+            if (macro_step_repeat_at[port][s] >= step->repeat) {
+                macro_step_repeat_at[port][s] = 0;
+                macro_step_at[port][s]++;
+                macro_step_holding[port][s] = 1;
+
+                if (macro_step_at[port][s] >= macro->step_count) {
+                    macro_step_at[port][s] = 0;
+                    macro_playing[port][s] = 0;
+                }
+            } else {
+                macro_step_holding[port][s] = 0;
+            }
         }
     }
 
@@ -91,13 +175,14 @@ static uint16_t drive_macro(const int port, const int s, const int macro_index, 
 
 static uint16_t build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress) {
     uint16_t out = 0;
+    const double fps = core_get_target_fps();
 
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
 
         const int macro_index = session_settings.port_source_macro[port][s];
         if (macro_index >= 0) {
-            out |= drive_macro(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress));
+            out |= drive_macro(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress), mask);
             continue;
         }
 
@@ -117,8 +202,9 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
                     turbo_phase[port][s]++;
                 }
 
-                const int period = turbo_period[rate];
-                held = turbo_phase[port][s] % (uint32_t) period < (uint32_t) (period / 2);
+                uint32_t period = ms_to_frames(rate, fps);
+                if (period < 2) period = 2;
+                held = turbo_phase[port][s] % period < period / 2;
             } else {
                 turbo_phase[port][s] = 0;
             }
@@ -246,7 +332,6 @@ static void resolve_port_assignments_cached(void) {
 
 static void input_bridge_build_snapshot(void) {
     resolve_port_assignments_cached();
-    refresh_turbo_periods();
 
     int ports_changed = 0;
 
@@ -293,10 +378,10 @@ static void input_bridge_build_snapshot(void) {
 
 void input_bridge_begin_run(void) {
     input_epoch++;
-    input_polled_epoch = (unsigned) -1;
 
     mux_input_poll();
     input_bridge_build_snapshot();
+    input_polled_epoch = input_epoch;
 }
 
 void mux_retro_input_poll_cb(void) {

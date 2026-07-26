@@ -5,7 +5,7 @@
 #include "libretro.h"
 
 struct core_cbs {
-    bool initialized;
+    bool initialised;
     void *handle;
 
     bool need_fullpath;

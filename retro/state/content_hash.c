@@ -13,8 +13,9 @@
 
 #define HASH_READ_CHUNK 65536
 
-static volatile int hash_running = 0;
-static volatile int hash_ready = 0;
+static pthread_mutex_t hash_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int hash_running = 0;
+static int hash_ready = 0;
 static char hash_result[16] = "";
 static char hash_active_path[PATH_MAX] = "";
 
@@ -35,7 +36,7 @@ static void set_cache_path(const char *content_path) {
     create_directories(cache_path, 1);
 }
 
-static int cache_read(const long long size, const long long mtime, char *out, const size_t out_size) {
+static int cache_read(const long long size, const long long mtime, char *out) {
     mini_t *ini = mini_try_load(cache_path);
     if (!ini) return 0;
 
@@ -45,7 +46,7 @@ static int cache_read(const long long size, const long long mtime, char *out, co
 
     int ok = 0;
     if (cached_size == size && cached_mtime == mtime && *cached_crc) {
-        snprintf(out, out_size, "%s", cached_crc);
+        snprintf(out, 16, "%s", cached_crc);
         ok = 1;
     }
 
@@ -67,9 +68,11 @@ static void cache_write(const long long size, const long long mtime, const char 
 }
 
 static void finish(const char *path, const char *result) {
+    pthread_mutex_lock(&hash_mutex);
     snprintf(hash_result, sizeof(hash_result), "%s", result);
     hash_ready = 1;
     hash_running = 0;
+    pthread_mutex_unlock(&hash_mutex);
     free((void *) path);
 }
 
@@ -83,7 +86,7 @@ static void *compute_thread(void *arg) {
     }
 
     char cached[16];
-    if (cache_read(st.st_size, st.st_mtime, cached, sizeof(cached))) {
+    if (cache_read(st.st_size, st.st_mtime, cached)) {
         finish(path, cached);
         return NULL;
     }
@@ -113,37 +116,49 @@ static void *compute_thread(void *arg) {
 }
 
 void content_hash_request(const char *content_path) {
-    if (hash_running) return;
-    if (hash_ready && strcmp(hash_active_path, content_path) == 0) return;
+    pthread_mutex_lock(&hash_mutex);
+    const int running = hash_running;
+    const int already_ready = hash_ready && strcmp(hash_active_path, content_path) == 0;
+    pthread_mutex_unlock(&hash_mutex);
+    if (running || already_ready) return;
 
     set_cache_path(content_path);
 
     snprintf(hash_active_path, sizeof(hash_active_path), "%s", content_path);
-    hash_ready = 0;
-    hash_result[0] = '\0';
 
     char *path_copy = strdup(content_path);
     if (!path_copy) {
+        pthread_mutex_lock(&hash_mutex);
         snprintf(hash_result, sizeof(hash_result), "%s", lang.generic.unknown);
         hash_ready = 1;
+        pthread_mutex_unlock(&hash_mutex);
         return;
     }
 
+    pthread_mutex_lock(&hash_mutex);
+    hash_ready = 0;
+    hash_result[0] = '\0';
     hash_running = 1;
+    pthread_mutex_unlock(&hash_mutex);
 
     pthread_t tid;
     if (pthread_create(&tid, NULL, compute_thread, path_copy) != 0) {
         free(path_copy);
+        pthread_mutex_lock(&hash_mutex);
         hash_running = 0;
         snprintf(hash_result, sizeof(hash_result), "%s", lang.generic.unknown);
         hash_ready = 1;
+        pthread_mutex_unlock(&hash_mutex);
         return;
     }
     pthread_detach(tid);
 }
 
 int content_hash_is_ready(void) {
-    return hash_ready;
+    pthread_mutex_lock(&hash_mutex);
+    const int ready = hash_ready;
+    pthread_mutex_unlock(&hash_mutex);
+    return ready;
 }
 
 const char *content_hash_get(void) {

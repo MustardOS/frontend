@@ -125,6 +125,7 @@ static void capture_tick(void) {
 
         for (int i = 0; i < 16; i++) {
             const mux_input_type pressed = (mux_input_type) session_settings_source_types[i];
+            if (pressed == mux_input_b) continue;
 
             if (new_bits & BIT(pressed)) {
                 session_settings_set_source_by_button(active_port, capture_row, pressed);
