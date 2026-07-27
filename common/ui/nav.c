@@ -431,7 +431,14 @@ static void blank_overflow_rows(const lv_obj_t *panel) {
 
         // 2px grace covers row padding, hopefully it is enough!
         const int outside = y2 <= panel_area.y1 + 2 || y1 >= panel_area.y2 - 2;
-        const lv_opa_t want = outside ? LV_OPA_TRANSP : LV_OPA_COVER;
+        const int peeking = !outside && (y1 < panel_area.y1 - 2 || y2 > panel_area.y2 + 2);
+
+        lv_opa_t want = LV_OPA_COVER;
+        if (outside) {
+            want = LV_OPA_TRANSP;
+        } else if (peeking) {
+            want = theme.misc.peek_opacity;
+        }
 
         if (lv_obj_get_style_opa(child, LV_PART_MAIN) != want) {
             lv_obj_set_style_opa(child, want, MU_OBJ_MAIN_DEFAULT);

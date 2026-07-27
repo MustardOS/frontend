@@ -480,6 +480,7 @@ struct theme_config {
         } content;
         int16_t antialiasing;
         int16_t label_width;
+        int16_t peek_opacity;
     } misc;
 
     struct {
