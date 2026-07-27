@@ -727,6 +727,10 @@ static void create_content_items(void) {
         for (size_t i = 0; i < item_count && i < limit; i++) {
             gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
         }
+
+        if (item_count > limit && limit % 2 == 0) {
+            gen_peek_label(items[0].use_module, items[0].glyph_icon, items[0].display_name);
+        }
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
@@ -859,6 +863,7 @@ static void focus_initial(void) {
     if (new_item_index >= count) new_item_index = count - 1;
 
     focus_group(new_item_index);
+    list_win_update_peek(update_list_item);
 
     if (config.visual.box_art < 4) {
         image_refresh("box");
@@ -930,6 +935,7 @@ static void list_nav_move(const int steps, const int direction) {
         }
 
         if (!grid_mode_enabled) focus_group(focus_list_index());
+        if (multi_list) list_win_update_peek(update_list_item);
     }
 
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);

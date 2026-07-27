@@ -241,6 +241,12 @@ static void create_collection_items(void) {
                 gen_label(mux_module, items[i].content_type == FOLDER ? "folder" : "collection", items[i].display_name);
             }
 
+            if (item_count > limit && limit % 2 == 0) {
+                gen_peek_label(
+                    mux_module, items[0].content_type == FOLDER ? "folder" : "collection", items[0].display_name
+                );
+            }
+
             for (size_t i = 0; i < item_count; i++) {
                 if (items[i].content_type == FOLDER && strcasecmp(items[i].extra_data, prev_dir) == 0)
                     sys_index = (int) i;
@@ -289,6 +295,7 @@ static void update_list_items(const int start_index) {
 
 static void focus_initial(void) {
     list_win_focus_initial(update_list_item);
+    list_win_update_peek(update_list_item);
 
     lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].display_name);
 
@@ -334,7 +341,10 @@ static void list_nav_move(const int steps, const int direction) {
                 update_grid(direction);
             }
 
-            if (multi_list) list_win_focus_group(list_win_focus_index());
+            if (multi_list) {
+                list_win_focus_group(list_win_focus_index());
+                list_win_update_peek(update_list_item);
+            }
         }
     }
 

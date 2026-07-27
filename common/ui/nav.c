@@ -611,6 +611,22 @@ void list_win_nav_move(
     nav_moved = 1;
 }
 
+void list_win_update_peek(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)) {
+    const int count = theme.mux.item.count;
+    if ((int) item_count <= count || count % 2 != 0) return;
+
+    const int window_start = current_item_index - list_win_focus_index();
+    const int peek_index = window_start + count;
+    const int middle = window_start > 0 && peek_index < (int) item_count;
+
+    lv_obj_scroll_to_y(ui_pnl_content, middle ? theme.mux.item.panel / 2 : 0, LV_ANIM_OFF);
+
+    if (middle) {
+        const lv_obj_t *peek_panel = lv_obj_get_child(ui_pnl_content, count);
+        if (peek_panel) update_item_cb(lv_obj_get_child(peek_panel, 0), lv_obj_get_child(peek_panel, 1), peek_index);
+    }
+}
+
 void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], const int count) {
     lv_dropdown_clear_options(ui_lbl_item_drop_down);
 

@@ -169,6 +169,8 @@ void update_title(
 
 void gen_label(const char *module, const char *item_glyph, const char *item_text);
 
+void gen_peek_label(const char *module, const char *item_glyph, const char *item_text);
+
 int launch_flag(int mode, int held);
 
 void reset_ui_groups(void);

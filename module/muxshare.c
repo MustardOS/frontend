@@ -527,6 +527,19 @@ void gen_label(const char *module, const char *item_glyph, const char *item_text
     apply_text_long_dot(&theme, ui_lbl_item);
 }
 
+void gen_peek_label(const char *module, const char *item_glyph, const char *item_text) {
+    lv_obj_t *ui_pnl_item = lv_obj_create(ui_pnl_content);
+    lv_obj_t *ui_lbl_item = lv_label_create(ui_pnl_item);
+    lv_obj_t *ui_lbl_item_glyph = lv_img_create(ui_pnl_item);
+
+    apply_theme_list_panel(ui_pnl_item);
+    apply_theme_list_item(&theme, ui_lbl_item, item_text);
+    apply_theme_list_glyph(&theme, ui_lbl_item_glyph, module, item_glyph);
+
+    apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, item_text);
+    apply_text_long_dot(&theme, ui_lbl_item);
+}
+
 /* Talk about a confusing state, but here we go!
  * 0=Press A, 1=Hold A, 2=Load State, 3=Start Fresh
  */
@@ -609,15 +622,17 @@ void gen_step_movement(
             current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
         }
 
+        update_scroll_position(
+            theme.mux.item.count + count_offset, theme.mux.item.panel, ui_count_static, current_item_index,
+            ui_pnl_content
+        );
+
         nav_move(ui_group, direction);
         nav_move(ui_group_value, direction);
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
     }
 
-    update_scroll_position(
-        theme.mux.item.count + count_offset, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
-    );
     if (long_dot == 1) {
         lv_obj_update_layout(ui_pnl_content);
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
