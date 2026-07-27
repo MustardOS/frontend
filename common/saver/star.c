@@ -119,17 +119,7 @@ static void drifter_spawn(drifter_t *d, const int interior) {
     int min_dist;
     int max_dist;
 
-#define DRIFTER_RAND_INT(LIMIT)                                                                                        \
-    ((LIMIT) <= 1 ? 0 : ({                                                                                             \
-        int _limit = (LIMIT);                                                                                          \
-        int _value = 0;                                                                                                \
-        uint32_t _pick = saver_rand_range((uint32_t) _limit);                                                          \
-        while (_pick > 0U) {                                                                                           \
-            _value++;                                                                                                  \
-            _pick--;                                                                                                   \
-        }                                                                                                              \
-        _value;                                                                                                        \
-    }))
+#define DRIFTER_RAND_INT(LIMIT) ((LIMIT) <= 1 ? 0 : (int) saver_rand_range((uint32_t) (LIMIT)))
 
     if (interior) {
         min_dist = 64;
