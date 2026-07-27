@@ -205,7 +205,7 @@ void init_display(void) {
     static uint32_t disp_buf_pixels = 0;
     static int disp_buf_double = -1;
 
-    if (__builtin_expect(disp_buf_size != disp_buf_pixels || double_buffer != disp_buf_double, 0)) {
+    if (disp_buf_size != disp_buf_pixels || double_buffer != disp_buf_double) {
         free(disp_buf_s1);
         free(disp_buf_s2);
 
