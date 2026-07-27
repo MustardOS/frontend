@@ -100,6 +100,8 @@ static void union_entry_list_free_arrays(union_entry_list *l) {
 }
 
 static int union_entry_list_push(union_entry_list *l, char *name, char *path) {
+    if (!l->names || !l->paths) return 0;
+
     if (l->count >= l->capacity) {
         const int new_cap = l->capacity * 2;
 
@@ -142,6 +144,8 @@ static size_t union_set_hash(const char *key, const size_t capacity) {
  * R -1 - alloc fail
  */
 static int union_set_insert(union_set *s, const char *name) {
+    if (!s->buckets) return -1;
+
     if (s->count * UNION_SET_LOAD_DEN >= s->capacity * UNION_SET_LOAD_NUM) {
         const size_t new_cap = s->capacity * 2;
         char **new_buckets = calloc(new_cap, sizeof(char *));
@@ -464,7 +468,11 @@ int union_collect(
             char *path = w->dir_list.paths[j];
 
             if (union_set_insert(&global_dir_set, name) == 0) {
-                union_entry_list_push(&global_dir_list, name, path);
+                if (!union_entry_list_push(&global_dir_list, name, path)) {
+                    free(name);
+                    free(path);
+                    continue;
+                }
 
                 if (merged_counts) {
                     const int idx = global_dir_list.count - 1;
@@ -495,7 +503,10 @@ int union_collect(
             char *path = w->file_list.paths[j];
 
             if (union_set_insert(&global_file_set, name) == 0) {
-                union_entry_list_push(&global_file_list, name, path);
+                if (!union_entry_list_push(&global_file_list, name, path)) {
+                    free(name);
+                    free(path);
+                }
             } else {
                 free(name);
                 free(path);

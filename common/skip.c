@@ -43,7 +43,7 @@ void free_skiplist(skip_list *sl) {
 }
 
 void add_to_skiplist(skip_list *sl, const char *dir, const char *name) {
-    if (!sl || !dir || !name) return;
+    if (!sl || !sl->buckets || !dir || !name) return;
 
     char full_path[MAX_BUFFER_SIZE];
     snprintf(full_path, sizeof(full_path), "%s/%s", dir, name);
