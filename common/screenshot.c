@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <SDL2/SDL.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
@@ -565,6 +566,52 @@ static int capture_drm(const char *path) {
     }
 
     return -1;
+}
+
+int screenshot_save_renderer(SDL_Renderer *renderer, const char *path, const screenshot_hue hue) {
+    if (!renderer || !path || !*path) return -1;
+
+    hue_red = hue.red;
+    hue_green = hue.green;
+    hue_blue = hue.blue;
+
+    int width = 0, height = 0;
+    SDL_Texture *target = SDL_GetRenderTarget(renderer);
+
+    if (target) {
+        if (SDL_QueryTexture(target, NULL, NULL, &width, &height) != 0) return -1;
+    } else if (SDL_GetRendererOutputSize(renderer, &width, &height) != 0) {
+        return -1;
+    }
+
+    if (width <= 0 || height <= 0) return -1;
+
+    const size_t pixel_count = (size_t) width * (size_t) height;
+    uint8_t *argb = malloc(pixel_count * 4);
+    if (!argb) return -1;
+
+    if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, argb, width * 4) != 0) {
+        free(argb);
+        return -1;
+    }
+
+    uint8_t *rgb = malloc(pixel_count * 3);
+    if (!rgb) {
+        free(argb);
+        return -1;
+    }
+
+    for (size_t i = 0; i < pixel_count; i++) {
+        rgb[i * 3 + 0] = argb[i * 4 + 2];
+        rgb[i * 3 + 1] = argb[i * 4 + 1];
+        rgb[i * 3 + 2] = argb[i * 4 + 0];
+    }
+
+    free(argb);
+
+    const int ret = png_write(path, rgb, (uint32_t) width, (uint32_t) height);
+    free(rgb);
+    return ret;
 }
 
 int screenshot_save(const char *path, const screenshot_mode mode, const screenshot_hue hue) {

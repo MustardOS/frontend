@@ -16,6 +16,7 @@
 #include "inotify.h"
 #include "fileio.h"
 #include "saver.h"
+#include "screenshot.h"
 #include "video.h"
 #include "saver/dvd.h"
 #include "saver/star.h"
@@ -227,10 +228,8 @@ enum {
 static char video_saver_path[MAX_BUFFER_SIZE];
 static char video_saver_prev_path[MAX_BUFFER_SIZE];
 static int video_saver_running = 0;
-static saver_state_t video_saver_base;
-
-static int saver_speed_override = 0;
 static int active_saver = -1;
+static saver_state_t video_saver_base;
 
 static int saver_active(void) {
     if (active_saver == saver_type_bsod) return bsod_active();
@@ -882,15 +881,16 @@ void preview_saver(const int type, const int speed) {
 }
 
 static int ui_layer_hidden = 0;
+static int composite_suppressed = 0;
 
 void display_set_ui_hidden(const int hidden) {
     ui_layer_hidden = hidden;
 }
 
-void display_composite_frame(void) {
+static void composite_to(SDL_Texture *target, const int present) {
     if (!monitor.renderer || !monitor.texture) return;
 
-    SDL_SetRenderTarget(monitor.renderer, NULL);
+    SDL_SetRenderTarget(monitor.renderer, target);
 
     const int animating = anim_is_active();
     const int anim_fg = animating && anim_is_foreground();
@@ -981,6 +981,7 @@ void display_composite_frame(void) {
         SDL_RenderFillRect(monitor.renderer, NULL);
     }
 
+    if (!present) return;
     SDL_RenderPresent(monitor.renderer);
 
     if (hard_sync_query_fn && hard_sync_query_fn()) {
@@ -990,6 +991,48 @@ void display_composite_frame(void) {
     }
 
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+}
+
+void display_composite_frame(void) {
+    composite_to(NULL, 1);
+}
+
+void display_set_composite_suppressed(const int suppressed) {
+    composite_suppressed = suppressed;
+}
+
+int display_capture_clean_frame(const char *path) {
+    if (!monitor.renderer || !monitor.texture) return -1;
+
+    static SDL_Texture *capture_tex = NULL;
+    static int capture_w = 0;
+    static int capture_h = 0;
+
+    if (!capture_tex || capture_w != device.screen.width || capture_h != device.screen.height) {
+        if (capture_tex) SDL_DestroyTexture(capture_tex);
+
+        capture_tex = SDL_CreateTexture(
+            monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.screen.width,
+            device.screen.height
+        );
+
+        if (!capture_tex) {
+            capture_w = 0;
+            capture_h = 0;
+            LOG_ERROR("video", "Failed to create capture texture: %s", SDL_GetError());
+            return -1;
+        }
+
+        SDL_SetTextureBlendMode(capture_tex, SDL_BLENDMODE_NONE);
+        capture_w = device.screen.width;
+        capture_h = device.screen.height;
+    }
+
+    composite_to(capture_tex, 0);
+    const int ret = screenshot_save_renderer(monitor.renderer, path, (screenshot_hue) {0, 0, 0});
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+
+    return ret;
 }
 
 void display_check_idle_saver(void) {
@@ -1049,7 +1092,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 
     display_check_idle_saver();
 
-    display_composite_frame();
+    if (!composite_suppressed) display_composite_frame();
     lv_disp_flush_ready(disp_drv);
 }
 
