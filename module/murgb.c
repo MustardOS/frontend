@@ -644,6 +644,9 @@ static int dispatch_restore(void) {
         PUSH_ZONE(st.col_shl2, st.bright_shl2);
         PUSH_ZONE(st.col_shr2, st.bright_shr2);
         PUSH_ZONE(st.col_shr1, st.bright_shr1);
+    } else if (use == be_serial) {
+        PUSH_ZONE(st.col_r, st.bright_r);
+        PUSH_ZONE(st.col_l, st.bright_l);
     } else {
         PUSH_ZONE(st.col_l, st.bright_l);
         PUSH_ZONE(st.col_r, st.bright_r);
@@ -882,7 +885,11 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
     const int lg = clamp(parse_int(argv[1], "G"), MCU_BRI);
     const int lb = clamp(parse_int(argv[2], "B"), MCU_BRI);
 
-    const int enabled = lr || lg || lb;
+    const int lr2 = argc >= 6 ? clamp(parse_int(argv[3], "R2"), MCU_BRI) : lr;
+    const int lg2 = argc >= 6 ? clamp(parse_int(argv[4], "G2"), MCU_BRI) : lg;
+    const int lb2 = argc >= 6 ? clamp(parse_int(argv[5], "B2"), MCU_BRI) : lb;
+
+    const int enabled = lr || lg || lb || lr2 || lg2 || lb2;
 
     if (!enabled) {
         joypad_write_int("led_switch", 0);
@@ -900,10 +907,6 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
     joypad_write_int("Led_rgb_r1", lr);
     joypad_write_int("Led_rgb_g1", lg);
     joypad_write_int("Led_rgb_b1", lb);
-
-    const int lr2 = argc >= 6 ? clamp(parse_int(argv[3], "R2"), MCU_BRI) : lr;
-    const int lg2 = argc >= 6 ? clamp(parse_int(argv[4], "G2"), MCU_BRI) : lg;
-    const int lb2 = argc >= 6 ? clamp(parse_int(argv[5], "B2"), MCU_BRI) : lb;
 
     joypad_write_int("Led_rgb_r2", lr2);
     joypad_write_int("Led_rgb_g2", lg2);
