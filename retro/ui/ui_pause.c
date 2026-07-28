@@ -7,7 +7,6 @@
 #include "../../common/input.h"
 #include "../../common/log.h"
 #include "../../common/options.h"
-#include "../../common/screenshot.h"
 #include "../../common/theme.h"
 #include "../../common/ui/common.h"
 #include "../../common/ui/font.h"
@@ -509,22 +508,19 @@ void pause_menu_capture_clean_screenshot(const char *path, const int restore_vis
     if (fps_was_visible) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
 
+    // Keep the frame off the screen so the markers do not blink
+    display_set_composite_suppressed(1);
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
-    display_composite_frame();
-
-    screenshot_save(path, screenshot_auto, (screenshot_hue) {0, 0, 0});
+    display_capture_clean_frame(path);
+    display_set_composite_suppressed(0);
 
     if (!restore_visibility) return;
 
     if (fps_was_visible) lv_obj_clear_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
 
-    if (fps_was_visible || header_was_visible) {
-        lv_obj_invalidate(ui_screen);
-        lv_refr_now(NULL);
-        display_composite_frame();
-    }
+    if (fps_was_visible || header_was_visible) lv_obj_invalidate(ui_screen);
 }
 
 void pause_menu_toggle(void) {

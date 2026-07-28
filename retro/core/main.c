@@ -186,9 +186,8 @@ static void run_core_batch(const unsigned frames) {
     hw_render_bridge_context_save();
 
     for (unsigned i = 0; i < frames; i++) {
-        const int is_last = i + 1 == frames;
+        const int is_last = i + 1 == frames || environment_av_info_pending();
 
-        video_bridge_set_frame_skip(!is_last);
         if (is_last) frame_pacer_maybe_wait();
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
@@ -202,6 +201,8 @@ static void run_core_batch(const unsigned frames) {
         core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
 
         audio_bridge_flush_sample_fifo();
+
+        if (is_last) break;
     }
 
     hw_render_bridge_context_restore();
@@ -493,7 +494,10 @@ int main(const int argc, char *argv[]) {
             } else if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_bridge_is_active()
                        && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
-                if (core_run_ema_ms > 0.0) {
+
+                if (hw_render_bridge_active()) {
+                    extra = 0;
+                } else if (core_run_ema_ms > 0.0) {
                     const double headroom = 1000.0 / target_fps / core_run_ema_ms - 1.0;
                     if (headroom <= 0.0) {
                         extra = 0;
@@ -501,6 +505,7 @@ int main(const int argc, char *argv[]) {
                         extra = (unsigned) headroom;
                     }
                 }
+
                 frames = 1 + extra;
             }
 

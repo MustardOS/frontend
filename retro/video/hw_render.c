@@ -522,6 +522,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
     const int first_time = fbo == 0;
     hw_render_bridge_context_save();
 
+    if (!first_time && context_ready && core_context_destroy) core_context_destroy();
     destroy_target();
 
     p_glGenTextures(1, &colour_tex);
@@ -578,10 +579,9 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     ensure_program();
 
-    if (first_time) {
-        context_ready = 1;
-        if (core_context_reset) core_context_reset();
-    }
+    // Tell the core to rebuild against the new framebuffer, not just the first time we make one!
+    context_ready = 1;
+    if (core_context_reset) core_context_reset();
 
     hw_render_bridge_context_restore();
 }

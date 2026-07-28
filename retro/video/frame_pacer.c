@@ -71,9 +71,7 @@ static void frame_pacer_begin_measure(void) {
     measuring = 1;
 }
 
-void frame_pacer_maybe_wait(void) {
-    frame_pacer_begin_measure();
-
+static void frame_pacer_wait(void) {
     if (session_settings.frame_delay_ms == FRAME_DELAY_OFF) return;
     if (session_settings.fps_limit != fps_limit_60) return;
     if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) return;
@@ -106,6 +104,14 @@ void frame_pacer_maybe_wait(void) {
     if (coarse_ns > 1000000) SDL_Delay((uint32_t) (coarse_ns / 1000000));
     while (perf_ns(SDL_GetPerformanceCounter() - start) < (double) sleep_ns) {
     }
+}
+
+void frame_pacer_maybe_wait(void) {
+    frame_pacer_wait();
+
+    // Started after the wait so the delay we just chose is not counted as frame work,
+    // this essentially stops any weird stalling on fast forward toggling!
+    frame_pacer_begin_measure();
 }
 
 void frame_pacer_after_present(void) {
