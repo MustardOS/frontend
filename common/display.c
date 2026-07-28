@@ -78,6 +78,10 @@ SDL_Renderer *display_get_renderer(void) {
     return monitor.renderer;
 }
 
+SDL_Window *display_get_window(void) {
+    return monitor.window;
+}
+
 SDL_Texture *display_get_shadow_layer(void) {
     return monitor.shadow_layer;
 }

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "../core/libretro.h"
 
-#define OPTIONS_MAX            64
+#define OPTIONS_MAX            256
 #define OPTIONS_MAX_VALUES     32
 #define OPTIONS_MAX_CATEGORIES 32
 

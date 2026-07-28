@@ -23,6 +23,8 @@ void display_set_ui_hidden(int hidden);
 
 SDL_Renderer *display_get_renderer(void);
 
+SDL_Window *display_get_window(void);
+
 SDL_Texture *display_get_shadow_layer(void);
 
 typedef void (*display_overlay_fn)(SDL_Renderer *r);

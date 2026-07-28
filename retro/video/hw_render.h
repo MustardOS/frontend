@@ -8,6 +8,8 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb);
 
 int hw_render_bridge_active(void);
 
+const char *hw_render_bridge_description(void);
+
 void hw_render_bridge_configure(unsigned max_width, unsigned max_height);
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void);
@@ -23,6 +25,10 @@ void hw_render_bridge_context_restore(void);
 void hw_render_bridge_enter_core_call(void);
 
 void hw_render_bridge_exit_core_call(void);
+
+void hw_render_bridge_yield_to_ui(void);
+
+void hw_render_bridge_resume_core(void);
 
 void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, const SDL_Rect *src_rect);
 

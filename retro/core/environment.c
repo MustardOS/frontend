@@ -17,6 +17,18 @@
 
 static enum retro_pixel_format pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
 
+#define MUX_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB 0x800003
+
+static bool clear_all_thread_waits(const unsigned clear, void *data) {
+    (void) clear;
+    (void) data;
+
+    return true;
+}
+
+static struct retro_disk_control_callback disk_control_storage;
+static struct retro_disk_control_ext_callback disk_control_ext_storage;
+
 static const struct retro_disk_control_callback *disk_control_cb = NULL;
 static const struct retro_disk_control_ext_callback *disk_control_ext_cb = NULL;
 
@@ -177,7 +189,13 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
 
         case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE: {
-            disk_control_cb = (const struct retro_disk_control_callback *) data;
+            if (!data) {
+                disk_control_cb = NULL;
+                return true;
+            }
+
+            disk_control_storage = *(const struct retro_disk_control_callback *) data;
+            disk_control_cb = &disk_control_storage;
             return true;
         }
 
@@ -187,7 +205,13 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE: {
-            disk_control_ext_cb = (const struct retro_disk_control_ext_callback *) data;
+            if (!data) {
+                disk_control_ext_cb = NULL;
+                return true;
+            }
+
+            disk_control_ext_storage = *(const struct retro_disk_control_ext_callback *) data;
+            disk_control_ext_cb = &disk_control_ext_storage;
             return true;
         }
 
@@ -299,6 +323,13 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
+        case MUX_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB: {
+            if (!data) return false;
+
+            *(retro_environment_t *) data = clear_all_thread_waits;
+            return true;
+        }
+
         case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
             struct retro_throttle_state *throttle = data;
             if (throttle) {
@@ -340,6 +371,10 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 void environment_apply_pending_av_info(void) {
     if (!av_info_pending) return;
     av_info_pending = 0;
+
+    if (hw_render_bridge_active()) {
+        hw_render_bridge_configure(pending_av_info.geometry.max_width, pending_av_info.geometry.max_height);
+    }
 
     video_bridge_set_geometry(
         pending_av_info.geometry.base_width, pending_av_info.geometry.base_height, pending_av_info.geometry.aspect_ratio

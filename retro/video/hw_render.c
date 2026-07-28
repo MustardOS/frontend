@@ -1,5 +1,8 @@
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 #include <GLES2/gl2.h>
+#include "../../common/display.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
@@ -100,6 +103,8 @@ static void(GL_APIENTRY *p_glTexImage2D)(
     GLenum type, const void *pixels
 ) = NULL;
 static void(GL_APIENTRY *p_glTexParameteri)(GLenum target, GLenum pname, GLint param) = NULL;
+static GLboolean(GL_APIENTRY *p_glIsTexture)(GLuint texture) = NULL;
+static const GLubyte *(GL_APIENTRY *p_glGetString)(GLenum name) = NULL;
 
 static int gl_funcs_ready = 0;
 
@@ -170,6 +175,8 @@ static int load_gl_functions(void) {
     LOAD_GL(glBindTexture);
     LOAD_GL(glTexImage2D);
     LOAD_GL(glTexParameteri);
+    LOAD_GL(glIsTexture);
+    LOAD_GL(glGetString);
 
 #undef LOAD_GL
 
@@ -203,22 +210,215 @@ static SDL_Texture *filter_src_tex = NULL;
 static int filter_src_w = 0;
 static int filter_src_h = 0;
 
+static SDL_Window *gl_window = NULL;
+static SDL_GLContext sdl_ctx = NULL;
+static SDL_GLContext core_ctx = NULL;
+
+static int owns_context(void) {
+    return core_ctx != NULL;
+}
+
+static const char *profile_name(const int profile) {
+    return profile == SDL_GL_CONTEXT_PROFILE_ES ? "GLES" : profile == SDL_GL_CONTEXT_PROFILE_CORE ? "GL core" : "GL";
+}
+
+#ifndef GL_CONTEXT_PROFILE_MASK
+#define GL_CONTEXT_PROFILE_MASK 0x9126
+#endif
+#ifndef GL_CONTEXT_CORE_PROFILE_BIT
+#define GL_CONTEXT_CORE_PROFILE_BIT 0x00000001
+#endif
+
+static int current_context_is(const int profile, const int major, const int minor) {
+    const char *version = (const char *) p_glGetString(GL_VERSION);
+    if (!version) return 0;
+
+    const int is_es = strncmp(version, "OpenGL ES", 9) == 0;
+    if (is_es != (profile == SDL_GL_CONTEXT_PROFILE_ES)) return 0;
+
+    const char *digits = version;
+    while (*digits && (*digits < '0' || *digits > '9'))
+        digits++;
+
+    int have_major = 0, have_minor = 0;
+    if (sscanf(digits, "%d.%d", &have_major, &have_minor) != 2) return 0;
+
+    if (have_major != major) {
+        if (have_major < major) return 0;
+    } else if (have_minor < minor) {
+        return 0;
+    }
+
+    if (profile == SDL_GL_CONTEXT_PROFILE_CORE) {
+        if (have_major < 3 || (have_major == 3 && have_minor < 2)) return 0;
+
+        GLint mask = 0;
+        p_glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
+
+        return (mask & GL_CONTEXT_CORE_PROFILE_BIT) != 0;
+    }
+
+    return 1;
+}
+
+static int create_shared_context(const int profile, const int major, const int minor) {
+    gl_window = display_get_window();
+    if (!gl_window) return 0;
+
+    sdl_ctx = SDL_GL_GetCurrentContext();
+    if (!sdl_ctx) return 0;
+
+    int was_share = 0, was_profile = 0, was_major = 0, was_minor = 0;
+    SDL_GL_GetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, &was_share);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &was_profile);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &was_major);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &was_minor);
+
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profile);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
+
+    core_ctx = SDL_GL_CreateContext(gl_window);
+
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, was_share);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, was_profile);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, was_major);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, was_minor);
+
+    if (!core_ctx) {
+        LOG_WARN(
+            mux_module, "hw_render: no shared %s %d.%d context (%s)", profile_name(profile), major, minor,
+            SDL_GetError()
+        );
+        SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+        return 0;
+    }
+
+    /* SDL_GL_CreateContext leaves the new context current - the UI needs its own back */
+    SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+    return 1;
+}
+
+static void destroy_shared_context(void) {
+    if (!core_ctx) return;
+
+    if (gl_window && sdl_ctx) SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+
+    SDL_GL_DeleteContext(core_ctx);
+    core_ctx = NULL;
+}
+
+static int shared_context_usable(const int profile, const int major, const int minor) {
+    SDL_GL_MakeCurrent(gl_window, core_ctx);
+
+    if (!current_context_is(profile, major, minor)) {
+        const char *got = (const char *) p_glGetString(GL_VERSION);
+        LOG_WARN(
+            mux_module, "hw_render: asked for %s %d.%d, driver gave '%s'", profile_name(profile), major, minor,
+            got ? got : "unknown"
+        );
+        SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+        return 0;
+    }
+
+    GLuint probe = 0;
+    p_glGenTextures(1, &probe);
+    if (probe) {
+        p_glBindTexture(GL_TEXTURE_2D, probe);
+        p_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        p_glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+    const int visible = probe != 0 && p_glIsTexture(probe);
+
+    SDL_GL_MakeCurrent(gl_window, core_ctx);
+    if (probe) p_glDeleteTextures(1, &probe);
+    SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+
+    if (!visible) LOG_WARN(mux_module, "hw_render: %s context is not sharing objects", profile_name(profile));
+
+    return visible;
+}
+
+static char backend_desc[64] = "";
+
 int hw_render_bridge_active(void) {
     return active;
+}
+
+const char *hw_render_bridge_description(void) {
+    return active && backend_desc[0] ? backend_desc : NULL;
+}
+
+static int context_requirements(
+    const struct retro_hw_render_callback *cb, int *profile, int *major, int *minor, const char **label
+) {
+    switch (cb->context_type) {
+        case RETRO_HW_CONTEXT_OPENGLES2:
+            *profile = SDL_GL_CONTEXT_PROFILE_ES;
+            *major = 2;
+            *minor = 0;
+            *label = "GLES2";
+            return 1;
+        case RETRO_HW_CONTEXT_OPENGLES3:
+            *profile = SDL_GL_CONTEXT_PROFILE_ES;
+            *major = 3;
+            *minor = 0;
+            *label = "GLES3";
+            return 1;
+        case RETRO_HW_CONTEXT_OPENGLES_VERSION:
+            *profile = SDL_GL_CONTEXT_PROFILE_ES;
+            *major = cb->version_major > 0 ? (int) cb->version_major : 3;
+            *minor = (int) cb->version_minor;
+            *label = "GLES";
+            return 1;
+        case RETRO_HW_CONTEXT_OPENGL:
+            *profile = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+            *major = cb->version_major > 0 ? (int) cb->version_major : 2;
+            *minor = (int) cb->version_minor;
+            *label = "GL";
+            return 1;
+        case RETRO_HW_CONTEXT_OPENGL_CORE:
+            *profile = SDL_GL_CONTEXT_PROFILE_CORE;
+            *major = cb->version_major > 0 ? (int) cb->version_major : 3;
+            *minor = (int) cb->version_minor;
+            *label = "GL core";
+            return 1;
+        default:
+            return 0;
+    }
 }
 
 int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
     if (!cb) return 0;
 
-    if (cb->context_type != RETRO_HW_CONTEXT_OPENGLES2) {
+    int profile = 0, major = 0, minor = 0;
+    const char *label = NULL;
+
+    if (!context_requirements(cb, &profile, &major, &minor, &label)) {
         LOG_WARN(
-            mux_module, "hw_render: core requested unsupported context type %d (only GLES2 is available)",
-            (int) cb->context_type
+            mux_module, "hw_render: core requested context type %d, which has no GL mapping", (int) cb->context_type
         );
         return 0;
     }
 
     if (!load_gl_functions()) return 0;
+
+    if (!create_shared_context(profile, major, minor) || !shared_context_usable(profile, major, minor)) {
+        destroy_shared_context();
+
+        if (cb->context_type != RETRO_HW_CONTEXT_OPENGLES2 || !current_context_is(profile, major, minor)) {
+            LOG_WARN(
+                mux_module, "hw_render: cannot provide %s %d.%d - core will fall back to software rendering", label,
+                major, minor
+            );
+            return 0;
+        }
+
+        LOG_INFO(mux_module, "hw_render: no context of our own, sharing the UI's for %s", label);
+    }
 
     core_context_reset = cb->context_reset;
     core_context_destroy = cb->context_destroy;
@@ -231,9 +431,14 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
     cb->get_proc_address = hw_render_bridge_get_proc_address;
 
     active = 1;
+    snprintf(
+        backend_desc, sizeof(backend_desc), "%s %d.%d (%s)", label, major, minor,
+        owns_context() ? "dedicated" : "shared"
+    );
+
     LOG_INFO(
-        mux_module, "hw_render: accepted GLES2 hardware-render request (depth=%d stencil=%d bottom_left_origin=%d)",
-        want_depth, want_stencil, cb->bottom_left_origin
+        mux_module, "hw_render: accepted %s request as %s (depth=%d stencil=%d bottom_left_origin=%d)", label,
+        backend_desc, want_depth, want_stencil, cb->bottom_left_origin
     );
     return 1;
 }
@@ -530,28 +735,66 @@ static void gl_state_apply(const gl_host_state_t *s) {
     }
 }
 
-void hw_render_bridge_context_save(void) {
-    if (!active || !gl_funcs_ready) return;
-    gl_state_capture(&sdl_state);
-}
+static void enter_core_gl(void) {
+    if (owns_context()) {
+        SDL_GL_MakeCurrent(gl_window, core_ctx);
+        return;
+    }
 
-void hw_render_bridge_context_restore(void) {
-    if (!active || !gl_funcs_ready || !sdl_state.valid) return;
-
-    gl_state_capture(&core_state);
-    gl_state_apply(&sdl_state);
-}
-
-void hw_render_bridge_enter_core_call(void) {
-    if (!active || !gl_funcs_ready) return;
     gl_state_capture(&sdl_state);
     gl_state_apply(&core_state);
 }
 
-void hw_render_bridge_exit_core_call(void) {
-    if (!active || !gl_funcs_ready || !sdl_state.valid) return;
+static void leave_core_gl(void) {
+    if (owns_context()) {
+        SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+        return;
+    }
+
+    if (!sdl_state.valid) return;
+
     gl_state_capture(&core_state);
     gl_state_apply(&sdl_state);
+}
+
+void hw_render_bridge_context_save(void) {
+    if (!active || !gl_funcs_ready) return;
+
+    if (owns_context()) {
+        SDL_GL_MakeCurrent(gl_window, core_ctx);
+        return;
+    }
+
+    gl_state_capture(&sdl_state);
+}
+
+void hw_render_bridge_context_restore(void) {
+    if (!active || !gl_funcs_ready) return;
+    if (!owns_context() && !sdl_state.valid) return;
+
+    leave_core_gl();
+}
+
+void hw_render_bridge_yield_to_ui(void) {
+    if (!active || !gl_funcs_ready || !owns_context()) return;
+    SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+}
+
+void hw_render_bridge_resume_core(void) {
+    if (!active || !gl_funcs_ready || !owns_context()) return;
+    SDL_GL_MakeCurrent(gl_window, core_ctx);
+}
+
+void hw_render_bridge_enter_core_call(void) {
+    if (!active || !gl_funcs_ready) return;
+    enter_core_gl();
+}
+
+void hw_render_bridge_exit_core_call(void) {
+    if (!active || !gl_funcs_ready) return;
+    if (!owns_context() && !sdl_state.valid) return;
+
+    leave_core_gl();
 }
 
 static void draw_hw_quad(
@@ -653,13 +896,18 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
     const float u_max = target_w > 0 ? (float) frame_valid_w / (float) target_w : 1.0f;
     const float v_max = target_h > 0 ? (float) frame_valid_h / (float) target_h : 1.0f;
 
+    const float du = target_w > 0 ? 0.5f / (float) target_w : 0.0f;
+    const float dv = target_h > 0 ? 0.5f / (float) target_h : 0.0f;
+
     if (colour_pass_needed() && ensure_filter_src(renderer)) {
         SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
         if (SDL_SetRenderTarget(renderer, filter_src_tex) == 0) {
-            const float v_at_top = flip_needed ? 0.0f : v_max;
-            const float v_at_bottom = flip_needed ? v_max : 0.0f;
+            const float v_at_top = flip_needed ? dv : v_max - dv;
+            const float v_at_bottom = flip_needed ? v_max - dv : dv;
 
-            draw_hw_quad(-1.0f, 1.0f, 1.0f, -1.0f, 0.0f, u_max, v_at_top, v_at_bottom, filter_src_w, filter_src_h, 1);
+            draw_hw_quad(
+                -1.0f, 1.0f, -1.0f, 1.0f, du, u_max - du, v_at_top, v_at_bottom, filter_src_w, filter_src_h, 1
+            );
             SDL_SetRenderTarget(renderer, prev_target);
 
             colour_render_pass(renderer, filter_src_tex, src_rect, dest_rect);
@@ -679,8 +927,14 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
 
     const float ndc_left = ((float) dest_rect->x / (float) out_w) * 2.0f - 1.0f;
     const float ndc_right = ((float) (dest_rect->x + dest_rect->w) / (float) out_w) * 2.0f - 1.0f;
-    const float ndc_top = 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
-    const float ndc_bottom = 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
+
+    float ndc_top = 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
+    float ndc_bottom = 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
+
+    if (cur_target) {
+        ndc_top = -ndc_top;
+        ndc_bottom = -ndc_bottom;
+    }
 
     float u0 = 0.0f, u1 = u_max, v0 = 0.0f, v1 = v_max;
     if (src_rect) {
@@ -690,6 +944,11 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
         v1 = (float) (src_rect->y + src_rect->h) / (float) target_h;
     }
 
+    u0 += du;
+    u1 -= du;
+    v0 += dv;
+    v1 -= dv;
+
     const float v_at_top = flip_needed ? v_max - v0 : v0;
     const float v_at_bottom = flip_needed ? v_max - v1 : v1;
 
@@ -698,6 +957,7 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
 
 void hw_render_bridge_shutdown(void) {
     if (!gl_funcs_ready) {
+        destroy_shared_context();
         active = 0;
         context_ready = 0;
         return;
@@ -709,14 +969,9 @@ void hw_render_bridge_shutdown(void) {
         hw_render_bridge_exit_core_call();
     }
 
-    destroy_target();
+    if (active) enter_core_gl();
 
-    if (filter_src_tex) {
-        SDL_DestroyTexture(filter_src_tex);
-        filter_src_tex = NULL;
-    }
-    filter_src_w = 0;
-    filter_src_h = 0;
+    destroy_target();
 
     if (prog) {
         p_glDeleteProgram(prog);
@@ -725,9 +980,21 @@ void hw_render_bridge_shutdown(void) {
     prog_ready = 0;
     a_pos = a_uv = u_tex = u_swap = -1;
 
+    if (active) leave_core_gl();
+
+    if (filter_src_tex) {
+        SDL_DestroyTexture(filter_src_tex);
+        filter_src_tex = NULL;
+    }
+    filter_src_w = 0;
+    filter_src_h = 0;
+
     core_context_reset = NULL;
     core_context_destroy = NULL;
 
+    destroy_shared_context();
+
+    backend_desc[0] = '\0';
     active = 0;
     context_ready = 0;
 

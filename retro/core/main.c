@@ -220,9 +220,11 @@ static void run_core_batch(const unsigned frames, const int present_every) {
         audio_bridge_flush_sample_fifo();
 
         if (should_present && !is_last) {
+            hw_render_bridge_yield_to_ui();
             video_bridge_flush_frame();
             lv_obj_invalidate(ui_screen);
             lv_refr_now(NULL);
+            hw_render_bridge_resume_core();
         }
     }
 

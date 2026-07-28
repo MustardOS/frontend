@@ -1644,6 +1644,8 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.information_screen.target_fps), lang_specific, "Target FPS"},
     {"muxretro", LANG_OFF(muxretro.information_screen.audio_output), lang_specific, "Audio Output"},
     {"muxretro", LANG_OFF(muxretro.information_screen.rumble_support), lang_specific, "Rumble Support"},
+    {"muxretro", LANG_OFF(muxretro.information_screen.renderer), lang_specific, "Renderer"},
+    {"muxretro", LANG_OFF(muxretro.information_screen.renderer_software), lang_specific, "Software (core)"},
     {"muxretro", LANG_OFF(muxretro.information_screen.disc_count), lang_specific, "Disc Count"},
     {"muxretro", LANG_OFF(muxretro.information_screen.direct), lang_specific, "Direct"},
     {"muxretro", LANG_OFF(muxretro.information_screen.vfs_stream), lang_specific, "VFS Stream"},

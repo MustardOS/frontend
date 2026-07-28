@@ -1,6 +1,8 @@
 #include <string.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
+#include "../../common/init.h"
+#include "../../common/log.h"
 #include "../../common/options.h"
 #include "../core/core.h"
 #include "options.h"
@@ -21,6 +23,14 @@ static int baseline_indices[OPTIONS_MAX];
 static mini_t *ovr_core = NULL;
 static mini_t *ovr_directory = NULL;
 static mini_t *ovr_content = NULL;
+
+static void warn_if_truncated(const char *dropped_key) {
+    if (!dropped_key) return;
+
+    LOG_WARN(
+        mux_module, "core options truncated at %d entries - '%s' onwards were dropped", OPTIONS_MAX, dropped_key
+    );
+}
 
 static void open_overrides(void) {
     ovr_core = core_ini_path[0] ? mini_try_load(core_ini_path) : NULL;
@@ -67,7 +77,8 @@ void options_store_v1(const struct retro_core_option_definition *defs) {
     options_reset();
     open_overrides();
 
-    for (int i = 0; defs[i].key && options_count < OPTIONS_MAX; i++) {
+    int i = 0;
+    for (; defs[i].key && options_count < OPTIONS_MAX; i++) {
         struct core_option_entry *e = &options_list[options_count];
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
         snprintf(e->label, sizeof(e->label), "%s", defs[i].desc ? defs[i].desc : defs[i].key);
@@ -89,6 +100,8 @@ void options_store_v1(const struct retro_core_option_definition *defs) {
         apply_override(e);
         options_count++;
     }
+
+    warn_if_truncated(defs[i].key);
 
     close_overrides();
     options_dirty = true;
@@ -122,7 +135,8 @@ void options_store_v2(const struct retro_core_options_v2 *opts) {
 
     const struct retro_core_option_v2_definition *defs = opts->definitions;
 
-    for (int i = 0; defs[i].key && options_count < OPTIONS_MAX; i++) {
+    int i = 0;
+    for (; defs[i].key && options_count < OPTIONS_MAX; i++) {
         struct core_option_entry *e = &options_list[options_count];
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
 
@@ -152,6 +166,8 @@ void options_store_v2(const struct retro_core_options_v2 *opts) {
         options_count++;
     }
 
+    warn_if_truncated(defs[i].key);
+
     close_overrides();
     options_dirty = true;
 }
@@ -160,7 +176,8 @@ void options_store_legacy(const struct retro_variable *vars) {
     options_reset();
     open_overrides();
 
-    for (int i = 0; vars[i].key && options_count < OPTIONS_MAX; i++) {
+    int i = 0;
+    for (; vars[i].key && options_count < OPTIONS_MAX; i++) {
         struct core_option_entry *e = &options_list[options_count];
         snprintf(e->key, sizeof(e->key), "%s", vars[i].key);
 
@@ -194,6 +211,8 @@ void options_store_legacy(const struct retro_variable *vars) {
         apply_override(e);
         options_count++;
     }
+
+    warn_if_truncated(vars[i].key);
 
     close_overrides();
     options_dirty = true;

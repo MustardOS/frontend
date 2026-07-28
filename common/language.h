@@ -1763,6 +1763,8 @@ struct mux_lang {
             char target_fps[MAX_BUFFER_SIZE];
             char audio_output[MAX_BUFFER_SIZE];
             char rumble_support[MAX_BUFFER_SIZE];
+            char renderer[MAX_BUFFER_SIZE];
+            char renderer_software[MAX_BUFFER_SIZE];
             char disc_count[MAX_BUFFER_SIZE];
             char direct[MAX_BUFFER_SIZE];
             char vfs_stream[MAX_BUFFER_SIZE];

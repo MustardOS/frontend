@@ -10,6 +10,7 @@
 #include "../core/core.h"
 #include "../input/nav_repeat.h"
 #include "../settings/settings.h"
+#include "../video/hw_render.h"
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
@@ -137,6 +138,13 @@ static void rebuild_rows(void) {
     }
     build_info_row(lang.muxretro.information_screen.display_output, display_output, "display");
 
+    // No hardware context means the core is drawing frames on the CPU itself
+    const char *renderer = hw_render_bridge_description();
+    build_info_row(
+        lang.muxretro.information_screen.renderer,
+        renderer ? renderer : lang.muxretro.information_screen.renderer_software, "videosettings"
+    );
+
     char fps[16];
     snprintf(fps, sizeof(fps), "%s", lang.generic.unknown);
     if (av_info.timing.fps > 0) snprintf(fps, sizeof(fps), "%.2f", av_info.timing.fps);
@@ -166,7 +174,7 @@ static void rebuild_rows(void) {
         build_info_row(lang.muxretro.information_screen.disc_count, discs, "disc");
     }
 
-    ui_count_static = row_offset + (disc_count > 1 ? 12 : 11);
+    ui_count_static = row_offset + (disc_count > 1 ? 13 : 12);
     first_open = 0;
 }
 
