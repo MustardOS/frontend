@@ -72,6 +72,8 @@ uint32_t audio_bridge_high_water_ms(void);
 
 void audio_bridge_wait_for_headroom(void);
 
+void audio_bridge_drc_tick(void);
+
 void audio_bridge_request_min_latency(unsigned ms);
 
 void audio_bridge_apply_pending_min_latency(void);

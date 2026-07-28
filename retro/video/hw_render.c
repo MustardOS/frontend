@@ -587,11 +587,11 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
-    return (uintptr_t) fbo;
+    return fbo;
 }
 
 retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
-    return (retro_proc_address_t) SDL_GL_GetProcAddress(sym);
+    return SDL_GL_GetProcAddress(sym);
 }
 
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
@@ -773,16 +773,6 @@ void hw_render_bridge_context_restore(void) {
     if (!owns_context() && !sdl_state.valid) return;
 
     leave_core_gl();
-}
-
-void hw_render_bridge_yield_to_ui(void) {
-    if (!active || !gl_funcs_ready || !owns_context()) return;
-    SDL_GL_MakeCurrent(gl_window, sdl_ctx);
-}
-
-void hw_render_bridge_resume_core(void) {
-    if (!active || !gl_funcs_ready || !owns_context()) return;
-    SDL_GL_MakeCurrent(gl_window, core_ctx);
 }
 
 void hw_render_bridge_enter_core_call(void) {

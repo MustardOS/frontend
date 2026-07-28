@@ -75,29 +75,30 @@ static const struct session_settings_t defaults = {
     .audio_latency_profile = audio_latency_balanced,
     .audio_period_frames = 512,
     .audio_filter = audio_filter_none,
+    .audio_rate_control = 50,
     .shimmer_fix = 0,
     .run_ahead = 0,
     .gpu_hard_sync = 0,
     .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
     .port_device_key = {"builtin", "", "", ""},
     .port_device_id = {0, 0, 0, 0},
-    .port_source_target = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {8,  0,  9,  1,  10, 11, 12, 13, 14, 15, 2,  3,
-                                                               4,  5,  6,  7,  -1, -1, -1, -1, -1, -1, -1, -1}},
+    .port_source_target = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
+                                                               4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1}},
     .port_source_macro = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {[0 ... PORT_SOURCE_COUNT - 1] = -1}},
 };
 
 // Physical control per source index
 const int session_settings_source_types[PORT_SOURCE_COUNT] = {
-    mux_input_a,        mux_input_b,         mux_input_x,         mux_input_y,        mux_input_l1,
-    mux_input_r1,       mux_input_l2,        mux_input_r2,        mux_input_l3,       mux_input_r3,
-    mux_input_select,   mux_input_start,     mux_input_dpad_up,   mux_input_dpad_down, mux_input_dpad_left,
-    mux_input_dpad_right, mux_input_ls_up,   mux_input_ls_down,   mux_input_ls_left,  mux_input_ls_right,
-    mux_input_rs_up,    mux_input_rs_down,   mux_input_rs_left,   mux_input_rs_right,
+    mux_input_a,          mux_input_b,       mux_input_x,       mux_input_y,         mux_input_l1,
+    mux_input_r1,         mux_input_l2,      mux_input_r2,      mux_input_l3,        mux_input_r3,
+    mux_input_select,     mux_input_start,   mux_input_dpad_up, mux_input_dpad_down, mux_input_dpad_left,
+    mux_input_dpad_right, mux_input_ls_up,   mux_input_ls_down, mux_input_ls_left,   mux_input_ls_right,
+    mux_input_rs_up,      mux_input_rs_down, mux_input_rs_left, mux_input_rs_right,
 };
 
 // Default core target per source index (-1 = unbound)
-static const int default_source_target[PORT_SOURCE_COUNT] = {8,  0,  9,  1,  10, 11, 12, 13, 14, 15, 2,  3,
-                                                             4,  5,  6,  7,  -1, -1, -1, -1, -1, -1, -1, -1};
+static const int default_source_target[PORT_SOURCE_COUNT] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
+                                                             4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
 
 static const int default_button_map[16] = {
     mux_input_b,       mux_input_y,         mux_input_select,    mux_input_start,
@@ -180,6 +181,10 @@ static const int sample_rate_choices[] = {0, 44100, 48000};
 
 static const int audio_period_choices[] = {128, 256, 512, 1024, 2048};
 #define AUDIO_PERIOD_CHOICE_COUNT ((int) (sizeof(audio_period_choices) / sizeof(audio_period_choices[0])))
+
+static const int audio_rate_control_choices[] = {0, 25, 50, 100, 200};
+#define AUDIO_RATE_CONTROL_CHOICE_COUNT                                                                                \
+    ((int) (sizeof(audio_rate_control_choices) / sizeof(audio_rate_control_choices[0])))
 
 static const int sram_flush_choices[] = {15, 30, 60, 90, 120, 240, 300};
 #define SRAM_FLUSH_CHOICE_COUNT ((int) (sizeof(sram_flush_choices) / sizeof(sram_flush_choices[0])))
@@ -486,6 +491,14 @@ const char *session_settings_audio_period_name(const int frames) {
     return buf;
 }
 
+const char *session_settings_audio_rate_control_name(const int hundredths) {
+    if (hundredths <= 0) return lang.muxretro.settings_screen.audio_rate_control_off;
+
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d.%02d%%", hundredths / 100, hundredths % 100);
+    return buf;
+}
+
 static void apply_ini(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) return;
@@ -686,6 +699,14 @@ static void apply_ini(const char *path) {
         }
     }
 
+    v = mini_get_int(ini, "settings", "audio_rate_control", -1);
+    for (int i = 0; v >= 0 && i < AUDIO_RATE_CONTROL_CHOICE_COUNT; i++) {
+        if (audio_rate_control_choices[i] == (int) v) {
+            session_settings.audio_rate_control = (int) v;
+            break;
+        }
+    }
+
     v = mini_get_int(ini, "settings", "shimmer_fix", -1);
     if (v == 0 || v == 1) session_settings.shimmer_fix = (int) v;
 
@@ -815,6 +836,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(audio_latency_profile);
     DELTA(audio_period_frames);
     DELTA(audio_filter);
+    DELTA(audio_rate_control);
     DELTA(shimmer_fix);
     DELTA(run_ahead);
     DELTA(gpu_hard_sync);
@@ -997,6 +1019,24 @@ void session_settings_cycle_audio_period(const int direction) {
 
     LOG_INFO(mux_module, "Audio Period changed to %d frames", session_settings.audio_period_frames);
     audio_bridge_apply_sample_rate();
+}
+
+void session_settings_cycle_audio_rate_control(const int direction) {
+    int idx = 0;
+    for (int i = 0; i < AUDIO_RATE_CONTROL_CHOICE_COUNT; i++) {
+        if (audio_rate_control_choices[i] == session_settings.audio_rate_control) {
+            idx = i;
+            break;
+        }
+    }
+
+    idx = (idx + direction + AUDIO_RATE_CONTROL_CHOICE_COUNT) % AUDIO_RATE_CONTROL_CHOICE_COUNT;
+    session_settings.audio_rate_control = audio_rate_control_choices[idx];
+
+    LOG_INFO(
+        mux_module, "Audio Rate Control changed to %s",
+        session_settings_audio_rate_control_name(session_settings.audio_rate_control)
+    );
 }
 
 void session_settings_cycle_fps_limit(const int direction) {

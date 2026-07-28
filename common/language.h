@@ -1624,6 +1624,8 @@ struct mux_lang {
             char audio_filter_none[MAX_BUFFER_SIZE];
             char audio_filter_low_pass[MAX_BUFFER_SIZE];
             char audio_filter_high_pass[MAX_BUFFER_SIZE];
+            char audio_rate_control[MAX_BUFFER_SIZE];
+            char audio_rate_control_off[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];
             char category_sound[MAX_BUFFER_SIZE];
@@ -1676,7 +1678,6 @@ struct mux_lang {
             char turbo_modes[MAX_BUFFER_SIZE];
             char unbind[MAX_BUFFER_SIZE];
             char press_button[MAX_BUFFER_SIZE];
-            char core_turbo_active[MAX_BUFFER_SIZE];
             char macro_label[MAX_BUFFER_SIZE];
             char macro_turbo_blocked[MAX_BUFFER_SIZE];
         } settings_screen;

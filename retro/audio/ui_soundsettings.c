@@ -4,15 +4,24 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_volume = 0, row_sample_rate, row_audio_latency, row_audio_period, row_audio_filter, row_count };
-
-static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.volume, lang.muxretro.settings_screen.sample_rate,
-    lang.muxretro.settings_screen.audio_latency, lang.muxretro.settings_screen.audio_period,
-    lang.muxretro.settings_screen.audio_filter
+enum {
+    row_volume = 0,
+    row_sample_rate,
+    row_audio_latency,
+    row_audio_period,
+    row_audio_filter,
+    row_audio_rate_control,
+    row_count
 };
 
-static const char *row_glyphs[row_count] = {"volume", "samplerate", "audiolatency", "audioperiod", "audiofilter"};
+static const char *row_labels[row_count] = {
+    lang.muxretro.settings_screen.volume,        lang.muxretro.settings_screen.sample_rate,
+    lang.muxretro.settings_screen.audio_latency, lang.muxretro.settings_screen.audio_period,
+    lang.muxretro.settings_screen.audio_filter,  lang.muxretro.settings_screen.audio_rate_control
+};
+
+static const char *row_glyphs[row_count] = {"volume",      "samplerate",  "audiolatency",
+                                            "audioperiod", "audiofilter", "audioratecontrol"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -30,6 +39,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_audio_filter:
             snprintf(buf, buf_len, "%s", session_settings_audio_filter_name(session_settings.audio_filter));
+            break;
+        case row_audio_rate_control:
+            snprintf(buf, buf_len, "%s", session_settings_audio_rate_control_name(session_settings.audio_rate_control));
             break;
         default:
             buf[0] = '\0';
@@ -53,6 +65,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_audio_filter:
             session_settings_cycle_audio_filter(direction);
+            break;
+        case row_audio_rate_control:
+            session_settings_cycle_audio_rate_control(direction);
             break;
         default:
             break;

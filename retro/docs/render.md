@@ -44,9 +44,6 @@ That split is what makes two contexts workable. The core's framebuffer is create
 core's context, while its colour texture is shared, so the blit path keeps sampling it exactly as it did when there was
 only one context.
 
-Switching happens at core call boundaries: `enter_core_gl()` / `leave_core_gl()`. Drawing that happens part way through
-a batch of core frames hands the context back for the duration (`hw_render_bridge_yield_to_ui()` / `_resume_core()`).
-
 ## Borrowing
 
 When a core cannot be given its own context it may share the existing one, and `enter_core_gl()` / `leave_core_gl()`

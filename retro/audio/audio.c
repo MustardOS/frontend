@@ -1,4 +1,3 @@
-#include <stdatomic.h>
 #include <SDL2/SDL.h>
 #include <string.h>
 #include "../../common/init.h"
@@ -12,7 +11,12 @@
 
 #define CORE_MIN_LATENCY_CEILING_MS 512
 
-#define AUDIO_FADE_IN_MS 8
+#define AUDIO_FADE_IN_MS       8
+#define AUDIO_UNDERRUN_RAMP_MS 1
+
+#define DRC_INTEGRAL_DIVISOR 500.0
+#define DRC_FILL_SMOOTHING   0.05
+#define DRC_OUT_FRAMES       1024
 
 static SDL_AudioDeviceID audio_dev = 0;
 
@@ -41,6 +45,18 @@ static _Atomic uint32_t ring_read_index = 0;
 static _Atomic uint32_t underrun_count = 0;
 
 static _Atomic uint32_t fade_in_remaining = 0;
+static _Atomic uint32_t fade_in_total = 0;
+static uint32_t fade_in_frames = 0;
+static uint32_t underrun_ramp_frames = 0;
+
+static double drc_bias = 0.0;
+static double drc_fill_avg = -1.0;
+static double drc_ratio = 1.0;
+static double drc_phase = 0.0;
+static int16_t drc_prev_l = 0;
+static int16_t drc_prev_r = 0;
+static int drc_primed = 0;
+static int16_t drc_out_buf[DRC_OUT_FRAMES * 2];
 
 static const double latency_profile_periods[audio_latency_count][2] = {
     [audio_latency_low] = {2.0, 3.0},
@@ -97,7 +113,7 @@ static void audio_filter_reset(void) {
     filter_state_r.prev_out = 0.0f;
 }
 
-static inline int16_t apply_audio_filter(const int16_t sample, audio_filter_state_t *st, const int high_pass) {
+static int16_t apply_audio_filter(const int16_t sample, audio_filter_state_t *st, const int high_pass) {
     const float in = sample;
     float out;
 
@@ -127,9 +143,16 @@ static void free_resampler(void) {
     }
 }
 
+static void drc_reset_stream(void) {
+    drc_phase = 0.0;
+    drc_prev_l = 0;
+    drc_prev_r = 0;
+    drc_primed = 0;
+}
+
 static size_t ring_write_frames(const int16_t *src, const size_t frames) {
-    const uint32_t write_idx = atomic_load_explicit(&ring_write_index, memory_order_relaxed);
-    const uint32_t read_idx = atomic_load_explicit(&ring_read_index, memory_order_acquire);
+    const uint32_t write_idx = ring_write_index;
+    const uint32_t read_idx = ring_read_index;
     const uint32_t occupied = write_idx - read_idx;
     const uint32_t free_frames = AUDIO_RING_FRAMES - occupied;
 
@@ -141,7 +164,7 @@ static size_t ring_write_frames(const int16_t *src, const size_t frames) {
         audio_ring[pos * 2 + 1] = src[i * 2 + 1];
     }
 
-    atomic_store_explicit(&ring_write_index, write_idx + (uint32_t) to_write, memory_order_release);
+    ring_write_index = write_idx + (uint32_t) to_write;
     return to_write;
 }
 
@@ -149,22 +172,26 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     (void) userdata;
 
     const uint32_t requested = (uint32_t) len / (2 * sizeof(int16_t));
-    const uint32_t write_idx = atomic_load_explicit(&ring_write_index, memory_order_acquire);
-    const uint32_t read_idx = atomic_load_explicit(&ring_read_index, memory_order_relaxed);
+    const uint32_t write_idx = ring_write_index;
+    const uint32_t read_idx = ring_read_index;
     const uint32_t available = write_idx - read_idx;
 
     const uint32_t to_read = available < requested ? available : requested;
     int16_t *out = (int16_t *) stream;
 
-    uint32_t fade_remaining = atomic_load_explicit(&fade_in_remaining, memory_order_relaxed);
-    const uint32_t fade_total = fade_remaining;
+    static int16_t last_l = 0;
+    static int16_t last_r = 0;
+
+    const uint32_t fade_started = fade_in_remaining;
+    const uint32_t fade_total = fade_in_total;
+    uint32_t fade_remaining = fade_started;
 
     for (uint32_t i = 0; i < to_read; i++) {
         const uint32_t pos = (read_idx + i) & (AUDIO_RING_FRAMES - 1);
         int16_t l = audio_ring[pos * 2 + 0];
         int16_t r = audio_ring[pos * 2 + 1];
 
-        if (fade_remaining > 0) {
+        if (fade_remaining > 0 && fade_total > 0) {
             const int32_t step = (int32_t) (fade_total - fade_remaining + 1);
             l = (int16_t) ((int32_t) l * step / (int32_t) fade_total);
             r = (int16_t) ((int32_t) r * step / (int32_t) fade_total);
@@ -175,19 +202,76 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
         out[i * 2 + 1] = r;
     }
 
-    if (fade_total > 0) atomic_store_explicit(&fade_in_remaining, fade_remaining, memory_order_relaxed);
+    if (fade_started > 0) fade_in_remaining = fade_remaining;
 
-    if (to_read < requested) {
-        memset(out + to_read * 2, 0, (size_t) (requested - to_read) * 2 * sizeof(int16_t));
-        atomic_fetch_add_explicit(&underrun_count, 1, memory_order_relaxed);
+    if (to_read > 0) {
+        last_l = out[(to_read - 1) * 2 + 0];
+        last_r = out[(to_read - 1) * 2 + 1];
     }
 
-    atomic_store_explicit(&ring_read_index, read_idx + to_read, memory_order_release);
+    if (to_read < requested) {
+        const uint32_t missing = requested - to_read;
+        const uint32_t ramp = missing < underrun_ramp_frames ? missing : underrun_ramp_frames;
+
+        for (uint32_t i = 0; i < ramp; i++) {
+            const int32_t gain = (int32_t) (ramp - i);
+            out[(to_read + i) * 2 + 0] = (int16_t) ((int32_t) last_l * gain / (int32_t) ramp);
+            out[(to_read + i) * 2 + 1] = (int16_t) ((int32_t) last_r * gain / (int32_t) ramp);
+        }
+
+        if (missing > ramp) memset(out + (to_read + ramp) * 2, 0, (size_t) (missing - ramp) * 2 * sizeof(int16_t));
+
+        last_l = 0;
+        last_r = 0;
+
+        fade_in_total = fade_in_frames;
+        fade_in_remaining = fade_in_frames;
+        underrun_count++;
+    }
+
+    ring_read_index = read_idx + to_read;
+}
+
+static void drc_write_frames(const int16_t *src, const size_t frames) {
+    size_t out_count = 0;
+
+    if (drc_ratio < 0.5) drc_ratio = 0.5;
+
+    for (size_t i = 0; i < frames; i++) {
+        const int16_t cur_l = src[i * 2 + 0];
+        const int16_t cur_r = src[i * 2 + 1];
+
+        if (!drc_primed) {
+            drc_prev_l = cur_l;
+            drc_prev_r = cur_r;
+            drc_primed = 1;
+        }
+
+        while (drc_phase < 1.0) {
+            drc_out_buf[out_count * 2 + 0] =
+                (int16_t) ((double) drc_prev_l + ((double) cur_l - (double) drc_prev_l) * drc_phase);
+            drc_out_buf[out_count * 2 + 1] =
+                (int16_t) ((double) drc_prev_r + ((double) cur_r - (double) drc_prev_r) * drc_phase);
+
+            drc_phase += drc_ratio;
+
+            if (++out_count == DRC_OUT_FRAMES) {
+                ring_write_frames(drc_out_buf, out_count);
+                out_count = 0;
+            }
+        }
+
+        drc_phase -= 1.0;
+        drc_prev_l = cur_l;
+        drc_prev_r = cur_r;
+    }
+
+    if (out_count > 0) ring_write_frames(drc_out_buf, out_count);
 }
 
 static void queue_samples(const int16_t *data, const size_t frames) {
     if (!resampler) {
-        ring_write_frames(data, frames);
+        drc_write_frames(data, frames);
         return;
     }
 
@@ -199,7 +283,7 @@ static void queue_samples(const int16_t *data, const size_t frames) {
         const int chunk = avail > (int) sizeof(resample_buf) ? (int) sizeof(resample_buf) : avail;
         const int got = SDL_AudioStreamGet(resampler, resample_buf, chunk);
         if (got <= 0) break;
-        ring_write_frames((const int16_t *) resample_buf, (size_t) got / (2 * sizeof(int16_t)));
+        drc_write_frames((const int16_t *) resample_buf, (size_t) got / (2 * sizeof(int16_t)));
     }
 }
 
@@ -293,12 +377,23 @@ int audio_bridge_open(const double core_sample_rate) {
     opened_channels = have.channels;
     opened_period_frames = (int) have.samples;
 
+    fade_in_frames = (uint32_t) opened_freq * AUDIO_FADE_IN_MS / 1000;
+    underrun_ramp_frames = (uint32_t) opened_freq * AUDIO_UNDERRUN_RAMP_MS / 1000;
+    if (underrun_ramp_frames == 0) underrun_ramp_frames = 1;
+
     audio_filter_recompute();
     audio_filter_reset();
 
-    atomic_store_explicit(&ring_write_index, 0, memory_order_relaxed);
-    atomic_store_explicit(&ring_read_index, 0, memory_order_relaxed);
-    atomic_store_explicit(&underrun_count, 0, memory_order_relaxed);
+    ring_write_index = 0;
+    ring_read_index = 0;
+    underrun_count = 0;
+    fade_in_remaining = 0;
+    fade_in_total = 0;
+
+    drc_bias = 0.0;
+    drc_fill_avg = -1.0;
+    drc_ratio = 1.0;
+    drc_reset_stream();
 
     free_resampler();
     if ((int) core_sample_rate != have.freq) {
@@ -358,8 +453,10 @@ void audio_bridge_close(void) {
         );
     }
 
-    const uint32_t underruns = atomic_load_explicit(&underrun_count, memory_order_relaxed);
+    const uint32_t underruns = underrun_count;
     if (underruns > 0) LOG_DEBUG(mux_module, "Audio ring underran %u time(s) this session", underruns);
+
+    LOG_DEBUG(mux_module, "Audio rate control settled at %+.3f%% correction", (1.0 - drc_ratio) * 100.0);
 
     audio_bridge_discard_sample_fifo();
     close_device();
@@ -377,9 +474,10 @@ int audio_bridge_is_active(void) {
 }
 
 static void audio_bridge_trigger_fade_in(void) {
-    if (!audio_dev || opened_freq == 0) return;
-    const uint32_t frames = (uint32_t) opened_freq * AUDIO_FADE_IN_MS / 1000;
-    atomic_store_explicit(&fade_in_remaining, frames, memory_order_relaxed);
+    if (opened_freq == 0) return;
+
+    fade_in_total = fade_in_frames;
+    fade_in_remaining = fade_in_frames;
 }
 
 void audio_bridge_set_paused(const int pause) {
@@ -409,28 +507,31 @@ void audio_bridge_clear_queued(void) {
 
     if (audio_dev) {
         SDL_LockAudioDevice(audio_dev);
-        const uint32_t read_idx = atomic_load_explicit(&ring_read_index, memory_order_relaxed);
-        atomic_store_explicit(&ring_write_index, read_idx, memory_order_relaxed);
+        const uint32_t read_idx = ring_read_index;
+        ring_write_index = read_idx;
         SDL_UnlockAudioDevice(audio_dev);
     }
 
     if (resampler) SDL_AudioStreamClear(resampler);
     last_queued_ms_valid = 0;
+
+    drc_fill_avg = -1.0;
+    drc_reset_stream();
 }
 
 Uint32 audio_bridge_queued_ms(void) {
     if (!audio_dev || opened_freq == 0) return 0;
 
-    const uint32_t write_idx = atomic_load_explicit(&ring_write_index, memory_order_acquire);
-    const uint32_t read_idx = atomic_load_explicit(&ring_read_index, memory_order_acquire);
+    const uint32_t write_idx = ring_write_index;
+    const uint32_t read_idx = ring_read_index;
     const uint32_t occupied_frames = write_idx - read_idx;
 
     return (Uint32) (((uint64_t) occupied_frames * 1000ULL) / (uint64_t) opened_freq);
 }
 
-static uint32_t period_ms(void) {
-    if (!audio_dev || opened_freq == 0) return 0;
-    return (uint32_t) (((uint64_t) opened_period_frames * 1000ULL) / (uint64_t) opened_freq);
+static double period_ms(void) {
+    if (!audio_dev || opened_freq == 0) return 0.0;
+    return (double) opened_period_frames * 1000.0 / (double) opened_freq;
 }
 
 static void compute_latency_targets(const uint32_t floor_ms, uint32_t *low_ms, uint32_t *high_ms) {
@@ -439,9 +540,9 @@ static void compute_latency_targets(const uint32_t floor_ms, uint32_t *low_ms, u
     const double low_periods = latency_profile_periods[valid ? profile : audio_latency_balanced][0];
     const double high_periods = latency_profile_periods[valid ? profile : audio_latency_balanced][1];
 
-    const uint32_t p_ms = period_ms();
-    uint32_t low = (uint32_t) ((double) p_ms * low_periods);
-    uint32_t high = (uint32_t) ((double) p_ms * high_periods);
+    const double p_ms = period_ms();
+    uint32_t low = (uint32_t) (p_ms * low_periods);
+    uint32_t high = (uint32_t) (p_ms * high_periods);
 
     if (floor_ms > low) {
         const uint32_t spread = high - low;
@@ -463,6 +564,43 @@ uint32_t audio_bridge_high_water_ms(void) {
     uint32_t low, high;
     compute_latency_targets(active_min_latency_ms, &low, &high);
     return high;
+}
+
+void audio_bridge_drc_tick(void) {
+    if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
+
+    const double max_deviation = (double) session_settings.audio_rate_control / 10000.0;
+    if (max_deviation <= 0.0) {
+        drc_bias = 0.0;
+        drc_ratio = 1.0;
+        return;
+    }
+
+    uint32_t low, high;
+    compute_latency_targets(active_min_latency_ms, &low, &high);
+
+    const uint64_t target_frames = ((uint64_t) (low + high) / 2ULL * (uint64_t) opened_freq) / 1000ULL;
+    if (target_frames == 0) return;
+
+    const uint32_t write_idx = ring_write_index;
+    const uint32_t read_idx = ring_read_index;
+    const double fill = (double) (write_idx - read_idx) / (double) target_frames;
+
+    drc_fill_avg = drc_fill_avg < 0.0 ? fill : drc_fill_avg * (1.0 - DRC_FILL_SMOOTHING) + fill * DRC_FILL_SMOOTHING;
+
+    double error = 1.0 - drc_fill_avg;
+    if (error > 1.0) error = 1.0;
+    if (error < -1.0) error = -1.0;
+
+    drc_bias += error * max_deviation / DRC_INTEGRAL_DIVISOR;
+    if (drc_bias > max_deviation) drc_bias = max_deviation;
+    if (drc_bias < -max_deviation) drc_bias = -max_deviation;
+
+    double correction = max_deviation * error + drc_bias;
+    if (correction > max_deviation) correction = max_deviation;
+    if (correction < -max_deviation) correction = -max_deviation;
+
+    drc_ratio = 1.0 - correction;
 }
 
 void audio_bridge_wait_for_headroom(void) {

@@ -154,6 +154,7 @@ struct session_settings_t {
     int audio_latency_profile;
     int audio_period_frames;
     int audio_filter;
+    int audio_rate_control;
     int shimmer_fix;
     int run_ahead;
     int gpu_hard_sync;
@@ -256,6 +257,8 @@ const char *session_settings_analog_sensitivity_name(int value);
 const char *session_settings_audio_latency_name(int mode);
 
 const char *session_settings_audio_period_name(int frames);
+
+const char *session_settings_audio_rate_control_name(int hundredths);
 
 void session_settings_init(const char *core_path_arg, const char *content_path);
 
@@ -372,6 +375,8 @@ void session_settings_cycle_analog_invert_y(int direction);
 void session_settings_cycle_audio_latency(int direction);
 
 void session_settings_cycle_audio_period(int direction);
+
+void session_settings_cycle_audio_rate_control(int direction);
 
 void session_settings_cycle_shimmer_fix(int direction);
 

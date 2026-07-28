@@ -180,31 +180,15 @@ static void idle_poll(void) {
     last_seen_changes = mux_idle_state_changes;
 }
 
-static int core_turbo_option_active(void) {
-    for (int i = 0; i < options_count; i++) {
-        const struct core_option_entry *e = &options_list[i];
-        if (!strcasestr(e->key, "turbo") && !strcasestr(e->label, "turbo")) continue;
-
-        const char *value = e->values[e->current_index];
-        if (strcasecmp(value, "off") != 0 && strcasecmp(value, "disabled") != 0 && strcasecmp(value, "0") != 0
-            && strcasecmp(value, "none") != 0 && strcasecmp(value, "false") != 0) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
 static double core_run_ema_ms = 0.0;
 
-static void run_core_batch(const unsigned frames, const int present_every) {
+static void run_core_batch(const unsigned frames) {
     hw_render_bridge_context_save();
 
     for (unsigned i = 0; i < frames; i++) {
         const int is_last = i + 1 == frames;
-        const int should_present = present_every || is_last;
 
-        video_bridge_set_frame_skip(!should_present);
+        video_bridge_set_frame_skip(!is_last);
         if (is_last) frame_pacer_maybe_wait();
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
@@ -218,14 +202,6 @@ static void run_core_batch(const unsigned frames, const int present_every) {
         core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
 
         audio_bridge_flush_sample_fifo();
-
-        if (should_present && !is_last) {
-            hw_render_bridge_yield_to_ui();
-            video_bridge_flush_frame();
-            lv_obj_invalidate(ui_screen);
-            lv_refr_now(NULL);
-            hw_render_bridge_resume_core();
-        }
     }
 
     hw_render_bridge_context_restore();
@@ -240,6 +216,7 @@ static void pace_core_output(void) {
         return;
     }
 
+    audio_bridge_drc_tick();
     audio_bridge_wait_for_headroom();
 
     const int slowmo_active = hotkeys_is_slow_motion_active();
@@ -417,10 +394,6 @@ int main(const int argc, char *argv[]) {
         pause_menu_show_toast(patch_toast);
     }
 
-    if (core_turbo_option_active()) {
-        pause_menu_show_toast_timed(lang.muxretro.settings_screen.core_turbo_active, 4000);
-    }
-
     if (state_preserved || load_blocked) {
         pause_menu_toggle();
         gamestate_notice_open();
@@ -531,7 +504,7 @@ int main(const int argc, char *argv[]) {
                 frames = 1 + extra;
             }
 
-            run_core_batch(frames, !ff_active);
+            run_core_batch(frames);
             core_ran = 1;
 
             fps_frame_count += frames;
