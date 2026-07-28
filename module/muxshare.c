@@ -633,6 +633,10 @@ void gen_step_movement(
         nav_move(ui_group_panel, direction);
     }
 
+    update_scroll_position(
+        theme.mux.item.count + count_offset, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
+    );
+
     if (long_dot == 1) {
         lv_obj_update_layout(ui_pnl_content);
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
