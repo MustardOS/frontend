@@ -108,6 +108,8 @@ uint64_t input_bridge_snapshot_signature(void);
 
 void input_bridge_apply_controller_ports(void);
 
+int environment_av_info_pending(void);
+
 void environment_apply_pending_av_info(void);
 
 void environment_notify_frame_time(void);

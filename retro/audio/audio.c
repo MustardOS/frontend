@@ -439,6 +439,10 @@ void audio_bridge_apply_sample_rate(void) {
 
 void audio_bridge_reconfigure_rate(const double new_core_rate) {
     if (new_core_rate <= 0.0 || !audio_dev) return;
+
+    // Reopening the device is slow, so only do it when the rate really moved
+    if ((int) new_core_rate == (int) core_native_rate) return;
+
     core_native_rate = new_core_rate;
     audio_bridge_apply_sample_rate();
 }

@@ -368,6 +368,10 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
     }
 }
 
+int environment_av_info_pending(void) {
+    return av_info_pending;
+}
+
 void environment_apply_pending_av_info(void) {
     if (!av_info_pending) return;
     av_info_pending = 0;
