@@ -23,14 +23,16 @@ becomes a question of the platform having a desktop GL driver rather than of rew
 ## Selection
 
 1. `context_requirements()` maps the request onto a profile and version.
-2. `create_shared_context()` creates the core a context of its own, in the same share group as the existing one.
-   Isolation is the point: whatever the core leaves behind in its own context, nothing else is drawing with it.
-3. `shared_context_usable()` proves two things that are otherwise only assumptions - that the new context reports the
+2. If the existing context already reports what the core asked for, the core shares it. A context of its own has to be
+   made current around every core call and on a embedded based driver that switch costs far more than the isolation is
+   worth.
+3. Otherwise the `create_shared_context()` function creates the core a context of its own, in the same share group as
+   the existing one.
+4. `shared_context_usable()` proves two things that are otherwise only assumptions - that the new context reports the
    version asked for, and that sharing actually happened, by creating a texture in it and looking for that texture from
    the other context. A driver may hand back a version other than the one requested, and sharing is a request nothing
    reports back on.
-4. If that fails, and only for `OPENGLES2`, the core may instead borrow the existing context - see below.
-5. Otherwise the request is refused.
+5. Otherwise, the request is refused.
 
 `current_context_is()` answers what the live context is by reading `GL_VERSION`. `SDL_GL_GetAttribute` cannot: it
 reports the attributes SDL was configured with, which includes anything set while probing, so one probe's leftovers
@@ -44,16 +46,15 @@ That split is what makes two contexts workable. The core's framebuffer is create
 core's context, while its colour texture is shared, so the blit path keeps sampling it exactly as it did when there was
 only one context.
 
-## Borrowing
+## Sharing the UI's context
 
-When a core cannot be given its own context it may share the existing one, and `enter_core_gl()` / `leave_core_gl()`
-then capture and restore GL state around every core call instead of switching.
+When the core shares the existing context, `enter_core_gl()` / `leave_core_gl()` capture and restore GL state around
+every core call instead of switching contexts.
 
-That only holds while every piece of state the core touches is on the list being saved, and the list covers ES2 era
-state. An ES3 core leaves bindings behind that are not on it - vertex arrays, samplers, uniform buffers - and the
-result is not a slightly wrong frame, it is the whole interface no longer drawing. So borrowing is offered only for
-`OPENGLES2`, the case it was written for. Anything else is refused instead, and refusing costs a core its hardware
-renderer rather than costing a usable screen.
+State the UI set and the core overwrites is saved and put back - that is `gl_state_capture()` / `gl_state_apply()`, and
+it covers ES2 era state. The muX UI never sets an ES3 state: vertex arrays, samplers, and the pixel pack, unpack and
+uniform buffer bindings. Nothing saved for those because SDL2 renderer never binds them, so the value to put back is
+always zero. `gl_reset_es3_state()` clears them.
 
 Note that a driver asked for ES2 may return a context reporting a much higher version, so "the existing context is
 good enough" cannot be inferred from what was requested when it was made.

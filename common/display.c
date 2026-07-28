@@ -887,6 +887,10 @@ void display_set_ui_hidden(const int hidden) {
     ui_layer_hidden = hidden;
 }
 
+int display_ui_is_hidden(void) {
+    return ui_layer_hidden;
+}
+
 static void composite_to(SDL_Texture *target, const int present) {
     if (!monitor.renderer || !monitor.texture) return;
 
@@ -981,7 +985,9 @@ static void composite_to(SDL_Texture *target, const int present) {
         SDL_RenderFillRect(monitor.renderer, NULL);
     }
 
+    // The caller wants to read this frame back, so leave it where it is
     if (!present) return;
+
     SDL_RenderPresent(monitor.renderer);
 
     if (hard_sync_query_fn && hard_sync_query_fn()) {

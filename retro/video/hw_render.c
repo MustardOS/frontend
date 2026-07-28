@@ -8,6 +8,18 @@
 #include "colour.h"
 #include "hw_render.h"
 
+#ifndef GL_PIXEL_PACK_BUFFER
+#define GL_PIXEL_PACK_BUFFER 0x88EB
+#endif
+#ifndef GL_PIXEL_UNPACK_BUFFER
+#define GL_PIXEL_UNPACK_BUFFER 0x88EC
+#endif
+#ifndef GL_UNIFORM_BUFFER
+#define GL_UNIFORM_BUFFER 0x8A11
+#endif
+#ifndef GL_TRANSFORM_FEEDBACK
+#define GL_TRANSFORM_FEEDBACK 0x8E22
+#endif
 #ifndef GL_DEPTH24_STENCIL8_OES
 #define GL_DEPTH24_STENCIL8_OES 0x88F0
 #endif
@@ -106,6 +118,11 @@ static void(GL_APIENTRY *p_glTexParameteri)(GLenum target, GLenum pname, GLint p
 static GLboolean(GL_APIENTRY *p_glIsTexture)(GLuint texture) = NULL;
 static const GLubyte *(GL_APIENTRY *p_glGetString)(GLenum name) = NULL;
 
+// ES3 only, so these are loaded best effort and stay NULL on an ES2 driver
+static void(GL_APIENTRY *p_glBindVertexArray)(GLuint array) = NULL;
+static void(GL_APIENTRY *p_glBindSampler)(GLuint unit, GLuint sampler) = NULL;
+static void(GL_APIENTRY *p_glBindTransformFeedback)(GLenum target, GLuint id) = NULL;
+
 static int gl_funcs_ready = 0;
 
 static int load_gl_functions(void) {
@@ -180,6 +197,10 @@ static int load_gl_functions(void) {
 
 #undef LOAD_GL
 
+    p_glBindVertexArray = SDL_GL_GetProcAddress("glBindVertexArray");
+    p_glBindSampler = SDL_GL_GetProcAddress("glBindSampler");
+    p_glBindTransformFeedback = SDL_GL_GetProcAddress("glBindTransformFeedback");
+
     gl_funcs_ready = 1;
     return 1;
 }
@@ -193,9 +214,13 @@ static int flip_needed = 1;
 static int active = 0;
 static int context_ready = 0;
 
-static GLuint fbo = 0;
-static GLuint colour_tex = 0;
+#define HW_TARGET_COUNT 1
+
+static GLuint fbo[HW_TARGET_COUNT] = {0};
+static GLuint colour_tex[HW_TARGET_COUNT] = {0};
 static GLuint depth_stencil_rb = 0;
+static int render_index = 0;
+static int display_index = 0;
 static int target_w = 0;
 static int target_h = 0;
 
@@ -406,18 +431,16 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
 
     if (!load_gl_functions()) return 0;
 
-    if (!create_shared_context(profile, major, minor) || !shared_context_usable(profile, major, minor)) {
+    if (current_context_is(profile, major, minor)) {
+        LOG_INFO(mux_module, "hw_render: sharing the UI's context for %s %d.%d", label, major, minor);
+    } else if (!create_shared_context(profile, major, minor) || !shared_context_usable(profile, major, minor)) {
         destroy_shared_context();
 
-        if (cb->context_type != RETRO_HW_CONTEXT_OPENGLES2 || !current_context_is(profile, major, minor)) {
-            LOG_WARN(
-                mux_module, "hw_render: cannot provide %s %d.%d - core will fall back to software rendering", label,
-                major, minor
-            );
-            return 0;
-        }
-
-        LOG_INFO(mux_module, "hw_render: no context of our own, sharing the UI's for %s", label);
+        LOG_WARN(
+            mux_module, "hw_render: cannot provide %s %d.%d - core will fall back to software rendering", label, major,
+            minor
+        );
+        return 0;
     }
 
     core_context_reset = cb->context_reset;
@@ -499,18 +522,24 @@ static void ensure_program(void) {
 }
 
 static void destroy_target(void) {
-    if (fbo) {
-        p_glDeleteFramebuffers(1, &fbo);
-        fbo = 0;
+    for (int i = 0; i < HW_TARGET_COUNT; i++) {
+        if (fbo[i]) {
+            p_glDeleteFramebuffers(1, &fbo[i]);
+            fbo[i] = 0;
+        }
+        if (colour_tex[i]) {
+            p_glDeleteTextures(1, &colour_tex[i]);
+            colour_tex[i] = 0;
+        }
     }
-    if (colour_tex) {
-        p_glDeleteTextures(1, &colour_tex);
-        colour_tex = 0;
-    }
+
     if (depth_stencil_rb) {
         p_glDeleteRenderbuffers(1, &depth_stencil_rb);
         depth_stencil_rb = 0;
     }
+
+    render_index = 0;
+    display_index = 0;
     target_w = 0;
     target_h = 0;
 }
@@ -519,57 +548,61 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
     if (!active || max_width == 0 || max_height == 0) return;
     if ((int) max_width == target_w && (int) max_height == target_h) return;
 
-    const int first_time = fbo == 0;
+    const int first_time = fbo[0] == 0;
     hw_render_bridge_context_save();
 
     if (!first_time && context_ready && core_context_destroy) core_context_destroy();
     destroy_target();
 
-    p_glGenTextures(1, &colour_tex);
-    p_glBindTexture(GL_TEXTURE_2D, colour_tex);
-    p_glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) max_width, (GLsizei) max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL
-    );
-    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    p_glBindTexture(GL_TEXTURE_2D, 0);
-
-    p_glGenFramebuffers(1, &fbo);
-    p_glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    p_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex, 0);
-
     if (want_depth) {
         p_glGenRenderbuffers(1, &depth_stencil_rb);
         p_glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_rb);
+        p_glRenderbufferStorage(
+            GL_RENDERBUFFER, want_stencil ? GL_DEPTH24_STENCIL8_OES : GL_DEPTH_COMPONENT16, (GLsizei) max_width,
+            (GLsizei) max_height
+        );
+    }
 
-        if (want_stencil) {
-            p_glRenderbufferStorage(
-                GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, (GLsizei) max_width, (GLsizei) max_height
-            );
+    for (int i = 0; i < HW_TARGET_COUNT; i++) {
+        p_glGenTextures(1, &colour_tex[i]);
+        p_glBindTexture(GL_TEXTURE_2D, colour_tex[i]);
+        p_glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) max_width, (GLsizei) max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL
+        );
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        p_glBindTexture(GL_TEXTURE_2D, 0);
+
+        p_glGenFramebuffers(1, &fbo[i]);
+        p_glBindFramebuffer(GL_FRAMEBUFFER, fbo[i]);
+        p_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[i], 0);
+
+        if (want_depth) {
             p_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
-            p_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
-        } else {
-            p_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, (GLsizei) max_width, (GLsizei) max_height);
-            p_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+            if (want_stencil)
+                p_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
         }
+
+        const GLenum status = p_glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            LOG_ERROR(
+                mux_module, "hw_render: framebuffer incomplete (status 0x%x) - disabling hardware render", status
+            );
+            p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            destroy_target();
+            hw_render_bridge_context_restore();
+            active = 0;
+            return;
+        }
+
+        p_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        p_glClear(
+            GL_COLOR_BUFFER_BIT | (want_depth ? GL_DEPTH_BUFFER_BIT : 0) | (want_stencil ? GL_STENCIL_BUFFER_BIT : 0)
+        );
     }
 
-    const GLenum status = p_glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR(mux_module, "hw_render: framebuffer incomplete (status 0x%x) - disabling hardware render", status);
-        p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        destroy_target();
-        hw_render_bridge_context_restore();
-        active = 0;
-        return;
-    }
-
-    p_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    p_glClear(
-        GL_COLOR_BUFFER_BIT | (want_depth ? GL_DEPTH_BUFFER_BIT : 0) | (want_stencil ? GL_STENCIL_BUFFER_BIT : 0)
-    );
     p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     target_w = (int) max_width;
@@ -579,6 +612,10 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     ensure_program();
 
+    LOG_INFO(
+        mux_module, "hw_render: target %ux%u (depth=%d stencil=%d)", max_width, max_height, want_depth, want_stencil
+    );
+
     // Tell the core to rebuild against the new framebuffer, not just the first time we make one!
     context_ready = 1;
     if (core_context_reset) core_context_reset();
@@ -587,7 +624,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
-    return fbo;
+    return fbo[render_index];
 }
 
 retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
@@ -596,6 +633,10 @@ retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
 
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
     if (width == 0 || height == 0) return;
+
+    display_index = render_index;
+    render_index = (render_index + 1) % HW_TARGET_COUNT;
+
     frame_valid_w = width;
     frame_valid_h = height;
 }
@@ -745,6 +786,21 @@ static void enter_core_gl(void) {
     gl_state_apply(&core_state);
 }
 
+static void gl_reset_es3_state(void) {
+    if (p_glBindVertexArray) p_glBindVertexArray(0);
+
+    if (p_glBindSampler) {
+        for (int i = 0; i < HW_TEX_UNITS; i++)
+            p_glBindSampler((GLuint) i, 0);
+    }
+
+    if (p_glBindTransformFeedback) p_glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+
+    p_glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    p_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    p_glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
 static void leave_core_gl(void) {
     if (owns_context()) {
         SDL_GL_MakeCurrent(gl_window, sdl_ctx);
@@ -754,6 +810,7 @@ static void leave_core_gl(void) {
     if (!sdl_state.valid) return;
 
     gl_state_capture(&core_state);
+    gl_reset_es3_state();
     gl_state_apply(&sdl_state);
 }
 
@@ -825,7 +882,7 @@ static void draw_hw_quad(
     p_glDisable(GL_BLEND);
     p_glViewport(0, 0, vp_w, vp_h);
     p_glUseProgram(prog);
-    p_glBindTexture(GL_TEXTURE_2D, colour_tex);
+    p_glBindTexture(GL_TEXTURE_2D, colour_tex[display_index]);
     if (u_tex >= 0) p_glUniform1i(u_tex, 0);
     if (u_swap >= 0) p_glUniform1i(u_swap, swap_channels);
 
@@ -878,7 +935,7 @@ static int ensure_filter_src(SDL_Renderer *renderer) {
 }
 
 void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, const SDL_Rect *src_rect) {
-    if (!active || !context_ready || !colour_tex || target_w == 0 || target_h == 0) return;
+    if (!active || !context_ready || !colour_tex[display_index] || target_w == 0 || target_h == 0) return;
     if (!prog) return;
 
     SDL_RenderFlush(renderer);

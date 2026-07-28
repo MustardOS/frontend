@@ -21,6 +21,8 @@ void display_composite_frame(void);
 
 void display_set_ui_hidden(int hidden);
 
+int display_ui_is_hidden(void);
+
 void display_set_composite_suppressed(int suppressed);
 
 int display_capture_clean_frame(const char *path);

@@ -543,8 +543,12 @@ int main(const int argc, char *argv[]) {
         video_bridge_flush_frame();
         if (paused_now) lv_task_handler();
 
-        lv_obj_invalidate(ui_screen);
-        lv_refr_now(NULL);
+        if (display_ui_is_hidden()) {
+            display_composite_frame();
+        } else {
+            lv_obj_invalidate(ui_screen);
+            lv_refr_now(NULL);
+        }
 
         frame_pacer_after_present();
 
