@@ -7,7 +7,16 @@ static char rom_system[PATH_MAX];
 static mux_dialogue assign_dlg;
 static int assign_dialogue_active = 0;
 
+// Sort mode picks a tag to filter a list by instead of assigning one to content
+static int sort_mode = 0;
+static char sort_origin[MAX_BUFFER_SIZE];
+
 static void show_help(void) {
+    if (sort_mode) {
+        show_info_box(lang.muxtag.sort, lang.muxtag.sort_help, 0);
+        return;
+    }
+
     show_info_box(lang.muxtag.title, lang.muxtag.help, 0);
 }
 
@@ -66,10 +75,36 @@ static void generate_available_tags(void) {
 static void close_screen(void) {
     remove(MUOS_SAG_LOAD);
 
+    if (sort_mode) load_mux(sort_origin);
+
     mux_input_stop();
 }
 
+static void pick_sort_tag(void) {
+    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    str_remchar(selected, ' ');
+
+    // None writes nothing back, which the list module reads as clearing the filter
+    if (strcasecmp(selected, "none") == 0) {
+        write_text_to_file(TAG_SORT_PICK, "w", CHAR, "");
+    } else {
+        write_text_to_file(TAG_SORT_PICK, "w", CHAR, selected);
+    }
+
+    LOG_INFO(mux_module, "Tag Sort Selected \"%s\" for %s", selected, sort_origin);
+    free(selected);
+}
+
 static void handle_a(void) {
+    if (sort_mode) {
+        if (msgbox_active || !ui_count_static || hold_call) return;
+
+        play_sound(snd_confirm);
+        pick_sort_tag();
+        close_screen();
+        return;
+    }
+
     if (assign_dialogue_active) {
         const int method = assign_dlg.option_data[assign_dlg.selected];
         dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
@@ -186,13 +221,25 @@ void muxtag_main(int auto_assign, const char *name, const char *dir, const char 
 
     init_module(__func__);
 
-    LOG_INFO(mux_module, "Assign Tag ROM_NAME: \"%s\"", rom_name);
-    LOG_INFO(mux_module, "Assign Tag ROM_DIR: \"%s\"", rom_dir);
-    LOG_INFO(mux_module, "Assign Tag ROM_SYS: \"%s\"", rom_system);
+    // A list module asking for a tag to sort by leaves us a pointer back to itself
+    sort_mode = file_exist(TAG_SORT_FROM);
+    if (sort_mode) {
+        char *origin = read_all_char_from(TAG_SORT_FROM);
+        snprintf(sort_origin, sizeof(sort_origin), "%s", origin && *origin ? origin : "launcher");
+
+        free(origin);
+        remove(TAG_SORT_FROM);
+
+        LOG_INFO(mux_module, "Tag Sort requested by \"%s\"", sort_origin);
+    } else {
+        LOG_INFO(mux_module, "Assign Tag ROM_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Tag ROM_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign Tag ROM_SYS: \"%s\"", rom_system);
+    }
 
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.muxtag.title);
+    init_ui_common_screen(&theme, &device, &lang, sort_mode ? lang.muxtag.sort : lang.muxtag.title);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);

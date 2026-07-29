@@ -382,11 +382,59 @@ static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
 
+static int actions_mode = 0;
+static int tag_filtered = 0;
+static char active_tag[MAX_BUFFER_SIZE];
+static mux_dialogue actions_item_dlg;
+static mux_dialogue actions_folder_dlg;
+static mux_dialogue actions_empty_dlg;
+static mux_dialogue *actions_dlg = NULL;
+
+typedef enum { act_information = 0, act_location, act_tag_sort, act_remove, act_count } actions_opt;
+
+static void start_remove(void);
+static void show_information(void);
+static void show_location(void);
+static void show_tag_sort(void);
+
 static void show_remove_dialog(void) {
     remove_mode = 1;
     remove_dlg.selected = 0;
     dialogue_show(&remove_dlg);
     dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void show_actions_dialog(void) {
+    if (!ui_count_static) {
+        actions_dlg = &actions_empty_dlg;
+    } else if (items[current_item_index].content_type == FOLDER) {
+        actions_dlg = &actions_folder_dlg;
+    } else {
+        actions_dlg = &actions_item_dlg;
+    }
+
+    actions_mode = 1;
+
+    const int quick_remove = config.settings.advanced.trust_remove || skip_confirm;
+    actions_dlg->selected = quick_remove ? actions_dlg->option_count - 1 : 0;
+
+    dialogue_show(actions_dlg);
+    dialogue_refresh(actions_dlg, &theme);
+}
+
+static void hide_actions_dialog(void) {
+    actions_mode = 0;
+    if (actions_dlg) dialogue_hide(actions_dlg);
+    actions_dlg = NULL;
+}
+
+static actions_opt actions_selected(void) {
+    const int opt = actions_dlg->selected;
+
+    if (actions_dlg == &actions_empty_dlg) return act_tag_sort;
+    if (actions_dlg == &actions_folder_dlg) return opt == 0 ? act_information : opt == 1 ? act_tag_sort : act_remove;
+
+    return (actions_opt) opt;
 }
 
 static void hide_remove_dialog(void) {
@@ -501,6 +549,18 @@ static void add_collection_item(void) {
     write_text_to_file(ADD_MODE_DONE, "w", CHAR, done_content);
 
     if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
+}
+
+static int load_add_mode_origin(void) {
+    char *origin = read_all_char_from(ADD_MODE_FROM);
+    const int valid = origin && *origin;
+
+    if (valid) load_mux(origin);
+
+    free(origin);
+    remove(ADD_MODE_FROM);
+
+    return valid;
 }
 
 static void show_splash() {
@@ -629,17 +689,39 @@ static void process_load(const int from_start) {
     if (load_message) toast_message(lang.generic.loading, tst_wait_f);
 
 load_end:
-    if (file_exist(ADD_MODE_DONE)) {
-        load_mux(read_all_char_from(ADD_MODE_FROM));
-    } else {
-        load_mux("collection");
-    }
+    if (!file_exist(ADD_MODE_DONE) || !load_add_mode_origin()) load_mux("collection");
 
     skip_confirm = 0;
     mux_input_stop();
 }
 
 static void handle_a(void) {
+    if (actions_mode) {
+        const actions_opt opt = actions_selected();
+
+        const int chains = opt == act_remove && !is_ksk(kiosk.collect.remove)
+                           && !(config.settings.advanced.trust_remove || skip_confirm);
+
+        if (chains) {
+            dialogue_hide_chained(actions_dlg);
+            actions_mode = 0;
+            actions_dlg = NULL;
+        } else {
+            hide_actions_dialog();
+        }
+
+        if (opt == act_information) {
+            show_information();
+        } else if (opt == act_location) {
+            show_location();
+        } else if (opt == act_tag_sort) {
+            show_tag_sort();
+        } else {
+            start_remove();
+        }
+        return;
+    }
+
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         hide_remove_dialog();
@@ -669,6 +751,12 @@ static void handle_b(void) {
     }
 
     if (hold_call) return;
+
+    if (actions_mode) {
+        play_sound(snd_back);
+        hide_actions_dialog();
+        return;
+    }
 
     if (remove_mode) {
         hide_remove_dialog();
@@ -704,14 +792,9 @@ static void handle_b(void) {
 
     if (file_exist(COLLECTION_DIR)) {
         load_mux("collection");
-    } else {
-        if (file_exist(ADD_MODE_DONE)) {
-            load_mux(read_all_char_from(ADD_MODE_FROM));
-            remove(ADD_MODE_FROM);
-        } else {
-            load_mux("launcher");
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "collection");
-        }
+    } else if (!file_exist(ADD_MODE_DONE) || !load_add_mode_origin()) {
+        load_mux("launcher");
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "collection");
     }
 
     skip_confirm = 0;
@@ -730,15 +813,11 @@ static void handle_start(void) {
     if (key_show) handle_keyboard_ok_press();
 }
 
-static void handle_x(void) {
-    if (key_show) {
-        close_osk(key_entry, ui_group, ui_txt_entry_collect, ui_pnl_entry_collect);
+static void start_remove(void) {
+    if (is_ksk(kiosk.collect.remove)) {
+        kiosk_denied();
         return;
     }
-
-    if (msgbox_active || !ui_count_static || add_mode || is_ksk(kiosk.collect.remove) || remove_mode
-        || video_preview_active())
-        return;
 
     if (config.settings.advanced.trust_remove || skip_confirm) {
         do_remove();
@@ -747,6 +826,89 @@ static void handle_x(void) {
 
     play_sound(snd_confirm);
     show_remove_dialog();
+}
+
+static void show_information(void) {
+    play_sound(snd_info_open);
+    image_refresh("preview");
+
+    show_info_box(items[current_item_index].display_name, load_content_description(), 1);
+}
+
+static void show_tag_sort(void) {
+    play_sound(snd_confirm);
+
+    write_text_to_file(TAG_SORT_FROM, "w", CHAR, "collection");
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, 0);
+
+    load_mux("tag");
+    mux_input_stop();
+}
+
+static void show_location(void) {
+    char resolved[PATH_MAX];
+    const char *content_path = items[current_item_index].extra_data;
+
+    if (!union_resolve_to_real(content_path, resolved, sizeof(resolved)))
+        snprintf(resolved, sizeof(resolved), "%s", content_path);
+
+    if (!file_exist(resolved)) {
+        play_sound(snd_error);
+        toast_message(lang.generic.location_gone, tst_wait_m);
+        return;
+    }
+
+    char base_dir[PATH_MAX];
+    snprintf(base_dir, sizeof(base_dir), "%s", resolved);
+
+    char *last_slash = strrchr(base_dir, '/');
+    if (last_slash) *last_slash = '\0';
+
+    play_sound(snd_confirm);
+
+    write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
+    write_text_to_file(MUOS_HST_LOAD, "w", CHAR, get_last_dir(resolved));
+
+    load_mux("explore");
+    mux_input_stop();
+}
+
+static void handle_x(void) {
+    if (key_show) {
+        close_osk(key_entry, ui_group, ui_txt_entry_collect, ui_pnl_entry_collect);
+        return;
+    }
+
+    if (msgbox_active || !ui_count_static || add_mode || actions_mode || remove_mode || hold_call
+        || video_preview_active())
+        return;
+
+    // A collection folder has no content behind it to carry any of the options stuff
+    if (items[current_item_index].content_type == FOLDER) return;
+
+    if (is_ksk(kiosk.content.option)) {
+        kiosk_denied();
+        return;
+    }
+
+    play_sound(snd_confirm);
+
+    char content_dir[PATH_MAX];
+    snprintf(content_dir, sizeof(content_dir), "%s", items[current_item_index].extra_data);
+
+    char *last_slash = strrchr(content_dir, '/');
+    if (last_slash) *last_slash = '\0';
+
+    write_text_to_file(MUOS_OPT_FROM, "w", CHAR, "collection");
+    write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_HST_LOAD, "w", CHAR, get_last_dir(items[current_item_index].extra_data));
+
+    load_content_core(1, 0, items[current_item_index].extra_data);
+    load_content_governor(content_dir, NULL, 1, 0, 0);
+
+    load_mux("option");
+    mux_input_stop();
 }
 
 static void handle_y(void) {
@@ -768,12 +930,13 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || video_preview_active()) return;
+    if (msgbox_active || progress_onscreen != -1 || hold_call || video_preview_active()) return;
+    if (key_show || add_mode || actions_mode || remove_mode) return;
+
+    if (!ui_count_static && !tag_filtered) return;
 
     play_sound(snd_info_open);
-    image_refresh("preview");
-
-    show_info_box(items[current_item_index].display_name, load_content_description(), 1);
+    show_actions_dialog();
 }
 
 static void handle_random_select(void) {
@@ -797,6 +960,14 @@ static void handle_up(void) {
         return;
     }
 
+    if (actions_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(actions_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -814,7 +985,7 @@ static void handle_up_hold(void) {
         return;
     }
 
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_up_hold();
 }
@@ -822,6 +993,14 @@ static void handle_up_hold(void) {
 static void handle_down(void) {
     if (key_show) {
         key_down();
+        return;
+    }
+
+    if (actions_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(actions_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
         return;
     }
 
@@ -842,7 +1021,7 @@ static void handle_down_hold(void) {
         return;
     }
 
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_down_hold();
 }
@@ -850,6 +1029,14 @@ static void handle_down_hold(void) {
 static void handle_left(void) {
     if (key_show) {
         key_left();
+        return;
+    }
+
+    if (actions_mode) {
+        if (swap_axis) {
+            dialogue_navigate(actions_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
         return;
     }
 
@@ -870,6 +1057,14 @@ static void handle_right(void) {
         return;
     }
 
+    if (actions_mode) {
+        if (swap_axis) {
+            dialogue_navigate(actions_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+
     if (remove_mode) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -887,7 +1082,7 @@ static void handle_left_hold(void) {
         return;
     }
 
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_left_hold();
 }
@@ -898,7 +1093,7 @@ static void handle_right_hold(void) {
         return;
     }
 
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_right_hold();
 }
@@ -948,12 +1143,14 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.generic.remove, 0},
+                                  {ui_lbl_nav_x, lang.generic.option, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
                                   {ui_lbl_nav_y, lang.generic.new, 0},
                                   {ui_lbl_nav_menu_glyph, "", 0},
-                                  {ui_lbl_nav_menu, lang.generic.info, 0},
+                                  {ui_lbl_nav_menu, lang.generic.actions, 0},
                                   {NULL, NULL, 0}});
+
+    update_tag_glyph(&theme, tag_filtered ? active_tag : NULL);
 
     overlay_display();
 }
@@ -1033,6 +1230,11 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
 
     snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 
+    tag_filter_apply();
+
+    tag_filtered = tag_filter_get(active_tag, sizeof(active_tag));
+    if (tag_filtered) LOG_INFO(mux_module, "Tag Sort active: \"%s\"", active_tag);
+
     create_collection_items();
     init_elements();
 
@@ -1062,7 +1264,7 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
         first_open = 0;
         nav_moved = 1;
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxcollect.none);
+        lv_label_set_text(ui_lbl_screen_message, tag_filtered ? lang.muxtag.no_match : lang.muxcollect.none);
         clear_box_image();
     }
 
@@ -1108,6 +1310,11 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
         }
     }
 
+    if (tag_filtered && !add_mode) {
+        nav_e[nav_menu].visible = 1;
+        nav_e[nav_menu_glyph].visible = 1;
+    }
+
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
@@ -1122,6 +1329,26 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
     }
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
+
+    const char *item_options[act_count] = {
+        lang.generic.information, lang.generic.location, lang.generic.tag_sort, lang.generic.remove
+    };
+    dialogue_init(
+        &actions_item_dlg, &theme, ui_screen, lang.generic.actions, NULL, item_options, act_count, lang.generic.select,
+        lang.generic.cancel
+    );
+
+    const char *folder_options[3] = {lang.generic.information, lang.generic.tag_sort, lang.generic.remove};
+    dialogue_init(
+        &actions_folder_dlg, &theme, ui_screen, lang.generic.actions, NULL, folder_options, 3, lang.generic.select,
+        lang.generic.cancel
+    );
+
+    const char *empty_options[1] = {lang.generic.tag_sort};
+    dialogue_init(
+        &actions_empty_dlg, &theme, ui_screen, lang.generic.actions, NULL, empty_options, 1, lang.generic.select,
+        lang.generic.cancel
+    );
     update_file_counter(ui_lbl_counter_collect, file_count);
     init_osk(ui_pnl_entry_collect, ui_txt_entry_collect, 0, 0, OSK_MAX);
 

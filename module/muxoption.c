@@ -773,6 +773,18 @@ static void handle_b(void) {
     remove(MUOS_SAA_LOAD);
     remove(MUOS_SAG_LOAD);
 
+    // Content Options is reached from more than the explorer now.
+    // So go back where we came from or so help me...
+    if (file_exist(MUOS_OPT_FROM)) {
+        char *from = read_all_char_from(MUOS_OPT_FROM);
+        remove(MUOS_OPT_FROM);
+
+        if (from) {
+            if (*from) load_mux(from);
+            free(from);
+        }
+    }
+
     mux_input_stop();
 }
 

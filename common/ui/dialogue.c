@@ -580,6 +580,18 @@ void dialogue_show(mux_dialogue *dlg) {
 skip_panel_anim:;
 }
 
+void dialogue_hide_chained(const mux_dialogue *dlg) {
+    lv_anim_del(dlg->panel, panel_anim_y_cb);
+    lv_anim_del(dlg->panel, panel_anim_x_cb);
+    lv_anim_del(dlg->panel, panel_anim_opa_cb);
+    lv_anim_del(dlg->dim, dim_anim_opa_cb);
+
+    lv_obj_add_flag(dlg->dim, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
+}
+
 void dialogue_hide(const mux_dialogue *dlg) {
     page_nav_blocked = 0;
     lv_anim_del(dlg->panel, panel_anim_y_cb);

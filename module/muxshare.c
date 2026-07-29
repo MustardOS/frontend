@@ -859,6 +859,9 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
     char *created_dirs[file_count];
     int created_count = 0;
 
+    char tag_filter[MAX_BUFFER_SIZE];
+    const int filtered = tag_filter_get(tag_filter, sizeof(tag_filter));
+
     for (int i = 0; i < file_count; i++) {
         char fn_name[MAX_BUFFER_SIZE];
 
@@ -891,6 +894,19 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
             create_directories(init_meta_dir, 0);
 
             created_dirs[created_count++] = strdup(sub_path);
+        }
+
+        if (filtered) {
+            char *tag = read_content_tag(sub_path, file_path);
+            const int keep = tag && strcasecmp(tag, tag_filter) == 0;
+            free(tag);
+
+            if (!keep) {
+                free(file_path_raw);
+                free(sub_path);
+                free(file_names[i]);
+                continue;
+            }
         }
 
         resolve_friendly_name(file_path, fn_name);

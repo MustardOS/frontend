@@ -45,6 +45,8 @@ lv_obj_t *ui_img_box;
 lv_obj_t *ui_pnl_header;
 lv_obj_t *ui_lbl_datetime;
 lv_obj_t *ui_lbl_title;
+lv_obj_t *ui_con_tag;
+lv_obj_t *ui_sta_tag;
 lv_obj_t *ui_con_glyphs;
 lv_obj_t *ui_sta_bluetooth;
 lv_obj_t *ui_sta_network;
@@ -754,6 +756,24 @@ void init_ui_common_screen(
     lv_obj_set_style_pad_right(ui_lbl_title, theme->header.padding_right, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_lbl_title, theme->font.header_pad_top * 2, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lbl_title, theme->font.header_pad_bottom * 2, MU_OBJ_MAIN_DEFAULT);
+
+    ui_con_tag = lv_obj_create(ui_pnl_header);
+    lv_obj_set_width(ui_con_tag, device->mux.width);
+    lv_obj_set_height(ui_con_tag, LV_SIZE_CONTENT);
+    lv_obj_set_align(ui_con_tag, LV_ALIGN_TOP_MID);
+
+    lv_obj_set_flex_flow(ui_con_tag, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(ui_con_tag, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_con_tag, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_set_style_pad_left(ui_con_tag, theme->datetime.padding_left, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_con_tag, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_con_tag, theme->font.header_icon_pad_top * 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_con_tag, theme->font.header_pad_bottom * 2, MU_OBJ_MAIN_DEFAULT);
+
+    ui_sta_tag = create_header_glyph(ui_con_tag, theme);
+    lv_obj_set_style_pad_left(ui_sta_tag, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
 
     ui_con_glyphs = lv_obj_create(ui_pnl_header);
     lv_obj_set_width(ui_con_glyphs, device->mux.width);
@@ -1642,6 +1662,30 @@ static void update_status_glyph(
         lv_img_set_src(ui_img, image_embed);
         apply_glyph_scale(ui_img, image_embed, header_px, header_px);
     }
+}
+
+void update_tag_glyph(const struct theme_config *theme, const char *tag) {
+    if (!ui_sta_tag || !ui_lbl_datetime) return;
+
+    char image_path[MAX_BUFFER_SIZE];
+    const int found = tag && *tag && load_glyph_icon(mux_dim, "muxtag", tag, image_path, sizeof(image_path));
+
+    if (!found) {
+        lv_obj_add_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_pad_left(ui_lbl_datetime, theme->datetime.padding_left, MU_OBJ_MAIN_DEFAULT);
+        return;
+    }
+
+    lv_obj_set_style_img_recolor(ui_sta_tag, lv_color_hex(theme->datetime.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_sta_tag, theme->datetime.alpha, MU_OBJ_MAIN_DEFAULT);
+
+    update_status_glyph(ui_sta_tag, theme, "muxtag", tag, 75);
+    lv_obj_clear_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
+
+    lv_obj_update_layout(ui_pnl_header);
+    lv_obj_set_style_pad_left(
+        ui_lbl_datetime, theme->datetime.padding_left + lv_obj_get_width(ui_sta_tag) + 6, MU_OBJ_MAIN_DEFAULT
+    );
 }
 
 void update_battery_capacity(lv_obj_t *ui_sta_capacity, const struct theme_config *theme) {

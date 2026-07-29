@@ -108,6 +108,11 @@
 #define ADD_MODE_DONE "/tmp/add_mode_done"
 #define ADD_MODE_FROM "/tmp/add_mode_from"
 
+#define TAG_SORT_FROM "/tmp/tag_fm"
+#define TAG_SORT_PICK "/tmp/tag_pk"
+#define TAG_SORT_COLL "/tmp/tag_cl"
+#define TAG_SORT_HIST "/tmp/tag_hs"
+
 #define COLLECTION_DIR "/tmp/collection_dir"
 
 #define CONF_DEVICE_PATH OPT_PATH "device/config/"
@@ -172,6 +177,7 @@
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
+#define MUOS_OPT_FROM "/tmp/opt_fm" // Content Options Module Return
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_AIX_LOAD "/tmp/aix_go" // Core/System Assignment Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader

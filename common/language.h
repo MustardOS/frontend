@@ -50,6 +50,7 @@ struct mux_lang {
         char clear[MAX_BUFFER_SIZE];
         char close[MAX_BUFFER_SIZE];
         char confirm[MAX_BUFFER_SIZE];
+        char actions[MAX_BUFFER_SIZE];
         char collect[MAX_BUFFER_SIZE];
         char content[MAX_BUFFER_SIZE];
         char details[MAX_BUFFER_SIZE];
@@ -69,6 +70,10 @@ struct mux_lang {
         char hold_reset[MAX_BUFFER_SIZE];
         char included[MAX_BUFFER_SIZE];
         char info[MAX_BUFFER_SIZE];
+        char information[MAX_BUFFER_SIZE];
+        char location[MAX_BUFFER_SIZE];
+        char location_gone[MAX_BUFFER_SIZE];
+        char tag_sort[MAX_BUFFER_SIZE];
         char install[MAX_BUFFER_SIZE];
         char kiosk_disable[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
@@ -1979,6 +1984,9 @@ struct mux_lang {
     struct {
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char no_match[MAX_BUFFER_SIZE];
+        char sort[MAX_BUFFER_SIZE];
+        char sort_help[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
     } muxtag;
 

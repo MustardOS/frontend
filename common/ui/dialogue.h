@@ -68,6 +68,8 @@ void dialogue_show(mux_dialogue *dlg);
 
 void dialogue_hide(const mux_dialogue *dlg);
 
+void dialogue_hide_chained(const mux_dialogue *dlg);
+
 void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, int delta);
 
 void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t);

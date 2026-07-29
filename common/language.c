@@ -181,7 +181,12 @@ static const lang_field lang_fields[] = {
     {"generic", LANG_OFF(generic.hold_remove), lang_generic, "Hold L2 and press X to confirm removal!"},
     {"generic", LANG_OFF(generic.hold_reset), lang_generic, "Hold L2 and press X to confirm reset!"},
     {"generic", LANG_OFF(generic.included), lang_generic, "Included"},
+    {"generic", LANG_OFF(generic.actions), lang_generic, "Actions"},
     {"generic", LANG_OFF(generic.info), lang_generic, "Info"},
+    {"generic", LANG_OFF(generic.information), lang_generic, "Information"},
+    {"generic", LANG_OFF(generic.location), lang_generic, "Location"},
+    {"generic", LANG_OFF(generic.location_gone), lang_generic, "That content is no longer there…"},
+    {"generic", LANG_OFF(generic.tag_sort), lang_generic, "Tag Sort"},
     {"generic", LANG_OFF(generic.install), lang_generic, "Install"},
     {"generic", LANG_OFF(generic.kiosk_disable), lang_generic, "This is disabled in kiosk mode!"},
     {"generic", LANG_OFF(generic.launch), lang_generic, "Launch"},
@@ -1853,6 +1858,9 @@ static const lang_field lang_fields[] = {
     {"muxtag", LANG_OFF(muxtag.title), lang_specific, "TAG"},
     {"muxtag", LANG_OFF(muxtag.help), lang_specific, "Change the tag of your current selected content to make it stand out"},
     {"muxtag", LANG_OFF(muxtag.none), lang_specific, "No Tags Found…"},
+    {"muxtag", LANG_OFF(muxtag.no_match), lang_specific, "Nothing Tagged…"},
+    {"muxtag", LANG_OFF(muxtag.sort), lang_specific, "TAG SORT"},
+    {"muxtag", LANG_OFF(muxtag.sort_help), lang_specific, "Show only the content carrying the tag you pick, or choose None to show everything again"},
 
     // muxtask
     {"muxtask", LANG_OFF(muxtask.title), lang_specific, "TASK TOOLKIT"},

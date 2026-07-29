@@ -1232,6 +1232,9 @@ static void handle_x(void) {
         return;
     }
 
+    // The explorer is the default return, so clear anything another module left behind
+    if (file_exist(MUOS_OPT_FROM)) remove(MUOS_OPT_FROM);
+
     write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
     write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);

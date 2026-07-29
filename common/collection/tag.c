@@ -5,6 +5,7 @@
 #include "../strutil.h"
 #include "../fileio.h"
 #include "../sysinfo.h"
+#include "../init.h"
 
 void load_tag_items(tag_item **tag_items, size_t *count) {
     int tag_count;
@@ -78,6 +79,76 @@ void free_tag_items(tag_item **tag_items, size_t *count) {
     free(*tag_items);  // Free the array itself
     *tag_items = NULL; // Set the pointer to NULL
     *count = 0;        // Set the count to 0
+}
+
+char *read_content_tag(const char *sub_path, const char *content_path) {
+    if (!sub_path || !*sub_path || !content_path || !*content_path) return NULL;
+
+    char base_name[MAX_BUFFER_SIZE];
+    snprintf(base_name, sizeof(base_name), "%s", get_file_name(content_path));
+
+    char *dot = strrchr(base_name, '.');
+    if (dot) *dot = '\0';
+
+    char marker_path[MAX_BUFFER_SIZE];
+    snprintf(marker_path, sizeof(marker_path), INFO_CON_PATH "/%s/%s.tag", sub_path, base_name);
+    remove_double_slashes(marker_path);
+
+    if (!file_exist(marker_path)) return NULL;
+
+    char *tag = read_line_char_from(marker_path, 1);
+    if (!tag) return NULL;
+
+    const char *trimmed = str_remchar(str_trim(tag), ' ');
+    char *normalised = *trimmed ? str_tolower(trimmed) : NULL;
+
+    free(tag);
+    return normalised;
+}
+
+const char *tag_filter_path(void) {
+    if (strcasecmp(mux_module, "muxcollect") == 0) return TAG_SORT_COLL;
+    if (strcasecmp(mux_module, "muxhistory") == 0) return TAG_SORT_HIST;
+
+    return NULL;
+}
+
+int tag_filter_get(char *output, const size_t size) {
+    if (!output || size == 0) return 0;
+    output[0] = '\0';
+
+    const char *path = tag_filter_path();
+    if (!path || !file_exist(path)) return 0;
+
+    char *tag = read_line_char_from(path, 1);
+    const int active = tag && *tag;
+
+    if (active) snprintf(output, size, "%s", tag);
+    free(tag);
+
+    return active;
+}
+
+void tag_filter_apply(void) {
+    if (!file_exist(TAG_SORT_PICK)) return;
+
+    const char *path = tag_filter_path();
+    if (!path) {
+        remove(TAG_SORT_PICK);
+        return;
+    }
+
+    char *tag = read_line_char_from(TAG_SORT_PICK, 1);
+
+    // An empty pick means we chose None so drop the filter entirely!
+    if (tag && *tag) {
+        write_text_to_file(path, "w", CHAR, tag);
+    } else {
+        remove(path);
+    }
+
+    free(tag);
+    remove(TAG_SORT_PICK);
 }
 
 void print_tag_items(const tag_item *tag_items, const size_t count) {

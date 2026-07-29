@@ -8,6 +8,22 @@ static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
 
+static int actions_mode = 0;
+static mux_dialogue actions_dlg;
+
+// A tag filter can empty the list, so keep a way back to the tag picker when there is nothing to act on
+static mux_dialogue actions_empty_dlg;
+static mux_dialogue *shown_dlg = NULL;
+static int tag_filtered = 0;
+static char active_tag[MAX_BUFFER_SIZE];
+
+typedef enum { act_information = 0, act_location, act_tag_sort, act_remove, act_count } actions_opt;
+
+static void start_remove(void);
+static void show_information(void);
+static void show_location(void);
+static void show_tag_sort(void);
+
 static void show_remove_dialog(void) {
     remove_mode = 1;
     remove_dlg.selected = 0;
@@ -18,6 +34,30 @@ static void show_remove_dialog(void) {
 static void hide_remove_dialog(void) {
     remove_mode = 0;
     dialogue_hide(&remove_dlg);
+}
+
+static void show_actions_dialog(void) {
+    actions_mode = 1;
+    shown_dlg = ui_count_static ? &actions_dlg : &actions_empty_dlg;
+
+    // Trust Remove, or having said don't ask again means we want the removes to be quick
+    const int quick_remove = config.settings.advanced.trust_remove || skip_confirm;
+    shown_dlg->selected = quick_remove ? shown_dlg->option_count - 1 : 0;
+
+    dialogue_show(shown_dlg);
+    dialogue_refresh(shown_dlg, &theme);
+}
+
+static void hide_actions_dialog(void) {
+    actions_mode = 0;
+    if (shown_dlg) dialogue_hide(shown_dlg);
+    shown_dlg = NULL;
+}
+
+static actions_opt actions_selected(void) {
+    if (shown_dlg == &actions_empty_dlg) return act_tag_sort;
+
+    return (actions_opt) shown_dlg->selected;
 }
 
 static int exit_status = 0;
@@ -419,6 +459,14 @@ static void do_remove(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (actions_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(shown_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -431,6 +479,14 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (actions_mode) {
+        if (!swap_axis) {
+            dialogue_navigate(shown_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -443,6 +499,14 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_left(void) {
+    if (actions_mode) {
+        if (swap_axis) {
+            dialogue_navigate(shown_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+
     if (remove_mode) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -455,6 +519,14 @@ static void handle_dpad_left(void) {
 }
 
 static void handle_dpad_right(void) {
+    if (actions_mode) {
+        if (swap_axis) {
+            dialogue_navigate(shown_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
+        return;
+    }
+
     if (remove_mode) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -467,31 +539,58 @@ static void handle_dpad_right(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_down_hold();
 }
 
 static void handle_dpad_left_hold(void) {
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_left_hold();
 }
 
 static void handle_dpad_right_hold(void) {
-    if (remove_mode) return;
+    if (actions_mode || remove_mode) return;
 
     handle_list_nav_right_hold();
 }
 
 static void handle_a(void) {
     if (hold_call) return;
+
+    if (actions_mode) {
+        const actions_opt opt = actions_selected();
+
+        // Remove hands straight over to its own dialogue, so keep the dim up between the two
+        const int chains = opt == act_remove && !is_ksk(kiosk.content.history)
+                           && !(config.settings.advanced.trust_remove || skip_confirm);
+
+        if (chains) {
+            dialogue_hide_chained(shown_dlg);
+            actions_mode = 0;
+            shown_dlg = NULL;
+        } else {
+            hide_actions_dialog();
+        }
+
+        if (opt == act_information) {
+            show_information();
+        } else if (opt == act_location) {
+            show_location();
+        } else if (opt == act_tag_sort) {
+            show_tag_sort();
+        } else if (opt == act_remove) {
+            start_remove();
+        }
+        return;
+    }
 
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
@@ -510,13 +609,19 @@ static void handle_a(void) {
 }
 
 static void handle_a_hold(void) {
-    if (msgbox_active || hold_call || remove_mode) return;
+    if (msgbox_active || hold_call || actions_mode || remove_mode) return;
     video_preview_cancel();
     process_load(launch_flag(config.visual.launch_swap, 1));
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (actions_mode) {
+        play_sound(snd_back);
+        hide_actions_dialog();
+        return;
+    }
 
     if (remove_mode) {
         hide_remove_dialog();
@@ -542,9 +647,11 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || is_ksk(kiosk.content.history) || remove_mode || video_preview_active())
+static void start_remove(void) {
+    if (is_ksk(kiosk.content.history)) {
+        kiosk_denied();
         return;
+    }
 
     if (config.settings.advanced.trust_remove || skip_confirm) {
         do_remove();
@@ -553,6 +660,79 @@ static void handle_x(void) {
 
     play_sound(snd_confirm);
     show_remove_dialog();
+}
+
+static void show_information(void) {
+    play_sound(snd_info_open);
+    image_refresh("preview");
+
+    show_info_box(items[current_item_index].display_name, load_content_description(), 1);
+}
+
+static void show_tag_sort(void) {
+    play_sound(snd_confirm);
+
+    write_text_to_file(TAG_SORT_FROM, "w", CHAR, "history");
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, 0);
+
+    load_mux("tag");
+    mux_input_stop();
+}
+
+static void show_location(void) {
+    char resolved[PATH_MAX];
+    const char *content_path = items[current_item_index].extra_data;
+
+    if (!union_resolve_to_real(content_path, resolved, sizeof(resolved)))
+        snprintf(resolved, sizeof(resolved), "%s", content_path);
+
+    if (!file_exist(resolved)) {
+        play_sound(snd_error);
+        toast_message(lang.generic.location_gone, tst_wait_m);
+        return;
+    }
+
+    char base_dir[PATH_MAX];
+    snprintf(base_dir, sizeof(base_dir), "%s", resolved);
+
+    char *last_slash = strrchr(base_dir, '/');
+    if (last_slash) *last_slash = '\0';
+
+    play_sound(snd_confirm);
+
+    write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
+    write_text_to_file(MUOS_HST_LOAD, "w", CHAR, get_last_dir(resolved));
+
+    load_mux("explore");
+    mux_input_stop();
+}
+
+static void handle_x(void) {
+    if (msgbox_active || !ui_count_static || actions_mode || remove_mode || hold_call || video_preview_active()) return;
+
+    if (is_ksk(kiosk.content.option)) {
+        kiosk_denied();
+        return;
+    }
+
+    play_sound(snd_confirm);
+
+    char content_dir[PATH_MAX];
+    snprintf(content_dir, sizeof(content_dir), "%s", items[current_item_index].extra_data);
+
+    char *last_slash = strrchr(content_dir, '/');
+    if (last_slash) *last_slash = '\0';
+
+    write_text_to_file(MUOS_OPT_FROM, "w", CHAR, "history");
+    write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_HST_LOAD, "w", CHAR, get_last_dir(items[current_item_index].extra_data));
+
+    load_content_core(1, 0, items[current_item_index].extra_data);
+    load_content_governor(content_dir, NULL, 1, 0, 0);
+
+    load_mux("option");
+    mux_input_stop();
 }
 
 static void handle_y(void) {
@@ -568,12 +748,13 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || video_preview_active()) return;
+    if (msgbox_active || progress_onscreen != -1 || hold_call || video_preview_active()) return;
+    if (actions_mode || remove_mode) return;
+
+    if (!ui_count_static && !tag_filtered) return;
 
     play_sound(snd_info_open);
-    image_refresh("preview");
-
-    show_info_box(items[current_item_index].display_name, load_content_description(), 1);
+    show_actions_dialog();
 }
 
 static void handle_random_select(void) {
@@ -607,17 +788,21 @@ static void init_elements(void) {
     lv_label_set_text(ui_lbl_preview_header, lang.generic.switch_image);
     lv_obj_clear_flag(ui_lbl_preview_header_glyph, LV_OBJ_FLAG_HIDDEN);
 
+    const int menu_check = tag_filtered ? 0 : 1;
+
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 1},
                                   {ui_lbl_nav_a, lang.generic.open, 1},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 1},
-                                  {ui_lbl_nav_x, lang.generic.remove, 1},
+                                  {ui_lbl_nav_x, lang.generic.option, 1},
                                   {ui_lbl_nav_y_glyph, "", 1},
                                   {ui_lbl_nav_y, lang.generic.collect, 1},
-                                  {ui_lbl_nav_menu_glyph, "", 1},
-                                  {ui_lbl_nav_menu, lang.generic.info, 1},
+                                  {ui_lbl_nav_menu_glyph, "", menu_check},
+                                  {ui_lbl_nav_menu, lang.generic.actions, menu_check},
                                   {NULL, NULL, 0}});
+
+    update_tag_glyph(&theme, tag_filtered ? active_tag : NULL);
 
     overlay_display();
 }
@@ -672,6 +857,10 @@ int muxhistory_main(const int his_index) {
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     reset_ui_groups();
+    tag_filter_apply();
+
+    tag_filtered = tag_filter_get(active_tag, sizeof(active_tag));
+    if (tag_filtered) LOG_INFO(mux_module, "Tag Sort active: \"%s\"", active_tag);
 
     create_history_items();
     init_elements();
@@ -700,13 +889,14 @@ int muxhistory_main(const int his_index) {
         first_open = 0;
         nav_moved = 1;
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxhistory.none);
+        lv_label_set_text(ui_lbl_screen_message, tag_filtered ? lang.muxtag.no_match : lang.muxhistory.none);
     }
 
-    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_vis},    {ui_lbl_nav_a_glyph, nav_vis},
-                                     {ui_lbl_nav_x, nav_vis},    {ui_lbl_nav_x_glyph, nav_vis},
-                                     {ui_lbl_nav_y, nav_vis},    {ui_lbl_nav_y_glyph, nav_vis},
-                                     {ui_lbl_nav_menu, nav_vis}, {ui_lbl_nav_menu_glyph, nav_vis}};
+    const int menu_vis = nav_vis || tag_filtered;
+    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_vis},     {ui_lbl_nav_a_glyph, nav_vis},
+                                     {ui_lbl_nav_x, nav_vis},     {ui_lbl_nav_x_glyph, nav_vis},
+                                     {ui_lbl_nav_y, nav_vis},     {ui_lbl_nav_y_glyph, nav_vis},
+                                     {ui_lbl_nav_menu, menu_vis}, {ui_lbl_nav_menu_glyph, menu_vis}};
 
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
@@ -739,6 +929,20 @@ int muxhistory_main(const int his_index) {
     }
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
+
+    const char *action_options[act_count] = {
+        lang.generic.information, lang.generic.location, lang.generic.tag_sort, lang.generic.remove
+    };
+    dialogue_init(
+        &actions_dlg, &theme, ui_screen, lang.generic.actions, NULL, action_options, act_count, lang.generic.select,
+        lang.generic.cancel
+    );
+
+    const char *empty_options[1] = {lang.generic.tag_sort};
+    dialogue_init(
+        &actions_empty_dlg, &theme, ui_screen, lang.generic.actions, NULL, empty_options, 1, lang.generic.select,
+        lang.generic.cancel
+    );
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

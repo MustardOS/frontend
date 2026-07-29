@@ -78,6 +78,8 @@ int generate_image_embed(
 
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
 
+void update_tag_glyph(const struct theme_config *theme, const char *tag);
+
 void update_battery_capacity(lv_obj_t *ui_sta_capacity, const struct theme_config *theme);
 
 void update_battery_percent_label(lv_obj_t *ui_label, const struct theme_config *theme);
@@ -122,6 +124,8 @@ extern lv_obj_t *ui_img_box;
 extern lv_obj_t *ui_pnl_header;
 extern lv_obj_t *ui_lbl_datetime;
 extern lv_obj_t *ui_lbl_title;
+extern lv_obj_t *ui_con_tag;
+extern lv_obj_t *ui_sta_tag;
 extern lv_obj_t *ui_con_glyphs;
 extern lv_obj_t *ui_sta_bluetooth;
 extern lv_obj_t *ui_sta_network;
