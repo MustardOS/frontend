@@ -51,6 +51,7 @@ static int find_system_item_index(const char *system_name) {
         closedir(ad);
     }
 
+    if (!tmp_items) return 0;
     sort_items(tmp_items, tmp_count);
 
     int idx = get_item_index_by_name(tmp_items, tmp_count, system_name, FOLDER);
@@ -119,6 +120,7 @@ static int find_core_item_index(const char *system) {
     }
     closedir(ad);
 
+    if (!tmp_items) return 0;
     sort_items(tmp_items, tmp_count);
 
     int idx = -1;

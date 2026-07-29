@@ -164,10 +164,12 @@ int item_exists(const content_item *content_items, const size_t count, const cha
 }
 
 void sort_items(content_item *content_items, const size_t count) {
+    if (!content_items || count < 2U) return;
     qsort(content_items, count, sizeof(content_item), content_item_compare);
 }
 
 void sort_items_time(content_item *content_items, const size_t count) {
+    if (!content_items || count < 2U) return;
     qsort(content_items, count, sizeof(content_item), time_compare_for_history);
 }
 
@@ -178,15 +180,15 @@ content_item get_item_by_index(const content_item *items, const size_t index) {
 int get_item_index_by_name(
     const content_item *content_items, const size_t count, const char *name, const content_type type
 ) {
-    for (int i = 0; i < count; i++) {
-        if (content_items[i].content_type == type && strcasecmp(content_items[i].name, name) == 0) return i;
+    for (size_t i = 0; i < count; i++) {
+        if (content_items[i].content_type == type && strcasecmp(content_items[i].name, name) == 0) return (int) i;
     }
     return -1;
 }
 
 int get_item_index_by_extra_data(const content_item *content_items, const size_t count, const char *extra_data) {
-    for (int i = 0; i < count; i++) {
-        if (strcasecmp(content_items[i].extra_data, extra_data) == 0) return i;
+    for (size_t i = 0; i < count; i++) {
+        if (strcasecmp(content_items[i].extra_data, extra_data) == 0) return (int) i;
     }
     return -1;
 }
