@@ -56,8 +56,24 @@ it covers ES2 era state. The muX UI never sets an ES3 state: vertex arrays, samp
 uniform buffer bindings. Nothing saved for those because SDL2 renderer never binds them, so the value to put back is
 always zero. `gl_reset_es3_state()` clears them.
 
+`GL_FRAMEBUFFER_BINDING` is the draw binding on ES3, not both of them. A core is free to leave different objects bound
+to `GL_READ_FRAMEBUFFER` and `GL_DRAW_FRAMEBUFFER`, and putting the state back through `GL_FRAMEBUFFER` sets both at
+once, which would quietly collapse a split the core was relying on. Both are captured and restored separately wherever
+ES3 is available, and the single binding remains the ES2 path.
+
 Note that a driver asked for ES2 may return a context reporting a much higher version, so "the existing context is
 good enough" cannot be inferred from what was requested when it was made.
+
+## Targets
+
+One colour texture and framebuffer, which is what RetroArch settles on for hardware rendered cores as well. Rotating
+through several was measured and made no difference. The hazard that would justify it - the core drawing into the
+texture the UI is sampling from another context - only exists while the core has a context of its own, and it no
+longer does.
+
+`hw_render_bridge_flush_core_commands()` submits the core's queued commands after the last frame of a batch while the
+core's context is still current. It does not wait for them, so the work is already in flight by the time state is put
+back and the texture is sampled.
 
 ## Fallback
 
@@ -69,3 +85,39 @@ chose to be slow.
 
 `hw_render_bridge_description()` reports the context actually in use, which the information screen shows so the
 outcome is visible without reading logs.
+
+## Game Renderer
+
+Video settings carry a `Game Renderer` choice of `Hardware` or `Software`. Choosing `Software` makes
+`SET_HW_RENDER` return false, which is the documented way of telling a core the frontend will not provide hardware
+rendering, and the core falls back to the renderer it ships with. No backend is ever exposed - the choice is only
+whether Pickles offers one at all.
+
+The row is hidden for cores that never ask for hardware rendering, where the choice would mean nothing.
+`environment_core_wants_hw_render()` records whether the request was seen.
+
+Negotiation happens once while the content loads, so a change only takes effect the next time the content is loaded,
+and cycling the option says so rather than appearing to do nothing. Settings are read before `core_load_content()` for
+the same reason - a core asks for its renderer while loading, so anything acted on during load has to be in place
+before it starts.
+
+## Known issue - hardware rendered PSX content
+
+SwanStation and DuckStation run some content near 40 FPS during gameplay while the same title's in game menus hold 60,
+through the same code path. RetroArch runs the same core, the same options and the same content at 60 throughout.
+
+Measured and ruled out, so nobody has to walk it again:
+
+- CPU and GPU clocks. Pinning both to maximum gained three frames.
+- Core options, fastmem mode and CPU execution mode. Identical to the RetroArch setup that does not have the problem.
+- Memory footprint. RetroArch resides larger than Pickles does and is unaffected.
+- Audio pacing and rate control. `audio_bridge_wait_for_headroom()` never sleeps during the fault.
+- Vsync quantisation. Disabling vsync entirely changed nothing.
+- Frontend CPU cost. Around 11ms of a 25ms frame, and the main thread sits under half busy, so the loop is waiting
+  rather than working.
+- Render path shape. A single target, a shared context and one blit all match what RetroArch does.
+
+What does track the fault is `mali-utility-wo`, the driver's GPU memory and job worker. It sits near a fifth of a core
+during gameplay, drops to nothing in the menus, and is idle under RetroArch in the same scene. Attributing that needs
+GPU counters rather than frame timers, so `Game Renderer` exists as the way out until someone can point a profiler at
+it.
