@@ -1,14 +1,6 @@
 #pragma once
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include "debug.h"
-#include "options.h"
+#include "debug.h" // IWYU pragma: keep
 
 #define COL_RED    "\x1b[38;5;196m"
 #define COL_GREEN  "\x1b[38;5;46m"
@@ -27,72 +19,45 @@
 #define SUCCESS_SYMBOL COL_GREEN "+" COL_RESET
 #define DEBUG_SYMBOL   COL_ORANGE "?" COL_RESET
 
-#define LOG(level, symbol, mux_module, msg, ...)                                                                       \
-    {                                                                                                                  \
-        int dbg_mode = is_debug_mode();                                                                                \
-        if (dbg_mode >= 1) {                                                                                           \
-            struct timespec ts;                                                                                        \
-            clock_gettime(CLOCK_MONOTONIC, &ts);                                                                       \
-            double uptime = ts.tv_sec + ts.tv_nsec / 1000000000.0;                                                     \
-                                                                                                                       \
-            time_t now = time(NULL);                                                                                   \
-            struct tm *timeinfo = localtime(&now);                                                                     \
-                                                                                                                       \
-            char time_buffer[20];                                                                                      \
-            strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", timeinfo);                                 \
-                                                                                                                       \
-            char date_buffer[16];                                                                                      \
-            strftime(date_buffer, sizeof(date_buffer), "%Y_%m_%d", timeinfo);                                          \
-                                                                                                                       \
-            char truncated_module[20];                                                                                 \
-            snprintf(truncated_module, sizeof(truncated_module), "%.19s", mux_module);                                 \
-                                                                                                                       \
-            fprintf(                                                                                                   \
-                stderr, "[%.2f]\t[%s] [%s] [%s]\t" msg "\n", uptime, time_buffer, symbol, truncated_module,            \
-                ##__VA_ARGS__                                                                                          \
-            );                                                                                                         \
-                                                                                                                       \
-            if (dbg_mode >= 2) {                                                                                       \
-                char log_path[256];                                                                                    \
-                snprintf(log_path, sizeof(log_path), "/opt/muos/log/%s_%s.log", date_buffer, truncated_module);        \
-                                                                                                                       \
-                int _log_fd = open(log_path, O_WRONLY | O_CREAT | O_APPEND, 0644);                                     \
-                if (_log_fd >= 0) {                                                                                    \
-                    char file_buffer[1024];                                                                            \
-                    int log_len = snprintf(                                                                            \
-                        file_buffer, sizeof(file_buffer), "[%.2f]\t[%s] [%s]\t" msg "\n", uptime, time_buffer,         \
-                        truncated_module, ##__VA_ARGS__                                                                \
-                    );                                                                                                 \
-                                                                                                                       \
-                    if (log_len > 0) {                                                                                 \
-                        __attribute__((unused)) ssize_t _r = write(_log_fd, file_buffer, (size_t) log_len);            \
-                        fsync(_log_fd);                                                                                \
-                    }                                                                                                  \
-                    close(_log_fd);                                                                                    \
-                }                                                                                                      \
-            }                                                                                                          \
-        }                                                                                                              \
-    }
+typedef enum log_level {
+    log_level_info = 0,
+    log_level_warn,
+    log_level_error,
+    log_level_success,
+    log_level_debug
+} log_level;
 
-#define LOG_INFO(mux_module, msg, ...)                                                                                 \
+void log_write_enabled(int debug_mode, log_level level, const char *module, const char *format, ...);
+
+void log_write(log_level level, const char *module, const char *format, ...);
+
+#if defined(MUX_LOG_DISABLE)
+
+#define LOG_INFO(...)    ((void) 0)
+#define LOG_WARN(...)    ((void) 0)
+#define LOG_ERROR(...)   ((void) 0)
+#define LOG_SUCCESS(...) ((void) 0)
+#define LOG_DEBUG(...)   ((void) 0)
+
+#else
+
+#define MUX_LOG_RUNTIME(level, module, ...)                                                                            \
     do {                                                                                                               \
-        LOG(INFO, INFO_SYMBOL, mux_module, msg, ##__VA_ARGS__);                                                        \
-    } while (0)
-#define LOG_WARN(mux_module, msg, ...)                                                                                 \
-    do {                                                                                                               \
-        LOG(WARN, WARN_SYMBOL, mux_module, msg, ##__VA_ARGS__);                                                        \
-    } while (0)
-#define LOG_ERROR(mux_module, msg, ...)                                                                                \
-    do {                                                                                                               \
-        LOG(ERROR, ERROR_SYMBOL, mux_module, msg, ##__VA_ARGS__);                                                      \
-    } while (0)
-#define LOG_SUCCESS(mux_module, msg, ...)                                                                              \
-    do {                                                                                                               \
-        LOG(SUCCESS, SUCCESS_SYMBOL, mux_module, msg, ##__VA_ARGS__);                                                  \
-    } while (0)
-#define LOG_DEBUG(mux_module, msg, ...)                                                                                \
-    do {                                                                                                               \
-        if (is_debug_mode() >= 2) {                                                                                    \
-            LOG(DEBUG, DEBUG_SYMBOL, mux_module, msg, ##__VA_ARGS__);                                                  \
+        const int mux_log_mode_value = is_debug_mode();                                                                \
+        if (mux_log_mode_value >= 1 && ((level) != log_level_debug || mux_log_mode_value >= 2)) {                      \
+            log_write_enabled(mux_log_mode_value, (level), (module), __VA_ARGS__);                                     \
         }                                                                                                              \
     } while (0)
+
+#define LOG_INFO(module, ...)    MUX_LOG_RUNTIME(log_level_info, (module), __VA_ARGS__)
+#define LOG_WARN(module, ...)    MUX_LOG_RUNTIME(log_level_warn, (module), __VA_ARGS__)
+#define LOG_ERROR(module, ...)   MUX_LOG_RUNTIME(log_level_error, (module), __VA_ARGS__)
+#define LOG_SUCCESS(module, ...) MUX_LOG_RUNTIME(log_level_success, (module), __VA_ARGS__)
+
+#if defined(MUX_LOG_PROD)
+#define LOG_DEBUG(...) ((void) 0)
+#else
+#define LOG_DEBUG(module, ...) MUX_LOG_RUNTIME(log_level_debug, (module), __VA_ARGS__)
+#endif
+
+#endif
