@@ -173,7 +173,11 @@ static void update_list_items(const int start_index) {
 
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, lv_group_get_focused(ui_group));

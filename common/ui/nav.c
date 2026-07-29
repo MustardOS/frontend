@@ -582,7 +582,11 @@ void list_win_nav_move(
     void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
 ) {
     if (!ui_count_static) return;
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
 
     const int visible_count = theme.mux.item.count;
     const int static_list = (int) item_count <= visible_count;

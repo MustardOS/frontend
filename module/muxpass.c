@@ -89,12 +89,20 @@ static void handle_down(void) {
 }
 
 static void handle_left(void) {
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
     nav_prev(ui_group, 1);
 }
 
 static void handle_right(void) {
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
     nav_next(ui_group, 1);
 }
 

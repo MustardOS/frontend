@@ -343,7 +343,11 @@ static void focus_initial(void) {
 
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
 
     const int visible_count = theme.mux.item.count;
     const int static_list = !grid_mode_enabled && (int) item_count <= visible_count;

@@ -173,7 +173,11 @@ static void handle_keyboard_ok_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(snd_keypress);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_keypress);
+    }
 
     lv_obj_t *active = key_show == 3 ? hex_entry : key_entry;
     const char *is_key = lv_btnmatrix_get_btn_text(active, key_curr);

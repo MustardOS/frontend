@@ -1712,7 +1712,11 @@ static int focus_activity_list_index(void) {
 
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
 
     const int overview = !in_detail_view && !in_global_view;
     const int visible_count = theme.mux.item.count;

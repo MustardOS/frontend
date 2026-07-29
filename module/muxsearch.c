@@ -165,7 +165,11 @@ static void gen_result(const char *item_glyph, const char *item_text, char *item
 
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
 
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
@@ -462,7 +466,11 @@ static void handle_keyboard_ok_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(snd_keypress);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_keypress);
+    }
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {

@@ -309,7 +309,11 @@ static void focus_initial(void) {
 
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-    first_open ? (first_open = 0) : play_sound(snd_navigate);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_navigate);
+    }
 
     const int visible_count = theme.mux.item.count;
     const int static_list = !grid_mode_enabled && (int) item_count <= visible_count;
@@ -451,7 +455,11 @@ static void handle_keyboard_ok_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(snd_keypress);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound(snd_keypress);
+    }
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (is_key && strcasecmp(is_key, OSK_DONE) == 0) {
