@@ -8,6 +8,15 @@
 #include "colour.h"
 #include "hw_render.h"
 
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER 0x8CA8
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER 0x8CA9
+#endif
+#ifndef GL_READ_FRAMEBUFFER_BINDING
+#define GL_READ_FRAMEBUFFER_BINDING 0x8CAA
+#endif
 #ifndef GL_PIXEL_PACK_BUFFER
 #define GL_PIXEL_PACK_BUFFER 0x88EB
 #endif
@@ -118,7 +127,10 @@ static void(GL_APIENTRY *p_glTexParameteri)(GLenum target, GLenum pname, GLint p
 static GLboolean(GL_APIENTRY *p_glIsTexture)(GLuint texture) = NULL;
 static const GLubyte *(GL_APIENTRY *p_glGetString)(GLenum name) = NULL;
 
+static void(GL_APIENTRY *p_glFlush)(void) = NULL;
+
 // ES3 only, so these are loaded best effort and stay NULL on an ES2 driver
+static int es3_available = 0;
 static void(GL_APIENTRY *p_glBindVertexArray)(GLuint array) = NULL;
 static void(GL_APIENTRY *p_glBindSampler)(GLuint unit, GLuint sampler) = NULL;
 static void(GL_APIENTRY *p_glBindTransformFeedback)(GLenum target, GLuint id) = NULL;
@@ -194,6 +206,7 @@ static int load_gl_functions(void) {
     LOAD_GL(glTexParameteri);
     LOAD_GL(glIsTexture);
     LOAD_GL(glGetString);
+    LOAD_GL(glFlush);
 
 #undef LOAD_GL
 
@@ -667,6 +680,7 @@ typedef struct {
     GLint array_buffer;
     GLint element_array_buffer;
     GLint framebuffer;
+    GLint read_framebuffer;
     GLint attrib_count;
     GLint attrib_enabled[HW_ATTRIB_MAX];
     int valid;
@@ -712,7 +726,10 @@ static void gl_state_capture(gl_host_state_t *s) {
 
     p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &s->array_buffer);
     p_glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &s->element_array_buffer);
+
     p_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &s->framebuffer);
+    s->read_framebuffer = s->framebuffer;
+    if (es3_available) p_glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &s->read_framebuffer);
 
     p_glGetIntegerv(GL_ACTIVE_TEXTURE, &s->active_texture);
     for (int i = 0; i < HW_TEX_UNITS; i++) {
@@ -759,7 +776,13 @@ static void gl_state_apply(const gl_host_state_t *s) {
 
     p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint) s->array_buffer);
     p_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint) s->element_array_buffer);
-    p_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) s->framebuffer);
+
+    if (es3_available && s->read_framebuffer != s->framebuffer) {
+        p_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint) s->framebuffer);
+        p_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) s->read_framebuffer);
+    } else {
+        p_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) s->framebuffer);
+    }
 
     for (int i = 0; i < HW_TEX_UNITS; i++) {
         p_glActiveTexture(GL_TEXTURE0 + (GLenum) i);
@@ -812,6 +835,11 @@ static void leave_core_gl(void) {
     gl_state_capture(&core_state);
     gl_reset_es3_state();
     gl_state_apply(&sdl_state);
+}
+
+void hw_render_bridge_flush_core_commands(void) {
+    if (!active || !gl_funcs_ready) return;
+    p_glFlush();
 }
 
 void hw_render_bridge_context_save(void) {

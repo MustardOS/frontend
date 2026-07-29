@@ -76,6 +76,7 @@ static const struct session_settings_t defaults = {
     .audio_period_frames = 512,
     .audio_filter = audio_filter_none,
     .audio_rate_control = 50,
+    .game_renderer = game_renderer_hardware,
     .shimmer_fix = 0,
     .run_ahead = 0,
     .gpu_hard_sync = 0,
@@ -164,6 +165,10 @@ static const char *filter_names[texture_filter_count] = {
     lang.muxretro.settings_screen.scale2_x,       lang.muxretro.settings_screen.scale3_x,
     lang.muxretro.settings_screen.sharp_bilinear, lang.muxretro.settings_screen.scale2_x_smooth,
     lang.muxretro.settings_screen.super_eagle
+};
+
+static const char *game_renderer_names[game_renderer_count] = {
+    lang.muxretro.settings_screen.game_renderer_hardware, lang.muxretro.settings_screen.game_renderer_software
 };
 
 static const char *audio_filter_names[audio_filter_count] = {
@@ -491,6 +496,11 @@ const char *session_settings_audio_period_name(const int frames) {
     return buf;
 }
 
+const char *session_settings_game_renderer_name(const int mode) {
+    if (mode < 0 || mode >= game_renderer_count) return game_renderer_names[game_renderer_hardware];
+    return game_renderer_names[mode];
+}
+
 const char *session_settings_audio_rate_control_name(const int hundredths) {
     if (hundredths <= 0) return lang.muxretro.settings_screen.audio_rate_control_off;
 
@@ -707,6 +717,9 @@ static void apply_ini(const char *path) {
         }
     }
 
+    v = mini_get_int(ini, "settings", "game_renderer", -1);
+    if (v >= 0 && v < game_renderer_count) session_settings.game_renderer = (int) v;
+
     v = mini_get_int(ini, "settings", "shimmer_fix", -1);
     if (v == 0 || v == 1) session_settings.shimmer_fix = (int) v;
 
@@ -837,6 +850,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(audio_period_frames);
     DELTA(audio_filter);
     DELTA(audio_rate_control);
+    DELTA(game_renderer);
     DELTA(shimmer_fix);
     DELTA(run_ahead);
     DELTA(gpu_hard_sync);
@@ -1036,6 +1050,15 @@ void session_settings_cycle_audio_rate_control(const int direction) {
     LOG_INFO(
         mux_module, "Audio Rate Control changed to %s",
         session_settings_audio_rate_control_name(session_settings.audio_rate_control)
+    );
+}
+
+void session_settings_cycle_game_renderer(const int direction) {
+    session_settings.game_renderer =
+        (session_settings.game_renderer + direction + game_renderer_count) % game_renderer_count;
+
+    LOG_INFO(
+        mux_module, "Game Renderer changed to %s", session_settings_game_renderer_name(session_settings.game_renderer)
     );
 }
 

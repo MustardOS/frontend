@@ -53,6 +53,8 @@ enum texture_filter_mode {
     texture_filter_count
 };
 
+enum game_renderer_mode { game_renderer_hardware = 0, game_renderer_software, game_renderer_count };
+
 enum audio_filter_mode { audio_filter_none = 0, audio_filter_low_pass, audio_filter_high_pass, audio_filter_count };
 
 enum border_colour_mode {
@@ -155,6 +157,7 @@ struct session_settings_t {
     int audio_period_frames;
     int audio_filter;
     int audio_rate_control;
+    int game_renderer;
     int shimmer_fix;
     int run_ahead;
     int gpu_hard_sync;
@@ -259,6 +262,8 @@ const char *session_settings_audio_latency_name(int mode);
 const char *session_settings_audio_period_name(int frames);
 
 const char *session_settings_audio_rate_control_name(int hundredths);
+
+const char *session_settings_game_renderer_name(int mode);
 
 void session_settings_init(const char *core_path_arg, const char *content_path);
 
@@ -377,6 +382,8 @@ void session_settings_cycle_audio_latency(int direction);
 void session_settings_cycle_audio_period(int direction);
 
 void session_settings_cycle_audio_rate_control(int direction);
+
+void session_settings_cycle_game_renderer(int direction);
 
 void session_settings_cycle_shimmer_fix(int direction);
 

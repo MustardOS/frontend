@@ -32,6 +32,12 @@ static struct retro_disk_control_ext_callback disk_control_ext_storage;
 static const struct retro_disk_control_callback *disk_control_cb = NULL;
 static const struct retro_disk_control_ext_callback *disk_control_ext_cb = NULL;
 
+static int core_wants_hw_render = 0;
+
+int environment_core_wants_hw_render(void) {
+    return core_wants_hw_render;
+}
+
 static struct retro_system_av_info pending_av_info;
 static int av_info_pending = 0;
 
@@ -360,6 +366,13 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_HW_RENDER: {
+            core_wants_hw_render = 1;
+
+            if (session_settings.game_renderer == game_renderer_software) {
+                LOG_INFO(mux_module, "hw_render: refused, Game Renderer is set to Software");
+                return false;
+            }
+
             return hw_render_bridge_negotiate(data);
         }
 

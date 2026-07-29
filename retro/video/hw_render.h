@@ -10,6 +10,8 @@ int hw_render_bridge_active(void);
 
 const char *hw_render_bridge_description(void);
 
+void hw_render_bridge_flush_core_commands(void);
+
 void hw_render_bridge_configure(unsigned max_width, unsigned max_height);
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void);

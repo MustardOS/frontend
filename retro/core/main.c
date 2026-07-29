@@ -205,6 +205,7 @@ static void run_core_batch(const unsigned frames) {
         if (is_last) break;
     }
 
+    hw_render_bridge_flush_core_commands();
     hw_render_bridge_context_restore();
     video_bridge_set_frame_skip(0);
 }
@@ -301,6 +302,7 @@ int main(const int argc, char *argv[]) {
 
     state_saves_init(core_path_arg);
     patch_manual_init(core_path_arg, content_path);
+    session_settings_init(core_path_arg, content_path);
 
     if (core_load_content(content_path) != 0) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
@@ -327,7 +329,6 @@ int main(const int argc, char *argv[]) {
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
 
-    session_settings_init(core_path_arg, content_path);
     video_bridge_apply_fps_limit();
     display_set_hard_sync_query(hard_sync_enabled);
 

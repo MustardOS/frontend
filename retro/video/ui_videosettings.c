@@ -14,10 +14,11 @@ enum {
     row_filter,
     row_shimmer_fix,
     row_border,
-    row_count
+    row_game_renderer,
+    row_max
 };
 
-static const char *row_labels[row_count] = {
+static const char *all_labels[row_max] = {
     lang.muxretro.display_screen.viewport,
     lang.muxretro.settings_screen.scaling_mode,
     lang.muxretro.settings_screen.rotate,
@@ -26,13 +27,35 @@ static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.integer_scale,
     lang.muxretro.settings_screen.texture_filter,
     lang.muxretro.settings_screen.shimmer_fix,
-    lang.muxretro.settings_screen.border_colour
+    lang.muxretro.settings_screen.border_colour,
+    lang.muxretro.settings_screen.game_renderer
 };
 
-static const char *row_glyphs[row_count] = {"viewport",     "scaling",       "rotate",     "mirrored", "aspectratio",
-                                            "integerscale", "texturefilter", "shimmerfix", "border"};
+static const char *all_glyphs[row_max] = {"viewport",     "scaling",       "rotate",     "mirrored", "aspectratio",
+                                          "integerscale", "texturefilter", "shimmerfix", "border",   "gamerenderer"};
 
-static void row_value_text(const int index, char *buf, const size_t buf_len) {
+// The renderer choice only means anything to a core that asked for hardware rendering!
+static const char *row_labels[row_max];
+static const char *row_glyphs[row_max];
+static int row_map[row_max];
+static int row_total;
+
+static void build_rows(void) {
+    row_total = 0;
+
+    for (int i = 0; i < row_max; i++) {
+        if (i == row_game_renderer && !environment_core_wants_hw_render()) continue;
+
+        row_labels[row_total] = all_labels[i];
+        row_glyphs[row_total] = all_glyphs[i];
+        row_map[row_total] = i;
+        row_total++;
+    }
+}
+
+static void row_value_text(const int display_index, char *buf, const size_t buf_len) {
+    const int index = row_map[display_index];
+
     switch (index) {
         case row_scaling:
             snprintf(buf, buf_len, "%s", session_settings_scale_name(session_settings.scaling_mode));
@@ -58,13 +81,18 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
         case row_border:
             snprintf(buf, buf_len, "%s", session_settings_border_name(session_settings.border_colour));
             break;
+        case row_game_renderer:
+            snprintf(buf, buf_len, "%s", session_settings_game_renderer_name(session_settings.game_renderer));
+            break;
         default:
             buf[0] = '\0';
             break;
     }
 }
 
-static void cycle_row(const int index, const int direction) {
+static void cycle_row(const int display_index, const int direction) {
+    const int index = row_map[display_index];
+
     switch (index) {
         case row_scaling:
             session_settings_cycle_scaling(direction);
@@ -90,17 +118,21 @@ static void cycle_row(const int index, const int direction) {
         case row_border:
             session_settings_cycle_border(direction);
             break;
+        case row_game_renderer:
+            session_settings_cycle_game_renderer(direction);
+            pause_menu_show_toast(lang.muxretro.settings_screen.game_renderer_restart);
+            break;
         default:
             break;
     }
 }
 
-static int row_is_action(const int index) {
-    return index == row_viewport;
+static int row_is_action(const int display_index) {
+    return row_map[display_index] == row_viewport;
 }
 
-static void row_action(const int index) {
-    if (index == row_viewport) viewport_menu_open();
+static void row_action(const int display_index) {
+    if (row_map[display_index] == row_viewport) viewport_menu_open();
 }
 
 static int child_tick(void) {
@@ -117,10 +149,10 @@ static void closed(void) {
 
 static submenu self;
 
-static const submenu_def def = {
+static submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
-    .row_count = row_count,
+    .row_count = row_max,
     .value_text = row_value_text,
     .cycle = cycle_row,
     .row_is_action = row_is_action,
@@ -132,11 +164,17 @@ static const submenu_def def = {
 };
 
 void video_menu_init(void) {
+    build_rows();
+    def.row_count = row_total;
+
     submenu_init(&self, &def);
     viewport_menu_init();
 }
 
 void video_menu_open(void) {
+    build_rows();
+    def.row_count = row_total;
+
     submenu_open(&self);
 }
 

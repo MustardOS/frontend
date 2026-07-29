@@ -118,9 +118,8 @@ static void set_corner_glyph(lv_obj_t *img, const char *glyph_name) {
     }
 }
 
-static lv_obj_t *create_corner_indicator(
-    const lv_align_t align, const lv_coord_t x_ofs, const lv_coord_t y_ofs, lv_obj_t **out_glyph
-) {
+static lv_obj_t *
+create_corner_indicator(const lv_align_t align, const lv_coord_t x_ofs, const lv_coord_t y_ofs, lv_obj_t **out_glyph) {
     lv_obj_t *panel = lv_obj_create(ui_screen);
     lv_obj_set_size(panel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(panel, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
@@ -469,7 +468,8 @@ void pause_menu_init(void) {
     set_gradient_visible(0);
 
     init_fonts();
-    if (init_audio_backend()) init_fe_snd(&fe_snd, config.settings.general.sound, 0);
+
+    if (config.settings.general.sound && init_audio_backend()) init_fe_snd(&fe_snd, config.settings.general.sound, 0);
 
     create_dim_overlay();
     create_fps_label();

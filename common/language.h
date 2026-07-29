@@ -1625,6 +1625,10 @@ struct mux_lang {
             char audio_filter_low_pass[MAX_BUFFER_SIZE];
             char audio_filter_high_pass[MAX_BUFFER_SIZE];
             char audio_rate_control[MAX_BUFFER_SIZE];
+            char game_renderer[MAX_BUFFER_SIZE];
+            char game_renderer_hardware[MAX_BUFFER_SIZE];
+            char game_renderer_software[MAX_BUFFER_SIZE];
+            char game_renderer_restart[MAX_BUFFER_SIZE];
             char audio_rate_control_off[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];

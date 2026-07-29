@@ -900,11 +900,12 @@ static void composite_to(SDL_Texture *target, const int present) {
     const int anim_fg = animating && anim_is_foreground();
     const int anim_bg = animating && !anim_fg;
     const int skip_wallpaper = !anim_bg && video_bg_fn_ptr && video_bg_opaque;
+    const int video_covers_all = skip_wallpaper && !monitor.needs_clear;
 
     if (monitor.background_image && !skip_wallpaper) {
         const SDL_Rect full = {0, 0, device.screen.width, device.screen.height};
         SDL_RenderCopy(monitor.renderer, monitor.background_image, NULL, &full);
-    } else {
+    } else if (!video_covers_all) {
         SDL_SetRenderDrawColor(monitor.renderer, theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255);
         SDL_RenderClear(monitor.renderer);
     }
