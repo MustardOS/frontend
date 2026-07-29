@@ -145,7 +145,7 @@ static mux_input_options input_opts = {
     .idle_handler = handle_idle,
 };
 
-static combo_config combo[MUX_INPUT_COMBO_COUNT] = {};
+static combo_config combo[MUX_INPUT_COMBO_COUNT] = {0};
 
 static int combo_count = 0;
 static int last_combo_index = 0;

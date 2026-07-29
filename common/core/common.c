@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <unistd.h>
 #include "common.h"
 #include "../init.h"
 #include "retroarch.h"

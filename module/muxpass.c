@@ -173,7 +173,7 @@ int muxpass_main(const int auth_type) {
                 [mux_input_dpad_left] = handle_left,
                 [mux_input_dpad_right] = handle_right,
             },
-        .release_handler = {},
+        .release_handler = {0},
         .hold_handler = {
             [mux_input_dpad_up] = handle_up,
             [mux_input_dpad_down] = handle_down,

@@ -568,7 +568,7 @@ int muxnews_main(void) {
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
             },
-        .release_handler = {},
+        .release_handler = {0},
         .hold_handler = {
             [mux_input_dpad_up] = handle_list_nav_up_hold,
             [mux_input_dpad_down] = handle_list_nav_down_hold,

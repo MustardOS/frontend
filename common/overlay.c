@@ -8,30 +8,37 @@ static int overlay_size = 1;
 
 static char *overlay_640_x480[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 static char *overlay_720_x480[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 static char *overlay_720_x576[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 static char *overlay_720_x720[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 static char *overlay_1024_x768[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 static char *overlay_1280_x720[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 static char *overlay_1920_x1080[] = {
     // TODO: Add resolution specific overlays!
+    NULL
 };
 
 typedef struct {

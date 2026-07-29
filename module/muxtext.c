@@ -145,7 +145,7 @@ int muxtext_main(void) {
                 [mux_input_l1] = handle_up_page,
                 [mux_input_r1] = handle_down_page,
             },
-        .release_handler = {},
+        .release_handler = {0},
         .hold_handler = {
             [mux_input_dpad_up] = handle_up,
             [mux_input_dpad_down] = handle_down,

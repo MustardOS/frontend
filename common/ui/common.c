@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <unistd.h>
 #include "common.h"
 #include "nav.h"
 #include "grid.h"

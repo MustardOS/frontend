@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <limits.h>
+#include <unistd.h>
 #include "init.h"
 #include "fileio.h"
 #include "ini.h"

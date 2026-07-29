@@ -1049,8 +1049,8 @@ static void dispatch_combo(const mux_input_options *opts, const int num, const m
 static void handle_inputs(const mux_input_options *opts) {
     if (input_is_suppressed()) return;
 
-    static uint32_t hold_delay[mux_input_count] = {};
-    static uint32_t hold_tick[mux_input_count] = {};
+    static uint32_t hold_delay[mux_input_count] = {0};
+    static uint32_t hold_tick[mux_input_count] = {0};
 
     uint64_t blocked = 0;
 
