@@ -83,9 +83,6 @@ static const struct session_settings_t defaults = {
     .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
     .port_device_key = {"builtin", "", "", ""},
     .port_device_id = {0, 0, 0, 0},
-    .port_source_target = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
-                                                               4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1}},
-    .port_source_macro = {[0 ... MUX_INPUT_PORT_COUNT - 1] = {[0 ... PORT_SOURCE_COUNT - 1] = -1}},
 };
 
 // Physical control per source index
@@ -100,6 +97,19 @@ const int session_settings_source_types[PORT_SOURCE_COUNT] = {
 // Default core target per source index (-1 = unbound)
 static const int default_source_target[PORT_SOURCE_COUNT] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
                                                              4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+
+static struct session_settings_t default_settings(void) {
+    struct session_settings_t out = defaults;
+
+    for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++) {
+        for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
+            out.port_source_target[port][source] = default_source_target[source];
+            out.port_source_macro[port][source] = -1;
+        }
+    }
+
+    return out;
+}
 
 static const int default_button_map[16] = {
     mux_input_b,       mux_input_y,         mux_input_select,    mux_input_start,
@@ -768,7 +778,7 @@ static void apply_ini(const char *path) {
 static struct session_settings_t tier_base(const int with_core, const int with_directory) {
     const struct session_settings_t live = session_settings;
 
-    session_settings = defaults;
+    session_settings = default_settings();
     if (with_core) apply_ini(core_ini_path);
     if (with_directory) apply_ini(directory_ini_path);
 
@@ -900,7 +910,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
 void session_settings_init(const char *core_path_arg, const char *content_path) {
     colour_init();
 
-    session_settings = defaults;
+    session_settings = default_settings();
 
     char core_name[MAX_BUFFER_SIZE];
     core_get_name(core_path_arg, core_name, sizeof(core_name));

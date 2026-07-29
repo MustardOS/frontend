@@ -252,10 +252,18 @@ static int16_t invert_y_if_needed(const int16_t y) {
     return y == INT16_MIN ? INT16_MAX : (int16_t) -y;
 }
 
-static unsigned port_applied_device[MUX_RETRO_PORT_COUNT] = {[0 ... MUX_RETRO_PORT_COUNT - 1] = (unsigned) -1};
+static unsigned port_applied_device[MUX_RETRO_PORT_COUNT];
+static int port_applied_ready;
 
 static void apply_controller_ports(void) {
     if (!current_core.retro_set_controller_port_device) return;
+
+    // Every port starts unknown so the first pass always tells the core, which a zero would not
+    if (!port_applied_ready) {
+        for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++)
+            port_applied_device[port] = (unsigned) -1;
+        port_applied_ready = 1;
+    }
 
     for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
         unsigned device = RETRO_DEVICE_NONE;
