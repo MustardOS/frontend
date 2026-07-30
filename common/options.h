@@ -113,6 +113,7 @@
 #define TAG_SORT_COLL "/tmp/tag_cl"
 #define TAG_SORT_HIST "/tmp/tag_hs"
 
+#define ORDER_DIR_FROM "/tmp/order_dir"
 #define COLLECTION_DIR "/tmp/collection_dir"
 
 #define CONF_DEVICE_PATH OPT_PATH "device/config/"

@@ -26,7 +26,7 @@ static void generate_available_governors(const char *default_governor) {
     if (!governors) return;
 
     for (int i = 0; i < governor_count; ++i)
-        add_item(&items, &item_count, governors[i], governors[i], "", ITEM);
+        add_item(&items, &item_count, governors[i], governors[i], "", item);
     sort_items(items, item_count);
 
     reset_ui_groups();
@@ -176,13 +176,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -218,7 +224,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+void muxgov_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
@@ -258,7 +264,7 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
             free(last_dir_lower);
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
+            const struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -344,7 +350,7 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
             free(last_dir_lower2);
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
+            const struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];

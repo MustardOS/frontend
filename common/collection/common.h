@@ -1,6 +1,22 @@
 #pragma once
 
-typedef enum { menu, FOLDER, ITEM } content_type;
+#include <stddef.h>
+
+typedef enum { menu, folder, item } content_type;
+
+typedef struct {
+    size_t play_time;
+    size_t times_played;
+    long last_played;
+    long added;
+    long file_size;
+    size_t title_length;
+    size_t vowels;
+    size_t words;
+    size_t capitals;
+    int sequel;
+    unsigned int shuffle;
+} order_key;
 
 typedef struct {
     char *name;
@@ -16,6 +32,7 @@ typedef struct {
     int sort_bucket;
     int folder_item_count;
     char group_tag[64];
+    order_key order;
 } content_item;
 
 content_item *add_item(

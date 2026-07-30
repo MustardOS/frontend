@@ -107,11 +107,11 @@ typedef struct {
 static zone_entry_t zones[zone_count];
 
 static int zone_visible(const zone_entry_t *z) {
-    return current_mode == RGB_MODE_STATIC && rgb_caps && (rgb_caps->zones & z->cap_bit);
+    return current_mode == RGB_MODE_STATIC && rgb_caps && rgb_caps->zones & z->cap_bit;
 }
 
 static void build_zone_table(void) {
-    const int dual_right = rgb_caps && (rgb_caps->zones & RGB_ZONE_RS1);
+    const int dual_right = rgb_caps && rgb_caps->zones & RGB_ZONE_RS1;
 
     zones[zone_l] = (zone_entry_t) {
         .cap_bit = RGB_ZONE_L,
@@ -409,14 +409,20 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (reset_dlg_active) return;
+    if (reset_dlg_active) {
+        dialogue_handle_dpad_hold(&reset_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
     check_focus();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (reset_dlg_active) return;
+    if (reset_dlg_active) {
+        dialogue_handle_dpad_hold(&reset_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
     check_focus();

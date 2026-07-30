@@ -63,6 +63,7 @@
 #include "../common/language.h"
 #include "../common/collection/common.h"
 #include "../common/collection/tag.h"
+#include "../common/collection/order.h"
 #include "../common/skip.h"
 #include "../common/passcode.h"
 #include "../common/timezone.h"
@@ -338,6 +339,8 @@ void muxshader_main(int auto_assign, const char *name, const char *dir, const ch
 int muxshot_main();
 
 int muxsort_main();
+
+int muxorder_main();
 
 int muxspace_main();
 

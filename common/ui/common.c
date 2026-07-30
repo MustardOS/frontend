@@ -47,6 +47,7 @@ lv_obj_t *ui_lbl_datetime;
 lv_obj_t *ui_lbl_title;
 lv_obj_t *ui_con_tag;
 lv_obj_t *ui_sta_tag;
+lv_obj_t *ui_sta_order;
 lv_obj_t *ui_con_glyphs;
 lv_obj_t *ui_sta_bluetooth;
 lv_obj_t *ui_sta_network;
@@ -774,6 +775,9 @@ void init_ui_common_screen(
     ui_sta_tag = create_header_glyph(ui_con_tag, theme);
     lv_obj_set_style_pad_left(ui_sta_tag, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
+
+    ui_sta_order = create_header_glyph(ui_con_tag, theme);
+    lv_obj_add_flag(ui_sta_order, LV_OBJ_FLAG_HIDDEN);
 
     ui_con_glyphs = lv_obj_create(ui_pnl_header);
     lv_obj_set_width(ui_con_glyphs, device->mux.width);
@@ -1664,28 +1668,46 @@ static void update_status_glyph(
     }
 }
 
-void update_tag_glyph(const struct theme_config *theme, const char *tag) {
-    if (!ui_sta_tag || !ui_lbl_datetime) return;
-
+static int header_extra_glyph(
+    lv_obj_t *ui_img, const struct theme_config *theme, const char *glyph_folder, const char *glyph_name
+) {
     char image_path[MAX_BUFFER_SIZE];
-    const int found = tag && *tag && load_glyph_icon(mux_dim, "muxtag", tag, image_path, sizeof(image_path));
 
-    if (!found) {
-        lv_obj_add_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_set_style_pad_left(ui_lbl_datetime, theme->datetime.padding_left, MU_OBJ_MAIN_DEFAULT);
-        return;
+    if (!glyph_name || !*glyph_name
+        || !load_glyph_icon(mux_dim, glyph_folder, glyph_name, image_path, sizeof(image_path))) {
+        lv_obj_add_flag(ui_img, LV_OBJ_FLAG_HIDDEN);
+        return 0;
     }
 
-    lv_obj_set_style_img_recolor(ui_sta_tag, lv_color_hex(theme->datetime.text), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_sta_tag, theme->datetime.alpha, MU_OBJ_MAIN_DEFAULT);
+    // These belong to the clock rather than the status glyphs, so they take the clock's colour
+    lv_obj_set_style_img_recolor(ui_img, lv_color_hex(theme->datetime.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_img, theme->datetime.alpha, MU_OBJ_MAIN_DEFAULT);
 
-    update_status_glyph(ui_sta_tag, theme, "muxtag", tag, 75);
-    lv_obj_clear_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
+    update_status_glyph(ui_img, theme, glyph_folder, glyph_name, 75);
+    lv_obj_clear_flag(ui_img, LV_OBJ_FLAG_HIDDEN);
 
-    lv_obj_update_layout(ui_pnl_header);
-    lv_obj_set_style_pad_left(
-        ui_lbl_datetime, theme->datetime.padding_left + lv_obj_get_width(ui_sta_tag) + 6, MU_OBJ_MAIN_DEFAULT
-    );
+    return 1;
+}
+
+void update_header_extras(const struct theme_config *theme, const char *tag, const char *order) {
+    if (!ui_sta_tag || !ui_sta_order || !ui_lbl_datetime) return;
+
+    const int has_tag = header_extra_glyph(ui_sta_tag, theme, "muxtag", tag);
+    const int has_order = header_extra_glyph(ui_sta_order, theme, "muxorder", order);
+
+    lv_coord_t used = 0;
+
+    // They share the far left with the clock, so walk it across by however much they take up
+    if (has_tag || has_order) {
+        lv_obj_update_layout(ui_pnl_header);
+
+        if (has_tag) used += lv_obj_get_width(ui_sta_tag);
+        if (has_order) used += lv_obj_get_width(ui_sta_order);
+
+        used += 6;
+    }
+
+    lv_obj_set_style_pad_left(ui_lbl_datetime, theme->datetime.padding_left + used, MU_OBJ_MAIN_DEFAULT);
 }
 
 void update_battery_capacity(lv_obj_t *ui_sta_capacity, const struct theme_config *theme) {

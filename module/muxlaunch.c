@@ -290,7 +290,12 @@ static void handle_down(void) {
 }
 
 static void handle_up_hold(void) { // prev
-    if (msgbox_active || confirm_mode) return;
+    if (confirm_mode) {
+        dialogue_handle_dpad_hold(&confirm_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
+    if (msgbox_active) return;
 
     const int grid_hold_ok = theme.grid.enabled && grid_row_hold_up_ok();
     const int misc_hold_ok = !theme.grid.enabled && misc_even_row_hold_up_ok(ui_count_dynamic);
@@ -305,7 +310,12 @@ static void handle_up_hold(void) { // prev
 }
 
 static void handle_down_hold(void) { // next
-    if (msgbox_active || confirm_mode) return;
+    if (confirm_mode) {
+        dialogue_handle_dpad_hold(&confirm_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
+    if (msgbox_active) return;
 
     const int grid_hold_ok = theme.grid.enabled && grid_row_hold_down_ok(ui_count_dynamic);
     const int misc_hold_ok = !theme.grid.enabled && misc_even_row_hold_down_ok(ui_count_dynamic);

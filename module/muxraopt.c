@@ -131,13 +131,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -173,7 +179,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-void muxraopt_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+void muxraopt_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
@@ -213,7 +219,7 @@ void muxraopt_main(int auto_assign, const char *name, const char *dir, const cha
             free(last_dir_lower);
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
+            const struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];

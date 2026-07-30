@@ -116,7 +116,7 @@ static void populate_theme_alternates(void) {
                 || (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxalt") == 0)) {
                 const char *name_without_ext = strip_ext(filename);
                 if (!item_exists(items, item_count, name_without_ext)) {
-                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", ITEM);
+                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", item);
                 }
             }
         }
@@ -625,13 +625,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) return;
+    if (save_mode) {
+        dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) return;
+    if (save_mode) {
+        dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }

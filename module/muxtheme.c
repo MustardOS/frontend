@@ -29,7 +29,7 @@ char *theme_version_compat = "";
 static char *theme_version_buf = NULL;
 
 static void show_help(void) {
-    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == menu) return;
+    if (items[current_item_index].content_type == folder || items[current_item_index].content_type == menu) return;
 
     char credits_path[MAX_BUFFER_SIZE];
     snprintf(credits_path, sizeof(credits_path), "%s/%s/" TEMP_CREDITS, sys_dir, items[current_item_index].name);
@@ -70,7 +70,7 @@ static int version_check(void) {
 }
 
 static void image_refresh(void) {
-    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == menu) {
+    if (items[current_item_index].content_type == folder || items[current_item_index].content_type == menu) {
         lv_img_set_src(ui_img_box, &ui_img_blank);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
         return;
@@ -104,9 +104,9 @@ static void create_theme_items(void) {
             snprintf(version_path, sizeof(version_path), "%s/%s/version.txt", sys_dir, tf->d_name);
 
             if (file_exist(version_path)) {
-                add_item(&items, &item_count, tf->d_name, tf->d_name, "", ITEM);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", item);
             } else {
-                add_item(&items, &item_count, tf->d_name, tf->d_name, "", FOLDER);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", folder);
             }
         }
     }
@@ -131,7 +131,7 @@ show_dl_only:
         apply_theme_list_glyph(
             &theme, ui_lbl_theme_item_glyph, mux_module,
             items[i].content_type == menu     ? "download"
-            : items[i].content_type == FOLDER ? "folder"
+            : items[i].content_type == folder ? "folder"
                                               : "theme"
         );
 
@@ -231,13 +231,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (remove_mode) return;
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (remove_mode) return;
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -270,7 +276,7 @@ static void handle_a(void) {
         }
         return;
     }
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == folder) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s", sys_dir, items[current_item_index].name);
 
@@ -318,7 +324,7 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || remove_mode || items[current_item_index].content_type == FOLDER
+    if (msgbox_active || !ui_count_static || remove_mode || items[current_item_index].content_type == folder
         || items[current_item_index].content_type == menu) {
         return;
     }
@@ -444,7 +450,7 @@ int muxtheme_main(char *ex_dir) {
 
     const char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
-        const int index = get_item_index_by_name(items, item_count, e_name_line, FOLDER);
+        const int index = get_item_index_by_name(items, item_count, e_name_line, folder);
         if (index > -1) sys_index = index;
         remove(EXPLORE_NAME);
     }

@@ -45,7 +45,7 @@ static int find_system_item_index(const char *system_name) {
         struct dirent *af;
         while ((af = readdir(ad))) {
             if (af->d_type == DT_DIR && strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
-                add_item(&tmp_items, &tmp_count, af->d_name, af->d_name, "", FOLDER);
+                add_item(&tmp_items, &tmp_count, af->d_name, af->d_name, "", folder);
             }
         }
         closedir(ad);
@@ -54,7 +54,7 @@ static int find_system_item_index(const char *system_name) {
     if (!tmp_items) return 0;
     sort_items(tmp_items, tmp_count);
 
-    int idx = get_item_index_by_name(tmp_items, tmp_count, system_name, FOLDER);
+    int idx = get_item_index_by_name(tmp_items, tmp_count, system_name, folder);
     if (idx < 0) idx = 0;
 
     free_items(&tmp_items, &tmp_count);
@@ -116,7 +116,7 @@ static int find_core_item_index(const char *system) {
         mini_free(core_config);
 
         if (strcmp(assign_core, "none") != 0)
-            add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, ITEM);
+            add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, item);
     }
     closedir(ad);
 
@@ -159,7 +159,7 @@ static void create_system_items(void) {
     while ((af = readdir(ad))) {
         if (af->d_type == DT_DIR) {
             if (strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
-                add_item(&items, &item_count, af->d_name, af->d_name, "", FOLDER);
+                add_item(&items, &item_count, af->d_name, af->d_name, "", folder);
             }
         }
     }
@@ -244,7 +244,7 @@ static void create_core_items(const char *target) {
                 mini_free(core_config);
 
                 if (strcmp(assign_core, "none") != 0) {
-                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, ITEM);
+                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, item);
                 } else {
                     LOG_ERROR(mux_module, "Assign ini missing/mismatched [%s] core= in: %s", af->d_name, core_file);
                     toast_message(lang.muxassign.misconfigured, tst_wait_l);
@@ -339,7 +339,7 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_core_assignment(const char *log_msg, int assignment_mode) {
+static void handle_core_assignment(const char *log_msg, const int assignment_mode) {
     LOG_INFO(mux_module, "%s", log_msg);
     play_sound(snd_confirm);
 
@@ -404,7 +404,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "Content Core RetroArch Config: %s", core_retroarch);
 
     static int core_lookup;
-    int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
+    const int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
     core_lookup = use_local_lookup ? use_local_lookup : get_ini_int(global_ini, "global", "lookup", 0);
     LOG_INFO(mux_module, "Content Core Lookup: %d", core_lookup);
 
@@ -505,13 +505,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -547,7 +553,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-void muxassign_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+void muxassign_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     (void) app;
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
@@ -594,7 +600,7 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
 
     if (strcasecmp(rom_system, "none") == 0) {
         char force_sys_name[PATH_MAX] = "";
-        int force_sys_picker = file_exist(MUOS_ASS_SYSP);
+        const int force_sys_picker = file_exist(MUOS_ASS_SYSP);
         if (force_sys_picker) {
             snprintf(force_sys_name, sizeof(force_sys_name), "%s", read_line_char_from(MUOS_ASS_SYSP, 1));
             remove(MUOS_ASS_SYSP);

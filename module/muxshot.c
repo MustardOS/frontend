@@ -69,7 +69,7 @@ static void create_screenshot_items(void) {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot) *last_dot = '\0';
 
-            add_item(&items, &item_count, tf->d_name, tf->d_name, "", ITEM);
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", item);
         }
     }
 
@@ -169,13 +169,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (remove_mode) return;
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (remove_mode) return;
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }

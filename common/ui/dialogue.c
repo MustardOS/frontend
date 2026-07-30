@@ -202,24 +202,24 @@ void dialogue_init_assign_scope(
 
     if (!is_dir) {
         dlg->option_data[n] = casn_single;
-        opts[n] = lang.generic.content;
+        opts[n] = lang.generic.scope_content;
         n++;
     }
 
     if (!is_app) {
         dlg->option_data[n] = casn_dir;
-        opts[n] = lang.generic.directory;
+        opts[n] = lang.generic.scope_directory;
         n++;
 
         if (!at_root) {
             dlg->option_data[n] = casn_parent;
-            opts[n] = lang.generic.recursive;
+            opts[n] = lang.generic.scope_subdirs;
             n++;
         }
     }
 
     dlg->option_data[n] = -1;
-    opts[n] = lang.generic.discard;
+    opts[n] = lang.generic.scope_none;
     n++;
 
     dialogue_init(dlg, t, parent, title, lang.generic.assign_desc, opts, n, nav_a, nav_b);
@@ -607,11 +607,22 @@ void dialogue_hide(const mux_dialogue *dlg) {
     timer_resume_all();
 }
 
-void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, const int delta) {
+static void dialogue_step(mux_dialogue *dlg, struct theme_config *t, const int delta, const int wrap) {
     if (dlg->option_count <= 0) return;
 
-    dlg->selected = (dlg->selected + delta + dlg->option_count) % dlg->option_count;
+    int target = dlg->selected + delta;
+
+    if (target < 0 || target >= dlg->option_count) {
+        if (!wrap) return;
+        target = (target + dlg->option_count) % dlg->option_count;
+    }
+
+    dlg->selected = target;
     dialogue_refresh(dlg, t);
+}
+
+void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, const int delta) {
+    dialogue_step(dlg, t, delta, 1);
 }
 
 void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t) {
@@ -647,8 +658,17 @@ void dialogue_dismiss(int *active, const mux_dialogue *dlg) {
 void dialogue_handle_dpad(mux_dialogue *dlg, struct theme_config *t, const int direction, const int should_fire) {
     if (!should_fire) return;
 
-    dialogue_navigate(dlg, t, direction);
+    dialogue_step(dlg, t, direction, 1);
     play_sound(snd_navigate);
+}
+
+void dialogue_handle_dpad_hold(mux_dialogue *dlg, struct theme_config *t, const int direction, const int should_fire) {
+    if (!should_fire) return;
+
+    const int before = dlg->selected;
+    dialogue_step(dlg, t, direction, 0);
+
+    if (dlg->selected != before) play_sound(snd_navigate);
 }
 
 int dialogue_guard_unsaved(int *active, mux_dialogue *dlg, struct theme_config *t, const int is_modified) {

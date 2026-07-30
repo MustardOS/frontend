@@ -413,6 +413,9 @@ void update_scroll_position(
     lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
 }
 
+static int row_dim_active = 0;
+static int row_dim_index = -1;
+
 static void blank_overflow_rows(const lv_obj_t *panel) {
     lv_area_t panel_area;
     lv_obj_get_coords(panel, &panel_area);
@@ -440,6 +443,8 @@ static void blank_overflow_rows(const lv_obj_t *panel) {
             want = theme.misc.peek_opacity;
         }
 
+        if (row_dim_active && want != LV_OPA_TRANSP && (int) i != row_dim_index) want = (lv_opa_t) (want / 2);
+
         if (lv_obj_get_style_opa(child, LV_PART_MAIN) != want) {
             lv_obj_set_style_opa(child, want, MU_OBJ_MAIN_DEFAULT);
         }
@@ -448,6 +453,13 @@ static void blank_overflow_rows(const lv_obj_t *panel) {
 
 static void blank_overflow_rows_cb(lv_event_t *e) {
     blank_overflow_rows(lv_event_get_target(e));
+}
+
+void nav_set_row_dim(const lv_obj_t *panel, const int active, const int index) {
+    row_dim_active = active;
+    row_dim_index = index;
+
+    if (panel) blank_overflow_rows(panel);
 }
 
 static lv_obj_t *raise_row = NULL;

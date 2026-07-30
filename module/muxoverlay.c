@@ -252,13 +252,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, 1);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, 1);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -300,7 +306,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-void muxoverlay_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+void muxoverlay_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     (void) auto_assign;
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);

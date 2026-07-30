@@ -27,12 +27,12 @@ static char *load_content_description(void) {
     char item_no_ext[MAX_BUFFER_SIZE];
     resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));
 
-    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.generic.no_info;
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == item) return lang.generic.no_info;
 
     const char *h_core_artwork = core_desc;
     const char *h_file_name_ptr = item_no_ext;
 
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == folder) {
         h_core_artwork = "Collection";
         h_file_name_ptr = items[current_item_index].name;
     }
@@ -57,7 +57,7 @@ static void image_refresh(const char *image_type) {
     char *h_core_artwork = core_desc;
     char *h_file_name_ptr = item_no_ext;
 
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == folder) {
         h_core_artwork = "Collection";
         h_file_name_ptr = items[current_item_index].name;
     }
@@ -68,7 +68,7 @@ static void image_refresh(const char *image_type) {
 }
 
 static void video_refresh(void) {
-    if (!ui_count_static || items[current_item_index].content_type == FOLDER) return;
+    if (!ui_count_static || items[current_item_index].content_type == folder) return;
 
     char core_desc[MAX_BUFFER_SIZE];
     char item_no_ext[MAX_BUFFER_SIZE];
@@ -208,7 +208,7 @@ static void create_collection_items(void) {
                 snprintf(collection_dir, sizeof(collection_dir), "%s/%s", sys_dir, dir_names[i]);
 
                 content_item *new_item =
-                    add_item(&items, &item_count, dir_names[i], friendly_folder_name, collection_dir, FOLDER);
+                    add_item(&items, &item_count, dir_names[i], friendly_folder_name, collection_dir, folder);
                 adjust_visual_label(new_item->display_name, config.visual.name, config.visual.dash);
 
                 if (config.visual.folder_item_count) {
@@ -238,17 +238,17 @@ static void create_collection_items(void) {
         } else {
             const size_t limit = theme.mux.item.count;
             for (size_t i = 0; i < item_count && i < limit; i++) {
-                gen_label(mux_module, items[i].content_type == FOLDER ? "folder" : "collection", items[i].display_name);
+                gen_label(mux_module, items[i].content_type == folder ? "folder" : "collection", items[i].display_name);
             }
 
             if (item_count > limit && limit % 2 == 0) {
                 gen_peek_label(
-                    mux_module, items[0].content_type == FOLDER ? "folder" : "collection", items[0].display_name
+                    mux_module, items[0].content_type == folder ? "folder" : "collection", items[0].display_name
                 );
             }
 
             for (size_t i = 0; i < item_count; i++) {
-                if (items[i].content_type == FOLDER && strcasecmp(items[i].extra_data, prev_dir) == 0)
+                if (items[i].content_type == folder && strcasecmp(items[i].extra_data, prev_dir) == 0)
                     sys_index = (int) i;
             }
         }
@@ -269,7 +269,7 @@ static void update_footer_glyph(void) {
     if (!add_mode) return;
     lv_label_set_text(
         ui_lbl_nav_a,
-        item_count > 0 && items[current_item_index].content_type == FOLDER ? lang.generic.open : lang.generic.add
+        item_count > 0 && items[current_item_index].content_type == folder ? lang.generic.open : lang.generic.add
     );
 }
 
@@ -279,7 +279,7 @@ static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph,
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (config.visual.list_glyph && theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {
         get_glyph_path(
-            mux_module, items[index].content_type == FOLDER ? "folder" : "collection", glyph_image_embed,
+            mux_module, items[index].content_type == folder ? "folder" : "collection", glyph_image_embed,
             MAX_BUFFER_SIZE
         );
         set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
@@ -407,7 +407,7 @@ static void show_remove_dialog(void) {
 static void show_actions_dialog(void) {
     if (!ui_count_static) {
         actions_dlg = &actions_empty_dlg;
-    } else if (items[current_item_index].content_type == FOLDER) {
+    } else if (items[current_item_index].content_type == folder) {
         actions_dlg = &actions_folder_dlg;
     } else {
         actions_dlg = &actions_item_dlg;
@@ -443,7 +443,7 @@ static void hide_remove_dialog(void) {
 }
 
 static void do_remove(void) {
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == folder) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
             play_sound(snd_error);
             toast_message(lang.muxcollect.error.remove_dir, tst_wait_s);
@@ -609,7 +609,7 @@ static void process_load(const int from_start) {
         goto load_end;
     }
 
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == folder) {
         play_sound(snd_confirm);
         load_message = 1;
 
@@ -884,7 +884,7 @@ static void handle_x(void) {
         return;
 
     // A collection folder has no content behind it to carry any of the options stuff
-    if (items[current_item_index].content_type == FOLDER) return;
+    if (items[current_item_index].content_type == folder) return;
 
     if (is_ksk(kiosk.content.option)) {
         kiosk_denied();
@@ -985,7 +985,15 @@ static void handle_up_hold(void) {
         return;
     }
 
-    if (actions_mode || remove_mode) return;
+    if (actions_mode) {
+        dialogue_handle_dpad_hold(actions_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
@@ -1021,7 +1029,15 @@ static void handle_down_hold(void) {
         return;
     }
 
-    if (actions_mode || remove_mode) return;
+    if (actions_mode) {
+        dialogue_handle_dpad_hold(actions_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -1082,7 +1098,15 @@ static void handle_left_hold(void) {
         return;
     }
 
-    if (actions_mode || remove_mode) return;
+    if (actions_mode) {
+        dialogue_handle_dpad_hold(actions_dlg, &theme, -1, swap_axis);
+        return;
+    }
+
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, swap_axis);
+        return;
+    }
 
     handle_list_nav_left_hold();
 }
@@ -1093,7 +1117,15 @@ static void handle_right_hold(void) {
         return;
     }
 
-    if (actions_mode || remove_mode) return;
+    if (actions_mode) {
+        dialogue_handle_dpad_hold(actions_dlg, &theme, +1, swap_axis);
+        return;
+    }
+
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, swap_axis);
+        return;
+    }
 
     handle_list_nav_right_hold();
 }
@@ -1150,7 +1182,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_menu, lang.generic.actions, 0},
                                   {NULL, NULL, 0}});
 
-    update_tag_glyph(&theme, tag_filtered ? active_tag : NULL);
+    update_header_extras(&theme, tag_filtered ? active_tag : NULL, NULL);
 
     overlay_display();
 }

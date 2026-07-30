@@ -123,7 +123,7 @@ static void generate_available_shaders(void) {
         snprintf(shader_store, sizeof(shader_store), "%s", shd_no_ext);
         free(shd_no_ext);
 
-        add_item(&items, &item_count, shader_store, shader_store, "", ITEM);
+        add_item(&items, &item_count, shader_store, shader_store, "", item);
     }
 
     ui_count_static += (int) item_count;
@@ -229,13 +229,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -271,7 +277,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-void muxshader_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+void muxshader_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     (void) auto_assign;
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);

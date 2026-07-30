@@ -554,13 +554,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) return;
+    if (save_mode) {
+        dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) return;
+    if (save_mode) {
+        dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }

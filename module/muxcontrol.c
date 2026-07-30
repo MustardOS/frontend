@@ -34,7 +34,7 @@ static void generate_available_controls(const char *default_control) {
             char *last_dot = strrchr(cf->d_name, '.');
             if (last_dot && strcasecmp(last_dot, ".txt") == 0) {
                 *last_dot = '\0';
-                add_item(&items, &item_count, cf->d_name, cf->d_name, "", ITEM);
+                add_item(&items, &item_count, cf->d_name, cf->d_name, "", item);
             }
         }
     }
@@ -193,13 +193,19 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) return;
+    if (assign_dialogue_active) {
+        dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
@@ -235,7 +241,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-void muxcontrol_main(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+void muxcontrol_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !app;
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
@@ -274,7 +280,7 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
             snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
+            const struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -360,7 +366,7 @@ void muxcontrol_main(int auto_assign, const char *name, const char *dir, const c
             snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
             str_remchars(assign_check, " -_+");
 
-            struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
+            const struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];

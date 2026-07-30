@@ -74,6 +74,13 @@ struct mux_lang {
         char location[MAX_BUFFER_SIZE];
         char location_gone[MAX_BUFFER_SIZE];
         char tag_sort[MAX_BUFFER_SIZE];
+        char search[MAX_BUFFER_SIZE];
+        char top_level[MAX_BUFFER_SIZE];
+        char sort_order[MAX_BUFFER_SIZE];
+        char scope_content[MAX_BUFFER_SIZE];
+        char scope_directory[MAX_BUFFER_SIZE];
+        char scope_subdirs[MAX_BUFFER_SIZE];
+        char scope_none[MAX_BUFFER_SIZE];
         char install[MAX_BUFFER_SIZE];
         char kiosk_disable[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
@@ -1263,6 +1270,45 @@ struct mux_lang {
             char launch[MAX_BUFFER_SIZE];
         } help;
     } muxoption;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
+        char active[MAX_BUFFER_SIZE];
+        char reset[MAX_BUFFER_SIZE];
+        char scope[MAX_BUFFER_SIZE];
+        char scope_global[MAX_BUFFER_SIZE];
+        struct {
+            char natural[MAX_BUFFER_SIZE];
+            char play_time[MAX_BUFFER_SIZE];
+            char times_played[MAX_BUFFER_SIZE];
+            char last_played[MAX_BUFFER_SIZE];
+            char recently_added[MAX_BUFFER_SIZE];
+            char title_length[MAX_BUFFER_SIZE];
+            char file_size[MAX_BUFFER_SIZE];
+            char feeling_lucky[MAX_BUFFER_SIZE];
+        } method;
+        struct {
+            char random[MAX_BUFFER_SIZE];
+            char backwards[MAX_BUFFER_SIZE];
+            char vowels[MAX_BUFFER_SIZE];
+            char wordy[MAX_BUFFER_SIZE];
+            char sequels[MAX_BUFFER_SIZE];
+            char shouty[MAX_BUFFER_SIZE];
+        } lucky;
+        struct {
+            char a_to_z[MAX_BUFFER_SIZE];
+            char z_to_a[MAX_BUFFER_SIZE];
+            char longest[MAX_BUFFER_SIZE];
+            char shortest[MAX_BUFFER_SIZE];
+            char most[MAX_BUFFER_SIZE];
+            char least[MAX_BUFFER_SIZE];
+            char recent[MAX_BUFFER_SIZE];
+            char oldest[MAX_BUFFER_SIZE];
+            char largest[MAX_BUFFER_SIZE];
+            char smallest[MAX_BUFFER_SIZE];
+        } direction;
+    } muxorder;
 
     struct {
         char title[MAX_BUFFER_SIZE];

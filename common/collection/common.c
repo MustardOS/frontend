@@ -35,7 +35,7 @@ content_item *add_item(
         content_item *new_items = malloc(sizeof(content_item));
         if (!new_items) return NULL;
         *content_items = new_items;
-    } else if (*count > 0 && (*count & (*count - 1)) == 0) {
+    } else if (*count > 0 && (*count & *count - 1) == 0) {
         content_item *new_items = realloc(*content_items, *count * 2 * sizeof(content_item));
         if (!new_items) return NULL;
         *content_items = new_items;
@@ -54,6 +54,7 @@ content_item *add_item(
     (*content_items)[*count].sort_bucket = 0;
     (*content_items)[*count].folder_item_count = 0;
     (*content_items)[*count].group_tag[0] = '\0';
+    (*content_items)[*count].order = (order_key) {0};
 
     if (config.visual.the_title_format) {
         reformat_display_name((*content_items)[*count].display_name);
@@ -66,7 +67,7 @@ content_item *add_item(
     return &(*content_items)[*count - 1];
 }
 
-static void free_item_fields(content_item *item) {
+static void free_item_fields(const content_item *item) {
     free(item->name);
     free(item->display_name);
     free(item->sort_name);
@@ -100,7 +101,7 @@ int bucket_item_compare(const void *a, const void *b) {
     const content_item *item_b = (content_item *) b;
 
     if (!config.visual.mixed_content && item_a->content_type != item_b->content_type)
-        return item_a->content_type == FOLDER ? -1 : 1;
+        return item_a->content_type == folder ? -1 : 1;
 
     if (item_a->sort_bucket != item_b->sort_bucket) return item_b->sort_bucket - item_a->sort_bucket;
 

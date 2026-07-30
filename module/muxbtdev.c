@@ -323,7 +323,10 @@ static void handle_up_hold(void) {
         return;
     }
 
-    if (forget_mode) return;
+    if (forget_mode) {
+        dialogue_handle_dpad_hold(&forget_dlg, &theme, -1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_up_hold();
 }
@@ -351,7 +354,10 @@ static void handle_down_hold(void) {
         return;
     }
 
-    if (forget_mode) return;
+    if (forget_mode) {
+        dialogue_handle_dpad_hold(&forget_dlg, &theme, +1, !swap_axis);
+        return;
+    }
 
     handle_list_nav_down_hold();
 }
