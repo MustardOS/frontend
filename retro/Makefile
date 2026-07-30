@@ -4,7 +4,7 @@ BIN_DIR := ../bin
 LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(BIN_DIR)/muxretro
 
-CFLAGS  := $(BASE_CFLAGS) -fPIE
+CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -fPIE
 LDFLAGS := $(COMMON_LIBS) $(BIN_LDFLAGS) $(LIB_LDFLAGS) -ldl -Wl,--allow-shlib-undefined
 
 ifeq ($(DEVICE), NATIVE)

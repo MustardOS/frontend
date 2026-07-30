@@ -1,6 +1,6 @@
 include ../common.mk
 
-CFLAGS = $(BASE_CFLAGS) \
+CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS) \
          -I./ui -I../font -I../common \
          -I../common/img -I../common/input -I../common/json \
          -I../common/mini -I../common/miniz

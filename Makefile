@@ -8,7 +8,7 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muw
 
 DEPENDENCIES = plutosvg common lvgl module
 
-CFLAGS = $(BASE_CFLAGS)
+CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS)
 
 INCLUDES = -I./module/ui -I./common \
            -I./common/input -I./common/json \

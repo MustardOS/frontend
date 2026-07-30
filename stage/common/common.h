@@ -8,6 +8,8 @@
 
 #define MAX_BUFFER_SIZE 1024
 
+#define A_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 #define INDICATOR_STEPS   10
 #define INDICATOR_SHOW_MS 1024
 

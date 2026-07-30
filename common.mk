@@ -42,8 +42,10 @@ endif
 
 ifeq ($(DEVICE), NATIVE)
     CC = ccache gcc
+    NM = nm
 else
     CC = ccache $(CROSS_COMPILE)gcc
+    NM = $(CROSS_COMPILE)nm
 endif
 
 DEBUG  ?= 0
@@ -66,6 +68,8 @@ BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
               -D_FORTIFY_SOURCE=3 -D_GNU_SOURCE -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
               $(BUILD_FLAGS) $(FFMPEG_CFLAGS)
+
+STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm \
               -lavformat -lavcodec -lavutil -lavdevice -lswscale -lswresample

@@ -1,6 +1,6 @@
 include ../common.mk
 
-CFLAGS   = $(BASE_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Icollection -Imojibake -isystem miniz \
+CFLAGS   = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Icollection -Imojibake -isystem miniz \
            -I../plutosvg/source -I../plutosvg/plutovg/include
 LDFLAGS  = $(COMMON_LIBS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
