@@ -531,6 +531,7 @@ void pause_menu_toggle(void) {
     rumble_bridge_set_suppressed(active);
 
     if (active) {
+        audio_bridge_set_paused(1);
         gamestate_capture_pending(0);
         hotkeys_reset();
     } else {

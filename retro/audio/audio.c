@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <stdio.h>
 #include <string.h>
 #include "../../common/init.h"
 #include "../../common/log.h"
@@ -11,8 +12,10 @@
 
 #define CORE_MIN_LATENCY_CEILING_MS 512
 
-#define AUDIO_FADE_IN_MS       8
-#define AUDIO_UNDERRUN_RAMP_MS 1
+#define AUDIO_FADE_IN_MS            8
+#define AUDIO_UNDERRUN_RAMP_MS      1
+#define AUDIO_RESUME_PREFILL_MIN_MS 20
+#define AUDIO_RESUME_PREFILL_MAX_MS 64
 
 #define DRC_INTEGRAL_DIVISOR 500.0
 #define DRC_FILL_SMOOTHING   0.05
@@ -24,6 +27,7 @@ static int opened_freq = 0;
 static int opened_channels = 0;
 static int opened_period_frames = 0;
 static int device_paused = 0;
+static int resume_pending = 0;
 static int audio_muted = 0;
 
 static double core_native_rate = 48000.0;
@@ -71,6 +75,8 @@ static uint32_t active_min_latency_ms = 0;
 static retro_audio_buffer_status_callback_t buffer_status_cb = NULL;
 static uint32_t last_queued_ms_sample = 0;
 static int last_queued_ms_valid = 0;
+
+static void audio_bridge_maybe_finish_resume(void);
 
 static int16_t scale_sample(const int16_t sample) {
     return (int16_t) ((int32_t) sample * session_settings.volume / 100);
@@ -333,6 +339,7 @@ void audio_bridge_flush_sample_fifo(void) {
 
     if (audio_dev && !audio_muted) {
         submit_audio_frames(sample_fifo, sample_fifo_count);
+        audio_bridge_maybe_finish_resume();
 
         single_sample_flushes++;
         if (sample_fifo_count > single_sample_max_batch) single_sample_max_batch = sample_fifo_count;
@@ -406,12 +413,15 @@ int audio_bridge_open(const double core_sample_rate) {
         }
     }
 
-    SDL_PauseAudioDevice(audio_dev, 0);
-    device_paused = 0;
+    SDL_PauseAudioDevice(audio_dev, 1);
+    device_paused = 1;
+    resume_pending = 1;
+
     LOG_SUCCESS(
         mux_module, "Audio device opened at %d Hz (core native %d Hz), period %d frames", have.freq,
         (int) core_sample_rate, opened_period_frames
     );
+
     return 0;
 }
 
@@ -427,6 +437,7 @@ static void close_device(void) {
     opened_channels = 0;
     opened_period_frames = 0;
     device_paused = 0;
+    resume_pending = 0;
     last_queued_ms_valid = 0;
 }
 
@@ -485,16 +496,24 @@ static void audio_bridge_trigger_fade_in(void) {
 }
 
 void audio_bridge_set_paused(const int pause) {
-    if (!audio_dev || pause == device_paused) return;
+    if (!audio_dev) return;
 
     if (pause) {
+        if (device_paused && !resume_pending) return;
+
+        resume_pending = 0;
+        device_paused = 1;
+        SDL_PauseAudioDevice(audio_dev, 1);
         audio_bridge_clear_queued();
-    } else {
-        audio_bridge_trigger_fade_in();
+
+        return;
     }
 
-    device_paused = pause;
-    SDL_PauseAudioDevice(audio_dev, pause);
+    if (!device_paused && !resume_pending) return;
+    if (resume_pending) return;
+
+    resume_pending = 1;
+    audio_bridge_maybe_finish_resume();
 }
 
 void audio_bridge_set_muted(const int mute) {
@@ -513,14 +532,19 @@ void audio_bridge_clear_queued(void) {
         SDL_LockAudioDevice(audio_dev);
         const uint32_t read_idx = ring_read_index;
         ring_write_index = read_idx;
+        fade_in_remaining = 0;
+        fade_in_total = 0;
         SDL_UnlockAudioDevice(audio_dev);
     }
 
     if (resampler) SDL_AudioStreamClear(resampler);
     last_queued_ms_valid = 0;
 
+    drc_bias = 0.0;
     drc_fill_avg = -1.0;
+    drc_ratio = 1.0;
     drc_reset_stream();
+    audio_filter_reset();
 }
 
 Uint32 audio_bridge_queued_ms(void) {
@@ -530,7 +554,7 @@ Uint32 audio_bridge_queued_ms(void) {
     const uint32_t read_idx = ring_read_index;
     const uint32_t occupied_frames = write_idx - read_idx;
 
-    return (Uint32) (((uint64_t) occupied_frames * 1000ULL) / (uint64_t) opened_freq);
+    return (Uint32) ((uint64_t) occupied_frames * 1000ULL / (uint64_t) opened_freq);
 }
 
 static double period_ms(void) {
@@ -570,6 +594,33 @@ uint32_t audio_bridge_high_water_ms(void) {
     return high;
 }
 
+static uint32_t audio_bridge_resume_target_ms(void) {
+    uint32_t target = audio_bridge_low_water_ms();
+
+    if (target < AUDIO_RESUME_PREFILL_MIN_MS) target = AUDIO_RESUME_PREFILL_MIN_MS;
+    if (target > AUDIO_RESUME_PREFILL_MAX_MS) target = AUDIO_RESUME_PREFILL_MAX_MS;
+
+    return target;
+}
+
+static void audio_bridge_maybe_finish_resume(void) {
+    if (!audio_dev || !resume_pending) return;
+
+    const uint32_t target_ms = audio_bridge_resume_target_ms();
+    const uint32_t queued_ms = audio_bridge_queued_ms();
+    if (queued_ms < target_ms) return;
+
+    audio_bridge_trigger_fade_in();
+
+    resume_pending = 0;
+    device_paused = 0;
+    last_queued_ms_sample = queued_ms;
+    last_queued_ms_valid = 1;
+
+    SDL_PauseAudioDevice(audio_dev, 0);
+    LOG_DEBUG(mux_module, "Audio resumed with %ums queued (target %ums)", queued_ms, target_ms);
+}
+
 void audio_bridge_drc_tick(void) {
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
 
@@ -583,7 +634,7 @@ void audio_bridge_drc_tick(void) {
     uint32_t low, high;
     compute_latency_targets(active_min_latency_ms, &low, &high);
 
-    const uint64_t target_frames = ((uint64_t) (low + high) / 2ULL * (uint64_t) opened_freq) / 1000ULL;
+    const uint64_t target_frames = (uint64_t) (low + high) / 2ULL * (uint64_t) opened_freq / 1000ULL;
     if (target_frames == 0) return;
 
     const uint32_t write_idx = ring_write_index;
@@ -608,6 +659,9 @@ void audio_bridge_drc_tick(void) {
 }
 
 void audio_bridge_wait_for_headroom(void) {
+    audio_bridge_maybe_finish_resume();
+    if (device_paused) return;
+
     const uint32_t queued = audio_bridge_queued_ms();
     const uint32_t high = audio_bridge_high_water_ms();
     if (queued > high) SDL_Delay(queued - high);
@@ -649,7 +703,7 @@ void audio_bridge_set_buffer_status_callback(const retro_audio_buffer_status_cal
 void audio_bridge_notify_buffer_status(void) {
     if (!buffer_status_cb) return;
 
-    const bool active = audio_dev != 0 && !audio_muted;
+    const bool active = audio_dev != 0 && !audio_muted && !device_paused;
     unsigned occupancy_pct = 0;
     bool underrun_likely = false;
 
@@ -658,7 +712,7 @@ void audio_bridge_notify_buffer_status(void) {
         const uint32_t low = audio_bridge_low_water_ms();
         const uint32_t high = audio_bridge_high_water_ms();
 
-        const uint64_t pct = high > 0 ? ((uint64_t) queued * 100ULL) / (uint64_t) high : 0;
+        const uint64_t pct = high > 0 ? (uint64_t) queued * 100ULL / (uint64_t) high : 0;
         occupancy_pct = (unsigned) (pct > 100 ? 100 : pct);
 
         if (last_queued_ms_valid) {
@@ -690,5 +744,6 @@ size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames)
     if (!audio_dev || !data || audio_muted) return frames;
 
     submit_audio_frames(data, frames);
+    audio_bridge_maybe_finish_resume();
     return frames;
 }

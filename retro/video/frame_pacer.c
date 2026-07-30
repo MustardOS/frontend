@@ -9,13 +9,17 @@
 #define FRAME_PACER_EMERGENCY_AUDIO_MS 20
 #define FRAME_PACER_MISS_RATIO         1.5
 
-#define FRAME_PACER_OUTLIER_RATIO    3.0
-#define FRAME_PACER_MARGIN_MIN_NS    300000
-#define FRAME_PACER_MARGIN_MAX_NS    3000000
-#define FRAME_PACER_MARGIN_GROW_NS   250000
-#define FRAME_PACER_MARGIN_SHRINK_NS 15000
-#define FRAME_PACER_STABLE_STREAK    90
-#define FRAME_PACER_SPIN_NS          300000
+#define FRAME_PACER_OUTLIER_RATIO     3.0
+#define FRAME_PACER_MARGIN_MIN_NS     300000.0
+#define FRAME_PACER_MARGIN_MAX_NS     3000000.0
+#define FRAME_PACER_MARGIN_GROW_NS    250000.0
+#define FRAME_PACER_MARGIN_SHRINK_NS  15000.0
+#define FRAME_PACER_STABLE_STREAK     90
+#define FRAME_PACER_SPIN_NS           300000ULL
+#define FRAME_PACER_RESET_GAP_NS      250000000.0
+#define FRAME_PACER_REFRESH_MIN_HZ    45.0
+#define FRAME_PACER_REFRESH_MAX_HZ    75.0
+#define FRAME_PACER_REFRESH_SMOOTHING 0.10
 
 typedef struct {
     uint64_t samples_ns[FRAME_PACER_HISTORY];
@@ -37,6 +41,37 @@ static double perf_ns(const uint64_t counter_delta) {
     static double ns_per_tick = 0.0;
     if (ns_per_tick == 0.0) ns_per_tick = 1e9 / (double) SDL_GetPerformanceFrequency();
     return (double) counter_delta * ns_per_tick;
+}
+
+static void frame_pacer_reset_state(void) {
+    memset(&work_history, 0, sizeof(work_history));
+
+    refresh_period_ns = 0.0;
+    refresh_period_known = 0;
+    last_present_counter = 0;
+
+    safety_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
+    stable_streak = 0;
+    last_tick_missed = 0;
+
+    measure_start_counter = 0;
+    measuring = 0;
+}
+
+static int frame_pacer_timing_available(void) {
+    if (session_settings.fps_limit != fps_limit_60) return 0;
+    if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) return 0;
+
+    if (audio_bridge_is_active() && audio_bridge_queued_ms() < FRAME_PACER_EMERGENCY_AUDIO_MS) return 0;
+
+    return 1;
+}
+
+static int refresh_interval_plausible(const double interval_ns) {
+    const double min_period_ns = 1e9 / FRAME_PACER_REFRESH_MAX_HZ;
+    const double max_period_ns = 1e9 / FRAME_PACER_REFRESH_MIN_HZ;
+
+    return interval_ns >= min_period_ns && interval_ns <= max_period_ns;
 }
 
 static void rolling_ns_push(rolling_ns_t *r, const uint64_t ns) {
@@ -73,9 +108,8 @@ static void frame_pacer_begin_measure(void) {
 
 static void frame_pacer_wait(void) {
     if (session_settings.frame_delay_ms == FRAME_DELAY_OFF) return;
-    if (session_settings.fps_limit != fps_limit_60) return;
-    if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) return;
-    if (!audio_bridge_is_active() || audio_bridge_queued_ms() < FRAME_PACER_EMERGENCY_AUDIO_MS) return;
+    if (!audio_bridge_is_active()) return;
+    if (!frame_pacer_timing_available()) return;
     if (last_tick_missed) return;
 
     uint64_t sleep_ns;
@@ -101,34 +135,33 @@ static void frame_pacer_wait(void) {
     const uint64_t spin_ns = sleep_ns > FRAME_PACER_SPIN_NS ? FRAME_PACER_SPIN_NS : sleep_ns;
     const uint64_t coarse_ns = sleep_ns - spin_ns;
 
-    if (coarse_ns > 1000000) SDL_Delay((uint32_t) (coarse_ns / 1000000));
+    if (coarse_ns > 1000000ULL) SDL_Delay((uint32_t) (coarse_ns / 1000000ULL));
     while (perf_ns(SDL_GetPerformanceCounter() - start) < (double) sleep_ns) {
     }
 }
 
 void frame_pacer_maybe_wait(void) {
-    frame_pacer_wait();
+    if (!frame_pacer_timing_available()) {
+        frame_pacer_reset_state();
+        return;
+    }
 
-    // Started after the wait so the delay we just chose is not counted as frame work,
-    // this essentially stops any weird stalling on fast forward toggling!
+    frame_pacer_wait();
     frame_pacer_begin_measure();
 }
 
 void frame_pacer_after_present(void) {
+    if (!frame_pacer_timing_available()) {
+        frame_pacer_reset_state();
+        return;
+    }
+
     if (measuring) {
         measuring = 0;
         rolling_ns_push(&work_history, (uint64_t) perf_ns(SDL_GetPerformanceCounter() - measure_start_counter));
     }
 
-    const int applicable = session_settings.fps_limit == fps_limit_60 && !hotkeys_is_fast_forward_active()
-                           && !hotkeys_is_slow_motion_active();
-
     const uint64_t now = SDL_GetPerformanceCounter();
-
-    if (!applicable) {
-        last_present_counter = 0;
-        return;
-    }
 
     if (last_present_counter == 0) {
         last_present_counter = now;
@@ -138,26 +171,42 @@ void frame_pacer_after_present(void) {
     const double interval_ns = perf_ns(now - last_present_counter);
     last_present_counter = now;
 
+    if (interval_ns >= FRAME_PACER_RESET_GAP_NS) {
+        frame_pacer_reset_state();
+        last_present_counter = now;
+        return;
+    }
+
     if (!refresh_period_known) {
+        if (!refresh_interval_plausible(interval_ns)) return;
+
         refresh_period_ns = interval_ns;
         refresh_period_known = 1;
         return;
     }
 
     if (interval_ns > refresh_period_ns * FRAME_PACER_OUTLIER_RATIO) return;
-    last_tick_missed = interval_ns > refresh_period_ns * FRAME_PACER_MISS_RATIO;
 
+    last_tick_missed = interval_ns > refresh_period_ns * FRAME_PACER_MISS_RATIO;
     if (last_tick_missed) {
         safety_margin_ns += FRAME_PACER_MARGIN_GROW_NS;
+
         if (safety_margin_ns > FRAME_PACER_MARGIN_MAX_NS) safety_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
         stable_streak = 0;
-    } else if (++stable_streak >= FRAME_PACER_STABLE_STREAK) {
+
+        return;
+    }
+
+    if (++stable_streak >= FRAME_PACER_STABLE_STREAK) {
         stable_streak = 0;
         safety_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
         if (safety_margin_ns < FRAME_PACER_MARGIN_MIN_NS) safety_margin_ns = FRAME_PACER_MARGIN_MIN_NS;
     }
 
-    refresh_period_ns = refresh_period_ns * 0.9 + interval_ns * 0.1;
+    if (!refresh_interval_plausible(interval_ns)) return;
+
+    refresh_period_ns =
+        refresh_period_ns * (1.0 - FRAME_PACER_REFRESH_SMOOTHING) + interval_ns * FRAME_PACER_REFRESH_SMOOTHING;
 }
 
 float frame_pacer_get_refresh_hz(void) {
