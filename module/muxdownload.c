@@ -66,7 +66,7 @@ static void create_content_items(void) {
         char help[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(item, "help"), help, sizeof(help));
 
-        content_item *new_item = add_item(&items, &item_count, name, name, url, ITEM);
+        content_item *new_item = add_item(&items, &item_count, name, name, url, content_type_item);
         new_item->help = strdup(help);
     }
     sort_items(items, item_count);

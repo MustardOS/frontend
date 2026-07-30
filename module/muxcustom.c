@@ -116,7 +116,7 @@ static void populate_theme_alternates(void) {
                 || (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxalt") == 0)) {
                 const char *name_without_ext = strip_ext(filename);
                 if (!item_exists(items, item_count, name_without_ext)) {
-                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", item);
+                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", content_type_item);
                 }
             }
         }

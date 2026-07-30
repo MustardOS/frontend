@@ -34,7 +34,7 @@ static void generate_available_controls(const char *default_control) {
             char *last_dot = strrchr(cf->d_name, '.');
             if (last_dot && strcasecmp(last_dot, ".txt") == 0) {
                 *last_dot = '\0';
-                add_item(&items, &item_count, cf->d_name, cf->d_name, "", item);
+                add_item(&items, &item_count, cf->d_name, cf->d_name, "", content_type_item);
             }
         }
     }

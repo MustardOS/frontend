@@ -34,7 +34,7 @@ static void generate_available_tags(void) {
     if (!tags) return;
 
     for (int i = 0; i < tag_count; ++i)
-        add_item(&items, &item_count, tags[i], tags[i], "", item);
+        add_item(&items, &item_count, tags[i], tags[i], "", content_type_item);
     sort_items(items, item_count);
 
     reset_ui_groups();

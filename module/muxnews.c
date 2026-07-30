@@ -226,7 +226,7 @@ static void parse_index_json(const char *json_data) {
 
         snprintf(key_buf, sizeof(key_buf), "topic_%d", id);
 
-        add_item(&items, &item_count, key_buf, title_buf, tag_buf, ITEM);
+        add_item(&items, &item_count, key_buf, title_buf, tag_buf, content_type_item);
         topic_ids[out_i++] = id;
     }
 

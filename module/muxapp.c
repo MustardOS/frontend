@@ -208,7 +208,7 @@ static void create_app_items(void) {
         char app_launcher[MAX_BUFFER_SIZE];
         snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, resolved_base, dir_names[i]);
 
-        mux_apps *mux_app = get_mux_app(dir_names[i]);
+        const mux_apps *mux_app = get_mux_app(dir_names[i]);
 
         char default_full_name[MAX_BUFFER_SIZE];
         char default_grid_name[MAX_BUFFER_SIZE];
@@ -267,7 +267,8 @@ static void create_app_items(void) {
         }
 
         content_item *new_item = add_item(
-            &items, &item_count, full_app_name, theme.grid.enabled ? grid_app_name : full_app_name, app_folder, ITEM
+            &items, &item_count, full_app_name, theme.grid.enabled ? grid_app_name : full_app_name, app_folder,
+            content_type_item
         );
 
         if (new_item) {

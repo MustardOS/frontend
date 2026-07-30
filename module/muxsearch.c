@@ -80,7 +80,7 @@ static void image_refresh() {
 }
 
 static void video_refresh(void) {
-    if (!ui_count_static || all_items[current_item_index].content_type == FOLDER) return;
+    if (!ui_count_static || all_items[current_item_index].content_type == content_type_folder) return;
 
     char *item_dir = get_content_path(all_items[current_item_index].extra_data);
 
@@ -172,7 +172,7 @@ static void list_nav_move(const int steps, const int direction) {
     }
 
     for (int step = 0; step < steps; ++step) {
-        if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
+        if (all_item_count > 0 && all_items[current_item_index].content_type == content_type_item) {
             apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
         }
 
@@ -192,7 +192,7 @@ static void list_nav_move(const int steps, const int direction) {
 
     video_preview_cancel();
 
-    if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
+    if (all_item_count > 0 && all_items[current_item_index].content_type == content_type_item) {
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
 
         if (config.visual.box_art < 4) {
@@ -332,7 +332,9 @@ static void process_results(const char *json_results) {
             }
 
             adjust_visual_label(display_name, config.visual.name, config.visual.dash);
-            add_item(&folder_items, &folder_item_count, display_name, display_name, content_full_path, ITEM);
+            add_item(
+                &folder_items, &folder_item_count, display_name, display_name, content_full_path, content_type_item
+            );
         }
 
         sort_items(folder_items, folder_item_count);
@@ -353,11 +355,11 @@ static void process_results(const char *json_results) {
         }
 
         for (size_t i = 0; i < folder_item_count; i++) {
-            if (folder_items[i].content_type == ITEM) {
+            if (folder_items[i].content_type == content_type_item) {
                 if (!in_skiplist(&skiplist, folder_items[i].extra_data)) {
                     add_item(
                         &t_all_items, &t_all_item_count, folder_items[i].name, folder_items[i].display_name,
-                        folder_items[i].extra_data, ITEM
+                        folder_items[i].extra_data, content_type_item
                     );
 
                     gen_result("content", folder_items[i].display_name, "content", folder_items[i].extra_data);
@@ -376,15 +378,15 @@ static void process_results(const char *json_results) {
     }
 
     // Add the three top labels - lookup, local, and global
-    add_item(&all_items, &all_item_count, "", "", "", FOLDER);
-    add_item(&all_items, &all_item_count, "", "", "", FOLDER);
-    add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+    add_item(&all_items, &all_item_count, "", "", "", content_type_folder);
+    add_item(&all_items, &all_item_count, "", "", "", content_type_folder);
+    add_item(&all_items, &all_item_count, "", "", "", content_type_folder);
 
     for (size_t i = 0; i < t_all_item_count; i++) {
-        if (t_all_items[i].content_type == ITEM) {
+        if (t_all_items[i].content_type == content_type_item) {
             add_item(
                 &all_items, &all_item_count, t_all_items[i].name, t_all_items[i].display_name,
-                t_all_items[i].extra_data, ITEM
+                t_all_items[i].extra_data, content_type_item
             );
         }
     }
@@ -676,7 +678,7 @@ static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call || video_preview_active())
         return;
 
-    if (!all_item_count || all_items[current_item_index].content_type != ITEM) {
+    if (!all_item_count || all_items[current_item_index].content_type != content_type_item) {
         play_sound(snd_info_open);
         show_help();
     }

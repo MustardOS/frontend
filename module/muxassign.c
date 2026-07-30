@@ -38,14 +38,14 @@ static int find_system_item_index(const char *system_name) {
     size_t tmp_count = 0;
 
     if (device.board.has_network)
-        add_item(&tmp_items, &tmp_count, lang.muxassign.core_down, lang.muxassign.core_down, "", menu);
+        add_item(&tmp_items, &tmp_count, lang.muxassign.core_down, lang.muxassign.core_down, "", content_type_menu);
 
     DIR *ad = opendir(STORE_LOC_ASIN);
     if (ad) {
         struct dirent *af;
         while ((af = readdir(ad))) {
             if (af->d_type == DT_DIR && strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
-                add_item(&tmp_items, &tmp_count, af->d_name, af->d_name, "", folder);
+                add_item(&tmp_items, &tmp_count, af->d_name, af->d_name, "", content_type_folder);
             }
         }
         closedir(ad);
@@ -54,7 +54,7 @@ static int find_system_item_index(const char *system_name) {
     if (!tmp_items) return 0;
     sort_items(tmp_items, tmp_count);
 
-    int idx = get_item_index_by_name(tmp_items, tmp_count, system_name, folder);
+    int idx = get_item_index_by_name(tmp_items, tmp_count, system_name, content_type_folder);
     if (idx < 0) idx = 0;
 
     free_items(&tmp_items, &tmp_count);
@@ -116,7 +116,7 @@ static int find_core_item_index(const char *system) {
         mini_free(core_config);
 
         if (strcmp(assign_core, "none") != 0)
-            add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, item);
+            add_item(&tmp_items, &tmp_count, assign_name, af->d_name, assign_core, content_type_item);
     }
     closedir(ad);
 
@@ -146,7 +146,7 @@ static void show_help(void) {
 
 static void create_system_items(void) {
     if (device.board.has_network)
-        add_item(&items, &item_count, lang.muxassign.core_down, lang.muxassign.core_down, "", menu);
+        add_item(&items, &item_count, lang.muxassign.core_down, lang.muxassign.core_down, "", content_type_menu);
 
     struct dirent *af;
 
@@ -159,7 +159,7 @@ static void create_system_items(void) {
     while ((af = readdir(ad))) {
         if (af->d_type == DT_DIR) {
             if (strcmp(af->d_name, ".") != 0 && strcmp(af->d_name, "..") != 0) {
-                add_item(&items, &item_count, af->d_name, af->d_name, "", folder);
+                add_item(&items, &item_count, af->d_name, af->d_name, "", content_type_folder);
             }
         }
     }
@@ -180,7 +180,8 @@ static void create_system_items(void) {
 
         lv_obj_t *ui_lbl_system_item_glyph = lv_img_create(ui_pnl_system);
         apply_theme_list_glyph(
-            &theme, ui_lbl_system_item_glyph, mux_module, items[i].content_type == menu ? "download" : "system"
+            &theme, ui_lbl_system_item_glyph, mux_module,
+            items[i].content_type == content_type_menu ? "download" : "system"
         );
 
         lv_group_add_obj(ui_group, ui_lbl_system_item);
@@ -190,7 +191,7 @@ static void create_system_items(void) {
         apply_size_to_content(&theme, ui_pnl_content, ui_lbl_system_item, ui_lbl_system_item_glyph, items[i].name);
         apply_text_long_dot(&theme, ui_lbl_system_item);
 
-        if (items[i].content_type == menu) ui_lbl_core_downloader = ui_lbl_system_item;
+        if (items[i].content_type == content_type_menu) ui_lbl_core_downloader = ui_lbl_system_item;
     }
 
     if (ui_count_static > 0) {
@@ -244,7 +245,7 @@ static void create_core_items(const char *target) {
                 mini_free(core_config);
 
                 if (strcmp(assign_core, "none") != 0) {
-                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, item);
+                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, content_type_item);
                 } else {
                     LOG_ERROR(mux_module, "Assign ini missing/mismatched [%s] core= in: %s", af->d_name, core_file);
                     toast_message(lang.muxassign.misconfigured, tst_wait_l);

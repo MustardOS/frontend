@@ -133,7 +133,7 @@ static void generate_available_filters(void) {
         snprintf(filter_store, sizeof(filter_store), "%s", filter_no_ext);
         free(filter_no_ext);
 
-        add_item(&items, &item_count, filter_store, filter_store, "", item);
+        add_item(&items, &item_count, filter_store, filter_store, "", content_type_item);
     }
 
     ui_count_static += (int) item_count;

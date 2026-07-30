@@ -26,7 +26,7 @@ static void generate_available_governors(const char *default_governor) {
     if (!governors) return;
 
     for (int i = 0; i < governor_count; ++i)
-        add_item(&items, &item_count, governors[i], governors[i], "", item);
+        add_item(&items, &item_count, governors[i], governors[i], "", content_type_item);
     sort_items(items, item_count);
 
     reset_ui_groups();

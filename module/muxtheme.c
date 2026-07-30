@@ -29,7 +29,9 @@ char *theme_version_compat = "";
 static char *theme_version_buf = NULL;
 
 static void show_help(void) {
-    if (items[current_item_index].content_type == folder || items[current_item_index].content_type == menu) return;
+    if (items[current_item_index].content_type == content_type_folder
+        || items[current_item_index].content_type == content_type_menu)
+        return;
 
     char credits_path[MAX_BUFFER_SIZE];
     snprintf(credits_path, sizeof(credits_path), "%s/%s/" TEMP_CREDITS, sys_dir, items[current_item_index].name);
@@ -70,7 +72,8 @@ static int version_check(void) {
 }
 
 static void image_refresh(void) {
-    if (items[current_item_index].content_type == folder || items[current_item_index].content_type == menu) {
+    if (items[current_item_index].content_type == content_type_folder
+        || items[current_item_index].content_type == content_type_menu) {
         lv_img_set_src(ui_img_box, &ui_img_blank);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
         return;
@@ -85,7 +88,7 @@ static void image_refresh(void) {
 
 static void create_theme_items(void) {
     if (device.board.has_network && strcasecmp(base_dir, sys_dir) == 0 && !is_ksk(kiosk.custom.theme_down)) {
-        add_item(&items, &item_count, lang.muxtheme.theme_down, lang.muxtheme.theme_down, "", menu);
+        add_item(&items, &item_count, lang.muxtheme.theme_down, lang.muxtheme.theme_down, "", content_type_menu);
     }
 
     struct dirent *tf;
@@ -104,9 +107,9 @@ static void create_theme_items(void) {
             snprintf(version_path, sizeof(version_path), "%s/%s/version.txt", sys_dir, tf->d_name);
 
             if (file_exist(version_path)) {
-                add_item(&items, &item_count, tf->d_name, tf->d_name, "", item);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_item);
             } else {
-                add_item(&items, &item_count, tf->d_name, tf->d_name, "", folder);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_folder);
             }
         }
     }
@@ -130,9 +133,9 @@ show_dl_only:
         lv_obj_t *ui_lbl_theme_item_glyph = lv_img_create(ui_pnl_theme);
         apply_theme_list_glyph(
             &theme, ui_lbl_theme_item_glyph, mux_module,
-            items[i].content_type == menu     ? "download"
-            : items[i].content_type == folder ? "folder"
-                                              : "theme"
+            items[i].content_type == content_type_menu     ? "download"
+            : items[i].content_type == content_type_folder ? "folder"
+                                                           : "theme"
         );
 
         lv_group_add_obj(ui_group, ui_lbl_theme_item);
@@ -265,7 +268,7 @@ static void handle_a(void) {
 
     play_sound(snd_confirm);
 
-    if (items[current_item_index].content_type == menu) {
+    if (items[current_item_index].content_type == content_type_menu) {
         if (is_network_connected()) {
             load_mux("themedwn");
 
@@ -276,7 +279,7 @@ static void handle_a(void) {
         }
         return;
     }
-    if (items[current_item_index].content_type == folder) {
+    if (items[current_item_index].content_type == content_type_folder) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s", sys_dir, items[current_item_index].name);
 
@@ -324,8 +327,9 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || remove_mode || items[current_item_index].content_type == folder
-        || items[current_item_index].content_type == menu) {
+    if (msgbox_active || !ui_count_static || remove_mode
+        || items[current_item_index].content_type == content_type_folder
+        || items[current_item_index].content_type == content_type_menu) {
         return;
     }
 
@@ -450,7 +454,7 @@ int muxtheme_main(char *ex_dir) {
 
     const char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
-        const int index = get_item_index_by_name(items, item_count, e_name_line, folder);
+        const int index = get_item_index_by_name(items, item_count, e_name_line, content_type_folder);
         if (index > -1) sys_index = index;
         remove(EXPLORE_NAME);
     }

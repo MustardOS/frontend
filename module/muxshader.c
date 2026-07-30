@@ -123,7 +123,7 @@ static void generate_available_shaders(void) {
         snprintf(shader_store, sizeof(shader_store), "%s", shd_no_ext);
         free(shd_no_ext);
 
-        add_item(&items, &item_count, shader_store, shader_store, "", item);
+        add_item(&items, &item_count, shader_store, shader_store, "", content_type_item);
     }
 
     ui_count_static += (int) item_count;

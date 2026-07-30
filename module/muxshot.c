@@ -69,7 +69,7 @@ static void create_screenshot_items(void) {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot) *last_dot = '\0';
 
-            add_item(&items, &item_count, tf->d_name, tf->d_name, "", item);
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_item);
         }
     }
 

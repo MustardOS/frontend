@@ -76,9 +76,10 @@ static char *load_content_description(void) {
     char core_desc[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
 
-    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == item) return lang.generic.no_info;
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == content_type_item)
+        return lang.generic.no_info;
 
-    if (items[current_item_index].content_type == folder) {
+    if (items[current_item_index].content_type == content_type_folder) {
         snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt", INFO_CAT_PATH, content_label);
         if (!file_exist(content_desc)) {
             char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
@@ -119,7 +120,7 @@ static void image_refresh(const char *image_type) {
     } else {
         get_catalogue_name(sys_dir, file_name, core_artwork, sizeof(core_artwork));
 
-        if (items[current_item_index].content_type == folder) {
+        if (items[current_item_index].content_type == content_type_folder) {
             char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, file_name);
             snprintf(
                 h_core_artwork_buf, sizeof(h_core_artwork_buf), "%s",
@@ -139,7 +140,7 @@ static void image_refresh(const char *image_type) {
 
 static void video_refresh(void) {
     if (!ui_count_static || union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR)) return;
-    if (items[current_item_index].content_type == folder) return;
+    if (items[current_item_index].content_type == content_type_folder) return;
 
     char *file_name = get_file_name(items[current_item_index].name);
 
@@ -426,7 +427,7 @@ static int collect_filtered_items(char **file_names, char **file_paths, const in
 
 static void build_items_from_temp(temp_item *tmp, const int tmp_count) {
     for (int i = 0; i < tmp_count; i++) {
-        add_item(&items, &item_count, tmp[i].name, tmp[i].display, tmp[i].full_path, item);
+        add_item(&items, &item_count, tmp[i].name, tmp[i].display, tmp[i].full_path, content_type_item);
         free(tmp[i].full_path);
     }
 
@@ -512,7 +513,7 @@ static void assign_content_glyphs(const char *sub_path) {
     char content_tag[PATH_MAX];
 
     for (size_t i = 0; i < item_count; ++i) {
-        if (items[i].content_type != item) continue;
+        if (items[i].content_type != content_type_item) continue;
 
         char basename[MAX_BUFFER_SIZE];
         snprintf(basename, sizeof(basename), "%s", items[i].name);
@@ -667,7 +668,7 @@ static void create_content_items(void) {
 
         automatic_assign_core(dir_paths[i]);
         content_item *new_item =
-            add_item(&items, &item_count, dir_names[i], friendly_folder_name, dir_paths[i], folder);
+            add_item(&items, &item_count, dir_names[i], friendly_folder_name, dir_paths[i], content_type_folder);
 
         if (new_item) {
             new_item->glyph_icon = strdup("folder");
@@ -720,7 +721,7 @@ static void create_content_items(void) {
         remove(MUOS_HST_LOAD);
 
         if (last_name) {
-            const int idx = get_item_index_by_name(items, item_count, last_name, item);
+            const int idx = get_item_index_by_name(items, item_count, last_name, content_type_item);
             if (idx >= 0) sys_index = idx;
 
             free(last_name);
@@ -1112,7 +1113,7 @@ static void process_load(const int from_start) {
 
     play_sound(snd_confirm);
 
-    if (items[current_item_index].content_type == folder) {
+    if (items[current_item_index].content_type == content_type_folder) {
         char folder_path[PATH_MAX];
         snprintf(folder_path, sizeof(folder_path), "%s", items[current_item_index].extra_data);
 
@@ -1292,7 +1293,7 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || !ui_count_static || hold_call || video_preview_active()) return;
 
-    if (items[current_item_index].content_type == folder) {
+    if (items[current_item_index].content_type == content_type_folder) {
         play_sound(snd_error);
         toast_message(lang.muxplore.error.no_folder, tst_wait_s);
     } else {
@@ -1552,7 +1553,7 @@ static void init_elements(void) {
 static void refresh_nav_items() {
     if (!ui_count_static) return;
 
-    if (items[current_item_index].content_type == folder) {
+    if (items[current_item_index].content_type == content_type_folder) {
         lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
@@ -1662,7 +1663,7 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
     }
 
     const int nav_vis = ui_count_static > 0;
-    const int collect_vis = ui_count_static > 0 && items[current_item_index].content_type == item;
+    const int collect_vis = ui_count_static > 0 && items[current_item_index].content_type == content_type_item;
 
     if (nav_vis) {
         lv_obj_add_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);
@@ -1775,7 +1776,7 @@ int muxplore_main(const int index, char *dir) {
         focus_initial();
         first_open = 0;
 
-        collect_vis = items[current_item_index].content_type == item;
+        collect_vis = items[current_item_index].content_type == content_type_item;
     } else {
         lv_label_set_text(ui_lbl_screen_message, lang.muxplore.none);
         lv_obj_clear_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);

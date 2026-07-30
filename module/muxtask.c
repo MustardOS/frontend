@@ -20,7 +20,7 @@ static void create_task_items(void) {
 
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_DIR && strcmp(tf->d_name, ".") != 0 && strcmp(tf->d_name, "..") != 0) {
-            add_item(&items, &item_count, tf->d_name, tf->d_name, "", FOLDER);
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_folder);
         } else if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
             snprintf(filename, sizeof(filename), "%s/%s", sys_dir, tf->d_name);
@@ -28,7 +28,7 @@ static void create_task_items(void) {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot && strcasecmp(last_dot, ".sh") == 0) {
                 *last_dot = '\0';
-                add_item(&items, &item_count, tf->d_name, tf->d_name, filename, ITEM);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, filename, content_type_item);
             }
         }
     }
@@ -50,7 +50,8 @@ static void create_task_items(void) {
         lv_obj_t *ui_lbl_task_item_glyph = lv_img_create(ui_pnl_task);
         apply_theme_list_glyph(
             &theme, ui_lbl_task_item_glyph, mux_module,
-            items[i].content_type == FOLDER ? "folder" : get_script_value(items[i].extra_data, "ICON", "task")
+            items[i].content_type == content_type_folder ? "folder"
+                                                         : get_script_value(items[i].extra_data, "ICON", "task")
         );
 
         lv_group_add_obj(ui_group, ui_lbl_task_item);
@@ -69,7 +70,7 @@ static void handle_a(void) {
 
     play_sound(snd_confirm);
 
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == content_type_folder) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s", sys_dir, items[current_item_index].name);
 
@@ -147,7 +148,8 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
             struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
             lv_obj_set_user_data(e_focused, items[current_item_index].name);
             lv_label_set_text(
-                ui_lbl_nav_a, items[current_item_index].content_type == FOLDER ? lang.generic.open : lang.generic.launch
+                ui_lbl_nav_a,
+                items[current_item_index].content_type == content_type_folder ? lang.generic.open : lang.generic.launch
             );
             adjust_wallpaper_element(ui_group, 0, wall_task);
         }

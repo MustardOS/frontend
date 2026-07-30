@@ -151,7 +151,7 @@ static void create_archive_items(void) {
         snprintf(item_glyph, sizeof(item_glyph), "%s", is_installed ? "installed" : "archive");
 
         char *display_name = strip_ext(archive_store);
-        add_item(&items, &item_count, base_filename, display_name, item_glyph, item);
+        add_item(&items, &item_count, base_filename, display_name, item_glyph, content_type_item);
         free(display_name);
     }
 

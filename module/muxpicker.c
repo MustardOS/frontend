@@ -20,7 +20,9 @@ static void hide_remove_dialog(void) {
 #define TEMP_CREDITS "credits.txt"
 
 static void show_help(void) {
-    if (items[current_item_index].content_type == folder || items[current_item_index].content_type == menu) return;
+    if (items[current_item_index].content_type == content_type_folder
+        || items[current_item_index].content_type == content_type_menu)
+        return;
 
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
@@ -47,7 +49,7 @@ static void create_picker_items(void) {
 
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_DIR && strcmp(tf->d_name, ".") != 0 && strcmp(tf->d_name, "..") != 0) {
-            add_item(&items, &item_count, tf->d_name, tf->d_name, "", folder);
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_folder);
         } else if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
             snprintf(filename, sizeof(filename), "%s/%s", sys_dir, tf->d_name);
@@ -58,7 +60,7 @@ static void create_picker_items(void) {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot && strcasecmp(last_dot, file_ext) == 0) {
                 *last_dot = '\0';
-                add_item(&items, &item_count, tf->d_name, tf->d_name, "", item);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_item);
             }
         }
     }
@@ -81,9 +83,9 @@ static void create_picker_items(void) {
         lv_obj_t *ui_lbl_picker_item_glyph = lv_img_create(ui_pnl_picker);
         apply_theme_list_glyph(
             &theme, ui_lbl_picker_item_glyph, mux_module,
-            items[i].content_type == menu     ? "download"
-            : items[i].content_type == folder ? "folder"
-                                              : get_last_subdir(picker_type, '/', 1)
+            items[i].content_type == content_type_menu     ? "download"
+            : items[i].content_type == content_type_folder ? "folder"
+                                                           : get_last_subdir(picker_type, '/', 1)
         );
 
         lv_group_add_obj(ui_group, ui_lbl_picker_item);
@@ -104,9 +106,9 @@ static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph,
 
     apply_theme_list_glyph(
         &theme, ui_lbl_item_glyph, mux_module,
-        items[index].content_type == menu     ? "download"
-        : items[index].content_type == folder ? "folder"
-                                              : get_last_subdir(picker_type, '/', 1)
+        items[index].content_type == content_type_menu     ? "download"
+        : items[index].content_type == content_type_folder ? "folder"
+                                                           : get_last_subdir(picker_type, '/', 1)
     );
 
     apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, items[index].display_name);
@@ -163,7 +165,7 @@ static void handle_a(void) {
 
     play_sound(snd_confirm);
 
-    if (items[current_item_index].content_type == folder) {
+    if (items[current_item_index].content_type == content_type_folder) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s", sys_dir, items[current_item_index].name);
 
@@ -205,8 +207,9 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || remove_mode || items[current_item_index].content_type == folder
-        || items[current_item_index].content_type == menu) {
+    if (msgbox_active || !ui_count_static || remove_mode
+        || items[current_item_index].content_type == content_type_folder
+        || items[current_item_index].content_type == content_type_menu) {
         return;
     }
 
@@ -398,7 +401,7 @@ int muxpicker_main(char *type, char *ex_dir) {
 
     const char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
-        const int index = get_item_index_by_name(items, item_count, e_name_line, folder);
+        const int index = get_item_index_by_name(items, item_count, e_name_line, content_type_folder);
         if (index > -1) sys_index = index;
         remove(EXPLORE_NAME);
     }

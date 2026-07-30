@@ -384,7 +384,7 @@ static int order_compare(const void *a, const void *b) {
     const content_item *item_b = b;
 
     if (!config.visual.mixed_content && item_a->content_type != item_b->content_type)
-        return item_a->content_type == folder ? -1 : 1;
+        return item_a->content_type == content_type_folder ? -1 : 1;
 
     if (item_a->sort_bucket != item_b->sort_bucket) return item_b->sort_bucket - item_a->sort_bucket;
 

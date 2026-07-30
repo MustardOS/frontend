@@ -441,7 +441,7 @@ static int register_launch_item(const char *file_path, const char *item_name) {
 
     char fn_name[MAX_BUFFER_SIZE];
     resolve_friendly_name(file_path, fn_name);
-    add_item(&items, &item_count, item_name, fn_name, file_path, ITEM);
+    add_item(&items, &item_count, item_name, fn_name, file_path, content_type_item);
 
     return 1;
 }
@@ -910,7 +910,7 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
         }
 
         resolve_friendly_name(file_path, fn_name);
-        add_item(&items, &item_count, file_names[i], fn_name, file_path, ITEM);
+        add_item(&items, &item_count, file_names[i], fn_name, file_path, content_type_item);
 
         ui_count_static++;
         free(file_names[i]);

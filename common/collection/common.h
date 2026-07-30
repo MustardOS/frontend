@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-typedef enum { menu, folder, item } content_type;
+typedef enum { content_type_menu, content_type_folder, content_type_item } content_type;
 
 typedef struct {
     size_t play_time;

@@ -74,7 +74,8 @@ static char *load_content_description(void) {
     char item_no_ext[MAX_BUFFER_SIZE];
     resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));
 
-    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == item) return lang.generic.no_info;
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == content_type_item)
+        return lang.generic.no_info;
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), INFO_CAT_PATH "/%s/text/%s.txt", core_desc, item_no_ext);
@@ -206,7 +207,7 @@ static void create_history_items(void) {
         if (!grid_mode_enabled) {
             const size_t limit = theme.mux.item.count;
             for (size_t i = 0; i < item_count && i < limit; i++) {
-                if (items[i].content_type == item) {
+                if (items[i].content_type == content_type_item) {
                     gen_label(mux_module, get_glyph_name(i), items[i].display_name);
                 }
             }
@@ -232,8 +233,8 @@ static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph,
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (config.visual.list_glyph && theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {
         get_glyph_path(
-            mux_module, items[index].content_type == item ? get_glyph_name(index) : "unknown", glyph_image_embed,
-            MAX_BUFFER_SIZE
+            mux_module, items[index].content_type == content_type_item ? get_glyph_name(index) : "unknown",
+            glyph_image_embed, MAX_BUFFER_SIZE
         );
         set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
     }
