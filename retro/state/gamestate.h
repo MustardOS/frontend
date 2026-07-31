@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 #define GAMESTATE_MAX_SLOTS      64
 #define GAMESTATE_NAME_MAX       128
 #define GAMESTATE_TIMELINE_DEPTH 10
@@ -59,3 +61,5 @@ int gamestate_metadata_matches(const struct gamestate_slot *slot);
 int gamestate_protect_mismatched_autosave(void);
 
 int gamestate_load_most_recent(int *mismatch_blocked);
+
+int gamestate_find_most_recent(char *path, size_t path_len, int *mismatch_blocked);

@@ -59,6 +59,7 @@ typedef struct {
     // Theme overlay image
     SDL_Texture *theme_overlay;
     uint8_t theme_overlay_opacity;
+    SDL_Rect theme_overlay_rect;
 
     // Shadow layer composited between background and UI texture
     SDL_Texture *shadow_layer;
@@ -73,6 +74,12 @@ static display_overlay_fn video_overlay_fn_ptr = NULL;
 static display_overlay_fn video_bg_fn_ptr = NULL;
 static int video_bg_opaque = 0;
 static int (*hard_sync_query_fn)(void) = NULL;
+
+static void (*present_timing_fn)(double draw_ms, double flip_ms) = NULL;
+static double last_draw_ms = 0.0;
+static double last_flip_ms = 0.0;
+static int flip_pending = 0;
+static uint64_t present_serial = 0;
 static int monitor_blend_configured = 0;
 
 SDL_Renderer *display_get_renderer(void) {
@@ -106,6 +113,17 @@ void display_clear_video_background(void) {
 
 void display_set_video_background_opaque(const int opaque) {
     video_bg_opaque = opaque;
+}
+
+void display_set_present_timing(void (*fn)(double draw_ms, double flip_ms)) {
+    present_timing_fn = fn;
+}
+
+double display_take_flip_ms(void) {
+    if (!flip_pending) return 0.0;
+
+    flip_pending = 0;
+    return last_flip_ms;
 }
 
 void display_set_hard_sync_query(int (*fn)(void)) {
@@ -148,10 +166,21 @@ void display_set_theme_overlay(SDL_Texture *tex, const uint8_t opacity) {
 
     monitor.theme_overlay = tex;
     monitor.theme_overlay_opacity = opacity;
+
+    int tex_w = 0, tex_h = 0;
+    if (tex && SDL_QueryTexture(tex, NULL, NULL, &tex_w, &tex_h) == 0) {
+        monitor.theme_overlay_rect =
+            (SDL_Rect) {(device.screen.width - tex_w) / 2, (device.screen.height - tex_h) / 2, tex_w, tex_h};
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(tex, opacity);
+    } else {
+        monitor.theme_overlay_rect = (SDL_Rect) {0, 0, 0, 0};
+    }
 }
 
 void display_update_overlay_opacity(const uint8_t opacity) {
     monitor.theme_overlay_opacity = opacity;
+    if (monitor.theme_overlay) SDL_SetTextureAlphaMod(monitor.theme_overlay, opacity);
 }
 
 void display_clear_theme_overlay(void) {
@@ -161,6 +190,7 @@ void display_clear_theme_overlay(void) {
     }
 
     monitor.theme_overlay_opacity = 0;
+    monitor.theme_overlay_rect = (SDL_Rect) {0, 0, 0, 0};
 }
 
 static void reload_background(const char *active_theme) {
@@ -736,6 +766,7 @@ static void render_saver_frame(void) {
     saver_render(monitor.renderer);
 
     SDL_RenderPresent(monitor.renderer);
+    present_serial++;
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
@@ -891,8 +922,14 @@ int display_ui_is_hidden(void) {
     return ui_layer_hidden;
 }
 
+int display_video_fast_path_allowed(void) {
+    return ui_layer_hidden && !video_overlay_fn_ptr && display_fade_alpha == 0 && !anim_is_active();
+}
+
 static void composite_to(SDL_Texture *target, const int present) {
     if (!monitor.renderer || !monitor.texture) return;
+
+    const uint64_t timing_start = present ? SDL_GetPerformanceCounter() : 0;
 
     SDL_SetRenderTarget(monitor.renderer, target);
 
@@ -969,14 +1006,8 @@ static void composite_to(SDL_Texture *target, const int present) {
 
     if (anim_fg) anim_tick(monitor.renderer);
 
-    if (monitor.theme_overlay) {
-        int tex_w, tex_h;
-        SDL_QueryTexture(monitor.theme_overlay, NULL, NULL, &tex_w, &tex_h);
-        const SDL_Rect dst = {(device.screen.width - tex_w) / 2, (device.screen.height - tex_h) / 2, tex_w, tex_h};
-        SDL_SetTextureBlendMode(monitor.theme_overlay, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(monitor.theme_overlay, monitor.theme_overlay_opacity);
-        SDL_RenderCopy(monitor.renderer, monitor.theme_overlay, NULL, &dst);
-    }
+    if (monitor.theme_overlay && !ui_layer_hidden && monitor.theme_overlay_rect.w > 0)
+        SDL_RenderCopy(monitor.renderer, monitor.theme_overlay, NULL, &monitor.theme_overlay_rect);
 
     if (video_overlay_fn_ptr) video_overlay_fn_ptr(monitor.renderer);
 
@@ -989,7 +1020,10 @@ static void composite_to(SDL_Texture *target, const int present) {
     // The caller wants to read this frame back, so leave it where it is
     if (!present) return;
 
+    const uint64_t draw_done = timing_start ? SDL_GetPerformanceCounter() : 0;
+
     SDL_RenderPresent(monitor.renderer);
+    present_serial++;
 
     if (hard_sync_query_fn && hard_sync_query_fn()) {
         static void (*p_gl_finish)(void) = NULL;
@@ -997,11 +1031,26 @@ static void composite_to(SDL_Texture *target, const int present) {
         if (p_gl_finish) p_gl_finish();
     }
 
+    if (timing_start) {
+        static double to_ms = 0.0;
+        if (to_ms == 0.0) to_ms = 1000.0 / (double) SDL_GetPerformanceFrequency();
+
+        last_draw_ms = (double) (draw_done - timing_start) * to_ms;
+        last_flip_ms = (double) (SDL_GetPerformanceCounter() - draw_done) * to_ms;
+        flip_pending = 1;
+
+        if (present_timing_fn) present_timing_fn(last_draw_ms, last_flip_ms);
+    }
+
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
 void display_composite_frame(void) {
     composite_to(NULL, 1);
+}
+
+uint64_t display_present_serial(void) {
+    return present_serial;
 }
 
 void display_set_composite_suppressed(const int suppressed) {
@@ -1035,7 +1084,13 @@ int display_capture_clean_frame(const char *path) {
         capture_h = device.screen.height;
     }
 
+    SDL_SetRenderTarget(monitor.renderer, capture_tex);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 255);
+    SDL_RenderClear(monitor.renderer);
+
     composite_to(capture_tex, 0);
+    SDL_RenderFlush(monitor.renderer);
     const int ret = screenshot_save_renderer(monitor.renderer, path, (screenshot_hue) {0, 0, 0});
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 

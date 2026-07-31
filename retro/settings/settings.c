@@ -11,9 +11,11 @@
 #include "../core/core.h"
 #include "../core/muxretro.h"
 #include "../input/core_input_meta.h"
+#include "../input/rumble.h"
 #include "../state/macro.h"
 #include "../video/overlay_bridge.h"
 #include "../core/paths.h"
+#include "../core/perf.h"
 #include "settings.h"
 
 static const struct session_settings_t defaults = {
@@ -26,6 +28,7 @@ static const struct session_settings_t defaults = {
     .rumble_enabled = 1,
     .volume = 100,
     .show_fps = 0,
+    .content_precache = content_precache_off,
     .border_colour = border_colour_theme,
     .sample_rate = 0,
     .fps_limit = fps_limit_60,
@@ -56,7 +59,7 @@ static const struct session_settings_t defaults = {
     .colour_gamma = 100,
     .colour_filter = 0,
     .colour_shader = 0,
-    .overlay_source = overlay_source_catalogue,
+    .overlay_source = overlay_source_off,
     .overlay_pattern = 0,
     .overlay_opacity = 100,
     .viewport_offset_x = 0,
@@ -102,6 +105,8 @@ static struct session_settings_t default_settings(void) {
     struct session_settings_t out = defaults;
 
     for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++) {
+        out.port_device_id[port] = (int) core_input_meta_preferred_device(port);
+
         for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
             out.port_source_target[port][source] = default_source_target[source];
             out.port_source_macro[port][source] = -1;
@@ -216,6 +221,11 @@ static const char *audio_latency_names[audio_latency_count] = {
     lang.muxretro.settings_screen.audio_latency_compat
 };
 
+static const char *show_fps_names[show_fps_count] = {
+    lang.generic.disabled, lang.muxretro.settings_screen.show_fps_simple,
+    lang.muxretro.settings_screen.show_fps_detailed
+};
+
 static const char *header_visibility_names[header_visibility_count] = {
     lang.muxretro.settings_screen.header_none, lang.muxretro.settings_screen.header_clock,
     lang.muxretro.settings_screen.header_battery, lang.muxretro.settings_screen.header_both
@@ -225,6 +235,8 @@ static const char *auto_save_names[auto_save_count] = {
     lang.generic.disabled, lang.muxretro.settings_screen.auto_save_idle, lang.muxretro.settings_screen.auto_save_quit,
     lang.muxretro.settings_screen.auto_save_idle_quit
 };
+
+static const int content_precache_mb[content_precache_count] = {0, 64, 128, 256};
 
 static const double ff_speed_values[ff_speed_count] = {2.0, 3.0, 4.0, 8.0};
 
@@ -313,6 +325,24 @@ const char *session_settings_sample_rate_name(const int rate) {
 const char *session_settings_fps_limit_name(const int mode) {
     if (mode < 0 || mode >= fps_limit_count) return fps_limit_names[fps_limit_60];
     return fps_limit_names[mode];
+}
+
+const char *session_settings_show_fps_name(const int mode) {
+    if (mode < 0 || mode >= show_fps_count) return show_fps_names[show_fps_off];
+    return show_fps_names[mode];
+}
+
+const char *session_settings_content_precache_name(const int mode) {
+    static char buf[16];
+    if (mode <= content_precache_off || mode >= content_precache_count) return lang.generic.disabled;
+
+    snprintf(buf, sizeof(buf), "%d MB", content_precache_mb[mode]);
+    return buf;
+}
+
+int session_settings_content_precache_mb(const int mode) {
+    if (mode <= content_precache_off || mode >= content_precache_count) return 0;
+    return content_precache_mb[mode];
 }
 
 const char *session_settings_header_visibility_name(const int mode) {
@@ -548,7 +578,10 @@ static void apply_ini(const char *path) {
     if (v >= 0 && v <= 100) session_settings.volume = (int) v;
 
     v = mini_get_int(ini, "settings", "show_fps", -1);
-    if (v == 0 || v == 1) session_settings.show_fps = (int) v;
+    if (v >= 0 && v < show_fps_count) session_settings.show_fps = (int) v;
+
+    v = mini_get_int(ini, "settings", "content_precache", -1);
+    if (v >= 0 && v < content_precache_count) session_settings.content_precache = (int) v;
 
     v = mini_get_int(ini, "settings", "border_colour", -1);
     if (v >= 0 && v < border_colour_count) session_settings.border_colour = (int) v;
@@ -810,6 +843,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(rumble_enabled);
     DELTA(volume);
     DELTA(show_fps);
+    DELTA(content_precache);
     DELTA(border_colour);
     DELTA(sample_rate);
     DELTA(fps_limit);
@@ -946,6 +980,8 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     apply_ini(directory_ini_path);
     apply_ini(content_ini_path);
 
+    session_settings_apply_fps_mode();
+
     baseline_settings = session_settings;
 }
 
@@ -994,6 +1030,7 @@ void session_settings_cycle_audio_filter(const int direction) {
 void session_settings_cycle_rumble(const int direction) {
     (void) direction;
     session_settings.rumble_enabled = !session_settings.rumble_enabled;
+    rumble_bridge_refresh();
 }
 
 void session_settings_cycle_volume(const int direction) {
@@ -1002,10 +1039,21 @@ void session_settings_cycle_volume(const int direction) {
     if (session_settings.volume > 100) session_settings.volume = 100;
 }
 
+void session_settings_apply_fps_mode(void) {
+    pause_menu_set_fps_visible(session_settings.show_fps != show_fps_off);
+    perf_set_hud_active(session_settings.show_fps == show_fps_detailed);
+    pause_menu_set_fps_text("");
+}
+
 void session_settings_cycle_fps(const int direction) {
-    (void) direction;
-    session_settings.show_fps = !session_settings.show_fps;
-    pause_menu_set_fps_visible(session_settings.show_fps);
+    const int step = direction ? direction : 1;
+    session_settings.show_fps = (session_settings.show_fps + step + show_fps_count) % show_fps_count;
+    session_settings_apply_fps_mode();
+}
+
+void session_settings_cycle_content_precache(const int direction) {
+    session_settings.content_precache =
+        (session_settings.content_precache + direction + content_precache_count) % content_precache_count;
 }
 
 void session_settings_cycle_border(const int direction) {
@@ -1780,7 +1828,7 @@ void session_settings_reset_input_port(const int port) {
         session_settings.port_device_key[port][0] = '\0';
     }
 
-    session_settings.port_device_id[port] = 0;
+    session_settings.port_device_id[port] = (int) core_input_meta_preferred_device(port);
     reset_button_map(port);
 }
 
@@ -1838,7 +1886,7 @@ void session_settings_discard_to(const struct session_settings_t *snapshot) {
     session_settings = *snapshot;
     video_bridge_apply_scaling();
     video_bridge_apply_filter();
-    pause_menu_set_fps_visible(session_settings.show_fps);
+    session_settings_apply_fps_mode();
     audio_bridge_apply_sample_rate();
     video_bridge_apply_fps_limit();
     colour_refresh();

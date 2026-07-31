@@ -16,6 +16,8 @@ typedef struct {
     void (*cycle)(int index, int direction);
     int (*row_is_action)(int index);
     void (*action)(int index);
+    const char *(*extra_label)(int index);
+    void (*extra_action)(int index);
     int (*child_tick)(void);
     void (*closed)(void);
 
@@ -29,6 +31,7 @@ typedef struct {
     uint64_t prev_nav_mask;
     nav_repeat_t rpt_up, rpt_down, rpt_left, rpt_right;
     int nav_row_class;
+    const char *nav_extra_label;
     int save_dialogue_active;
     mux_dialogue save_dlg;
     struct session_settings_t entry_snapshot;

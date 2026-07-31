@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include "../../common/fileio.h"
 #include "../../common/init.h"
@@ -97,7 +98,14 @@ static void mux_retro_log_printf(const enum retro_log_level level, const char *f
     vsnprintf(msg, sizeof(msg), fmt, args);
     va_end(args);
 
+    size_t msg_len = strlen(msg);
+    while (msg_len > 0 && (msg[msg_len - 1] == '\n' || msg[msg_len - 1] == '\r'))
+        msg[--msg_len] = '\0';
+
     switch (level) {
+        case RETRO_LOG_DEBUG:
+            LOG_DEBUG(mux_module, "core: %s", msg);
+            break;
         case RETRO_LOG_ERROR:
             LOG_ERROR(mux_module, "core: %s", msg);
             break;

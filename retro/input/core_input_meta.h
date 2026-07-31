@@ -13,4 +13,6 @@ int core_input_meta_port_type_count(int port);
 
 int core_input_meta_port_type_get(int port, int index, char *desc_out, size_t desc_len, unsigned *id_out);
 
+unsigned core_input_meta_preferred_device(int port);
+
 const char *core_input_meta_label(unsigned port, unsigned device, unsigned index, unsigned id);

@@ -1,41 +1,52 @@
 #include <string.h>
+#include <time.h>
 #include <SDL2/SDL.h>
+#include "../../common/display.h"
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "hw_render.h"
 
-#define FRAME_PACER_HISTORY            16
-#define FRAME_PACER_MIN_SAMPLES        8
 #define FRAME_PACER_EMERGENCY_AUDIO_MS 20
 #define FRAME_PACER_MISS_RATIO         1.5
+#define FRAME_PACER_OUTLIER_RATIO      3.0
 
-#define FRAME_PACER_OUTLIER_RATIO     3.0
-#define FRAME_PACER_MARGIN_MIN_NS     300000.0
-#define FRAME_PACER_MARGIN_MAX_NS     3000000.0
-#define FRAME_PACER_MARGIN_GROW_NS    250000.0
-#define FRAME_PACER_MARGIN_SHRINK_NS  15000.0
-#define FRAME_PACER_STABLE_STREAK     90
+#define FRAME_PACER_WORK_HISTORY 32
+#define FRAME_PACER_MIN_SAMPLES  8
+
+#define FRAME_PACER_FLIP_TARGET_NS 1500000.0
+
+#define FRAME_PACER_MARGIN_MAX_NS    8000000.0
+#define FRAME_PACER_MARGIN_GROW_NS   1000000.0
+#define FRAME_PACER_MARGIN_SHRINK_NS 8000.0
+
+#define FRAME_PACER_WORK_CEILING_RATIO 0.70
+
 #define FRAME_PACER_SPIN_NS           300000ULL
 #define FRAME_PACER_RESET_GAP_NS      250000000.0
 #define FRAME_PACER_REFRESH_MIN_HZ    45.0
 #define FRAME_PACER_REFRESH_MAX_HZ    75.0
 #define FRAME_PACER_REFRESH_SMOOTHING 0.10
 
-typedef struct {
-    uint64_t samples_ns[FRAME_PACER_HISTORY];
-    int count;
-    int next;
-} rolling_ns_t;
+static double work_samples_ns[FRAME_PACER_WORK_HISTORY];
+static int work_count = 0;
+static int work_next = 0;
 
-static rolling_ns_t work_history;
 static double refresh_period_ns = 0.0;
 static int refresh_period_known = 0;
 static uint64_t last_present_counter = 0;
-static double safety_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
-static int stable_streak = 0;
 static int last_tick_missed = 0;
+static double extra_margin_ns = 0.0;
 static uint64_t measure_start_counter = 0;
 static int measuring = 0;
+static double last_delay_ns = 0.0;
+
+static void sleep_ns_coarse(const uint64_t ns) {
+    if (ns == 0) return;
+
+    const struct timespec ts = {.tv_sec = (time_t) (ns / 1000000000ULL), .tv_nsec = (long) (ns % 1000000000ULL)};
+    nanosleep(&ts, NULL);
+}
 
 static double perf_ns(const uint64_t counter_delta) {
     static double ns_per_tick = 0.0;
@@ -44,24 +55,24 @@ static double perf_ns(const uint64_t counter_delta) {
 }
 
 static void frame_pacer_reset_state(void) {
-    memset(&work_history, 0, sizeof(work_history));
+    memset(work_samples_ns, 0, sizeof(work_samples_ns));
+    work_count = 0;
+    work_next = 0;
 
     refresh_period_ns = 0.0;
     refresh_period_known = 0;
     last_present_counter = 0;
-
-    safety_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
-    stable_streak = 0;
     last_tick_missed = 0;
 
+    extra_margin_ns = 0.0;
     measure_start_counter = 0;
     measuring = 0;
+    last_delay_ns = 0.0;
 }
 
 static int frame_pacer_timing_available(void) {
     if (session_settings.fps_limit != fps_limit_60) return 0;
     if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) return 0;
-
     if (audio_bridge_is_active() && audio_bridge_queued_ms() < FRAME_PACER_EMERGENCY_AUDIO_MS) return 0;
 
     return 1;
@@ -74,56 +85,47 @@ static int refresh_interval_plausible(const double interval_ns) {
     return interval_ns >= min_period_ns && interval_ns <= max_period_ns;
 }
 
-static void rolling_ns_push(rolling_ns_t *r, const uint64_t ns) {
-    r->samples_ns[r->next] = ns;
-    r->next = (r->next + 1) % FRAME_PACER_HISTORY;
-    if (r->count < FRAME_PACER_HISTORY) r->count++;
+static void work_push(const double ns) {
+    work_samples_ns[work_next] = ns;
+    work_next = (work_next + 1) % FRAME_PACER_WORK_HISTORY;
+    if (work_count < FRAME_PACER_WORK_HISTORY) work_count++;
 }
 
-static uint64_t rolling_ns_percentile95(const rolling_ns_t *r) {
-    if (r->count == 0) return 0;
+static double work_worst_ns(void) {
+    double worst = 0.0;
+    for (int i = 0; i < work_count; i++)
+        if (work_samples_ns[i] > worst) worst = work_samples_ns[i];
 
-    uint64_t sorted[FRAME_PACER_HISTORY];
-    memcpy(sorted, r->samples_ns, sizeof(uint64_t) * (size_t) r->count);
-
-    for (int i = 1; i < r->count; i++) {
-        const uint64_t key = sorted[i];
-        int j = i - 1;
-        while (j >= 0 && sorted[j] > key) {
-            sorted[j + 1] = sorted[j];
-            j--;
-        }
-        sorted[j + 1] = key;
-    }
-
-    int idx = (int) (0.95 * (double) (r->count - 1));
-    if (idx >= r->count) idx = r->count - 1;
-    return sorted[idx];
-}
-
-static void frame_pacer_begin_measure(void) {
-    measure_start_counter = SDL_GetPerformanceCounter();
-    measuring = 1;
+    return worst;
 }
 
 static void frame_pacer_wait(void) {
+    last_delay_ns = 0.0;
+
     if (session_settings.frame_delay_ms == FRAME_DELAY_OFF) return;
     if (!audio_bridge_is_active()) return;
     if (!frame_pacer_timing_available()) return;
-    if (last_tick_missed) return;
 
     uint64_t sleep_ns;
 
     if (session_settings.frame_delay_ms == FRAME_DELAY_AUTO) {
-        if (!refresh_period_known || work_history.count < FRAME_PACER_MIN_SAMPLES) return;
+        if (hw_render_bridge_active()) return;
 
-        const uint64_t work_ns = rolling_ns_percentile95(&work_history);
-        if ((double) work_ns >= refresh_period_ns * 0.9) return;
+        if (!refresh_period_known || work_count < FRAME_PACER_MIN_SAMPLES || last_present_counter == 0) return;
 
-        const double budget_ns = refresh_period_ns - (double) work_ns - safety_margin_ns;
+        const double work_ns = work_worst_ns();
+        if (work_ns >= refresh_period_ns * FRAME_PACER_WORK_CEILING_RATIO) return;
+
+        const double budget_ns = refresh_period_ns - work_ns - FRAME_PACER_FLIP_TARGET_NS - extra_margin_ns;
         if (budget_ns <= 0.0) return;
-        sleep_ns = (uint64_t) budget_ns;
+
+        const double spent_ns = perf_ns(SDL_GetPerformanceCounter() - last_present_counter);
+        if (spent_ns >= budget_ns) return;
+
+        sleep_ns = (uint64_t) (budget_ns - spent_ns);
     } else {
+        if (last_tick_missed) return;
+
         sleep_ns = (uint64_t) session_settings.frame_delay_ms * 1000000ULL;
         if (refresh_period_known && (double) sleep_ns > refresh_period_ns * 0.9)
             sleep_ns = (uint64_t) (refresh_period_ns * 0.9);
@@ -133,18 +135,21 @@ static void frame_pacer_wait(void) {
 
     const uint64_t start = SDL_GetPerformanceCounter();
     const uint64_t spin_ns = sleep_ns > FRAME_PACER_SPIN_NS ? FRAME_PACER_SPIN_NS : sleep_ns;
-    const uint64_t coarse_ns = sleep_ns - spin_ns;
 
-    if (coarse_ns > 1000000ULL) SDL_Delay((uint32_t) (coarse_ns / 1000000ULL));
+    sleep_ns_coarse(sleep_ns - spin_ns);
     while (perf_ns(SDL_GetPerformanceCounter() - start) < (double) sleep_ns) {
     }
+
+    last_delay_ns = perf_ns(SDL_GetPerformanceCounter() - start);
+}
+
+static void frame_pacer_begin_measure(void) {
+    measure_start_counter = SDL_GetPerformanceCounter();
+    measuring = 1;
 }
 
 void frame_pacer_maybe_wait(void) {
-    if (!frame_pacer_timing_available()) {
-        frame_pacer_reset_state();
-        return;
-    }
+    if (!frame_pacer_timing_available()) return;
 
     frame_pacer_wait();
     frame_pacer_begin_measure();
@@ -152,16 +157,20 @@ void frame_pacer_maybe_wait(void) {
 
 void frame_pacer_after_present(void) {
     if (!frame_pacer_timing_available()) {
-        frame_pacer_reset_state();
+        last_present_counter = 0;
+        measuring = 0;
         return;
     }
 
+    const uint64_t now = SDL_GetPerformanceCounter();
+
     if (measuring) {
         measuring = 0;
-        rolling_ns_push(&work_history, (uint64_t) perf_ns(SDL_GetPerformanceCounter() - measure_start_counter));
-    }
 
-    const uint64_t now = SDL_GetPerformanceCounter();
+        const double span_ns = perf_ns(now - measure_start_counter);
+        const double flip_ns = display_take_flip_ms() * 1000000.0;
+        work_push(span_ns > flip_ns ? span_ns - flip_ns : span_ns);
+    }
 
     if (last_present_counter == 0) {
         last_present_counter = now;
@@ -188,20 +197,15 @@ void frame_pacer_after_present(void) {
     if (interval_ns > refresh_period_ns * FRAME_PACER_OUTLIER_RATIO) return;
 
     last_tick_missed = interval_ns > refresh_period_ns * FRAME_PACER_MISS_RATIO;
+
     if (last_tick_missed) {
-        safety_margin_ns += FRAME_PACER_MARGIN_GROW_NS;
-
-        if (safety_margin_ns > FRAME_PACER_MARGIN_MAX_NS) safety_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
-        stable_streak = 0;
-
+        extra_margin_ns += FRAME_PACER_MARGIN_GROW_NS;
+        if (extra_margin_ns > FRAME_PACER_MARGIN_MAX_NS) extra_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
         return;
     }
 
-    if (++stable_streak >= FRAME_PACER_STABLE_STREAK) {
-        stable_streak = 0;
-        safety_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
-        if (safety_margin_ns < FRAME_PACER_MARGIN_MIN_NS) safety_margin_ns = FRAME_PACER_MARGIN_MIN_NS;
-    }
+    extra_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
+    if (extra_margin_ns < 0.0) extra_margin_ns = 0.0;
 
     if (!refresh_interval_plausible(interval_ns)) return;
 
@@ -212,4 +216,8 @@ void frame_pacer_after_present(void) {
 float frame_pacer_get_refresh_hz(void) {
     if (refresh_period_known && refresh_period_ns > 0.0) return (float) (1e9 / refresh_period_ns);
     return 60.0f;
+}
+
+float frame_pacer_get_delay_ms(void) {
+    return (float) (last_delay_ns / 1000000.0);
 }

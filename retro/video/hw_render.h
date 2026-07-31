@@ -14,6 +14,8 @@ void hw_render_bridge_flush_core_commands(void);
 
 void hw_render_bridge_configure(unsigned max_width, unsigned max_height);
 
+void hw_render_bridge_apply_filter(void);
+
 uintptr_t hw_render_bridge_get_current_framebuffer(void);
 
 retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym);

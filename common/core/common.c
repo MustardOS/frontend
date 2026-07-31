@@ -515,8 +515,8 @@ int system_uses_pico8_core(char *rom_dir) {
 
     char *core = read_line_char_from(core_file, global_core);
     const int is_pico8 = core
-        && (strncmp(core, "ext-pico8", 9) == 0 || strcasecmp(core, "fake08_libretro.so") == 0
-            || strcasecmp(core, "retro8_libretro.so") == 0);
+                         && (strncmp(core, "ext-pico8", 9) == 0 || strcasecmp(core, "fake08_libretro.so") == 0
+                             || strcasecmp(core, "retro8_libretro.so") == 0);
     free(core);
 
     return is_pico8;
@@ -633,6 +633,7 @@ static const char *get_ra_config_dir(const char *core) {
 }
 
 #define MURETRO_SET_PATH RUN_STORAGE_PATH "save/pickles/settings"
+#define MURETRO_OPT_PATH RUN_STORAGE_PATH "save/pickles/coreopt"
 
 static void muxretro_core_name(const char *core, char *out, const size_t out_size) {
     const char *base = strrchr(core, '/');
@@ -642,6 +643,18 @@ static void muxretro_core_name(const char *core, char *out, const size_t out_siz
 
     char *ext = strstr(out, "_libretro.so");
     if (ext) *ext = '\0';
+}
+
+static void remove_muxretro_ini_pair(const char *label, const char *rel) {
+    char path[MAX_BUFFER_SIZE];
+
+    snprintf(path, sizeof(path), "%s/%s", MURETRO_SET_PATH, rel);
+    LOG_INFO(mux_module, "Removing muRetro %s Settings: %s", label, path);
+    if (file_exist(path)) remove(path);
+
+    snprintf(path, sizeof(path), "%s/%s", MURETRO_OPT_PATH, rel);
+    LOG_INFO(mux_module, "Removing muRetro %s Core Options: %s", label, path);
+    if (file_exist(path)) remove(path);
 }
 
 static void muxretro_rel_dir(const char *dir, char *out, const size_t out_size) {
@@ -674,15 +687,14 @@ int remove_muxretro_content_config(const char *content_path) {
     char *content_dot = strrchr(content_stem, '.');
     if (content_dot) *content_dot = '\0';
 
-    char path[MAX_BUFFER_SIZE];
+    char rel[MAX_BUFFER_SIZE];
     if (*rel_dir) {
-        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s/%s.ini", rel_dir, content_stem);
+        snprintf(rel, sizeof(rel), "content/%s/%s.ini", rel_dir, content_stem);
     } else {
-        snprintf(path, sizeof(path), MURETRO_SET_PATH "/content/%s.ini", content_stem);
+        snprintf(rel, sizeof(rel), "content/%s.ini", content_stem);
     }
 
-    LOG_INFO(mux_module, "Removing muRetro Content Settings: %s", path);
-    if (file_exist(path)) remove(path);
+    remove_muxretro_ini_pair("Content", rel);
 
     return 1;
 }
@@ -693,15 +705,14 @@ int remove_muxretro_dir_config(const char *dir) {
     char rel_dir[MAX_BUFFER_SIZE];
     muxretro_rel_dir(dir, rel_dir, sizeof(rel_dir));
 
-    char path[MAX_BUFFER_SIZE];
+    char rel[MAX_BUFFER_SIZE];
     if (*rel_dir) {
-        snprintf(path, sizeof(path), MURETRO_SET_PATH "/directory/%s/directory.ini", rel_dir);
+        snprintf(rel, sizeof(rel), "directory/%s/directory.ini", rel_dir);
     } else {
-        snprintf(path, sizeof(path), MURETRO_SET_PATH "/directory/directory.ini");
+        snprintf(rel, sizeof(rel), "directory/directory.ini");
     }
 
-    LOG_INFO(mux_module, "Removing muRetro Directory Settings (%s): %s", dir, path);
-    if (file_exist(path)) remove(path);
+    remove_muxretro_ini_pair("Directory", rel);
 
     return 1;
 }
@@ -712,11 +723,10 @@ int remove_muxretro_core_config(const char *core) {
     char core_name[MAX_BUFFER_SIZE];
     muxretro_core_name(core, core_name, sizeof(core_name));
 
-    char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), MURETRO_SET_PATH "/core/%s.ini", core_name);
+    char rel[MAX_BUFFER_SIZE];
+    snprintf(rel, sizeof(rel), "core/%s.ini", core_name);
 
-    LOG_INFO(mux_module, "Removing muRetro Core Settings: %s", path);
-    if (file_exist(path)) remove(path);
+    remove_muxretro_ini_pair("Core", rel);
 
     return 1;
 }

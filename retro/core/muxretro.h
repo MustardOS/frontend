@@ -122,6 +122,8 @@ void frame_pacer_after_present(void);
 
 float frame_pacer_get_refresh_hz(void);
 
+float frame_pacer_get_delay_ms(void);
+
 void core_set_target_fps(double new_fps);
 
 double core_get_target_fps(void);
@@ -133,6 +135,8 @@ void input_bridge_suppress(mux_input_type type);
 void state_saves_init(const char *core_file_path);
 
 int state_saves_supported(void);
+
+int state_saves_warmup_frames(void);
 
 int state_save(const char *path);
 

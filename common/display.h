@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <SDL2/SDL.h>
 #include "../lvgl/lvgl.h"
 
@@ -19,9 +20,13 @@ void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);
 
+uint64_t display_present_serial(void);
+
 void display_set_ui_hidden(int hidden);
 
 int display_ui_is_hidden(void);
+
+int display_video_fast_path_allowed(void);
 
 void display_set_composite_suppressed(int suppressed);
 
@@ -46,6 +51,10 @@ void display_clear_video_background(void);
 void display_set_video_background_opaque(int opaque);
 
 void display_set_hard_sync_query(int (*fn)(void));
+
+void display_set_present_timing(void (*fn)(double draw_ms, double flip_ms));
+
+double display_take_flip_ms(void);
 
 SDL_Texture *display_load_png_texture(const char *path);
 

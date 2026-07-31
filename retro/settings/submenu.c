@@ -14,8 +14,29 @@
 static submenu *submenu_stack[SUBMENU_STACK_MAX];
 static int submenu_stack_depth = 0;
 
+#define SUBMENU_NAV_X_BIT BIT(6)
+
 static int row_is_action(const submenu *m, const int index) {
     return m->def->row_is_action ? m->def->row_is_action(index) : 0;
+}
+
+static const char *row_extra_label(const submenu *m, const int index) {
+    return m->def->extra_label && m->def->extra_action ? m->def->extra_label(index) : NULL;
+}
+
+static uint64_t submenu_nav_mask(void) {
+    return nav_mask_standard() | (mux_input_pressed(mux_input_x) ? SUBMENU_NAV_X_BIT : 0);
+}
+
+static void nav_show_x(const int show, const char *text) {
+    if (show) {
+        lv_label_set_text(ui_lbl_nav_x, text);
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 }
 
 static void row_value(const submenu *m, const int index, char *buf, const size_t len) {
@@ -111,8 +132,12 @@ void submenu_refresh_values(const submenu *m) {
 
 static void submenu_nav(submenu *m, const int force) {
     const int action_row = row_is_action(m, current_item_index);
-    if (!force && action_row == m->nav_row_class) return;
+    const char *extra = row_extra_label(m, current_item_index);
+    if (!force && action_row == m->nav_row_class && extra == m->nav_extra_label) return;
     m->nav_row_class = action_row;
+    m->nav_extra_label = extra;
+
+    nav_show_x(extra != NULL, extra);
 
     if (action_row) {
         nav_show_lr(0);
@@ -134,6 +159,7 @@ static void submenu_nav(submenu *m, const int force) {
 
 static void close_menu(submenu *m) {
     m->active = 0;
+    nav_show_x(0, NULL);
     if (submenu_stack_depth > 0 && submenu_stack[submenu_stack_depth - 1] == m) submenu_stack_depth--;
     if (m->def->closed) m->def->closed();
 }
@@ -155,6 +181,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->active = 0;
     m->save_dialogue_active = 0;
     m->nav_row_class = -1;
+    m->nav_extra_label = NULL;
     m->pending_action_row = -1;
 
     dialogue_init(
@@ -165,7 +192,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
 
 void submenu_open(submenu *m) {
     m->active = 1;
-    m->prev_nav_mask = nav_mask_standard();
+    m->prev_nav_mask = submenu_nav_mask();
     m->nav_row_class = -1;
     m->entry_snapshot = session_settings;
 
@@ -181,7 +208,7 @@ void submenu_reopen_at(submenu *m, const int row) {
     focus_row(row);
     m->nav_row_class = -1;
     submenu_nav(m, 1);
-    m->prev_nav_mask = nav_mask_standard();
+    m->prev_nav_mask = submenu_nav_mask();
     pause_menu_sync_input_mask();
 }
 
@@ -192,7 +219,7 @@ int submenu_is_active(const submenu *m) {
 void submenu_tick(submenu *m) {
     if (m->def->child_tick && m->def->child_tick()) return;
 
-    const uint64_t mask = nav_mask_standard();
+    const uint64_t mask = submenu_nav_mask();
     const uint64_t edge = mask & ~m->prev_nav_mask;
     m->prev_nav_mask = mask;
 
@@ -268,6 +295,11 @@ void submenu_tick(submenu *m) {
                 play_sound(snd_confirm);
                 m->def->action(current_item_index);
             }
+        }
+    } else if (edge & SUBMENU_NAV_X_BIT) {
+        if (row_extra_label(m, current_item_index)) {
+            play_sound(snd_confirm);
+            m->def->extra_action(current_item_index);
         }
     } else if (edge & BIT(5)) {
         if (memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {

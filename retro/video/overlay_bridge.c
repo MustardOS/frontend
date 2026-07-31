@@ -78,6 +78,10 @@ void overlay_bridge_apply(void) {
     }
 }
 
+int overlay_bridge_active(void) {
+    return current_overlay_tex != NULL;
+}
+
 void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int canvas_h) {
     if (!current_overlay_tex) return;
 

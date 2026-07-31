@@ -1,20 +1,67 @@
 #include <stdio.h>
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
+#include "../core/paths.h"
+#include "../core/perf.h"
 #include "settings.h"
 #include "submenu.h"
 
-enum { row_fps_limit = 0, row_frame_delay, row_run_ahead, row_gpu_hard_sync, row_count };
-
-static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.fps_limit, lang.muxretro.settings_screen.frame_delay,
-    lang.muxretro.settings_screen.run_ahead, lang.muxretro.settings_screen.gpu_hard_sync
+enum {
+    row_preset = 0,
+    row_fps_limit,
+    row_frame_delay,
+    row_run_ahead,
+    row_gpu_hard_sync,
+    row_performance_capture,
+    row_count
 };
 
-static const char *row_glyphs[row_count] = {"fpslimit", "framedelay", "runahead", "hardsync"};
+static const char *row_labels[row_count] = {
+    lang.muxretro.settings_screen.performance_preset, lang.muxretro.settings_screen.fps_limit,
+    lang.muxretro.settings_screen.frame_delay,        lang.muxretro.settings_screen.run_ahead,
+    lang.muxretro.settings_screen.gpu_hard_sync,      lang.muxretro.settings_screen.performance_capture
+};
+
+static const char *row_glyphs[row_count] = {"performance", "fpslimit", "framedelay", "runahead", "hardsync", "info"};
+
+enum { preset_recommended = 0, preset_low_latency, preset_stable, preset_count };
+
+static const struct {
+    const char *name;
+    int frame_delay_ms;
+    int run_ahead;
+    int gpu_hard_sync;
+} presets[preset_count] = {
+    {lang.muxretro.settings_screen.preset_recommended, FRAME_DELAY_AUTO, 0, 0},
+    {lang.muxretro.settings_screen.preset_low_latency, FRAME_DELAY_AUTO, 1, 0},
+    {lang.muxretro.settings_screen.preset_stable, FRAME_DELAY_OFF, 0, 0}
+};
+
+static int current_preset(void) {
+    for (int i = 0; i < preset_count; i++)
+        if (session_settings.frame_delay_ms == presets[i].frame_delay_ms
+            && !session_settings.run_ahead == !presets[i].run_ahead
+            && !session_settings.gpu_hard_sync == !presets[i].gpu_hard_sync)
+            return i;
+
+    return -1;
+}
+
+static void apply_preset(const int preset) {
+    session_settings.frame_delay_ms = presets[preset].frame_delay_ms;
+    session_settings.run_ahead = presets[preset].run_ahead;
+    session_settings.gpu_hard_sync = presets[preset].gpu_hard_sync;
+}
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
+        case row_preset: {
+            const int preset = current_preset();
+            snprintf(
+                buf, buf_len, "%s", preset < 0 ? lang.muxretro.settings_screen.preset_custom : presets[preset].name
+            );
+            break;
+        }
         case row_fps_limit:
             snprintf(buf, buf_len, "%s", session_settings_fps_limit_name(session_settings.fps_limit));
             break;
@@ -27,14 +74,24 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
         case row_gpu_hard_sync:
             snprintf(buf, buf_len, "%s", session_settings.gpu_hard_sync ? lang.generic.enabled : lang.generic.disabled);
             break;
+        case row_performance_capture:
+            snprintf(buf, buf_len, "%s", perf_is_capture_active() ? lang.generic.enabled : lang.generic.disabled);
+            break;
         default:
             buf[0] = '\0';
             break;
     }
 }
 
+static submenu self;
+
 static void cycle_row(const int index, const int direction) {
     switch (index) {
+        case row_preset: {
+            const int preset = current_preset();
+            apply_preset(preset < 0 ? preset_recommended : (preset + direction + preset_count) % preset_count);
+            break;
+        }
         case row_fps_limit:
             session_settings_cycle_fps_limit(direction);
             break;
@@ -47,8 +104,32 @@ static void cycle_row(const int index, const int direction) {
         case row_gpu_hard_sync:
             session_settings_cycle_gpu_hard_sync(direction);
             break;
+        case row_performance_capture:
+            perf_set_capture_active(!perf_is_capture_active());
+            break;
         default:
             break;
+    }
+
+    submenu_refresh_values(&self);
+}
+
+static const char *extra_label(const int index) {
+    return index == row_performance_capture ? lang.muxretro.settings_screen.export_diagnostics : NULL;
+}
+
+static void extra_action(const int index) {
+    if (index != row_performance_capture) return;
+
+    if (!perf_has_samples()) {
+        pause_menu_show_toast(lang.muxretro.settings_screen.export_diagnostics_empty);
+        return;
+    }
+
+    if (perf_export_trace(RETRO_SHARE_PATH "performance.csv") == 0) {
+        pause_menu_show_toast(lang.muxretro.settings_screen.export_diagnostics_done);
+    } else {
+        pause_menu_show_toast(lang.muxretro.settings_screen.export_diagnostics_failed);
     }
 }
 
@@ -56,14 +137,14 @@ static void closed(void) {
     settings_menu_reopen_performance();
 }
 
-static submenu self;
-
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,
+    .extra_label = extra_label,
+    .extra_action = extra_action,
     .closed = closed,
     .save_title = lang.muxretro.save.performance_title,
     .save_desc = lang.muxretro.save.performance_desc,

@@ -4,15 +4,15 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_auto_save = 0, row_timeline, row_timeline_count, row_sram_flush, row_sram_backup, row_count };
+enum { row_auto_save = 0, row_timeline, row_timeline_count, row_sram_flush, row_sram_backup, row_precache, row_count };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.auto_save,      lang.muxretro.settings_screen.timeline_saves,
     lang.muxretro.settings_screen.timeline_count, lang.muxretro.settings_screen.sram_flush,
-    lang.muxretro.settings_screen.sram_backup,
+    lang.muxretro.settings_screen.sram_backup,    lang.muxretro.settings_screen.content_precache,
 };
 
-static const char *row_glyphs[row_count] = {"autosave", "timeline", "timeline", "sram", "sram"};
+static const char *row_glyphs[row_count] = {"autosave", "timeline", "timeline", "sram", "sram", "content"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -32,6 +32,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             snprintf(
                 buf, buf_len, "%s", session_settings.sram_backup_enabled ? lang.generic.enabled : lang.generic.disabled
             );
+            break;
+        case row_precache:
+            snprintf(buf, buf_len, "%s", session_settings_content_precache_name(session_settings.content_precache));
             break;
         default:
             buf[0] = '\0';
@@ -55,6 +58,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_sram_backup:
             session_settings_cycle_sram_backup_enabled(direction);
+            break;
+        case row_precache:
+            session_settings_cycle_content_precache(direction);
             break;
         default:
             break;

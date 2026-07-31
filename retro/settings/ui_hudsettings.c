@@ -15,7 +15,7 @@ static const char *row_glyphs[row_count] = {"fpscounter", "header"};
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_fps:
-            snprintf(buf, buf_len, "%s", session_settings.show_fps ? lang.generic.enabled : lang.generic.disabled);
+            snprintf(buf, buf_len, "%s", session_settings_show_fps_name(session_settings.show_fps));
             break;
         case row_header_visibility:
             snprintf(buf, buf_len, "%s", session_settings_header_visibility_name(session_settings.header_visibility));

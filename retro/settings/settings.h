@@ -72,6 +72,16 @@ enum fps_limit_mode { fps_limit_60 = 0, fps_limit_50, fps_limit_none, fps_limit_
 
 enum audio_latency_mode { audio_latency_low = 0, audio_latency_balanced, audio_latency_compat, audio_latency_count };
 
+enum content_precache_mode {
+    content_precache_off = 0,
+    content_precache_64,
+    content_precache_128,
+    content_precache_256,
+    content_precache_count
+};
+
+enum show_fps_mode { show_fps_off = 0, show_fps_simple, show_fps_detailed, show_fps_count };
+
 enum header_visibility_mode {
     header_visibility_none = 0,
     header_visibility_clock,
@@ -107,6 +117,7 @@ struct session_settings_t {
     int rumble_enabled;
     int volume;
     int show_fps;
+    int content_precache;
     int border_colour;
     int sample_rate;
     int fps_limit;
@@ -194,6 +205,12 @@ const char *session_settings_border_name(int mode);
 const char *session_settings_sample_rate_name(int rate);
 
 const char *session_settings_fps_limit_name(int mode);
+
+const char *session_settings_show_fps_name(int mode);
+
+const char *session_settings_content_precache_name(int mode);
+
+int session_settings_content_precache_mb(int mode);
 
 const char *session_settings_header_visibility_name(int mode);
 
@@ -286,6 +303,10 @@ void session_settings_cycle_rumble(int direction);
 void session_settings_cycle_volume(int direction);
 
 void session_settings_cycle_fps(int direction);
+
+void session_settings_apply_fps_mode(void);
+
+void session_settings_cycle_content_precache(int direction);
 
 void session_settings_cycle_border(int direction);
 

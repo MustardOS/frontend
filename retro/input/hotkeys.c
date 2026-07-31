@@ -183,7 +183,7 @@ int hotkeys_task(void) {
 
         if (y_now && !prev_y && session_settings.hotkey_toggle_fps_enabled) {
             session_settings_cycle_fps(0);
-            LOG_INFO(mux_module, "Toggle FPS %s (hotkey)", session_settings.show_fps ? "enabled" : "disabled");
+            LOG_INFO(mux_module, "Toggle FPS %s (hotkey)", session_settings_show_fps_name(session_settings.show_fps));
             input_bridge_suppress(mux_input_y);
             menu_combo_consumed = 1;
         }

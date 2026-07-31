@@ -21,6 +21,9 @@
 #define DRC_FILL_SMOOTHING   0.05
 #define DRC_OUT_FRAMES       1024
 
+#define HEADROOM_MAX_WAIT_MS 4
+#define HEADROOM_SMOOTHING   0.25
+
 static SDL_AudioDeviceID audio_dev = 0;
 
 static int opened_freq = 0;
@@ -55,6 +58,7 @@ static uint32_t underrun_ramp_frames = 0;
 
 static double drc_bias = 0.0;
 static double drc_fill_avg = -1.0;
+static double headroom_queued_avg = -1.0;
 static double drc_ratio = 1.0;
 static double drc_phase = 0.0;
 static int16_t drc_prev_l = 0;
@@ -163,12 +167,12 @@ static size_t ring_write_frames(const int16_t *src, const size_t frames) {
     const uint32_t free_frames = AUDIO_RING_FRAMES - occupied;
 
     const size_t to_write = frames > free_frames ? free_frames : frames;
+    const uint32_t start = write_idx & (AUDIO_RING_FRAMES - 1);
+    const size_t first = to_write < AUDIO_RING_FRAMES - start ? to_write : AUDIO_RING_FRAMES - start;
+    const size_t second = to_write - first;
 
-    for (size_t i = 0; i < to_write; i++) {
-        const uint32_t pos = (write_idx + (uint32_t) i) & (AUDIO_RING_FRAMES - 1);
-        audio_ring[pos * 2 + 0] = src[i * 2 + 0];
-        audio_ring[pos * 2 + 1] = src[i * 2 + 1];
-    }
+    memcpy(audio_ring + (size_t) start * 2, src, first * 2 * sizeof(int16_t));
+    if (second > 0) memcpy(audio_ring, src + first * 2, second * 2 * sizeof(int16_t));
 
     ring_write_index = write_idx + (uint32_t) to_write;
     return to_write;
@@ -192,20 +196,29 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     const uint32_t fade_total = fade_in_total;
     uint32_t fade_remaining = fade_started;
 
-    for (uint32_t i = 0; i < to_read; i++) {
-        const uint32_t pos = (read_idx + i) & (AUDIO_RING_FRAMES - 1);
-        int16_t l = audio_ring[pos * 2 + 0];
-        int16_t r = audio_ring[pos * 2 + 1];
+    if (fade_remaining == 0 || fade_total == 0) {
+        const uint32_t start = read_idx & (AUDIO_RING_FRAMES - 1);
+        const uint32_t first = to_read < AUDIO_RING_FRAMES - start ? to_read : AUDIO_RING_FRAMES - start;
+        const uint32_t second = to_read - first;
 
-        if (fade_remaining > 0 && fade_total > 0) {
-            const int32_t step = (int32_t) (fade_total - fade_remaining + 1);
-            l = (int16_t) ((int32_t) l * step / (int32_t) fade_total);
-            r = (int16_t) ((int32_t) r * step / (int32_t) fade_total);
-            fade_remaining--;
+        memcpy(out, audio_ring + (size_t) start * 2, (size_t) first * 2 * sizeof(int16_t));
+        if (second > 0) memcpy(out + (size_t) first * 2, audio_ring, (size_t) second * 2 * sizeof(int16_t));
+    } else {
+        for (uint32_t i = 0; i < to_read; i++) {
+            const uint32_t pos = (read_idx + i) & (AUDIO_RING_FRAMES - 1);
+            int16_t l = audio_ring[pos * 2 + 0];
+            int16_t r = audio_ring[pos * 2 + 1];
+
+            if (fade_remaining > 0) {
+                const int32_t step = (int32_t) (fade_total - fade_remaining + 1);
+                l = (int16_t) ((int32_t) l * step / (int32_t) fade_total);
+                r = (int16_t) ((int32_t) r * step / (int32_t) fade_total);
+                fade_remaining--;
+            }
+
+            out[i * 2 + 0] = l;
+            out[i * 2 + 1] = r;
         }
-
-        out[i * 2 + 0] = l;
-        out[i * 2 + 1] = r;
     }
 
     if (fade_started > 0) fade_in_remaining = fade_remaining;
@@ -399,6 +412,7 @@ int audio_bridge_open(const double core_sample_rate) {
 
     drc_bias = 0.0;
     drc_fill_avg = -1.0;
+    headroom_queued_avg = -1.0;
     drc_ratio = 1.0;
     drc_reset_stream();
 
@@ -542,6 +556,7 @@ void audio_bridge_clear_queued(void) {
 
     drc_bias = 0.0;
     drc_fill_avg = -1.0;
+    headroom_queued_avg = -1.0;
     drc_ratio = 1.0;
     drc_reset_stream();
     audio_filter_reset();
@@ -663,8 +678,21 @@ void audio_bridge_wait_for_headroom(void) {
     if (device_paused) return;
 
     const uint32_t queued = audio_bridge_queued_ms();
+
+    headroom_queued_avg = headroom_queued_avg < 0.0
+                              ? (double) queued
+                              : headroom_queued_avg * (1.0 - HEADROOM_SMOOTHING) + (double) queued * HEADROOM_SMOOTHING;
+
+    const double depth = headroom_queued_avg < (double) queued ? headroom_queued_avg : (double) queued;
+
     const uint32_t high = audio_bridge_high_water_ms();
-    if (queued > high) SDL_Delay(queued - high);
+    if (depth <= (double) high) return;
+
+    uint32_t wait_ms = (uint32_t) (depth - (double) high);
+    if (wait_ms > HEADROOM_MAX_WAIT_MS) wait_ms = HEADROOM_MAX_WAIT_MS;
+    if (wait_ms == 0) return;
+
+    SDL_Delay(wait_ms);
 }
 
 void audio_bridge_request_min_latency(const uint32_t ms) {

@@ -515,7 +515,7 @@ int gamestate_protect_mismatched_autosave(void) {
     return 1;
 }
 
-int gamestate_load_most_recent(int *mismatch_blocked) {
+int gamestate_find_most_recent(char *path, const size_t path_len, int *mismatch_blocked) {
     long long best_created = -1;
     long long best_match_created = -1;
     const char *best_match_path = NULL;
@@ -559,6 +559,13 @@ int gamestate_load_most_recent(int *mismatch_blocked) {
 
     if (mismatch_blocked) *mismatch_blocked = newest_is_mismatch;
 
-    if (!best_match_path) return -1;
-    return state_load(best_match_path);
+    if (!best_match_path || !path || path_len == 0) return -1;
+    snprintf(path, path_len, "%s", best_match_path);
+    return 0;
+}
+
+int gamestate_load_most_recent(int *mismatch_blocked) {
+    char path[MAX_STATE_SIZE];
+    if (gamestate_find_most_recent(path, sizeof(path), mismatch_blocked) != 0) return -1;
+    return state_load(path);
 }

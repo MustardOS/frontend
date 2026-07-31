@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "../../common/input.h"
 #include "core_input_meta.h"
 
@@ -91,6 +92,18 @@ int core_input_meta_port_type_get(
     if (desc_out) snprintf(desc_out, desc_len, "%s", port_info[port].types[index].desc);
     if (id_out) *id_out = port_info[port].types[index].id;
     return 1;
+}
+
+unsigned core_input_meta_preferred_device(const int port) {
+    if (port < 0 || port >= CORE_INPUT_META_PORT_COUNT) return 0;
+
+    for (int i = 0; i < port_info[port].type_count; i++) {
+        const core_input_device_type *type = &port_info[port].types[i];
+        if ((type->id & RETRO_DEVICE_MASK) != RETRO_DEVICE_ANALOG) continue;
+        if (strcasestr(type->desc, "dualshock") || strcasestr(type->desc, "dual shock")) return type->id;
+    }
+
+    return 0;
 }
 
 const char *core_input_meta_label(const unsigned port, const unsigned device, const unsigned index, const unsigned id) {

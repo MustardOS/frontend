@@ -1,42 +1,58 @@
 # Technical Notes
 
-The dirty stuff, with the pieces described elsewhere in [`docs/`](.) actually fit together at runtime and at build time.
-Not required reading to use or extend a single feature. Start here if you need to understand the whole lifecycle of a
-running session of Pickles.
+These technical notes describe how the pieces documented elsewhere in [`docs/`](.) fit together at runtime and build
+time. You do not need to read them to use or extend a single feature. Start here if you need to understand the whole
+lifecycle of a running Pickles session.
 
 ## Startup Sequence
 
-Installs SIGUSR1/SIGUSR2 (sleep/wake) signal handlers > load device/config > `init_module`/`init_theme`/`init_display` >
-`board_init`/`mux_input_open` > `core_open` (dlopen) > `state_saves_init` (per core savestate gate) >
-`core_load_content` (archive extraction / VFS streaming and softpatching first) > init SRAM/cheats/overlay bridges >
-`gamestate_init` > `options_capture_baseline` > `session_settings_init` (three tier settings INI) > configures the
-hardware render target if the core negotiated one > open audio, init video > warm up and auto load the most recent save
-state (unless `--fresh` is used and only when save states are enabled for the core) > `pause_menu_init`. _That's it._
+Install SIGUSR1/SIGUSR2 (sleep/wake) signal handlers > load the device and configuration > call
+`init_module`/`init_theme`/`init_display` > call `board_init`/`mux_input_open` > call `core_open` (`dlopen`) > call
+`state_saves_init` (per-core save-state gate) > call `core_load_content` (archive extraction or VFS streaming, with soft
+patching first) > initialise the SRAM, cheat and overlay bridges > call `gamestate_init` > call
+`options_capture_baseline` > call `session_settings_init` (three-tier settings INI) > configure the hardware render target
+if the core negotiated one > open audio and initialise video > select and automatically load the most recent compatible
+save state (unless `--fresh` is used). No emulation warm-up occurs when there is no state. The default resume path restores
+immediately; a core that requires initial frames before deserialisation can set `savestate_warmup_frames = "N"` in its
+RetroArch-style `.info` file > call `pause_menu_init`. Startup logs report the time spent loading content, setting up the
+renderer, performing an optional warm-up, reading the state and deserialising it. _That's it._
 
 ## Main Loop
 
-Poll input > idle/suspend-signal handling (may autosave + toggle pause) > periodic status and SRAM flush timers > if
-paused, tick the pause menu UI else run the hotkey dispatcher... otherwise decide the frame batch (fast forward batch,
-or audio catchup frames granted out of measured headroom) > `run_core_batch` (GL context bracket, per frame Frame Delay
-wait, late input poll, optional runahead preparation, `retro_run`) > flush the video frame, refresh LVGL only when the
-HUD is dirty, composite, present > pacing sleeps (audio headroom / 50 Hz / slow motion) _after_ present.
+Poll input > handle idle and suspend signals (which may trigger an automatic save and toggle pause) > service the periodic
+status and SRAM-flush timers > when paused, tick the pause-menu UI; otherwise, run the hotkey dispatcher and determine the
+frame batch (a fast-forward batch or audio catch-up frames granted from measured headroom) > call `run_core_batch` (GL
+context bracket, per-frame Frame Delay wait, late input poll, optional run-ahead preparation and `retro_run`) > flush the
+video frame, refresh LVGL only when the HUD is dirty, composite and present > apply pacing sleeps for audio headroom, 50 Hz
+content and slow motion _after_ presentation.
 
-Hidden frames (fast forward intermediates, audio catchup, runahead replays) skip the video path entirely and report
-video disabled via `RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE`, so cooperating cores skip their own rendering too.
+The gameplay-governor policy samples effective FPS once per second. Two consecutive windows below 97% of the core target
+temporarily select the performance governor; eight windows above 99% restore the governor observed at session start. Fast
+forward requests the boost directly, while pause and slow motion release it. Save, load and startup boosts use the same
+nested ownership so none of these paths can restore the governor out of order.
+
+Hidden frames (fast-forward intermediate frames, audio catch-up and run-ahead replays) skip the video path entirely and
+report video disabled via `RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE`, so cooperating cores skip their own rendering too. When
+the gameplay HUD is hidden, the compositor also omits LVGL, its shadow layer and theme chrome; explicit Pickles content
+overlays remain controlled by the session overlay settings. On the dedicated-context direct presentation path, the
+hardware quad captures SDL's GL restore state once and reuses it without synchronous state queries. Render targets,
+rotation, mirroring, colour passes, overlays, animations, fades or visible UI automatically select the full
+state-preserving path and invalidate the cached state.
 
 ## Shutdown
 
-Tear down the pause menu, runahead, video (incl. hardware render target), overlay, audio, and rumble bridges > flush
-SRAM one last time > unload content and the core > close input > `sdl_cleanup`.
+Tear down the pause menu, run-ahead system, video (including the hardware render target), overlay, audio and rumble bridges >
+flush SRAM one last time > unload the content and core > close input > call `sdl_cleanup`.
 
 ## Settings Persistence
 
-The `session_settings_t` (in `settings/settings.h`) holds every per-session setting - video
-(scaling/rotate/mirror/aspect/integer scale/texture filter/shimmer fix/border), viewport, colour grading +
-filter/shader, overlays, sound (volume/sample rate/latency profile/filter), input (rumble/analog tuning), performance
-(fps limit/frame delay/run ahead), screen info, hotkey enables and speeds, auto-save mode, and SRAM flush interval.
+The `session_settings_t` structure (in `settings/settings.h`) holds every per-session setting: video (scaling, rotation,
+mirroring, aspect ratio, integer scaling, texture filter, shimmer fix and border); viewport; colour grading, filters and
+shaders; overlays; sound (volume, sample rate, latency profile and filter); input (rumble and analogue tuning); performance
+(FPS limit, frame delay and run-ahead); screen information; hotkey enablement and speeds; automatic-save mode; and SRAM
+flush interval.
 
-Settings are stored as three `.ini` tiers under `RETRO_SET_PATH` (`<share>/retro/settings/`):
+Settings are stored in three INI tiers under `RETRO_SET_PATH` (`<share>/retro/settings/`):
 
 ```
 settings/core/<core_name>.ini
@@ -44,22 +60,23 @@ settings/directory/<crc32-of-content-directory>.ini
 settings/content/<content_basename>.ini
 ```
 
-Applied in the order of **core > directory > content**. So the most specific tier wins! Each tier stores only a
-**delta** with saving writes just the keys that differ from the tiers beneath it (and removes the file entirely when
-nothing differs), so a content-level override never pins unrelated settings against later core or directory level
-changes. The `session_settings_init` snapshots a baseline right after loading. Dirty checking against it drives the
-'Save Changes?' dialogue on leaving any settings screen, and saving writes only the tier the user picked.
+Pickles applies them in the order **core > directory > content**, so the most specific tier wins. Each tier stores only a
+**delta**: saving writes the keys that differ from the tiers beneath it and removes the file entirely when nothing differs.
+This approach ensures that a content-level override never pins unrelated settings against later core-level or
+directory-level changes. `session_settings_init` captures a baseline immediately after loading. Comparing changes against
+that baseline drives the 'Save Changes?' dialogue when the user leaves a settings screen, and saving writes only the
+selected tier.
 
 ## Content Loading
 
-The `core_load_content` function prefers streaming archive members straight to `need_fullpath` cores via the VFS
-(`archive#member` convention, backed by a persistent extraction cache keyed by path/entry/size/mtime), falling back to
-extraction. The soft patch (`patch.c`) applies before the final path/data reaches `retro_load_game`. Savestate, SRAM,
-and settings paths derive from the core name and content basename/directory. This way cores and directories never
-collide especially for same content names and directory structure organisation.
+The `core_load_content` function prefers to stream archive members directly to `need_fullpath` cores through the VFS
+(`archive#member` convention, backed by a persistent extraction cache keyed by path, entry, size and modification time),
+with extraction as a fallback. The soft patch (`patch.c`) is applied before the final path or data reaches
+`retro_load_game`. Save-state, SRAM and settings paths derive from the core name, content base name and directory. This
+prevents collisions between cores and directories, especially when content shares a name or directory structure.
 
 ## Build
 
-Builds to `../bin/muxretro` via `retro/Makefile` (_sources listed per subdirectory_). Links against the shared
+The build produces `../bin/muxretro` through `retro/Makefile` (_sources listed per subdirectory_). It links against the shared
 `libmuxcom`/`libmuxmod`/`libui` libraries plus `plutosvg`, `z`/`lzma` and `bz2`, and compiles the bundled
 `common/libarchive` sources directly into the binary.

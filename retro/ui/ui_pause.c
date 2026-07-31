@@ -21,6 +21,7 @@
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "cheats.h"
+#include "ui_loading.h"
 
 #define TOAST_DURATION_MS 2048
 #define HEADER_FADE_MS    256
@@ -650,6 +651,7 @@ int pause_menu_tick(void) {
             information_menu_open();
         } else if (current_item_index == row_restart) {
             play_sound(snd_confirm);
+            loading_message_show(lang.muxretro.content_restarting);
             core_restart_requested = 1;
             return 1;
         } else if (current_item_index == row_quit) {

@@ -2,6 +2,7 @@
 #include "../../common/input.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../core/perf.h"
 #include "../settings/settings.h"
 #include "../state/macro.h"
 
@@ -339,6 +340,9 @@ static void resolve_port_assignments_cached(void) {
 }
 
 static void input_bridge_build_snapshot(void) {
+    const int track_latency = perf_is_enabled();
+    const uint64_t previous_signature = track_latency ? input_bridge_snapshot_signature() : 0;
+
     resolve_port_assignments_cached();
 
     int ports_changed = 0;
@@ -382,11 +386,13 @@ static void input_bridge_build_snapshot(void) {
     }
 
     if (ports_changed) apply_controller_ports();
+    if (track_latency && input_bridge_snapshot_signature() != previous_signature) perf_note_input_change();
 }
 
 void input_bridge_begin_run(void) {
     input_epoch++;
 
+    perf_note_poll();
     mux_input_poll();
     input_bridge_build_snapshot();
     input_polled_epoch = input_epoch;

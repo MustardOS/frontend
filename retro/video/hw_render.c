@@ -6,7 +6,11 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
+#include "filters/filters.h"
 #include "hw_render.h"
+#include "overlay_bridge.h"
+#include "../core/governor_boost.h"
+#include "../settings/settings.h"
 
 #ifndef GL_READ_FRAMEBUFFER
 #define GL_READ_FRAMEBUFFER 0x8CA8
@@ -34,6 +38,12 @@
 #endif
 #ifndef GL_DEPTH_STENCIL_OES
 #define GL_DEPTH_STENCIL_OES 0x84F9
+#endif
+#ifndef GL_SAMPLE_BUFFERS
+#define GL_SAMPLE_BUFFERS 0x80A8
+#endif
+#ifndef GL_SAMPLES
+#define GL_SAMPLES 0x80A9
 #endif
 
 static const char *vs_src = "attribute vec2 a_pos;"
@@ -227,11 +237,13 @@ static int flip_needed = 1;
 static int active = 0;
 static int context_ready = 0;
 
-#define HW_TARGET_COUNT 1
+#define HW_TARGET_COUNT_MAX              2
+#define HW_DOUBLE_BUFFER_MAX_EXTRA_BYTES (16u * 1024u * 1024u)
 
-static GLuint fbo[HW_TARGET_COUNT] = {0};
-static GLuint colour_tex[HW_TARGET_COUNT] = {0};
+static GLuint fbo[HW_TARGET_COUNT_MAX] = {0};
+static GLuint colour_tex[HW_TARGET_COUNT_MAX] = {0};
 static GLuint depth_stencil_rb = 0;
+static int target_count = 1;
 static int render_index = 0;
 static int display_index = 0;
 static int target_w = 0;
@@ -247,6 +259,27 @@ static int prog_ready = 0;
 static SDL_Texture *filter_src_tex = NULL;
 static int filter_src_w = 0;
 static int filter_src_h = 0;
+static SDL_Renderer *cached_output_renderer = NULL;
+static int cached_output_w = 0;
+static int cached_output_h = 0;
+
+typedef struct {
+    GLint program;
+    GLint array_buffer;
+    GLint active_texture;
+    GLint texture0;
+    GLboolean blend_enabled;
+    GLboolean scissor_enabled;
+    GLint attrib_pos_enabled;
+    GLint attrib_uv_enabled;
+    int valid;
+} quad_restore_state_t;
+
+static quad_restore_state_t cached_quad_restore;
+
+static GLint target_filter_param(void) {
+    return texture_filter_wants_linear_sample(session_settings.texture_filter) ? GL_LINEAR : GL_NEAREST;
+}
 
 static SDL_Window *gl_window = NULL;
 static SDL_GLContext sdl_ctx = NULL;
@@ -444,16 +477,28 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
 
     if (!load_gl_functions()) return 0;
 
-    if (current_context_is(profile, major, minor)) {
-        LOG_INFO(mux_module, "hw_render: sharing the UI's context for %s %d.%d", label, major, minor);
-    } else if (!create_shared_context(profile, major, minor) || !shared_context_usable(profile, major, minor)) {
+    const int ui_context_compatible = current_context_is(profile, major, minor);
+    const int dedicated_context_ready =
+        create_shared_context(profile, major, minor) && shared_context_usable(profile, major, minor);
+
+    if (dedicated_context_ready) {
+        LOG_INFO(mux_module, "hw_render: using a dedicated shared-object context for %s %d.%d", label, major, minor);
+    } else {
         destroy_shared_context();
 
-        LOG_WARN(
-            mux_module, "hw_render: cannot provide %s %d.%d - core will fall back to software rendering", label, major,
-            minor
-        );
-        return 0;
+        if (ui_context_compatible) {
+            LOG_WARN(
+                mux_module,
+                "hw_render: dedicated %s %d.%d context unavailable - falling back to the UI's shared context", label,
+                major, minor
+            );
+        } else {
+            LOG_WARN(
+                mux_module, "hw_render: cannot provide %s %d.%d - core will fall back to software rendering", label,
+                major, minor
+            );
+            return 0;
+        }
     }
 
     core_context_reset = cb->context_reset;
@@ -535,7 +580,7 @@ static void ensure_program(void) {
 }
 
 static void destroy_target(void) {
-    for (int i = 0; i < HW_TARGET_COUNT; i++) {
+    for (int i = 0; i < HW_TARGET_COUNT_MAX; i++) {
         if (fbo[i]) {
             p_glDeleteFramebuffers(1, &fbo[i]);
             fbo[i] = 0;
@@ -553,6 +598,7 @@ static void destroy_target(void) {
 
     render_index = 0;
     display_index = 0;
+    target_count = 1;
     target_w = 0;
     target_h = 0;
 }
@@ -567,6 +613,10 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
     if (!first_time && context_ready && core_context_destroy) core_context_destroy();
     destroy_target();
 
+    const size_t pixels = (size_t) max_width * (size_t) max_height;
+    const size_t colour_target_bytes = pixels * 4u;
+    target_count = colour_target_bytes <= HW_DOUBLE_BUFFER_MAX_EXTRA_BYTES ? 2 : 1;
+
     if (want_depth) {
         p_glGenRenderbuffers(1, &depth_stencil_rb);
         p_glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_rb);
@@ -576,14 +626,17 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         );
     }
 
-    for (int i = 0; i < HW_TARGET_COUNT; i++) {
+    GLint sample_buffers = 0;
+    GLint samples = 0;
+    for (int i = 0; i < target_count; i++) {
         p_glGenTextures(1, &colour_tex[i]);
         p_glBindTexture(GL_TEXTURE_2D, colour_tex[i]);
         p_glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) max_width, (GLsizei) max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL
         );
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        const GLint filter = target_filter_param();
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
         p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         p_glBindTexture(GL_TEXTURE_2D, 0);
@@ -600,6 +653,19 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
         const GLenum status = p_glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
+            if (i > 0) {
+                LOG_WARN(
+                    mux_module, "hw_render: secondary framebuffer incomplete (status 0x%x) - using a single target",
+                    status
+                );
+                p_glDeleteFramebuffers(1, &fbo[i]);
+                fbo[i] = 0;
+                p_glDeleteTextures(1, &colour_tex[i]);
+                colour_tex[i] = 0;
+                target_count = 1;
+                break;
+            }
+
             LOG_ERROR(
                 mux_module, "hw_render: framebuffer incomplete (status 0x%x) - disabling hardware render", status
             );
@@ -608,6 +674,11 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
             hw_render_bridge_context_restore();
             active = 0;
             return;
+        }
+
+        if (i == 0) {
+            p_glGetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers);
+            p_glGetIntegerv(GL_SAMPLES, &samples);
         }
 
         p_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -625,15 +696,51 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     ensure_program();
 
+    const size_t depth_bytes = want_depth ? pixels * (want_stencil ? 4u : 2u) : 0u;
+    const size_t target_bytes = colour_target_bytes * (size_t) target_count + depth_bytes;
     LOG_INFO(
-        mux_module, "hw_render: target %ux%u (depth=%d stencil=%d)", max_width, max_height, want_depth, want_stencil
+        mux_module,
+        "hw_render: target %ux%u (buffers=%d depth=%d stencil=%d filter=%s sample_buffers=%d samples=%d, %.1f MiB)",
+        max_width, max_height, target_count, want_depth, want_stencil,
+        target_filter_param() == GL_LINEAR ? "linear" : "nearest", sample_buffers, samples,
+        (double) target_bytes / (1024.0 * 1024.0)
     );
 
     // Tell the core to rebuild against the new framebuffer, not just the first time we make one!
     context_ready = 1;
-    if (core_context_reset) core_context_reset();
+    if (core_context_reset) {
+        governor_boost_begin("GL context reset");
+        const Uint64 reset_started = SDL_GetPerformanceCounter();
+        core_context_reset();
+        const Uint64 reset_finished = SDL_GetPerformanceCounter();
+        const Uint64 frequency = SDL_GetPerformanceFrequency();
+        const double reset_ms =
+            frequency > 0 ? (double) (reset_finished - reset_started) * 1000.0 / (double) frequency : 0.0;
+        LOG_INFO(mux_module, "hw_render: core context reset took %.2f ms", reset_ms);
+        governor_boost_end();
+    }
 
     hw_render_bridge_context_restore();
+}
+
+void hw_render_bridge_apply_filter(void) {
+    if (!active || !gl_funcs_ready || !colour_tex[0]) return;
+
+    hw_render_bridge_enter_core_call();
+
+    GLint previous = 0;
+    p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous);
+    const GLint filter = target_filter_param();
+    for (int i = 0; i < target_count; i++) {
+        if (!colour_tex[i]) continue;
+        p_glBindTexture(GL_TEXTURE_2D, colour_tex[i]);
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    }
+    p_glBindTexture(GL_TEXTURE_2D, (GLuint) previous);
+
+    hw_render_bridge_exit_core_call();
+    LOG_INFO(mux_module, "hw_render: sampling changed to %s", filter == GL_LINEAR ? "linear" : "nearest");
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
@@ -648,7 +755,7 @@ void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) 
     if (width == 0 || height == 0) return;
 
     display_index = render_index;
-    render_index = (render_index + 1) % HW_TARGET_COUNT;
+    render_index = (render_index + 1) % target_count;
 
     frame_valid_w = width;
     frame_valid_h = height;
@@ -872,9 +979,40 @@ void hw_render_bridge_exit_core_call(void) {
     leave_core_gl();
 }
 
+static void capture_quad_restore_state(quad_restore_state_t *state) {
+    p_glGetIntegerv(GL_CURRENT_PROGRAM, &state->program);
+    p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &state->array_buffer);
+    p_glGetIntegerv(GL_ACTIVE_TEXTURE, &state->active_texture);
+
+    p_glActiveTexture(GL_TEXTURE0);
+    p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &state->texture0);
+
+    state->blend_enabled = p_glIsEnabled(GL_BLEND);
+    state->scissor_enabled = p_glIsEnabled(GL_SCISSOR_TEST);
+    state->attrib_pos_enabled = 0;
+    state->attrib_uv_enabled = 0;
+    if (a_pos >= 0) p_glGetVertexAttribiv((GLuint) a_pos, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &state->attrib_pos_enabled);
+    if (a_uv >= 0) p_glGetVertexAttribiv((GLuint) a_uv, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &state->attrib_uv_enabled);
+
+    state->valid = 1;
+}
+
+static void restore_quad_state(const quad_restore_state_t *state) {
+    if (a_pos >= 0 && !state->attrib_pos_enabled) p_glDisableVertexAttribArray((GLuint) a_pos);
+    if (a_uv >= 0 && !state->attrib_uv_enabled) p_glDisableVertexAttribArray((GLuint) a_uv);
+
+    p_glBindTexture(GL_TEXTURE_2D, (GLuint) state->texture0);
+    p_glActiveTexture((GLenum) state->active_texture);
+    p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint) state->array_buffer);
+    p_glUseProgram((GLuint) state->program);
+    if (state->blend_enabled) p_glEnable(GL_BLEND);
+    if (state->scissor_enabled) p_glEnable(GL_SCISSOR_TEST);
+}
+
 static void draw_hw_quad(
     const float l, const float r, const float t, const float b, const float u_min, const float u_max,
-    const float v_at_top, const float v_at_bottom, const int vp_w, const int vp_h, const int swap_channels
+    const float v_at_top, const float v_at_bottom, const int vp_w, const int vp_h, const int swap_channels,
+    const int cache_restore_state
 ) {
     const GLfloat verts[] = {
         l, t, u_min, v_at_top,    // top left
@@ -883,28 +1021,21 @@ static void draw_hw_quad(
         r, b, u_max, v_at_bottom, // bottom right
     };
 
-    GLint prev_program = 0;
-    p_glGetIntegerv(GL_CURRENT_PROGRAM, &prev_program);
+    quad_restore_state_t frame_restore;
+    quad_restore_state_t *restore = &frame_restore;
 
-    GLint prev_viewport[4] = {0};
-    p_glGetIntegerv(GL_VIEWPORT, prev_viewport);
-
-    GLint prev_array_buffer = 0;
-    p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_array_buffer);
-
-    GLint prev_active_texture = 0;
-    p_glGetIntegerv(GL_ACTIVE_TEXTURE, &prev_active_texture);
-    p_glActiveTexture(GL_TEXTURE0);
-
-    GLint prev_texture0 = 0;
-    p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &prev_texture0);
-
-    const GLboolean prev_blend_enabled = p_glIsEnabled(GL_BLEND);
-    const GLboolean prev_scissor_enabled = p_glIsEnabled(GL_SCISSOR_TEST);
-
-    GLint prev_attrib_pos_enabled = 0, prev_attrib_uv_enabled = 0;
-    if (a_pos >= 0) p_glGetVertexAttribiv((GLuint) a_pos, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &prev_attrib_pos_enabled);
-    if (a_uv >= 0) p_glGetVertexAttribiv((GLuint) a_uv, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &prev_attrib_uv_enabled);
+    if (cache_restore_state && cached_quad_restore.valid) {
+        restore = &cached_quad_restore;
+        p_glActiveTexture(GL_TEXTURE0);
+    } else {
+        capture_quad_restore_state(&frame_restore);
+        if (cache_restore_state) {
+            cached_quad_restore = frame_restore;
+            restore = &cached_quad_restore;
+        } else {
+            cached_quad_restore.valid = 0;
+        }
+    }
 
     p_glDisable(GL_SCISSOR_TEST);
     p_glDisable(GL_BLEND);
@@ -926,16 +1057,7 @@ static void draw_hw_quad(
 
     p_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    if (a_pos >= 0 && !prev_attrib_pos_enabled) p_glDisableVertexAttribArray(a_pos);
-    if (a_uv >= 0 && !prev_attrib_uv_enabled) p_glDisableVertexAttribArray(a_uv);
-
-    p_glBindTexture(GL_TEXTURE_2D, (GLuint) prev_texture0);
-    p_glActiveTexture((GLenum) prev_active_texture);
-    p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint) prev_array_buffer);
-    p_glUseProgram((GLuint) prev_program);
-    p_glViewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);
-    if (prev_blend_enabled) p_glEnable(GL_BLEND);
-    if (prev_scissor_enabled) p_glEnable(GL_SCISSOR_TEST);
+    restore_quad_state(restore);
 }
 
 static int ensure_filter_src(SDL_Renderer *renderer) {
@@ -981,7 +1103,7 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
             const float v_at_bottom = flip_needed ? v_max - dv : dv;
 
             draw_hw_quad(
-                -1.0f, 1.0f, -1.0f, 1.0f, du, u_max - du, v_at_top, v_at_bottom, filter_src_w, filter_src_h, 1
+                -1.0f, 1.0f, -1.0f, 1.0f, du, u_max - du, v_at_top, v_at_bottom, filter_src_w, filter_src_h, 1, 0
             );
             SDL_SetRenderTarget(renderer, prev_target);
 
@@ -992,11 +1114,20 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
     }
 
     int out_w = 0, out_h = 0;
+    Uint32 target_format = 0;
     SDL_Texture *cur_target = SDL_GetRenderTarget(renderer);
     if (cur_target) {
-        SDL_QueryTexture(cur_target, NULL, NULL, &out_w, &out_h);
+        SDL_QueryTexture(cur_target, &target_format, NULL, &out_w, &out_h);
     } else {
-        SDL_GetRendererOutputSize(renderer, &out_w, &out_h);
+        if (cached_output_renderer != renderer || cached_output_w <= 0 || cached_output_h <= 0) {
+            cached_output_renderer = renderer;
+            if (SDL_GetRendererOutputSize(renderer, &cached_output_w, &cached_output_h) != 0) {
+                cached_output_w = 0;
+                cached_output_h = 0;
+            }
+        }
+        out_w = cached_output_w;
+        out_h = cached_output_h;
     }
     if (out_w <= 0 || out_h <= 0) return;
 
@@ -1027,7 +1158,13 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
     const float v_at_top = flip_needed ? v_max - v0 : v0;
     const float v_at_bottom = flip_needed ? v_max - v1 : v1;
 
-    draw_hw_quad(ndc_left, ndc_right, ndc_top, ndc_bottom, u0, u1, v_at_top, v_at_bottom, out_w, out_h, 0);
+    const int swap_target_channels = cur_target && target_format == SDL_PIXELFORMAT_ARGB8888;
+    const int cache_restore_state =
+        owns_context() && !cur_target && display_video_fast_path_allowed() && !overlay_bridge_active();
+    draw_hw_quad(
+        ndc_left, ndc_right, ndc_top, ndc_bottom, u0, u1, v_at_top, v_at_bottom, out_w, out_h, swap_target_channels,
+        cache_restore_state
+    );
 }
 
 void hw_render_bridge_shutdown(void) {
@@ -1063,6 +1200,10 @@ void hw_render_bridge_shutdown(void) {
     }
     filter_src_w = 0;
     filter_src_h = 0;
+    cached_output_renderer = NULL;
+    cached_output_w = 0;
+    cached_output_h = 0;
+    cached_quad_restore.valid = 0;
 
     core_context_reset = NULL;
     core_context_destroy = NULL;

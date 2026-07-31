@@ -411,6 +411,7 @@ static void apply_texture_filter(void) {
 
 void video_bridge_apply_filter(void) {
     apply_texture_filter();
+    hw_render_bridge_apply_filter();
     upload_frame();
 }
 

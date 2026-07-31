@@ -9,6 +9,7 @@
 #include "../core/muxretro.h"
 #include "../core/core.h"
 #include "../input/nav_repeat.h"
+#include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../video/hw_render.h"
 
@@ -16,6 +17,7 @@ static int active = 0;
 static uint64_t prev_nav_mask = 0;
 static int hash_row_shown_ready = 0;
 static int hash_row_index = 0;
+static int rumble_row_index = 0;
 static int bios_count = 0;
 
 typedef enum { screen_main, screen_bios } screen_state_t;
@@ -27,8 +29,10 @@ static nav_repeat_t rpt_down = {0};
 static uint64_t current_nav_mask(void) {
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
+    const int test_rumble = mux_input_pressed(mux_input_y);
 
-    return (nav_dir_bits() & (BIT(0) | BIT(1))) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
+    return (nav_dir_bits() & (BIT(0) | BIT(1))) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0)
+           | (test_rumble ? BIT(4) : 0) | nav_mask_page();
 }
 
 static void build_info_row(const char *label, const char *value, const char *glyph) {
@@ -60,6 +64,7 @@ static void rebuild_rows(void) {
     bios_count = bios_check_scan(core_file_path);
     const int row_offset = bios_count > 0 ? 1 : 0;
     hash_row_index = row_offset + 3;
+    rumble_row_index = row_offset + 11;
 
     if (bios_count > 0) {
         int missing = 0;
@@ -204,6 +209,7 @@ static void build_bios_rows(void) {
 }
 
 static void close_information(void) {
+    rumble_bridge_test_cancel();
     active = 0;
 
     pause_menu_rebuild();
@@ -240,6 +246,8 @@ int information_menu_is_active(void) {
 }
 
 void information_menu_tick(void) {
+    rumble_bridge_test_tick();
+
     if (screen_state == screen_main && !hash_row_shown_ready && content_hash_is_ready()) {
         hash_row_shown_ready = 1;
 
@@ -290,5 +298,7 @@ void information_menu_tick(void) {
         } else {
             close_information();
         }
+    } else if (edge & BIT(4)) {
+        if (screen_state == screen_main && current_item_index == rumble_row_index) rumble_bridge_test_start();
     }
 }

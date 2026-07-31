@@ -587,27 +587,14 @@ int screenshot_save_renderer(SDL_Renderer *renderer, const char *path, const scr
     if (width <= 0 || height <= 0) return -1;
 
     const size_t pixel_count = (size_t) width * (size_t) height;
-    uint8_t *argb = malloc(pixel_count * 4);
-    if (!argb) return -1;
-
-    if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, argb, width * 4) != 0) {
-        free(argb);
-        return -1;
-    }
-
     uint8_t *rgb = malloc(pixel_count * 3);
-    if (!rgb) {
-        free(argb);
+    if (!rgb) return -1;
+
+    SDL_RenderFlush(renderer);
+    if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGB24, rgb, width * 3) != 0) {
+        free(rgb);
         return -1;
     }
-
-    for (size_t i = 0; i < pixel_count; i++) {
-        rgb[i * 3 + 0] = argb[i * 4 + 2];
-        rgb[i * 3 + 1] = argb[i * 4 + 1];
-        rgb[i * 3 + 2] = argb[i * 4 + 0];
-    }
-
-    free(argb);
 
     const int ret = png_write(path, rgb, (uint32_t) width, (uint32_t) height);
     free(rgb);

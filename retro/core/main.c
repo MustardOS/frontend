@@ -1,8 +1,10 @@
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
 #include "../../common/board.h"
@@ -25,18 +27,20 @@
 #include "../input/hotkeys.h"
 #include "muxretro.h"
 #include "../ui/options.h"
+#include "../ui/ui_loading.h"
 #include "core.h"
+#include "governor_boost.h"
 #include "runahead.h"
 #include "../video/hw_render.h"
 #include "../video/overlay_bridge.h"
 #include "paths.h"
+#include "perf.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../state/sram.h"
 
-#define RESUME_COOLDOWN_MS     1500
-#define AUTOLOAD_WARMUP_FRAMES 60
-#define AUDIO_MAX_CATCHUP      3
+#define RESUME_COOLDOWN_MS 1500
+#define AUDIO_MAX_CATCHUP  3
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -48,6 +52,15 @@ static char macro_dir[MAX_BUFFER_SIZE];
 static volatile sig_atomic_t pending_sleep_signal = 0;
 static volatile sig_atomic_t pending_wake_signal = 0;
 static double target_fps = 60.0;
+
+static double startup_elapsed_ms(const uint64_t start) {
+    return (double) (SDL_GetPerformanceCounter() - start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+}
+
+static void startup_log_stage(const char *stage, uint64_t *stage_start) {
+    LOG_INFO(mux_module, "Startup: %s took %.2f ms", stage, startup_elapsed_ms(*stage_start));
+    *stage_start = SDL_GetPerformanceCounter();
+}
 
 void core_set_target_fps(const double new_fps) {
     if (new_fps > 0.0) target_fps = new_fps;
@@ -94,6 +107,27 @@ static void handle_pending_suspend_signals(void) {
 
         if (pause_menu_is_active()) pause_menu_toggle();
     }
+}
+
+static void precache_content(const char *content_path) {
+    const int budget_mb = session_settings_content_precache_mb(session_settings.content_precache);
+    if (budget_mb <= 0) return;
+
+    const int fd = open(content_path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) return;
+
+    struct stat st;
+    off_t len = fstat(fd, &st) == 0 ? st.st_size : 0;
+
+    const off_t budget = (off_t) budget_mb * 1024 * 1024;
+    if (len > budget) len = budget;
+
+    if (len > 0) {
+        posix_fadvise(fd, 0, len, POSIX_FADV_WILLNEED);
+        LOG_INFO(mux_module, "Content precache: hinted %lld MiB of '%s'", (long long) (len >> 20), content_path);
+    }
+
+    close(fd);
 }
 
 static int hard_sync_enabled(void) {
@@ -185,10 +219,11 @@ static double core_run_ema_ms = 0.0;
 static void run_core_batch(const unsigned frames) {
     hw_render_bridge_context_save();
 
+    if (frames == 1) frame_pacer_maybe_wait();
+
     for (unsigned i = 0; i < frames; i++) {
         const int is_last = i + 1 == frames || environment_av_info_pending();
 
-        if (is_last) frame_pacer_maybe_wait();
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
         environment_notify_frame_time();
@@ -199,6 +234,7 @@ static void run_core_batch(const unsigned frames) {
         const double run_ms =
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
         core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
+        perf_record(perf_stage_core, run_ms);
 
         audio_bridge_flush_sample_fifo();
 
@@ -218,8 +254,10 @@ static void pace_core_output(void) {
         return;
     }
 
+    const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
     audio_bridge_wait_for_headroom();
+    perf_end(perf_stage_audio_wait, audio_wait_start);
 
     const int slowmo_active = hotkeys_is_slow_motion_active();
     if (session_settings.fps_limit != fps_limit_50 && !slowmo_active) {
@@ -269,7 +307,19 @@ int main(const int argc, char *argv[]) {
     const char *core_path_arg = argv[1];
     const char *content_path = argv[2];
 
-    const int start_fresh = argc >= 4 && strcmp(argv[3], "--fresh") == 0;
+    int start_fresh = 0;
+    int start_restarting = 0;
+    for (int i = 3; i < argc; i++) {
+        if (strcmp(argv[i], "--fresh") == 0) start_fresh = 1;
+        if (strcmp(argv[i], "--restart") == 0) {
+            start_fresh = 1;
+            start_restarting = 1;
+        }
+    }
+
+    const char *startup_message = start_restarting ? lang.muxretro.content_restarting : lang.muxretro.content_loading;
+    const uint64_t startup_start = SDL_GetPerformanceCounter();
+    uint64_t startup_stage = startup_start;
 
     install_suspend_signal_handlers();
 
@@ -292,34 +342,50 @@ int main(const int argc, char *argv[]) {
     create_directories(RETRO_SRM_PATH "/", 1);
     options_init_paths(core_path_arg, content_path);
 
+    governor_boost_begin("content startup");
+    loading_message_show(startup_message);
+
     if (core_open(core_path_arg) != 0) {
         LOG_ERROR(mux_module, "Failed to open core: %s", core_path_arg);
+        governor_boost_end();
         mux_input_close();
         sdl_cleanup();
         return EXIT_FAILURE;
     }
     LOG_DEBUG(mux_module, "core_open done");
+    startup_log_stage("frontend and core initialisation", &startup_stage);
 
     state_saves_init(core_path_arg);
     patch_manual_init(core_path_arg, content_path);
+    perf_init();
     session_settings_init(core_path_arg, content_path);
+
+    build_state_dir(core_path_arg, content_path);
+    gamestate_init(state_dir);
+
+    char resume_path[512] = "";
+    int load_blocked = 0;
+    int has_resume = !start_fresh && state_saves_supported()
+                     && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
+    loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
+
+    precache_content(content_path);
 
     if (core_load_content(content_path) != 0) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
+        governor_boost_end();
         core_unload();
         mux_input_close();
         sdl_cleanup();
         return EXIT_FAILURE;
     }
     LOG_DEBUG(mux_module, "core_load_content done");
+    startup_log_stage("content load", &startup_stage);
 
     sram_bridge_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
     manual_init(core_path_arg, content_path);
     overlay_bridge_init(core_path_arg, content_path);
-
-    build_state_dir(core_path_arg, content_path);
-    gamestate_init(state_dir);
 
     build_macro_dir(core_path_arg, content_path);
     macros_init(macro_dir);
@@ -348,40 +414,56 @@ int main(const int argc, char *argv[]) {
 
     video_bridge_init();
     LOG_DEBUG(mux_module, "video_bridge_init done");
+    startup_log_stage("bridges and renderer setup", &startup_stage);
 
     overlay_bridge_apply();
     mux_input_poll();
     input_bridge_suppress_held();
 
     int state_preserved = 0;
-    int load_blocked = 0;
     if (state_saves_supported()) state_preserved = gamestate_protect_mismatched_autosave();
 
-    if (!start_fresh && state_saves_supported()) {
+    resume_path[0] = '\0';
+    load_blocked = 0;
+    has_resume = !start_fresh && state_saves_supported()
+                 && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
+
+    if (has_resume) {
+        loading_message_show(lang.muxretro.content_resuming);
+        const int warmup_frames = state_saves_warmup_frames();
         video_bridge_set_frame_skip(1);
         audio_bridge_set_muted(1);
         rumble_bridge_set_suppressed(1);
 
-        hw_render_bridge_context_save();
-        for (int i = 0; i < AUTOLOAD_WARMUP_FRAMES; i++) {
-            input_bridge_begin_run();
-            current_core.retro_run();
+        if (warmup_frames > 0) {
+            hw_render_bridge_context_save();
+            for (int i = 0; i < warmup_frames; i++) {
+                input_bridge_begin_run();
+                current_core.retro_run();
+            }
+            hw_render_bridge_flush_core_commands();
+            hw_render_bridge_context_restore();
         }
-        hw_render_bridge_context_restore();
         audio_bridge_clear_queued();
 
         video_bridge_set_frame_skip(0);
         audio_bridge_set_muted(0);
         rumble_bridge_set_suppressed(0);
 
-        if (gamestate_load_most_recent(&load_blocked) == 0) {
-            LOG_INFO(
-                mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", AUTOLOAD_WARMUP_FRAMES
-            );
+        startup_log_stage("save-state warm-up", &startup_stage);
+
+        if (state_load(resume_path) == 0) {
+            LOG_INFO(mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", warmup_frames);
         }
+        startup_log_stage("save-state restore", &startup_stage);
+    } else {
+        startup_log_stage("resume selection (no compatible state)", &startup_stage);
     }
 
+    governor_boost_end();
+
     pause_menu_init();
+    loading_message_hide();
     LOG_DEBUG(
         mux_module, "pause_menu_init done: ui_screen=%p ui_pnl_header=%p ui_pnl_content=%p ui_pnl_footer=%p",
         (void *) ui_screen, (void *) ui_pnl_header, (void *) ui_pnl_content, (void *) ui_pnl_footer
@@ -402,6 +484,7 @@ int main(const int argc, char *argv[]) {
     }
 
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", target_fps, av_info.timing.sample_rate);
+    LOG_INFO(mux_module, "Startup: ready in %.2f ms total", startup_elapsed_ms(startup_start));
 
     int quit = 0;
     int peeking = 0;
@@ -438,6 +521,7 @@ int main(const int argc, char *argv[]) {
         }
 
         const int paused = pause_menu_is_active();
+        if (paused || hotkeys_is_content_paused()) governor_boost_gameplay_idle();
         if (prev_paused && !paused) core_prime_audio();
         prev_paused = paused;
         audio_bridge_set_paused(paused);
@@ -510,19 +594,34 @@ int main(const int argc, char *argv[]) {
                 frames = 1 + extra;
             }
 
+            perf_note_batch(frames);
             run_core_batch(frames);
             core_ran = 1;
+
+            perf_record(perf_stage_frame_delay, frame_pacer_get_delay_ms());
 
             fps_frame_count += frames;
             const uint32_t now_ticks = SDL_GetTicks();
             const uint32_t fps_elapsed = now_ticks - fps_last_update;
             if (fps_elapsed >= 1000) {
+                const double vfps = (double) fps_frame_count * 1000.0 / (double) fps_elapsed;
                 if (session_settings.show_fps) {
-                    char fps_text[16];
-                    const double vfps = (double) fps_frame_count * 1000.0 / (double) fps_elapsed;
-                    snprintf(fps_text, sizeof(fps_text), "%.2f", vfps);
+                    char fps_text[256];
+                    if (session_settings.show_fps == show_fps_detailed) {
+                        perf_format_hud(fps_text, sizeof(fps_text), vfps);
+                    } else {
+                        snprintf(fps_text, sizeof(fps_text), "%.2f", vfps);
+                    }
                     pause_menu_set_fps_text(fps_text);
                 }
+
+                if (slowmo_active) {
+                    governor_boost_gameplay_idle();
+                } else {
+                    const double governor_target = session_settings.fps_limit == fps_limit_50 ? 50.0 : target_fps;
+                    governor_boost_gameplay_update(vfps, governor_target, ff_active);
+                }
+
                 pause_menu_update_header();
                 fps_frame_count = 0;
                 fps_last_update = now_ticks;
@@ -541,22 +640,31 @@ int main(const int argc, char *argv[]) {
             display_set_ui_hidden(!hud_active);
         }
 
+        const uint64_t video_start = core_ran ? perf_begin() : 0;
         video_bridge_flush_frame();
+        perf_end(perf_stage_video, video_start);
         if (paused_now) lv_task_handler();
 
+        const uint64_t present_start = core_ran ? perf_begin() : 0;
         if (display_ui_is_hidden()) {
             display_composite_frame();
         } else {
-            lv_obj_invalidate(ui_screen);
+            const uint64_t present_before_refresh = display_present_serial();
+            if (paused_now) lv_obj_invalidate(ui_screen);
             lv_refr_now(NULL);
+            if (display_present_serial() == present_before_refresh) display_composite_frame();
         }
+        perf_end(perf_stage_present, present_start);
+        if (core_ran) perf_note_present();
 
         frame_pacer_after_present();
 
         if (core_ran) pace_core_output();
+        perf_frame_complete(core_ran);
     }
 
     pause_menu_shutdown();
+    governor_boost_shutdown();
     runahead_shutdown();
     video_bridge_shutdown();
     overlay_bridge_shutdown();
@@ -578,7 +686,7 @@ int main(const int argc, char *argv[]) {
         // Force a (re)start of pickles with '--fresh'.
         // A restart must NEVER auto load anything otherwise it just reloads the exact frame we quit on
         // and it'll essentially undo the reset and cause all sorts of funky stuff to happen...
-        char *restart_argv[] = {argv[0], core_file_path, core_content_path, "--fresh", NULL};
+        char *restart_argv[] = {argv[0], core_file_path, core_content_path, "--fresh", "--restart", NULL};
         execvp(restart_argv[0], restart_argv);
         LOG_ERROR(mux_module, "Failed to re-exec for restart (%s), exiting instead", strerror(errno));
     }

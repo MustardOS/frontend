@@ -1512,6 +1512,9 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char content_loading[MAX_BUFFER_SIZE];
+        char content_resuming[MAX_BUFFER_SIZE];
+        char content_restarting[MAX_BUFFER_SIZE];
         char resume[MAX_BUFFER_SIZE];
         char game_state[MAX_BUFFER_SIZE];
         char core_options[MAX_BUFFER_SIZE];
@@ -1618,6 +1621,8 @@ struct mux_lang {
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];
+            char show_fps_simple[MAX_BUFFER_SIZE];
+            char show_fps_detailed[MAX_BUFFER_SIZE];
             char border_colour[MAX_BUFFER_SIZE];
             char aspect_ratio[MAX_BUFFER_SIZE];
             char aspect_ratio_mode[MAX_BUFFER_SIZE];
@@ -1653,6 +1658,7 @@ struct mux_lang {
             char header_both[MAX_BUFFER_SIZE];
             char sram_flush[MAX_BUFFER_SIZE];
             char sram_backup[MAX_BUFFER_SIZE];
+            char content_precache[MAX_BUFFER_SIZE];
             char timeline_saves[MAX_BUFFER_SIZE];
             char timeline_count[MAX_BUFFER_SIZE];
             char auto_save[MAX_BUFFER_SIZE];
@@ -1682,6 +1688,16 @@ struct mux_lang {
             char game_renderer_restart[MAX_BUFFER_SIZE];
             char audio_rate_control_off[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
+            char performance_preset[MAX_BUFFER_SIZE];
+            char performance_capture[MAX_BUFFER_SIZE];
+            char preset_recommended[MAX_BUFFER_SIZE];
+            char preset_low_latency[MAX_BUFFER_SIZE];
+            char preset_stable[MAX_BUFFER_SIZE];
+            char preset_custom[MAX_BUFFER_SIZE];
+            char export_diagnostics[MAX_BUFFER_SIZE];
+            char export_diagnostics_done[MAX_BUFFER_SIZE];
+            char export_diagnostics_failed[MAX_BUFFER_SIZE];
+            char export_diagnostics_empty[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];
             char category_sound[MAX_BUFFER_SIZE];
             char category_input[MAX_BUFFER_SIZE];
