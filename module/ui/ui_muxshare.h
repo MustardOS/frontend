@@ -548,7 +548,7 @@
     VISUAL(network, "network")                                                                                         \
     VISUAL(bluetooth, "bluetooth")                                                                                     \
     VISUAL(header_title, "headertitle")                                                                                \
-    VISUAL(dialogue_transition, "dialoguetransition")                                                                  \
+    VISUAL(element_transition, "elementtransition")                                                                    \
     VISUAL(name, "name")                                                                                               \
     VISUAL(name_scroll, "namescroll")                                                                                  \
     VISUAL(label_scroll_speed, "labelscrollspeed")                                                                     \

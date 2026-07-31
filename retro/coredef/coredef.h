@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h> // IWYU pragma: keep
+
 struct coredef_option {
     const char *key;
     const char *value;

@@ -497,7 +497,7 @@ void dialogue_show(mux_dialogue *dlg) {
     page_nav_blocked = 1;
     timer_suspend_all();
 
-    const int diag_transition = config.visual.dialogue_transition;
+    const int diag_transition = config.visual.element_transition;
 
     lv_anim_path_cb_t path;
     uint32_t duration;

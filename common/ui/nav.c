@@ -141,7 +141,7 @@ void show_info_box(const char *title, const char *content, const int is_content)
         lv_obj_t *ui_pnl_item = lv_obj_get_parent(ui_lbl_help_content);
         lv_obj_scroll_to_y(ui_pnl_item, 0, LV_ANIM_OFF);
 
-        const int trans = config.visual.dialogue_transition;
+        const int trans = config.visual.element_transition;
 
         lv_anim_path_cb_t path;
         uint32_t duration;

@@ -196,3 +196,91 @@ void transition_box_art_destroy(void) {
     is_scrolling = 0;
     scroll_stop_cb = NULL;
 }
+
+static void panel_in_x_cb(void *var, const int32_t value) {
+    lv_obj_set_style_translate_x(var, value, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void panel_in_y_cb(void *var, const int32_t value) {
+    lv_obj_set_style_translate_y(var, value, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void panel_in_opa_cb(void *var, const int32_t value) {
+    lv_obj_set_style_opa(var, (lv_opa_t) value, MU_OBJ_MAIN_DEFAULT);
+}
+
+void transition_panel_play_in(lv_obj_t *panel, const int type) {
+    if (!panel || !lv_obj_is_valid(panel) || type == TSN_DISABLED) return;
+
+    lv_obj_set_style_translate_x(panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_y(panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_opa(panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+
+    lv_anim_path_cb_t path;
+    uint32_t duration;
+
+    switch (type) {
+        case TSN_BOUNCE_RIGHT:
+        case TSN_BOUNCE_LEFT:
+        case TSN_BOUNCE_UP:
+        case TSN_BOUNCE_DOWN:
+            path = lv_anim_path_bounce;
+            duration = 450;
+            break;
+        case TSN_SHOOT_RIGHT:
+        case TSN_SHOOT_LEFT:
+        case TSN_SHOOT_UP:
+        case TSN_SHOOT_DOWN:
+            path = lv_anim_path_overshoot;
+            duration = 350;
+            break;
+        default:
+            path = lv_anim_path_ease_out;
+            duration = 250;
+            break;
+    }
+
+    lv_anim_t ap;
+    lv_anim_init(&ap);
+    lv_anim_set_var(&ap, panel);
+
+    switch (type) {
+        case TSN_SLIDE_RIGHT:
+        case TSN_BOUNCE_RIGHT:
+        case TSN_SHOOT_RIGHT:
+            lv_obj_set_style_translate_x(panel, LV_HOR_RES, MU_OBJ_MAIN_DEFAULT);
+            lv_anim_set_exec_cb(&ap, panel_in_x_cb);
+            lv_anim_set_values(&ap, LV_HOR_RES, 0);
+            break;
+        case TSN_SLIDE_LEFT:
+        case TSN_BOUNCE_LEFT:
+        case TSN_SHOOT_LEFT:
+            lv_obj_set_style_translate_x(panel, -LV_HOR_RES, MU_OBJ_MAIN_DEFAULT);
+            lv_anim_set_exec_cb(&ap, panel_in_x_cb);
+            lv_anim_set_values(&ap, -LV_HOR_RES, 0);
+            break;
+        case TSN_SLIDE_UP:
+        case TSN_BOUNCE_UP:
+        case TSN_SHOOT_UP:
+            lv_obj_set_style_translate_y(panel, LV_VER_RES, MU_OBJ_MAIN_DEFAULT);
+            lv_anim_set_exec_cb(&ap, panel_in_y_cb);
+            lv_anim_set_values(&ap, LV_VER_RES, 0);
+            break;
+        case TSN_SLIDE_DOWN:
+        case TSN_BOUNCE_DOWN:
+        case TSN_SHOOT_DOWN:
+            lv_obj_set_style_translate_y(panel, -LV_VER_RES, MU_OBJ_MAIN_DEFAULT);
+            lv_anim_set_exec_cb(&ap, panel_in_y_cb);
+            lv_anim_set_values(&ap, -LV_VER_RES, 0);
+            break;
+        default:
+            lv_obj_set_style_opa(panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+            lv_anim_set_exec_cb(&ap, panel_in_opa_cb);
+            lv_anim_set_values(&ap, LV_OPA_TRANSP, LV_OPA_COVER);
+            break;
+    }
+
+    lv_anim_set_path_cb(&ap, path);
+    lv_anim_set_time(&ap, duration);
+    lv_anim_start(&ap);
+}

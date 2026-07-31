@@ -89,7 +89,7 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, network, "visual/network", INT, 0);
     CHECK_AND_SAVE_STD(visual, bluetooth, "visual/bluetooth", INT, 0);
     CHECK_AND_SAVE_STD(visual, header_title, "visual/headertitle", INT, 0);
-    CHECK_AND_SAVE_STD(visual, dialogue_transition, "visual/dialoguetransition", INT, 0);
+    CHECK_AND_SAVE_STD(visual, element_transition, "visual/elementtransition", INT, 0);
     CHECK_AND_SAVE_STD(visual, name, "visual/name", INT, 0);
     CHECK_AND_SAVE_STD(visual, dash, "visual/dash", INT, 0);
     CHECK_AND_SAVE_STD(visual, friendly_folder, "visual/friendlyfolder", INT, 0);
@@ -151,8 +151,7 @@ static void init_navigation_group(void) {
 
     char *label_scroll_speed[] = {scroll_speed[0], scroll_speed[1], scroll_speed[2], scroll_speed[3]};
 
-    char *dialogue_transition[] = {
-        lang.muxvisual.transition.fade_in,     lang.muxvisual.transition.slide_right,
+    char *element_transition[] = {lang.muxvisual.transition.fade_in,     lang.muxvisual.transition.slide_right,
         lang.muxvisual.transition.slide_left,  lang.muxvisual.transition.slide_up,
         lang.muxvisual.transition.slide_down,  lang.muxvisual.transition.bounce_right,
         lang.muxvisual.transition.bounce_left, lang.muxvisual.transition.bounce_up,
@@ -175,8 +174,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, bluetooth, lang.muxvisual.bluetooth, "bluetooth", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, header_title, lang.muxvisual.headertitle, "headertitle", hidden_visible, 2);
     INIT_OPTION_ITEM(
-        -1, visual, dialogue_transition, lang.muxvisual.dialoguetransition, "dialoguetransition", dialogue_transition,
-        14
+        -1, visual, element_transition, lang.muxvisual.elementtransition, "elementtransition", element_transition, 14
     );
     INIT_OPTION_ITEM(-1, visual, name, lang.muxvisual.name.title, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, name_scroll, lang.muxvisual.namescroll, "namescroll", scroll_mode, 3);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../lvgl/lvgl.h"
+
 #define TSN_FADE_IN 0
 
 #define TSN_SLIDE_RIGHT 1
@@ -28,3 +30,5 @@ void transition_box_art_key_released(void);
 void transition_box_art_apply_in(int type);
 
 void transition_box_art_destroy(void);
+
+void transition_panel_play_in(lv_obj_t *panel, int type);

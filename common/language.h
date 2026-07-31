@@ -2331,7 +2331,7 @@ struct mux_lang {
         char network[MAX_BUFFER_SIZE];
         char bluetooth[MAX_BUFFER_SIZE];
         char headertitle[MAX_BUFFER_SIZE];
-        char dialoguetransition[MAX_BUFFER_SIZE];
+        char elementtransition[MAX_BUFFER_SIZE];
         char dash[MAX_BUFFER_SIZE];
         char friendlyfolder[MAX_BUFFER_SIZE];
         char thetitleformat[MAX_BUFFER_SIZE];
@@ -2413,7 +2413,7 @@ struct mux_lang {
             char network[MAX_BUFFER_SIZE];
             char bluetooth[MAX_BUFFER_SIZE];
             char header_title[MAX_BUFFER_SIZE];
-            char dialogue_transition[MAX_BUFFER_SIZE];
+            char element_transition[MAX_BUFFER_SIZE];
             char dash[MAX_BUFFER_SIZE];
             char friendly_folder[MAX_BUFFER_SIZE];
             char the_title_format[MAX_BUFFER_SIZE];

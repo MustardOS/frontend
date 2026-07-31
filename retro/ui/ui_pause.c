@@ -9,6 +9,7 @@
 #include "../../common/options.h"
 #include "../../common/theme.h"
 #include "../../common/ui/common.h"
+#include "../../common/ui/transition.h"
 #include "../../common/ui/font.h"
 #include "../../common/ui/glyph.h"
 #include "../../module/muxshare.h"
@@ -205,6 +206,8 @@ void pause_menu_show_toast_timed(const char *msg, const uint32_t duration_ms) {
 
     lv_obj_mark_layout_as_dirty(ui_pnl_message);
     lv_obj_update_layout(ui_pnl_message);
+
+    transition_panel_play_in(ui_pnl_message, config.visual.element_transition);
 
     toast_expire_tick = SDL_GetTicks() + duration_ms;
     toast_active = 1;
