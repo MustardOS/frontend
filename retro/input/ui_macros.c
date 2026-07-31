@@ -159,7 +159,7 @@ static void refresh_row_value(const int index, const char *text) {
 static void describe_assignment(const int position, char *buf) {
     const int macro_index = macro_list[position].index;
 
-    for (int s = 0; s < 16; s++) {
+    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         if (session_settings.port_source_macro[active_port][s] == macro_index) {
             snprintf(buf, ROW_VALUE_MAX, "%s", session_settings_button_type_label(session_settings_source_types[s]));
             return;
@@ -171,7 +171,7 @@ static void describe_assignment(const int position, char *buf) {
 
 static void list_row_value(const int position, char *buf) {
     if (capture_state != capture_none && capture_purpose == capture_purpose_assign && position == current_item_index) {
-        snprintf(buf, ROW_VALUE_MAX, "%s", lang.muxretro.settings_screen.press_button);
+        snprintf(buf, ROW_VALUE_MAX, "%s", lang.muxretro.settings_screen.assign_control);
         return;
     }
 
@@ -187,8 +187,9 @@ static void format_step_targets(const int target_mask, char *buf) {
     size_t used = 0;
     buf[0] = '\0';
 
-    for (int t = 0; t < 16 && used < ROW_VALUE_MAX; t++) {
-        if (!(target_mask & (1 << t))) continue;
+    for (int position = 0; position < PORT_DIGITAL_COUNT && used < ROW_VALUE_MAX; position++) {
+        const int t = session_settings_target_at_position(position);
+        if (t < 0 || !(target_mask & (1 << t))) continue;
 
         const int n =
             snprintf(buf + used, ROW_VALUE_MAX - used, "%s%s", used ? "+" : "", session_settings_target_label(t));
@@ -361,9 +362,9 @@ static void begin_capture(const capture_purpose_t purpose) {
     chord_mask = 0;
 
     if (purpose == capture_purpose_assign) {
-        refresh_row_value(current_item_index, lang.muxretro.settings_screen.press_button);
+        refresh_row_value(current_item_index, lang.muxretro.settings_screen.assign_control);
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxretro.settings_screen.press_button);
+        lv_label_set_text(ui_lbl_screen_message, lang.muxretro.settings_screen.assign_control);
     }
 }
 
@@ -375,7 +376,7 @@ static void end_capture(void) {
 
 static void finish_assign(const mux_input_type pressed) {
     const int row = current_item_index;
-    const int source = session_settings_source_for_button(pressed);
+    const int source = session_settings_source_for_input(pressed);
     if (source >= 0) {
         session_settings_assign_source_macro(active_port, source, macro_list[row].index);
         play_sound(snd_confirm);
@@ -467,8 +468,9 @@ static void capture_tick(void) {
         const uint64_t new_bits = mask & ~capture_prev_mask;
         capture_prev_mask = mask;
 
+        // Buttons only here - a step's chord is a digital mask, so a stick push has nowhere to go in it
         uint64_t candidate_mask = 0;
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < PORT_DIGITAL_COUNT; i++) {
             const mux_input_type type = (mux_input_type) session_settings_source_types[i];
 
             if (capture_state == capture_waiting_press && type == mux_input_b) continue;
@@ -507,7 +509,7 @@ static void capture_tick(void) {
         const uint64_t new_bits = mask & ~capture_prev_mask;
         capture_prev_mask = mask;
 
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < PORT_SOURCE_COUNT; i++) {
             const mux_input_type pressed = (mux_input_type) session_settings_source_types[i];
             if (pressed == mux_input_b) continue;
 

@@ -180,7 +180,10 @@ struct session_settings_t {
     int port_source_macro[MUX_INPUT_PORT_COUNT][24];
 };
 
-#define PORT_SOURCE_COUNT 24
+#define PORT_SOURCE_COUNT  24
+#define PORT_DIGITAL_COUNT 16
+#define PORT_TARGET_COUNT  24
+#define PORT_STICK_FULL    32767
 
 extern const int session_settings_source_types[PORT_SOURCE_COUNT];
 
@@ -428,11 +431,19 @@ const char *session_settings_target_label(int target_id);
 
 int session_settings_mux_type_for_target(int target_id);
 
+int session_settings_target_stick(int target_id, int *stick, int *axis_x, int *axis_y);
+
+int session_settings_target_at_position(int position);
+
+int session_settings_target_position(int target_id);
+
 int session_settings_target_for_button(int pressed_type);
 
-int session_settings_source_for_button(int pressed_type);
+int session_settings_source_for_input(int pressed_type);
 
 int session_settings_set_source_by_button(int port, int source, int pressed_type);
+
+int session_settings_set_source_target(int port, int source, int target);
 
 void session_settings_cycle_source_turbo(int port, int source, int direction);
 

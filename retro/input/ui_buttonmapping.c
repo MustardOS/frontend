@@ -29,6 +29,17 @@ static const char *row_glyphs[PORT_SOURCE_COUNT] = {
     "controller", "controller", "controller", "controller", "controller", "controller", "controller", "controller",
 };
 
+#define PICKER_ROW_COUNT (1 + PORT_TARGET_COUNT)
+
+static const char *picker_labels[PICKER_ROW_COUNT];
+
+static int picker_active = 0;
+static int picker_row = -1;
+static uint64_t picker_prev_mask = 0;
+
+static nav_repeat_t rpt_pick_up = {0};
+static nav_repeat_t rpt_pick_down = {0};
+
 static int active_port = 0;
 
 static int prev_x = 0;
@@ -51,7 +62,7 @@ static submenu bm_self[MUX_INPUT_PORT_COUNT];
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     if (capture_state == capture_waiting_press && index == capture_row) {
-        snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.press_button);
+        snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.assign_control);
         return;
     }
 
@@ -107,13 +118,142 @@ static void apply_nav_bar(void) {
                                   {ui_lbl_nav_a_glyph, "", 0},
                                   {ui_lbl_nav_a, lang.generic.set, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.muxretro.settings_screen.unbind, 0},
+                                  {ui_lbl_nav_x, lang.muxretro.settings_screen.targets, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
                                   {ui_lbl_nav_y, lang.generic.reset, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
+}
+
+static void picker_build_row(const int index) {
+    lv_obj_t *panel = lv_obj_create(ui_pnl_content);
+    lv_obj_t *label = lv_label_create(panel);
+    lv_obj_t *icon = lv_img_create(panel);
+    lv_obj_t *value = lv_label_create(panel);
+
+    apply_theme_list_panel(panel);
+    apply_theme_option_item_label(&theme, label, picker_labels[index], 1);
+    apply_theme_list_glyph(&theme, icon, "muxretro", "controller");
+    apply_theme_list_value(&theme, value, "");
+    apply_size_to_content(&theme, ui_pnl_content, label, icon, picker_labels[index]);
+    apply_text_long_dot(&theme, label);
+
+    lv_group_add_obj(ui_group, label);
+    lv_group_add_obj(ui_group_glyph, icon);
+    lv_group_add_obj(ui_group_panel, panel);
+    lv_group_add_obj(ui_group_value, value);
+}
+
+static void picker_focus(const int index) {
+    if (index < 0 || index >= ui_count_static) return;
+    current_item_index = index;
+
+    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
+    if (!panel) return;
+
+    lv_obj_t *label = lv_obj_get_child(panel, 0);
+    lv_obj_t *glyph = lv_obj_get_child(panel, 1);
+    lv_obj_t *value = lv_obj_get_child(panel, 2);
+
+    nav_suppress_next_shake();
+
+    if (label) lv_group_focus_obj(label);
+    if (glyph) lv_group_focus_obj(glyph);
+    if (value) lv_group_focus_obj(value);
+    lv_group_focus_obj(panel);
+
+    update_scroll_position(
+        theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
+    );
+}
+
+static void picker_nav_bar(void) {
+    nav_show_lr(0);
+
+    lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
+    pause_menu_fix_nav_order();
+}
+
+static void picker_open(const int row) {
+    picker_row = row;
+    picker_active = 1;
+
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+
+    ui_count_static = 0;
+    current_item_index = 0;
+
+    for (int i = 0; i < PICKER_ROW_COUNT; i++)
+        picker_build_row(i);
+
+    ui_count_static = PICKER_ROW_COUNT;
+    first_open = 0;
+
+    // Opening on whatever the row already uses, with Unbound sitting at the top
+    const int position = session_settings_target_position(session_settings.port_source_target[active_port][row]);
+    picker_focus(position < 0 ? 0 : position + 1);
+
+    picker_prev_mask = nav_mask_standard();
+    picker_nav_bar();
+    pause_menu_sync_input_mask();
+}
+
+static void picker_close(void) {
+    picker_active = 0;
+    submenu_reopen_at(&bm_self[active_port], picker_row);
+    apply_nav_bar();
+
+    prev_x = mux_input_pressed(mux_input_x);
+    prev_y = mux_input_pressed(mux_input_y);
+
+    turbo_cycle_prev_mask = nav_mask_standard();
+}
+
+static void picker_tick(void) {
+    const uint64_t mask = nav_mask_standard();
+    const uint64_t edge = mask & ~picker_prev_mask;
+    picker_prev_mask = mask;
+
+    if (nav_input_halted()) return;
+
+    const uint32_t now = SDL_GetTicks();
+    const int do_up = nav_repeat_step(&rpt_pick_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
+    const int do_down =
+        nav_repeat_step(&rpt_pick_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
+
+    if (do_up) {
+        nav_set_last_dir(nav_dir_up);
+        nav_unsuppress_shake();
+        gen_step_movement(1, -1, 2, 0, 1);
+    } else if (do_down) {
+        nav_set_last_dir(nav_dir_down);
+        nav_unsuppress_shake();
+        gen_step_movement(1, +1, 2, 0, 1);
+    } else if (nav_page_tick(edge, mask, 2)) {
+        // do nothing!
+    } else if (edge & BIT(4)) {
+        play_sound(snd_confirm);
+
+        const int target = current_item_index == 0 ? -1 : session_settings_target_at_position(current_item_index - 1);
+
+        session_settings_set_source_target(active_port, picker_row, target);
+        picker_close();
+    } else if (edge & BIT(5)) {
+        play_sound(snd_back);
+        picker_close();
+    }
 }
 
 static void capture_tick(void) {
@@ -123,7 +263,7 @@ static void capture_tick(void) {
         const uint64_t new_bits = mask & ~capture_prev_mask;
         capture_prev_mask = mask;
 
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < PORT_SOURCE_COUNT; i++) {
             const mux_input_type pressed = (mux_input_type) session_settings_source_types[i];
             if (pressed == mux_input_b) continue;
 
@@ -180,9 +320,8 @@ static void check_row_shortcuts(void) {
     if (current_item_index < 0 || current_item_index >= bm_def.row_count) return;
 
     if (x_edge) {
-        play_sound(snd_option);
-        session_settings_unbind_source(active_port, current_item_index);
-        submenu_refresh_values(&bm_self[active_port]);
+        play_sound(snd_confirm);
+        picker_open(current_item_index);
     } else if (y_edge) {
         play_sound(snd_option);
         session_settings_reset_source(active_port, current_item_index);
@@ -200,6 +339,10 @@ static void check_row_shortcuts(void) {
 }
 
 void button_mapping_menu_init_all(void) {
+    picker_labels[0] = lang.muxretro.settings_screen.unbound;
+    for (int position = 0; position < PORT_TARGET_COUNT; position++)
+        picker_labels[position + 1] = session_settings_target_label(session_settings_target_at_position(position));
+
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++)
         submenu_init(&bm_self[i], &bm_def);
 }
@@ -224,6 +367,11 @@ int button_mapping_menu_is_active(void) {
 }
 
 void button_mapping_menu_tick(void) {
+    if (picker_active) {
+        picker_tick();
+        return;
+    }
+
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         if (!submenu_is_active(&bm_self[i])) continue;
 
@@ -233,6 +381,8 @@ void button_mapping_menu_tick(void) {
         }
 
         check_row_shortcuts();
+        if (picker_active) return;
+
         submenu_tick(&bm_self[i]);
         return;
     }

@@ -793,7 +793,7 @@ static void apply_ini(const char *path) {
         for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
             snprintf(key, sizeof(key), "port%d_src_%d", i, s);
             v = mini_get_int(ini, "settings", key, -99);
-            if (v >= -1 && v < 16) session_settings.port_source_target[i][s] = (int) v;
+            if (v >= -1 && v < PORT_TARGET_COUNT) session_settings.port_source_target[i][s] = (int) v;
 
             snprintf(key, sizeof(key), "port%d_srcms_%d", i, s);
             v = mini_get_int(ini, "settings", key, -1);
@@ -1674,14 +1674,65 @@ const char *session_settings_button_type_label(const int type) {
     }
 }
 
+static const int target_display_order[PORT_TARGET_COUNT] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
+                                                            4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23};
+
+int session_settings_target_at_position(const int position) {
+    if (position < 0 || position >= PORT_TARGET_COUNT) return -1;
+    return target_display_order[position];
+}
+
+int session_settings_target_position(const int target_id) {
+    for (int i = 0; i < PORT_TARGET_COUNT; i++) {
+        if (target_display_order[i] == target_id) return i;
+    }
+
+    return -1;
+}
+
+static const char *stick_target_labels[PORT_TARGET_COUNT - PORT_DIGITAL_COUNT] = {
+    lang.muxretro.settings_screen.stick_ls_up,   lang.muxretro.settings_screen.stick_ls_down,
+    lang.muxretro.settings_screen.stick_ls_left, lang.muxretro.settings_screen.stick_ls_right,
+    lang.muxretro.settings_screen.stick_rs_up,   lang.muxretro.settings_screen.stick_rs_down,
+    lang.muxretro.settings_screen.stick_rs_left, lang.muxretro.settings_screen.stick_rs_right,
+};
+
 const char *session_settings_target_label(const int target_id) {
-    if (target_id < 0 || target_id >= 16) return lang.muxretro.settings_screen.unbound;
+    if (target_id < 0 || target_id >= PORT_TARGET_COUNT) return lang.muxretro.settings_screen.unbound;
+    if (target_id >= PORT_DIGITAL_COUNT) return stick_target_labels[target_id - PORT_DIGITAL_COUNT];
+
     return session_settings_button_type_label(default_button_map[target_id]);
 }
 
 int session_settings_mux_type_for_target(const int target_id) {
-    if (target_id < 0 || target_id >= 16) return -1;
+    if (target_id < 0 || target_id >= PORT_DIGITAL_COUNT) return -1;
     return default_button_map[target_id];
+}
+
+int session_settings_target_stick(const int target_id, int *stick, int *axis_x, int *axis_y) {
+    if (target_id < PORT_DIGITAL_COUNT || target_id >= PORT_TARGET_COUNT) return 0;
+
+    const int offset = target_id - PORT_DIGITAL_COUNT;
+    *stick = offset / 4;
+    *axis_x = 0;
+    *axis_y = 0;
+
+    switch (offset % 4) {
+        case 0:
+            *axis_y = -PORT_STICK_FULL;
+            break;
+        case 1:
+            *axis_y = PORT_STICK_FULL;
+            break;
+        case 2:
+            *axis_x = -PORT_STICK_FULL;
+            break;
+        default:
+            *axis_x = PORT_STICK_FULL;
+            break;
+    }
+
+    return 1;
 }
 
 void session_settings_source_value(const int port, const int source, char *buf, const size_t len) {
@@ -1707,30 +1758,51 @@ void session_settings_source_value(const int port, const int source, char *buf, 
 }
 
 int session_settings_target_for_button(const int pressed_type) {
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < PORT_DIGITAL_COUNT; i++) {
         if (session_settings_source_types[i] == pressed_type) return default_source_target[i];
+    }
+
+    for (int i = PORT_DIGITAL_COUNT; i < PORT_SOURCE_COUNT; i++) {
+        if (session_settings_source_types[i] == pressed_type) return i;
     }
 
     return -1;
 }
 
-int session_settings_source_for_button(const int pressed_type) {
-    for (int s = 0; s < 16; s++) {
+int session_settings_source_for_input(const int pressed_type) {
+    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         if (session_settings_source_types[s] == pressed_type) return s;
     }
 
     return -1;
 }
 
-int session_settings_set_source_by_button(const int port, const int source, const int pressed_type) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return 0;
+void session_settings_unbind_source(const int port, const int source) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
+    session_settings.port_source_target[port][source] = -1;
+    session_settings.port_source_turbo[port][source] = 0;
+    session_settings.port_source_macro[port][source] = -1;
+}
 
-    const int target = session_settings_target_for_button(pressed_type);
-    if (target < 0) return 0;
+int session_settings_set_source_target(const int port, const int source, const int target) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return 0;
+    if (target >= PORT_TARGET_COUNT) return 0;
+
+    if (target < 0) {
+        session_settings_unbind_source(port, source);
+        return 1;
+    }
 
     session_settings.port_source_target[port][source] = target;
     session_settings.port_source_macro[port][source] = -1;
     return 1;
+}
+
+int session_settings_set_source_by_button(const int port, const int source, const int pressed_type) {
+    const int target = session_settings_target_for_button(pressed_type);
+    if (target < 0) return 0;
+
+    return session_settings_set_source_target(port, source, target);
 }
 
 static const int turbo_ms_table[] = {48, 96, 192, 384, 768, 1536, 3072, 6144};
@@ -1754,13 +1826,6 @@ void session_settings_cycle_source_turbo(const int port, const int source, const
     if (idx >= TURBO_MS_TABLE_COUNT) idx = -1;
 
     session_settings.port_source_turbo[port][source] = idx < 0 ? 0 : turbo_ms_table[idx];
-}
-
-void session_settings_unbind_source(const int port, const int source) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
-    session_settings.port_source_target[port][source] = -1;
-    session_settings.port_source_turbo[port][source] = 0;
-    session_settings.port_source_macro[port][source] = -1;
 }
 
 void session_settings_reset_source(const int port, const int source) {

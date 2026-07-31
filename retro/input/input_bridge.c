@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "../../common/input.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
@@ -28,10 +30,61 @@ static int macro_step_at[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static int macro_step_holding[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static int macro_step_repeat_at[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static uint32_t macro_step_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static uint32_t macro_step_target[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static int macro_loop_progress[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT][MACRO_STEP_MAX];
+static int macro_vars[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT][MACRO_VAR_MAX];
+
+static int16_t macro_stick_x[MUX_RETRO_PORT_COUNT][2];
+static int16_t macro_stick_y[MUX_RETRO_PORT_COUNT][2];
+static int macro_stick_active[MUX_RETRO_PORT_COUNT][2];
+
+static int bound_stick_x[MUX_RETRO_PORT_COUNT][2];
+static int bound_stick_y[MUX_RETRO_PORT_COUNT][2];
+static int bound_stick_active[MUX_RETRO_PORT_COUNT][2];
+
+static int16_t clamp_axis(const int value) {
+    if (value > PORT_STICK_FULL) return PORT_STICK_FULL;
+    if (value < -PORT_STICK_FULL) return -PORT_STICK_FULL;
+    return (int16_t) value;
+}
+
+static void push_bound_stick(const int port, const int target) {
+    int stick = 0;
+    int axis_x = 0;
+    int axis_y = 0;
+
+    if (!session_settings_target_stick(target, &stick, &axis_x, &axis_y)) return;
+    if (stick < 0 || stick > 1) return;
+
+    bound_stick_x[port][stick] += axis_x;
+    bound_stick_y[port][stick] += axis_y;
+    bound_stick_active[port][stick] = 1;
+}
 
 static uint32_t ms_to_frames(const int ms, const double fps) {
     return (uint32_t) (fps > 0.0 ? (double) ms / 1000.0 * fps + 0.5 : 6);
+}
+
+static long macro_random(void) {
+    static int seeded = 0;
+    if (!seeded) {
+        srandom((unsigned) time(NULL) ^ (uintptr_t) &seeded);
+        seeded = 1;
+    }
+
+    return random();
+}
+
+static int roll_ms(const int base_ms, const int rand_ms) {
+    if (rand_ms <= base_ms) return base_ms < 0 ? 0 : base_ms;
+    return base_ms + (int) (macro_random() % (rand_ms - base_ms + 1));
+}
+
+static uint32_t roll_segment_frames(const struct macro_step *step, const int holding, const double fps) {
+    const int ms = holding ? roll_ms(step->hold_ms, step->hold_rand_ms) : roll_ms(step->wait_ms, step->wait_rand_ms);
+
+    const uint32_t frames = ms_to_frames(ms, fps);
+    return frames < 1 ? 1 : frames;
 }
 
 static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, const int apply_suppress) {
@@ -45,33 +98,42 @@ static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, 
     return raw_held;
 }
 
-static int if_condition_true(const struct macro_step *step, const int port, const int s, const uint64_t mask) {
-    if (step->if_test == if_test_count_compare) {
-        const int count = macro_loop_progress[port][s][step->if_loop_ref] + 1;
-        switch (step->if_op) {
-            case if_op_equals:
-                return count == step->loop_count;
-            case if_op_notequals:
-                return count != step->loop_count;
-            case if_op_less:
-                return count < step->loop_count;
-            case if_op_greater:
-                return count > step->loop_count;
-            case if_op_atleast:
-                return count >= step->loop_count;
-            default: // if_op_atmost
-                return count <= step->loop_count;
-        }
+static int compare_values(const int value, const int op, const int against) {
+    switch (op) {
+        case if_op_equals:
+            return value == against;
+        case if_op_notequals:
+            return value != against;
+        case if_op_less:
+            return value < against;
+        case if_op_greater:
+            return value > against;
+        case if_op_atleast:
+            return value >= against;
+        default: // if_op_atmost
+            return value <= against;
     }
-
-    if (step->target_mask == 0) return step->if_negate;
-
-    const int mux_type = session_settings_mux_type_for_target(__builtin_ctz((unsigned) step->target_mask));
-    const int held = mux_type >= 0 && (mask & BIT(mux_type)) != 0;
-    return step->if_negate ? !held : held;
 }
 
-static uint16_t drive_macro(const int port, const int s, const int macro_index, const int raw_held, const uint64_t mask) {
+static int if_condition_true(const struct macro_step *step, const int port, const int s, const uint64_t mask) {
+    int result = 0;
+
+    if (step->if_test == if_test_count_compare) {
+        result = compare_values(macro_loop_progress[port][s][step->if_loop_ref] + 1, step->if_op, step->loop_count);
+    } else if (step->if_test == if_test_var_compare) {
+        result = compare_values(macro_vars[port][s][step->var_index], step->if_op, step->var_value);
+    } else if (step->if_test == if_test_random) {
+        result = step->loop_count > 0 && macro_random() % 100 < step->loop_count;
+    } else if (step->target_mask != 0) {
+        const int mux_type = session_settings_mux_type_for_target(__builtin_ctz((unsigned) step->target_mask));
+        result = mux_type >= 0 && (mask & BIT(mux_type)) != 0;
+    }
+
+    return step->if_negate ? !result : result;
+}
+
+static uint16_t
+drive_macro(const int port, const int s, const int macro_index, const int raw_held, const uint64_t mask) {
     const int press_edge = raw_held && !macro_held_prev[port][s];
     macro_held_prev[port][s] = raw_held;
 
@@ -86,15 +148,18 @@ static uint16_t drive_macro(const int port, const int s, const int macro_index, 
         macro_step_at[port][s] = 0;
         macro_step_repeat_at[port][s] = 0;
         macro_step_phase[port][s] = 0;
+        macro_step_target[port][s] = 0;
         macro_step_holding[port][s] = 1;
         memset(macro_loop_progress[port][s], 0, sizeof(macro_loop_progress[port][s]));
+        memset(macro_vars[port][s], 0, sizeof(macro_vars[port][s]));
     }
 
     if (!macro_playing[port][s]) return 0;
 
     for (int guard = 0; guard < MACRO_STEP_MAX * 4 && macro_playing[port][s]; guard++) {
         const struct macro_step *control = &macro->steps[macro_step_at[port][s]];
-        if (control->kind != macro_step_goto && control->kind != macro_step_loop && control->kind != macro_step_if)
+        if (control->kind != macro_step_goto && control->kind != macro_step_loop && control->kind != macro_step_if
+            && control->kind != macro_step_setvar)
             break;
 
         int take_jump = control->kind == macro_step_goto;
@@ -107,6 +172,9 @@ static uint16_t drive_macro(const int port, const int s, const int macro_index, 
             }
         } else if (control->kind == macro_step_if) {
             take_jump = if_condition_true(control, port, s, mask);
+        } else if (control->kind == macro_step_setvar) {
+            int *slot = &macro_vars[port][s][control->var_index];
+            *slot = control->var_set ? control->var_value : *slot + control->var_value;
         }
 
         if (take_jump) {
@@ -122,12 +190,13 @@ static uint16_t drive_macro(const int port, const int s, const int macro_index, 
 
         macro_step_repeat_at[port][s] = 0;
         macro_step_phase[port][s] = 0;
+        macro_step_target[port][s] = 0;
         macro_step_holding[port][s] = 1;
     }
 
     if (macro_playing[port][s]) {
         const struct macro_step *landed = &macro->steps[macro_step_at[port][s]];
-        if (landed->kind != macro_step_button) {
+        if (landed->kind != macro_step_button && landed->kind != macro_step_stick) {
             macro_playing[port][s] = 0;
             macro_step_at[port][s] = 0;
         }
@@ -137,19 +206,26 @@ static uint16_t drive_macro(const int port, const int s, const int macro_index, 
 
     const double fps = core_get_target_fps();
     const struct macro_step *step = &macro->steps[macro_step_at[port][s]];
+    const int holding = macro_step_holding[port][s];
 
-    uint32_t hold_frames = ms_to_frames(step->hold_ms, fps);
-    if (hold_frames < 1) hold_frames = 1;
+    if (macro_step_target[port][s] == 0) macro_step_target[port][s] = roll_segment_frames(step, holding, fps);
+    const uint32_t current_target = macro_step_target[port][s];
 
-    uint32_t wait_frames = ms_to_frames(step->wait_ms, fps);
-    if (wait_frames < 1) wait_frames = 1;
+    uint16_t bit_out = 0;
+    if (step->kind == macro_step_stick) {
+        const int stick = step->stick_index & 1;
 
-    const uint16_t bit_out = macro_step_holding[port][s] ? (uint16_t) (step->target_mask & 0xFFFF) : 0;
-    const uint32_t current_target = macro_step_holding[port][s] ? hold_frames : wait_frames;
+        macro_stick_active[port][stick] = 1;
+        macro_stick_x[port][stick] = holding ? (int16_t) step->axis_x : 0;
+        macro_stick_y[port][stick] = holding ? (int16_t) step->axis_y : 0;
+    } else if (holding) {
+        bit_out = (uint16_t) (step->target_mask & 0xFFFF);
+    }
 
     macro_step_phase[port][s]++;
     if (macro_step_phase[port][s] >= current_target) {
         macro_step_phase[port][s] = 0;
+        macro_step_target[port][s] = 0;
 
         if (!macro_step_holding[port][s]) {
             macro_step_holding[port][s] = 1;
@@ -178,6 +254,14 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
     uint16_t out = 0;
     const double fps = core_get_target_fps();
 
+    macro_stick_active[port][0] = 0;
+    macro_stick_active[port][1] = 0;
+
+    bound_stick_x[port][0] = bound_stick_y[port][0] = 0;
+    bound_stick_x[port][1] = bound_stick_y[port][1] = 0;
+    bound_stick_active[port][0] = 0;
+    bound_stick_active[port][1] = 0;
+
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
 
@@ -188,7 +272,7 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
         }
 
         const int target = session_settings.port_source_target[port][s];
-        if (target < 0 || target >= 16) continue;
+        if (target < 0 || target >= PORT_TARGET_COUNT) continue;
 
         const int raw_held = resolve_raw_held(mux_type, mask, apply_suppress);
 
@@ -213,17 +297,24 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
 
         turbo_held_prev[port][s] = raw_held;
 
-        if (held) out |= (uint16_t) (1u << target);
+        if (!held) continue;
+
+        if (target < PORT_DIGITAL_COUNT) {
+            out |= (uint16_t) (1u << target);
+        } else {
+            push_bound_stick(port, target);
+        }
     }
 
     return out;
 }
 
 static int stick_has_bound_direction(const int port, const int stick) {
-    const int first = 16 + stick * 4;
+    const int first = PORT_DIGITAL_COUNT + stick * 4;
 
     for (int s = first; s < first + 4; s++) {
-        if (session_settings.port_source_target[port][s] >= 0) return 1;
+        if (session_settings.port_source_target[port][s] >= 0 || session_settings.port_source_macro[port][s] >= 0)
+            return 1;
     }
 
     return 0;
@@ -358,6 +449,11 @@ static void input_bridge_build_snapshot(void) {
             port_retropad_mask[port] = 0;
             port_stick_x[port][0] = port_stick_y[port][0] = 0;
             port_stick_x[port][1] = port_stick_y[port][1] = 0;
+            macro_stick_active[port][0] = 0;
+            macro_stick_active[port][1] = 0;
+            bound_stick_active[port][0] = 0;
+            bound_stick_active[port][1] = 0;
+
             for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
                 turbo_held_prev[port][s] = 0;
                 turbo_phase[port][s] = 0;
@@ -365,6 +461,7 @@ static void input_bridge_build_snapshot(void) {
                 macro_playing[port][s] = 0;
                 macro_step_at[port][s] = 0;
                 macro_step_phase[port][s] = 0;
+                macro_step_target[port][s] = 0;
             }
             continue;
         }
@@ -372,6 +469,20 @@ static void input_bridge_build_snapshot(void) {
         port_retropad_mask[port] = build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0);
 
         for (int s = 0; s < 2; s++) {
+            // A playing analogue stick macro owns that stick outright and ignores any axis transform
+            if (macro_stick_active[port][s]) {
+                port_stick_x[port][s] = macro_stick_x[port][s];
+                port_stick_y[port][s] = macro_stick_y[port][s];
+                continue;
+            }
+
+            // A button bound to a axis direction takes the stick over only while it is actually held
+            if (bound_stick_active[port][s]) {
+                port_stick_x[port][s] = clamp_axis(bound_stick_x[port][s]);
+                port_stick_y[port][s] = clamp_axis(bound_stick_y[port][s]);
+                continue;
+            }
+
             if (stick_has_bound_direction(port, s)) {
                 port_stick_x[port][s] = 0;
                 port_stick_y[port][s] = 0;

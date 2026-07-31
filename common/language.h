@@ -1747,8 +1747,8 @@ struct mux_lang {
             char stick_rs_left[MAX_BUFFER_SIZE];
             char stick_rs_right[MAX_BUFFER_SIZE];
             char turbo_modes[MAX_BUFFER_SIZE];
-            char unbind[MAX_BUFFER_SIZE];
-            char press_button[MAX_BUFFER_SIZE];
+            char targets[MAX_BUFFER_SIZE];
+            char assign_control[MAX_BUFFER_SIZE];
             char macro_label[MAX_BUFFER_SIZE];
             char macro_turbo_blocked[MAX_BUFFER_SIZE];
         } settings_screen;

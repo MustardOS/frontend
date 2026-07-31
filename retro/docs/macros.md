@@ -17,7 +17,9 @@ That's [Relish](relish.md), the companion scripting language. This page just cov
   0ms, Hold 96ms, Repeat 1 - identical to a plain single press.
 - Pressing `Y` on a step list opens an **Add Step** dialogue with two kinds:
     - **Button** captures the next physical button pressed on the port, then drops it into the step list with the same
-      Wait/Hold/Repeat defaults as above.
+      Wait/Hold/Repeat defaults as above. Buttons only - a step holds a digital chord, so a stick push isn't offered
+      here even though one can _trigger_ the macro. To have a macro move a stick, use a [Relish](relish.md) `STICK`
+      step.
     - **Pause** adds a step that presses nothing for its Hold duration - a plain dead-time gap between two other steps,
       shown as **Pause** in the step list. Pressing `A` on a Pause row skips the Wait/Hold/Repeat submenu entirely and
       opens the numeric OSK directly for its duration in milliseconds.
@@ -26,8 +28,10 @@ That's [Relish](relish.md), the companion scripting language. This page just cov
 
 ## Binding and Playback
 
-- Pressing `A` on a macro (_list view_) offers **Edit** or **Bind**. Bind enters the same physical button capture flow
-  as Button Mapping. On a Relish sourced macro, the dialogue is skipped entirely and `A` goes straight to Bind, since
+- Pressing `A` on a macro (_list view_) offers **Edit** or **Bind**. Bind enters the same capture flow as Button
+  Mapping, so a macro can be triggered by any of the sixteen buttons _or_ by a stick push - flick the stick and that
+  direction becomes the trigger. Binding a direction this way turns that whole stick digital, exactly as binding one to
+  a normal target does. On a Relish sourced macro, the dialogue is skipped entirely and `A` goes straight to Bind, since
   Edit is never available for one anyway. Assigning a macro to a button is mutually exclusive with that buttons normal
   target/turbo binding so assigning one clears the other.
 - Pressing the bound physical button triggers the macro. It plays through to completion on its own, regardless of
