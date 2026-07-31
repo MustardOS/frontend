@@ -5,6 +5,7 @@
 #include "../../common/log.h"
 #include "../../common/options.h"
 #include "../core/core.h"
+#include "../coredef/coredef.h"
 #include "options.h"
 #include "../core/paths.h"
 
@@ -14,6 +15,7 @@ struct core_option_category options_categories[OPTIONS_MAX_CATEGORIES];
 int options_category_count = 0;
 bool options_dirty = false;
 
+static char active_core_name[MAX_BUFFER_SIZE] = "";
 static char core_ini_path[MAX_BUFFER_SIZE] = "";
 static char content_ini_path[MAX_BUFFER_SIZE] = "";
 static char directory_ini_path[MAX_BUFFER_SIZE] = "";
@@ -27,9 +29,7 @@ static mini_t *ovr_content = NULL;
 static void warn_if_truncated(const char *dropped_key) {
     if (!dropped_key) return;
 
-    LOG_WARN(
-        mux_module, "core options truncated at %d entries - '%s' onwards were dropped", OPTIONS_MAX, dropped_key
-    );
+    LOG_WARN(mux_module, "core options truncated at %d entries - '%s' onwards were dropped", OPTIONS_MAX, dropped_key);
 }
 
 static void open_overrides(void) {
@@ -48,21 +48,25 @@ static void close_overrides(void) {
     ovr_content = NULL;
 }
 
+static void apply_value(struct core_option_entry *e, const char *value) {
+    if (!value || !*value) return;
+
+    for (int v = 0; v < e->value_count; v++) {
+        if (strcmp(e->values[v], value) == 0) {
+            e->current_index = v;
+            return;
+        }
+    }
+}
+
 static void apply_override(struct core_option_entry *e) {
+    apply_value(e, coredef_lookup(active_core_name, e->key));
     mini_t *inis[] = {ovr_core, ovr_directory, ovr_content};
 
     for (int p = 0; p < 3; p++) {
         if (!inis[p]) continue;
 
-        const char *saved = get_ini_string(inis[p], "options", e->key, "");
-        if (!saved || !*saved) continue;
-
-        for (int v = 0; v < e->value_count; v++) {
-            if (strcmp(e->values[v], saved) == 0) {
-                e->current_index = v;
-                break;
-            }
-        }
+        apply_value(e, get_ini_string(inis[p], "options", e->key, ""));
     }
 }
 
@@ -262,6 +266,7 @@ static void snapshot_baseline(void) {
 void options_init_paths(const char *core_path_arg, const char *content_path) {
     char core_name[MAX_BUFFER_SIZE];
     core_get_name(core_path_arg, core_name, sizeof(core_name));
+    snprintf(active_core_name, sizeof(active_core_name), "%s", core_name);
     snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_OPT_PATH, core_name);
     create_directories(core_ini_path, 1);
 

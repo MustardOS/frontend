@@ -17,7 +17,7 @@ endif
 INCLUDES := -I../module -I../module/ui -I../common \
             -I../common/input -I../common/mini
 
-SRC := core/main.c core/core.c core/environment.c core/runahead.c core/perf.c core/governor_boost.c \
+SRC := $(wildcard coredef/*.c) core/main.c core/core.c core/environment.c core/runahead.c core/perf.c core/governor_boost.c \
        video/video.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_viewport.c \
        video/ui_videosettings.c video/hw_render.c \
