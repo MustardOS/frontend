@@ -65,3 +65,4 @@ sourced macros show a distinct glyph in the list and can be bound/deleted but ne
 show as a selectable, deletable "Broken Script" entry with a somewhat helpful compile error message.
 
 See [`relish.md`](relish.md) for the full language reference.
+Ready-to-copy scripts and their known limitations are in [`macro/examples`](../macro/examples/README.md).

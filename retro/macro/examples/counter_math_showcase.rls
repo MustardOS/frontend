@@ -1,0 +1,23 @@
+NAME Counter Maths Showcase
+SET source 1.25
+ADD source 0.75
+MUL source 2
+DIV source 4
+SET copy VAR source
+FLR lower VAR copy
+TOP upper 1.01
+SIN sine 30
+COS cosine 60
+TAN tangent 45
+IF VAR lower EQUALS 1 THEN GOTO upper_check ELSE GOTO fail
+LABEL upper_check
+IF VAR upper EQUALS 2 THEN GOTO sine_check ELSE GOTO fail
+LABEL sine_check
+IF VAR sine EQUALS VAR cosine THEN GOTO tangent_check ELSE GOTO fail
+LABEL tangent_check
+IF VAR tangent EQUALS 1 THEN GOTO pass ELSE GOTO fail
+LABEL fail
+BUTTON B HOLD 300
+STOP
+LABEL pass
+BUTTON A HOLD 300

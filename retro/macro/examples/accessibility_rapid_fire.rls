@@ -1,0 +1,6 @@
+NAME Accessibility Rapid Fire
+INCLUDE common_timings
+LOOP 65535
+    IF B HELD THEN STOP
+    BUTTON A HOLD TAP WAIT GAP REPEAT BURST
+ENDLOOP

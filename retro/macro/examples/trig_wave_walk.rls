@@ -1,0 +1,14 @@
+NAME Trigonometric Wave Walk
+INCLUDE common_timings
+SET angle -180
+LOOP 12
+    SIN wave VAR angle
+    IF VAR wave ATLEAST 0 THEN GOTO positive ELSE GOTO negative
+    LABEL positive
+        BUTTON RIGHT HOLD TAP
+        GOTO next
+    LABEL negative
+        BUTTON LEFT HOLD TAP
+    LABEL next
+        ADD angle 30
+ENDLOOP

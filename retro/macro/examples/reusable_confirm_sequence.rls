@@ -1,0 +1,11 @@
+NAME Reusable Confirm Sequence
+INCLUDE common_timings
+GOTO main
+LABEL confirm
+    BUTTON A HOLD TAP
+    RETURN
+LABEL main
+    CALL confirm
+    PAUSE 250
+    BUTTON DOWN HOLD TAP
+    CALL confirm

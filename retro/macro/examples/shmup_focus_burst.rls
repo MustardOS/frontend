@@ -1,0 +1,3 @@
+NAME Focus Fire Burst
+INCLUDE common_timings
+BUTTON L1 A HOLD TAP WAIT GAP REPEAT BURST

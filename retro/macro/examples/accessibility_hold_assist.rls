@@ -1,0 +1,6 @@
+NAME Accessibility Hold Assist
+INCLUDE common_timings
+LOOP 120
+    IF B HELD THEN STOP
+    BUTTON A HOLD LONG_HOLD WAIT GAP
+ENDLOOP

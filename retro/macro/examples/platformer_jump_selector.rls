@@ -1,0 +1,8 @@
+NAME Short or Long Jump
+INCLUDE common_timings
+IF R1 HELD THEN GOTO long_jump ELSE GOTO short_jump
+LABEL short_jump
+    BUTTON A HOLD TAP
+    STOP
+LABEL long_jump
+    BUTTON A HOLD 400

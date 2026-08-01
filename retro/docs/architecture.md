@@ -73,6 +73,7 @@ retro/
 | `runtime.c` / `runtime.h` | Low-overhead macro playback, timing, looping, conditions, variables and analogue-stick output.                                                                              |
 | `relish.c` / `relish.h`   | Compiler for the Relish (`.rls`) scripting language, including includes, tokenisation, label resolution, validation and stable indices (see [Relish scripting](relish.md)). |
 | `ui_macros.c`             | Per-port macro list, binding and on device step editor.                                                                                                                     |
+| `examples/`               | Ready-to-copy practical and playful Relish scripts, plus their shared include file.                                                                                         |
 
 ## state/
 
