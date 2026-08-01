@@ -20,7 +20,7 @@ struct help_msg {
 
 struct nav_bar {
     lv_obj_t *item;
-    char *text;
+    const char *text;
     int ui_check;
 };
 

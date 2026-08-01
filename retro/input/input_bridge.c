@@ -4,7 +4,10 @@
 #include "../core/muxretro.h"
 #include "../core/perf.h"
 #include "../macro/runtime.h"
+#include "../cheevo/cheevo.h"
+#include "../netplay/netplay.h"
 #include "../settings/settings.h"
+#include "../video/hw_render.h"
 
 #define MUX_RETRO_PORT_COUNT (1 + MUX_INPUT_MAX_EXTRA_PLAYERS)
 
@@ -17,7 +20,10 @@ static uint16_t port_retropad_mask[MUX_RETRO_PORT_COUNT];
 static int16_t port_stick_x[MUX_RETRO_PORT_COUNT][2];
 static int16_t port_stick_y[MUX_RETRO_PORT_COUNT][2];
 
-static int port_last_connected[MUX_RETRO_PORT_COUNT];
+static int port_source_connected[MUX_RETRO_PORT_COUNT];
+static unsigned netplay_player_count;
+static int netplay_routes_input;
+static netplay_pad_state netplay_local_input;
 
 static int turbo_held_prev[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
 static uint32_t turbo_phase[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
@@ -60,7 +66,8 @@ static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, 
     return raw_held;
 }
 
-static uint16_t build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress) {
+static uint16_t
+build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress, const int restricted) {
     uint16_t out = 0;
     const double fps = core_get_target_fps();
 
@@ -75,7 +82,7 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
         const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
 
         const int macro_index = session_settings.port_source_macro[port][s];
-        if (macro_index >= 0) {
+        if (macro_index >= 0 && !restricted) {
             out |=
                 macro_runtime_drive(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress), mask, fps);
             continue;
@@ -87,7 +94,7 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
         const int raw_held = resolve_raw_held(mux_type, mask, apply_suppress);
 
         int held = raw_held;
-        const int rate = session_settings.port_source_turbo[port][s];
+        const int rate = restricted ? 0 : session_settings.port_source_turbo[port][s];
 
         if (rate > 0) {
             if (raw_held) {
@@ -170,7 +177,10 @@ static void apply_controller_ports(void) {
     for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
         unsigned device = RETRO_DEVICE_NONE;
 
-        if (port_last_connected[port]) {
+        const int connected =
+            netplay_player_count ? (unsigned) port < netplay_player_count : port_source_connected[port];
+
+        if (connected) {
             device = session_settings.port_device_id[port] ? (unsigned) session_settings.port_device_id[port]
                                                            : RETRO_DEVICE_JOYPAD;
         }
@@ -184,6 +194,21 @@ static void apply_controller_ports(void) {
 
 void input_bridge_apply_controller_ports(void) {
     apply_controller_ports();
+}
+
+void input_bridge_set_netplay_state(unsigned player_count, const int routes_input) {
+    if (player_count > MUX_RETRO_PORT_COUNT) player_count = MUX_RETRO_PORT_COUNT;
+    const int count_changed = netplay_player_count != player_count;
+    const int routed = player_count && routes_input;
+    if (!count_changed && netplay_routes_input == routed) return;
+
+    netplay_player_count = player_count;
+    netplay_routes_input = routed;
+    if (!count_changed) return;
+
+    hw_render_bridge_enter_core_call();
+    apply_controller_ports();
+    hw_render_bridge_exit_core_call();
 }
 
 static int resolved_source[MUX_RETRO_PORT_COUNT];
@@ -242,6 +267,7 @@ static void resolve_port_assignments_cached(void) {
 
 static void input_bridge_build_snapshot(void) {
     const int track_latency = perf_is_enabled();
+    const int restricted = cheevo_restricted();
     const uint64_t previous_signature = track_latency ? input_bridge_snapshot_signature() : 0;
 
     resolve_port_assignments_cached();
@@ -252,8 +278,8 @@ static void input_bridge_build_snapshot(void) {
         const int source = resolved_source[port];
         const int connected = source >= 0;
 
-        if (connected != port_last_connected[port]) ports_changed = 1;
-        port_last_connected[port] = connected;
+        if (connected != port_source_connected[port]) ports_changed = 1;
+        port_source_connected[port] = connected;
 
         if (!connected) {
             port_retropad_mask[port] = 0;
@@ -270,11 +296,12 @@ static void input_bridge_build_snapshot(void) {
             continue;
         }
 
-        port_retropad_mask[port] = build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0);
+        port_retropad_mask[port] =
+            build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0, restricted);
 
         for (int s = 0; s < 2; s++) {
             // A playing analogue stick macro owns that stick outright and ignores any axis transform
-            if (macro_runtime_stick(port, s, &port_stick_x[port][s], &port_stick_y[port][s])) continue;
+            if (!restricted && macro_runtime_stick(port, s, &port_stick_x[port][s], &port_stick_y[port][s])) continue;
 
             // A button bound to a axis direction takes the stick over only while it is actually held
             if (bound_stick_active[port][s]) {
@@ -294,6 +321,25 @@ static void input_bridge_build_snapshot(void) {
             port_stick_x[port][s] = apply_analog_transform(x);
             port_stick_y[port][s] = invert_y_if_needed(apply_analog_transform(y));
         }
+    }
+
+    memset(&netplay_local_input, 0, sizeof(netplay_local_input));
+    for (unsigned port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
+        if (!port_source_connected[port]) continue;
+
+        netplay_local_input.buttons = port_retropad_mask[port];
+        netplay_local_input.axes[0] = port_stick_x[port][0];
+        netplay_local_input.axes[1] = port_stick_y[port][0];
+        netplay_local_input.axes[2] = port_stick_x[port][1];
+        netplay_local_input.axes[3] = port_stick_y[port][1];
+        netplay_local_input.connected = 1;
+        break;
+    }
+
+    if (netplay_routes_input) {
+        memset(port_retropad_mask, 0, sizeof(port_retropad_mask));
+        memset(port_stick_x, 0, sizeof(port_stick_x));
+        memset(port_stick_y, 0, sizeof(port_stick_y));
     }
 
     if (ports_changed) apply_controller_ports();
@@ -359,4 +405,19 @@ int16_t mux_retro_input_state_cb(const unsigned port, const unsigned device, con
     }
 
     return 0;
+}
+
+void netplay_input_get_local(netplay_pad_state *state) {
+    if (!state) return;
+    *state = netplay_local_input;
+}
+
+void netplay_input_set_port(const unsigned port, const netplay_pad_state *state) {
+    if (!state || port >= MUX_RETRO_PORT_COUNT) return;
+
+    port_retropad_mask[port] = state->buttons;
+    port_stick_x[port][0] = state->axes[0];
+    port_stick_y[port][0] = state->axes[1];
+    port_stick_x[port][1] = state->axes[2];
+    port_stick_y[port][1] = state->axes[3];
 }

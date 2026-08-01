@@ -18,10 +18,13 @@
 #include "../../common/language.h"
 #include "../../common/log.h"
 #include "../../common/ui/common.h"
+#include "../../common/ui/nav.h"
 #include "../ui/cheats.h"
+#include "../cheevo/cheevo.h"
 #include "../state/content_hash.h"
 #include "../state/gamestate.h"
 #include "../macro/macro.h"
+#include "../netplay/netplay.h"
 #include "../state/manual.h"
 #include "../state/patch.h"
 #include "../input/hotkeys.h"
@@ -97,7 +100,7 @@ static void handle_pending_suspend_signals(void) {
 
         LOG_INFO(mux_module, "Received sleep-prepare signal (SIGUSR1): saving SRAM");
         sram_bridge_save();
-        if (session_settings_auto_save_on_idle()) gamestate_autosave_save();
+        if (!netplay_is_active() && session_settings_auto_save_on_idle()) gamestate_autosave_save();
         if (!pause_menu_is_active()) pause_menu_toggle();
     }
 
@@ -209,15 +212,16 @@ static void idle_poll(void) {
         pause_menu_toggle();
 
         sram_bridge_save();
-        if (session_settings_auto_save_on_idle()) gamestate_autosave_save();
+        if (!netplay_is_active() && session_settings_auto_save_on_idle()) gamestate_autosave_save();
     }
     last_seen_changes = mux_idle_state_changes;
 }
 
 static double core_run_ema_ms = 0.0;
 
-static void run_core_batch(const unsigned frames) {
+static unsigned run_core_batch(const unsigned frames) {
     hw_render_bridge_context_save();
+    unsigned ran = 0;
 
     if (frames == 1) frame_pacer_maybe_wait();
 
@@ -226,11 +230,17 @@ static void run_core_batch(const unsigned frames) {
 
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
-        environment_notify_frame_time();
 
         const uint64_t run_start = SDL_GetPerformanceCounter();
-        if (is_last) runahead_before_frame(frames == 1);
+        const int network_active = netplay_is_active();
+        const int network_frame = network_active && netplay_is_playing();
+        if (network_frame && !netplay_before_frame()) break;
+        environment_notify_frame_time();
+        if (is_last && !network_active && !cheevo_restricted()) runahead_before_frame(frames == 1);
         current_core.retro_run();
+        ran++;
+        cheevo_do_frame();
+        if (network_frame) netplay_after_frame();
         const double run_ms =
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
         core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
@@ -244,6 +254,7 @@ static void run_core_batch(const unsigned frames) {
     hw_render_bridge_flush_core_commands();
     hw_render_bridge_context_restore();
     video_bridge_set_frame_skip(0);
+    return ran;
 }
 
 static void pace_core_output(void) {
@@ -300,7 +311,10 @@ void core_prime_audio(void) {
 
 int main(const int argc, char *argv[]) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: %s <core.so> <content> [--fresh]\n", argv[0]);
+        fprintf(
+            stderr, "Usage: %s <core.so> <content> [--fresh] [--netplay-host[=port]] [--netplay-join=address[:port]]\n",
+            argv[0]
+        );
         return EXIT_FAILURE;
     }
 
@@ -309,11 +323,34 @@ int main(const int argc, char *argv[]) {
 
     int start_fresh = 0;
     int start_restarting = 0;
+    int start_netplay_host = 0;
+    int start_netplay_invalid = 0;
+    char start_netplay_address[256] = "";
+    uint16_t start_netplay_port = NETPLAY_DEFAULT_PORT;
     for (int i = 3; i < argc; i++) {
         if (strcmp(argv[i], "--fresh") == 0) start_fresh = 1;
         if (strcmp(argv[i], "--restart") == 0) {
             start_fresh = 1;
             start_restarting = 1;
+        }
+        if (strcmp(argv[i], "--netplay-host") == 0) start_netplay_host = 1;
+        if (strncmp(argv[i], "--netplay-host=", 15) == 0) {
+            start_netplay_host = 1;
+            char *end = NULL;
+            const unsigned long port = strtoul(argv[i] + 15, &end, 10);
+            if (end && !*end && port > 0 && port <= UINT16_MAX)
+                start_netplay_port = (uint16_t) port;
+            else
+                start_netplay_invalid = 1;
+        }
+        if (strncmp(argv[i], "--netplay-join=", 15) == 0) {
+            if (netplay_parse_address(
+                    argv[i] + 15, start_netplay_address, sizeof(start_netplay_address), &start_netplay_port
+                )
+                != 0) {
+                start_netplay_address[0] = '\0';
+                start_netplay_invalid = 1;
+            }
         }
     }
 
@@ -382,6 +419,8 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
 
+    cheevo_init(content_path);
+
     sram_bridge_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
     manual_init(core_path_arg, content_path);
@@ -394,6 +433,9 @@ int main(const int argc, char *argv[]) {
 
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
+
+    if (netplay_init(core_path_arg, content_path) != 0)
+        LOG_WARN(mux_module, "Network Play secure transport could not be initialised");
 
     video_bridge_apply_fps_limit();
     display_set_hard_sync_query(hard_sync_enabled);
@@ -415,6 +457,23 @@ int main(const int argc, char *argv[]) {
     video_bridge_init();
     LOG_DEBUG(mux_module, "video_bridge_init done");
     startup_log_stage("bridges and renderer setup", &startup_stage);
+
+    int cheevo_connecting_background = 0;
+    if (cheevo_is_starting()) {
+        loading_message_show(lang.muxretro.cheevo.connecting);
+        const uint32_t cheevo_deadline = SDL_GetTicks() + 1200;
+        while (cheevo_is_starting() && !SDL_TICKS_PASSED(SDL_GetTicks(), cheevo_deadline)) {
+            cheevo_tick();
+            lv_task_handler();
+            lv_refr_now(NULL);
+            SDL_Delay(10);
+        }
+        if (cheevo_is_starting()) {
+            cheevo_connecting_background = 1;
+            LOG_INFO(mux_module, "RetroAchievements connection is continuing in the background");
+        }
+        loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
+    }
 
     overlay_bridge_apply();
     mux_input_poll();
@@ -464,6 +523,18 @@ int main(const int argc, char *argv[]) {
 
     pause_menu_init();
     loading_message_hide();
+
+    if (cheevo_connecting_background)
+        pause_menu_show_toast_timed(lang.muxretro.cheevo.connecting_background, tst_wait_s);
+
+    if (start_netplay_invalid) {
+        pause_menu_show_toast(lang.muxretro.netplay.startup_invalid);
+    } else if (start_netplay_host) {
+        if (netplay_host(start_netplay_port) != 0) pause_menu_show_toast(lang.muxretro.netplay.hosting_start_failed);
+    } else if (start_netplay_address[0]) {
+        if (netplay_join(start_netplay_address, start_netplay_port) != 0)
+            pause_menu_show_toast(lang.muxretro.netplay.startup_join_failed);
+    }
     LOG_DEBUG(
         mux_module, "pause_menu_init done: ui_screen=%p ui_pnl_header=%p ui_pnl_content=%p ui_pnl_footer=%p",
         (void *) ui_screen, (void *) ui_pnl_header, (void *) ui_pnl_content, (void *) ui_pnl_footer
@@ -483,12 +554,23 @@ int main(const int argc, char *argv[]) {
         gamestate_notice_open();
     }
 
+    const cheevo_status startup_cheevo_status = cheevo_get_status();
+    if (!cheevo_connecting_background
+        && (startup_cheevo_status == cheevo_status_active_softcore
+            || startup_cheevo_status == cheevo_status_active_hardcore)) {
+        cheevo_info startup_cheevo_info;
+        cheevo_get_info(&startup_cheevo_info);
+        if (startup_cheevo_info.notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.active, tst_wait_s);
+    }
+
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", target_fps, av_info.timing.sample_rate);
     LOG_INFO(mux_module, "Startup: ready in %.2f ms total", startup_elapsed_ms(startup_start));
 
     int quit = 0;
     int peeking = 0;
     int prev_paused = 0;
+    int netplay_wait_visible = 0;
+    int netplay_governor_active = 0;
 
     uint32_t fps_frame_count = 0;
     uint32_t fps_last_update = SDL_GetTicks();
@@ -505,6 +587,16 @@ int main(const int argc, char *argv[]) {
         const uint32_t loop_now = SDL_GetTicks();
 
         mux_input_poll();
+        cheevo_tick();
+        netplay_tick();
+        const int netplay_active = netplay_is_active();
+        if (netplay_active != netplay_governor_active) {
+            if (netplay_active)
+                governor_boost_begin("Network Play session");
+            else
+                governor_boost_end();
+            netplay_governor_active = netplay_active;
+        }
         idle_poll();
         handle_pending_suspend_signals();
         display_check_idle_saver();
@@ -521,10 +613,20 @@ int main(const int argc, char *argv[]) {
         }
 
         const int paused = pause_menu_is_active();
-        if (paused || hotkeys_is_content_paused()) governor_boost_gameplay_idle();
-        if (prev_paused && !paused) core_prime_audio();
-        prev_paused = paused;
-        audio_bridge_set_paused(paused);
+        const int network_menu_paused = netplay_menu_paused();
+        const int show_netplay_wait = network_menu_paused && !paused;
+        if (show_netplay_wait != netplay_wait_visible) {
+            if (show_netplay_wait)
+                loading_message_show(lang.muxretro.netplay.pause_menu_open);
+            else
+                loading_message_hide();
+            netplay_wait_visible = show_netplay_wait;
+        }
+        const int content_paused = (paused && !netplay_is_playing()) || network_menu_paused;
+        if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
+        if (prev_paused && !content_paused) core_prime_audio();
+        prev_paused = content_paused;
+        audio_bridge_set_paused(content_paused);
 
         const int timeline_ms = session_settings_timeline_interval_ms();
         if (timeline_ms != timeline_armed_ms) {
@@ -533,12 +635,14 @@ int main(const int argc, char *argv[]) {
         }
 
         if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported()
-            && loop_now >= timeline_deadline) {
+            && !netplay_is_active() && !cheevo_restricted() && loop_now >= timeline_deadline) {
             gamestate_timeline_save();
             timeline_deadline = loop_now + (uint32_t) timeline_ms;
         }
 
+        int run_gameplay = 0;
         if (paused) {
+            if (!netplay_is_playing()) cheevo_idle();
             const int peek = pause_menu_peek_allowed() && mux_input_pressed(mux_input_menu);
             if (peek != peeking) {
                 peeking = peek;
@@ -551,7 +655,10 @@ int main(const int argc, char *argv[]) {
                 lv_obj_invalidate(ui_screen);
             }
 
-            SDL_Delay(10);
+            if (!quit && netplay_is_playing() && !network_menu_paused)
+                run_gameplay = 1;
+            else
+                SDL_Delay(10);
         } else if (peeking) {
             peeking = 0;
             display_set_ui_hidden(0);
@@ -563,21 +670,29 @@ int main(const int argc, char *argv[]) {
             manual_menu_open();
         } else if (hotkeys_is_quit_requested()) {
             quit = 1;
+        } else if (netplay_blocks_core()) {
+            SDL_Delay(5);
+        } else if (network_menu_paused) {
+            SDL_Delay(10);
         } else if (hotkeys_is_content_paused()) {
             SDL_Delay(10);
         } else {
+            run_gameplay = 1;
+        }
+
+        if (run_gameplay) {
             audio_bridge_apply_pending_min_latency();
             environment_apply_pending_av_info();
 
-            const int ff_active = hotkeys_is_fast_forward_active();
-            const int slowmo_active = hotkeys_is_slow_motion_active();
+            const int ff_active = !netplay_is_active() && hotkeys_is_fast_forward_active();
+            const int slowmo_active = !netplay_is_active() && hotkeys_is_slow_motion_active();
 
             unsigned frames = 1;
             if (ff_active) {
                 const unsigned ff_batch = (unsigned) session_settings_ff_speed_value(session_settings.ff_speed);
                 frames = ff_batch > 0 ? ff_batch : 1;
-            } else if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_bridge_is_active()
-                       && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
+            } else if (!netplay_is_active() && session_settings.fps_limit != fps_limit_50 && !slowmo_active
+                       && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
 
                 if (hw_render_bridge_active()) {
@@ -594,13 +709,15 @@ int main(const int argc, char *argv[]) {
                 frames = 1 + extra;
             }
 
-            perf_note_batch(frames);
-            run_core_batch(frames);
-            core_ran = 1;
+            const unsigned ran_frames = run_core_batch(frames);
+            core_ran = ran_frames > 0;
 
-            perf_record(perf_stage_frame_delay, frame_pacer_get_delay_ms());
+            if (core_ran) {
+                perf_note_batch(ran_frames);
+                perf_record(perf_stage_frame_delay, frame_pacer_get_delay_ms());
+            }
 
-            fps_frame_count += frames;
+            fps_frame_count += ran_frames;
             const uint32_t now_ticks = SDL_GetTicks();
             const uint32_t fps_elapsed = now_ticks - fps_last_update;
             if (fps_elapsed >= 1000) {
@@ -615,11 +732,13 @@ int main(const int argc, char *argv[]) {
                     pause_menu_set_fps_text(fps_text);
                 }
 
-                if (slowmo_active) {
-                    governor_boost_gameplay_idle();
-                } else {
-                    const double governor_target = session_settings.fps_limit == fps_limit_50 ? 50.0 : target_fps;
-                    governor_boost_gameplay_update(vfps, governor_target, ff_active);
+                if (!netplay_active) {
+                    if (slowmo_active) {
+                        governor_boost_gameplay_idle();
+                    } else {
+                        const double governor_target = session_settings.fps_limit == fps_limit_50 ? 50.0 : target_fps;
+                        governor_boost_gameplay_update(vfps, governor_target, ff_active);
+                    }
                 }
 
                 pause_menu_update_header();
@@ -632,8 +751,9 @@ int main(const int argc, char *argv[]) {
         pause_menu_header_fade_tick();
 
         const int paused_now = pause_menu_is_active();
+        const int ui_visible = paused_now || netplay_wait_visible;
 
-        if (paused_now) {
+        if (ui_visible) {
             if (!peeking) display_set_ui_hidden(0);
         } else {
             const int hud_active = pause_menu_gameplay_hud_active();
@@ -643,14 +763,14 @@ int main(const int argc, char *argv[]) {
         const uint64_t video_start = core_ran ? perf_begin() : 0;
         video_bridge_flush_frame();
         perf_end(perf_stage_video, video_start);
-        if (paused_now) lv_task_handler();
+        if (ui_visible) lv_task_handler();
 
         const uint64_t present_start = core_ran ? perf_begin() : 0;
         if (display_ui_is_hidden()) {
             display_composite_frame();
         } else {
             const uint64_t present_before_refresh = display_present_serial();
-            if (paused_now) lv_obj_invalidate(ui_screen);
+            if (ui_visible) lv_obj_invalidate(ui_screen);
             lv_refr_now(NULL);
             if (display_present_serial() == present_before_refresh) display_composite_frame();
         }
@@ -663,7 +783,11 @@ int main(const int argc, char *argv[]) {
         perf_frame_complete(core_ran);
     }
 
+    if (netplay_wait_visible) loading_message_hide();
+    if (netplay_governor_active) governor_boost_end();
     pause_menu_shutdown();
+    netplay_shutdown();
+    cheevo_shutdown();
     governor_boost_shutdown();
     runahead_shutdown();
     video_bridge_shutdown();

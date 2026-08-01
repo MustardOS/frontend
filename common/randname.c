@@ -1,8 +1,10 @@
 #include "randname.h"
 
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 const char *const randname_adjectives[RANDNAME_ADJECTIVE_COUNT] = {
     "Silent",   "Turbo",   "Crimson", "Cosmic", "Rusty",    "Golden",   "Shadow", "Electric",  "Ancient", "Rogue",
@@ -33,6 +35,12 @@ const char *const randname_nouns[RANDNAME_NOUN_COUNT] = {
 };
 
 static size_t randname_random_index() {
+    static int seeded;
+    if (!seeded) {
+        srand((unsigned) time(NULL) ^ (uintptr_t) &seeded);
+        seeded = 1;
+    }
+
     const unsigned long range = (unsigned long) RAND_MAX + 1UL;
     const unsigned long limit = range - range % RANDNAME_COUNT;
     unsigned long value;

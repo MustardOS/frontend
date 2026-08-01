@@ -14,7 +14,9 @@ typedef struct {
 
     void (*value_text)(int index, char *buf, size_t len);
     void (*cycle)(int index, int direction);
+    int (*row_can_cycle)(int index);
     int (*row_is_action)(int index);
+    const char *(*action_label)(int index);
     void (*action)(int index);
     const char *(*extra_label)(int index);
     void (*extra_action)(int index);
@@ -31,6 +33,7 @@ typedef struct {
     uint64_t prev_nav_mask;
     nav_repeat_t rpt_up, rpt_down, rpt_left, rpt_right;
     int nav_row_class;
+    const char *nav_action_label;
     const char *nav_extra_label;
     int save_dialogue_active;
     mux_dialogue save_dlg;
@@ -44,10 +47,14 @@ void submenu_open(submenu *m);
 
 void submenu_reopen_at(submenu *m, int row);
 
+void submenu_focus_at(submenu *m, int row);
+
 int submenu_is_active(const submenu *m);
 
 void submenu_tick(submenu *m);
 
 void submenu_refresh_values(const submenu *m);
+
+void submenu_refresh_nav(submenu *m);
 
 void submenu_stack_resync(void);

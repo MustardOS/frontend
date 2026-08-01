@@ -174,7 +174,7 @@ static void refresh_preview(void) {
     lv_obj_clear_flag(ui_img_box, LV_OBJ_FLAG_HIDDEN);
 
     if (!thumb_path) {
-        lv_img_set_src(ui_img_box, &ui_img_blank);
+        clear_image(ui_img_box);
         return;
     }
 
@@ -380,7 +380,7 @@ int gamestate_menu_is_active(void) {
 static void close_gamestate(void) {
     active = 0;
 
-    lv_img_set_src(ui_img_box, &ui_img_blank);
+    clear_image(ui_img_box);
     lv_obj_add_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
     lv_label_set_text(ui_lbl_screen_message, "");
 

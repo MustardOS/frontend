@@ -4,6 +4,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../core/muxretro.h"
+#include "../netplay/netplay.h"
 #include "../settings/settings.h"
 
 #define AUDIO_SCRATCH_FRAMES 4096
@@ -730,6 +731,10 @@ void audio_bridge_set_buffer_status_callback(const retro_audio_buffer_status_cal
 
 void audio_bridge_notify_buffer_status(void) {
     if (!buffer_status_cb) return;
+    if (netplay_is_active()) {
+        buffer_status_cb(true, 50, false);
+        return;
+    }
 
     const bool active = audio_dev != 0 && !audio_muted && !device_paused;
     unsigned occupancy_pct = 0;

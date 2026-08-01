@@ -8,6 +8,8 @@
 #include "core.h"
 #include "../input/core_input_meta.h"
 #include "../input/hotkeys.h"
+#include "../cheevo/cheevo.h"
+#include "../netplay/netplay.h"
 #include "muxretro.h"
 #include "../ui/options.h"
 #include "paths.h"
@@ -122,6 +124,15 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
     switch (cmd) {
         case RETRO_ENVIRONMENT_GET_CAN_DUPE: {
             *(bool *) data = true;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_NETPLAY_CLIENT_INDEX: {
+            return data && netplay_get_client_index(data);
+        }
+
+        case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE: {
+            netplay_set_netpacket_interface(data);
             return true;
         }
 
@@ -275,6 +286,16 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
+        case RETRO_ENVIRONMENT_SET_MEMORY_MAPS: {
+            cheevo_set_memory_map(data);
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS: {
+            cheevo_set_core_support(data && *(const bool *) data);
+            return true;
+        }
+
         case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES: {
             if (data) *(uint64_t *) data = UINT64_C(1) << RETRO_DEVICE_JOYPAD | UINT64_C(1) << RETRO_DEVICE_ANALOG;
             return true;
@@ -412,7 +433,7 @@ void environment_apply_pending_av_info(void) {
 void environment_notify_frame_time(void) {
     if (!frame_time_cb) return;
 
-    const int throttled = hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active();
+    const int throttled = hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active() || netplay_is_active();
     retro_usec_t usec = frame_time_reference;
 
     if (!throttled) {

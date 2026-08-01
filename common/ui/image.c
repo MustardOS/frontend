@@ -519,6 +519,12 @@ static void free_scaled_raster(lv_obj_t *ui_img_obj) {
     }
 }
 
+void clear_image(lv_obj_t *ui_img_obj) {
+    if (!ui_img_obj) return;
+    lv_img_set_src(ui_img_obj, &ui_img_blank);
+    free_scaled_raster(ui_img_obj);
+}
+
 static void scale_and_set_raster(
     lv_obj_t *ui_img_obj, const char *image_path, const int tw, const int th, const int align, const int pad_l,
     const int pad_r, const int pad_t, const int pad_b
@@ -646,7 +652,7 @@ static void scale_and_set_raster(
 }
 
 void update_image(lv_obj_t *ui_img_obj, const struct image_settings image_settings) {
-    free_scaled_raster(ui_img_obj);
+    clear_image(ui_img_obj);
 
     if (file_exist(image_settings.image_path)) {
         const size_t plen = strlen(image_settings.image_path);
@@ -695,7 +701,5 @@ void update_image(lv_obj_t *ui_img_obj, const struct image_settings image_settin
 
         lv_img_set_src(ui_img_obj, image_path);
         lv_obj_move_foreground(ui_img_obj);
-    } else {
-        lv_img_set_src(ui_img_obj, &ui_img_blank);
     }
 }

@@ -15,6 +15,10 @@
 #include "../../module/muxshare.h"
 #include "../state/gamestate.h"
 #include "../state/patch.h"
+#include "../cheevo/cheevo.h"
+#include "../cheevo/ui_cheevo.h"
+#include "../netplay/netplay.h"
+#include "../netplay/ui_netplay.h"
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
 #include "../core/core.h"
@@ -42,11 +46,14 @@ static lv_obj_t *ui_lbl_fps = NULL;
 static lv_obj_t *ui_img_fps_glyph = NULL;
 static lv_obj_t *ui_lbl_speed_mode = NULL;
 static lv_obj_t *ui_img_speed_glyph = NULL;
+static lv_obj_t *ui_img_toast_glyph = NULL;
 
 static int has_disc_control = 0;
 static int row_resume;
 static int row_game_state;
 static int row_options;
+static int row_netplay;
+static int row_cheevo;
 static int row_disc_control;
 static int row_cheats;
 static int row_patches;
@@ -61,11 +68,13 @@ static void compute_row_indices(void) {
 
     int i = 0;
     row_resume = i++;
-    row_game_state = state_saves_supported() ? i++ : -1;
-    row_options = i++;
-    row_disc_control = has_disc_control ? i++ : -1;
-    row_cheats = cheats_count > 0 ? i++ : -1;
-    row_patches = patch_manual_count > 0 ? i++ : -1;
+    row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
+    row_options = !netplay_is_active() ? i++ : -1;
+    row_netplay = i++;
+    row_cheevo = cheevo_is_configured() ? i++ : -1;
+    row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
+    row_cheats = cheats_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
+    row_patches = patch_manual_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -196,9 +205,32 @@ void pause_menu_set_speed_indicator(const char *text, const char *glyph) {
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
 }
 
-void pause_menu_show_toast_timed(const char *msg, const uint32_t duration_ms) {
+static void set_toast_glyph(const char *glyph) {
+    if (!ui_img_toast_glyph) return;
+    if (!glyph || !glyph[0]) {
+        lv_obj_add_flag(ui_img_toast_glyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_width(ui_lbl_message, device.mux.width - 50);
+        return;
+    }
+
+    char embed[MAX_BUFFER_SIZE];
+    if (!get_glyph_path("muxretro", glyph, embed, sizeof(embed))) {
+        lv_obj_add_flag(ui_img_toast_glyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_width(ui_lbl_message, device.mux.width - 50);
+        return;
+    }
+
+    set_list_glyph_image(ui_img_toast_glyph, embed);
+    lv_obj_set_style_img_recolor(ui_img_toast_glyph, lv_color_hex(theme.message.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_img_toast_glyph, theme.message.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(ui_img_toast_glyph, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_width(ui_lbl_message, device.mux.width - 50 - theme.mux.item.height);
+}
+
+void pause_menu_show_glyph_toast_timed(const char *msg, const char *glyph, const uint32_t duration_ms) {
     if (!ui_pnl_message || !ui_lbl_message) return;
 
+    set_toast_glyph(glyph);
     lv_label_set_text(ui_lbl_message, msg);
     lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_opa(ui_pnl_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
@@ -207,10 +239,21 @@ void pause_menu_show_toast_timed(const char *msg, const uint32_t duration_ms) {
     lv_obj_mark_layout_as_dirty(ui_pnl_message);
     lv_obj_update_layout(ui_pnl_message);
 
-    transition_panel_play_in(ui_pnl_message, config.visual.element_transition);
-
+    if (active) transition_panel_play_in(ui_pnl_message, config.visual.element_transition);
     toast_expire_tick = SDL_GetTicks() + duration_ms;
     toast_active = 1;
+
+    lv_obj_invalidate(ui_screen);
+    if (!active) {
+        display_set_ui_hidden(0);
+        const uint64_t present_before_refresh = display_present_serial();
+        lv_refr_now(NULL);
+        if (display_present_serial() == present_before_refresh) display_composite_frame();
+    }
+}
+
+void pause_menu_show_toast_timed(const char *msg, const uint32_t duration_ms) {
+    pause_menu_show_glyph_toast_timed(msg, NULL, duration_ms);
 }
 
 void pause_menu_show_toast(const char *msg) {
@@ -222,6 +265,7 @@ void pause_menu_toast_tick(void) {
     if (SDL_GetTicks() < toast_expire_tick) return;
 
     lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_invalidate(ui_screen);
     toast_active = 0;
 }
 
@@ -361,7 +405,9 @@ void pause_menu_rebuild(void) {
 
     gen_label("muxretro", "resume", lang.muxretro.resume);
     if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
-    gen_label("muxretro", "core", lang.muxretro.core_options);
+    if (row_options >= 0) gen_label("muxretro", "core", lang.muxretro.core_options);
+    gen_label("muxretro", "network", lang.muxretro.network_play);
+    if (row_cheevo >= 0) gen_label("muxretro", "trophy", lang.muxretro.cheevo.achievements);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
     if (row_cheats >= 0) gen_label("muxretro", "cheat", lang.muxretro.cheats);
     if (row_patches >= 0) gen_label("muxretro", "patch", lang.muxretro.patches);
@@ -443,6 +489,14 @@ void pause_menu_focus_information_item(void) {
     focus_item(row_information);
 }
 
+void pause_menu_focus_netplay_item(void) {
+    focus_item(row_netplay);
+}
+
+void pause_menu_focus_cheevo_item(void) {
+    focus_item(row_cheevo);
+}
+
 void pause_menu_fix_nav_order(void) {
     lv_obj_move_foreground(ui_lbl_nav_lr_glyph);
     lv_obj_move_foreground(ui_lbl_nav_lr);
@@ -471,6 +525,10 @@ void pause_menu_init(void) {
     init_ui_common_screen(&theme, &device, &lang, lang.muxretro.title);
     set_gradient_visible(0);
 
+    ui_img_toast_glyph = lv_img_create(ui_pnl_message);
+    lv_obj_move_to_index(ui_img_toast_glyph, 0);
+    lv_obj_add_flag(ui_img_toast_glyph, LV_OBJ_FLAG_HIDDEN);
+
     init_fonts();
 
     if (config.settings.general.sound && init_audio_backend()) init_fe_snd(&fe_snd, config.settings.general.sound, 0);
@@ -484,6 +542,8 @@ void pause_menu_init(void) {
     patch_menu_init();
     manual_menu_init();
     options_menu_init();
+    netplay_menu_init();
+    cheevo_menu_init();
 
     pause_menu_rebuild();
 
@@ -505,29 +565,43 @@ int pause_menu_is_active(void) {
     return active;
 }
 
-void pause_menu_capture_clean_screenshot(const char *path, const int restore_visibility) {
+int pause_menu_capture_clean_screenshot(const char *path, const int restore_visibility) {
     const int fps_was_visible = ui_lbl_fps && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     const int header_was_visible = ui_pnl_header && !lv_obj_has_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+    const int toast_was_visible = ui_pnl_message && !lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
 
     if (fps_was_visible) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+    if (toast_was_visible) lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
 
     // Keep the frame off the screen so the markers do not blink
     display_set_composite_suppressed(1);
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
-    display_capture_clean_frame(path);
+    const int result = display_capture_clean_frame(path);
     display_set_composite_suppressed(0);
 
-    if (!restore_visibility) return;
+    if (!restore_visibility) return result;
 
     if (fps_was_visible) lv_obj_clear_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+    if (toast_was_visible) lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
 
-    if (fps_was_visible || header_was_visible) lv_obj_invalidate(ui_screen);
+    if (fps_was_visible || header_was_visible || toast_was_visible) lv_obj_invalidate(ui_screen);
+    return result;
 }
 
 void pause_menu_toggle(void) {
+    if (!active) {
+        uint32_t frames_remaining = 0;
+        if (!cheevo_can_pause(&frames_remaining)) {
+            char message[128];
+            snprintf(message, sizeof(message), lang.muxretro.netplay.hardcore_pause, frames_remaining);
+            pause_menu_show_toast_timed(message, tst_wait_s);
+            return;
+        }
+    }
+
     active = !active;
     LOG_DEBUG(mux_module, "pause_menu_toggle: active=%d", active);
 
@@ -535,8 +609,8 @@ void pause_menu_toggle(void) {
     rumble_bridge_set_suppressed(active);
 
     if (active) {
-        audio_bridge_set_paused(1);
-        gamestate_capture_pending(0);
+        if (!netplay_is_playing()) audio_bridge_set_paused(1);
+        if (!netplay_is_active()) gamestate_capture_pending(0);
         hotkeys_reset();
     } else {
         input_bridge_suppress_held();
@@ -565,6 +639,16 @@ int pause_menu_tick(void) {
 
     if (gamestate_menu_is_active()) {
         gamestate_menu_tick();
+        return 0;
+    }
+
+    if (netplay_menu_is_active()) {
+        netplay_menu_tick();
+        return 0;
+    }
+
+    if (cheevo_menu_is_active()) {
+        cheevo_menu_tick();
         return 0;
     }
 
@@ -637,6 +721,12 @@ int pause_menu_tick(void) {
         } else if (current_item_index == row_options) {
             play_sound(snd_confirm);
             options_menu_open();
+        } else if (current_item_index == row_netplay) {
+            play_sound(snd_confirm);
+            netplay_menu_open();
+        } else if (row_cheevo >= 0 && current_item_index == row_cheevo) {
+            play_sound(snd_confirm);
+            cheevo_menu_open();
         } else if (has_disc_control && current_item_index == row_disc_control) {
             play_sound(snd_confirm);
             diskcontrol_menu_open();
@@ -659,7 +749,7 @@ int pause_menu_tick(void) {
             return 1;
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
-            if (session_settings_auto_save_on_quit()) gamestate_autosave_save();
+            if (!netplay_is_active() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
             return 1;
         }
     }

@@ -1529,6 +1529,7 @@ void apply_theme_list_drop_down(
 void apply_theme_list_glyph(
     const struct theme_config *theme, lv_obj_t *ui_lbl_item_glyph, const char *screen_name, const char *item_glyph
 ) {
+    if (!theme || !ui_lbl_item_glyph || !lv_obj_is_valid(ui_lbl_item_glyph)) return;
     if (!config.visual.list_glyph) return;
     if (theme->list_default.glyph_alpha == 0 && theme->list_focus.glyph_alpha == 0) return;
 
@@ -1539,6 +1540,8 @@ void apply_theme_list_glyph(
         lv_img_set_src(ui_lbl_item_glyph, NULL);
     }
 
+    lv_obj_remove_style(ui_lbl_item_glyph, &style_list_glyph_default, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_remove_style(ui_lbl_item_glyph, &style_list_glyph_focused, MU_OBJ_MAIN_FOCUS);
     lv_obj_add_style(ui_lbl_item_glyph, &style_list_glyph_default, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_style(ui_lbl_item_glyph, &style_list_glyph_focused, MU_OBJ_MAIN_FOCUS);
 }

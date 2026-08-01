@@ -1,4 +1,5 @@
 #include "../../module/muxshare.h"
+#include "../cheevo/ui_cheevo.h"
 #include "../core/muxretro.h"
 #include "submenu.h"
 
@@ -11,6 +12,7 @@ enum {
     row_performance,
     row_hud,
     row_storage,
+    row_cheevo,
     row_count
 };
 
@@ -23,10 +25,12 @@ static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.category_performance,
     lang.muxretro.settings_screen.category_hud,
     lang.muxretro.settings_screen.category_storage,
+    lang.muxretro.retroachievements,
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys",       "videosettings", "display",    "soundsettings",
-                                            "inputsettings", "performance",   "screeninfo", "storagesettings"};
+static const char *row_glyphs[row_count] = {"hotkeys",       "videosettings",   "display",
+                                            "soundsettings", "inputsettings",   "performance",
+                                            "screeninfo",    "storagesettings", "trophy"};
 
 static int row_is_action(const int index) {
     (void) index;
@@ -58,6 +62,9 @@ static void row_action(const int index) {
             break;
         case row_storage:
             storage_menu_open();
+            break;
+        case row_cheevo:
+            cheevo_settings_menu_open();
             break;
         default:
             break;
@@ -102,6 +109,11 @@ static int child_tick(void) {
 
     if (storage_menu_is_active()) {
         storage_menu_tick();
+        return 1;
+    }
+
+    if (cheevo_settings_menu_is_active()) {
+        cheevo_settings_menu_tick();
         return 1;
     }
 
@@ -185,4 +197,8 @@ void settings_menu_reopen_hud(void) {
 
 void settings_menu_reopen_storage(void) {
     submenu_reopen_at(&self, row_storage);
+}
+
+void settings_menu_reopen_cheevo(void) {
+    submenu_reopen_at(&self, row_cheevo);
 }

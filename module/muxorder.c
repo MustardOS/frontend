@@ -35,7 +35,7 @@ static void refresh_rows(void) {
 
         char value[MAX_BUFFER_SIZE];
         if (method == order_active) {
-            snprintf(value, sizeof(value), "%s · %s", variant, lang.muxorder.active);
+            snprintf(value, sizeof(value), "%s - %s", variant, lang.muxorder.active);
         } else {
             snprintf(value, sizeof(value), "%s", variant);
         }

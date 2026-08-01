@@ -108,6 +108,8 @@ uint64_t input_bridge_snapshot_signature(void);
 
 void input_bridge_apply_controller_ports(void);
 
+void input_bridge_set_netplay_state(unsigned player_count, int routes_input);
+
 int environment_core_wants_hw_render(void);
 
 int environment_av_info_pending(void);
@@ -174,6 +176,10 @@ void pause_menu_focus_settings_item(void);
 
 void pause_menu_focus_information_item(void);
 
+void pause_menu_focus_netplay_item(void);
+
+void pause_menu_focus_cheevo_item(void);
+
 void pause_menu_set_fps_visible(int visible);
 
 void pause_menu_set_fps_text(const char *text);
@@ -183,6 +189,8 @@ void pause_menu_set_speed_indicator(const char *text, const char *glyph);
 void pause_menu_show_toast(const char *msg);
 
 void pause_menu_show_toast_timed(const char *msg, uint32_t duration_ms);
+
+void pause_menu_show_glyph_toast_timed(const char *msg, const char *glyph, uint32_t duration_ms);
 
 void pause_menu_toast_tick(void);
 
@@ -194,7 +202,7 @@ int pause_menu_gameplay_hud_active(void);
 
 void pause_menu_apply_header_visibility(void);
 
-void pause_menu_capture_clean_screenshot(const char *path, int restore_visibility);
+int pause_menu_capture_clean_screenshot(const char *path, int restore_visibility);
 
 int pause_menu_tick(void);
 
@@ -249,6 +257,8 @@ void settings_menu_reopen_performance(void);
 void settings_menu_reopen_hud(void);
 
 void settings_menu_reopen_storage(void);
+
+void settings_menu_reopen_cheevo(void);
 
 void video_menu_init(void);
 

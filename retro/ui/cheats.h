@@ -16,3 +16,5 @@ extern int cheats_count;
 void cheats_init(const char *core_path_arg, const char *content_path);
 
 void cheats_toggle(int index);
+
+void cheats_set_suppressed(int suppressed);

@@ -48,4 +48,6 @@ int load_terminal_resource(const char *resource, const char *extension, char *bu
 
 void unload_image_animation(void);
 
+void clear_image(lv_obj_t *ui_img_obj);
+
 void update_image(lv_obj_t *ui_img_obj, struct image_settings image_settings);

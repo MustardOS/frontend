@@ -9,6 +9,8 @@
 #include "../core/paths.h"
 #include "cheats.h"
 
+static int cheats_suppressed;
+
 struct cheat_entry cheats_list[CHEAT_MAX];
 int cheats_count = 0;
 
@@ -24,13 +26,18 @@ static int cheat_index_from_group_id(const char *group_id) {
 
 static void apply_enabled_cheats(void) {
     if (current_core.retro_cheat_reset) current_core.retro_cheat_reset();
-    if (!current_core.retro_cheat_set) return;
+    if (!current_core.retro_cheat_set || cheats_suppressed) return;
 
     unsigned applied = 0;
     for (int i = 0; i < cheats_count; i++) {
         if (!cheats_list[i].enabled) continue;
         current_core.retro_cheat_set(applied++, true, cheats_list[i].code);
     }
+}
+
+void cheats_set_suppressed(const int suppressed) {
+    cheats_suppressed = suppressed != 0;
+    apply_enabled_cheats();
 }
 
 static void trim_value(char *s) {

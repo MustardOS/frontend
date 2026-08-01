@@ -1051,6 +1051,7 @@ static void handle_inputs(const mux_input_options *opts) {
 
     static uint32_t hold_delay[mux_input_count] = {0};
     static uint32_t hold_tick[mux_input_count] = {0};
+    static uint64_t suppressed_horizontal = 0;
 
     uint64_t blocked = 0;
 
@@ -1069,6 +1070,24 @@ static void handle_inputs(const mux_input_options *opts) {
 
     const mux_input_type mod = hold_modifier(opts);
     if (mod < mux_input_count) blocked |= BIT(mod);
+
+    uint64_t vertical = BIT(mux_input_dpad_up) | BIT(mux_input_dpad_down);
+    uint64_t horizontal = BIT(mux_input_dpad_left) | BIT(mux_input_dpad_right);
+
+    if (opts->remap_to_dpad && (opts->nav & NAV_LEFT_STICK)) {
+        vertical |= BIT(mux_input_ls_up) | BIT(mux_input_ls_down);
+        horizontal |= BIT(mux_input_ls_left) | BIT(mux_input_ls_right);
+    }
+
+    if (opts->remap_to_dpad && (opts->nav & NAV_RIGHT_STICK)) {
+        vertical |= BIT(mux_input_rs_up) | BIT(mux_input_rs_down);
+        horizontal |= BIT(mux_input_rs_left) | BIT(mux_input_rs_right);
+    }
+
+    const uint64_t suppressed_releases = suppressed_horizontal & held & ~pressed;
+    suppressed_horizontal &= pressed;
+    if (pressed & vertical) suppressed_horizontal |= pressed & ~held & horizontal;
+    blocked |= suppressed_horizontal | suppressed_releases;
 
     const uint64_t pressed_filtered = pressed & ~blocked;
     const uint64_t held_filtered = held & ~blocked;

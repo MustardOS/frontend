@@ -20,8 +20,18 @@ static int row_is_action(const submenu *m, const int index) {
     return m->def->row_is_action ? m->def->row_is_action(index) : 0;
 }
 
+static int row_can_cycle(const submenu *m, const int index) {
+    if (!m->def->cycle) return 0;
+    return m->def->row_can_cycle ? m->def->row_can_cycle(index) : !row_is_action(m, index);
+}
+
 static const char *row_extra_label(const submenu *m, const int index) {
     return m->def->extra_label && m->def->extra_action ? m->def->extra_label(index) : NULL;
+}
+
+static const char *row_action_label(const submenu *m, const int index) {
+    const char *label = m->def->action_label ? m->def->action_label(index) : NULL;
+    return label ? label : lang.generic.select;
 }
 
 static uint64_t submenu_nav_mask(void) {
@@ -112,7 +122,7 @@ static void refresh_row(const submenu *m, const int index, const enum nav_direct
 
     char value_text[SUBMENU_VALUE_MAX];
     row_value(m, index, value_text, sizeof(value_text));
-    lv_label_set_text(value, value_text);
+    if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
     nav_play_shake(value, shake_dir);
 }
 
@@ -126,35 +136,60 @@ void submenu_refresh_values(const submenu *m) {
 
         char value_text[SUBMENU_VALUE_MAX];
         row_value(m, i, value_text, sizeof(value_text));
-        lv_label_set_text(value, value_text);
+        if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
     }
 }
 
 static void submenu_nav(submenu *m, const int force) {
     const int action_row = row_is_action(m, current_item_index);
+    const int cycle_row = row_can_cycle(m, current_item_index);
+    const char *action = row_action_label(m, current_item_index);
     const char *extra = row_extra_label(m, current_item_index);
-    if (!force && action_row == m->nav_row_class && extra == m->nav_extra_label) return;
-    m->nav_row_class = action_row;
+    const int row_class = action_row | (cycle_row << 1);
+    if (!force && row_class == m->nav_row_class && action == m->nav_action_label && extra == m->nav_extra_label) return;
+    m->nav_row_class = row_class;
+    m->nav_action_label = action;
     m->nav_extra_label = extra;
 
     nav_show_x(extra != NULL, extra);
 
     if (action_row) {
-        nav_show_lr(0);
-        setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                      {ui_lbl_nav_a, lang.generic.select, 0},
-                                      {ui_lbl_nav_b_glyph, "", 0},
-                                      {ui_lbl_nav_b, lang.generic.back, 0},
-                                      {NULL, NULL, 0}});
-    } else {
+        nav_show_lr(cycle_row);
+        if (cycle_row)
+            setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                          {ui_lbl_nav_lr, lang.generic.change, 0},
+                                          {ui_lbl_nav_a_glyph, "", 0},
+                                          {ui_lbl_nav_a, action, 0},
+                                          {ui_lbl_nav_b_glyph, "", 0},
+                                          {ui_lbl_nav_b, lang.generic.back, 0},
+                                          {NULL, NULL, 0}});
+        else
+            setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                          {ui_lbl_nav_a, action, 0},
+                                          {ui_lbl_nav_b_glyph, "", 0},
+                                          {ui_lbl_nav_b, lang.generic.back, 0},
+                                          {NULL, NULL, 0}});
+    } else if (cycle_row) {
         nav_show_a(0, "");
+        nav_show_lr(1);
         setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                       {ui_lbl_nav_lr, lang.generic.change, 0},
                                       {ui_lbl_nav_b_glyph, "", 0},
                                       {ui_lbl_nav_b, lang.generic.back, 0},
                                       {NULL, NULL, 0}});
+    } else {
+        nav_show_a(0, "");
+        nav_show_lr(0);
+        setup_nav(
+            (struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}}
+        );
     }
     pause_menu_fix_nav_order();
+}
+
+void submenu_refresh_nav(submenu *m) {
+    if (!m || !m->active) return;
+    submenu_nav(m, 0);
 }
 
 static void close_menu(submenu *m) {
@@ -181,6 +216,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->active = 0;
     m->save_dialogue_active = 0;
     m->nav_row_class = -1;
+    m->nav_action_label = NULL;
     m->nav_extra_label = NULL;
     m->pending_action_row = -1;
 
@@ -194,6 +230,7 @@ void submenu_open(submenu *m) {
     m->active = 1;
     m->prev_nav_mask = submenu_nav_mask();
     m->nav_row_class = -1;
+    m->nav_action_label = NULL;
     m->entry_snapshot = session_settings;
 
     if (submenu_stack_depth < SUBMENU_STACK_MAX) submenu_stack[submenu_stack_depth++] = m;
@@ -207,9 +244,15 @@ void submenu_reopen_at(submenu *m, const int row) {
     rebuild_rows(m);
     focus_row(row);
     m->nav_row_class = -1;
+    m->nav_action_label = NULL;
     submenu_nav(m, 1);
     m->prev_nav_mask = submenu_nav_mask();
     pause_menu_sync_input_mask();
+}
+
+void submenu_focus_at(submenu *m, const int row) {
+    if (!m || !m->active) return;
+    focus_row(row);
 }
 
 int submenu_is_active(const submenu *m) {
@@ -261,7 +304,7 @@ void submenu_tick(submenu *m) {
     const int do_up = nav_repeat_step(&m->rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
     const int do_down =
         nav_repeat_step(&m->rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);
-    const int cycle_allowed = m->def->cycle != NULL && !row_is_action(m, current_item_index);
+    const int cycle_allowed = row_can_cycle(m, current_item_index);
     const int do_left = nav_repeat_step(&m->rpt_left, edge & BIT(2), mask & BIT(2), cycle_allowed, now);
     const int do_right = nav_repeat_step(&m->rpt_right, edge & BIT(3), mask & BIT(3), cycle_allowed, now);
 

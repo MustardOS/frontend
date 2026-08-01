@@ -4,8 +4,11 @@
 #include "../../common/language.h"
 #include "../../common/log.h"
 #include "../../common/ui/common.h"
+#include "../../common/ui/nav.h"
 #include "../state/gamestate.h"
 #include "../state/manual.h"
+#include "../netplay/netplay.h"
+#include "../cheevo/cheevo.h"
 #include "hotkeys.h"
 #include "../core/muxretro.h"
 #include "nav_repeat.h"
@@ -133,13 +136,13 @@ int hotkeys_task(void) {
     }
 
     if (menu_held) {
-        if (r1_now && !prev_r1 && session_settings.hotkey_ff_enabled) {
+        if (r1_now && !prev_r1 && session_settings.hotkey_ff_enabled && !netplay_is_active()) {
             toggle_fast_forward();
             input_bridge_suppress(mux_input_r1);
             menu_combo_consumed = 1;
         }
 
-        if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled) {
+        if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled && !netplay_is_active()) {
             if (state_saves_supported()) {
                 gamestate_quicksave_save();
                 LOG_INFO(mux_module, "Quick Save (hotkey)");
@@ -151,19 +154,24 @@ int hotkeys_task(void) {
             menu_combo_consumed = 1;
         }
 
-        if (l1_now && !prev_l1 && session_settings.hotkey_slowmo_enabled) {
+        if (l1_now && !prev_l1 && session_settings.hotkey_slowmo_enabled && !netplay_is_active()
+            && !cheevo_restricted()) {
             toggle_slow_motion();
             input_bridge_suppress(mux_input_l1);
             menu_combo_consumed = 1;
         }
 
-        if (b_now && !prev_b && session_settings.hotkey_pause_enabled) {
-            toggle_content_pause();
+        if (b_now && !prev_b && session_settings.hotkey_pause_enabled && !netplay_is_active()) {
+            uint32_t frames_remaining = 0;
+            if (cheevo_can_pause(&frames_remaining))
+                toggle_content_pause();
+            else
+                pause_menu_show_toast_timed("Hardcore pause is not available yet", tst_wait_s);
             input_bridge_suppress(mux_input_b);
             menu_combo_consumed = 1;
         }
 
-        if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled) {
+        if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled && !netplay_is_active()) {
             if (!state_saves_supported()) {
                 pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
             } else if (gamestate_quicksave_exists && !gamestate_metadata_matches(&gamestate_quicksave)) {
@@ -201,7 +209,7 @@ int hotkeys_task(void) {
         }
 
         if (start_now && !prev_start && session_settings.hotkey_quit_enabled) {
-            if (session_settings_auto_save_on_quit()) gamestate_autosave_save();
+            if (!netplay_is_active() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
             LOG_INFO(mux_module, "Quit (hotkey)");
             quit_requested = 1;
             input_bridge_suppress(mux_input_start);
